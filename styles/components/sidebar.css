@@ -173,10 +173,22 @@
 
 /* ── Search input ─────────────────────────────────────────────────────
    Shares chrome with the workspace search input via .ap-input-group.
-   The wrapper class only contributes the sidebar-specific margins. */
+   The wrapper class contributes the sidebar-specific margins, plus a
+   compact size override (the DS default sits ~40px tall, too chunky
+   for the sidebar's ~28-32px row rhythm). */
 
 .app-sidebar__search {
   margin: 0 var(--ref-spacing-xs) var(--ref-spacing-xs);
+}
+
+.app-sidebar__search .ap-input,
+.app-sidebar__search input {
+  height: 32px;
+  font-size: var(--ref-font-size-sm);
+}
+
+.app-sidebar__search .ap-icon-search {
+  font-size: var(--sys-icon-css-sm);
 }
 
 /* ── List ───────────────────────────────────────────────────────────── */
@@ -256,32 +268,36 @@
 
 /* Trailing color dot — resolves the row's bound-context color. Mirrors
    the topbar Context-pill swatch palette so a session and its context
-   are recognizable at a glance. */
+   are recognizable at a glance. The slot is sized 24×24 (same as the
+   pin button below) so swapping dot ↔ pin on hover doesn't shift the
+   row's layout ; the visible 8px circle is drawn via radial-gradient
+   centered in the slot. */
 .app-sidebar__row-dot {
-  flex: 0 0 auto;
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--ref-color-grey-40);
+  --dot-color: var(--ref-color-grey-40);
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border-radius: 0;
+  background: radial-gradient(circle at center, var(--dot-color) 0 4px, transparent 4.5px);
 }
 
 .app-sidebar__row-dot--orange {
-  background: var(--ref-color-orange-100);
+  --dot-color: var(--ref-color-orange-100);
 }
 .app-sidebar__row-dot--blue {
-  background: var(--ref-color-electric-blue-100);
+  --dot-color: var(--ref-color-electric-blue-100);
 }
 .app-sidebar__row-dot--green {
-  background: var(--ref-color-green-100);
+  --dot-color: var(--ref-color-green-100);
 }
 .app-sidebar__row-dot--purple {
-  background: var(--ref-color-purple-100);
+  --dot-color: var(--ref-color-purple-100);
 }
 .app-sidebar__row-dot--red {
-  background: var(--ref-color-red-100);
+  --dot-color: var(--ref-color-red-100);
 }
 .app-sidebar__row-dot--grey {
-  background: var(--ref-color-grey-40);
+  --dot-color: var(--ref-color-grey-40);
 }
 
 /* Pin/unpin trigger — hidden by default, revealed on row hover (or when
