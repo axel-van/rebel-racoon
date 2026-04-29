@@ -1,5 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=23";
+import { isFlagOn } from "../feature-flags.js?v=1";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=25";
 import { isNewUser } from "../user-mode.js?v=20";
 import { getPath } from "../router.js?v=20";
@@ -11,7 +12,7 @@ import {
   updatePostContent,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=23";
-import { renderPostCard } from "./post-card.js?v=21";
+import { renderPostCard } from "./post-card.js?v=22";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
@@ -44,6 +45,7 @@ const PANEL_ID = "rightPanel";
 const PANEL_WIDTH_KEY = "archie-rpanel-width";
 const PANEL_MIN_WIDTH = 380;
 const PANEL_MAX_RIGHT_GAP = 400; // leave at least this much for sidebar+content
+const DRAFT_INLINE_EDIT_FLAG = "draftInlineEdit";
 
 // Idea kind taxonomy — handoff Ideas filter rail (§ 2.6). Order is the order
 // shown in the chip row. The .kind selector also drives the per-kind tag
@@ -89,6 +91,10 @@ const subs = new Set();
 
 function notify() {
   for (const fn of subs) fn(state);
+}
+
+function canDraftInlineEdit() {
+  return isFlagOn(DRAFT_INLINE_EDIT_FLAG);
 }
 
 export function getMode() {
@@ -182,7 +188,7 @@ export function init() {
     // current editor + its Save/Cancel buttons. Falls through so a click
     // on another card's pen icon (or any other action) still routes
     // through the normal handlers below.
-    if (editingPostId) {
+    if (canDraftInlineEdit() && editingPostId) {
       const insideCurrent = event.target.closest(
         `[data-post-editor="${editingPostId}"], [data-post-edit-save="${editingPostId}"], [data-post-edit-cancel="${editingPostId}"]`,
       );
@@ -212,17 +218,17 @@ export function init() {
     }
     // Per-card actions on a single draft (Lot 21 rich PostCard).
     const editBtn = event.target.closest("[data-post-edit]");
-    if (editBtn) {
+    if (canDraftInlineEdit() && editBtn) {
       startEdit(editBtn.dataset.postEdit);
       return;
     }
     const saveBtn = event.target.closest("[data-post-edit-save]");
-    if (saveBtn) {
+    if (canDraftInlineEdit() && saveBtn) {
       commitEdit(saveBtn.dataset.postEditSave);
       return;
     }
     const cancelBtn = event.target.closest("[data-post-edit-cancel]");
-    if (cancelBtn) {
+    if (canDraftInlineEdit() && cancelBtn) {
       cancelEdit(cancelBtn.dataset.postEditCancel);
       return;
     }
@@ -275,7 +281,7 @@ export function init() {
   // Esc cancels (and stops propagation so the document handler below
   // doesn't also close the panel) ; Cmd/Ctrl+Enter saves.
   el.addEventListener("keydown", (event) => {
-    if (!editingPostId) return;
+    if (!canDraftInlineEdit() || !editingPostId) return;
     const editor = event.target.closest(`[data-post-editor="${editingPostId}"]`);
     if (!editor) return;
     if (event.key === "Escape") {
@@ -290,7 +296,7 @@ export function init() {
   // Focus moving outside the panel (Tab, click on topbar, etc.) commits
   // any in-progress edit.
   document.addEventListener("focusin", (event) => {
-    if (!editingPostId) return;
+    if (!canDraftInlineEdit() || !editingPostId) return;
     if (el.contains(event.target)) return;
     commitEdit(editingPostId);
   });
@@ -459,6 +465,11 @@ function rebindPostsStore() {
 }
 
 function renderDraftsView() {
+  const inlineEdit = canDraftInlineEdit();
+  if (!inlineEdit && editingPostId) {
+    editingPostId = null;
+    editingOriginal = null;
+  }
   const sid = activeSessionId();
   const allPosts = sid ? getPosts(sid) : [];
   if (!allPosts.length) return renderDraftsEmpty();
@@ -532,7 +543,7 @@ function renderDraftsView() {
   `;
 
   const feed = filtered.length
-    ? filtered.map((p) => renderPostCard(p, { editing: p.id === editingPostId })).join("")
+    ? filtered.map((p) => renderPostCard(p, { editing: p.id === editingPostId, inlineEdit })).join("")
     : `<div class="app-right-panel__empty">
          <div class="app-right-panel__empty-title">No drafts match this filter</div>
          <div class="app-right-panel__empty-sub">Try another filter, or clear the current one.</div>
@@ -628,6 +639,7 @@ function onPostImage(postId) {
 // --- Inline edit handlers ---------------------------------------------
 
 function startEdit(postId) {
+  if (!canDraftInlineEdit()) return;
   if (editingPostId === postId) return;
   if (editingPostId) commitEdit(editingPostId); // auto-save the previous card
   const sid = activeSessionId();
@@ -655,6 +667,7 @@ function startEdit(postId) {
 }
 
 function commitEdit(postId) {
+  if (!canDraftInlineEdit()) return;
   if (editingPostId !== postId) return;
   const sid = activeSessionId();
   const editor = document.querySelector(`[data-post-editor="${postId}"]`);
@@ -680,6 +693,7 @@ function commitEdit(postId) {
 }
 
 function cancelEdit(postId) {
+  if (!canDraftInlineEdit()) return;
   if (editingPostId !== postId) return;
   editingPostId = null;
   editingOriginal = null;

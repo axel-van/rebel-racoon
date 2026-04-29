@@ -1,11 +1,18 @@
-/* Admin chip — bottom-right floating toggle for first-time vs returning user.
+/* Admin chip — bottom-right prototype controls.
    Not part of the product UI; only visible in this prototype. */
 
-.admin-chip {
+.admin-chip-root {
   position: fixed;
   right: var(--ref-spacing-sm);
   bottom: var(--ref-spacing-sm);
   z-index: var(--app-z-admin);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--ref-spacing-xxs);
+}
+
+.admin-chip {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
@@ -13,11 +20,11 @@
   border-radius: var(--app-radius-pill);
   background: var(--ref-color-grey-150);
   color: var(--ref-color-white);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: none;
   font-family: inherit;
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
-  box-shadow: 0 8px 24px rgba(33, 46, 68, 0.18);
+  line-height: var(--ref-line-height-xs);
   cursor: pointer;
 }
 
@@ -29,7 +36,6 @@
 
 .admin-chip--new {
   background: var(--sys-color-main-default-bg-default);
-  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .admin-chip--new:hover,
@@ -38,13 +44,13 @@
 }
 
 .admin-chip__label {
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--ref-color-grey-20);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: normal;
 }
 
 .admin-chip__divider {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--ref-color-grey-40);
 }
 
 .admin-chip__mode {
@@ -53,6 +59,60 @@
 
 .admin-chip__icon {
   margin-left: var(--ref-spacing-xxxs);
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--ref-color-grey-10);
   font-size: var(--sys-icon-css-xs);
+}
+
+.admin-menu {
+  width: calc(var(--ref-spacing-xl) * 7);
+}
+
+.admin-menu[hidden] {
+  display: none;
+}
+
+.admin-menu__row {
+  min-height: calc(var(--ref-spacing-md) + var(--ref-spacing-sm));
+  height: auto;
+}
+
+.admin-menu__section-title {
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs) var(--ref-spacing-xxxs);
+  color: var(--sys-text-color-light);
+  font-family: var(--sys-text-style-caption-bold-font-family);
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  text-transform: uppercase;
+}
+
+.admin-menu__flag-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  min-height: calc(var(--ref-spacing-lg) + var(--ref-spacing-xs));
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  box-sizing: border-box;
+  color: var(--sys-text-color-default);
+  cursor: pointer;
+}
+
+.admin-menu__flag-row:hover,
+.admin-menu__flag-row:focus-within {
+  background: var(--ref-color-grey-05);
+}
+
+.admin-menu__flag-label {
+  min-width: 0;
+  color: var(--sys-text-color-default);
+  font-family: var(--sys-text-style-body-font-family);
+  font-size: var(--sys-text-style-body-size);
+  font-weight: var(--sys-text-style-body-weight);
+  line-height: var(--sys-text-style-body-line-height);
+}
+
+.admin-menu__toggle {
+  flex-shrink: 0;
 }

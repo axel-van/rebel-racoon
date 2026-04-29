@@ -5,6 +5,7 @@ import { open as openBugReportModal } from "./bug-report-modal.js?v=21";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=24";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 import { recentSessions } from "../mocks.js?v=25";
+import { isFlagOn } from "../feature-flags.js?v=1";
 import { isNewUser } from "../user-mode.js?v=20";
 import { getSources, subscribeSources } from "../sources-stream.js?v=20";
 import { getIdeas } from "../library.js?v=20";
@@ -354,10 +355,11 @@ const NAV = [
 ];
 
 function renderNav(path) {
-  return NAV.map((item) => {
-    const count = item.count ? item.count() : 0;
-    const counter = count > 0 ? `<span class="ap-counter normal grey">${count}</span>` : "";
-    return `
+  return NAV.filter((item) => item.path !== "/ideas" || isFlagOn("sidebarIdeas"))
+    .map((item) => {
+      const count = item.count ? item.count() : 0;
+      const counter = count > 0 ? `<span class="ap-counter normal grey">${count}</span>` : "";
+      return `
       <button
         type="button"
         class="app-sidebar__nav-item ${item.match(path) ? "is-active" : ""}"
@@ -368,7 +370,8 @@ function renderNav(path) {
         ${counter}
       </button>
     `;
-  }).join("");
+    })
+    .join("");
 }
 
 // Search input — visible only when the recent-conversations list has at
