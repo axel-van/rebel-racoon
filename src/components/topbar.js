@@ -9,7 +9,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=33";
+} from "./right-panel.js?v=34";
 import { open as openContextDrawer } from "./context-drawer.js?v=20";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=23";
 import { recentSessions } from "../mocks.js?v=25";

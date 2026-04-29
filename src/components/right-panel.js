@@ -36,6 +36,14 @@ import { open as openGenerateImageModal } from "./generate-image-modal.js?v=20";
 
 const PANEL_ID = "rightPanel";
 
+// Persisted user-resized width override. Read at boot ; rewritten as
+// the user drags the resize handle on the panel's left edge. Falls
+// back to the static --app-right-panel-width / wide variant when
+// unset, so the panel keeps working for users who haven't resized.
+const PANEL_WIDTH_KEY = "archie-rpanel-width";
+const PANEL_MIN_WIDTH = 380;
+const PANEL_MAX_RIGHT_GAP = 400; // leave at least this much for sidebar+content
+
 // Idea kind taxonomy — handoff Ideas filter rail (§ 2.6). Order is the order
 // shown in the chip row. The .kind selector also drives the per-kind tag
 // color so each kind reads at a glance.
@@ -151,6 +159,18 @@ export function init() {
     const shell = document.getElementById("appShell") || document.body;
     shell.appendChild(el);
   }
+  // Apply user-resized width (if any) before the first render so the
+  // grid template column sizes correctly on boot.
+  applyPersistedPanelWidth();
+
+  // Resize handle — mousedown begins drag, document-level mousemove +
+  // mouseup tracks until release.
+  el.addEventListener("mousedown", (event) => {
+    if (event.target.closest("[data-rpanel-resize]")) {
+      startResizeDrag(event);
+    }
+  });
+
   el.addEventListener("click", (event) => {
     if (event.target.closest("[data-rpanel-close]")) {
       closePanel();
@@ -263,6 +283,14 @@ function renderPanel() {
   const titleIcon = state.mode === "drafts" ? "ap-icon-pen" : "ap-icon-sparkles";
   const titleText = state.mode === "drafts" ? "Drafts" : "Ideas";
   el.innerHTML = html`
+    <div
+      class="app-right-panel__resize"
+      data-rpanel-resize
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize panel"
+      title="Drag to resize"
+    ></div>
     <div class="app-right-panel__head">
       <h2 class="app-right-panel__title">
         <i class="${titleIcon}" aria-hidden="true"></i>
@@ -282,6 +310,59 @@ function renderPanel() {
       ${state.mode === "drafts" ? raw(renderDraftsView()) : raw(renderIdeasView())}
     </div>
   `;
+}
+
+// --- Resize handle -----------------------------------------------------
+
+// Apply a previously-persisted user width (if any) as a CSS custom
+// property on the shell. The grid-template-columns rules in layout.css
+// honor this var when set. Called once at init, before the first
+// renderPanel.
+function applyPersistedPanelWidth() {
+  const shell = document.getElementById("appShell");
+  if (!shell) return;
+  const stored = localStorage.getItem(PANEL_WIDTH_KEY);
+  if (stored) shell.style.setProperty("--app-right-panel-width-runtime", `${stored}px`);
+}
+
+// Drag-to-resize handler bound on the panel root. Tracks mousemove on
+// document (not on the handle) so the cursor can leave the 4px strip
+// without dropping the drag — same pattern as standard split-pane
+// implementations.
+let resizeDragging = false;
+function startResizeDrag(event) {
+  event.preventDefault();
+  resizeDragging = true;
+  document.body.style.cursor = "col-resize";
+  document.body.style.userSelect = "none";
+  document.addEventListener("mousemove", onResizeDrag);
+  document.addEventListener("mouseup", endResizeDrag);
+}
+
+function onResizeDrag(event) {
+  if (!resizeDragging) return;
+  const shell = document.getElementById("appShell");
+  if (!shell) return;
+  const next = Math.round(window.innerWidth - event.clientX);
+  const max = Math.max(PANEL_MIN_WIDTH, window.innerWidth - PANEL_MAX_RIGHT_GAP);
+  const clamped = Math.min(max, Math.max(PANEL_MIN_WIDTH, next));
+  shell.style.setProperty("--app-right-panel-width-runtime", `${clamped}px`);
+}
+
+function endResizeDrag() {
+  if (!resizeDragging) return;
+  resizeDragging = false;
+  document.body.style.cursor = "";
+  document.body.style.userSelect = "";
+  document.removeEventListener("mousemove", onResizeDrag);
+  document.removeEventListener("mouseup", endResizeDrag);
+  // Persist the resolved width so it survives a reload.
+  const shell = document.getElementById("appShell");
+  const w = shell?.style.getPropertyValue("--app-right-panel-width-runtime");
+  if (w) {
+    const parsed = parseInt(w, 10);
+    if (Number.isFinite(parsed)) localStorage.setItem(PANEL_WIDTH_KEY, String(parsed));
+  }
 }
 
 // --- Drafts mode (Lot 21 — rich PostCard feed) -------------------------

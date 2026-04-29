@@ -13,6 +13,30 @@
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
+  /* Resize handle is positioned absolute against this container. */
+  position: relative;
+}
+
+/* Resize handle — 6px-wide vertical strip on the panel's left edge.
+   The actual hit area is wider (12px) for usability ; the visible
+   indicator is the 1px DS border on hover. Cursor switches to
+   col-resize so the affordance is obvious. */
+.app-right-panel__resize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 6px;
+  margin-left: -3px;
+  z-index: 1;
+  cursor: col-resize;
+  background: transparent;
+  transition: background-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.app-right-panel__resize:hover,
+.app-right-panel__resize:active {
+  background: var(--ref-color-electric-blue-100);
 }
 
 .app-right-panel[hidden] {
