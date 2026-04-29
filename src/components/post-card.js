@@ -22,7 +22,8 @@
 import { html, raw } from "../utils.js?v=20";
 
 export function renderPostCard(post, opts = {}) {
-  const editing = opts.editing === true;
+  const inlineEdit = opts.inlineEdit === true;
+  const editing = inlineEdit && opts.editing === true;
 
   const statusPill = (() => {
     // "needs_fixes" surfaces above the card via renderPostErrors — no header pill.
@@ -129,15 +130,19 @@ export function renderPostCard(post, opts = {}) {
       </div>
 
       <div class="posts__row-actions" aria-label="Post actions">
-        <button
-          type="button"
-          class="ap-icon-button stroked"
-          aria-label="Edit post"
-          title="Edit"
-          data-post-edit="${post.id}"
-        >
-          <i class="ap-icon-pen"></i>
-        </button>
+        ${raw(
+          inlineEdit
+            ? `<button
+                type="button"
+                class="ap-icon-button stroked"
+                aria-label="Edit post"
+                title="Edit"
+                data-post-edit="${post.id}"
+              >
+                <i class="ap-icon-pen"></i>
+              </button>`
+            : "",
+        )}
         <button
           type="button"
           class="ap-icon-button stroked"
