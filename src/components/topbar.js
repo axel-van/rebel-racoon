@@ -141,17 +141,17 @@ export function initTopbar() {
 // Context + Drafts + Ideas pills — only on /session/:id. Order matches
 // handoff App.jsx: Context first, then Drafts (with badge), then Ideas.
 //
-// Lot 18 DS conformance (revised 2026-04-29) — the DS only ships
-// `.stroked` paired with grey/blue/red (no orange). For ON/OFF toggle
-// pills, the DS-native pattern is:
-//   • OFF → `.ap-button stroked grey` (outlined, neutral)
-//   • ON  → `.ap-button secondary <orange|blue>` (tinted-fill in the
-//           accent color — color-XX-10 bg + color-XX-100 text/icon)
-// This contrast (outlined vs tinted-fill) reads as a clear pressed
-// state, and inherits proper hover/active/focus feedback from the DS.
-// The Drafts count badge stays `.ap-counter normal orange`. The
-// Context pill is the only composed exception (2-line inner label) —
-// it starts from `.ap-button stroked grey` and adds a thin
+// Lot 18 DS conformance (revised 2026-04-29 #2) — Drafts + Ideas are
+// ghost buttons in their resting state per user feedback. The DS ships
+// `.ghost` in grey/blue/green/red (no orange), so the ON/OFF mapping is:
+//   • OFF → `.ap-button ghost grey` (transparent, no border)
+//   • ON  → `.ap-button secondary <orange|blue>` (tinted-fill — color-XX-10
+//           bg + color-XX-100 text/icon)
+// The transparent → tinted-fill transition reads cleanly as the pressed
+// state, and all hover/active/focus feedback is inherited from the DS.
+// The Drafts count badge stays `.ap-counter normal orange`. The Context
+// pill is the only composed exception (2-line inner label) — it starts
+// from `.ap-button stroked grey` and adds a thin
 // `.app-topbar__context-pill` wrapper for the layout overrides.
 function renderSessionPills(rpMode, draftCount) {
   const ctx = currentContext();
@@ -159,8 +159,8 @@ function renderSessionPills(rpMode, draftCount) {
   const ctxLabel = ctx ? ctx.name : "Set context…";
   const ctxStateClass = ctx ? "" : "is-empty";
   const draftBadge = draftCount > 0 ? `<span class="ap-counter normal orange">${draftCount}</span>` : "";
-  const draftsClass = rpMode === "drafts" ? "secondary orange" : "stroked grey";
-  const ideasClass = rpMode === "ideas" ? "secondary blue" : "stroked grey";
+  const draftsClass = rpMode === "drafts" ? "secondary orange" : "ghost grey";
+  const ideasClass = rpMode === "ideas" ? "secondary blue" : "ghost grey";
   return `
     <button
       type="button"
