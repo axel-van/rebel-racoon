@@ -181,9 +181,17 @@
   margin: 0 var(--ref-spacing-xs) var(--ref-spacing-xs);
 }
 
+/* The DS .ap-input-group ships at 36px tall — too chunky for the
+   sidebar's ~28px row rhythm. Force the wrapper + inner <input> to a
+   compact 28px and shrink the leading icon to match. */
+.app-sidebar__search.ap-input-group {
+  height: 28px;
+  padding: 0 var(--ref-spacing-xxs);
+}
+
 .app-sidebar__search .ap-input,
 .app-sidebar__search input {
-  height: 32px;
+  height: 26px;
   font-size: var(--ref-font-size-sm);
 }
 
@@ -302,12 +310,22 @@
 
 /* Pin/unpin trigger — hidden by default, revealed on row hover (or when
    the row already holds keyboard focus). On hover the dot makes way for
-   the pin button so the row chrome stays compact. */
+   the pin button so the row chrome stays compact.
+
+   The pin element carries the DS .ap-icon-button class for hover/active
+   styling, but DS forces min/max width+height to 36px via
+   --comp-icon-button-width. We need 24×24 to match the dot slot it
+   replaces (otherwise the row grows taller on hover) — override the
+   min/max as well as the width/height. */
 .app-sidebar__row-pin {
   display: none;
-  flex: 0 0 auto;
+  flex: 0 0 24px;
   width: 24px;
   height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  max-width: 24px;
+  max-height: 24px;
   align-items: center;
   justify-content: center;
   border-radius: var(--app-radius-button-sm);
