@@ -16,7 +16,7 @@
 
 import { postUserTurn, postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=23";
 import { getIdeas } from "./library.js?v=23";
-import { addPostDraft } from "./posts-store.js?v=22";
+import { addPostDraft } from "./posts-store.js?v=23";
 
 const CHANNEL_META = {
   linkedin: { icon: "ap-icon-linkedin", label: "LinkedIn" },

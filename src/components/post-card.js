@@ -22,6 +22,8 @@
 import { html, raw } from "../utils.js?v=20";
 
 export function renderPostCard(post, opts = {}) {
+  const editing = opts.editing === true;
+
   const statusPill = (() => {
     // "needs_fixes" surfaces above the card via renderPostErrors — no header pill.
     // "scheduled" surfaces above the card via renderPostScheduled — no header pill.
@@ -36,6 +38,28 @@ export function renderPostCard(post, opts = {}) {
     : "";
 
   const cta = post.cta ? `<p class="posts__card-cta">${post.cta}</p>` : "";
+
+  // In edit mode the entire body (paragraphs + hashtags + CTA) collapses
+  // into one contenteditable region. Hashtags lose their styling during
+  // edit and re-style on save (per spec).
+  const editorBody = editing
+    ? `<div
+        class="posts__card-body posts__card-editor"
+        contenteditable="true"
+        role="textbox"
+        aria-multiline="true"
+        aria-label="Edit post body"
+        data-post-editor="${post.id}"
+        spellcheck="true"
+      >${escapeForEditor(serializeBody(post))}</div>`
+    : `<div class="posts__card-body">${bodyParagraphs} ${hashtags} ${cta}</div>`;
+
+  const editActions = editing
+    ? `<div class="posts__card-edit-actions">
+        <button type="button" class="ap-button ghost grey" data-post-edit-cancel="${post.id}">Cancel</button>
+        <button type="button" class="ap-button primary orange" data-post-edit-save="${post.id}">Save</button>
+      </div>`
+    : "";
 
   const stats = post.stats || {};
   const engagement =
@@ -63,7 +87,7 @@ export function renderPostCard(post, opts = {}) {
     <article class="posts__row ${opts.focusPost === post.id ? "is-focused" : ""}" data-post-id="${post.id}">
       <div class="posts__card-wrap">
         ${raw(renderPostErrors(post))} ${raw(renderPostScheduled(post))}
-        <article class="ap-card posts__card">
+        <article class="ap-card posts__card ${editing ? "is-editing" : ""}">
           <header class="posts__card-header">
             <div class="posts__card-avatar" aria-hidden="true">${post.author.initials}</div>
             <div class="posts__card-author">
@@ -77,9 +101,7 @@ export function renderPostCard(post, opts = {}) {
             <div class="posts__card-status">${raw(statusPill)}</div>
           </header>
 
-          <div class="posts__card-body">${raw(bodyParagraphs)} ${raw(hashtags)} ${raw(cta)}</div>
-
-          ${raw(imageBlock)} ${raw(engagement)}
+          ${raw(editorBody)} ${raw(editActions)} ${raw(imageBlock)} ${raw(engagement)}
 
           <!-- Footer is a non-interactive LinkedIn-style preview of the
                engagement bar — decoration only, not real actions (see
@@ -107,6 +129,15 @@ export function renderPostCard(post, opts = {}) {
       </div>
 
       <div class="posts__row-actions" aria-label="Post actions">
+        <button
+          type="button"
+          class="ap-icon-button stroked"
+          aria-label="Edit post"
+          title="Edit"
+          data-post-edit="${post.id}"
+        >
+          <i class="ap-icon-pen"></i>
+        </button>
         <button
           type="button"
           class="ap-icon-button stroked"
@@ -157,6 +188,25 @@ function renderPostErrors(post) {
       </div>
     </div>
   `;
+}
+
+// Build the editable plain-text body shown inside the contenteditable
+// region. Paragraphs separated by blank lines ; hashtags rendered as
+// "#tag #tag2" on their own line ; CTA on its own line.
+// The reverse parse lives in right-panel.js (parseEditorBody).
+function serializeBody(post) {
+  const parts = [];
+  if (post.text?.length) parts.push(post.text.join("\n\n"));
+  if (post.hashtags?.length) parts.push(post.hashtags.map((h) => `#${h}`).join(" "));
+  if (post.cta) parts.push(post.cta);
+  return parts.join("\n\n");
+}
+
+// HTML-escape user content before injecting into the contenteditable.
+// innerText reads back the literal characters, so escaping here avoids
+// the editor rendering injected markup on first paint.
+function escapeForEditor(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 // "scheduled" notice — sits above the card with the scheduled-for label.

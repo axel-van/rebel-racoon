@@ -317,6 +317,33 @@
   margin-left: var(--ref-spacing-xxs);
 }
 
+/* ---------- Inline edit state ---------- */
+
+.posts__card-editor {
+  /* Negative margin keeps the editor's outer footprint identical to the
+     read-mode body so the card doesn't jump in size on enter. */
+  margin: calc(var(--ref-spacing-xs) * -1);
+  padding: var(--ref-spacing-xs);
+  white-space: pre-wrap;
+  border: 1px solid var(--ref-color-electric-blue-100);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
+  outline: none;
+  cursor: text;
+  min-height: calc(var(--ref-font-line-height-md) * 3);
+}
+
+.posts__card-editor:focus-visible {
+  /* Border + tinted background already convey focus state. */
+  outline: none;
+}
+
+.posts__card-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ref-spacing-xxs);
+}
+
 .posts__card-footer {
   display: flex;
   justify-content: space-between;

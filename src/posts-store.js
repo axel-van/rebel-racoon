@@ -69,6 +69,18 @@ export function attachImageToDraft(sessionId, postId, imageUrl) {
   }
 }
 
+// Patch a post's editable body fields (text[], hashtags[], cta).
+// Undefined keys are left unchanged.
+export function updatePostContent(sessionId, postId, partial) {
+  const posts = getPosts(sessionId);
+  const post = posts.find((p) => p.id === postId);
+  if (!post) return;
+  if (partial.text !== undefined) post.text = partial.text;
+  if (partial.hashtags !== undefined) post.hashtags = partial.hashtags;
+  if (partial.cta !== undefined) post.cta = partial.cta;
+  notify(sessionId);
+}
+
 // Remove a post from the session's drafts list. Returns the removed post
 // (or null) so the caller can offer Undo via re-insertion.
 export function removePost(sessionId, postId) {

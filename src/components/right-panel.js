@@ -8,9 +8,10 @@ import {
   addPostDraft,
   removePost,
   insertPost,
+  updatePostContent,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=22";
-import { renderPostCard } from "./post-card.js?v=20";
+} from "../posts-store.js?v=23";
+import { renderPostCard } from "./post-card.js?v=21";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
@@ -67,6 +68,11 @@ let ideasQuery = "";
 // open/close cycles so the user keeps their filter when they re-open.
 let draftsFilter = "all";
 let draftsNetwork = "all";
+
+// Inline-edit state — only one card in edit mode at a time. Snapshot of
+// the original body fields powers the "no spurious save" check.
+let editingPostId = null;
+let editingOriginal = null; // { text:[], hashtags:[], cta:"" } | null
 
 let state = {
   mode: null, // 'drafts' | 'ideas' | null
@@ -172,6 +178,16 @@ export function init() {
   });
 
   el.addEventListener("click", (event) => {
+    // Auto-commit any in-progress edit when the click lands outside the
+    // current editor + its Save/Cancel buttons. Falls through so a click
+    // on another card's pen icon (or any other action) still routes
+    // through the normal handlers below.
+    if (editingPostId) {
+      const insideCurrent = event.target.closest(
+        `[data-post-editor="${editingPostId}"], [data-post-edit-save="${editingPostId}"], [data-post-edit-cancel="${editingPostId}"]`,
+      );
+      if (!insideCurrent) commitEdit(editingPostId);
+    }
     if (event.target.closest("[data-rpanel-close]")) {
       closePanel();
       return;
@@ -195,6 +211,21 @@ export function init() {
       return;
     }
     // Per-card actions on a single draft (Lot 21 rich PostCard).
+    const editBtn = event.target.closest("[data-post-edit]");
+    if (editBtn) {
+      startEdit(editBtn.dataset.postEdit);
+      return;
+    }
+    const saveBtn = event.target.closest("[data-post-edit-save]");
+    if (saveBtn) {
+      commitEdit(saveBtn.dataset.postEditSave);
+      return;
+    }
+    const cancelBtn = event.target.closest("[data-post-edit-cancel]");
+    if (cancelBtn) {
+      cancelEdit(cancelBtn.dataset.postEditCancel);
+      return;
+    }
     const rewriteBtn = event.target.closest("[data-post-rewrite]");
     if (rewriteBtn) {
       onPostRewrite(rewriteBtn.dataset.postRewrite);
@@ -239,6 +270,29 @@ export function init() {
       ideasQuery = event.target.value || "";
       renderIdeasBodyOnly();
     }
+  });
+  // Inline-edit shortcuts — scoped to the active editor.
+  // Esc cancels (and stops propagation so the document handler below
+  // doesn't also close the panel) ; Cmd/Ctrl+Enter saves.
+  el.addEventListener("keydown", (event) => {
+    if (!editingPostId) return;
+    const editor = event.target.closest(`[data-post-editor="${editingPostId}"]`);
+    if (!editor) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      cancelEdit(editingPostId);
+    } else if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      commitEdit(editingPostId);
+    }
+  });
+  // Focus moving outside the panel (Tab, click on topbar, etc.) commits
+  // any in-progress edit.
+  document.addEventListener("focusin", (event) => {
+    if (!editingPostId) return;
+    if (el.contains(event.target)) return;
+    commitEdit(editingPostId);
   });
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && state.mode) {
@@ -478,7 +532,7 @@ function renderDraftsView() {
   `;
 
   const feed = filtered.length
-    ? filtered.map((p) => renderPostCard(p)).join("")
+    ? filtered.map((p) => renderPostCard(p, { editing: p.id === editingPostId })).join("")
     : `<div class="app-right-panel__empty">
          <div class="app-right-panel__empty-title">No drafts match this filter</div>
          <div class="app-right-panel__empty-sub">Try another filter, or clear the current one.</div>
@@ -569,6 +623,99 @@ function onPostImage(postId) {
   // generate-image-modal.open(postId, onUse) — onUse re-renders the
   // panel so the new image lands in the card immediately.
   openGenerateImageModal(postId, () => renderPanel());
+}
+
+// --- Inline edit handlers ---------------------------------------------
+
+function startEdit(postId) {
+  if (editingPostId === postId) return;
+  if (editingPostId) commitEdit(editingPostId); // auto-save the previous card
+  const sid = activeSessionId();
+  const post = sid && getPosts(sid).find((p) => p.id === postId);
+  if (!post) return;
+  editingPostId = postId;
+  editingOriginal = {
+    text: [...(post.text || [])],
+    hashtags: [...(post.hashtags || [])],
+    cta: post.cta || "",
+  };
+  renderPanel();
+  // Focus the editor and place caret at the end of the body.
+  requestAnimationFrame(() => {
+    const editor = document.querySelector(`[data-post-editor="${postId}"]`);
+    if (!editor) return;
+    editor.focus();
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  });
+}
+
+function commitEdit(postId) {
+  if (editingPostId !== postId) return;
+  const sid = activeSessionId();
+  const editor = document.querySelector(`[data-post-editor="${postId}"]`);
+  if (!sid || !editor) {
+    editingPostId = null;
+    editingOriginal = null;
+    renderPanel();
+    return;
+  }
+  const parsed = parseEditorBody(editor.innerText);
+  const original = editingOriginal;
+  const changed =
+    JSON.stringify(parsed.text) !== JSON.stringify(original.text) ||
+    JSON.stringify(parsed.hashtags) !== JSON.stringify(original.hashtags) ||
+    parsed.cta !== original.cta;
+  editingPostId = null;
+  editingOriginal = null;
+  if (changed) {
+    updatePostContent(sid, postId, parsed); // notify → posts-store subscriber re-renders
+  } else {
+    renderPanel(); // no notify path → render manually
+  }
+}
+
+function cancelEdit(postId) {
+  if (editingPostId !== postId) return;
+  editingPostId = null;
+  editingOriginal = null;
+  renderPanel();
+}
+
+// Reverse of post-card.js#serializeBody — split blank-line-separated
+// blocks, find the hashtag-only block (if any), extract its tags into
+// the hashtags array. Everything else becomes text[]. CTA folds into
+// text[] as a regular paragraph (accepted per spec — only hashtags need
+// to re-style on save).
+//
+// The hashtag block can sit anywhere among the blocks (typically last
+// in social-post convention, but a CTA may follow it). Scanning all
+// blocks instead of walking from the end keeps the round-trip robust
+// against either ordering.
+function parseEditorBody(raw) {
+  const blocks = String(raw)
+    .replace(/\r/g, "")
+    .trim()
+    .split(/\n\s*\n+/)
+    .map((b) => b.trim())
+    .filter(Boolean);
+  const text = [];
+  let hashtags = [];
+  for (const block of blocks) {
+    if (!hashtags.length && /^(#\S+\s*)+$/.test(block)) {
+      hashtags = block
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((t) => t.replace(/^#/, ""));
+    } else {
+      text.push(block);
+    }
+  }
+  return { text, hashtags, cta: "" };
 }
 
 // --- Ideas mode -------------------------------------------------------
