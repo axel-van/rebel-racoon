@@ -1,5 +1,11 @@
 # Archie
 
+## Origine du projet
+
+Ce repo est un fork autonome issu d'une branche du projet [probable-spoon](https://github.com/mbousendorfer/probable-spoon).
+Forké le 2026-04-29 à partir de la branche `audit/studio-handoff-2026-04-28`. Les deux projets ont depuis
+des trajectoires indépendantes.
+
 Interactive prototype for Archie — navigable click-through of the wireframe in [Figma](https://www.figma.com/design/ulQHaMfPhTQwNLib6IDOez/Archie?node-id=0-1) built on the Agorapulse V2 Design System.
 
 ## Run it
