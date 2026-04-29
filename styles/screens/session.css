@@ -730,6 +730,127 @@
   background: var(--ref-color-grey-10);
 }
 
+/* ---------- Composer pills (Zone 1 — attachments above the input) ---- */
+
+/* Container — wraps multiple attachments side by side, hidden when empty
+   so it doesn't add a phantom gap above the input. */
+.composer-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+  padding: 0 var(--ref-spacing-xxs);
+  margin-bottom: var(--ref-spacing-xxs);
+}
+
+.composer-pills[hidden] {
+  display: none;
+}
+
+/* Compound pill — extends .ap-tag.blue with extra inline gap and a tighter
+   close button. The .ap-tag styling (background, border-radius, padding,
+   font) all comes from the DS — this rule only handles flex layout for the
+   compound children (icon + label + state indicator + close).
+   Max-width keeps the label from pushing the pill past the composer width
+   on long filenames; the .composer-pill__label below handles ellipsis. */
+.composer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  max-width: 100%;
+}
+
+.composer-pill__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 28ch;
+}
+
+.composer-pill__status {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
+}
+
+/* Override the default .ap-icon-button square geometry so the close button
+   shrinks to fit inside the pill height. The DS ships --comp-icon-button
+   tokens at 36px which would blow the pill out — pinning to 18×18 keeps
+   the visual rhythm of an inline tag affordance. */
+.composer-pill .ap-icon-button.composer-pill__close {
+  width: 18px;
+  min-width: 18px;
+  height: 18px;
+  min-height: 18px;
+  padding: 0;
+}
+
+.composer-pill .ap-icon-button.composer-pill__close > i {
+  font-size: var(--sys-icon-css-xs);
+}
+
+/* The "N nouvelles idées" tag-in-tag — clickable, opens the Ideas panel.
+   The DS .ap-tag.green.mini provides bg + text color + radius + padding;
+   we just opt out of the parent .ap-tag's `> button` close-button sizing
+   (20×20 square) which would otherwise squash this action button. */
+.composer-pill > button.composer-pill__ideas {
+  width: auto;
+  max-width: none;
+  height: var(--comp-tag-mini-height);
+  max-height: var(--comp-tag-mini-height);
+  border-radius: var(--comp-tag-border-radius);
+  cursor: pointer;
+}
+
+/* ---------- Composer context (Zone 2 — dropdown above the textarea) -- */
+
+.composer-context {
+  position: relative;
+}
+
+/* Trigger is a button.ap-tag.tagOrange — DS already styles the background
+   and radius; we add the dot + caret children and a small focus-visible
+   ring so it reads as interactive. */
+.composer-context__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  cursor: pointer;
+}
+
+.composer-context__trigger > i {
+  font-size: var(--sys-icon-css-xs);
+}
+
+.composer-context__dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--ref-border-radius-sm);
+  flex-shrink: 0;
+}
+
+/* Position the .ap-action-dropdown above the trigger. The DS ships the
+   skin (bg, padding, shadow) — only the floating placement is local. */
+.composer-context__menu {
+  position: absolute;
+  bottom: calc(100% + var(--ref-spacing-xxs));
+  left: 0;
+  min-width: 240px;
+  z-index: var(--app-z-overlay);
+}
+
+.composer-context__menu[hidden] {
+  display: none;
+}
+
+/* ---------- Composer bottom action bar left slot (Zone 3) ----------- */
+
+.composer-actions__left {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
 /* ---------- Workspace ---------- */
 
 .session__workspace {

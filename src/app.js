@@ -1,7 +1,7 @@
 import { route, setAfterRender, start } from "./router.js?v=21";
 import { initTopbar, renderTopbar } from "./components/topbar.js?v=34";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=27";
-import { init as initRightPanel } from "./components/right-panel.js?v=34";
+import { init as initRightPanel } from "./components/right-panel.js?v=35";
 import { init as initContextDrawer } from "./components/context-drawer.js?v=20";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=20";
 import { initUserModeChip } from "./components/user-mode-chip.js?v=20";
@@ -13,7 +13,7 @@ import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=21";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=20";
 import { renderDashboard } from "./screens/dashboard.js?v=42";
-import { renderSession } from "./screens/session.js?v=60";
+import { renderSession } from "./screens/session.js?v=63";
 import { renderSources } from "./screens/sources.js?v=25";
 import { renderIdeas } from "./screens/ideas.js?v=24";
 import { renderContexts } from "./screens/contexts.js?v=25";

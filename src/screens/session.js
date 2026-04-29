@@ -20,9 +20,9 @@ import {
   subscribe,
   submitAssistantChoice,
 } from "../assistant.js?v=23";
-import { getSources, getIdeas, subscribe as subscribeLibrary, addSource } from "../library.js?v=23";
+import { getSources, getIdeas, subscribe as subscribeLibrary } from "../library.js?v=23";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
-import { getPosts, attachImageToDraft, subscribe as subscribePostsStore } from "../posts-store.js?v=22";
+import { getPosts, attachImageToDraft, subscribe as subscribePostsStore } from "../posts-store.js?v=23";
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
 import { startContextBuildFlow, startActionPickerFlow, handleActionPick } from "../start-flow.js?v=23";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
@@ -40,14 +40,25 @@ import { open as openGenerateImageModal } from "../components/generate-image-mod
 import { open as openSettingsDrawer } from "../components/settings-drawer.js?v=22";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=21";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=21";
-import { classifyFile, startFileUpload } from "../sources-stream.js?v=25";
+import {
+  classifyFile,
+  startFileUpload,
+  cancelUpload,
+  removeSources,
+  getSources as getStreamSources,
+  getUploads as getStreamUploads,
+  subscribeSources,
+  subscribeUploads,
+  pushScriptedSource,
+  completeScriptedSource,
+} from "../sources-stream.js?v=25";
 import { showToast } from "../components/toast.js?v=20";
 import {
   openDrafts as openDraftsPanel,
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=34";
+} from "../components/right-panel.js?v=35";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=20";
 
@@ -226,6 +237,7 @@ function renderAssistantPanel(session, attachedContext) {
               <span class="session__composer-thinking-spinner" aria-hidden="true"></span>
               <span class="session__composer-thinking-text" data-thinking-text>0s · 1 credit</span>
             </div>
+            <div class="composer-pills" data-composer-pills hidden></div>
             <div class="session__composer-input">
               <textarea
                 class="session__composer-input-field"
@@ -234,28 +246,118 @@ function renderAssistantPanel(session, attachedContext) {
                 rows="3"
               ></textarea>
               <div class="session__composer-actions">
-                <div class="assistant-attach">
+                <div class="composer-actions__left">
                   <button
                     type="button"
                     class="ap-icon-button transparent"
-                    aria-label="Attach a source"
-                    data-assistant-attach-toggle
+                    aria-label="Joindre un fichier"
+                    data-composer-attach
                   >
-                    <i class="ap-icon-plus"></i>
+                    <i class="ap-icon-paper-clip"></i>
                   </button>
-                  <div class="assistant-attach__menu" data-assistant-attach-menu hidden>
-                    <button type="button" class="assistant-attach__item" data-add-source="pdf">
-                      <i class="ap-icon-file--pdf"></i>
-                      <span>Add PDF</span>
+                  <input type="file" data-composer-file-input hidden />
+                  <div class="assistant-attach">
+                    <button
+                      type="button"
+                      class="ap-icon-button transparent"
+                      aria-label="Attach a source"
+                      data-assistant-attach-toggle
+                    >
+                      <i class="ap-icon-plus"></i>
                     </button>
-                    <button type="button" class="assistant-attach__item" data-add-source="video">
-                      <i class="ap-icon-file--video"></i>
-                      <span>Add video</span>
+                    <div
+                      class="ap-action-dropdown assistant-attach__menu"
+                      data-assistant-attach-menu
+                      hidden
+                      role="menu"
+                    >
+                      <button type="button" class="ap-action-dropdown-item" data-add-source="pdf" role="menuitem">
+                        <i class="ap-icon-file--pdf"></i>
+                        <div class="ap-action-dropdown-item-text">
+                          <div class="ap-action-dropdown-item-label">Add PDF</div>
+                        </div>
+                      </button>
+                      <button type="button" class="ap-action-dropdown-item" data-add-source="video" role="menuitem">
+                        <i class="ap-icon-file--video"></i>
+                        <div class="ap-action-dropdown-item-text">
+                          <div class="ap-action-dropdown-item-label">Add video</div>
+                        </div>
+                      </button>
+                      <button type="button" class="ap-action-dropdown-item" data-add-source="url" role="menuitem">
+                        <i class="ap-icon-link"></i>
+                        <div class="ap-action-dropdown-item-text">
+                          <div class="ap-action-dropdown-item-label">Add URL</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="composer-context" data-composer-context>
+                    <button
+                      type="button"
+                      class="ap-tag tagOrange composer-context__trigger"
+                      data-context-trigger
+                      aria-haspopup="menu"
+                      aria-expanded="false"
+                    >
+                      <span
+                        class="composer-context__dot"
+                        data-context-dot
+                        style="background: var(--ref-color-orange-100);"
+                      ></span>
+                      <span data-context-label>Agorapulse · Studio launch</span>
+                      <i class="ap-icon-arrow-down"></i>
                     </button>
-                    <button type="button" class="assistant-attach__item" data-add-source="url">
-                      <i class="ap-icon-link"></i>
-                      <span>Add URL</span>
-                    </button>
+                    <div class="ap-action-dropdown composer-context__menu" data-context-menu hidden role="menu">
+                      <button
+                        type="button"
+                        class="ap-action-dropdown-item"
+                        data-context-id="agp-studio"
+                        data-context-color="orange-100"
+                        data-context-name="Agorapulse · Studio launch"
+                        role="menuitem"
+                      >
+                        <span class="composer-context__dot" style="background: var(--ref-color-orange-100);"></span>
+                        <div class="ap-action-dropdown-item-text">
+                          <div class="ap-action-dropdown-item-label">Agorapulse · Studio launch</div>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        class="ap-action-dropdown-item"
+                        data-context-id="agp-brand"
+                        data-context-color="electric-blue-100"
+                        data-context-name="Agorapulse · Brand awareness"
+                        role="menuitem"
+                      >
+                        <span
+                          class="composer-context__dot"
+                          style="background: var(--ref-color-electric-blue-100);"
+                        ></span>
+                        <div class="ap-action-dropdown-item-text">
+                          <div class="ap-action-dropdown-item-label">Agorapulse · Brand awareness</div>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        class="ap-action-dropdown-item"
+                        data-context-id="perso-side"
+                        data-context-color="green-100"
+                        data-context-name="Personal · Side project"
+                        role="menuitem"
+                      >
+                        <span class="composer-context__dot" style="background: var(--ref-color-green-100);"></span>
+                        <div class="ap-action-dropdown-item-text">
+                          <div class="ap-action-dropdown-item-label">Personal · Side project</div>
+                        </div>
+                      </button>
+                      <div class="ap-action-dropdown-divider"></div>
+                      <button type="button" class="ap-action-dropdown-item" data-context-id="__new__" role="menuitem">
+                        <i class="ap-icon-plus"></i>
+                        <div class="ap-action-dropdown-item-text">
+                          <div class="ap-action-dropdown-item-label">Nouveau contexte…</div>
+                        </div>
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <button
@@ -782,6 +884,9 @@ function wireAssistantPanel(root, session, attachedContext) {
       const newAside = tmp.firstElementChild;
       if (newAside && aside) {
         screen.replaceChild(newAside, aside);
+        // The new aside ships with an empty pills container — paint
+        // any persisted pills for this session into it.
+        paintComposerPills(root, session.id);
       }
     }
     rebindWizardKeyboardIfActive();
@@ -796,6 +901,14 @@ function wireAssistantPanel(root, session, attachedContext) {
   // No subscriber to wire today; the right-panel Drafts surface listens to
   // assistant.subscribe directly for batch updates.
   const offPosts = () => {};
+
+  // Composer pills — repaint on every sources/uploads stream change. The
+  // analyzing → ready transition crosses the upload→source boundary on the
+  // 📎 path, so subscribing to both catches every state flip. Initial
+  // paint covers pills carried over by composerStates from a prior render.
+  const offComposerSources = subscribeSources(() => paintComposerPills(root, session.id));
+  const offComposerUploads = subscribeUploads(() => paintComposerPills(root, session.id));
+  paintComposerPills(root, session.id);
 
   // Apply idea focus on initial render if ?focusIdea= is present.
   applyIdeaFocus(root);
@@ -909,6 +1022,8 @@ function wireAssistantPanel(root, session, attachedContext) {
     offPosts();
     offWizard();
     offInlineQuestion();
+    offComposerSources();
+    offComposerUploads();
     stopThinkingTimer();
   };
 }
@@ -1129,6 +1244,167 @@ function renderDraftTurn(message) {
       </button>
     </div>
   `;
+}
+
+// ─── Composer state — pills + context selection (per-session) ────────────
+//
+// Pills track in-flight + recently-completed attachments shown in the input
+// zone above the textarea. They survive thread/right-panel/wizard re-renders
+// because they live in this module-level Map keyed by sessionId rather than
+// inside bindSession's local scope. Each pill points to either a backing
+// upload (started via the 📎 button → real File) or a source (started via
+// the + menu items → fake scripted source for the proto). Display state is
+// re-derived from the global sources-stream snapshot on every paint.
+const COMPOSER_CONTEXTS = [
+  { id: "agp-studio", label: "Agorapulse · Studio launch", color: "orange-100" },
+  { id: "agp-brand", label: "Agorapulse · Brand awareness", color: "electric-blue-100" },
+  { id: "perso-side", label: "Personal · Side project", color: "green-100" },
+];
+const composerStates = new Map();
+function getComposerState(sessionId) {
+  let s = composerStates.get(sessionId);
+  if (!s) {
+    s = { contextId: COMPOSER_CONTEXTS[0].id, pills: new Map() };
+    composerStates.set(sessionId, s);
+  }
+  return s;
+}
+
+const PILL_KIND_ICON = {
+  PDF: "ap-icon-file--pdf",
+  Word: "ap-icon-file--text",
+  Text: "ap-icon-file--text",
+  Video: "ap-icon-file--video",
+  Audio: "ap-icon-file",
+  Image: "ap-icon-file--image",
+  URL: "ap-icon-link",
+};
+
+const SCRIPTED_KINDS = {
+  pdf: { kindLabel: "PDF", filename: "Roadmap Q3.pdf" },
+  video: { kindLabel: "Video", filename: "Demo replay.mp4" },
+  url: { kindLabel: "URL", filename: "blog.example.com/post" },
+};
+
+// Resolves a pill against the live sources/uploads stream. Returns null
+// when the backing record is gone (cancelled upload / removed source) so
+// the caller can drop the pill from local state.
+function resolveComposerPill(pill) {
+  if (pill.uploadId) {
+    const upload = getStreamUploads().find((u) => u.id === pill.uploadId);
+    if (!upload || upload.status === "cancelled") return null;
+    if (upload.sourceId) {
+      const src = getStreamSources().find((s) => s.id === upload.sourceId);
+      if (src) {
+        return {
+          state: src.status === "Processed" ? "ready" : "analyzing",
+          filename: src.filename,
+          kindLabel: src.kind,
+          ideaCount: src.ideaCount,
+          sourceId: src.id,
+        };
+      }
+    }
+    return {
+      state: "analyzing",
+      filename: upload.name,
+      kindLabel: upload.kind,
+      ideaCount: 0,
+      sourceId: null,
+    };
+  }
+  if (pill.sourceId) {
+    const src = getStreamSources().find((s) => s.id === pill.sourceId);
+    if (!src) return null;
+    return {
+      state: src.status === "Processed" ? "ready" : "analyzing",
+      filename: src.filename,
+      kindLabel: src.kind,
+      ideaCount: src.ideaCount,
+      sourceId: src.id,
+    };
+  }
+  return null;
+}
+
+function renderComposerPill(pillId, snap) {
+  const icon = PILL_KIND_ICON[snap.kindLabel] || "ap-icon-file";
+  let indicator = "";
+  if (snap.state === "analyzing") {
+    indicator = `
+      <span class="ap-loader blue size-16" aria-hidden="true">
+        <svg><circle></circle><circle></circle></svg>
+      </span>
+      <span class="composer-pill__status">Analyse en cours…</span>`;
+  } else if (snap.state === "ready") {
+    const ideas = snap.ideaCount === 1 ? "1 nouvelle idée" : `${snap.ideaCount} nouvelles idées`;
+    indicator = `
+      <button type="button" class="ap-tag green mini composer-pill__ideas" data-open-source-ideas="${snap.sourceId}">
+        <span>${escapeHtml(ideas)}</span>
+      </button>`;
+  } else if (snap.state === "error") {
+    indicator = `<span class="ap-tag red mini">Échec</span>`;
+  }
+  const closeAttr = snap.state === "analyzing" ? `data-pill-cancel="${pillId}"` : `data-pill-remove="${pillId}"`;
+  const closeAria = snap.state === "analyzing" ? "Annuler" : "Retirer";
+  return `
+    <span class="ap-tag blue composer-pill" data-pill-id="${pillId}" data-pill-state="${snap.state}"${snap.sourceId ? ` data-source-id="${snap.sourceId}"` : ""}>
+      <i class="${icon}"></i>
+      <span class="composer-pill__label">${escapeHtml(snap.filename)}</span>
+      ${indicator}
+      <button type="button" class="ap-icon-button transparent composer-pill__close" ${closeAttr} aria-label="${closeAria}">
+        <i class="ap-icon-close"></i>
+      </button>
+    </span>`;
+}
+
+function paintComposerPills(root, sessionId) {
+  const container = root.querySelector("[data-composer-pills]");
+  if (!container) return;
+  const state = getComposerState(sessionId);
+  const html = [];
+  for (const [pillId, pill] of state.pills) {
+    const snap = resolveComposerPill(pill);
+    if (!snap) {
+      state.pills.delete(pillId);
+      continue;
+    }
+    html.push(renderComposerPill(pillId, snap));
+  }
+  container.innerHTML = html.join("");
+  container.hidden = html.length === 0;
+}
+
+function startPillFromFile(root, sessionId, file) {
+  const cls = classifyFile(file);
+  if (!cls.ok) {
+    showToast(cls.reason);
+    return;
+  }
+  const uploadId = startFileUpload(file, cls);
+  getComposerState(sessionId).pills.set(`pill-${uploadId}`, { uploadId });
+  // pushScriptedSource / startFileUpload notify subscribers BEFORE we
+  // record the pill — paint once explicitly so the analyzing state
+  // shows up on the same tick as the click.
+  paintComposerPills(root, sessionId);
+}
+
+function startPillFromKind(root, sessionId, kind) {
+  const spec = SCRIPTED_KINDS[kind];
+  if (!spec) return;
+  const sourceId = pushScriptedSource({ filename: spec.filename, kind: spec.kindLabel });
+  getComposerState(sessionId).pills.set(`pill-${sourceId}`, { sourceId });
+  paintComposerPills(root, sessionId);
+  // Match the brief — flip to ready in ~3-5s with 3-8 ideas.
+  const delay = 3000 + Math.floor(Math.random() * 2000);
+  const ideaCount = 3 + Math.floor(Math.random() * 6);
+  setTimeout(() => {
+    completeScriptedSource(sourceId, {
+      signal: "Medium signal",
+      signalColor: "tagOrange",
+      ideaCount,
+    });
+  }, delay);
 }
 
 function bindSession(root, session) {
@@ -1500,16 +1776,109 @@ function bindSession(root, session) {
 
       const addSrc = event.target.closest("[data-add-source]");
       if (addSrc) {
-        // library.js owns the full flow: source card → Processing → Processed
-        // + extracted ideas + "Source intake" system notice + AI wrap-up turn.
-        addSource(session.id, addSrc.dataset.addSource);
+        // Composer + menu items drop a non-blocking pill in the input
+        // zone (analyzing → ready) — same UX as the 📎 button.
+        startPillFromKind(root, session.id, addSrc.dataset.addSource);
         closeAttachMenu();
         return;
+      }
+
+      // 📎 — trigger the hidden native file picker. Result handled by the
+      // input's change listener below.
+      if (event.target.closest("[data-composer-attach]")) {
+        const fileInput = root.querySelector("[data-composer-file-input]");
+        if (fileInput) fileInput.click();
+        return;
+      }
+
+      const pillCancelBtn = event.target.closest("[data-pill-cancel]");
+      if (pillCancelBtn) {
+        event.preventDefault();
+        const pillId = pillCancelBtn.dataset.pillCancel;
+        const pill = getComposerState(session.id).pills.get(pillId);
+        if (pill?.uploadId) cancelUpload(pill.uploadId);
+        if (pill?.sourceId) removeSources([pill.sourceId]);
+        paintComposerPills(root, session.id);
+        return;
+      }
+      const pillRemoveBtn = event.target.closest("[data-pill-remove]");
+      if (pillRemoveBtn) {
+        event.preventDefault();
+        const pillId = pillRemoveBtn.dataset.pillRemove;
+        const pill = getComposerState(session.id).pills.get(pillId);
+        if (pill?.sourceId) removeSources([pill.sourceId]);
+        paintComposerPills(root, session.id);
+        return;
+      }
+      const openIdeasBtn = event.target.closest("[data-open-source-ideas]");
+      if (openIdeasBtn) {
+        event.preventDefault();
+        // Placeholder — the proto wires a `console.log` here. Future:
+        // route to the right-panel Ideas surface focused on the source.
+        // eslint-disable-next-line no-console
+        console.log("open ideas", openIdeasBtn.dataset.openSourceIdeas);
+        return;
+      }
+
+      // Composer context dropdown — toggle, select, or close on outside click.
+      if (event.target.closest("[data-context-trigger]")) {
+        event.preventDefault();
+        const menu = root.querySelector("[data-context-menu]");
+        const trigger = root.querySelector("[data-context-trigger]");
+        if (menu) menu.hidden = !menu.hidden;
+        if (trigger) trigger.setAttribute("aria-expanded", menu && !menu.hidden ? "true" : "false");
+        return;
+      }
+      const ctxItem = event.target.closest("[data-context-id]");
+      if (ctxItem) {
+        event.preventDefault();
+        const id = ctxItem.dataset.contextId;
+        if (id === "__new__") {
+          // eslint-disable-next-line no-console
+          console.log("create context");
+        } else {
+          const composerSt = getComposerState(session.id);
+          composerSt.contextId = id;
+          const trigger = root.querySelector("[data-context-trigger]");
+          const dot = trigger?.querySelector("[data-context-dot]");
+          const label = trigger?.querySelector("[data-context-label]");
+          const color = ctxItem.dataset.contextColor;
+          const name = ctxItem.dataset.contextName;
+          if (dot && color) dot.setAttribute("style", `background: var(--ref-color-${color});`);
+          if (label && name) label.textContent = name;
+        }
+        const menu = root.querySelector("[data-context-menu]");
+        const trigger = root.querySelector("[data-context-trigger]");
+        if (menu) menu.hidden = true;
+        if (trigger) trigger.setAttribute("aria-expanded", "false");
+        return;
+      }
+      if (!event.target.closest(".composer-context")) {
+        const menu = root.querySelector("[data-context-menu]");
+        const trigger = root.querySelector("[data-context-trigger]");
+        if (menu && !menu.hidden) {
+          menu.hidden = true;
+          if (trigger) trigger.setAttribute("aria-expanded", "false");
+        }
       }
 
       // Click outside the attach menu → close it
       if (!event.target.closest(".assistant-attach")) {
         closeAttachMenu();
+      }
+    },
+    { signal },
+  );
+
+  // 📎 — file picker change handler. Reset value so re-picking the same
+  // file fires change again.
+  root.addEventListener(
+    "change",
+    (event) => {
+      if (event.target.matches("[data-composer-file-input]")) {
+        const file = event.target.files?.[0];
+        if (file) startPillFromFile(root, session.id, file);
+        event.target.value = "";
       }
     },
     { signal },
