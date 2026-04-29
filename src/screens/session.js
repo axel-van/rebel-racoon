@@ -55,6 +55,7 @@ import {
 import { showToast } from "../components/toast.js?v=20";
 import {
   openDrafts as openDraftsPanel,
+  openIdeas as openIdeasPanel,
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
@@ -1329,32 +1330,41 @@ function resolveComposerPill(pill) {
 
 function renderComposerPill(pillId, snap) {
   const icon = PILL_KIND_ICON[snap.kindLabel] || "ap-icon-file";
-  let indicator = "";
+  // Every state-specific indicator lives OUTSIDE the blue pill, as a
+  // sibling within the .composer-pill-group. The blue pill itself stays
+  // minimal (icon + label + ×) so the eye reads "this file" → "what's
+  // happening with it" left-to-right.
+  let siblingIndicator = "";
   if (snap.state === "analyzing") {
-    indicator = `
-      <span class="ap-loader blue size-16" aria-hidden="true">
-        <svg><circle></circle><circle></circle></svg>
-      </span>
-      <span class="composer-pill__status">Analyse en cours…</span>`;
+    siblingIndicator = `
+      <span class="composer-pill__indicator analyzing" aria-live="polite">
+        <span class="ap-loader blue size-16" aria-hidden="true">
+          <svg><circle></circle><circle></circle></svg>
+        </span>
+        <span class="composer-pill__status">Analyse en cours…</span>
+      </span>`;
   } else if (snap.state === "ready") {
     const ideas = snap.ideaCount === 1 ? "1 nouvelle idée" : `${snap.ideaCount} nouvelles idées`;
-    indicator = `
-      <button type="button" class="ap-tag green mini composer-pill__ideas" data-open-source-ideas="${snap.sourceId}">
+    siblingIndicator = `
+      <button type="button" class="ap-tag green mini composer-pill__ideas" data-open-source-ideas="${snap.sourceId}" data-idea-count="${snap.ideaCount}">
         <span>${escapeHtml(ideas)}</span>
       </button>`;
   } else if (snap.state === "error") {
-    indicator = `<span class="ap-tag red mini">Échec</span>`;
+    siblingIndicator = `<span class="ap-tag red mini">Échec</span>`;
   }
   const closeAttr = snap.state === "analyzing" ? `data-pill-cancel="${pillId}"` : `data-pill-remove="${pillId}"`;
   const closeAria = snap.state === "analyzing" ? "Annuler" : "Retirer";
+
   return `
-    <span class="ap-tag blue composer-pill" data-pill-id="${pillId}" data-pill-state="${snap.state}"${snap.sourceId ? ` data-source-id="${snap.sourceId}"` : ""}>
-      <i class="${icon}"></i>
-      <span class="composer-pill__label">${escapeHtml(snap.filename)}</span>
-      ${indicator}
-      <button type="button" class="ap-icon-button transparent composer-pill__close" ${closeAttr} aria-label="${closeAria}">
-        <i class="ap-icon-close"></i>
-      </button>
+    <span class="composer-pill-group">
+      <span class="ap-tag blue composer-pill" data-pill-id="${pillId}" data-pill-state="${snap.state}"${snap.sourceId ? ` data-source-id="${snap.sourceId}"` : ""}>
+        <i class="${icon}"></i>
+        <span class="composer-pill__label">${escapeHtml(snap.filename)}</span>
+        <button type="button" class="ap-icon-button transparent composer-pill__close" ${closeAttr} aria-label="${closeAria}">
+          <i class="ap-icon-close"></i>
+        </button>
+      </span>
+      ${siblingIndicator}
     </span>`;
 }
 
@@ -1813,10 +1823,25 @@ function bindSession(root, session) {
       const openIdeasBtn = event.target.closest("[data-open-source-ideas]");
       if (openIdeasBtn) {
         event.preventDefault();
-        // Placeholder — the proto wires a `console.log` here. Future:
-        // route to the right-panel Ideas surface focused on the source.
-        // eslint-disable-next-line no-console
-        console.log("open ideas", openIdeasBtn.dataset.openSourceIdeas);
+        const ideaCount = parseInt(openIdeasBtn.dataset.ideaCount || "0", 10) || 3;
+        openIdeasPanel();
+        // Wait for the panel to mount + render its idea cards, then pulse
+        // the first N as the "ideas extracted from this source" highlight.
+        // The proto's mock IDEAS aren't linked to user-uploaded sources,
+        // so we approximate the connection by pulsing the top N cards
+        // (matching the source's ideaCount).
+        requestAnimationFrame(() => {
+          const panel = document.querySelector(".app-right-panel");
+          if (!panel) return;
+          const cards = Array.from(panel.querySelectorAll(".rpanel-ideas__card")).slice(0, ideaCount);
+          cards.forEach((c) => {
+            c.classList.remove("is-focused");
+            // Force reflow so the pulse animation restarts on repeated clicks.
+            void c.offsetWidth;
+            c.classList.add("is-focused");
+          });
+          if (cards[0]) cards[0].scrollIntoView({ behavior: "smooth", block: "center" });
+        });
         return;
       }
 

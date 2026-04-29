@@ -746,6 +746,15 @@
   display: none;
 }
 
+/* Pill+tag pair: keeps the blue source pill and its sibling green
+   "N nouvelles idées" tag together when the row wraps. Without this
+   wrapper, flex-wrap could orphan the green tag onto the next line. */
+.composer-pill-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
 /* Compound pill — extends .ap-tag.blue with extra inline gap and a tighter
    close button. The .ap-tag styling (background, border-radius, padding,
    font) all comes from the DS — this rule only handles flex layout for the
@@ -764,6 +773,16 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 28ch;
+}
+
+/* Sibling chip for the analyzing state — flat (no bg/border), just the
+   DS loader + caption-styled status text. Lives next to the blue pill
+   in the same .composer-pill-group flex row so it tracks visually with
+   the file it describes. */
+.composer-pill__indicator.analyzing {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
 }
 
 .composer-pill__status {
@@ -788,16 +807,10 @@
   font-size: var(--sys-icon-css-xs);
 }
 
-/* The "N nouvelles idées" tag-in-tag — clickable, opens the Ideas panel.
-   The DS .ap-tag.green.mini provides bg + text color + radius + padding;
-   we just opt out of the parent .ap-tag's `> button` close-button sizing
-   (20×20 square) which would otherwise squash this action button. */
-.composer-pill > button.composer-pill__ideas {
-  width: auto;
-  max-width: none;
-  height: var(--comp-tag-mini-height);
-  max-height: var(--comp-tag-mini-height);
-  border-radius: var(--comp-tag-border-radius);
+/* The "N nouvelles idées" tag — sibling of the blue pill, opens the
+   Ideas panel + pulses the matching cards on click. The DS
+   .ap-tag.green.mini ships the visuals; we just enable cursor. */
+.composer-pill__ideas {
   cursor: pointer;
 }
 
