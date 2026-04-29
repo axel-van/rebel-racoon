@@ -172,31 +172,13 @@
 }
 
 /* ── Search input ─────────────────────────────────────────────────────
-   Shares chrome with the workspace search input via .ap-input-group.
-   The wrapper class contributes the sidebar-specific margins, plus a
-   compact size override (the DS default sits ~40px tall, too chunky
-   for the sidebar's ~28-32px row rhythm). */
+   Wraps a stock DS .ap-input-group. The wrapper provides the sidebar-
+   side padding so the inner .ap-input-group can keep its DS-native
+   width: 100% without overflowing the sidebar (a margin on the input
+   group itself would let it grow past the sidebar's right edge). */
 
 .app-sidebar__search {
-  margin: 0 var(--ref-spacing-xs) var(--ref-spacing-xs);
-}
-
-/* The DS .ap-input-group ships at 36px tall — too chunky for the
-   sidebar's ~28px row rhythm. Force the wrapper + inner <input> to a
-   compact 28px and shrink the leading icon to match. */
-.app-sidebar__search.ap-input-group {
-  height: 28px;
-  padding: 0 var(--ref-spacing-xxs);
-}
-
-.app-sidebar__search .ap-input,
-.app-sidebar__search input {
-  height: 26px;
-  font-size: var(--ref-font-size-sm);
-}
-
-.app-sidebar__search .ap-icon-search {
-  font-size: var(--sys-icon-css-sm);
+  padding: 0 var(--ref-spacing-xs) var(--ref-spacing-xs);
 }
 
 /* ── List ───────────────────────────────────────────────────────────── */

@@ -380,16 +380,18 @@ function renderSearchInput() {
   if (isNewUser() || recentSessions.length === 0) return "";
   const value = sidebarSearchQuery ? sidebarSearchQuery.replace(/"/g, "&quot;") : "";
   return `
-    <div class="app-sidebar__search ap-input-group">
-      <i class="ap-icon-search" aria-hidden="true"></i>
-      <input
-        type="text"
-        class="ap-input"
-        placeholder="Search…"
-        value="${value}"
-        data-sidebar-search
-        aria-label="Search conversations"
-      />
+    <div class="app-sidebar__search">
+      <div class="ap-input-group">
+        <i class="ap-icon-search" aria-hidden="true"></i>
+        <input
+          type="text"
+          class="ap-input"
+          placeholder="Search…"
+          value="${value}"
+          data-sidebar-search
+          aria-label="Search conversations"
+        />
+      </div>
     </div>
   `;
 }
