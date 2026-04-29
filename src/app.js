@@ -1,6 +1,6 @@
 import { route, setAfterRender, start } from "./router.js?v=21";
 import { initTopbar, renderTopbar } from "./components/topbar.js?v=35";
-import { initSidebar, renderSidebar } from "./components/sidebar.js?v=27";
+import { initSidebar, renderSidebar } from "./components/sidebar.js?v=28";
 import { init as initRightPanel } from "./components/right-panel.js?v=36";
 import { init as initContextDrawer } from "./components/context-drawer.js?v=20";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=20";

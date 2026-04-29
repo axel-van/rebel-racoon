@@ -8,4 +8,10 @@ export const FLAGS = Object.freeze([
       "right panel (introduit par le commit 1e3076e — feat(rpanel): " +
       "inline editing for draft posts).",
   },
+  {
+    id: "sidebarIdeas",
+    label: "Ideas in left sidebar",
+    default: true,
+    hides: "Ideas entry in the left sidebar navigation.",
+  },
 ]);
