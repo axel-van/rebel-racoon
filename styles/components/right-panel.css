@@ -520,46 +520,25 @@
 }
 
 /* ── Drafts mode (Lot 21) — rich PostCard feed ──────────────────────
-   Chrome only ; the .posts__* classes from posts.css drive the cards
-   themselves. The filter strip lives at the top of the panel body and
-   uses .ap-button ghost grey / secondary blue chips with a counter
-   badge. Below sits a flat feed of cards (no network grouping). */
+   2-col layout: filter rail on the left, feed on the right. Chrome
+   only ; the .posts__* classes from posts.css drive the rail items
+   AND the cards themselves. */
 
-.rpanel-drafts__filters {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
-  border-bottom: 1px solid var(--app-border-soft);
-}
-
-.rpanel-drafts__filter-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxxs);
-}
-
-/* Compact chips — the DS button defaults to 36px height which is too
-   chunky in this filter row. Pull it down to 28px and tighten the
-   horizontal padding. */
-.ap-button.rpanel-drafts__chip {
-  height: 28px;
+.rpanel-drafts {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  gap: var(--ref-spacing-lg);
+  padding: var(--ref-spacing-md);
+  align-items: start;
+  height: 100%;
   min-height: 0;
-  padding: 0 var(--ref-spacing-xs);
-  font-size: var(--ref-font-size-xs);
-}
-
-.ap-button.rpanel-drafts__chip i {
-  font-size: var(--sys-icon-css-sm);
+  overflow-y: auto;
 }
 
 .rpanel-drafts__feed {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-md);
-  padding: var(--ref-spacing-md);
-  overflow-y: auto;
-  min-height: 0;
+  /* posts.css already handles vertical stack + spacing via .posts__feed.
+     Just guard the min-width so cards inside don't blow out the grid. */
+  min-width: 0;
 }
 
 /* Inside the right-panel feed, .posts__row already lays out as a flex

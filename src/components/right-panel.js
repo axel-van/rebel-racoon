@@ -323,24 +323,12 @@ function rebindPostsStore() {
   }
 }
 
-const DRAFTS_FILTERS = [
-  { id: "all", label: "All posts", icon: "ap-icon-megaphone" },
-  { id: "needs_fixes", label: "Needs fixes", icon: "ap-icon-error" },
-  { id: "scheduled", label: "Scheduled", icon: "ap-icon-calendar" },
-];
-
-const DRAFTS_NETWORKS = [
-  { id: "all", label: "All networks" },
-  { id: "linkedin", label: "LinkedIn" },
-  { id: "twitter", label: "X" },
-];
-
 function renderDraftsView() {
   const sid = activeSessionId();
   const allPosts = sid ? getPosts(sid) : [];
   if (!allPosts.length) return renderDraftsEmpty();
 
-  // Counts per status / per network — drive the filter chip badges.
+  // Counts per status / per network — drive the filter rail badges.
   const filterCounts = {
     all: allPosts.length,
     needs_fixes: allPosts.filter((p) => p.status === "needs_fixes").length,
@@ -360,38 +348,53 @@ function renderDraftsView() {
     return true;
   });
 
-  const filterChips = DRAFTS_FILTERS.map((f) => {
-    const active = draftsFilter === f.id;
-    const count = filterCounts[f.id] ?? 0;
+  // Filter rail — vertical, sticky, on the left. Reuses the same
+  // `.posts__rail / .posts__filter` chrome the source-prototype Posts
+  // tab used (driven by posts.css) so we don't reinvent the styling.
+  const filterRow = (id, icon, label, count) => {
+    const active = draftsFilter === id;
     return `
       <button
         type="button"
-        class="ap-button ${active ? "secondary blue" : "ghost grey"} rpanel-drafts__chip"
-        data-rpanel-drafts-filter="${f.id}"
-        aria-pressed="${active}"
+        class="posts__filter ${active ? "is-active" : ""}"
+        data-rpanel-drafts-filter="${id}"
       >
-        <i class="${f.icon}" aria-hidden="true"></i>
-        <span>${f.label}</span>
-        <span class="ap-counter normal grey">${count}</span>
+        <i class="${icon}"></i>
+        <span class="posts__filter-label">${label}</span>
+        <span class="posts__filter-count">${count}</span>
       </button>
     `;
-  }).join("");
+  };
 
-  const networkChips = DRAFTS_NETWORKS.map((n) => {
-    const active = draftsNetwork === n.id;
-    const count = networkCounts[n.id] ?? 0;
+  const networkRow = (id, label, count) => {
+    const active = draftsNetwork === id;
     return `
       <button
         type="button"
-        class="ap-button ${active ? "secondary blue" : "ghost grey"} rpanel-drafts__chip"
-        data-rpanel-drafts-network="${n.id}"
-        aria-pressed="${active}"
+        class="posts__filter posts__filter--network ${active ? "is-active" : ""}"
+        data-rpanel-drafts-network="${id}"
       >
-        <span>${n.label}</span>
-        <span class="ap-counter normal grey">${count}</span>
+        <span class="posts__filter-label">${label}</span>
+        <span class="posts__filter-count">${count}</span>
       </button>
     `;
-  }).join("");
+  };
+
+  const rail = `
+    <aside class="posts__rail" aria-label="Post filters">
+      <div class="posts__rail-group">
+        ${filterRow("all", "ap-icon-megaphone", "All posts", filterCounts.all)}
+        ${filterRow("needs_fixes", "ap-icon-error", "Needs fixes", filterCounts.needs_fixes)}
+        ${filterRow("scheduled", "ap-icon-calendar", "Scheduled", filterCounts.scheduled)}
+      </div>
+      <div class="posts__rail-group">
+        <h3 class="posts__rail-heading">Network</h3>
+        ${networkRow("all", "All", networkCounts.all)}
+        ${networkRow("linkedin", "LinkedIn", networkCounts.linkedin)}
+        ${networkRow("twitter", "X", networkCounts.twitter)}
+      </div>
+    </aside>
+  `;
 
   const feed = filtered.length
     ? filtered.map((p) => renderPostCard(p)).join("")
@@ -402,11 +405,8 @@ function renderDraftsView() {
 
   return html`
     <div class="rpanel-drafts">
-      <div class="rpanel-drafts__filters">
-        <div class="rpanel-drafts__filter-group" role="group" aria-label="Filter by status">${raw(filterChips)}</div>
-        <div class="rpanel-drafts__filter-group" role="group" aria-label="Filter by network">${raw(networkChips)}</div>
-      </div>
-      <div class="rpanel-drafts__feed">${raw(feed)}</div>
+      ${raw(rail)}
+      <div class="posts__feed rpanel-drafts__feed">${raw(feed)}</div>
     </div>
   `;
 }
