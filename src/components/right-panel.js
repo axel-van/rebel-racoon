@@ -2,12 +2,22 @@ import { html, raw } from "../utils.js?v=20";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=23";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=25";
 import { isNewUser } from "../user-mode.js?v=20";
+import { getPath } from "../router.js?v=20";
+import {
+  getPosts,
+  addPostDraft,
+  removePost,
+  insertPost,
+  subscribe as subscribePostsStore,
+} from "../posts-store.js?v=22";
+import { renderPostCard } from "./post-card.js?v=20";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
 import { open as openScheduleModal } from "./schedule-modal.js?v=20";
+import { open as openGenerateImageModal } from "./generate-image-modal.js?v=20";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
 // the session workspace, hosts two modes:
@@ -26,35 +36,6 @@ import { open as openScheduleModal } from "./schedule-modal.js?v=20";
 
 const PANEL_ID = "rightPanel";
 
-const NETWORK_ICON = {
-  linkedin: "ap-icon-linkedin",
-  twitter: "ap-icon-twitter-official",
-  x: "ap-icon-twitter-official",
-  instagram: "ap-icon-instagram",
-  facebook: "ap-icon-facebook",
-  tiktok: "ap-icon-tiktok-official",
-};
-
-const NETWORK_NAME = {
-  linkedin: "LinkedIn",
-  twitter: "X",
-  x: "X",
-  instagram: "Instagram",
-  facebook: "Facebook",
-  tiktok: "TikTok",
-};
-
-// Per-batch character limits — handoff §3.3 + mocks/socialAccounts. Used to
-// show the live counter under each BatchCard. Conservative defaults.
-const NETWORK_LIMIT = {
-  linkedin: 3000,
-  twitter: 280,
-  x: 280,
-  instagram: 2200,
-  facebook: 63206,
-  tiktok: 2200,
-};
-
 // Idea kind taxonomy — handoff Ideas filter rail (§ 2.6). Order is the order
 // shown in the chip row. The .kind selector also drives the per-kind tag
 // color so each kind reads at a glance.
@@ -72,6 +53,13 @@ const IDEA_KINDS = [
 let ideasFilter = "all";
 let ideasQuery = "";
 
+// Drafts-mode local UI state — Lot 21 rich-card view. Filter strip at the
+// top of the panel head drives both axes : status (all / needs_fixes /
+// scheduled) and network (all / linkedin / twitter). Survives across
+// open/close cycles so the user keeps their filter when they re-open.
+let draftsFilter = "all";
+let draftsNetwork = "all";
+
 let state = {
   mode: null, // 'drafts' | 'ideas' | null
   activeBatchRef: null, // { sessionId, messageId } | null
@@ -79,7 +67,6 @@ let state = {
 // Per-batch selection — Map<"sessionId::messageId", Set<postId>>. Defaults
 // to all-selected the first time a batch is shown so the Schedule CTA is
 // active out of the box.
-const selectedByBatch = new Map();
 // Subscriber bookkeeping — when the panel is open in Drafts mode we listen
 // to the assistant thread so the panel re-renders when the batch's status
 // changes (e.g. additional drafts land).
@@ -174,10 +161,43 @@ export function init() {
       setMode(tab.dataset.rpanelTab);
       return;
     }
-    // BatchCard checkbox toggle.
-    const toggle = event.target.closest("[data-rpanel-toggle]");
-    if (toggle) {
-      togglePostSelection(toggle.dataset.rpanelToggle);
+    // Drafts filter chips — status + network.
+    const filterChip = event.target.closest("[data-rpanel-drafts-filter]");
+    if (filterChip) {
+      draftsFilter = filterChip.dataset.rpanelDraftsFilter;
+      renderPanel();
+      return;
+    }
+    const networkChip = event.target.closest("[data-rpanel-drafts-network]");
+    if (networkChip) {
+      draftsNetwork = networkChip.dataset.rpanelDraftsNetwork;
+      renderPanel();
+      return;
+    }
+    // Per-card actions on a single draft (Lot 21 rich PostCard).
+    const rewriteBtn = event.target.closest("[data-post-rewrite]");
+    if (rewriteBtn) {
+      onPostRewrite(rewriteBtn.dataset.postRewrite);
+      return;
+    }
+    const scheduleBtn = event.target.closest("[data-post-schedule]");
+    if (scheduleBtn) {
+      onPostSchedule(scheduleBtn.dataset.postSchedule);
+      return;
+    }
+    const dupBtn = event.target.closest("[data-post-duplicate]");
+    if (dupBtn) {
+      onPostDuplicate(dupBtn.dataset.postDuplicate);
+      return;
+    }
+    const delBtn = event.target.closest("[data-post-delete]");
+    if (delBtn) {
+      onPostDelete(delBtn.dataset.postDelete);
+      return;
+    }
+    const imageBtn = event.target.closest("[data-post-image]");
+    if (imageBtn) {
+      onPostImage(imageBtn.dataset.postImage);
       return;
     }
     // Ideas filter chip.
@@ -193,10 +213,6 @@ export function init() {
       useIdea(useBtn.dataset.rpanelUseIdea);
       return;
     }
-    // Schedule N posts — wired in Lot 9 once the modal exists.
-    if (event.target.closest("[data-rpanel-schedule]")) {
-      onSchedulePlaceholder();
-    }
   });
   el.addEventListener("input", (event) => {
     if (event.target.matches("[data-rpanel-ideas-search]")) {
@@ -209,86 +225,13 @@ export function init() {
       closePanel();
     }
   });
-}
 
-// --- Selection state ----------------------------------------------------
-
-function batchKey(ref) {
-  return `${ref.sessionId}::${ref.messageId}`;
-}
-
-function getSelected(ref, drafts) {
-  const key = batchKey(ref);
-  if (!selectedByBatch.has(key)) {
-    // Default: every draft selected so the Schedule CTA is enabled out
-    // of the box (matches handoff defaultBatch behavior).
-    selectedByBatch.set(key, new Set(drafts.map((d) => d.id)));
-  }
-  return selectedByBatch.get(key);
-}
-
-function togglePostSelection(postId) {
-  if (!state.activeBatchRef) return;
-  const message = lookupActiveMessage();
-  if (!message?.drafts) return;
-  const set = getSelected(state.activeBatchRef, message.drafts);
-  if (set.has(postId)) set.delete(postId);
-  else set.add(postId);
-  renderPanel();
-}
-
-// Per-batch scheduling state — Map<batchKey, Set<postId>>. Drafts in this
-// set render with .is-scheduled (faded + green check pill). Lot 9 keeps the
-// flow purely client-side per Q9; a real Publishing API call is the
-// replacement point inside onSchedulePlaceholder.
-const scheduledByBatch = new Map();
-
-function getScheduled(ref) {
-  const key = batchKey(ref);
-  if (!scheduledByBatch.has(key)) scheduledByBatch.set(key, new Set());
-  return scheduledByBatch.get(key);
-}
-
-// Open the Schedule modal pinned to the active batch's selected drafts.
-// Mock end-to-end (Q9): on confirm, the modal flags those posts as
-// scheduled and we re-render. Replacement point #5: post the slots to the
-// real Publishing API instead of mutating local state.
-function onSchedulePlaceholder() {
-  if (!state.activeBatchRef) return;
-  const message = lookupActiveMessage();
-  if (!message?.drafts) return;
-  const selected = getSelected(state.activeBatchRef, message.drafts);
-  const scheduled = getScheduled(state.activeBatchRef);
-  const candidates = message.drafts.filter((d) => selected.has(d.id) && !scheduled.has(d.id));
-  if (candidates.length === 0) {
-    import("./toast.js?v=20").then(({ showToast }) =>
-      showToast("Nothing to schedule — every selected draft is already scheduled."),
-    );
-    return;
-  }
-  openScheduleModal({
-    posts: candidates,
-    onConfirm: (_slots) => {
-      const set = getScheduled(state.activeBatchRef);
-      for (const c of candidates) set.add(c.id);
-      renderPanel();
-    },
-  });
-}
-
-function lookupActiveMessage() {
-  if (!state.activeBatchRef) return null;
-  const thread = getThread(state.activeBatchRef.sessionId);
-  return thread.find((m) => m.id === state.activeBatchRef.messageId) || null;
-}
-
-// Resolve the count for the Drafts tab badge — looks up the active batch
-// in whichever session is currently mounted. Returns 0 when no batch is
-// pinned (badge hides). Used by the panel head and indirectly drives the
-// topbar pill badge too.
-function lookupActiveDraftCount() {
-  const message = lookupActiveMessage();
-  return message?.count ?? message?.drafts?.length ?? 0;
+  // Lot 21 — re-render the Drafts view when the active session's posts
+  // store mutates (per-card duplicate / delete / image attach). The
+  // store's subscribe is per-session, so we re-bind whenever the active
+  // session changes via `rebindPostsStore()`.
+  rebindPostsStore();
+  window.addEventListener("hashchange", rebindPostsStore);
 }
 
 function renderPanel() {
@@ -299,7 +242,14 @@ function renderPanel() {
   // sitting underneath it. CSS in components/right-panel.css handles the
   // padding-right transition.
   const shell = document.getElementById("appShell");
-  if (shell) shell.classList.toggle("is-right-panel-open", !!state.mode);
+  if (shell) {
+    shell.classList.toggle("is-right-panel-open", !!state.mode);
+    // Drafts mode renders rich PostCards + per-card action stack — needs
+    // a wider panel column than the compact Ideas list. Toggle a marker
+    // class on the shell ; layout.css picks it up to swap the grid
+    // template column from the default 460px to ~720px.
+    shell.classList.toggle("is-right-panel-wide", state.mode === "drafts");
+  }
   if (!state.mode) {
     el.hidden = true;
     el.innerHTML = "";
@@ -334,125 +284,131 @@ function renderPanel() {
   `;
 }
 
-// --- Drafts mode -------------------------------------------------------
+// --- Drafts mode (Lot 21 — rich PostCard feed) -------------------------
+//
+// Source-of-truth shifted from the per-batch `message.drafts` payload to
+// the durable per-session `posts-store`. Every post the user has ever
+// drafted in a session lives there ; the panel reads + filters that list
+// and renders rich PostCards (cf. `post-card.js`). Per-card actions
+// (rewrite / schedule / duplicate / delete / generate image) wire
+// directly to posts-store mutations + the relevant modals.
+
+// Resolve the active session's id from the URL — the right-panel always
+// reflects the route, regardless of which assistant message kicked it
+// open. Falls back to the activeBatchRef session when the URL doesn't
+// match a session route.
+function activeSessionId() {
+  const m = /^\/session\/([^/?]+)/.exec(getPath());
+  if (m) return m[1];
+  return state.activeBatchRef?.sessionId || null;
+}
+
+// Re-bind posts-store subscription when the active session changes
+// (route hashchange) or on first init. Keeps the panel reactive without
+// leaking listeners across sessions.
+let unsubscribePosts = null;
+let lastPostsSubscriptionSessionId = null;
+function rebindPostsStore() {
+  const sid = activeSessionId();
+  if (sid === lastPostsSubscriptionSessionId) return;
+  if (unsubscribePosts) {
+    unsubscribePosts();
+    unsubscribePosts = null;
+  }
+  lastPostsSubscriptionSessionId = sid;
+  if (sid) {
+    unsubscribePosts = subscribePostsStore(sid, () => {
+      if (state.mode === "drafts") renderPanel();
+    });
+  }
+}
+
+const DRAFTS_FILTERS = [
+  { id: "all", label: "All posts", icon: "ap-icon-megaphone" },
+  { id: "needs_fixes", label: "Needs fixes", icon: "ap-icon-error" },
+  { id: "scheduled", label: "Scheduled", icon: "ap-icon-calendar" },
+];
+
+const DRAFTS_NETWORKS = [
+  { id: "all", label: "All networks" },
+  { id: "linkedin", label: "LinkedIn" },
+  { id: "twitter", label: "X" },
+];
 
 function renderDraftsView() {
-  const message = lookupActiveMessage();
-  if (!message?.drafts?.length) return renderDraftsEmpty();
+  const sid = activeSessionId();
+  const allPosts = sid ? getPosts(sid) : [];
+  if (!allPosts.length) return renderDraftsEmpty();
 
-  const ref = state.activeBatchRef;
-  const selected = getSelected(ref, message.drafts);
-  const scheduled = getScheduled(ref);
-  const total = message.drafts.length;
-  const selectedCount = message.drafts.filter((d) => selected.has(d.id) && !scheduled.has(d.id)).length;
-  const scheduledCount = message.drafts.filter((d) => scheduled.has(d.id)).length;
-  const allScheduled = scheduledCount === total;
+  // Counts per status / per network — drive the filter chip badges.
+  const filterCounts = {
+    all: allPosts.length,
+    needs_fixes: allPosts.filter((p) => p.status === "needs_fixes").length,
+    scheduled: allPosts.filter((p) => p.status === "scheduled").length,
+  };
+  const networkCounts = {
+    all: allPosts.length,
+    linkedin: allPosts.filter((p) => p.network === "linkedin").length,
+    twitter: allPosts.filter((p) => p.network === "twitter").length,
+  };
 
-  // Group by network. Preserves first-occurrence order so LinkedIn-first
-  // sequences read top-to-bottom as the user expects.
-  const groups = new Map();
-  for (const d of message.drafts) {
-    const net = d.network || "linkedin";
-    if (!groups.has(net)) groups.set(net, []);
-    groups.get(net).push(d);
-  }
+  // Apply both filter axes.
+  const filtered = allPosts.filter((p) => {
+    if (draftsFilter === "needs_fixes" && p.status !== "needs_fixes") return false;
+    if (draftsFilter === "scheduled" && p.status !== "scheduled") return false;
+    if (draftsNetwork !== "all" && p.network !== draftsNetwork) return false;
+    return true;
+  });
 
-  const headerSub = [
-    `${total} ${total === 1 ? "post" : "posts"}`,
-    scheduledCount > 0 ? `${scheduledCount} scheduled` : null,
-    selectedCount > 0 && !allScheduled ? `${selectedCount} selected` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const filterChips = DRAFTS_FILTERS.map((f) => {
+    const active = draftsFilter === f.id;
+    const count = filterCounts[f.id] ?? 0;
+    return `
+      <button
+        type="button"
+        class="ap-button ${active ? "secondary blue" : "ghost grey"} rpanel-drafts__chip"
+        data-rpanel-drafts-filter="${f.id}"
+        aria-pressed="${active}"
+      >
+        <i class="${f.icon}" aria-hidden="true"></i>
+        <span>${f.label}</span>
+        <span class="ap-counter normal grey">${count}</span>
+      </button>
+    `;
+  }).join("");
 
-  const groupBlocks = [...groups.entries()]
-    .map(([network, drafts]) => {
-      const cards = drafts.map((d) => renderBatchCard(d, selected.has(d.id), scheduled.has(d.id))).join("");
-      return `
-        <div class="rpanel-drafts__group">
-          <div class="rpanel-drafts__group-head">
-            <i class="${NETWORK_ICON[network] || "ap-icon-megaphone"}" aria-hidden="true"></i>
-            <span class="rpanel-drafts__group-name">${NETWORK_NAME[network] || network}</span>
-            <span class="rpanel-drafts__group-count">${drafts.length}</span>
-          </div>
-          <div class="rpanel-drafts__group-list">${cards}</div>
-        </div>
-      `;
-    })
-    .join("");
+  const networkChips = DRAFTS_NETWORKS.map((n) => {
+    const active = draftsNetwork === n.id;
+    const count = networkCounts[n.id] ?? 0;
+    return `
+      <button
+        type="button"
+        class="ap-button ${active ? "secondary blue" : "ghost grey"} rpanel-drafts__chip"
+        data-rpanel-drafts-network="${n.id}"
+        aria-pressed="${active}"
+      >
+        <span>${n.label}</span>
+        <span class="ap-counter normal grey">${count}</span>
+      </button>
+    `;
+  }).join("");
+
+  const feed = filtered.length
+    ? filtered.map((p) => renderPostCard(p)).join("")
+    : `<div class="app-right-panel__empty">
+         <div class="app-right-panel__empty-title">No drafts match this filter</div>
+         <div class="app-right-panel__empty-sub">Try another filter, or clear the current one.</div>
+       </div>`;
 
   return html`
     <div class="rpanel-drafts">
-      <div class="rpanel-drafts__head">
-        <div class="rpanel-drafts__title-row">
-          <div>
-            <div class="rpanel-drafts__title">Drafts</div>
-            <div class="rpanel-drafts__sub">${headerSub}</div>
-          </div>
-          <button type="button" class="ap-button transparent grey" data-rpanel-regenerate>
-            <i class="ap-icon-refresh"></i>
-            <span>Regenerate</span>
-          </button>
-        </div>
-        ${raw(
-          allScheduled
-            ? `<div class="rpanel-drafts__all-scheduled"><i class="ap-icon-check"></i><span>All posts scheduled</span></div>`
-            : `<button
-                type="button"
-                class="ap-button primary orange rpanel-drafts__schedule"
-                data-rpanel-schedule
-                ${selectedCount === 0 ? "disabled" : ""}
-              >
-                <i class="ap-icon-calendar"></i>
-                <span>Schedule ${selectedCount > 0 ? selectedCount + " " : ""}${selectedCount === 1 ? "post" : "posts"}</span>
-              </button>`,
-        )}
+      <div class="rpanel-drafts__filters">
+        <div class="rpanel-drafts__filter-group" role="group" aria-label="Filter by status">${raw(filterChips)}</div>
+        <div class="rpanel-drafts__filter-group" role="group" aria-label="Filter by network">${raw(networkChips)}</div>
       </div>
-      <div class="rpanel-drafts__body">${raw(groupBlocks)}</div>
+      <div class="rpanel-drafts__feed">${raw(feed)}</div>
     </div>
   `;
-}
-
-function renderBatchCard(draft, isSelected, isScheduled = false) {
-  const network = draft.network || "linkedin";
-  const limit = NETWORK_LIMIT[network] || 3000;
-  const text = draft.preview || (Array.isArray(draft.text) ? draft.text.join("\n\n") : draft.text || "");
-  const len = text.length;
-  const overLimit = len > limit;
-  const scheduledPill = isScheduled
-    ? `<span class="rpanel-batch-card__sched-pill"><i class="ap-icon-check"></i>Scheduled</span>`
-    : "";
-  return `
-    <div class="rpanel-batch-card ${isSelected ? "is-selected" : ""} ${overLimit ? "is-over" : ""} ${isScheduled ? "is-scheduled" : ""}">
-      <div class="rpanel-batch-card__head">
-        <button
-          type="button"
-          class="rpanel-batch-card__check ${isSelected ? "is-on" : ""}"
-          data-rpanel-toggle="${draft.id}"
-          aria-label="${isSelected ? "Deselect" : "Select"} draft"
-          aria-pressed="${isSelected}"
-          ${isScheduled ? "disabled" : ""}
-        >
-          ${isSelected ? '<i class="ap-icon-check"></i>' : ""}
-        </button>
-        <i class="${NETWORK_ICON[network] || "ap-icon-megaphone"} rpanel-batch-card__network" aria-hidden="true"></i>
-        <span class="rpanel-batch-card__network-name">${NETWORK_NAME[network] || network}</span>
-        ${scheduledPill}
-        <span class="rpanel-batch-card__count ${overLimit ? "is-over" : ""}">${len}/${limit}</span>
-      </div>
-      <div class="rpanel-batch-card__body">${escapeHtml(text)}</div>
-    </div>
-  `;
-}
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\n/g, "<br>");
 }
 
 function renderDraftsEmpty() {
@@ -465,6 +421,73 @@ function renderDraftsEmpty() {
       </div>
     </div>
   `;
+}
+
+// --- Per-card action handlers ------------------------------------------
+
+function onPostRewrite(postId) {
+  // The real rewrite-with-AI loop will reuse the assistant pipeline ;
+  // stub for now with a toast so the wiring is visible.
+  import("./toast.js?v=20").then(({ showToast }) => {
+    showToast("Regenerating draft… (mock)", { actionLabel: null });
+  });
+}
+
+function onPostSchedule(postId) {
+  const sid = activeSessionId();
+  if (!sid) return;
+  const post = getPosts(sid).find((p) => p.id === postId);
+  if (!post) return;
+  openScheduleModal({
+    posts: [post],
+    onConfirm: () => {
+      // Mark the post scheduled in-place — the store doesn't have a
+      // dedicated mutator yet, so we mutate the object directly. Future
+      // refactor: posts-store.markScheduled(sid, postId, label).
+      post.status = "scheduled";
+      post.scheduledForLabel = post.scheduledForLabel || "later";
+      renderPanel();
+      import("./toast.js?v=20").then(({ showToast }) => showToast("Draft scheduled"));
+    },
+  });
+}
+
+function onPostDuplicate(postId) {
+  const sid = activeSessionId();
+  if (!sid) return;
+  const post = getPosts(sid).find((p) => p.id === postId);
+  if (!post) return;
+  addPostDraft(sid, {
+    network: post.network,
+    text: [...(post.text || [])],
+    hashtags: [...(post.hashtags || [])],
+  });
+  import("./toast.js?v=20").then(({ showToast }) => showToast("Draft duplicated"));
+}
+
+function onPostDelete(postId) {
+  const sid = activeSessionId();
+  if (!sid) return;
+  const idx = getPosts(sid).findIndex((p) => p.id === postId);
+  if (idx < 0) return;
+  const removed = removePost(sid, postId);
+  if (!removed) return;
+  import("./toast.js?v=20").then(({ showToast }) => {
+    showToast("Draft deleted", {
+      action: {
+        label: "Undo",
+        onClick: () => insertPost(sid, removed, idx),
+      },
+    });
+  });
+}
+
+function onPostImage(postId) {
+  const sid = activeSessionId();
+  if (!sid) return;
+  // generate-image-modal.open(postId, onUse) — onUse re-renders the
+  // panel so the new image lands in the card immediately.
+  openGenerateImageModal(postId, () => renderPanel());
 }
 
 // --- Ideas mode -------------------------------------------------------

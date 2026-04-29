@@ -69,6 +69,25 @@ export function attachImageToDraft(sessionId, postId, imageUrl) {
   }
 }
 
+// Remove a post from the session's drafts list. Returns the removed post
+// (or null) so the caller can offer Undo via re-insertion.
+export function removePost(sessionId, postId) {
+  const posts = getPosts(sessionId);
+  const idx = posts.findIndex((p) => p.id === postId);
+  if (idx < 0) return null;
+  const [removed] = posts.splice(idx, 1);
+  notify(sessionId);
+  return removed;
+}
+
+// Re-insert a previously removed post at its original index (used by the
+// Undo action of the trash-button toast).
+export function insertPost(sessionId, post, index = 0) {
+  const posts = getPosts(sessionId);
+  posts.splice(index, 0, post);
+  notify(sessionId);
+}
+
 export function subscribe(sessionId, fn) {
   if (!subs.has(sessionId)) subs.set(sessionId, new Set());
   subs.get(sessionId).add(fn);

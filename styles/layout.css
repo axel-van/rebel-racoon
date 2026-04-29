@@ -55,12 +55,29 @@
   grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) var(--app-right-panel-width);
 }
 
+/* Drafts mode (Lot 21) — the rich PostCard + action-stack layout needs
+   more horizontal room than the default Ideas list. Wide variant
+   activated via .is-right-panel-wide on the shell. */
+.app-shell.is-right-panel-open.is-right-panel-wide {
+  grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr) 720px;
+}
+
+.app-shell.is-right-panel-open.is-right-panel-wide.is-sidebar-collapsed {
+  grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) 720px;
+}
+
 @media (max-width: 1300px) {
   .app-shell.is-right-panel-open {
     grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr) 420px;
   }
   .app-shell.is-right-panel-open.is-sidebar-collapsed {
     grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) 420px;
+  }
+  .app-shell.is-right-panel-open.is-right-panel-wide {
+    grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr) 600px;
+  }
+  .app-shell.is-right-panel-open.is-right-panel-wide.is-sidebar-collapsed {
+    grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) 600px;
   }
 }
 
@@ -70,6 +87,12 @@
   }
   .app-shell.is-right-panel-open.is-sidebar-collapsed {
     grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) 380px;
+  }
+  .app-shell.is-right-panel-open.is-right-panel-wide {
+    grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr) 520px;
+  }
+  .app-shell.is-right-panel-open.is-right-panel-wide.is-sidebar-collapsed {
+    grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) 520px;
   }
 }
 
