@@ -564,19 +564,10 @@
 
 /* Inside the right-panel feed, .posts__row already lays out as a flex
    row (card + action stack). Drop the leading checkbox slot since
-   selection mode isn't part of this redesign, and let the card-wrap
-   stretch to fill the available width. */
+   selection mode isn't part of this redesign. The card-wrap inherits
+   its `max-width: 500px` cap from posts.css so the card stays
+   readable even when the panel is dragged wider. Free space sits to
+   the right of the action stack. */
 .rpanel-drafts__feed .posts__row-check {
   display: none;
-}
-
-.rpanel-drafts__feed .posts__card-wrap {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-/* Inside posts.css the card-wrap caps at max-width: 500px ; we override
-   that here so the card fills the wider Drafts panel. */
-.rpanel-drafts__feed .posts__card-wrap {
-  max-width: none;
 }
