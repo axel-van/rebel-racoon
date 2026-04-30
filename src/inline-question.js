@@ -32,7 +32,7 @@
 //   onCustom(value)   fn      — called with the free-text answer
 //   onSkip()          fn      — called when Skip / Esc; if omitted, no skip btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=24";
+import { chatTurn } from "./screens/_analyse-common.js?v=25";
 
 const states = new Map(); // sessionId → opts
 const subscribers = new Map(); // sessionId → Set<fn>

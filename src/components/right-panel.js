@@ -14,7 +14,7 @@ import {
 } from "../posts-store.js?v=23";
 import { renderPostCard } from "./post-card.js?v=22";
 import { CONTEXT_QUESTIONS } from "../context-questions.js?v=20";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=31";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=32";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard

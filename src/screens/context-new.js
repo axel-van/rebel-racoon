@@ -10,7 +10,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=35";
 import { navigate } from "../router.js?v=21";
-import { bindWizardKeyboard, unbindWizardKeyboard, renderPicker, chatTurn } from "./_analyse-common.js?v=24";
+import { bindWizardKeyboard, unbindWizardKeyboard, renderPicker, chatTurn } from "./_analyse-common.js?v=25";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=23";
 import * as inlineQuestion from "../inline-question.js?v=21";
 import * as contextBuilder from "../context-builder.js?v=23";

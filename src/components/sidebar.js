@@ -83,7 +83,12 @@ export function initSidebar() {
       // Close any leftover right-panel from the previous chat — drafts /
       // ideas / context-form should never spill into a fresh conversation.
       closeRightPanel();
-      navigate("/session/new");
+      // Mint a unique session id per click so the per-id stores
+      // (assistant thread, composer pills, posts-store, contextBuilder
+      // promptedSessions) all start clean. A literal "/session/new"
+      // would re-land on the same accumulated state — feels like a
+      // toggle to the user.
+      navigate(`/session/new-${Date.now().toString(36)}`);
       return;
     }
     const navItem = event.target.closest("[data-sidebar-nav]");

@@ -358,15 +358,12 @@ export function bindWizardKeyboard(target, { handler, onExit, onCustomSubmit = n
   currentKeyListener = listener;
   document.addEventListener("keydown", listener);
 
-  // Click on the send-icon submits the typed value too.
-  target.addEventListener("click", (event) => {
-    const btn = event.target.closest(`[data-${handler}-custom-submit]`);
-    if (btn && onCustomSubmit) {
-      const input = target.querySelector(`[data-${handler}-custom]`);
-      const value = (input?.value || "").trim();
-      if (value) onCustomSubmit(value);
-    }
-  });
+  // (Send-icon click handling lives at the screen level — session.js and
+  // context-new.js both delegate `[data-{handler}-custom-submit]` clicks
+  // there. Adding it here too caused the click to fire twice: the second
+  // dispatch happened AFTER the first had already swapped the inline-
+  // question state, so the second submit landed on the next step's
+  // picker with the stale text value as input — auto-skipping it.)
 
   // Focus first option on render.
   queueMicrotask(() => {

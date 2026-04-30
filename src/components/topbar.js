@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { getPath, navigate } from "../router.js?v=21";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { toggleSidebar } from "./sidebar.js?v=31";
+import { toggleSidebar } from "./sidebar.js?v=32";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,

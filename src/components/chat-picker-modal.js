@@ -16,7 +16,7 @@ import { recentSessions } from "../mocks.js?v=25";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=20";
 
 const MODAL_ID = "chatPicker";
-import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "../screens/_analyse-common.js?v=24";
+import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "../screens/_analyse-common.js?v=25";
 
 let backdrop, modal, body;
 let initialized = false;
