@@ -7,6 +7,7 @@ import {
   deleteContext,
 } from "../contexts-store.js?v=24";
 import { open as openContextDrawer } from "../components/context-drawer.js?v=20";
+import { open as openConfirmModal } from "../components/confirm-modal.js?v=20";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 
 // Contexts library — standalone page (handoff §2.4).
@@ -205,9 +206,20 @@ function bind(root) {
         );
         return;
       }
-      if (!window.confirm(`Delete "${ctx.name}"?`)) return;
-      deleteContext(ctx.id);
-      import("../components/toast.js?v=20").then(({ showToast }) => showToast("Context deleted"));
+      // FIND-C1: switch from window.confirm to the DS confirm-modal so the
+      // delete prompt is keyboard-accessible, themed, and consistent with
+      // the rest of the prototype (settings drawer Discard, etc.).
+      openConfirmModal({
+        title: "Delete context?",
+        body: `"${ctx.name}" will be removed. Chats currently referencing it will need a new context.`,
+        confirmLabel: "Delete",
+        cancelLabel: "Keep",
+        danger: true,
+        onConfirm: () => {
+          deleteContext(ctx.id);
+          import("../components/toast.js?v=20").then(({ showToast }) => showToast("Context deleted"));
+        },
+      });
     }
   });
 
