@@ -33,6 +33,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { renderSourceCard } from "./source-card.js?v=26";
 import { renderIdeaCard } from "./idea-card.js?v=24";
+import { renderEmptyState } from "./empty-state.js?v=1";
 
 export const contentState = { q: "", sort: "potential" };
 
@@ -66,19 +67,6 @@ function sortIdeas(ideas, sort) {
 }
 
 // ─── Body renderers ───────────────────────────────────────────────────────
-
-function renderEmptyState({ icon, title, body, actionHtml = "" }) {
-  return `
-    <div class="session__empty">
-      <div class="session__empty-icon">
-        <i class="${icon} lg"></i>
-      </div>
-      <h3 class="text-subtitle">${title}</h3>
-      <p class="muted">${body}</p>
-      ${actionHtml ? `<div class="session__empty-action">${actionHtml}</div>` : ""}
-    </div>
-  `;
-}
 
 function renderBySourceBody(sources, allIdeas, search, selection = null) {
   if (sources.length === 0) {
