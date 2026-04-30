@@ -129,24 +129,55 @@ export function subscribe(fn) {
   return () => subs.delete(fn);
 }
 
-// Below this viewport the sidebar (260px) and a 620px right-panel leave
-// the chat column too cramped — auto-collapse the sidebar to free up
-// horizontal real estate. Mirrors the layout.css media query that
-// flattens the drafts filter rail at the same width.
-const NARROW_VIEWPORT_PX = 1440;
+// Floor for the chat column width — under this the assistant panel
+// (composer + thread) reads cramped regardless of viewport. When the
+// content column would land below this floor with the sidebar still
+// expanded, we collapse the sidebar to claw back ~204px (260 − 56).
+// The trigger is content-aware (depends on the live panel width) rather
+// than a hard viewport breakpoint, so a wide Drafts panel collapses
+// the sidebar earlier than a narrow Ideas panel.
+const CHAT_MIN_WIDTH_PX = 500;
 
-// Collapse the sidebar the first time the panel transitions from closed
-// to open on a narrow viewport. We deliberately don't auto-restore on
-// close (the user re-expands manually) — but if the user expands the
-// sidebar mid-session and re-opens the panel, we collapse again. That's
-// the simplest interpretation of "no yo-yo while the panel is open":
-// we only act on the closed → open transition, not on mode swaps.
+// Compute the chat column width that would result if the sidebar were
+// kept expanded. Reads the actual panel size from the DOM (post-layout)
+// so it works for both fit-content and fixed-width grid columns. When
+// the panel is closed, the panel.offsetWidth is 0 and the check
+// effectively short-circuits via the !state.mode guard above.
+function computeChatWidth() {
+  if (typeof window === "undefined") return Infinity;
+  const sidebar = document.getElementById("sidebar");
+  const panel = document.getElementById(PANEL_ID);
+  const sidebarW = sidebar ? sidebar.offsetWidth : 260;
+  const panelW = panel ? panel.offsetWidth : 0;
+  // If the sidebar is already collapsed we use its expanded width
+  // (260) for the projection — we want to know what would happen if
+  // it were re-expanded, not the current state. 56px collapsed +
+  // 204px delta = 260 expanded.
+  const projectedSidebar = sidebarW < 200 ? 260 : sidebarW;
+  return window.innerWidth - projectedSidebar - panelW;
+}
+
+// Collapse the sidebar when the projected chat column would dip below
+// CHAT_MIN_WIDTH_PX. Called on panel-open transitions and on window
+// resize. We deliberately don't auto-restore on close (the user
+// re-expands manually) and we don't run on mode swaps inside an
+// already-open panel — only on the closed → open transition or on
+// genuine viewport changes.
+function maybeCollapseSidebar() {
+  if (!state.mode) return;
+  if (isSidebarCollapsed()) return;
+  if (computeChatWidth() < CHAT_MIN_WIDTH_PX) {
+    setSidebarCollapsed(true);
+  }
+}
+
 function maybeCollapseSidebarOnOpen(prevMode) {
   if (prevMode !== null) return; // mode swap, not an open
-  if (typeof window === "undefined") return;
-  if (window.innerWidth > NARROW_VIEWPORT_PX) return;
-  if (isSidebarCollapsed()) return;
-  setSidebarCollapsed(true);
+  // Defer until after the renderPanel() call that follows in the open*
+  // helper completes. Until the panel's `hidden` flag flips and the grid
+  // column resolves, panel.offsetWidth would still read 0 and our chat-
+  // width math would think there's plenty of room.
+  requestAnimationFrame(maybeCollapseSidebar);
 }
 
 // Open in Drafts mode pinned to a specific assistant message in a session.
@@ -503,6 +534,18 @@ export function init() {
   // session changes via `rebindPostsStore()`.
   rebindPostsStore();
   window.addEventListener("hashchange", rebindPostsStore);
+
+  // Auto-collapse the sidebar when the viewport shrinks enough that the
+  // chat column would dip below CHAT_MIN_WIDTH_PX. rAF-debounced so
+  // continuous drag-resize doesn't thrash setSidebarCollapsed.
+  let resizeRaf = 0;
+  window.addEventListener("resize", () => {
+    if (resizeRaf) return;
+    resizeRaf = requestAnimationFrame(() => {
+      resizeRaf = 0;
+      maybeCollapseSidebar();
+    });
+  });
 }
 
 function renderPanel() {
