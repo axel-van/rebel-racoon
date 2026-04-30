@@ -322,19 +322,12 @@ function renderFootMenu({ collapsed }) {
   `;
 }
 
-// Library nav — 4 items pointing at the dashboard + the standalone Sources /
-// Ideas / Contexts views. The active item is derived from the path prefix so
-// /session/* still highlights "Chats". `count` resolves to a live count from
-// the relevant store so the trailing `.ap-counter` badge stays in sync as
-// the user adds sources / ideas / contexts. Chats has no counter — the
-// recent-conversations list right below already shows the conversations.
+// Library nav — Sources / Ideas / Contexts standalone views. `count`
+// resolves to a live count from the relevant store so the trailing
+// `.ap-counter` badge stays in sync. Chats no longer needs a nav row:
+// the recent-conversations list right below is the canonical entry
+// point for session navigation.
 const NAV = [
-  {
-    path: "/",
-    icon: "ap-icon-double-chat-bubbles",
-    label: "Chats",
-    match: (p) => p === "/" || p.startsWith("/session/"),
-  },
   {
     path: "/sources",
     icon: "ap-icon-folder",
