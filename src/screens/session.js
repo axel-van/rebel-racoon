@@ -386,17 +386,26 @@ function renderAssistantPanel(session, attachedContext) {
 // hasn't sent a first message yet. Mirrors the handoff (Chat.jsx empty state):
 // hero question + sub-line + 2x2 grid of starter cards. Cards click → prefill
 // the composer textarea (handler in bindSession via [data-starter]).
+//
+// FIND-A4: the raw prompts in mocks.chatStarters use a `{{source}}` placeholder
+// that the previous version dropped into the textarea verbatim. Resolve it at
+// render time: if a source is attached we name it; otherwise we fall back to
+// "your source" so the prompt still reads cleanly for first-run users.
 function renderEmptyHero() {
+  const sources = getStreamSources();
+  const firstSource = sources.find((s) => s.status !== "Processing") || sources[0] || null;
+  const sourceLabel = firstSource ? `"${firstSource.filename}"` : "your source";
   const cards = chatStarters
-    .map(
-      (s) => `
-        <button type="button" class="starter-card" data-starter="${s.id}" data-starter-prompt="${escapeHtml(s.prompt)}">
+    .map((s) => {
+      const resolvedPrompt = s.prompt.replace(/\{\{source\}\}/g, sourceLabel);
+      return `
+        <button type="button" class="starter-card" data-starter="${s.id}" data-starter-prompt="${escapeHtml(resolvedPrompt)}">
           <span class="starter-card__icon"><i class="${s.icon}"></i></span>
           <span class="starter-card__title">${s.title}</span>
-          <span class="starter-card__prompt">${s.prompt}</span>
+          <span class="starter-card__prompt">${escapeHtml(resolvedPrompt)}</span>
         </button>
-      `,
-    )
+      `;
+    })
     .join("");
   return html`
     <div class="empty-chat" data-empty-chat>
@@ -1755,8 +1764,10 @@ function bindSession(root, session) {
       }
 
       // Empty-state starter card click — pre-fills the composer textarea
-      // with the starter's prompt text. Doesn't auto-send so the user can
-      // tweak the {{source}} placeholder before submitting.
+      // with the starter's prompt text. The `{{source}}` placeholder has
+      // already been resolved at render time (cf. renderEmptyHero), so the
+      // textarea receives clean text the user can either submit as-is or
+      // tweak before sending.
       const starterBtn = event.target.closest("[data-starter]");
       if (starterBtn && input) {
         input.value = starterBtn.dataset.starterPrompt;
