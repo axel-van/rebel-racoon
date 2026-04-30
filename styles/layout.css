@@ -71,16 +71,25 @@
 
 /* Drafts mode (Lot 21) — the rich PostCard + action-stack layout needs
    more horizontal room than the default Ideas list. Wide variant
-   activated via .is-right-panel-wide on the shell. */
+   activated via .is-right-panel-wide on the shell.
+
+   Width by viewport :
+     • > 1440px : 860px so the side filter rail (~200px) fits next to
+                  the cards (max 500px) + per-card action stack (~80px)
+                  without crowding.
+     • ≤ 1440px : 620px — the rail moves on top of the feed
+                  (cf. styles/components/right-panel.css) so the panel
+                  shrinks to roughly post + action-stack width.
+     • ≤ 1100px : 520px — narrower screens shave more from the cap. */
 .app-shell.is-right-panel-open.is-right-panel-wide {
-  grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr) var(--app-right-panel-width-runtime, 720px);
+  grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr) var(--app-right-panel-width-runtime, 860px);
 }
 
 .app-shell.is-right-panel-open.is-right-panel-wide.is-sidebar-collapsed {
-  grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) var(--app-right-panel-width-runtime, 720px);
+  grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) var(--app-right-panel-width-runtime, 860px);
 }
 
-@media (max-width: 1300px) {
+@media (max-width: 1440px) {
   .app-shell.is-right-panel-open {
     grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr) var(--app-right-panel-width-runtime, 420px);
   }
@@ -88,10 +97,10 @@
     grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) var(--app-right-panel-width-runtime, 420px);
   }
   .app-shell.is-right-panel-open.is-right-panel-wide {
-    grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr) var(--app-right-panel-width-runtime, 600px);
+    grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr) var(--app-right-panel-width-runtime, 620px);
   }
   .app-shell.is-right-panel-open.is-right-panel-wide.is-sidebar-collapsed {
-    grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) var(--app-right-panel-width-runtime, 600px);
+    grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) var(--app-right-panel-width-runtime, 620px);
   }
 }
 
