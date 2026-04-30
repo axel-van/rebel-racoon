@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { getPath, navigate } from "../router.js?v=21";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { toggleSidebar } from "./sidebar.js?v=29";
+import { toggleSidebar } from "./sidebar.js?v=30";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
@@ -37,6 +37,10 @@ export function renderTopbar(_options = {}) {
   const onSession = isSessionRoute();
   const rpMode = getRightPanelMode();
   const draftCount = onSession ? latestDraftCount() : 0;
+  // Empty conversation = no user turn yet. Used to disable Ideas (which is
+  // global content but not relevant before the user has even started) and
+  // — combined with draftCount — Drafts (no drafts produced for this chat).
+  const isEmpty = onSession ? isEmptyConversation() : true;
   el.innerHTML = html`
     <div class="app-topbar__left">
       <button
@@ -50,8 +54,15 @@ export function renderTopbar(_options = {}) {
       </button>
       <h1 class="app-topbar__title">${raw(currentTitle())}</h1>
     </div>
-    <div class="app-topbar__right">${raw(onSession ? renderSessionPills(rpMode, draftCount) : "")}</div>
+    <div class="app-topbar__right">${raw(onSession ? renderSessionPills(rpMode, draftCount, isEmpty) : "")}</div>
   `;
+}
+
+function isEmptyConversation() {
+  const sid = currentSessionId();
+  if (!sid) return true;
+  const thread = getThread(sid);
+  return thread.every((m) => m.role !== "user");
 }
 
 // Bind once at startup — the topbar DOM node is persistent.
@@ -160,7 +171,7 @@ export function initTopbar() {
 // pill is the only composed exception (2-line inner label) — it starts
 // from `.ap-button stroked grey` and adds a thin
 // `.app-topbar__context-pill` wrapper for the layout overrides.
-function renderSessionPills(rpMode, draftCount) {
+function renderSessionPills(rpMode, draftCount, isEmpty) {
   const ctx = currentContext();
   const ctxColor = ctx?.color || "grey";
   const ctxLabel = ctx ? ctx.name : "Set context…";
@@ -168,6 +179,12 @@ function renderSessionPills(rpMode, draftCount) {
   const draftBadge = draftCount > 0 ? `<span class="ap-counter normal orange">${draftCount}</span>` : "";
   const draftsClass = rpMode === "drafts" ? "secondary orange" : "ghost grey";
   const ideasClass = rpMode === "ideas" ? "secondary blue" : "ghost grey";
+  // Drafts disabled until at least one draft turn has landed in the thread
+  // (latestDraftCount > 0). Ideas disabled until the user has actually
+  // started the conversation — opening Ideas in a brand-new chat with no
+  // prompt sent yet has no useful context.
+  const draftsDisabled = draftCount === 0;
+  const ideasDisabled = isEmpty;
   return `
     <button
       type="button"
@@ -184,10 +201,11 @@ function renderSessionPills(rpMode, draftCount) {
     </button>
     <button
       type="button"
-      class="ap-button ${draftsClass}"
+      class="ap-button ${draftsClass} ${draftsDisabled ? "is-empty" : ""}"
       data-topbar-drafts
+      ${draftsDisabled ? "disabled" : ""}
       aria-pressed="${rpMode === "drafts"}"
-      title="Toggle Drafts panel"
+      title="${draftsDisabled ? "No drafts in this conversation yet" : "Toggle Drafts panel"}"
     >
       <i class="ap-icon-pen"></i>
       <span>Drafts</span>
@@ -195,10 +213,11 @@ function renderSessionPills(rpMode, draftCount) {
     </button>
     <button
       type="button"
-      class="ap-button ${ideasClass}"
+      class="ap-button ${ideasClass} ${ideasDisabled ? "is-empty" : ""}"
       data-topbar-ideas
+      ${ideasDisabled ? "disabled" : ""}
       aria-pressed="${rpMode === "ideas"}"
-      title="Toggle Ideas panel"
+      title="${ideasDisabled ? "Send a message first" : "Toggle Ideas panel"}"
     >
       <i class="ap-icon-sparkles"></i>
       <span>Ideas</span>
