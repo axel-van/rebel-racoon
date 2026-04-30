@@ -1,6 +1,30 @@
 /* Wizard chrome — conversational flow (chat bubbles) with a sticky picker bar.
-   Used by the session sidebar wizard and inline-question panels.
+   Used by the session sidebar wizard, inline-question panels, and the
+   /contexts/new screen.
    The standalone /analyse hub and wizard routes have been removed. */
+
+/* When .analyse--wizard is rendered as a full-screen route (e.g. /contexts/new
+   on .screen.analyse--wizard), the chat grows to fill the viewport and the
+   sticky bar pins to the bottom — same shape as a chat composer, so multi-
+   choice prompts always sit in the same spot regardless of conversation
+   length. The in-session sidebar wizard uses its own grid layout
+   (.session__assistant--wizard) and is unaffected. */
+.screen.analyse--wizard {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.screen.analyse--wizard > .analyse__chat {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.screen.analyse--wizard > .analyse__sticky-bar {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--app-border-soft);
+  background: var(--app-surface);
+}
 
 /* Column flex + `margin: auto auto 0` on the inner anchors a short
    conversation to the bottom (right above the sticky answer bar) instead

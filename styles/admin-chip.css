@@ -3,12 +3,14 @@
 
 .admin-chip-root {
   position: fixed;
-  right: var(--ref-spacing-sm);
-  bottom: var(--ref-spacing-sm);
+  /* Bottom-left of the sidebar, just above the user footer (~56px tall:
+     32px avatar + 8px top + 8px bottom + 1px top border + slack). */
+  left: var(--ref-spacing-sm);
+  bottom: 64px;
   z-index: var(--app-z-admin);
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: var(--ref-spacing-xxs);
 }
 
