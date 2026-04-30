@@ -17,6 +17,7 @@
 
 import { escapeHtml } from "../utils.js?v=20";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=20";
+import { showToast } from "./toast.js?v=20";
 
 const MODAL_ID = "generateImage";
 
@@ -268,13 +269,25 @@ function renderBody() {
 async function runDerive() {
   promptLoading = true;
   renderBody();
+  let derivedFailed = false;
   try {
     promptText = await derivePromptFromPost(currentPostId);
   } catch {
-    // keep whatever was there
+    // FIND-D5: the previous catch was silent — the spinner just stopped
+    // and the textarea stayed empty, leaving the user wondering whether
+    // the click registered. Surface a discreet toast so the failure is
+    // visible without blocking the flow (the user can still type a
+    // prompt manually).
+    derivedFailed = true;
   }
   promptLoading = false;
   renderBody();
+  if (derivedFailed) {
+    showToast("Couldn't auto-derive a prompt. Type one in or try again.", {
+      variant: "error",
+      duration: 4000,
+    });
+  }
   const ta = body.querySelector("#genImagePrompt");
   if (ta) {
     focusSafe(ta);
