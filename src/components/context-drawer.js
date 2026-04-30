@@ -296,12 +296,24 @@ function renderInner() {
   const all = getContexts();
   const draft = state.draft;
   if (!draft) {
+    // FIND-B7: align with the settings-drawer Contexts empty state
+    // (icon + title + body + CTA) so the two surfaces read identically
+    // when the user lands on either with zero contexts saved. The
+    // wrapper class stays specific to the drawer for layout.
     return html`
       <div class="context-drawer__empty">
-        <p class="muted">No contexts yet — create one to get started.</p>
-        <button type="button" class="ap-button primary orange" data-cdrawer-new>
-          <i class="ap-icon-plus"></i><span>New context</span>
-        </button>
+        <div class="context-drawer__empty-icon">
+          <i class="ap-icon-target lg"></i>
+        </div>
+        <h3 class="text-subtitle">No contexts yet</h3>
+        <p class="muted">
+          Define brand, audience, brief and tone of voice — Archie applies it to every draft you ask it to make.
+        </p>
+        <div class="context-drawer__empty-action">
+          <button type="button" class="ap-button primary orange" data-cdrawer-new>
+            <i class="ap-icon-plus"></i><span>Create your first context</span>
+          </button>
+        </div>
       </div>
     `;
   }
