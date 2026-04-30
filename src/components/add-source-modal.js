@@ -177,6 +177,13 @@ function renderUploadRow(u) {
 
 function renderUrlTab() {
   const valid = isValidUrl(state.urlValue);
+  // Inline format error — shown only when the user has typed something that
+  // isn't a valid URL. While the input is empty we keep the slate clean
+  // (the `Add URL` button stays disabled and the sub-text hint covers
+  // expectations). FIND-A1: stop the silent disable that left the user
+  // wondering why the button never reacted.
+  const trimmed = state.urlValue.trim();
+  const showUrlError = trimmed.length > 0 && !valid;
   return html`
     <div class="add-source__url">
       <div class="ap-form-field">
@@ -189,11 +196,22 @@ function renderUrlTab() {
               placeholder="https://example.com/article"
               data-url-input
               value="${state.urlValue}"
+              aria-describedby="addSourceUrlError"
+              aria-invalid="${showUrlError ? "true" : "false"}"
             />
           </div>
           <button type="button" class="ap-button primary orange" data-add-url ${valid ? "" : "disabled"}>
             <span>Add URL</span>
           </button>
+        </div>
+        <div
+          id="addSourceUrlError"
+          class="ap-infobox error add-source__url-error"
+          data-url-error
+          role="alert"
+          ${showUrlError ? "" : "hidden"}
+        >
+          <span data-url-error-text>URL must start with http:// or https://</span>
         </div>
         <p class="add-source__sub muted">Public web pages, blog posts, YouTube videos, podcasts.</p>
       </div>
@@ -555,7 +573,16 @@ function onInput(event) {
     state.urlValue = event.target.value;
     // Just enable/disable the Add URL button — re-render only the button state.
     const btn = contentEl.querySelector("[data-add-url]");
-    if (btn) btn.toggleAttribute("disabled", !isValidUrl(state.urlValue));
+    const valid = isValidUrl(state.urlValue);
+    if (btn) btn.toggleAttribute("disabled", !valid);
+    // Toggle the inline format error in place so the input keeps focus +
+    // caret position. Only surface the error after the user has typed
+    // something — empty input stays neutral.
+    const trimmed = state.urlValue.trim();
+    const showError = trimmed.length > 0 && !valid;
+    const errorEl = contentEl.querySelector("[data-url-error]");
+    if (errorEl) errorEl.hidden = !showError;
+    if (event.target.setAttribute) event.target.setAttribute("aria-invalid", showError ? "true" : "false");
     return;
   }
 }
