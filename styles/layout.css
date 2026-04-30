@@ -119,11 +119,16 @@
   .app-shell.is-right-panel-open.is-sidebar-collapsed {
     grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) var(--app-right-panel-width-runtime, 380px);
   }
+  /* Wide-variant column also auto-fits content here — the ≤1440 rule
+     above already does fit-content(620px), but a fixed 520px override
+     below 1100 would re-introduce the wasted space to the right of the
+     post + action stack (the 520px fallback was set when the rail was
+     still vertical and ate ~200px of column width). */
   .app-shell.is-right-panel-open.is-right-panel-wide {
-    grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr) var(--app-right-panel-width-runtime, 520px);
+    grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr) fit-content(620px);
   }
   .app-shell.is-right-panel-open.is-right-panel-wide.is-sidebar-collapsed {
-    grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) var(--app-right-panel-width-runtime, 520px);
+    grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) fit-content(620px);
   }
 }
 
