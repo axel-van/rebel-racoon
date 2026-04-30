@@ -14,6 +14,7 @@ import {
 } from "../posts-store.js?v=23";
 import { renderPostCard } from "./post-card.js?v=22";
 import { CONTEXT_QUESTIONS } from "../context-questions.js?v=20";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=28";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
@@ -128,17 +129,72 @@ export function subscribe(fn) {
   return () => subs.delete(fn);
 }
 
+// Floor for the chat column width — under this the assistant panel
+// (composer + thread) reads cramped regardless of viewport. When the
+// content column would land below this floor with the sidebar still
+// expanded, we collapse the sidebar to claw back ~204px (260 − 56).
+// The trigger is content-aware (depends on the live panel width) rather
+// than a hard viewport breakpoint, so a wide Drafts panel collapses
+// the sidebar earlier than a narrow Ideas panel.
+const CHAT_MIN_WIDTH_PX = 500;
+
+// Compute the chat column width that would result if the sidebar were
+// kept expanded. Reads the actual panel size from the DOM (post-layout)
+// so it works for both fit-content and fixed-width grid columns. When
+// the panel is closed, the panel.offsetWidth is 0 and the check
+// effectively short-circuits via the !state.mode guard above.
+function computeChatWidth() {
+  if (typeof window === "undefined") return Infinity;
+  const sidebar = document.getElementById("sidebar");
+  const panel = document.getElementById(PANEL_ID);
+  const sidebarW = sidebar ? sidebar.offsetWidth : 260;
+  const panelW = panel ? panel.offsetWidth : 0;
+  // If the sidebar is already collapsed we use its expanded width
+  // (260) for the projection — we want to know what would happen if
+  // it were re-expanded, not the current state. 56px collapsed +
+  // 204px delta = 260 expanded.
+  const projectedSidebar = sidebarW < 200 ? 260 : sidebarW;
+  return window.innerWidth - projectedSidebar - panelW;
+}
+
+// Collapse the sidebar when the projected chat column would dip below
+// CHAT_MIN_WIDTH_PX. Called on panel-open transitions and on window
+// resize. We deliberately don't auto-restore on close (the user
+// re-expands manually) and we don't run on mode swaps inside an
+// already-open panel — only on the closed → open transition or on
+// genuine viewport changes.
+function maybeCollapseSidebar() {
+  if (!state.mode) return;
+  if (isSidebarCollapsed()) return;
+  if (computeChatWidth() < CHAT_MIN_WIDTH_PX) {
+    setSidebarCollapsed(true);
+  }
+}
+
+function maybeCollapseSidebarOnOpen(prevMode) {
+  if (prevMode !== null) return; // mode swap, not an open
+  // Defer until after the renderPanel() call that follows in the open*
+  // helper completes. Until the panel's `hidden` flag flips and the grid
+  // column resolves, panel.offsetWidth would still read 0 and our chat-
+  // width math would think there's plenty of room.
+  requestAnimationFrame(maybeCollapseSidebar);
+}
+
 // Open in Drafts mode pinned to a specific assistant message in a session.
 // Called by the in-thread Drafts summary card (Lot 4.3).
 export function openDrafts(activeBatchRef) {
+  const prev = state.mode;
   state = { mode: "drafts", activeBatchRef: activeBatchRef || state.activeBatchRef };
+  maybeCollapseSidebarOnOpen(prev);
   rebindThread();
   renderPanel();
   notify();
 }
 
 export function openIdeas() {
+  const prev = state.mode;
   state = { ...state, mode: "ideas" };
+  maybeCollapseSidebarOnOpen(prev);
   renderPanel();
   notify();
 }
@@ -173,8 +229,10 @@ export function setMode(mode) {
 // Use refreshContextForm() from the caller after every state change so the
 // panel re-renders against the latest values.
 export function openContextForm(config = {}) {
+  const prev = state.mode;
   contextFormConfig = { mode: "edit", ...config };
   state = { ...state, mode: "context-form" };
+  maybeCollapseSidebarOnOpen(prev);
   renderPanel();
   notify();
 }
@@ -265,12 +323,9 @@ export function init() {
       renderPanel();
       return;
     }
-    const networkChip = event.target.closest("[data-rpanel-drafts-network]");
-    if (networkChip) {
-      draftsNetwork = networkChip.dataset.rpanelDraftsNetwork;
-      renderPanel();
-      return;
-    }
+    // Network select changes are caught in the panel's "change" handler
+    // (set up below in init()) — selects don't surface meaningful click
+    // events on the chosen option across browsers.
     if (event.target.closest("[data-rpanel-drafts-clear]")) {
       draftsFilter = "all";
       draftsNetwork = "all";
@@ -393,6 +448,13 @@ export function init() {
       return;
     }
   });
+  el.addEventListener("change", (event) => {
+    if (event.target.matches("[data-rpanel-drafts-network-select]")) {
+      draftsNetwork = event.target.value || "all";
+      renderPanel();
+      return;
+    }
+  });
   el.addEventListener("input", (event) => {
     if (event.target.matches("[data-rpanel-ideas-search]")) {
       ideasQuery = event.target.value || "";
@@ -472,6 +534,18 @@ export function init() {
   // session changes via `rebindPostsStore()`.
   rebindPostsStore();
   window.addEventListener("hashchange", rebindPostsStore);
+
+  // Auto-collapse the sidebar when the viewport shrinks enough that the
+  // chat column would dip below CHAT_MIN_WIDTH_PX. rAF-debounced so
+  // continuous drag-resize doesn't thrash setSidebarCollapsed.
+  let resizeRaf = 0;
+  window.addEventListener("resize", () => {
+    if (resizeRaf) return;
+    resizeRaf = requestAnimationFrame(() => {
+      resizeRaf = 0;
+      maybeCollapseSidebar();
+    });
+  });
 }
 
 function renderPanel() {
@@ -692,19 +766,25 @@ function renderDraftsView() {
     `;
   };
 
-  const networkRow = (id, label, count) => {
-    const active = draftsNetwork === id;
-    return `
-      <button
-        type="button"
-        class="posts__filter posts__filter--network ${active ? "is-active" : ""}"
-        data-rpanel-drafts-network="${id}"
-      >
-        <span class="posts__filter-label">${label}</span>
-        <span class="posts__filter-count">${count}</span>
-      </button>
-    `;
-  };
+  // Network filter is a DS native select, not a row of buttons or a
+  // segmented control: its 3 mutually-exclusive options take less room
+  // than 3 pills (matters in the compact ≤1440 layout where the rail
+  // shares a single horizontal row with the status filters), and the
+  // browser-native picker keeps the wide layout from wasting vertical
+  // space on a label list.
+  const networkOpt = (id, label, count) =>
+    `<option value="${id}" ${draftsNetwork === id ? "selected" : ""}>${label} (${count})</option>`;
+  const networkSelect = `
+    <select
+      class="ap-native-select posts__rail-network-select"
+      data-rpanel-drafts-network-select
+      aria-label="Filter by network"
+    >
+      ${networkOpt("all", "All networks", networkCounts.all)}
+      ${networkOpt("linkedin", "LinkedIn", networkCounts.linkedin)}
+      ${networkOpt("twitter", "X", networkCounts.twitter)}
+    </select>
+  `;
 
   const rail = `
     <aside class="posts__rail" aria-label="Post filters">
@@ -713,11 +793,9 @@ function renderDraftsView() {
         ${filterRow("needs_fixes", "ap-icon-error", "Needs fixes", filterCounts.needs_fixes)}
         ${filterRow("scheduled", "ap-icon-calendar", "Scheduled", filterCounts.scheduled)}
       </div>
-      <div class="posts__rail-group">
+      <div class="posts__rail-group posts__rail-group--network">
         <h3 class="posts__rail-heading">Network</h3>
-        ${networkRow("all", "All", networkCounts.all)}
-        ${networkRow("linkedin", "LinkedIn", networkCounts.linkedin)}
-        ${networkRow("twitter", "X", networkCounts.twitter)}
+        ${networkSelect}
       </div>
     </aside>
   `;

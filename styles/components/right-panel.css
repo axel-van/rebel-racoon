@@ -553,9 +553,12 @@
 }
 
 /* ── Drafts mode (Lot 21) — rich PostCard feed ──────────────────────
-   2-col layout: filter rail on the left, feed on the right. Chrome
-   only ; the .posts__* classes from posts.css drive the rail items
-   AND the cards themselves. */
+   Default layout (> 1440px): 2-col grid — vertical filter rail on the
+   left, feed on the right. The .posts__* classes from posts.css drive
+   both the rail items AND the cards themselves.
+   Compact layout (≤ 1440px): rail flattens onto a single row at the top
+   so the panel can shrink down to roughly post + action-stack width.
+   Cf. layout.css for the matching grid-column widths. */
 
 .rpanel-drafts {
   display: grid;
@@ -582,4 +585,72 @@
    the right of the action stack. */
 .rpanel-drafts__feed .posts__row-check {
   display: none;
+}
+
+/* Network select sizing — fixed comfortable width in both layouts. */
+.rpanel-drafts .posts__rail-network-select {
+  width: 100%;
+}
+
+/* ── Compact layout — filters on top ────────────────────────────────
+   Below 1440px the side rail doesn't have room. Switch to a single
+   column with the filter rail flattened onto a horizontal row above
+   the feed: status filters as pills on the left, the network select
+   on the right. */
+@media (max-width: 1440px) {
+  .rpanel-drafts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ref-spacing-sm);
+  }
+
+  .rpanel-drafts .posts__rail {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--ref-spacing-sm);
+    padding-bottom: var(--ref-spacing-xs);
+    border-bottom: 1px solid var(--app-border-soft);
+    position: static;
+  }
+
+  /* Status group → flex row of pills. */
+  .rpanel-drafts .posts__rail-group {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--ref-spacing-xxs);
+  }
+
+  /* Status pills shrink to fit content (no full-width row). */
+  .rpanel-drafts .posts__filter {
+    width: auto;
+    gap: var(--ref-spacing-xxs);
+  }
+
+  /* Status pill icons are decorative — the label carries the meaning.
+     Drop them in the compact layout to claw back ~24px per pill so all
+     three fit alongside the network select on a single row. */
+  .rpanel-drafts .posts__filter > i {
+    display: none;
+  }
+
+  /* Hide the "Network" eyebrow — the select's own labels carry the
+     network info and the heading would steal a line of vertical space. */
+  .rpanel-drafts .posts__rail-heading {
+    display: none;
+  }
+
+  /* Push the network group to the trailing edge of the row so status
+     and network sit on opposite ends. */
+  .rpanel-drafts .posts__rail-group--network {
+    margin-left: auto;
+  }
+
+  /* Compact-mode select width — let the option labels (with counts)
+     define the natural width, but cap it so a long label doesn't bump
+     the status pills onto another row. */
+  .rpanel-drafts .posts__rail-network-select {
+    width: auto;
+    min-width: 160px;
+    max-width: 220px;
+  }
 }
