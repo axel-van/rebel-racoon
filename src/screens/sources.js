@@ -6,6 +6,7 @@ import { getSources, subscribeSources, classifyFile, startFileUpload } from "../
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=25";
 import { isNewUser } from "../user-mode.js?v=20";
 import { showToast } from "../components/toast.js?v=20";
+import { renderEmptyState } from "../components/empty-state.js?v=1";
 
 // Lot 15 — empty in first-time mode so the sub-line "{N} ideas extracted"
 // and the cards both reflect a clean slate. Returning user gets the seed.
@@ -117,12 +118,52 @@ function renderPage() {
         <div class="sources-view__grid">
           ${raw(renderDropTile())}
           ${visible.length === 0
-            ? raw(`<div class="sources-view__empty">No sources match.</div>`)
+            ? raw(renderSourcesEmpty(sources, pageState))
             : raw(visible.map((s) => renderSourceCard(s, IDEAS)).join(""))}
         </div>
       </div>
     </div>
   `;
+}
+
+// FIND-B2: distinguish "no sources at all" (returning user with everything
+// deleted, or first-run) from "filter/search active with no match". The
+// first-time empty case is already softened by the permanent drop tile at
+// the head of the grid; for filter/search we surface a Clear filters CTA.
+function renderSourcesEmpty(allSources, pageState) {
+  const hasFilter = pageState.kind !== "all" || (pageState.query || "").trim().length > 0;
+  if (allSources.length === 0) {
+    return renderEmptyState({
+      icon: "ap-icon-feature-library",
+      title: "No sources yet",
+      body: "Drop a PDF, video, audio file, or paste a URL — Archie processes it and surfaces ideas you can publish.",
+      wrapperClass: "sources-view__empty sources-view__empty--rich",
+    });
+  }
+  if (hasFilter) {
+    return renderEmptyState({
+      icon: "ap-icon-search",
+      title: "No sources match",
+      body: pageState.query
+        ? `No source matches "${escapeText(pageState.query)}". Try a different term.`
+        : "No source matches the active filter.",
+      actionHtml: `<button type="button" class="ap-button stroked grey" data-sources-clear-filters>Clear filters</button>`,
+      wrapperClass: "sources-view__empty sources-view__empty--rich",
+    });
+  }
+  return renderEmptyState({
+    icon: "ap-icon-feature-library",
+    title: "No sources match",
+    body: "Drop a file or paste a link to populate this list.",
+    wrapperClass: "sources-view__empty sources-view__empty--rich",
+  });
+}
+
+function escapeText(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 // Permanent drop tile at the head of the grid — encourages upload without
@@ -173,6 +214,12 @@ function bind(root) {
       paint(root);
       return;
     }
+    if (event.target.closest("[data-sources-clear-filters]")) {
+      pageState.kind = "all";
+      pageState.query = "";
+      paint(root);
+      return;
+    }
   });
 
   root.addEventListener("input", (event) => {
@@ -181,11 +228,12 @@ function bind(root) {
       // Body-only repaint so the search input doesn't lose focus on each keystroke.
       const grid = root.querySelector(".sources-view__grid");
       if (grid) {
-        const visible = filterAndSearch(getSources(), pageState);
+        const allSources = getSources();
+        const visible = filterAndSearch(allSources, pageState);
         grid.innerHTML =
           renderDropTile() +
           (visible.length === 0
-            ? `<div class="sources-view__empty">No sources match.</div>`
+            ? renderSourcesEmpty(allSources, pageState)
             : visible.map((s) => renderSourceCard(s, IDEAS)).join(""));
       }
     }

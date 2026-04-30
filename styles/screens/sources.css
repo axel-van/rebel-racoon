@@ -230,3 +230,11 @@
   font-size: var(--ref-font-size-sm);
   color: var(--ref-color-grey-60);
 }
+
+/* Rich empty state — icon + title + body + optional CTA, shared with the
+   `session__empty` chrome. The wrapper still gets `sources-view__empty`
+   so it spans the grid cleanly; `--rich` widens the padding so the
+   visual weight matches the cards next to it. */
+.sources-view__empty--rich {
+  padding: var(--ref-spacing-xl) var(--ref-spacing-md);
+}
