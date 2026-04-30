@@ -292,12 +292,9 @@ export function init() {
       renderPanel();
       return;
     }
-    const networkChip = event.target.closest("[data-rpanel-drafts-network]");
-    if (networkChip) {
-      draftsNetwork = networkChip.dataset.rpanelDraftsNetwork;
-      renderPanel();
-      return;
-    }
+    // Network select changes are caught in the panel's "change" handler
+    // (set up below in init()) — selects don't surface meaningful click
+    // events on the chosen option across browsers.
     if (event.target.closest("[data-rpanel-drafts-clear]")) {
       draftsFilter = "all";
       draftsNetwork = "all";
@@ -417,6 +414,13 @@ export function init() {
     }
     if (event.target.closest("[data-ctx-edit-mode]")) {
       contextFormConfig?.onEnterEdit?.();
+      return;
+    }
+  });
+  el.addEventListener("change", (event) => {
+    if (event.target.matches("[data-rpanel-drafts-network-select]")) {
+      draftsNetwork = event.target.value || "all";
+      renderPanel();
       return;
     }
   });
@@ -719,19 +723,25 @@ function renderDraftsView() {
     `;
   };
 
-  const networkRow = (id, label, count) => {
-    const active = draftsNetwork === id;
-    return `
-      <button
-        type="button"
-        class="posts__filter posts__filter--network ${active ? "is-active" : ""}"
-        data-rpanel-drafts-network="${id}"
-      >
-        <span class="posts__filter-label">${label}</span>
-        <span class="posts__filter-count">${count}</span>
-      </button>
-    `;
-  };
+  // Network filter is a DS native select, not a row of buttons or a
+  // segmented control: its 3 mutually-exclusive options take less room
+  // than 3 pills (matters in the compact ≤1440 layout where the rail
+  // shares a single horizontal row with the status filters), and the
+  // browser-native picker keeps the wide layout from wasting vertical
+  // space on a label list.
+  const networkOpt = (id, label, count) =>
+    `<option value="${id}" ${draftsNetwork === id ? "selected" : ""}>${label} (${count})</option>`;
+  const networkSelect = `
+    <select
+      class="ap-native-select posts__rail-network-select"
+      data-rpanel-drafts-network-select
+      aria-label="Filter by network"
+    >
+      ${networkOpt("all", "All networks", networkCounts.all)}
+      ${networkOpt("linkedin", "LinkedIn", networkCounts.linkedin)}
+      ${networkOpt("twitter", "X", networkCounts.twitter)}
+    </select>
+  `;
 
   const rail = `
     <aside class="posts__rail" aria-label="Post filters">
@@ -740,11 +750,9 @@ function renderDraftsView() {
         ${filterRow("needs_fixes", "ap-icon-error", "Needs fixes", filterCounts.needs_fixes)}
         ${filterRow("scheduled", "ap-icon-calendar", "Scheduled", filterCounts.scheduled)}
       </div>
-      <div class="posts__rail-group">
+      <div class="posts__rail-group posts__rail-group--network">
         <h3 class="posts__rail-heading">Network</h3>
-        ${networkRow("all", "All", networkCounts.all)}
-        ${networkRow("linkedin", "LinkedIn", networkCounts.linkedin)}
-        ${networkRow("twitter", "X", networkCounts.twitter)}
+        ${networkSelect}
       </div>
     </aside>
   `;

@@ -587,11 +587,16 @@
   display: none;
 }
 
+/* Network select sizing — fixed comfortable width in both layouts. */
+.rpanel-drafts .posts__rail-network-select {
+  width: 100%;
+}
+
 /* ── Compact layout — filters on top ────────────────────────────────
    Below 1440px the side rail doesn't have room. Switch to a single
    column with the filter rail flattened onto a horizontal row above
-   the feed: status filters as pills on the left, network filters as
-   a tightly-packed segmented control on the right. */
+   the feed: status filters as pills on the left, the network select
+   on the right. */
 @media (max-width: 1440px) {
   .rpanel-drafts {
     grid-template-columns: minmax(0, 1fr);
@@ -618,44 +623,34 @@
   /* Status pills shrink to fit content (no full-width row). */
   .rpanel-drafts .posts__filter {
     width: auto;
+    gap: var(--ref-spacing-xxs);
   }
 
-  /* Hide the "Network" eyebrow — the segmented control reads on its
-     own and the heading would steal a line of vertical space. */
+  /* Status pill icons are decorative — the label carries the meaning.
+     Drop them in the compact layout to claw back ~24px per pill so all
+     three fit alongside the network select on a single row. */
+  .rpanel-drafts .posts__filter > i {
+    display: none;
+  }
+
+  /* Hide the "Network" eyebrow — the select's own labels carry the
+     network info and the heading would steal a line of vertical space. */
   .rpanel-drafts .posts__rail-heading {
     display: none;
   }
 
   /* Push the network group to the trailing edge of the row so status
      and network sit on opposite ends. */
-  .rpanel-drafts .posts__rail-group:has(.posts__filter--network) {
+  .rpanel-drafts .posts__rail-group--network {
     margin-left: auto;
   }
 
-  /* Network filters → segmented control. Drop the indent that posts.css
-     adds to nest network rows under the status group. */
-  .rpanel-drafts .posts__filter--network {
-    padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
-    border: 1px solid var(--app-border-soft);
-    border-radius: 0;
-    background: var(--app-surface);
-    /* Collapse adjacent borders so the row reads as one segmented unit. */
-    margin-left: -1px;
-  }
-
-  .rpanel-drafts .posts__filter--network:first-of-type {
-    border-top-left-radius: var(--app-radius-md);
-    border-bottom-left-radius: var(--app-radius-md);
-    margin-left: 0;
-  }
-
-  .rpanel-drafts .posts__filter--network:last-of-type {
-    border-top-right-radius: var(--app-radius-md);
-    border-bottom-right-radius: var(--app-radius-md);
-  }
-
-  .rpanel-drafts .posts__filter--network.is-active {
-    z-index: 1;
-    position: relative;
+  /* Compact-mode select width — let the option labels (with counts)
+     define the natural width, but cap it so a long label doesn't bump
+     the status pills onto another row. */
+  .rpanel-drafts .posts__rail-network-select {
+    width: auto;
+    min-width: 160px;
+    max-width: 220px;
   }
 }
