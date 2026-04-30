@@ -421,18 +421,33 @@ function onDrop(event) {
 }
 
 function ingestFiles(fileList) {
-  let firstError = null;
+  // FIND-D4: drop the silent "first error wins" pattern. When the user
+  // drops 5 files and 3 fail validation, we now build a summary
+  // ("3 files were rejected: <first reason>, …") so they know more than
+  // one was filtered. The detailed reasons stay machine-readable for
+  // future surfacing (e.g. a per-row error list).
+  const rejections = [];
   for (const file of fileList) {
     const res = classifyFile(file);
     if (!res.ok) {
-      if (!firstError) firstError = res.reason;
+      rejections.push(res.reason);
       continue;
     }
     const id = startFileUpload(file, res);
     state.tripUploadIds.add(id);
   }
-  if (firstError) showInlineError(firstError);
+  if (rejections.length > 0) {
+    showInlineError(formatRejectionSummary(rejections));
+  }
   render();
+}
+
+function formatRejectionSummary(rejections) {
+  if (rejections.length === 1) return rejections[0];
+  // First reason verbatim (already includes filename + cause), then a
+  // count of the rest so the message stays one line on the infobox.
+  const [first, ...rest] = rejections;
+  return `${first} (and ${rest.length} other${rest.length === 1 ? "" : "s"} rejected)`;
 }
 
 function showInlineError(message) {
