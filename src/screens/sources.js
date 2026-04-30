@@ -36,24 +36,25 @@ const KIND_FILTERS = [
 ];
 
 let unsubscribeSources = null;
+let bindController = null;
 let pageState = { kind: "all", query: "" };
 
 export function renderSources(_params, target) {
   renderTopbar();
-  if (unsubscribeSources) {
-    unsubscribeSources();
-    unsubscribeSources = null;
-  }
+  cleanupSources();
   pageState = { kind: "all", query: "" };
 
   paint(target);
 
   unsubscribeSources = subscribeSources(() => paint(target));
+  return cleanupSources;
 }
 
 function paint(target) {
+  if (bindController) bindController.abort();
+  bindController = new AbortController();
   target.innerHTML = html`<section class="screen sources-view">${raw(renderPage())}</section>`;
-  bind(target);
+  bind(target, bindController.signal);
 }
 
 function renderPage() {
@@ -198,87 +199,122 @@ function filterAndSearch(sources, { kind, query }) {
     .filter((s) => !q || (s.filename || "").toLowerCase().includes(q));
 }
 
-function bind(root) {
-  root.addEventListener("click", (event) => {
-    if (event.target.closest("[data-sources-add]")) {
-      openAddSourceModal({ tab: "upload" });
-      return;
-    }
-    if (event.target.closest("[data-sources-connect]")) {
-      openAddSourceModal({ tab: "connectors" });
-      return;
-    }
-    const filter = event.target.closest("[data-sources-filter]");
-    if (filter) {
-      pageState.kind = filter.dataset.sourcesFilter;
-      paint(root);
-      return;
-    }
-    if (event.target.closest("[data-sources-clear-filters]")) {
-      pageState.kind = "all";
-      pageState.query = "";
-      paint(root);
-      return;
-    }
-  });
-
-  root.addEventListener("input", (event) => {
-    if (event.target.matches("[data-sources-search]")) {
-      pageState.query = event.target.value || "";
-      // Body-only repaint so the search input doesn't lose focus on each keystroke.
-      const grid = root.querySelector(".sources-view__grid");
-      if (grid) {
-        const allSources = getSources();
-        const visible = filterAndSearch(allSources, pageState);
-        grid.innerHTML =
-          renderDropTile() +
-          (visible.length === 0
-            ? renderSourcesEmpty(allSources, pageState)
-            : visible.map((s) => renderSourceCard(s, IDEAS)).join(""));
+function bind(root, signal) {
+  root.addEventListener(
+    "click",
+    (event) => {
+      if (event.target.closest("[data-sources-add]")) {
+        openAddSourceModal({ tab: "upload" });
+        return;
       }
-    }
-  });
+      if (event.target.closest("[data-sources-connect]")) {
+        openAddSourceModal({ tab: "connectors" });
+        return;
+      }
+      const filter = event.target.closest("[data-sources-filter]");
+      if (filter) {
+        pageState.kind = filter.dataset.sourcesFilter;
+        paint(root);
+        return;
+      }
+      if (event.target.closest("[data-sources-clear-filters]")) {
+        pageState.kind = "all";
+        pageState.query = "";
+        paint(root);
+        return;
+      }
+    },
+    { signal },
+  );
+
+  root.addEventListener(
+    "input",
+    (event) => {
+      if (event.target.matches("[data-sources-search]")) {
+        pageState.query = event.target.value || "";
+        // Body-only repaint so the search input doesn't lose focus on each keystroke.
+        const grid = root.querySelector(".sources-view__grid");
+        if (grid) {
+          const allSources = getSources();
+          const visible = filterAndSearch(allSources, pageState);
+          grid.innerHTML =
+            renderDropTile() +
+            (visible.length === 0
+              ? renderSourcesEmpty(allSources, pageState)
+              : visible.map((s) => renderSourceCard(s, IDEAS)).join(""));
+        }
+      }
+    },
+    { signal },
+  );
 
   // Drag/drop a file anywhere on the body → kick off the upload pipeline.
   // Mirrors the chat-panel drag/drop wired in Lot 3.5.
   const dropTarget = root.querySelector("[data-sources-drop-target]");
   if (dropTarget) {
     let dragDepth = 0;
-    dropTarget.addEventListener("dragenter", (event) => {
-      if (!event.dataTransfer || !Array.from(event.dataTransfer.types || []).includes("Files")) return;
-      event.preventDefault();
-      dragDepth += 1;
-      dropTarget.classList.add("is-drop-target");
-    });
-    dropTarget.addEventListener("dragover", (event) => {
-      if (!event.dataTransfer || !Array.from(event.dataTransfer.types || []).includes("Files")) return;
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "copy";
-    });
-    dropTarget.addEventListener("dragleave", () => {
-      dragDepth = Math.max(0, dragDepth - 1);
-      if (dragDepth === 0) dropTarget.classList.remove("is-drop-target");
-    });
-    dropTarget.addEventListener("drop", (event) => {
-      if (!event.dataTransfer || !event.dataTransfer.files?.length) return;
-      event.preventDefault();
-      dragDepth = 0;
-      dropTarget.classList.remove("is-drop-target");
-      const files = Array.from(event.dataTransfer.files);
-      let started = 0;
-      for (const file of files) {
-        const c = classifyFile(file);
-        if (c.ok) {
-          startFileUpload(file, c);
-          started += 1;
+    dropTarget.addEventListener(
+      "dragenter",
+      (event) => {
+        if (!event.dataTransfer || !Array.from(event.dataTransfer.types || []).includes("Files")) return;
+        event.preventDefault();
+        dragDepth += 1;
+        dropTarget.classList.add("is-drop-target");
+      },
+      { signal },
+    );
+    dropTarget.addEventListener(
+      "dragover",
+      (event) => {
+        if (!event.dataTransfer || !Array.from(event.dataTransfer.types || []).includes("Files")) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+      },
+      { signal },
+    );
+    dropTarget.addEventListener(
+      "dragleave",
+      () => {
+        dragDepth = Math.max(0, dragDepth - 1);
+        if (dragDepth === 0) dropTarget.classList.remove("is-drop-target");
+      },
+      { signal },
+    );
+    dropTarget.addEventListener(
+      "drop",
+      (event) => {
+        if (!event.dataTransfer || !event.dataTransfer.files?.length) return;
+        event.preventDefault();
+        dragDepth = 0;
+        dropTarget.classList.remove("is-drop-target");
+        const files = Array.from(event.dataTransfer.files);
+        let started = 0;
+        for (const file of files) {
+          const c = classifyFile(file);
+          if (c.ok) {
+            startFileUpload(file, c);
+            started += 1;
+          }
         }
-      }
-      if (started > 0) {
-        showToast(started === 1 ? `Uploading "${files[0].name}"…` : `Uploading ${started} files…`);
-      } else {
-        openAddSourceModal({ tab: "upload" });
-      }
-    });
+        if (started > 0) {
+          showToast(started === 1 ? `Uploading "${files[0].name}"…` : `Uploading ${started} files…`);
+        } else {
+          openAddSourceModal({ tab: "upload" });
+        }
+      },
+      { signal },
+    );
+  }
+}
+
+function cleanupSources() {
+  if (unsubscribeSources) {
+    unsubscribeSources();
+    unsubscribeSources = null;
+  }
+  if (bindController) {
+    bindController.abort();
+    bindController = null;
   }
 }
 

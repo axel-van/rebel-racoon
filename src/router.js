@@ -3,6 +3,7 @@
 
 const routes = [];
 let afterRender = null;
+let activeCleanup = null;
 
 export function route(pattern, handler) {
   // Compile :param segments into a regex.
@@ -60,13 +61,23 @@ export function render() {
       navigate("/");
       return;
     }
+    runActiveCleanup();
     target.innerHTML = '<p style="padding: var(--ref-spacing-lg)">Not found.</p>';
     return;
   }
-  found.handler(found.params, target);
+  runActiveCleanup();
+  const cleanup = found.handler(found.params, target);
+  activeCleanup = typeof cleanup === "function" ? cleanup : null;
   if (afterRender) afterRender(path, found.params);
   // Scroll any scrollable regions to top on route change.
   target.scrollTop = 0;
+}
+
+function runActiveCleanup() {
+  if (!activeCleanup) return;
+  const cleanup = activeCleanup;
+  activeCleanup = null;
+  cleanup();
 }
 
 export function start() {
