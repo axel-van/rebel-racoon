@@ -17,6 +17,7 @@
 import { postUserTurn, postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=23";
 import { getIdeas } from "./library.js?v=23";
 import { addPostDraft } from "./posts-store.js?v=23";
+import { showToast } from "./components/toast.js?v=20";
 
 const CHANNEL_META = {
   linkedin: { icon: "ap-icon-linkedin", label: "LinkedIn" },
@@ -81,21 +82,39 @@ export function executeDraft(sessionId, ideaId, selectedChannels) {
   const pendingId = startPending(sessionId);
 
   setTimeout(() => {
+    // FIND-D2: wrap the draft creation + result post in a try/catch so
+    // a downstream failure (posts-store throws, assistant push errors)
+    // doesn't leave the thinking chip ticking forever. The chip itself
+    // is cleared by finishPending so the user always gets back to a
+    // stable state, and an error toast surfaces the failure with a
+    // hook-able Retry action (idempotent — runs the same channels).
     finishPending(sessionId, pendingId);
-
-    // 3. Create one draft per selected channel.
-    const drafts = selectedChannels.map((channel) =>
-      addPostDraft(sessionId, {
-        network: channel,
-        text: [idea.title, ...(idea.body ? [idea.body] : [])],
-        hashtags: [],
-      }),
-    );
-
-    // 4. Announce the result in the assistant thread.
-    postDraftResult(sessionId, {
-      ideaTitle: idea.title,
-      drafts,
-    });
+    try {
+      const drafts = selectedChannels.map((channel) =>
+        addPostDraft(sessionId, {
+          network: channel,
+          text: [idea.title, ...(idea.body ? [idea.body] : [])],
+          hashtags: [],
+        }),
+      );
+      postDraftResult(sessionId, {
+        ideaTitle: idea.title,
+        drafts,
+      });
+    } catch (err) {
+      // Surface the failure + offer a Retry that re-enters executeDraft
+      // with the same arguments. Keep the toast duration generous so
+      // the user has time to react before it auto-dismisses.
+      // eslint-disable-next-line no-console
+      console.error("draft-flow: executeDraft failed", err);
+      showToast("Couldn't create those drafts. Try again?", {
+        variant: "error",
+        duration: 6000,
+        action: {
+          label: "Retry",
+          onClick: () => executeDraft(sessionId, ideaId, selectedChannels),
+        },
+      });
+    }
   }, 2000);
 }
