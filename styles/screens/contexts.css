@@ -89,6 +89,12 @@
   color: var(--ref-color-grey-60);
 }
 
+/* Rich empty-state variant — icon + title + body + optional CTA, sharing
+   the `session__empty` chrome from styles/base.css. */
+.contexts-view__empty--rich {
+  padding: var(--ref-spacing-xl) var(--ref-spacing-md);
+}
+
 /* ── ContextCard ─────────────────────────────────────────────────── */
 
 .contexts-card {
