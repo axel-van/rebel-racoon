@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { getPath } from "../router.js?v=20";
+import { getPath, navigate } from "../router.js?v=21";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 import { toggleSidebar } from "./sidebar.js?v=28";
 import {
@@ -10,7 +10,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
 } from "./right-panel.js?v=38";
-import { open as openContextDrawer } from "./context-drawer.js?v=20";
+import { openRead as openContextRead } from "../context-builder.js?v=22";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=23";
 import { recentSessions } from "../mocks.js?v=25";
 import { getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=24";
@@ -89,7 +89,14 @@ export function initTopbar() {
     }
     if (event.target.closest("[data-topbar-context]")) {
       const ctx = currentContext();
-      openContextDrawer(ctx?.id || null);
+      // No context attached → jump to the conversational creation flow.
+      // Otherwise open the right-panel context-form in read mode (the user
+      // can hit Edit from there if they want to mutate).
+      if (!ctx) {
+        navigate("/contexts/new");
+      } else {
+        openContextRead(ctx.id);
+      }
     }
   });
 
