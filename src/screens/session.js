@@ -1050,6 +1050,13 @@ function wireAssistantPanel(root, session, attachedContext) {
 // --- Thinking chip -------------------------------------------------------
 
 let thinkingIntervalId = null;
+// FIND-D1: 30-second cap on a single thinking turn — past that we surface a
+// "taking longer than expected" toast so the user knows the system is still
+// alive. We don't auto-cancel the message (the mock pipeline always finishes
+// in <2s), but the toast is the hook that wires to a real timeout / retry
+// path when the API lands.
+const THINKING_TIMEOUT_MS = 30000;
+const timedOutMessageIds = new Set();
 
 function updateThinkingChip(sessionId) {
   const chip = document.querySelector("[data-assistant-thinking]");
@@ -1100,6 +1107,18 @@ function startThinkingTimer(sessionId) {
       return;
     }
     paintThinkingChip(chip, loading.createdAt || Date.now());
+
+    // Per-message timeout — show the toast once per loading turn that
+    // crosses the boundary, so successive long turns each get their own
+    // notice instead of a single early one and silence afterwards.
+    const elapsed = Date.now() - (loading.createdAt || Date.now());
+    if (elapsed >= THINKING_TIMEOUT_MS && !timedOutMessageIds.has(loading.id)) {
+      timedOutMessageIds.add(loading.id);
+      showToast("This is taking longer than expected. Hang tight, or refresh if it stays stuck.", {
+        variant: "error",
+        duration: 6000,
+      });
+    }
   }, 1000);
 }
 
