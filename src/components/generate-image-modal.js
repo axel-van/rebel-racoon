@@ -32,6 +32,11 @@ let styleKey = null;
 let moodKey = null;
 let imageUrl = null;
 let onUseCallback = null;
+// Last-generation error message — surfaced as an infobox above the
+// idle-state form when a previous run failed (FIND-A2). Clears the
+// next time the user clicks Generate so the error doesn't outlive
+// the retry attempt.
+let lastError = null;
 
 const STYLE_OPTIONS = [
   { key: "photorealistic", label: "Photorealistic", icon: "📷" },
@@ -153,7 +158,24 @@ function renderBody() {
       ? `<span class="gen-image-spinner"></span>Deriving from post content…`
       : `<i class="ap-icon-sparkles"></i><span>Re-derive from post content</span>`;
 
+    // Surface the previous-run error (if any) above the form so the
+    // user has context for the retry. Cleared when they click Generate
+    // again (cf. runGeneration). FIND-A2: until now the catch path
+    // silently rolled back to idle, leaving the user unsure whether
+    // the click registered.
+    const errorBlock = lastError
+      ? `<div class="ap-infobox error" role="alert">
+           <i class="ap-icon-error_fill" aria-hidden="true"></i>
+           <div class="ap-infobox-content">
+             <div class="ap-infobox-texts">
+               <span class="ap-infobox-message">${escapeHtml(lastError)}</span>
+             </div>
+           </div>
+         </div>`
+      : "";
+
     body.innerHTML = `
+      ${errorBlock}
       <div class="gen-image-body">
         <div class="gen-section">
           <p class="gen-section-label">Describe your image<span>— edit or write your own</span></p>
@@ -261,13 +283,21 @@ async function runDerive() {
 }
 
 async function runGeneration() {
+  // Clear any stale error from a previous run so the in-flight generation
+  // doesn't show a contradictory message.
+  lastError = null;
   genState = "loading";
   renderBody();
   try {
     imageUrl = await generateImage(buildFullPrompt(), buildSeed());
     genState = "result";
   } catch {
+    // FIND-A2: surface the failure inline next to the form instead of
+    // silently rolling back to idle. The user can then tweak the prompt
+    // and retry, or close the modal — but at least they know the click
+    // registered and the system reached the API.
     genState = "idle";
+    lastError = "Image generation failed. Tweak the prompt or try again.";
   }
   renderBody();
 }
@@ -381,5 +411,6 @@ export function close() {
   imageUrl = null;
   currentPostId = null;
   onUseCallback = null;
+  lastError = null;
   notifyClose(MODAL_ID);
 }
