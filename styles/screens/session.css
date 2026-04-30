@@ -834,6 +834,13 @@
   font-size: var(--sys-icon-css-xs);
 }
 
+/* Locked indicator — context is committed once the chat has a user turn.
+   Same orange tag, no chevron, no hover, no cursor pointer. The element
+   is a <span>, not a <button>, so default tab behaviour skips it. */
+.composer-context__trigger--locked {
+  cursor: default;
+}
+
 .composer-context__dot {
   display: inline-block;
   width: 12px;

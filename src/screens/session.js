@@ -208,21 +208,19 @@ function renderAssistantPanel(session, attachedContext) {
       </div>
       ${isEmptyConversation
         ? ""
-        : html`
+        : raw(`
             <div class="session__assistant-suggestions" data-assistant-prompts>
-              ${raw(
-                prompts
-                  .map(
-                    (p) => `
-                      <button type="button" class="assistant-prompt" data-assistant-prompt="${p.value}">
-                        <span class="assistant-prompt__title">${p.title}</span>
-                      </button>
-                    `,
-                  )
-                  .join(""),
-              )}
+              ${prompts
+                .map(
+                  (p) => `
+                    <button type="button" class="assistant-prompt" data-assistant-prompt="${p.value}">
+                      <span class="assistant-prompt__title">${p.title}</span>
+                    </button>
+                  `,
+                )
+                .join("")}
             </div>
-          `}
+          `)}
       <div class="session__composer">
         <div class="session__composer-inner">
           <div class="session__composer-card">
@@ -284,7 +282,7 @@ function renderAssistantPanel(session, attachedContext) {
                       </button>
                     </div>
                   </div>
-                  ${raw(renderComposerContextDropdown(attachedContext))}
+                  ${raw(renderComposerContextDropdown(attachedContext, { locked: !isEmptyConversation }))}
                 </div>
                 <button
                   type="button"
@@ -316,10 +314,29 @@ function renderAssistantPanel(session, attachedContext) {
 // "No context" fallback); menu lists every saved context plus a New CTA.
 // Click handler at the bottom of bindSession updates the URL via setQuery,
 // so the session re-renders with the chosen context attached.
-function renderComposerContextDropdown(attachedContext) {
+// `locked` — once the chat has at least one user turn, the attached
+// context is committed: render the trigger as a static span (no menu, no
+// chevron) so the user can read it but can't swap it. Swapping mid-chat
+// would invalidate the citations / drafts already produced under the
+// original context.
+function renderComposerContextDropdown(attachedContext, { locked = false } = {}) {
   const all = getContexts();
   const triggerColor = attachedContext?.color || "grey";
   const triggerLabel = attachedContext?.name || "No context";
+  if (locked) {
+    return `
+      <div class="composer-context composer-context--locked" data-composer-context aria-live="polite">
+        <span
+          class="ap-tag tagOrange composer-context__trigger composer-context__trigger--locked"
+          aria-label="Context (locked for this chat)"
+          title="The context is locked once the conversation has started."
+        >
+          <span class="composer-context__dot" style="background: var(--ref-color-${escapeHtml(triggerColor)}-100);"></span>
+          <span>${escapeHtml(triggerLabel)}</span>
+        </span>
+      </div>
+    `;
+  }
   const triggerClass = attachedContext
     ? "ap-tag tagOrange composer-context__trigger"
     : "ap-tag grey composer-context__trigger composer-context__trigger--empty";
@@ -819,6 +836,10 @@ function wireAssistantPanel(root, session, attachedContext) {
   // has a batch, set activeBatchRef and switch to drafts" rule (§ State
   // Management → send transitions).
   let lastDraftMessageId = null;
+  // Track whether we've already crossed the empty → has-user-turn boundary.
+  // The first time we cross it, the composer context picker locks in (its
+  // markup changes shape), so we re-render the whole assistant aside.
+  let firstUserTurnSeen = getThread(session.id).some((m) => m.role === "user");
   const offThread = subscribe(session.id, (messages) => {
     const thread = getThreadEl();
     if (thread) {
@@ -826,6 +847,10 @@ function wireAssistantPanel(root, session, attachedContext) {
       thread.scrollTop = thread.scrollHeight;
     }
     updateThinkingChip(session.id);
+    if (!firstUserTurnSeen && messages.some((m) => m.role === "user")) {
+      firstUserTurnSeen = true;
+      refreshAssistantAside();
+    }
     const latestDraft = [...messages].reverse().find((m) => m.variant === "draft");
     if (latestDraft && latestDraft.id !== lastDraftMessageId) {
       lastDraftMessageId = latestDraft.id;
