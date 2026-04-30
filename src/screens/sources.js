@@ -75,9 +75,9 @@ function renderPage() {
           </p>
         </div>
         <div class="sources-view__head-actions">
-          <button type="button" class="ap-button stroked grey" data-sources-add-url>
+          <button type="button" class="ap-button stroked grey" data-sources-connect>
             <i class="ap-icon-link"></i>
-            <span>Add URL</span>
+            <span>Connect sources</span>
           </button>
           <button type="button" class="ap-button primary orange" data-sources-add>
             <i class="ap-icon-plus"></i>
@@ -204,8 +204,8 @@ function bind(root) {
       openAddSourceModal({ tab: "upload" });
       return;
     }
-    if (event.target.closest("[data-sources-add-url]")) {
-      openAddSourceModal({ tab: "url" });
+    if (event.target.closest("[data-sources-connect]")) {
+      openAddSourceModal({ tab: "connectors" });
       return;
     }
     const filter = event.target.closest("[data-sources-filter]");
