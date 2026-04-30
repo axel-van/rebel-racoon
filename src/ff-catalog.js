@@ -11,7 +11,7 @@ export const FLAGS = Object.freeze([
   {
     id: "sidebarIdeas",
     label: "Ideas in left sidebar",
-    default: true,
+    default: false,
     hides: "Ideas entry in the left sidebar navigation.",
   },
 ]);

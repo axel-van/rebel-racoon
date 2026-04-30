@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=23";
-import { isFlagOn } from "../feature-flags.js?v=1";
+import { isFlagOn } from "../feature-flags.js?v=2";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=25";
 import { isNewUser } from "../user-mode.js?v=20";
 import { getPath } from "../router.js?v=20";
@@ -14,7 +14,7 @@ import {
 } from "../posts-store.js?v=23";
 import { renderPostCard } from "./post-card.js?v=22";
 import { CONTEXT_QUESTIONS } from "../context-questions.js?v=20";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=28";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=29";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
