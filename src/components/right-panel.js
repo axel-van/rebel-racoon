@@ -187,6 +187,17 @@ export function getContextFormMode() {
   return contextFormConfig?.mode || null;
 }
 
+// Close the panel without firing the context-form onCancel callback.
+// Used by context-builder after a successful Save — the draft was just
+// persisted, no need to discard it via the cancel path.
+export function closeContextFormSilently() {
+  if (state.mode !== "context-form") return;
+  contextFormConfig = null;
+  state = { ...state, mode: null };
+  renderPanel();
+  notify();
+}
+
 // Subscribe to the active session's thread so the panel reflects late-
 // landing batch changes. Tear down + re-create on every mode flip / batch
 // switch so we never leak listeners across sessions.
