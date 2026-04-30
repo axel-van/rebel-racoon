@@ -4,14 +4,7 @@ import { renderTopbar } from "../components/topbar.js?v=34";
 import { getSessionById, socialAccounts, recentSessions, chatStarters } from "../mocks.js?v=25";
 import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=24";
 import { isNewUser } from "../user-mode.js?v=20";
-import {
-  getThread,
-  sendMessage,
-  pickSuggestedPrompts,
-  postAssistantMessage,
-  subscribe,
-  submitAssistantChoice,
-} from "../assistant.js?v=23";
+import { getThread, sendMessage, postAssistantMessage, subscribe, submitAssistantChoice } from "../assistant.js?v=23";
 import { getSources, getIdeas, subscribe as subscribeLibrary } from "../library.js?v=23";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import { getPosts, attachImageToDraft, subscribe as subscribePostsStore } from "../posts-store.js?v=23";
@@ -181,7 +174,6 @@ function renderAssistantPanel(session, attachedContext) {
     hasContext: !!attachedContext,
     skipGreeting: hasPendingStartFlow,
   });
-  const prompts = pickSuggestedPrompts({ hasContext: !!attachedContext });
 
   // Wizard mode — when sidebar-wizard has state for this session, replace the
   // normal thread + composer with the analyse-style wizard chrome.
@@ -196,9 +188,7 @@ function renderAssistantPanel(session, attachedContext) {
 
   // Empty conversation = the user hasn't typed anything yet. We swap the
   // thread for the handoff "What are we creating today?" hero with a 2x2
-  // grid of starter cards (Q14). Once the user types their first message
-  // the thread takes over and the existing pickSuggestedPrompts row above
-  // the composer surfaces contextual follow-ups.
+  // grid of starter cards (Q14). Once the user types, the thread takes over.
   const isEmptyConversation = thread.every((m) => m.role !== "user");
 
   return html`
@@ -206,21 +196,6 @@ function renderAssistantPanel(session, attachedContext) {
       <div class="session__assistant-thread" id="assistantThread" data-assistant-thread>
         ${isEmptyConversation ? raw(renderEmptyHero()) : raw(renderThread(thread))}
       </div>
-      ${isEmptyConversation
-        ? ""
-        : raw(`
-            <div class="session__assistant-suggestions" data-assistant-prompts>
-              ${prompts
-                .map(
-                  (p) => `
-                    <button type="button" class="assistant-prompt" data-assistant-prompt="${p.value}">
-                      <span class="assistant-prompt__title">${p.title}</span>
-                    </button>
-                  `,
-                )
-                .join("")}
-            </div>
-          `)}
       <div class="session__composer">
         <div class="session__composer-inner">
           <div class="session__composer-card">
@@ -1800,13 +1775,6 @@ function bindSession(root, session) {
       }
 
       // --- Assistant panel ---
-      const promptBtn = event.target.closest("[data-assistant-prompt]");
-      if (promptBtn && input) {
-        input.value = promptBtn.dataset.assistantPrompt;
-        input.focus();
-        return;
-      }
-
       // Empty-state starter card click — pre-fills the composer textarea
       // with the starter's prompt text. The `{{source}}` placeholder has
       // already been resolved at render time (cf. renderEmptyHero), so the

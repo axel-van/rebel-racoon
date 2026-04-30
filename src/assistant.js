@@ -284,22 +284,6 @@ export function postDraftResult(sessionId, { ideaTitle, drafts }) {
   notify(sessionId);
 }
 
-export function pickSuggestedPrompts({ hasContext } = {}) {
-  const base = [
-    { title: "Find strongest signal", value: "Find the strongest post angle in this session" },
-    { title: "Compare top ideas", value: "Compare the top two ideas and tell me which one is more actionable" },
-    { title: "Generate LinkedIn post", value: "Turn the leading idea into a short LinkedIn draft" },
-    { title: "What source next?", value: "What source should I add next to strengthen this sprint?" },
-  ];
-  if (!hasContext) {
-    base[0] = {
-      title: "Help me set a context",
-      value: "Walk me through attaching a context for this session",
-    };
-  }
-  return base;
-}
-
 // --- Internals ------------------------------------------------------------
 
 function notify(sessionId) {

@@ -14,7 +14,7 @@
 
 .session__assistant {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   background: var(--app-surface);
   border-right: 1px solid var(--app-border-soft);
   overflow: hidden;
@@ -225,51 +225,6 @@
   font-size: var(--ref-font-size-xs);
   line-height: var(--ref-font-line-height-xs);
   color: var(--ref-color-grey-80);
-}
-
-.session__assistant-suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-md);
-  border-top: 1px solid var(--app-border-soft);
-  background: var(--app-surface);
-}
-
-.assistant-prompt {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  padding: 6px var(--ref-spacing-xs);
-  border: 1px solid var(--app-border-soft);
-  border-radius: var(--app-radius-pill);
-  background: var(--app-surface);
-  color: var(--ref-color-grey-100);
-  font-family: inherit;
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.assistant-prompt {
-  transition:
-    background-color var(--ref-animation-short) var(--app-ease-out),
-    border-color var(--ref-animation-short) var(--app-ease-out),
-    color var(--ref-animation-short) var(--app-ease-out);
-}
-
-.assistant-prompt:hover,
-.assistant-prompt:focus-visible {
-  background: var(--ref-color-electric-blue-05);
-  border-color: var(--ref-color-electric-blue-60);
-  color: var(--ref-color-electric-blue-150);
-  outline: none;
-}
-
-.assistant-prompt:active {
-  background: var(--ref-color-electric-blue-10);
-  border-color: var(--ref-color-electric-blue-100);
 }
 
 /* Assistant notice (Figma 25:1043 / 25:1054) — a mermaid `.ap-status` pill
