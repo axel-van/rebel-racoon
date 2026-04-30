@@ -553,9 +553,12 @@
 }
 
 /* ── Drafts mode (Lot 21) — rich PostCard feed ──────────────────────
-   2-col layout: filter rail on the left, feed on the right. Chrome
-   only ; the .posts__* classes from posts.css drive the rail items
-   AND the cards themselves. */
+   Default layout (> 1440px): 2-col grid — vertical filter rail on the
+   left, feed on the right. The .posts__* classes from posts.css drive
+   both the rail items AND the cards themselves.
+   Compact layout (≤ 1440px): rail flattens onto a single row at the top
+   so the panel can shrink down to roughly post + action-stack width.
+   Cf. layout.css for the matching grid-column widths. */
 
 .rpanel-drafts {
   display: grid;
@@ -582,4 +585,77 @@
    the right of the action stack. */
 .rpanel-drafts__feed .posts__row-check {
   display: none;
+}
+
+/* ── Compact layout — filters on top ────────────────────────────────
+   Below 1440px the side rail doesn't have room. Switch to a single
+   column with the filter rail flattened onto a horizontal row above
+   the feed: status filters as pills on the left, network filters as
+   a tightly-packed segmented control on the right. */
+@media (max-width: 1440px) {
+  .rpanel-drafts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ref-spacing-sm);
+  }
+
+  .rpanel-drafts .posts__rail {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--ref-spacing-sm);
+    padding-bottom: var(--ref-spacing-xs);
+    border-bottom: 1px solid var(--app-border-soft);
+    position: static;
+  }
+
+  /* Status group → flex row of pills. */
+  .rpanel-drafts .posts__rail-group {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--ref-spacing-xxs);
+  }
+
+  /* Status pills shrink to fit content (no full-width row). */
+  .rpanel-drafts .posts__filter {
+    width: auto;
+  }
+
+  /* Hide the "Network" eyebrow — the segmented control reads on its
+     own and the heading would steal a line of vertical space. */
+  .rpanel-drafts .posts__rail-heading {
+    display: none;
+  }
+
+  /* Push the network group to the trailing edge of the row so status
+     and network sit on opposite ends. */
+  .rpanel-drafts .posts__rail-group:has(.posts__filter--network) {
+    margin-left: auto;
+  }
+
+  /* Network filters → segmented control. Drop the indent that posts.css
+     adds to nest network rows under the status group. */
+  .rpanel-drafts .posts__filter--network {
+    padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+    border: 1px solid var(--app-border-soft);
+    border-radius: 0;
+    background: var(--app-surface);
+    /* Collapse adjacent borders so the row reads as one segmented unit. */
+    margin-left: -1px;
+  }
+
+  .rpanel-drafts .posts__filter--network:first-of-type {
+    border-top-left-radius: var(--app-radius-md);
+    border-bottom-left-radius: var(--app-radius-md);
+    margin-left: 0;
+  }
+
+  .rpanel-drafts .posts__filter--network:last-of-type {
+    border-top-right-radius: var(--app-radius-md);
+    border-bottom-right-radius: var(--app-radius-md);
+  }
+
+  .rpanel-drafts .posts__filter--network.is-active {
+    z-index: 1;
+    position: relative;
+  }
 }
