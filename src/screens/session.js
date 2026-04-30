@@ -1274,7 +1274,11 @@ const composerStates = new Map();
 function getComposerState(sessionId) {
   let s = composerStates.get(sessionId);
   if (!s) {
-    s = { pills: new Map() };
+    s = {
+      pills: new Map(),
+      dismissingIdeaSourceIds: new Set(),
+      dismissedIdeaSourceIds: new Set(),
+    };
     composerStates.set(sessionId, s);
   }
   return s;
@@ -1337,7 +1341,7 @@ function resolveComposerPill(pill) {
   return null;
 }
 
-function renderComposerPill(pillId, snap) {
+function renderComposerPill(pillId, snap, state) {
   const icon = PILL_KIND_ICON[snap.kindLabel] || "ap-icon-file";
   // Every state-specific indicator lives OUTSIDE the blue pill, as a
   // sibling within the .composer-pill-group. The blue pill itself stays
@@ -1354,10 +1358,13 @@ function renderComposerPill(pillId, snap) {
       </span>`;
   } else if (snap.state === "ready") {
     const ideas = snap.ideaCount === 1 ? "1 nouvelle idée" : `${snap.ideaCount} nouvelles idées`;
-    siblingIndicator = `
-      <button type="button" class="ap-tag green mini composer-pill__ideas" data-open-source-ideas="${snap.sourceId}" data-idea-count="${snap.ideaCount}">
-        <span>${escapeHtml(ideas)}</span>
-      </button>`;
+    if (!state.dismissedIdeaSourceIds.has(snap.sourceId)) {
+      const dismissingClass = state.dismissingIdeaSourceIds.has(snap.sourceId) ? " is-dismissing" : "";
+      siblingIndicator = `
+        <button type="button" class="ap-tag green mini composer-pill__ideas${dismissingClass}" data-open-source-ideas="${snap.sourceId}" data-idea-count="${snap.ideaCount}">
+          <span>${escapeHtml(ideas)}</span>
+        </button>`;
+    }
   } else if (snap.state === "error") {
     siblingIndicator = `<span class="ap-tag red mini">Échec</span>`;
   }
@@ -1388,10 +1395,23 @@ function paintComposerPills(root, sessionId) {
       state.pills.delete(pillId);
       continue;
     }
-    html.push(renderComposerPill(pillId, snap));
+    html.push(renderComposerPill(pillId, snap, state));
   }
   container.innerHTML = html.join("");
   container.hidden = html.length === 0;
+}
+
+function dismissComposerIdeasBadge(root, sessionId, sourceId, button) {
+  if (!sourceId) return;
+  const state = getComposerState(sessionId);
+  if (state.dismissedIdeaSourceIds.has(sourceId)) return;
+  state.dismissingIdeaSourceIds.add(sourceId);
+  button?.classList.add("is-dismissing");
+  window.setTimeout(() => {
+    state.dismissingIdeaSourceIds.delete(sourceId);
+    state.dismissedIdeaSourceIds.add(sourceId);
+    paintComposerPills(root, sessionId);
+  }, 180);
 }
 
 function startPillFromFile(root, sessionId, file) {
@@ -1853,6 +1873,7 @@ function bindSession(root, session) {
       const openIdeasBtn = event.target.closest("[data-open-source-ideas]");
       if (openIdeasBtn) {
         event.preventDefault();
+        dismissComposerIdeasBadge(root, session.id, openIdeasBtn.dataset.openSourceIdeas, openIdeasBtn);
         const ideaCount = parseInt(openIdeasBtn.dataset.ideaCount || "0", 10) || 3;
         openIdeasPanel();
         // Wait for the panel to mount + render its idea cards, then pulse

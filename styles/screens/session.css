@@ -767,6 +767,15 @@
    .ap-tag.green.mini ships the visuals; we just enable cursor. */
 .composer-pill__ideas {
   cursor: pointer;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.composer-pill__ideas.is-dismissing {
+  opacity: 0;
+  transform: translateY(-2px) scale(0.96);
+  pointer-events: none;
 }
 
 /* ---------- Composer context (Zone 2 — dropdown above the textarea) -- */
