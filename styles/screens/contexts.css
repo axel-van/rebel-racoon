@@ -109,6 +109,14 @@
   border-radius: var(--app-radius-card);
   box-shadow: var(--app-shadow-card);
   overflow: hidden;
+  cursor: pointer;
+  transition: border-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.contexts-card:hover,
+.contexts-card:focus-visible {
+  border-color: var(--ref-color-grey-40);
+  outline: none;
 }
 
 /* Swatch strip — top edge, full-width, colored per ctx.color. */

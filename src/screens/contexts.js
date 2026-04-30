@@ -6,14 +6,15 @@ import {
   duplicateContext,
   deleteContext,
 } from "../contexts-store.js?v=24";
-import { open as openContextDrawer } from "../components/context-drawer.js?v=20";
+import { navigate } from "../router.js?v=21";
+import { openRead, startEdit } from "../context-builder.js?v=22";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=20";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 
 // Contexts library — standalone page (handoff §2.4).
 // Header → search → grid of ContextCards. Each card surfaces brand /
 // briefSummary / tones / do/don't preview, and an "Edit" button that
-// opens the multi-context drawer (Lot 8.2 — placeholder for now).
+// opens the right-panel context-form (read mode by default, edit on demand).
 
 let unsubscribe = null;
 let pageState = { query: "" };
@@ -115,7 +116,7 @@ function renderContextCard(ctx) {
   const doPreview = (ctx.doRules || []).slice(0, 2);
   const dontPreview = (ctx.dontRules || []).slice(0, 2);
   return `
-    <article class="contexts-card contexts-card--${color}">
+    <article class="contexts-card contexts-card--${color}" data-contexts-card="${ctx.id}" role="button" tabindex="0">
       <span class="contexts-card__swatch" aria-hidden="true"></span>
       <header class="contexts-card__head">
         <div class="contexts-card__head-text">
@@ -175,11 +176,12 @@ function bind(root) {
   root.addEventListener("click", (event) => {
     const editBtn = event.target.closest("[data-contexts-edit]");
     if (editBtn) {
-      openContextDrawer(editBtn.dataset.contextsEdit);
+      event.stopPropagation();
+      startEdit(editBtn.dataset.contextsEdit);
       return;
     }
     if (event.target.closest("[data-contexts-new]")) {
-      openContextDrawer(null); // drawer auto-creates a fresh "Untitled context"
+      navigate("/contexts/new");
       return;
     }
     if (event.target.closest("[data-contexts-clear-query]")) {
@@ -189,15 +191,17 @@ function bind(root) {
     }
     const dupBtn = event.target.closest("[data-contexts-duplicate]");
     if (dupBtn) {
+      event.stopPropagation();
       const copy = duplicateContext(dupBtn.dataset.contextsDuplicate);
       if (copy) {
         import("../components/toast.js?v=20").then(({ showToast }) => showToast("Context duplicated"));
-        openContextDrawer(copy.id);
+        startEdit(copy.id);
       }
       return;
     }
     const delBtn = event.target.closest("[data-contexts-delete]");
     if (delBtn) {
+      event.stopPropagation();
       const ctx = getContexts().find((c) => c.id === delBtn.dataset.contextsDelete);
       if (!ctx) return;
       if (getContexts().length <= 1) {
@@ -206,9 +210,8 @@ function bind(root) {
         );
         return;
       }
-      // FIND-C1: switch from window.confirm to the DS confirm-modal so the
-      // delete prompt is keyboard-accessible, themed, and consistent with
-      // the rest of the prototype (settings drawer Discard, etc.).
+      // FIND-C1: DS confirm-modal so the delete prompt is keyboard-
+      // accessible, themed, and consistent with the rest of the prototype.
       openConfirmModal({
         title: "Delete context?",
         body: `"${ctx.name}" will be removed. Chats currently referencing it will need a new context.`,
@@ -220,6 +223,15 @@ function bind(root) {
           import("../components/toast.js?v=20").then(({ showToast }) => showToast("Context deleted"));
         },
       });
+      return;
+    }
+    // Card click — anywhere outside the action buttons opens the panel in
+    // read-only mode for inspection. The footer buttons stop propagation
+    // so they win over this fallback.
+    const card = event.target.closest("[data-contexts-card]");
+    if (card) {
+      openRead(card.dataset.contextsCard);
+      return;
     }
   });
 

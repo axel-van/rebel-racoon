@@ -15,7 +15,7 @@
 import * as inlineQuestion from "./inline-question.js?v=21";
 import { postAssistantMessage, postUserTurn } from "./assistant.js?v=23";
 import * as rightPanel from "./components/right-panel.js?v=38";
-import { addContext } from "./contexts-store.js?v=24";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=24";
 import { emptyAnswers } from "./context-questions.js?v=20";
 
 // Mock social profiles offered for analysis. Identical seed to the one used
@@ -81,10 +81,49 @@ export function start(sessionId, { onComplete } = {}) {
     profiles: [],
     answers: emptyAnswers(),
     name: "",
+    editingId: null,
     onComplete: onComplete || null,
   });
   notify(sessionId);
   askUrl(sessionId);
+}
+
+// Open the right-panel context-form on an existing context in read mode.
+// onEnterEdit (triggered by the Edit footer button) seeds an editable draft
+// from the same context and re-opens the form in edit mode.
+export function openRead(contextId) {
+  rightPanel.openContextForm({
+    mode: "read",
+    getCtx: () => getContextById(contextId),
+    onEnterEdit: () => startEdit(contextId),
+  });
+}
+
+// Skip the conversational phase and open the form directly populated with
+// an existing context's values. Save flows back through updateContext()
+// instead of addContext() so the original context id is preserved.
+export function startEdit(contextId) {
+  const ctx = getContextById(contextId);
+  if (!ctx) return;
+  const sessionId = `context-edit-${contextId}-${Date.now()}`;
+  drafts.set(sessionId, {
+    url: "",
+    profiles: [],
+    answers: {
+      brandName: ctx.brandName || "",
+      audience: ctx.audience || "",
+      tones: Array.isArray(ctx.tones) ? ctx.tones.slice() : [],
+      doRules: Array.isArray(ctx.doRules) ? ctx.doRules.slice() : [],
+      dontRules: Array.isArray(ctx.dontRules) ? ctx.dontRules.slice() : [],
+      briefSummary: ctx.briefSummary || "",
+      cta: ctx.cta || "",
+      color: ctx.color || "orange",
+    },
+    name: ctx.name || "",
+    editingId: contextId,
+    onComplete: null,
+  });
+  openForm(sessionId);
 }
 
 export function cancel(sessionId) {
@@ -186,7 +225,9 @@ export function save(sessionId) {
   if (!d) return;
   const name = (d.name || "").trim();
   if (!name) return; // Save button is disabled in this state, but defensive.
-  const created = addContext({ name, ...d.answers });
+  const saved = d.editingId
+    ? updateContext(d.editingId, { name, ...d.answers, updatedAt: "just now" })
+    : addContext({ name, ...d.answers });
   const onComplete = d.onComplete;
   drafts.delete(sessionId);
   inlineQuestion.exit(sessionId);
@@ -194,5 +235,5 @@ export function save(sessionId) {
   // Close the panel without firing onCancel — the draft was just persisted
   // so the cancel path (which would discard it again) doesn't apply.
   rightPanel.closeContextFormSilently();
-  if (onComplete) onComplete(created);
+  if (onComplete) onComplete(saved);
 }
