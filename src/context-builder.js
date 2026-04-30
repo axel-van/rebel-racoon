@@ -13,7 +13,7 @@
 // and into contexts-store#addContext() on save.
 
 import * as inlineQuestion from "./inline-question.js?v=21";
-import { postAssistantMessage } from "./assistant.js?v=23";
+import { postAssistantMessage, postUserTurn } from "./assistant.js?v=23";
 import * as rightPanel from "./components/right-panel.js?v=38";
 import { addContext } from "./contexts-store.js?v=24";
 import { emptyAnswers } from "./context-questions.js?v=20";
@@ -112,6 +112,7 @@ function setUrl(sessionId, url) {
   const d = drafts.get(sessionId);
   if (!d) return;
   d.url = (url || "").trim();
+  postUserTurn(sessionId, d.url || "Skip");
   notify(sessionId);
   askProfiles(sessionId);
 }
@@ -136,6 +137,8 @@ function setProfiles(sessionId, values) {
   const d = drafts.get(sessionId);
   if (!d) return;
   d.profiles = Array.isArray(values) ? values.slice() : [];
+  const labels = d.profiles.map((v) => MOCK_PROFILES.find((p) => p.value === v)?.label || v).join(", ");
+  postUserTurn(sessionId, labels || "Skip");
   notify(sessionId);
   postAssistantMessage(
     sessionId,

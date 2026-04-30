@@ -17,6 +17,7 @@ import { renderSession } from "./screens/session.js?v=66";
 import { renderSources } from "./screens/sources.js?v=25";
 import { renderIdeas } from "./screens/ideas.js?v=24";
 import { renderContexts } from "./screens/contexts.js?v=25";
+import { renderContextNew } from "./screens/context-new.js?v=20";
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
 // stays in sync with the active context.
@@ -25,6 +26,7 @@ route("/session/:id", renderSession);
 route("/sources", renderSources);
 route("/ideas", renderIdeas);
 route("/contexts", renderContexts);
+route("/contexts/new", renderContextNew);
 
 // Boot.
 initTopbar();
