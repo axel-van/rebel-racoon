@@ -10,6 +10,7 @@
 // Public API:
 //   ask(sessionId, opts)     → show the question; opts described below
 //   pick(sessionId, value)   → resolve with the chosen value
+//   submitMulti(sessionId, valuesArray) → resolve with the selected values (multi mode)
 //   submitCustom(sessionId, value) → resolve with a free-text answer
 //   skip(sessionId)          → call onSkip and exit
 //   exit(sessionId)          → just clear state (no callbacks)
@@ -24,8 +25,10 @@
 //   stepLabel         string  — small label on the top right (e.g. "Profile")
 //   skipLabel         string  — label on the Skip button (default "Skip")
 //   items             array   — [{ value, label, caption?, icon?, imgSrc? }]
+//   multi             bool    — when true, render multi-select toggles + Continue button
+//   submitLabel       string  — multi-select submit button label (default "Continue")
 //   customPlaceholder string  — when set, render a free-text option row
-//   onPick(value)     fn      — called with the chosen item's value
+//   onPick(value)     fn      — called with the chosen item's value (or array in multi mode)
 //   onCustom(value)   fn      — called with the free-text answer
 //   onSkip()          fn      — called when Skip / Esc; if omitted, no skip btn
 
@@ -50,6 +53,14 @@ export function pick(sessionId, value) {
   states.delete(sessionId);
   notify(sessionId);
   s.onPick?.(value);
+}
+
+export function submitMulti(sessionId, values) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  states.delete(sessionId);
+  notify(sessionId);
+  s.onPick?.(values);
 }
 
 export function submitCustom(sessionId, value) {
@@ -100,6 +111,8 @@ export function renderChrome(sessionId) {
     stepIndicator: s.stepLabel || null,
     skipLabel: s.onSkip ? s.skipLabel || "Skip" : null,
     customPlaceholder: s.customPlaceholder || null,
+    multi: s.multi === true,
+    submitLabel: s.submitLabel || "Continue",
   };
   return { body, picker };
 }

@@ -26,7 +26,7 @@ import { getPosts, attachImageToDraft, subscribe as subscribePostsStore } from "
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
 import { startContextBuildFlow, startActionPickerFlow, handleActionPick } from "../start-flow.js?v=23";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
-import * as inlineQuestion from "../inline-question.js?v=20";
+import * as inlineQuestion from "../inline-question.js?v=21";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=24";
 import { renderSourceCard } from "../components/source-card.js?v=26";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
@@ -888,6 +888,9 @@ function wireAssistantPanel(root, session, attachedContext) {
         onCustomSubmit: (value) => {
           inlineQuestion.submitCustom(session.id, value);
         },
+        onMultiSubmit: (selectedValues) => {
+          inlineQuestion.submitMulti(session.id, selectedValues);
+        },
       });
     } else {
       unbindWizardKeyboard();
@@ -1565,11 +1568,30 @@ function bindSession(root, session) {
         return;
       }
 
-      // Inline single-question pick / skip / custom-submit.
+      // Inline single-question pick / skip / custom-submit / multi-submit.
       const inlineQuestionBtn = event.target.closest("[data-inline-question]");
       if (inlineQuestionBtn) {
         event.preventDefault();
-        inlineQuestion.pick(session.id, inlineQuestionBtn.dataset.inlineQuestion);
+        const opts = inlineQuestionBtn.closest(".analyse__options");
+        if (opts?.dataset.multi !== undefined) {
+          const wasSelected = inlineQuestionBtn.classList.contains("is-selected");
+          inlineQuestionBtn.classList.toggle("is-selected", !wasSelected);
+          inlineQuestionBtn.setAttribute("aria-pressed", !wasSelected ? "true" : "false");
+        } else {
+          inlineQuestion.pick(session.id, inlineQuestionBtn.dataset.inlineQuestion);
+        }
+        return;
+      }
+      const inlineQuestionSubmitBtn = event.target.closest("[data-inline-question-submit]");
+      if (inlineQuestionSubmitBtn) {
+        event.preventDefault();
+        const opts = inlineQuestionSubmitBtn.closest(".analyse__options");
+        const selected = opts
+          ? Array.from(opts.querySelectorAll("[data-inline-question].is-selected")).map(
+              (el) => el.dataset.inlineQuestion,
+            )
+          : [];
+        if (selected.length) inlineQuestion.submitMulti(session.id, selected);
         return;
       }
       if (event.target.closest("[data-inline-question-skip]")) {
