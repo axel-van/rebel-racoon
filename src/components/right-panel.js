@@ -14,6 +14,7 @@ import {
 } from "../posts-store.js?v=23";
 import { renderPostCard } from "./post-card.js?v=22";
 import { CONTEXT_QUESTIONS } from "../context-questions.js?v=20";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=28";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
@@ -128,17 +129,41 @@ export function subscribe(fn) {
   return () => subs.delete(fn);
 }
 
+// Below this viewport the sidebar (260px) and a 620px right-panel leave
+// the chat column too cramped — auto-collapse the sidebar to free up
+// horizontal real estate. Mirrors the layout.css media query that
+// flattens the drafts filter rail at the same width.
+const NARROW_VIEWPORT_PX = 1440;
+
+// Collapse the sidebar the first time the panel transitions from closed
+// to open on a narrow viewport. We deliberately don't auto-restore on
+// close (the user re-expands manually) — but if the user expands the
+// sidebar mid-session and re-opens the panel, we collapse again. That's
+// the simplest interpretation of "no yo-yo while the panel is open":
+// we only act on the closed → open transition, not on mode swaps.
+function maybeCollapseSidebarOnOpen(prevMode) {
+  if (prevMode !== null) return; // mode swap, not an open
+  if (typeof window === "undefined") return;
+  if (window.innerWidth > NARROW_VIEWPORT_PX) return;
+  if (isSidebarCollapsed()) return;
+  setSidebarCollapsed(true);
+}
+
 // Open in Drafts mode pinned to a specific assistant message in a session.
 // Called by the in-thread Drafts summary card (Lot 4.3).
 export function openDrafts(activeBatchRef) {
+  const prev = state.mode;
   state = { mode: "drafts", activeBatchRef: activeBatchRef || state.activeBatchRef };
+  maybeCollapseSidebarOnOpen(prev);
   rebindThread();
   renderPanel();
   notify();
 }
 
 export function openIdeas() {
+  const prev = state.mode;
   state = { ...state, mode: "ideas" };
+  maybeCollapseSidebarOnOpen(prev);
   renderPanel();
   notify();
 }
@@ -173,8 +198,10 @@ export function setMode(mode) {
 // Use refreshContextForm() from the caller after every state change so the
 // panel re-renders against the latest values.
 export function openContextForm(config = {}) {
+  const prev = state.mode;
   contextFormConfig = { mode: "edit", ...config };
   state = { ...state, mode: "context-form" };
+  maybeCollapseSidebarOnOpen(prev);
   renderPanel();
   notify();
 }
