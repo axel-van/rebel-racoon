@@ -96,11 +96,19 @@
   .app-shell.is-right-panel-open.is-sidebar-collapsed {
     grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) var(--app-right-panel-width-runtime, 420px);
   }
+  /* Wide variant in compact layout — the rail moved on top of the feed,
+     so the column only needs post-card (max 500px) + action stack
+     (~36px) + padding/gaps. Use fit-content(620px) so the column
+     auto-shrinks to the content's natural width and caps at 620px on
+     unusually long lines. The runtime resize override is intentionally
+     dropped here: with the card hard-capped at 500px, dragging the
+     handle wider would just create empty space; dragging narrower
+     would cramp the card. Content drives the width. */
   .app-shell.is-right-panel-open.is-right-panel-wide {
-    grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr) var(--app-right-panel-width-runtime, 620px);
+    grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr) fit-content(620px);
   }
   .app-shell.is-right-panel-open.is-right-panel-wide.is-sidebar-collapsed {
-    grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) var(--app-right-panel-width-runtime, 620px);
+    grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) fit-content(620px);
   }
 }
 
