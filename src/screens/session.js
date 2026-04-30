@@ -214,23 +214,14 @@ function renderAssistantPanel(session, attachedContext) {
               ></textarea>
               <div class="session__composer-actions">
                 <div class="composer-actions__left">
-                  <button
-                    type="button"
-                    class="ap-icon-button transparent"
-                    aria-label="Joindre un fichier"
-                    data-composer-attach
-                  >
-                    <i class="ap-icon-paper-clip"></i>
-                  </button>
-                  <input type="file" data-composer-file-input hidden />
                   <div class="assistant-attach">
                     <button
                       type="button"
                       class="ap-icon-button transparent"
-                      aria-label="Attach a source"
+                      aria-label="Ajouter une source"
                       data-assistant-attach-toggle
                     >
-                      <i class="ap-icon-plus"></i>
+                      <i class="ap-icon-paper-clip"></i>
                     </button>
                     <div
                       class="ap-action-dropdown assistant-attach__menu"
@@ -1414,20 +1405,6 @@ function dismissComposerIdeasBadge(root, sessionId, sourceId, button) {
   }, 180);
 }
 
-function startPillFromFile(root, sessionId, file) {
-  const cls = classifyFile(file);
-  if (!cls.ok) {
-    showToast(cls.reason);
-    return;
-  }
-  const uploadId = startFileUpload(file, cls);
-  getComposerState(sessionId).pills.set(`pill-${uploadId}`, { uploadId });
-  // pushScriptedSource / startFileUpload notify subscribers BEFORE we
-  // record the pill — paint once explicitly so the analyzing state
-  // shows up on the same tick as the click.
-  paintComposerPills(root, sessionId);
-}
-
 function startPillFromKind(root, sessionId, kind) {
   const spec = SCRIPTED_KINDS[kind];
   if (!spec) return;
@@ -1837,17 +1814,9 @@ function bindSession(root, session) {
       const addSrc = event.target.closest("[data-add-source]");
       if (addSrc) {
         // Composer + menu items drop a non-blocking pill in the input
-        // zone (analyzing → ready) — same UX as the 📎 button.
+        // zone (analyzing → ready).
         startPillFromKind(root, session.id, addSrc.dataset.addSource);
         closeAttachMenu();
-        return;
-      }
-
-      // 📎 — trigger the hidden native file picker. Result handled by the
-      // input's change listener below.
-      if (event.target.closest("[data-composer-attach]")) {
-        const fileInput = root.querySelector("[data-composer-file-input]");
-        if (fileInput) fileInput.click();
         return;
       }
 
@@ -1937,20 +1906,6 @@ function bindSession(root, session) {
       // Click outside the attach menu → close it
       if (!event.target.closest(".assistant-attach")) {
         closeAttachMenu();
-      }
-    },
-    { signal },
-  );
-
-  // 📎 — file picker change handler. Reset value so re-picking the same
-  // file fires change again.
-  root.addEventListener(
-    "change",
-    (event) => {
-      if (event.target.matches("[data-composer-file-input]")) {
-        const file = event.target.files?.[0];
-        if (file) startPillFromFile(root, session.id, file);
-        event.target.value = "";
       }
     },
     { signal },
