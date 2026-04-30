@@ -1644,27 +1644,22 @@ function bindSession(root, session) {
         return;
       }
 
-      // External-link on an extraction idea card — jump to Content ideas + focus.
-      const focusBtn = event.target.closest("[data-focus-idea]");
-      if (focusBtn) {
+      // Stay-in-conversation policy — uploading / drafting / extracting
+      // inside a chat must never redirect the user to a side panel or
+      // the now-dead Content tab. We swallow the click events for these
+      // legacy chips so the chip render can stay (visual signal) but
+      // doesn't navigate. The data attributes are kept for analytics /
+      // future re-wiring; the click is just consumed silently.
+      if (event.target.closest("[data-focus-idea]")) {
         event.preventDefault();
-        const id = focusBtn.dataset.focusIdea;
-        if (id) setQuery({ tab: "content", view: "ideas", focusIdea: id });
         return;
       }
-
-      // "View all N ideas" inside a source card → switch to All ideas view.
       if (event.target.closest("[data-source-view]")) {
         event.preventDefault();
-        setQuery({ tab: "content", view: "ideas", focusIdea: "" });
         return;
       }
-
-      // Content workspace view switch — By source / All ideas.
-      const contentViewBtn = event.target.closest("[data-content-view]");
-      if (contentViewBtn) {
+      if (event.target.closest("[data-content-view]")) {
         event.preventDefault();
-        setQuery({ tab: "content", view: contentViewBtn.dataset.contentView, focusIdea: "" });
         return;
       }
 
@@ -1693,11 +1688,10 @@ function bindSession(root, session) {
         return;
       }
 
-      // Idea-card source chips — navigate to the source within this session.
-      const openSrc = event.target.closest("[data-source-open]");
-      if (openSrc) {
+      // Idea-card source chips — same stay-in-conversation policy as the
+      // other dead Content-tab nav above. Click consumed, no nav.
+      if (event.target.closest("[data-source-open]")) {
         event.preventDefault();
-        setQuery({ tab: "content", view: "sources", focusSource: openSrc.dataset.sourceOpen });
         return;
       }
 
