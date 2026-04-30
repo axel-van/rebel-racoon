@@ -1,16 +1,8 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=34";
-import {
-  getSessionById,
-  socialAccounts,
-  recentSessions,
-  voiceAnalysis,
-  strategyBrief,
-  brandTheme,
-  chatStarters,
-} from "../mocks.js?v=25";
-import { getContextById, getContexts, addContext, updateContext } from "../contexts-store.js?v=24";
+import { getSessionById, socialAccounts, recentSessions, chatStarters } from "../mocks.js?v=25";
+import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=24";
 import { isNewUser } from "../user-mode.js?v=20";
 import {
   getThread,
@@ -24,7 +16,7 @@ import { getSources, getIdeas, subscribe as subscribeLibrary } from "../library.
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import { getPosts, attachImageToDraft, subscribe as subscribePostsStore } from "../posts-store.js?v=23";
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
-import { startContextBuildFlow, startActionPickerFlow, handleActionPick } from "../start-flow.js?v=23";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=21";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=24";
@@ -950,37 +942,14 @@ function wireAssistantPanel(root, session, attachedContext) {
     setTimeout(() => askWhatToKnow(session.id, pendingAsk.filename), 150);
   }
 
-  // Pending start flow set by the dashboard's New chat button. Same handoff
-  // pattern as pendingDraftIdeaId — read, clear, dispatch with a tiny delay
-  // so the assistant subscriber is wired up before turns get pushed.
+  // Pending start flow set by the dashboard's New chat button. Only the
+  // action-picker variant remains — creating a context is now handled by
+  // the dedicated /contexts/new route, not by spawning a chat. New chats
+  // without a context attached just land on the empty hero.
   const pendingStart = consumeHandoff("pendingStartFlow");
-  if (pendingStart) {
+  if (pendingStart && pendingStart.hasContext) {
     setTimeout(() => {
-      if (pendingStart.hasContext) {
-        startActionPickerFlow(session.id, { contextName: pendingStart.contextName });
-      } else {
-        startContextBuildFlow(session.id, {
-          // Every wizard run produces a saved global. `name` is null when
-          // the user picked "Use the chat title" at the memorize step; we
-          // fall back to the session title (or "Untitled context" if the
-          // chat itself is unnamed). The URL change to contextId triggers
-          // a re-render so the Context tab immediately repaints.
-          onPersist: ({ name }) => {
-            const fallback = (session.name || "").trim() || "Untitled context";
-            const finalName = (name || "").trim() || fallback;
-            const created = addContext({
-              name: finalName,
-              voice: voiceAnalysis,
-              brief: strategyBrief,
-              brand: brandTheme,
-            });
-            setQuery({ contextId: created.id });
-            // Hand the resolved name back so start-flow's confirmation
-            // message ("Saved as …") matches what's actually in the store.
-            return { name: finalName };
-          },
-        });
-      }
+      startActionPickerFlow(session.id, { contextName: pendingStart.contextName });
     }, 200);
   }
 
@@ -1924,10 +1893,8 @@ function bindSession(root, session) {
         if (menu) menu.hidden = true;
         if (trigger) trigger.setAttribute("aria-expanded", "false");
         if (id === "__new__") {
-          // Hand the user over to the contexts library where they can author
-          // a new context with the full editor — same destination the sidebar
-          // Contexts nav points at.
-          navigate("/contexts");
+          // Hand the user over to the conversational create-context flow.
+          navigate("/contexts/new");
         } else if (id === "__detach__") {
           setQuery({ contextId: "" });
         } else {
