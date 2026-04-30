@@ -12,6 +12,7 @@ import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=21";
+import * as contextBuilder from "../context-builder.js?v=23";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=24";
 import { renderSourceCard } from "../components/source-card.js?v=26";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
@@ -944,12 +945,22 @@ function wireAssistantPanel(root, session, attachedContext) {
 
   // Pending start flow set by the dashboard's New chat button. Only the
   // action-picker variant remains — creating a context is now handled by
-  // the dedicated /contexts/new route, not by spawning a chat. New chats
-  // without a context attached just land on the empty hero.
+  // the dedicated /contexts/new route, not by spawning a chat.
   const pendingStart = consumeHandoff("pendingStartFlow");
   if (pendingStart && pendingStart.hasContext) {
     setTimeout(() => {
       startActionPickerFlow(session.id, { contextName: pendingStart.contextName });
+    }, 200);
+  } else if (!attachedContext) {
+    // No context attached on this chat — prompt the user to set one up via
+    // the conversational create-flow. context-builder.startWithPrompt is
+    // a no-op once the session has been prompted, so this guards against
+    // re-triggering on every panel re-render. User can still skip and
+    // chat without a context.
+    setTimeout(() => {
+      contextBuilder.startWithPrompt(session.id, {
+        onComplete: (created) => setQuery({ contextId: created.id }),
+      });
     }, 200);
   }
 

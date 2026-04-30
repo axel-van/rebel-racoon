@@ -13,7 +13,7 @@ import { navigate } from "../router.js?v=21";
 import { bindWizardKeyboard, unbindWizardKeyboard, renderPicker, chatTurn } from "./_analyse-common.js?v=24";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=23";
 import * as inlineQuestion from "../inline-question.js?v=21";
-import * as contextBuilder from "../context-builder.js?v=22";
+import * as contextBuilder from "../context-builder.js?v=23";
 import { showToast } from "../components/toast.js?v=20";
 
 // Per-mount cleanup — abort previous subscriptions + the previous click

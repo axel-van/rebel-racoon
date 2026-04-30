@@ -88,6 +88,32 @@ export function start(sessionId, { onComplete } = {}) {
   askUrl(sessionId);
 }
 
+// In-session preflight prompt — used when the user opens a chat with no
+// context attached. Renders an inline-question that the user can either
+// accept (kicks off start()) or skip (silently exits, leaving the chat
+// usable without a context). Tracks already-prompted sessions so we
+// don't re-prompt on every panel re-render or after the user dismisses.
+const promptedSessions = new Set();
+
+export function startWithPrompt(sessionId, { onComplete } = {}) {
+  if (promptedSessions.has(sessionId)) return;
+  promptedSessions.add(sessionId);
+  inlineQuestion.ask(sessionId, {
+    intro:
+      "This chat doesn't have a context attached yet. Want me to walk you through setting one up? It'll only take a minute.",
+    title: "Set up a context for this chat?",
+    items: [{ value: "yes", label: "Yes, set up a context", icon: "ap-icon-check" }],
+    onPick: () => start(sessionId, { onComplete }),
+    onSkip: () => {
+      // User opted out — keep the entry in promptedSessions so we don't
+      // re-trigger if the panel re-renders (e.g. after the right panel
+      // toggles or a flag flips). The user can still attach an existing
+      // context manually via the composer dropdown.
+    },
+    skipLabel: "No, just chat",
+  });
+}
+
 // Open the right-panel context-form on an existing context in read mode.
 // onEnterEdit (triggered by the Edit footer button) seeds an editable draft
 // from the same context and re-opens the form in edit mode.

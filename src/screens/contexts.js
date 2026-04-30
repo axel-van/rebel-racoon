@@ -7,7 +7,7 @@ import {
   deleteContext,
 } from "../contexts-store.js?v=24";
 import { navigate } from "../router.js?v=21";
-import { openRead, startEdit } from "../context-builder.js?v=22";
+import { openRead, startEdit } from "../context-builder.js?v=23";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=20";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 
