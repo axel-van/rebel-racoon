@@ -951,17 +951,6 @@ function wireAssistantPanel(root, session, attachedContext) {
     setTimeout(() => {
       startActionPickerFlow(session.id, { contextName: pendingStart.contextName });
     }, 200);
-  } else if (!attachedContext) {
-    // No context attached on this chat — prompt the user to set one up via
-    // the conversational create-flow. context-builder.startWithPrompt is
-    // a no-op once the session has been prompted, so this guards against
-    // re-triggering on every panel re-render. User can still skip and
-    // chat without a context.
-    setTimeout(() => {
-      contextBuilder.startWithPrompt(session.id, {
-        onComplete: (created) => setQuery({ contextId: created.id }),
-      });
-    }, 200);
   }
 
   // Drag-and-drop a file anywhere on the assistant panel → kicks off the
@@ -1456,7 +1445,7 @@ function bindSession(root, session) {
     signal,
   });
 
-  const input = root.querySelector("#assistantInput");
+  const getInput = () => root.querySelector("#assistantInput");
 
   // The assistant aside (and its attach menu) gets replaced wholesale on
   // sidebarWizard / inlineQuestion / library subscribe callbacks. Holding a
@@ -1471,11 +1460,20 @@ function bindSession(root, session) {
   }
 
   function submitInput() {
+    const input = getInput();
     if (!input) return;
     const text = input.value.trim();
     if (!text) return;
+    const isFirstUserMessage = !getThread(session.id).some((m) => m.role === "user");
     sendMessage(session.id, text);
     input.value = "";
+    if (isFirstUserMessage && !attachedContext) {
+      setTimeout(() => {
+        contextBuilder.startWithPrompt(session.id, {
+          onComplete: (created) => setQuery({ contextId: created.id }),
+        });
+      }, 200);
+    }
   }
 
   root.addEventListener(
@@ -1786,7 +1784,9 @@ function bindSession(root, session) {
       // textarea receives clean text the user can either submit as-is or
       // tweak before sending.
       const starterBtn = event.target.closest("[data-starter]");
-      if (starterBtn && input) {
+      if (starterBtn) {
+        const input = getInput();
+        if (!input) return;
         input.value = starterBtn.dataset.starterPrompt;
         input.focus();
         // Place cursor at end so the user can edit.
@@ -1800,7 +1800,9 @@ function bindSession(root, session) {
       }
 
       const rewritePost = event.target.closest("[data-post-rewrite]");
-      if (rewritePost && input) {
+      if (rewritePost) {
+        const input = getInput();
+        if (!input) return;
         input.value = "Rewrite this post with a sharper hook and one concrete proof point.";
         input.focus();
         return;
@@ -1933,24 +1935,23 @@ function bindSession(root, session) {
     { signal },
   );
 
-  if (input) {
-    input.addEventListener(
-      "keydown",
-      (event) => {
-        // Cmd/Ctrl+Enter sends from anywhere in the textarea (matches Claude.ai
-        // and the handoff README spec). Plain Enter (no shift, no modifier)
-        // also sends — preserves the archie default. Shift+Enter newlines.
-        const isCmdEnter = event.key === "Enter" && (event.metaKey || event.ctrlKey);
-        const isPlainEnter =
-          event.key === "Enter" && !event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey;
-        if (isCmdEnter || isPlainEnter) {
-          event.preventDefault();
-          submitInput();
-        }
-      },
-      { signal },
-    );
-  }
+  root.addEventListener(
+    "keydown",
+    (event) => {
+      if (!event.target.matches("#assistantInput")) return;
+      // Cmd/Ctrl+Enter sends from anywhere in the textarea (matches Claude.ai
+      // and the handoff README spec). Plain Enter (no shift, no modifier)
+      // also sends — preserves the archie default. Shift+Enter newlines.
+      const isCmdEnter = event.key === "Enter" && (event.metaKey || event.ctrlKey);
+      const isPlainEnter =
+        event.key === "Enter" && !event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey;
+      if (isCmdEnter || isPlainEnter) {
+        event.preventDefault();
+        submitInput();
+      }
+    },
+    { signal },
+  );
 
   // Content workspace: live search input + sort dropdown. These update the
   // module-level contentState and re-render just the list body so the input
