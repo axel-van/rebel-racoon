@@ -3,6 +3,8 @@ import { renderTopbar } from "../components/topbar.js?v=34";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
 import { ideas as MOCK_IDEAS, sources as SOURCES } from "../mocks.js?v=25";
 import { isNewUser } from "../user-mode.js?v=20";
+import { renderEmptyState } from "../components/empty-state.js?v=1";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=21";
 
 // Lot 15 — empty out in first-time mode so /ideas mirrors the dashboard's
 // own first-run UX. Returning user gets the full seed.
@@ -107,11 +109,51 @@ function renderPage() {
 
       <div class="ideas-view__body">
         ${visible.length === 0
-          ? raw(`<div class="ideas-view__empty">No ideas match.</div>`)
+          ? raw(renderIdeasEmpty(IDEAS, pageState))
           : raw(`<div class="ideas-view__grid">${visible.map((i) => renderIdeaCard(i, SOURCES)).join("")}</div>`)}
       </div>
     </div>
   `;
+}
+
+// FIND-B3: rich empty state mirroring sources.js — three branches so the
+// user gets actionable copy depending on whether the page is genuinely
+// empty (first run / re-mine pending) or just filter-narrow.
+function renderIdeasEmpty(allIdeas, pageState) {
+  const hasFilter = pageState.kind !== "all" || (pageState.query || "").trim().length > 0;
+  if (allIdeas.length === 0) {
+    return renderEmptyState({
+      icon: "ap-icon-sparkles",
+      title: "No ideas yet",
+      body: "Add a source — Archie extracts hooks, stats, quotes, and stories you can use to draft posts.",
+      actionHtml: `<button type="button" class="ap-button primary orange" data-ideas-add-source><i class="ap-icon-plus"></i><span>Add a source</span></button>`,
+      wrapperClass: "ideas-view__empty ideas-view__empty--rich",
+    });
+  }
+  if (hasFilter) {
+    return renderEmptyState({
+      icon: "ap-icon-search",
+      title: "No ideas match",
+      body: pageState.query
+        ? `No idea matches "${escapeText(pageState.query)}". Try a different term.`
+        : "No idea matches the active filter.",
+      actionHtml: `<button type="button" class="ap-button stroked grey" data-ideas-clear-filters>Clear filters</button>`,
+      wrapperClass: "ideas-view__empty ideas-view__empty--rich",
+    });
+  }
+  return renderEmptyState({
+    icon: "ap-icon-sparkles",
+    title: "No ideas to show",
+    body: "Once your sources finish processing, ideas land here.",
+    wrapperClass: "ideas-view__empty ideas-view__empty--rich",
+  });
+}
+
+function escapeText(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function countByKind() {
@@ -146,6 +188,16 @@ function bind(root) {
       paint(root);
       return;
     }
+    if (event.target.closest("[data-ideas-add-source]")) {
+      openAddSourceModal({ tab: "upload" });
+      return;
+    }
+    if (event.target.closest("[data-ideas-clear-filters]")) {
+      pageState.kind = "all";
+      pageState.query = "";
+      paint(root);
+      return;
+    }
     if (event.target.closest("[data-ideas-new]") || event.target.closest("[data-ideas-remine]")) {
       // Wired in a follow-up — surface a placeholder toast for now so the
       // user knows the click registered.
@@ -158,10 +210,16 @@ function bind(root) {
   root.addEventListener("input", (event) => {
     if (event.target.matches("[data-ideas-search]")) {
       pageState.query = event.target.value || "";
-      const grid = root.querySelector(".ideas-view__grid");
-      if (grid) {
+      // Repaint the body in place — covers both the grid -> empty and
+      // empty -> grid transitions while leaving the search input
+      // untouched so focus + caret stay alive.
+      const body = root.querySelector(".ideas-view__body");
+      if (body) {
         const visible = filterAndSort(IDEAS, pageState);
-        grid.innerHTML = visible.map((i) => renderIdeaCard(i, SOURCES)).join("");
+        body.innerHTML =
+          visible.length === 0
+            ? renderIdeasEmpty(IDEAS, pageState)
+            : `<div class="ideas-view__grid">${visible.map((i) => renderIdeaCard(i, SOURCES)).join("")}</div>`;
       }
     }
   });
