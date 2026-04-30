@@ -358,3 +358,18 @@
   align-items: center;
   gap: var(--ref-spacing-sm);
 }
+
+.context-drawer__empty-icon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ref-color-grey-05);
+  border-radius: var(--ref-radius-full);
+  color: var(--ref-color-grey-60);
+}
+
+.context-drawer__empty-action {
+  margin-top: var(--ref-spacing-xs);
+}

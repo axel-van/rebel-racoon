@@ -7,6 +7,8 @@ import {
   deleteContext,
 } from "../contexts-store.js?v=24";
 import { open as openContextDrawer } from "../components/context-drawer.js?v=20";
+import { open as openConfirmModal } from "../components/confirm-modal.js?v=20";
+import { renderEmptyState } from "../components/empty-state.js?v=1";
 
 // Contexts library — standalone page (handoff §2.4).
 // Header → search → grid of ContextCards. Each card surfaces brand /
@@ -65,11 +67,43 @@ function renderPage() {
 
       <div class="contexts-view__body">
         ${visible.length === 0
-          ? raw(`<div class="contexts-view__empty">No contexts match.</div>`)
+          ? raw(renderContextsEmpty(all, pageState))
           : raw(`<div class="contexts-view__grid">${visible.map(renderContextCard).join("")}</div>`)}
       </div>
     </div>
   `;
+}
+
+// FIND-B4: rich empty state — separates "no contexts at all" (first-run)
+// from "search active with no match". Returning user with everything
+// deleted hits the same first-run path, which is fine — both want a
+// "Create your first context" CTA.
+function renderContextsEmpty(allContexts, pageState) {
+  const hasQuery = (pageState.query || "").trim().length > 0;
+  if (allContexts.length === 0) {
+    return renderEmptyState({
+      icon: "ap-icon-target",
+      title: "No contexts yet",
+      body: "Define brand, audience, brief and tone of voice — Archie applies it to every draft.",
+      actionHtml: `<button type="button" class="ap-button primary orange" data-contexts-new><i class="ap-icon-plus"></i><span>Create your first context</span></button>`,
+      wrapperClass: "contexts-view__empty contexts-view__empty--rich",
+    });
+  }
+  if (hasQuery) {
+    return renderEmptyState({
+      icon: "ap-icon-search",
+      title: "No contexts match",
+      body: `No context matches "${escapeText(pageState.query)}". Try a different term.`,
+      actionHtml: `<button type="button" class="ap-button stroked grey" data-contexts-clear-query>Clear search</button>`,
+      wrapperClass: "contexts-view__empty contexts-view__empty--rich",
+    });
+  }
+  return renderEmptyState({
+    icon: "ap-icon-target",
+    title: "No contexts to show",
+    body: "Create one to get started.",
+    wrapperClass: "contexts-view__empty contexts-view__empty--rich",
+  });
 }
 
 function renderContextCard(ctx) {
@@ -148,6 +182,11 @@ function bind(root) {
       openContextDrawer(null); // drawer auto-creates a fresh "Untitled context"
       return;
     }
+    if (event.target.closest("[data-contexts-clear-query]")) {
+      pageState.query = "";
+      paint(root);
+      return;
+    }
     const dupBtn = event.target.closest("[data-contexts-duplicate]");
     if (dupBtn) {
       const copy = duplicateContext(dupBtn.dataset.contextsDuplicate);
@@ -167,22 +206,36 @@ function bind(root) {
         );
         return;
       }
-      if (!window.confirm(`Delete "${ctx.name}"?`)) return;
-      deleteContext(ctx.id);
-      import("../components/toast.js?v=20").then(({ showToast }) => showToast("Context deleted"));
+      // FIND-C1: switch from window.confirm to the DS confirm-modal so the
+      // delete prompt is keyboard-accessible, themed, and consistent with
+      // the rest of the prototype (settings drawer Discard, etc.).
+      openConfirmModal({
+        title: "Delete context?",
+        body: `"${ctx.name}" will be removed. Chats currently referencing it will need a new context.`,
+        confirmLabel: "Delete",
+        cancelLabel: "Keep",
+        danger: true,
+        onConfirm: () => {
+          deleteContext(ctx.id);
+          import("../components/toast.js?v=20").then(({ showToast }) => showToast("Context deleted"));
+        },
+      });
     }
   });
 
   root.addEventListener("input", (event) => {
     if (event.target.matches("[data-contexts-search]")) {
       pageState.query = event.target.value || "";
-      const grid = root.querySelector(".contexts-view__grid");
-      if (grid) {
-        const visible = filter(getContexts(), pageState);
-        grid.innerHTML =
+      // Repaint the body in place so empty <-> grid transitions both
+      // work without losing search input focus.
+      const body = root.querySelector(".contexts-view__body");
+      if (body) {
+        const all = getContexts();
+        const visible = filter(all, pageState);
+        body.innerHTML =
           visible.length === 0
-            ? `<div class="contexts-view__empty">No contexts match.</div>`
-            : visible.map(renderContextCard).join("");
+            ? renderContextsEmpty(all, pageState)
+            : `<div class="contexts-view__grid">${visible.map(renderContextCard).join("")}</div>`;
       }
     }
   });

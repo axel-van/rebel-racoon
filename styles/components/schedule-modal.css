@@ -166,3 +166,29 @@
   display: flex;
   gap: var(--ref-spacing-xs);
 }
+
+/* Inline error infobox shown above the footer when the confirm callback
+   throws or returns a rejected Promise — keeps the modal open so the
+   user can adjust + retry instead of losing context. */
+.schedule-modal__error {
+  margin: 0 var(--ref-spacing-md) var(--ref-spacing-xs);
+}
+
+/* Spinner shown inside the primary CTA while the confirm callback runs.
+   Same visual language as the other modal spinners (gen-image-spinner,
+   add-source__file-spinner). */
+.schedule-modal__spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--ref-color-white);
+  border-top-color: transparent;
+  animation: schedule-modal__spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes schedule-modal__spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

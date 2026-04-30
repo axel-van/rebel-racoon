@@ -227,6 +227,12 @@
   margin: 0;
 }
 
+/* Inline URL format error — surfaces below the input row when the typed
+   value isn't a valid URL. Empty input keeps the slate clean. */
+.add-source__url-error {
+  margin: 0;
+}
+
 .add-source__url-history-title {
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);

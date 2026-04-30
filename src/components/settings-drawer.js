@@ -161,6 +161,12 @@ function renderContextsSection() {
                 Start a new chat — Archie will walk you through capturing a Voice, Strategy brief, and Brand theme,
                 then offer to save it here.
               </p>
+              <div class="settings-drawer__empty-action">
+                <button type="button" class="ap-button primary orange" data-settings-new-chat>
+                  <i class="ap-icon-plus"></i>
+                  <span>Start a new chat</span>
+                </button>
+              </div>
             </div>
           `
         : `<ul class="settings-drawer__rows">${all.map(renderContextRow).join("")}</ul>`,
@@ -639,6 +645,16 @@ function onClick(event) {
   // Drawer close
   if (event.target.closest("#settingsDrawerClose")) {
     attemptClose();
+    return;
+  }
+
+  // FIND-E1: empty-state CTA on the Contexts section — close the drawer
+  // and route the user to the new-session entry point so the wizard can
+  // walk them through Voice / Brief / Brand and save the resulting
+  // context back into this list.
+  if (event.target.closest("[data-settings-new-chat]")) {
+    close();
+    window.location.replace(window.location.href.split("#")[0] + "#/session/new");
     return;
   }
 }

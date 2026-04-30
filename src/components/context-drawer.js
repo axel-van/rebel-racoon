@@ -9,6 +9,7 @@ import {
   subscribe as subscribeContexts,
 } from "../contexts-store.js?v=24";
 import { showToast } from "./toast.js?v=20";
+import { open as openConfirmModal } from "./confirm-modal.js?v=20";
 
 // Multi-context drawer (handoff §2.7).
 //   • Slides in from the right edge, 480px wide
@@ -92,7 +93,24 @@ export function open(focusId = null) {
 }
 
 export function close({ confirm = false } = {}) {
-  if (confirm && isDirty() && !window.confirm("Discard unsaved changes?")) return;
+  // FIND-C2: route the dirty-discard prompt through the DS confirm-modal
+  // instead of window.confirm so it matches the rest of the prototype's
+  // confirmation chrome.
+  if (confirm && isDirty()) {
+    openConfirmModal({
+      title: "Discard unsaved changes?",
+      body: "Any tweaks you've made to this context will be lost.",
+      confirmLabel: "Discard",
+      cancelLabel: "Keep editing",
+      danger: true,
+      onConfirm: () => doClose(),
+    });
+    return;
+  }
+  doClose();
+}
+
+function doClose() {
   state = { open: false, focusId: null, draft: null };
   if (unsubscribeStore) {
     unsubscribeStore();
@@ -102,9 +120,30 @@ export function close({ confirm = false } = {}) {
 }
 
 function focusContext(id) {
-  if (isDirty() && !window.confirm("Discard unsaved changes?")) return;
+  if (isDirty()) {
+    openConfirmModal({
+      title: "Discard unsaved changes?",
+      body: "Switching to another context will drop your in-flight tweaks.",
+      confirmLabel: "Discard",
+      cancelLabel: "Keep editing",
+      danger: true,
+      onConfirm: () => doFocusContext(id),
+    });
+    return;
+  }
+  doFocusContext(id);
+}
+
+function doFocusContext(id) {
   state.focusId = id;
   state.draft = cloneCtx(getContextById(id));
+  renderDrawer();
+}
+
+function doCreateNewContext() {
+  const created = addContext({ name: "Untitled context" });
+  state.focusId = created.id;
+  state.draft = cloneCtx(getContextById(created.id));
   renderDrawer();
 }
 
@@ -151,11 +190,18 @@ function onClick(event) {
     return;
   }
   if (event.target.closest("[data-cdrawer-new]")) {
-    if (isDirty() && !window.confirm("Discard unsaved changes?")) return;
-    const created = addContext({ name: "Untitled context" });
-    state.focusId = created.id;
-    state.draft = cloneCtx(getContextById(created.id));
-    renderDrawer();
+    if (isDirty()) {
+      openConfirmModal({
+        title: "Discard unsaved changes?",
+        body: "Starting a new context will drop your in-flight tweaks.",
+        confirmLabel: "Discard",
+        cancelLabel: "Keep editing",
+        danger: true,
+        onConfirm: () => doCreateNewContext(),
+      });
+      return;
+    }
+    doCreateNewContext();
     return;
   }
   const railRow = event.target.closest("[data-cdrawer-focus]");
@@ -230,13 +276,23 @@ function onClick(event) {
       showToast("Can't delete the last context — every chat needs one.");
       return;
     }
-    if (!window.confirm(`Delete "${state.draft.name}"?`)) return;
-    deleteContext(state.focusId);
-    showToast("Context deleted");
-    const next = getContexts()[0];
-    state.focusId = next?.id || null;
-    state.draft = next ? cloneCtx(next) : null;
-    renderDrawer();
+    const targetName = state.draft.name || "this context";
+    const targetId = state.focusId;
+    openConfirmModal({
+      title: "Delete context?",
+      body: `"${targetName}" will be removed. Chats currently referencing it will need a new context.`,
+      confirmLabel: "Delete",
+      cancelLabel: "Keep",
+      danger: true,
+      onConfirm: () => {
+        deleteContext(targetId);
+        showToast("Context deleted");
+        const next = getContexts()[0];
+        state.focusId = next?.id || null;
+        state.draft = next ? cloneCtx(next) : null;
+        renderDrawer();
+      },
+    });
   }
 }
 
@@ -296,12 +352,24 @@ function renderInner() {
   const all = getContexts();
   const draft = state.draft;
   if (!draft) {
+    // FIND-B7: align with the settings-drawer Contexts empty state
+    // (icon + title + body + CTA) so the two surfaces read identically
+    // when the user lands on either with zero contexts saved. The
+    // wrapper class stays specific to the drawer for layout.
     return html`
       <div class="context-drawer__empty">
-        <p class="muted">No contexts yet — create one to get started.</p>
-        <button type="button" class="ap-button primary orange" data-cdrawer-new>
-          <i class="ap-icon-plus"></i><span>New context</span>
-        </button>
+        <div class="context-drawer__empty-icon">
+          <i class="ap-icon-target lg"></i>
+        </div>
+        <h3 class="text-subtitle">No contexts yet</h3>
+        <p class="muted">
+          Define brand, audience, brief and tone of voice — Archie applies it to every draft you ask it to make.
+        </p>
+        <div class="context-drawer__empty-action">
+          <button type="button" class="ap-button primary orange" data-cdrawer-new>
+            <i class="ap-icon-plus"></i><span>Create your first context</span>
+          </button>
+        </div>
       </div>
     `;
   }

@@ -414,9 +414,18 @@ function renderRecentListsOnly() {
 // empty-state message takes over the list.
 function renderRecentLists(activeSessionId, query) {
   if (isNewUser() || recentSessions.length === 0) {
+    // FIND-E4: first-run anchor for the recent-conversations list. The
+    // bare "No conversations yet" was a dead end — anchor a soft hint
+    // that points at the New conversation button just above this list,
+    // so the user has an obvious next move without duplicating the
+    // primary CTA.
     return `
-      <div class="app-sidebar__empty">
+      <div class="app-sidebar__empty app-sidebar__empty--first-run">
         <span class="app-sidebar__empty-text">No conversations yet</span>
+        <span class="app-sidebar__empty-hint">
+          <i class="ap-icon-arrow-up" aria-hidden="true"></i>
+          <span>Start one with the button above.</span>
+        </span>
       </div>
     `;
   }

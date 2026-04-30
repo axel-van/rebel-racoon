@@ -172,6 +172,10 @@
   max-width: 36ch;
 }
 
+.settings-drawer__empty-action {
+  margin-top: var(--ref-spacing-xs);
+}
+
 /* ── Settings row (chained on .ap-card) ───────────────────────────────── */
 
 .settings-drawer__rows {

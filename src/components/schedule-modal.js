@@ -21,6 +21,11 @@ let state = {
   slots: [], // [{post, when: epoch ms}]
   mode: "daily",
   onConfirm: null,
+  // FIND-D3: track the scheduling phase so the user gets feedback while
+  // the (currently mocked) confirm callback runs and so a real backend
+  // failure can surface inline instead of vanishing into a no-op toast.
+  status: "idle", // 'idle' | 'scheduling' | 'error'
+  errorMessage: "",
 };
 
 const NETWORK_ICON = {
@@ -80,12 +85,22 @@ export function open({ posts, onConfirm }) {
     mode: "daily",
     slots: defaultDailySlots(posts),
     onConfirm: typeof onConfirm === "function" ? onConfirm : null,
+    status: "idle",
+    errorMessage: "",
   };
   render();
 }
 
 export function close() {
-  state = { open: false, posts: [], slots: [], mode: "daily", onConfirm: null };
+  state = {
+    open: false,
+    posts: [],
+    slots: [],
+    mode: "daily",
+    onConfirm: null,
+    status: "idle",
+    errorMessage: "",
+  };
   render();
 }
 
@@ -131,11 +146,50 @@ function onClick(event) {
     return;
   }
   if (event.target.closest("[data-schedule-confirm]")) {
-    const slots = state.slots.map((s) => ({ postId: s.post.id, when: s.when }));
-    if (state.onConfirm) state.onConfirm(slots);
-    showToast(`${slots.length} ${slots.length === 1 ? "post" : "posts"} scheduled`);
-    close();
+    if (state.status === "scheduling") return; // ignore double-click
+    confirmSchedule();
   }
+}
+
+// FIND-D3: drive the confirm through a small async wrapper so we can:
+//   • disable the CTA + paint the spinner while it runs
+//   • catch a downstream onConfirm throw + surface an inline error
+//     with retry-able state instead of silently closing on success
+//
+// onConfirm may itself be async (a real publishing API). We treat it as
+// thenable to support both shapes.
+function confirmSchedule() {
+  state.status = "scheduling";
+  state.errorMessage = "";
+  render();
+
+  const slots = state.slots.map((s) => ({ postId: s.post.id, when: s.when }));
+  let result;
+  try {
+    result = state.onConfirm ? state.onConfirm(slots) : undefined;
+  } catch (err) {
+    onConfirmFailed(err);
+    return;
+  }
+
+  if (result && typeof result.then === "function") {
+    Promise.resolve(result).then(() => onConfirmSucceeded(slots), onConfirmFailed);
+  } else {
+    onConfirmSucceeded(slots);
+  }
+}
+
+function onConfirmSucceeded(slots) {
+  showToast(`${slots.length} ${slots.length === 1 ? "post" : "posts"} scheduled`);
+  close();
+}
+
+function onConfirmFailed(err) {
+  // eslint-disable-next-line no-console
+  console.error("schedule-modal: confirm failed", err);
+  state.status = "error";
+  state.errorMessage = (err && err.message) || "Couldn't schedule these posts. Try again.";
+  render();
 }
 
 function onInput(event) {
@@ -253,13 +307,41 @@ function renderInner() {
 
     <div class="schedule-modal__body">${raw(rows)}</div>
 
+    ${state.status === "error"
+      ? raw(`
+          <div class="ap-infobox error schedule-modal__error" role="alert">
+            <i class="ap-icon-error_fill" aria-hidden="true"></i>
+            <div class="ap-infobox-content">
+              <div class="ap-infobox-texts">
+                <span class="ap-infobox-message">${escapeText(state.errorMessage)}</span>
+              </div>
+            </div>
+          </div>
+        `)
+      : ""}
+
     <footer class="schedule-modal__foot">
       <span class="schedule-modal__foot-disclosure"> Posts will publish to your connected accounts. </span>
       <div class="schedule-modal__foot-actions">
-        <button type="button" class="ap-button transparent grey" data-schedule-close>Cancel</button>
-        <button type="button" class="ap-button primary orange" data-schedule-confirm>
-          <i class="ap-icon-calendar"></i>
-          <span>Schedule ${n} ${n === 1 ? "post" : "posts"}</span>
+        <button
+          type="button"
+          class="ap-button transparent grey"
+          data-schedule-close
+          ${state.status === "scheduling" ? "disabled" : ""}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="ap-button primary orange"
+          data-schedule-confirm
+          ${state.status === "scheduling" ? "disabled" : ""}
+        >
+          ${state.status === "scheduling"
+            ? raw(`<span class="schedule-modal__spinner" aria-hidden="true"></span><span>Scheduling…</span>`)
+            : raw(
+                `<i class="ap-icon-calendar"></i><span>${state.status === "error" ? "Try again" : `Schedule ${n} ${n === 1 ? "post" : "posts"}`}</span>`,
+              )}
         </button>
       </div>
     </footer>

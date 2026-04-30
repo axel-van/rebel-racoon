@@ -216,6 +216,12 @@ export function init() {
       renderPanel();
       return;
     }
+    if (event.target.closest("[data-rpanel-drafts-clear]")) {
+      draftsFilter = "all";
+      draftsNetwork = "all";
+      renderPanel();
+      return;
+    }
     // Per-card actions on a single draft (Lot 21 rich PostCard).
     const editBtn = event.target.closest("[data-post-edit]");
     if (canDraftInlineEdit() && editBtn) {
@@ -261,6 +267,12 @@ export function init() {
     const chip = event.target.closest("[data-rpanel-ideas-filter]");
     if (chip) {
       ideasFilter = chip.dataset.rpanelIdeasFilter;
+      renderPanel();
+      return;
+    }
+    if (event.target.closest("[data-rpanel-ideas-clear]")) {
+      ideasFilter = "all";
+      ideasQuery = "";
       renderPanel();
       return;
     }
@@ -542,11 +554,19 @@ function renderDraftsView() {
     </aside>
   `;
 
+  // FIND-B5: align the no-match state with the rich `No drafts yet`
+  // pattern just below — icon + title + sub + Clear filters CTA. The
+  // CTA resets both filter axes through data-rpanel-drafts-clear so the
+  // rail buttons and state mutation stay in lockstep.
   const feed = filtered.length
     ? filtered.map((p) => renderPostCard(p, { editing: p.id === editingPostId, inlineEdit })).join("")
     : `<div class="app-right-panel__empty">
+         <div class="app-right-panel__empty-icon"><i class="ap-icon-search"></i></div>
          <div class="app-right-panel__empty-title">No drafts match this filter</div>
          <div class="app-right-panel__empty-sub">Try another filter, or clear the current one.</div>
+         <div class="app-right-panel__empty-action">
+           <button type="button" class="ap-button stroked grey" data-rpanel-drafts-clear>Clear filters</button>
+         </div>
        </div>`;
 
   return html`
@@ -775,7 +795,24 @@ function renderIdeasList() {
     (i) => !q || (i.body || "").toLowerCase().includes(q) || (i.title || "").toLowerCase().includes(q),
   );
   if (list.length === 0) {
-    return html`<div class="rpanel-ideas__no-match">No ideas match.</div>`;
+    // FIND-B6: align with the rich empty pattern. When the user has a
+    // search query, propose to clear it; otherwise the filter chip is
+    // the only narrowing axis so we point them at the All chip.
+    const hasQuery = (ideasQuery || "").trim().length > 0;
+    return html`
+      <div class="app-right-panel__empty rpanel-ideas__no-match">
+        <div class="app-right-panel__empty-icon"><i class="ap-icon-search"></i></div>
+        <div class="app-right-panel__empty-title">No ideas match</div>
+        <div class="app-right-panel__empty-sub">
+          ${hasQuery
+            ? `No idea matches "${escapeText(ideasQuery)}". Try a different term or clear the search.`
+            : "Switch to a different kind, or pick All to broaden the list."}
+        </div>
+        <div class="app-right-panel__empty-action">
+          <button type="button" class="ap-button stroked grey" data-rpanel-ideas-clear>Clear filters</button>
+        </div>
+      </div>
+    `;
   }
   return list.map((i) => renderIdeaCompact(i)).join("");
 }

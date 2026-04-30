@@ -45,11 +45,12 @@ export const recentSessions = [
 ];
 
 // Empty-state Chat starter cards — the four handoff-spec prompts shown when a
-// conversation has no user message yet. The {{source}} placeholder is left
-// literal in the prompt so the user (or a future Lot) can replace it via the
-// source picker. Per Q14 these are now the only starters in the product —
-// the previous `templateStarters` array (dashboard sidebar workflow templates)
-// was dropped at Lot 2.1.
+// conversation has no user message yet. The `{{source}}` placeholder is
+// resolved at render time by renderEmptyHero in screens/session.js — either
+// the filename of the first attached source, or the literal "your source"
+// fallback for first-run users. Per Q14 these are now the only starters in
+// the product — the previous `templateStarters` array (dashboard sidebar
+// workflow templates) was dropped at Lot 2.1.
 export const chatStarters = [
   {
     id: "starter-batch",

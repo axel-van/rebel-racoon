@@ -292,74 +292,7 @@ function renderAssistantPanel(session, attachedContext) {
                       </button>
                     </div>
                   </div>
-                  <div class="composer-context" data-composer-context>
-                    <button
-                      type="button"
-                      class="ap-tag tagOrange composer-context__trigger"
-                      data-context-trigger
-                      aria-haspopup="menu"
-                      aria-expanded="false"
-                    >
-                      <span
-                        class="composer-context__dot"
-                        data-context-dot
-                        style="background: var(--ref-color-orange-100);"
-                      ></span>
-                      <span data-context-label>Agorapulse · Studio launch</span>
-                      <i class="ap-icon-arrow-down"></i>
-                    </button>
-                    <div class="ap-action-dropdown composer-context__menu" data-context-menu hidden role="menu">
-                      <button
-                        type="button"
-                        class="ap-action-dropdown-item"
-                        data-context-id="agp-studio"
-                        data-context-color="orange-100"
-                        data-context-name="Agorapulse · Studio launch"
-                        role="menuitem"
-                      >
-                        <span class="composer-context__dot" style="background: var(--ref-color-orange-100);"></span>
-                        <div class="ap-action-dropdown-item-text">
-                          <div class="ap-action-dropdown-item-label">Agorapulse · Studio launch</div>
-                        </div>
-                      </button>
-                      <button
-                        type="button"
-                        class="ap-action-dropdown-item"
-                        data-context-id="agp-brand"
-                        data-context-color="electric-blue-100"
-                        data-context-name="Agorapulse · Brand awareness"
-                        role="menuitem"
-                      >
-                        <span
-                          class="composer-context__dot"
-                          style="background: var(--ref-color-electric-blue-100);"
-                        ></span>
-                        <div class="ap-action-dropdown-item-text">
-                          <div class="ap-action-dropdown-item-label">Agorapulse · Brand awareness</div>
-                        </div>
-                      </button>
-                      <button
-                        type="button"
-                        class="ap-action-dropdown-item"
-                        data-context-id="perso-side"
-                        data-context-color="green-100"
-                        data-context-name="Personal · Side project"
-                        role="menuitem"
-                      >
-                        <span class="composer-context__dot" style="background: var(--ref-color-green-100);"></span>
-                        <div class="ap-action-dropdown-item-text">
-                          <div class="ap-action-dropdown-item-label">Personal · Side project</div>
-                        </div>
-                      </button>
-                      <div class="ap-action-dropdown-divider"></div>
-                      <button type="button" class="ap-action-dropdown-item" data-context-id="__new__" role="menuitem">
-                        <i class="ap-icon-plus"></i>
-                        <div class="ap-action-dropdown-item-text">
-                          <div class="ap-action-dropdown-item-label">Nouveau contexte…</div>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
+                  ${raw(renderComposerContextDropdown(attachedContext))}
                 </div>
                 <button
                   type="button"
@@ -382,21 +315,106 @@ function renderAssistantPanel(session, attachedContext) {
   `;
 }
 
+// Composer context dropdown — trigger + menu items derived live from the
+// contexts-store, replacing the previous hardcoded markup that diverged
+// from the actual store (esp. broken in `isNewUser()` mode where the store
+// is empty but the dropdown still showed three Agorapulse contexts).
+//
+// FIND-A5: trigger reflects the currently attached context (or a neutral
+// "No context" fallback); menu lists every saved context plus a New CTA.
+// Click handler at the bottom of bindSession updates the URL via setQuery,
+// so the session re-renders with the chosen context attached.
+function renderComposerContextDropdown(attachedContext) {
+  const all = getContexts();
+  const triggerColor = attachedContext?.color || "grey";
+  const triggerLabel = attachedContext?.name || "No context";
+  const triggerClass = attachedContext
+    ? "ap-tag tagOrange composer-context__trigger"
+    : "ap-tag grey composer-context__trigger composer-context__trigger--empty";
+  const items = all
+    .map(
+      (c) => `
+        <button
+          type="button"
+          class="ap-action-dropdown-item ${c.id === attachedContext?.id ? "is-on" : ""}"
+          data-context-id="${escapeHtml(c.id)}"
+          role="menuitem"
+        >
+          <span class="composer-context__dot" style="background: var(--ref-color-${escapeHtml(c.color || "grey")}-100);"></span>
+          <div class="ap-action-dropdown-item-text">
+            <div class="ap-action-dropdown-item-label">${escapeHtml(c.name)}</div>
+          </div>
+        </button>
+      `,
+    )
+    .join("");
+  const detachItem = attachedContext
+    ? `
+        <button type="button" class="ap-action-dropdown-item" data-context-id="__detach__" role="menuitem">
+          <i class="ap-icon-close"></i>
+          <div class="ap-action-dropdown-item-text">
+            <div class="ap-action-dropdown-item-label">Detach context</div>
+          </div>
+        </button>
+      `
+    : "";
+  const noneItem =
+    !attachedContext && all.length === 0
+      ? `<div class="ap-action-dropdown-item composer-context__menu-empty muted">No saved contexts yet.</div>`
+      : "";
+  return `
+    <div class="composer-context" data-composer-context>
+      <button
+        type="button"
+        class="${triggerClass}"
+        data-context-trigger
+        aria-haspopup="menu"
+        aria-expanded="false"
+      >
+        <span class="composer-context__dot" data-context-dot style="background: var(--ref-color-${escapeHtml(triggerColor)}-100);"></span>
+        <span data-context-label>${escapeHtml(triggerLabel)}</span>
+        <i class="ap-icon-arrow-down"></i>
+      </button>
+      <div class="ap-action-dropdown composer-context__menu" data-context-menu hidden role="menu">
+        ${noneItem}
+        ${items}
+        ${items || detachItem ? `<div class="ap-action-dropdown-divider"></div>` : ""}
+        ${detachItem}
+        <button type="button" class="ap-action-dropdown-item" data-context-id="__new__" role="menuitem">
+          <i class="ap-icon-plus"></i>
+          <div class="ap-action-dropdown-item-text">
+            <div class="ap-action-dropdown-item-label">New context…</div>
+          </div>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 // Empty-state hero — shown inside the assistant thread region when the user
 // hasn't sent a first message yet. Mirrors the handoff (Chat.jsx empty state):
 // hero question + sub-line + 2x2 grid of starter cards. Cards click → prefill
 // the composer textarea (handler in bindSession via [data-starter]).
+//
+// FIND-A4: the raw prompts in mocks.chatStarters use a `{{source}}` placeholder
+// that the previous version dropped into the textarea verbatim. Resolve it at
+// render time: if a source is attached we name it; otherwise we fall back to
+// "your source" so the prompt still reads cleanly for first-run users.
 function renderEmptyHero() {
+  const sources = getStreamSources();
+  const firstSource = sources.find((s) => s.status !== "Processing") || sources[0] || null;
+  const sourceLabel = firstSource ? `"${firstSource.filename}"` : "your source";
   const cards = chatStarters
-    .map(
-      (s) => `
-        <button type="button" class="starter-card" data-starter="${s.id}" data-starter-prompt="${escapeHtml(s.prompt)}">
+    .map((s) => {
+      const resolvedPrompt = s.prompt.replace(/\{\{source\}\}/g, sourceLabel);
+      return `
+        <button type="button" class="starter-card" data-starter="${s.id}" data-starter-prompt="${escapeHtml(resolvedPrompt)}">
           <span class="starter-card__icon"><i class="${s.icon}"></i></span>
           <span class="starter-card__title">${s.title}</span>
-          <span class="starter-card__prompt">${s.prompt}</span>
+          <span class="starter-card__prompt">${escapeHtml(resolvedPrompt)}</span>
         </button>
-      `,
-    )
+      `;
+    })
     .join("");
   return html`
     <div class="empty-chat" data-empty-chat>
@@ -1032,6 +1050,13 @@ function wireAssistantPanel(root, session, attachedContext) {
 // --- Thinking chip -------------------------------------------------------
 
 let thinkingIntervalId = null;
+// FIND-D1: 30-second cap on a single thinking turn — past that we surface a
+// "taking longer than expected" toast so the user knows the system is still
+// alive. We don't auto-cancel the message (the mock pipeline always finishes
+// in <2s), but the toast is the hook that wires to a real timeout / retry
+// path when the API lands.
+const THINKING_TIMEOUT_MS = 30000;
+const timedOutMessageIds = new Set();
 
 function updateThinkingChip(sessionId) {
   const chip = document.querySelector("[data-assistant-thinking]");
@@ -1082,6 +1107,18 @@ function startThinkingTimer(sessionId) {
       return;
     }
     paintThinkingChip(chip, loading.createdAt || Date.now());
+
+    // Per-message timeout — show the toast once per loading turn that
+    // crosses the boundary, so successive long turns each get their own
+    // notice instead of a single early one and silence afterwards.
+    const elapsed = Date.now() - (loading.createdAt || Date.now());
+    if (elapsed >= THINKING_TIMEOUT_MS && !timedOutMessageIds.has(loading.id)) {
+      timedOutMessageIds.add(loading.id);
+      showToast("This is taking longer than expected. Hang tight, or refresh if it stays stuck.", {
+        variant: "error",
+        duration: 6000,
+      });
+    }
   }, 1000);
 }
 
@@ -1256,16 +1293,16 @@ function renderDraftTurn(message) {
 // upload (started via the 📎 button → real File) or a source (started via
 // the + menu items → fake scripted source for the proto). Display state is
 // re-derived from the global sources-stream snapshot on every paint.
-const COMPOSER_CONTEXTS = [
-  { id: "agp-studio", label: "Agorapulse · Studio launch", color: "orange-100" },
-  { id: "agp-brand", label: "Agorapulse · Brand awareness", color: "electric-blue-100" },
-  { id: "perso-side", label: "Personal · Side project", color: "green-100" },
-];
+// FIND-A5: COMPOSER_CONTEXTS / composerSt.contextId removed when the
+// composer dropdown moved to a contexts-store-driven render. The dropdown
+// now reads the attached context from the session's URL state and the
+// menu items from getContexts(); selection routes through setQuery, so
+// per-composer context tracking is no longer needed here.
 const composerStates = new Map();
 function getComposerState(sessionId) {
   let s = composerStates.get(sessionId);
   if (!s) {
-    s = { contextId: COMPOSER_CONTEXTS[0].id, pills: new Map() };
+    s = { pills: new Map() };
     composerStates.set(sessionId, s);
   }
   return s;
@@ -1755,8 +1792,10 @@ function bindSession(root, session) {
       }
 
       // Empty-state starter card click — pre-fills the composer textarea
-      // with the starter's prompt text. Doesn't auto-send so the user can
-      // tweak the {{source}} placeholder before submitting.
+      // with the starter's prompt text. The `{{source}}` placeholder has
+      // already been resolved at render time (cf. renderEmptyHero), so the
+      // textarea receives clean text the user can either submit as-is or
+      // tweak before sending.
       const starterBtn = event.target.closest("[data-starter]");
       if (starterBtn && input) {
         input.value = starterBtn.dataset.starterPrompt;
@@ -1858,24 +1897,22 @@ function bindSession(root, session) {
       if (ctxItem) {
         event.preventDefault();
         const id = ctxItem.dataset.contextId;
-        if (id === "__new__") {
-          // eslint-disable-next-line no-console
-          console.log("create context");
-        } else {
-          const composerSt = getComposerState(session.id);
-          composerSt.contextId = id;
-          const trigger = root.querySelector("[data-context-trigger]");
-          const dot = trigger?.querySelector("[data-context-dot]");
-          const label = trigger?.querySelector("[data-context-label]");
-          const color = ctxItem.dataset.contextColor;
-          const name = ctxItem.dataset.contextName;
-          if (dot && color) dot.setAttribute("style", `background: var(--ref-color-${color});`);
-          if (label && name) label.textContent = name;
-        }
         const menu = root.querySelector("[data-context-menu]");
         const trigger = root.querySelector("[data-context-trigger]");
         if (menu) menu.hidden = true;
         if (trigger) trigger.setAttribute("aria-expanded", "false");
+        if (id === "__new__") {
+          // Hand the user over to the contexts library where they can author
+          // a new context with the full editor — same destination the sidebar
+          // Contexts nav points at.
+          navigate("/contexts");
+        } else if (id === "__detach__") {
+          setQuery({ contextId: "" });
+        } else {
+          // Update the URL so renderSession resolves the new context and
+          // re-renders the panel with attachedContext / hasContext refreshed.
+          setQuery({ contextId: id });
+        }
         return;
       }
       if (!event.target.closest(".composer-context")) {
