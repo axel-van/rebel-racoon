@@ -120,6 +120,12 @@ export function appendExtractedIdeas(sessionId, sources) {
 // inline extraction turn in the assistant thread (e.g. the composer "Add
 // video → Extract ideas" branch). Each idea may omit secondary fields;
 // defaults are filled in to match the seed idea shape.
+//
+// We mutate BOTH the per-session ideasMap AND the shared mocks `seedIdeas`
+// array. The right-panel + /ideas + /sources surfaces read directly from
+// mocks (the prototype never wired them to the library store), so without
+// the dual-write the injected ideas would only show up via library APIs
+// and remain invisible in the Ideas panel.
 export function injectIdeasForSource(sessionId, sourceId, ideas) {
   if (!Array.isArray(ideas) || ideas.length === 0) return [];
   getIdeas(sessionId);
@@ -127,6 +133,10 @@ export function injectIdeasForSource(sessionId, sourceId, ideas) {
     id: i.id || newId("idea"),
     title: i.title,
     body: i.body,
+    kind: i.kind || "insight",
+    tags: i.tags || [],
+    used: i.used ?? 0,
+    ref: i.ref || "",
     rationale: i.rationale || "",
     relevance: i.relevance || "Medium relevance",
     relevanceColor: i.relevanceColor || "tagOrange",
@@ -138,6 +148,11 @@ export function injectIdeasForSource(sessionId, sourceId, ideas) {
     extractedAt: "just now",
   }));
   ideasMap.get(sessionId).unshift(...created);
+  // Dual-write — right-panel / standalone /ideas / /sources read from this
+  // module-level array, not from ideasMap. unshift mutates in place so
+  // every consumer with a reference to it (including IDEAS = MOCK_IDEAS at
+  // module-load time) sees the new entries on its next render.
+  seedIdeas.unshift(...created.map((i) => ({ ...i })));
   notify(sessionId);
   return created;
 }

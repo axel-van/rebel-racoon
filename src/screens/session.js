@@ -14,7 +14,7 @@ import {
   subscribe,
   submitAssistantChoice,
 } from "../assistant.js?v=25";
-import { getSources, getIdeas, injectIdeasForSource, subscribe as subscribeLibrary } from "../library.js?v=24";
+import { getSources, getIdeas, injectIdeasForSource, subscribe as subscribeLibrary } from "../library.js?v=25";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import { getPosts, addPostDraft, attachImageToDraft, subscribe as subscribePostsStore } from "../posts-store.js?v=23";
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
@@ -1527,12 +1527,17 @@ const SCRIPTED_KINDS = {
 // demo / founder-talk video. Full idea shape (matches library.js's
 // EXTRA_IDEA_TEMPLATES) so the Ideas panel can render them with all
 // secondary fields (rationale, relevance, confidence, channels).
-function mockVideoIdeas(sourceId) {
+function mockVideoIdeas(sourceId, filename) {
+  const ref = filename ? `Video · ${filename}` : "Video";
   return [
     {
       id: `idea_${sourceId}_1`,
       title: "Opening thesis — one-line framing",
       body: "The video opens with the central claim. Reads as a standalone post or as the lede of a longer piece.",
+      kind: "hook",
+      tags: ["hook", "positioning"],
+      used: 0,
+      ref,
       rationale: "Quotable single-sentence framing — strong cold open for a thought-leadership post.",
       relevance: "High relevance",
       relevanceColor: "orange",
@@ -1543,6 +1548,10 @@ function mockVideoIdeas(sourceId) {
       id: `idea_${sourceId}_2`,
       title: "Demo segment — value lands visually",
       body: "Short compact demo where the product's value lands in under a minute. Travels well on vertical formats.",
+      kind: "story",
+      tags: ["demo", "product"],
+      used: 0,
+      ref,
       rationale: "Visual demos with a clear payoff outperform talking-head clips on vertical formats.",
       relevance: "Medium relevance",
       relevanceColor: "tagOrange",
@@ -1553,6 +1562,10 @@ function mockVideoIdeas(sourceId) {
       id: `idea_${sourceId}_3`,
       title: "Headline stat with the story behind it",
       body: "Specific number delivered with the customer context that earns it. Strong proof point for LinkedIn.",
+      kind: "stat",
+      tags: ["stat", "proof"],
+      used: 0,
+      ref,
       rationale: "Numbers + before/after context land on LinkedIn audiences who over-index on time-savings proof.",
       relevance: "High relevance",
       relevanceColor: "orange",
@@ -1563,6 +1576,10 @@ function mockVideoIdeas(sourceId) {
       id: `idea_${sourceId}_4`,
       title: "Contrarian POV — the unpopular call",
       body: "Founder explains a decision that goes against the obvious move. Single-beat thought-leadership material.",
+      kind: "insight",
+      tags: ["contrarian", "pov"],
+      used: 0,
+      ref,
       rationale: "Strong POV in a single beat — drives debate without alienating either side.",
       relevance: "Medium relevance",
       relevanceColor: "tagOrange",
@@ -1800,7 +1817,7 @@ function bindSession(root, session) {
       const { sourceId, filename } = msg.context || {};
       const pick = selectedValues[0];
       if (sourceId && pick) {
-        const ideas = pick === "ideas" ? mockVideoIdeas(sourceId) : [];
+        const ideas = pick === "ideas" ? mockVideoIdeas(sourceId, filename) : [];
         completeScriptedSource(sourceId, {
           signal: ideas.length > 0 ? "Medium signal" : "Low signal",
           signalColor: ideas.length > 0 ? "tagOrange" : "grey",
