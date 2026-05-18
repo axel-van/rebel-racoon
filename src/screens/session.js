@@ -4,10 +4,17 @@ import { renderTopbar } from "../components/topbar.js?v=34";
 import { getSessionById, socialAccounts, recentSessions, chatStarters } from "../mocks.js?v=26";
 import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=24";
 import { isNewUser } from "../user-mode.js?v=20";
-import { getThread, sendMessage, postAssistantMessage, subscribe, submitAssistantChoice } from "../assistant.js?v=23";
+import {
+  getThread,
+  sendMessage,
+  postAssistantMessage,
+  postDraftResult,
+  subscribe,
+  submitAssistantChoice,
+} from "../assistant.js?v=23";
 import { getSources, getIdeas, subscribe as subscribeLibrary } from "../library.js?v=23";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
-import { getPosts, attachImageToDraft, subscribe as subscribePostsStore } from "../posts-store.js?v=23";
+import { getPosts, addPostDraft, attachImageToDraft, subscribe as subscribePostsStore } from "../posts-store.js?v=23";
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
@@ -23,6 +30,7 @@ import {
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=23";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=20";
+import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";
 import { open as openSettingsDrawer } from "../components/settings-drawer.js?v=22";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=21";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=21";
@@ -37,6 +45,7 @@ import {
   subscribeUploads,
   pushScriptedSource,
   completeScriptedSource,
+  updateSourceClips,
 } from "../sources-stream.js?v=25";
 import { showToast } from "../components/toast.js?v=20";
 import {
@@ -380,11 +389,21 @@ function renderEmptyHero() {
   const sources = getStreamSources();
   const firstSource = sources.find((s) => s.status !== "Processing") || sources[0] || null;
   const sourceLabel = firstSource ? `"${firstSource.filename}"` : "your source";
+  // `{{video-source}}` resolves to the first processed video source so the
+  // "Extract video clips" starter reads naturally even when the first
+  // overall source is a PDF.
+  const firstVideo = sources.find(
+    (s) => (s.kind || "").toLowerCase() === "video" && s.status === "Processed" && typeof s.durationSec === "number",
+  );
+  const videoLabel = firstVideo ? `"${firstVideo.filename}"` : "your video";
   const cards = chatStarters
     .map((s) => {
-      const resolvedPrompt = s.prompt.replace(/\{\{source\}\}/g, sourceLabel);
+      const resolvedPrompt = s.prompt
+        .replace(/\{\{source\}\}/g, sourceLabel)
+        .replace(/\{\{video-source\}\}/g, videoLabel);
+      const actionAttr = s.action ? ` data-starter-action="${s.action}"` : "";
       return `
-        <button type="button" class="starter-card" data-starter="${s.id}" data-starter-prompt="${escapeHtml(resolvedPrompt)}">
+        <button type="button" class="starter-card" data-starter="${s.id}"${actionAttr} data-starter-prompt="${escapeHtml(resolvedPrompt)}">
           <span class="starter-card__icon"><i class="${s.icon}"></i></span>
           <span class="starter-card__title">${s.title}</span>
           <span class="starter-card__prompt">${escapeHtml(resolvedPrompt)}</span>
@@ -1780,7 +1799,51 @@ function bindSession(root, session) {
       // already been resolved at render time (cf. renderEmptyHero), so the
       // textarea receives clean text the user can either submit as-is or
       // tweak before sending.
+      //
+      // Starters can opt into a direct action instead of text injection by
+      // setting `action` on the mock. Today the only action is
+      // "open-video-clips" — click pops the Video Clips modal on the first
+      // processed video source and pipes drafts into the current session.
+      // If no video source exists, fall back to opening the Add Source
+      // modal so the user can upload one.
       const starterBtn = event.target.closest("[data-starter]");
+      if (starterBtn && starterBtn.dataset.starterAction === "open-video-clips") {
+        const videoSrc = getStreamSources().find(
+          (s) =>
+            (s.kind || "").toLowerCase() === "video" && s.status === "Processed" && typeof s.durationSec === "number",
+        );
+        if (!videoSrc) {
+          showToast("Upload a video first to extract clips.", { duration: 3200 });
+          openAddSourceModal({ tab: "upload" });
+          return;
+        }
+        openVideoClipsModal(videoSrc, {
+          onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
+          onUseClips: (selectedClips, source) => {
+            const drafts = selectedClips.map((clip) =>
+              addPostDraft(session.id, {
+                network: clip.network,
+                text: [clip.title, clip.summary].filter(Boolean),
+                hashtags: (clip.tags || []).map((t) => `#${t}`),
+                clipRef: {
+                  start: clip.start,
+                  end: clip.end,
+                  sourceName: source.filename,
+                  hue: clip.hue,
+                },
+              }),
+            );
+            postDraftResult(session.id, {
+              ideaTitle: `From ${source.filename}`,
+              drafts,
+            });
+            showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from ${source.filename}`, {
+              duration: 3200,
+            });
+          },
+        });
+        return;
+      }
       if (starterBtn) {
         const input = getInput();
         if (!input) return;

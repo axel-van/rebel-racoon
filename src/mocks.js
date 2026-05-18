@@ -72,10 +72,14 @@ export const chatStarters = [
       "Turn {{source}} into 8 posts: 3 for LinkedIn, 3 for X, 2 for Instagram. Different angles, same brand voice.",
   },
   {
-    id: "starter-customer",
-    icon: "ap-icon-megaphone",
-    title: "Customer story → multi-channel",
-    prompt: "Use {{source}} to draft a customer-story post for each network we publish on.",
+    id: "starter-video-clips",
+    icon: "ap-icon-video",
+    title: "Extract video clips",
+    prompt:
+      "Surface the best moments from {{video-source}} and turn them into posts across LinkedIn, X, Instagram, and TikTok.",
+    // `action` switches the starter from text-injection to a direct
+    // dispatch in renderEmptyHero's click handler. See session.js.
+    action: "open-video-clips",
   },
 ];
 
