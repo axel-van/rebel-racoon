@@ -17,7 +17,7 @@
 // chooses "Save as global". updateContext is used by the section-edit flow
 // when scope is "Update everywhere".
 
-import { contexts as seed } from "./mocks.js?v=25";
+import { contexts as seed } from "./mocks.js?v=26";
 import { isNewUser } from "./user-mode.js?v=20";
 
 // Lot 15 — first-time user mode starts empty so the standalone /contexts

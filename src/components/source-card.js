@@ -123,6 +123,21 @@ export function renderSourceCard(source, allIdeas = [], { selectable = false, is
         <span>Ask</span>
       </button>`;
 
+  // "Suggest clips" — only on processed video sources that ship a duration.
+  // durationSec is the gate: legacy mocks without one keep the button hidden.
+  const isVideo = (source.kind || "").toLowerCase() === "video";
+  const hasVideoData = isVideo && !isProcessing && typeof source.durationSec === "number";
+  const clipsButton = hasVideoData
+    ? `<button
+          type="button"
+          class="ap-button transparent grey source-card__clips"
+          data-source-suggest-clips="${source.id}"
+        >
+          <i class="ap-icon-sparkles"></i>
+          <span>Suggest clips</span>
+        </button>`
+    : "";
+
   // Leading checkbox — only when the workspace is in selection mode AND the
   // source is processed. The DS `.ap-checkbox-container` uses a hidden
   // input + sibling `<i>` to render the visual box (see ds/css-ui index
@@ -191,6 +206,7 @@ export function renderSourceCard(source, allIdeas = [], { selectable = false, is
       </div>
 
       <div class="source-card__actions">
+        ${clipsButton}
         ${askButton}
         ${processingPill}
         ${moreMenu}
