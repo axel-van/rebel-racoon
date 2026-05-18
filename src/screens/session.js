@@ -1046,7 +1046,18 @@ function wireAssistantPanel(root, session, attachedContext) {
   // analyzing → ready transition crosses the upload→source boundary on the
   // 📎 path, so subscribing to both catches every state flip. Initial
   // paint covers pills carried over by composerStates from a prior render.
-  const offComposerSources = subscribeSources(() => paintComposerPills(root, session.id));
+  // The thread also repaints on source changes so inline clip-extraction
+  // cards flip from pending to ready (and pick up clipExtractionStatus +
+  // clips count) without an extra notify hop.
+  const repaintThreadFromSources = () => {
+    const thread = getThreadEl();
+    if (!thread) return;
+    thread.innerHTML = renderThread(getThread(session.id));
+  };
+  const offComposerSources = subscribeSources(() => {
+    paintComposerPills(root, session.id);
+    repaintThreadFromSources();
+  });
   const offComposerUploads = subscribeUploads(() => paintComposerPills(root, session.id));
   paintComposerPills(root, session.id);
 
