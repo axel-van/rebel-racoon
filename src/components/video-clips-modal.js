@@ -798,11 +798,12 @@ function enterEdit(clipId) {
   draft = { ...clip };
   draftPlayhead = clip.start;
   render();
-  // Scroll the floating editor into view smoothly.
-  setTimeout(() => {
-    const editor = document.querySelector("[data-vc-floating]");
-    if (editor) editor.scrollIntoView({ block: "start", behavior: "smooth" });
-  }, 30);
+  // Reset the body's scroll position so the sticky editor sits at the top
+  // of the visible area. NOT scrollIntoView — that bubbles up the ancestor
+  // chain and scrolls the modal itself (yes, even with overflow: hidden),
+  // which pushes the modal header offscreen and leaves dead space below
+  // the footer.
+  if (bodyEl) bodyEl.scrollTop = 0;
 }
 
 function saveEdit() {
