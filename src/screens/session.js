@@ -1796,31 +1796,23 @@ function bindSession(root, session) {
       const { sourceId, filename } = msg.context || {};
       const pick = selectedValues[0];
       if (sourceId && pick) {
-        const completeFor = (extraIdeas) => {
-          completeScriptedSource(sourceId, {
-            signal: extraIdeas > 0 ? "Medium signal" : "Low signal",
-            signalColor: extraIdeas > 0 ? "tagOrange" : "grey",
-            ideaCount: extraIdeas,
+        const ideas = pick === "ideas" ? mockVideoIdeas(sourceId) : [];
+        completeScriptedSource(sourceId, {
+          signal: ideas.length > 0 ? "Medium signal" : "Low signal",
+          signalColor: ideas.length > 0 ? "tagOrange" : "grey",
+          ideaCount: ideas.length,
+        });
+        const source = getStreamSources().find((s) => s.id === sourceId);
+        if (source && pick === "clips") {
+          postClipExtractionTurn(session.id, { sourceId, filename });
+          startClipExtraction(source, {
+            onReady: (ready) => openVideoClipsModalForSession(ready, session),
           });
-          const source = getStreamSources().find((s) => s.id === sourceId);
-          if (!source) return;
-          if (pick === "clips") {
-            postClipExtractionTurn(session.id, { sourceId, filename });
-            startClipExtraction(source, {
-              onReady: (ready) => openVideoClipsModalForSession(ready, session),
-            });
-          } else if (pick === "ideas") {
-            // Ideas now land in the Ideas panel (right-panel), not as an
-            // inline assistant turn. The composer pill's green "N nouvelles
-            // idées" badge + the topbar Ideas pill are the user's entry
-            // points to them.
-            injectIdeasForSource(session.id, sourceId, mockVideoIdeas(sourceId));
-          }
-        };
-        if (pick === "clips") {
-          completeFor(0);
-        } else if (pick === "ideas") {
-          completeFor(3 + Math.floor(Math.random() * 6));
+        } else if (source && pick === "ideas") {
+          // Ideas land in the Ideas panel (right-panel), not as an inline
+          // assistant turn. The composer pill's green "N nouvelles idées"
+          // badge + the topbar Ideas pill are the user's entry points.
+          injectIdeasForSource(session.id, sourceId, ideas);
         }
       }
     }
