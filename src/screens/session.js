@@ -1620,7 +1620,11 @@ function renderComposerPill(pillId, snap, state) {
   // minimal (icon + label + ×) so the eye reads "this file" → "what's
   // happening with it" left-to-right.
   let siblingIndicator = "";
-  if (snap.state === "analyzing") {
+  // For video sources, the source stays in Processing until the user picks
+  // clips vs ideas — the AI is waiting on the user, not analyzing. Skip the
+  // misleading "Analyse en cours" spinner for that case.
+  const isVideoAwaiting = snap.state === "analyzing" && (snap.kindLabel || "").toLowerCase() === "video";
+  if (snap.state === "analyzing" && !isVideoAwaiting) {
     siblingIndicator = `
       <span class="composer-pill__indicator analyzing" aria-live="polite">
         <span class="ap-loader blue size-16" aria-hidden="true">
