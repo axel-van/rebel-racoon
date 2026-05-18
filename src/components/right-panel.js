@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=23";
 import { isFlagOn } from "../feature-flags.js?v=2";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=25";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=26";
 import { isNewUser } from "../user-mode.js?v=20";
 import { getPath } from "../router.js?v=20";
 import {

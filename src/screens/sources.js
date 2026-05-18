@@ -2,8 +2,20 @@ import { html, raw } from "../utils.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=34";
 import { renderSourceCard } from "../components/source-card.js?v=26";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=21";
-import { getSources, subscribeSources, classifyFile, startFileUpload } from "../sources-stream.js?v=25";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=25";
+import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";
+import { ensureClipsThen } from "../components/clip-extraction-loader.js?v=1";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=21";
+import { addPostDraft } from "../posts-store.js?v=23";
+import { postDraftResult } from "../assistant.js?v=23";
+import { navigate } from "../router.js?v=21";
+import {
+  getSources,
+  subscribeSources,
+  classifyFile,
+  startFileUpload,
+  updateSourceClips,
+} from "../sources-stream.js?v=25";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=26";
 import { isNewUser } from "../user-mode.js?v=20";
 import { showToast } from "../components/toast.js?v=20";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
@@ -221,6 +233,66 @@ function bind(root, signal) {
         pageState.kind = "all";
         pageState.query = "";
         paint(root);
+        return;
+      }
+
+      // "Suggest clips" on a video source card → open the Video Clips modal.
+      // Edits persist via sources-stream (so reopening shows the user's
+      // trims). "Draft posts from N clips" pops the chat picker so the user
+      // chooses which conversation the drafts land in.
+      const clipsBtn = event.target.closest("[data-source-suggest-clips]");
+      if (clipsBtn) {
+        event.preventDefault();
+        const sourceId = clipsBtn.dataset.sourceSuggestClips;
+        const src = getSources().find((s) => s.id === sourceId);
+        if (!src) return;
+        // ensureClipsThen runs the 30s extraction loader if the source has no
+        // clips yet, then opens the modal; if clips already exist it hands
+        // off straight to the modal. Same callbacks either way.
+        ensureClipsThen(src, (ready) =>
+          openVideoClipsModal(ready, {
+            onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
+            onUseClips: (selectedClips, source) => {
+              openChatPickerModal({
+                onPick: (pick) => {
+                  // chat-picker's contract: { kind: "new" } | { kind: "existing", session }.
+                  // "new" is treated as start-from-scratch — for the prototype we
+                  // just toast and skip; real implementation would mint a fresh
+                  // conversation and inject the drafts.
+                  if (pick?.kind !== "existing" || !pick.session?.id) {
+                    showToast("Pick an existing conversation to receive the drafts.", {
+                      variant: "warning",
+                      duration: 3200,
+                    });
+                    return;
+                  }
+                  const sessionId = pick.session.id;
+                  const drafts = selectedClips.map((clip) =>
+                    addPostDraft(sessionId, {
+                      network: clip.network,
+                      text: [clip.title, clip.summary].filter(Boolean),
+                      hashtags: (clip.tags || []).map((t) => `#${t}`),
+                      clipRef: {
+                        start: clip.start,
+                        end: clip.end,
+                        sourceName: source.filename,
+                        hue: clip.hue,
+                      },
+                    }),
+                  );
+                  postDraftResult(sessionId, {
+                    ideaTitle: `From ${source.filename}`,
+                    drafts,
+                  });
+                  navigate(`/session/${sessionId}`);
+                  showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from ${source.filename}`, {
+                    duration: 3200,
+                  });
+                },
+              });
+            },
+          }),
+        );
         return;
       }
     },

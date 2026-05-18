@@ -123,6 +123,23 @@ export function renderSourceCard(source, allIdeas = [], { selectable = false, is
         <span>Ask</span>
       </button>`;
 
+  // "Suggest clips" — surfaces on every processed video source. The
+  // sources.js click handler runs the 30s extraction loader first if the
+  // source hasn't been through extraction yet, then opens the Video Clips
+  // modal; if clips already exist it hands off straight to the modal.
+  const isVideo = (source.kind || "").toLowerCase() === "video";
+  const clipsButton =
+    isVideo && !isProcessing
+      ? `<button
+          type="button"
+          class="ap-button transparent grey source-card__clips"
+          data-source-suggest-clips="${source.id}"
+        >
+          <i class="ap-icon-sparkles"></i>
+          <span>Suggest clips</span>
+        </button>`
+      : "";
+
   // Leading checkbox — only when the workspace is in selection mode AND the
   // source is processed. The DS `.ap-checkbox-container` uses a hidden
   // input + sibling `<i>` to render the visual box (see ds/css-ui index
@@ -191,6 +208,7 @@ export function renderSourceCard(source, allIdeas = [], { selectable = false, is
       </div>
 
       <div class="source-card__actions">
+        ${clipsButton}
         ${askButton}
         ${processingPill}
         ${moreMenu}

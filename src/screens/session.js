@@ -1,13 +1,20 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=34";
-import { getSessionById, socialAccounts, recentSessions, chatStarters } from "../mocks.js?v=25";
+import { getSessionById, socialAccounts, recentSessions, chatStarters } from "../mocks.js?v=26";
 import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=24";
 import { isNewUser } from "../user-mode.js?v=20";
-import { getThread, sendMessage, postAssistantMessage, subscribe, submitAssistantChoice } from "../assistant.js?v=23";
+import {
+  getThread,
+  sendMessage,
+  postAssistantMessage,
+  postDraftResult,
+  subscribe,
+  submitAssistantChoice,
+} from "../assistant.js?v=23";
 import { getSources, getIdeas, subscribe as subscribeLibrary } from "../library.js?v=23";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
-import { getPosts, attachImageToDraft, subscribe as subscribePostsStore } from "../posts-store.js?v=23";
+import { getPosts, addPostDraft, attachImageToDraft, subscribe as subscribePostsStore } from "../posts-store.js?v=23";
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
@@ -23,6 +30,8 @@ import {
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=23";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=20";
+import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";
+import { ensureClipsThen } from "../components/clip-extraction-loader.js?v=1";
 import { open as openSettingsDrawer } from "../components/settings-drawer.js?v=22";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=21";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=21";
@@ -37,6 +46,7 @@ import {
   subscribeUploads,
   pushScriptedSource,
   completeScriptedSource,
+  updateSourceClips,
 } from "../sources-stream.js?v=25";
 import { showToast } from "../components/toast.js?v=20";
 import {
@@ -380,11 +390,21 @@ function renderEmptyHero() {
   const sources = getStreamSources();
   const firstSource = sources.find((s) => s.status !== "Processing") || sources[0] || null;
   const sourceLabel = firstSource ? `"${firstSource.filename}"` : "your source";
+  // `{{video-source}}` resolves to the first processed video source so the
+  // "Extract video clips" starter reads naturally even when the first
+  // overall source is a PDF.
+  const firstVideo = sources.find(
+    (s) => (s.kind || "").toLowerCase() === "video" && s.status === "Processed" && typeof s.durationSec === "number",
+  );
+  const videoLabel = firstVideo ? `"${firstVideo.filename}"` : "your video";
   const cards = chatStarters
     .map((s) => {
-      const resolvedPrompt = s.prompt.replace(/\{\{source\}\}/g, sourceLabel);
+      const resolvedPrompt = s.prompt
+        .replace(/\{\{source\}\}/g, sourceLabel)
+        .replace(/\{\{video-source\}\}/g, videoLabel);
+      const actionAttr = s.action ? ` data-starter-action="${s.action}"` : "";
       return `
-        <button type="button" class="starter-card" data-starter="${s.id}" data-starter-prompt="${escapeHtml(resolvedPrompt)}">
+        <button type="button" class="starter-card" data-starter="${s.id}"${actionAttr} data-starter-prompt="${escapeHtml(resolvedPrompt)}">
           <span class="starter-card__icon"><i class="${s.icon}"></i></span>
           <span class="starter-card__title">${s.title}</span>
           <span class="starter-card__prompt">${escapeHtml(resolvedPrompt)}</span>
@@ -550,6 +570,102 @@ function startAskFlowFromSession(sessionId, sourceId, filename) {
   } else {
     openChatPickerModal({ onPick: handoff });
   }
+}
+
+// "Extract video clips" starter → multi-step flow:
+//   1. Snapshot the current source ids, open the Add Source modal so the
+//      user can upload a video file.
+//   2. Subscribe to sources-stream; pick up the first new source whose kind
+//      resolves to "video".
+//   3. Wait for that source to reach `Processed` status (the existing
+//      upload pipeline already runs 2s upload + 3-5s processing).
+//   4. Run a 30s "Extracting clips" loader, then attach mock clips (same
+//      shape as the founder-keynote seed) and open the Video Clips modal.
+//   5. "Draft posts from N clips" pipes drafts into the current session
+//      with full clipRef so each draft card renders its video player.
+//
+// Bail conditions: a 2-minute watchdog clears subscriptions if the user
+// cancels the Add Source modal so we don't leak listeners.
+
+function startClipsExtractionFlow(session) {
+  const initialIds = new Set(getStreamSources().map((s) => s.id));
+  let newSourceId = null;
+  let unsubNew = null;
+  let unsubProcessed = null;
+  let watchdog = null;
+
+  const cleanup = () => {
+    if (unsubNew) {
+      unsubNew();
+      unsubNew = null;
+    }
+    if (unsubProcessed) {
+      unsubProcessed();
+      unsubProcessed = null;
+    }
+    if (watchdog) {
+      clearTimeout(watchdog);
+      watchdog = null;
+    }
+  };
+
+  // After the user picks a file, the Add Source modal kicks off the
+  // existing upload pipeline which pushes a new source. We catch the
+  // first new VIDEO source — anything else is ignored and the user
+  // can re-trigger the starter.
+  unsubNew = subscribeSources((sources) => {
+    const fresh = sources.find((s) => !initialIds.has(s.id) && (s.kind || "").toLowerCase() === "video");
+    if (!fresh) return;
+    newSourceId = fresh.id;
+    unsubNew();
+    unsubNew = null;
+
+    // Now wait for the upload + processing pipeline to finish on this
+    // specific source. Then defer to ensureClipsThen which runs the 30s
+    // extraction loader + attaches mocked clips before opening the modal.
+    unsubProcessed = subscribeSources((latest) => {
+      const target = latest.find((s) => s.id === newSourceId);
+      if (!target || target.status !== "Processed") return;
+      unsubProcessed();
+      unsubProcessed = null;
+      if (watchdog) {
+        clearTimeout(watchdog);
+        watchdog = null;
+      }
+      ensureClipsThen(target, (ready) =>
+        openVideoClipsModal(ready, {
+          onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
+          onUseClips: (selectedClips, source) => {
+            const drafts = selectedClips.map((clip) =>
+              addPostDraft(session.id, {
+                network: clip.network,
+                text: [clip.title, clip.summary].filter(Boolean),
+                hashtags: (clip.tags || []).map((t) => `#${t}`),
+                clipRef: {
+                  start: clip.start,
+                  end: clip.end,
+                  sourceName: source.filename,
+                  hue: clip.hue,
+                },
+              }),
+            );
+            postDraftResult(session.id, {
+              ideaTitle: `From ${source.filename}`,
+              drafts,
+            });
+            showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from ${source.filename}`, {
+              duration: 3200,
+            });
+          },
+        }),
+      );
+    });
+  });
+
+  // Drop listeners if the user backs out for 2 minutes without uploading.
+  watchdog = setTimeout(cleanup, 120000);
+
+  openAddSourceModal({ tab: "upload" });
 }
 
 // Local copy of dashboard's defaultChatName — keeps session.js standalone
@@ -1780,7 +1896,20 @@ function bindSession(root, session) {
       // already been resolved at render time (cf. renderEmptyHero), so the
       // textarea receives clean text the user can either submit as-is or
       // tweak before sending.
+      //
+      // Starters can opt into a direct action instead of text injection by
+      // setting `action` on the mock. Today the only action is
+      // "open-video-clips" — the full flow lives in startClipsExtractionFlow:
+      // 1. Open Add Source modal so the user uploads a video.
+      // 2. Detect the new video source via subscribeSources.
+      // 3. Run a 30s "Extracting clips" loader once it reaches Processed.
+      // 4. Attach mock clips + open the Video Clips modal in the current
+      //    session so drafts land here.
       const starterBtn = event.target.closest("[data-starter]");
+      if (starterBtn && starterBtn.dataset.starterAction === "open-video-clips") {
+        startClipsExtractionFlow(session);
+        return;
+      }
       if (starterBtn) {
         const input = getInput();
         if (!input) return;

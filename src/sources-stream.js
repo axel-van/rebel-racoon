@@ -6,7 +6,7 @@
 // State machine timers live here (not inside the modal) so uploads
 // continue in background after the user closes the modal.
 
-import { sources as seedSources } from "./mocks.js?v=25";
+import { sources as seedSources } from "./mocks.js?v=26";
 import { isNewUser } from "./user-mode.js?v=20";
 
 // ─── State ───────────────────────────────────────────────────────────────
@@ -378,6 +378,16 @@ export function cancelUpload(uploadId) {
 // Content tab. The accompanying ideas (per-session) are cleaned up by the
 // caller via library.removeIdeasForSources — this module only owns the
 // global sources array. No-op for ids that aren't found.
+// Replace a source's clips array (used by the Video Clips modal after the
+// user trims/edits/deletes/adds clips). Mutates in place so existing
+// references in the dashboard / session keep working, then notifies.
+export function updateSourceClips(sourceId, nextClips) {
+  const source = sources.find((s) => s.id === sourceId);
+  if (!source) return;
+  source.clips = nextClips.map((c) => ({ ...c }));
+  notifySources();
+}
+
 export function removeSources(ids) {
   if (!Array.isArray(ids) || ids.length === 0) return 0;
   const set = new Set(ids);

@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=34";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
-import { ideas as MOCK_IDEAS, sources as SOURCES } from "../mocks.js?v=25";
+import { ideas as MOCK_IDEAS, sources as SOURCES } from "../mocks.js?v=26";
 import { isNewUser } from "../user-mode.js?v=20";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=21";
