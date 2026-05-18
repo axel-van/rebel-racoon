@@ -204,6 +204,48 @@
 
 .posts__card-status {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Video-clip provenance chip — drafted from a Video Clips modal selection.
+ * Same orange-on-orange-10 affordance as the modal's time chips so the
+ * source is recognizable. */
+.posts__card-clip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-orange-150);
+  background: var(--ref-color-orange-10);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+  max-width: 240px;
+}
+
+.posts__card-clip i {
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.posts__card-clip-time {
+  white-space: nowrap;
+}
+
+.posts__card-clip-sep {
+  opacity: 0.6;
+}
+
+.posts__card-clip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--ref-font-weight-regular);
 }
 
 .posts__card-body {

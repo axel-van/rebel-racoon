@@ -267,6 +267,11 @@ function bind(root, signal) {
                     network: clip.network,
                     text: [clip.title, clip.summary].filter(Boolean),
                     hashtags: (clip.tags || []).map((t) => `#${t}`),
+                    clipRef: {
+                      start: clip.start,
+                      end: clip.end,
+                      sourceName: source.filename,
+                    },
                   }),
                 );
                 postDraftResult(sessionId, {

@@ -32,6 +32,17 @@ export function renderPostCard(post, opts = {}) {
     return '<span class="ap-status green">Draft ready</span>';
   })();
 
+  // Video-clip source ref — set by the Video Clips modal so the card surfaces
+  // the timestamp + filename it was drafted from.
+  const clipChip = post.clipRef
+    ? `<span class="posts__card-clip" title="Drafted from ${escapeAttr(post.clipRef.sourceName)} · ${formatClipTime(post.clipRef.start)}–${formatClipTime(post.clipRef.end)}">
+         <i class="ap-icon-file--video"></i>
+         <span class="posts__card-clip-time">${formatClipTime(post.clipRef.start)}–${formatClipTime(post.clipRef.end)}</span>
+         <span class="posts__card-clip-sep">·</span>
+         <span class="posts__card-clip-name">${escapeText(post.clipRef.sourceName)}</span>
+       </span>`
+    : "";
+
   const bodyParagraphs = post.text.map((p) => `<p class="posts__card-paragraph">${p}</p>`).join("");
 
   const hashtags = post.hashtags.length
@@ -99,7 +110,7 @@ export function renderPostCard(post, opts = {}) {
               <div class="muted posts__card-title">${post.author.title}</div>
               <div class="muted posts__card-meta">${post.timeLabel} · ${post.author.visibility}</div>
             </div>
-            <div class="posts__card-status">${raw(statusPill)}</div>
+            <div class="posts__card-status">${raw(clipChip)} ${raw(statusPill)}</div>
           </header>
 
           ${raw(editorBody)} ${raw(editActions)} ${raw(imageBlock)} ${raw(engagement)}
@@ -210,6 +221,24 @@ function serializeBody(post) {
 // HTML-escape user content before injecting into the contenteditable.
 // innerText reads back the literal characters, so escaping here avoids
 // the editor rendering injected markup on first paint.
+function escapeText(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function escapeAttr(s) {
+  return escapeText(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function formatClipTime(sec) {
+  const s = Math.max(0, Math.round(sec || 0));
+  const m = Math.floor(s / 60);
+  const rest = (s % 60).toString().padStart(2, "0");
+  return `${m}:${rest}`;
+}
+
 function escapeForEditor(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
