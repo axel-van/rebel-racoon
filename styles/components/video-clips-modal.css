@@ -144,8 +144,8 @@
 }
 
 .vc-timeline__seg.is-on {
-  background: var(--ref-color-orange-100);
-  box-shadow: 0 0 0 1px var(--ref-color-orange-150) inset;
+  background: var(--ref-color-electric-blue-100);
+  box-shadow: 0 0 0 1px var(--ref-color-electric-blue-150) inset;
 }
 
 .vc-timeline__seg.is-editing {
@@ -330,9 +330,9 @@
 }
 
 .vc-row.is-on {
-  border-color: var(--ref-color-orange-100);
-  background: var(--ref-color-orange-10);
-  box-shadow: 0 0 0 3px rgba(255, 103, 38, 0.08);
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-05);
+  box-shadow: 0 0 0 3px rgba(23, 141, 254, 0.08);
 }
 
 .vc-row.is-editing {
@@ -377,8 +377,8 @@
 }
 
 .vc-row.is-on .vc-row__check-box {
-  background: var(--ref-color-orange-100);
-  border-color: var(--ref-color-orange-100);
+  background: var(--ref-color-electric-blue-100);
+  border-color: var(--ref-color-electric-blue-100);
 }
 
 .vc-row__check-box i {
@@ -1123,9 +1123,9 @@
 }
 
 .vc-editor__net.is-on {
-  background: rgba(255, 103, 38, 0.14);
-  border-color: var(--ref-color-orange-100);
-  color: var(--ref-color-orange-100);
+  background: rgba(23, 141, 254, 0.14);
+  border-color: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-electric-blue-100);
 }
 
 .vc-editor__net img {
