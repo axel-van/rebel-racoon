@@ -207,39 +207,9 @@
   background: var(--ref-color-grey-10);
 }
 
-.vc-regen {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 var(--ref-spacing-xs);
-  border-radius: var(--app-radius-button-sm);
-  background: var(--ref-color-white);
-  border: 1px solid var(--ref-color-grey-10);
-  font-family: inherit;
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-  cursor: pointer;
-  transition: all var(--ref-animation-short);
-}
-
-.vc-regen:hover {
-  border-color: var(--ref-color-grey-40);
-  color: var(--ref-color-grey-150);
-}
-
-.vc-regen:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.vc-regen i {
-  font-size: 12px;
-  opacity: 0.7;
-}
-
-.vc-regen.is-loading i {
+/* Suggest more — uses the DS .ap-button.stroked.grey. The only addition
+   is the spinner animation on the refresh icon when re-mining. */
+.video-clips-modal__regen.is-loading i {
   animation: vc-spin 0.9s linear infinite;
 }
 
@@ -520,33 +490,7 @@
   border-radius: 3px;
 }
 
-.vc-row__icon-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  height: 30px;
-  padding: 0 var(--ref-spacing-xs);
-  border-radius: var(--app-radius-button-sm);
-  border: 1.5px solid var(--ref-color-grey-20);
-  background: var(--ref-color-white);
-  color: var(--ref-color-grey-150);
-  cursor: pointer;
-  font-family: inherit;
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
-  transition: all var(--ref-animation-short);
-}
-
-.vc-row__icon-btn:hover {
-  background: var(--ref-color-orange-10);
-  border-color: var(--ref-color-orange-100);
-  color: var(--ref-color-orange-150);
-}
-
-.vc-row__icon-btn i {
-  font-size: 12px;
-}
+/* Per-card "Edit" button — DS .ap-button.stroked.grey with no extras. */
 
 /* ── Inline edit (contenteditable) ─────────────────────────────── */
 
@@ -563,58 +507,6 @@
 
 .vc-edit:focus {
   box-shadow: inset 0 -2px 0 var(--ref-color-orange-100);
-}
-
-/* ── "Add a clip manually" CTA ─────────────────────────────────── */
-
-.vc-add-clip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 18px;
-  background: var(--ref-color-white);
-  border: 1.5px dashed var(--ref-color-grey-20);
-  border-radius: var(--app-radius-starter);
-  cursor: pointer;
-  font-family: inherit;
-  font-size: var(--ref-font-size-sm);
-  color: var(--ref-color-grey-100);
-  transition: all var(--ref-animation-short);
-  text-align: left;
-}
-
-.vc-add-clip:hover {
-  border-color: var(--ref-color-orange-100);
-  color: var(--ref-color-orange-150);
-  background: var(--ref-color-orange-10);
-}
-
-.vc-add-clip__plus {
-  width: 26px;
-  height: 26px;
-  border-radius: var(--app-radius-circle);
-  background: var(--ref-color-grey-10);
-  color: var(--ref-color-grey-80);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1;
-  transition: all var(--ref-animation-short);
-}
-
-.vc-add-clip:hover .vc-add-clip__plus {
-  background: var(--ref-color-orange-100);
-  color: var(--ref-color-white);
-}
-
-.vc-add-clip__hint {
-  margin-left: auto;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--ref-color-grey-60);
-  font-style: italic;
 }
 
 /* ── Footer ────────────────────────────────────────────────────── */
