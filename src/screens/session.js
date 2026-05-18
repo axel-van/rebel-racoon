@@ -753,6 +753,12 @@ function renderTurn(message) {
     return renderDraftTurn(message);
   }
 
+  // Clip extraction — pending spinner pill that flips to a ready card with
+  // an "Open clips" action once the background extraction completes.
+  if (message.role === "assistant" && message.variant === "clip-extraction") {
+    return renderClipExtractionTurn(message);
+  }
+
   // Channel-picker choice turn — chip row + "Draft them" button.
   if (message.role === "assistant-choice") {
     return renderChoiceTurn(message);
@@ -1375,6 +1381,69 @@ function renderDraftTurn(message) {
   `;
 }
 
+// Pending → ready clip-extraction card. The turn carries only the sourceId
+// and filename; the renderer reads the live source from sources-stream so
+// the same turn naturally flips state when setClipExtractionStatus fires
+// (the session view subscribes to subscribeSources, repainting the thread).
+function renderClipExtractionTurn(message) {
+  const source = getStreamSources().find((s) => s.id === message.sourceId);
+  const filename = escapeHtml(source?.filename || message.filename || "your video");
+
+  // Source was removed (e.g. user deleted it from /sources) — degrade to a
+  // muted notice rather than leave a broken CTA.
+  if (!source) {
+    return `
+      <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
+        <div class="clip-extraction-card clip-extraction-card--gone">
+          <span class="clip-extraction-card__icon" aria-hidden="true">
+            <i class="ap-icon-file--video"></i>
+          </span>
+          <span class="clip-extraction-card__main">
+            <span class="clip-extraction-card__title">Clips no longer available</span>
+            <span class="clip-extraction-card__sub">${filename} was removed.</span>
+          </span>
+        </div>
+      </div>
+    `;
+  }
+
+  const clipsCount = Array.isArray(source.clips) ? source.clips.length : 0;
+  const isReady = source.clipExtractionStatus === "ready" || clipsCount > 0;
+
+  if (!isReady) {
+    return `
+      <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
+        <div class="clip-extraction-card clip-extraction-card--pending">
+          <span class="clip-extraction-card__spinner" role="status" aria-label="Extracting clips"></span>
+          <span class="clip-extraction-card__main">
+            <span class="clip-extraction-card__title">Extracting clips from ${filename}…</span>
+            <span class="clip-extraction-card__sub">This usually takes a moment.</span>
+          </span>
+        </div>
+      </div>
+    `;
+  }
+
+  const countLabel = clipsCount === 1 ? "1 clip" : `${clipsCount} clips`;
+  return `
+    <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
+      <div class="clip-extraction-card clip-extraction-card--ready">
+        <span class="clip-extraction-card__icon" aria-hidden="true">
+          <i class="ap-icon-sparkles"></i>
+        </span>
+        <span class="clip-extraction-card__main">
+          <span class="clip-extraction-card__title">Clips ready · ${countLabel} from ${filename}</span>
+          <span class="clip-extraction-card__sub">Pick the ones you want and turn them into posts.</span>
+        </span>
+        <button type="button" class="ap-button stroked orange clip-extraction-card__cta" data-clip-card-open="${source.id}">
+          <i class="ap-icon-sparkles"></i>
+          <span>Open clips</span>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 // ─── Composer state — pills + context selection (per-session) ────────────
 //
 // Pills track in-flight + recently-completed attachments shown in the input
@@ -1973,6 +2042,18 @@ function bindSession(root, session) {
         // zone (analyzing → ready).
         startPillFromKind(root, session, addSrc.dataset.addSource);
         closeAttachMenu();
+        return;
+      }
+
+      // Inline clip-extraction card "Open clips" button — opens the Video
+      // Clips modal pre-bound to this session's draft callbacks. Same exit
+      // path as the completion toast's action.
+      const openClipsBtn = event.target.closest("[data-clip-card-open]");
+      if (openClipsBtn) {
+        event.preventDefault();
+        const sourceId = openClipsBtn.dataset.clipCardOpen;
+        const source = getStreamSources().find((s) => s.id === sourceId);
+        if (source) openVideoClipsModalForSession(source, session);
         return;
       }
 
