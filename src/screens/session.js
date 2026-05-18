@@ -11,11 +11,10 @@ import {
   postAssistantMessage,
   postClipExtractionTurn,
   postDraftResult,
-  postExtractionResult,
   subscribe,
   submitAssistantChoice,
 } from "../assistant.js?v=25";
-import { getSources, getIdeas, subscribe as subscribeLibrary } from "../library.js?v=23";
+import { getSources, getIdeas, injectIdeasForSource, subscribe as subscribeLibrary } from "../library.js?v=24";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import { getPosts, addPostDraft, attachImageToDraft, subscribe as subscribePostsStore } from "../posts-store.js?v=23";
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
@@ -1523,31 +1522,52 @@ const SCRIPTED_KINDS = {
   url: { kindLabel: "URL", filename: "blog.example.com/post" },
 };
 
-// Canned ideas posted via postExtractionResult when the user picks "Extract
+// Canned ideas injected into the Ideas panel when the user picks "Extract
 // ideas" on a video. Generic enough to plausibly come from any keynote /
-// demo / founder-talk video. Shape matches the { id, title, body } the
-// renderer reads (renderExtractionTurn).
+// demo / founder-talk video. Full idea shape (matches library.js's
+// EXTRA_IDEA_TEMPLATES) so the Ideas panel can render them with all
+// secondary fields (rationale, relevance, confidence, channels).
 function mockVideoIdeas(sourceId) {
   return [
     {
       id: `idea_${sourceId}_1`,
       title: "Opening thesis — one-line framing",
       body: "The video opens with the central claim. Reads as a standalone post or as the lede of a longer piece.",
+      rationale: "Quotable single-sentence framing — strong cold open for a thought-leadership post.",
+      relevance: "High relevance",
+      relevanceColor: "orange",
+      confidence: 86,
+      channels: ["linkedin", "x"],
     },
     {
       id: `idea_${sourceId}_2`,
       title: "Demo segment — value lands visually",
       body: "Short compact demo where the product's value lands in under a minute. Travels well on vertical formats.",
+      rationale: "Visual demos with a clear payoff outperform talking-head clips on vertical formats.",
+      relevance: "Medium relevance",
+      relevanceColor: "tagOrange",
+      confidence: 74,
+      channels: ["instagram", "tiktok"],
     },
     {
       id: `idea_${sourceId}_3`,
       title: "Headline stat with the story behind it",
       body: "Specific number delivered with the customer context that earns it. Strong proof point for LinkedIn.",
+      rationale: "Numbers + before/after context land on LinkedIn audiences who over-index on time-savings proof.",
+      relevance: "High relevance",
+      relevanceColor: "orange",
+      confidence: 82,
+      channels: ["linkedin"],
     },
     {
       id: `idea_${sourceId}_4`,
       title: "Contrarian POV — the unpopular call",
       body: "Founder explains a decision that goes against the obvious move. Single-beat thought-leadership material.",
+      rationale: "Strong POV in a single beat — drives debate without alienating either side.",
+      relevance: "Medium relevance",
+      relevanceColor: "tagOrange",
+      confidence: 71,
+      channels: ["linkedin", "x"],
     },
   ];
 }
@@ -1769,7 +1789,7 @@ function bindSession(root, session) {
       handleActionPick(session.id, msg, selectedValues, { setQuery });
     } else if (msg.handler === "video-intake-choice") {
       // Single-select picker between "clips" (cut into clip-extraction flow)
-      // and "ideas" (postExtractionResult turn with mock ideas). For video,
+      // and "ideas" (inject mock ideas into the Ideas panel). For video,
       // startPillFromKind intentionally skips auto-complete — we complete
       // the scripted source here so the pill's "N nouvelles idées" badge
       // only reflects the chosen branch (0 for clips, random 3-8 for ideas).
@@ -1790,10 +1810,11 @@ function bindSession(root, session) {
               onReady: (ready) => openVideoClipsModalForSession(ready, session),
             });
           } else if (pick === "ideas") {
-            postExtractionResult(session.id, {
-              filename,
-              ideas: mockVideoIdeas(sourceId),
-            });
+            // Ideas now land in the Ideas panel (right-panel), not as an
+            // inline assistant turn. The composer pill's green "N nouvelles
+            // idées" badge + the topbar Ideas pill are the user's entry
+            // points to them.
+            injectIdeasForSource(session.id, sourceId, mockVideoIdeas(sourceId));
           }
         };
         if (pick === "clips") {

@@ -115,6 +115,33 @@ export function appendExtractedIdeas(sessionId, sources) {
   return created;
 }
 
+// Silently inject a set of ideas associated with one source. Used by flows
+// that want the ideas to land in the Ideas panel WITHOUT also posting an
+// inline extraction turn in the assistant thread (e.g. the composer "Add
+// video → Extract ideas" branch). Each idea may omit secondary fields;
+// defaults are filled in to match the seed idea shape.
+export function injectIdeasForSource(sessionId, sourceId, ideas) {
+  if (!Array.isArray(ideas) || ideas.length === 0) return [];
+  getIdeas(sessionId);
+  const created = ideas.map((i) => ({
+    id: i.id || newId("idea"),
+    title: i.title,
+    body: i.body,
+    rationale: i.rationale || "",
+    relevance: i.relevance || "Medium relevance",
+    relevanceColor: i.relevanceColor || "tagOrange",
+    confidence: i.confidence ?? 70,
+    channels: i.channels || ["linkedin"],
+    state: "New",
+    pinned: false,
+    sourceIds: [sourceId],
+    extractedAt: "just now",
+  }));
+  ideasMap.get(sessionId).unshift(...created);
+  notify(sessionId);
+  return created;
+}
+
 // Bulk-delete ideas by id. Used by the "All ideas" view's bulk-action bar.
 // Returns the number of ideas actually removed (no-op for unknown ids).
 export function removeIdeas(sessionId, ideaIds) {
