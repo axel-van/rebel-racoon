@@ -1399,23 +1399,18 @@ function renderDraftTurn(message) {
 
   return `
     <div class="chat-turn chat-turn--ai chat-turn--extraction">
-      <button type="button" class="drafts-card ${isActive ? "is-active" : ""}" data-drafts-card-message="${message.id || ""}">
+      <button type="button" class="ap-card drafts-card ${isActive ? "is-active" : ""}" data-drafts-card-message="${message.id || ""}">
         <span class="drafts-card__icon" aria-hidden="true">
           <i class="ap-icon-pen"></i>
         </span>
         <span class="drafts-card__main">
-          <span class="drafts-card__title">
-            ${count} draft${count === 1 ? "" : "s"} ready
-          </span>
+          <span class="drafts-card__title">${count} draft${count === 1 ? "" : "s"} ready</span>
           <span class="drafts-card__sub">
-            ${networks.length ? `<span class="drafts-card__nets">${networkIcons}</span>` : ""}
+            ${networks.length ? `<span class="ap-tag-list drafts-card__nets">${networkIcons}</span>` : ""}
             <span class="drafts-card__sub-text">${networkLabelText}</span>
           </span>
         </span>
-        <span class="drafts-card__cta">
-          View drafts
-          <i class="ap-icon-chevron-right"></i>
-        </span>
+        <i class="ap-icon-chevron-right drafts-card__chevron" aria-hidden="true"></i>
       </button>
     </div>
   `;
