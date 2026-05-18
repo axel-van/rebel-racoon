@@ -333,14 +333,13 @@ span.chat-bubble-choice-chip {
 
 .drafts-card:hover,
 .drafts-card:focus-visible {
-  border-color: var(--sys-color-main-default-bg-default);
-  box-shadow: var(--app-shadow-orange-hover);
+  border-color: var(--sys-color-accent-default-bg-default);
   outline: none;
 }
 
 .drafts-card.is-active {
-  border-color: var(--sys-color-main-default-bg-default);
-  background: var(--sys-color-main-light-bg);
+  border-color: var(--sys-color-accent-default-bg-default);
+  background: var(--sys-color-accent-light-bg);
 }
 
 .drafts-card__icon {
@@ -350,8 +349,8 @@ span.chat-bubble-choice-chip {
   width: var(--ref-spacing-lg);
   height: var(--ref-spacing-lg);
   border-radius: var(--app-radius-button-sm);
-  background: var(--sys-color-main-default-bg-default);
-  color: var(--sys-color-main-default-text);
+  background: var(--sys-color-accent-default-bg-default);
+  color: var(--sys-color-accent-default-text);
   flex-shrink: 0;
 }
 
