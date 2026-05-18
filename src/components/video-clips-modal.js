@@ -320,11 +320,11 @@ function editorPaneHTML() {
           <span class="vc-editor__head-dur" data-vc-editor-time-dur>${fmtTime(draft.end - draft.start)}</span>
         </div>
         <span class="vc-editor__head-spacer"></span>
-        <button class="vc-editor__danger" data-vc-action="delete-clip" title="Delete this clip">
+        <button type="button" class="ap-button ghost red" data-vc-action="delete-clip" title="Delete this clip">
           <i class="ap-icon-trash"></i><span>Delete</span>
         </button>
-        <button class="vc-editor__btn vc-editor__btn--ghost" data-vc-action="cancel-edit">Cancel</button>
-        <button class="vc-editor__btn vc-editor__btn--primary" data-vc-action="save-edit">
+        <button type="button" class="ap-button ghost grey" data-vc-action="cancel-edit">Cancel</button>
+        <button type="button" class="ap-button primary orange" data-vc-action="save-edit">
           <i class="ap-icon-check"></i><span>Save changes</span>
         </button>
       </header>
