@@ -228,9 +228,13 @@ export function postUserChoice(sessionId, { text }) {
 // Push an "assistant-choice" turn that renders a set of toggle chips plus a
 // submit button. Keeps the module generic — the handler string identifies
 // what the click delegate in session.js should do on submit.
+//
+// Pass `instant: true` for single-select pickers where each chip click
+// immediately fires the handler (no Submit button). Useful for binary
+// "pick a path" questions.
 export function postAssistantChoice(
   sessionId,
-  { text, choices, multi = true, handler = "", context = {}, submitLabel = "Submit" },
+  { text, choices, multi = true, handler = "", context = {}, submitLabel = "Submit", instant = false },
 ) {
   const thread = getThread(sessionId);
   thread.push({
@@ -244,6 +248,7 @@ export function postAssistantChoice(
     handler,
     context,
     submitLabel,
+    instant,
     status: "ready",
     createdAt: Date.now(),
   });

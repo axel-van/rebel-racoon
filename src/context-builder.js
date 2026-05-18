@@ -13,7 +13,7 @@
 // and into contexts-store#addContext() on save.
 
 import * as inlineQuestion from "./inline-question.js?v=21";
-import { postAssistantMessage, postUserTurn } from "./assistant.js?v=24";
+import { postAssistantMessage, postUserTurn } from "./assistant.js?v=25";
 import * as rightPanel from "./components/right-panel.js?v=40";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=24";
 import { emptyAnswers } from "./context-questions.js?v=20";
