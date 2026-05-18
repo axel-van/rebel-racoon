@@ -8,7 +8,6 @@ import { init as initBugReportModal } from "./components/bug-report-modal.js?v=2
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=24";
 import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=20";
 import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=1";
-import { init as initClipExtractionLoader } from "./components/clip-extraction-loader.js?v=1";
 import { init as initSettingsDrawer } from "./components/settings-drawer.js?v=22";
 import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=21";
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=21";
@@ -43,7 +42,6 @@ initBugReportModal();
 initFeedbackModal();
 initGenerateImageModal();
 initVideoClipsModal();
-initClipExtractionLoader();
 initSettingsDrawer();
 initChatPickerModal();
 initAddSourceModal();

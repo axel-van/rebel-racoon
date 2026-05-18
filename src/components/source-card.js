@@ -124,21 +124,36 @@ export function renderSourceCard(source, allIdeas = [], { selectable = false, is
       </button>`;
 
   // "Suggest clips" — surfaces on every processed video source. The
-  // sources.js click handler runs the 30s extraction loader first if the
-  // source hasn't been through extraction yet, then opens the Video Clips
-  // modal; if clips already exist it hands off straight to the modal.
+  // sources.js click handler kicks off a non-blocking extraction if the
+  // source hasn't been through extraction yet (toast on start + toast with
+  // "Open clips" action when ready), or opens the Video Clips modal
+  // immediately if clips already exist. While extraction is in flight, the
+  // button is disabled and shows an "Extracting clips…" spinner.
   const isVideo = (source.kind || "").toLowerCase() === "video";
-  const clipsButton =
-    isVideo && !isProcessing
-      ? `<button
+  const isExtractingClips = isVideo && source.clipExtractionStatus === "extracting";
+  let clipsButton = "";
+  if (isVideo && !isProcessing) {
+    if (isExtractingClips) {
+      clipsButton = `<button
+          type="button"
+          class="ap-button transparent grey source-card__clips source-card__clips--extracting"
+          aria-disabled="true"
+          tabindex="-1"
+        >
+          <span class="source-card__clips-spinner" role="status" aria-label="Extracting clips"></span>
+          <span>Extracting clips…</span>
+        </button>`;
+    } else {
+      clipsButton = `<button
           type="button"
           class="ap-button transparent grey source-card__clips"
           data-source-suggest-clips="${source.id}"
         >
           <i class="ap-icon-sparkles"></i>
           <span>Suggest clips</span>
-        </button>`
-      : "";
+        </button>`;
+    }
+  }
 
   // Leading checkbox — only when the workspace is in selection mode AND the
   // source is processed. The DS `.ap-checkbox-container` uses a hidden
