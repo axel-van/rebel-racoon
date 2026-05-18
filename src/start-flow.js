@@ -9,7 +9,7 @@
 // The legacy create-context-on-new-chat flow was removed — context creation
 // now happens at /contexts/new via context-builder.js.
 
-import { postAssistantMessage, postUserTurn, postAssistantChoice } from "./assistant.js?v=23";
+import { postAssistantMessage, postUserTurn, postAssistantChoice } from "./assistant.js?v=25";
 
 // ---- Action picker -----------------------------------------------------
 

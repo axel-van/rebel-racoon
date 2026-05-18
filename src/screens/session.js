@@ -7,12 +7,14 @@ import { isNewUser } from "../user-mode.js?v=20";
 import {
   getThread,
   sendMessage,
+  postAssistantChoice,
   postAssistantMessage,
+  postClipExtractionTurn,
   postDraftResult,
   subscribe,
   submitAssistantChoice,
-} from "../assistant.js?v=23";
-import { getSources, getIdeas, subscribe as subscribeLibrary } from "../library.js?v=23";
+} from "../assistant.js?v=25";
+import { getSources, getIdeas, injectIdeasForSource, subscribe as subscribeLibrary } from "../library.js?v=25";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import { getPosts, addPostDraft, attachImageToDraft, subscribe as subscribePostsStore } from "../posts-store.js?v=23";
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
@@ -197,10 +199,14 @@ function renderAssistantPanel(session, attachedContext) {
     return renderAssistantPanelQuestion(session);
   }
 
-  // Empty conversation = the user hasn't typed anything yet. We swap the
-  // thread for the handoff "What are we creating today?" hero with a 2x2
-  // grid of starter cards (Q14). Once the user types, the thread takes over.
-  const isEmptyConversation = thread.every((m) => m.role !== "user");
+  // Empty conversation = the user hasn't typed anything yet AND no rich
+  // assistant turn has landed (extraction / draft / clip-extraction). We
+  // swap the thread for the handoff "What are we creating today?" hero
+  // with a 2x2 grid of starter cards (Q14). Once the user types or a
+  // rich turn arrives, the thread takes over so the in-flight work stays
+  // visible across remounts.
+  const isEmptyConversation =
+    thread.every((m) => m.role !== "user") && !thread.some((m) => m.role === "assistant" && m.variant);
 
   return html`
     <aside class="session__assistant" aria-label="Assistant panel">
@@ -635,32 +641,7 @@ function startClipsExtractionFlow(session) {
         watchdog = null;
       }
       startClipExtraction(target, {
-        onReady: (ready) =>
-          openVideoClipsModal(ready, {
-            onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
-            onUseClips: (selectedClips, source) => {
-              const drafts = selectedClips.map((clip) =>
-                addPostDraft(session.id, {
-                  network: clip.network,
-                  text: [clip.title, clip.summary].filter(Boolean),
-                  hashtags: (clip.tags || []).map((t) => `#${t}`),
-                  clipRef: {
-                    start: clip.start,
-                    end: clip.end,
-                    sourceName: source.filename,
-                    hue: clip.hue,
-                  },
-                }),
-              );
-              postDraftResult(session.id, {
-                ideaTitle: `From ${source.filename}`,
-                drafts,
-              });
-              showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from ${source.filename}`, {
-                duration: 3200,
-              });
-            },
-          }),
+        onReady: (ready) => openVideoClipsModalForSession(ready, session),
       });
     });
   });
@@ -669,6 +650,59 @@ function startClipsExtractionFlow(session) {
   watchdog = setTimeout(cleanup, 120000);
 
   openAddSourceModal({ tab: "upload" });
+}
+
+// Open the Video Clips modal with the standard "session" callback wiring:
+// save persists clip edits in sources-stream; use-clips drafts the picked
+// clips into THIS session (drafts pill increments + inline draft turn +
+// toast). Shared by every in-session entry point (dashboard starter, future
+// "Add video" composer path, completion-toast action, inline thread card).
+function openVideoClipsModalForSession(source, session) {
+  openVideoClipsModal(source, {
+    onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
+    onUseClips: (selectedClips, src) => {
+      const drafts = selectedClips.map((clip) =>
+        addPostDraft(session.id, {
+          network: clip.network,
+          text: [clip.title, clip.summary].filter(Boolean),
+          hashtags: (clip.tags || []).map((t) => `#${t}`),
+          clipRef: {
+            start: clip.start,
+            end: clip.end,
+            sourceName: src.filename,
+            hue: clip.hue,
+          },
+        }),
+      );
+      postDraftResult(session.id, {
+        ideaTitle: `From ${src.filename}`,
+        drafts,
+      });
+      showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from ${src.filename}`, {
+        duration: 3200,
+      });
+    },
+  });
+}
+
+// Resolve a source by id once it reaches Processed status. Calls fn(source)
+// synchronously if it's already Processed, otherwise subscribes and waits
+// for the first matching state transition (then auto-unsubscribes).
+// Returns the teardown function in case the caller needs to abort early.
+function whenSourceProcessed(sourceId, fn) {
+  const src = getStreamSources().find((s) => s.id === sourceId);
+  if (src && src.status === "Processed") {
+    fn(src);
+    return () => {};
+  }
+  const unsub = subscribeSources((sources) => {
+    const t = sources.find((s) => s.id === sourceId);
+    if (t && t.status === "Processed") {
+      unsub();
+      fn(t);
+    }
+  });
+  return unsub;
 }
 
 // Local copy of dashboard's defaultChatName — keeps session.js standalone
@@ -742,6 +776,12 @@ function renderTurn(message) {
   // Draft result — "Drafted N posts" mermaid-pill + mini post cards.
   if (message.role === "assistant" && message.variant === "draft") {
     return renderDraftTurn(message);
+  }
+
+  // Clip extraction — pending spinner pill that flips to a ready card with
+  // an "Open clips" action once the background extraction completes.
+  if (message.role === "assistant" && message.variant === "clip-extraction") {
+    return renderClipExtractionTurn(message);
   }
 
   // Channel-picker choice turn — chip row + "Draft them" button.
@@ -1031,7 +1071,18 @@ function wireAssistantPanel(root, session, attachedContext) {
   // analyzing → ready transition crosses the upload→source boundary on the
   // 📎 path, so subscribing to both catches every state flip. Initial
   // paint covers pills carried over by composerStates from a prior render.
-  const offComposerSources = subscribeSources(() => paintComposerPills(root, session.id));
+  // The thread also repaints on source changes so inline clip-extraction
+  // cards flip from pending to ready (and pick up clipExtractionStatus +
+  // clips count) without an extra notify hop.
+  const repaintThreadFromSources = () => {
+    const thread = getThreadEl();
+    if (!thread) return;
+    thread.innerHTML = renderThread(getThread(session.id));
+  };
+  const offComposerSources = subscribeSources(() => {
+    paintComposerPills(root, session.id);
+    repaintThreadFromSources();
+  });
   const offComposerUploads = subscribeUploads(() => paintComposerPills(root, session.id));
   paintComposerPills(root, session.id);
 
@@ -1272,9 +1323,12 @@ function renderChoiceTurn(message) {
     .join("");
 
   const submitLabel = message.submitLabel || "Submit";
-  const footer = isAnswered
-    ? ""
-    : `<div class="chat-bubble-choices-footer">
+  // Instant pickers (single click = submit) skip the Submit button — the
+  // chip-click handler fires the handler directly.
+  const footer =
+    isAnswered || message.instant
+      ? ""
+      : `<div class="chat-bubble-choices-footer">
         <button
           type="button"
           class="ap-button primary orange"
@@ -1344,24 +1398,82 @@ function renderDraftTurn(message) {
 
   return `
     <div class="chat-turn chat-turn--ai chat-turn--extraction">
-      <button type="button" class="drafts-card ${isActive ? "is-active" : ""}" data-drafts-card-message="${message.id || ""}">
+      <button type="button" class="ap-card drafts-card ${isActive ? "is-active" : ""}" data-drafts-card-message="${message.id || ""}">
         <span class="drafts-card__icon" aria-hidden="true">
           <i class="ap-icon-pen"></i>
         </span>
         <span class="drafts-card__main">
-          <span class="drafts-card__title">
-            ${count} draft${count === 1 ? "" : "s"} ready
-          </span>
+          <span class="drafts-card__title">${count} draft${count === 1 ? "" : "s"} ready</span>
           <span class="drafts-card__sub">
-            ${networks.length ? `<span class="drafts-card__nets">${networkIcons}</span>` : ""}
+            ${networks.length ? `<span class="ap-tag-list drafts-card__nets">${networkIcons}</span>` : ""}
             <span class="drafts-card__sub-text">${networkLabelText}</span>
           </span>
         </span>
-        <span class="drafts-card__cta">
-          View drafts
-          <i class="ap-icon-chevron-right"></i>
-        </span>
+        <i class="ap-icon-chevron-right drafts-card__chevron" aria-hidden="true"></i>
       </button>
+    </div>
+  `;
+}
+
+// Pending → ready clip-extraction card. The turn carries only the sourceId
+// and filename; the renderer reads the live source from sources-stream so
+// the same turn naturally flips state when setClipExtractionStatus fires
+// (the session view subscribes to subscribeSources, repainting the thread).
+function renderClipExtractionTurn(message) {
+  const source = getStreamSources().find((s) => s.id === message.sourceId);
+  const filename = escapeHtml(source?.filename || message.filename || "your video");
+
+  // Source was removed (e.g. user deleted it from /sources) — degrade to a
+  // muted notice rather than leave a broken CTA.
+  if (!source) {
+    return `
+      <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
+        <div class="clip-extraction-card clip-extraction-card--gone">
+          <span class="clip-extraction-card__icon" aria-hidden="true">
+            <i class="ap-icon-file--video"></i>
+          </span>
+          <span class="clip-extraction-card__main">
+            <span class="clip-extraction-card__title">Clips no longer available</span>
+            <span class="clip-extraction-card__sub">${filename} was removed.</span>
+          </span>
+        </div>
+      </div>
+    `;
+  }
+
+  const clipsCount = Array.isArray(source.clips) ? source.clips.length : 0;
+  const isReady = source.clipExtractionStatus === "ready" || clipsCount > 0;
+
+  if (!isReady) {
+    return `
+      <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
+        <div class="clip-extraction-card clip-extraction-card--pending">
+          <span class="clip-extraction-card__spinner" role="status" aria-label="Extracting clips"></span>
+          <span class="clip-extraction-card__main">
+            <span class="clip-extraction-card__title">Extracting clips from ${filename}…</span>
+            <span class="clip-extraction-card__sub">This usually takes a moment.</span>
+          </span>
+        </div>
+      </div>
+    `;
+  }
+
+  const countLabel = clipsCount === 1 ? "1 clip" : `${clipsCount} clips`;
+  return `
+    <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
+      <div class="clip-extraction-card clip-extraction-card--ready">
+        <span class="clip-extraction-card__icon" aria-hidden="true">
+          <i class="ap-icon-sparkles"></i>
+        </span>
+        <span class="clip-extraction-card__main">
+          <span class="clip-extraction-card__title">Clips ready · ${countLabel} from ${filename}</span>
+          <span class="clip-extraction-card__sub">Pick the ones you want and turn them into posts.</span>
+        </span>
+        <button type="button" class="ap-button stroked orange clip-extraction-card__cta" data-clip-card-open="${source.id}">
+          <i class="ap-icon-sparkles"></i>
+          <span>Open clips</span>
+        </button>
+      </div>
     </div>
   `;
 }
@@ -1409,6 +1521,73 @@ const SCRIPTED_KINDS = {
   video: { kindLabel: "Video", filename: "Demo replay.mp4" },
   url: { kindLabel: "URL", filename: "blog.example.com/post" },
 };
+
+// Canned ideas injected into the Ideas panel when the user picks "Extract
+// ideas" on a video. Generic enough to plausibly come from any keynote /
+// demo / founder-talk video. Full idea shape (matches library.js's
+// EXTRA_IDEA_TEMPLATES) so the Ideas panel can render them with all
+// secondary fields (rationale, relevance, confidence, channels).
+function mockVideoIdeas(sourceId, filename) {
+  const ref = filename ? `Video · ${filename}` : "Video";
+  return [
+    {
+      id: `idea_${sourceId}_1`,
+      title: "Opening thesis — one-line framing",
+      body: "The video opens with the central claim. Reads as a standalone post or as the lede of a longer piece.",
+      kind: "hook",
+      tags: ["hook", "positioning"],
+      used: 0,
+      ref,
+      rationale: "Quotable single-sentence framing — strong cold open for a thought-leadership post.",
+      relevance: "High relevance",
+      relevanceColor: "orange",
+      confidence: 86,
+      channels: ["linkedin", "x"],
+    },
+    {
+      id: `idea_${sourceId}_2`,
+      title: "Demo segment — value lands visually",
+      body: "Short compact demo where the product's value lands in under a minute. Travels well on vertical formats.",
+      kind: "story",
+      tags: ["demo", "product"],
+      used: 0,
+      ref,
+      rationale: "Visual demos with a clear payoff outperform talking-head clips on vertical formats.",
+      relevance: "Medium relevance",
+      relevanceColor: "tagOrange",
+      confidence: 74,
+      channels: ["instagram", "tiktok"],
+    },
+    {
+      id: `idea_${sourceId}_3`,
+      title: "Headline stat with the story behind it",
+      body: "Specific number delivered with the customer context that earns it. Strong proof point for LinkedIn.",
+      kind: "stat",
+      tags: ["stat", "proof"],
+      used: 0,
+      ref,
+      rationale: "Numbers + before/after context land on LinkedIn audiences who over-index on time-savings proof.",
+      relevance: "High relevance",
+      relevanceColor: "orange",
+      confidence: 82,
+      channels: ["linkedin"],
+    },
+    {
+      id: `idea_${sourceId}_4`,
+      title: "Contrarian POV — the unpopular call",
+      body: "Founder explains a decision that goes against the obvious move. Single-beat thought-leadership material.",
+      kind: "insight",
+      tags: ["contrarian", "pov"],
+      used: 0,
+      ref,
+      rationale: "Strong POV in a single beat — drives debate without alienating either side.",
+      relevance: "Medium relevance",
+      relevanceColor: "tagOrange",
+      confidence: 71,
+      channels: ["linkedin", "x"],
+    },
+  ];
+}
 
 // Resolves a pill against the live sources/uploads stream. Returns null
 // when the backing record is gone (cancelled upload / removed source) so
@@ -1458,7 +1637,11 @@ function renderComposerPill(pillId, snap, state) {
   // minimal (icon + label + ×) so the eye reads "this file" → "what's
   // happening with it" left-to-right.
   let siblingIndicator = "";
-  if (snap.state === "analyzing") {
+  // For video sources, the source stays in Processing until the user picks
+  // clips vs ideas — the AI is waiting on the user, not analyzing. Skip the
+  // misleading "Analyse en cours" spinner for that case.
+  const isVideoAwaiting = snap.state === "analyzing" && (snap.kindLabel || "").toLowerCase() === "video";
+  if (snap.state === "analyzing" && !isVideoAwaiting) {
     siblingIndicator = `
       <span class="composer-pill__indicator analyzing" aria-live="polite">
         <span class="ap-loader blue size-16" aria-hidden="true">
@@ -1466,7 +1649,11 @@ function renderComposerPill(pillId, snap, state) {
         </span>
         <span class="composer-pill__status">Analyse en cours…</span>
       </span>`;
-  } else if (snap.state === "ready") {
+  } else if (snap.state === "ready" && snap.ideaCount > 0) {
+    // Only surface the "N nouvelles idées" badge once we actually have
+    // ideas attached. A processed source with ideaCount: 0 (e.g. a video
+    // the user routed to clip extraction) renders no badge — only the
+    // blue filename pill.
     const ideas = snap.ideaCount === 1 ? "1 nouvelle idée" : `${snap.ideaCount} nouvelles idées`;
     if (!state.dismissedIdeaSourceIds.has(snap.sourceId)) {
       const dismissingClass = state.dismissingIdeaSourceIds.has(snap.sourceId) ? " is-dismissing" : "";
@@ -1524,13 +1711,34 @@ function dismissComposerIdeasBadge(root, sessionId, sourceId, button) {
   }, 180);
 }
 
-function startPillFromKind(root, sessionId, kind) {
+function startPillFromKind(root, session, kind) {
   const spec = SCRIPTED_KINDS[kind];
   if (!spec) return;
+  const sessionId = session.id;
   const sourceId = pushScriptedSource({ filename: spec.filename, kind: spec.kindLabel });
   getComposerState(sessionId).pills.set(`pill-${sourceId}`, { sourceId });
   paintComposerPills(root, sessionId);
-  // Match the brief — flip to ready in ~3-5s with 3-8 ideas.
+  if (kind === "video") {
+    // Video kind: skip auto-complete and ask the user up-front whether
+    // they want clips or ideas. The choice handler completes the source
+    // with the right ideaCount (0 for clips, random 3–8 for ideas) so
+    // the composer pill's green "N nouvelles idées" badge never shows
+    // before the user has actually chosen the ideas path.
+    postAssistantChoice(sessionId, {
+      text: "What should I do with this video?",
+      choices: [
+        { value: "clips", label: "Cut into clips", icon: "ap-icon-sparkles" },
+        { value: "ideas", label: "Extract ideas", icon: "ap-icon-bulb" },
+      ],
+      multi: false,
+      instant: true,
+      handler: "video-intake-choice",
+      context: { sourceId, filename: spec.filename },
+    });
+    return;
+  }
+  // PDF / URL — keep the existing scripted intake: flip to ready in ~3-5s
+  // with 3-8 ideas attached.
   const delay = 3000 + Math.floor(Math.random() * 2000);
   const ideaCount = 3 + Math.floor(Math.random() * 6);
   setTimeout(() => {
@@ -1589,6 +1797,45 @@ function bindSession(root, session) {
           onComplete: (created) => setQuery({ contextId: created.id }),
         });
       }, 200);
+    }
+  }
+
+  // Run the handler for a choice turn (freeze the message + dispatch). Called
+  // by both the Submit-button path and the instant chip-click path.
+  function dispatchChoiceSubmit(msg, selectedValues) {
+    submitAssistantChoice(session.id, msg.id, selectedValues);
+    if (msg.handler === "draft-channels" && msg.context?.ideaId) {
+      executeDraft(session.id, msg.context.ideaId, selectedValues);
+    } else if (msg.handler === "start-action") {
+      handleActionPick(session.id, msg, selectedValues, { setQuery });
+    } else if (msg.handler === "video-intake-choice") {
+      // Single-select picker between "clips" (cut into clip-extraction flow)
+      // and "ideas" (inject mock ideas into the Ideas panel). For video,
+      // startPillFromKind intentionally skips auto-complete — we complete
+      // the scripted source here so the pill's "N nouvelles idées" badge
+      // only reflects the chosen branch (0 for clips, random 3-8 for ideas).
+      const { sourceId, filename } = msg.context || {};
+      const pick = selectedValues[0];
+      if (sourceId && pick) {
+        const ideas = pick === "ideas" ? mockVideoIdeas(sourceId, filename) : [];
+        completeScriptedSource(sourceId, {
+          signal: ideas.length > 0 ? "Medium signal" : "Low signal",
+          signalColor: ideas.length > 0 ? "tagOrange" : "grey",
+          ideaCount: ideas.length,
+        });
+        const source = getStreamSources().find((s) => s.id === sourceId);
+        if (source && pick === "clips") {
+          postClipExtractionTurn(session.id, { sourceId, filename });
+          startClipExtraction(source, {
+            onReady: (ready) => openVideoClipsModalForSession(ready, session),
+          });
+        } else if (source && pick === "ideas") {
+          // Ideas land in the Ideas panel (right-panel), not as an inline
+          // assistant turn. The composer pill's green "N nouvelles idées"
+          // badge + the topbar Ideas pill are the user's entry points.
+          injectIdeasForSource(session.id, sourceId, ideas);
+        }
+      }
     }
   }
 
@@ -1704,25 +1951,31 @@ function bindSession(root, session) {
         return;
       }
 
-      // Channel-picker chip toggle — visual only, no state change yet.
+      // Choice chip click — instant pickers (msg.instant) fire the handler
+      // immediately with the clicked value. Otherwise it's a visual-only
+      // toggle and the user submits via the Submit button below.
       const choiceChip = event.target.closest("[data-assistant-choice]");
       if (choiceChip && choiceChip.tagName === "BUTTON") {
         event.preventDefault();
-        const wasSelected = choiceChip.classList.contains("is-selected");
-        choiceChip.classList.toggle("is-selected", !wasSelected);
-        choiceChip.setAttribute("aria-pressed", !wasSelected ? "true" : "false");
+        const msgId = choiceChip.dataset.assistantChoiceMsg;
+        const msg = getThread(session.id).find((m) => m.id === msgId);
+        if (msg?.instant) {
+          dispatchChoiceSubmit(msg, [choiceChip.dataset.assistantChoice]);
+        } else {
+          const wasSelected = choiceChip.classList.contains("is-selected");
+          choiceChip.classList.toggle("is-selected", !wasSelected);
+          choiceChip.setAttribute("aria-pressed", !wasSelected ? "true" : "false");
+        }
         return;
       }
 
-      // "Draft them" submit — freeze the choice message + run executeDraft.
+      // "Draft them" / "Continue" submit — freeze the choice + run handler.
       const submitChoiceBtn = event.target.closest("[data-assistant-choice-submit]");
       if (submitChoiceBtn) {
         event.preventDefault();
         const msgId = submitChoiceBtn.dataset.assistantChoiceSubmit;
-        const thread = getThread(session.id);
-        const msg = thread.find((m) => m.id === msgId);
+        const msg = getThread(session.id).find((m) => m.id === msgId);
         if (!msg) return;
-        // Collect selected chip values from the DOM.
         const bubble = submitChoiceBtn.closest(".chat-bubble");
         const selectedValues = bubble
           ? [...bubble.querySelectorAll("button.chat-bubble-choice-chip.is-selected")]
@@ -1730,12 +1983,7 @@ function bindSession(root, session) {
               .filter(Boolean)
           : [];
         if (selectedValues.length === 0) return; // nothing selected — no-op
-        submitAssistantChoice(session.id, msgId, selectedValues);
-        if (msg.handler === "draft-channels" && msg.context?.ideaId) {
-          executeDraft(session.id, msg.context.ideaId, selectedValues);
-        } else if (msg.handler === "start-action") {
-          handleActionPick(session.id, msg, selectedValues, { setQuery });
-        }
+        dispatchChoiceSubmit(msg, selectedValues);
         return;
       }
 
@@ -1947,8 +2195,20 @@ function bindSession(root, session) {
       if (addSrc) {
         // Composer + menu items drop a non-blocking pill in the input
         // zone (analyzing → ready).
-        startPillFromKind(root, session.id, addSrc.dataset.addSource);
+        startPillFromKind(root, session, addSrc.dataset.addSource);
         closeAttachMenu();
+        return;
+      }
+
+      // Inline clip-extraction card "Open clips" button — opens the Video
+      // Clips modal pre-bound to this session's draft callbacks. Same exit
+      // path as the completion toast's action.
+      const openClipsBtn = event.target.closest("[data-clip-card-open]");
+      if (openClipsBtn) {
+        event.preventDefault();
+        const sourceId = openClipsBtn.dataset.clipCardOpen;
+        const source = getStreamSources().find((s) => s.id === sourceId);
+        if (source) openVideoClipsModalForSession(source, session);
         return;
       }
 

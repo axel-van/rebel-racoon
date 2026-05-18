@@ -228,9 +228,13 @@ export function postUserChoice(sessionId, { text }) {
 // Push an "assistant-choice" turn that renders a set of toggle chips plus a
 // submit button. Keeps the module generic — the handler string identifies
 // what the click delegate in session.js should do on submit.
+//
+// Pass `instant: true` for single-select pickers where each chip click
+// immediately fires the handler (no Submit button). Useful for binary
+// "pick a path" questions.
 export function postAssistantChoice(
   sessionId,
-  { text, choices, multi = true, handler = "", context = {}, submitLabel = "Submit" },
+  { text, choices, multi = true, handler = "", context = {}, submitLabel = "Submit", instant = false },
 ) {
   const thread = getThread(sessionId);
   thread.push({
@@ -244,6 +248,7 @@ export function postAssistantChoice(
     handler,
     context,
     submitLabel,
+    instant,
     status: "ready",
     createdAt: Date.now(),
   });
@@ -258,6 +263,27 @@ export function submitAssistantChoice(sessionId, messageId, selectedValues) {
   msg.selected = selectedValues;
   msg.status = "answered";
   notify(sessionId);
+}
+
+// Inline "Extracting clips → Clips ready" card pinned to a single video
+// source. The turn carries the sourceId; the renderer reads the source's
+// live clipExtractionStatus / clips count from sources-stream so the same
+// turn flips from pending to ready without an extra notify hop.
+export function postClipExtractionTurn(sessionId, { sourceId, filename }) {
+  const thread = getThread(sessionId);
+  const id = newId();
+  thread.push({
+    id,
+    role: "assistant",
+    variant: "clip-extraction",
+    meta: "Archie",
+    sourceId,
+    filename,
+    status: "ready",
+    createdAt: Date.now(),
+  });
+  notify(sessionId);
+  return id;
 }
 
 // Structured "Drafted N posts" result turn. Reuses the extraction-turn chrome

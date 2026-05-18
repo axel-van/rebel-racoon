@@ -312,95 +312,85 @@ span.chat-bubble-choice-chip {
    opens the Drafts panel pinned to this batch (today: navigates to the
    Posts tab; rewired in Lot 4). */
 
+/* Composes .ap-card with a horizontal layout. .ap-card supplies the
+   surface (bg, border, radius, padding); .drafts-card adds the row layout
+   + the orange icon tile + the active state. Whole card is the click
+   target; the trailing chevron is the affordance hint. */
 .drafts-card {
-  display: flex;
+  /* .ap-card defaults to flex-direction: column with --ref-spacing-sm gap;
+     compose horizontally with a tighter gap for this list-item style. */
+  flex-direction: row;
   align-items: center;
   gap: var(--ref-spacing-xs);
   width: 100%;
-  padding: var(--ref-spacing-xs);
-  background: var(--app-surface);
-  border: 1.5px solid var(--app-border-soft);
-  border-radius: var(--app-radius-card);
+  cursor: pointer;
   font-family: inherit;
   text-align: left;
-  cursor: pointer;
-  box-shadow: var(--app-shadow-card);
   transition:
     border-color var(--ref-animation-short) var(--app-ease-standard),
-    box-shadow var(--ref-animation-short) var(--app-ease-standard),
-    transform var(--ref-animation-short) var(--app-ease-standard);
+    box-shadow var(--ref-animation-short) var(--app-ease-standard);
 }
 
 .drafts-card:hover,
 .drafts-card:focus-visible {
-  border-color: var(--ref-color-orange-100);
-  box-shadow: var(--app-shadow-orange-hover);
+  border-color: var(--sys-color-accent-default-bg-default);
   outline: none;
-  transform: translateY(-1px);
 }
 
-/* Active state — when this batch is the one currently shown in the right
-   panel. Lot 4 toggles the .is-active class. Today no consumer; the rule
-   stays so Lot 4 is a one-line wire-up. */
 .drafts-card.is-active {
-  border-left: 4px solid var(--ref-color-orange-100);
-  background: linear-gradient(180deg, var(--ref-color-orange-10) 0%, var(--ref-color-white) 100%);
-  border-top-color: var(--ref-color-orange-100);
-  border-right-color: var(--ref-color-orange-100);
-  border-bottom-color: var(--ref-color-orange-100);
+  border-color: var(--sys-color-accent-default-bg-default);
+  background: var(--sys-color-accent-light-bg);
 }
 
 .drafts-card__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: var(--ref-spacing-lg);
+  height: var(--ref-spacing-lg);
   border-radius: var(--app-radius-button-sm);
-  background: linear-gradient(135deg, var(--ref-color-orange-100), var(--ref-color-orange-150));
-  color: var(--ref-color-white);
+  background: var(--sys-color-accent-default-bg-default);
+  color: var(--sys-color-accent-default-text);
   flex-shrink: 0;
 }
 
-.drafts-card__icon i {
-  font-size: var(--sys-icon-css-md);
-  color: var(--ref-color-white);
+.drafts-card__icon > i {
+  font-size: var(--sys-icon-css-sm);
 }
 
 .drafts-card__main {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--ref-spacing-xxxs);
   flex: 1 1 auto;
   min-width: 0;
 }
 
 .drafts-card__title {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-extra-bold);
-  color: var(--ref-color-grey-150);
+  font: var(--sys-text-style-body-bold-weight) var(--sys-text-style-body-bold-size) /
+    var(--sys-text-style-body-bold-line-height) var(--sys-text-style-body-bold-font-family);
+  color: var(--sys-text-color-default);
 }
 
 .drafts-card__sub {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  font-size: var(--ref-font-size-xs);
-  color: var(--ref-color-grey-60);
+  font: var(--sys-text-style-body-weight) var(--sys-text-style-body-size) / var(--sys-text-style-body-line-height)
+    var(--sys-text-style-body-font-family);
+  color: var(--sys-text-color-light);
+  min-width: 0;
 }
 
 .drafts-card__nets {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--ref-spacing-xxxs);
 }
 
-.drafts-card__nets i {
+.drafts-card__nets > i {
   font-size: var(--sys-icon-css-xs);
-  color: var(--ref-color-grey-80);
+  color: var(--sys-text-color-light);
 }
 
 .drafts-card__sub-text {
@@ -410,20 +400,8 @@ span.chat-bubble-choice-chip {
   min-width: 0;
 }
 
-.drafts-card__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  padding: 6px var(--ref-spacing-xs);
-  border-radius: var(--app-radius-pill);
-  background: var(--ref-color-orange-100);
-  color: var(--ref-color-white);
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+.drafts-card__chevron {
+  font-size: var(--sys-icon-css-sm);
+  color: var(--sys-text-color-light);
   flex-shrink: 0;
-}
-
-.drafts-card__cta i {
-  font-size: var(--sys-icon-css-xs);
-  color: var(--ref-color-white);
 }
