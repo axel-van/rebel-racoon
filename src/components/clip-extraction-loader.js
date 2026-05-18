@@ -11,6 +11,7 @@
 
 import { escapeHtml } from "../utils.js?v=20";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=20";
+import { updateSourceClips } from "../sources-stream.js?v=25";
 
 const MODAL_ID = "clipExtraction";
 const DEFAULT_DURATION_MS = 30000;
@@ -123,6 +124,88 @@ export function open({ filename = "your video", durationMs = DEFAULT_DURATION_MS
     close();
     if (cb) cb();
   }, totalMs);
+}
+
+// Canned extraction output — the mocked AI result attached to any video
+// source that hasn't been through the "Suggest clips" flow yet. Generic
+// enough to plausibly come from any keynote / talk / demo video.
+const EXTRACTED_CLIPS_TEMPLATE = [
+  {
+    start: 252,
+    end: 282,
+    hue: 22,
+    title: "Opening hook — the thesis in one line",
+    summary: "Single-sentence framing that lands the whole talk. Strong cold open.",
+    why: "Quotable. Reads as a standalone post or as the lede of a longer story.",
+    network: "x",
+    tags: ["hook", "positioning"],
+  },
+  {
+    start: 510,
+    end: 568,
+    hue: 280,
+    title: "Live demo — the payoff moment",
+    summary: "Compact demo segment where the value lands visually in under a minute.",
+    why: "Short, kinetic, ends on a clear payoff. Travels well on vertical formats.",
+    network: "instagram",
+    tags: ["demo", "product"],
+  },
+  {
+    start: 890,
+    end: 938,
+    hue: 200,
+    title: "Headline stat with the story behind it",
+    summary: "Specific number delivered with the customer context that earns it.",
+    why: "Numbers + before/after. LinkedIn audiences over-index on time-savings proof.",
+    network: "linkedin",
+    tags: ["stat", "proof"],
+  },
+  {
+    start: 1102,
+    end: 1156,
+    hue: 12,
+    title: "Contrarian POV — why we did the unpopular thing",
+    summary: "Founder explains a decision that goes against the obvious move.",
+    why: "Strong POV in a single beat. Ideal for thought-leadership context.",
+    network: "linkedin",
+    tags: ["contrarian", "pov"],
+  },
+  {
+    start: 1340,
+    end: 1392,
+    hue: 145,
+    title: "Closing line — the quotable outro",
+    summary: "Clean closing delivery with room around it for graphics or captions.",
+    why: "Vertical-format reel material. Punchy, mid-length, ends on a quotable.",
+    network: "tiktok",
+    tags: ["closing", "reel"],
+  },
+];
+
+// Convenience wrapper used by every Video Clips entry point (the empty-state
+// starter, the "Suggest clips" source-card button, and any future trigger):
+// if the source already carries an extraction result, hand it off directly;
+// otherwise run the 30s loader, attach the canned clips, then continue.
+export function ensureClipsThen(source, onReady) {
+  if (!source) return;
+  const hasClips = Array.isArray(source.clips) && source.clips.length > 0;
+  if (hasClips) {
+    onReady(source);
+    return;
+  }
+  open({
+    filename: source.filename || "your video",
+    durationMs: 30000,
+    onComplete: () => {
+      source.durationSec = source.durationSec || 1458;
+      const clipsWithIds = EXTRACTED_CLIPS_TEMPLATE.map((c, i) => ({
+        ...c,
+        id: `clip_${source.id}_${i}`,
+      }));
+      updateSourceClips(source.id, clipsWithIds);
+      onReady(source);
+    },
+  });
 }
 
 export function close() {

@@ -31,7 +31,7 @@ import {
 } from "../components/content-workspace.js?v=23";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=20";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";
-import { open as openClipExtractionLoader } from "../components/clip-extraction-loader.js?v=1";
+import { ensureClipsThen } from "../components/clip-extraction-loader.js?v=1";
 import { open as openSettingsDrawer } from "../components/settings-drawer.js?v=22";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=21";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=21";
@@ -587,59 +587,6 @@ function startAskFlowFromSession(sessionId, sourceId, filename) {
 // Bail conditions: a 2-minute watchdog clears subscriptions if the user
 // cancels the Add Source modal so we don't leak listeners.
 
-const EXTRACTED_CLIPS_TEMPLATE = [
-  {
-    start: 252,
-    end: 282,
-    hue: 22,
-    title: "Opening hook — the thesis in one line",
-    summary: "Single-sentence framing that lands the whole talk. Strong cold open.",
-    why: "Quotable. Reads as a standalone post or as the lede of a longer story.",
-    network: "x",
-    tags: ["hook", "positioning"],
-  },
-  {
-    start: 510,
-    end: 568,
-    hue: 280,
-    title: "Live demo — the payoff moment",
-    summary: "Compact demo segment where the value lands visually in under a minute.",
-    why: "Short, kinetic, ends on a clear payoff. Travels well on vertical formats.",
-    network: "instagram",
-    tags: ["demo", "product"],
-  },
-  {
-    start: 890,
-    end: 938,
-    hue: 200,
-    title: "Headline stat with the story behind it",
-    summary: "Specific number delivered with the customer context that earns it.",
-    why: "Numbers + before/after. LinkedIn audiences over-index on time-savings proof.",
-    network: "linkedin",
-    tags: ["stat", "proof"],
-  },
-  {
-    start: 1102,
-    end: 1156,
-    hue: 12,
-    title: "Contrarian POV — why we did the unpopular thing",
-    summary: "Founder explains a decision that goes against the obvious move.",
-    why: "Strong POV in a single beat. Ideal for thought-leadership context.",
-    network: "linkedin",
-    tags: ["contrarian", "pov"],
-  },
-  {
-    start: 1340,
-    end: 1392,
-    hue: 145,
-    title: "Closing line — the quotable outro",
-    summary: "Clean closing delivery with room around it for graphics or captions.",
-    why: "Vertical-format reel material. Punchy, mid-length, ends on a quotable.",
-    network: "tiktok",
-    tags: ["closing", "reel"],
-  },
-];
-
 function startClipsExtractionFlow(session) {
   const initialIds = new Set(getStreamSources().map((s) => s.id));
   let newSourceId = null;
@@ -674,42 +621,19 @@ function startClipsExtractionFlow(session) {
     unsubNew = null;
 
     // Now wait for the upload + processing pipeline to finish on this
-    // specific source. Then run the 30s extraction overlay.
+    // specific source. Then defer to ensureClipsThen which runs the 30s
+    // extraction loader + attaches mocked clips before opening the modal.
     unsubProcessed = subscribeSources((latest) => {
       const target = latest.find((s) => s.id === newSourceId);
       if (!target || target.status !== "Processed") return;
       unsubProcessed();
       unsubProcessed = null;
-      runExtractionThen(target);
-    });
-  });
-
-  // Drop listeners if the user backs out for 2 minutes without uploading.
-  watchdog = setTimeout(cleanup, 120000);
-
-  openAddSourceModal({ tab: "upload" });
-
-  function runExtractionThen(target) {
-    if (watchdog) {
-      clearTimeout(watchdog);
-      watchdog = null;
-    }
-    openClipExtractionLoader({
-      filename: target.filename,
-      durationMs: 30000,
-      onComplete: () => {
-        // Attach the mocked extraction output to the source so the modal
-        // (and any future revisit via /sources) sees a fully populated
-        // video. durationSec is set inline on the source object since
-        // sources-stream does not expose a dedicated mutator for it.
-        target.durationSec = 1458;
-        const clipsWithIds = EXTRACTED_CLIPS_TEMPLATE.map((c, i) => ({
-          ...c,
-          id: `clip_${target.id}_${i}`,
-        }));
-        updateSourceClips(target.id, clipsWithIds);
-
-        openVideoClipsModal(target, {
+      if (watchdog) {
+        clearTimeout(watchdog);
+        watchdog = null;
+      }
+      ensureClipsThen(target, (ready) =>
+        openVideoClipsModal(ready, {
           onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
           onUseClips: (selectedClips, source) => {
             const drafts = selectedClips.map((clip) =>
@@ -733,10 +657,15 @@ function startClipsExtractionFlow(session) {
               duration: 3200,
             });
           },
-        });
-      },
+        }),
+      );
     });
-  }
+  });
+
+  // Drop listeners if the user backs out for 2 minutes without uploading.
+  watchdog = setTimeout(cleanup, 120000);
+
+  openAddSourceModal({ tab: "upload" });
 }
 
 // Local copy of dashboard's defaultChatName — keeps session.js standalone

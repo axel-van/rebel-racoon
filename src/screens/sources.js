@@ -3,6 +3,7 @@ import { renderTopbar } from "../components/topbar.js?v=34";
 import { renderSourceCard } from "../components/source-card.js?v=26";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=21";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";
+import { ensureClipsThen } from "../components/clip-extraction-loader.js?v=1";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=21";
 import { addPostDraft } from "../posts-store.js?v=23";
 import { postDraftResult } from "../assistant.js?v=23";
@@ -245,48 +246,53 @@ function bind(root, signal) {
         const sourceId = clipsBtn.dataset.sourceSuggestClips;
         const src = getSources().find((s) => s.id === sourceId);
         if (!src) return;
-        openVideoClipsModal(src, {
-          onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
-          onUseClips: (selectedClips, source) => {
-            openChatPickerModal({
-              onPick: (pick) => {
-                // chat-picker's contract: { kind: "new" } | { kind: "existing", session }.
-                // "new" is treated as start-from-scratch — for the prototype we
-                // just toast and skip; real implementation would mint a fresh
-                // conversation and inject the drafts.
-                if (pick?.kind !== "existing" || !pick.session?.id) {
-                  showToast("Pick an existing conversation to receive the drafts.", {
-                    variant: "warning",
+        // ensureClipsThen runs the 30s extraction loader if the source has no
+        // clips yet, then opens the modal; if clips already exist it hands
+        // off straight to the modal. Same callbacks either way.
+        ensureClipsThen(src, (ready) =>
+          openVideoClipsModal(ready, {
+            onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
+            onUseClips: (selectedClips, source) => {
+              openChatPickerModal({
+                onPick: (pick) => {
+                  // chat-picker's contract: { kind: "new" } | { kind: "existing", session }.
+                  // "new" is treated as start-from-scratch — for the prototype we
+                  // just toast and skip; real implementation would mint a fresh
+                  // conversation and inject the drafts.
+                  if (pick?.kind !== "existing" || !pick.session?.id) {
+                    showToast("Pick an existing conversation to receive the drafts.", {
+                      variant: "warning",
+                      duration: 3200,
+                    });
+                    return;
+                  }
+                  const sessionId = pick.session.id;
+                  const drafts = selectedClips.map((clip) =>
+                    addPostDraft(sessionId, {
+                      network: clip.network,
+                      text: [clip.title, clip.summary].filter(Boolean),
+                      hashtags: (clip.tags || []).map((t) => `#${t}`),
+                      clipRef: {
+                        start: clip.start,
+                        end: clip.end,
+                        sourceName: source.filename,
+                        hue: clip.hue,
+                      },
+                    }),
+                  );
+                  postDraftResult(sessionId, {
+                    ideaTitle: `From ${source.filename}`,
+                    drafts,
+                  });
+                  navigate(`/session/${sessionId}`);
+                  showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from ${source.filename}`, {
                     duration: 3200,
                   });
-                  return;
-                }
-                const sessionId = pick.session.id;
-                const drafts = selectedClips.map((clip) =>
-                  addPostDraft(sessionId, {
-                    network: clip.network,
-                    text: [clip.title, clip.summary].filter(Boolean),
-                    hashtags: (clip.tags || []).map((t) => `#${t}`),
-                    clipRef: {
-                      start: clip.start,
-                      end: clip.end,
-                      sourceName: source.filename,
-                      hue: clip.hue,
-                    },
-                  }),
-                );
-                postDraftResult(sessionId, {
-                  ideaTitle: `From ${source.filename}`,
-                  drafts,
-                });
-                navigate(`/session/${sessionId}`);
-                showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from ${source.filename}`, {
-                  duration: 3200,
-                });
-              },
-            });
-          },
-        });
+                },
+              });
+            },
+          }),
+        );
         return;
       }
     },

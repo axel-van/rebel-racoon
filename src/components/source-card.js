@@ -123,12 +123,14 @@ export function renderSourceCard(source, allIdeas = [], { selectable = false, is
         <span>Ask</span>
       </button>`;
 
-  // "Suggest clips" — only on processed video sources that ship a duration.
-  // durationSec is the gate: legacy mocks without one keep the button hidden.
+  // "Suggest clips" — surfaces on every processed video source. The
+  // sources.js click handler runs the 30s extraction loader first if the
+  // source hasn't been through extraction yet, then opens the Video Clips
+  // modal; if clips already exist it hands off straight to the modal.
   const isVideo = (source.kind || "").toLowerCase() === "video";
-  const hasVideoData = isVideo && !isProcessing && typeof source.durationSec === "number";
-  const clipsButton = hasVideoData
-    ? `<button
+  const clipsButton =
+    isVideo && !isProcessing
+      ? `<button
           type="button"
           class="ap-button transparent grey source-card__clips"
           data-source-suggest-clips="${source.id}"
@@ -136,7 +138,7 @@ export function renderSourceCard(source, allIdeas = [], { selectable = false, is
           <i class="ap-icon-sparkles"></i>
           <span>Suggest clips</span>
         </button>`
-    : "";
+      : "";
 
   // Leading checkbox — only when the workspace is in selection mode AND the
   // source is processed. The DS `.ap-checkbox-container` uses a hidden
