@@ -317,7 +317,9 @@ span.chat-bubble-choice-chip {
    + the orange icon tile + the active state. Whole card is the click
    target; the trailing chevron is the affordance hint. */
 .drafts-card {
-  display: flex;
+  /* .ap-card defaults to flex-direction: column with --ref-spacing-sm gap;
+     compose horizontally with a tighter gap for this list-item style. */
+  flex-direction: row;
   align-items: center;
   gap: var(--ref-spacing-xs);
   width: 100%;
