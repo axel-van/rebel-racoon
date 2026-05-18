@@ -1608,7 +1608,11 @@ function renderComposerPill(pillId, snap, state) {
         </span>
         <span class="composer-pill__status">Analyse en cours…</span>
       </span>`;
-  } else if (snap.state === "ready") {
+  } else if (snap.state === "ready" && snap.ideaCount > 0) {
+    // Only surface the "N nouvelles idées" badge once we actually have
+    // ideas attached. A processed source with ideaCount: 0 (e.g. a video
+    // the user routed to clip extraction) renders no badge — only the
+    // blue filename pill.
     const ideas = snap.ideaCount === 1 ? "1 nouvelle idée" : `${snap.ideaCount} nouvelles idées`;
     if (!state.dismissedIdeaSourceIds.has(snap.sourceId)) {
       const dismissingClass = state.dismissingIdeaSourceIds.has(snap.sourceId) ? " is-dismissing" : "";
@@ -1673,21 +1677,12 @@ function startPillFromKind(root, session, kind) {
   const sourceId = pushScriptedSource({ filename: spec.filename, kind: spec.kindLabel });
   getComposerState(sessionId).pills.set(`pill-${sourceId}`, { sourceId });
   paintComposerPills(root, sessionId);
-  // Match the brief — flip to ready in ~3-5s with 3-8 ideas.
-  const delay = 3000 + Math.floor(Math.random() * 2000);
-  const ideaCount = 3 + Math.floor(Math.random() * 6);
-  setTimeout(() => {
-    completeScriptedSource(sourceId, {
-      signal: "Medium signal",
-      signalColor: "tagOrange",
-      ideaCount,
-    });
-  }, delay);
-  // Video kind: rather than auto-running clip extraction, ask the user
-  // up-front whether they want clips or ideas. The choice handler
-  // (video-intake-choice in the click dispatcher below) waits for the
-  // source to finish processing, then runs the picked flow.
   if (kind === "video") {
+    // Video kind: skip auto-complete and ask the user up-front whether
+    // they want clips or ideas. The choice handler completes the source
+    // with the right ideaCount (0 for clips, random 3–8 for ideas) so
+    // the composer pill's green "N nouvelles idées" badge never shows
+    // before the user has actually chosen the ideas path.
     postAssistantChoice(sessionId, {
       text: "What should I do with this video?",
       choices: [
@@ -1699,7 +1694,19 @@ function startPillFromKind(root, session, kind) {
       handler: "video-intake-choice",
       context: { sourceId, filename: spec.filename },
     });
+    return;
   }
+  // PDF / URL — keep the existing scripted intake: flip to ready in ~3-5s
+  // with 3-8 ideas attached.
+  const delay = 3000 + Math.floor(Math.random() * 2000);
+  const ideaCount = 3 + Math.floor(Math.random() * 6);
+  setTimeout(() => {
+    completeScriptedSource(sourceId, {
+      signal: "Medium signal",
+      signalColor: "tagOrange",
+      ideaCount,
+    });
+  }, delay);
 }
 
 function bindSession(root, session) {
@@ -1762,13 +1769,21 @@ function bindSession(root, session) {
       handleActionPick(session.id, msg, selectedValues, { setQuery });
     } else if (msg.handler === "video-intake-choice") {
       // Single-select picker between "clips" (cut into clip-extraction flow)
-      // and "ideas" (postExtractionResult turn with mock ideas). The user
-      // may pick before the scripted source is Processed — whenSourceProcessed
-      // defers until it lands.
+      // and "ideas" (postExtractionResult turn with mock ideas). For video,
+      // startPillFromKind intentionally skips auto-complete — we complete
+      // the scripted source here so the pill's "N nouvelles idées" badge
+      // only reflects the chosen branch (0 for clips, random 3-8 for ideas).
       const { sourceId, filename } = msg.context || {};
       const pick = selectedValues[0];
       if (sourceId && pick) {
-        whenSourceProcessed(sourceId, (source) => {
+        const completeFor = (extraIdeas) => {
+          completeScriptedSource(sourceId, {
+            signal: extraIdeas > 0 ? "Medium signal" : "Low signal",
+            signalColor: extraIdeas > 0 ? "tagOrange" : "grey",
+            ideaCount: extraIdeas,
+          });
+          const source = getStreamSources().find((s) => s.id === sourceId);
+          if (!source) return;
           if (pick === "clips") {
             postClipExtractionTurn(session.id, { sourceId, filename });
             startClipExtraction(source, {
@@ -1780,7 +1795,12 @@ function bindSession(root, session) {
               ideas: mockVideoIdeas(sourceId),
             });
           }
-        });
+        };
+        if (pick === "clips") {
+          completeFor(0);
+        } else if (pick === "ideas") {
+          completeFor(3 + Math.floor(Math.random() * 6));
+        }
       }
     }
   }
