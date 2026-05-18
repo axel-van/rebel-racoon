@@ -115,6 +115,10 @@ const SHELL_HTML = `
       <h2 class="video-clips-modal__title" id="videoClipsTitle"></h2>
       <p class="video-clips-modal__sub" id="videoClipsSub"></p>
     </div>
+    <button type="button" class="ap-button stroked grey video-clips-modal__add" data-vc-action="add-clip">
+      <i class="ap-icon-plus"></i>
+      <span>Add clip</span>
+    </button>
     <button type="button" class="video-clips-modal__close" id="videoClipsClose" aria-label="Close">
       <i class="ap-icon-close"></i>
     </button>
@@ -194,7 +198,7 @@ function renderToolbar() {
       <span class="video-clips-modal__sep"></span>
       <button class="vc-link" data-vc-action="clear" ${selected.size === 0 ? "disabled" : ""}>Clear</button>
     </div>
-    <button class="vc-regen${regenerating ? " is-loading" : ""}" data-vc-action="regen" ${regenerating ? "disabled" : ""}>
+    <button class="ap-button stroked grey video-clips-modal__regen${regenerating ? " is-loading" : ""}" data-vc-action="regen" ${regenerating ? "disabled" : ""}>
       <i class="ap-icon-refresh"></i>
       <span>${regenerating ? "Re-mining clips…" : "Suggest more"}</span>
     </button>
@@ -245,7 +249,7 @@ function clipCardHTML(clip) {
             <span class="vc-row__time">${fmtTime(clip.start)} – ${fmtTime(clip.end)}</span>
             <span class="vc-row__title">${escapeHtml(clip.title || "Untitled clip")}</span>
           </div>
-          <button class="vc-row__icon-btn" data-vc-action="edit" data-vc-clip="${clip.id}" title="Edit clip">
+          <button class="ap-button stroked grey vc-row__edit-btn" data-vc-action="edit" data-vc-clip="${clip.id}" title="Edit clip">
             <i class="ap-icon-pen"></i>
             <span>Edit</span>
           </button>
@@ -449,11 +453,6 @@ function renderBody() {
   bodyEl.innerHTML = `
     ${editorBlock}
     <div class="vc-rows">${cards}</div>
-    <button class="vc-add-clip" data-vc-action="add-clip">
-      <span class="vc-add-clip__plus">+</span>
-      <span>Add a clip manually</span>
-      <span class="vc-add-clip__hint">Pick a moment we missed</span>
-    </button>
   `;
 }
 
