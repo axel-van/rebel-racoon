@@ -260,6 +260,27 @@ export function submitAssistantChoice(sessionId, messageId, selectedValues) {
   notify(sessionId);
 }
 
+// Inline "Extracting clips → Clips ready" card pinned to a single video
+// source. The turn carries the sourceId; the renderer reads the source's
+// live clipExtractionStatus / clips count from sources-stream so the same
+// turn flips from pending to ready without an extra notify hop.
+export function postClipExtractionTurn(sessionId, { sourceId, filename }) {
+  const thread = getThread(sessionId);
+  const id = newId();
+  thread.push({
+    id,
+    role: "assistant",
+    variant: "clip-extraction",
+    meta: "Archie",
+    sourceId,
+    filename,
+    status: "ready",
+    createdAt: Date.now(),
+  });
+  notify(sessionId);
+  return id;
+}
+
 // Structured "Drafted N posts" result turn. Reuses the extraction-turn chrome
 // (mermaid pill + collapsible detail) but shows post mini-cards instead of
 // idea cards.
