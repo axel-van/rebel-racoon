@@ -388,6 +388,17 @@ export function updateSourceClips(sourceId, nextClips) {
   notifySources();
 }
 
+// Tracks the background clip-extraction phase on a video source. Status is
+// one of: undefined (never run) | "extracting" | "ready". Source cards read
+// this to render a disabled "Extracting clips…" affordance while the job is
+// in flight.
+export function setClipExtractionStatus(sourceId, status) {
+  const source = sources.find((s) => s.id === sourceId);
+  if (!source) return;
+  source.clipExtractionStatus = status;
+  notifySources();
+}
+
 export function removeSources(ids) {
   if (!Array.isArray(ids) || ids.length === 0) return 0;
   const set = new Set(ids);

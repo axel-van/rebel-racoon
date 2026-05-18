@@ -21,7 +21,7 @@ import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=21";
 import * as contextBuilder from "../context-builder.js?v=23";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=25";
-import { renderSourceCard } from "../components/source-card.js?v=26";
+import { renderSourceCard } from "../components/source-card.js?v=27";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
 import {
   contentState,
@@ -31,7 +31,7 @@ import {
 } from "../components/content-workspace.js?v=23";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=20";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";
-import { ensureClipsThen } from "../components/clip-extraction-loader.js?v=1";
+import { startClipExtraction } from "../components/clip-extraction-loader.js?v=2";
 import { open as openSettingsDrawer } from "../components/settings-drawer.js?v=22";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=21";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=21";
@@ -47,7 +47,7 @@ import {
   pushScriptedSource,
   completeScriptedSource,
   updateSourceClips,
-} from "../sources-stream.js?v=25";
+} from "../sources-stream.js?v=26";
 import { showToast } from "../components/toast.js?v=20";
 import {
   openDrafts as openDraftsPanel,
@@ -579,8 +579,9 @@ function startAskFlowFromSession(sessionId, sourceId, filename) {
 //      resolves to "video".
 //   3. Wait for that source to reach `Processed` status (the existing
 //      upload pipeline already runs 2s upload + 3-5s processing).
-//   4. Run a 30s "Extracting clips" loader, then attach mock clips (same
-//      shape as the founder-keynote seed) and open the Video Clips modal.
+//   4. Kick off the non-blocking clip extraction (30s background job). The
+//      UI stays usable; the user gets a toast with an "Open clips" action
+//      when extraction completes, which opens the Video Clips modal.
 //   5. "Draft posts from N clips" pipes drafts into the current session
 //      with full clipRef so each draft card renders its video player.
 //
@@ -621,8 +622,9 @@ function startClipsExtractionFlow(session) {
     unsubNew = null;
 
     // Now wait for the upload + processing pipeline to finish on this
-    // specific source. Then defer to ensureClipsThen which runs the 30s
-    // extraction loader + attaches mocked clips before opening the modal.
+    // specific source. Then defer to startClipExtraction which runs a 30s
+    // non-blocking background job and fires a completion toast whose
+    // "Open clips" action invokes onReady to open the Video Clips modal.
     unsubProcessed = subscribeSources((latest) => {
       const target = latest.find((s) => s.id === newSourceId);
       if (!target || target.status !== "Processed") return;
@@ -632,33 +634,34 @@ function startClipsExtractionFlow(session) {
         clearTimeout(watchdog);
         watchdog = null;
       }
-      ensureClipsThen(target, (ready) =>
-        openVideoClipsModal(ready, {
-          onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
-          onUseClips: (selectedClips, source) => {
-            const drafts = selectedClips.map((clip) =>
-              addPostDraft(session.id, {
-                network: clip.network,
-                text: [clip.title, clip.summary].filter(Boolean),
-                hashtags: (clip.tags || []).map((t) => `#${t}`),
-                clipRef: {
-                  start: clip.start,
-                  end: clip.end,
-                  sourceName: source.filename,
-                  hue: clip.hue,
-                },
-              }),
-            );
-            postDraftResult(session.id, {
-              ideaTitle: `From ${source.filename}`,
-              drafts,
-            });
-            showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from ${source.filename}`, {
-              duration: 3200,
-            });
-          },
-        }),
-      );
+      startClipExtraction(target, {
+        onReady: (ready) =>
+          openVideoClipsModal(ready, {
+            onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
+            onUseClips: (selectedClips, source) => {
+              const drafts = selectedClips.map((clip) =>
+                addPostDraft(session.id, {
+                  network: clip.network,
+                  text: [clip.title, clip.summary].filter(Boolean),
+                  hashtags: (clip.tags || []).map((t) => `#${t}`),
+                  clipRef: {
+                    start: clip.start,
+                    end: clip.end,
+                    sourceName: source.filename,
+                    hue: clip.hue,
+                  },
+                }),
+              );
+              postDraftResult(session.id, {
+                ideaTitle: `From ${source.filename}`,
+                drafts,
+              });
+              showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from ${source.filename}`, {
+                duration: 3200,
+              });
+            },
+          }),
+      });
     });
   });
 
