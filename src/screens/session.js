@@ -198,10 +198,14 @@ function renderAssistantPanel(session, attachedContext) {
     return renderAssistantPanelQuestion(session);
   }
 
-  // Empty conversation = the user hasn't typed anything yet. We swap the
-  // thread for the handoff "What are we creating today?" hero with a 2x2
-  // grid of starter cards (Q14). Once the user types, the thread takes over.
-  const isEmptyConversation = thread.every((m) => m.role !== "user");
+  // Empty conversation = the user hasn't typed anything yet AND no rich
+  // assistant turn has landed (extraction / draft / clip-extraction). We
+  // swap the thread for the handoff "What are we creating today?" hero
+  // with a 2x2 grid of starter cards (Q14). Once the user types or a
+  // rich turn arrives, the thread takes over so the in-flight work stays
+  // visible across remounts.
+  const isEmptyConversation =
+    thread.every((m) => m.role !== "user") && !thread.some((m) => m.role === "assistant" && m.variant);
 
   return html`
     <aside class="session__assistant" aria-label="Assistant panel">
