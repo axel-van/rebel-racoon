@@ -628,78 +628,17 @@
   flex: 1;
 }
 
-.vc-editor__danger {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: inherit;
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
-  color: #f87171;
-  background: transparent;
-  border: 1px solid transparent;
-  padding: 6px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all var(--ref-animation-short);
-}
-
-.vc-editor__danger:hover {
-  background: rgba(248, 113, 113, 0.1);
-  border-color: rgba(248, 113, 113, 0.3);
-}
-
-.vc-editor__danger i {
-  font-size: 12px;
-  opacity: 0.85;
-}
-
-.vc-editor__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: var(--ref-font-weight-bold);
-  height: 28px;
-  padding: 0 10px;
-  border-radius: var(--app-radius-button-sm);
-  cursor: pointer;
-  transition: all var(--ref-animation-short);
-}
-
-.vc-editor__btn--ghost {
-  background: transparent;
-  border: 1px solid #3a4150;
+/* Editor-header buttons (Delete / Cancel / Save) — Delete and Cancel use
+ * .ap-button.ghost.{red,grey} which were designed for light surfaces;
+ * tweak the grey text to read against the cinematic dark pane. The red
+ * ghost variant already has enough contrast at default colors. */
+.vc-editor__head .ap-button.ghost.grey {
   color: #d1d5db;
 }
 
-.vc-editor__btn--ghost:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: #545b6b;
+.vc-editor__head .ap-button.ghost.grey:hover {
+  background: rgba(255, 255, 255, 0.06);
   color: var(--ref-color-white);
-}
-
-.vc-editor__btn--primary {
-  background: var(--ref-color-orange-100);
-  color: var(--ref-color-white);
-  border: 1px solid var(--ref-color-orange-100);
-}
-
-.vc-editor__btn--primary:hover {
-  background: #ff7e46;
-  border-color: #ff7e46;
-}
-
-.vc-editor__btn--primary:disabled {
-  background: rgba(255, 103, 38, 0.4);
-  border-color: transparent;
-  color: rgba(255, 255, 255, 0.6);
-  cursor: not-allowed;
-}
-
-.vc-editor__btn i {
-  font-size: 11px;
 }
 
 /* ── Editor top: preview (left) + form (right) ─────────────────── */
