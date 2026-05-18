@@ -31,6 +31,7 @@ import {
 } from "../components/content-workspace.js?v=23";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=20";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";
+import { open as openClipExtractionLoader } from "../components/clip-extraction-loader.js?v=1";
 import { open as openSettingsDrawer } from "../components/settings-drawer.js?v=22";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=21";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=21";
@@ -568,6 +569,173 @@ function startAskFlowFromSession(sessionId, sourceId, filename) {
     handoff({ kind: "new" });
   } else {
     openChatPickerModal({ onPick: handoff });
+  }
+}
+
+// "Extract video clips" starter → multi-step flow:
+//   1. Snapshot the current source ids, open the Add Source modal so the
+//      user can upload a video file.
+//   2. Subscribe to sources-stream; pick up the first new source whose kind
+//      resolves to "video".
+//   3. Wait for that source to reach `Processed` status (the existing
+//      upload pipeline already runs 2s upload + 3-5s processing).
+//   4. Run a 30s "Extracting clips" loader, then attach mock clips (same
+//      shape as the founder-keynote seed) and open the Video Clips modal.
+//   5. "Draft posts from N clips" pipes drafts into the current session
+//      with full clipRef so each draft card renders its video player.
+//
+// Bail conditions: a 2-minute watchdog clears subscriptions if the user
+// cancels the Add Source modal so we don't leak listeners.
+
+const EXTRACTED_CLIPS_TEMPLATE = [
+  {
+    start: 252,
+    end: 282,
+    hue: 22,
+    title: "Opening hook — the thesis in one line",
+    summary: "Single-sentence framing that lands the whole talk. Strong cold open.",
+    why: "Quotable. Reads as a standalone post or as the lede of a longer story.",
+    network: "x",
+    tags: ["hook", "positioning"],
+  },
+  {
+    start: 510,
+    end: 568,
+    hue: 280,
+    title: "Live demo — the payoff moment",
+    summary: "Compact demo segment where the value lands visually in under a minute.",
+    why: "Short, kinetic, ends on a clear payoff. Travels well on vertical formats.",
+    network: "instagram",
+    tags: ["demo", "product"],
+  },
+  {
+    start: 890,
+    end: 938,
+    hue: 200,
+    title: "Headline stat with the story behind it",
+    summary: "Specific number delivered with the customer context that earns it.",
+    why: "Numbers + before/after. LinkedIn audiences over-index on time-savings proof.",
+    network: "linkedin",
+    tags: ["stat", "proof"],
+  },
+  {
+    start: 1102,
+    end: 1156,
+    hue: 12,
+    title: "Contrarian POV — why we did the unpopular thing",
+    summary: "Founder explains a decision that goes against the obvious move.",
+    why: "Strong POV in a single beat. Ideal for thought-leadership context.",
+    network: "linkedin",
+    tags: ["contrarian", "pov"],
+  },
+  {
+    start: 1340,
+    end: 1392,
+    hue: 145,
+    title: "Closing line — the quotable outro",
+    summary: "Clean closing delivery with room around it for graphics or captions.",
+    why: "Vertical-format reel material. Punchy, mid-length, ends on a quotable.",
+    network: "tiktok",
+    tags: ["closing", "reel"],
+  },
+];
+
+function startClipsExtractionFlow(session) {
+  const initialIds = new Set(getStreamSources().map((s) => s.id));
+  let newSourceId = null;
+  let unsubNew = null;
+  let unsubProcessed = null;
+  let watchdog = null;
+
+  const cleanup = () => {
+    if (unsubNew) {
+      unsubNew();
+      unsubNew = null;
+    }
+    if (unsubProcessed) {
+      unsubProcessed();
+      unsubProcessed = null;
+    }
+    if (watchdog) {
+      clearTimeout(watchdog);
+      watchdog = null;
+    }
+  };
+
+  // After the user picks a file, the Add Source modal kicks off the
+  // existing upload pipeline which pushes a new source. We catch the
+  // first new VIDEO source — anything else is ignored and the user
+  // can re-trigger the starter.
+  unsubNew = subscribeSources((sources) => {
+    const fresh = sources.find((s) => !initialIds.has(s.id) && (s.kind || "").toLowerCase() === "video");
+    if (!fresh) return;
+    newSourceId = fresh.id;
+    unsubNew();
+    unsubNew = null;
+
+    // Now wait for the upload + processing pipeline to finish on this
+    // specific source. Then run the 30s extraction overlay.
+    unsubProcessed = subscribeSources((latest) => {
+      const target = latest.find((s) => s.id === newSourceId);
+      if (!target || target.status !== "Processed") return;
+      unsubProcessed();
+      unsubProcessed = null;
+      runExtractionThen(target);
+    });
+  });
+
+  // Drop listeners if the user backs out for 2 minutes without uploading.
+  watchdog = setTimeout(cleanup, 120000);
+
+  openAddSourceModal({ tab: "upload" });
+
+  function runExtractionThen(target) {
+    if (watchdog) {
+      clearTimeout(watchdog);
+      watchdog = null;
+    }
+    openClipExtractionLoader({
+      filename: target.filename,
+      durationMs: 30000,
+      onComplete: () => {
+        // Attach the mocked extraction output to the source so the modal
+        // (and any future revisit via /sources) sees a fully populated
+        // video. durationSec is set inline on the source object since
+        // sources-stream does not expose a dedicated mutator for it.
+        target.durationSec = 1458;
+        const clipsWithIds = EXTRACTED_CLIPS_TEMPLATE.map((c, i) => ({
+          ...c,
+          id: `clip_${target.id}_${i}`,
+        }));
+        updateSourceClips(target.id, clipsWithIds);
+
+        openVideoClipsModal(target, {
+          onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
+          onUseClips: (selectedClips, source) => {
+            const drafts = selectedClips.map((clip) =>
+              addPostDraft(session.id, {
+                network: clip.network,
+                text: [clip.title, clip.summary].filter(Boolean),
+                hashtags: (clip.tags || []).map((t) => `#${t}`),
+                clipRef: {
+                  start: clip.start,
+                  end: clip.end,
+                  sourceName: source.filename,
+                  hue: clip.hue,
+                },
+              }),
+            );
+            postDraftResult(session.id, {
+              ideaTitle: `From ${source.filename}`,
+              drafts,
+            });
+            showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from ${source.filename}`, {
+              duration: 3200,
+            });
+          },
+        });
+      },
+    });
   }
 }
 
@@ -1802,46 +1970,15 @@ function bindSession(root, session) {
       //
       // Starters can opt into a direct action instead of text injection by
       // setting `action` on the mock. Today the only action is
-      // "open-video-clips" — click pops the Video Clips modal on the first
-      // processed video source and pipes drafts into the current session.
-      // If no video source exists, fall back to opening the Add Source
-      // modal so the user can upload one.
+      // "open-video-clips" — the full flow lives in startClipsExtractionFlow:
+      // 1. Open Add Source modal so the user uploads a video.
+      // 2. Detect the new video source via subscribeSources.
+      // 3. Run a 30s "Extracting clips" loader once it reaches Processed.
+      // 4. Attach mock clips + open the Video Clips modal in the current
+      //    session so drafts land here.
       const starterBtn = event.target.closest("[data-starter]");
       if (starterBtn && starterBtn.dataset.starterAction === "open-video-clips") {
-        const videoSrc = getStreamSources().find(
-          (s) =>
-            (s.kind || "").toLowerCase() === "video" && s.status === "Processed" && typeof s.durationSec === "number",
-        );
-        if (!videoSrc) {
-          showToast("Upload a video first to extract clips.", { duration: 3200 });
-          openAddSourceModal({ tab: "upload" });
-          return;
-        }
-        openVideoClipsModal(videoSrc, {
-          onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
-          onUseClips: (selectedClips, source) => {
-            const drafts = selectedClips.map((clip) =>
-              addPostDraft(session.id, {
-                network: clip.network,
-                text: [clip.title, clip.summary].filter(Boolean),
-                hashtags: (clip.tags || []).map((t) => `#${t}`),
-                clipRef: {
-                  start: clip.start,
-                  end: clip.end,
-                  sourceName: source.filename,
-                  hue: clip.hue,
-                },
-              }),
-            );
-            postDraftResult(session.id, {
-              ideaTitle: `From ${source.filename}`,
-              drafts,
-            });
-            showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from ${source.filename}`, {
-              duration: 3200,
-            });
-          },
-        });
+        startClipsExtractionFlow(session);
         return;
       }
       if (starterBtn) {

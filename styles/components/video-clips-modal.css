@@ -1458,6 +1458,113 @@
   }
 }
 
+/* ── Clip extraction loader (30s pseudo-processing overlay) ─────
+ * Shown between Add Source modal close and Video Clips modal open
+ * when the user triggers the "Extract video clips" starter.
+ */
+
+.clip-extraction {
+  position: fixed;
+  top: 50vh;
+  left: 50vw;
+  transform: translate(-50%, -50%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  z-index: var(--app-z-modal);
+  width: min(calc(100% - 48px), 460px);
+  padding: var(--ref-spacing-lg) var(--ref-spacing-md);
+  background: var(--ref-color-white);
+  border-radius: var(--app-radius-modal);
+  box-shadow: var(--app-shadow-modal);
+  border: 1px solid var(--sys-border-color-default);
+  gap: var(--ref-spacing-xs);
+}
+
+.clip-extraction.open {
+  display: flex;
+  animation: app-modal-fade-in var(--ref-animation-normal) ease;
+}
+
+.clip-extraction__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-orange-10);
+  color: var(--ref-color-orange-100);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  animation: clip-extraction-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes clip-extraction-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 103, 38, 0.18);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 103, 38, 0.02);
+  }
+}
+
+.clip-extraction__title {
+  margin: 0;
+  font-size: var(--ref-font-size-lg);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+  letter-spacing: -0.01em;
+}
+
+.clip-extraction__filename {
+  margin: 0;
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-60);
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clip-extraction__bar {
+  width: 100%;
+  height: 6px;
+  margin-top: var(--ref-spacing-xs);
+  background: var(--ref-color-grey-10);
+  border-radius: var(--app-radius-pill);
+  overflow: hidden;
+}
+
+.clip-extraction__bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--ref-color-orange-80) 0%, var(--ref-color-orange-100) 100%);
+  border-radius: var(--app-radius-pill);
+  transition: width 240ms linear;
+}
+
+.clip-extraction__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  font-size: var(--ref-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--ref-color-grey-80);
+}
+
+.clip-extraction__stage {
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+}
+
+.clip-extraction__percent {
+  color: var(--ref-color-orange-150);
+  font-weight: var(--ref-font-weight-bold);
+}
+
 /* ── Source card trigger button (orange ghost on video sources) ─ */
 
 .source-card__clips {
