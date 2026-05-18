@@ -7,9 +7,11 @@ import { isNewUser } from "../user-mode.js?v=20";
 import {
   getThread,
   sendMessage,
+  postAssistantChoice,
   postAssistantMessage,
   postClipExtractionTurn,
   postDraftResult,
+  postExtractionResult,
   subscribe,
   submitAssistantChoice,
 } from "../assistant.js?v=24";
@@ -682,6 +684,26 @@ function openVideoClipsModalForSession(source, session) {
       });
     },
   });
+}
+
+// Resolve a source by id once it reaches Processed status. Calls fn(source)
+// synchronously if it's already Processed, otherwise subscribes and waits
+// for the first matching state transition (then auto-unsubscribes).
+// Returns the teardown function in case the caller needs to abort early.
+function whenSourceProcessed(sourceId, fn) {
+  const src = getStreamSources().find((s) => s.id === sourceId);
+  if (src && src.status === "Processed") {
+    fn(src);
+    return () => {};
+  }
+  const unsub = subscribeSources((sources) => {
+    const t = sources.find((s) => s.id === sourceId);
+    if (t && t.status === "Processed") {
+      unsub();
+      fn(t);
+    }
+  });
+  return unsub;
 }
 
 // Local copy of dashboard's defaultChatName — keeps session.js standalone
@@ -1503,6 +1525,35 @@ const SCRIPTED_KINDS = {
   url: { kindLabel: "URL", filename: "blog.example.com/post" },
 };
 
+// Canned ideas posted via postExtractionResult when the user picks "Extract
+// ideas" on a video. Generic enough to plausibly come from any keynote /
+// demo / founder-talk video. Shape matches the { id, title, body } the
+// renderer reads (renderExtractionTurn).
+function mockVideoIdeas(sourceId) {
+  return [
+    {
+      id: `idea_${sourceId}_1`,
+      title: "Opening thesis — one-line framing",
+      body: "The video opens with the central claim. Reads as a standalone post or as the lede of a longer piece.",
+    },
+    {
+      id: `idea_${sourceId}_2`,
+      title: "Demo segment — value lands visually",
+      body: "Short compact demo where the product's value lands in under a minute. Travels well on vertical formats.",
+    },
+    {
+      id: `idea_${sourceId}_3`,
+      title: "Headline stat with the story behind it",
+      body: "Specific number delivered with the customer context that earns it. Strong proof point for LinkedIn.",
+    },
+    {
+      id: `idea_${sourceId}_4`,
+      title: "Contrarian POV — the unpopular call",
+      body: "Founder explains a decision that goes against the obvious move. Single-beat thought-leadership material.",
+    },
+  ];
+}
+
 // Resolves a pill against the live sources/uploads stream. Returns null
 // when the backing record is gone (cancelled upload / removed source) so
 // the caller can drop the pill from local state.
@@ -1633,21 +1684,24 @@ function startPillFromKind(root, session, kind) {
       signalColor: "tagOrange",
       ideaCount,
     });
-    // Video kind triggers a follow-up clip-extraction beat: a persistent
-    // assistant card in the thread + the existing start/completion toasts
-    // (start, then "Clips ready · Open clips"). The card and the toast
-    // action both route through openVideoClipsModalForSession so behavior
-    // is identical.
-    if (kind === "video") {
-      const target = getStreamSources().find((s) => s.id === sourceId);
-      if (target) {
-        postClipExtractionTurn(sessionId, { sourceId, filename: target.filename });
-        startClipExtraction(target, {
-          onReady: (ready) => openVideoClipsModalForSession(ready, session),
-        });
-      }
-    }
   }, delay);
+  // Video kind: rather than auto-running clip extraction, ask the user
+  // up-front whether they want clips or ideas. The choice handler
+  // (video-intake-choice in the click dispatcher below) waits for the
+  // source to finish processing, then runs the picked flow.
+  if (kind === "video") {
+    postAssistantChoice(sessionId, {
+      text: "What should I do with this video?",
+      choices: [
+        { value: "clips", label: "Cut into clips", icon: "ap-icon-sparkles" },
+        { value: "ideas", label: "Extract ideas", icon: "ap-icon-bulb" },
+      ],
+      multi: false,
+      handler: "video-intake-choice",
+      context: { sourceId, filename: spec.filename },
+      submitLabel: "Continue",
+    });
+  }
 }
 
 function bindSession(root, session) {
@@ -1843,6 +1897,28 @@ function bindSession(root, session) {
           executeDraft(session.id, msg.context.ideaId, selectedValues);
         } else if (msg.handler === "start-action") {
           handleActionPick(session.id, msg, selectedValues, { setQuery });
+        } else if (msg.handler === "video-intake-choice") {
+          // Single-select picker between "clips" (cut into clip-extraction
+          // flow) and "ideas" (postExtractionResult turn with mock ideas).
+          // The user may submit before the scripted source is Processed —
+          // whenSourceProcessed defers until it lands.
+          const { sourceId, filename } = msg.context || {};
+          const pick = selectedValues[0];
+          if (sourceId && pick) {
+            whenSourceProcessed(sourceId, (source) => {
+              if (pick === "clips") {
+                postClipExtractionTurn(session.id, { sourceId, filename });
+                startClipExtraction(source, {
+                  onReady: (ready) => openVideoClipsModalForSession(ready, session),
+                });
+              } else if (pick === "ideas") {
+                postExtractionResult(session.id, {
+                  filename,
+                  ideas: mockVideoIdeas(sourceId),
+                });
+              }
+            });
+          }
         }
         return;
       }
