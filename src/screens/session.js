@@ -635,32 +635,7 @@ function startClipsExtractionFlow(session) {
         watchdog = null;
       }
       startClipExtraction(target, {
-        onReady: (ready) =>
-          openVideoClipsModal(ready, {
-            onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
-            onUseClips: (selectedClips, source) => {
-              const drafts = selectedClips.map((clip) =>
-                addPostDraft(session.id, {
-                  network: clip.network,
-                  text: [clip.title, clip.summary].filter(Boolean),
-                  hashtags: (clip.tags || []).map((t) => `#${t}`),
-                  clipRef: {
-                    start: clip.start,
-                    end: clip.end,
-                    sourceName: source.filename,
-                    hue: clip.hue,
-                  },
-                }),
-              );
-              postDraftResult(session.id, {
-                ideaTitle: `From ${source.filename}`,
-                drafts,
-              });
-              showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from ${source.filename}`, {
-                duration: 3200,
-              });
-            },
-          }),
+        onReady: (ready) => openVideoClipsModalForSession(ready, session),
       });
     });
   });
@@ -669,6 +644,39 @@ function startClipsExtractionFlow(session) {
   watchdog = setTimeout(cleanup, 120000);
 
   openAddSourceModal({ tab: "upload" });
+}
+
+// Open the Video Clips modal with the standard "session" callback wiring:
+// save persists clip edits in sources-stream; use-clips drafts the picked
+// clips into THIS session (drafts pill increments + inline draft turn +
+// toast). Shared by every in-session entry point (dashboard starter, future
+// "Add video" composer path, completion-toast action, inline thread card).
+function openVideoClipsModalForSession(source, session) {
+  openVideoClipsModal(source, {
+    onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
+    onUseClips: (selectedClips, src) => {
+      const drafts = selectedClips.map((clip) =>
+        addPostDraft(session.id, {
+          network: clip.network,
+          text: [clip.title, clip.summary].filter(Boolean),
+          hashtags: (clip.tags || []).map((t) => `#${t}`),
+          clipRef: {
+            start: clip.start,
+            end: clip.end,
+            sourceName: src.filename,
+            hue: clip.hue,
+          },
+        }),
+      );
+      postDraftResult(session.id, {
+        ideaTitle: `From ${src.filename}`,
+        drafts,
+      });
+      showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from ${src.filename}`, {
+        duration: 3200,
+      });
+    },
+  });
 }
 
 // Local copy of dashboard's defaultChatName — keeps session.js standalone
