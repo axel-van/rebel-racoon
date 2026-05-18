@@ -8,6 +8,7 @@ import {
   getThread,
   sendMessage,
   postAssistantMessage,
+  postClipExtractionTurn,
   postDraftResult,
   subscribe,
   submitAssistantChoice,
@@ -1532,9 +1533,10 @@ function dismissComposerIdeasBadge(root, sessionId, sourceId, button) {
   }, 180);
 }
 
-function startPillFromKind(root, sessionId, kind) {
+function startPillFromKind(root, session, kind) {
   const spec = SCRIPTED_KINDS[kind];
   if (!spec) return;
+  const sessionId = session.id;
   const sourceId = pushScriptedSource({ filename: spec.filename, kind: spec.kindLabel });
   getComposerState(sessionId).pills.set(`pill-${sourceId}`, { sourceId });
   paintComposerPills(root, sessionId);
@@ -1547,6 +1549,20 @@ function startPillFromKind(root, sessionId, kind) {
       signalColor: "tagOrange",
       ideaCount,
     });
+    // Video kind triggers a follow-up clip-extraction beat: a persistent
+    // assistant card in the thread + the existing start/completion toasts
+    // (start, then "Clips ready · Open clips"). The card and the toast
+    // action both route through openVideoClipsModalForSession so behavior
+    // is identical.
+    if (kind === "video") {
+      const target = getStreamSources().find((s) => s.id === sourceId);
+      if (target) {
+        postClipExtractionTurn(sessionId, { sourceId, filename: target.filename });
+        startClipExtraction(target, {
+          onReady: (ready) => openVideoClipsModalForSession(ready, session),
+        });
+      }
+    }
   }, delay);
 }
 
@@ -1955,7 +1971,7 @@ function bindSession(root, session) {
       if (addSrc) {
         // Composer + menu items drop a non-blocking pill in the input
         // zone (analyzing → ready).
-        startPillFromKind(root, session.id, addSrc.dataset.addSource);
+        startPillFromKind(root, session, addSrc.dataset.addSource);
         closeAttachMenu();
         return;
       }
