@@ -1324,9 +1324,12 @@ function renderChoiceTurn(message) {
     .join("");
 
   const submitLabel = message.submitLabel || "Submit";
-  const footer = isAnswered
-    ? ""
-    : `<div class="chat-bubble-choices-footer">
+  // Instant pickers (single click = submit) skip the Submit button — the
+  // chip-click handler fires the handler directly.
+  const footer =
+    isAnswered || message.instant
+      ? ""
+      : `<div class="chat-bubble-choices-footer">
         <button
           type="button"
           class="ap-button primary orange"
@@ -1697,9 +1700,9 @@ function startPillFromKind(root, session, kind) {
         { value: "ideas", label: "Extract ideas", icon: "ap-icon-bulb" },
       ],
       multi: false,
+      instant: true,
       handler: "video-intake-choice",
       context: { sourceId, filename: spec.filename },
-      submitLabel: "Continue",
     });
   }
 }
@@ -1751,6 +1754,39 @@ function bindSession(root, session) {
           onComplete: (created) => setQuery({ contextId: created.id }),
         });
       }, 200);
+    }
+  }
+
+  // Run the handler for a choice turn (freeze the message + dispatch). Called
+  // by both the Submit-button path and the instant chip-click path.
+  function dispatchChoiceSubmit(msg, selectedValues) {
+    submitAssistantChoice(session.id, msg.id, selectedValues);
+    if (msg.handler === "draft-channels" && msg.context?.ideaId) {
+      executeDraft(session.id, msg.context.ideaId, selectedValues);
+    } else if (msg.handler === "start-action") {
+      handleActionPick(session.id, msg, selectedValues, { setQuery });
+    } else if (msg.handler === "video-intake-choice") {
+      // Single-select picker between "clips" (cut into clip-extraction flow)
+      // and "ideas" (postExtractionResult turn with mock ideas). The user
+      // may pick before the scripted source is Processed — whenSourceProcessed
+      // defers until it lands.
+      const { sourceId, filename } = msg.context || {};
+      const pick = selectedValues[0];
+      if (sourceId && pick) {
+        whenSourceProcessed(sourceId, (source) => {
+          if (pick === "clips") {
+            postClipExtractionTurn(session.id, { sourceId, filename });
+            startClipExtraction(source, {
+              onReady: (ready) => openVideoClipsModalForSession(ready, session),
+            });
+          } else if (pick === "ideas") {
+            postExtractionResult(session.id, {
+              filename,
+              ideas: mockVideoIdeas(sourceId),
+            });
+          }
+        });
+      }
     }
   }
 
@@ -1866,25 +1902,31 @@ function bindSession(root, session) {
         return;
       }
 
-      // Channel-picker chip toggle — visual only, no state change yet.
+      // Choice chip click — instant pickers (msg.instant) fire the handler
+      // immediately with the clicked value. Otherwise it's a visual-only
+      // toggle and the user submits via the Submit button below.
       const choiceChip = event.target.closest("[data-assistant-choice]");
       if (choiceChip && choiceChip.tagName === "BUTTON") {
         event.preventDefault();
-        const wasSelected = choiceChip.classList.contains("is-selected");
-        choiceChip.classList.toggle("is-selected", !wasSelected);
-        choiceChip.setAttribute("aria-pressed", !wasSelected ? "true" : "false");
+        const msgId = choiceChip.dataset.assistantChoiceMsg;
+        const msg = getThread(session.id).find((m) => m.id === msgId);
+        if (msg?.instant) {
+          dispatchChoiceSubmit(msg, [choiceChip.dataset.assistantChoice]);
+        } else {
+          const wasSelected = choiceChip.classList.contains("is-selected");
+          choiceChip.classList.toggle("is-selected", !wasSelected);
+          choiceChip.setAttribute("aria-pressed", !wasSelected ? "true" : "false");
+        }
         return;
       }
 
-      // "Draft them" submit — freeze the choice message + run executeDraft.
+      // "Draft them" / "Continue" submit — freeze the choice + run handler.
       const submitChoiceBtn = event.target.closest("[data-assistant-choice-submit]");
       if (submitChoiceBtn) {
         event.preventDefault();
         const msgId = submitChoiceBtn.dataset.assistantChoiceSubmit;
-        const thread = getThread(session.id);
-        const msg = thread.find((m) => m.id === msgId);
+        const msg = getThread(session.id).find((m) => m.id === msgId);
         if (!msg) return;
-        // Collect selected chip values from the DOM.
         const bubble = submitChoiceBtn.closest(".chat-bubble");
         const selectedValues = bubble
           ? [...bubble.querySelectorAll("button.chat-bubble-choice-chip.is-selected")]
@@ -1892,34 +1934,7 @@ function bindSession(root, session) {
               .filter(Boolean)
           : [];
         if (selectedValues.length === 0) return; // nothing selected — no-op
-        submitAssistantChoice(session.id, msgId, selectedValues);
-        if (msg.handler === "draft-channels" && msg.context?.ideaId) {
-          executeDraft(session.id, msg.context.ideaId, selectedValues);
-        } else if (msg.handler === "start-action") {
-          handleActionPick(session.id, msg, selectedValues, { setQuery });
-        } else if (msg.handler === "video-intake-choice") {
-          // Single-select picker between "clips" (cut into clip-extraction
-          // flow) and "ideas" (postExtractionResult turn with mock ideas).
-          // The user may submit before the scripted source is Processed —
-          // whenSourceProcessed defers until it lands.
-          const { sourceId, filename } = msg.context || {};
-          const pick = selectedValues[0];
-          if (sourceId && pick) {
-            whenSourceProcessed(sourceId, (source) => {
-              if (pick === "clips") {
-                postClipExtractionTurn(session.id, { sourceId, filename });
-                startClipExtraction(source, {
-                  onReady: (ready) => openVideoClipsModalForSession(ready, session),
-                });
-              } else if (pick === "ideas") {
-                postExtractionResult(session.id, {
-                  filename,
-                  ideas: mockVideoIdeas(sourceId),
-                });
-              }
-            });
-          }
-        }
+        dispatchChoiceSubmit(msg, selectedValues);
         return;
       }
 
