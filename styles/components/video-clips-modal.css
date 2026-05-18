@@ -18,7 +18,11 @@
   flex-direction: column;
   z-index: var(--app-z-modal);
   width: min(calc(100% - 48px), 1240px);
-  max-height: 94vh;
+  /* Fixed height (rather than max-height) so the body's `flex: 1` has a
+     constrained parent to fill — without this the modal collapsed to its
+     intrinsic content height and the footer floated mid-card on short
+     videos. Body still scrolls when clips overflow. */
+  height: 94vh;
   background: var(--ref-color-white);
   border-radius: var(--app-radius-modal);
   box-shadow: var(--app-shadow-modal);
