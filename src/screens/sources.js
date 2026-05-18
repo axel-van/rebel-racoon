@@ -271,6 +271,7 @@ function bind(root, signal) {
                       start: clip.start,
                       end: clip.end,
                       sourceName: source.filename,
+                      hue: clip.hue,
                     },
                   }),
                 );

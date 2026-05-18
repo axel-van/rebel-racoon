@@ -52,13 +52,16 @@ export function addPostDraft(sessionId, { network, text, hashtags = [], clipRef 
     cta: "",
     hasImage: false,
     stats: { likes: 0, comments: 0, reposts: 0 },
-    // Optional source reference — set by the Video Clips modal so the card
-    // shows a "M:SS – M:SS · filename" chip on the header.
+    // Optional video-source reference — set by the Video Clips modal so the
+    // post card renders a native-feeling video player in place of the
+    // "Generate an image" placeholder. `hue` drives the faux thumbnail's
+    // gradient color so the demo looks like a real frame extraction.
     clipRef: clipRef
       ? {
           start: clipRef.start,
           end: clipRef.end,
           sourceName: clipRef.sourceName,
+          hue: typeof clipRef.hue === "number" ? clipRef.hue : 24,
         }
       : null,
   };

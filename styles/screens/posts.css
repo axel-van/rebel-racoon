@@ -204,48 +204,6 @@
 
 .posts__card-status {
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-/* Video-clip provenance chip — drafted from a Video Clips modal selection.
- * Same orange-on-orange-10 affordance as the modal's time chips so the
- * source is recognizable. */
-.posts__card-clip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-orange-150);
-  background: var(--ref-color-orange-10);
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-variant-numeric: tabular-nums;
-  max-width: 240px;
-}
-
-.posts__card-clip i {
-  font-size: 11px;
-  flex-shrink: 0;
-}
-
-.posts__card-clip-time {
-  white-space: nowrap;
-}
-
-.posts__card-clip-sep {
-  opacity: 0.6;
-}
-
-.posts__card-clip-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: var(--ref-font-weight-regular);
 }
 
 .posts__card-body {
@@ -320,6 +278,134 @@
 
 .posts__card-image-placeholder i {
   font-size: var(--sys-icon-css-md);
+}
+
+/* ── Video clip player (drafts from Video Clips modal) ──────────────
+ * Renders in place of the image / placeholder when post.clipRef exists.
+ * The frame itself is a gradient from clip.hue (set inline) — these
+ * rules handle layout, the play overlay, the duration chip, the
+ * source badge, and the bottom scrubber.
+ */
+
+.posts__card-clip-player {
+  position: relative;
+  width: 100%;
+  border-radius: var(--app-radius-md);
+  overflow: hidden;
+  background-color: #1a1a1a;
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.posts__card-clip-player--landscape {
+  aspect-ratio: 16 / 9;
+}
+
+/* Portrait posts (TikTok / Instagram Reels) — capped width so a 9:16
+ * frame doesn't dominate the draft card. Stays centered inside the
+ * card body. */
+.posts__card-clip-player--portrait {
+  aspect-ratio: 9 / 16;
+  max-width: 260px;
+  margin: 0 auto;
+}
+
+.posts__card-clip-player::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.32) 100%);
+  pointer-events: none;
+}
+
+.posts__card-clip-player-source {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: calc(100% - 80px);
+  padding: 3px 8px;
+  border-radius: var(--ref-border-radius-sm);
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--ref-color-white);
+  font-size: 10px;
+  font-weight: var(--ref-font-weight-bold);
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.posts__card-clip-player-source i {
+  font-size: 11px;
+}
+
+.posts__card-clip-player-source span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.posts__card-clip-player-dur {
+  position: absolute;
+  bottom: 14px;
+  right: 10px;
+  z-index: 2;
+  font-size: 10px;
+  font-weight: var(--ref-font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--ref-color-white);
+  background: rgba(0, 0, 0, 0.7);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.posts__card-clip-player-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: var(--app-radius-circle);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ref-color-grey-150);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 3px;
+  cursor: pointer;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  transition: transform var(--ref-animation-short) var(--app-ease-out);
+}
+
+.posts__card-clip-player:hover .posts__card-clip-player-play {
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+/* Bottom scrubber — fake-progress so the surface reads as a paused
+ * player instead of a static thumbnail. */
+.posts__card-clip-player-scrubber {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.posts__card-clip-player-progress {
+  display: block;
+  height: 100%;
+  background: var(--ref-color-orange-100);
 }
 
 .posts__card-image {

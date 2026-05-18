@@ -32,17 +32,6 @@ export function renderPostCard(post, opts = {}) {
     return '<span class="ap-status green">Draft ready</span>';
   })();
 
-  // Video-clip source ref — set by the Video Clips modal so the card surfaces
-  // the timestamp + filename it was drafted from.
-  const clipChip = post.clipRef
-    ? `<span class="posts__card-clip" title="Drafted from ${escapeAttr(post.clipRef.sourceName)} · ${formatClipTime(post.clipRef.start)}–${formatClipTime(post.clipRef.end)}">
-         <i class="ap-icon-file--video"></i>
-         <span class="posts__card-clip-time">${formatClipTime(post.clipRef.start)}–${formatClipTime(post.clipRef.end)}</span>
-         <span class="posts__card-clip-sep">·</span>
-         <span class="posts__card-clip-name">${escapeText(post.clipRef.sourceName)}</span>
-       </span>`
-    : "";
-
   const bodyParagraphs = post.text.map((p) => `<p class="posts__card-paragraph">${p}</p>`).join("");
 
   const hashtags = post.hashtags.length
@@ -88,9 +77,17 @@ export function renderPostCard(post, opts = {}) {
       `
       : "";
 
-  const imageBlock = post.imageUrl
-    ? `<img class="posts__card-image" src="${post.imageUrl}" alt="Generated image for this post" />`
-    : `<button type="button" class="posts__card-image-placeholder" data-post-image="${post.id}">
+  // Media block — when the draft was generated from a video clip the card
+  // surfaces a native-feeling video player (faux frame + play overlay +
+  // duration chip + scrubber). Vertical networks (TikTok, Instagram) use
+  // a portrait aspect ratio so the preview matches what the post would
+  // actually look like in feed. Otherwise the existing image / generate
+  // placeholder path is preserved.
+  const mediaBlock = post.clipRef
+    ? renderClipPlayer(post)
+    : post.imageUrl
+      ? `<img class="posts__card-image" src="${post.imageUrl}" alt="Generated image for this post" />`
+      : `<button type="button" class="posts__card-image-placeholder" data-post-image="${post.id}">
           <i class="ap-icon-sparkles-mermaid"></i>
           <span>Generate an image</span>
         </button>`;
@@ -110,10 +107,10 @@ export function renderPostCard(post, opts = {}) {
               <div class="muted posts__card-title">${post.author.title}</div>
               <div class="muted posts__card-meta">${post.timeLabel} · ${post.author.visibility}</div>
             </div>
-            <div class="posts__card-status">${raw(clipChip)} ${raw(statusPill)}</div>
+            <div class="posts__card-status">${raw(statusPill)}</div>
           </header>
 
-          ${raw(editorBody)} ${raw(editActions)} ${raw(imageBlock)} ${raw(engagement)}
+          ${raw(editorBody)} ${raw(editActions)} ${raw(mediaBlock)} ${raw(engagement)}
 
           <!-- Footer is a non-interactive LinkedIn-style preview of the
                engagement bar — decoration only, not real actions (see
@@ -221,26 +218,73 @@ function serializeBody(post) {
 // HTML-escape user content before injecting into the contenteditable.
 // innerText reads back the literal characters, so escaping here avoids
 // the editor rendering injected markup on first paint.
-function escapeText(s) {
-  return String(s == null ? "" : s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+function escapeForEditor(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function escapeAttr(s) {
-  return escapeText(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+// ── Video clip player (faux) ────────────────────────────────────────
+//
+// Mimics what a native video post looks like on the destination network:
+// 9:16 frame for TikTok / Instagram (Reels-style), 16:9 for everything
+// else. The frame itself is a hue-driven gradient so each draft feels
+// like a real extracted thumbnail; play overlay + duration chip + a
+// 1-px scrubber bar at the bottom (paused mid-clip) round out the
+// "this is a player" affordance. Filename surfaces in a top-left bezel
+// so the user still sees where the clip came from.
+
+const PORTRAIT_NETWORKS = new Set(["tiktok", "instagram"]);
+
+function renderClipPlayer(post) {
+  const clip = post.clipRef;
+  const duration = Math.max(1, Math.round(clip.end - clip.start));
+  const portrait = PORTRAIT_NETWORKS.has(post.network);
+  const h = typeof clip.hue === "number" ? clip.hue : 24;
+  const bg = `linear-gradient(135deg, oklch(0.28 0.08 ${h}) 0%, oklch(0.14 0.05 ${h}) 100%)`;
+  const blob1 = `radial-gradient(circle at 30% 35%, oklch(0.74 0.20 ${h}) 0%, transparent 48%)`;
+  const blob2 = `radial-gradient(circle at 75% 70%, oklch(0.55 0.16 ${(h + 50) % 360}) 0%, transparent 44%)`;
+  const blob3 = `radial-gradient(circle at 50% 88%, oklch(0.42 0.12 ${(h + 25) % 360}) 0%, transparent 36%)`;
+  const aspectClass = portrait ? "posts__card-clip-player--portrait" : "posts__card-clip-player--landscape";
+  const source = clip.sourceName || "";
+  return `
+    <div
+      class="posts__card-clip-player ${aspectClass}"
+      style="background-image: ${blob1}, ${blob2}, ${blob3}, ${bg}"
+      role="img"
+      aria-label="Video preview from ${escapePlayerAttr(source)} (${formatPlayerTime(duration)})"
+    >
+      <span class="posts__card-clip-player-source" title="${escapePlayerAttr(source)}">
+        <i class="ap-icon-file--video" aria-hidden="true"></i>
+        <span>${escapePlayerText(source)}</span>
+      </span>
+      <span class="posts__card-clip-player-dur">${formatPlayerTime(duration)}</span>
+      <button type="button" class="posts__card-clip-player-play" aria-label="Play preview" tabindex="-1">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path d="M8 5v14l11-7z" fill="currentColor" />
+        </svg>
+      </button>
+      <span class="posts__card-clip-player-scrubber" aria-hidden="true">
+        <span class="posts__card-clip-player-progress" style="width: 24%"></span>
+      </span>
+    </div>
+  `;
 }
 
-function formatClipTime(sec) {
+function formatPlayerTime(sec) {
   const s = Math.max(0, Math.round(sec || 0));
   const m = Math.floor(s / 60);
   const rest = (s % 60).toString().padStart(2, "0");
   return `${m}:${rest}`;
 }
 
-function escapeForEditor(s) {
-  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+function escapePlayerText(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function escapePlayerAttr(s) {
+  return escapePlayerText(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
 // "scheduled" notice — sits above the card with the scheduled-for label.
