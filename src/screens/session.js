@@ -12,12 +12,14 @@ import {
   postClipExtractionTurn,
   postIdeaExtractionTurn,
   markIdeaExtractionReady,
+  postSourceIntake,
+  markSourceIntakeReady,
   postDraftResult,
   subscribe,
   submitAssistantChoice,
-} from "../assistant.js?v=26";
+} from "../assistant.js?v=27";
 import { getSources, getIdeas, injectIdeasForSource, subscribe as subscribeLibrary } from "../library.js?v=25";
-import { attachSource } from "../inputs-store.js?v=1";
+import { attachSource, getAttachedSourceIds, subscribe as subscribeInputs } from "../inputs-store.js?v=1";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
   getPosts,
@@ -863,19 +865,52 @@ function renderExtractingNotice() {
 }
 
 function renderSourceIntakeTurn(message) {
+  // Kind icon — map the raw kind label (from sources-stream) to the DS
+  // icon name. Lowercased so "PDF" / "Video" / "URL" / "Word" / "Image"
+  // / "Audio" all resolve.
   const iconByKind = {
     pdf: "ap-icon-file--pdf",
     video: "ap-icon-file--video",
     url: "ap-icon-link",
+    word: "ap-icon-file--text",
+    text: "ap-icon-file--text",
+    image: "ap-icon-file--image",
+    audio: "ap-icon-file",
   };
-  const icon = iconByKind[message.kind] || "ap-icon-file";
-  const suffix = message.size ? ` · ${message.size}` : "";
+  const kindKey = (message.kind || "").toLowerCase();
+  const icon = iconByKind[kindKey] || "ap-icon-file";
+  const isLoading = message.status === "loading";
+
+  // Live-derived sub-text. While loading we show "Uploading…"; once
+  // marked ready, we show the source's idea count (or just "Processed"
+  // if zero ideas yet — e.g. video routed to clip extraction).
+  let subText = "";
+  if (isLoading) {
+    subText = "Uploading…";
+  } else if (message.sourceId) {
+    const src = getStreamSources().find((s) => s.id === message.sourceId);
+    const ideas = src?.ideaCount || 0;
+    subText = ideas > 0 ? `Processed · ${ideas} idea${ideas === 1 ? "" : "s"}` : "Processed";
+  } else if (message.size) {
+    subText = message.size;
+  }
+
+  const indicator = isLoading
+    ? `<span class="ap-loader blue size-16 chat-bubble-source-intake__spinner" aria-hidden="true">
+        <svg><circle></circle><circle></circle></svg>
+      </span>`
+    : `<i class="ap-icon-rounded-check_fill chat-bubble-source-intake__check" aria-hidden="true"></i>`;
+
   return `
     <div class="chat-turn chat-turn--user">
       <span class="chat-turn-role">${message.meta || "Source intake"}</span>
-      <div class="chat-bubble chat-bubble--source-intake">
-        <i class="${icon}" aria-hidden="true"></i>
-        <p class="chat-bubble-text">${message.filename}${suffix}</p>
+      <div class="chat-bubble chat-bubble--source-intake" data-intake-status="${message.status || "ready"}">
+        <i class="${icon} chat-bubble-source-intake__kind" aria-hidden="true"></i>
+        <div class="chat-bubble-source-intake__main">
+          <p class="chat-bubble-text">${message.filename}</p>
+          ${subText ? `<p class="chat-bubble-source-intake__sub muted">${subText}</p>` : ""}
+        </div>
+        ${indicator}
       </div>
     </div>
   `;
@@ -1093,7 +1128,61 @@ function wireAssistantPanel(root, session, attachedContext) {
     if (!thread) return;
     thread.innerHTML = renderThread(getThread(session.id));
   };
-  const offComposerSources = subscribeSources(() => repaintThreadFromSources());
+  // Intake-turn lifecycle (loading → ready)
+  //
+  // seenSourceIds is a snapshot baseline of which sources were already
+  // attached when bindSession mounted. Any sourceId that appears in
+  // attachedSourceIds AFTER this baseline counts as a "new attach" — we
+  // post an intake turn for it (unless the source is already Processed,
+  // which means it's a Library re-attach, not an upload).
+  //
+  // sentReadyForSourceIds dedupes the markReady call: once a turn flips
+  // to ready, we don't re-fire on every notify.
+  const seenSourceIds = new Set(getAttachedSourceIds(session.id));
+  const sentReadyForSourceIds = new Set();
+
+  const offIntakeInputs = subscribeInputs(session.id, () => {
+    const current = getAttachedSourceIds(session.id);
+    for (const sid of current) {
+      if (seenSourceIds.has(sid)) continue;
+      seenSourceIds.add(sid);
+      const src = getStreamSources().find((s) => s.id === sid);
+      if (!src) continue;
+      // Library re-attach: source already Processed at attach time → no
+      // intake turn (the file isn't being uploaded right now).
+      if (src.status === "Processed") {
+        sentReadyForSourceIds.add(sid);
+        continue;
+      }
+      postSourceIntake(session.id, {
+        kind: src.kind,
+        filename: src.filename,
+        sourceId: sid,
+        status: "loading",
+      });
+    }
+  });
+
+  const offComposerSources = subscribeSources(() => {
+    // Repaint the thread on every source flip — intake turns derive
+    // ideaCount + status live from sources-stream, so re-rendering is
+    // how "Processed · N ideas" lands.
+    repaintThreadFromSources();
+
+    // Flip pending intake turns to ready as their source completes.
+    const thread = getThread(session.id);
+    for (const msg of thread) {
+      if (msg.role !== "source-intake") continue;
+      if (!msg.sourceId || msg.status === "ready") continue;
+      if (sentReadyForSourceIds.has(msg.sourceId)) continue;
+      const src = getStreamSources().find((s) => s.id === msg.sourceId);
+      if (src && src.status === "Processed") {
+        sentReadyForSourceIds.add(msg.sourceId);
+        markSourceIntakeReady(session.id, msg.sourceId);
+      }
+    }
+  });
+
   // Tracks upload IDs started from drag/drop in this session so we can
   // auto-attach the resulting source once the upload pipeline assigns
   // its sourceId. Keyed alongside a tripAttachedSourceIds Set so each
@@ -1203,6 +1292,7 @@ function wireAssistantPanel(root, session, attachedContext) {
     offInlineQuestion();
     offComposerSources();
     offComposerUploads();
+    offIntakeInputs();
     stopThinkingTimer();
   };
 }

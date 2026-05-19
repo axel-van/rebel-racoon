@@ -139,10 +139,17 @@ export function postAssistantMessage(sessionId, text, { meta = "Archie" } = {}) 
   notify(sessionId);
 }
 
-// Right-aligned "Source intake" turn — renders like a user turn but with a
-// light electric-blue bubble containing a file icon + filename · size.
+// Right-aligned "Source intake" turn — renders like a user turn but with
+// a light electric-blue bubble containing a file icon + filename · size.
 // Figma 25:1127/25:1131.
-export function postSourceIntake(sessionId, { kind, filename, size }) {
+//
+// Pass `sourceId` so the renderer can read live `source.status` from
+// sources-stream and so `markSourceIntakeReady` can flip this turn from
+// loading → ready when processing completes. Status defaults to
+// `"loading"` — the upload subscription in session.js calls
+// markSourceIntakeReady when sources-stream flips the source to
+// Processed.
+export function postSourceIntake(sessionId, { kind, filename, size, sourceId, status = "loading" }) {
   const thread = getThread(sessionId);
   thread.push({
     id: newId(),
@@ -151,9 +158,21 @@ export function postSourceIntake(sessionId, { kind, filename, size }) {
     kind,
     filename,
     size,
-    status: "ready",
+    sourceId: sourceId || null,
+    status,
     createdAt: Date.now(),
   });
+  notify(sessionId);
+}
+
+// Flip an existing source-intake turn from loading → ready. Lookup by
+// sourceId so the caller doesn't have to track message ids.
+export function markSourceIntakeReady(sessionId, sourceId) {
+  if (!sourceId) return;
+  const thread = getThread(sessionId);
+  const msg = thread.find((m) => m.role === "source-intake" && m.sourceId === sourceId);
+  if (!msg || msg.status === "ready") return;
+  msg.status = "ready";
   notify(sessionId);
 }
 

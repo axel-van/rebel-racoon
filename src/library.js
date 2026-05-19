@@ -14,13 +14,7 @@
 
 import { ideas as seedIdeas } from "./mocks.js?v=27";
 import { isNewUser } from "./user-mode.js?v=20";
-import {
-  postAssistantMessage,
-  postExtractionResult,
-  postSourceIntake,
-  startPending,
-  finishPending,
-} from "./assistant.js?v=26";
+import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=27";
 import {
   getSources as streamGetSources,
   subscribeSources,
@@ -210,12 +204,10 @@ export function addSource(sessionId, kind) {
     kind: script.kindLabel,
   });
 
-  // 2. Right-aligned "Source intake" turn with file icon + filename · size.
-  postSourceIntake(sessionId, {
-    kind,
-    filename: script.filename,
-    size: script.size,
-  });
+  // Right-aligned "Source intake" turn is now posted by the centralized
+  // subscription in session.js (bindSession → subscribeInputs path),
+  // which fires for every new attach and flips to ready when the source
+  // hits Processed. The legacy call here would have double-posted.
 
   // 2b. Flip the composer into "thinking" mode for the duration of the
   // extraction. Hidden pending marker — never rendered as a turn.

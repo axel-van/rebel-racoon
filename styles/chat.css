@@ -123,6 +123,39 @@
   font-size: var(--sys-icon-css-sm);
 }
 
+/* Pending → ready lifecycle indicators (loading spinner / success check)
+   sit at the trailing edge of the bubble. The main column stacks the
+   filename + a small "Uploading…" / "Processed · N ideas" sub-line. */
+.chat-bubble-source-intake__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.chat-bubble-source-intake__sub {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--ref-color-electric-blue-100);
+  opacity: 0.8;
+}
+
+.chat-bubble-source-intake__spinner {
+  flex-shrink: 0;
+}
+
+.chat-bubble-source-intake__check {
+  flex-shrink: 0;
+  color: var(--ref-color-green-100) !important;
+  font-size: var(--sys-icon-css-md) !important;
+}
+
+.chat-bubble-source-intake__kind {
+  flex-shrink: 0;
+}
+
 .chat-bubble.is-loading {
   opacity: 0.7;
 }
