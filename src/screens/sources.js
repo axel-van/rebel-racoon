@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { renderTopbar } from "../components/topbar.js?v=34";
+import { renderTopbar } from "../components/topbar.js?v=38";
 import { renderSourceCard } from "../components/source-card.js?v=27";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=21";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";

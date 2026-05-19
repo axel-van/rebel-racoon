@@ -217,10 +217,10 @@ function renderSessionPills(rpMode, draftCount, isEmpty) {
       data-topbar-ideas
       ${ideasDisabled ? "disabled" : ""}
       aria-pressed="${rpMode === "ideas"}"
-      title="${ideasDisabled ? "Send a message first" : "Toggle Ideas panel"}"
+      title="${ideasDisabled ? "Send a message first" : "Toggle Outputs panel"}"
     >
       <i class="ap-icon-sparkles"></i>
-      <span>Ideas</span>
+      <span>Outputs</span>
     </button>
   `;
 }

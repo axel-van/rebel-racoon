@@ -718,7 +718,7 @@ function renderPanel() {
   // (Earlier iteration had Drafts/Ideas tabs here too ; the user flagged
   // them as redundant on 2026-04-29.)
   let titleIcon = "ap-icon-sparkles";
-  let titleText = "Ideas";
+  let titleText = "Outputs";
   if (state.mode === "drafts") {
     titleIcon = "ap-icon-pen";
     titleText = "Drafts";
