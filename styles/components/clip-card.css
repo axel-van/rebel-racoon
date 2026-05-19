@@ -1,0 +1,227 @@
+/* Clip card — visual parallel of idea-card, used in the right-panel
+   Outputs surface (Clips tab) and anywhere else clips need a card render.
+   Two-piece grammar: signals row + thumbnail + body + actions row. */
+
+.clip-card {
+  display: block;
+  border-radius: var(--ref-border-radius-md);
+  transition:
+    background var(--ref-animation-short) var(--app-ease-out),
+    box-shadow var(--ref-animation-short) var(--app-ease-out);
+}
+
+.clip-card--selected {
+  background: var(--ref-color-electric-blue-05);
+}
+
+.clip-card__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-xs);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: var(--ref-border-radius-md);
+}
+
+.clip-card--selected .clip-card__inner {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.clip-card__signals {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  flex-wrap: wrap;
+}
+
+.clip-card__check {
+  margin: 0;
+}
+
+.clip-card__network {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  text-transform: capitalize;
+}
+
+.clip-card__network i {
+  font-size: var(--sys-icon-css-sm);
+}
+
+/* Thumbnail — hue-gradient, fills card width, 16:9 ratio. Clickable as
+   an Edit affordance (parallels idea-card's title button). */
+.clip-card__thumb-btn {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--ref-border-radius-sm);
+  overflow: hidden;
+}
+
+.clip-card__thumb {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-size: cover;
+  background-position: center;
+  border-radius: var(--ref-border-radius-sm);
+}
+
+.clip-card__thumb-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ref-color-white);
+  opacity: 0.92;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.35));
+  pointer-events: none;
+  transition: transform var(--ref-animation-short) var(--app-ease-out);
+}
+
+.clip-card__thumb-btn:hover .clip-card__thumb-play,
+.clip-card__thumb-btn:focus-visible .clip-card__thumb-play {
+  transform: scale(1.08);
+}
+
+.clip-card__thumb-btn:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
+}
+
+/* Duration badge — .ap-tag grey mini posed absolute over the thumb. */
+.clip-card__duration {
+  position: absolute;
+  right: var(--ref-spacing-xxs);
+  bottom: var(--ref-spacing-xxs);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Body — same typography contract as idea-card. */
+.clip-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.clip-card__title {
+  margin: 0;
+  font-size: var(--ref-font-size-md);
+  line-height: var(--ref-font-line-height-lg);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+}
+
+.clip-card__hook {
+  margin: 0;
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  color: var(--ref-color-grey-80);
+}
+
+/* Tags row — same chip style as idea-card. */
+.clip-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.clip-card__tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-grey-05);
+  color: var(--ref-color-grey-80);
+  font-size: 11px;
+  font-weight: var(--ref-font-weight-bold);
+}
+
+/* Actions row — source attribution left, Draft Post + more menu right. */
+.clip-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.clip-card__source {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  color: var(--ref-color-grey-60);
+}
+
+.clip-card__secondary-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  margin-left: auto;
+}
+
+/* More menu — same dropdown chrome as idea-card. */
+.clip-card__more-wrap {
+  position: relative;
+}
+
+.clip-card__more-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--ref-spacing-xxxs));
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: var(--ref-spacing-xxxs);
+  list-style: none;
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: var(--ref-border-radius-sm);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  min-width: 180px;
+}
+
+.clip-card__more-menu[hidden] {
+  display: none;
+}
+
+.clip-card__more-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  background: 0;
+  border: 0;
+  border-radius: var(--ref-border-radius-xs);
+  font: inherit;
+  font-size: var(--ref-font-size-sm);
+  color: var(--ref-color-grey-150);
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.clip-card__more-item:hover,
+.clip-card__more-item:focus-visible {
+  background: var(--ref-color-grey-05);
+  outline: none;
+}
+
+.clip-card__more-item--danger {
+  color: var(--sys-color-text-color-error);
+}
+
+.clip-card__more-item--danger i {
+  color: inherit;
+}
