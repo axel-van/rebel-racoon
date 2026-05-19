@@ -1596,7 +1596,7 @@ function renderClipExtractionTurn(message) {
           <span class="clip-extraction-card__title">Clips ready · ${countLabel} from ${filename}</span>
           <span class="clip-extraction-card__sub">Pick the ones you want and turn them into posts.</span>
         </span>
-        <button type="button" class="ap-button stroked orange clip-extraction-card__cta" data-clip-card-open="${source.id}">
+        <button type="button" class="ap-button ghost grey clip-extraction-card__cta" data-clip-card-open="${source.id}">
           <i class="ap-icon-sparkles"></i>
           <span>Open clips</span>
         </button>
