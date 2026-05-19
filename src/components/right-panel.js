@@ -1289,11 +1289,9 @@ function renderSourceRow(src) {
   const ideaCount = src.ideaCount > 0 ? `${src.ideaCount} idea${src.ideaCount === 1 ? "" : "s"}` : "";
   const meta = [src.addedAt, ideaCount].filter(Boolean).join(" · ");
   const isProcessing = src.status !== "Processed";
-  const statusEl = isProcessing
-    ? `<span class="ap-status grey rpanel-sources__row-status">Processing</span>`
-    : src.signal && src.signal !== "Pending"
-      ? `<span class="ap-status ${src.signalColor || "grey"} rpanel-sources__row-status">${escapeText(src.signal)}</span>`
-      : "";
+  // Only surface a status pill while the source is in-flight. Once
+  // Processed, the row stays uncluttered — the filename + meta carry it.
+  const statusEl = isProcessing ? `<span class="ap-status grey rpanel-sources__row-status">Processing</span>` : "";
   return `
     <div class="rpanel-sources__row" data-source-id="${src.id}">
       <span class="rpanel-sources__row-icon" aria-hidden="true"><i class="${icon}"></i></span>
