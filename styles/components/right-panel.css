@@ -700,3 +700,101 @@
   width: 100%;
   justify-content: center;
 }
+
+/* Sources mode — list of attached sources for the active session. Sits
+   inside .app-right-panel__body, lighter chrome than Drafts (no
+   filters/search, just the list + Attach button). */
+
+.rpanel-sources {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm);
+}
+
+.rpanel-sources__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  padding-bottom: var(--ref-spacing-xs);
+  border-bottom: 1px solid var(--ref-color-grey-10);
+}
+
+.rpanel-sources__head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rpanel-sources__count {
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+}
+
+.rpanel-sources__sub {
+  font-size: var(--ref-font-size-xs);
+}
+
+.rpanel-sources__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.rpanel-sources__row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--ref-color-white);
+}
+
+.rpanel-sources__row-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ref-border-radius-xs);
+  background: var(--ref-color-grey-05);
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-icon-css-md);
+}
+
+.rpanel-sources__row-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rpanel-sources__row-name {
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rpanel-sources__row-meta {
+  font-size: var(--ref-font-size-xs);
+}
+
+.rpanel-sources__row-status {
+  flex-shrink: 0;
+}
+
+.rpanel-sources__row-detach {
+  flex-shrink: 0;
+}
+
+.rpanel-sources__empty {
+  padding-top: var(--ref-spacing-xl);
+}

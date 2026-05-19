@@ -5,11 +5,13 @@ import { toggleSidebar } from "./sidebar.js?v=32";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
+  openSources as openSourcesPanel,
   closePanel as closeRightPanel,
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=40";
+} from "./right-panel.js?v=41";
+import { getAttachedSourceIds, subscribe as subscribeInputs } from "../inputs-store.js?v=1";
 import { openRead as openContextRead } from "../context-builder.js?v=23";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=26";
 import { recentSessions } from "../mocks.js?v=27";
@@ -98,6 +100,12 @@ export function initTopbar() {
       else openIdeasPanel();
       return;
     }
+    if (event.target.closest("[data-topbar-sources]")) {
+      const mode = getRightPanelMode();
+      if (mode === "sources") closeRightPanel();
+      else openSourcesPanel();
+      return;
+    }
     if (event.target.closest("[data-topbar-context]")) {
       const ctx = currentContext();
       // No context attached → jump to the conversational creation flow.
@@ -123,9 +131,11 @@ export function initTopbar() {
 
   // When the active session's thread updates (new drafts land), re-render
   // so the Drafts pill badge reflects the latest count. Re-attach when the
-  // route changes to a different session.
+  // route changes to a different session. Same goes for inputs (attached
+  // sources) — drives the Sources pill counter.
   let lastSessionId = null;
   let unsubscribeThread = null;
+  let unsubscribeInputs = null;
   function syncThreadSubscription() {
     const sid = currentSessionId();
     if (sid === lastSessionId) return;
@@ -133,9 +143,14 @@ export function initTopbar() {
       unsubscribeThread();
       unsubscribeThread = null;
     }
+    if (unsubscribeInputs) {
+      unsubscribeInputs();
+      unsubscribeInputs = null;
+    }
     lastSessionId = sid;
     if (sid) {
       unsubscribeThread = subscribeThread(sid, () => renderTopbar());
+      unsubscribeInputs = subscribeInputs(sid, () => renderTopbar());
     }
   }
   syncThreadSubscription();
@@ -179,12 +194,15 @@ function renderSessionPills(rpMode, draftCount, isEmpty) {
   const draftBadge = draftCount > 0 ? `<span class="ap-counter normal orange">${draftCount}</span>` : "";
   const draftsClass = rpMode === "drafts" ? "secondary orange" : "ghost grey";
   const ideasClass = rpMode === "ideas" ? "secondary blue" : "ghost grey";
+  const sourcesClass = rpMode === "sources" ? "secondary blue" : "ghost grey";
   // Drafts disabled until at least one draft turn has landed in the thread
   // (latestDraftCount > 0). Ideas disabled until the user has actually
   // started the conversation — opening Ideas in a brand-new chat with no
-  // prompt sent yet has no useful context.
+  // prompt sent yet has no useful context. Sources is always available.
   const draftsDisabled = draftCount === 0;
   const ideasDisabled = isEmpty;
+  const sourcesCount = sessionSourceCount();
+  const sourcesBadge = sourcesCount > 0 ? `<span class="ap-counter normal blue">${sourcesCount}</span>` : "";
   return `
     <button
       type="button"
@@ -198,6 +216,17 @@ function renderSessionPills(rpMode, draftCount, isEmpty) {
         <span class="app-topbar__context-name">${escapeText(ctxLabel)}</span>
       </span>
       <i class="ap-icon-chevron-down" aria-hidden="true"></i>
+    </button>
+    <button
+      type="button"
+      class="ap-button ${sourcesClass}"
+      data-topbar-sources
+      aria-pressed="${rpMode === "sources"}"
+      title="Toggle Sources panel"
+    >
+      <i class="ap-icon-file"></i>
+      <span>Sources</span>
+      ${sourcesBadge}
     </button>
     <button
       type="button"
@@ -227,6 +256,15 @@ function renderSessionPills(rpMode, draftCount, isEmpty) {
 
 function escapeText(str) {
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Resolve the count of sources attached to the active session. Drives
+// the .ap-counter badge on the Sources pill so the user sees how many
+// inputs are feeding the conversation without opening the panel.
+function sessionSourceCount() {
+  const sid = currentSessionId();
+  if (!sid) return 0;
+  return getAttachedSourceIds(sid).length;
 }
 
 // Resolve the active session's bound context — URL ?contextId= wins,

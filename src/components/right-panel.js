@@ -18,6 +18,8 @@ import { open as openVideoClipsModal } from "./video-clips-modal.js?v=2";
 import { CONTEXT_QUESTIONS } from "../context-questions.js?v=20";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=32";
 import { getSources as getStreamSources, subscribeSources, updateSourceClips } from "../sources-stream.js?v=26";
+import { getAttachedSourceIds, attachMany, detachSource, subscribe as subscribeInputs } from "../inputs-store.js?v=1";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=22";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
@@ -213,6 +215,17 @@ export function openIdeas() {
   notify();
 }
 
+// Sources mode — shows the list of sources currently attached to the
+// active session. Distinct surface from Outputs (Ideas/Clips) since a
+// source is an INPUT to the conversation, not an AI-generated output.
+export function openSources() {
+  const prev = state.mode;
+  state = { ...state, mode: "sources" };
+  maybeCollapseSidebarOnOpen(prev);
+  renderPanel();
+  notify();
+}
+
 export function closePanel() {
   // Notify the context-form caller so it can release any per-session state
   // (typically the in-progress draft in context-builder). We let the
@@ -385,6 +398,28 @@ export function init() {
     const imageBtn = event.target.closest("[data-post-image]");
     if (imageBtn) {
       onPostImage(imageBtn.dataset.postImage);
+      return;
+    }
+    // Sources mode — "+ Attach" opens the Add Source modal scoped to
+    // the active session. The modal handles upload/URL/connectors and
+    // the Library reuse picker; both fire onAttachNew / onAttachExisting
+    // → attachMany. The panel re-renders via subscribeInputs.
+    if (event.target.closest("[data-rpanel-sources-attach]")) {
+      const sid = activeSessionId();
+      if (!sid) return;
+      openAddSourceModal({
+        onAttachExisting: (sourceIds) => attachMany(sid, sourceIds),
+        onAttachNew: (sourceIds) => attachMany(sid, sourceIds),
+        currentSessionId: sid,
+        attachedSourceIds: getAttachedSourceIds(sid),
+      });
+      return;
+    }
+    const sourcesDetachBtn = event.target.closest("[data-rpanel-sources-detach]");
+    if (sourcesDetachBtn) {
+      const sid = activeSessionId();
+      if (!sid) return;
+      detachSource(sid, sourcesDetachBtn.dataset.rpanelSourcesDetach);
       return;
     }
     // Outputs sub-view tab — Ideas | Clips.
@@ -669,14 +704,38 @@ export function init() {
   // clip count to detect the 0 → N transition reliably.
   let lastClipCount = collectAllClips().length;
   subscribeSources(() => {
-    if (state.mode !== "ideas") return;
-    const next = collectAllClips().length;
-    if (next > lastClipCount && lastClipCount === 0) {
-      outputsView = "clips";
+    // Sources mode reads from this stream too — re-render whenever a
+    // source mutates (e.g. processing → processed flips the status pill).
+    if (state.mode === "sources" || state.mode === "ideas") {
+      const next = collectAllClips().length;
+      if (state.mode === "ideas" && next > lastClipCount && lastClipCount === 0) {
+        outputsView = "clips";
+      }
+      lastClipCount = next;
+      renderPanel();
     }
-    lastClipCount = next;
-    renderPanel();
   });
+
+  // Inputs subscription — re-binds whenever the active session changes
+  // so Sources mode reflects the current conversation's attachments.
+  let unsubscribeInputs = null;
+  let lastInputsSessionId = null;
+  function rebindInputsSubscription() {
+    const sid = activeSessionId();
+    if (sid === lastInputsSessionId) return;
+    if (unsubscribeInputs) {
+      unsubscribeInputs();
+      unsubscribeInputs = null;
+    }
+    lastInputsSessionId = sid;
+    if (sid) {
+      unsubscribeInputs = subscribeInputs(sid, () => {
+        if (state.mode === "sources") renderPanel();
+      });
+    }
+  }
+  rebindInputsSubscription();
+  window.addEventListener("hashchange", rebindInputsSubscription);
 
   // Auto-collapse the sidebar when the viewport shrinks enough that the
   // chat column would dip below CHAT_MIN_WIDTH_PX. rAF-debounced so
@@ -722,6 +781,9 @@ function renderPanel() {
   if (state.mode === "drafts") {
     titleIcon = "ap-icon-pen";
     titleText = "Drafts";
+  } else if (state.mode === "sources") {
+    titleIcon = "ap-icon-file";
+    titleText = "Sources";
   } else if (state.mode === "context-form") {
     titleIcon = "ap-icon-target";
     const isRead = contextFormConfig?.mode === "read";
@@ -734,12 +796,18 @@ function renderPanel() {
     }
   }
   // The context-form view manages its own scrolling body + sticky footer
-  // (so Save sits flush at the bottom). Drafts/Ideas keep the historical
-  // .app-right-panel__body wrapper.
+  // (so Save sits flush at the bottom). Drafts/Ideas/Sources keep the
+  // historical .app-right-panel__body wrapper.
   const bodyHtml =
     state.mode === "context-form"
       ? renderContextFormView()
-      : `<div class="app-right-panel__body">${state.mode === "drafts" ? renderDraftsView() : renderIdeasView()}</div>`;
+      : `<div class="app-right-panel__body">${
+          state.mode === "drafts"
+            ? renderDraftsView()
+            : state.mode === "sources"
+              ? renderSourcesView()
+              : renderIdeasView()
+        }</div>`;
 
   el.innerHTML = html`
     <div
@@ -1142,6 +1210,110 @@ function parseEditorBody(raw) {
 }
 
 // --- Ideas mode -------------------------------------------------------
+
+// Sources mode view — list of source rows for the active session + a
+// trailing "+ Attach" button. Each row carries kind icon, filename,
+// signal/idea-count meta, and per-row Open + Detach actions. The list
+// reads from inputs-store and re-renders on any attach/detach via the
+// subscribeInputs hook below.
+function renderSourcesView() {
+  const sid = activeSessionId();
+  if (!sid) {
+    return `
+      <div class="rpanel-sources">
+        <div class="app-right-panel__empty">
+          <div class="app-right-panel__empty-icon"><i class="ap-icon-file"></i></div>
+          <div class="app-right-panel__empty-title">Open a conversation</div>
+          <div class="app-right-panel__empty-sub">Sources attach to a conversation. Start or open one to manage its inputs.</div>
+        </div>
+      </div>
+    `;
+  }
+  const attachedIds = getAttachedSourceIds(sid);
+  const sources = getStreamSources();
+  const rows = attachedIds
+    .map((id) => sources.find((s) => s.id === id))
+    .filter(Boolean)
+    .map((src) => renderSourceRow(src))
+    .join("");
+  const head = `
+    <div class="rpanel-sources__head">
+      <div class="rpanel-sources__head-text">
+        <div class="rpanel-sources__count">${attachedIds.length} source${attachedIds.length === 1 ? "" : "s"} attached</div>
+        <div class="rpanel-sources__sub muted">These files feed this conversation's outputs.</div>
+      </div>
+      <button type="button" class="ap-button stroked grey" data-rpanel-sources-attach>
+        <i class="ap-icon-plus"></i>
+        <span>Attach</span>
+      </button>
+    </div>
+  `;
+  if (attachedIds.length === 0) {
+    return `
+      <div class="rpanel-sources">
+        ${head}
+        <div class="app-right-panel__empty rpanel-sources__empty">
+          <div class="app-right-panel__empty-icon"><i class="ap-icon-file"></i></div>
+          <div class="app-right-panel__empty-title">No sources yet</div>
+          <div class="app-right-panel__empty-sub">Attach a file or pick from your library to start.</div>
+          <div class="app-right-panel__empty-action">
+            <button type="button" class="ap-button primary orange" data-rpanel-sources-attach>
+              <i class="ap-icon-plus"></i>
+              <span>Attach a source</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  return `
+    <div class="rpanel-sources">
+      ${head}
+      <div class="rpanel-sources__list">${rows}</div>
+    </div>
+  `;
+}
+
+const SOURCE_KIND_ICON = {
+  PDF: "ap-icon-file--pdf",
+  Word: "ap-icon-file--text",
+  Text: "ap-icon-file--text",
+  Video: "ap-icon-file--video",
+  Audio: "ap-icon-file",
+  Image: "ap-icon-file--image",
+  URL: "ap-icon-link",
+};
+
+function renderSourceRow(src) {
+  const icon = SOURCE_KIND_ICON[src.kind] || "ap-icon-file";
+  const ideaCount = src.ideaCount > 0 ? `${src.ideaCount} idea${src.ideaCount === 1 ? "" : "s"}` : "";
+  const meta = [src.addedAt, ideaCount].filter(Boolean).join(" · ");
+  const isProcessing = src.status !== "Processed";
+  const statusEl = isProcessing
+    ? `<span class="ap-status grey rpanel-sources__row-status">Processing</span>`
+    : src.signal && src.signal !== "Pending"
+      ? `<span class="ap-status ${src.signalColor || "grey"} rpanel-sources__row-status">${escapeText(src.signal)}</span>`
+      : "";
+  return `
+    <div class="rpanel-sources__row" data-source-id="${src.id}">
+      <span class="rpanel-sources__row-icon" aria-hidden="true"><i class="${icon}"></i></span>
+      <div class="rpanel-sources__row-body">
+        <div class="rpanel-sources__row-name">${escapeText(src.filename)}</div>
+        ${meta ? `<div class="rpanel-sources__row-meta muted">${escapeText(meta)}</div>` : ""}
+      </div>
+      ${statusEl}
+      <button
+        type="button"
+        class="ap-icon-button transparent rpanel-sources__row-detach"
+        data-rpanel-sources-detach="${src.id}"
+        aria-label="Detach ${escapeAttr(src.filename)}"
+        title="Detach"
+      >
+        <i class="ap-icon-close"></i>
+      </button>
+    </div>
+  `;
+}
 
 function renderIdeasView() {
   const ideaCount = IDEAS.length;

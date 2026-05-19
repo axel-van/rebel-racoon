@@ -10,7 +10,7 @@ import { isNewUser } from "../user-mode.js?v=20";
 import { getSources, subscribeSources } from "../sources-stream.js?v=20";
 import { getIdeas } from "../library.js?v=20";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=24";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=40";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=41";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the
