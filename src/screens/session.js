@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=20";
-import { renderTopbar } from "../components/topbar.js?v=38";
+import { renderTopbar } from "../components/topbar.js?v=39";
 import { getSessionById, socialAccounts, recentSessions, chatStarters } from "../mocks.js?v=27";
 import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=24";
 import { isNewUser } from "../user-mode.js?v=20";
@@ -17,13 +17,7 @@ import {
   submitAssistantChoice,
 } from "../assistant.js?v=26";
 import { getSources, getIdeas, injectIdeasForSource, subscribe as subscribeLibrary } from "../library.js?v=25";
-import {
-  getAttachedSourceIds,
-  attachSource,
-  attachMany,
-  detachSource,
-  subscribe as subscribeInputs,
-} from "../inputs-store.js?v=1";
+import { attachSource } from "../inputs-store.js?v=1";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
   getPosts,
@@ -55,8 +49,6 @@ import { open as openAddSourceModal } from "../components/add-source-modal.js?v=
 import {
   classifyFile,
   startFileUpload,
-  cancelUpload,
-  removeSources,
   getSources as getStreamSources,
   getUploads as getStreamUploads,
   subscribeSources,
@@ -72,7 +64,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=40";
+} from "../components/right-panel.js?v=41";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=20";
 
@@ -235,7 +227,6 @@ function renderAssistantPanel(session, attachedContext) {
               <span class="session__composer-thinking-spinner" aria-hidden="true"></span>
               <span class="session__composer-thinking-text" data-thinking-text>0s · 1 credit</span>
             </div>
-            <div class="composer-pills" data-composer-pills></div>
             <div class="session__composer-input">
               <textarea
                 class="session__composer-input-field"
@@ -245,41 +236,6 @@ function renderAssistantPanel(session, attachedContext) {
               ></textarea>
               <div class="session__composer-actions">
                 <div class="composer-actions__left">
-                  <div class="assistant-attach">
-                    <button
-                      type="button"
-                      class="ap-icon-button transparent"
-                      aria-label="Ajouter une source"
-                      data-assistant-attach-toggle
-                    >
-                      <i class="ap-icon-paper-clip"></i>
-                    </button>
-                    <div
-                      class="ap-action-dropdown assistant-attach__menu"
-                      data-assistant-attach-menu
-                      hidden
-                      role="menu"
-                    >
-                      <button type="button" class="ap-action-dropdown-item" data-add-source="pdf" role="menuitem">
-                        <i class="ap-icon-file--pdf"></i>
-                        <div class="ap-action-dropdown-item-text">
-                          <div class="ap-action-dropdown-item-label">Add PDF</div>
-                        </div>
-                      </button>
-                      <button type="button" class="ap-action-dropdown-item" data-add-source="video" role="menuitem">
-                        <i class="ap-icon-file--video"></i>
-                        <div class="ap-action-dropdown-item-text">
-                          <div class="ap-action-dropdown-item-label">Add video</div>
-                        </div>
-                      </button>
-                      <button type="button" class="ap-action-dropdown-item" data-add-source="url" role="menuitem">
-                        <i class="ap-icon-link"></i>
-                        <div class="ap-action-dropdown-item-text">
-                          <div class="ap-action-dropdown-item-label">Add URL</div>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
                   ${raw(renderComposerContextDropdown(attachedContext, { locked: !isEmptyConversation }))}
                 </div>
                 <button
@@ -1071,9 +1027,6 @@ function wireAssistantPanel(root, session, attachedContext) {
       const newAside = tmp.firstElementChild;
       if (newAside && aside) {
         screen.replaceChild(newAside, aside);
-        // The new aside ships with an empty pills container — paint
-        // any persisted pills for this session into it.
-        paintComposerPills(root, session.id);
       }
     }
     rebindWizardKeyboardIfActive();
@@ -1089,42 +1042,32 @@ function wireAssistantPanel(root, session, attachedContext) {
   // assistant.subscribe directly for batch updates.
   const offPosts = () => {};
 
-  // Composer pills — repaint on every sources/uploads stream change. The
-  // analyzing → ready transition crosses the upload→source boundary on the
-  // 📎 path, so subscribing to both catches every state flip. Initial
-  // paint covers pills carried over by composerStates from a prior render.
-  // The thread also repaints on source changes so inline clip-extraction
-  // cards flip from pending to ready (and pick up clipExtractionStatus +
-  // clips count) without an extra notify hop.
+  // Thread re-paints on source changes so inline clip-extraction cards
+  // flip from pending to ready (and pick up clipExtractionStatus + clips
+  // count) without an extra notify hop.
   const repaintThreadFromSources = () => {
     const thread = getThreadEl();
     if (!thread) return;
     thread.innerHTML = renderThread(getThread(session.id));
   };
-  const offComposerSources = subscribeSources(() => {
-    paintComposerPills(root, session.id);
-    repaintThreadFromSources();
-  });
+  const offComposerSources = subscribeSources(() => repaintThreadFromSources());
   // Tracks upload IDs started from drag/drop in this session so we can
-  // auto-attach the resulting source once the upload pipeline assigns its
-  // sourceId. Keyed alongside a tripAttachedSourceIds Set so each new
-  // source attaches at most once.
+  // auto-attach the resulting source once the upload pipeline assigns
+  // its sourceId. Keyed alongside a tripAttachedSourceIds Set so each
+  // new source attaches at most once. The Sources panel re-renders on
+  // the inputs-store subscription it owns.
   const dragUploadIds = new Set();
   const dragAttachedSourceIds = new Set();
   const offComposerUploads = subscribeUploads(() => {
-    if (dragUploadIds.size > 0) {
-      const ups = getStreamUploads();
-      for (const u of ups) {
-        if (dragUploadIds.has(u.id) && u.sourceId && !dragAttachedSourceIds.has(u.sourceId)) {
-          dragAttachedSourceIds.add(u.sourceId);
-          attachSource(session.id, u.sourceId);
-        }
+    if (dragUploadIds.size === 0) return;
+    const ups = getStreamUploads();
+    for (const u of ups) {
+      if (dragUploadIds.has(u.id) && u.sourceId && !dragAttachedSourceIds.has(u.sourceId)) {
+        dragAttachedSourceIds.add(u.sourceId);
+        attachSource(session.id, u.sourceId);
       }
     }
-    paintComposerPills(root, session.id);
   });
-  const offComposerInputs = subscribeInputs(session.id, () => paintComposerPills(root, session.id));
-  paintComposerPills(root, session.id);
 
   // Apply idea focus on initial render if ?focusIdea= is present.
   applyIdeaFocus(root);
@@ -1217,7 +1160,6 @@ function wireAssistantPanel(root, session, attachedContext) {
     offInlineQuestion();
     offComposerSources();
     offComposerUploads();
-    offComposerInputs();
     stopThinkingTimer();
   };
 }
@@ -1566,43 +1508,13 @@ function renderIdeaExtractionTurn(message) {
   `;
 }
 
-// ─── Composer state — pills + context selection (per-session) ────────────
+// ─── Composer side state ─────────────────────────────────────────────────
 //
-// Pills track in-flight + recently-completed attachments shown in the input
-// zone above the textarea. They survive thread/right-panel/wizard re-renders
-// because they live in this module-level Map keyed by sessionId rather than
-// inside bindSession's local scope. Each pill points to either a backing
-// upload (started via the 📎 button → real File) or a source (started via
-// the + menu items → fake scripted source for the proto). Display state is
-// re-derived from the global sources-stream snapshot on every paint.
-// FIND-A5: COMPOSER_CONTEXTS / composerSt.contextId removed when the
-// composer dropdown moved to a contexts-store-driven render. The dropdown
-// now reads the attached context from the session's URL state and the
-// menu items from getContexts(); selection routes through setQuery, so
-// per-composer context tracking is no longer needed here.
-const composerStates = new Map();
-function getComposerState(sessionId) {
-  let s = composerStates.get(sessionId);
-  if (!s) {
-    s = {
-      pills: new Map(),
-      dismissingIdeaSourceIds: new Set(),
-      dismissedIdeaSourceIds: new Set(),
-    };
-    composerStates.set(sessionId, s);
-  }
-  return s;
-}
-
-const PILL_KIND_ICON = {
-  PDF: "ap-icon-file--pdf",
-  Word: "ap-icon-file--text",
-  Text: "ap-icon-file--text",
-  Video: "ap-icon-file--video",
-  Audio: "ap-icon-file",
-  Image: "ap-icon-file--image",
-  URL: "ap-icon-link",
-};
+// The legacy per-session composer-pill machinery (composerStates,
+// getComposerState, resolveComposerPill, renderComposerPill,
+// paintComposerPills, dismissComposerIdeasBadge) was removed when sources
+// moved into the right-panel "Sources" mode. Attachments now live in
+// inputs-store and render in the panel — the composer stays minimal.
 
 // Label map for subtitle preset picks — used by the toast confirmation
 // after the user resolves the "Add subtitles?" turn (PDF flow 06.B).
@@ -1706,179 +1618,15 @@ function mockVideoIdeas(sourceId, filename) {
   ];
 }
 
-// Resolves a pill against the live sources/uploads stream. Returns null
-// when the backing record is gone (cancelled upload / removed source) so
-// the caller can drop the pill from local state.
-function resolveComposerPill(pill) {
-  if (pill.uploadId) {
-    const upload = getStreamUploads().find((u) => u.id === pill.uploadId);
-    if (!upload || upload.status === "cancelled") return null;
-    if (upload.sourceId) {
-      const src = getStreamSources().find((s) => s.id === upload.sourceId);
-      if (src) {
-        return {
-          state: src.status === "Processed" ? "ready" : "analyzing",
-          filename: src.filename,
-          kindLabel: src.kind,
-          ideaCount: src.ideaCount,
-          sourceId: src.id,
-        };
-      }
-    }
-    return {
-      state: "analyzing",
-      filename: upload.name,
-      kindLabel: upload.kind,
-      ideaCount: 0,
-      sourceId: null,
-    };
-  }
-  if (pill.sourceId) {
-    const src = getStreamSources().find((s) => s.id === pill.sourceId);
-    if (!src) return null;
-    return {
-      state: src.status === "Processed" ? "ready" : "analyzing",
-      filename: src.filename,
-      kindLabel: src.kind,
-      ideaCount: src.ideaCount,
-      sourceId: src.id,
-    };
-  }
-  return null;
-}
-
-function renderComposerPill(pillId, snap, state) {
-  const icon = PILL_KIND_ICON[snap.kindLabel] || "ap-icon-file";
-  // Every state-specific indicator lives OUTSIDE the blue pill, as a
-  // sibling within the .composer-pill-group. The blue pill itself stays
-  // minimal (icon + label + ×) so the eye reads "this file" → "what's
-  // happening with it" left-to-right.
-  let siblingIndicator = "";
-  // For video sources, the source stays in Processing until the user picks
-  // clips vs ideas — the AI is waiting on the user, not analyzing. Skip the
-  // misleading "Analyse en cours" spinner for that case.
-  const isVideoAwaiting = snap.state === "analyzing" && (snap.kindLabel || "").toLowerCase() === "video";
-  if (snap.state === "analyzing" && !isVideoAwaiting) {
-    siblingIndicator = `
-      <span class="composer-pill__indicator analyzing" aria-live="polite">
-        <span class="ap-loader blue size-16" aria-hidden="true">
-          <svg><circle></circle><circle></circle></svg>
-        </span>
-        <span class="composer-pill__status">Analyse en cours…</span>
-      </span>`;
-  } else if (snap.state === "ready" && snap.ideaCount > 0) {
-    // Only surface the "N nouvelles idées" badge once we actually have
-    // ideas attached. A processed source with ideaCount: 0 (e.g. a video
-    // the user routed to clip extraction) renders no badge — only the
-    // blue filename pill.
-    const ideas = snap.ideaCount === 1 ? "1 nouvelle idée" : `${snap.ideaCount} nouvelles idées`;
-    if (!state.dismissedIdeaSourceIds.has(snap.sourceId)) {
-      const dismissingClass = state.dismissingIdeaSourceIds.has(snap.sourceId) ? " is-dismissing" : "";
-      siblingIndicator = `
-        <button type="button" class="ap-tag green mini composer-pill__ideas${dismissingClass}" data-open-source-ideas="${snap.sourceId}" data-idea-count="${snap.ideaCount}">
-          <span>${escapeHtml(ideas)}</span>
-        </button>`;
-    }
-  } else if (snap.state === "error") {
-    siblingIndicator = `<span class="ap-tag red mini">Échec</span>`;
-  }
-  const closeAttr = snap.state === "analyzing" ? `data-pill-cancel="${pillId}"` : `data-pill-remove="${pillId}"`;
-  const closeAria = snap.state === "analyzing" ? "Annuler" : "Retirer";
-
-  return `
-    <span class="composer-pill-group">
-      <span class="ap-tag blue composer-pill" data-pill-id="${pillId}" data-pill-state="${snap.state}"${snap.sourceId ? ` data-source-id="${snap.sourceId}"` : ""}>
-        <i class="${icon}"></i>
-        <span class="composer-pill__label">${escapeHtml(snap.filename)}</span>
-        <button type="button" class="ap-icon-button transparent composer-pill__close" ${closeAttr} aria-label="${closeAria}">
-          <i class="ap-icon-close"></i>
-        </button>
-      </span>
-      ${siblingIndicator}
-    </span>`;
-}
-
-function paintComposerPills(root, sessionId) {
-  const container = root.querySelector("[data-composer-pills]");
-  if (!container) return;
-  const state = getComposerState(sessionId);
-
-  // Inputs strip = persistent attachments (source ids on the session) +
-  // any in-flight uploads not yet promoted to an attachment + a trailing
-  // "+ Attach" affordance. Pills resolve their live status from the
-  // sources-stream so processing → ready transitions happen with zero
-  // extra re-render orchestration.
-  const attachedIds = getAttachedSourceIds(sessionId);
-  const renderedSourceIds = new Set();
-  const html = [];
-
-  // 1. Persistent attachments — one pill per source id on the session.
-  for (const sourceId of attachedIds) {
-    const snap = resolveComposerPill({ sourceId });
-    if (!snap) continue;
-    renderedSourceIds.add(snap.sourceId);
-    html.push(renderComposerPill(`src-pill-${sourceId}`, snap, state));
-  }
-
-  // 2. In-flight uploads — uploads whose backing source hasn't landed yet
-  // OR scripted-source pills not yet auto-attached. Skip any whose
-  // sourceId is already shown above to avoid duplicates.
-  for (const [pillId, pill] of state.pills) {
-    const snap = resolveComposerPill(pill);
-    if (!snap) {
-      state.pills.delete(pillId);
-      continue;
-    }
-    if (snap.sourceId && renderedSourceIds.has(snap.sourceId)) continue;
-    html.push(renderComposerPill(pillId, snap, state));
-  }
-
-  // 3. Trailing "+ Attach" affordance — opens the Add Source modal.
-  html.push(`
-    <button type="button" class="ap-button stroked grey composer-pill__attach" data-composer-attach aria-label="Attach a source">
-      <i class="ap-icon-plus"></i>
-      <span>Attach</span>
-    </button>
-  `);
-
-  // 4. Empty state — when zero pills landed, swap the "+ Attach" button
-  // for a softer link that hints at both upload and library reuse.
-  if (renderedSourceIds.size === 0 && state.pills.size === 0) {
-    container.innerHTML = `
-      <a href="#" class="ap-link small composer-pill__empty-link" data-composer-attach>
-        Attach a file or pick from library
-      </a>
-    `;
-  } else {
-    container.innerHTML = html.join("");
-  }
-  container.hidden = false;
-}
-
-function dismissComposerIdeasBadge(root, sessionId, sourceId, button) {
-  if (!sourceId) return;
-  const state = getComposerState(sessionId);
-  if (state.dismissedIdeaSourceIds.has(sourceId)) return;
-  state.dismissingIdeaSourceIds.add(sourceId);
-  button?.classList.add("is-dismissing");
-  window.setTimeout(() => {
-    state.dismissingIdeaSourceIds.delete(sourceId);
-    state.dismissedIdeaSourceIds.add(sourceId);
-    paintComposerPills(root, sessionId);
-  }, 180);
-}
-
-function startPillFromKind(root, session, kind) {
+function startPillFromKind(_root, session, kind) {
   const spec = SCRIPTED_KINDS[kind];
   if (!spec) return;
   const sessionId = session.id;
   const sourceId = pushScriptedSource({ filename: spec.filename, kind: spec.kindLabel });
-  // Auto-attach to the session so the new source shows up in the Inputs
-  // strip immediately and persists across reloads — same end-state as if
+  // Auto-attach to the session so the new source shows up in the Sources
+  // panel immediately and persists across reloads — same end-state as if
   // the user had picked it from the Library tab.
   attachSource(sessionId, sourceId);
-  getComposerState(sessionId).pills.set(`pill-${sourceId}`, { sourceId });
-  paintComposerPills(root, sessionId);
   if (kind === "video") {
     // Video kind: skip auto-complete and ask the user up-front whether
     // they want clips or ideas. The choice handler completes the source
@@ -1931,18 +1679,6 @@ function bindSession(root, session) {
   });
 
   const getInput = () => root.querySelector("#assistantInput");
-
-  // The assistant aside (and its attach menu) gets replaced wholesale on
-  // sidebarWizard / inlineQuestion / library subscribe callbacks. Holding a
-  // reference here would bind to a detached node — query lazily instead.
-  function getAttachMenu() {
-    return root.querySelector("[data-assistant-attach-menu]");
-  }
-
-  function closeAttachMenu() {
-    const menu = getAttachMenu();
-    if (menu) menu.hidden = true;
-  }
 
   function submitInput() {
     const input = getInput();
@@ -2361,104 +2097,13 @@ function bindSession(root, session) {
         return;
       }
 
-      if (event.target.closest("[data-assistant-attach-toggle]")) {
-        const menu = getAttachMenu();
-        if (menu) menu.hidden = !menu.hidden;
-        return;
-      }
-
-      const addSrc = event.target.closest("[data-add-source]");
-      if (addSrc) {
-        // Composer + menu items drop a non-blocking pill in the input
-        // zone (analyzing → ready).
-        startPillFromKind(root, session, addSrc.dataset.addSource);
-        closeAttachMenu();
-        return;
-      }
-
-      // Inline clip-extraction card "Open clips" button — opens the Video
-      // Clips modal pre-bound to this session's draft callbacks. Same exit
-      // path as the completion toast's action. After P0 unification, the
-      // CTA now opens the Outputs panel (Clips tab) rather than the modal
-      // — the modal is reserved for per-clip trim/preview editing.
+      // Inline clip-extraction card "Open clips" button — after P0
+      // unification, the CTA opens the Outputs panel (Clips tab) rather
+      // than the modal; the modal is reserved for per-clip trim editing.
       const openClipsBtn = event.target.closest("[data-clip-card-open]");
       if (openClipsBtn) {
         event.preventDefault();
         openIdeasPanel();
-        return;
-      }
-
-      const pillCancelBtn = event.target.closest("[data-pill-cancel]");
-      if (pillCancelBtn) {
-        event.preventDefault();
-        const pillId = pillCancelBtn.dataset.pillCancel;
-        const pill = getComposerState(session.id).pills.get(pillId);
-        if (pill?.uploadId) cancelUpload(pill.uploadId);
-        if (pill?.sourceId) removeSources([pill.sourceId]);
-        paintComposerPills(root, session.id);
-        return;
-      }
-      const pillRemoveBtn = event.target.closest("[data-pill-remove]");
-      if (pillRemoveBtn) {
-        event.preventDefault();
-        const pillId = pillRemoveBtn.dataset.pillRemove;
-        // Two paint paths produce pills:
-        // - In-flight scripted pills live in composerState.pills with key
-        //   "pill-…" — remove from there and (legacy) also clean up the
-        //   underlying source so the test workspace doesn't keep them.
-        // - Persistent attachments are keyed "src-pill-<sourceId>" by
-        //   paintComposerPills — detach from the session only; the source
-        //   stays in the global library and can be re-attached later.
-        if (pillId.startsWith("src-pill-")) {
-          const sourceId = pillId.slice("src-pill-".length);
-          detachSource(session.id, sourceId);
-        } else {
-          const pill = getComposerState(session.id).pills.get(pillId);
-          if (pill?.sourceId) {
-            detachSource(session.id, pill.sourceId);
-            getComposerState(session.id).pills.delete(pillId);
-          }
-        }
-        paintComposerPills(root, session.id);
-        return;
-      }
-      // "+ Attach" affordance at the end of the Inputs strip — opens the
-      // Add Source modal so the user can upload a new file or pick from
-      // the existing library (P2).
-      const composerAttachBtn = event.target.closest("[data-composer-attach]");
-      if (composerAttachBtn) {
-        event.preventDefault();
-        openAddSourceModal({
-          onAttachExisting: (sourceIds) => attachMany(session.id, sourceIds),
-          onAttachNew: (sourceIds) => attachMany(session.id, sourceIds),
-          currentSessionId: session.id,
-          attachedSourceIds: getAttachedSourceIds(session.id),
-        });
-        return;
-      }
-      const openIdeasBtn = event.target.closest("[data-open-source-ideas]");
-      if (openIdeasBtn) {
-        event.preventDefault();
-        dismissComposerIdeasBadge(root, session.id, openIdeasBtn.dataset.openSourceIdeas, openIdeasBtn);
-        const ideaCount = parseInt(openIdeasBtn.dataset.ideaCount || "0", 10) || 3;
-        openIdeasPanel();
-        // Wait for the panel to mount + render its idea cards, then pulse
-        // the first N as the "ideas extracted from this source" highlight.
-        // The proto's mock IDEAS aren't linked to user-uploaded sources,
-        // so we approximate the connection by pulsing the top N cards
-        // (matching the source's ideaCount).
-        requestAnimationFrame(() => {
-          const panel = document.querySelector(".app-right-panel");
-          if (!panel) return;
-          const cards = Array.from(panel.querySelectorAll(".rpanel-ideas__card")).slice(0, ideaCount);
-          cards.forEach((c) => {
-            c.classList.remove("is-focused");
-            // Force reflow so the pulse animation restarts on repeated clicks.
-            void c.offsetWidth;
-            c.classList.add("is-focused");
-          });
-          if (cards[0]) cards[0].scrollIntoView({ behavior: "smooth", block: "center" });
-        });
         return;
       }
 
@@ -2498,11 +2143,6 @@ function bindSession(root, session) {
           menu.hidden = true;
           if (trigger) trigger.setAttribute("aria-expanded", "false");
         }
-      }
-
-      // Click outside the attach menu → close it
-      if (!event.target.closest(".assistant-attach")) {
-        closeAttachMenu();
       }
     },
     { signal },
