@@ -8,7 +8,7 @@
 // stays mounted so the user can see the full conversation.
 
 import { html, raw } from "../utils.js?v=20";
-import { renderTopbar } from "../components/topbar.js?v=39";
+import { renderTopbar } from "../components/topbar.js?v=40";
 import { navigate } from "../router.js?v=21";
 import { bindWizardKeyboard, unbindWizardKeyboard, renderPicker, chatTurn } from "./_analyse-common.js?v=25";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=26";

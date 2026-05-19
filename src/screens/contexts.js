@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { renderTopbar } from "../components/topbar.js?v=39";
+import { renderTopbar } from "../components/topbar.js?v=40";
 import {
   getContexts,
   subscribe as subscribeContexts,

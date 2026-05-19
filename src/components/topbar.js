@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { getPath, navigate } from "../router.js?v=21";
+import { getPath } from "../router.js?v=21";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 import { toggleSidebar } from "./sidebar.js?v=32";
 import {
@@ -12,11 +12,8 @@ import {
   subscribe as subscribeRightPanel,
 } from "./right-panel.js?v=41";
 import { getAttachedSourceIds, subscribe as subscribeInputs } from "../inputs-store.js?v=1";
-import { openRead as openContextRead } from "../context-builder.js?v=23";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=26";
 import { recentSessions } from "../mocks.js?v=27";
-import { getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=24";
-import { parseHashParams } from "../url-state.js?v=20";
 
 // Persistent top bar.
 //
@@ -106,27 +103,13 @@ export function initTopbar() {
       else openSourcesPanel();
       return;
     }
-    if (event.target.closest("[data-topbar-context]")) {
-      const ctx = currentContext();
-      // No context attached → jump to the conversational creation flow.
-      // Otherwise open the right-panel context-form in read mode (the user
-      // can hit Edit from there if they want to mutate).
-      if (!ctx) {
-        navigate("/contexts/new");
-      } else {
-        openContextRead(ctx.id);
-      }
-    }
   });
 
   // Re-render the topbar whenever the right panel state changes so the
   // pills reflect the live mode (.is-on accent flips).
   subscribeRightPanel(() => renderTopbar());
 
-  // Re-render when contexts are mutated (rename, color change, delete) so
-  // the Context pill stays in sync with the drawer's edits, and on hash
-  // change so the pill picks up a new ?contextId= param.
-  subscribeContexts(() => renderTopbar());
+  // Re-render on hash change so pills re-derive per-route state.
   window.addEventListener("hashchange", () => renderTopbar());
 
   // When the active session's thread updates (new drafts land), re-render
@@ -187,10 +170,6 @@ export function initTopbar() {
 // from `.ap-button stroked grey` and adds a thin
 // `.app-topbar__context-pill` wrapper for the layout overrides.
 function renderSessionPills(rpMode, draftCount, isEmpty) {
-  const ctx = currentContext();
-  const ctxColor = ctx?.color || "grey";
-  const ctxLabel = ctx ? ctx.name : "Set context…";
-  const ctxStateClass = ctx ? "" : "is-empty";
   const draftBadge = draftCount > 0 ? `<span class="ap-counter normal orange">${draftCount}</span>` : "";
   const draftsClass = rpMode === "drafts" ? "secondary orange" : "ghost grey";
   const ideasClass = rpMode === "ideas" ? "secondary blue" : "ghost grey";
@@ -204,19 +183,6 @@ function renderSessionPills(rpMode, draftCount, isEmpty) {
   const sourcesCount = sessionSourceCount();
   const sourcesBadge = sourcesCount > 0 ? `<span class="ap-counter normal blue">${sourcesCount}</span>` : "";
   return `
-    <button
-      type="button"
-      class="ap-button stroked grey app-topbar__context-pill ${ctxStateClass}"
-      data-topbar-context
-      title="${ctx ? `Edit context · ${ctx.name}` : "Attach a context"}"
-    >
-      <span class="app-topbar__context-swatch app-topbar__context-swatch--${ctxColor}" aria-hidden="true"></span>
-      <span class="app-topbar__context-label">
-        <span class="app-topbar__context-eyebrow">Context</span>
-        <span class="app-topbar__context-name">${escapeText(ctxLabel)}</span>
-      </span>
-      <i class="ap-icon-chevron-down" aria-hidden="true"></i>
-    </button>
     <button
       type="button"
       class="ap-button ${sourcesClass}"
@@ -265,19 +231,6 @@ function sessionSourceCount() {
   const sid = currentSessionId();
   if (!sid) return 0;
   return getAttachedSourceIds(sid).length;
-}
-
-// Resolve the active session's bound context — URL ?contextId= wins,
-// otherwise fall back to the recentSessions seed for known mock sessions.
-function currentContext() {
-  const sid = currentSessionId();
-  if (!sid) return null;
-  const params = parseHashParams();
-  const fromUrl = params.get("contextId");
-  if (fromUrl) return getContextById(fromUrl);
-  const seed = recentSessions.find((s) => s.id === sid);
-  if (seed?.contextId) return getContextById(seed.contextId);
-  return null;
 }
 
 // Resolve the latest draft message in the active session (if any) and return
