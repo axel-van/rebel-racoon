@@ -236,6 +236,15 @@ function renderAssistantPanel(session, attachedContext) {
               ></textarea>
               <div class="session__composer-actions">
                 <div class="composer-actions__left">
+                  <button
+                    type="button"
+                    class="ap-icon-button transparent"
+                    aria-label="Attach a source"
+                    title="Attach a source"
+                    data-composer-attach
+                  >
+                    <i class="ap-icon-paper-clip"></i>
+                  </button>
                   ${raw(renderComposerContextDropdown(attachedContext, { locked: !isEmptyConversation }))}
                 </div>
                 <button
@@ -2104,6 +2113,26 @@ function bindSession(root, session) {
       if (openClipsBtn) {
         event.preventDefault();
         openIdeasPanel();
+        return;
+      }
+
+      // Paper-clip in the composer — same modal entry point as the Sources
+      // panel's "+ Attach" button. Pre-seeds the modal with the active
+      // session so attachExisting/attachNew route through inputs-store and
+      // land in the Sources panel.
+      const composerAttachBtn = event.target.closest("[data-composer-attach]");
+      if (composerAttachBtn) {
+        event.preventDefault();
+        Promise.all([import("../inputs-store.js?v=1"), import("../components/add-source-modal.js?v=22")]).then(
+          ([store, modal]) => {
+            modal.open({
+              onAttachExisting: (sourceIds) => store.attachMany(session.id, sourceIds),
+              onAttachNew: (sourceIds) => store.attachMany(session.id, sourceIds),
+              currentSessionId: session.id,
+              attachedSourceIds: store.getAttachedSourceIds(session.id),
+            });
+          },
+        );
         return;
       }
 
