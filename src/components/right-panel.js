@@ -13,8 +13,10 @@ import {
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=23";
 import { renderPostCard } from "./post-card.js?v=22";
+import { renderClipCard } from "./clip-card.js?v=1";
 import { CONTEXT_QUESTIONS } from "../context-questions.js?v=20";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=32";
+import { getSources as getStreamSources, subscribeSources } from "../sources-stream.js?v=26";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
@@ -65,6 +67,17 @@ const IDEA_KINDS = [
 // the panel reopens in Ideas mode.
 let ideasFilter = "all";
 let ideasQuery = "";
+
+// Outputs sub-view inside Ideas mode — "ideas" or "clips". Unifies the
+// two AI-extracted output types of a source under one persistent surface
+// so users keep their workflow continuity (PDF 06.B flow). When the
+// session's sources gain clips for the first time, the panel auto-flips
+// to the Clips tab so the result feels surfaced rather than buried.
+let outputsView = "ideas";
+
+// Per-clip selection inside the Clips tab — Set<clipId>. Multi-select
+// drives the sticky footer "Draft posts from N clips" CTA.
+let clipSelection = new Set();
 
 // Drafts-mode local UI state — Lot 21 rich-card view. Filter strip at the
 // top of the panel head drives both axes : status (all / needs_fixes /
@@ -373,6 +386,17 @@ export function init() {
       onPostImage(imageBtn.dataset.postImage);
       return;
     }
+    // Outputs sub-view tab — Ideas | Clips.
+    const outputsTab = event.target.closest("[data-rpanel-outputs-tab]");
+    if (outputsTab) {
+      const next = outputsTab.dataset.rpanelOutputsTab;
+      if (next !== outputsView) {
+        outputsView = next;
+        clipSelection = new Set();
+        renderPanel();
+      }
+      return;
+    }
     // Ideas filter chip.
     const chip = event.target.closest("[data-rpanel-ideas-filter]");
     if (chip) {
@@ -384,6 +408,47 @@ export function init() {
       ideasFilter = "all";
       ideasQuery = "";
       renderPanel();
+      return;
+    }
+    // Clip selection toggle (multi-select in Clips tab).
+    const clipSelectInput = event.target.closest("[data-clip-select]");
+    if (clipSelectInput) {
+      const cid = clipSelectInput.getAttribute("data-clip-select");
+      if (clipSelection.has(cid)) clipSelection.delete(cid);
+      else clipSelection.add(cid);
+      renderPanel();
+      return;
+    }
+    // Footer CTA — draft posts from the selected clips into the active
+    // session. Mirrors the onUseClips logic that used to live behind the
+    // video-clips-modal CTA: one draft per clip, clipRef carries trim +
+    // source name + hue so post-card can render its video PIP.
+    if (event.target.closest("[data-rpanel-clips-draft]")) {
+      const sid = activeSessionId();
+      if (!sid) return;
+      const all = collectAllClips();
+      const picked = all.filter(({ clip }) => clipSelection.has(clip.id));
+      if (picked.length === 0) return;
+      const drafts = picked.map(({ clip, sourceName }) =>
+        addPostDraft(sid, {
+          network: clip.network,
+          text: [clip.title, clip.summary].filter(Boolean),
+          hashtags: (clip.tags || []).map((t) => `#${t}`),
+          clipRef: {
+            start: clip.start,
+            end: clip.end,
+            sourceName,
+            hue: clip.hue,
+          },
+        }),
+      );
+      clipSelection = new Set();
+      renderPanel();
+      // Toast confirmation — keep it succinct; the post-card update lands
+      // in the Drafts panel and the user can drill in from there.
+      import("./toast.js").then(({ showToast }) =>
+        showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from clips`, { duration: 3200 }),
+      );
       return;
     }
     // Use this idea → injects a templated prompt into the assistant composer.
@@ -534,6 +599,22 @@ export function init() {
   // session changes via `rebindPostsStore()`.
   rebindPostsStore();
   window.addEventListener("hashchange", rebindPostsStore);
+
+  // Sources stream — when clips land on any source while the Ideas panel
+  // is open, re-render so the Clips tab counter updates and (if this is
+  // the first clip batch in the workspace) auto-switch to the Clips tab
+  // so the user lands on their just-finished output. Tracks the global
+  // clip count to detect the 0 → N transition reliably.
+  let lastClipCount = collectAllClips().length;
+  subscribeSources(() => {
+    if (state.mode !== "ideas") return;
+    const next = collectAllClips().length;
+    if (next > lastClipCount && lastClipCount === 0) {
+      outputsView = "clips";
+    }
+    lastClipCount = next;
+    renderPanel();
+  });
 
   // Auto-collapse the sidebar when the viewport shrinks enough that the
   // chat column would dip below CHAT_MIN_WIDTH_PX. rAF-debounced so
@@ -1001,8 +1082,53 @@ function parseEditorBody(raw) {
 // --- Ideas mode -------------------------------------------------------
 
 function renderIdeasView() {
+  const ideaCount = IDEAS.length;
+  const clips = collectAllClips();
+  const clipCount = clips.length;
+  const ideasActive = outputsView === "ideas";
+
+  // Outputs tabs — Ideas | Clips. Always rendered so the user can
+  // discover the Clips surface even when empty; the Clips tab carries
+  // an empty state on its own when no clips have been extracted yet.
+  const tabs = `
+    <div class="ap-tabs rpanel-outputs__tabs">
+      <div class="ap-tabs-nav">
+        <button
+          type="button"
+          class="ap-tabs-tab ${ideasActive ? "active" : ""}"
+          data-rpanel-outputs-tab="ideas"
+          role="tab"
+          aria-selected="${ideasActive}"
+        >
+          <span>Ideas</span>
+          ${ideaCount > 0 ? `<span class="ap-counter normal ${ideasActive ? "blue" : "grey"}">${ideaCount}</span>` : ""}
+        </button>
+        <button
+          type="button"
+          class="ap-tabs-tab ${!ideasActive ? "active" : ""}"
+          data-rpanel-outputs-tab="clips"
+          role="tab"
+          aria-selected="${!ideasActive}"
+        >
+          <span>Clips</span>
+          ${clipCount > 0 ? `<span class="ap-counter normal ${!ideasActive ? "blue" : "grey"}">${clipCount}</span>` : ""}
+        </button>
+      </div>
+    </div>
+  `;
+
+  if (!ideasActive) {
+    return html`
+      <div class="rpanel-ideas">
+        ${raw(tabs)}
+        <div class="rpanel-ideas__body" data-rpanel-ideas-body>${raw(renderClipsList(clips))}</div>
+      </div>
+    `;
+  }
+
   return html`
     <div class="rpanel-ideas">
+      ${raw(tabs)}
       <div class="rpanel-ideas__head">
         <div class="ap-input-group rpanel-ideas__search">
           <i class="ap-icon-search"></i>
@@ -1032,6 +1158,63 @@ function renderIdeasView() {
       </div>
       <div class="rpanel-ideas__body" data-rpanel-ideas-body>${raw(renderIdeasList())}</div>
     </div>
+  `;
+}
+
+// Walk all sources in the workspace and aggregate any attached clips with
+// their source attribution so the unified panel knows where each clip
+// came from. Returns a flat array of { clip, sourceName, sourceId }.
+function collectAllClips() {
+  const sources = getStreamSources();
+  const out = [];
+  for (const src of sources) {
+    if (!Array.isArray(src.clips) || src.clips.length === 0) continue;
+    for (const clip of src.clips) {
+      out.push({ clip, sourceName: src.filename || "Source", sourceId: src.id });
+    }
+  }
+  return out;
+}
+
+function renderClipsList(entries) {
+  if (!Array.isArray(entries) || entries.length === 0) {
+    return html`
+      <div class="app-right-panel__empty rpanel-ideas__no-match">
+        <div class="app-right-panel__empty-icon"><i class="ap-icon-file--video"></i></div>
+        <div class="app-right-panel__empty-title">No clips yet</div>
+        <div class="app-right-panel__empty-sub">
+          Drop a video into the chat and pick <strong>Create clips</strong> to extract short segments here.
+        </div>
+      </div>
+    `;
+  }
+
+  const cards = entries
+    .map(({ clip, sourceName }) =>
+      renderClipCard(clip, {
+        selectable: true,
+        isSelected: clipSelection.has(clip.id),
+        sourceName,
+      }),
+    )
+    .join("");
+
+  const selectedCount = entries.filter(({ clip }) => clipSelection.has(clip.id)).length;
+  const footer =
+    selectedCount > 0
+      ? `
+        <div class="rpanel-outputs__footer">
+          <button type="button" class="ap-button mermaid" data-rpanel-clips-draft>
+            <i class="ap-icon-sparkles"></i>
+            <span>Draft posts from ${selectedCount} clip${selectedCount > 1 ? "s" : ""}</span>
+          </button>
+        </div>
+      `
+      : "";
+
+  return `
+    <div class="rpanel-outputs__clips">${cards}</div>
+    ${footer}
   `;
 }
 

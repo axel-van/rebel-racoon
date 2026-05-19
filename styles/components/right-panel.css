@@ -654,3 +654,49 @@
     max-width: 220px;
   }
 }
+
+/* ── Outputs sub-view: Ideas | Clips tabs + Clips list + footer ─────── */
+
+.rpanel-outputs__tabs {
+  padding: 0 var(--ref-spacing-sm);
+  border-bottom: 1px solid var(--ref-color-grey-10);
+  background: var(--ref-color-white);
+}
+
+.rpanel-outputs__tabs .ap-tabs-nav {
+  padding: 0;
+}
+
+.rpanel-outputs__tabs .ap-tabs-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+/* Clips grid inside the panel body — vertical stack on narrow widths,
+   2-col only when the panel widens past ~640px. */
+.rpanel-outputs__clips {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
+}
+
+/* Sticky footer with the multi-select Draft CTA. Sits at the bottom of
+   the panel body, above the panel border. Only renders when ≥ 1 clip
+   is selected. */
+.rpanel-outputs__footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: stretch;
+  padding: var(--ref-spacing-sm);
+  background: var(--ref-color-white);
+  border-top: 1px solid var(--ref-color-grey-10);
+  box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.04);
+}
+
+.rpanel-outputs__footer .ap-button {
+  width: 100%;
+  justify-content: center;
+}
