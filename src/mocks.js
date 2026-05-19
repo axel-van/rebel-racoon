@@ -11,6 +11,10 @@ export const recentSessions = [
     postCount: 3,
     contextId: "ctx-acme",
     pinned: true,
+    // Per-session attached source ids. Sources live globally in `sources`
+    // below; sessions reference them by id. Multiple sessions can share
+    // the same source (it stays in the library regardless of detach).
+    attachedSourceIds: ["src-1", "src-2", "src-3"],
   },
   {
     id: "s-riverside",
@@ -21,6 +25,7 @@ export const recentSessions = [
     postCount: 5,
     contextId: "ctx-customer",
     pinned: false,
+    attachedSourceIds: ["src-1", "src-2"],
   },
   {
     id: "s-state-of-social",
@@ -31,6 +36,7 @@ export const recentSessions = [
     postCount: 2,
     contextId: "ctx-founder-voice",
     pinned: false,
+    attachedSourceIds: ["src-1", "src-2"],
   },
   {
     id: "s-weekly-recap",
@@ -41,6 +47,7 @@ export const recentSessions = [
     postCount: 1,
     contextId: "ctx-acme",
     pinned: false,
+    attachedSourceIds: ["src-1"],
   },
 ];
 
