@@ -1727,8 +1727,8 @@ function startPillFromKind(root, session, kind) {
     postAssistantChoice(sessionId, {
       text: "What should I do with this video?",
       choices: [
-        { value: "clips", label: "Cut into clips", icon: "ap-icon-sparkles" },
-        { value: "ideas", label: "Extract ideas", icon: "ap-icon-bulb" },
+        { value: "clips", label: "Create clips", icon: "ap-icon-sparkles" },
+        { value: "ideas", label: "Extract themes", icon: "ap-icon-bulb" },
       ],
       multi: false,
       instant: true,
