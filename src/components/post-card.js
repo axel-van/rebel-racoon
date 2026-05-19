@@ -83,8 +83,13 @@ export function renderPostCard(post, opts = {}) {
   // a portrait aspect ratio so the preview matches what the post would
   // actually look like in feed. Otherwise the existing image / generate
   // placeholder path is preserved.
+  const subtitleBadge =
+    post.clipRef && post.subtitleStyle && post.subtitleStyle !== "none"
+      ? `<span class="ap-status grey no-dot posts__card-subtitle-pill">Subtitles · ${SUBTITLE_LABEL[post.subtitleStyle] || post.subtitleStyle}</span>`
+      : "";
+
   const mediaBlock = post.clipRef
-    ? renderClipPlayer(post)
+    ? `${renderClipPlayer(post)}${subtitleBadge}`
     : post.imageUrl
       ? `<img class="posts__card-image" src="${post.imageUrl}" alt="Generated image for this post" />`
       : `<button type="button" class="posts__card-image-placeholder" data-post-image="${post.id}">
@@ -233,6 +238,12 @@ function escapeForEditor(s) {
 // so the user still sees where the clip came from.
 
 const PORTRAIT_NETWORKS = new Set(["tiktok", "instagram"]);
+
+const SUBTITLE_LABEL = {
+  bold: "Bold",
+  clean: "Clean",
+  caption: "Caption",
+};
 
 function renderClipPlayer(post) {
   const clip = post.clipRef;

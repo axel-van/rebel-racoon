@@ -506,3 +506,11 @@
 .session__tab-body--flush {
   padding: var(--ref-spacing-md) var(--ref-spacing-lg);
 }
+
+/* Subtitle preset metadata badge — sits under the clip-player when the
+   user has picked a style after drafting. Quiet visual (.ap-status grey
+   no-dot) since it is metadata, not a primary action. */
+.posts__card-subtitle-pill {
+  margin-top: var(--ref-spacing-xxxs);
+  align-self: flex-start;
+}
