@@ -10,10 +10,10 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=41";
-import { getAttachedSourceIds, subscribe as subscribeInputs } from "../inputs-store.js?v=1";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=26";
-import { recentSessions } from "../mocks.js?v=27";
+} from "./right-panel.js?v=42";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=28";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=27";
+import { recentSessions } from "../mocks.js?v=28";
 
 // Persistent top bar.
 //
@@ -118,7 +118,7 @@ export function initTopbar() {
   // sources) — drives the Sources pill counter.
   let lastSessionId = null;
   let unsubscribeThread = null;
-  let unsubscribeInputs = null;
+  let unsubscribeSources = null;
   function syncThreadSubscription() {
     const sid = currentSessionId();
     if (sid === lastSessionId) return;
@@ -126,14 +126,14 @@ export function initTopbar() {
       unsubscribeThread();
       unsubscribeThread = null;
     }
-    if (unsubscribeInputs) {
-      unsubscribeInputs();
-      unsubscribeInputs = null;
+    if (unsubscribeSources) {
+      unsubscribeSources();
+      unsubscribeSources = null;
     }
     lastSessionId = sid;
     if (sid) {
       unsubscribeThread = subscribeThread(sid, () => renderTopbar());
-      unsubscribeInputs = subscribeInputs(sid, () => renderTopbar());
+      unsubscribeSources = subscribeSources(sid, () => renderTopbar());
     }
   }
   syncThreadSubscription();
@@ -230,7 +230,7 @@ function escapeText(str) {
 function sessionSourceCount() {
   const sid = currentSessionId();
   if (!sid) return 0;
-  return getAttachedSourceIds(sid).length;
+  return getSessionSources(sid).length;
 }
 
 // Resolve the latest draft message in the active session (if any) and return

@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=40";
-import { getSessionById, socialAccounts, recentSessions, chatStarters } from "../mocks.js?v=27";
+import { getSessionById, socialAccounts, recentSessions, chatStarters } from "../mocks.js?v=28";
 import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=24";
 import { isNewUser } from "../user-mode.js?v=20";
 import {
@@ -18,8 +18,7 @@ import {
   subscribe,
   submitAssistantChoice,
 } from "../assistant.js?v=27";
-import { getSources, getIdeas, injectIdeasForSource, subscribe as subscribeLibrary } from "../library.js?v=25";
-import { attachSource, getAttachedSourceIds, subscribe as subscribeInputs } from "../inputs-store.js?v=1";
+import { getSources, getIdeas, injectIdeasForSource } from "../library.js?v=26";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
   getPosts,
@@ -58,7 +57,7 @@ import {
   pushScriptedSource,
   completeScriptedSource,
   updateSourceClips,
-} from "../sources-stream.js?v=26";
+} from "../sources-stream.js?v=28";
 import { showToast } from "../components/toast.js?v=20";
 import {
   openDrafts as openDraftsPanel,
@@ -66,7 +65,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=41";
+} from "../components/right-panel.js?v=42";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=20";
 
@@ -220,7 +219,7 @@ function renderAssistantPanel(session, attachedContext) {
   return html`
     <aside class="session__assistant" aria-label="Assistant panel">
       <div class="session__assistant-thread" id="assistantThread" data-assistant-thread>
-        ${isEmptyConversation ? raw(renderEmptyHero()) : raw(renderThread(thread))}
+        ${isEmptyConversation ? raw(renderEmptyHero(session.id)) : raw(renderThread(thread))}
       </div>
       <div class="session__composer">
         <div class="session__composer-inner">
@@ -270,13 +269,6 @@ function renderAssistantPanel(session, attachedContext) {
                         <i class="ap-icon-link"></i>
                         <div class="ap-action-dropdown-item-text">
                           <div class="ap-action-dropdown-item-label">Add URL</div>
-                        </div>
-                      </button>
-                      <div class="ap-action-dropdown-divider"></div>
-                      <button type="button" class="ap-action-dropdown-item" data-composer-attach-modal role="menuitem">
-                        <i class="ap-icon-feature-library"></i>
-                        <div class="ap-action-dropdown-item-text">
-                          <div class="ap-action-dropdown-item-label">Browse library…</div>
                         </div>
                       </button>
                     </div>
@@ -408,8 +400,8 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
 // that the previous version dropped into the textarea verbatim. Resolve it at
 // render time: if a source is attached we name it; otherwise we fall back to
 // "your source" so the prompt still reads cleanly for first-run users.
-function renderEmptyHero() {
-  const sources = getStreamSources();
+function renderEmptyHero(sessionId) {
+  const sources = getStreamSources(sessionId);
   const firstSource = sources.find((s) => s.status !== "Processing") || sources[0] || null;
   const sourceLabel = firstSource ? `"${firstSource.filename}"` : "your source";
   // `{{video-source}}` resolves to the first processed video source so the
@@ -611,7 +603,7 @@ function startAskFlowFromSession(sessionId, sourceId, filename) {
 // cancels the Add Source modal so we don't leak listeners.
 
 function startClipsExtractionFlow(session) {
-  const initialIds = new Set(getStreamSources().map((s) => s.id));
+  const initialIds = new Set(getStreamSources(session.id).map((s) => s.id));
   let newSourceId = null;
   let unsubNew = null;
   let unsubProcessed = null;
@@ -636,7 +628,7 @@ function startClipsExtractionFlow(session) {
   // existing upload pipeline which pushes a new source. We catch the
   // first new VIDEO source — anything else is ignored and the user
   // can re-trigger the starter.
-  unsubNew = subscribeSources((sources) => {
+  unsubNew = subscribeSources(session.id, (sources) => {
     const fresh = sources.find((s) => !initialIds.has(s.id) && (s.kind || "").toLowerCase() === "video");
     if (!fresh) return;
     newSourceId = fresh.id;
@@ -644,10 +636,8 @@ function startClipsExtractionFlow(session) {
     unsubNew = null;
 
     // Now wait for the upload + processing pipeline to finish on this
-    // specific source. Then defer to startClipExtraction which runs a 30s
-    // non-blocking background job and fires a completion toast whose
-    // "Open clips" action invokes onReady to open the Video Clips modal.
-    unsubProcessed = subscribeSources((latest) => {
+    // specific source.
+    unsubProcessed = subscribeSources(session.id, (latest) => {
       const target = latest.find((s) => s.id === newSourceId);
       if (!target || target.status !== "Processed") return;
       unsubProcessed();
@@ -701,26 +691,6 @@ function openVideoClipsModalForSession(source, session) {
   });
 }
 
-// Resolve a source by id once it reaches Processed status. Calls fn(source)
-// synchronously if it's already Processed, otherwise subscribes and waits
-// for the first matching state transition (then auto-unsubscribes).
-// Returns the teardown function in case the caller needs to abort early.
-function whenSourceProcessed(sourceId, fn) {
-  const src = getStreamSources().find((s) => s.id === sourceId);
-  if (src && src.status === "Processed") {
-    fn(src);
-    return () => {};
-  }
-  const unsub = subscribeSources((sources) => {
-    const t = sources.find((s) => s.id === sourceId);
-    if (t && t.status === "Processed") {
-      unsub();
-      fn(t);
-    }
-  });
-  return unsub;
-}
-
 // Local copy of dashboard's defaultChatName — keeps session.js standalone
 // without a circular import for a 5-line helper.
 function defaultChatNameLocal() {
@@ -764,11 +734,11 @@ function askProfileQuestion(sessionId, ideaId) {
   });
 }
 
-function renderThread(messages) {
-  return messages.map(renderTurn).join("");
+function renderThread(messages, sessionId) {
+  return messages.map((m) => renderTurn(m, sessionId)).join("");
 }
 
-function renderTurn(message) {
+function renderTurn(message, sessionId) {
   // Hidden placeholders (pre-reply AI bubbles) don't render.
   if (message.hidden) return "";
 
@@ -781,7 +751,7 @@ function renderTurn(message) {
 
   // Right-aligned "Source intake" turn — Figma 25:1127 / 25:1131.
   if (message.role === "source-intake") {
-    return renderSourceIntakeTurn(message);
+    return renderSourceIntakeTurn(message, sessionId);
   }
 
   // AI extraction result — Figma 25:1053.
@@ -797,14 +767,14 @@ function renderTurn(message) {
   // Clip extraction — pending spinner pill that flips to a ready card with
   // an "Open clips" action once the background extraction completes.
   if (message.role === "assistant" && message.variant === "clip-extraction") {
-    return renderClipExtractionTurn(message);
+    return renderClipExtractionTurn(message, sessionId);
   }
 
   // Idea extraction (Flow A — "Extract themes"). Same chrome as clip
   // extraction; flips to a "Themes ready · panel updated" notice when
   // injectIdeasForSource lands.
   if (message.role === "assistant" && message.variant === "idea-extraction") {
-    return renderIdeaExtractionTurn(message);
+    return renderIdeaExtractionTurn(message, sessionId);
   }
 
   // Channel-picker choice turn — chip row + "Draft them" button.
@@ -864,7 +834,7 @@ function renderExtractingNotice() {
   `;
 }
 
-function renderSourceIntakeTurn(message) {
+function renderSourceIntakeTurn(message, sessionId) {
   // Kind icon — map the raw kind label (from sources-stream) to the DS
   // icon name. Lowercased so "PDF" / "Video" / "URL" / "Word" / "Image"
   // / "Audio" all resolve.
@@ -888,7 +858,7 @@ function renderSourceIntakeTurn(message) {
   if (isLoading) {
     subText = "Uploading…";
   } else if (message.sourceId) {
-    const src = getStreamSources().find((s) => s.id === message.sourceId);
+    const src = getStreamSources(sessionId).find((s) => s.id === message.sourceId);
     const ideas = src?.ideaCount || 0;
     subText = ideas > 0 ? `Processed · ${ideas} idea${ideas === 1 ? "" : "s"}` : "Processed";
   } else if (message.size) {
@@ -1025,7 +995,7 @@ function wireAssistantPanel(root, session, attachedContext) {
   const offThread = subscribe(session.id, (messages) => {
     const thread = getThreadEl();
     if (thread) {
-      thread.innerHTML = renderThread(messages);
+      thread.innerHTML = renderThread(messages, session.id);
       thread.scrollTop = thread.scrollHeight;
     }
     updateThinkingChip(session.id);
@@ -1048,7 +1018,7 @@ function wireAssistantPanel(root, session, attachedContext) {
     const thread = getThreadEl();
     if (!thread) return;
     const messages = getThread(session.id);
-    thread.innerHTML = renderThread(messages);
+    thread.innerHTML = renderThread(messages, session.id);
   });
 
   // The library subscription used to re-render the in-session Content tab.
@@ -1126,7 +1096,7 @@ function wireAssistantPanel(root, session, attachedContext) {
   const repaintThreadFromSources = () => {
     const thread = getThreadEl();
     if (!thread) return;
-    thread.innerHTML = renderThread(getThread(session.id));
+    thread.innerHTML = renderThread(getThread(session.id), session.id);
   };
   // Intake-turn lifecycle (loading → ready)
   //
@@ -1138,32 +1108,34 @@ function wireAssistantPanel(root, session, attachedContext) {
   //
   // sentReadyForSourceIds dedupes the markReady call: once a turn flips
   // to ready, we don't re-fire on every notify.
-  const seenSourceIds = new Set(getAttachedSourceIds(session.id));
+  // Intake-turn lifecycle (loading → ready)
+  //
+  // seenSourceIds is a snapshot baseline of the session's sources at
+  // mount time. Any sourceId that appears in this session's sources
+  // AFTER this baseline counts as a "new upload" — we post an intake
+  // turn for it (Processing status). When the source flips to Processed,
+  // the turn flips to ready.
+  //
+  // sentReadyForSourceIds dedupes the markReady call: once a turn flips
+  // to ready, we don't re-fire on every notify.
+  const seenSourceIds = new Set(getStreamSources(session.id).map((s) => s.id));
   const sentReadyForSourceIds = new Set();
 
-  const offIntakeInputs = subscribeInputs(session.id, () => {
-    const current = getAttachedSourceIds(session.id);
-    for (const sid of current) {
-      if (seenSourceIds.has(sid)) continue;
-      seenSourceIds.add(sid);
-      const src = getStreamSources().find((s) => s.id === sid);
-      if (!src) continue;
-      // Library re-attach: source already Processed at attach time → no
-      // intake turn (the file isn't being uploaded right now).
-      if (src.status === "Processed") {
-        sentReadyForSourceIds.add(sid);
-        continue;
-      }
+  const offComposerSources = subscribeSources(session.id, (sources) => {
+    // Post intake turns for any new source ids.
+    for (const src of sources) {
+      if (seenSourceIds.has(src.id)) continue;
+      seenSourceIds.add(src.id);
+      // Every new source in this session is a fresh upload (no library
+      // re-attach in the per-session model) → post a loading intake.
       postSourceIntake(session.id, {
         kind: src.kind,
         filename: src.filename,
-        sourceId: sid,
+        sourceId: src.id,
         status: "loading",
       });
     }
-  });
 
-  const offComposerSources = subscribeSources(() => {
     // Repaint the thread on every source flip — intake turns derive
     // ideaCount + status live from sources-stream, so re-rendering is
     // how "Processed · N ideas" lands.
@@ -1175,7 +1147,7 @@ function wireAssistantPanel(root, session, attachedContext) {
       if (msg.role !== "source-intake") continue;
       if (!msg.sourceId || msg.status === "ready") continue;
       if (sentReadyForSourceIds.has(msg.sourceId)) continue;
-      const src = getStreamSources().find((s) => s.id === msg.sourceId);
+      const src = sources.find((s) => s.id === msg.sourceId);
       if (src && src.status === "Processed") {
         sentReadyForSourceIds.add(msg.sourceId);
         markSourceIntakeReady(session.id, msg.sourceId);
@@ -1183,23 +1155,10 @@ function wireAssistantPanel(root, session, attachedContext) {
     }
   });
 
-  // Tracks upload IDs started from drag/drop in this session so we can
-  // auto-attach the resulting source once the upload pipeline assigns
-  // its sourceId. Keyed alongside a tripAttachedSourceIds Set so each
-  // new source attaches at most once. The Sources panel re-renders on
-  // the inputs-store subscription it owns.
-  const dragUploadIds = new Set();
-  const dragAttachedSourceIds = new Set();
-  const offComposerUploads = subscribeUploads(() => {
-    if (dragUploadIds.size === 0) return;
-    const ups = getStreamUploads();
-    for (const u of ups) {
-      if (dragUploadIds.has(u.id) && u.sourceId && !dragAttachedSourceIds.has(u.sourceId)) {
-        dragAttachedSourceIds.add(u.sourceId);
-        attachSource(session.id, u.sourceId);
-      }
-    }
-  });
+  // Uploads → no extra wiring needed: startFileUpload already takes a
+  // session.id, so the resulting source lands in this session's list
+  // and the source subscription above handles intake + ready flips.
+  const offComposerUploads = subscribeUploads(() => {});
 
   // Apply idea focus on initial render if ?focusIdea= is present.
   applyIdeaFocus(root);
@@ -1263,8 +1222,7 @@ function wireAssistantPanel(root, session, attachedContext) {
       for (const file of files) {
         const classification = classifyFile(file);
         if (classification.ok) {
-          const uploadId = startFileUpload(file, classification);
-          if (uploadId) dragUploadIds.add(uploadId);
+          startFileUpload(file, classification, session.id);
           started += 1;
         } else if (!firstReject) {
           firstReject = classification.reason;
@@ -1292,7 +1250,6 @@ function wireAssistantPanel(root, session, attachedContext) {
     offInlineQuestion();
     offComposerSources();
     offComposerUploads();
-    offIntakeInputs();
     stopThinkingTimer();
   };
 }
@@ -1546,8 +1503,8 @@ function renderDraftTurn(message) {
 // and filename; the renderer reads the live source from sources-stream so
 // the same turn naturally flips state when setClipExtractionStatus fires
 // (the session view subscribes to subscribeSources, repainting the thread).
-function renderClipExtractionTurn(message) {
-  const source = getStreamSources().find((s) => s.id === message.sourceId);
+function renderClipExtractionTurn(message, sessionId) {
+  const source = getStreamSources(sessionId).find((s) => s.id === message.sourceId);
   const filename = escapeHtml(source?.filename || message.filename || "your video");
 
   // Source was removed (e.g. user deleted it from /sources) — degrade to a
@@ -1607,8 +1564,8 @@ function renderClipExtractionTurn(message) {
 // Pending → ready idea-extraction notice for the "Extract themes" branch.
 // Reuses the .clip-extraction-card chrome so the visual language stays
 // consistent across both Flow A and Flow B non-blocking turns.
-function renderIdeaExtractionTurn(message) {
-  const source = getStreamSources().find((s) => s.id === message.sourceId);
+function renderIdeaExtractionTurn(message, sessionId) {
+  const source = getStreamSources(sessionId).find((s) => s.id === message.sourceId);
   const filename = escapeHtml(source?.filename || message.filename || "your video");
 
   if (message.status === "loading") {
@@ -1644,9 +1601,10 @@ function renderIdeaExtractionTurn(message) {
 //
 // The legacy per-session composer-pill machinery (composerStates,
 // getComposerState, resolveComposerPill, renderComposerPill,
-// paintComposerPills, dismissComposerIdeasBadge) was removed when sources
-// moved into the right-panel "Sources" mode. Attachments now live in
-// inputs-store and render in the panel — the composer stays minimal.
+// paintComposerPills, dismissComposerIdeasBadge) was removed when
+// sources moved into the right-panel "Sources" mode. Sources now live
+// directly in sources-stream's per-session list and render in the
+// panel — the composer stays minimal.
 
 // Label map for subtitle preset picks — used by the toast confirmation
 // after the user resolves the "Add subtitles?" turn (PDF flow 06.B).
@@ -1754,11 +1712,7 @@ function startPillFromKind(_root, session, kind) {
   const spec = SCRIPTED_KINDS[kind];
   if (!spec) return;
   const sessionId = session.id;
-  const sourceId = pushScriptedSource({ filename: spec.filename, kind: spec.kindLabel });
-  // Auto-attach to the session so the new source shows up in the Sources
-  // panel immediately and persists across reloads — same end-state as if
-  // the user had picked it from the Library tab.
-  attachSource(sessionId, sourceId);
+  const sourceId = pushScriptedSource({ filename: spec.filename, kind: spec.kindLabel, sessionId });
   if (kind === "video") {
     // Video kind: skip auto-complete and ask the user up-front whether
     // they want clips or ideas. The choice handler completes the source
@@ -1863,7 +1817,7 @@ function bindSession(root, session) {
           signalColor: ideas.length > 0 ? "tagOrange" : "grey",
           ideaCount: ideas.length,
         });
-        const source = getStreamSources().find((s) => s.id === sourceId);
+        const source = getStreamSources(session.id).find((s) => s.id === sourceId);
         if (source && pick === "clips") {
           postClipExtractionTurn(session.id, { sourceId, filename });
           startClipExtraction(source, {
@@ -2240,8 +2194,7 @@ function bindSession(root, session) {
       }
 
       // Paper-clip in the composer — toggle the dropdown menu open/closed.
-      // The menu offers three scripted "Add PDF/Video/URL" quick-actions
-      // plus a "Browse library…" item that opens the full Add Source modal.
+      // The menu offers three scripted "Add PDF/Video/URL" quick-actions.
       if (event.target.closest("[data-assistant-attach-toggle]")) {
         event.preventDefault();
         const menu = root.querySelector("[data-assistant-attach-menu]");
@@ -2256,28 +2209,6 @@ function bindSession(root, session) {
         startPillFromKind(root, session, addSrcItem.dataset.addSource);
         const menu = root.querySelector("[data-assistant-attach-menu]");
         if (menu) menu.hidden = true;
-        return;
-      }
-
-      // "Browse library…" menu item — opens the full Add Source modal with
-      // the active session pre-wired so upload/URL/connector/library picks
-      // all land in inputs-store via attachMany.
-      const composerAttachBtn = event.target.closest("[data-composer-attach-modal]");
-      if (composerAttachBtn) {
-        event.preventDefault();
-        const menu = root.querySelector("[data-assistant-attach-menu]");
-        if (menu) menu.hidden = true;
-        Promise.all([import("../inputs-store.js?v=1"), import("../components/add-source-modal.js?v=22")]).then(
-          ([store, modal]) => {
-            modal.open({
-              tab: "library",
-              onAttachExisting: (sourceIds) => store.attachMany(session.id, sourceIds),
-              onAttachNew: (sourceIds) => store.attachMany(session.id, sourceIds),
-              currentSessionId: session.id,
-              attachedSourceIds: store.getAttachedSourceIds(session.id),
-            });
-          },
-        );
         return;
       }
 

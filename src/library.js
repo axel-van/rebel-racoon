@@ -1,18 +1,15 @@
 // Per-session ideas state + the scripted "Add PDF / video / URL" flow
-// behind the session composer's inline `+` menu. Sources live in the
-// global sources-stream store (so a source added from any session also
-// shows up on the dashboard and in every other session); ideas stay
-// per-session here.
+// behind the session composer's inline `+` menu. Sources are per-session
+// in sources-stream; ideas are also per-session here.
 //
 // Public API:
-//   getSources(_sessionId) → Source[]   (delegates to sources-stream)
+//   getSources(sessionId) → Source[]   (delegates to sources-stream)
 //   getIdeas(sessionId)    → Idea[]
 //   subscribe(sessionId, fn) → unsubscribe   payload: { sources, ideas }
-//   addSource(sessionId, kind)  kicks off the mocked add → extract flow
 //   appendExtractedIdeas(sessionId, sources)  bulk "extract more" flow
 //   removeIdeasForSources(sessionId, sourceIds)  cleanup after bulk-delete
 
-import { ideas as seedIdeas } from "./mocks.js?v=27";
+import { ideas as seedIdeas } from "./mocks.js?v=28";
 import { isNewUser } from "./user-mode.js?v=20";
 import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=27";
 import {
@@ -20,18 +17,17 @@ import {
   subscribeSources,
   pushScriptedSource,
   completeScriptedSource,
-} from "./sources-stream.js?v=26";
+} from "./sources-stream.js?v=28";
 
 // --- Module state -------------------------------------------------------
 
 const ideasMap = new Map(); // sessionId → Idea[]
 const subscribers = new Map(); // sessionId → Set<fn>
 
-// Stream sources are global — re-emit any change to every session that's
-// currently subscribing so their Content tab repaints.
-subscribeSources(() => {
-  for (const sessionId of subscribers.keys()) notify(sessionId);
-});
+// Per-session source-stream forwarding: when a session's sources change,
+// re-emit to the library subscribers so consumers reading via library
+// (e.g. Content tab) stay in sync.
+const streamUnsubsBySession = new Map();
 
 let idCounter = 0;
 function newId(prefix) {
@@ -41,8 +37,8 @@ function newId(prefix) {
 
 // --- Public API ---------------------------------------------------------
 
-export function getSources(_sessionId) {
-  return streamGetSources();
+export function getSources(sessionId) {
+  return streamGetSources(sessionId);
 }
 
 export function getIdeas(sessionId) {
@@ -51,11 +47,29 @@ export function getIdeas(sessionId) {
 }
 
 export function subscribe(sessionId, fn) {
-  if (!subscribers.has(sessionId)) subscribers.set(sessionId, new Set());
+  if (!subscribers.has(sessionId)) {
+    subscribers.set(sessionId, new Set());
+    // First subscriber for this session — bind a per-session sources
+    // listener that forwards to all library subscribers of this session.
+    streamUnsubsBySession.set(
+      sessionId,
+      subscribeSources(sessionId, () => notify(sessionId)),
+    );
+  }
   subscribers.get(sessionId).add(fn);
   return () => {
     const set = subscribers.get(sessionId);
-    if (set) set.delete(fn);
+    if (set) {
+      set.delete(fn);
+      if (set.size === 0) {
+        subscribers.delete(sessionId);
+        const off = streamUnsubsBySession.get(sessionId);
+        if (off) {
+          off();
+          streamUnsubsBySession.delete(sessionId);
+        }
+      }
+    }
   };
 }
 

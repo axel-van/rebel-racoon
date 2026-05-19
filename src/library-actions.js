@@ -30,8 +30,8 @@
 // underlying state stays in one place. The user-facing toast is fired here
 // (a single shared place for the wording).
 
-import { appendExtractedIdeas, removeIdeasForSources, removeIdeas } from "./library.js?v=25";
-import { removeSources as streamRemoveSources, getSources as streamGetSources } from "./sources-stream.js?v=26";
+import { appendExtractedIdeas, removeIdeasForSources, removeIdeas } from "./library.js?v=26";
+import { removeSources as streamRemoveSources, getSources as streamGetSources } from "./sources-stream.js?v=28";
 import { open as openConfirmModal } from "./components/confirm-modal.js?v=20";
 import { showToast } from "./components/toast.js?v=20";
 
@@ -76,7 +76,8 @@ export function renderIdeasBulkBar(count) {
 // ── Wiring ───────────────────────────────────────────────────────────────
 
 export function wireLibraryActions(root, options) {
-  const { sessionId, sourceSelection, ideaSelection, getSources = streamGetSources, onRerender, signal } = options;
+  const { sessionId, sourceSelection, ideaSelection, onRerender, signal } = options;
+  const getSources = options.getSources || (() => streamGetSources(sessionId));
 
   root.addEventListener(
     "click",
@@ -127,7 +128,7 @@ export function wireLibraryActions(root, options) {
           danger: true,
           onConfirm: () => {
             removeIdeasForSources(sessionId, [id]);
-            streamRemoveSources([id]);
+            streamRemoveSources([id], sessionId);
             sourceSelection.delete(id);
             onRerender?.();
             showToast(`${target.filename} deleted`);
@@ -170,7 +171,7 @@ export function wireLibraryActions(root, options) {
           danger: true,
           onConfirm: () => {
             removeIdeasForSources(sessionId, ids);
-            const removed = streamRemoveSources(ids);
+            const removed = streamRemoveSources(ids, sessionId);
             sourceSelection.clear();
             onRerender?.();
             showToast(`${removed} ${removed === 1 ? "source" : "sources"} deleted`);

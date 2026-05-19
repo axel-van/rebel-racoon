@@ -1,4 +1,4 @@
-import { recentSessions } from "../mocks.js?v=27";
+import { recentSessions } from "../mocks.js?v=28";
 import { isNewUser } from "../user-mode.js?v=20";
 
 // Dashboard route — pure redirect surface.

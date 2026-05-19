@@ -1,27 +1,37 @@
-// Global sources + uploads store. The dashboard's Content panel renders
-// from here. The Add source modal pushes through this module's state
-// machine: file uploads, URL imports, connector imports all funnel into
-// the same { Processing → Processed } pipeline.
+// Per-session sources + global uploads store.
 //
-// State machine timers live here (not inside the modal) so uploads
+// Sources are owned by the conversation that created them — no cross-
+// session reuse. Each session has its own `Source[]` list and its own
+// set of subscribers. Uploads (transient pre-source state) remain global
+// since they're short-lived and the modal cares about them as a pool.
+//
+// The state machine timers live here (not inside the modal) so uploads
 // continue in background after the user closes the modal.
 
-import { sources as seedSources } from "./mocks.js?v=27";
+import { sourcesBySession as seedByCsesssion } from "./mocks.js?v=28";
 import { isNewUser } from "./user-mode.js?v=20";
 
 // ─── State ───────────────────────────────────────────────────────────────
 
-// The live source list — seeded from mocks.sources in returning-user mode,
-// empty in first-time mode (Lot 15 — sources-stream is global, the standalone
-// /sources page reads through getSources(); without this guard the empty
-// state never showed even when the dashboard correctly hid mocks).
-const sources = isNewUser() ? [] : seedSources.map((s) => ({ ...s }));
+// Per-session source lists. Seeded from mocks for returning users; empty
+// (per-session lazy init via getSources) for new users.
+const sourcesBySession = new Map();
+if (!isNewUser()) {
+  for (const [sessionId, seed] of Object.entries(seedByCsesssion || {})) {
+    sourcesBySession.set(
+      sessionId,
+      seed.map((s) => ({ ...s, clips: s.clips ? s.clips.map((c) => ({ ...c })) : undefined })),
+    );
+  }
+}
 
-// Uploads currently being processed. Visible in the modal's upload list.
-// { id, name, size, kind, status: 'uploading'|'processing'|'done'|'cancelled', progress, sourceId? }
+// Uploads currently being processed. Global. Visible in the modal's
+// upload list.
+//   { id, name, size, kind, status: 'uploading'|'processing'|'done'|'cancelled', progress, sourceId?, sessionId }
 const uploads = [];
 
-const sourceSubs = new Set();
+// Per-session source subscribers. Map<sessionId, Set<fn>>.
+const sourceSubsBySession = new Map();
 const uploadSubs = new Set();
 
 let counter = 0;
@@ -30,26 +40,55 @@ function newId(prefix) {
   return `${prefix}-${Date.now().toString(36)}-${counter}`;
 }
 
-function notifySources() {
-  for (const fn of sourceSubs) fn(sources);
+function getOrInitSessionSources(sessionId) {
+  let list = sourcesBySession.get(sessionId);
+  if (!list) {
+    list = [];
+    sourcesBySession.set(sessionId, list);
+  }
+  return list;
 }
+
+function notifySources(sessionId) {
+  const subs = sourceSubsBySession.get(sessionId);
+  if (!subs) return;
+  const snapshot = getOrInitSessionSources(sessionId);
+  for (const fn of subs) fn(snapshot);
+}
+
 function notifyUploads() {
   for (const fn of uploadSubs) fn(uploads);
 }
 
+// Resolve which session owns a given sourceId. Used by mutators that take
+// only the sourceId (clip extraction, completion, cancellation).
+function findSourceOwner(sourceId) {
+  for (const [sid, list] of sourcesBySession) {
+    if (list.some((s) => s.id === sourceId)) return sid;
+  }
+  return null;
+}
+
 // ─── Public API ──────────────────────────────────────────────────────────
 
-export function getSources() {
-  return sources;
+export function getSources(sessionId) {
+  if (!sessionId) return [];
+  return getOrInitSessionSources(sessionId);
 }
 
 export function getUploads() {
   return uploads;
 }
 
-export function subscribeSources(fn) {
-  sourceSubs.add(fn);
-  return () => sourceSubs.delete(fn);
+export function subscribeSources(sessionId, fn) {
+  if (!sessionId) return () => {};
+  let subs = sourceSubsBySession.get(sessionId);
+  if (!subs) {
+    subs = new Set();
+    sourceSubsBySession.set(sessionId, subs);
+  }
+  subs.add(fn);
+  return () => subs.delete(fn);
 }
 
 export function subscribeUploads(fn) {
@@ -119,9 +158,9 @@ function randomProcessingMs() {
 
 // Kicks off the file upload pipeline:
 //   1. Upload progress 0→100% over ~2s (modal-only state).
-//   2. Push a Processing source to getSources() (visible in dashboard).
+//   2. Push a Processing source under the target session.
 //   3. After 3-5s, flip source to Processed with random signal/ideaCount.
-export function startFileUpload(file, classification) {
+export function startFileUpload(file, classification, sessionId) {
   const upload = {
     id: newId("up"),
     name: file.name,
@@ -131,6 +170,7 @@ export function startFileUpload(file, classification) {
     status: "uploading",
     progress: 0,
     sourceId: null,
+    sessionId,
   };
   uploads.unshift(upload);
   notifyUploads();
@@ -163,7 +203,8 @@ function transitionToProcessing(upload) {
   const sourceId = newId("src");
   upload.sourceId = sourceId;
   const totalMs = randomProcessingMs();
-  sources.unshift({
+  const list = getOrInitSessionSources(upload.sessionId);
+  list.unshift({
     id: sourceId,
     filename: upload.name,
     kind: upload.kind,
@@ -182,10 +223,10 @@ function transitionToProcessing(upload) {
     startedAt: Date.now(),
     totalProcessingMs: totalMs,
   });
-  notifySources();
+  notifySources(upload.sessionId);
   notifyUploads();
 
-  startProcessingTicker(sourceId, totalMs);
+  startProcessingTicker(upload.sessionId, sourceId, totalMs);
   setTimeout(() => transitionToDone(upload), totalMs);
 }
 
@@ -203,29 +244,25 @@ const PROCESSING_STAGES = [
 function stageForKind(kind, progress) {
   const stage = [...PROCESSING_STAGES].reverse().find((s) => progress >= s.from);
   if (!stage) return PROCESSING_STAGES[0].label;
-  // Audio/video sources transcribe rather than read.
   if (stage.label === "Reading content" && (kind === "Video" || kind === "Audio")) {
     return "Transcribing audio";
   }
   return stage.label;
 }
 
-// Tick the source's progress every 200ms. Mirrors the handoff App.jsx
-// 600ms ticker but a bit faster because we already gated the start
-// behind a 2s upload phase. Stops when the source flips to Processed
-// (transitionToDone) or disappears.
-function startProcessingTicker(sourceId, totalMs) {
+function startProcessingTicker(sessionId, sourceId, totalMs) {
   const startedAt = Date.now();
   const tickInterval = 200;
   const tick = () => {
-    const src = sources.find((s) => s.id === sourceId);
+    const list = sourcesBySession.get(sessionId);
+    const src = list && list.find((s) => s.id === sourceId);
     if (!src || src.status !== "Processing") return;
     const elapsed = Date.now() - startedAt;
     const progress = Math.min(0.99, elapsed / totalMs);
     src.progress = progress;
     src.stage = stageForKind(src.kind, progress);
     src.etaSec = Math.max(1, Math.round((totalMs - elapsed) / 1000));
-    notifySources();
+    notifySources(sessionId);
     if (elapsed < totalMs) setTimeout(tick, tickInterval);
   };
   setTimeout(tick, tickInterval);
@@ -235,7 +272,8 @@ function transitionToDone(upload) {
   if (upload.status === "cancelled") return;
   upload.status = "done";
   let ideaCount = 0;
-  const src = sources.find((s) => s.id === upload.sourceId);
+  const list = sourcesBySession.get(upload.sessionId);
+  const src = list && list.find((s) => s.id === upload.sourceId);
   if (src) {
     const sig = randomSignal();
     src.status = "Processed";
@@ -243,13 +281,10 @@ function transitionToDone(upload) {
     src.signalColor = sig.signalColor;
     src.ideaCount = randomIdeas();
     ideaCount = src.ideaCount;
-    // Clear the granular ticker fields once the source is done — keeps
-    // the post-processing card from showing a stale 99% / "Finalizing"
-    // hint.
     src.progress = 1;
     src.stage = undefined;
     src.etaSec = undefined;
-    notifySources();
+    notifySources(upload.sessionId);
   }
   notifyUploads();
 
@@ -260,7 +295,7 @@ function transitionToDone(upload) {
 }
 
 // URL import skips the upload phase — straight into Processing.
-export function startUrlImport(url) {
+export function startUrlImport(url, sessionId) {
   const filename = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
   const upload = {
     id: newId("up"),
@@ -271,12 +306,14 @@ export function startUrlImport(url) {
     status: "processing",
     progress: 100,
     sourceId: null,
+    sessionId,
   };
   uploads.unshift(upload);
 
   const sourceId = newId("src");
   upload.sourceId = sourceId;
-  sources.unshift({
+  const list = getOrInitSessionSources(sessionId);
+  list.unshift({
     id: sourceId,
     filename,
     kind: "URL",
@@ -286,7 +323,7 @@ export function startUrlImport(url) {
     ideaCount: 0,
     addedAt: "just now",
   });
-  notifySources();
+  notifySources(sessionId);
   notifyUploads();
 
   setTimeout(() => transitionToDone(upload), 4000 + Math.floor(Math.random() * 2000));
@@ -294,8 +331,7 @@ export function startUrlImport(url) {
 }
 
 // Connector import — same shape as URL: skip uploading, straight to processing.
-// The "doc" object is the mock from mocks.connectorDocs.
-export function startConnectorImport(connector, doc) {
+export function startConnectorImport(connector, doc, sessionId) {
   const upload = {
     id: newId("up"),
     name: doc.title,
@@ -305,12 +341,14 @@ export function startConnectorImport(connector, doc) {
     status: "processing",
     progress: 100,
     sourceId: null,
+    sessionId,
   };
   uploads.unshift(upload);
 
   const sourceId = newId("src");
   upload.sourceId = sourceId;
-  sources.unshift({
+  const list = getOrInitSessionSources(sessionId);
+  list.unshift({
     id: sourceId,
     filename: doc.title,
     kind: doc.kind || connector.name,
@@ -320,7 +358,7 @@ export function startConnectorImport(connector, doc) {
     ideaCount: 0,
     addedAt: "just now",
   });
-  notifySources();
+  notifySources(sessionId);
   notifyUploads();
 
   setTimeout(() => transitionToDone(upload), randomProcessingMs());
@@ -329,11 +367,13 @@ export function startConnectorImport(connector, doc) {
 
 // Scripted-source pipeline used by the session composer's inline `+` menu
 // (Add PDF / Add video / Add URL). The caller controls timing — push the
-// source as Processing, then flip it Processed in lockstep with the thread's
-// extraction turn so the user sees source state and ideas land together.
-export function pushScriptedSource({ filename, kind }) {
+// source as Processing, then flip it Processed in lockstep with the
+// thread's extraction turn so the user sees source state and ideas land
+// together.
+export function pushScriptedSource({ filename, kind, sessionId }) {
   const sourceId = newId("src");
-  sources.unshift({
+  const list = getOrInitSessionSources(sessionId);
+  list.unshift({
     id: sourceId,
     filename,
     kind,
@@ -343,22 +383,23 @@ export function pushScriptedSource({ filename, kind }) {
     ideaCount: 0,
     addedAt: "just now",
   });
-  notifySources();
+  notifySources(sessionId);
   return sourceId;
 }
 
 export function completeScriptedSource(sourceId, { signal, signalColor, ideaCount }) {
-  const src = sources.find((s) => s.id === sourceId);
+  const sessionId = findSourceOwner(sourceId);
+  if (!sessionId) return;
+  const src = sourcesBySession.get(sessionId).find((s) => s.id === sourceId);
   if (!src) return;
   src.status = "Processed";
   src.signal = signal;
   src.signalColor = signalColor;
   src.ideaCount = ideaCount;
-  notifySources();
+  notifySources(sessionId);
 }
 
-// Cancel an in-flight upload. After Done it's a no-op — by then the
-// "remove" affordance is gone in the modal anyway.
+// Cancel an in-flight upload. After Done it's a no-op.
 export function cancelUpload(uploadId) {
   const idx = uploads.findIndex((u) => u.id === uploadId);
   if (idx < 0) return;
@@ -366,47 +407,52 @@ export function cancelUpload(uploadId) {
   if (u.status === "done") return;
   u.status = "cancelled";
   uploads.splice(idx, 1);
-  if (u.sourceId) {
-    const sIdx = sources.findIndex((s) => s.id === u.sourceId);
-    if (sIdx >= 0) sources.splice(sIdx, 1);
-    notifySources();
+  if (u.sourceId && u.sessionId) {
+    const list = sourcesBySession.get(u.sessionId);
+    if (list) {
+      const sIdx = list.findIndex((s) => s.id === u.sourceId);
+      if (sIdx >= 0) list.splice(sIdx, 1);
+      notifySources(u.sessionId);
+    }
   }
   notifyUploads();
 }
 
-// Remove one or more processed sources. Used by the bulk-delete flow on the
-// Content tab. The accompanying ideas (per-session) are cleaned up by the
-// caller via library.removeIdeasForSources — this module only owns the
-// global sources array. No-op for ids that aren't found.
 // Replace a source's clips array (used by the Video Clips modal after the
 // user trims/edits/deletes/adds clips). Mutates in place so existing
-// references in the dashboard / session keep working, then notifies.
+// references keep working, then notifies the owning session.
 export function updateSourceClips(sourceId, nextClips) {
-  const source = sources.find((s) => s.id === sourceId);
+  const sessionId = findSourceOwner(sourceId);
+  if (!sessionId) return;
+  const source = sourcesBySession.get(sessionId).find((s) => s.id === sourceId);
   if (!source) return;
   source.clips = nextClips.map((c) => ({ ...c }));
-  notifySources();
+  notifySources(sessionId);
 }
 
-// Tracks the background clip-extraction phase on a video source. Status is
-// one of: undefined (never run) | "extracting" | "ready". Source cards read
-// this to render a disabled "Extracting clips…" affordance while the job is
-// in flight.
+// Tracks the background clip-extraction phase on a video source. Status
+// is one of: undefined (never run) | "extracting" | "ready".
 export function setClipExtractionStatus(sourceId, status) {
-  const source = sources.find((s) => s.id === sourceId);
+  const sessionId = findSourceOwner(sourceId);
+  if (!sessionId) return;
+  const source = sourcesBySession.get(sessionId).find((s) => s.id === sourceId);
   if (!source) return;
   source.clipExtractionStatus = status;
-  notifySources();
+  notifySources(sessionId);
 }
 
-export function removeSources(ids) {
-  if (!Array.isArray(ids) || ids.length === 0) return 0;
+// Remove one or more sources from a session. Returns the count of
+// actually-removed entries. No-op for ids not found in the session.
+export function removeSources(ids, sessionId) {
+  if (!Array.isArray(ids) || ids.length === 0 || !sessionId) return 0;
+  const list = sourcesBySession.get(sessionId);
+  if (!list) return 0;
   const set = new Set(ids);
-  const before = sources.length;
-  for (let i = sources.length - 1; i >= 0; i -= 1) {
-    if (set.has(sources[i].id)) sources.splice(i, 1);
+  const before = list.length;
+  for (let i = list.length - 1; i >= 0; i -= 1) {
+    if (set.has(list[i].id)) list.splice(i, 1);
   }
-  const removed = before - sources.length;
-  if (removed > 0) notifySources();
+  const removed = before - list.length;
+  if (removed > 0) notifySources(sessionId);
   return removed;
 }

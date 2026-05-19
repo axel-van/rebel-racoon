@@ -13,7 +13,7 @@
 //       completion toast with an "Open clips" action that calls onReady.
 
 import { showToast } from "./toast.js";
-import { updateSourceClips, setClipExtractionStatus } from "../sources-stream.js?v=26";
+import { updateSourceClips, setClipExtractionStatus } from "../sources-stream.js?v=28";
 
 const DEFAULT_DURATION_MS = 45000;
 

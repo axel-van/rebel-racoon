@@ -4,13 +4,12 @@ import { open as openSettingsDrawer } from "./settings-drawer.js?v=22";
 import { open as openBugReportModal } from "./bug-report-modal.js?v=21";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=24";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { recentSessions } from "../mocks.js?v=27";
+import { recentSessions } from "../mocks.js?v=28";
 import { isFlagOn } from "../feature-flags.js?v=2";
 import { isNewUser } from "../user-mode.js?v=20";
-import { getSources, subscribeSources } from "../sources-stream.js?v=20";
-import { getIdeas } from "../library.js?v=20";
+import { getIdeas } from "../library.js?v=26";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=24";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=41";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=42";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the
@@ -153,7 +152,6 @@ export function initSidebar() {
   // Live-rerender on store mutations so the nav counters and any context
   // colors used by session rows stay in sync without waiting for the next
   // route change.
-  subscribeSources(() => renderSidebar());
   subscribeContexts(() => renderSidebar());
 
   // Click outside the popmenu → close.
@@ -327,19 +325,13 @@ function renderFootMenu({ collapsed }) {
   `;
 }
 
-// Library nav — Sources / Ideas / Contexts standalone views. `count`
-// resolves to a live count from the relevant store so the trailing
-// `.ap-counter` badge stays in sync. Chats no longer needs a nav row:
-// the recent-conversations list right below is the canonical entry
-// point for session navigation.
+// Library nav — Ideas / Contexts standalone views. `count` resolves to
+// a live count from the relevant store so the trailing `.ap-counter`
+// badge stays in sync. Sources moved into per-session ownership; they
+// are no longer browseable workspace-wide so the global /sources page
+// was dropped. Chats: the recent-conversations list below is the
+// canonical entry point for session navigation.
 const NAV = [
-  {
-    path: "/sources",
-    icon: "ap-icon-folder",
-    label: "Sources",
-    match: (p) => p === "/sources",
-    count: () => getSources().length,
-  },
   {
     path: "/ideas",
     icon: "ap-icon-sparkles",

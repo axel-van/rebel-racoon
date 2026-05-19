@@ -1,7 +1,12 @@
 import { html, raw } from "../utils.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=40";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
-import { ideas as MOCK_IDEAS, sources as SOURCES } from "../mocks.js?v=27";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=28";
+
+// Sources moved to a per-session model — there's no workspace-wide
+// source list on this standalone /ideas page. idea-card renders source
+// chips only when it can resolve a sourceId; passing [] hides chips.
+const SOURCES = [];
 import { isNewUser } from "../user-mode.js?v=20";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=22";

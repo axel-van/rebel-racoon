@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=26";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=27";
 import { isFlagOn } from "../feature-flags.js?v=2";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=27";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=28";
 import { isNewUser } from "../user-mode.js?v=20";
 import { getPath } from "../router.js?v=20";
 import {
@@ -17,8 +17,12 @@ import { renderClipCard } from "./clip-card.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=2";
 import { CONTEXT_QUESTIONS } from "../context-questions.js?v=20";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=32";
-import { getSources as getStreamSources, subscribeSources, updateSourceClips } from "../sources-stream.js?v=26";
-import { getAttachedSourceIds, attachMany, detachSource, subscribe as subscribeInputs } from "../inputs-store.js?v=1";
+import {
+  getSources as getStreamSources,
+  subscribeSources,
+  updateSourceClips,
+  removeSources,
+} from "../sources-stream.js?v=28";
 import { open as openAddSourceModal } from "./add-source-modal.js?v=22";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
@@ -401,17 +405,14 @@ export function init() {
       return;
     }
     // Sources mode — "+ Attach" opens the Add Source modal scoped to
-    // the active session. The modal handles upload/URL/connectors and
-    // the Library reuse picker; both fire onAttachNew / onAttachExisting
-    // → attachMany. The panel re-renders via subscribeInputs.
+    // the active session. The modal handles upload/URL/connectors; the
+    // upload pipeline creates sources directly in this session's list,
+    // and the source-stream subscription below repaints the panel.
     if (event.target.closest("[data-rpanel-sources-attach]")) {
       const sid = activeSessionId();
       if (!sid) return;
       openAddSourceModal({
-        onAttachExisting: (sourceIds) => attachMany(sid, sourceIds),
-        onAttachNew: (sourceIds) => attachMany(sid, sourceIds),
         currentSessionId: sid,
-        attachedSourceIds: getAttachedSourceIds(sid),
       });
       return;
     }
@@ -419,7 +420,7 @@ export function init() {
     if (sourcesDetachBtn) {
       const sid = activeSessionId();
       if (!sid) return;
-      detachSource(sid, sourcesDetachBtn.dataset.rpanelSourcesDetach);
+      removeSources([sourcesDetachBtn.dataset.rpanelSourcesDetach], sid);
       return;
     }
     // Outputs sub-view tab — Ideas | Clips.
@@ -461,9 +462,10 @@ export function init() {
     const clipEditBtn = event.target.closest("[data-clip-edit]");
     if (clipEditBtn) {
       const cid = clipEditBtn.getAttribute("data-clip-edit");
+      const sid = activeSessionId();
       const entry = collectAllClips().find(({ clip }) => clip.id === cid);
-      if (entry) {
-        const source = getStreamSources().find((s) => s.id === entry.sourceId);
+      if (entry && sid) {
+        const source = getStreamSources(sid).find((s) => s.id === entry.sourceId);
         if (source) {
           openVideoClipsModal(source, {
             editingClipId: cid,
@@ -479,9 +481,10 @@ export function init() {
     const clipRemoveBtn = event.target.closest("[data-clip-remove]");
     if (clipRemoveBtn) {
       const cid = clipRemoveBtn.getAttribute("data-clip-remove");
+      const sid = activeSessionId();
       const entry = collectAllClips().find(({ clip }) => clip.id === cid);
-      if (entry) {
-        const source = getStreamSources().find((s) => s.id === entry.sourceId);
+      if (entry && sid) {
+        const source = getStreamSources(sid).find((s) => s.id === entry.sourceId);
         if (source && Array.isArray(source.clips)) {
           const nextClips = source.clips.filter((c) => c.id !== cid);
           updateSourceClips(source.id, nextClips);
@@ -697,45 +700,43 @@ export function init() {
   rebindPostsStore();
   window.addEventListener("hashchange", rebindPostsStore);
 
-  // Sources stream — when clips land on any source while the Ideas panel
-  // is open, re-render so the Clips tab counter updates and (if this is
-  // the first clip batch in the workspace) auto-switch to the Clips tab
-  // so the user lands on their just-finished output. Tracks the global
-  // clip count to detect the 0 → N transition reliably.
-  let lastClipCount = collectAllClips().length;
-  subscribeSources(() => {
-    // Sources mode reads from this stream too — re-render whenever a
-    // source mutates (e.g. processing → processed flips the status pill).
-    if (state.mode === "sources" || state.mode === "ideas") {
-      const next = collectAllClips().length;
-      if (state.mode === "ideas" && next > lastClipCount && lastClipCount === 0) {
-        outputsView = "clips";
-      }
-      lastClipCount = next;
-      renderPanel();
-    }
-  });
-
-  // Inputs subscription — re-binds whenever the active session changes
-  // so Sources mode reflects the current conversation's attachments.
-  let unsubscribeInputs = null;
-  let lastInputsSessionId = null;
-  function rebindInputsSubscription() {
+  // Sources stream — sources are now per-session, so we re-bind the
+  // subscription whenever the active session changes. The subscriber
+  // covers both Sources mode (renders the per-session source list) and
+  // the Ideas/Clips Outputs mode (Clips tab + auto-switch on first
+  // clip batch).
+  let unsubscribeSources = null;
+  let lastSourcesSessionId = null;
+  let lastClipCount = 0;
+  function rebindSourcesSubscription() {
     const sid = activeSessionId();
-    if (sid === lastInputsSessionId) return;
-    if (unsubscribeInputs) {
-      unsubscribeInputs();
-      unsubscribeInputs = null;
+    if (sid === lastSourcesSessionId) return;
+    if (unsubscribeSources) {
+      unsubscribeSources();
+      unsubscribeSources = null;
     }
-    lastInputsSessionId = sid;
+    lastSourcesSessionId = sid;
+    lastClipCount = sid ? collectAllClips().length : 0;
     if (sid) {
-      unsubscribeInputs = subscribeInputs(sid, () => {
-        if (state.mode === "sources") renderPanel();
+      unsubscribeSources = subscribeSources(sid, () => {
+        if (state.mode === "sources" || state.mode === "ideas") {
+          const next = collectAllClips().length;
+          if (state.mode === "ideas" && next > lastClipCount && lastClipCount === 0) {
+            outputsView = "clips";
+          }
+          lastClipCount = next;
+          renderPanel();
+        }
       });
     }
+    // Re-paint immediately on session change so the panel reflects the
+    // new conversation's sources without waiting for the next mutation.
+    if (state.mode === "sources" || state.mode === "ideas") {
+      renderPanel();
+    }
   }
-  rebindInputsSubscription();
-  window.addEventListener("hashchange", rebindInputsSubscription);
+  rebindSourcesSubscription();
+  window.addEventListener("hashchange", rebindSourcesSubscription);
 
   // Auto-collapse the sidebar when the viewport shrinks enough that the
   // chat column would dip below CHAT_MIN_WIDTH_PX. rAF-debounced so
@@ -1214,8 +1215,8 @@ function parseEditorBody(raw) {
 // Sources mode view — list of source rows for the active session + a
 // trailing "+ Attach" button. Each row carries kind icon, filename,
 // signal/idea-count meta, and per-row Open + Detach actions. The list
-// reads from inputs-store and re-renders on any attach/detach via the
-// subscribeInputs hook below.
+// reads from sources-stream's per-session map and re-renders on every
+// notify from the session's sources subscription bound at init time.
 function renderSourcesView() {
   const sid = activeSessionId();
   if (!sid) {
@@ -1229,17 +1230,12 @@ function renderSourcesView() {
       </div>
     `;
   }
-  const attachedIds = getAttachedSourceIds(sid);
-  const sources = getStreamSources();
-  const rows = attachedIds
-    .map((id) => sources.find((s) => s.id === id))
-    .filter(Boolean)
-    .map((src) => renderSourceRow(src))
-    .join("");
+  const sources = getStreamSources(sid);
+  const rows = sources.map((src) => renderSourceRow(src)).join("");
   const head = `
     <div class="rpanel-sources__head">
       <div class="rpanel-sources__head-text">
-        <div class="rpanel-sources__count">${attachedIds.length} source${attachedIds.length === 1 ? "" : "s"} attached</div>
+        <div class="rpanel-sources__count">${sources.length} source${sources.length === 1 ? "" : "s"} in this chat</div>
         <div class="rpanel-sources__sub muted">These files feed this conversation's outputs.</div>
       </div>
       <button type="button" class="ap-button stroked grey" data-rpanel-sources-attach>
@@ -1248,7 +1244,7 @@ function renderSourcesView() {
       </button>
     </div>
   `;
-  if (attachedIds.length === 0) {
+  if (sources.length === 0) {
     return `
       <div class="rpanel-sources">
         ${head}
@@ -1397,7 +1393,9 @@ function renderIdeasView() {
 // their source attribution so the unified panel knows where each clip
 // came from. Returns a flat array of { clip, sourceName, sourceId }.
 function collectAllClips() {
-  const sources = getStreamSources();
+  const sid = activeSessionId();
+  if (!sid) return [];
+  const sources = getStreamSources(sid);
   const out = [];
   for (const src of sources) {
     if (!Array.isArray(src.clips) || src.clips.length === 0) continue;
