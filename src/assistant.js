@@ -286,6 +286,33 @@ export function postClipExtractionTurn(sessionId, { sourceId, filename }) {
   return id;
 }
 
+// Inline non-blocking notice for the "Extract themes" branch. Flips from
+// pending to ready when ideas land — the caller (video-intake handler)
+// owns the timing and calls markIdeaExtractionReady once injection runs.
+export function postIdeaExtractionTurn(sessionId, { sourceId, filename }) {
+  const thread = getThread(sessionId);
+  const id = newId();
+  thread.push({
+    id,
+    role: "assistant",
+    variant: "idea-extraction",
+    meta: "Archie",
+    sourceId,
+    filename,
+    status: "loading",
+    createdAt: Date.now(),
+  });
+  notify(sessionId);
+  return id;
+}
+
+export function markIdeaExtractionReady(sessionId, id) {
+  const thread = getThread(sessionId);
+  const msg = thread.find((m) => m.id === id);
+  if (msg) msg.status = "ready";
+  notify(sessionId);
+}
+
 // Structured "Drafted N posts" result turn. Reuses the extraction-turn chrome
 // (mermaid pill + collapsible detail) but shows post mini-cards instead of
 // idea cards.

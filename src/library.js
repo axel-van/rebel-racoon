@@ -20,7 +20,7 @@ import {
   postSourceIntake,
   startPending,
   finishPending,
-} from "./assistant.js?v=25";
+} from "./assistant.js?v=26";
 import {
   getSources as streamGetSources,
   subscribeSources,

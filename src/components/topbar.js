@@ -11,7 +11,7 @@ import {
   subscribe as subscribeRightPanel,
 } from "./right-panel.js?v=40";
 import { openRead as openContextRead } from "../context-builder.js?v=23";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=25";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=26";
 import { recentSessions } from "../mocks.js?v=26";
 import { getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=24";
 import { parseHashParams } from "../url-state.js?v=20";

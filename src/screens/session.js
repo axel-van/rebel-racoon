@@ -10,10 +10,12 @@ import {
   postAssistantChoice,
   postAssistantMessage,
   postClipExtractionTurn,
+  postIdeaExtractionTurn,
+  markIdeaExtractionReady,
   postDraftResult,
   subscribe,
   submitAssistantChoice,
-} from "../assistant.js?v=25";
+} from "../assistant.js?v=26";
 import { getSources, getIdeas, injectIdeasForSource, subscribe as subscribeLibrary } from "../library.js?v=25";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import { getPosts, addPostDraft, attachImageToDraft, subscribe as subscribePostsStore } from "../posts-store.js?v=23";
@@ -784,6 +786,13 @@ function renderTurn(message) {
     return renderClipExtractionTurn(message);
   }
 
+  // Idea extraction (Flow A — "Extract themes"). Same chrome as clip
+  // extraction; flips to a "Themes ready · panel updated" notice when
+  // injectIdeasForSource lands.
+  if (message.role === "assistant" && message.variant === "idea-extraction") {
+    return renderIdeaExtractionTurn(message);
+  }
+
   // Channel-picker choice turn — chip row + "Draft them" button.
   if (message.role === "assistant-choice") {
     return renderChoiceTurn(message);
@@ -1450,8 +1459,8 @@ function renderClipExtractionTurn(message) {
         <div class="clip-extraction-card clip-extraction-card--pending">
           <span class="clip-extraction-card__spinner" role="status" aria-label="Extracting clips"></span>
           <span class="clip-extraction-card__main">
-            <span class="clip-extraction-card__title">Extracting clips from ${filename}…</span>
-            <span class="clip-extraction-card__sub">This usually takes a moment.</span>
+            <span class="clip-extraction-card__title">Cutting your clips…</span>
+            <span class="clip-extraction-card__sub">Up to 45s · you can keep chatting</span>
           </span>
         </div>
       </div>
@@ -1473,6 +1482,42 @@ function renderClipExtractionTurn(message) {
           <i class="ap-icon-sparkles"></i>
           <span>Open clips</span>
         </button>
+      </div>
+    </div>
+  `;
+}
+
+// Pending → ready idea-extraction notice for the "Extract themes" branch.
+// Reuses the .clip-extraction-card chrome so the visual language stays
+// consistent across both Flow A and Flow B non-blocking turns.
+function renderIdeaExtractionTurn(message) {
+  const source = getStreamSources().find((s) => s.id === message.sourceId);
+  const filename = escapeHtml(source?.filename || message.filename || "your video");
+
+  if (message.status === "loading") {
+    return `
+      <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
+        <div class="clip-extraction-card clip-extraction-card--pending">
+          <span class="clip-extraction-card__spinner" role="status" aria-label="Reading video for themes"></span>
+          <span class="clip-extraction-card__main">
+            <span class="clip-extraction-card__title">Reading the video for themes…</span>
+            <span class="clip-extraction-card__sub">Up to 15s · you can keep chatting</span>
+          </span>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
+      <div class="clip-extraction-card clip-extraction-card--ready">
+        <span class="clip-extraction-card__icon" aria-hidden="true">
+          <i class="ap-icon-bulb"></i>
+        </span>
+        <span class="clip-extraction-card__main">
+          <span class="clip-extraction-card__title">Themes ready from ${filename}</span>
+          <span class="clip-extraction-card__sub">Check the Ideas panel on the right.</span>
+        </span>
       </div>
     </div>
   `;
@@ -1831,9 +1876,14 @@ function bindSession(root, session) {
           });
         } else if (source && pick === "ideas") {
           // Ideas land in the Ideas panel (right-panel), not as an inline
-          // assistant turn. The composer pill's green "N nouvelles idées"
-          // badge + the topbar Ideas pill are the user's entry points.
-          injectIdeasForSource(session.id, sourceId, ideas);
+          // assistant result turn. We do post a transient pending notice
+          // ("Reading the video for themes… up to 15s") so the user knows
+          // the AI is working non-blocking before the panel updates.
+          const noticeId = postIdeaExtractionTurn(session.id, { sourceId, filename });
+          window.setTimeout(() => {
+            injectIdeasForSource(session.id, sourceId, ideas);
+            markIdeaExtractionReady(session.id, noticeId);
+          }, 12000);
         }
       }
     }
