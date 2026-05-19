@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=38";
-import { getSessionById, socialAccounts, recentSessions, chatStarters } from "../mocks.js?v=26";
+import { getSessionById, socialAccounts, recentSessions, chatStarters } from "../mocks.js?v=27";
 import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=24";
 import { isNewUser } from "../user-mode.js?v=20";
 import {
@@ -17,6 +17,13 @@ import {
   submitAssistantChoice,
 } from "../assistant.js?v=26";
 import { getSources, getIdeas, injectIdeasForSource, subscribe as subscribeLibrary } from "../library.js?v=25";
+import {
+  getAttachedSourceIds,
+  attachSource,
+  attachMany,
+  detachSource,
+  subscribe as subscribeInputs,
+} from "../inputs-store.js?v=1";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
   getPosts,
@@ -228,7 +235,7 @@ function renderAssistantPanel(session, attachedContext) {
               <span class="session__composer-thinking-spinner" aria-hidden="true"></span>
               <span class="session__composer-thinking-text" data-thinking-text>0s · 1 credit</span>
             </div>
-            <div class="composer-pills" data-composer-pills hidden></div>
+            <div class="composer-pills" data-composer-pills></div>
             <div class="session__composer-input">
               <textarea
                 class="session__composer-input-field"
@@ -1099,6 +1106,7 @@ function wireAssistantPanel(root, session, attachedContext) {
     repaintThreadFromSources();
   });
   const offComposerUploads = subscribeUploads(() => paintComposerPills(root, session.id));
+  const offComposerInputs = subscribeInputs(session.id, () => paintComposerPills(root, session.id));
   paintComposerPills(root, session.id);
 
   // Apply idea focus on initial render if ?focusIdea= is present.
@@ -1191,6 +1199,7 @@ function wireAssistantPanel(root, session, attachedContext) {
     offInlineQuestion();
     offComposerSources();
     offComposerUploads();
+    offComposerInputs();
     stopThinkingTimer();
   };
 }
@@ -1775,17 +1784,57 @@ function paintComposerPills(root, sessionId) {
   const container = root.querySelector("[data-composer-pills]");
   if (!container) return;
   const state = getComposerState(sessionId);
+
+  // Inputs strip = persistent attachments (source ids on the session) +
+  // any in-flight uploads not yet promoted to an attachment + a trailing
+  // "+ Attach" affordance. Pills resolve their live status from the
+  // sources-stream so processing → ready transitions happen with zero
+  // extra re-render orchestration.
+  const attachedIds = getAttachedSourceIds(sessionId);
+  const renderedSourceIds = new Set();
   const html = [];
+
+  // 1. Persistent attachments — one pill per source id on the session.
+  for (const sourceId of attachedIds) {
+    const snap = resolveComposerPill({ sourceId });
+    if (!snap) continue;
+    renderedSourceIds.add(snap.sourceId);
+    html.push(renderComposerPill(`src-pill-${sourceId}`, snap, state));
+  }
+
+  // 2. In-flight uploads — uploads whose backing source hasn't landed yet
+  // OR scripted-source pills not yet auto-attached. Skip any whose
+  // sourceId is already shown above to avoid duplicates.
   for (const [pillId, pill] of state.pills) {
     const snap = resolveComposerPill(pill);
     if (!snap) {
       state.pills.delete(pillId);
       continue;
     }
+    if (snap.sourceId && renderedSourceIds.has(snap.sourceId)) continue;
     html.push(renderComposerPill(pillId, snap, state));
   }
-  container.innerHTML = html.join("");
-  container.hidden = html.length === 0;
+
+  // 3. Trailing "+ Attach" affordance — opens the Add Source modal.
+  html.push(`
+    <button type="button" class="ap-button stroked grey composer-pill__attach" data-composer-attach aria-label="Attach a source">
+      <i class="ap-icon-plus"></i>
+      <span>Attach</span>
+    </button>
+  `);
+
+  // 4. Empty state — when zero pills landed, swap the "+ Attach" button
+  // for a softer link that hints at both upload and library reuse.
+  if (renderedSourceIds.size === 0 && state.pills.size === 0) {
+    container.innerHTML = `
+      <a href="#" class="ap-link small composer-pill__empty-link" data-composer-attach>
+        Attach a file or pick from library
+      </a>
+    `;
+  } else {
+    container.innerHTML = html.join("");
+  }
+  container.hidden = false;
 }
 
 function dismissComposerIdeasBadge(root, sessionId, sourceId, button) {
@@ -2331,9 +2380,36 @@ function bindSession(root, session) {
       if (pillRemoveBtn) {
         event.preventDefault();
         const pillId = pillRemoveBtn.dataset.pillRemove;
-        const pill = getComposerState(session.id).pills.get(pillId);
-        if (pill?.sourceId) removeSources([pill.sourceId]);
+        // Two paint paths produce pills:
+        // - In-flight scripted pills live in composerState.pills with key
+        //   "pill-…" — remove from there and (legacy) also clean up the
+        //   underlying source so the test workspace doesn't keep them.
+        // - Persistent attachments are keyed "src-pill-<sourceId>" by
+        //   paintComposerPills — detach from the session only; the source
+        //   stays in the global library and can be re-attached later.
+        if (pillId.startsWith("src-pill-")) {
+          const sourceId = pillId.slice("src-pill-".length);
+          detachSource(session.id, sourceId);
+        } else {
+          const pill = getComposerState(session.id).pills.get(pillId);
+          if (pill?.sourceId) {
+            detachSource(session.id, pill.sourceId);
+            getComposerState(session.id).pills.delete(pillId);
+          }
+        }
         paintComposerPills(root, session.id);
+        return;
+      }
+      // "+ Attach" affordance at the end of the Inputs strip — opens the
+      // Add Source modal so the user can upload a new file or pick from
+      // the existing library (P2).
+      const composerAttachBtn = event.target.closest("[data-composer-attach]");
+      if (composerAttachBtn) {
+        event.preventDefault();
+        openAddSourceModal({
+          onAttachExisting: (sourceIds) => attachMany(session.id, sourceIds),
+          currentSessionId: session.id,
+        });
         return;
       }
       const openIdeasBtn = event.target.closest("[data-open-source-ideas]");

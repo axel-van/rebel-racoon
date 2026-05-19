@@ -15,7 +15,7 @@ import {
   startFileUpload,
   updateSourceClips,
 } from "../sources-stream.js?v=26";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=26";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=27";
 import { isNewUser } from "../user-mode.js?v=20";
 import { showToast } from "../components/toast.js?v=20";
 import { renderEmptyState } from "../components/empty-state.js?v=1";

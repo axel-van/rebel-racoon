@@ -6,7 +6,7 @@
 // State machine timers live here (not inside the modal) so uploads
 // continue in background after the user closes the modal.
 
-import { sources as seedSources } from "./mocks.js?v=26";
+import { sources as seedSources } from "./mocks.js?v=27";
 import { isNewUser } from "./user-mode.js?v=20";
 
 // ─── State ───────────────────────────────────────────────────────────────
