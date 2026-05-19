@@ -1818,7 +1818,7 @@ function startPillFromKind(root, session, kind) {
       text: "What should I do with this video?",
       choices: [
         { value: "clips", label: "Create clips", icon: "ap-icon-sparkles" },
-        { value: "ideas", label: "Extract themes", icon: "ap-icon-bulb" },
+        { value: "ideas", label: "Extract themes", icon: "ap-icon-tag" },
       ],
       multi: false,
       instant: true,
