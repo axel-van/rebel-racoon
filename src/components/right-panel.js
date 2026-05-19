@@ -11,8 +11,8 @@ import {
   insertPost,
   updatePostContent,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=23";
-import { renderPostCard } from "./post-card.js?v=22";
+} from "../posts-store.js?v=24";
+import { renderPostCard } from "./post-card.js?v=23";
 import { renderClipCard } from "./clip-card.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=2";
 import { CONTEXT_QUESTIONS } from "../context-questions.js?v=20";
@@ -476,7 +476,9 @@ export function init() {
     // Footer CTA — draft posts from the selected clips into the active
     // session. Mirrors the onUseClips logic that used to live behind the
     // video-clips-modal CTA: one draft per clip, clipRef carries trim +
-    // source name + hue so post-card can render its video PIP.
+    // source name + hue so post-card can render its video PIP. After
+    // drafts land, fires the PDF-flow 06.B subtitle preset question into
+    // the assistant thread.
     if (event.target.closest("[data-rpanel-clips-draft]")) {
       const sid = activeSessionId();
       if (!sid) return;
@@ -498,11 +500,17 @@ export function init() {
       );
       clipSelection = new Set();
       renderPanel();
-      // Toast confirmation — keep it succinct; the post-card update lands
-      // in the Drafts panel and the user can drill in from there.
       import("./toast.js").then(({ showToast }) =>
         showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from clips`, { duration: 3200 }),
       );
+      // PDF flow 06.B — ask the user for a subtitle preset. We import
+      // lazily to keep this module decoupled from the session screen.
+      import("../screens/session.js?v=82").then(({ postSubtitleQuestion }) => {
+        postSubtitleQuestion(
+          sid,
+          drafts.map((d) => d.id),
+        );
+      });
       return;
     }
     // Use this idea → injects a templated prompt into the assistant composer.

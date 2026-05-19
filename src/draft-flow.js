@@ -16,7 +16,7 @@
 
 import { postUserTurn, postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=26";
 import { getIdeas } from "./library.js?v=25";
-import { addPostDraft } from "./posts-store.js?v=23";
+import { addPostDraft } from "./posts-store.js?v=24";
 import { showToast } from "./components/toast.js?v=20";
 
 const CHANNEL_META = {

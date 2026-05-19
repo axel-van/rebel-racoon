@@ -18,7 +18,13 @@ import {
 } from "../assistant.js?v=26";
 import { getSources, getIdeas, injectIdeasForSource, subscribe as subscribeLibrary } from "../library.js?v=25";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
-import { getPosts, addPostDraft, attachImageToDraft, subscribe as subscribePostsStore } from "../posts-store.js?v=23";
+import {
+  getPosts,
+  addPostDraft,
+  attachImageToDraft,
+  setSubtitleStyle,
+  subscribe as subscribePostsStore,
+} from "../posts-store.js?v=24";
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
@@ -1308,28 +1314,38 @@ function rerenderContentWorkspace(root, session) {
 // Channel-picker choice turn — chips toggle on click, "Draft them" submits.
 function renderChoiceTurn(message) {
   const isAnswered = message.status === "answered";
+  // Preview-rich chips (e.g. subtitle style picker) carry a `preview`
+  // string per choice that's rendered above the label as a styled
+  // sample. The chip is taller and the icon slot is dropped — the
+  // sample text *is* the icon visually.
+  const hasPreviews = (message.choices || []).some((c) => typeof c.preview === "string" && c.preview.length > 0);
   const chips = (message.choices || [])
     .map((c) => {
       const isSelected = (message.selected || []).includes(c.value);
       const selectedClass = isSelected ? " is-selected" : "";
+      const previewClass = c.preview ? ` chat-bubble-choice-chip--${c.previewKind || "preview"}` : "";
+      const inner = c.preview
+        ? `<span class="chat-bubble-choice-preview chat-bubble-choice-preview--${c.previewKind || "default"}">${c.preview}</span>
+           <span class="chat-bubble-choice-label">${c.label}</span>`
+        : `<i class="${c.icon}" aria-hidden="true"></i>
+           <span>${c.label}</span>`;
       if (isAnswered) {
-        return `<span class="chat-bubble-choice-chip${selectedClass}">
-          <i class="${c.icon}" aria-hidden="true"></i>
-          <span>${c.label}</span>
+        return `<span class="chat-bubble-choice-chip${selectedClass}${previewClass}">
+          ${inner}
         </span>`;
       }
       return `<button
         type="button"
-        class="chat-bubble-choice-chip${selectedClass}"
+        class="chat-bubble-choice-chip${selectedClass}${previewClass}"
         data-assistant-choice="${c.value}"
         data-assistant-choice-msg="${message.id}"
         aria-pressed="${isSelected ? "true" : "false"}"
       >
-        <i class="${c.icon}" aria-hidden="true"></i>
-        <span>${c.label}</span>
+        ${inner}
       </button>`;
     })
     .join("");
+  const choicesRowClass = hasPreviews ? "chat-bubble-choices chat-bubble-choices--visual" : "chat-bubble-choices";
 
   const submitLabel = message.submitLabel || "Submit";
   // Instant pickers (single click = submit) skip the Submit button — the
@@ -1352,7 +1368,7 @@ function renderChoiceTurn(message) {
       <i class="ap-icon-sparkles-mermaid chat-turn-avatar" aria-hidden="true"></i>
       <div class="chat-bubble chat-bubble--ai">
         <p class="chat-bubble-text">${message.text}</p>
-        <div class="chat-bubble-choices">${chips}</div>
+        <div class="${choicesRowClass}">${chips}</div>
         ${footer}
       </div>
     </div>
@@ -1560,6 +1576,35 @@ const PILL_KIND_ICON = {
   Image: "ap-icon-file--image",
   URL: "ap-icon-link",
 };
+
+// Label map for subtitle preset picks — used by the toast confirmation
+// after the user resolves the "Add subtitles?" turn (PDF flow 06.B).
+const SUBTITLE_PICK_LABEL = {
+  bold: "Bold",
+  clean: "Clean",
+  caption: "Caption",
+};
+
+// Post the "Add subtitles?" question into the assistant thread after the
+// user has drafted ≥1 post from clips. Renders 4 visual preset chips
+// (preview text styled per preset) plus a "No subtitles" option. The
+// handler resolves to setSubtitleStyle(sessionId, draftIds, pick).
+export function postSubtitleQuestion(sessionId, draftIds) {
+  if (!Array.isArray(draftIds) || draftIds.length === 0) return;
+  postAssistantChoice(sessionId, {
+    text: "Add subtitles to your clips?",
+    choices: [
+      { value: "bold", label: "Bold", previewKind: "bold", preview: "POST" },
+      { value: "clean", label: "Clean", previewKind: "clean", preview: "Post" },
+      { value: "caption", label: "Caption", previewKind: "caption", preview: "post" },
+      { value: "none", label: "No subtitles", previewKind: "none", preview: "—" },
+    ],
+    multi: false,
+    instant: true,
+    handler: "subtitle-style-pick",
+    context: { draftIds },
+  });
+}
 
 const SCRIPTED_KINDS = {
   pdf: { kindLabel: "PDF", filename: "Roadmap Q3.pdf" },
@@ -1853,6 +1898,17 @@ function bindSession(root, session) {
       executeDraft(session.id, msg.context.ideaId, selectedValues);
     } else if (msg.handler === "start-action") {
       handleActionPick(session.id, msg, selectedValues, { setQuery });
+    } else if (msg.handler === "subtitle-style-pick") {
+      // PDF flow step 06.B — user picks a subtitle preset (or "none") for
+      // the clip-derived drafts. Applies the style to each draft id we
+      // stashed in the message context.
+      const { draftIds = [] } = msg.context || {};
+      const pick = selectedValues[0];
+      if (draftIds.length > 0 && pick) {
+        setSubtitleStyle(session.id, draftIds, pick);
+        const label = pick === "none" ? "No subtitles" : SUBTITLE_PICK_LABEL[pick] || pick;
+        showToast(`Subtitles applied · ${label}`, { duration: 3200 });
+      }
     } else if (msg.handler === "video-intake-choice") {
       // Single-select picker between "clips" (cut into clip-extraction flow)
       // and "ideas" (inject mock ideas into the Ideas panel). For video,

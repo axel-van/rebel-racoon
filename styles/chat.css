@@ -405,3 +405,72 @@ span.chat-bubble-choice-chip {
   color: var(--sys-text-color-light);
   flex-shrink: 0;
 }
+
+/* Subtitle preset chips (PDF flow 06.B). When the choice carries a
+   preview field, the chip becomes a 2-row tile: visual sample on top,
+   label below. The .ap-button focus ring + DS tokens drive the chrome;
+   per-style classes only tune the preview text appearance. */
+.chat-bubble-choices--visual {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xs);
+}
+
+.chat-bubble-choice-chip--preview,
+.chat-bubble-choice-chip--bold,
+.chat-bubble-choice-chip--clean,
+.chat-bubble-choice-chip--caption,
+.chat-bubble-choice-chip--none {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 86px;
+  min-height: 78px;
+  padding: var(--ref-spacing-xs);
+}
+
+.chat-bubble-choice-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 2px 8px;
+  border-radius: var(--ref-border-radius-xs);
+  background: var(--ref-color-grey-100);
+  color: var(--ref-color-white);
+}
+
+.chat-bubble-choice-preview--bold {
+  font-weight: var(--ref-font-weight-extra-bold);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.chat-bubble-choice-preview--clean {
+  font-weight: var(--ref-font-weight-regular);
+  font-size: 13px;
+  background: var(--ref-color-grey-80);
+}
+
+.chat-bubble-choice-preview--caption {
+  font-weight: var(--ref-font-weight-regular);
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.65);
+  letter-spacing: 0.02em;
+}
+
+.chat-bubble-choice-preview--none,
+.chat-bubble-choice-preview--default {
+  background: transparent;
+  color: var(--ref-color-grey-60);
+  font-size: 18px;
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.chat-bubble-choice-label {
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+}

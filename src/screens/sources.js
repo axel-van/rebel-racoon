@@ -5,7 +5,7 @@ import { open as openAddSourceModal } from "../components/add-source-modal.js?v=
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";
 import { startClipExtraction } from "../components/clip-extraction-loader.js?v=2";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=21";
-import { addPostDraft } from "../posts-store.js?v=23";
+import { addPostDraft } from "../posts-store.js?v=24";
 import { postDraftResult } from "../assistant.js?v=26";
 import { navigate } from "../router.js?v=21";
 import {
