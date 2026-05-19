@@ -2255,16 +2255,15 @@ function bindSession(root, session) {
       // tweak before sending.
       //
       // Starters can opt into a direct action instead of text injection by
-      // setting `action` on the mock. Today the only action is
-      // "open-video-clips" — the full flow lives in startClipsExtractionFlow:
-      // 1. Open Add Source modal so the user uploads a video.
-      // 2. Detect the new video source via subscribeSources.
-      // 3. Run a 30s "Extracting clips" loader once it reaches Processed.
-      // 4. Attach mock clips + open the Video Clips modal in the current
-      //    session so drafts land here.
+      // setting `action` on the mock. The "open-video-clips" action is now
+      // a shortcut to the same path as the attach menu's "Add video" —
+      // pushes a scripted video pill which posts the "Create clips /
+      // Extract themes" choice turn. Keeps a single entry point for the
+      // video flow regardless of whether the user picks via starter,
+      // attach menu, or drag-drop.
       const starterBtn = event.target.closest("[data-starter]");
       if (starterBtn && starterBtn.dataset.starterAction === "open-video-clips") {
-        startClipsExtractionFlow(session);
+        startPillFromKind(root, session, "video");
         return;
       }
       if (starterBtn) {
