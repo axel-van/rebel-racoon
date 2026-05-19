@@ -871,14 +871,35 @@ export function open(opts = {}) {
   state.currentSessionId = opts.currentSessionId || null;
   state.attachedSourceIds = Array.isArray(opts.attachedSourceIds) ? opts.attachedSourceIds : [];
   state.onAttachExisting = typeof opts.onAttachExisting === "function" ? opts.onAttachExisting : null;
+  // Auto-attach any source created during this trip (upload / URL /
+  // connector) to the current session. Tracked separately from
+  // tripUploadIds so each source attaches at most once.
+  state.onAttachNew = typeof opts.onAttachNew === "function" ? opts.onAttachNew : null;
+  state.tripAttachedSourceIds = new Set();
   backdrop.hidden = false;
   backdrop.classList.add("open");
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
   document.body.classList.add("has-modal");
-  // Subscribe to upload changes — re-render the upload list + footer.
+  // Subscribe to upload changes — re-render the upload list + footer +
+  // auto-attach any newly-created source to the current session.
   if (!unsubscribeUploads) {
     unsubscribeUploads = subscribeUploads(() => {
+      // Auto-attach any new source created during this modal trip — once
+      // the upload pipeline assigns a sourceId, hand it off to the caller's
+      // onAttachNew callback so the new file shows up in the session's
+      // Inputs strip without an extra click.
+      if (state.onAttachNew && state.tripUploadIds.size > 0) {
+        const uploads = getUploads();
+        const toAttach = [];
+        for (const u of uploads) {
+          if (state.tripUploadIds.has(u.id) && u.sourceId && !state.tripAttachedSourceIds.has(u.sourceId)) {
+            state.tripAttachedSourceIds.add(u.sourceId);
+            toAttach.push(u.sourceId);
+          }
+        }
+        if (toAttach.length) state.onAttachNew(toAttach);
+      }
       // Re-render content if showing upload-related views (Upload tab or URL
       // tab with history). Always re-render footer (it tracks upload counts).
       if (state.activeTab === "upload" || (state.activeTab === "url" && state.urlHistory.length)) {
@@ -887,6 +908,7 @@ export function open(opts = {}) {
       renderFooter();
     });
   }
+
   // Subscribe to connector changes too — if the user toggles a connector in
   // the settings drawer while this modal is open, the Connectors tab needs
   // to repaint to match. (FIND-01.)

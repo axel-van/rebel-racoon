@@ -1105,7 +1105,24 @@ function wireAssistantPanel(root, session, attachedContext) {
     paintComposerPills(root, session.id);
     repaintThreadFromSources();
   });
-  const offComposerUploads = subscribeUploads(() => paintComposerPills(root, session.id));
+  // Tracks upload IDs started from drag/drop in this session so we can
+  // auto-attach the resulting source once the upload pipeline assigns its
+  // sourceId. Keyed alongside a tripAttachedSourceIds Set so each new
+  // source attaches at most once.
+  const dragUploadIds = new Set();
+  const dragAttachedSourceIds = new Set();
+  const offComposerUploads = subscribeUploads(() => {
+    if (dragUploadIds.size > 0) {
+      const ups = getStreamUploads();
+      for (const u of ups) {
+        if (dragUploadIds.has(u.id) && u.sourceId && !dragAttachedSourceIds.has(u.sourceId)) {
+          dragAttachedSourceIds.add(u.sourceId);
+          attachSource(session.id, u.sourceId);
+        }
+      }
+    }
+    paintComposerPills(root, session.id);
+  });
   const offComposerInputs = subscribeInputs(session.id, () => paintComposerPills(root, session.id));
   paintComposerPills(root, session.id);
 
@@ -1171,7 +1188,8 @@ function wireAssistantPanel(root, session, attachedContext) {
       for (const file of files) {
         const classification = classifyFile(file);
         if (classification.ok) {
-          startFileUpload(file, classification);
+          const uploadId = startFileUpload(file, classification);
+          if (uploadId) dragUploadIds.add(uploadId);
           started += 1;
         } else if (!firstReject) {
           firstReject = classification.reason;
@@ -1855,6 +1873,10 @@ function startPillFromKind(root, session, kind) {
   if (!spec) return;
   const sessionId = session.id;
   const sourceId = pushScriptedSource({ filename: spec.filename, kind: spec.kindLabel });
+  // Auto-attach to the session so the new source shows up in the Inputs
+  // strip immediately and persists across reloads — same end-state as if
+  // the user had picked it from the Library tab.
+  attachSource(sessionId, sourceId);
   getComposerState(sessionId).pills.set(`pill-${sourceId}`, { sourceId });
   paintComposerPills(root, sessionId);
   if (kind === "video") {
@@ -2408,6 +2430,7 @@ function bindSession(root, session) {
         event.preventDefault();
         openAddSourceModal({
           onAttachExisting: (sourceIds) => attachMany(session.id, sourceIds),
+          onAttachNew: (sourceIds) => attachMany(session.id, sourceIds),
           currentSessionId: session.id,
           attachedSourceIds: getAttachedSourceIds(session.id),
         });
