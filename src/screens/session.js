@@ -236,15 +236,49 @@ function renderAssistantPanel(session, attachedContext) {
               ></textarea>
               <div class="session__composer-actions">
                 <div class="composer-actions__left">
-                  <button
-                    type="button"
-                    class="ap-icon-button transparent"
-                    aria-label="Attach a source"
-                    title="Attach a source"
-                    data-composer-attach
-                  >
-                    <i class="ap-icon-paper-clip"></i>
-                  </button>
+                  <div class="assistant-attach">
+                    <button
+                      type="button"
+                      class="ap-icon-button transparent"
+                      aria-label="Attach a source"
+                      title="Attach a source"
+                      data-assistant-attach-toggle
+                    >
+                      <i class="ap-icon-paper-clip"></i>
+                    </button>
+                    <div
+                      class="ap-action-dropdown assistant-attach__menu"
+                      data-assistant-attach-menu
+                      hidden
+                      role="menu"
+                    >
+                      <button type="button" class="ap-action-dropdown-item" data-add-source="pdf" role="menuitem">
+                        <i class="ap-icon-file--pdf"></i>
+                        <div class="ap-action-dropdown-item-text">
+                          <div class="ap-action-dropdown-item-label">Add PDF</div>
+                        </div>
+                      </button>
+                      <button type="button" class="ap-action-dropdown-item" data-add-source="video" role="menuitem">
+                        <i class="ap-icon-file--video"></i>
+                        <div class="ap-action-dropdown-item-text">
+                          <div class="ap-action-dropdown-item-label">Add video</div>
+                        </div>
+                      </button>
+                      <button type="button" class="ap-action-dropdown-item" data-add-source="url" role="menuitem">
+                        <i class="ap-icon-link"></i>
+                        <div class="ap-action-dropdown-item-text">
+                          <div class="ap-action-dropdown-item-label">Add URL</div>
+                        </div>
+                      </button>
+                      <div class="ap-action-dropdown-divider"></div>
+                      <button type="button" class="ap-action-dropdown-item" data-composer-attach-modal role="menuitem">
+                        <i class="ap-icon-feature-library"></i>
+                        <div class="ap-action-dropdown-item-text">
+                          <div class="ap-action-dropdown-item-label">Browse library…</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
                   ${raw(renderComposerContextDropdown(attachedContext, { locked: !isEmptyConversation }))}
                 </div>
                 <button
@@ -2116,16 +2150,38 @@ function bindSession(root, session) {
         return;
       }
 
-      // Paper-clip in the composer — same modal entry point as the Sources
-      // panel's "+ Attach" button. Pre-seeds the modal with the active
-      // session so attachExisting/attachNew route through inputs-store and
-      // land in the Sources panel.
-      const composerAttachBtn = event.target.closest("[data-composer-attach]");
+      // Paper-clip in the composer — toggle the dropdown menu open/closed.
+      // The menu offers three scripted "Add PDF/Video/URL" quick-actions
+      // plus a "Browse library…" item that opens the full Add Source modal.
+      if (event.target.closest("[data-assistant-attach-toggle]")) {
+        event.preventDefault();
+        const menu = root.querySelector("[data-assistant-attach-menu]");
+        if (menu) menu.hidden = !menu.hidden;
+        return;
+      }
+
+      // Quick scripted attach items inside the paper-clip menu.
+      const addSrcItem = event.target.closest("[data-add-source]");
+      if (addSrcItem) {
+        event.preventDefault();
+        startPillFromKind(root, session, addSrcItem.dataset.addSource);
+        const menu = root.querySelector("[data-assistant-attach-menu]");
+        if (menu) menu.hidden = true;
+        return;
+      }
+
+      // "Browse library…" menu item — opens the full Add Source modal with
+      // the active session pre-wired so upload/URL/connector/library picks
+      // all land in inputs-store via attachMany.
+      const composerAttachBtn = event.target.closest("[data-composer-attach-modal]");
       if (composerAttachBtn) {
         event.preventDefault();
+        const menu = root.querySelector("[data-assistant-attach-menu]");
+        if (menu) menu.hidden = true;
         Promise.all([import("../inputs-store.js?v=1"), import("../components/add-source-modal.js?v=22")]).then(
           ([store, modal]) => {
             modal.open({
+              tab: "library",
               onAttachExisting: (sourceIds) => store.attachMany(session.id, sourceIds),
               onAttachNew: (sourceIds) => store.attachMany(session.id, sourceIds),
               currentSessionId: session.id,
@@ -2134,6 +2190,12 @@ function bindSession(root, session) {
           },
         );
         return;
+      }
+
+      // Click outside the paper-clip menu → close it.
+      if (!event.target.closest(".assistant-attach")) {
+        const menu = root.querySelector("[data-assistant-attach-menu]");
+        if (menu && !menu.hidden) menu.hidden = true;
       }
 
       // Composer context dropdown — toggle, select, or close on outside click.
