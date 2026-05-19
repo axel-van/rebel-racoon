@@ -14,9 +14,10 @@ import {
 } from "../posts-store.js?v=23";
 import { renderPostCard } from "./post-card.js?v=22";
 import { renderClipCard } from "./clip-card.js?v=1";
+import { open as openVideoClipsModal } from "./video-clips-modal.js?v=2";
 import { CONTEXT_QUESTIONS } from "../context-questions.js?v=20";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=32";
-import { getSources as getStreamSources, subscribeSources } from "../sources-stream.js?v=26";
+import { getSources as getStreamSources, subscribeSources, updateSourceClips } from "../sources-stream.js?v=26";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
@@ -417,6 +418,59 @@ export function init() {
       if (clipSelection.has(cid)) clipSelection.delete(cid);
       else clipSelection.add(cid);
       renderPanel();
+      return;
+    }
+    // Clip-card "Edit" affordance (kebab menu item or thumbnail click).
+    // Opens the video-clips modal pre-positioned on the target clip so
+    // the user lands directly on the trim/preview surface.
+    const clipEditBtn = event.target.closest("[data-clip-edit]");
+    if (clipEditBtn) {
+      const cid = clipEditBtn.getAttribute("data-clip-edit");
+      const entry = collectAllClips().find(({ clip }) => clip.id === cid);
+      if (entry) {
+        const source = getStreamSources().find((s) => s.id === entry.sourceId);
+        if (source) {
+          openVideoClipsModal(source, {
+            editingClipId: cid,
+            onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
+          });
+        }
+      }
+      return;
+    }
+    // Clip-card "Remove clip" kebab item — mutates the parent source's
+    // clips array via sources-stream. The auto-subscribe in this panel
+    // re-renders on the resulting notify.
+    const clipRemoveBtn = event.target.closest("[data-clip-remove]");
+    if (clipRemoveBtn) {
+      const cid = clipRemoveBtn.getAttribute("data-clip-remove");
+      const entry = collectAllClips().find(({ clip }) => clip.id === cid);
+      if (entry) {
+        const source = getStreamSources().find((s) => s.id === entry.sourceId);
+        if (source && Array.isArray(source.clips)) {
+          const nextClips = source.clips.filter((c) => c.id !== cid);
+          updateSourceClips(source.id, nextClips);
+          clipSelection.delete(cid);
+        }
+      }
+      return;
+    }
+    // Per-card "Draft Post" — drafts that single clip into the active
+    // session. Same payload shape as the footer multi-select CTA.
+    const clipDraftBtn = event.target.closest("[data-clip-draft]");
+    if (clipDraftBtn) {
+      const cid = clipDraftBtn.getAttribute("data-clip-draft");
+      const entry = collectAllClips().find(({ clip }) => clip.id === cid);
+      const sid = activeSessionId();
+      if (!sid || !entry) return;
+      const { clip, sourceName } = entry;
+      addPostDraft(sid, {
+        network: clip.network,
+        text: [clip.title, clip.summary].filter(Boolean),
+        hashtags: (clip.tags || []).map((t) => `#${t}`),
+        clipRef: { start: clip.start, end: clip.end, sourceName, hue: clip.hue },
+      });
+      import("./toast.js").then(({ showToast }) => showToast(`Drafted a post from clip`, { duration: 3200 }));
       return;
     }
     // Footer CTA — draft posts from the selected clips into the active

@@ -643,7 +643,7 @@ function startClipsExtractionFlow(session) {
         watchdog = null;
       }
       startClipExtraction(target, {
-        onReady: (ready) => openVideoClipsModalForSession(ready, session),
+        onReady: () => openIdeasPanel(),
       });
     });
   });
@@ -1872,7 +1872,7 @@ function bindSession(root, session) {
         if (source && pick === "clips") {
           postClipExtractionTurn(session.id, { sourceId, filename });
           startClipExtraction(source, {
-            onReady: (ready) => openVideoClipsModalForSession(ready, session),
+            onReady: () => openIdeasPanel(),
           });
         } else if (source && pick === "ideas") {
           // Ideas land in the Ideas panel (right-panel), not as an inline
@@ -2252,13 +2252,13 @@ function bindSession(root, session) {
 
       // Inline clip-extraction card "Open clips" button — opens the Video
       // Clips modal pre-bound to this session's draft callbacks. Same exit
-      // path as the completion toast's action.
+      // path as the completion toast's action. After P0 unification, the
+      // CTA now opens the Outputs panel (Clips tab) rather than the modal
+      // — the modal is reserved for per-clip trim/preview editing.
       const openClipsBtn = event.target.closest("[data-clip-card-open]");
       if (openClipsBtn) {
         event.preventDefault();
-        const sourceId = openClipsBtn.dataset.clipCardOpen;
-        const source = getStreamSources().find((s) => s.id === sourceId);
-        if (source) openVideoClipsModalForSession(source, session);
+        openIdeasPanel();
         return;
       }
 

@@ -944,6 +944,19 @@ export function open(source, callbacks = {}) {
   onUseCallback = typeof callbacks.onUseClips === "function" ? callbacks.onUseClips : null;
   onSaveCallback = typeof callbacks.onSaveClips === "function" ? callbacks.onSaveClips : null;
 
+  // Optional pre-positioning into edit mode for a specific clip — used by
+  // the right-panel clip-card's Edit affordance. The browse list still
+  // renders behind, but the editor pane is opened immediately so the
+  // user lands on the trim/preview surface without an extra click.
+  if (callbacks.editingClipId) {
+    const target = clips.find((c) => c.id === callbacks.editingClipId);
+    if (target) {
+      editingId = target.id;
+      draft = { ...target };
+      draftPlayhead = target.start || 0;
+    }
+  }
+
   // Head info (file kind badge + filename + sub).
   const kindEl = document.getElementById("videoClipsKind");
   if (kindEl) kindEl.textContent = (source.ext || "MP4").toUpperCase();
