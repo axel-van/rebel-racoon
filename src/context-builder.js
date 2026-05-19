@@ -14,7 +14,7 @@
 
 import * as inlineQuestion from "./inline-question.js?v=21";
 import { postAssistantMessage, postUserTurn } from "./assistant.js?v=27";
-import * as rightPanel from "./components/right-panel.js?v=42";
+import * as rightPanel from "./components/right-panel.js?v=43";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=24";
 import { emptyAnswers } from "./context-questions.js?v=20";
 

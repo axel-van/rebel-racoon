@@ -785,6 +785,30 @@
 
 .rpanel-sources__row-meta {
   font-size: var(--ref-font-size-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  flex-wrap: wrap;
+}
+
+/* "N ideas" clickable badge inside the meta line — quiet link treatment
+   that pops on hover to signal it's interactive. Underlines on hover
+   per DS link convention. */
+.rpanel-sources__row-ideas-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  background: 0;
+  border: 0;
+  font: inherit;
+  color: var(--ref-color-electric-blue-100);
+  cursor: pointer;
+}
+
+.rpanel-sources__row-ideas-btn:hover,
+.rpanel-sources__row-ideas-btn:focus-visible {
+  text-decoration: underline;
+  outline: none;
 }
 
 .rpanel-sources__row-status {

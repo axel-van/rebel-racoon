@@ -423,6 +423,37 @@ export function init() {
       removeSources([sourcesDetachBtn.dataset.rpanelSourcesDetach], sid);
       return;
     }
+    // "N ideas" button on a source row → switch the panel to Outputs
+    // (Ideas tab) and pulse the cards that came from this source so the
+    // user spots them.
+    const sourceIdeasBtn = event.target.closest("[data-rpanel-sources-show-ideas]");
+    if (sourceIdeasBtn) {
+      const sourceId = sourceIdeasBtn.dataset.rpanelSourcesShowIdeas;
+      outputsView = "ideas";
+      state = { ...state, mode: "ideas" };
+      renderPanel();
+      // Wait for the panel re-render, then pulse the source's idea cards.
+      requestAnimationFrame(() => {
+        const panel = document.querySelector(".app-right-panel");
+        if (!panel) return;
+        const cards = Array.from(panel.querySelectorAll("[data-idea-id]")).filter((card) => {
+          // idea-card stores sourceIds via the sources panel below the
+          // title; we don't have a data attribute for them, so we re-
+          // derive from the IDEAS seed by id.
+          const id = card.getAttribute("data-idea-id");
+          const idea = IDEAS.find((i) => i.id === id);
+          return idea && Array.isArray(idea.sourceIds) && idea.sourceIds.includes(sourceId);
+        });
+        cards.forEach((c) => {
+          c.classList.remove("is-focused");
+          void c.offsetWidth;
+          c.classList.add("is-focused");
+        });
+        if (cards[0]) cards[0].scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      notify();
+      return;
+    }
     // Outputs sub-view tab — Ideas | Clips.
     const outputsTab = event.target.closest("[data-rpanel-outputs-tab]");
     if (outputsTab) {
@@ -1282,18 +1313,28 @@ const SOURCE_KIND_ICON = {
 
 function renderSourceRow(src) {
   const icon = SOURCE_KIND_ICON[src.kind] || "ap-icon-file";
-  const ideaCount = src.ideaCount > 0 ? `${src.ideaCount} idea${src.ideaCount === 1 ? "" : "s"}` : "";
-  const meta = [src.addedAt, ideaCount].filter(Boolean).join(" · ");
+  const hasIdeas = src.ideaCount > 0;
+  const ideaLabel = hasIdeas ? `${src.ideaCount} idea${src.ideaCount === 1 ? "" : "s"}` : "";
   const isProcessing = src.status !== "Processed";
   // Only surface a status pill while the source is in-flight. Once
   // Processed, the row stays uncluttered — the filename + meta carry it.
   const statusEl = isProcessing ? `<span class="ap-status grey rpanel-sources__row-status">Processing</span>` : "";
+  // Meta line: "addedAt · <clickable N ideas>". The ideas count is a
+  // button that switches the panel to Outputs (Ideas tab) so the user
+  // can review what the source produced. addedAt stays as static text.
+  const ideasButton = hasIdeas
+    ? `<button type="button" class="rpanel-sources__row-ideas-btn" data-rpanel-sources-show-ideas="${src.id}">${ideaLabel}</button>`
+    : "";
+  const metaParts = [];
+  if (src.addedAt) metaParts.push(`<span>${escapeText(src.addedAt)}</span>`);
+  if (ideasButton) metaParts.push(ideasButton);
+  const meta = metaParts.length ? metaParts.join(' <span aria-hidden="true">·</span> ') : "";
   return `
     <div class="rpanel-sources__row" data-source-id="${src.id}">
       <span class="rpanel-sources__row-icon" aria-hidden="true"><i class="${icon}"></i></span>
       <div class="rpanel-sources__row-body">
         <div class="rpanel-sources__row-name">${escapeText(src.filename)}</div>
-        ${meta ? `<div class="rpanel-sources__row-meta muted">${escapeText(meta)}</div>` : ""}
+        ${meta ? `<div class="rpanel-sources__row-meta muted">${meta}</div>` : ""}
       </div>
       ${statusEl}
       <button
