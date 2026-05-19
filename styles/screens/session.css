@@ -371,8 +371,8 @@
   width: 32px;
   height: 32px;
   border-radius: var(--app-radius-circle);
-  background: var(--ref-color-orange-10);
-  color: var(--ref-color-orange-100);
+  background: var(--ref-color-mermaid-gradient-background);
+  color: var(--ref-color-white);
   display: inline-flex;
   align-items: center;
   justify-content: center;
