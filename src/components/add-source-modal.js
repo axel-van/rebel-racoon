@@ -27,6 +27,8 @@ import {
   startConnectorImport,
   cancelUpload,
   getUploads,
+  getSources,
+  subscribeSources,
   subscribeUploads,
 } from "../sources-stream.js?v=26";
 
@@ -40,6 +42,19 @@ const TABS = [
   { id: "upload", label: "Upload" },
   { id: "url", label: "URL" },
   { id: "connectors", label: "Connectors" },
+  { id: "library", label: "Library" },
+];
+
+// Kind filter chips for the Library tab — mirrors /sources screen so the
+// reuse-picker reads the same as the standalone library page.
+const LIBRARY_KIND_FILTERS = [
+  { id: "all", label: "All" },
+  { id: "PDF", label: "PDFs" },
+  { id: "Video", label: "Video" },
+  { id: "Audio", label: "Audio" },
+  { id: "URL", label: "Links" },
+  { id: "Word", label: "Documents" },
+  { id: "Image", label: "Images" },
 ];
 
 const ACCEPT = ".pdf,.doc,.docx,.txt,.md,.mp4,.mov,.mp3,.wav,.m4a,.png,.jpg,.jpeg";
@@ -57,6 +72,16 @@ const state = {
   tripUploadIds: new Set(),
   // Mini-history of URLs added in this modal session
   urlHistory: [], // [{ uploadId }]
+  // Library tab sub-state
+  libraryKind: "all",
+  libraryQuery: "",
+  librarySelection: new Set(), // Set<sourceId>
+  // Caller-supplied context for the Library tab — which session we're
+  // attaching to (to disable already-attached sources) and the callback
+  // that takes the picked source ids.
+  currentSessionId: null,
+  attachedSourceIds: [],
+  onAttachExisting: null,
 };
 
 function clone(obj) {
@@ -362,6 +387,24 @@ function footerForState() {
     };
   }
 
+  if (state.activeTab === "library") {
+    const n = state.librarySelection.size;
+    return {
+      visible: true,
+      html: `
+        <div class="ap-dialog-footer-left muted">
+          ${n === 0 ? "Pick sources to attach" : `${n} source${n === 1 ? "" : "s"} selected`}
+        </div>
+        <div class="ap-dialog-footer-right">
+          <button type="button" class="ap-button transparent grey" data-modal-close>Cancel</button>
+          <button type="button" class="ap-button primary orange" data-add-source-library-confirm ${n === 0 ? "disabled" : ""}>
+            Attach ${n || ""} source${n === 1 ? "" : "s"}
+          </button>
+        </div>
+      `,
+    };
+  }
+
   // URL + connectors list — single Done button.
   return {
     visible: true,
@@ -379,6 +422,126 @@ function renderContent() {
   if (state.activeTab === "upload") contentEl.innerHTML = renderUploadTab();
   else if (state.activeTab === "url") contentEl.innerHTML = renderUrlTab();
   else if (state.activeTab === "connectors") contentEl.innerHTML = renderConnectorsTab();
+  else if (state.activeTab === "library") contentEl.innerHTML = renderLibraryTab();
+}
+
+// ─── Library tab ─────────────────────────────────────────────────────────
+// Picker over the global library so the user can re-attach an existing
+// source to the current conversation without re-uploading. Mirrors the
+// /sources screen layout (search + kind filter chips + grid) but routes
+// the multi-select through onAttachExisting instead of opening sources.
+function renderLibraryTab() {
+  const all = getSources();
+  const attached = new Set(state.attachedSourceIds);
+  const filtered = all.filter((s) => filterMatchesLibrary(s));
+  return `
+    <div class="add-source-modal__library">
+      <div class="add-source-modal__library-head">
+        <div class="ap-input-group add-source-modal__library-search">
+          <i class="ap-icon-search"></i>
+          <input
+            type="search"
+            class="ap-input"
+            placeholder="Search the library…"
+            value="${escapeHtml(state.libraryQuery)}"
+            data-add-source-library-search
+          />
+        </div>
+        <div class="add-source-modal__library-filters" role="tablist">
+          ${LIBRARY_KIND_FILTERS.map(
+            (k) => `
+              <button
+                type="button"
+                class="add-source-modal__library-filter ${state.libraryKind === k.id ? "is-on" : ""}"
+                data-add-source-library-filter="${k.id}"
+                role="tab"
+                aria-selected="${state.libraryKind === k.id}"
+              >${escapeHtml(k.label)}</button>
+            `,
+          ).join("")}
+        </div>
+      </div>
+      <div class="add-source-modal__library-body">
+        ${
+          all.length === 0
+            ? renderLibraryEmpty()
+            : filtered.length === 0
+              ? renderLibraryNoMatch()
+              : `<div class="add-source-modal__library-grid">${filtered
+                  .map((s) => renderLibrarySourceCard(s, attached.has(s.id), state.librarySelection.has(s.id)))
+                  .join("")}</div>`
+        }
+      </div>
+    </div>
+  `;
+}
+
+function filterMatchesLibrary(source) {
+  const q = state.libraryQuery.trim().toLowerCase();
+  const kindOk = state.libraryKind === "all" || (source.kind || "").toLowerCase() === state.libraryKind.toLowerCase();
+  if (!kindOk) return false;
+  if (!q) return true;
+  return (source.filename || "").toLowerCase().includes(q);
+}
+
+function renderLibrarySourceCard(source, isAttached, isSelected) {
+  const icon = iconFor(source.kind);
+  const selectedClass = isSelected ? " is-selected" : "";
+  const attachedClass = isAttached ? " is-attached" : "";
+  const idea = source.ideaCount > 0 ? `${source.ideaCount} idea${source.ideaCount === 1 ? "" : "s"}` : "";
+  const meta = [source.addedAt, idea].filter(Boolean).join(" · ");
+  return `
+    <label class="add-source-modal__library-card${selectedClass}${attachedClass}">
+      <input
+        type="checkbox"
+        class="add-source-modal__library-check"
+        data-add-source-library-pick="${source.id}"
+        ${isSelected ? "checked" : ""}
+        ${isAttached ? "disabled" : ""}
+      />
+      <span class="add-source-modal__library-card-icon" aria-hidden="true">
+        <i class="${icon}"></i>
+      </span>
+      <span class="add-source-modal__library-card-body">
+        <span class="add-source-modal__library-card-name">${escapeHtml(source.filename)}</span>
+        ${meta ? `<span class="add-source-modal__library-card-meta muted">${escapeHtml(meta)}</span>` : ""}
+      </span>
+      ${
+        isAttached
+          ? `<span class="ap-status green no-dot add-source-modal__library-card-tag">Attached</span>`
+          : source.signal && source.signal !== "Pending"
+            ? `<span class="ap-status ${source.signalColor || "grey"} add-source-modal__library-card-tag">${escapeHtml(source.signal)}</span>`
+            : ""
+      }
+    </label>
+  `;
+}
+
+function renderLibraryEmpty() {
+  return `
+    <div class="add-source-modal__library-empty">
+      <i class="ap-icon-feature-library" aria-hidden="true"></i>
+      <div class="add-source-modal__library-empty-title">Your library is empty</div>
+      <div class="add-source-modal__library-empty-sub">Upload your first source to start.</div>
+      <button type="button" class="ap-button stroked grey" data-add-source-library-jump-upload>
+        <i class="ap-icon-plus"></i>
+        <span>Upload a source</span>
+      </button>
+    </div>
+  `;
+}
+
+function renderLibraryNoMatch() {
+  return `
+    <div class="add-source-modal__library-empty">
+      <i class="ap-icon-search" aria-hidden="true"></i>
+      <div class="add-source-modal__library-empty-title">No source matches</div>
+      <div class="add-source-modal__library-empty-sub">Try a different term or clear the filter.</div>
+      <button type="button" class="ap-button stroked grey" data-add-source-library-clear>
+        Clear filters
+      </button>
+    </div>
+  `;
 }
 
 function render() {
@@ -492,6 +655,36 @@ function onClick(event) {
     return;
   }
 
+  // ── Library tab interactions ──────────────────────────────────────────
+  const libraryFilter = event.target.closest("[data-add-source-library-filter]");
+  if (libraryFilter) {
+    state.libraryKind = libraryFilter.dataset.addSourceLibraryFilter;
+    renderContent();
+    return;
+  }
+
+  if (event.target.closest("[data-add-source-library-clear]")) {
+    state.libraryKind = "all";
+    state.libraryQuery = "";
+    renderContent();
+    renderFooter();
+    return;
+  }
+
+  if (event.target.closest("[data-add-source-library-jump-upload]")) {
+    state.activeTab = "upload";
+    render();
+    return;
+  }
+
+  if (event.target.closest("[data-add-source-library-confirm]")) {
+    const ids = Array.from(state.librarySelection);
+    if (ids.length === 0) return;
+    state.onAttachExisting?.(ids);
+    close();
+    return;
+  }
+
   // URL submit
   if (event.target.closest("[data-add-url]")) {
     const trimmed = state.urlValue.trim();
@@ -581,9 +774,42 @@ function onChange(event) {
     renderFooter();
     return;
   }
+  // Library source pick toggle
+  const libraryPick = event.target.closest("[data-add-source-library-pick]");
+  if (libraryPick) {
+    const id = libraryPick.dataset.addSourceLibraryPick;
+    if (libraryPick.checked) state.librarySelection.add(id);
+    else state.librarySelection.delete(id);
+    // Re-render to update the card "is-selected" state + footer CTA count.
+    renderContent();
+    renderFooter();
+    return;
+  }
 }
 
 function onInput(event) {
+  // Library search input
+  if (event.target.matches("[data-add-source-library-search]")) {
+    state.libraryQuery = event.target.value || "";
+    // Re-render only the grid body, NOT the head, so the search input keeps
+    // focus + caret position while the user types.
+    const body = contentEl.querySelector(".add-source-modal__library-body");
+    if (body) {
+      const all = getSources();
+      const filtered = all.filter((s) => filterMatchesLibrary(s));
+      const attached = new Set(state.attachedSourceIds);
+      body.innerHTML =
+        all.length === 0
+          ? renderLibraryEmpty()
+          : filtered.length === 0
+            ? renderLibraryNoMatch()
+            : `<div class="add-source-modal__library-grid">${filtered
+                .map((s) => renderLibrarySourceCard(s, attached.has(s.id), state.librarySelection.has(s.id)))
+                .join("")}</div>`;
+    }
+    return;
+  }
+
   if (event.target.matches("[data-url-input]")) {
     state.urlValue = event.target.value;
     // Just enable/disable the Add URL button — re-render only the button state.
@@ -636,6 +862,15 @@ export function open(opts = {}) {
   state.tripUploadIds = new Set();
   state.urlHistory = [];
   state.selections = {};
+  // Library tab — reset selection on every open so the user starts from
+  // a clean slate. Caller-supplied context (current session + onAttach
+  // callback) is stashed for the lifetime of the modal.
+  state.libraryKind = "all";
+  state.libraryQuery = "";
+  state.librarySelection = new Set();
+  state.currentSessionId = opts.currentSessionId || null;
+  state.attachedSourceIds = Array.isArray(opts.attachedSourceIds) ? opts.attachedSourceIds : [];
+  state.onAttachExisting = typeof opts.onAttachExisting === "function" ? opts.onAttachExisting : null;
   backdrop.hidden = false;
   backdrop.classList.add("open");
   modal.classList.add("open");

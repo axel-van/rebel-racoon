@@ -358,3 +358,164 @@
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-150);
 }
+
+/* Library tab (P2) — picker for re-attaching existing sources. Compact
+   grid layout, multi-select via checkbox, mirrors /sources screen
+   patterns but tuned for a modal width. */
+
+.add-source-modal__library {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  min-height: 320px;
+}
+
+.add-source-modal__library-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.add-source-modal__library-search {
+  width: 100%;
+}
+
+.add-source-modal__library-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+}
+
+.add-source-modal__library-filter {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
+  background: 0;
+  border: 1px solid var(--sys-color-border-color-default);
+  border-radius: var(--app-radius-pill);
+  font: inherit;
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-80);
+  cursor: pointer;
+}
+
+.add-source-modal__library-filter.is-on {
+  background: var(--ref-color-electric-blue-05);
+  border-color: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-electric-blue-100);
+}
+
+.add-source-modal__library-body {
+  flex: 1;
+  overflow: auto;
+  max-height: 360px;
+}
+
+.add-source-modal__library-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+/* Library card — uses native label/checkbox association so the whole row
+   is one tap target. Visually quiet by default; highlights on selection
+   and dims when already attached. */
+.add-source-modal__library-card {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--ref-color-white);
+  cursor: pointer;
+  transition: border-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.add-source-modal__library-card:hover {
+  border-color: var(--ref-color-grey-30);
+}
+
+.add-source-modal__library-card.is-selected {
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-05);
+}
+
+.add-source-modal__library-card.is-attached {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.add-source-modal__library-check {
+  flex-shrink: 0;
+  margin: 0;
+  accent-color: var(--ref-color-electric-blue-100);
+}
+
+.add-source-modal__library-card-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ref-border-radius-xs);
+  background: var(--ref-color-grey-05);
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-icon-css-md);
+}
+
+.add-source-modal__library-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.add-source-modal__library-card-name {
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.add-source-modal__library-card-meta {
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-60);
+}
+
+.add-source-modal__library-card-tag {
+  flex-shrink: 0;
+}
+
+/* Empty states — center, padding, soft icon. */
+.add-source-modal__library-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xl) var(--ref-spacing-md);
+  text-align: center;
+  color: var(--ref-color-grey-80);
+}
+
+.add-source-modal__library-empty i {
+  font-size: 32px;
+  color: var(--ref-color-grey-30);
+}
+
+.add-source-modal__library-empty-title {
+  font-size: var(--ref-font-size-md);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+}
+
+.add-source-modal__library-empty-sub {
+  font-size: var(--ref-font-size-sm);
+  color: var(--ref-color-grey-80);
+  max-width: 320px;
+}

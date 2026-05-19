@@ -4,7 +4,7 @@ import { renderIdeaCard } from "../components/idea-card.js?v=25";
 import { ideas as MOCK_IDEAS, sources as SOURCES } from "../mocks.js?v=27";
 import { isNewUser } from "../user-mode.js?v=20";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=21";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=22";
 
 // Lot 15 — empty out in first-time mode so /ideas mirrors the dashboard's
 // own first-run UX. Returning user gets the full seed.

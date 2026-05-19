@@ -51,7 +51,7 @@ import { open as openVideoClipsModal } from "../components/video-clips-modal.js?
 import { startClipExtraction } from "../components/clip-extraction-loader.js?v=2";
 import { open as openSettingsDrawer } from "../components/settings-drawer.js?v=22";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=21";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=21";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=22";
 import {
   classifyFile,
   startFileUpload,
@@ -2409,6 +2409,7 @@ function bindSession(root, session) {
         openAddSourceModal({
           onAttachExisting: (sourceIds) => attachMany(session.id, sourceIds),
           currentSessionId: session.id,
+          attachedSourceIds: getAttachedSourceIds(session.id),
         });
         return;
       }
