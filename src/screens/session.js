@@ -244,76 +244,92 @@ function renderAssistantPanel(session, attachedContext) {
     !thread.some((m) => m.role === "assistant-choice") &&
     !thread.some((m) => m.role === "assistant" && m.variant);
 
+  // The composer markup is the same regardless of where it appears — bottom
+  // of the panel (default) or inline inside the empty hero. We render it
+  // once and place it via `${composerMarkup}` so click handlers (delegated
+  // on #app) keep working in both positions.
+  const composerMarkup = renderComposer(attachedContext, hasUserMessage);
   return html`
     <aside class="session__assistant" aria-label="Assistant panel">
       <div class="session__assistant-thread" id="assistantThread" data-assistant-thread>
-        ${isEmptyConversation ? raw(renderEmptyHero(session.id)) : raw(renderThread(thread))}
+        ${isEmptyConversation ? raw(renderEmptyHero(session.id, composerMarkup)) : raw(renderThread(thread))}
       </div>
-      <div class="session__composer">
-        <div class="session__composer-inner">
-          <div class="session__composer-card">
-            <div class="session__composer-thinking" data-assistant-thinking hidden>
-              <span class="session__composer-thinking-spinner" aria-hidden="true"></span>
-              <span class="session__composer-thinking-text" data-thinking-text>0s · 1 credit</span>
-            </div>
-            <div class="session__composer-input">
-              <textarea
-                class="session__composer-input-field"
-                id="assistantInput"
-                placeholder="ask archie..."
-                rows="3"
-              ></textarea>
+      ${isEmptyConversation ? "" : raw(composerMarkup)}
+    </aside>
+  `;
+}
+
+// Composer markup — extracted so it can be rendered either at the bottom
+// of the assistant panel (default) or inline inside the empty hero (when
+// the conversation hasn't started yet). The click handlers in bindSession
+// are delegated on #app, so the same markup works in both positions
+// without re-wiring.
+function renderComposer(attachedContext, hasUserMessage) {
+  return `
+    <div class="session__composer">
+      <div class="session__composer-inner">
+        <div class="session__composer-card">
+          <div class="session__composer-thinking" data-assistant-thinking hidden>
+            <span class="session__composer-thinking-spinner" aria-hidden="true"></span>
+            <span class="session__composer-thinking-text" data-thinking-text>0s · 1 credit</span>
+          </div>
+          <div class="session__composer-input">
+            <textarea
+              class="session__composer-input-field"
+              id="assistantInput"
+              placeholder="ask archie..."
+              rows="3"
+            ></textarea>
+            <button
+              type="button"
+              class="ap-button primary orange session__composer-send"
+              aria-label="Send"
+              data-assistant-send
+            >
+              <i class="ap-icon-arrow-up"></i>
+            </button>
+          </div>
+          <div class="session__composer-toolbar">
+            ${renderComposerContextDropdown(attachedContext, { locked: hasUserMessage })}
+            <div class="assistant-attach">
               <button
                 type="button"
-                class="ap-button primary orange session__composer-send"
-                aria-label="Send"
-                data-assistant-send
+                class="ap-button stroked grey assistant-attach__trigger"
+                aria-label="Attach files"
+                data-assistant-attach-toggle
               >
-                <i class="ap-icon-arrow-up"></i>
+                <i class="ap-icon-paper-clip"></i>
+                <span>Attach files</span>
               </button>
-            </div>
-            <div class="session__composer-toolbar">
-              ${raw(renderComposerContextDropdown(attachedContext, { locked: hasUserMessage }))}
-              <div class="assistant-attach">
-                <button
-                  type="button"
-                  class="ap-button stroked grey assistant-attach__trigger"
-                  aria-label="Attach files"
-                  data-assistant-attach-toggle
-                >
-                  <i class="ap-icon-paper-clip"></i>
-                  <span>Attach files</span>
+              <div class="ap-action-dropdown assistant-attach__menu" data-assistant-attach-menu hidden role="menu">
+                <button type="button" class="ap-action-dropdown-item" data-add-source="pdf" role="menuitem">
+                  <i class="ap-icon-file--pdf"></i>
+                  <div class="ap-action-dropdown-item-text">
+                    <div class="ap-action-dropdown-item-label">Add PDF</div>
+                  </div>
                 </button>
-                <div class="ap-action-dropdown assistant-attach__menu" data-assistant-attach-menu hidden role="menu">
-                  <button type="button" class="ap-action-dropdown-item" data-add-source="pdf" role="menuitem">
-                    <i class="ap-icon-file--pdf"></i>
-                    <div class="ap-action-dropdown-item-text">
-                      <div class="ap-action-dropdown-item-label">Add PDF</div>
-                    </div>
-                  </button>
-                  <button type="button" class="ap-action-dropdown-item" data-add-source="video" role="menuitem">
-                    <i class="ap-icon-file--video"></i>
-                    <div class="ap-action-dropdown-item-text">
-                      <div class="ap-action-dropdown-item-label">Add video</div>
-                    </div>
-                  </button>
-                  <button type="button" class="ap-action-dropdown-item" data-add-source="url" role="menuitem">
-                    <i class="ap-icon-link"></i>
-                    <div class="ap-action-dropdown-item-text">
-                      <div class="ap-action-dropdown-item-label">Add URL</div>
-                    </div>
-                  </button>
-                </div>
+                <button type="button" class="ap-action-dropdown-item" data-add-source="video" role="menuitem">
+                  <i class="ap-icon-file--video"></i>
+                  <div class="ap-action-dropdown-item-text">
+                    <div class="ap-action-dropdown-item-label">Add video</div>
+                  </div>
+                </button>
+                <button type="button" class="ap-action-dropdown-item" data-add-source="url" role="menuitem">
+                  <i class="ap-icon-link"></i>
+                  <div class="ap-action-dropdown-item-text">
+                    <div class="ap-action-dropdown-item-label">Add URL</div>
+                  </div>
+                </button>
               </div>
             </div>
           </div>
-          <div class="session__composer-hint">
-            <kbd>↵</kbd> to send · <kbd>Shift</kbd>+<kbd>↵</kbd> for new line · <kbd>⌘</kbd>+<kbd>↵</kbd> sends from
-            anywhere · drop a file anywhere to add it as a source
-          </div>
+        </div>
+        <div class="session__composer-hint">
+          <kbd>↵</kbd> to send · <kbd>Shift</kbd>+<kbd>↵</kbd> for new line · <kbd>⌘</kbd>+<kbd>↵</kbd> sends from
+          anywhere · drop a file anywhere to add it as a source
         </div>
       </div>
-    </aside>
+    </div>
   `;
 }
 
@@ -442,7 +458,7 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
 // competing decisions at once. The context choice now happens AFTER the
 // starter pick via an inline AI question in the thread (cf. starter
 // handler in bindSession + handleAssistantChoice "starter-context-pick").
-function renderEmptyHero(sessionId) {
+function renderEmptyHero(sessionId, composerMarkup = "") {
   const sources = getStreamSources(sessionId);
   const firstSource = sources.find((s) => s.status !== "Processing") || sources[0] || null;
   const sourceLabel = firstSource ? `"${firstSource.filename}"` : "your source";
@@ -474,6 +490,8 @@ function renderEmptyHero(sessionId) {
       <div class="empty-chat__sub">
         Drop in a source and Archie will turn it into a batch of posts you can review, edit, and schedule.
       </div>
+      ${raw(composerMarkup)}
+      <div class="empty-chat__starter-label">Start with a source or pick a starter pack</div>
       <div class="starter-grid">${raw(cards)}</div>
     </div>
   `;
