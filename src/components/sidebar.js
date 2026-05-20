@@ -294,15 +294,7 @@ export function renderSidebar() {
         </button>
       </div>
 
-      <button
-        type="button"
-        class="ap-button secondary blue app-sidebar__new app-sidebar__new--collapsed"
-        data-sidebar-new
-        aria-label="New conversation"
-        title="New conversation"
-      >
-        <i class="ap-icon-plus"></i>
-      </button>
+      <nav class="app-sidebar__nav" aria-label="Library">${raw(renderNav(path))}</nav>
 
       <div class="app-sidebar__list-spacer"></div>
 
@@ -483,6 +475,8 @@ function renderNav(path) {
         type="button"
         class="app-sidebar__nav-item ${item.match(path) ? "is-active" : ""}"
         data-sidebar-nav="${item.path}"
+        title="${item.label}"
+        aria-label="${item.label}"
       >
         <i class="${item.icon}"></i>
         <span>${item.label}</span>

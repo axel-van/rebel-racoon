@@ -546,18 +546,36 @@
 }
 
 /* ── Collapsed mode (56px) ────────────────────────────────────────────
-   Icon-only stack centred horizontally. Markup is rendered server-side
-   so we don't have to fight CSS-only hiding rules. */
+   Icon-only stack centred horizontally. The nav block (New conversation
+   / Search / Playbooks / Ideas) renders the same markup as expanded mode;
+   CSS below squashes each row into an icon-only 36px square and hides
+   the label / shortcut / counter chrome. Tooltips (title="…") carry the
+   identity for hover discovery. */
 
 .app-sidebar__head--collapsed {
   justify-content: center;
   padding: var(--ref-spacing-xs) var(--ref-spacing-xxs);
 }
 
-.app-sidebar__new--collapsed {
-  margin: 0 var(--ref-spacing-xxs) var(--ref-spacing-xxs);
-  width: calc(var(--app-sidebar-width-collapsed) - var(--ref-spacing-sm));
-  align-self: center;
+.app-shell.is-sidebar-collapsed .app-sidebar__nav {
+  padding: 0 var(--ref-spacing-xxs) var(--ref-spacing-xxs);
+  align-items: center;
+}
+
+.app-shell.is-sidebar-collapsed .app-sidebar__nav-item {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  justify-content: center;
+  gap: 0;
+}
+
+/* Hide the label, ⇧⌘O/⌘K hint, and per-row counter — only the leading
+   icon survives in collapsed mode. Tooltips carry the label. */
+.app-shell.is-sidebar-collapsed .app-sidebar__nav-item > span,
+.app-shell.is-sidebar-collapsed .app-sidebar__nav-kbd,
+.app-shell.is-sidebar-collapsed .app-sidebar__nav-item .ap-counter {
+  display: none;
 }
 
 .app-sidebar__list-spacer {
