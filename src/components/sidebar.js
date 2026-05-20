@@ -332,11 +332,6 @@ export function renderSidebar() {
       </button>
     </div>
 
-    <button type="button" class="ap-link standalone small app-sidebar__feedback" data-sidebar-feedback>
-      <i class="ap-icon-single-chat-bubble"></i>
-      <span>Give feedback</span>
-    </button>
-
     <nav class="app-sidebar__nav" aria-label="Library">${raw(renderNav(path))}</nav>
 
     <div class="app-sidebar__list" aria-label="Recent conversations">${raw(renderRecentLists(activeSessionId))}</div>
@@ -357,10 +352,31 @@ export function renderSidebar() {
 // Footer popmenu — trigger button + popmenu list. The popmenu lives in the
 // DOM but is hidden until the user clicks the trigger. Items dispatch to
 // the existing modal/drawer/legend handlers at the top of initSidebar.
+//
+// Expanded mode also renders a sibling 💬 icon button as a direct,
+// always-visible entry point to Send feedback (the head-of-sidebar link
+// was demoted to this quieter footer slot). Collapsed mode skips the
+// dedicated button — the popmenu's `Send feedback` item is the
+// collapsed-mode fallback, otherwise the foot rail would carry two
+// stacked icon buttons in too-little horizontal space.
 function renderFootMenu({ collapsed }) {
+  const feedbackBtn = collapsed
+    ? ""
+    : `
+      <button
+        type="button"
+        class="ap-icon-button transparent app-sidebar__foot-feedback"
+        data-sidebar-feedback
+        aria-label="Send feedback"
+        title="Send feedback"
+      >
+        <i class="ap-icon-single-chat-bubble"></i>
+      </button>
+    `;
   // Pop the menu UPWARDS from the trigger so it doesn't get cut off by the
   // viewport's bottom edge.
   return `
+    ${feedbackBtn}
     <div class="app-sidebar__foot-popmenu-wrap">
       <button
         type="button"

@@ -74,38 +74,6 @@
   flex-shrink: 0;
 }
 
-/* Give feedback — small standalone link in the sidebar head, above the
-   "New conversation" CTA. Hidden in collapsed mode (no room for the
-   text). DS .ap-link.standalone.small drives the typography ; the
-   wrapper here just re-applies button reset (background, border,
-   cursor) since the DS class targets <a>. */
-.app-sidebar__feedback {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  margin: 0 var(--ref-spacing-sm) var(--ref-spacing-xxs);
-  padding: 0;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-  text-align: left;
-  align-self: flex-start;
-}
-
-.app-sidebar__feedback i {
-  font-size: var(--sys-icon-css-xs);
-}
-
-.app-sidebar__feedback:hover,
-.app-sidebar__feedback:focus-visible {
-  color: var(--comp-link-hover-color);
-  outline: none;
-}
-
-.app-shell.is-sidebar-collapsed .app-sidebar__feedback {
-  display: none;
-}
-
 /* ── New conversation CTA ───────────────────────────────────────────── */
 /* In the expanded sidebar, "+ New conversation" lives inside the nav
    group as a regular `.app-sidebar__nav-item` (cf. renderNav() — same
