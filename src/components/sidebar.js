@@ -137,9 +137,22 @@ export function initSidebar() {
       return;
     }
     // 3-dots menu summary click — let <details> handle its own toggle,
-    // just swallow propagation so the row's session-nav handler doesn't fire.
-    if (event.target.closest(".app-sidebar__row-menu summary")) {
+    // swallow propagation so the row's session-nav handler doesn't fire,
+    // and position the dropdown (fixed-positioned, escapes the sidebar's
+    // overflow) just to the right of the trigger.
+    const summary = event.target.closest(".app-sidebar__row-menu summary");
+    if (summary) {
       event.stopPropagation();
+      // Wait for <details>.open to toggle, then position the dropdown.
+      requestAnimationFrame(() => {
+        const details = summary.closest("details");
+        if (!details?.open) return;
+        const dropdown = details.querySelector(".app-sidebar__row-menu-dropdown");
+        if (!dropdown) return;
+        const rect = summary.getBoundingClientRect();
+        dropdown.style.left = `${rect.right + 8}px`;
+        dropdown.style.top = `${rect.top}px`;
+      });
       return;
     }
     const sessionRow = event.target.closest("[data-sidebar-session]");
@@ -198,6 +211,29 @@ export function initSidebar() {
     if (!menuOpen) return;
     if (event.target.closest("[data-sidebar-foot-menu], [data-sidebar-foot-toggle]")) return;
     setMenuOpen(false);
+  });
+
+  // Click outside an open row ⋮ menu → close it. The dropdown is
+  // fixed-positioned so its click events bubble normally to document.
+  document.addEventListener("click", (event) => {
+    const openDetails = el.querySelector(".app-sidebar__row-menu[open]");
+    if (!openDetails) return;
+    if (openDetails.contains(event.target)) return;
+    openDetails.removeAttribute("open");
+  });
+
+  // If the user scrolls the sidebar list while a menu is open, close it
+  // — the dropdown is fixed-positioned and wouldn't follow.
+  const list = el.querySelector(".app-sidebar__list");
+  if (list) {
+    list.addEventListener("scroll", () => {
+      const openDetails = el.querySelector(".app-sidebar__row-menu[open]");
+      if (openDetails) openDetails.removeAttribute("open");
+    });
+  }
+  window.addEventListener("resize", () => {
+    const openDetails = el.querySelector(".app-sidebar__row-menu[open]");
+    if (openDetails) openDetails.removeAttribute("open");
   });
 
   // Cmd/Ctrl+B toggles the sidebar — matches Claude.ai. Skip the binding when

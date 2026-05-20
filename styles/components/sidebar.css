@@ -300,12 +300,14 @@
 /* ⋮ More-actions menu — Claude-style hover-reveal on the trailing edge.
    Absolute-positioned so it overlays the row without taking flex space
    (the title can use the full width at rest). Stays visible while the
-   dropdown is open. */
+   dropdown is open.
+
+   No `transform` — even a translateY would create a containing block
+   for the fixed-positioned dropdown inside, breaking JS positioning. */
 .app-sidebar__row-menu {
   position: absolute;
   right: var(--ref-spacing-xxs);
-  top: 50%;
-  transform: translateY(-50%);
+  top: 5px; /* (row height 34 - icon 24) / 2 */
   width: 24px;
   height: 24px;
   display: inline-flex;
@@ -336,6 +338,20 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* Opaque background so the title text behind the icon is masked
+     cleanly. Matches the row's hover bg so the button visually merges
+     with the row instead of looking like an overlay sticker. */
+  background: var(--ref-color-grey-10);
+}
+
+.app-sidebar__row-more::-webkit-details-marker {
+  display: none;
+}
+
+.app-sidebar__row-more:hover,
+.app-sidebar__row-menu[open] .app-sidebar__row-more {
+  background: var(--ref-color-grey-20);
+  color: var(--ref-color-grey-150);
 }
 
 .app-sidebar__row-more::-webkit-details-marker {
@@ -351,18 +367,22 @@
   color: var(--ref-color-grey-150);
 }
 
-/* Dropdown content — positioned absolutely below the trigger, aligned
-   to the right edge of the row. */
+/* Dropdown content — `position: fixed` so it escapes the sidebar's
+   overflow and the row-list's vertical scroll. Coordinates are set by
+   JS on toggle (see initSidebar in sidebar.js — reads the trigger's
+   getBoundingClientRect and sets inline top/left), placing the menu
+   just to the right of the ⋮ icon so it lives outside the sidebar
+   without covering conversation rows. */
 .app-sidebar__row-menu-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  z-index: 20;
-  min-width: 160px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--app-z-modal, 200);
+  min-width: 200px;
   background: var(--ref-color-white);
   border: 1px solid var(--ref-color-grey-10);
   border-radius: var(--ref-border-radius-md);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
   padding: var(--ref-spacing-xxs);
   display: flex;
   flex-direction: column;

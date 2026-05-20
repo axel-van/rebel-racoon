@@ -16,7 +16,7 @@ import { renderPostCard } from "./post-card.js?v=23";
 import { renderClipCard } from "./clip-card.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=2";
 import { CONTEXT_QUESTIONS } from "../context-questions.js?v=20";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=36";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=37";
 import {
   getSources as getStreamSources,
   subscribeSources,
