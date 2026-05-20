@@ -1,5 +1,5 @@
 import { route, setAfterRender, start } from "./router.js?v=21";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=43";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=44";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=41";
 import { init as initRightPanel } from "./components/right-panel.js?v=55";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=20";

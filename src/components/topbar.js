@@ -1,7 +1,10 @@
 import { html, raw } from "../utils.js?v=20";
 import { getPath } from "../router.js?v=21";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { toggleSidebar } from "./sidebar.js?v=41";
+// Lot 19 — topbar no longer carries its own sidebar-toggle button. The
+// sidebar head exposes the toggle in both expanded (chevron-left) and
+// collapsed (view-list) states, so the duplicate in the topbar was just
+// a leftover. ⌘B still works globally.
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
@@ -42,18 +45,7 @@ export function renderTopbar(_options = {}) {
   // — combined with draftCount — Drafts (no drafts produced for this chat).
   const isEmpty = onSession ? isEmptyConversation() : true;
   el.innerHTML = html`
-    <div class="app-topbar__left">
-      <button
-        type="button"
-        class="ap-icon-button transparent"
-        data-topbar-sidebar-toggle
-        aria-label="Toggle sidebar (⌘B)"
-        title="Toggle sidebar (⌘B)"
-      >
-        <i class="ap-icon-view-list"></i>
-      </button>
-      ${raw(renderTitle(onSession))}
-    </div>
+    <div class="app-topbar__left">${raw(renderTitle(onSession))}</div>
     <div class="app-topbar__right">${raw(onSession ? renderSessionPills(rpMode, draftCount, isEmpty) : "")}</div>
   `;
 }
@@ -92,10 +84,6 @@ export function initTopbar() {
   const el = document.getElementById("topbar");
   if (!el) return;
   el.addEventListener("click", (event) => {
-    if (event.target.closest("[data-topbar-sidebar-toggle]")) {
-      toggleSidebar();
-      return;
-    }
     // Click the conversation title → open the rename modal for it.
     const renameBtn = event.target.closest("[data-topbar-rename-session]");
     if (renameBtn) {
