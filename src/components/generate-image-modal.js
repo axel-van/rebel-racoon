@@ -105,7 +105,7 @@ function buildFullPrompt() {
 // ── Mock async stand-ins for real endpoints ──────────────────────────
 
 async function derivePromptFromPost(postId) {
-  await new Promise((r) => setTimeout(r, 600));
+  await new Promise((r) => setTimeout(r, 6000));
   const prompts = [
     "A professional executive presenting data insights in a modern office environment, photorealistic, warm lighting",
     "Bold graphic showing an upward-trending growth chart with vibrant blue and orange colors, minimalist style",
@@ -121,7 +121,7 @@ async function generateImage(prompt, seed) {
   // Pretend to call an image generation API; the seed keeps Picsum stable per
   // set of inputs so the "Regenerate" flow shows a different image each time.
   void prompt;
-  await new Promise((r) => setTimeout(r, 1400));
+  await new Promise((r) => setTimeout(r, 6000));
   return `https://picsum.photos/seed/${encodeURIComponent(seed)}/800/600`;
 }
 

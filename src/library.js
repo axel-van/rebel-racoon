@@ -11,13 +11,13 @@
 
 import { ideas as seedIdeas } from "./mocks.js?v=29";
 import { isNewUser } from "./user-mode.js?v=20";
-import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=29";
+import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=30";
 import {
   getSources as streamGetSources,
   subscribeSources,
   pushScriptedSource,
   completeScriptedSource,
-} from "./sources-stream.js?v=28";
+} from "./sources-stream.js?v=29";
 
 // --- Module state -------------------------------------------------------
 
@@ -227,9 +227,9 @@ export function addSource(sessionId, kind) {
   // extraction. Hidden pending marker — never rendered as a turn.
   const pendingId = startPending(sessionId);
 
-  // 3. Simulate extraction — ~15s so the thinking chip has time to tick
-  // through the "Xs · N credits" live counter.
-  const delay = 14500 + Math.round(Math.random() * 1000);
+  // 3. Simulate extraction — standardized 6s reasoning delay across the
+  // prototype so every "Archie is thinking" moment feels predictable.
+  const delay = 6000;
   setTimeout(() => {
     // Flip the source to Processed in the global store. notifySources()
     // inside completeScriptedSource fans out to every session subscriber.

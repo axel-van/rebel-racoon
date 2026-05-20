@@ -14,7 +14,7 @@
 //   3. Creates one draft post per channel via posts-store.js.
 //   4. Posts a structured "Drafted N posts" result turn.
 
-import { postUserTurn, postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=29";
+import { postUserTurn, postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=30";
 import { getIdeas } from "./library.js?v=26";
 import { addPostDraft } from "./posts-store.js?v=24";
 import { showToast } from "./components/toast.js?v=20";
@@ -67,7 +67,7 @@ export function startDraftFlow(sessionId, ideaId) {
       context: { ideaId: idea.id },
       submitLabel: "Draft them",
     });
-  }, 1500);
+  }, 6000);
 }
 
 export function executeDraft(sessionId, ideaId, selectedChannels) {
@@ -116,5 +116,5 @@ export function executeDraft(sessionId, ideaId, selectedChannels) {
         },
       });
     }
-  }, 2000);
+  }, 6000);
 }

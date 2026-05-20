@@ -6,14 +6,14 @@ import { init as initScheduleModal } from "./components/schedule-modal.js?v=20";
 import { initUserModeChip } from "./components/user-mode-chip.js?v=21";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=21";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=24";
-import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=20";
+import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=21";
 import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=1";
 import { init as initSettingsDrawer } from "./components/settings-drawer.js?v=23";
 import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=21";
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=22";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=20";
 import { renderDashboard } from "./screens/dashboard.js?v=42";
-import { renderSession } from "./screens/session.js?v=93";
+import { renderSession } from "./screens/session.js?v=94";
 import { renderIdeas } from "./screens/ideas.js?v=24";
 import { renderContexts } from "./screens/contexts.js?v=29";
 // Route table.

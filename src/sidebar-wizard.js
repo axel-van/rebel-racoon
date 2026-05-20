@@ -188,7 +188,7 @@ export function answer(sessionId, value, custom = null) {
       live.isPending = false;
       live.step = next.nextStep;
       notify(sessionId);
-    }, next.ms || 2000);
+    }, next.ms || 6000);
     return;
   }
 

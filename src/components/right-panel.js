@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=29";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=30";
 import { isFlagOn } from "../feature-flags.js?v=2";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=29";
 import { isNewUser } from "../user-mode.js?v=20";
@@ -22,7 +22,7 @@ import {
   subscribeSources,
   updateSourceClips,
   removeSources,
-} from "../sources-stream.js?v=28";
+} from "../sources-stream.js?v=29";
 import { open as openAddSourceModal } from "./add-source-modal.js?v=22";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
@@ -30,7 +30,7 @@ import { open as openAddSourceModal } from "./add-source-modal.js?v=22";
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
 import { open as openScheduleModal } from "./schedule-modal.js?v=20";
-import { open as openGenerateImageModal } from "./generate-image-modal.js?v=20";
+import { open as openGenerateImageModal } from "./generate-image-modal.js?v=21";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
 // the session workspace, hosts two modes:

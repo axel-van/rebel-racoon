@@ -151,7 +151,8 @@ function randomIdeas() {
 }
 
 function randomProcessingMs() {
-  return 3000 + Math.floor(Math.random() * 2000); // 3-5s
+  // Standardized 6s reasoning delay across the whole prototype.
+  return 6000;
 }
 
 // ─── Pipelines ───────────────────────────────────────────────────────────
@@ -326,7 +327,7 @@ export function startUrlImport(url, sessionId) {
   notifySources(sessionId);
   notifyUploads();
 
-  setTimeout(() => transitionToDone(upload), 4000 + Math.floor(Math.random() * 2000));
+  setTimeout(() => transitionToDone(upload), 6000);
   return upload.id;
 }
 

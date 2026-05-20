@@ -17,7 +17,7 @@ import {
   postDraftResult,
   subscribe,
   submitAssistantChoice,
-} from "../assistant.js?v=29";
+} from "../assistant.js?v=30";
 import { getSources, getIdeas, injectIdeasForSource } from "../library.js?v=26";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
@@ -27,11 +27,11 @@ import {
   setSubtitleStyle,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=24";
-import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
+import { startDraftFlow, executeDraft } from "../draft-flow.js?v=21";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=24";
-import * as contextBuilder from "../context-builder.js?v=31";
+import * as contextBuilder from "../context-builder.js?v=32";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=27";
 import { renderSourceCard } from "../components/source-card.js?v=27";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
@@ -41,7 +41,7 @@ import {
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=23";
-import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=20";
+import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=21";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";
 import { startClipExtraction } from "../components/clip-extraction-loader.js?v=2";
 import { open as openSettingsDrawer } from "../components/settings-drawer.js?v=23";
@@ -57,7 +57,7 @@ import {
   pushScriptedSource,
   completeScriptedSource,
   updateSourceClips,
-} from "../sources-stream.js?v=28";
+} from "../sources-stream.js?v=29";
 import { showToast } from "../components/toast.js?v=20";
 import {
   openDrafts as openDraftsPanel,
@@ -1803,7 +1803,7 @@ function startPillFromKind(_root, session, kind) {
   }
   // PDF / URL — keep the existing scripted intake: flip to ready in ~3-5s
   // with 3-8 ideas attached.
-  const delay = 3000 + Math.floor(Math.random() * 2000);
+  const delay = 6000;
   const ideaCount = 3 + Math.floor(Math.random() * 6);
   setTimeout(() => {
     completeScriptedSource(sourceId, {
@@ -1910,7 +1910,7 @@ function bindSession(root, session) {
           window.setTimeout(() => {
             injectIdeasForSource(session.id, sourceId, ideas);
             markIdeaExtractionReady(session.id, noticeId);
-          }, 12000);
+          }, 6000);
         }
       }
     }

@@ -13,9 +13,9 @@
 //       completion toast with an "Open clips" action that calls onReady.
 
 import { showToast } from "./toast.js";
-import { updateSourceClips, setClipExtractionStatus } from "../sources-stream.js?v=28";
+import { updateSourceClips, setClipExtractionStatus } from "../sources-stream.js?v=29";
 
-const DEFAULT_DURATION_MS = 45000;
+const DEFAULT_DURATION_MS = 6000;
 
 // Canned extraction output — the mocked AI result attached to any video
 // source that hasn't been through extraction yet. Generic enough to

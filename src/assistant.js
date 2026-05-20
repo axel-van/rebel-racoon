@@ -94,7 +94,7 @@ export function sendMessage(sessionId, text, options = {}) {
   });
   notify(sessionId);
 
-  const delay = 900 + Math.round(Math.random() * 600);
+  const delay = 6000;
   setTimeout(() => {
     const reply = mockAiReply({ prompt: text });
     const reasoning = thread.find((m) => m.id === reasoningId);

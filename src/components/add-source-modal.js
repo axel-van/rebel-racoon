@@ -28,7 +28,7 @@ import {
   cancelUpload,
   getUploads,
   subscribeUploads,
-} from "../sources-stream.js?v=28";
+} from "../sources-stream.js?v=29";
 
 let backdrop, modal, tabsEl, contentEl, footerEl, fileInput;
 let initialized = false;
