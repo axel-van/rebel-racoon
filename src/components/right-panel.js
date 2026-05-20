@@ -2076,7 +2076,7 @@ function renderContextBriefView() {
             ${(d.name || "").trim() ? "" : "disabled"}
           >
             <i class="ap-icon-sparkles-mermaid"></i>
-            <span>Generate my brief</span>
+            <span>Save context</span>
           </button>
         </footer>
       `;
