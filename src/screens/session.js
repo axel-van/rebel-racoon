@@ -129,13 +129,6 @@ function clearSelection() {
 // Unsubscribe fn for the assistant thread + library subscriptions.
 let currentUnsubscribe = null;
 
-// Composer prefill that needs to survive a renderSession re-render. Set by
-// the inline "Which context?" choice handler when the user picks a chip: we
-// stash the starter prompt here so the fresh composer textarea picks it up
-// after the route re-render triggered by setQuery({ contextId }). Keyed by
-// sessionId so concurrent sessions don't leak.
-const pendingComposerPrefill = new Map();
-
 // Controller used to abort the click/keydown listeners that bindSession
 // attaches to the stable #app element. Each renderSession call aborts the
 // previous batch and hands bindSession a fresh controller — otherwise tab
@@ -191,21 +184,6 @@ export function renderSession(params, target) {
 
   bindSession(target, session);
   wireAssistantPanel(target, session, attachedContext);
-
-  // Drain a pending composer prefill stashed by the inline "Which context?"
-  // chip handler. The chip click triggers setQuery({ contextId }) which
-  // re-runs renderSession → fresh composer textarea → empty. We restore
-  // the starter prompt here so the user can review it and hit Send.
-  const prefill = pendingComposerPrefill.get(session.id);
-  if (prefill) {
-    pendingComposerPrefill.delete(session.id);
-    const input = target.querySelector("#assistantInput");
-    if (input) {
-      input.value = prefill;
-      input.focus();
-      input.setSelectionRange(input.value.length, input.value.length);
-    }
-  }
 }
 
 function renderAssistantPanel(session, attachedContext) {
@@ -453,11 +431,10 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
 // render time: if a source is attached we name it; otherwise we fall back to
 // "your source" so the prompt still reads cleanly for first-run users.
 //
-// Context decision: the previous "2-section hero" experiment (picker above
-// the starters) was rolled back as too charged — the user had to make two
-// competing decisions at once. The context choice now happens AFTER the
-// starter pick via an inline AI question in the thread (cf. starter
-// handler in bindSession + handleAssistantChoice "starter-context-pick").
+// Context decision: handled entirely by the composer picker (visible
+// inline inside this hero). The previous inline AI question flow
+// ("Quick — which context?") was removed — the composer picker is now
+// the single, always-visible context affordance.
 function renderEmptyHero(sessionId, composerMarkup = "") {
   const sources = getStreamSources(sessionId);
   const firstSource = sources.find((s) => s.status !== "Processing") || sources[0] || null;
@@ -1847,49 +1824,8 @@ function bindSession(root, session) {
     if (!input) return;
     const text = input.value.trim();
     if (!text) return;
-    const wasFirstUserMessage = !getThread(session.id).some((m) => m.role === "user");
     sendMessage(session.id, text);
     input.value = "";
-
-    // Cover the "first typed message without a context" gap: starter clicks
-    // already post the same inline "Which context?" question, but a user
-    // who types directly (no starter) would otherwise lock the
-    // conversation with no context and no path to create one. Mirror the
-    // starter pattern here so every first-message path handles
-    // "no context defined" the same way.
-    if (!wasFirstUserMessage) return;
-    const q = readQuery();
-    const ctxAttached = q.contextId || session.contextId;
-    if (ctxAttached) return;
-    const thread = getThread(session.id);
-    // Guard against double-posting: the starter handler also posts this
-    // question on starter click. If the user clicked a starter then hit
-    // Send, the open choice is already in the thread — don't duplicate.
-    const hasOpenContextChoice = thread.some(
-      (m) => m.handler === "starter-context-pick" && !(m.selected && m.selected.length),
-    );
-    if (hasOpenContextChoice) return;
-    const allContexts = getContexts();
-    if (allContexts.length === 0) {
-      // New-user mode (no seeded contexts): nothing to pick. Launch the
-      // wizard inline so the user stays in the chat — onComplete attaches
-      // the freshly-created context to this session.
-      contextBuilder.start(session.id, {
-        onComplete: (created) => setQuery({ contextId: created.id }),
-      });
-      return;
-    }
-    const choices = allContexts.map((c) => ({ value: c.id, label: c.name }));
-    choices.push({ value: "__none__", label: "No context" });
-    choices.push({ value: "__new__", label: "New context", icon: "ap-icon-plus" });
-    postAssistantChoice(session.id, {
-      text: "Quick — which context should I tailor this to?",
-      choices,
-      multi: false,
-      instant: true,
-      handler: "starter-context-pick",
-      context: { prompt: "" },
-    });
   }
 
   // Run the handler for a choice turn (freeze the message + dispatch). Called
@@ -1910,33 +1846,6 @@ function bindSession(root, session) {
         setSubtitleStyle(session.id, draftIds, pick);
         const label = pick === "none" ? "No subtitles" : SUBTITLE_PICK_LABEL[pick] || pick;
         showToast(`Subtitles applied · ${label}`, { duration: 3200 });
-      }
-    } else if (msg.handler === "starter-context-pick") {
-      // User clicked a starter card without an attached context — the AI
-      // asked "Which context?" inline. Apply the pick + restore the
-      // starter prompt in the composer (the setQuery re-render wipes it).
-      const prompt = msg.context?.prompt || "";
-      const pick = selectedValues[0];
-      if (pick === "__new__") {
-        // Inline wizard inside the current session — user keeps their
-        // chat (and the starter prompt they typed) instead of leaving
-        // for a dedicated page. onComplete attaches the new context.
-        contextBuilder.start(session.id, {
-          onComplete: (created) => setQuery({ contextId: created.id }),
-        });
-      } else if (pick === "__none__") {
-        // Explicit "No context". The URL is already clean for fresh
-        // chats; just drain the prefill into the composer in place
-        // (no re-render needed — frozen choice already triggered one).
-        const input = root.querySelector("#assistantInput");
-        if (input && prompt) {
-          input.value = prompt;
-          input.focus();
-          input.setSelectionRange(input.value.length, input.value.length);
-        }
-      } else if (pick) {
-        if (prompt) pendingComposerPrefill.set(session.id, prompt);
-        setQuery({ contextId: pick });
       }
     } else if (msg.handler === "video-intake-choice") {
       // Single-select picker between "clips" (cut into clip-extraction flow)
@@ -2298,50 +2207,10 @@ function bindSession(root, session) {
       if (starterBtn) {
         const input = getInput();
         if (!input) return;
-        const prompt = starterBtn.dataset.starterPrompt;
-        input.value = prompt;
+        input.value = starterBtn.dataset.starterPrompt;
         input.focus();
         // Place cursor at end so the user can edit.
         input.setSelectionRange(input.value.length, input.value.length);
-
-        // If no context is attached AND we have contexts to pick from, ask
-        // inline before the user sends. Decision happens IN the thread,
-        // not in a separate hero section — matches the conversational
-        // model the user prefers (cf. revert of the 2-section hero).
-        // Once chosen, the route re-render replaces the composer textarea,
-        // so we stash the prompt in the message context to re-prefill it
-        // after the navigation (cf. pendingComposerPrefill drain).
-        const q = readQuery();
-        const ctxAttached = q.contextId || session.contextId;
-        const allContexts = getContexts();
-        if (!ctxAttached && allContexts.length > 0) {
-          // Don't double-ask if a choice turn for this same prompt is
-          // already in the thread (e.g. user clicked the same starter
-          // twice, or another starter before picking).
-          const thread = getThread(session.id);
-          const hasOpenContextChoice = thread.some(
-            (m) => m.variant === "choice" && m.handler === "starter-context-pick" && !m.chosen,
-          );
-          if (!hasOpenContextChoice) {
-            const choices = allContexts.map((c) => ({
-              value: c.id,
-              label: c.name,
-              // No icon — the colored dot in the chip would be nicer but
-              // postAssistantChoice's chip renderer only supports an `icon`
-              // prop today. Keep the chip clean and rely on the name.
-            }));
-            choices.push({ value: "__none__", label: "No context" });
-            choices.push({ value: "__new__", label: "New context", icon: "ap-icon-plus" });
-            postAssistantChoice(session.id, {
-              text: "Quick — which context should I tailor this to?",
-              choices,
-              multi: false,
-              instant: true,
-              handler: "starter-context-pick",
-              context: { prompt },
-            });
-          }
-        }
         return;
       }
 
