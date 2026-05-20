@@ -156,14 +156,18 @@
   outline: none;
 }
 
+/* Active nav item — same visual treatment as the active conversation
+   row (filled surface bg + electric-blue label/icon). Keeps the
+   "you-are-here" cue consistent across the whole sidebar: nav and
+   conversations share one active style. */
 .app-sidebar__nav-item.is-active {
   background: var(--app-surface);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-electric-blue-100);
   box-shadow: var(--app-shadow-subtle);
 }
 
 .app-sidebar__nav-item.is-active i {
-  color: var(--ref-color-orange-100);
+  color: var(--ref-color-electric-blue-100);
 }
 
 /* Live counter badge — pushed to the trailing edge of the nav row. */
