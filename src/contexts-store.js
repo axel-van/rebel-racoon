@@ -60,7 +60,7 @@ export function addContext(ctx = {}) {
       : [];
   const next = {
     id: ctx.id || freshId(),
-    name: ctx.name || "Untitled context",
+    name: ctx.name || "Untitled playbook",
     color: ctx.color || "orange",
     isDefault: ctx.isDefault === true,
     // — legacy fields (kept for backwards compatibility with seeds + the

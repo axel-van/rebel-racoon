@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=28";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=29";
 import { isFlagOn } from "../feature-flags.js?v=2";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=29";
 import { isNewUser } from "../user-mode.js?v=20";
@@ -16,7 +16,7 @@ import { renderPostCard } from "./post-card.js?v=23";
 import { renderClipCard } from "./clip-card.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=2";
 import { CONTEXT_QUESTIONS } from "../context-questions.js?v=20";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=32";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=33";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -967,16 +967,16 @@ function renderPanel() {
     const isRead = contextFormConfig?.mode === "read";
     if (isRead) {
       const ctx = contextFormConfig.getCtx?.();
-      titleText = ctx?.name || "Context";
+      titleText = ctx?.name || "Playbook";
     } else {
       const draft = contextFormConfig?.getDraft?.();
-      titleText = draft?.name?.trim() || "Build your context";
+      titleText = draft?.name?.trim() || "Build your playbook";
     }
   } else if (state.mode === "context-brief") {
     titleIcon = "ap-icon-target";
     if (contextBriefConfig?.mode === "read") {
       const ctx = contextBriefConfig.getCtx?.();
-      titleText = ctx?.name || "Context";
+      titleText = ctx?.name || "Playbook";
     } else {
       const draft = contextBriefConfig?.getDraft?.();
       titleText = draft?.name?.trim() || "Define your content brief";
@@ -1924,7 +1924,7 @@ function renderContextFormFooterEdit(name) {
         <input
           type="text"
           class="ap-input"
-          placeholder="Name this context (e.g. Acme · Q3)"
+          placeholder="Name this playbook (e.g. Acme · Q3)"
           data-ctx-name
           value="${escapeAttr(name)}"
         />
@@ -1939,7 +1939,7 @@ function renderContextFormFooterEdit(name) {
         ${canSave ? "" : "disabled"}
       >
         <i class="ap-icon-rounded-check"></i>
-        <span>Save context</span>
+        <span>Save playbook</span>
       </button>
     </footer>
   `;
@@ -2100,7 +2100,7 @@ function renderContextBriefView() {
             ${(d.name || "").trim() ? "" : "disabled"}
           >
             <i class="ap-icon-sparkles-mermaid"></i>
-            <span>Save context</span>
+            <span>Save playbook</span>
           </button>
         </footer>
       `;

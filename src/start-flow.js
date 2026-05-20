@@ -11,11 +11,11 @@
 // from any "+ New context" entry point (composer picker, AI inline
 // question chip, /contexts page via a spawn-session handoff).
 
-import { postAssistantMessage, postUserTurn, postAssistantChoice } from "./assistant.js?v=28";
+import { postAssistantMessage, postUserTurn, postAssistantChoice } from "./assistant.js?v=29";
 
 // ---- Action picker -----------------------------------------------------
 
-export function startActionPickerFlow(sessionId, { contextName = "Your context" } = {}) {
+export function startActionPickerFlow(sessionId, { contextName = "Your playbook" } = {}) {
   postAssistantMessage(sessionId, `Welcome back. ${contextName} is attached — what do you want to do?`);
   postAssistantChoice(sessionId, {
     text: "",

@@ -20,8 +20,8 @@
 // contexts that may still have the old shape.
 
 import * as inlineQuestion from "./inline-question.js?v=21";
-import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=28";
-import * as rightPanel from "./components/right-panel.js?v=54";
+import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=29";
+import * as rightPanel from "./components/right-panel.js?v=55";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=25";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=20";
 
@@ -165,8 +165,8 @@ function askUrl(sessionId, { autoLaunched = false } = {}) {
   // is hidden. So we pass our framing copy through the `intro` field
   // instead of postAssistantMessage (which would be invisible).
   const intro = autoLaunched
-    ? "Before I dive in — there's no context defined for this conversation yet. Let's create one together, it'll only take a minute. I'll ask you a few quick questions, starting with your website."
-    : "Let's set up a new context. I'll ask you a few quick questions, starting with your website.";
+    ? "Before I dive in — there's no playbook defined for this conversation yet. Let's create one together, it'll only take a minute. I'll ask you a few quick questions, starting with your website."
+    : "Let's set up a new playbook. I'll ask you a few quick questions, starting with your website.";
   // Also push the same intro to the thread so it's there when the wizard
   // exits (the user sees a coherent history after the brief panel opens).
   postAssistantMessage(sessionId, intro);

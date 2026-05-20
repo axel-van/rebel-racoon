@@ -219,7 +219,7 @@ export function renderChrome(sessionId) {
         historyHtml +
         chatTurn({
           role: "ai",
-          text: "What should I call this context?",
+          text: "What should I call this playbook?",
         }),
       picker: MEMORIZE_NAME_PICKER,
     };
@@ -231,7 +231,7 @@ export function renderChrome(sessionId) {
         historyHtml +
         chatTurn({
           role: "ai",
-          text: "Saving this context so you can reuse it. Want to name it, or use the chat's title as the default?",
+          text: "Saving this playbook so you can reuse it. Want to name it, or use the chat's title as the default?",
         }),
       picker: MEMORIZE_PICKER,
     };
@@ -281,8 +281,8 @@ const MEMORIZE_PICKER = {
     { value: "default", label: "Use the chat title", icon: "ap-icon-arrow-right" },
   ],
   handler: "wizard-answer",
-  title: "Saving this context so you can reuse it. Name it, or use the chat title?",
-  stepIndicator: "Save context",
+  title: "Saving this playbook so you can reuse it. Name it, or use the chat title?",
+  stepIndicator: "Save playbook",
 };
 
 // Custom-input-only picker — items=[] + customPlaceholder makes the input row
@@ -291,9 +291,9 @@ const MEMORIZE_PICKER = {
 const MEMORIZE_NAME_PICKER = {
   items: [],
   handler: "wizard-answer",
-  customPlaceholder: "Name this context (e.g. “Founder voice”)…",
-  title: "What should I call this context?",
-  stepIndicator: "Name context",
+  customPlaceholder: "Name this playbook (e.g. “Founder voice”)…",
+  title: "What should I call this playbook?",
+  stepIndicator: "Name playbook",
 };
 
 // ---- Voice script ----------------------------------------------------------

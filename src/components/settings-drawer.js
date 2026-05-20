@@ -31,7 +31,7 @@ let confirmBackdrop, confirmDialog, confirmText;
 
 const SECTIONS = [
   { id: "connectors", label: "Connectors", icon: "ap-icon-link" },
-  { id: "contexts", label: "Contexts", icon: "ap-icon-headset" },
+  { id: "contexts", label: "Playbooks", icon: "ap-icon-headset" },
   { id: "preferences", label: "Generation preferences", icon: "ap-icon-sparkles" },
   { id: "social", label: "Social accounts", icon: "ap-icon-multiple-users" },
   { id: "notifications", label: "Notifications", icon: "ap-icon-bell" },
@@ -145,7 +145,7 @@ function renderContextsSection() {
   return html`
     <header class="settings-drawer__section-header">
       <div>
-        <h3 class="settings-drawer__section-title">Contexts</h3>
+        <h3 class="settings-drawer__section-title">Playbooks</h3>
         <p class="settings-drawer__section-sub">
           Saved bundles of voice, brief, and brand. Create or edit one from inside any chat.
         </p>
@@ -156,7 +156,7 @@ function renderContextsSection() {
         ? `
             <div class="settings-drawer__empty">
               <div class="settings-drawer__empty-icon"><i class="ap-icon-headset lg"></i></div>
-              <h4 class="settings-drawer__empty-title">No saved contexts yet</h4>
+              <h4 class="settings-drawer__empty-title">No saved playbooks yet</h4>
               <p class="settings-drawer__empty-body">
                 Start a new chat — Archie will walk you through capturing a Voice, Strategy brief, and Brand theme,
                 then offer to save it here.

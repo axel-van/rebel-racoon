@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate, getPath } from "../router.js?v=20";
-import { open as openSettingsDrawer } from "./settings-drawer.js?v=22";
+import { open as openSettingsDrawer } from "./settings-drawer.js?v=23";
 import { open as openBugReportModal } from "./bug-report-modal.js?v=21";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=24";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
@@ -9,7 +9,7 @@ import { isFlagOn } from "../feature-flags.js?v=2";
 import { isNewUser } from "../user-mode.js?v=20";
 import { getIdeas } from "../library.js?v=26";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=25";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=54";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=55";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the
@@ -342,7 +342,7 @@ const NAV = [
   {
     path: "/contexts",
     icon: "ap-icon-target",
-    label: "Contexts",
+    label: "Playbooks",
     match: (p) => p === "/contexts",
     count: () => getContexts().length,
   },

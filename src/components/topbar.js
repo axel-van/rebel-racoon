@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { getPath } from "../router.js?v=21";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { toggleSidebar } from "./sidebar.js?v=32";
+import { toggleSidebar } from "./sidebar.js?v=33";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
@@ -10,9 +10,9 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=54";
+} from "./right-panel.js?v=55";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=28";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=28";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=29";
 import { recentSessions } from "../mocks.js?v=29";
 
 // Persistent top bar.
@@ -263,7 +263,7 @@ function currentTitle() {
   if (path === "/") return "Home";
   if (path === "/sources") return "Sources";
   if (path === "/ideas") return "Ideas";
-  if (path === "/contexts") return "Contexts";
+  if (path === "/contexts") return "Playbooks";
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);
   if (sessionMatch) {
     const id = sessionMatch[1];

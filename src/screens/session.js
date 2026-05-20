@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=20";
-import { renderTopbar } from "../components/topbar.js?v=40";
+import { renderTopbar } from "../components/topbar.js?v=41";
 import { getSessionById, socialAccounts, recentSessions, chatStarters } from "../mocks.js?v=29";
 import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=25";
 import { isNewUser } from "../user-mode.js?v=20";
@@ -17,7 +17,7 @@ import {
   postDraftResult,
   subscribe,
   submitAssistantChoice,
-} from "../assistant.js?v=28";
+} from "../assistant.js?v=29";
 import { getSources, getIdeas, injectIdeasForSource } from "../library.js?v=26";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
@@ -31,7 +31,7 @@ import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=21";
-import * as contextBuilder from "../context-builder.js?v=27";
+import * as contextBuilder from "../context-builder.js?v=28";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=25";
 import { renderSourceCard } from "../components/source-card.js?v=27";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
@@ -44,7 +44,7 @@ import {
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=20";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";
 import { startClipExtraction } from "../components/clip-extraction-loader.js?v=2";
-import { open as openSettingsDrawer } from "../components/settings-drawer.js?v=22";
+import { open as openSettingsDrawer } from "../components/settings-drawer.js?v=23";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=21";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=22";
 import {
@@ -65,7 +65,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=54";
+} from "../components/right-panel.js?v=55";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=20";
 
@@ -340,7 +340,7 @@ function dotColorVar(colorName) {
 function renderComposerContextDropdown(attachedContext, { locked = false } = {}) {
   const all = getContexts();
   const triggerColor = attachedContext?.color || "grey";
-  const triggerLabel = attachedContext?.name || "No context";
+  const triggerLabel = attachedContext?.name || "No playbook";
   // Locked state — conversation has at least one user turn. The context is
   // committed: swap the picker for a simple stroked button showing the
   // active context's color dot + name. Clicking it opens the right-panel
@@ -356,8 +356,8 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
         type="button"
         class="ap-button stroked grey composer-context__locked"
         data-context-view
-        title="View context"
-        aria-label="View context: ${escapeHtml(triggerLabel)}"
+        title="View playbook"
+        aria-label="View playbook: ${escapeHtml(triggerLabel)}"
       >
         <span class="composer-context__dot" style="background: ${dotColorVar(triggerColor)};"></span>
         <span>${escapeHtml(triggerLabel)}</span>
@@ -392,16 +392,16 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
         <div class="ap-select-divider"></div>
         <button type="button" class="ap-select-option" data-context-id="__detach__" role="option">
           <i class="ap-icon-close ap-select-option-icon"></i>
-          <span class="ap-select-option-text">No context</span>
+          <span class="ap-select-option-text">No playbook</span>
         </button>
       `
     : "";
-  const noneItem = all.length === 0 ? `<div class="ap-select-option disabled muted">No saved contexts yet.</div>` : "";
+  const noneItem = all.length === 0 ? `<div class="ap-select-option disabled muted">No saved playbooks yet.</div>` : "";
   return `
     <details class="ap-select composer-context-select" data-composer-context>
       <summary class="ap-select-trigger">
         <span class="composer-context__dot" data-context-dot style="background: ${dotColorVar(triggerColor)};"></span>
-        <span class="ap-select-inline-label">Context</span>
+        <span class="ap-select-inline-label">Playbook</span>
         <span class="ap-select-value" data-context-label>${escapeHtml(triggerLabel)}</span>
         <i class="ap-icon-chevron-down ap-select-arrow"></i>
       </summary>
@@ -413,7 +413,7 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
           <div class="ap-select-divider"></div>
           <button type="button" class="ap-select-option" data-context-id="__new__" role="option">
             <i class="ap-icon-plus ap-select-create-icon"></i>
-            <span class="ap-select-option-text">New context…</span>
+            <span class="ap-select-option-text">New playbook…</span>
           </button>
         </div>
       </div>

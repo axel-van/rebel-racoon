@@ -409,7 +409,7 @@ function seedThread(sessionId, { hasContext, skipGreeting }) {
 
   const greeting = hasContext
     ? "Hi — I can compare ideas, pick the strongest signal, or draft a post. Pick a suggestion below, type a question, or drop a source."
-    : "Hi — I'll help you pick sources, sharpen angles, and draft posts. Attach a context (Voice, Brief, Brand) any time to make my suggestions sharper.";
+    : "Hi — I'll help you pick sources, sharpen angles, and draft posts. Attach a playbook (Voice, Brief, Brand) any time to make my suggestions sharper.";
 
   threads.set(sessionId, [
     {
@@ -526,7 +526,7 @@ function mockAiReply({ prompt }) {
       reasoning: `Scanned ${ideaCount} extracted ideas, ranked by confidence and relevance. "${leadIdea.title}" came out on top (${leadIdea.confidence}% confidence) — composing a ${batch.length}-post batch grounded in its source.`,
       text: isLaunch
         ? `Here's a ${batch.length}-day sequence built from "${leadIdea.title}" — one post per day, mixed networks. Open the Drafts panel to review and schedule.`
-        : `I drafted ${batch.length} posts grounded in "${leadIdea.title}". Each is sized for its network and follows the active context's tone rules.`,
+        : `I drafted ${batch.length} posts grounded in "${leadIdea.title}". Each is sized for its network and follows the active playbook's tone rules.`,
       batch,
     };
   }
