@@ -129,6 +129,13 @@ function clearSelection() {
 // Unsubscribe fn for the assistant thread + library subscriptions.
 let currentUnsubscribe = null;
 
+// Composer prefill that needs to survive a renderSession re-render. Set by
+// the inline "Which context?" choice handler when the user picks a chip: we
+// stash the starter prompt here so the fresh composer textarea picks it up
+// after the route re-render triggered by setQuery({ contextId }). Keyed by
+// sessionId so concurrent sessions don't leak.
+const pendingComposerPrefill = new Map();
+
 // Controller used to abort the click/keydown listeners that bindSession
 // attaches to the stable #app element. Each renderSession call aborts the
 // previous batch and hands bindSession a fresh controller — otherwise tab
@@ -184,6 +191,21 @@ export function renderSession(params, target) {
 
   bindSession(target, session);
   wireAssistantPanel(target, session, attachedContext);
+
+  // Drain a pending composer prefill stashed by the inline "Which context?"
+  // chip handler. The chip click triggers setQuery({ contextId }) which
+  // re-runs renderSession → fresh composer textarea → empty. We restore
+  // the starter prompt here so the user can review it and hit Send.
+  const prefill = pendingComposerPrefill.get(session.id);
+  if (prefill) {
+    pendingComposerPrefill.delete(session.id);
+    const input = target.querySelector("#assistantInput");
+    if (input) {
+      input.value = prefill;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  }
 }
 
 function renderAssistantPanel(session, attachedContext) {
@@ -208,18 +230,21 @@ function renderAssistantPanel(session, attachedContext) {
   }
 
   // Empty conversation = the user hasn't typed anything yet AND no rich
-  // assistant turn has landed (extraction / draft / clip-extraction). We
-  // swap the thread for the handoff "What are we creating today?" hero
-  // with a 2x2 grid of starter cards (Q14). Once the user types or a
-  // rich turn arrives, the thread takes over so the in-flight work stays
-  // visible across remounts.
+  // assistant turn has landed (extraction / draft / clip-extraction /
+  // assistant-choice). We swap the thread for the handoff "What are we
+  // creating today?" hero with a 2x2 grid of starter cards (Q14). Once
+  // the user types or a rich turn arrives (incl. the inline "Which
+  // context?" choice posted by a starter click), the thread takes over
+  // so the in-flight work stays visible across remounts.
   const isEmptyConversation =
-    thread.every((m) => m.role !== "user") && !thread.some((m) => m.role === "assistant" && m.variant);
+    thread.every((m) => m.role !== "user") &&
+    !thread.some((m) => m.role === "assistant-choice") &&
+    !thread.some((m) => m.role === "assistant" && m.variant);
 
   return html`
     <aside class="session__assistant" aria-label="Assistant panel">
       <div class="session__assistant-thread" id="assistantThread" data-assistant-thread>
-        ${isEmptyConversation ? raw(renderEmptyHero(session.id, attachedContext)) : raw(renderThread(thread))}
+        ${isEmptyConversation ? raw(renderEmptyHero(session.id)) : raw(renderThread(thread))}
       </div>
       <div class="session__composer">
         <div class="session__composer-inner">
@@ -391,27 +416,22 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
   `;
 }
 
-// Sessions where the user explicitly skipped the context-picker section in
-// the empty hero. Module-local — doesn't persist across reloads (acceptable:
-// skipping a brand-new chat once doesn't need to survive a hard refresh, and
-// once the first message is sent the picker is gone anyway).
-const skippedContextPicker = new Set();
-
 // Empty-state hero — shown inside the assistant thread region when the user
-// hasn't sent a first message yet. Two stacked sections:
+// hasn't sent a first message yet. Mirrors the handoff (Chat.jsx empty state):
+// hero question + sub-line + 2x2 grid of starter cards. Cards click → prefill
+// the composer textarea (handler in bindSession via [data-starter]).
 //
-//   1. Context picker (top) — surfaces the contexts so the choice happens
-//      BEFORE the first prompt instead of being buried in the composer pill.
-//      State machine:
-//        • attachedContext present → confirmation strip (tag + Change)
-//        • user skipped this session → section hidden
-//        • zero contexts (new user) → CTA "Create my first context"
-//        • else → 3 cards + "New context" / "Start without context"
-//   2. Starter prompts (bottom) — unchanged 2x2 grid of starter cards. The
-//      raw prompts use a `{{source}}` placeholder resolved at render time
-//      so "Batch from your source" reads as "Batch from \"X.pdf\"" when a
-//      source is already attached.
-function renderEmptyHero(sessionId, attachedContext) {
+// FIND-A4: the raw prompts in mocks.chatStarters use a `{{source}}` placeholder
+// that the previous version dropped into the textarea verbatim. Resolve it at
+// render time: if a source is attached we name it; otherwise we fall back to
+// "your source" so the prompt still reads cleanly for first-run users.
+//
+// Context decision: the previous "2-section hero" experiment (picker above
+// the starters) was rolled back as too charged — the user had to make two
+// competing decisions at once. The context choice now happens AFTER the
+// starter pick via an inline AI question in the thread (cf. starter
+// handler in bindSession + handleAssistantChoice "starter-context-pick").
+function renderEmptyHero(sessionId) {
   const sources = getStreamSources(sessionId);
   const firstSource = sources.find((s) => s.status !== "Processing") || sources[0] || null;
   const sourceLabel = firstSource ? `"${firstSource.filename}"` : "your source";
@@ -439,101 +459,11 @@ function renderEmptyHero(sessionId, attachedContext) {
     .join("");
   return html`
     <div class="empty-chat" data-empty-chat>
-      ${raw(renderEmptyHeroContextSection(sessionId, attachedContext))}
       <div class="empty-chat__hello">What are we creating today?</div>
       <div class="empty-chat__sub">
         Drop in a source and Archie will turn it into a batch of posts you can review, edit, and schedule.
       </div>
       <div class="starter-grid">${raw(cards)}</div>
-    </div>
-  `;
-}
-
-// Top section of the empty hero — context picker / confirmation / empty
-// state. Returns "" when the user skipped explicitly (handled inline so the
-// divider below collapses with it).
-function renderEmptyHeroContextSection(sessionId, attachedContext) {
-  // State 1 — context attached: compressed confirmation strip. Reuses the
-  // composer locked-tag visual language so the in-conversation pill and
-  // the hero confirmation share the same chrome.
-  if (attachedContext) {
-    const color = attachedContext.color || "orange";
-    return `
-      <div class="empty-chat__context-confirm" data-empty-context-confirm>
-        <span class="empty-chat__context-confirm-tag">
-          <i class="ap-icon-rounded-check_fill"></i>
-          <span class="empty-chat__context-confirm-label">Context</span>
-          <span class="composer-context__dot" style="background: var(--ref-color-${escapeHtml(color)}-100);"></span>
-          <span class="empty-chat__context-confirm-name">${escapeHtml(attachedContext.name)}</span>
-        </span>
-        <button type="button" class="ap-button ghost grey" data-context-change>
-          <span>Change</span>
-          <i class="ap-icon-chevron-down"></i>
-        </button>
-      </div>
-    `;
-  }
-
-  // State 2 — user skipped: render nothing, starters take over.
-  if (skippedContextPicker.has(sessionId)) {
-    return "";
-  }
-
-  const contexts = getContexts();
-
-  // State 3 — zero contexts (new user): inviting empty state, primary CTA
-  // routes to /contexts/new. The Skip lets them opt out without setting one
-  // up, which preserves the unblocking path.
-  if (contexts.length === 0) {
-    return `
-      <div class="empty-chat__context-picker empty-chat__context-picker--empty">
-        <div class="empty-chat__context-eyebrow">Set up your first context to get sharper suggestions</div>
-        <div class="empty-chat__context-empty-sub">
-          A context tells Archie about your brand voice, audience, and do/don'ts.
-        </div>
-        <div class="empty-chat__context-footer">
-          <button type="button" class="ap-button primary orange" data-context-new>
-            <i class="ap-icon-plus"></i>
-            <span>Create my first context</span>
-          </button>
-          <button type="button" class="ap-link small" data-context-skip>Skip — start without context</button>
-        </div>
-        <div class="empty-chat__divider"></div>
-      </div>
-    `;
-  }
-
-  // State 4 — pick a context: grid of 3 cards. Each card uses the context
-  // color dot pattern to mirror the composer pill and confirmation strip.
-  const cardsHtml = contexts
-    .map((c) => {
-      const color = c.color || "orange";
-      const desc = (c.briefSummary || "").trim();
-      const descShort = desc.length > 110 ? `${desc.slice(0, 107)}…` : desc;
-      return `
-        <button type="button" class="empty-chat__context-card" data-context-pick="${escapeHtml(c.id)}" style="--ctx-accent: var(--ref-color-${escapeHtml(color)}-100); --ctx-accent-bg: var(--ref-color-${escapeHtml(color)}-10);">
-          <span class="empty-chat__context-card-head">
-            <span class="composer-context__dot" style="background: var(--ref-color-${escapeHtml(color)}-100);"></span>
-            <span class="empty-chat__context-card-name">${escapeHtml(c.name)}</span>
-          </span>
-          <span class="empty-chat__context-card-desc">${escapeHtml(descShort)}</span>
-        </button>
-      `;
-    })
-    .join("");
-
-  return `
-    <div class="empty-chat__context-picker">
-      <div class="empty-chat__context-eyebrow">Pick a context — Archie will tailor its suggestions</div>
-      <div class="empty-chat__context-grid">${cardsHtml}</div>
-      <div class="empty-chat__context-footer">
-        <button type="button" class="ap-button stroked grey" data-context-new>
-          <i class="ap-icon-plus"></i>
-          <span>New context</span>
-        </button>
-        <button type="button" class="ap-link small" data-context-skip>Start without context</button>
-      </div>
-      <div class="empty-chat__divider"></div>
     </div>
   `;
 }
@@ -1900,6 +1830,30 @@ function bindSession(root, session) {
         const label = pick === "none" ? "No subtitles" : SUBTITLE_PICK_LABEL[pick] || pick;
         showToast(`Subtitles applied · ${label}`, { duration: 3200 });
       }
+    } else if (msg.handler === "starter-context-pick") {
+      // User clicked a starter card without an attached context — the AI
+      // asked "Which context?" inline. Apply the pick + restore the
+      // starter prompt in the composer (the setQuery re-render wipes it).
+      const prompt = msg.context?.prompt || "";
+      const pick = selectedValues[0];
+      if (pick === "__new__") {
+        // Route to the dedicated create-context flow. The starter prompt
+        // is sacrificed — user will pick a starter again on return.
+        navigate("/contexts/new");
+      } else if (pick === "__none__") {
+        // Explicit "No context". The URL is already clean for fresh
+        // chats; just drain the prefill into the composer in place
+        // (no re-render needed — frozen choice already triggered one).
+        const input = root.querySelector("#assistantInput");
+        if (input && prompt) {
+          input.value = prompt;
+          input.focus();
+          input.setSelectionRange(input.value.length, input.value.length);
+        }
+      } else if (pick) {
+        if (prompt) pendingComposerPrefill.set(session.id, prompt);
+        setQuery({ contextId: pick });
+      }
     } else if (msg.handler === "video-intake-choice") {
       // Single-select picker between "clips" (cut into clip-extraction flow)
       // and "ideas" (inject mock ideas into the Ideas panel). For video,
@@ -2260,61 +2214,50 @@ function bindSession(root, session) {
       if (starterBtn) {
         const input = getInput();
         if (!input) return;
-        input.value = starterBtn.dataset.starterPrompt;
+        const prompt = starterBtn.dataset.starterPrompt;
+        input.value = prompt;
         input.focus();
         // Place cursor at end so the user can edit.
         input.setSelectionRange(input.value.length, input.value.length);
-        return;
-      }
 
-      // Empty-hero context picker — pick a context. Routes via setQuery so
-      // renderSession resolves the new attachedContext and re-paints the
-      // panel (confirmation strip + composer locked tag) in one pass.
-      const ctxPickBtn = event.target.closest("[data-context-pick]");
-      if (ctxPickBtn) {
-        event.preventDefault();
-        const id = ctxPickBtn.dataset.contextPick;
-        // If the user previously skipped this session, picking should also
-        // clear the skipped flag so the picker re-surfaces correctly if they
-        // change their mind later.
-        skippedContextPicker.delete(session.id);
-        setQuery({ contextId: id });
-        return;
-      }
-
-      // Empty-hero context "Change" — clears the URL contextId, which makes
-      // renderSession resolve attachedContext to null and the picker re-
-      // surfaces in the hero. Also removes the skipped flag so the picker
-      // (not the skip-emptied hero) shows up.
-      if (event.target.closest("[data-context-change]")) {
-        event.preventDefault();
-        skippedContextPicker.delete(session.id);
-        setQuery({ contextId: "" });
-        return;
-      }
-
-      // Empty-hero "Start without context" — flags the session as skipped
-      // and re-renders the empty hero in place (no URL change). The starter
-      // cards remain visible; the picker section collapses.
-      if (event.target.closest("[data-context-skip]")) {
-        event.preventDefault();
-        skippedContextPicker.add(session.id);
-        const emptyChat = root.querySelector("[data-empty-chat]");
-        if (emptyChat) {
-          // Re-render just the empty hero's context section (returns "" for
-          // skipped sessions). The starter cards below are untouched.
-          const oldSection = emptyChat.querySelector(".empty-chat__context-picker");
-          if (oldSection) oldSection.remove();
+        // If no context is attached AND we have contexts to pick from, ask
+        // inline before the user sends. Decision happens IN the thread,
+        // not in a separate hero section — matches the conversational
+        // model the user prefers (cf. revert of the 2-section hero).
+        // Once chosen, the route re-render replaces the composer textarea,
+        // so we stash the prompt in the message context to re-prefill it
+        // after the navigation (cf. pendingComposerPrefill drain).
+        const q = readQuery();
+        const ctxAttached = q.contextId || session.contextId;
+        const allContexts = getContexts();
+        if (!ctxAttached && allContexts.length > 0) {
+          // Don't double-ask if a choice turn for this same prompt is
+          // already in the thread (e.g. user clicked the same starter
+          // twice, or another starter before picking).
+          const thread = getThread(session.id);
+          const hasOpenContextChoice = thread.some(
+            (m) => m.variant === "choice" && m.handler === "starter-context-pick" && !m.chosen,
+          );
+          if (!hasOpenContextChoice) {
+            const choices = allContexts.map((c) => ({
+              value: c.id,
+              label: c.name,
+              // No icon — the colored dot in the chip would be nicer but
+              // postAssistantChoice's chip renderer only supports an `icon`
+              // prop today. Keep the chip clean and rely on the name.
+            }));
+            choices.push({ value: "__none__", label: "No context" });
+            choices.push({ value: "__new__", label: "New context", icon: "ap-icon-plus" });
+            postAssistantChoice(session.id, {
+              text: "Quick — which context should I tailor this to?",
+              choices,
+              multi: false,
+              instant: true,
+              handler: "starter-context-pick",
+              context: { prompt },
+            });
+          }
         }
-        return;
-      }
-
-      // Empty-hero "New context" / "Create my first context" — both route
-      // to the standalone create flow. The conversation is preserved (the
-      // hero will re-render with the picker on return).
-      if (event.target.closest("[data-context-new]")) {
-        event.preventDefault();
-        navigate("/contexts/new");
         return;
       }
 
