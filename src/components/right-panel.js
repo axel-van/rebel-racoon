@@ -1971,23 +1971,6 @@ function renderContextBriefView() {
     ),
     renderBriefChips(
       chipProps({
-        field: "audienceProblems",
-        title: "What problems does your audience face?",
-        hint: "Archie will craft posts that resonate with their real frustrations.",
-        fromWeb: true,
-        suggestions: d.suggestions?.audienceProblems || [],
-        fallback: [],
-        values: d.audienceProblems || [],
-        customs: d.customAdditions?.audienceProblems || [],
-        otherPlaceholder: "Describe the main challenge…",
-        warningCount:
-          !isRead && (d.suggestions?.audienceProblems || []).length >= 20
-            ? (d.suggestions?.audienceProblems || []).length
-            : 0,
-      }),
-    ),
-    renderBriefChips(
-      chipProps({
         field: "tones",
         title: "What's your brand's tone of voice?",
         hint: "This shapes how Archie writes — word choice, energy, and style.",
