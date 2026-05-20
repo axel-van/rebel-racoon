@@ -187,23 +187,22 @@ export function initTopbar() {
 // Context + Drafts + Ideas pills — only on /session/:id. Order matches
 // handoff App.jsx: Context first, then Drafts (with badge), then Ideas.
 //
-// Lot 18 DS conformance (revised 2026-04-29 #2) — Drafts + Ideas are
-// ghost buttons in their resting state per user feedback. The DS ships
-// `.ghost` in grey/blue/green/red (no orange), so the ON/OFF mapping is:
+// Lot 19 DS conformance — Drafts / Outputs / Sources now share one
+// uniform button style per user feedback:
 //   • OFF → `.ap-button ghost grey` (transparent, no border)
-//   • ON  → `.ap-button secondary <orange|blue>` (tinted-fill — color-XX-10
-//           bg + color-XX-100 text/icon)
-// The transparent → tinted-fill transition reads cleanly as the pressed
-// state, and all hover/active/focus feedback is inherited from the DS.
-// The Drafts count badge stays `.ap-counter normal orange`. The Context
-// pill is the only composed exception (2-line inner label) — it starts
-// from `.ap-button stroked grey` and adds a thin
-// `.app-topbar__context-pill` wrapper for the layout overrides.
+//   • ON  → `.ap-button stroked blue` (1px blue border + blue text/icon,
+//           no fill — the canonical "active panel" cue in the
+//           Agorapulse DS for a ghost-rest button)
+// All hover/focus/disabled feedback is inherited from the DS.
+// Counters stay color-coded to the data they carry: Drafts orange,
+// Sources blue. The Context pill is unrelated (composed exception
+// elsewhere in the layout — `.ap-button stroked grey` wrapped in
+// `.app-topbar__context-pill`).
 function renderSessionPills(rpMode, draftCount, isEmpty) {
   const draftBadge = draftCount > 0 ? `<span class="ap-counter normal orange">${draftCount}</span>` : "";
-  const draftsClass = rpMode === "drafts" ? "secondary orange" : "ghost grey";
-  const ideasClass = rpMode === "ideas" ? "secondary blue" : "ghost grey";
-  const sourcesClass = rpMode === "sources" ? "secondary blue" : "ghost grey";
+  const draftsClass = rpMode === "drafts" ? "stroked blue" : "ghost grey";
+  const ideasClass = rpMode === "ideas" ? "stroked blue" : "ghost grey";
+  const sourcesClass = rpMode === "sources" ? "stroked blue" : "ghost grey";
   // Drafts disabled until at least one draft turn has landed in the thread
   // (latestDraftCount > 0). Ideas disabled until the user has actually
   // started the conversation — opening Ideas in a brand-new chat with no
