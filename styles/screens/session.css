@@ -123,10 +123,10 @@
   color: var(--ref-color-grey-150);
 }
 
-/* Option rows — generous vertical padding, no dividers (the focus pill
-   provides all the visual separation needed). Rows round on focus so
-   the highlight reads as a pill, slightly inset from the frame edge
-   thanks to the picker's own padding. */
+/* Option rows — generous vertical padding, thin separator between rows
+   for scannability. The separator is a pseudo-element so the row's own
+   border-radius (used by the focus pill) stays clean and so the line
+   sits inside the picker's padding without bleeding to the frame edge. */
 .session__assistant-wizard-bar .analyse__option {
   position: relative;
   padding: var(--ref-spacing-sm);
@@ -134,6 +134,24 @@
   border-bottom: 0;
   border-radius: var(--ref-border-radius-sm);
   transition: background-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.session__assistant-wizard-bar .analyse__option:not(:last-of-type)::before {
+  content: "";
+  position: absolute;
+  left: var(--ref-spacing-sm);
+  right: var(--ref-spacing-sm);
+  bottom: 0;
+  height: 1px;
+  background: var(--ref-color-grey-10);
+  pointer-events: none;
+}
+
+/* Hide the separator on the focused row (and the row immediately above
+   it) so the pill reads as a clean filled card, no line cutting it. */
+.session__assistant-wizard-bar .analyse__option:focus-visible::before,
+.session__assistant-wizard-bar .analyse__option:has(+ :focus-visible)::before {
+  display: none;
 }
 
 .session__assistant-wizard-bar .analyse__option:hover {
