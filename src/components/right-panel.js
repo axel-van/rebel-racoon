@@ -2506,16 +2506,6 @@ function renderBriefImageVoice(d) {
           <h3 class="context-brief__title">Image Voice</h3>
           <p class="context-brief__hint">Brand visual identity extracted from websites</p>
         </div>
-        <button
-          type="button"
-          class="ap-button stroked grey context-brief__iv-add"
-          disabled
-          aria-disabled="true"
-          title="Coming soon"
-        >
-          <i class="ap-icon-plus"></i>
-          <span>Add website</span>
-        </button>
       </header>
 
       <div class="context-brief__iv-site">

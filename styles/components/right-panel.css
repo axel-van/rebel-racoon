@@ -1194,10 +1194,6 @@
   gap: 2px;
 }
 
-.context-brief__iv-add {
-  flex-shrink: 0;
-}
-
 .context-brief__iv-site {
   display: flex;
   align-items: center;
