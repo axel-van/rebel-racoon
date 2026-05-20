@@ -268,11 +268,11 @@ function renderComposer(attachedContext, hasUserMessage) {
   return `
     <div class="session__composer">
       <div class="session__composer-inner">
+        <div class="session__composer-thinking" data-assistant-thinking hidden>
+          <span class="session__composer-thinking-spinner" aria-hidden="true"></span>
+          <span class="session__composer-thinking-text" data-thinking-text>0s · 1 credit</span>
+        </div>
         <div class="session__composer-card">
-          <div class="session__composer-thinking" data-assistant-thinking hidden>
-            <span class="session__composer-thinking-spinner" aria-hidden="true"></span>
-            <span class="session__composer-thinking-text" data-thinking-text>0s · 1 credit</span>
-          </div>
           <div class="session__composer-input">
             <textarea
               class="session__composer-input-field"
