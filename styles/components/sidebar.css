@@ -135,7 +135,7 @@
   border-radius: var(--app-radius-button-sm);
   font-family: inherit;
   font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--ref-font-weight-regular);
   color: var(--ref-color-grey-100);
   text-align: left;
   cursor: pointer;
@@ -171,15 +171,8 @@
   margin-left: auto;
 }
 
-/* Search row variant — first nav item, opens the search modal. The label
-   weight stays regular (vs other nav items' bold) so it reads as a
-   tertiary control: it's a verb, not a destination. The ⌘K hint sits
-   on the trailing edge in a subtle `<kbd>`-style pill. */
-.app-sidebar__nav-item--search {
-  font-weight: var(--ref-font-weight-regular);
-  color: var(--ref-color-grey-100);
-}
-
+/* ⌘K hint pill on the trailing edge of the Search row. Stays as a quiet
+   `<kbd>`-style chip — visual only this pass, no global binding yet. */
 .app-sidebar__nav-kbd {
   margin-left: auto;
   display: inline-flex;
