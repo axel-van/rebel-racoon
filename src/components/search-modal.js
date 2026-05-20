@@ -139,6 +139,20 @@ function injectOnce() {
     renderResults();
   });
 
+  // Global ⌘K / Ctrl+K — open the modal from anywhere (matches Claude /
+  // Linear / Raycast / Slack). Intentionally NOT skipped on inputs /
+  // textareas / contenteditable: ⌘K is the canonical "navigate anywhere"
+  // shortcut and should win over the surface the user is currently on.
+  // No-op if the modal is already open so re-pressing the shortcut
+  // doesn't reset the input mid-query.
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "k" && event.key !== "K") return;
+    if (!(event.metaKey || event.ctrlKey)) return;
+    event.preventDefault();
+    if (isOpen) return;
+    open();
+  });
+
   initialized = true;
 }
 
