@@ -13,7 +13,7 @@ import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=22";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=20";
 import { init as initRenameModal } from "./components/rename-modal.js?v=1";
-import { init as initSearchModal } from "./components/search-modal.js?v=1";
+import { init as initSearchModal } from "./components/search-modal.js?v=2";
 import { renderDashboard } from "./screens/dashboard.js?v=42";
 import { renderSession } from "./screens/session.js?v=95";
 import { renderIdeas } from "./screens/ideas.js?v=24";

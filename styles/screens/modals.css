@@ -80,12 +80,13 @@ body.has-modal {
 }
 
 /* ── Search modal ────────────────────────────────────────────
-   Spotlight-style command palette anchored slightly above center
-   on tall viewports — bigger than the rename modal because the
-   primary content is a scrollable result list, not a single field. */
+   Raycast / Linear / Spotlight command-palette density. Single-line
+   rows (~32px), narrow modal (560px), tight grouping. Row only shows
+   the ⏎ keycap when highlighted — pin status is conveyed by the
+   "Pinned" group heading, no per-row glyph needed. */
 .search-modal {
-  width: min(calc(100% - 32px), 640px);
-  max-height: min(calc(100vh - 80px), 560px);
+  width: min(calc(100% - 32px), 560px);
+  max-height: min(calc(100vh - 80px), 480px);
   flex-direction: column;
   padding: 0;
 }
@@ -93,7 +94,12 @@ body.has-modal {
 .search-modal .ap-dialog-content.search-modal__results {
   flex: 1;
   overflow-y: auto;
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxxs) 0 var(--ref-spacing-xs);
+  /* DS `.ap-dialog-content` ships `gap: 24px` for vertically-stacked form
+     sections; in a dense command palette that pushes consecutive rows
+     ~24px apart. Collapse the gap so the result list reads as a single
+     continuous list. */
+  gap: 0;
 }
 
 .search-modal__header {
@@ -118,10 +124,10 @@ body.has-modal {
   border: 0;
   background: transparent;
   font-family: inherit;
-  font-size: var(--ref-font-size-md);
+  font-size: var(--ref-font-size-sm);
   color: var(--ref-color-grey-150);
   outline: none;
-  padding: var(--ref-spacing-xxs) 0;
+  padding: var(--ref-spacing-xxxs) 0;
   min-width: 0;
 }
 
@@ -133,21 +139,22 @@ body.has-modal {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
-  height: 20px;
-  padding: 0 6px;
+  min-width: 24px;
+  height: 18px;
+  padding: 0 var(--ref-spacing-xxxs);
   border-radius: var(--app-radius-sm);
   background: var(--ref-color-grey-05);
   border: 1px solid var(--app-border-soft);
   font-family: inherit;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-80);
   flex-shrink: 0;
 }
 
 .search-modal__group-heading {
-  margin: var(--ref-spacing-xs) var(--ref-spacing-xs) var(--ref-spacing-xxs);
+  margin: 0;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm) var(--ref-spacing-xxxs);
   font-size: 10px;
   line-height: var(--ref-font-line-height-xs);
   font-weight: var(--ref-font-weight-extra-bold);
@@ -156,12 +163,18 @@ body.has-modal {
   color: var(--ref-color-grey-60);
 }
 
+.search-modal__group-heading:first-child {
+  padding-top: var(--ref-spacing-xxs);
+}
+
 .search-modal__result {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  width: 100%;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  width: calc(100% - var(--ref-spacing-xs));
+  margin: 0 var(--ref-spacing-xxs);
+  padding: 0 var(--ref-spacing-xs);
+  min-height: 32px;
   background: transparent;
   border: 0;
   border-radius: var(--app-radius-button-sm);
@@ -185,12 +198,34 @@ body.has-modal {
   min-width: 0;
 }
 
+/* Per-row meta only shows on the highlighted row — keeps the rest of the
+   list visually quiet (Raycast / Linear pattern). The ⏎ keycap signals
+   "Enter opens this" so keyboard users know what's about to happen. */
 .search-modal__result-meta {
   display: inline-flex;
   align-items: center;
-  font-size: var(--sys-icon-css-xs);
-  color: var(--ref-color-grey-60);
   flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--ref-animation-short) var(--app-ease-out);
+}
+
+.search-modal__result.is-highlighted .search-modal__result-meta {
+  opacity: 1;
+}
+
+.search-modal__result-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 var(--ref-spacing-xxxs);
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-white);
+  border: 1px solid var(--app-border-soft);
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--ref-color-grey-80);
 }
 
 .search-modal__empty {

@@ -5,7 +5,7 @@ import { open as openBugReportModal } from "./bug-report-modal.js?v=21";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=24";
 import { open as openConfirmModal } from "./confirm-modal.js?v=20";
 import { open as openRenameModal } from "./rename-modal.js?v=1";
-import { open as openSearchModal } from "./search-modal.js?v=1";
+import { open as openSearchModal } from "./search-modal.js?v=2";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 import {
   getSessions,

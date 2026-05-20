@@ -196,6 +196,10 @@ function renderResultRow(session, index) {
   const color = ctx?.color || "grey";
   const safeName = escapeHtml(session.name || "Untitled conversation");
   const isHighlighted = index === highlightIndex;
+  // Pinned status is conveyed by the "Pinned" group heading above the row,
+  // so no per-row pin glyph (Raycast/Linear pattern). The trailing slot
+  // carries the ↩ keycap, only visible when the row is highlighted to
+  // signal "Enter opens this".
   return `
     <button
       type="button"
@@ -210,7 +214,9 @@ function renderResultRow(session, index) {
         aria-hidden="true"
       ></span>
       <span class="search-modal__result-title">${safeName}</span>
-      ${session.pinned ? `<span class="search-modal__result-meta"><i class="ap-icon-pin" aria-hidden="true"></i></span>` : ""}
+      <span class="search-modal__result-meta" aria-hidden="true">
+        <kbd class="search-modal__result-kbd">↵</kbd>
+      </span>
     </button>
   `;
 }
