@@ -896,6 +896,19 @@
   max-width: 100%;
 }
 
+/* The DS .ap-select-option example uses <div>, so DS styles don't include
+   a browser-default reset. We use <button> for accessibility (native Enter
+   support), which inherits the agent's default 2px outset black border.
+   Reset it explicitly so the option looks like the DS div pattern. */
+.composer-context-select button.ap-select-option {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+}
+
 /* Locked-state wrapper (used when the conversation has at least one user
    turn). The static .ap-tag tagOrange replaces the .ap-select — no menu,
    no dropdown, just a read-only indicator with the inline-label prefix. */
