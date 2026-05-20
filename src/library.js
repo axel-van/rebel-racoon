@@ -9,7 +9,7 @@
 //   appendExtractedIdeas(sessionId, sources)  bulk "extract more" flow
 //   removeIdeasForSources(sessionId, sourceIds)  cleanup after bulk-delete
 
-import { ideas as seedIdeas } from "./mocks.js?v=28";
+import { ideas as seedIdeas } from "./mocks.js?v=29";
 import { isNewUser } from "./user-mode.js?v=20";
 import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=28";
 import {

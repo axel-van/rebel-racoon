@@ -518,10 +518,78 @@ export const contexts = [
     color: "orange",
     isDefault: true,
     brandName: "Acme",
-    audience: "Operators and marketing leads at 50–200-person B2B startups.",
+    websiteUrl: "https://acme.example.com",
+    audience: ["Operators and marketing leads at 50–200-person B2B startups"],
+    businessSummary:
+      "Drive awareness for Acme's Q2 launch. Lead with concrete time savings + customer outcomes, not feature lists.",
     briefSummary:
       "Drive awareness for Acme's Q2 launch. Lead with concrete time savings + customer outcomes, not feature lists.",
     tones: ["Direct", "Operator-first"],
+    voiceProfile: {
+      headline: "Direct · operator-first · specific",
+      writingStyle:
+        "Direct, hook-first, and benefit-led. Every sentence has to earn its place: cut the throat-clearing, lead with the outcome, back it with a number or a quote.",
+      vocabulary:
+        "Plain operator language — 'time saved', 'shipped', 'closed', 'pipeline'. Avoid corporate jargon ('synergy', 'leverage', '10x') and feature-shaped marketing words ('robust', 'powerful', 'cutting-edge').",
+      sentenceStructure:
+        "Short to medium sentences. Often opens on a number or a contrarian beat. Lists when there are three or more parallel points; otherwise prose.",
+      formality:
+        "Semi-formal. Always 'we' and 'you' — never the third person. Contractions are fine. The tone matches a smart Slack message, not a press release.",
+      personality:
+        "Confident without bragging. Helpful without performing. Speaks the way operators actually talk to each other — direct, specific, occasionally dry.",
+      rhetoricalDevices:
+        "Open with a hook or specific number. Use before / after contrasts. End every post with a clear next step. No 'stay tuned' cliffhangers.",
+      emotionalTone: "Steady and confident. Acknowledges the messy reality of B2B without complaining about it.",
+      contentPatterns:
+        "Hook → context → concrete result → call to action. Most posts top out around 90 words and resolve in a single idea.",
+      uniqueTraits:
+        "No emoji in B2B contexts. Customer outcomes always sit ahead of feature names. Numbers are real, sourced, and rounded honestly (not '99.999%').",
+    },
+    contentStyle: ["Direct and actionable", "Data-driven with storytelling"],
+    objective: ["Brand awareness", "Lead generation"],
+    contentAction: ["Sign up for a free trial", "Book a demo"],
+    ctaLinks: [
+      { label: "30-day free trial", url: "acme.example.com/trial", checked: true, suggested: false },
+      { label: "Book a demo", url: "acme.example.com/demo", checked: true, suggested: false },
+    ],
+    language: "English",
+    imageVoice: {
+      websites: [
+        {
+          domain: "acme.example.com",
+          url: "https://acme.example.com",
+          colors: {
+            primary: "#1A1F36",
+            accent: "#FF6726",
+            background: "#FFFFFF",
+            textPrimary: "#1A1F36",
+            link: "#FF6726",
+          },
+          typography: {
+            primaryFont: "Inter",
+            headingFont: "Inter",
+            h1Size: "48px",
+            h2Size: "24px",
+            bodySize: "16px",
+            fontStack: ["Inter", "system-ui", "sans-serif"],
+          },
+          images: {
+            logo: { label: "Logo", url: "" },
+            favicon: { label: "Favicon", url: "" },
+            ogImage: { label: "OgImage", url: "" },
+          },
+          buttons: {
+            primary: { bg: "#FF6726", color: "#FFFFFF", label: "Primary" },
+            secondary: { bg: "#FFFFFF", color: "#1A1F36", border: "#1A1F36", label: "Secondary" },
+          },
+          personality: {
+            tone: "operator-first",
+            energy: "medium-high",
+            audience: "B2B startup operators",
+          },
+        },
+      ],
+    },
     doRules: [
       'Use "we" and "you" — never third person',
       "Open with a hook or specific number",
@@ -543,10 +611,76 @@ export const contexts = [
     color: "blue",
     isDefault: false,
     brandName: "Jamie Torres · Personal",
-    audience: "B2B founders and product leaders thinking about how teams ship.",
+    websiteUrl: "",
+    audience: ["B2B founders and product leaders thinking about how teams ship"],
+    businessSummary:
+      "Build trust over time with sharp opinions, lived experience, zero promotional content. Posts should make readers re-examine an assumption.",
     briefSummary:
       "Build trust over time with sharp opinions, lived experience, zero promotional content. Posts should make readers re-examine an assumption.",
     tones: ["Direct", "Conversational"],
+    voiceProfile: {
+      headline: "Direct · conversational · opinionated",
+      writingStyle:
+        "Conversational and pointed. Reads like a strong founder DM — sharp opinion up front, lived context behind it, no marketing varnish.",
+      vocabulary:
+        "Plain English, occasional technical terms used precisely. Avoids growth-speak ('community', 'movement') and the LinkedIn cliché vocabulary ('grateful', 'humbled', 'thrilled').",
+      sentenceStructure:
+        "Short. Sometimes a single line. Occasional longer sentences when explaining a counter-intuitive idea, but never paragraphs of throat-clearing.",
+      formality:
+        "Informal. First person ('I', 'we'), contractions, the occasional cuss kept in if it's the right word.",
+      personality:
+        "Opinionated, generous with credit, willing to be wrong out loud. Speaks from scar tissue, not theory.",
+      rhetoricalDevices:
+        "Contrarian take or a specific moment up top. Often a single surprising data point. Resolves on a reframe rather than a CTA.",
+      emotionalTone:
+        "Engaged and a bit impatient. Readers should feel pulled forward and slightly challenged, never sold to.",
+      contentPatterns:
+        "Hook (contrarian or anecdote) → context → reframe. One idea per post. Length is whatever the idea needs; usually short.",
+      uniqueTraits:
+        "No CTAs, no links, no product mentions. No hashtags. The byline is the brand — the audience follows the human, not a logo.",
+    },
+    contentStyle: ["Direct and actionable"],
+    objective: ["Build personal brand", "Brand awareness"],
+    contentAction: ["Read more on the blog"],
+    ctaLinks: [],
+    language: "English",
+    imageVoice: {
+      websites: [
+        {
+          domain: "",
+          url: "",
+          colors: {
+            primary: "#178DFE",
+            accent: "#178DFE",
+            background: "#FFFFFF",
+            textPrimary: "#1A1F36",
+            link: "#178DFE",
+          },
+          typography: {
+            primaryFont: "System UI",
+            headingFont: "System UI",
+            h1Size: "44px",
+            h2Size: "22px",
+            bodySize: "16px",
+            fontStack: ["System UI", "Inter", "sans-serif"],
+          },
+          images: {
+            logo: { label: "Logo", url: "" },
+            favicon: { label: "Favicon", url: "" },
+            ogImage: { label: "OgImage", url: "" },
+          },
+          buttons: {
+            primary: { bg: "#178DFE", color: "#FFFFFF", label: "Primary" },
+            secondary: { bg: "#FFFFFF", color: "#178DFE", border: "#178DFE", label: "Secondary" },
+          },
+          personality: {
+            tone: "direct",
+            energy: "calm",
+            audience: "founders & product leaders",
+          },
+        },
+      ],
+    },
     doRules: [
       "Start with a contrarian take or a moment, not a stat",
       "Write like you talk — short sentences, real verbs",
@@ -568,10 +702,82 @@ export const contexts = [
     color: "green",
     isDefault: false,
     brandName: "Acme",
-    audience: "Prospects evaluating Acme who care about real outcomes from teams like theirs.",
+    websiteUrl: "https://acme.example.com/customers",
+    audience: ["Prospects evaluating Acme who care about real outcomes from teams like theirs"],
+    businessSummary:
+      "Turn customer interviews into evidence-led posts. Lead with the team's situation, the change they made, and the measurable result. Quote them directly.",
     briefSummary:
       "Turn customer interviews into evidence-led posts. Lead with the team's situation, the change they made, and the measurable result. Quote them directly.",
     tones: ["Professional", "Conversational"],
+    voiceProfile: {
+      headline: "Professional · evidence-led · honest",
+      writingStyle:
+        "Story-shaped and grounded in fact. Each post follows a specific team's arc — situation, change, result — and lets their voice carry it.",
+      vocabulary:
+        "Industry-neutral. Customer's own words for their problem and outcome; Acme's words stay out of the quote. Avoid marketing words ('transformed', 'revolutionised') in favour of measurable verbs.",
+      sentenceStructure:
+        "Medium-length sentences. A short opening line for the hook, then 2–3 sentences of context, a quote, and a closing line that names the result.",
+      formality:
+        "Professional but warm. Always names the customer and their role. 'They' for the team, 'we' only when speaking about Acme's role in the story.",
+      personality:
+        "Trustworthy, attentive, occasionally surprised on the customer's behalf. Lets the customer be the hero.",
+      rhetoricalDevices:
+        "Direct quotes — never paraphrased. Before / after metrics. Specific names of teams and tools.",
+      emotionalTone: "Genuine and slightly understated. Lets the numbers and the human carry the emotion.",
+      contentPatterns: "Situation → change → result, with a quote anchoring the change. One customer per post.",
+      uniqueTraits:
+        'No generic testimonials ("game changer", "love this"). No paraphrasing. No "stay tuned" cliffhangers — every story resolves.',
+    },
+    contentStyle: ["Data-driven with storytelling"],
+    objective: ["Brand awareness", "Lead generation"],
+    contentAction: ["Read the full customer story", "Book a demo"],
+    ctaLinks: [
+      {
+        label: "See how teams like yours use Acme",
+        url: "acme.example.com/customers",
+        checked: true,
+        suggested: false,
+      },
+      { label: "Book a demo", url: "acme.example.com/demo", checked: true, suggested: false },
+    ],
+    language: "English",
+    imageVoice: {
+      websites: [
+        {
+          domain: "acme.example.com",
+          url: "https://acme.example.com/customers",
+          colors: {
+            primary: "#1A6E3F",
+            accent: "#34A65F",
+            background: "#FFFFFF",
+            textPrimary: "#1A1F36",
+            link: "#1A6E3F",
+          },
+          typography: {
+            primaryFont: "Inter",
+            headingFont: "Inter",
+            h1Size: "44px",
+            h2Size: "22px",
+            bodySize: "16px",
+            fontStack: ["Inter", "system-ui", "sans-serif"],
+          },
+          images: {
+            logo: { label: "Logo", url: "" },
+            favicon: { label: "Favicon", url: "" },
+            ogImage: { label: "OgImage", url: "" },
+          },
+          buttons: {
+            primary: { bg: "#1A6E3F", color: "#FFFFFF", label: "Primary" },
+            secondary: { bg: "#FFFFFF", color: "#1A6E3F", border: "#1A6E3F", label: "Secondary" },
+          },
+          personality: {
+            tone: "evidence-led",
+            energy: "calm",
+            audience: "B2B buyers in evaluation",
+          },
+        },
+      ],
+    },
     doRules: [
       "Always name the customer and their role",
       "Pull one direct quote per post",

@@ -13,7 +13,7 @@ import {
 } from "./right-panel.js?v=52";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=28";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=28";
-import { recentSessions } from "../mocks.js?v=28";
+import { recentSessions } from "../mocks.js?v=29";
 
 // Persistent top bar.
 //
