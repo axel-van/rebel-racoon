@@ -877,12 +877,20 @@
 /* ---------- Composer context (Zone 2 — DS .ap-select above the textarea) -- */
 
 /* Row that wraps the context picker, sitting between the thinking indicator
-   and the textarea. Natural width, left-aligned — the DS .ap-select trigger
-   sizes to content; we just bound the row's padding. */
+   and the textarea. Natural width, left-aligned. Bottom padding gives the
+   textarea a bit of breathing room. */
 .session__composer-context-row {
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm) 0;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   display: flex;
   align-items: center;
+}
+
+/* The DS .ap-select-trigger stretches to 100% of its container by default
+   (assumes form-width usage). Constrain it to its intrinsic content so the
+   picker sits left-aligned in the row instead of spanning the full card. */
+.composer-context-select {
+  width: fit-content;
+  max-width: 100%;
 }
 
 /* Locked-state wrapper (used when the conversation has at least one user
