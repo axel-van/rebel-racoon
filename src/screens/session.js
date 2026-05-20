@@ -2,7 +2,7 @@ import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=40";
 import { getSessionById, socialAccounts, recentSessions, chatStarters } from "../mocks.js?v=28";
-import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=24";
+import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=25";
 import { isNewUser } from "../user-mode.js?v=20";
 import {
   getThread,
@@ -31,7 +31,7 @@ import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=21";
-import * as contextBuilder from "../context-builder.js?v=23";
+import * as contextBuilder from "../context-builder.js?v=24";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=25";
 import { renderSourceCard } from "../components/source-card.js?v=27";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
@@ -65,7 +65,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=43";
+} from "../components/right-panel.js?v=44";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=20";
 

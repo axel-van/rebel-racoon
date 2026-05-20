@@ -822,3 +822,130 @@
 .rpanel-sources__empty {
   padding-top: var(--ref-spacing-xl);
 }
+
+/* ─── V1 Brief panel ─────────────────────────────────────────────────────
+   Side-by-side context builder. The panel hosts a vertically scrollable
+   form (intro + name + business summary + Q1-Q9 + color) with a sticky
+   footer carrying the mermaid "Generate my brief" CTA. */
+
+.context-brief {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.context-brief__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--ref-spacing-md) var(--ref-spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+}
+
+.context-brief__intro,
+.context-brief__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.context-brief__intro-text {
+  margin: 0;
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+}
+
+.context-brief__title {
+  margin: 0;
+  font-size: var(--ref-font-size-md);
+  line-height: var(--ref-font-line-height-md);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+}
+
+.context-brief__hint {
+  margin: 0;
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+}
+
+.context-brief__from-web {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  color: var(--ref-color-menthol-150, #1c8a83);
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+}
+
+.context-brief__from-web > i {
+  font-size: var(--ref-font-size-xs);
+}
+
+.context-brief__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+}
+
+.context-brief__other {
+  max-width: 360px;
+}
+
+.context-brief__cta-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.context-brief__cta-card {
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  cursor: pointer;
+}
+
+.context-brief__cta-card small {
+  display: block;
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  margin-top: 2px;
+}
+
+.context-brief__color-swatches {
+  display: flex;
+  gap: var(--ref-spacing-xs);
+}
+
+.context-brief__color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    transform var(--ref-animation-short) var(--app-ease-standard),
+    border-color var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.context-brief__color-swatch:hover {
+  transform: scale(1.05);
+}
+
+.context-brief__color-swatch.is-selected {
+  border-color: var(--ref-color-grey-150);
+}
+
+.context-brief__footer {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-lg);
+  border-top: 1px solid var(--ref-color-grey-10);
+  background: var(--ref-color-white);
+}

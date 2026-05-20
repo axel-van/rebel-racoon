@@ -1,50 +1,31 @@
-// Conversational context-builder orchestrator.
+// Conversational context-builder orchestrator (V1).
 //
-// Runs the create-context flow inside a per-"session" context (the screen
-// passes any unique id — usually a one-off id like "context-builder-…"
-// since the flow is dissociated from chat sessions). Three phases:
+// Two-phase flow:
+//   1. Inline Q (website URL) — free-text via inline-question (custom row).
+//   2. Pending "Reading your website…" (~10s) → analyzeWebsite(url) mocks an
+//      analysis result, which seeds the draft (businessSummary, suggested
+//      values for each multi-pick question).
+//   3. Brief panel opens side-by-side with the chat (Claude-Artifact style)
+//      via rightPanel.openContextBriefPanel(...). User edits the brief
+//      directly — chips, CTAs, language, color — and clicks "Generate my
+//      brief" to save.
 //
-//   1. Inline Q1 (URL)        — free-text via inline-question (custom row only)
-//   2. Inline Q2 (profiles)   — multi-pick via inline-question (multi: true)
-//   3. Right-panel form        — multi-question form, name + Save in footer
+// State per "session" (a synthetic id when invoked outside a real chat) is
+// the draft: { websiteUrl, name, businessSummary, audience, audienceProblems,
+// tones, contentStyle, objective, contentAction, ctaLinks, language, color,
+// suggestions, editingId, onComplete }.
 //
-// Holds the in-progress draft (URL, profiles, per-field answers, name).
-// Calls into right-panel via openContextForm() once the inline phase is done,
-// and into contexts-store#addContext() on save.
+// The legacy 3-phase form (URL → profiles → right-panel form) is gone. The
+// right-panel ContextForm read mode (openRead) stays for viewing existing
+// contexts that may still have the old shape.
 
 import * as inlineQuestion from "./inline-question.js?v=21";
 import { postAssistantMessage, postUserTurn } from "./assistant.js?v=27";
-import * as rightPanel from "./components/right-panel.js?v=43";
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=24";
-import { emptyAnswers } from "./context-questions.js?v=20";
+import * as rightPanel from "./components/right-panel.js?v=44";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=25";
+import { analyzeWebsite } from "./context-mock-analysis.js?v=20";
 
-// Mock social profiles offered for analysis. Identical seed to the one used
-// by sidebar-wizard.js so the picker reads consistent across surfaces.
-const MOCK_PROFILES = [
-  {
-    value: "profile-linkedin-maya",
-    label: "linkedin.com/in/maya-chen",
-    icon: "ap-icon-linkedin",
-    caption: "LinkedIn · 1.2k followers · last post 3 days ago",
-  },
-  {
-    value: "profile-x-maya",
-    label: "@mayachen_",
-    icon: "ap-icon-twitter-official",
-    caption: "X · 843 followers · last post 1 week ago",
-  },
-  {
-    value: "profile-instagram-maya",
-    label: "@maya.chen",
-    icon: "ap-icon-instagram",
-    caption: "Instagram · 412 followers · last post 2 weeks ago",
-  },
-];
-
-// Per-session draft store + subscribers — session.js repaints the
-// assistant aside when state advances via inlineQuestion.subscribe and
-// the right-panel ContextForm tracks form-phase mutations.
-const drafts = new Map(); // sessionId → { url, profiles[], answers, name }
+const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
 
 function notify(sessionId) {
@@ -57,6 +38,43 @@ function notify(sessionId) {
       console.warn("[context-builder] subscriber threw", err);
     }
   }
+}
+
+function emptyDraft(overrides = {}) {
+  return {
+    websiteUrl: "",
+    name: "",
+    businessSummary: "",
+    audience: [],
+    audienceProblems: [],
+    tones: [],
+    contentStyle: [],
+    objective: [],
+    contentAction: [],
+    ctaLinks: [], // Array<{ label, url, checked, suggested }>
+    language: "English",
+    color: "orange",
+    suggestions: {
+      audience: [],
+      audienceProblems: [],
+      tones: [],
+      contentStyle: [],
+      objective: [],
+      contentAction: [],
+      ctaLinks: [],
+    },
+    customAdditions: {
+      audience: [],
+      audienceProblems: [],
+      tones: [],
+      contentStyle: [],
+      objective: [],
+      contentAction: [],
+    },
+    editingId: null,
+    onComplete: null,
+    ...overrides,
+  };
 }
 
 export function isActive(sessionId) {
@@ -73,34 +91,18 @@ export function subscribe(sessionId, fn) {
   return () => subscribers.get(sessionId)?.delete(fn);
 }
 
-// Kick off the inline conversational creation wizard inside `sessionId`.
-// The session.js panel detects inlineQuestion.isActive and renders the
-// wizard chrome over the chat. Optional onComplete is called with the
-// saved Context after the user clicks Save — callers typically attach
-// the new context to the session via setQuery({ contextId }) or
-// navigate elsewhere (e.g. back to /contexts).
+// Kick off the V1 brief-builder flow. The inline question asks for the URL
+// inside `sessionId`'s assistant panel; once submitted, a ~10s "Reading
+// your website…" pending turn fires before the brief panel opens.
 export function start(sessionId, { onComplete } = {}) {
-  drafts.set(sessionId, {
-    url: "",
-    profiles: [],
-    answers: emptyAnswers(),
-    name: "",
-    editingId: null,
-    onComplete: onComplete || null,
-  });
+  drafts.set(sessionId, emptyDraft({ onComplete }));
   notify(sessionId);
   askUrl(sessionId);
 }
 
-// The legacy post-first-message "Want me to walk you through setting one
-// up?" inline question (startWithPrompt) was removed once the empty hero
-// gained a dedicated context-picker section. The decision now happens
-// before the first message via the hero, so a conversational re-ask after
-// the first turn would just nag.
-
 // Open the right-panel context-form on an existing context in read mode.
-// onEnterEdit (triggered by the Edit footer button) seeds an editable draft
-// from the same context and re-opens the form in edit mode.
+// (Read mode still uses the legacy ContextForm renderer — it knows how to
+// display both the old shape and the new V1 fields.)
 export function openRead(contextId) {
   rightPanel.openContextForm({
     mode: "read",
@@ -109,31 +111,31 @@ export function openRead(contextId) {
   });
 }
 
-// Skip the conversational phase and open the form directly populated with
-// an existing context's values. Save flows back through updateContext()
-// instead of addContext() so the original context id is preserved.
+// Re-open an existing context for editing via the brief panel. Pre-fills
+// the draft from the persisted Context, jumping straight to phase 3.
 export function startEdit(contextId) {
   const ctx = getContextById(contextId);
   if (!ctx) return;
   const sessionId = `context-edit-${contextId}-${Date.now()}`;
-  drafts.set(sessionId, {
-    url: "",
-    profiles: [],
-    answers: {
-      brandName: ctx.brandName || "",
-      audience: ctx.audience || "",
+  drafts.set(
+    sessionId,
+    emptyDraft({
+      editingId: contextId,
+      websiteUrl: ctx.websiteUrl || "",
+      name: ctx.name || "",
+      businessSummary: ctx.businessSummary || ctx.briefSummary || "",
+      audience: Array.isArray(ctx.audience) ? ctx.audience.slice() : ctx.audience ? [ctx.audience] : [],
+      audienceProblems: Array.isArray(ctx.audienceProblems) ? ctx.audienceProblems.slice() : [],
       tones: Array.isArray(ctx.tones) ? ctx.tones.slice() : [],
-      doRules: Array.isArray(ctx.doRules) ? ctx.doRules.slice() : [],
-      dontRules: Array.isArray(ctx.dontRules) ? ctx.dontRules.slice() : [],
-      briefSummary: ctx.briefSummary || "",
-      cta: ctx.cta || "",
+      contentStyle: Array.isArray(ctx.contentStyle) ? ctx.contentStyle.slice() : [],
+      objective: Array.isArray(ctx.objective) ? ctx.objective.slice() : [],
+      contentAction: Array.isArray(ctx.contentAction) ? ctx.contentAction.slice() : [],
+      ctaLinks: Array.isArray(ctx.ctaLinks) ? ctx.ctaLinks.map((l) => ({ ...l })) : [],
+      language: ctx.language || "English",
       color: ctx.color || "orange",
-    },
-    name: ctx.name || "",
-    editingId: contextId,
-    onComplete: null,
-  });
-  openForm(sessionId);
+    }),
+  );
+  openBriefPanel(sessionId);
 }
 
 export function cancel(sessionId) {
@@ -145,10 +147,9 @@ export function cancel(sessionId) {
 // --- Phase 1 — URL ---------------------------------------------------------
 
 function askUrl(sessionId) {
-  postAssistantMessage(sessionId, "Let's set up a new context. What's the URL of your website?");
+  postAssistantMessage(sessionId, "Let's set up a new context. What's the URL of your company website?");
   inlineQuestion.ask(sessionId, {
-    title: "What's the URL of your website?",
-    stepLabel: "Step 1 of 2",
+    title: "What's the URL of your company website?",
     items: [],
     customPlaceholder: "https://your-brand.com",
     onCustom: (value) => setUrl(sessionId, value),
@@ -160,52 +161,55 @@ function askUrl(sessionId) {
 function setUrl(sessionId, url) {
   const d = drafts.get(sessionId);
   if (!d) return;
-  d.url = (url || "").trim();
-  postUserTurn(sessionId, d.url || "Skip");
+  d.websiteUrl = (url || "").trim();
+  postUserTurn(sessionId, d.websiteUrl || "Skip");
+  inlineQuestion.exit(sessionId);
   notify(sessionId);
-  askProfiles(sessionId);
+  runAnalysis(sessionId);
 }
 
-// --- Phase 2 — Profiles ----------------------------------------------------
+// --- Phase 2 — Mock website analysis (~10s) -------------------------------
 
-function askProfiles(sessionId) {
-  postAssistantMessage(sessionId, "Which social profiles should I analyse to learn the brand voice?");
-  inlineQuestion.ask(sessionId, {
-    title: "Pick the profiles to analyse",
-    stepLabel: "Step 2 of 2",
-    items: MOCK_PROFILES,
-    multi: true,
-    submitLabel: "Open the questionnaire",
-    onPick: (values) => setProfiles(sessionId, values),
-    onSkip: () => setProfiles(sessionId, []),
-    skipLabel: "Skip",
-  });
-}
-
-function setProfiles(sessionId, values) {
-  const d = drafts.get(sessionId);
-  if (!d) return;
-  d.profiles = Array.isArray(values) ? values.slice() : [];
-  const labels = d.profiles.map((v) => MOCK_PROFILES.find((p) => p.value === v)?.label || v).join(", ");
-  postUserTurn(sessionId, labels || "Skip");
+function runAnalysis(sessionId) {
+  postAssistantMessage(sessionId, "Reading your website… I'll have a draft brief ready in about 10 seconds.");
   notify(sessionId);
-  postAssistantMessage(
-    sessionId,
-    "Got it — I've prepared a few questions in the panel on the right. Pick the answers that fit and add anything missing.",
-  );
-  openForm(sessionId);
+  window.setTimeout(() => {
+    const d = drafts.get(sessionId);
+    if (!d) return; // session bailed out mid-analysis
+    const analysis = analyzeWebsite(d.websiteUrl);
+    d.name = d.name || analysis.name;
+    d.businessSummary = analysis.businessSummary;
+    d.suggestions = analysis.suggestions;
+    // Pre-select the suggested values so the chips start in their "selected"
+    // (green / checked) state. The user toggles them off if not relevant.
+    d.audience = (analysis.suggestions.audience || []).slice();
+    d.audienceProblems = (analysis.suggestions.audienceProblems || []).slice();
+    d.tones = (analysis.suggestions.tones || []).slice();
+    d.contentStyle = (analysis.suggestions.contentStyle || []).slice();
+    d.objective = (analysis.suggestions.objective || []).slice();
+    d.contentAction = (analysis.suggestions.contentAction || []).slice();
+    d.ctaLinks = (analysis.suggestions.ctaLinks || []).map((l) => ({ ...l }));
+    d.language = analysis.suggestions.language || "English";
+    d.color = analysis.suggestions.color || "orange";
+    notify(sessionId);
+    postAssistantMessage(
+      sessionId,
+      "Here's a draft brief. Tweak anything that doesn't fit, then click \"Generate my brief\" to save.",
+    );
+    openBriefPanel(sessionId);
+  }, 10000);
 }
 
-// --- Phase 3 — Right-panel form -------------------------------------------
+// --- Phase 3 — Brief panel -------------------------------------------------
 
-function openForm(sessionId) {
-  rightPanel.openContextForm({
-    mode: "edit",
-    getDraft: () => {
-      const d = drafts.get(sessionId);
-      return d ? { name: d.name, answers: d.answers } : { name: "", answers: emptyAnswers() };
-    },
+function openBriefPanel(sessionId) {
+  rightPanel.openContextBriefPanel({
+    getDraft: () => drafts.get(sessionId) || emptyDraft(),
     onAnswer: (field, value) => setAnswer(sessionId, field, value),
+    onToggleChip: (field, value) => toggleChip(sessionId, field, value),
+    onAddOther: (field, value) => addCustomChip(sessionId, field, value),
+    onRemoveChip: (field, value) => toggleChip(sessionId, field, value),
+    onToggleCta: (url) => toggleCta(sessionId, url),
     onName: (name) => setName(sessionId, name),
     onSave: () => save(sessionId),
     onCancel: () => cancel(sessionId),
@@ -215,9 +219,9 @@ function openForm(sessionId) {
 export function setAnswer(sessionId, field, value) {
   const d = drafts.get(sessionId);
   if (!d) return;
-  d.answers[field] = value;
+  d[field] = value;
   notify(sessionId);
-  rightPanel.refreshContextForm();
+  rightPanel.refreshContextBriefPanel?.();
 }
 
 export function setName(sessionId, name) {
@@ -225,25 +229,72 @@ export function setName(sessionId, name) {
   if (!d) return;
   d.name = name || "";
   notify(sessionId);
-  // Don't refreshContextForm here — typing in the name input would lose
-  // focus on every keystroke. The panel handles its own enable/disable
-  // toggle on the Save button via a localized DOM tweak.
+  // No refresh — let the input keep its focus.
+}
+
+function toggleChip(sessionId, field, value) {
+  const d = drafts.get(sessionId);
+  if (!d) return;
+  const arr = Array.isArray(d[field]) ? d[field].slice() : [];
+  const idx = arr.indexOf(value);
+  if (idx >= 0) arr.splice(idx, 1);
+  else arr.push(value);
+  d[field] = arr;
+  notify(sessionId);
+  rightPanel.refreshContextBriefPanel?.();
+}
+
+function addCustomChip(sessionId, field, value) {
+  const v = (value || "").trim();
+  if (!v) return;
+  const d = drafts.get(sessionId);
+  if (!d) return;
+  const arr = Array.isArray(d[field]) ? d[field].slice() : [];
+  if (!arr.includes(v)) arr.push(v);
+  d[field] = arr;
+  // Track that this is a user-added chip (not an AI suggestion).
+  const customs = d.customAdditions[field] || [];
+  if (!customs.includes(v)) customs.push(v);
+  d.customAdditions[field] = customs;
+  notify(sessionId);
+  rightPanel.refreshContextBriefPanel?.();
+}
+
+function toggleCta(sessionId, url) {
+  const d = drafts.get(sessionId);
+  if (!d) return;
+  d.ctaLinks = d.ctaLinks.map((l) => (l.url === url ? { ...l, checked: !l.checked } : l));
+  notify(sessionId);
+  rightPanel.refreshContextBriefPanel?.();
 }
 
 export function save(sessionId) {
   const d = drafts.get(sessionId);
   if (!d) return;
   const name = (d.name || "").trim();
-  if (!name) return; // Save button is disabled in this state, but defensive.
-  const saved = d.editingId
-    ? updateContext(d.editingId, { name, ...d.answers, updatedAt: "just now" })
-    : addContext({ name, ...d.answers });
+  if (!name) return; // Save button is disabled in this state; defensive.
+  const payload = {
+    name,
+    color: d.color,
+    websiteUrl: d.websiteUrl,
+    businessSummary: d.businessSummary,
+    briefSummary: d.businessSummary, // mirror to legacy field for backwards-read compat
+    audience: d.audience,
+    audienceProblems: d.audienceProblems,
+    tones: d.tones,
+    contentStyle: d.contentStyle,
+    objective: d.objective,
+    contentAction: d.contentAction,
+    ctaLinks: d.ctaLinks.filter((l) => l.checked),
+    cta: d.ctaLinks.find((l) => l.checked)?.url || "",
+    language: d.language,
+    updatedAt: "just now",
+  };
+  const saved = d.editingId ? updateContext(d.editingId, payload) : addContext(payload);
   const onComplete = d.onComplete;
   drafts.delete(sessionId);
   inlineQuestion.exit(sessionId);
   notify(sessionId);
-  // Close the panel without firing onCancel — the draft was just persisted
-  // so the cancel path (which would discard it again) doesn't apply.
-  rightPanel.closeContextFormSilently();
+  rightPanel.closeContextBriefPanelSilently?.();
   if (onComplete) onComplete(saved);
 }

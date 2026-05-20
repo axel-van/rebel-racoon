@@ -5,9 +5,9 @@ import {
   subscribe as subscribeContexts,
   duplicateContext,
   deleteContext,
-} from "../contexts-store.js?v=24";
+} from "../contexts-store.js?v=25";
 import { navigate } from "../router.js?v=21";
-import { openRead, startEdit } from "../context-builder.js?v=23";
+import { openRead, startEdit } from "../context-builder.js?v=24";
 import { setHandoff } from "../handoff.js?v=20";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=20";
 import { renderEmptyState } from "../components/empty-state.js?v=1";

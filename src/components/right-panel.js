@@ -287,6 +287,30 @@ export function closeContextFormSilently() {
   notify();
 }
 
+// V1 brief-builder panel — opens a side-by-side scrollable form populated
+// from a mocked website analysis. Caller (context-builder) owns the draft
+// state and supplies callbacks for each interactive surface (chips, CTA
+// checkboxes, name, save, cancel).
+let contextBriefConfig = null;
+export function openContextBriefPanel(config = {}) {
+  const prev = state.mode;
+  contextBriefConfig = { ...config };
+  state = { ...state, mode: "context-brief" };
+  maybeCollapseSidebarOnOpen(prev);
+  renderPanel();
+  notify();
+}
+export function refreshContextBriefPanel() {
+  if (state.mode === "context-brief") renderPanel();
+}
+export function closeContextBriefPanelSilently() {
+  if (state.mode !== "context-brief") return;
+  contextBriefConfig = null;
+  state = { ...state, mode: null };
+  renderPanel();
+  notify();
+}
+
 // Subscribe to the active session's thread so the panel reflects late-
 // landing batch changes. Tear down + re-create on every mode flip / batch
 // switch so we never leak listeners across sessions.
@@ -643,6 +667,56 @@ export function init() {
       contextFormConfig?.onEnterEdit?.();
       return;
     }
+    // --- V1 brief panel handlers ---
+    const briefChip = event.target.closest("[data-brief-chip-field]");
+    if (briefChip) {
+      contextBriefConfig?.onToggleChip?.(briefChip.dataset.briefChipField, briefChip.dataset.briefChipValue);
+      return;
+    }
+    const briefSingle = event.target.closest("[data-brief-single-field]");
+    if (briefSingle) {
+      contextBriefConfig?.onAnswer?.(briefSingle.dataset.briefSingleField, briefSingle.dataset.briefSingleValue);
+      return;
+    }
+    const briefColor = event.target.closest("[data-brief-color]");
+    if (briefColor) {
+      contextBriefConfig?.onAnswer?.("color", briefColor.dataset.briefColor);
+      return;
+    }
+    const briefOtherToggle = event.target.closest("[data-brief-other-toggle]");
+    if (briefOtherToggle) {
+      const field = briefOtherToggle.dataset.briefOtherToggle;
+      const wrap = el.querySelector(`[data-brief-other-wrap="${field}"]`);
+      if (wrap) {
+        wrap.hidden = !wrap.hidden;
+        if (!wrap.hidden) wrap.querySelector("input")?.focus();
+      }
+      return;
+    }
+    const briefOtherSubmit = event.target.closest("[data-brief-other-submit]");
+    if (briefOtherSubmit) {
+      const field = briefOtherSubmit.dataset.briefOtherSubmit;
+      const input = el.querySelector(`[data-brief-other-input="${field}"]`);
+      const v = (input?.value || "").trim();
+      if (!v) return;
+      contextBriefConfig?.onAddOther?.(field, v);
+      return;
+    }
+    const briefCta = event.target.closest("[data-brief-cta-toggle]");
+    if (briefCta) {
+      // The native checkbox toggles its own state; we just propagate.
+      contextBriefConfig?.onToggleCta?.(briefCta.dataset.briefCtaToggle);
+      return;
+    }
+    if (event.target.closest("[data-brief-save]")) {
+      contextBriefConfig?.onSave?.();
+      return;
+    }
+    if (event.target.closest("[data-brief-cancel]")) {
+      contextBriefConfig?.onCancel?.();
+      closePanel();
+      return;
+    }
   });
   el.addEventListener("change", (event) => {
     if (event.target.matches("[data-rpanel-drafts-network-select]")) {
@@ -679,6 +753,22 @@ export function init() {
       }
       return;
     }
+    // --- V1 brief panel inputs ---
+    if (event.target.matches("[data-brief-name]")) {
+      contextBriefConfig?.onName?.(event.target.value);
+      const btn = el.querySelector("[data-brief-save]");
+      if (btn) {
+        const shouldDisable = !event.target.value.trim();
+        if (shouldDisable && !btn.hasAttribute("disabled")) btn.setAttribute("disabled", "");
+        else if (!shouldDisable && btn.hasAttribute("disabled")) btn.removeAttribute("disabled");
+      }
+      return;
+    }
+    if (event.target.matches("[data-brief-summary]")) {
+      // Pass-through without re-render so the textarea keeps focus.
+      contextBriefConfig?.onAnswer?.("businessSummary", event.target.value);
+      return;
+    }
   });
   // Enter inside the "Other…" text input on a chip-multi-add question
   // appends the chip — same affordance as clicking the + button.
@@ -693,6 +783,15 @@ export function init() {
       const current = Array.isArray(draft?.answers?.[field]) ? draft.answers[field].slice() : [];
       if (!current.includes(v)) current.push(v);
       contextFormConfig?.onAnswer?.(field, current);
+    }
+    // V1 brief panel — same Enter-to-add affordance on Other inputs.
+    const briefOtherInput = event.target.matches("[data-brief-other-input]") ? event.target : null;
+    if (briefOtherInput && event.key === "Enter") {
+      event.preventDefault();
+      const field = briefOtherInput.dataset.briefOtherInput;
+      const v = briefOtherInput.value.trim();
+      if (!v) return;
+      contextBriefConfig?.onAddOther?.(field, v);
     }
   });
   // Inline-edit shortcuts — scoped to the active editor.
@@ -826,20 +925,26 @@ function renderPanel() {
       const draft = contextFormConfig?.getDraft?.();
       titleText = draft?.name?.trim() || "Build your context";
     }
+  } else if (state.mode === "context-brief") {
+    titleIcon = "ap-icon-target";
+    const draft = contextBriefConfig?.getDraft?.();
+    titleText = draft?.name?.trim() || "Define your content brief";
   }
-  // The context-form view manages its own scrolling body + sticky footer
-  // (so Save sits flush at the bottom). Drafts/Ideas/Sources keep the
-  // historical .app-right-panel__body wrapper.
+  // The context-form / context-brief views manage their own scrolling body
+  // + sticky footer (so Save sits flush at the bottom). Drafts/Ideas/Sources
+  // keep the historical .app-right-panel__body wrapper.
   const bodyHtml =
     state.mode === "context-form"
       ? renderContextFormView()
-      : `<div class="app-right-panel__body">${
-          state.mode === "drafts"
-            ? renderDraftsView()
-            : state.mode === "sources"
-              ? renderSourcesView()
-              : renderIdeasView()
-        }</div>`;
+      : state.mode === "context-brief"
+        ? renderContextBriefView()
+        : `<div class="app-right-panel__body">${
+            state.mode === "drafts"
+              ? renderDraftsView()
+              : state.mode === "sources"
+                ? renderSourcesView()
+                : renderIdeasView()
+          }</div>`;
 
   el.innerHTML = html`
     <div
@@ -1800,5 +1905,356 @@ function renderContextFormFooterRead() {
         <span>Edit</span>
       </button>
     </footer>
+  `;
+}
+
+// --- V1 Brief panel ---------------------------------------------------
+
+const COLOR_SWATCHES = ["orange", "blue", "green", "purple", "red", "yellow"];
+const LANGUAGE_OPTIONS = ["English", "Français", "Español", "Deutsch", "Italiano", "Português"];
+const TONE_FALLBACKS = [
+  "Conversational & approachable",
+  "Bold & opinionated",
+  "Neutral & informative",
+  "Playful & witty",
+];
+const STYLE_FALLBACKS = ["Educational with case studies", "Inspirational & aspirational", "Behind-the-scenes & human"];
+const OBJECTIVE_FALLBACKS = ["Drive traffic", "Community engagement", "Thought leadership", "Customer retention"];
+const ACTION_FALLBACKS = ["Visit the website", "Download a resource", "Join the community", "Contact sales"];
+
+function renderContextBriefView() {
+  if (!contextBriefConfig) return "";
+  const d = contextBriefConfig.getDraft?.() || {};
+  const sections = [
+    renderBriefIntro(),
+    renderBriefName(d),
+    renderBriefBusinessSummary(d),
+    renderBriefChips({
+      field: "audience",
+      title: "Who is your primary audience?",
+      hint: "Archie will tailor post topics and framing to speak directly to them.",
+      fromWeb: true,
+      suggestions: d.suggestions?.audience || [],
+      fallback: [],
+      values: d.audience || [],
+      customs: d.customAdditions?.audience || [],
+      otherPlaceholder: "Describe your audience…",
+      warningCount: 0,
+    }),
+    renderBriefChips({
+      field: "audienceProblems",
+      title: "What problems does your audience face?",
+      hint: "Archie will craft posts that resonate with their real frustrations.",
+      fromWeb: true,
+      suggestions: d.suggestions?.audienceProblems || [],
+      fallback: [],
+      values: d.audienceProblems || [],
+      customs: d.customAdditions?.audienceProblems || [],
+      otherPlaceholder: "Describe the main challenge…",
+      warningCount:
+        (d.suggestions?.audienceProblems || []).length >= 20 ? (d.suggestions?.audienceProblems || []).length : 0,
+    }),
+    renderBriefChips({
+      field: "tones",
+      title: "What's your brand's tone of voice?",
+      hint: "This shapes how Archie writes — word choice, energy, and style.",
+      fromWeb: true,
+      suggestions: d.suggestions?.tones || [],
+      fallback: TONE_FALLBACKS,
+      values: d.tones || [],
+      customs: d.customAdditions?.tones || [],
+      otherPlaceholder: "Describe your tone…",
+    }),
+    renderBriefChips({
+      field: "contentStyle",
+      title: "What content style fits your brand?",
+      hint: "This guides the structure and format of every post Archie writes.",
+      fromWeb: true,
+      suggestions: d.suggestions?.contentStyle || [],
+      fallback: STYLE_FALLBACKS,
+      values: d.contentStyle || [],
+      customs: d.customAdditions?.contentStyle || [],
+      otherPlaceholder: "Describe your style…",
+    }),
+    renderBriefChips({
+      field: "objective",
+      title: "What's your primary social media objective?",
+      hint: "Archie will prioritize content angles that serve this goal.",
+      fromWeb: true,
+      suggestions: d.suggestions?.objective || [],
+      fallback: OBJECTIVE_FALLBACKS,
+      values: d.objective || [],
+      customs: d.customAdditions?.objective || [],
+      otherPlaceholder: "Describe your objective…",
+    }),
+    renderBriefChips({
+      field: "contentAction",
+      title: "What action should your content drive?",
+      hint: "Archie will include relevant CTAs aligned with this action.",
+      fromWeb: true,
+      suggestions: d.suggestions?.contentAction || [],
+      fallback: ACTION_FALLBACKS,
+      values: d.contentAction || [],
+      customs: d.customAdditions?.contentAction || [],
+      otherPlaceholder: "Describe the action…",
+    }),
+    renderBriefCtaList(d),
+    renderBriefSinglePick({
+      field: "language",
+      title: "Select a language for ideas and posts",
+      hint: "Archie will write in this language.",
+      options: LANGUAGE_OPTIONS,
+      value: d.language || "English",
+      suggested: d.suggestions?.language || "",
+    }),
+    renderBriefColor(d),
+  ];
+  return `
+    <div class="context-brief">
+      <div class="context-brief__body">${sections.join('<hr class="ap-divider" />')}</div>
+      <footer class="context-brief__footer">
+        <button
+          type="button"
+          class="ap-button stroked grey"
+          data-brief-cancel
+          aria-label="Cancel"
+        >
+          <span>Cancel</span>
+        </button>
+        <button
+          type="button"
+          class="ap-button mermaid"
+          data-brief-save
+          ${(d.name || "").trim() ? "" : "disabled"}
+        >
+          <i class="ap-icon-sparkles-mermaid"></i>
+          <span>Generate my brief</span>
+        </button>
+      </footer>
+    </div>
+  `;
+}
+
+function renderBriefIntro() {
+  return `
+    <section class="context-brief__intro">
+      <p class="context-brief__intro-text">Help Archie understand your brand so it generates posts that truly fit your voice and audience.</p>
+      <div class="ap-infobox info has-title">
+        <i class="ap-icon-info_fill"></i>
+        <div class="ap-infobox-content">
+          <div class="ap-infobox-texts">
+            <div class="ap-infobox-title">Pre-filled from your website</div>
+            <div class="ap-infobox-message">Green chips were suggested by Archie. Click any to toggle off, or add your own via "Other…".</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderBriefName(d) {
+  return `
+    <section class="context-brief__section">
+      <h3 class="context-brief__title">Context name</h3>
+      <div class="ap-input-group">
+        <input
+          type="text"
+          data-brief-name
+          value="${escapeAttr(d.name || "")}"
+          placeholder="e.g. Acme · Q2 marketing"
+        />
+      </div>
+    </section>
+  `;
+}
+
+function renderBriefBusinessSummary(d) {
+  const text = d.businessSummary || "";
+  return `
+    <section class="context-brief__section">
+      <h3 class="context-brief__title">Does this describe your business correctly?</h3>
+      <p class="context-brief__hint">Archie analysed your website and wrote this summary. Edit it directly if anything needs adjusting.</p>
+      <span class="context-brief__from-web"><i class="ap-icon-sparkles"></i> Generated from your website</span>
+      <div class="ap-textarea-field resizable">
+        <textarea data-brief-summary rows="5">${escapeText(text)}</textarea>
+      </div>
+    </section>
+  `;
+}
+
+function renderBriefChips({
+  field,
+  title,
+  hint,
+  fromWeb,
+  suggestions,
+  fallback,
+  values,
+  customs,
+  otherPlaceholder,
+  warningCount,
+}) {
+  const valuesSet = new Set(values || []);
+  const suggestionsSet = new Set(suggestions || []);
+  // Render order: suggestions first (menthol/green), then fallback (grey/blue), then customs (always blue).
+  const seen = new Set();
+  const chipNodes = [];
+  for (const v of suggestions || []) {
+    if (seen.has(v)) continue;
+    seen.add(v);
+    chipNodes.push(renderBriefChip(field, v, valuesSet.has(v), true));
+  }
+  for (const v of fallback || []) {
+    if (seen.has(v)) continue;
+    seen.add(v);
+    chipNodes.push(renderBriefChip(field, v, valuesSet.has(v), false));
+  }
+  for (const v of customs || []) {
+    if (seen.has(v)) continue;
+    seen.add(v);
+    chipNodes.push(renderBriefChip(field, v, valuesSet.has(v), false));
+  }
+  // Any value present in the draft but not in any list (defensive — e.g.
+  // legacy data) — render as custom.
+  for (const v of values || []) {
+    if (seen.has(v)) continue;
+    seen.add(v);
+    chipNodes.push(renderBriefChip(field, v, true, false));
+  }
+  chipNodes.push(
+    `<button type="button" class="ap-tag grey" data-brief-other-toggle="${escapeAttr(field)}"><i class="ap-icon-plus"></i><span>Other…</span></button>`,
+  );
+  const warning =
+    warningCount > 0
+      ? `
+        <div class="ap-infobox warning has-title">
+          <i class="ap-icon-warning_fill"></i>
+          <div class="ap-infobox-content">
+            <div class="ap-infobox-texts">
+              <div class="ap-infobox-title">${warningCount} suggestions — all audiences combined</div>
+              <div class="ap-infobox-message">Pick the pains that truly resonate. You'll get a sharper brief by narrowing down to 5–10.</div>
+            </div>
+          </div>
+        </div>
+      `
+      : "";
+  return `
+    <section class="context-brief__section" data-brief-field-section="${escapeAttr(field)}">
+      <h3 class="context-brief__title">${escapeText(title)}</h3>
+      ${hint ? `<p class="context-brief__hint">${escapeText(hint)}</p>` : ""}
+      ${fromWeb ? `<span class="context-brief__from-web"><i class="ap-icon-web"></i> From your website</span>` : ""}
+      ${warning}
+      <div class="context-brief__chips" data-brief-field="${escapeAttr(field)}">${chipNodes.join("")}</div>
+      <div class="context-brief__other" data-brief-other-wrap="${escapeAttr(field)}" hidden>
+        <div class="ap-input-group">
+          <input
+            type="text"
+            data-brief-other-input="${escapeAttr(field)}"
+            placeholder="${escapeAttr(otherPlaceholder || "Add another…")}"
+          />
+          <button type="button" class="ap-button stroked grey" data-brief-other-submit="${escapeAttr(field)}">
+            <span>Add</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderBriefChip(field, value, selected, suggested) {
+  // Color logic from the brief HTML:
+  //   suggested + unselected  → menthol
+  //   suggested + selected    → green
+  //   neutral   + unselected  → grey
+  //   neutral   + selected    → blue
+  let cls;
+  if (suggested) cls = selected ? "green" : "menthol";
+  else cls = selected ? "blue" : "grey";
+  return `
+    <button
+      type="button"
+      class="ap-tag ${cls}"
+      data-brief-chip-field="${escapeAttr(field)}"
+      data-brief-chip-value="${escapeAttr(value)}"
+      aria-pressed="${selected ? "true" : "false"}"
+    >${escapeText(value)}</button>
+  `;
+}
+
+function renderBriefCtaList(d) {
+  const ctas = d.ctaLinks || [];
+  const cards = ctas
+    .map((cta) => {
+      const checked = cta.checked ? "checked" : "";
+      return `
+        <label class="ap-card context-brief__cta-card">
+          <label class="ap-checkbox-container">
+            <input type="checkbox" data-brief-cta-toggle="${escapeAttr(cta.url)}" ${checked} />
+            <i></i>
+            <span>${escapeText(cta.label)}<small>${escapeText(cta.url)}</small></span>
+          </label>
+        </label>
+      `;
+    })
+    .join("");
+  return `
+    <section class="context-brief__section">
+      <h3 class="context-brief__title">Which links should Archie use as CTAs?</h3>
+      <p class="context-brief__hint">These URLs will be included in your posts when relevant.</p>
+      <span class="context-brief__from-web"><i class="ap-icon-web"></i> From your website</span>
+      <div class="context-brief__cta-list">${cards || `<p class="context-brief__hint">No CTA links suggested yet.</p>`}</div>
+    </section>
+  `;
+}
+
+function renderBriefSinglePick({ field, title, hint, options, value, suggested }) {
+  const chips = options
+    .map((opt) => {
+      const isSelected = opt === value;
+      const isSuggested = opt === suggested;
+      let cls;
+      if (isSuggested) cls = isSelected ? "green" : "menthol";
+      else cls = isSelected ? "blue" : "grey";
+      return `
+        <button
+          type="button"
+          class="ap-tag ${cls}"
+          data-brief-single-field="${escapeAttr(field)}"
+          data-brief-single-value="${escapeAttr(opt)}"
+          aria-pressed="${isSelected ? "true" : "false"}"
+        >${escapeText(opt)}</button>
+      `;
+    })
+    .join("");
+  return `
+    <section class="context-brief__section">
+      <h3 class="context-brief__title">${escapeText(title)}</h3>
+      ${hint ? `<p class="context-brief__hint">${escapeText(hint)}</p>` : ""}
+      <div class="context-brief__chips">${chips}</div>
+    </section>
+  `;
+}
+
+function renderBriefColor(d) {
+  const value = d.color || "orange";
+  const swatches = COLOR_SWATCHES.map((c) => {
+    const isSelected = c === value;
+    return `
+      <button
+        type="button"
+        class="context-brief__color-swatch ${isSelected ? "is-selected" : ""}"
+        data-brief-color="${c}"
+        style="background: var(--ref-color-${c === "blue" ? "electric-blue" : c}-100);"
+        aria-label="${c}"
+        aria-pressed="${isSelected ? "true" : "false"}"
+      ></button>
+    `;
+  }).join("");
+  return `
+    <section class="context-brief__section">
+      <h3 class="context-brief__title">Pick a color for your context</h3>
+      <p class="context-brief__hint">Shown next to the context name in chats and listings.</p>
+      <div class="context-brief__color-swatches">${swatches}</div>
+    </section>
   `;
 }

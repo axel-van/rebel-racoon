@@ -50,18 +50,38 @@ export function getContextById(id) {
  * @returns {Context}
  */
 export function addContext(ctx = {}) {
+  // audience used to be a free-text string; the V1 brief builder makes it
+  // a multi-pick array. Accept either shape so seeds and existing code
+  // paths keep working (string → wrap in single-element array).
+  const audienceVal = Array.isArray(ctx.audience)
+    ? ctx.audience.slice()
+    : typeof ctx.audience === "string" && ctx.audience.length > 0
+      ? [ctx.audience]
+      : [];
   const next = {
     id: ctx.id || freshId(),
     name: ctx.name || "Untitled context",
     color: ctx.color || "orange",
     isDefault: ctx.isDefault === true,
+    // — legacy fields (kept for backwards compatibility with seeds + the
+    //   ContextForm read mode) —
     brandName: ctx.brandName || "",
-    audience: ctx.audience || "",
     briefSummary: ctx.briefSummary || "",
-    tones: Array.isArray(ctx.tones) ? ctx.tones.slice() : [],
     doRules: Array.isArray(ctx.doRules) ? ctx.doRules.slice() : [],
     dontRules: Array.isArray(ctx.dontRules) ? ctx.dontRules.slice() : [],
     cta: ctx.cta || "",
+    // — V1 brief-builder fields —
+    websiteUrl: ctx.websiteUrl || "",
+    businessSummary: ctx.businessSummary || ctx.briefSummary || "",
+    audience: audienceVal,
+    audienceProblems: Array.isArray(ctx.audienceProblems) ? ctx.audienceProblems.slice() : [],
+    tones: Array.isArray(ctx.tones) ? ctx.tones.slice() : [],
+    contentStyle: Array.isArray(ctx.contentStyle) ? ctx.contentStyle.slice() : [],
+    objective: Array.isArray(ctx.objective) ? ctx.objective.slice() : [],
+    contentAction: Array.isArray(ctx.contentAction) ? ctx.contentAction.slice() : [],
+    ctaLinks: Array.isArray(ctx.ctaLinks) ? ctx.ctaLinks.map((l) => ({ ...l })) : [],
+    language: ctx.language || "English",
+    // — meta —
     usedIn: typeof ctx.usedIn === "number" ? ctx.usedIn : 0,
     updatedAt: ctx.updatedAt || "just now",
     analysis: ctx.analysis || { voice: null, brief: null, brand: null },
@@ -101,6 +121,15 @@ export function updateContext(id, patch) {
   if (patch.doRules !== undefined) c.doRules = patch.doRules;
   if (patch.dontRules !== undefined) c.dontRules = patch.dontRules;
   if (patch.cta !== undefined) c.cta = patch.cta;
+  // V1 brief-builder fields
+  if (patch.websiteUrl !== undefined) c.websiteUrl = patch.websiteUrl;
+  if (patch.businessSummary !== undefined) c.businessSummary = patch.businessSummary;
+  if (patch.audienceProblems !== undefined) c.audienceProblems = patch.audienceProblems;
+  if (patch.contentStyle !== undefined) c.contentStyle = patch.contentStyle;
+  if (patch.objective !== undefined) c.objective = patch.objective;
+  if (patch.contentAction !== undefined) c.contentAction = patch.contentAction;
+  if (patch.ctaLinks !== undefined) c.ctaLinks = patch.ctaLinks;
+  if (patch.language !== undefined) c.language = patch.language;
   if (patch.usedIn !== undefined) c.usedIn = patch.usedIn;
   if (patch.updatedAt !== undefined) c.updatedAt = patch.updatedAt;
   // Legacy + analysis sub-object
