@@ -842,19 +842,24 @@
   padding: var(--ref-spacing-md);
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--ref-spacing-xs);
 }
 
-/* Intro stays plain (no card chrome) — header text + infobox only. */
+/* Intro stays plain (no card chrome) — header text + infobox only.
+   Capped at the same 500px as the cards below for visual alignment. */
 .context-brief__intro {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
   padding: 0 var(--ref-spacing-xxs);
+  max-width: 500px;
+  width: 100%;
 }
 
 /* Each question lives in its own card: white surface, grey-10 border,
-   8px radius. Reads as a discrete unit. */
+   8px radius. Reads as a discrete unit. Capped at 500px so the
+   form stays scannable even when the panel column is wide. */
 .context-brief__section {
   display: flex;
   flex-direction: column;
@@ -863,6 +868,8 @@
   border: 1px solid var(--ref-color-grey-10);
   border-radius: var(--ref-border-radius-md);
   padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  max-width: 500px;
+  width: 100%;
 }
 
 /* Card chrome already separates sections — hide the divider noise. */
