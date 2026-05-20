@@ -571,15 +571,26 @@
    white to the composer's solid background. pointer-events: none keeps
    buttons in the underlying thread (cards, drafts, etc.) clickable
    through the gradient. Use rgba(255,255,255,0) rather than `transparent`
-   to avoid Safari's grey midpoint when interpolating through black. */
+   to avoid Safari's grey midpoint when interpolating through black.
+
+   Multi-stop ease-in curve (most of the dissolve happens in the bottom
+   third) over 96px — softer than the previous straight linear ramp,
+   which felt like a hard edge halfway through. */
 .session__composer::before {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
   bottom: 100%;
-  height: 48px;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--app-surface));
+  height: 96px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.55) 75%,
+    rgba(255, 255, 255, 1) 100%
+  );
   pointer-events: none;
 }
 
