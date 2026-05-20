@@ -17,7 +17,7 @@ import {
   postDraftResult,
   subscribe,
   submitAssistantChoice,
-} from "../assistant.js?v=27";
+} from "../assistant.js?v=28";
 import { getSources, getIdeas, injectIdeasForSource } from "../library.js?v=26";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
@@ -31,7 +31,7 @@ import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=21";
-import * as contextBuilder from "../context-builder.js?v=25";
+import * as contextBuilder from "../context-builder.js?v=26";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=25";
 import { renderSourceCard } from "../components/source-card.js?v=27";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";

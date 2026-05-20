@@ -139,6 +139,39 @@ export function postAssistantMessage(sessionId, text, { meta = "Archie" } = {}) 
   notify(sessionId);
 }
 
+// Standalone mermaid system notice — same pill style as the "Drafting"
+// reasoning block, but pushed on its own (no surrounding user/AI turns).
+// Use for inline status indicators like "Extracting guidelines" while a
+// long-running, non-blocking task is in flight. Returns the id so callers
+// can flip the pill state to ready via markSystemNoticeReady.
+export function postSystemNotice(sessionId, { meta, text = "", variant = "mermaid", open = false } = {}) {
+  const thread = getThread(sessionId);
+  const id = newId();
+  thread.push({
+    id,
+    role: "system",
+    meta: meta || "Working…",
+    variant,
+    text,
+    open,
+    status: "loading",
+    createdAt: Date.now(),
+  });
+  notify(sessionId);
+  return id;
+}
+
+export function markSystemNoticeReady(sessionId, id, patch = {}) {
+  const thread = getThread(sessionId);
+  const msg = thread.find((m) => m.id === id);
+  if (!msg) return;
+  msg.status = "ready";
+  if (patch.meta) msg.meta = patch.meta;
+  if (patch.text != null) msg.text = patch.text;
+  if (patch.open != null) msg.open = patch.open;
+  notify(sessionId);
+}
+
 // Right-aligned "Source intake" turn — renders like a user turn but with
 // a light electric-blue bubble containing a file icon + filename · size.
 // Figma 25:1127/25:1131.

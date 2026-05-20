@@ -12,7 +12,7 @@ import {
   subscribe as subscribeRightPanel,
 } from "./right-panel.js?v=46";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=28";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=27";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=28";
 import { recentSessions } from "../mocks.js?v=28";
 
 // Persistent top bar.

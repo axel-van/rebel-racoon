@@ -20,7 +20,7 @@
 // contexts that may still have the old shape.
 
 import * as inlineQuestion from "./inline-question.js?v=21";
-import { postAssistantMessage, postUserTurn } from "./assistant.js?v=27";
+import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=28";
 import * as rightPanel from "./components/right-panel.js?v=46";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=25";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=20";
@@ -173,7 +173,11 @@ function setUrl(sessionId, url) {
 // --- Phase 2 — Mock website analysis (~10s) -------------------------------
 
 function runAnalysis(sessionId) {
-  postAssistantMessage(sessionId, "Reading your website… I'll have a draft brief ready in about 10 seconds.");
+  // Mermaid status pill — same chrome as the "Drafting" reasoning pill,
+  // labeled "Extracting guidelines" while the mocked website analysis is
+  // in flight, then flipped to "Extracted guidelines" once the brief
+  // panel is ready to open.
+  const noticeId = postSystemNotice(sessionId, { meta: "Extracting guidelines", variant: "mermaid" });
   notify(sessionId);
   window.setTimeout(() => {
     const d = drafts.get(sessionId);
@@ -193,11 +197,8 @@ function runAnalysis(sessionId) {
     d.ctaLinks = (analysis.suggestions.ctaLinks || []).map((l) => ({ ...l }));
     d.language = analysis.suggestions.language || "English";
     d.color = analysis.suggestions.color || "orange";
+    markSystemNoticeReady(sessionId, noticeId, { meta: "Extracted guidelines" });
     notify(sessionId);
-    postAssistantMessage(
-      sessionId,
-      "Here's a draft brief. Tweak anything that doesn't fit, then click \"Generate my brief\" to save.",
-    );
     openBriefPanel(sessionId);
   }, 10000);
 }
