@@ -94,10 +94,14 @@ export function subscribe(sessionId, fn) {
 // Kick off the V1 brief-builder flow. The inline question asks for the URL
 // inside `sessionId`'s assistant panel; once submitted, a ~10s "Reading
 // your website…" pending turn fires before the brief panel opens.
-export function start(sessionId, { onComplete } = {}) {
+// `autoLaunched: true` softens the entry copy with a transitional message
+// — used when session.js fires the wizard on the user's first message
+// without a context. Explicit "+ New context" entry points keep the
+// existing concise intro since the user already opted in.
+export function start(sessionId, { onComplete, autoLaunched = false } = {}) {
   drafts.set(sessionId, emptyDraft({ onComplete }));
   notify(sessionId);
-  askUrl(sessionId);
+  askUrl(sessionId, { autoLaunched });
 }
 
 // Open the right-panel brief panel in read mode for an existing context.
@@ -148,9 +152,19 @@ export function cancel(sessionId) {
 
 // --- Phase 1 — URL ---------------------------------------------------------
 
-function askUrl(sessionId) {
-  postAssistantMessage(sessionId, "Let's set up a new context. What's the URL of your company website?");
+function askUrl(sessionId, { autoLaunched = false } = {}) {
+  // The wizard chrome (renderAssistantPanelQuestion in session.js) shows
+  // ONLY the inline-question's `intro` + picker — the underlying thread
+  // is hidden. So we pass our framing copy through the `intro` field
+  // instead of postAssistantMessage (which would be invisible).
+  const intro = autoLaunched
+    ? "Before I dive in — there's no context defined for this conversation yet. Let's create one together, it'll only take a minute. I'll ask you a few quick questions, starting with your website."
+    : "Let's set up a new context. I'll ask you a few quick questions, starting with your website.";
+  // Also push the same intro to the thread so it's there when the wizard
+  // exits (the user sees a coherent history after the brief panel opens).
+  postAssistantMessage(sessionId, intro);
   inlineQuestion.ask(sessionId, {
+    intro,
     title: "What's the URL of your company website?",
     items: [],
     customPlaceholder: "https://your-brand.com",

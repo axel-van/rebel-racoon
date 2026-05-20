@@ -31,7 +31,7 @@ import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=21";
-import * as contextBuilder from "../context-builder.js?v=26";
+import * as contextBuilder from "../context-builder.js?v=27";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=25";
 import { renderSourceCard } from "../components/source-card.js?v=27";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
@@ -1839,6 +1839,7 @@ function bindSession(root, session) {
     if (ctxAttached) return;
     setTimeout(() => {
       contextBuilder.start(session.id, {
+        autoLaunched: true,
         onComplete: (created) => setQuery({ contextId: created.id }),
       });
     }, 200);
