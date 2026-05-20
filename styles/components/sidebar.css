@@ -20,12 +20,18 @@
 
 /* ── Head ────────────────────────────────────────────────────────────── */
 
+/* Locked to the topbar height + a matching border-bottom so the brand
+   row and the topbar share a single horizontal baseline. Content
+   centers vertically (icon buttons + brand mark all sit on the same
+   y-axis as the topbar's title + sidebar-toggle to the right). */
 .app-sidebar__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm) var(--ref-spacing-sm) var(--ref-spacing-xs);
+  height: var(--app-topbar-height);
+  padding: 0 var(--ref-spacing-sm);
+  border-bottom: 1px solid var(--app-border-soft);
 }
 
 .app-sidebar__brand {
@@ -554,7 +560,9 @@
 
 .app-sidebar__head--collapsed {
   justify-content: center;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-xxs);
+  padding: 0 var(--ref-spacing-xxs);
+  /* height + border-bottom inherited from .app-sidebar__head — keeps
+     the collapsed rail aligned with the topbar baseline too. */
 }
 
 .app-shell.is-sidebar-collapsed .app-sidebar__nav {
