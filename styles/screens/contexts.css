@@ -71,7 +71,7 @@
    when the right panel pinched the main area. */
 .contexts-view__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--ref-spacing-md);
 }
 
@@ -88,14 +88,20 @@
   padding: var(--ref-spacing-xl) var(--ref-spacing-md);
 }
 
-/* ── ContextCard ─────────────────────────────────────────────────── */
+/* ── ContextCard ───────────────────────────────────────────────────
+   Summary card that lets a user spot which context is which at a
+   glance. Modelled on the Claude Projects pattern: color stripe on
+   top, title, voice headline, multi-line summary, footer counters +
+   brand palette dots, "Updated X ago" timestamp. Secondary actions
+   (Edit / Duplicate / Delete) hide by default and reveal on hover
+   so the card stays uncluttered. */
 
 .contexts-card {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-md);
   padding-top: var(--ref-spacing-md);
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
@@ -103,13 +109,20 @@
   box-shadow: var(--app-shadow-card);
   overflow: hidden;
   cursor: pointer;
-  transition: border-color var(--ref-animation-short) var(--app-ease-out);
+  transition:
+    border-color var(--ref-animation-short) var(--app-ease-out),
+    transform var(--ref-animation-short) var(--app-ease-out),
+    box-shadow var(--ref-animation-short) var(--app-ease-out);
 }
 
 .contexts-card:hover,
 .contexts-card:focus-visible {
   border-color: var(--ref-color-grey-40);
   outline: none;
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 6px 16px rgba(0, 0, 0, 0.06);
 }
 
 /* Swatch strip — top edge, full-width, colored per ctx.color. */
@@ -140,43 +153,98 @@
   background: var(--ref-color-yellow-100);
 }
 
+/* Hover-reveal action toolbar — sits in the top-right corner, hidden
+   by default. Matches Claude / Linear / Notion's "actions appear on
+   hover" pattern so the card body stays clean to scan. */
+.contexts-card__actions {
+  position: absolute;
+  top: calc(var(--ref-spacing-xs) + 4px); /* +4 = color-strip height */
+  right: var(--ref-spacing-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  padding: 2px;
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-10);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--ref-animation-short) var(--app-ease-out);
+}
+
+.contexts-card:hover .contexts-card__actions,
+.contexts-card:focus-within .contexts-card__actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.contexts-card__actions .ap-icon-button {
+  width: 28px;
+  height: 28px;
+}
+
 .contexts-card__head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--ref-spacing-xs);
-}
-
-.contexts-card__head-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  /* Reserve horizontal space for the hover-reveal action toolbar so
+     long names don't crash into it on hover. */
+  padding-right: 100px;
 }
 
 .contexts-card__name {
   margin: 0;
-  font-size: var(--ref-font-size-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  font-size: var(--ref-font-size-md);
+  line-height: var(--ref-font-line-height-md);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-150);
 }
 
-.contexts-card__brand {
-  font-size: var(--ref-font-size-xs);
-  color: var(--ref-color-grey-60);
+.contexts-card__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ref-color-yellow-100);
+  font-size: var(--ref-font-size-sm);
 }
 
-.contexts-card__used {
-  flex-shrink: 0;
-  font-size: 11px;
+/* Voice headline — small italic-ish pill showing the brand's tones
+   joined. Sparkles icon ties it to the AI-extracted voice profile. */
+.contexts-card__voice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--ref-color-grey-05);
+  color: var(--ref-color-grey-150);
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-60);
+}
+
+.contexts-card__voice > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contexts-card__voice > i {
+  color: var(--ref-color-electric-blue-100);
+  font-size: var(--ref-font-size-xs);
 }
 
 .contexts-card__brief {
   margin: 0;
-  font-size: var(--ref-font-size-xs);
-  line-height: 1.5;
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
   color: var(--ref-color-grey-100);
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -189,56 +257,54 @@
   font-style: italic;
 }
 
-.contexts-card__tones {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxxs);
-}
-
-.contexts-card__lists {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--ref-spacing-xs);
-}
-
-.contexts-card__list-h {
-  font-size: 10px;
-  font-weight: var(--ref-font-weight-extra-bold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ref-color-grey-60);
-  margin-bottom: 2px;
-}
-
-.contexts-card__list ul {
-  margin: 0;
-  padding-left: var(--ref-spacing-sm);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.contexts-card__list li {
-  font-size: 11px;
-  line-height: 1.4;
-  color: var(--ref-color-grey-100);
-}
-
-.contexts-card__list--dont .contexts-card__list-h {
-  color: var(--ref-color-red-100);
-}
-
-.contexts-card__list-empty {
-  list-style: none;
-  margin-left: calc(-1 * var(--ref-spacing-sm));
-  color: var(--ref-color-grey-40);
-}
-
 .contexts-card__foot {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
   margin-top: auto;
   padding-top: var(--ref-spacing-xs);
-  border-top: 1px solid var(--app-border-soft);
+}
+
+.contexts-card__counters {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+}
+
+.contexts-card__counter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-80);
+}
+
+.contexts-card__counter > i {
+  font-size: var(--ref-font-size-sm);
+  color: var(--ref-color-grey-60);
+}
+
+/* Brand palette preview — tiny colored dots from the analysed
+   website. Three dots overlap slightly like avatar stacks. */
+.contexts-card__palette {
+  display: inline-flex;
+  align-items: center;
+}
+
+.contexts-card__palette-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--ref-color-white);
+  margin-left: -6px;
+}
+
+.contexts-card__palette-dot:first-child {
+  margin-left: 0;
+}
+
+.contexts-card__updated {
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-60);
 }

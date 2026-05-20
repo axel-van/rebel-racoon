@@ -15,7 +15,7 @@ import { init as initConfirmModal } from "./components/confirm-modal.js?v=20";
 import { renderDashboard } from "./screens/dashboard.js?v=42";
 import { renderSession } from "./screens/session.js?v=91";
 import { renderIdeas } from "./screens/ideas.js?v=24";
-import { renderContexts } from "./screens/contexts.js?v=27";
+import { renderContexts } from "./screens/contexts.js?v=28";
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
 // stays in sync with the active context.

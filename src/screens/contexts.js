@@ -108,48 +108,44 @@ function renderContextsEmpty(allContexts, pageState) {
   });
 }
 
+// Claude-Projects-style summary card. The card is the primary
+// "what is this context" affordance — readable at a glance, with
+// secondary actions tucked into a hover-reveal toolbar in the
+// top-right corner. DO/DON'T lists and the tones chip row moved
+// out: they bloated the card without helping identification, and
+// they live in the read panel where they belong.
 function renderContextCard(ctx) {
   const color = ctx.color || "orange";
-  const tones = (ctx.tones || []).slice(0, 3);
-  const toneRow = tones.length
-    ? `<div class="contexts-card__tones">${tones.map((t) => `<span class="ap-tag">${escapeText(t)}</span>`).join("")}</div>`
+  const summary = (ctx.businessSummary || ctx.briefSummary || "").trim();
+  const voiceHeadline =
+    ctx.voiceProfile?.headline ||
+    (Array.isArray(ctx.tones) && ctx.tones.length ? ctx.tones.join(" · ").toLowerCase() : "");
+  const audienceCount = Array.isArray(ctx.audience) ? ctx.audience.length : ctx.audience ? 1 : 0;
+  const usedIn = ctx.usedIn || 0;
+  // Brand color preview — first website's primary / accent / link from
+  // imageVoice, up to 3 dots. Matches the "people avatars" affordance
+  // in the Claude reference but uses the analysed brand palette.
+  const site = ctx.imageVoice?.websites?.[0];
+  const paletteDots = site
+    ? [site.colors?.primary, site.colors?.accent, site.colors?.link]
+        .filter((c, i, arr) => c && arr.indexOf(c) === i)
+        .slice(0, 3)
+    : [];
+  const dotsHtml = paletteDots.length
+    ? `<div class="contexts-card__palette" aria-hidden="true">${paletteDots
+        .map((c) => `<span class="contexts-card__palette-dot" style="background:${escapeAttr(c)};"></span>`)
+        .join("")}</div>`
     : "";
-  const doPreview = (ctx.doRules || []).slice(0, 2);
-  const dontPreview = (ctx.dontRules || []).slice(0, 2);
+  const isDefaultBadge = ctx.isDefault
+    ? `<span class="contexts-card__badge" title="Default context"><i class="ap-icon-star_fill"></i></span>`
+    : "";
   return `
     <article class="contexts-card contexts-card--${color}" data-contexts-card="${ctx.id}" role="button" tabindex="0">
       <span class="contexts-card__swatch" aria-hidden="true"></span>
-      <header class="contexts-card__head">
-        <div class="contexts-card__head-text">
-          <h3 class="contexts-card__name">${escapeText(ctx.name)}</h3>
-          <div class="contexts-card__brand">${escapeText(ctx.brandName || "No brand set")}</div>
-        </div>
-        <span class="contexts-card__used">${ctx.usedIn || 0} ${(ctx.usedIn || 0) === 1 ? "chat" : "chats"}</span>
-      </header>
 
-      ${
-        ctx.briefSummary
-          ? `<p class="contexts-card__brief">${escapeText(ctx.briefSummary)}</p>`
-          : `<p class="contexts-card__brief contexts-card__brief--empty">No brief yet.</p>`
-      }
-
-      ${toneRow}
-
-      <div class="contexts-card__lists">
-        <div class="contexts-card__list">
-          <div class="contexts-card__list-h">Do</div>
-          <ul>${doPreview.map((d) => `<li>${escapeText(d)}</li>`).join("") || '<li class="contexts-card__list-empty">—</li>'}</ul>
-        </div>
-        <div class="contexts-card__list contexts-card__list--dont">
-          <div class="contexts-card__list-h">Don't</div>
-          <ul>${dontPreview.map((d) => `<li>${escapeText(d)}</li>`).join("") || '<li class="contexts-card__list-empty">—</li>'}</ul>
-        </div>
-      </div>
-
-      <footer class="contexts-card__foot">
-        <button type="button" class="ap-button stroked grey" data-contexts-edit="${ctx.id}">
+      <div class="contexts-card__actions" data-contexts-card-actions>
+        <button type="button" class="ap-icon-button transparent" data-contexts-edit="${ctx.id}" title="Edit" aria-label="Edit">
           <i class="ap-icon-pen"></i>
-          <span>Edit</span>
         </button>
         <button type="button" class="ap-icon-button transparent" data-contexts-duplicate="${ctx.id}" title="Duplicate" aria-label="Duplicate">
           <i class="ap-icon-copy"></i>
@@ -157,7 +153,49 @@ function renderContextCard(ctx) {
         <button type="button" class="ap-icon-button transparent" data-contexts-delete="${ctx.id}" title="Delete" aria-label="Delete">
           <i class="ap-icon-trash"></i>
         </button>
+      </div>
+
+      <header class="contexts-card__head">
+        <h3 class="contexts-card__name">
+          ${escapeText(ctx.name)}
+          ${isDefaultBadge}
+        </h3>
+      </header>
+
+      ${
+        voiceHeadline
+          ? `<div class="contexts-card__voice">
+              <i class="ap-icon-sparkles"></i>
+              <span>${escapeText(voiceHeadline)}</span>
+            </div>`
+          : ""
+      }
+
+      ${
+        summary
+          ? `<p class="contexts-card__brief">${escapeText(summary)}</p>`
+          : `<p class="contexts-card__brief contexts-card__brief--empty">No brief yet — open this context to add one.</p>`
+      }
+
+      <footer class="contexts-card__foot">
+        <div class="contexts-card__counters">
+          <span class="contexts-card__counter" title="${usedIn} ${usedIn === 1 ? "chat uses this context" : "chats use this context"}">
+            <i class="ap-icon-single-chat-bubble"></i>
+            <span>${usedIn}</span>
+          </span>
+          ${
+            audienceCount
+              ? `<span class="contexts-card__counter" title="${audienceCount} ${audienceCount === 1 ? "audience" : "audiences"}">
+                  <i class="ap-icon-target"></i>
+                  <span>${audienceCount}</span>
+                </span>`
+              : ""
+          }
+        </div>
+        ${dotsHtml}
       </footer>
+
+      <div class="contexts-card__updated">Updated ${escapeText(ctx.updatedAt || "recently")}</div>
     </article>
   `;
 }
