@@ -249,110 +249,49 @@
   color: var(--ref-color-grey-60);
 }
 
-/* Leading pin icon — only rendered for pinned rows. Visual marker that
-   matches the screenshot (small grey-80 pin in front of the title). */
-.app-sidebar__row-leading {
-  flex: 0 0 auto;
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-grey-80);
-}
-
-/* Trailing color dot — resolves the row's bound-context color. Mirrors
-   the topbar Context-pill swatch palette so a session and its context
-   are recognizable at a glance. The slot is sized 24×24 (same as the
-   pin button below) so swapping dot ↔ pin on hover doesn't shift the
-   row's layout ; the visible 8px circle is drawn via radial-gradient
-   centered in the slot. */
-.app-sidebar__row-dot {
+/* Leading playbook-color dot — small 8px circle on the left edge of
+   the row, just before the title. Resolves the bound playbook's color
+   so the user can scan the sidebar for "which conversation belongs to
+   which brand" without reading every name. Sized in a 16px slot so it
+   doesn't crowd the title's text but still aligns vertically with it. */
+.app-sidebar__row-color-dot {
   --dot-color: var(--ref-color-grey-40);
-  flex: 0 0 24px;
-  width: 24px;
-  height: 24px;
-  border-radius: 0;
-  background: radial-gradient(circle at center, var(--dot-color) 0 4px, transparent 4.5px);
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dot-color);
 }
 
-.app-sidebar__row-dot--orange {
+.app-sidebar__row-color-dot--orange {
   --dot-color: var(--ref-color-orange-100);
 }
-.app-sidebar__row-dot--blue {
+.app-sidebar__row-color-dot--blue {
   --dot-color: var(--ref-color-electric-blue-100);
 }
-.app-sidebar__row-dot--green {
+.app-sidebar__row-color-dot--green {
   --dot-color: var(--ref-color-green-100);
 }
-.app-sidebar__row-dot--purple {
+.app-sidebar__row-color-dot--purple {
   --dot-color: var(--ref-color-purple-100);
 }
-.app-sidebar__row-dot--red {
+.app-sidebar__row-color-dot--red {
   --dot-color: var(--ref-color-red-100);
 }
-.app-sidebar__row-dot--grey {
+.app-sidebar__row-color-dot--yellow {
+  --dot-color: var(--ref-color-yellow-100);
+}
+.app-sidebar__row-color-dot--grey {
   --dot-color: var(--ref-color-grey-40);
 }
 
-/* Pin/unpin trigger — hidden by default, revealed on row hover (or when
-   the row already holds keyboard focus). On hover the dot makes way for
-   the pin button so the row chrome stays compact.
-
-   The pin element carries the DS .ap-icon-button class for hover/active
-   styling, but DS forces min/max width+height to 36px via
-   --comp-icon-button-width. We need 24×24 to match the dot slot it
-   replaces (otherwise the row grows taller on hover) — override the
-   min/max as well as the width/height. */
-.app-sidebar__row-pin {
-  /* Absolute-position the hover-reveal actions so they overlay the
-     dot's slot on the trailing edge — keeps the title's flex space
-     intact and prevents any layout shift between rest and hover. */
-  position: absolute;
-  right: calc(var(--ref-spacing-xs) + 28px);
-  top: 50%;
-  transform: translateY(-50%);
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
-  min-height: 24px;
-  max-width: 24px;
-  max-height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--app-radius-button-sm);
-  color: var(--ref-color-grey-80);
-  cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--ref-animation-short) var(--app-ease-out);
-}
-
-.app-sidebar__row-pin i {
-  font-size: var(--sys-icon-css-sm);
-}
-
-.app-sidebar__row-pin:hover {
-  background: var(--ref-color-grey-20);
-  color: var(--ref-color-grey-150);
-}
-
-.app-sidebar__row:hover .app-sidebar__row-pin,
-.app-sidebar__row:focus-visible .app-sidebar__row-pin,
-.app-sidebar__row:focus-within .app-sidebar__row-pin {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.app-sidebar__row:hover .app-sidebar__row-dot,
-.app-sidebar__row:focus-visible .app-sidebar__row-dot,
-.app-sidebar__row:focus-within .app-sidebar__row-dot {
-  opacity: 0;
-}
-
-/* 3-dots more menu — also absolute-positioned, sitting at the trailing
-   edge in the dot's slot. Together with pin (at -28px offset) the two
-   hover-reveal icons occupy 48px of overlay width when revealed. */
+/* ⋮ More-actions menu — Claude-style hover-reveal on the trailing edge.
+   Absolute-positioned so it overlays the row without taking flex space
+   (the title can use the full width at rest). Stays visible while the
+   dropdown is open. */
 .app-sidebar__row-menu {
   position: absolute;
-  right: var(--ref-spacing-xs);
+  right: var(--ref-spacing-xxs);
   top: 50%;
   transform: translateY(-50%);
   width: 24px;

@@ -489,22 +489,20 @@ function renderRecentLists(activeSessionId, query) {
   return out;
 }
 
-// One conversation row. Layout:
-//   [pin icon if pinned] [title] [color dot] [pin button on hover]
-// The color dot resolves the row's bound context color (orange / blue /
-// green / etc.) — same lookup the topbar Context pill uses. Falls back to
-// grey when the session has no contextId or the context was deleted.
+// One conversation row — Claude-style minimal layout:
+//   [color dot]  [title]                                          [⋮ on hover]
+// The color dot resolves the row's bound playbook color (orange / blue /
+// green / etc.); falls back to grey when the session has no playbook
+// attached. Pinned status is conveyed only by the PINNED section header
+// above the row (no extra glyph on the row itself).
 function renderSessionRow(session, activeSessionId) {
   const isActive = session.id === activeSessionId;
   const ctx = session.contextId ? getContextById(session.contextId) : null;
   const dotColor = ctx?.color || "grey";
   const isPinned = !!session.pinned;
-  const leading = isPinned ? `<i class="ap-icon-pin app-sidebar__row-leading" aria-hidden="true"></i>` : "";
-  const pinLabel = isPinned ? "Unpin conversation" : "Pin conversation";
   const safeName = escapeHtml(session.name);
-  // The row is a <div role="button"> rather than a <button> so we can
-  // nest interactive children (3-dots menu via <details>, pin button)
-  // without nesting buttons.
+  // <div role="button"> rather than <button> so we can nest the <details>
+  // dropdown legitimately without breaking HTML semantics.
   return `
     <div
       class="app-sidebar__row ${isActive ? "is-active" : ""}"
@@ -513,25 +511,14 @@ function renderSessionRow(session, activeSessionId) {
       role="button"
       tabindex="0"
     >
-      ${leading}
-      <span class="app-sidebar__row-title">${safeName}</span>
       <span
-        class="app-sidebar__row-dot app-sidebar__row-dot--${dotColor}"
+        class="app-sidebar__row-color-dot app-sidebar__row-color-dot--${dotColor}"
         aria-hidden="true"
       ></span>
-      <span
-        class="ap-icon-button transparent app-sidebar__row-pin"
-        role="button"
-        tabindex="0"
-        data-sidebar-pin="${session.id}"
-        aria-label="${pinLabel}"
-        title="${pinLabel}"
-      >
-        <i class="ap-icon-pin"></i>
-      </span>
+      <span class="app-sidebar__row-title">${safeName}</span>
       <details class="ap-select app-sidebar__row-menu" data-sidebar-row-menu>
         <summary
-          class="ap-icon-button transparent app-sidebar__row-more"
+          class="app-sidebar__row-more"
           aria-label="More actions"
           title="More actions"
         >
