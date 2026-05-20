@@ -20,7 +20,7 @@ const OVERLAY_ID = "settingsDrawer";
 // the working-copy + Save pattern because they're forms with multiple fields
 // where intermediate states aren't meaningful.
 import { contextComponentsFor, socialAccounts, generationPrefs, notificationPrefs } from "../mocks.js?v=29";
-import { getContexts } from "../contexts-store.js?v=25";
+import { getContexts } from "../contexts-store.js?v=26";
 import { getConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=21";
 
 // ─── State ───────────────────────────────────────────────────────────────

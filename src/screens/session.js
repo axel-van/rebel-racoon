@@ -2,7 +2,7 @@ import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=41";
 import { getSessionById, socialAccounts, recentSessions, chatStarters } from "../mocks.js?v=29";
-import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=25";
+import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=26";
 import { isNewUser } from "../user-mode.js?v=20";
 import {
   getThread,
@@ -30,9 +30,9 @@ import {
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
-import * as inlineQuestion from "../inline-question.js?v=21";
-import * as contextBuilder from "../context-builder.js?v=28";
-import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=25";
+import * as inlineQuestion from "../inline-question.js?v=22";
+import * as contextBuilder from "../context-builder.js?v=29";
+import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=26";
 import { renderSourceCard } from "../components/source-card.js?v=27";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
 import {
@@ -1098,6 +1098,15 @@ function wireAssistantPanel(root, session, attachedContext) {
           inlineQuestion.submitMulti(session.id, selectedValues);
         },
       });
+      // File dropzone variant — bind `change` on the hidden <input type=file>
+      // so picking a file submits via the dedicated submitFile path.
+      const fileInput = aside.querySelector("[data-inline-question-custom-file]");
+      if (fileInput) {
+        fileInput.addEventListener("change", (event) => {
+          const file = event.target.files?.[0];
+          if (file) inlineQuestion.submitFile(session.id, file);
+        });
+      }
     } else {
       unbindWizardKeyboard();
     }

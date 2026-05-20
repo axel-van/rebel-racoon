@@ -72,6 +72,10 @@ export function addContext(ctx = {}) {
     cta: ctx.cta || "",
     // — V1 brief-builder fields —
     websiteUrl: ctx.websiteUrl || "",
+    sourceType: ctx.sourceType || null,
+    sourceUrl: ctx.sourceUrl || ctx.websiteUrl || "",
+    sourceFile: ctx.sourceFile || null,
+    sourcePlatform: ctx.sourcePlatform || null,
     businessSummary: ctx.businessSummary || ctx.briefSummary || "",
     audience: audienceVal,
     audienceProblems: Array.isArray(ctx.audienceProblems) ? ctx.audienceProblems.slice() : [],
@@ -129,6 +133,10 @@ export function updateContext(id, patch) {
   if (patch.cta !== undefined) c.cta = patch.cta;
   // V1 brief-builder fields
   if (patch.websiteUrl !== undefined) c.websiteUrl = patch.websiteUrl;
+  if (patch.sourceType !== undefined) c.sourceType = patch.sourceType;
+  if (patch.sourceUrl !== undefined) c.sourceUrl = patch.sourceUrl;
+  if (patch.sourceFile !== undefined) c.sourceFile = patch.sourceFile;
+  if (patch.sourcePlatform !== undefined) c.sourcePlatform = patch.sourcePlatform;
   if (patch.businessSummary !== undefined) c.businessSummary = patch.businessSummary;
   if (patch.audienceProblems !== undefined) c.audienceProblems = patch.audienceProblems;
   if (patch.contentStyle !== undefined) c.contentStyle = patch.contentStyle;

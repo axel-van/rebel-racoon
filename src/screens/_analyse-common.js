@@ -171,6 +171,14 @@ export function renderPicker(picker) {
     title = null, // text shown at the top of the picker (mirrors the AI question)
     stepIndicator = null, // small label on the top right (e.g. "3 of 7")
     skipLabel = null, // when set, render a "Skip" button next to Submit
+    // File-upload variant: when `customFile: true`, the trailing row swaps
+    // from a text input to a clickable dropzone with a hidden <input
+    // type="file">. Wired by session.js — change → inlineQuestion.submitFile.
+    customFile = false,
+    customFileAccept = "",
+    customFileLabel = "Drop a file here, or click to browse",
+    customFileHint = "",
+    customFileIcon = "ap-icon-upload",
   } = picker;
 
   // Multi-select swaps the trailing chevron for a check icon (visible only
@@ -230,6 +238,32 @@ export function renderPicker(picker) {
     `
     : "";
 
+  // File-upload variant — full-row dropzone with a hidden <input type=file>.
+  // The label wraps the input so clicking anywhere on the row opens the
+  // OS file picker. Session.js binds the change event to submitFile.
+  const fileRow = customFile
+    ? `
+      <label class="analyse__option analyse__option--file" data-custom-file-row>
+        <span class="analyse__option-shortcut" aria-hidden="true">${items.length + 1}</span>
+        <span class="analyse__option-icon">
+          <i class="${customFileIcon}"></i>
+        </span>
+        <span class="analyse__option-text">
+          <span class="analyse__option-label">${customFileLabel}</span>
+          ${customFileHint ? `<span class="muted">${customFileHint}</span>` : ""}
+        </span>
+        <input
+          type="file"
+          class="analyse__option-file-input"
+          accept="${customFileAccept}"
+          data-${customHandler || handler}-custom-file
+          aria-label="${customFileLabel}"
+        />
+        <i class="ap-icon-chevron-right analyse__option-chevron" aria-hidden="true"></i>
+      </label>
+    `
+    : "";
+
   // Header — shown when the picker carries a title or a step indicator.
   // Mirrors the AI question text so the user has the full prompt in view
   // while scanning options. The step indicator (e.g. "3 of 7") sits on the
@@ -254,7 +288,7 @@ export function renderPicker(picker) {
     : "";
   const footer = skipBtn || submitBtn ? `<div class="analyse__options-submit">${skipBtn}${submitBtn}</div>` : "";
 
-  return `<div class="analyse__options${multi ? " analyse__options--multi" : ""}" ${multi ? "data-multi" : ""}>${header}${rows}${customRow}${footer}</div>`;
+  return `<div class="analyse__options${multi ? " analyse__options--multi" : ""}" ${multi ? "data-multi" : ""}>${header}${rows}${customRow}${fileRow}${footer}</div>`;
 }
 
 // -- Keyboard wiring --------------------------------------------------------

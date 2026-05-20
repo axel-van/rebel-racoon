@@ -28,11 +28,17 @@
 //   multi             bool    — when true, render multi-select toggles + Continue button
 //   submitLabel       string  — multi-select submit button label (default "Continue")
 //   customPlaceholder string  — when set, render a free-text option row
+//   customFile        bool    — when true, render a dropzone row instead of a text input
+//   customFileAccept  string  — accept attribute for the dropzone <input type=file>
+//   customFileLabel   string  — primary label on the dropzone row
+//   customFileHint    string  — small hint below the label ("PDF · DOCX · TXT")
+//   customFileIcon    string  — DS icon class (default "ap-icon-upload")
 //   onPick(value)     fn      — called with the chosen item's value (or array in multi mode)
 //   onCustom(value)   fn      — called with the free-text answer
+//   onFile(file)      fn      — called with the picked File object
 //   onSkip()          fn      — called when Skip / Esc; if omitted, no skip btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=25";
+import { chatTurn } from "./screens/_analyse-common.js?v=26";
 
 const states = new Map(); // sessionId → opts
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -70,6 +76,17 @@ export function submitCustom(sessionId, value) {
   notify(sessionId);
   if (s.onCustom) s.onCustom(value);
   else s.onPick?.(value);
+}
+
+// File-upload variant — wired by session.js when the dropzone row's
+// hidden <input type=file> fires `change`. Mirrors submitCustom but
+// hands a File object to onFile.
+export function submitFile(sessionId, file) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  states.delete(sessionId);
+  notify(sessionId);
+  s.onFile?.(file);
 }
 
 export function skip(sessionId) {
@@ -111,6 +128,11 @@ export function renderChrome(sessionId) {
     stepIndicator: s.stepLabel || null,
     skipLabel: s.onSkip ? s.skipLabel || "Skip" : null,
     customPlaceholder: s.customPlaceholder || null,
+    customFile: s.customFile === true,
+    customFileAccept: s.customFileAccept || "",
+    customFileLabel: s.customFileLabel || "Drop a file here, or click to browse",
+    customFileHint: s.customFileHint || "",
+    customFileIcon: s.customFileIcon || "ap-icon-upload",
     multi: s.multi === true,
     submitLabel: s.submitLabel || "Continue",
   };

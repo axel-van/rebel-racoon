@@ -243,6 +243,150 @@ function deriveName(url) {
     .join(" ");
 }
 
+// Platform detection — host-based, tolerant of `https://`/`www.`/missing
+// scheme. Returns null when nothing matches so the caller can fall back
+// to the generic playbook shape.
+const PLATFORM_HOSTS = {
+  linkedin: ["linkedin.com", "lnkd.in"],
+  x: ["x.com", "twitter.com", "t.co"],
+  instagram: ["instagram.com"],
+  tiktok: ["tiktok.com"],
+  bluesky: ["bsky.app"],
+  threads: ["threads.net"],
+  facebook: ["facebook.com", "fb.com"],
+  youtube: ["youtube.com", "youtu.be"],
+};
+export function detectPlatform(url) {
+  const host = deriveDomain(url).toLowerCase();
+  if (!host) return null;
+  for (const [key, hosts] of Object.entries(PLATFORM_HOSTS)) {
+    if (hosts.some((h) => host === h || host.endsWith(`.${h}`))) return key;
+  }
+  return null;
+}
+
+// Pretty platform label for the brief panel + headline strings.
+const PLATFORM_LABELS = {
+  linkedin: "LinkedIn",
+  x: "X (Twitter)",
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  bluesky: "Bluesky",
+  threads: "Threads",
+  facebook: "Facebook",
+  youtube: "YouTube",
+};
+
+// Tilted color palette per platform — drives the imageVoice preview dots
+// on the playbook card. Loose approximations of each platform's brand.
+const PLATFORM_THEMES = {
+  linkedin: { primary: "#0A66C2", accent: "#0A66C2", color: "blue" },
+  x: { primary: "#0F1419", accent: "#1D9BF0", color: "blue" },
+  instagram: { primary: "#E1306C", accent: "#F77737", color: "red" },
+  tiktok: { primary: "#000000", accent: "#FE2C55", color: "red" },
+  bluesky: { primary: "#1185FE", accent: "#1185FE", color: "blue" },
+  threads: { primary: "#000000", accent: "#FF4500", color: "red" },
+  facebook: { primary: "#1877F2", accent: "#1877F2", color: "blue" },
+  youtube: { primary: "#FF0000", accent: "#FF0000", color: "red" },
+};
+
+/**
+ * Mock-analyse a social profile URL. Returns the same shape as
+ * `analyzeWebsite`. Platform is detected from the hostname; everything
+ * else is a generic-but-personable playbook seeded around "founders &
+ * operators" with a platform-flavoured headline.
+ */
+export function analyzeSocialProfile(url) {
+  const platform = detectPlatform(url);
+  const generic = clone(GENERIC);
+  const handle = deriveHandle(url);
+  const platformLabel = platform ? PLATFORM_LABELS[platform] : "Social";
+  const theme = platform ? PLATFORM_THEMES[platform] : { primary: "#178DFE", accent: "#178DFE", color: "blue" };
+
+  generic.name = handle ? `${handle} · ${platformLabel}` : `${platformLabel} profile`;
+  generic.businessSummary = `Personal voice ${handle ? `(${handle}) ` : ""}on ${platformLabel}. Speaks directly from lived experience, sharp opinions, and concrete observations — no marketing varnish. Posts make readers re-examine an assumption.`;
+
+  // Audience / objective / action calibrated for personal accounts.
+  generic.suggestions.audience = ["Operators & founders following the brand", "Industry peers"];
+  generic.suggestions.objective = ["Build personal brand", "Brand awareness"];
+  generic.suggestions.contentAction = ["Reply to a comment"];
+  generic.suggestions.contentStyle = ["Direct and actionable"];
+  generic.suggestions.tones = ["Direct", "Conversational"];
+  generic.suggestions.color = theme.color;
+  generic.suggestions.language = "English";
+
+  // Platform-flavoured voice profile.
+  generic.suggestions.voiceProfile = {
+    headline: "Direct · conversational · opinionated",
+    writingStyle: `Reads like a strong ${platformLabel} post — sharp opinion up front, lived context behind it, no boilerplate.`,
+    vocabulary: "Plain English, occasional technical terms used precisely. Avoids hype words.",
+    sentenceStructure:
+      "Short sentences. Sometimes a single line. Occasional longer thread when explaining a counter-intuitive idea.",
+    formality: "Informal. First person, contractions, occasionally a sharper word kept in if it's the right one.",
+    personality: "Opinionated, generous with credit, willing to be wrong out loud.",
+    rhetoricalDevices: "Contrarian take or a specific moment up top. Resolves on a reframe rather than a CTA.",
+    emotionalTone: "Engaged and a bit impatient. Readers should feel pulled forward and slightly challenged.",
+    contentPatterns: "Hook (contrarian or anecdote) → context → reframe. One idea per post.",
+    uniqueTraits: `No hashtags. No links unless the post is specifically about something to read. The byline is the brand — the audience follows the human.`,
+  };
+
+  // Tinted brand palette + the URL recorded.
+  if (generic.suggestions.imageVoice?.websites?.[0]) {
+    const site = generic.suggestions.imageVoice.websites[0];
+    site.domain = deriveDomain(url) || "";
+    site.url = url.startsWith("http") ? url : `https://${url}`;
+    site.colors.primary = theme.primary;
+    site.colors.accent = theme.accent;
+    site.colors.link = theme.accent;
+    site.personality = {
+      tone: "direct",
+      energy: "calm",
+      audience: "founders & operators",
+    };
+  }
+
+  generic.suggestions.ctaLinks = [];
+  return generic;
+}
+
+function deriveHandle(url) {
+  try {
+    const u = new URL(url.startsWith("http") ? url : `https://${url}`);
+    const parts = u.pathname.split("/").filter(Boolean);
+    if (!parts.length) return "";
+    // LinkedIn: /in/jdoe → jdoe ; X: /jdoe → jdoe ; instagram: /jdoe → jdoe
+    const handle = parts.includes("in") ? parts[parts.indexOf("in") + 1] : parts[0];
+    return handle ? `@${handle}` : "";
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Mock-analyse an uploaded document. We don't actually parse the file —
+ * we use the filename to derive a brand name. Returns the same shape
+ * as `analyzeWebsite`.
+ */
+export function analyzeDocument(file) {
+  const generic = clone(GENERIC);
+  const filename = (file && file.name) || "Untitled document";
+  const stem = filename.replace(/\.[^.]+$/, "");
+  const prettyName =
+    stem
+      .replace(/[-_]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\w/g, (c) => c.toUpperCase()) || "Untitled brand";
+
+  generic.name = prettyName;
+  generic.businessSummary = `Playbook built from your document "${filename}". Edit each section below to match what's actually in the file — Archie will then ground every post in your written brand guidance.`;
+  generic.suggestions.voiceProfile = {
+    ...generic.suggestions.voiceProfile,
+    headline: "Professional · clear · helpful",
+  };
+  return generic;
+}
+
 function deriveDomain(url) {
   try {
     const u = new URL(url.startsWith("http") ? url : `https://${url}`);

@@ -19,11 +19,11 @@
 // right-panel ContextForm read mode (openRead) stays for viewing existing
 // contexts that may still have the old shape.
 
-import * as inlineQuestion from "./inline-question.js?v=21";
+import * as inlineQuestion from "./inline-question.js?v=22";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=29";
 import * as rightPanel from "./components/right-panel.js?v=55";
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=25";
-import { analyzeWebsite } from "./context-mock-analysis.js?v=20";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=26";
+import { analyzeWebsite, analyzeSocialProfile, analyzeDocument, detectPlatform } from "./context-mock-analysis.js?v=21";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -55,6 +55,10 @@ function emptyDraft(overrides = {}) {
     language: "English",
     color: "orange",
     voiceProfile: null,
+    sourceType: null, // "website" | "documents" | "social"
+    sourceUrl: "",
+    sourceFile: null,
+    sourcePlatform: null,
     imageVoice: { websites: [] },
     suggestions: {
       audience: [],
@@ -103,7 +107,7 @@ export function subscribe(sessionId, fn) {
 export function start(sessionId, { onComplete, autoLaunched = false } = {}) {
   drafts.set(sessionId, emptyDraft({ onComplete }));
   notify(sessionId);
-  askUrl(sessionId, { autoLaunched });
+  askSource(sessionId, { autoLaunched });
 }
 
 // Open the right-panel brief panel in read mode for an existing context.
@@ -157,18 +161,65 @@ export function cancel(sessionId) {
   notify(sessionId);
 }
 
-// --- Phase 1 — URL ---------------------------------------------------------
+// --- Phase 1 — Source picker + source-specific input -----------------------
 
-function askUrl(sessionId, { autoLaunched = false } = {}) {
-  // The wizard chrome (renderAssistantPanelQuestion in session.js) shows
-  // ONLY the inline-question's `intro` + picker — the underlying thread
-  // is hidden. So we pass our framing copy through the `intro` field
-  // instead of postAssistantMessage (which would be invisible).
+// Step 0: 3-card picker for the input type. Archie analyses whatever the
+// user provides and produces the playbook from it.
+function askSource(sessionId, { autoLaunched = false } = {}) {
   const intro = autoLaunched
-    ? "Before I dive in — there's no playbook defined for this conversation yet. Let's create one together, it'll only take a minute. I'll ask you a few quick questions, starting with your website."
-    : "Let's set up a new playbook. I'll ask you a few quick questions, starting with your website.";
-  // Also push the same intro to the thread so it's there when the wizard
-  // exits (the user sees a coherent history after the brief panel opens).
+    ? "Before I dive in — there's no playbook defined for this conversation yet. Let's create one together, it'll only take a minute."
+    : "Let's set up a new playbook.";
+  postAssistantMessage(sessionId, intro);
+  inlineQuestion.ask(sessionId, {
+    intro,
+    title: "How should I start?",
+    items: [
+      {
+        value: "website",
+        label: "Website",
+        caption: "Paste any URL — agorapulse.com, your blog, a landing page…",
+        icon: "ap-icon-web",
+      },
+      {
+        value: "documents",
+        label: "Documents",
+        caption: "Drop a PDF, DOCX or TXT — brand doc, strategy deck…",
+        icon: "ap-icon-file--pdf",
+      },
+      {
+        value: "social",
+        label: "Social profile",
+        caption: "LinkedIn, X, Instagram, TikTok, Bluesky…",
+        icon: "ap-icon-multiple-users",
+      },
+    ],
+    onPick: (value) => setSourceType(sessionId, value),
+    onSkip: () => exitWithoutSave(sessionId),
+    skipLabel: "Skip",
+  });
+}
+
+function setSourceType(sessionId, sourceType) {
+  const d = drafts.get(sessionId);
+  if (!d) return;
+  d.sourceType = sourceType;
+  notify(sessionId);
+  inlineQuestion.exit(sessionId);
+  // Route to the matching input step.
+  if (sourceType === "website") askUrl(sessionId);
+  else if (sourceType === "social") askProfileUrl(sessionId);
+  else if (sourceType === "documents") askDocument(sessionId);
+}
+
+function exitWithoutSave(sessionId) {
+  drafts.delete(sessionId);
+  inlineQuestion.exit(sessionId);
+  notify(sessionId);
+}
+
+// Step 1a: Website URL (existing flow).
+function askUrl(sessionId) {
+  const intro = "Got it — paste your website URL and I'll pull the brand voice, audience and visual identity from it.";
   postAssistantMessage(sessionId, intro);
   inlineQuestion.ask(sessionId, {
     intro,
@@ -181,11 +232,58 @@ function askUrl(sessionId, { autoLaunched = false } = {}) {
   });
 }
 
+// Step 1b: Social profile URL. Same chrome as askUrl, different placeholder.
+function askProfileUrl(sessionId) {
+  const intro = "Got it — paste the profile URL. I'll detect the platform and analyse the voice from there.";
+  postAssistantMessage(sessionId, intro);
+  inlineQuestion.ask(sessionId, {
+    intro,
+    title: "What's your social profile URL?",
+    items: [],
+    customPlaceholder: "linkedin.com/in/jdoe",
+    onCustom: (value) => setUrl(sessionId, value),
+    onSkip: () => setUrl(sessionId, ""),
+    skipLabel: "Skip",
+  });
+}
+
+// Step 1c: Document upload. customFile dropzone variant of inline-question.
+function askDocument(sessionId) {
+  const intro = "Got it — drop a brand or strategy document and I'll build the playbook from it.";
+  postAssistantMessage(sessionId, intro);
+  inlineQuestion.ask(sessionId, {
+    intro,
+    title: "Upload a brand or strategy document",
+    items: [],
+    customFile: true,
+    customFileAccept:
+      ".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain",
+    customFileLabel: "Drop a file here, or click to browse",
+    customFileHint: "PDF · DOCX · TXT — max 10 MB",
+    customFileIcon: "ap-icon-upload",
+    onFile: (file) => setFile(sessionId, file),
+    onSkip: () => setFile(sessionId, null),
+    skipLabel: "Skip",
+  });
+}
+
 function setUrl(sessionId, url) {
   const d = drafts.get(sessionId);
   if (!d) return;
-  d.websiteUrl = (url || "").trim();
-  postUserTurn(sessionId, d.websiteUrl || "Skip");
+  d.sourceUrl = (url || "").trim();
+  // Keep websiteUrl in sync for back-compat with downstream readers.
+  if (d.sourceType === "website") d.websiteUrl = d.sourceUrl;
+  postUserTurn(sessionId, d.sourceUrl || "Skip");
+  inlineQuestion.exit(sessionId);
+  notify(sessionId);
+  runAnalysis(sessionId);
+}
+
+function setFile(sessionId, file) {
+  const d = drafts.get(sessionId);
+  if (!d) return;
+  d.sourceFile = file ? { name: file.name, size: file.size, type: file.type } : null;
+  postUserTurn(sessionId, file ? file.name : "Skip");
   inlineQuestion.exit(sessionId);
   notify(sessionId);
   runAnalysis(sessionId);
@@ -203,7 +301,17 @@ function runAnalysis(sessionId) {
   window.setTimeout(() => {
     const d = drafts.get(sessionId);
     if (!d) return; // session bailed out mid-analysis
-    const analysis = analyzeWebsite(d.websiteUrl);
+    // Dispatch on the user's chosen source type. Each mock returns the
+    // same shape so the rest of the brief-panel pipeline is unchanged.
+    let analysis;
+    if (d.sourceType === "social") {
+      analysis = analyzeSocialProfile(d.sourceUrl);
+      d.sourcePlatform = detectPlatform(d.sourceUrl);
+    } else if (d.sourceType === "documents") {
+      analysis = analyzeDocument(d.sourceFile);
+    } else {
+      analysis = analyzeWebsite(d.sourceUrl || d.websiteUrl);
+    }
     d.name = d.name || analysis.name;
     d.businessSummary = analysis.businessSummary;
     d.suggestions = analysis.suggestions;
@@ -313,6 +421,10 @@ export function save(sessionId) {
     name,
     color: d.color,
     websiteUrl: d.websiteUrl,
+    sourceType: d.sourceType || null,
+    sourceUrl: d.sourceUrl || d.websiteUrl || "",
+    sourceFile: d.sourceFile || null,
+    sourcePlatform: d.sourcePlatform || null,
     businessSummary: d.businessSummary,
     briefSummary: d.businessSummary, // mirror to legacy field for backwards-read compat
     audience: d.audience,
