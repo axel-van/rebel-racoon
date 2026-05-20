@@ -1813,13 +1813,46 @@ function bindSession(root, session) {
     if (!input) return;
     const text = input.value.trim();
     if (!text) return;
+    const wasFirstUserMessage = !getThread(session.id).some((m) => m.role === "user");
     sendMessage(session.id, text);
     input.value = "";
-    // Note: the legacy post-message "Want me to walk you through setting up
-    // a context?" inline question (context-builder.startWithPrompt) was
-    // retired once the empty hero gained a dedicated context-picker section.
-    // The decision now happens before the first message instead of after,
-    // so we don't double-prompt the user.
+
+    // Cover the "first typed message without a context" gap: starter clicks
+    // already post the same inline "Which context?" question, but a user
+    // who types directly (no starter) would otherwise lock the
+    // conversation with no context and no path to create one. Mirror the
+    // starter pattern here so every first-message path handles
+    // "no context defined" the same way.
+    if (!wasFirstUserMessage) return;
+    const q = readQuery();
+    const ctxAttached = q.contextId || session.contextId;
+    if (ctxAttached) return;
+    const thread = getThread(session.id);
+    // Guard against double-posting: the starter handler also posts this
+    // question on starter click. If the user clicked a starter then hit
+    // Send, the open choice is already in the thread — don't duplicate.
+    const hasOpenContextChoice = thread.some(
+      (m) => m.handler === "starter-context-pick" && !(m.selected && m.selected.length),
+    );
+    if (hasOpenContextChoice) return;
+    const allContexts = getContexts();
+    if (allContexts.length === 0) {
+      // New-user mode (no seeded contexts): nothing to pick, route
+      // straight to the creation flow.
+      navigate("/contexts/new");
+      return;
+    }
+    const choices = allContexts.map((c) => ({ value: c.id, label: c.name }));
+    choices.push({ value: "__none__", label: "No context" });
+    choices.push({ value: "__new__", label: "New context", icon: "ap-icon-plus" });
+    postAssistantChoice(session.id, {
+      text: "Quick — which context should I tailor this to?",
+      choices,
+      multi: false,
+      instant: true,
+      handler: "starter-context-pick",
+      context: { prompt: "" },
+    });
   }
 
   // Run the handler for a choice turn (freeze the message + dispatch). Called
