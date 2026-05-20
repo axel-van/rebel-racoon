@@ -253,6 +253,21 @@ export function initSidebar() {
     event.preventDefault();
     toggleSidebar();
   });
+
+  // ⇧⌘O / Ctrl+Shift+O — start a new conversation from anywhere. Matches
+  // Claude.ai's "New chat" shortcut. Like ⌘K, it intentionally fires even
+  // from inside inputs / textareas / contenteditable: starting a new
+  // conversation is a global navigation action, and the user can always
+  // come back if they want to keep editing. Same closeRightPanel + fresh
+  // session-id logic as the `[data-sidebar-new]` click handler above.
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "o" && event.key !== "O") return;
+    if (!(event.metaKey || event.ctrlKey)) return;
+    if (!event.shiftKey) return;
+    event.preventDefault();
+    closeRightPanel();
+    navigate(`/session/new-${Date.now().toString(36)}`);
+  });
 }
 
 export function renderSidebar() {
@@ -320,11 +335,6 @@ export function renderSidebar() {
     <button type="button" class="ap-link standalone small app-sidebar__feedback" data-sidebar-feedback>
       <i class="ap-icon-single-chat-bubble"></i>
       <span>Give feedback</span>
-    </button>
-
-    <button type="button" class="ap-button secondary blue app-sidebar__new" data-sidebar-new>
-      <i class="ap-icon-plus"></i>
-      <span>New conversation</span>
     </button>
 
     <nav class="app-sidebar__nav" aria-label="Library">${raw(renderNav(path))}</nav>
@@ -416,16 +426,31 @@ const NAV = [
 ];
 
 function renderNav(path) {
-  // Search row sits at the top of the nav group (Claude-style). Not a
-  // route — clicking it opens the search modal via the
-  // `data-sidebar-search-open` delegate in initSidebar().
+  // Action rows at the top of the nav group: New conversation + Search.
+  // Both are verbs (not routes), so they live alongside Playbooks / Ideas
+  // but never carry the `.is-active` cue. Their ⇧⌘O / ⌘K kbd hints are
+  // hover-revealed (cf. sidebar.css — opacity 0 → 1 on :hover/:focus).
+  const newConversationItem = `
+    <button
+      type="button"
+      class="app-sidebar__nav-item"
+      data-sidebar-new
+      aria-label="New conversation"
+      title="New conversation (⇧⌘O)"
+    >
+      <i class="ap-icon-plus"></i>
+      <span>New conversation</span>
+      <kbd class="app-sidebar__nav-kbd" aria-hidden="true">⇧⌘O</kbd>
+    </button>
+  `;
+
   const searchItem = `
     <button
       type="button"
-      class="app-sidebar__nav-item app-sidebar__nav-item--search"
+      class="app-sidebar__nav-item"
       data-sidebar-search-open
       aria-label="Search conversations"
-      title="Search conversations"
+      title="Search conversations (⌘K)"
     >
       <i class="ap-icon-search"></i>
       <span>Search…</span>
@@ -451,7 +476,7 @@ function renderNav(path) {
     })
     .join("");
 
-  return searchItem + routeItems;
+  return newConversationItem + searchItem + routeItems;
 }
 
 // Pinned + Recent groups. Search lives in a dedicated modal now

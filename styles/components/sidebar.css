@@ -107,14 +107,11 @@
 }
 
 /* ── New conversation CTA ───────────────────────────────────────────── */
-/* Visual treatment is owned by the DS via `.ap-button secondary blue`.
-   This class only contributes layout (sidebar margins + full-width
-   stretch). The collapsed variant overrides width below. */
-
-.app-sidebar__new {
-  margin: 0 var(--ref-spacing-sm) var(--ref-spacing-sm);
-  justify-content: center;
-}
+/* In the expanded sidebar, "+ New conversation" lives inside the nav
+   group as a regular `.app-sidebar__nav-item` (cf. renderNav() — same
+   chrome as Search / Playbooks). The dedicated `.app-sidebar__new`
+   class is kept only for the collapsed-mode icon-only variant below;
+   the expanded blue pill no longer exists. */
 
 /* ── Nav ────────────────────────────────────────────────────────────── */
 
@@ -175,8 +172,10 @@
   margin-left: auto;
 }
 
-/* ⌘K hint pill on the trailing edge of the Search row. Stays as a quiet
-   `<kbd>`-style chip — visual only this pass, no global binding yet. */
+/* Shortcut hint pill on the trailing edge of action nav rows
+   (New conversation, Search). Hover-revealed so the resting state
+   stays calm — the row still announces its shortcut on hover/focus
+   without ever feeling like a permanent badge. */
 .app-sidebar__nav-kbd {
   margin-left: auto;
   display: inline-flex;
@@ -192,6 +191,13 @@
   font-size: 10px;
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-80);
+  opacity: 0;
+  transition: opacity var(--ref-animation-short) var(--app-ease-out);
+}
+
+.app-sidebar__nav-item:hover .app-sidebar__nav-kbd,
+.app-sidebar__nav-item:focus-visible .app-sidebar__nav-kbd {
+  opacity: 1;
 }
 
 /* ── List ───────────────────────────────────────────────────────────── */
