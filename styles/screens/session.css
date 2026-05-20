@@ -94,6 +94,51 @@
   border-color: var(--ref-color-grey-10);
 }
 
+/* ---------- Claude-Code-style row treatment (scoped to the wizard) ----
+   Inactive rows: clean — no trailing chevron, just label + caption.
+   :focus-visible rows: subtle highlight + trailing ↵ glyph that hints
+   at "press Enter to pick". Mirrors the slash-command picker pattern. */
+
+.session__assistant-wizard-bar .analyse__option-chevron {
+  display: none;
+}
+
+/* Add a return-key glyph as a pseudo on the trailing edge — visible only
+   when the row is keyboard-focused. Using a UTF-8 ↵ avoids relying on
+   a non-existent DS icon. */
+.session__assistant-wizard-bar .analyse__option {
+  position: relative;
+}
+
+.session__assistant-wizard-bar .analyse__option:focus-visible::after {
+  content: "↵";
+  position: absolute;
+  right: var(--ref-spacing-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--ref-font-size-md);
+  color: var(--ref-color-grey-150);
+  font-family: inherit;
+  line-height: 1;
+}
+
+/* Picker header — drop the bottom divider so the title sits flush
+   with the rows (the rows already have their own dividers between
+   them). Matches the Claude Code clean header. */
+.session__assistant-wizard-bar .analyse__picker-header {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Skip footer — sit INSIDE the picker frame, divider on top (like
+   another option row), with the Skip button right-aligned. Removes
+   the dead-space "row" the footer used to occupy below the picker. */
+.session__assistant-wizard-bar .analyse__options-submit {
+  margin-top: 0;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border-top: 1px solid var(--app-border-soft);
+}
+
 /* Cap the wizard chrome at the same 740px the composer uses below so the
    wizard step (source picker, URL input, dropzone) lines up with the
    regular composer textarea — same visual rhythm whether the user is
