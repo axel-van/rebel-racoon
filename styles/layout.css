@@ -165,6 +165,39 @@
   min-width: 0;
 }
 
+/* Click-to-rename variant on session routes — the title is a button.
+   Pencil icon fades in on hover so the affordance is discoverable
+   without cluttering the resting state. */
+button.app-topbar__title--rename {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  background: transparent;
+  border: 0;
+  padding: 4px 8px;
+  margin-left: -8px; /* visually align text with non-button title */
+  border-radius: var(--app-radius-button-sm);
+  cursor: pointer;
+  transition: background-color var(--ref-animation-short) var(--app-ease-out);
+  max-width: 100%;
+}
+
+button.app-topbar__title--rename:hover {
+  background: var(--ref-color-grey-05);
+}
+
+.app-topbar__title-pen {
+  opacity: 0;
+  font-size: var(--ref-font-size-sm);
+  color: var(--ref-color-grey-80);
+  transition: opacity var(--ref-animation-short) var(--app-ease-out);
+}
+
+button.app-topbar__title--rename:hover .app-topbar__title-pen,
+button.app-topbar__title--rename:focus-visible .app-topbar__title-pen {
+  opacity: 1;
+}
+
 /* Context / Drafts / Ideas topbar pills — Lot 18 DS conformance.
    Drafts + Ideas now use the DS .ap-button stroked variant directly
    (no custom .app-topbar__pill class). The toggle between the two

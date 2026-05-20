@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { getPath } from "../router.js?v=21";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { toggleSidebar } from "./sidebar.js?v=34";
+import { toggleSidebar } from "./sidebar.js?v=35";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
@@ -13,7 +13,8 @@ import {
 } from "./right-panel.js?v=55";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=30";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=31";
-import { getSessionById, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
+import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
+import { open as openRenameModal } from "./rename-modal.js?v=1";
 
 // Persistent top bar.
 //
@@ -51,10 +52,32 @@ export function renderTopbar(_options = {}) {
       >
         <i class="ap-icon-view-list"></i>
       </button>
-      <h1 class="app-topbar__title">${raw(currentTitle())}</h1>
+      ${raw(renderTitle(onSession))}
     </div>
     <div class="app-topbar__right">${raw(onSession ? renderSessionPills(rpMode, draftCount, isEmpty) : "")}</div>
   `;
+}
+
+// On session routes the title doubles as a rename trigger — click to
+// open the rename modal for the active conversation. Off-session the
+// title is a plain heading.
+function renderTitle(onSession) {
+  const title = currentTitle();
+  if (onSession) {
+    const sid = currentSessionId();
+    return `
+      <button
+        type="button"
+        class="app-topbar__title app-topbar__title--rename"
+        data-topbar-rename-session="${sid || ""}"
+        title="Rename conversation"
+      >
+        ${title}
+        <i class="ap-icon-pen app-topbar__title-pen" aria-hidden="true"></i>
+      </button>
+    `;
+  }
+  return `<h1 class="app-topbar__title">${title}</h1>`;
 }
 
 function isEmptyConversation() {
@@ -71,6 +94,21 @@ export function initTopbar() {
   el.addEventListener("click", (event) => {
     if (event.target.closest("[data-topbar-sidebar-toggle]")) {
       toggleSidebar();
+      return;
+    }
+    // Click the conversation title → open the rename modal for it.
+    const renameBtn = event.target.closest("[data-topbar-rename-session]");
+    if (renameBtn) {
+      const sid = renameBtn.dataset.topbarRenameSession;
+      const session = sid ? getSessionById(sid) : null;
+      if (!session) return;
+      openRenameModal({
+        title: "Rename conversation",
+        initialName: session.name,
+        placeholder: "Conversation name",
+        confirmLabel: "Save",
+        onSubmit: (name) => updateSession(sid, { name }),
+      });
       return;
     }
     // Drafts pill — toggle the right panel between Drafts mode and closed.

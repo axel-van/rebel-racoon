@@ -398,28 +398,6 @@
   color: var(--ref-color-red-100);
 }
 
-/* Inline-rename input — replaces the row title while editing. Sits
-   flush with the title's typography but in a bordered input shell. */
-.app-sidebar__row-rename {
-  flex: 1 1 auto;
-  min-width: 0;
-  width: 100%;
-  margin: 0;
-  padding: 2px 6px;
-  font: inherit;
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
-  color: var(--ref-color-grey-150);
-  background: var(--ref-color-white);
-  border: 1px solid var(--ref-color-electric-blue-100);
-  border-radius: var(--app-radius-button-sm);
-  outline: none;
-}
-
-.app-sidebar__row.is-renaming {
-  cursor: default;
-}
-
 .app-sidebar__empty {
   padding: var(--ref-spacing-md) var(--ref-spacing-xs);
   text-align: center;

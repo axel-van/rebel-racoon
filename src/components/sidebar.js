@@ -4,6 +4,7 @@ import { open as openSettingsDrawer } from "./settings-drawer.js?v=23";
 import { open as openBugReportModal } from "./bug-report-modal.js?v=21";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=24";
 import { open as openConfirmModal } from "./confirm-modal.js?v=20";
+import { open as openRenameModal } from "./rename-modal.js?v=1";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 import {
   getSessions,
@@ -44,10 +45,9 @@ let menuOpen = false;
 // changes / store subscriptions.
 let sidebarSearchQuery = "";
 
-// When a sidebar row is being renamed inline, this carries its id so the
-// next render swaps that row's title for an <input>. Esc / blur / Enter
-// (handled below) clear it.
-let renamingSessionId = null;
+// Rename is handled via the dedicated rename-modal, not inline edit.
+// (Earlier iteration tried inline title → input swap but the modal
+// pattern is friendlier for a name long enough to matter.)
 
 export function isSidebarCollapsed() {
   return localStorage.getItem(COLLAPSED_KEY) === "1";
@@ -136,11 +136,6 @@ export function initSidebar() {
       togglePinSidebar(pinBtn.dataset.sidebarPin);
       return;
     }
-    // Rename input click — swallow so the click doesn't navigate.
-    if (event.target.closest("[data-sidebar-row-rename-input]")) {
-      event.stopPropagation();
-      return;
-    }
     // 3-dots menu summary click — let <details> handle its own toggle,
     // just swallow propagation so the row's session-nav handler doesn't fire.
     if (event.target.closest(".app-sidebar__row-menu summary")) {
@@ -149,8 +144,6 @@ export function initSidebar() {
     }
     const sessionRow = event.target.closest("[data-sidebar-session]");
     if (sessionRow) {
-      // Don't navigate while the user is renaming this row.
-      if (renamingSessionId === sessionRow.dataset.sidebarSession) return;
       navigate(`/session/${sessionRow.dataset.sidebarSession}`);
       return;
     }
@@ -199,32 +192,6 @@ export function initSidebar() {
   // route change.
   subscribeContexts(() => renderSidebar());
   subscribeSessions(() => renderSidebar());
-
-  // Keyboard handler for the inline-rename input — Enter commits, Esc
-  // cancels. Bound at the sidebar element level via delegation.
-  el.addEventListener("keydown", (event) => {
-    const input = event.target.closest?.("[data-sidebar-row-rename-input]");
-    if (!input) return;
-    if (event.key === "Enter") {
-      event.preventDefault();
-      commitRenameSidebar(input.dataset.sidebarRowRenameInput, input.value);
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      cancelRenameSidebar();
-    }
-  });
-  // Blur on the rename input = commit (same as Enter), unless the user is
-  // clicking inside the row (e.g. on the dropdown) which would shift focus.
-  el.addEventListener(
-    "blur",
-    (event) => {
-      const input = event.target?.closest?.("[data-sidebar-row-rename-input]");
-      if (!input) return;
-      if (renamingSessionId !== input.dataset.sidebarRowRenameInput) return;
-      commitRenameSidebar(input.dataset.sidebarRowRenameInput, input.value);
-    },
-    true, // capture so we get the focusout reliably
-  );
 
   // Click outside the popmenu → close.
   document.addEventListener("click", (event) => {
@@ -347,16 +314,6 @@ export function renderSidebar() {
       </div>
     </div>
   `;
-
-  // Post-render — focus the rename input if any row is mid-edit, and
-  // select the full name so the user can overtype immediately.
-  if (renamingSessionId) {
-    const input = el.querySelector(`[data-sidebar-row-rename-input="${renamingSessionId}"]`);
-    if (input) {
-      input.focus();
-      input.select();
-    }
-  }
 }
 
 // Footer popmenu — trigger button + popmenu list. The popmenu lives in the
@@ -544,31 +501,20 @@ function renderSessionRow(session, activeSessionId) {
   const isPinned = !!session.pinned;
   const leading = isPinned ? `<i class="ap-icon-pin app-sidebar__row-leading" aria-hidden="true"></i>` : "";
   const pinLabel = isPinned ? "Unpin conversation" : "Pin conversation";
-  const isRenaming = renamingSessionId === session.id;
   const safeName = escapeHtml(session.name);
-  const safeNameAttr = escapeAttr(session.name);
   // The row is a <div role="button"> rather than a <button> so we can
-  // nest interactive children (3-dots menu via <details>, pin button,
-  // rename input) without nesting buttons.
-  const titleCell = isRenaming
-    ? `<input
-         type="text"
-         class="app-sidebar__row-rename"
-         data-sidebar-row-rename-input="${session.id}"
-         value="${safeNameAttr}"
-         aria-label="Rename conversation"
-       />`
-    : `<span class="app-sidebar__row-title">${safeName}</span>`;
+  // nest interactive children (3-dots menu via <details>, pin button)
+  // without nesting buttons.
   return `
     <div
-      class="app-sidebar__row ${isActive ? "is-active" : ""} ${isRenaming ? "is-renaming" : ""}"
+      class="app-sidebar__row ${isActive ? "is-active" : ""}"
       data-sidebar-session="${session.id}"
       data-sidebar-pinned="${isPinned ? "true" : "false"}"
       role="button"
       tabindex="0"
     >
       ${leading}
-      ${titleCell}
+      <span class="app-sidebar__row-title">${safeName}</span>
       <span
         class="app-sidebar__row-dot app-sidebar__row-dot--${dotColor}"
         aria-hidden="true"
@@ -589,7 +535,7 @@ function renderSessionRow(session, activeSessionId) {
           aria-label="More actions"
           title="More actions"
         >
-          <i class="ap-icon-more-vertical"></i>
+          <i class="ap-icon-more"></i>
         </summary>
         <div class="ap-action-dropdown app-sidebar__row-menu-dropdown" role="menu">
           <button type="button" class="ap-action-dropdown-item" role="menuitem" data-sidebar-row-rename="${session.id}">
@@ -645,26 +591,21 @@ function togglePinSidebar(sessionId) {
   });
 }
 
-// Inline rename — flip the row into edit mode and let the next render
-// swap in the input. Focus + select-all happen on mount via the
-// post-render hook.
+// Open the rename modal for a session. The modal owns its own input +
+// keyboard handling; on Save we patch the session and the store's
+// subscribe hook re-renders the sidebar + topbar.
 function startRenameSidebar(sessionId) {
-  renamingSessionId = sessionId;
+  const session = getSessionById(sessionId);
+  if (!session) return;
   // Close any open dropdown menus that may have triggered this rename.
   document.querySelectorAll(".app-sidebar__row-menu[open]").forEach((el) => el.removeAttribute("open"));
-  renderSidebar();
-}
-
-function commitRenameSidebar(sessionId, rawValue) {
-  const value = (rawValue || "").trim();
-  renamingSessionId = null;
-  if (value) updateSession(sessionId, { name: value });
-  else renderSidebar(); // empty input → cancel + re-render
-}
-
-function cancelRenameSidebar() {
-  renamingSessionId = null;
-  renderSidebar();
+  openRenameModal({
+    title: "Rename conversation",
+    initialName: session.name,
+    placeholder: "Conversation name",
+    confirmLabel: "Save",
+    onSubmit: (name) => updateSession(sessionId, { name }),
+  });
 }
 
 // Delete a conversation via confirm-modal. Cleans up every per-session

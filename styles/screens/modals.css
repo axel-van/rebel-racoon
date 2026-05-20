@@ -45,6 +45,7 @@ body.has-modal {
 .chat-picker-modal,
 .add-source-modal,
 .confirm-modal,
+.rename-modal,
 .shortcut-legend {
   position: fixed;
   top: 50vh;
@@ -73,6 +74,10 @@ body.has-modal {
   width: min(calc(100% - 32px), 640px);
 }
 
+.rename-modal {
+  width: min(calc(100% - 32px), 440px);
+}
+
 .shortcut-legend {
   width: min(calc(100% - 32px), 480px);
 }
@@ -83,6 +88,7 @@ body.has-modal {
 .chat-picker-modal.open,
 .add-source-modal.open,
 .confirm-modal.open,
+.rename-modal.open,
 .shortcut-legend.open {
   display: flex;
   animation: app-modal-fade-in var(--ref-animation-normal) ease;
