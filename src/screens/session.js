@@ -256,6 +256,22 @@ function renderAssistantPanel(session, attachedContext) {
               <span class="session__composer-thinking-spinner" aria-hidden="true"></span>
               <span class="session__composer-thinking-text" data-thinking-text>0s · 1 credit</span>
             </div>
+            <div class="session__composer-input">
+              <textarea
+                class="session__composer-input-field"
+                id="assistantInput"
+                placeholder="ask archie..."
+                rows="3"
+              ></textarea>
+              <button
+                type="button"
+                class="ap-button primary orange session__composer-send"
+                aria-label="Send"
+                data-assistant-send
+              >
+                <i class="ap-icon-arrow-up"></i>
+              </button>
+            </div>
             <div class="session__composer-toolbar">
               ${raw(renderComposerContextDropdown(attachedContext, { locked: hasUserMessage }))}
               <div class="assistant-attach">
@@ -289,22 +305,6 @@ function renderAssistantPanel(session, attachedContext) {
                   </button>
                 </div>
               </div>
-            </div>
-            <div class="session__composer-input">
-              <textarea
-                class="session__composer-input-field"
-                id="assistantInput"
-                placeholder="ask archie..."
-                rows="3"
-              ></textarea>
-              <button
-                type="button"
-                class="ap-button primary orange session__composer-send"
-                aria-label="Send"
-                data-assistant-send
-              >
-                <i class="ap-icon-arrow-up"></i>
-              </button>
             </div>
             <div class="session__composer-hint">
               <kbd>↵</kbd> to send · <kbd>Shift</kbd>+<kbd>↵</kbd> for new line · <kbd>⌘</kbd>+<kbd>↵</kbd> sends from

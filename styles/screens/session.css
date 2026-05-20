@@ -594,8 +594,15 @@
   pointer-events: none;
 }
 
+/* Composer card — wraps the input + toolbar + hint as one visually
+   distinct surface that sits above the chat. A subtle grey-05 fill +
+   1px border lifts the whole zone off the white thread background so
+   the composer reads as a tool, not as more chat. */
 .session__composer-card {
+  background: var(--ref-color-grey-05);
+  border: 1px solid var(--app-border-soft);
   border-radius: var(--app-radius-modal);
+  padding: var(--ref-spacing-sm);
   display: flex;
   flex-direction: column;
 }
@@ -906,11 +913,13 @@
 
 /* ---------- Composer context (Zone 2 — DS .ap-select above the textarea) -- */
 
-/* Toolbar row above the textarea: hosts the context picker on the left
+/* Toolbar row below the textarea: hosts the context picker on the left
    and the "Attach files" button on the right. Both buttons sit at their
-   natural width with a small gap between them. */
+   natural width with a small gap between them. Padding gives breathing
+   room from the input above; the hint row follows below with its own
+   margin. */
 .session__composer-toolbar {
-  padding: var(--ref-spacing-xs) var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-xxs) 0;
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
