@@ -560,9 +560,27 @@
          .session__composer-session  folder · session name · chevron chip */
 
 .session__composer {
-  border-top: 1px solid var(--ref-color-grey-10);
+  position: relative;
   padding: var(--ref-spacing-sm);
   background: var(--app-surface);
+}
+
+/* Fade the thread content into the composer surface as it scrolls past
+   the visible bottom. The pseudo sits ABOVE the composer (bottom: 100%)
+   so it overlaps the thread's bottom band, fading from fully-transparent
+   white to the composer's solid background. pointer-events: none keeps
+   buttons in the underlying thread (cards, drafts, etc.) clickable
+   through the gradient. Use rgba(255,255,255,0) rather than `transparent`
+   to avoid Safari's grey midpoint when interpolating through black. */
+.session__composer::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 48px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--app-surface));
+  pointer-events: none;
 }
 
 .session__composer-card {
