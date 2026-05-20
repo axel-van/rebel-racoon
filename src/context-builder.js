@@ -21,7 +21,7 @@
 
 import * as inlineQuestion from "./inline-question.js?v=21";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=28";
-import * as rightPanel from "./components/right-panel.js?v=46";
+import * as rightPanel from "./components/right-panel.js?v=47";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=25";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=20";
 
@@ -54,6 +54,7 @@ function emptyDraft(overrides = {}) {
     ctaLinks: [], // Array<{ label, url, checked, suggested }>
     language: "English",
     color: "orange",
+    imageVoice: { websites: [] },
     suggestions: {
       audience: [],
       audienceProblems: [],
@@ -139,6 +140,10 @@ export function startEdit(contextId) {
       ctaLinks: Array.isArray(ctx.ctaLinks) ? ctx.ctaLinks.map((l) => ({ ...l })) : [],
       language: ctx.language || "English",
       color: ctx.color || "orange",
+      imageVoice:
+        ctx.imageVoice && Array.isArray(ctx.imageVoice.websites)
+          ? { websites: ctx.imageVoice.websites.map((w) => ({ ...w })) }
+          : { websites: [] },
     }),
   );
   openBriefPanel(sessionId);
@@ -211,6 +216,7 @@ function runAnalysis(sessionId) {
     d.ctaLinks = (analysis.suggestions.ctaLinks || []).map((l) => ({ ...l }));
     d.language = analysis.suggestions.language || "English";
     d.color = analysis.suggestions.color || "orange";
+    d.imageVoice = analysis.suggestions.imageVoice || { websites: [] };
     markSystemNoticeReady(sessionId, noticeId, { meta: "Extracted guidelines" });
     notify(sessionId);
     openBriefPanel(sessionId);
@@ -305,6 +311,7 @@ export function save(sessionId) {
     ctaLinks: d.ctaLinks.filter((l) => l.checked),
     cta: d.ctaLinks.find((l) => l.checked)?.url || "",
     language: d.language,
+    imageVoice: d.imageVoice && Array.isArray(d.imageVoice.websites) ? d.imageVoice : { websites: [] },
     updatedAt: "just now",
   };
   const saved = d.editingId ? updateContext(d.editingId, payload) : addContext(payload);

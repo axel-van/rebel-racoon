@@ -65,6 +65,43 @@ const AGORAPULSE = {
     ],
     language: "English",
     color: "orange",
+    imageVoice: {
+      websites: [
+        {
+          domain: "agorapulse.com",
+          url: "https://agorapulse.com",
+          colors: {
+            primary: "#212E44",
+            accent: "#FF6726",
+            background: "#FFFFFF",
+            textPrimary: "#FF6726",
+            link: "#FF6726",
+          },
+          typography: {
+            primaryFont: "Averta",
+            headingFont: "Averta",
+            h1Size: "56px",
+            h2Size: "20px",
+            bodySize: "16px",
+            fontStack: ["Averta", "Arial", "Helvetica"],
+          },
+          images: {
+            logo: { label: "Logo", url: "" },
+            favicon: { label: "Favicon", url: "" },
+            ogImage: { label: "OgImage", url: "" },
+          },
+          buttons: {
+            primary: { bg: "#FF6726", color: "#FFFFFF", label: "Primary" },
+            secondary: { bg: "#FFFFFF", color: "#FF6726", border: "#FF6726", label: "Secondary" },
+          },
+          personality: {
+            tone: "professional",
+            energy: "medium",
+            audience: "business professionals",
+          },
+        },
+      ],
+    },
   },
 };
 
@@ -87,6 +124,43 @@ const GENERIC = {
     ctaLinks: [{ label: "Homepage", url: "", checked: true, suggested: true }],
     language: "English",
     color: "blue",
+    imageVoice: {
+      websites: [
+        {
+          domain: "",
+          url: "",
+          colors: {
+            primary: "#178DFE", // electric-blue-100 (the default seeded color)
+            accent: "#178DFE",
+            background: "#FFFFFF",
+            textPrimary: "#344563",
+            link: "#178DFE",
+          },
+          typography: {
+            primaryFont: "System UI",
+            headingFont: "System UI",
+            h1Size: "48px",
+            h2Size: "20px",
+            bodySize: "16px",
+            fontStack: ["System UI", "Arial", "sans-serif"],
+          },
+          images: {
+            logo: { label: "Logo", url: "" },
+            favicon: { label: "Favicon", url: "" },
+            ogImage: { label: "OgImage", url: "" },
+          },
+          buttons: {
+            primary: { bg: "#178DFE", color: "#FFFFFF", label: "Primary" },
+            secondary: { bg: "#FFFFFF", color: "#178DFE", border: "#178DFE", label: "Secondary" },
+          },
+          personality: {
+            tone: "professional",
+            energy: "medium",
+            audience: "business professionals",
+          },
+        },
+      ],
+    },
   },
 };
 
@@ -103,10 +177,16 @@ export function analyzeWebsite(url) {
   const derivedName = deriveName(url) || GENERIC.name;
   const generic = clone(GENERIC);
   generic.name = derivedName;
-  // Patch ctaLinks first URL with the actual domain when available.
+  // Patch domain-dependent fields with the actual URL when available.
   const domain = deriveDomain(url);
-  if (domain && generic.suggestions.ctaLinks[0]) {
-    generic.suggestions.ctaLinks[0].url = domain;
+  if (domain) {
+    if (generic.suggestions.ctaLinks[0]) {
+      generic.suggestions.ctaLinks[0].url = domain;
+    }
+    if (generic.suggestions.imageVoice?.websites?.[0]) {
+      generic.suggestions.imageVoice.websites[0].domain = domain;
+      generic.suggestions.imageVoice.websites[0].url = url.startsWith("http") ? url : `https://${domain}`;
+    }
   }
   return generic;
 }

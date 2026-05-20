@@ -1024,3 +1024,257 @@
 .context-brief__footer-spacer {
   flex: 1;
 }
+
+/* Image Voice — Brand visual identity card. Read-only in V1 (values come
+   from the mock website analysis). Section uses the same card chrome as
+   the rest of the brief panel but stacks several sub-blocks inside. */
+.context-brief__image-voice {
+  gap: var(--ref-spacing-sm);
+}
+
+.context-brief__iv-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+}
+
+.context-brief__iv-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.context-brief__iv-add {
+  flex-shrink: 0;
+}
+
+.context-brief__iv-site {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: var(--ref-border-radius-md);
+  background: var(--ref-color-grey-05);
+}
+
+.context-brief__iv-site-favicon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--ref-color-white);
+  color: var(--ref-color-grey-100);
+  border: 1px solid var(--ref-color-grey-10);
+  flex-shrink: 0;
+}
+
+.context-brief__iv-site-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.context-brief__iv-site-domain {
+  color: var(--ref-color-grey-150);
+  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+}
+
+.context-brief__iv-site-url {
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.context-brief__iv-site-delete {
+  flex-shrink: 0;
+}
+
+.context-brief__iv-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.context-brief__iv-subtitle {
+  margin: 0;
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  font-weight: var(--ref-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ref-color-grey-80);
+}
+
+/* Colors — grid of swatch + label + hex. */
+.context-brief__iv-colors {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--ref-spacing-xs);
+}
+
+.context-brief__iv-color {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  min-width: 0;
+}
+
+.context-brief__iv-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--ref-color-grey-10);
+  flex-shrink: 0;
+}
+
+.context-brief__iv-color-label {
+  color: var(--ref-color-grey-150);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.context-brief__iv-color-hex {
+  color: var(--ref-color-grey-80);
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: var(--ref-font-size-xs);
+  flex-shrink: 0;
+}
+
+/* Typography — 2-column rows + font-stack chips. */
+.context-brief__iv-typo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.context-brief__iv-typo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xxs) 0;
+  border-bottom: 1px dashed var(--ref-color-grey-10);
+}
+
+.context-brief__iv-typo-row:last-child {
+  border-bottom: none;
+}
+
+.context-brief__iv-typo-label {
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+}
+
+.context-brief__iv-typo-value {
+  color: var(--ref-color-grey-150);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.context-brief__iv-font-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+  margin-top: var(--ref-spacing-xxs);
+}
+
+.context-brief__iv-font-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--ref-color-grey-150);
+  color: var(--ref-color-white);
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+/* Images — 3 thumbnails with labels. */
+.context-brief__iv-images {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--ref-spacing-xs);
+}
+
+.context-brief__iv-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.context-brief__iv-image-thumb {
+  width: 100%;
+  aspect-ratio: 1.6 / 1;
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--ref-color-grey-05);
+  border: 1px solid var(--ref-color-grey-10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.context-brief__iv-image-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.context-brief__iv-image-placeholder {
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-xs);
+  text-transform: lowercase;
+}
+
+.context-brief__iv-image-label {
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+}
+
+/* Buttons — preview chips. Non-interactive. */
+.context-brief__iv-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xs);
+}
+
+.context-brief__iv-btn-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: var(--ref-border-radius-sm);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-sm);
+  cursor: default;
+  user-select: none;
+}
+
+/* Personality — DS grey tags. */
+.context-brief__iv-personality {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+}

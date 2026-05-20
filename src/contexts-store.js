@@ -81,6 +81,10 @@ export function addContext(ctx = {}) {
     contentAction: Array.isArray(ctx.contentAction) ? ctx.contentAction.slice() : [],
     ctaLinks: Array.isArray(ctx.ctaLinks) ? ctx.ctaLinks.map((l) => ({ ...l })) : [],
     language: ctx.language || "English",
+    imageVoice:
+      ctx.imageVoice && Array.isArray(ctx.imageVoice.websites)
+        ? { websites: ctx.imageVoice.websites.map((w) => ({ ...w })) }
+        : { websites: [] },
     // — meta —
     usedIn: typeof ctx.usedIn === "number" ? ctx.usedIn : 0,
     updatedAt: ctx.updatedAt || "just now",
@@ -129,6 +133,7 @@ export function updateContext(id, patch) {
   if (patch.objective !== undefined) c.objective = patch.objective;
   if (patch.contentAction !== undefined) c.contentAction = patch.contentAction;
   if (patch.ctaLinks !== undefined) c.ctaLinks = patch.ctaLinks;
+  if (patch.imageVoice !== undefined) c.imageVoice = patch.imageVoice;
   if (patch.language !== undefined) c.language = patch.language;
   if (patch.usedIn !== undefined) c.usedIn = patch.usedIn;
   if (patch.updatedAt !== undefined) c.updatedAt = patch.updatedAt;

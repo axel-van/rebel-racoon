@@ -2049,6 +2049,7 @@ function renderContextBriefView() {
       isRead,
     }),
     renderBriefColor(d, isRead),
+    renderBriefImageVoice(d),
   ].filter(Boolean);
   const footer = isRead
     ? `
@@ -2109,6 +2110,7 @@ function readBriefFromCtx(ctx) {
         : [],
     language: ctx.language || "English",
     color: ctx.color || "orange",
+    imageVoice: ctx.imageVoice && Array.isArray(ctx.imageVoice.websites) ? ctx.imageVoice : { websites: [] },
     suggestions: {},
     customAdditions: {},
   };
@@ -2405,6 +2407,166 @@ function renderBriefColor(d, isRead) {
       <h3 class="context-brief__title">Pick a color for your context</h3>
       <p class="context-brief__hint">Shown next to the context name in chats and listings.</p>
       <div class="context-brief__color-swatches">${swatches}</div>
+    </section>
+  `;
+}
+
+// Image Voice — Brand visual identity extracted from the analysed website.
+// Read-only in both edit and read modes (colors / fonts / images / personality
+// come from the mock analysis, the user does not edit them in V1).
+// Section is hidden when no website was analysed (legacy seeds without
+// `imageVoice` keep the brief panel ending at the color picker).
+function renderBriefImageVoice(d) {
+  const websites = Array.isArray(d.imageVoice?.websites) ? d.imageVoice.websites : [];
+  if (websites.length === 0) return "";
+  const site = websites[0];
+  const colors = site.colors || {};
+  const typography = site.typography || {};
+  const images = site.images || {};
+  const buttons = site.buttons || {};
+  const personality = site.personality || {};
+
+  const colorRow = (label, hex) => {
+    if (!hex) return "";
+    return `
+      <div class="context-brief__iv-color">
+        <span class="context-brief__iv-swatch" style="background:${escapeAttr(hex)};"></span>
+        <span class="context-brief__iv-color-label">${escapeText(label)}</span>
+        <span class="context-brief__iv-color-hex">${escapeText(hex)}</span>
+      </div>
+    `;
+  };
+
+  const typoRow = (label, value) => {
+    if (!value) return "";
+    return `
+      <div class="context-brief__iv-typo-row">
+        <span class="context-brief__iv-typo-label">${escapeText(label)}</span>
+        <span class="context-brief__iv-typo-value">${escapeText(value)}</span>
+      </div>
+    `;
+  };
+
+  const fontStack = Array.isArray(typography.fontStack) ? typography.fontStack : [];
+  const fontChips = fontStack.map((f) => `<span class="context-brief__iv-font-chip">${escapeText(f)}</span>`).join("");
+
+  const imageTile = (asset) => {
+    if (!asset) return "";
+    return `
+      <div class="context-brief__iv-image">
+        <div class="context-brief__iv-image-thumb">
+          ${
+            asset.url
+              ? `<img src="${escapeAttr(asset.url)}" alt="${escapeAttr(asset.label || "")}" />`
+              : `<span class="context-brief__iv-image-placeholder">${escapeText(asset.label || "")}</span>`
+          }
+        </div>
+        <span class="context-brief__iv-image-label">${escapeText(asset.label || "")}</span>
+      </div>
+    `;
+  };
+
+  const primaryBtn = buttons.primary || {};
+  const secondaryBtn = buttons.secondary || {};
+  const primaryBtnStyle = `background:${escapeAttr(primaryBtn.bg || "#212E44")};color:${escapeAttr(primaryBtn.color || "#fff")};`;
+  const secondaryBtnStyle = `background:${escapeAttr(secondaryBtn.bg || "#fff")};color:${escapeAttr(secondaryBtn.color || "#212E44")};border:1px solid ${escapeAttr(secondaryBtn.border || secondaryBtn.color || "#212E44")};`;
+
+  const personalityChips = ["tone", "energy", "audience"]
+    .map((key) => {
+      const v = personality[key];
+      if (!v) return "";
+      const label = key === "tone" ? "Tone" : key === "energy" ? "Energy" : "Audience";
+      return `<span class="ap-tag grey">${escapeText(label)}: ${escapeText(v)}</span>`;
+    })
+    .join("");
+
+  return `
+    <section class="context-brief__section context-brief__image-voice">
+      <header class="context-brief__iv-header">
+        <div class="context-brief__iv-heading">
+          <h3 class="context-brief__title">Image Voice</h3>
+          <p class="context-brief__hint">Brand visual identity extracted from websites</p>
+        </div>
+        <button
+          type="button"
+          class="ap-button stroked grey context-brief__iv-add"
+          disabled
+          aria-disabled="true"
+          title="Coming soon"
+        >
+          <i class="ap-icon-plus"></i>
+          <span>Add website</span>
+        </button>
+      </header>
+
+      <div class="context-brief__iv-site">
+        <span class="context-brief__iv-site-favicon"><i class="ap-icon-web"></i></span>
+        <div class="context-brief__iv-site-meta">
+          <span class="context-brief__iv-site-domain">${escapeText(site.domain || "")}</span>
+          <span class="context-brief__iv-site-url">${escapeText(site.url || "")}</span>
+        </div>
+        <button
+          type="button"
+          class="ap-icon-button transparent context-brief__iv-site-delete"
+          disabled
+          aria-disabled="true"
+          aria-label="Remove website"
+          title="Coming soon"
+        >
+          <i class="ap-icon-trash"></i>
+        </button>
+      </div>
+
+      <div class="context-brief__iv-block">
+        <h4 class="context-brief__iv-subtitle">Colors</h4>
+        <div class="context-brief__iv-colors">
+          ${colorRow("Primary", colors.primary)}
+          ${colorRow("Accent", colors.accent)}
+          ${colorRow("Background", colors.background)}
+          ${colorRow("Text Primary", colors.textPrimary)}
+          ${colorRow("Link", colors.link)}
+        </div>
+      </div>
+
+      <div class="context-brief__iv-block">
+        <h4 class="context-brief__iv-subtitle">Typography</h4>
+        <div class="context-brief__iv-typo">
+          ${typoRow("Primary", typography.primaryFont)}
+          ${typoRow("Heading", typography.headingFont)}
+          ${typoRow("H1 size", typography.h1Size)}
+          ${typoRow("H2 size", typography.h2Size)}
+          ${typoRow("Body size", typography.bodySize)}
+        </div>
+        ${fontChips ? `<div class="context-brief__iv-font-stack">${fontChips}</div>` : ""}
+      </div>
+
+      <div class="context-brief__iv-block">
+        <h4 class="context-brief__iv-subtitle">Images</h4>
+        <div class="context-brief__iv-images">
+          ${imageTile(images.logo)}
+          ${imageTile(images.favicon)}
+          ${imageTile(images.ogImage)}
+        </div>
+      </div>
+
+      <div class="context-brief__iv-block">
+        <h4 class="context-brief__iv-subtitle">Buttons</h4>
+        <div class="context-brief__iv-buttons">
+          <span class="context-brief__iv-btn-preview" style="${primaryBtnStyle}">${escapeText(primaryBtn.label || "Primary")}</span>
+          <span class="context-brief__iv-btn-preview" style="${secondaryBtnStyle}">${escapeText(secondaryBtn.label || "Secondary")}</span>
+        </div>
+      </div>
+
+      ${
+        personalityChips
+          ? `
+        <div class="context-brief__iv-block">
+          <h4 class="context-brief__iv-subtitle">Personality</h4>
+          <div class="context-brief__iv-personality">${personalityChips}</div>
+        </div>
+      `
+          : ""
+      }
     </section>
   `;
 }
