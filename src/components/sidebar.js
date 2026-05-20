@@ -3,13 +3,24 @@ import { navigate, getPath } from "../router.js?v=20";
 import { open as openSettingsDrawer } from "./settings-drawer.js?v=23";
 import { open as openBugReportModal } from "./bug-report-modal.js?v=21";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=24";
+import { open as openConfirmModal } from "./confirm-modal.js?v=20";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { recentSessions } from "../mocks.js?v=29";
+import {
+  getSessions,
+  getSessionById,
+  updateSession,
+  deleteSession,
+  togglePin as togglePinSession,
+  subscribe as subscribeSessions,
+} from "../sessions-store.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=2";
 import { isNewUser } from "../user-mode.js?v=20";
-import { getIdeas } from "../library.js?v=26";
+import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=27";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=26";
 import { closePanel as closeRightPanel } from "./right-panel.js?v=55";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=31";
+import { clearSession as clearPostsSession } from "../posts-store.js?v=25";
+import { clearSession as clearSourcesSession } from "../sources-stream.js?v=30";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the
@@ -32,6 +43,11 @@ let menuOpen = false;
 // Kept module-local so it survives the re-renders triggered by route
 // changes / store subscriptions.
 let sidebarSearchQuery = "";
+
+// When a sidebar row is being renamed inline, this carries its id so the
+// next render swaps that row's title for an <input>. Esc / blur / Enter
+// (handled below) clear it.
+let renamingSessionId = null;
 
 export function isSidebarCollapsed() {
   return localStorage.getItem(COLLAPSED_KEY) === "1";
@@ -95,6 +111,22 @@ export function initSidebar() {
       navigate(navItem.dataset.sidebarNav);
       return;
     }
+    // Rename action — opens the inline-rename input on the row.
+    const renameBtn = event.target.closest("[data-sidebar-row-rename]");
+    if (renameBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      startRenameSidebar(renameBtn.dataset.sidebarRowRename);
+      return;
+    }
+    // Delete action — confirm-modal then cleanup + remove.
+    const deleteBtn = event.target.closest("[data-sidebar-row-delete]");
+    if (deleteBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      deleteSidebarSession(deleteBtn.dataset.sidebarRowDelete);
+      return;
+    }
     // Pin/unpin a conversation. Captured before the row-navigation handler
     // so clicking the pin button doesn't bubble into a route change.
     const pinBtn = event.target.closest("[data-sidebar-pin]");
@@ -104,8 +136,21 @@ export function initSidebar() {
       togglePinSidebar(pinBtn.dataset.sidebarPin);
       return;
     }
+    // Rename input click — swallow so the click doesn't navigate.
+    if (event.target.closest("[data-sidebar-row-rename-input]")) {
+      event.stopPropagation();
+      return;
+    }
+    // 3-dots menu summary click — let <details> handle its own toggle,
+    // just swallow propagation so the row's session-nav handler doesn't fire.
+    if (event.target.closest(".app-sidebar__row-menu summary")) {
+      event.stopPropagation();
+      return;
+    }
     const sessionRow = event.target.closest("[data-sidebar-session]");
     if (sessionRow) {
+      // Don't navigate while the user is renaming this row.
+      if (renamingSessionId === sessionRow.dataset.sidebarSession) return;
       navigate(`/session/${sessionRow.dataset.sidebarSession}`);
       return;
     }
@@ -153,6 +198,33 @@ export function initSidebar() {
   // colors used by session rows stay in sync without waiting for the next
   // route change.
   subscribeContexts(() => renderSidebar());
+  subscribeSessions(() => renderSidebar());
+
+  // Keyboard handler for the inline-rename input — Enter commits, Esc
+  // cancels. Bound at the sidebar element level via delegation.
+  el.addEventListener("keydown", (event) => {
+    const input = event.target.closest?.("[data-sidebar-row-rename-input]");
+    if (!input) return;
+    if (event.key === "Enter") {
+      event.preventDefault();
+      commitRenameSidebar(input.dataset.sidebarRowRenameInput, input.value);
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      cancelRenameSidebar();
+    }
+  });
+  // Blur on the rename input = commit (same as Enter), unless the user is
+  // clicking inside the row (e.g. on the dropdown) which would shift focus.
+  el.addEventListener(
+    "blur",
+    (event) => {
+      const input = event.target?.closest?.("[data-sidebar-row-rename-input]");
+      if (!input) return;
+      if (renamingSessionId !== input.dataset.sidebarRowRenameInput) return;
+      commitRenameSidebar(input.dataset.sidebarRowRenameInput, input.value);
+    },
+    true, // capture so we get the focusout reliably
+  );
 
   // Click outside the popmenu → close.
   document.addEventListener("click", (event) => {
@@ -275,6 +347,16 @@ export function renderSidebar() {
       </div>
     </div>
   `;
+
+  // Post-render — focus the rename input if any row is mid-edit, and
+  // select the full name so the user can overtype immediately.
+  if (renamingSessionId) {
+    const input = el.querySelector(`[data-sidebar-row-rename-input="${renamingSessionId}"]`);
+    if (input) {
+      input.focus();
+      input.select();
+    }
+  }
 }
 
 // Footer popmenu — trigger button + popmenu list. The popmenu lives in the
@@ -337,7 +419,7 @@ const NAV = [
     icon: "ap-icon-sparkles",
     label: "Ideas",
     match: (p) => p === "/ideas",
-    count: () => recentSessions.reduce((n, s) => n + getIdeas(s.id).length, 0),
+    count: () => getSessions().reduce((n, s) => n + getIdeas(s.id).length, 0),
   },
   {
     path: "/contexts",
@@ -374,7 +456,7 @@ function renderNav(path) {
 // content toolbar pattern (cf. content-workspace.js): `.ap-input-group`
 // + leading icon + `<input>`.
 function renderSearchInput() {
-  if (isNewUser() || recentSessions.length === 0) return "";
+  if (isNewUser() || getSessions().length === 0) return "";
   const value = sidebarSearchQuery ? sidebarSearchQuery.replace(/"/g, "&quot;") : "";
   return `
     <div class="app-sidebar__search">
@@ -407,7 +489,8 @@ function renderRecentListsOnly() {
 // are dropped (no orphan heading). When the filter matches nothing, an
 // empty-state message takes over the list.
 function renderRecentLists(activeSessionId, query) {
-  if (isNewUser() || recentSessions.length === 0) {
+  const allSessions = getSessions();
+  if (isNewUser() || allSessions.length === 0) {
     // FIND-E4: first-run anchor for the recent-conversations list. The
     // bare "No conversations yet" was a dead end — anchor a soft hint
     // that points at the New conversation button just above this list,
@@ -424,7 +507,7 @@ function renderRecentLists(activeSessionId, query) {
     `;
   }
   const q = (query || "").trim().toLowerCase();
-  const filtered = q ? recentSessions.filter((s) => s.name.toLowerCase().includes(q)) : recentSessions;
+  const filtered = q ? allSessions.filter((s) => s.name.toLowerCase().includes(q)) : allSessions;
 
   const pinned = filtered.filter((s) => s.pinned);
   const unpinned = filtered.filter((s) => !s.pinned);
@@ -461,15 +544,31 @@ function renderSessionRow(session, activeSessionId) {
   const isPinned = !!session.pinned;
   const leading = isPinned ? `<i class="ap-icon-pin app-sidebar__row-leading" aria-hidden="true"></i>` : "";
   const pinLabel = isPinned ? "Unpin conversation" : "Pin conversation";
+  const isRenaming = renamingSessionId === session.id;
+  const safeName = escapeHtml(session.name);
+  const safeNameAttr = escapeAttr(session.name);
+  // The row is a <div role="button"> rather than a <button> so we can
+  // nest interactive children (3-dots menu via <details>, pin button,
+  // rename input) without nesting buttons.
+  const titleCell = isRenaming
+    ? `<input
+         type="text"
+         class="app-sidebar__row-rename"
+         data-sidebar-row-rename-input="${session.id}"
+         value="${safeNameAttr}"
+         aria-label="Rename conversation"
+       />`
+    : `<span class="app-sidebar__row-title">${safeName}</span>`;
   return `
-    <button
-      type="button"
-      class="app-sidebar__row ${isActive ? "is-active" : ""}"
+    <div
+      class="app-sidebar__row ${isActive ? "is-active" : ""} ${isRenaming ? "is-renaming" : ""}"
       data-sidebar-session="${session.id}"
       data-sidebar-pinned="${isPinned ? "true" : "false"}"
+      role="button"
+      tabindex="0"
     >
       ${leading}
-      <span class="app-sidebar__row-title">${session.name}</span>
+      ${titleCell}
       <span
         class="app-sidebar__row-dot app-sidebar__row-dot--${dotColor}"
         aria-hidden="true"
@@ -484,25 +583,125 @@ function renderSessionRow(session, activeSessionId) {
       >
         <i class="ap-icon-pin"></i>
       </span>
-    </button>
+      <details class="ap-select app-sidebar__row-menu" data-sidebar-row-menu>
+        <summary
+          class="ap-icon-button transparent app-sidebar__row-more"
+          aria-label="More actions"
+          title="More actions"
+        >
+          <i class="ap-icon-more-vertical"></i>
+        </summary>
+        <div class="ap-action-dropdown app-sidebar__row-menu-dropdown" role="menu">
+          <button type="button" class="ap-action-dropdown-item" role="menuitem" data-sidebar-row-rename="${session.id}">
+            <i class="ap-icon-pen"></i>
+            <div class="ap-action-dropdown-item-text">
+              <div class="ap-action-dropdown-item-label">Rename</div>
+            </div>
+          </button>
+          <button type="button" class="ap-action-dropdown-item" role="menuitem" data-sidebar-pin="${session.id}">
+            <i class="ap-icon-pin"></i>
+            <div class="ap-action-dropdown-item-text">
+              <div class="ap-action-dropdown-item-label">${isPinned ? "Unpin" : "Pin"}</div>
+            </div>
+          </button>
+          <button type="button" class="ap-action-dropdown-item app-sidebar__row-menu-danger" role="menuitem" data-sidebar-row-delete="${session.id}">
+            <i class="ap-icon-trash"></i>
+            <div class="ap-action-dropdown-item-text">
+              <div class="ap-action-dropdown-item-label">Delete</div>
+            </div>
+          </button>
+        </div>
+      </details>
+    </div>
   `;
 }
 
-// Toggle the pinned flag on a session (in-memory mock mutation), re-render
-// the sidebar, and surface a toast with an Undo action — same pattern as
-// the idea-card pin/unpin (cf. idea-card.js togglePinMenuItem).
+function escapeHtml(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function escapeAttr(s) {
+  return String(s || "").replace(/"/g, "&quot;");
+}
+
+// Toggle the pinned flag on a session via the sessions-store, then
+// surface a toast with an Undo action. The store's subscribe hook
+// re-renders the sidebar automatically.
 function togglePinSidebar(sessionId) {
-  const s = recentSessions.find((r) => r.id === sessionId);
-  if (!s) return;
-  s.pinned = !s.pinned;
-  renderSidebar();
+  const before = getSessionById(sessionId);
+  if (!before) return;
+  const after = togglePinSession(sessionId);
+  if (!after) return;
   import("./toast.js?v=20").then(({ showToast }) => {
-    showToast(s.pinned ? "Conversation pinned" : "Conversation unpinned", {
+    showToast(after.pinned ? "Conversation pinned" : "Conversation unpinned", {
       action: {
         label: "Undo",
-        onClick: () => togglePinSidebar(sessionId),
+        onClick: () => togglePinSession(sessionId),
       },
     });
+  });
+}
+
+// Inline rename — flip the row into edit mode and let the next render
+// swap in the input. Focus + select-all happen on mount via the
+// post-render hook.
+function startRenameSidebar(sessionId) {
+  renamingSessionId = sessionId;
+  // Close any open dropdown menus that may have triggered this rename.
+  document.querySelectorAll(".app-sidebar__row-menu[open]").forEach((el) => el.removeAttribute("open"));
+  renderSidebar();
+}
+
+function commitRenameSidebar(sessionId, rawValue) {
+  const value = (rawValue || "").trim();
+  renamingSessionId = null;
+  if (value) updateSession(sessionId, { name: value });
+  else renderSidebar(); // empty input → cancel + re-render
+}
+
+function cancelRenameSidebar() {
+  renamingSessionId = null;
+  renderSidebar();
+}
+
+// Delete a conversation via confirm-modal. Cleans up every per-session
+// store before removing from the sessions list, and redirects to the
+// dashboard if the user was viewing the deleted session.
+function deleteSidebarSession(sessionId) {
+  const session = getSessionById(sessionId);
+  if (!session) return;
+  openConfirmModal({
+    title: "Delete conversation?",
+    body: `"${session.name}" will be permanently removed.`,
+    confirmLabel: "Delete",
+    cancelLabel: "Keep",
+    danger: true,
+    onConfirm: () => {
+      // Sweep per-session state before pulling the row.
+      try {
+        clearAssistantSession(sessionId);
+      } catch {}
+      try {
+        clearPostsSession(sessionId);
+      } catch {}
+      try {
+        clearLibrarySession(sessionId);
+      } catch {}
+      try {
+        clearSourcesSession(sessionId);
+      } catch {}
+      deleteSession(sessionId);
+      // If the user was viewing this session, bounce them home.
+      const activeId = matchSessionId(getPath());
+      if (activeId === sessionId) {
+        closeRightPanel();
+        navigate("/");
+      }
+      import("./toast.js?v=20").then(({ showToast }) => showToast("Conversation deleted"));
+    },
   });
 }
 

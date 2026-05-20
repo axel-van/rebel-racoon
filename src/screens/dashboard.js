@@ -1,4 +1,4 @@
-import { recentSessions } from "../mocks.js?v=29";
+import { getSessions } from "../sessions-store.js?v=1";
 import { isNewUser } from "../user-mode.js?v=20";
 
 // Dashboard route — pure redirect surface.
@@ -18,7 +18,7 @@ import { isNewUser } from "../user-mode.js?v=20";
 // dead code on main.
 
 export function renderDashboard(_params, _target) {
-  const recent = recentSessions[0];
+  const recent = getSessions()[0];
   const targetPath = isNewUser() || !recent ? "/session/new" : `/session/${recent.id}`;
   // Use replace() rather than navigate() so the browser history doesn't end
   // up with a `/` entry that immediately bounces — feels broken on Back.

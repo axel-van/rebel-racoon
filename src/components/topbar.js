@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { getPath } from "../router.js?v=21";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { toggleSidebar } from "./sidebar.js?v=33";
+import { toggleSidebar } from "./sidebar.js?v=34";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
@@ -11,9 +11,9 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
 } from "./right-panel.js?v=55";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=29";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=30";
-import { recentSessions } from "../mocks.js?v=29";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=30";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=31";
+import { getSessionById, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 
 // Persistent top bar.
 //
@@ -108,6 +108,10 @@ export function initTopbar() {
   // Re-render the topbar whenever the right panel state changes so the
   // pills reflect the live mode (.is-on accent flips).
   subscribeRightPanel(() => renderTopbar());
+  // Re-render when a session is renamed / deleted so the topbar title
+  // reflects the new value (or "New conversation" if the active session
+  // got removed).
+  subscribeSessions(() => renderTopbar());
 
   // Re-render on hash change so pills re-derive per-route state.
   window.addEventListener("hashchange", () => renderTopbar());
@@ -267,7 +271,7 @@ function currentTitle() {
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);
   if (sessionMatch) {
     const id = sessionMatch[1];
-    const known = recentSessions.find((s) => s.id === id);
+    const known = getSessionById(id);
     return known?.name || "New conversation";
   }
   return "Archie";

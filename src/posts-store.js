@@ -144,6 +144,21 @@ export function subscribe(sessionId, fn) {
   };
 }
 
+// Drop all posts + subscribers for a session — used by the
+// conversation-delete flow in the sidebar.
+export function clearSession(sessionId) {
+  store.delete(sessionId);
+  const set = subs.get(sessionId);
+  if (set) {
+    for (const fn of set) {
+      try {
+        fn([]);
+      } catch {}
+    }
+    subs.delete(sessionId);
+  }
+}
+
 // --- Internals ----------------------------------------------------------
 
 function seed(sessionId) {

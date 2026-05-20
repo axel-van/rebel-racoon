@@ -325,13 +325,99 @@
 }
 
 .app-sidebar__row:hover .app-sidebar__row-pin,
-.app-sidebar__row:focus-visible .app-sidebar__row-pin {
+.app-sidebar__row:focus-visible .app-sidebar__row-pin,
+.app-sidebar__row:focus-within .app-sidebar__row-pin {
   display: inline-flex;
 }
 
 .app-sidebar__row:hover .app-sidebar__row-dot,
-.app-sidebar__row:focus-visible .app-sidebar__row-dot {
+.app-sidebar__row:focus-visible .app-sidebar__row-dot,
+.app-sidebar__row:focus-within .app-sidebar__row-dot {
   display: none;
+}
+
+/* 3-dots more menu — hover-reveal sibling of the pin button. Same
+   24×24 icon-button chrome, hidden at rest, fades in on row hover or
+   when the menu is open. */
+.app-sidebar__row-menu {
+  display: none;
+  position: relative;
+  flex: 0 0 24px;
+  margin-left: 2px;
+}
+
+.app-sidebar__row:hover .app-sidebar__row-menu,
+.app-sidebar__row:focus-within .app-sidebar__row-menu,
+.app-sidebar__row-menu[open] {
+  display: inline-flex;
+}
+
+.app-sidebar__row-more {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border-radius: var(--app-radius-button-sm);
+  color: var(--ref-color-grey-80);
+  cursor: pointer;
+  list-style: none;
+}
+
+.app-sidebar__row-more::-webkit-details-marker {
+  display: none;
+}
+
+.app-sidebar__row-more i {
+  font-size: var(--sys-icon-css-sm);
+}
+
+.app-sidebar__row-more:hover {
+  background: var(--ref-color-grey-20);
+  color: var(--ref-color-grey-150);
+}
+
+/* Dropdown content — positioned absolutely below the trigger, aligned
+   to the right edge of the row. */
+.app-sidebar__row-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  min-width: 160px;
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: var(--ref-border-radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: var(--ref-spacing-xxs);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-sidebar__row-menu-danger,
+.app-sidebar__row-menu-danger i {
+  color: var(--ref-color-red-100);
+}
+
+/* Inline-rename input — replaces the row title while editing. Sits
+   flush with the title's typography but in a bordered input shell. */
+.app-sidebar__row-rename {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: 2px 6px;
+  font: inherit;
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  color: var(--ref-color-grey-150);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-electric-blue-100);
+  border-radius: var(--app-radius-button-sm);
+  outline: none;
+}
+
+.app-sidebar__row.is-renaming {
+  cursor: default;
 }
 
 .app-sidebar__empty {

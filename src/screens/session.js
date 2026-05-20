@@ -1,7 +1,8 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=20";
-import { renderTopbar } from "../components/topbar.js?v=41";
-import { getSessionById, socialAccounts, recentSessions, chatStarters } from "../mocks.js?v=29";
+import { renderTopbar } from "../components/topbar.js?v=42";
+import { socialAccounts, chatStarters } from "../mocks.js?v=29";
+import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=26";
 import { isNewUser } from "../user-mode.js?v=20";
 import {
@@ -17,8 +18,8 @@ import {
   postDraftResult,
   subscribe,
   submitAssistantChoice,
-} from "../assistant.js?v=30";
-import { getSources, getIdeas, injectIdeasForSource } from "../library.js?v=26";
+} from "../assistant.js?v=31";
+import { getSources, getIdeas, injectIdeasForSource } from "../library.js?v=27";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
   getPosts,
@@ -26,7 +27,7 @@ import {
   attachImageToDraft,
   setSubtitleStyle,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=24";
+} from "../posts-store.js?v=25";
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=21";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
@@ -57,7 +58,7 @@ import {
   pushScriptedSource,
   completeScriptedSource,
   updateSourceClips,
-} from "../sources-stream.js?v=29";
+} from "../sources-stream.js?v=30";
 import { showToast } from "../components/toast.js?v=20";
 import {
   openDrafts as openDraftsPanel,
@@ -616,7 +617,7 @@ function startAskFlowFromSession(sessionId, sourceId, filename) {
       navigate(`/session/${choice.session.id}?tab=posts`);
     }
   };
-  if (recentSessions.length === 0) {
+  if (getSessions().length === 0) {
     handoff({ kind: "new" });
   } else {
     openChatPickerModal({ onPick: handoff });

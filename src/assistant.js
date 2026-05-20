@@ -35,6 +35,22 @@ export function subscribe(sessionId, fn) {
   };
 }
 
+// Drop all state for a session — used by the conversation-delete flow in
+// the sidebar. Subscribers are flushed too; any DOM still mounted will
+// get one last empty-thread notify so it can clean up gracefully.
+export function clearSession(sessionId) {
+  threads.delete(sessionId);
+  const subs = subscribers.get(sessionId);
+  if (subs) {
+    for (const fn of subs) {
+      try {
+        fn([]);
+      } catch {}
+    }
+    subscribers.delete(sessionId);
+  }
+}
+
 export function sendMessage(sessionId, text, options = {}) {
   if (!text || !text.trim()) return;
   const thread = getThread(sessionId);

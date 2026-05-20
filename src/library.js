@@ -11,13 +11,13 @@
 
 import { ideas as seedIdeas } from "./mocks.js?v=29";
 import { isNewUser } from "./user-mode.js?v=20";
-import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=30";
+import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=31";
 import {
   getSources as streamGetSources,
   subscribeSources,
   pushScriptedSource,
   completeScriptedSource,
-} from "./sources-stream.js?v=29";
+} from "./sources-stream.js?v=30";
 
 // --- Module state -------------------------------------------------------
 
@@ -71,6 +71,26 @@ export function subscribe(sessionId, fn) {
       }
     }
   };
+}
+
+// Drop all ideas + subscribers + stream forwarding for a session — used
+// by the conversation-delete flow in the sidebar.
+export function clearSession(sessionId) {
+  ideasMap.delete(sessionId);
+  const set = subscribers.get(sessionId);
+  if (set) {
+    for (const fn of set) {
+      try {
+        fn();
+      } catch {}
+    }
+    subscribers.delete(sessionId);
+  }
+  const off = streamUnsubsBySession.get(sessionId);
+  if (off) {
+    off();
+    streamUnsubsBySession.delete(sessionId);
+  }
 }
 
 // Bulk "extract more ideas" — used by the source-list bulk action bar.

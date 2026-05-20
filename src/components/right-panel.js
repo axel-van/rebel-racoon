@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=30";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=31";
 import { isFlagOn } from "../feature-flags.js?v=2";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=29";
 import { isNewUser } from "../user-mode.js?v=20";
@@ -11,18 +11,18 @@ import {
   insertPost,
   updatePostContent,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=24";
+} from "../posts-store.js?v=25";
 import { renderPostCard } from "./post-card.js?v=23";
 import { renderClipCard } from "./clip-card.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=2";
 import { CONTEXT_QUESTIONS } from "../context-questions.js?v=20";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=33";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=34";
 import {
   getSources as getStreamSources,
   subscribeSources,
   updateSourceClips,
   removeSources,
-} from "../sources-stream.js?v=29";
+} from "../sources-stream.js?v=30";
 import { open as openAddSourceModal } from "./add-source-modal.js?v=22";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines

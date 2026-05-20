@@ -96,6 +96,21 @@ export function subscribeUploads(fn) {
   return () => uploadSubs.delete(fn);
 }
 
+// Drop all sources + subscribers for a session — used by the
+// conversation-delete flow in the sidebar.
+export function clearSession(sessionId) {
+  sourcesBySession.delete(sessionId);
+  const subs = sourceSubsBySession.get(sessionId);
+  if (subs) {
+    for (const fn of subs) {
+      try {
+        fn([]);
+      } catch {}
+    }
+    sourceSubsBySession.delete(sessionId);
+  }
+}
+
 // File extensions → ({ kind, iconKey }). The iconKey is the lowercase
 // value file-kinds.js uses for KIND_ICON lookup.
 const EXT_MAP = {
