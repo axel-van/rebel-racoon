@@ -8,6 +8,7 @@ import {
 } from "../contexts-store.js?v=24";
 import { navigate } from "../router.js?v=21";
 import { openRead, startEdit } from "../context-builder.js?v=23";
+import { setHandoff } from "../handoff.js?v=20";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=20";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 
@@ -181,7 +182,12 @@ function bind(root) {
       return;
     }
     if (event.target.closest("[data-contexts-new]")) {
-      navigate("/contexts/new");
+      // The /contexts page has no chat panel to host the wizard, so we
+      // spawn a fresh session and arm a handoff so session.js launches
+      // contextBuilder.start() on mount. After save, onComplete routes
+      // the user back to /contexts (returnTo).
+      setHandoff("pendingStartContextBuilder", { returnTo: "/contexts" });
+      navigate(`/session/new-ctx-${Date.now().toString(36)}`);
       return;
     }
     if (event.target.closest("[data-contexts-clear-query]")) {

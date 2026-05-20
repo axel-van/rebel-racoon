@@ -1221,13 +1221,29 @@ function wireAssistantPanel(root, session, attachedContext) {
   }
 
   // Pending start flow set by the dashboard's New chat button. Only the
-  // action-picker variant remains — creating a context is now handled by
-  // the dedicated /contexts/new route, not by spawning a chat.
+  // action-picker variant remains — creating a context happens via the
+  // inline wizard (contextBuilder.start) instead.
   const pendingStart = consumeHandoff("pendingStartFlow");
   if (pendingStart && pendingStart.hasContext) {
     setTimeout(() => {
       startActionPickerFlow(session.id, { contextName: pendingStart.contextName });
     }, 200);
+  }
+
+  // Spawn-session handoff from the /contexts page "New context" button.
+  // The page has no chat panel to host the wizard, so it minted this
+  // fresh session for us. Launch the inline wizard now; onComplete
+  // navigates back to the returnTo path (typically /contexts).
+  const pendingCtxBuilder = consumeHandoff("pendingStartContextBuilder");
+  if (pendingCtxBuilder) {
+    const returnTo = pendingCtxBuilder.returnTo;
+    setTimeout(() => {
+      contextBuilder.start(session.id, {
+        onComplete: () => {
+          if (returnTo) navigate(returnTo);
+        },
+      });
+    }, 50);
   }
 
   // Drag-and-drop a file anywhere on the assistant panel → kicks off the
@@ -1837,9 +1853,12 @@ function bindSession(root, session) {
     if (hasOpenContextChoice) return;
     const allContexts = getContexts();
     if (allContexts.length === 0) {
-      // New-user mode (no seeded contexts): nothing to pick, route
-      // straight to the creation flow.
-      navigate("/contexts/new");
+      // New-user mode (no seeded contexts): nothing to pick. Launch the
+      // wizard inline so the user stays in the chat — onComplete attaches
+      // the freshly-created context to this session.
+      contextBuilder.start(session.id, {
+        onComplete: (created) => setQuery({ contextId: created.id }),
+      });
       return;
     }
     const choices = allContexts.map((c) => ({ value: c.id, label: c.name }));
@@ -1881,9 +1900,12 @@ function bindSession(root, session) {
       const prompt = msg.context?.prompt || "";
       const pick = selectedValues[0];
       if (pick === "__new__") {
-        // Route to the dedicated create-context flow. The starter prompt
-        // is sacrificed — user will pick a starter again on return.
-        navigate("/contexts/new");
+        // Inline wizard inside the current session — user keeps their
+        // chat (and the starter prompt they typed) instead of leaving
+        // for a dedicated page. onComplete attaches the new context.
+        contextBuilder.start(session.id, {
+          onComplete: (created) => setQuery({ contextId: created.id }),
+        });
       } else if (pick === "__none__") {
         // Explicit "No context". The URL is already clean for fresh
         // chats; just drain the prefill into the composer in place
@@ -2377,8 +2399,11 @@ function bindSession(root, session) {
         const sel = root.querySelector("details.composer-context-select");
         if (sel) sel.open = false;
         if (id === "__new__") {
-          // Hand the user over to the conversational create-context flow.
-          navigate("/contexts/new");
+          // Launch the conversational create-context wizard inline in
+          // this session. onComplete attaches the new context once saved.
+          contextBuilder.start(session.id, {
+            onComplete: (created) => setQuery({ contextId: created.id }),
+          });
         } else if (id === "__detach__") {
           setQuery({ contextId: "" });
         } else {

@@ -41,8 +41,9 @@ const MOCK_PROFILES = [
   },
 ];
 
-// Per-session draft store + subscribers (the /contexts/new screen subscribes
-// so it can repaint the assistant chat when state advances).
+// Per-session draft store + subscribers — session.js repaints the
+// assistant aside when state advances via inlineQuestion.subscribe and
+// the right-panel ContextForm tracks form-phase mutations.
 const drafts = new Map(); // sessionId → { url, profiles[], answers, name }
 const subscribers = new Map(); // sessionId → Set<fn>
 
@@ -72,9 +73,12 @@ export function subscribe(sessionId, fn) {
   return () => subscribers.get(sessionId)?.delete(fn);
 }
 
-// Kick off the flow. Optional onComplete is called with the saved Context
-// after the user clicks Save (the screen typically uses it to navigate
-// away from /contexts/new).
+// Kick off the inline conversational creation wizard inside `sessionId`.
+// The session.js panel detects inlineQuestion.isActive and renders the
+// wizard chrome over the chat. Optional onComplete is called with the
+// saved Context after the user clicks Save — callers typically attach
+// the new context to the session via setQuery({ contextId }) or
+// navigate elsewhere (e.g. back to /contexts).
 export function start(sessionId, { onComplete } = {}) {
   drafts.set(sessionId, {
     url: "",

@@ -7,7 +7,9 @@
 //     the dashboard's New chat handler with hasContext: true.
 //
 // The legacy create-context-on-new-chat flow was removed — context creation
-// now happens at /contexts/new via context-builder.js.
+// runs inline in the current session via contextBuilder.start(), launched
+// from any "+ New context" entry point (composer picker, AI inline
+// question chip, /contexts page via a spawn-session handoff).
 
 import { postAssistantMessage, postUserTurn, postAssistantChoice } from "./assistant.js?v=27";
 
