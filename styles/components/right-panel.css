@@ -839,17 +839,35 @@
 .context-brief__body {
   flex: 1;
   overflow-y: auto;
-  padding: var(--ref-spacing-md) var(--ref-spacing-lg);
+  padding: var(--ref-spacing-md);
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-md);
+  gap: var(--ref-spacing-xs);
 }
 
-.context-brief__intro,
+/* Intro stays plain (no card chrome) — header text + infobox only. */
+.context-brief__intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: 0 var(--ref-spacing-xxs);
+}
+
+/* Each question lives in its own card: white surface, grey-10 border,
+   8px radius. Reads as a discrete unit. */
 .context-brief__section {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: var(--ref-border-radius-md);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+}
+
+/* Card chrome already separates sections — hide the divider noise. */
+.context-brief__body > hr.ap-divider {
+  display: none;
 }
 
 .context-brief__intro-text {

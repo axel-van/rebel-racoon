@@ -10,7 +10,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=44";
+} from "./right-panel.js?v=45";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=28";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=27";
 import { recentSessions } from "../mocks.js?v=28";

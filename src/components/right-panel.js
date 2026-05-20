@@ -301,7 +301,15 @@ export function openContextBriefPanel(config = {}) {
   notify();
 }
 export function refreshContextBriefPanel() {
-  if (state.mode === "context-brief") renderPanel();
+  if (state.mode !== "context-brief") return;
+  // Preserve scroll across re-renders — chip toggles call this on every
+  // click, and a naïve innerHTML rewrite would snap the user back to the
+  // top.
+  const body = document.querySelector("#" + PANEL_ID + " .context-brief__body");
+  const scrollTop = body?.scrollTop || 0;
+  renderPanel();
+  const nextBody = document.querySelector("#" + PANEL_ID + " .context-brief__body");
+  if (nextBody && scrollTop) nextBody.scrollTop = scrollTop;
 }
 export function closeContextBriefPanelSilently() {
   if (state.mode !== "context-brief") return;
@@ -891,11 +899,10 @@ function renderPanel() {
   const shell = document.getElementById("appShell");
   if (shell) {
     shell.classList.toggle("is-right-panel-open", !!state.mode);
-    // Drafts mode renders rich PostCards + per-card action stack — needs
-    // a wider panel column than the compact Ideas list. Toggle a marker
-    // class on the shell ; layout.css picks it up to swap the grid
-    // template column from the default 460px to ~720px.
-    shell.classList.toggle("is-right-panel-wide", state.mode === "drafts");
+    // Drafts + context-brief render rich, multi-section content — both
+    // need the wider panel column. The compact Ideas/Sources list stays
+    // on the default 460px.
+    shell.classList.toggle("is-right-panel-wide", state.mode === "drafts" || state.mode === "context-brief");
   }
   if (!state.mode) {
     el.hidden = true;
