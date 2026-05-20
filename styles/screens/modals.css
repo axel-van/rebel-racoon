@@ -46,6 +46,7 @@ body.has-modal {
 .add-source-modal,
 .confirm-modal,
 .rename-modal,
+.search-modal,
 .shortcut-legend {
   position: fixed;
   top: 50vh;
@@ -78,6 +79,130 @@ body.has-modal {
   width: min(calc(100% - 32px), 440px);
 }
 
+/* ── Search modal ────────────────────────────────────────────
+   Spotlight-style command palette anchored slightly above center
+   on tall viewports — bigger than the rename modal because the
+   primary content is a scrollable result list, not a single field. */
+.search-modal {
+  width: min(calc(100% - 32px), 640px);
+  max-height: min(calc(100vh - 80px), 560px);
+  flex-direction: column;
+  padding: 0;
+}
+
+.search-modal .ap-dialog-content.search-modal__results {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xxs) var(--ref-spacing-xs);
+}
+
+.search-modal__header {
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border-bottom: 1px solid var(--app-border-soft);
+}
+
+.search-modal__input-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.search-modal__input-icon {
+  color: var(--ref-color-grey-60);
+  font-size: var(--sys-icon-css-sm);
+  flex-shrink: 0;
+}
+
+.search-modal__input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--ref-font-size-md);
+  color: var(--ref-color-grey-150);
+  outline: none;
+  padding: var(--ref-spacing-xxs) 0;
+  min-width: 0;
+}
+
+.search-modal__input::placeholder {
+  color: var(--ref-color-grey-40);
+}
+
+.search-modal__kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-grey-05);
+  border: 1px solid var(--app-border-soft);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-80);
+  flex-shrink: 0;
+}
+
+.search-modal__group-heading {
+  margin: var(--ref-spacing-xs) var(--ref-spacing-xs) var(--ref-spacing-xxs);
+  font-size: 10px;
+  line-height: var(--ref-font-line-height-xs);
+  font-weight: var(--ref-font-weight-extra-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ref-color-grey-60);
+}
+
+.search-modal__result {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  background: transparent;
+  border: 0;
+  border-radius: var(--app-radius-button-sm);
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--ref-color-grey-150);
+}
+
+.search-modal__result.is-highlighted {
+  background: var(--ref-color-grey-10);
+}
+
+.search-modal__result-title {
+  flex: 1 1 auto;
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.search-modal__result-meta {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--sys-icon-css-xs);
+  color: var(--ref-color-grey-60);
+  flex-shrink: 0;
+}
+
+.search-modal__empty {
+  padding: var(--ref-spacing-lg) var(--ref-spacing-md);
+  text-align: center;
+}
+
+.search-modal__empty-text {
+  font-size: var(--ref-font-size-sm);
+  color: var(--ref-color-grey-60);
+}
+
 .shortcut-legend {
   width: min(calc(100% - 32px), 480px);
 }
@@ -89,6 +214,7 @@ body.has-modal {
 .add-source-modal.open,
 .confirm-modal.open,
 .rename-modal.open,
+.search-modal.open,
 .shortcut-legend.open {
   display: flex;
   animation: app-modal-fade-in var(--ref-animation-normal) ease;

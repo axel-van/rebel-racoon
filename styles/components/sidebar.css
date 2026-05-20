@@ -171,14 +171,30 @@
   margin-left: auto;
 }
 
-/* ── Search input ─────────────────────────────────────────────────────
-   Wraps a stock DS .ap-input-group. The wrapper provides the sidebar-
-   side padding so the inner .ap-input-group can keep its DS-native
-   width: 100% without overflowing the sidebar (a margin on the input
-   group itself would let it grow past the sidebar's right edge). */
+/* Search row variant — first nav item, opens the search modal. The label
+   weight stays regular (vs other nav items' bold) so it reads as a
+   tertiary control: it's a verb, not a destination. The ⌘K hint sits
+   on the trailing edge in a subtle `<kbd>`-style pill. */
+.app-sidebar__nav-item--search {
+  font-weight: var(--ref-font-weight-regular);
+  color: var(--ref-color-grey-100);
+}
 
-.app-sidebar__search {
-  padding: 0 var(--ref-spacing-xs) var(--ref-spacing-xs);
+.app-sidebar__nav-kbd {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-white);
+  border: 1px solid var(--app-border-soft);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-80);
 }
 
 /* ── List ───────────────────────────────────────────────────────────── */

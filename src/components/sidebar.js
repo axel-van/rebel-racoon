@@ -5,6 +5,7 @@ import { open as openBugReportModal } from "./bug-report-modal.js?v=21";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=24";
 import { open as openConfirmModal } from "./confirm-modal.js?v=20";
 import { open as openRenameModal } from "./rename-modal.js?v=1";
+import { open as openSearchModal } from "./search-modal.js?v=1";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 import {
   getSessions,
@@ -39,11 +40,10 @@ import { clearSession as clearSourcesSession } from "../sources-stream.js?v=30";
 const COLLAPSED_KEY = "archie-sidebar-collapsed";
 
 let menuOpen = false;
-// Live filter query for the recent-conversations list. Updated as the user
-// types into the search input, drives the visible Pinned / Recent groups.
-// Kept module-local so it survives the re-renders triggered by route
-// changes / store subscriptions.
-let sidebarSearchQuery = "";
+
+// Search lives in a dedicated modal now (cf. ./search-modal.js — opened from
+// the Search… row in the top nav). The sidebar no longer carries an inline
+// `<input>` or a live filter query — opening the modal is the only path.
 
 // Rename is handled via the dedicated rename-modal, not inline edit.
 // (Earlier iteration tried inline title → input swap but the modal
@@ -104,6 +104,13 @@ export function initSidebar() {
       // would re-land on the same accumulated state — feels like a
       // toggle to the user.
       navigate(`/session/new-${Date.now().toString(36)}`);
+      return;
+    }
+    // Search… nav row — open the dedicated search modal (mirrors Claude's
+    // pattern). Captured before the generic `data-sidebar-nav` branch since
+    // the Search row intentionally isn't a route.
+    if (event.target.closest("[data-sidebar-search-open]")) {
+      openSearchModal();
       return;
     }
     const navItem = event.target.closest("[data-sidebar-nav]");
@@ -186,17 +193,6 @@ export function initSidebar() {
     if (event.target.closest("[data-sidebar-settings]")) {
       setMenuOpen(false);
       openSettingsDrawer();
-    }
-  });
-
-  // Search input — filter the recent / pinned lists as the user types.
-  // Re-renders only the list block (not the input), so the input keeps
-  // its focus and selection state across keystrokes.
-  el.addEventListener("input", (event) => {
-    const target = event.target;
-    if (target instanceof HTMLElement && target.matches("[data-sidebar-search]")) {
-      sidebarSearchQuery = target.value;
-      renderRecentListsOnly();
     }
   });
 
@@ -333,11 +329,7 @@ export function renderSidebar() {
 
     <nav class="app-sidebar__nav" aria-label="Library">${raw(renderNav(path))}</nav>
 
-    ${raw(renderSearchInput())}
-
-    <div class="app-sidebar__list" aria-label="Recent conversations">
-      ${raw(renderRecentLists(activeSessionId, sidebarSearchQuery))}
-    </div>
+    <div class="app-sidebar__list" aria-label="Recent conversations">${raw(renderRecentLists(activeSessionId))}</div>
 
     <div class="app-sidebar__foot">
       <div class="app-sidebar__user">
@@ -424,7 +416,24 @@ const NAV = [
 ];
 
 function renderNav(path) {
-  return NAV.filter((item) => item.path !== "/ideas" || isFlagOn("sidebarIdeas"))
+  // Search row sits at the top of the nav group (Claude-style). Not a
+  // route — clicking it opens the search modal via the
+  // `data-sidebar-search-open` delegate in initSidebar().
+  const searchItem = `
+    <button
+      type="button"
+      class="app-sidebar__nav-item app-sidebar__nav-item--search"
+      data-sidebar-search-open
+      aria-label="Search conversations"
+      title="Search conversations"
+    >
+      <i class="ap-icon-search"></i>
+      <span>Search…</span>
+      <kbd class="app-sidebar__nav-kbd" aria-hidden="true">⌘K</kbd>
+    </button>
+  `;
+
+  const routeItems = NAV.filter((item) => item.path !== "/ideas" || isFlagOn("sidebarIdeas"))
     .map((item) => {
       const count = item.count ? item.count() : 0;
       const counter = count > 0 ? `<span class="ap-counter normal grey">${count}</span>` : "";
@@ -441,47 +450,13 @@ function renderNav(path) {
     `;
     })
     .join("");
+
+  return searchItem + routeItems;
 }
 
-// Search input — visible only when the recent-conversations list has at
-// least one entry (otherwise it'd just be a dead control). Hidden in
-// isNewUser mode for the same reason. Markup mirrors the workspace
-// content toolbar pattern (cf. content-workspace.js): `.ap-input-group`
-// + leading icon + `<input>`.
-function renderSearchInput() {
-  if (isNewUser() || getSessions().length === 0) return "";
-  const value = sidebarSearchQuery ? sidebarSearchQuery.replace(/"/g, "&quot;") : "";
-  return `
-    <div class="app-sidebar__search">
-      <div class="ap-input-group">
-        <i class="ap-icon-search" aria-hidden="true"></i>
-        <input
-          type="text"
-          class="ap-input"
-          placeholder="Search…"
-          value="${value}"
-          data-sidebar-search
-          aria-label="Search conversations"
-        />
-      </div>
-    </div>
-  `;
-}
-
-// Render only the lists (Pinned + Recent) inside `.app-sidebar__list`.
-// Used by the search-input keystroke handler so the input's focus and
-// caret position survive the re-render.
-function renderRecentListsOnly() {
-  const list = document.querySelector(".app-sidebar__list");
-  if (!list) return;
-  const activeSessionId = matchSessionId(getPath());
-  list.innerHTML = renderRecentLists(activeSessionId, sidebarSearchQuery);
-}
-
-// Pinned + Recent groups, filtered by the live search query. Empty groups
-// are dropped (no orphan heading). When the filter matches nothing, an
-// empty-state message takes over the list.
-function renderRecentLists(activeSessionId, query) {
+// Pinned + Recent groups. Search lives in a dedicated modal now
+// (./search-modal.js) — the sidebar always renders the full list.
+function renderRecentLists(activeSessionId) {
   const allSessions = getSessions();
   if (isNewUser() || allSessions.length === 0) {
     // FIND-E4: first-run anchor for the recent-conversations list. The
@@ -499,19 +474,8 @@ function renderRecentLists(activeSessionId, query) {
       </div>
     `;
   }
-  const q = (query || "").trim().toLowerCase();
-  const filtered = q ? allSessions.filter((s) => s.name.toLowerCase().includes(q)) : allSessions;
-
-  const pinned = filtered.filter((s) => s.pinned);
-  const unpinned = filtered.filter((s) => !s.pinned);
-
-  if (pinned.length === 0 && unpinned.length === 0) {
-    return `
-      <div class="app-sidebar__empty">
-        <span class="app-sidebar__empty-text">No conversations match</span>
-      </div>
-    `;
-  }
+  const pinned = allSessions.filter((s) => s.pinned);
+  const unpinned = allSessions.filter((s) => !s.pinned);
 
   let out = "";
   if (pinned.length > 0) {
