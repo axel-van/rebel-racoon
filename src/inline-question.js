@@ -93,9 +93,14 @@ export function submitFile(sessionId, file) {
 export function skip(sessionId) {
   const s = states.get(sessionId);
   if (!s) return;
+  // Esc / Skip falls back to Back when the current step doesn't offer a
+  // skip (e.g. the URL / file / profile input steps that need *something*
+  // from the user — Back returns to the previous step rather than
+  // leaving the wizard in a dangling state).
+  const cb = s.onSkip || s.onBack;
   states.delete(sessionId);
   notify(sessionId);
-  s.onSkip?.();
+  cb?.();
 }
 
 // Back — same lifecycle as skip but for the multi-step wizard's

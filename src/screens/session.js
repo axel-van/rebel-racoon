@@ -30,8 +30,8 @@ import {
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
-import * as inlineQuestion from "../inline-question.js?v=23";
-import * as contextBuilder from "../context-builder.js?v=30";
+import * as inlineQuestion from "../inline-question.js?v=24";
+import * as contextBuilder from "../context-builder.js?v=31";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=27";
 import { renderSourceCard } from "../components/source-card.js?v=27";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";

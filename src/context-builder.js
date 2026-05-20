@@ -19,7 +19,7 @@
 // right-panel ContextForm read mode (openRead) stays for viewing existing
 // contexts that may still have the old shape.
 
-import * as inlineQuestion from "./inline-question.js?v=23";
+import * as inlineQuestion from "./inline-question.js?v=24";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=29";
 import * as rightPanel from "./components/right-panel.js?v=55";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=26";
@@ -217,7 +217,8 @@ function exitWithoutSave(sessionId) {
   notify(sessionId);
 }
 
-// Step 1a: Website URL (existing flow).
+// Step 1a: Website URL. No skip — the wizard needs something to analyse;
+// the back button is the way out (returns to source picker).
 function askUrl(sessionId) {
   const intro = "Got it — paste your website URL and I'll pull the brand voice, audience and visual identity from it.";
   postAssistantMessage(sessionId, intro);
@@ -227,9 +228,7 @@ function askUrl(sessionId) {
     items: [],
     customPlaceholder: "https://your-brand.com",
     onCustom: (value) => setUrl(sessionId, value),
-    onSkip: () => setUrl(sessionId, ""),
     onBack: () => askSource(sessionId),
-    skipLabel: "Skip",
   });
 }
 
@@ -243,9 +242,7 @@ function askProfileUrl(sessionId) {
     items: [],
     customPlaceholder: "linkedin.com/in/jdoe",
     onCustom: (value) => setUrl(sessionId, value),
-    onSkip: () => setUrl(sessionId, ""),
     onBack: () => askSource(sessionId),
-    skipLabel: "Skip",
   });
 }
 
@@ -264,9 +261,7 @@ function askDocument(sessionId) {
     customFileHint: "PDF · DOCX · TXT — max 10 MB",
     customFileIcon: "ap-icon-upload",
     onFile: (file) => setFile(sessionId, file),
-    onSkip: () => setFile(sessionId, null),
     onBack: () => askSource(sessionId),
-    skipLabel: "Skip",
   });
 }
 
