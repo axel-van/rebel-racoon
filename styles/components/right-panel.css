@@ -877,6 +877,63 @@
   display: none;
 }
 
+/* Each of the 3 groups (Audience / Voice profile / Branding) wraps its
+   header + cards in a `<section>`. This containment is what enables the
+   iOS Settings "push-out" sticky behavior — without a parent container,
+   sibling sticky headers all stack at top: 0. The group container scopes
+   each sticky header so it scrolls out when its group's content ends. */
+.context-brief__group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+}
+
+/* Group header — inline band that introduces the next set of cards in
+   the brief panel (Audience / Voice profile / Branding). Sticky at the
+   top of the scroll body so the user always knows which group they're
+   in while scrolling (iOS Settings pattern). */
+.context-brief__group-header {
+  position: sticky;
+  top: calc(
+    var(--ref-spacing-md) * -1
+  ); /* cancel the body's padding-top so the band sits flush against the scroll viewport top */
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  margin: 0;
+  padding: var(--ref-spacing-sm) 0 var(--ref-spacing-xs);
+  background: var(--ref-color-grey-05);
+  border-bottom: 1px solid var(--ref-color-grey-10);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ref-color-grey-100);
+  width: 100%;
+  max-width: 640px;
+}
+
+.context-brief__group-header > i {
+  font-size: var(--ref-font-size-sm);
+  color: var(--ref-color-grey-80);
+}
+
+.context-brief__group-header:first-of-type {
+  padding-top: 0;
+}
+
+/* The voice profile card already has its own internal header (chevron +
+   megaphone + h3). Now that a "VOICE PROFILE" sticky band sits right
+   above the card, the internal label + icon are redundant — hide them
+   but keep the chevron-collapse button so the card stays collapsible. */
+.context-brief__voice-profile .context-brief__vp-header > .context-brief__title,
+.context-brief__voice-profile .context-brief__vp-icon {
+  display: none;
+}
+
 .context-brief__intro-text {
   margin: 0;
   color: var(--ref-color-grey-80);

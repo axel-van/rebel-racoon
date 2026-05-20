@@ -1980,10 +1980,16 @@ function renderContextBriefView() {
   // Read mode reads from a persisted Context; edit mode from the draft.
   const d = isRead ? readBriefFromCtx(contextBriefConfig.getCtx?.()) : contextBriefConfig.getDraft?.() || {};
   const chipProps = (cfg) => ({ ...cfg, isRead });
-  const sections = [
-    isRead ? "" : renderBriefIntro(),
-    isRead ? renderBriefSummaryRead(d) : renderBriefName(d),
-    isRead ? "" : renderBriefBusinessSummary(d),
+  // Identité du panel — hors groupes. En read mode le nom du contexte est
+  // dans le header du right panel, donc on saute renderBriefName.
+  const nonGroupedTop = [isRead ? "" : renderBriefIntro(), isRead ? "" : renderBriefName(d)].filter(Boolean);
+
+  // Chaque groupe a son propre conteneur. C'est essentiel pour le sticky
+  // push-out style iOS Settings : un sticky header siblings au même `top:
+  // 0` se stack, alors qu'un sticky header borné par son groupe parent
+  // est "poussé" hors écran quand le groupe suivant arrive.
+  const audienceCards = [
+    isRead ? renderBriefSummaryRead(d) : renderBriefBusinessSummary(d),
     renderBriefChips(
       chipProps({
         field: "audience",
@@ -1998,7 +2004,6 @@ function renderContextBriefView() {
         warningCount: 0,
       }),
     ),
-    renderBriefVoiceProfile(d, isRead),
     renderBriefChips(
       chipProps({
         field: "contentStyle",
@@ -2048,8 +2053,27 @@ function renderContextBriefView() {
       suggested: d.suggestions?.language || "",
       isRead,
     }),
-    isRead ? renderBriefColor(d, isRead) : "",
-    renderBriefImageVoice(d),
+  ].filter(Boolean);
+
+  const voiceCards = [renderBriefVoiceProfile(d, isRead)].filter(Boolean);
+
+  const brandingCards = [isRead ? renderBriefColor(d, isRead) : "", renderBriefImageVoice(d)].filter(Boolean);
+
+  const renderGroup = (id, label, icon, cards) =>
+    cards.length
+      ? `
+        <section class="context-brief__group" data-brief-group="${id}">
+          ${renderBriefGroupHeader({ id, label, icon })}
+          ${cards.join("")}
+        </section>
+      `
+      : "";
+
+  const sections = [
+    ...nonGroupedTop,
+    renderGroup("audience", "Audience", "ap-icon-target", audienceCards),
+    renderGroup("voice", "Voice profile", "ap-icon-megaphone", voiceCards),
+    renderGroup("branding", "Branding", "ap-icon-view-grid", brandingCards),
   ].filter(Boolean);
   const footer = isRead
     ? `
@@ -2084,6 +2108,21 @@ function renderContextBriefView() {
     <div class="context-brief ${isRead ? "context-brief--read" : ""}">
       <div class="context-brief__body">${sections.join("")}</div>
       ${footer}
+    </div>
+  `;
+}
+
+// Group header — sticky uppercase label inserted between the three logical
+// groups of the brief panel (Audience / Voice profile / Branding). Not a
+// card — just a horizontal band that introduces the next set of cards and
+// stays pinned at the top of the scroll body while the user reads its
+// group (iOS Settings style). See `renderContextBriefView` for the
+// section ordering.
+function renderBriefGroupHeader({ id, label, icon }) {
+  return `
+    <div class="context-brief__group-header" data-brief-group="${escapeAttr(id)}">
+      <i class="${escapeAttr(icon)}"></i>
+      <span class="context-brief__group-label">${escapeText(label)}</span>
     </div>
   `;
 }
