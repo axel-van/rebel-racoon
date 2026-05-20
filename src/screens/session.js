@@ -256,64 +256,55 @@ function renderAssistantPanel(session, attachedContext) {
               <span class="session__composer-thinking-spinner" aria-hidden="true"></span>
               <span class="session__composer-thinking-text" data-thinking-text>0s · 1 credit</span>
             </div>
-            <div class="session__composer-context-row">
+            <div class="session__composer-toolbar">
               ${raw(renderComposerContextDropdown(attachedContext, { locked: hasUserMessage }))}
+              <div class="assistant-attach">
+                <button
+                  type="button"
+                  class="ap-button stroked grey assistant-attach__trigger"
+                  aria-label="Attach files"
+                  data-assistant-attach-toggle
+                >
+                  <i class="ap-icon-paper-clip"></i>
+                  <span>Attach files</span>
+                </button>
+                <div class="ap-action-dropdown assistant-attach__menu" data-assistant-attach-menu hidden role="menu">
+                  <button type="button" class="ap-action-dropdown-item" data-add-source="pdf" role="menuitem">
+                    <i class="ap-icon-file--pdf"></i>
+                    <div class="ap-action-dropdown-item-text">
+                      <div class="ap-action-dropdown-item-label">Add PDF</div>
+                    </div>
+                  </button>
+                  <button type="button" class="ap-action-dropdown-item" data-add-source="video" role="menuitem">
+                    <i class="ap-icon-file--video"></i>
+                    <div class="ap-action-dropdown-item-text">
+                      <div class="ap-action-dropdown-item-label">Add video</div>
+                    </div>
+                  </button>
+                  <button type="button" class="ap-action-dropdown-item" data-add-source="url" role="menuitem">
+                    <i class="ap-icon-link"></i>
+                    <div class="ap-action-dropdown-item-text">
+                      <div class="ap-action-dropdown-item-label">Add URL</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
             </div>
             <div class="session__composer-input">
               <textarea
                 class="session__composer-input-field"
                 id="assistantInput"
-                placeholder="Ask Archie to compare ideas, find a signal, or draft the next move…"
+                placeholder="ask archie..."
                 rows="3"
               ></textarea>
-              <div class="session__composer-actions">
-                <div class="composer-actions__left">
-                  <div class="assistant-attach">
-                    <button
-                      type="button"
-                      class="ap-icon-button transparent"
-                      aria-label="Attach a source"
-                      title="Attach a source"
-                      data-assistant-attach-toggle
-                    >
-                      <i class="ap-icon-paper-clip"></i>
-                    </button>
-                    <div
-                      class="ap-action-dropdown assistant-attach__menu"
-                      data-assistant-attach-menu
-                      hidden
-                      role="menu"
-                    >
-                      <button type="button" class="ap-action-dropdown-item" data-add-source="pdf" role="menuitem">
-                        <i class="ap-icon-file--pdf"></i>
-                        <div class="ap-action-dropdown-item-text">
-                          <div class="ap-action-dropdown-item-label">Add PDF</div>
-                        </div>
-                      </button>
-                      <button type="button" class="ap-action-dropdown-item" data-add-source="video" role="menuitem">
-                        <i class="ap-icon-file--video"></i>
-                        <div class="ap-action-dropdown-item-text">
-                          <div class="ap-action-dropdown-item-label">Add video</div>
-                        </div>
-                      </button>
-                      <button type="button" class="ap-action-dropdown-item" data-add-source="url" role="menuitem">
-                        <i class="ap-icon-link"></i>
-                        <div class="ap-action-dropdown-item-text">
-                          <div class="ap-action-dropdown-item-label">Add URL</div>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  class="ap-button primary orange session__composer-send"
-                  aria-label="Send"
-                  data-assistant-send
-                >
-                  <i class="ap-icon-arrow-up"></i>
-                </button>
-              </div>
+              <button
+                type="button"
+                class="ap-button primary orange session__composer-send"
+                aria-label="Send"
+                data-assistant-send
+              >
+                <i class="ap-icon-arrow-up"></i>
+              </button>
             </div>
             <div class="session__composer-hint">
               <kbd>↵</kbd> to send · <kbd>Shift</kbd>+<kbd>↵</kbd> for new line · <kbd>⌘</kbd>+<kbd>↵</kbd> sends from
@@ -340,6 +331,18 @@ function renderAssistantPanel(session, attachedContext) {
 // chevron) so the user can read it but can't swap it. Swapping mid-chat
 // would invalidate the citations / drafts already produced under the
 // original context.
+// The DS doesn't ship a plain --ref-color-blue-* family — its blue is
+// split across electric-blue / soft-blue / bluesky. Map the legacy "blue"
+// context color (used by ctx-founder-voice in the mocks) to electric-blue,
+// the same alias the sidebar uses (styles/components/sidebar.css:277).
+// Without this mapping, `var(--ref-color-blue-100)` silently resolves to
+// transparent and the dot vanishes.
+const CONTEXT_DOT_TOKEN = { blue: "electric-blue" };
+function dotColorVar(colorName) {
+  const token = CONTEXT_DOT_TOKEN[colorName] || colorName || "grey";
+  return `var(--ref-color-${token}-100)`;
+}
+
 function renderComposerContextDropdown(attachedContext, { locked = false } = {}) {
   const all = getContexts();
   const triggerColor = attachedContext?.color || "grey";
@@ -358,7 +361,7 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
           aria-label="Context (locked for this chat)"
           title="The context is locked once the conversation has started."
         >
-          <span class="composer-context__dot" style="background: var(--ref-color-${escapeHtml(triggerColor)}-100);"></span>
+          <span class="composer-context__dot" style="background: ${dotColorVar(triggerColor)};"></span>
           <span class="ap-select-inline-label">Context</span>
           <span>${escapeHtml(triggerLabel)}</span>
         </span>
@@ -381,7 +384,7 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
           data-context-id="${escapeHtml(c.id)}"
           role="option"
         >
-          <span class="composer-context__dot" style="background: var(--ref-color-${escapeHtml(color)}-100);"></span>
+          <span class="composer-context__dot" style="background: ${dotColorVar(color)};"></span>
           <span class="ap-select-option-text">${escapeHtml(c.name)}</span>
           ${isSelected ? `<i class="ap-icon-check ap-select-option-check"></i>` : ""}
         </button>
@@ -392,7 +395,7 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
     ? `
         <div class="ap-select-divider"></div>
         <button type="button" class="ap-select-option" data-context-id="__detach__" role="option">
-          <span class="composer-context__dot" style="background: var(--ref-color-grey-100);"></span>
+          <i class="ap-icon-close ap-select-option-icon"></i>
           <span class="ap-select-option-text">No context</span>
         </button>
       `
@@ -401,7 +404,7 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
   return `
     <details class="ap-select composer-context-select" data-composer-context>
       <summary class="ap-select-trigger">
-        <span class="composer-context__dot" data-context-dot style="background: var(--ref-color-${escapeHtml(triggerColor)}-100);"></span>
+        <span class="composer-context__dot" data-context-dot style="background: ${dotColorVar(triggerColor)};"></span>
         <span class="ap-select-inline-label">Context</span>
         <span class="ap-select-value" data-context-label>${escapeHtml(triggerLabel)}</span>
         <i class="ap-icon-chevron-down ap-select-arrow"></i>
