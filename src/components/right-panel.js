@@ -239,6 +239,10 @@ export function closePanel() {
     contextFormConfig?.onCancel?.();
     contextFormConfig = null;
   }
+  if (state.mode === "context-brief") {
+    contextBriefConfig?.onCancel?.();
+    contextBriefConfig = null;
+  }
   state = { ...state, mode: null };
   if (unsubscribeActiveThread) {
     unsubscribeActiveThread();
@@ -287,14 +291,17 @@ export function closeContextFormSilently() {
   notify();
 }
 
-// V1 brief-builder panel — opens a side-by-side scrollable form populated
-// from a mocked website analysis. Caller (context-builder) owns the draft
-// state and supplies callbacks for each interactive surface (chips, CTA
-// checkboxes, name, save, cancel).
+// V1 brief-builder panel — opens a side-by-side scrollable form. Two
+// modes:
+//   - edit (default): caller owns the draft state and supplies callbacks
+//     for chips, CTA checkboxes, name, save, cancel.
+//   - read: read-only view of an existing Context. getCtx() returns the
+//     persisted Context. onEnterEdit fires when the user clicks "Edit"
+//     in the footer (typically routes through contextBuilder.startEdit).
 let contextBriefConfig = null;
 export function openContextBriefPanel(config = {}) {
   const prev = state.mode;
-  contextBriefConfig = { ...config };
+  contextBriefConfig = { mode: "edit", ...config };
   state = { ...state, mode: "context-brief" };
   maybeCollapseSidebarOnOpen(prev);
   renderPanel();
@@ -725,6 +732,10 @@ export function init() {
       closePanel();
       return;
     }
+    if (event.target.closest("[data-brief-edit-mode]")) {
+      contextBriefConfig?.onEnterEdit?.();
+      return;
+    }
   });
   el.addEventListener("change", (event) => {
     if (event.target.matches("[data-rpanel-drafts-network-select]")) {
@@ -934,8 +945,13 @@ function renderPanel() {
     }
   } else if (state.mode === "context-brief") {
     titleIcon = "ap-icon-target";
-    const draft = contextBriefConfig?.getDraft?.();
-    titleText = draft?.name?.trim() || "Define your content brief";
+    if (contextBriefConfig?.mode === "read") {
+      const ctx = contextBriefConfig.getCtx?.();
+      titleText = ctx?.name || "Context";
+    } else {
+      const draft = contextBriefConfig?.getDraft?.();
+      titleText = draft?.name?.trim() || "Define your content brief";
+    }
   }
   // The context-form / context-brief views manage their own scrolling body
   // + sticky footer (so Save sits flush at the bottom). Drafts/Ideas/Sources
@@ -1931,114 +1947,181 @@ const ACTION_FALLBACKS = ["Visit the website", "Download a resource", "Join the 
 
 function renderContextBriefView() {
   if (!contextBriefConfig) return "";
-  const d = contextBriefConfig.getDraft?.() || {};
+  const isRead = contextBriefConfig.mode === "read";
+  // Read mode reads from a persisted Context; edit mode from the draft.
+  const d = isRead ? readBriefFromCtx(contextBriefConfig.getCtx?.()) : contextBriefConfig.getDraft?.() || {};
+  const chipProps = (cfg) => ({ ...cfg, isRead });
   const sections = [
-    renderBriefIntro(),
-    renderBriefName(d),
-    renderBriefBusinessSummary(d),
-    renderBriefChips({
-      field: "audience",
-      title: "Who is your primary audience?",
-      hint: "Archie will tailor post topics and framing to speak directly to them.",
-      fromWeb: true,
-      suggestions: d.suggestions?.audience || [],
-      fallback: [],
-      values: d.audience || [],
-      customs: d.customAdditions?.audience || [],
-      otherPlaceholder: "Describe your audience…",
-      warningCount: 0,
-    }),
-    renderBriefChips({
-      field: "audienceProblems",
-      title: "What problems does your audience face?",
-      hint: "Archie will craft posts that resonate with their real frustrations.",
-      fromWeb: true,
-      suggestions: d.suggestions?.audienceProblems || [],
-      fallback: [],
-      values: d.audienceProblems || [],
-      customs: d.customAdditions?.audienceProblems || [],
-      otherPlaceholder: "Describe the main challenge…",
-      warningCount:
-        (d.suggestions?.audienceProblems || []).length >= 20 ? (d.suggestions?.audienceProblems || []).length : 0,
-    }),
-    renderBriefChips({
-      field: "tones",
-      title: "What's your brand's tone of voice?",
-      hint: "This shapes how Archie writes — word choice, energy, and style.",
-      fromWeb: true,
-      suggestions: d.suggestions?.tones || [],
-      fallback: TONE_FALLBACKS,
-      values: d.tones || [],
-      customs: d.customAdditions?.tones || [],
-      otherPlaceholder: "Describe your tone…",
-    }),
-    renderBriefChips({
-      field: "contentStyle",
-      title: "What content style fits your brand?",
-      hint: "This guides the structure and format of every post Archie writes.",
-      fromWeb: true,
-      suggestions: d.suggestions?.contentStyle || [],
-      fallback: STYLE_FALLBACKS,
-      values: d.contentStyle || [],
-      customs: d.customAdditions?.contentStyle || [],
-      otherPlaceholder: "Describe your style…",
-    }),
-    renderBriefChips({
-      field: "objective",
-      title: "What's your primary social media objective?",
-      hint: "Archie will prioritize content angles that serve this goal.",
-      fromWeb: true,
-      suggestions: d.suggestions?.objective || [],
-      fallback: OBJECTIVE_FALLBACKS,
-      values: d.objective || [],
-      customs: d.customAdditions?.objective || [],
-      otherPlaceholder: "Describe your objective…",
-    }),
-    renderBriefChips({
-      field: "contentAction",
-      title: "What action should your content drive?",
-      hint: "Archie will include relevant CTAs aligned with this action.",
-      fromWeb: true,
-      suggestions: d.suggestions?.contentAction || [],
-      fallback: ACTION_FALLBACKS,
-      values: d.contentAction || [],
-      customs: d.customAdditions?.contentAction || [],
-      otherPlaceholder: "Describe the action…",
-    }),
-    renderBriefCtaList(d),
+    isRead ? "" : renderBriefIntro(),
+    isRead ? renderBriefSummaryRead(d) : renderBriefName(d),
+    isRead ? "" : renderBriefBusinessSummary(d),
+    renderBriefChips(
+      chipProps({
+        field: "audience",
+        title: "Who is your primary audience?",
+        hint: "Archie will tailor post topics and framing to speak directly to them.",
+        fromWeb: true,
+        suggestions: d.suggestions?.audience || [],
+        fallback: [],
+        values: d.audience || [],
+        customs: d.customAdditions?.audience || [],
+        otherPlaceholder: "Describe your audience…",
+        warningCount: 0,
+      }),
+    ),
+    renderBriefChips(
+      chipProps({
+        field: "audienceProblems",
+        title: "What problems does your audience face?",
+        hint: "Archie will craft posts that resonate with their real frustrations.",
+        fromWeb: true,
+        suggestions: d.suggestions?.audienceProblems || [],
+        fallback: [],
+        values: d.audienceProblems || [],
+        customs: d.customAdditions?.audienceProblems || [],
+        otherPlaceholder: "Describe the main challenge…",
+        warningCount:
+          !isRead && (d.suggestions?.audienceProblems || []).length >= 20
+            ? (d.suggestions?.audienceProblems || []).length
+            : 0,
+      }),
+    ),
+    renderBriefChips(
+      chipProps({
+        field: "tones",
+        title: "What's your brand's tone of voice?",
+        hint: "This shapes how Archie writes — word choice, energy, and style.",
+        fromWeb: true,
+        suggestions: d.suggestions?.tones || [],
+        fallback: TONE_FALLBACKS,
+        values: d.tones || [],
+        customs: d.customAdditions?.tones || [],
+        otherPlaceholder: "Describe your tone…",
+      }),
+    ),
+    renderBriefChips(
+      chipProps({
+        field: "contentStyle",
+        title: "What content style fits your brand?",
+        hint: "This guides the structure and format of every post Archie writes.",
+        fromWeb: true,
+        suggestions: d.suggestions?.contentStyle || [],
+        fallback: STYLE_FALLBACKS,
+        values: d.contentStyle || [],
+        customs: d.customAdditions?.contentStyle || [],
+        otherPlaceholder: "Describe your style…",
+      }),
+    ),
+    renderBriefChips(
+      chipProps({
+        field: "objective",
+        title: "What's your primary social media objective?",
+        hint: "Archie will prioritize content angles that serve this goal.",
+        fromWeb: true,
+        suggestions: d.suggestions?.objective || [],
+        fallback: OBJECTIVE_FALLBACKS,
+        values: d.objective || [],
+        customs: d.customAdditions?.objective || [],
+        otherPlaceholder: "Describe your objective…",
+      }),
+    ),
+    renderBriefChips(
+      chipProps({
+        field: "contentAction",
+        title: "What action should your content drive?",
+        hint: "Archie will include relevant CTAs aligned with this action.",
+        fromWeb: true,
+        suggestions: d.suggestions?.contentAction || [],
+        fallback: ACTION_FALLBACKS,
+        values: d.contentAction || [],
+        customs: d.customAdditions?.contentAction || [],
+        otherPlaceholder: "Describe the action…",
+      }),
+    ),
+    renderBriefCtaList(d, isRead),
     renderBriefSinglePick({
       field: "language",
-      title: "Select a language for ideas and posts",
-      hint: "Archie will write in this language.",
+      title: isRead ? "Language" : "Select a language for ideas and posts",
+      hint: isRead ? "" : "Archie will write in this language.",
       options: LANGUAGE_OPTIONS,
       value: d.language || "English",
       suggested: d.suggestions?.language || "",
+      isRead,
     }),
-    renderBriefColor(d),
-  ];
+    renderBriefColor(d, isRead),
+  ].filter(Boolean);
+  const footer = isRead
+    ? `
+        <footer class="context-brief__footer">
+          <span class="context-brief__footer-spacer"></span>
+          <button type="button" class="ap-button stroked grey" data-rpanel-close>
+            <span>Close</span>
+          </button>
+          <button type="button" class="ap-button primary orange" data-brief-edit-mode>
+            <i class="ap-icon-pen"></i>
+            <span>Edit</span>
+          </button>
+        </footer>
+      `
+    : `
+        <footer class="context-brief__footer">
+          <button type="button" class="ap-button stroked grey" data-brief-cancel aria-label="Cancel">
+            <span>Cancel</span>
+          </button>
+          <button
+            type="button"
+            class="ap-button mermaid"
+            data-brief-save
+            ${(d.name || "").trim() ? "" : "disabled"}
+          >
+            <i class="ap-icon-sparkles-mermaid"></i>
+            <span>Generate my brief</span>
+          </button>
+        </footer>
+      `;
   return `
-    <div class="context-brief">
-      <div class="context-brief__body">${sections.join('<hr class="ap-divider" />')}</div>
-      <footer class="context-brief__footer">
-        <button
-          type="button"
-          class="ap-button stroked grey"
-          data-brief-cancel
-          aria-label="Cancel"
-        >
-          <span>Cancel</span>
-        </button>
-        <button
-          type="button"
-          class="ap-button mermaid"
-          data-brief-save
-          ${(d.name || "").trim() ? "" : "disabled"}
-        >
-          <i class="ap-icon-sparkles-mermaid"></i>
-          <span>Generate my brief</span>
-        </button>
-      </footer>
+    <div class="context-brief ${isRead ? "context-brief--read" : ""}">
+      <div class="context-brief__body">${sections.join("")}</div>
+      ${footer}
     </div>
+  `;
+}
+
+// Map a persisted Context into the shape the brief renderer expects.
+// Legacy seeds may have briefSummary instead of businessSummary, or
+// audience as a string instead of an array — normalize both.
+function readBriefFromCtx(ctx) {
+  if (!ctx) return {};
+  return {
+    name: ctx.name || "",
+    websiteUrl: ctx.websiteUrl || "",
+    businessSummary: ctx.businessSummary || ctx.briefSummary || "",
+    audience: Array.isArray(ctx.audience) ? ctx.audience : ctx.audience ? [ctx.audience] : [],
+    audienceProblems: Array.isArray(ctx.audienceProblems) ? ctx.audienceProblems : [],
+    tones: Array.isArray(ctx.tones) ? ctx.tones : [],
+    contentStyle: Array.isArray(ctx.contentStyle) ? ctx.contentStyle : [],
+    objective: Array.isArray(ctx.objective) ? ctx.objective : [],
+    contentAction: Array.isArray(ctx.contentAction) ? ctx.contentAction : [],
+    ctaLinks: Array.isArray(ctx.ctaLinks)
+      ? ctx.ctaLinks
+      : ctx.cta
+        ? [{ label: ctx.cta, url: ctx.cta, checked: true }]
+        : [],
+    language: ctx.language || "English",
+    color: ctx.color || "orange",
+    suggestions: {},
+    customAdditions: {},
+  };
+}
+
+function renderBriefSummaryRead(d) {
+  if (!d.businessSummary) return "";
+  return `
+    <section class="context-brief__section">
+      <h3 class="context-brief__title">Business summary</h3>
+      ${d.websiteUrl ? `<p class="context-brief__hint">${escapeText(d.websiteUrl)}</p>` : ""}
+      <p class="context-brief__readonly-text">${escapeText(d.businessSummary)}</p>
+    </section>
   `;
 }
 
@@ -2100,9 +2183,24 @@ function renderBriefChips({
   customs,
   otherPlaceholder,
   warningCount,
+  isRead,
 }) {
+  // Read mode: only show the SELECTED values (chip pills, non-interactive).
+  // Hide the entire section if nothing is selected — keeps the read view
+  // honest about what's actually in this context.
+  if (isRead) {
+    if (!values || values.length === 0) return "";
+    const chips = values
+      .map((v) => `<span class="ap-tag blue context-brief__chip-readonly">${escapeText(v)}</span>`)
+      .join("");
+    return `
+      <section class="context-brief__section">
+        <h3 class="context-brief__title">${escapeText(title)}</h3>
+        <div class="context-brief__chips">${chips}</div>
+      </section>
+    `;
+  }
   const valuesSet = new Set(values || []);
-  const suggestionsSet = new Set(suggestions || []);
   // Render order: suggestions first (menthol/green), then fallback (grey/blue), then customs (always blue).
   const seen = new Set();
   const chipNodes = [];
@@ -2188,8 +2286,28 @@ function renderBriefChip(field, value, selected, suggested) {
   `;
 }
 
-function renderBriefCtaList(d) {
+function renderBriefCtaList(d, isRead) {
   const ctas = d.ctaLinks || [];
+  if (isRead) {
+    const active = ctas.filter((l) => l.checked);
+    if (active.length === 0) return "";
+    const items = active
+      .map(
+        (cta) => `
+          <li class="context-brief__cta-readonly">
+            <span class="context-brief__cta-label">${escapeText(cta.label)}</span>
+            <span class="context-brief__cta-url">${escapeText(cta.url)}</span>
+          </li>
+        `,
+      )
+      .join("");
+    return `
+      <section class="context-brief__section">
+        <h3 class="context-brief__title">CTA links</h3>
+        <ul class="context-brief__cta-readonly-list">${items}</ul>
+      </section>
+    `;
+  }
   const cards = ctas
     .map((cta) => {
       const checked = cta.checked ? "checked" : "";
@@ -2214,7 +2332,18 @@ function renderBriefCtaList(d) {
   `;
 }
 
-function renderBriefSinglePick({ field, title, hint, options, value, suggested }) {
+function renderBriefSinglePick({ field, title, hint, options, value, suggested, isRead }) {
+  if (isRead) {
+    if (!value) return "";
+    return `
+      <section class="context-brief__section">
+        <h3 class="context-brief__title">${escapeText(title)}</h3>
+        <div class="context-brief__chips">
+          <span class="ap-tag blue context-brief__chip-readonly">${escapeText(value)}</span>
+        </div>
+      </section>
+    `;
+  }
   const chips = options
     .map((opt) => {
       const isSelected = opt === value;
@@ -2242,8 +2371,22 @@ function renderBriefSinglePick({ field, title, hint, options, value, suggested }
   `;
 }
 
-function renderBriefColor(d) {
+function renderBriefColor(d, isRead) {
   const value = d.color || "orange";
+  if (isRead) {
+    return `
+      <section class="context-brief__section">
+        <h3 class="context-brief__title">Color tag</h3>
+        <div class="context-brief__color-swatches">
+          <span
+            class="context-brief__color-swatch is-selected context-brief__color-swatch--readonly"
+            style="background: var(--ref-color-${value === "blue" ? "electric-blue" : value}-100);"
+            aria-label="${value}"
+          ></span>
+        </div>
+      </section>
+    `;
+  }
   const swatches = COLOR_SWATCHES.map((c) => {
     const isSelected = c === value;
     return `

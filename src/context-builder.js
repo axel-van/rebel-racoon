@@ -21,7 +21,7 @@
 
 import * as inlineQuestion from "./inline-question.js?v=21";
 import { postAssistantMessage, postUserTurn } from "./assistant.js?v=27";
-import * as rightPanel from "./components/right-panel.js?v=45";
+import * as rightPanel from "./components/right-panel.js?v=46";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=25";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=20";
 
@@ -100,11 +100,13 @@ export function start(sessionId, { onComplete } = {}) {
   askUrl(sessionId);
 }
 
-// Open the right-panel context-form on an existing context in read mode.
-// (Read mode still uses the legacy ContextForm renderer — it knows how to
-// display both the old shape and the new V1 fields.)
+// Open the right-panel brief panel in read mode for an existing context.
+// Same card-per-section layout as the brief builder — just read-only
+// (selected chips only, no Other inputs, footer = Close + Edit). Legacy
+// fields (briefSummary, plain-string audience, single cta) are normalized
+// inside readBriefFromCtx in right-panel.js.
 export function openRead(contextId) {
-  rightPanel.openContextForm({
+  rightPanel.openContextBriefPanel({
     mode: "read",
     getCtx: () => getContextById(contextId),
     onEnterEdit: () => startEdit(contextId),

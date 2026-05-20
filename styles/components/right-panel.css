@@ -967,3 +967,53 @@
   border-top: 1px solid var(--ref-color-grey-10);
   background: var(--ref-color-white);
 }
+
+/* Read-mode brief panel — only selected values are shown, displayed as
+   chip pills with no toggle affordance. */
+.context-brief--read .context-brief__chip-readonly {
+  cursor: default;
+  pointer-events: none;
+}
+
+.context-brief--read .context-brief__color-swatch--readonly {
+  cursor: default;
+  border-color: var(--ref-color-grey-150);
+}
+
+.context-brief__readonly-text {
+  margin: 0;
+  color: var(--ref-color-grey-100);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  white-space: pre-wrap;
+}
+
+.context-brief__cta-readonly-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.context-brief__cta-readonly {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--ref-spacing-xxs) 0;
+}
+
+.context-brief__cta-label {
+  color: var(--ref-color-grey-150);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.context-brief__cta-url {
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-xs);
+}
+
+.context-brief__footer-spacer {
+  flex: 1;
+}
