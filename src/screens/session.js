@@ -306,10 +306,10 @@ function renderAssistantPanel(session, attachedContext) {
                 </div>
               </div>
             </div>
-            <div class="session__composer-hint">
-              <kbd>↵</kbd> to send · <kbd>Shift</kbd>+<kbd>↵</kbd> for new line · <kbd>⌘</kbd>+<kbd>↵</kbd> sends from
-              anywhere · drop a file anywhere to add it as a source
-            </div>
+          </div>
+          <div class="session__composer-hint">
+            <kbd>↵</kbd> to send · <kbd>Shift</kbd>+<kbd>↵</kbd> for new line · <kbd>⌘</kbd>+<kbd>↵</kbd> sends from
+            anywhere · drop a file anywhere to add it as a source
           </div>
         </div>
       </div>

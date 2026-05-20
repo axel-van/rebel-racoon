@@ -594,29 +594,28 @@
   pointer-events: none;
 }
 
-/* Composer card — wraps the input + toolbar + hint as one visually
-   distinct surface that sits above the chat. A subtle grey-05 fill +
-   1px border lifts the whole zone off the white thread background so
-   the composer reads as a tool, not as more chat. */
+/* Composer card — wraps the input + toolbar as one visually distinct
+   surface that sits above the chat. grey-05 fill + 1px grey-10 border
+   matches Figma 278:1852 (ref-border-radius-md, no padding — inner
+   sections own their own spacing). The hint row sits OUTSIDE this
+   card so it floats under the card surface. */
 .session__composer-card {
   background: var(--ref-color-grey-05);
-  border: 1px solid var(--app-border-soft);
-  border-radius: var(--app-radius-modal);
-  padding: var(--ref-spacing-sm);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: var(--ref-border-radius-md);
   display: flex;
   flex-direction: column;
 }
 
-/* Composer input shell — handoff calls for radius 16, 1.5px border, 12px
-   pad, white bg. Border softens to grey-10 (matches the rest of the
-   chrome) and lifts to electric-blue-100 on focus.
-   `position: relative` anchors the absolute-positioned send button at
-   the top-right corner of the input area. */
+/* Composer input shell — Figma 278:1689 (Form-Textarea). White bg, 1px
+   grey-20 border, 8px radius, 9px/12px padding. `position: relative`
+   anchors the absolute-positioned send button at the bottom-right of
+   the input area. */
 .session__composer-input {
-  background: var(--app-surface);
-  border: 1.5px solid var(--app-border-soft);
-  border-radius: var(--app-radius-modal);
-  padding: var(--ref-spacing-xs);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 8px;
+  padding: 9px var(--ref-spacing-xs);
   position: relative;
 }
 
@@ -913,13 +912,11 @@
 
 /* ---------- Composer context (Zone 2 — DS .ap-select above the textarea) -- */
 
-/* Toolbar row below the textarea: hosts the context picker on the left
-   and the "Attach files" button on the right. Both buttons sit at their
-   natural width with a small gap between them. Padding gives breathing
-   room from the input above; the hint row follows below with its own
-   margin. */
+/* Toolbar row below the textarea — Figma 280:1146. Buttons (context
+   picker on the left, Attach files on the right) sit inside an 8px
+   padded wrapper, with 12px gap between them. */
 .session__composer-toolbar {
-  padding: var(--ref-spacing-sm) var(--ref-spacing-xxs) 0;
+  padding: var(--ref-spacing-xxs);
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
