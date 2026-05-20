@@ -144,15 +144,15 @@
   background: var(--ref-color-grey-10);
 }
 
-/* Show the DS icon back — it carries meaning (web globe / pdf / users). */
-.session__assistant-wizard-bar .analyse__option-icon:not(:has(img)) {
-  display: inline-flex;
-}
-
 /* Align the number badge and the icon container — both are 28×28 squares
    with the same radius so they read as a paired leading-glyph unit. The
    badge keeps its border (it's the focus anchor); the icon container
-   stays borderless so it doesn't compete with the badge. */
+   stays borderless so it doesn't compete with the badge.
+
+   `display: grid; place-items: center` (inherited from the base
+   .analyse__option-icon rule) does the actual centering. We don't
+   re-declare `display: inline-flex` here because that would drop the
+   centering and offset the glyph to the top-left of the container. */
 .session__assistant-wizard-bar .analyse__option-shortcut {
   flex-shrink: 0;
   width: 28px;
@@ -164,6 +164,7 @@
 .session__assistant-wizard-bar .analyse__option-icon {
   width: 28px;
   height: 28px;
+  min-width: 28px;
   border-radius: var(--app-radius-sm);
   background: var(--ref-color-grey-05);
   color: var(--ref-color-grey-100);
@@ -171,6 +172,7 @@
 
 .session__assistant-wizard-bar .analyse__option-icon > i {
   font-size: var(--ref-font-size-md);
+  line-height: 1;
 }
 
 /* Drop the trailing chevron entirely — replaced by the focus ↵ glyph. */
