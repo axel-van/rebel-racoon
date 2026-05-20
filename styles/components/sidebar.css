@@ -249,10 +249,11 @@
   min-width: 0;
 }
 
-/* The active row stays slightly heavier so the user always knows which
-   conversation they're in without relying on background contrast alone. */
+/* Active row's title shifts to electric-blue (matching the brand's
+   accent) — keeps the weight regular and lets color alone signal the
+   "you are here" state, paired with the row's filled background. */
 .app-sidebar__row.is-active .app-sidebar__row-title {
-  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-electric-blue-100);
 }
 
 .app-sidebar__row-meta {
