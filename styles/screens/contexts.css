@@ -64,22 +64,15 @@
   min-height: 200px;
 }
 
+/* Auto-fill grid: cards keep a readable minimum width (280px) and the
+   number of columns reflows naturally when the available width shrinks
+   (e.g. the right panel is open or the viewport is narrow). The previous
+   hard-coded 2 / 3 column breakpoints squashed cards down to ~80px wide
+   when the right panel pinched the main area. */
 .contexts-view__grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--ref-spacing-md);
-}
-
-@media (min-width: 960px) {
-  .contexts-view__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1280px) {
-  .contexts-view__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 .contexts-view__empty {
