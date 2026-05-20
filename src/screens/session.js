@@ -348,24 +348,26 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
   const triggerColor = attachedContext?.color || "grey";
   const triggerLabel = attachedContext?.name || "No context";
   // Locked state — conversation has at least one user turn. The context is
-  // committed: render a static read-only orange tag so the user can read
-  // it but not swap it (swapping mid-chat would invalidate the citations /
-  // drafts already produced). Mirrors the inline-label pattern of the
-  // unlocked DS .ap-select trigger so the two states stay visually
-  // consistent in the new row above the textarea.
+  // committed: swap the picker for a simple stroked button showing the
+  // active context's color dot + name. Clicking it opens the right-panel
+  // ContextForm in read mode (via contextBuilder.openRead) so the user
+  // can review the brief / voice / do-don't details without leaving the
+  // chat. If no context is attached when the lock kicks in, render
+  // nothing in this slot — a "No context" view button would have no
+  // content to show.
   if (locked) {
+    if (!attachedContext) return "";
     return `
-      <div class="composer-context composer-context--locked" data-composer-context aria-live="polite">
-        <span
-          class="ap-tag tagOrange composer-context__trigger composer-context__trigger--locked"
-          aria-label="Context (locked for this chat)"
-          title="The context is locked once the conversation has started."
-        >
-          <span class="composer-context__dot" style="background: ${dotColorVar(triggerColor)};"></span>
-          <span class="ap-select-inline-label">Context</span>
-          <span>${escapeHtml(triggerLabel)}</span>
-        </span>
-      </div>
+      <button
+        type="button"
+        class="ap-button stroked grey composer-context__locked"
+        data-context-view
+        title="View context"
+        aria-label="View context: ${escapeHtml(triggerLabel)}"
+      >
+        <span class="composer-context__dot" style="background: ${dotColorVar(triggerColor)};"></span>
+        <span>${escapeHtml(triggerLabel)}</span>
+      </button>
     `;
   }
   // Unlocked state — DS .ap-select built on the native <details>/<summary>
@@ -2317,6 +2319,17 @@ function bindSession(root, session) {
       if (!event.target.closest(".assistant-attach")) {
         const menu = root.querySelector("[data-assistant-attach-menu]");
         if (menu && !menu.hidden) menu.hidden = true;
+      }
+
+      // Locked composer context — click on the stroked button opens the
+      // right-panel ContextForm in read mode so the user can review the
+      // active context's details without leaving the chat. Falls back
+      // through the URL contextId (wizard-driven) then the session seed.
+      if (event.target.closest("[data-context-view]")) {
+        event.preventDefault();
+        const ctxId = readQuery().contextId || session.contextId;
+        if (ctxId) contextBuilder.openRead(ctxId);
+        return;
       }
 
       // Composer context dropdown — picks + outside-click close. The DS

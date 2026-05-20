@@ -938,22 +938,9 @@
   width: 100%;
 }
 
-/* Locked-state wrapper (used when the conversation has at least one user
-   turn). The static .ap-tag tagOrange replaces the .ap-select — no menu,
-   no dropdown, just a read-only indicator with the inline-label prefix. */
-.composer-context--locked {
-  display: inline-flex;
-}
-
-.composer-context__trigger--locked {
-  cursor: default;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-}
-
-/* Color dot reused inside both the unlocked .ap-select trigger and the
-   locked .ap-tag — shows the context's accent color in the row. */
+/* Color dot reused inside the unlocked .ap-select trigger and the locked
+   stroked button (composer-context__locked) — shows the context's accent
+   color at a glance. */
 .composer-context__dot {
   display: inline-block;
   width: 12px;
