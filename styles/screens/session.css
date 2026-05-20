@@ -195,12 +195,12 @@
   line-height: 1;
 }
 
-/* Skip footer — tight compact row inside the picker frame. Only as
-   tall as the button itself + a hair of breathing room above; the
+/* Skip footer — tight compact row inside the picker frame. Just enough
+   top padding to separate the button from the last option row; the
    picker frame's own bottom padding handles the gap below. */
 .session__assistant-wizard-bar .analyse__options-submit {
   margin-top: 0;
-  padding: 0;
+  padding: var(--ref-spacing-sm) 0 0;
 }
 
 .session__assistant-wizard-bar .analyse__hints {
