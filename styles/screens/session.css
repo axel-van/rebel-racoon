@@ -99,10 +99,11 @@
 }
 
 /* Picker frame — rounded card with internal padding so the active row
-   pill can inset cleanly. Stronger border for definition. */
+   pill can inset cleanly. Border at grey-20 for clear definition
+   against the surrounding surface. */
 .session__assistant-wizard-bar .analyse__options {
   border-radius: var(--ref-border-radius-md);
-  border-color: var(--ref-color-grey-10);
+  border-color: var(--ref-color-grey-20);
   padding: var(--ref-spacing-xxs);
   background: var(--ref-color-white);
 }
