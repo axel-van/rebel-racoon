@@ -116,10 +116,29 @@
   padding: var(--ref-spacing-sm) var(--ref-spacing-sm) var(--ref-spacing-xs);
 }
 
+.session__assistant-wizard-bar .analyse__picker-header {
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
 .session__assistant-wizard-bar .analyse__picker-title {
   font-size: var(--ref-font-size-lg);
   line-height: var(--ref-font-line-height-lg);
   font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+}
+
+/* Back button — small ghost icon button on the left of the header,
+   used to return to the previous wizard step. */
+.session__assistant-wizard-bar .analyse__picker-back {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  color: var(--ref-color-grey-100);
+}
+
+.session__assistant-wizard-bar .analyse__picker-back:hover {
+  background: var(--ref-color-grey-05);
   color: var(--ref-color-grey-150);
 }
 

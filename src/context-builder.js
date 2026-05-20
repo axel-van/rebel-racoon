@@ -19,7 +19,7 @@
 // right-panel ContextForm read mode (openRead) stays for viewing existing
 // contexts that may still have the old shape.
 
-import * as inlineQuestion from "./inline-question.js?v=22";
+import * as inlineQuestion from "./inline-question.js?v=23";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=29";
 import * as rightPanel from "./components/right-panel.js?v=55";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=26";
@@ -228,6 +228,7 @@ function askUrl(sessionId) {
     customPlaceholder: "https://your-brand.com",
     onCustom: (value) => setUrl(sessionId, value),
     onSkip: () => setUrl(sessionId, ""),
+    onBack: () => askSource(sessionId),
     skipLabel: "Skip",
   });
 }
@@ -243,6 +244,7 @@ function askProfileUrl(sessionId) {
     customPlaceholder: "linkedin.com/in/jdoe",
     onCustom: (value) => setUrl(sessionId, value),
     onSkip: () => setUrl(sessionId, ""),
+    onBack: () => askSource(sessionId),
     skipLabel: "Skip",
   });
 }
@@ -263,6 +265,7 @@ function askDocument(sessionId) {
     customFileIcon: "ap-icon-upload",
     onFile: (file) => setFile(sessionId, file),
     onSkip: () => setFile(sessionId, null),
+    onBack: () => askSource(sessionId),
     skipLabel: "Skip",
   });
 }

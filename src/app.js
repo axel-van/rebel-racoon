@@ -13,7 +13,7 @@ import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=22";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=20";
 import { renderDashboard } from "./screens/dashboard.js?v=42";
-import { renderSession } from "./screens/session.js?v=92";
+import { renderSession } from "./screens/session.js?v=93";
 import { renderIdeas } from "./screens/ideas.js?v=24";
 import { renderContexts } from "./screens/contexts.js?v=29";
 // Route table.

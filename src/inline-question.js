@@ -37,8 +37,9 @@
 //   onCustom(value)   fn      — called with the free-text answer
 //   onFile(file)      fn      — called with the picked File object
 //   onSkip()          fn      — called when Skip / Esc; if omitted, no skip btn
+//   onBack()          fn      — called when ← Back is clicked; if omitted, no back btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=26";
+import { chatTurn } from "./screens/_analyse-common.js?v=27";
 
 const states = new Map(); // sessionId → opts
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -97,6 +98,18 @@ export function skip(sessionId) {
   s.onSkip?.();
 }
 
+// Back — same lifecycle as skip but for the multi-step wizard's
+// "return to the previous step" affordance. The previous step's
+// `ask()` will re-set the state; we just clear current and notify.
+export function back(sessionId) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  const cb = s.onBack;
+  states.delete(sessionId);
+  notify(sessionId);
+  cb?.();
+}
+
 export function exit(sessionId) {
   if (!states.has(sessionId)) return;
   states.delete(sessionId);
@@ -127,6 +140,7 @@ export function renderChrome(sessionId) {
     title: s.title || null,
     stepIndicator: s.stepLabel || null,
     skipLabel: s.onSkip ? s.skipLabel || "Skip" : null,
+    showBack: !!s.onBack,
     customPlaceholder: s.customPlaceholder || null,
     customFile: s.customFile === true,
     customFileAccept: s.customFileAccept || "",

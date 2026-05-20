@@ -179,6 +179,9 @@ export function renderPicker(picker) {
     customFileLabel = "Drop a file here, or click to browse",
     customFileHint = "",
     customFileIcon = "ap-icon-upload",
+    // When the wizard supports going back to a previous step, the
+    // header renders a small ← back button on the left.
+    showBack = false,
   } = picker;
 
   // Multi-select swaps the trailing chevron for a check icon (visible only
@@ -268,10 +271,16 @@ export function renderPicker(picker) {
   // Mirrors the AI question text so the user has the full prompt in view
   // while scanning options. The step indicator (e.g. "3 of 7") sits on the
   // right and helps with multi-step wizards.
+  const backBtn = showBack
+    ? `<button type="button" class="analyse__picker-back ap-icon-button transparent" data-${handler}-back aria-label="Back">
+         <i class="ap-icon-arrow-left"></i>
+       </button>`
+    : "";
   const header =
-    title || stepIndicator
+    title || stepIndicator || showBack
       ? `
         <header class="analyse__picker-header">
+          ${backBtn}
           ${title ? `<h3 class="analyse__picker-title">${title}</h3>` : ""}
           ${stepIndicator ? `<span class="analyse__picker-step muted">${stepIndicator}</span>` : ""}
         </header>

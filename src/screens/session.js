@@ -30,9 +30,9 @@ import {
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=20";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
-import * as inlineQuestion from "../inline-question.js?v=22";
-import * as contextBuilder from "../context-builder.js?v=29";
-import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=26";
+import * as inlineQuestion from "../inline-question.js?v=23";
+import * as contextBuilder from "../context-builder.js?v=30";
+import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=27";
 import { renderSourceCard } from "../components/source-card.js?v=27";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
 import {
@@ -1107,6 +1107,13 @@ function wireAssistantPanel(root, session, attachedContext) {
           if (file) inlineQuestion.submitFile(session.id, file);
         });
       }
+      // When the question has only a free-text input (no `items`), focus
+      // it on render so the user can type immediately without clicking.
+      const customInput = aside.querySelector("[data-inline-question-custom]");
+      const firstItem = aside.querySelector("[data-inline-question]");
+      if (customInput && !firstItem) {
+        Promise.resolve().then(() => customInput.focus());
+      }
     } else {
       unbindWizardKeyboard();
     }
@@ -2008,6 +2015,11 @@ function bindSession(root, session) {
       if (event.target.closest("[data-inline-question-skip]")) {
         event.preventDefault();
         inlineQuestion.skip(session.id);
+        return;
+      }
+      if (event.target.closest("[data-inline-question-back]")) {
+        event.preventDefault();
+        inlineQuestion.back(session.id);
         return;
       }
       const inlineQuestionCustomSubmit = event.target.closest("[data-inline-question-custom-submit]");
