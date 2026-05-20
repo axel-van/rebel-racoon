@@ -874,33 +874,33 @@
   pointer-events: none;
 }
 
-/* ---------- Composer context (Zone 2 — dropdown above the textarea) -- */
+/* ---------- Composer context (Zone 2 — DS .ap-select above the textarea) -- */
 
-.composer-context {
-  position: relative;
+/* Row that wraps the context picker, sitting between the thinking indicator
+   and the textarea. Natural width, left-aligned — the DS .ap-select trigger
+   sizes to content; we just bound the row's padding. */
+.session__composer-context-row {
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm) 0;
+  display: flex;
+  align-items: center;
 }
 
-/* Trigger is a button.ap-tag.tagOrange — DS already styles the background
-   and radius; we add the dot + caret children and a small focus-visible
-   ring so it reads as interactive. */
-.composer-context__trigger {
+/* Locked-state wrapper (used when the conversation has at least one user
+   turn). The static .ap-tag tagOrange replaces the .ap-select — no menu,
+   no dropdown, just a read-only indicator with the inline-label prefix. */
+.composer-context--locked {
+  display: inline-flex;
+}
+
+.composer-context__trigger--locked {
+  cursor: default;
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  cursor: pointer;
 }
 
-.composer-context__trigger > i {
-  font-size: var(--sys-icon-css-xs);
-}
-
-/* Locked indicator — context is committed once the chat has a user turn.
-   Same orange tag, no chevron, no hover, no cursor pointer. The element
-   is a <span>, not a <button>, so default tab behaviour skips it. */
-.composer-context__trigger--locked {
-  cursor: default;
-}
-
+/* Color dot reused inside both the unlocked .ap-select trigger and the
+   locked .ap-tag — shows the context's accent color in the row. */
 .composer-context__dot {
   display: inline-block;
   width: 12px;
@@ -909,18 +909,16 @@
   flex-shrink: 0;
 }
 
-/* Position the .ap-action-dropdown above the trigger. The DS ships the
-   skin (bg, padding, shadow) — only the floating placement is local. */
-.composer-context__menu {
-  position: absolute;
+/* Anchor the DS .ap-select-dropdown above the row instead of below. The DS
+   default places the panel below the trigger, but the picker is now near
+   the bottom of the viewport (composer area), so flipping it upward keeps
+   the option list inside the viewport. The .ap-select-dropdown is already
+   positioned absolutely by the DS — we only override the vertical
+   placement. */
+.composer-context-select .ap-select-dropdown {
   bottom: calc(100% + var(--ref-spacing-xxs));
-  left: 0;
+  top: auto;
   min-width: 240px;
-  z-index: var(--app-z-overlay);
-}
-
-.composer-context__menu[hidden] {
-  display: none;
 }
 
 /* ---------- Composer bottom action bar left slot (Zone 3) ----------- */

@@ -229,15 +229,18 @@ function renderAssistantPanel(session, attachedContext) {
     return renderAssistantPanelQuestion(session);
   }
 
-  // Empty conversation = the user hasn't typed anything yet AND no rich
-  // assistant turn has landed (extraction / draft / clip-extraction /
-  // assistant-choice). We swap the thread for the handoff "What are we
-  // creating today?" hero with a 2x2 grid of starter cards (Q14). Once
-  // the user types or a rich turn arrives (incl. the inline "Which
-  // context?" choice posted by a starter click), the thread takes over
-  // so the in-flight work stays visible across remounts.
+  // Locked picker — driven purely by whether the user has actually sent
+  // a message yet. The inline "Which context?" assistant-choice posted by
+  // a starter click does NOT commit the chat: the user still hasn't typed
+  // anything, so they should remain able to swap context via the picker.
+  // Only an actual user turn freezes the choice.
+  const hasUserMessage = thread.some((m) => m.role === "user");
+  // Empty conversation = nothing has happened yet. Hides the empty hero
+  // once any rich turn lands (user msg, assistant variant, or the
+  // assistant-choice posted by the starter context question) so the
+  // in-flight work stays visible across remounts.
   const isEmptyConversation =
-    thread.every((m) => m.role !== "user") &&
+    !hasUserMessage &&
     !thread.some((m) => m.role === "assistant-choice") &&
     !thread.some((m) => m.role === "assistant" && m.variant);
 
@@ -252,6 +255,9 @@ function renderAssistantPanel(session, attachedContext) {
             <div class="session__composer-thinking" data-assistant-thinking hidden>
               <span class="session__composer-thinking-spinner" aria-hidden="true"></span>
               <span class="session__composer-thinking-text" data-thinking-text>0s · 1 credit</span>
+            </div>
+            <div class="session__composer-context-row">
+              ${raw(renderComposerContextDropdown(attachedContext, { locked: hasUserMessage }))}
             </div>
             <div class="session__composer-input">
               <textarea
@@ -298,7 +304,6 @@ function renderAssistantPanel(session, attachedContext) {
                       </button>
                     </div>
                   </div>
-                  ${raw(renderComposerContextDropdown(attachedContext, { locked: !isEmptyConversation }))}
                 </div>
                 <button
                   type="button"
@@ -339,6 +344,12 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
   const all = getContexts();
   const triggerColor = attachedContext?.color || "grey";
   const triggerLabel = attachedContext?.name || "No context";
+  // Locked state — conversation has at least one user turn. The context is
+  // committed: render a static read-only orange tag so the user can read
+  // it but not swap it (swapping mid-chat would invalidate the citations /
+  // drafts already produced). Mirrors the inline-label pattern of the
+  // unlocked DS .ap-select trigger so the two states stay visually
+  // consistent in the new row above the textarea.
   if (locked) {
     return `
       <div class="composer-context composer-context--locked" data-composer-context aria-live="polite">
@@ -348,71 +359,66 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
           title="The context is locked once the conversation has started."
         >
           <span class="composer-context__dot" style="background: var(--ref-color-${escapeHtml(triggerColor)}-100);"></span>
+          <span class="ap-select-inline-label">Context</span>
           <span>${escapeHtml(triggerLabel)}</span>
         </span>
       </div>
     `;
   }
-  const triggerClass = attachedContext
-    ? "ap-tag tagOrange composer-context__trigger"
-    : "ap-tag grey composer-context__trigger composer-context__trigger--empty";
-  const items = all
-    .map(
-      (c) => `
+  // Unlocked state — DS .ap-select built on the native <details>/<summary>
+  // pattern. The browser handles open/close on summary clicks; we only
+  // wire pick (data-context-id) + outside-click in bindSession. The
+  // inline-label DS sub-element ("Context") prefixes the active value so
+  // the picker reads as "Context · {name}" at a glance.
+  const options = all
+    .map((c) => {
+      const isSelected = c.id === attachedContext?.id;
+      const color = c.color || "grey";
+      return `
         <button
           type="button"
-          class="ap-action-dropdown-item ${c.id === attachedContext?.id ? "is-on" : ""}"
+          class="ap-select-option ${isSelected ? "selected" : ""}"
           data-context-id="${escapeHtml(c.id)}"
-          role="menuitem"
+          role="option"
         >
-          <span class="composer-context__dot" style="background: var(--ref-color-${escapeHtml(c.color || "grey")}-100);"></span>
-          <div class="ap-action-dropdown-item-text">
-            <div class="ap-action-dropdown-item-label">${escapeHtml(c.name)}</div>
-          </div>
+          <span class="composer-context__dot" style="background: var(--ref-color-${escapeHtml(color)}-100);"></span>
+          <span class="ap-select-option-text">${escapeHtml(c.name)}</span>
+          ${isSelected ? `<i class="ap-icon-check ap-select-option-check"></i>` : ""}
         </button>
-      `,
-    )
+      `;
+    })
     .join("");
   const detachItem = attachedContext
     ? `
-        <button type="button" class="ap-action-dropdown-item" data-context-id="__detach__" role="menuitem">
-          <i class="ap-icon-close"></i>
-          <div class="ap-action-dropdown-item-text">
-            <div class="ap-action-dropdown-item-label">Detach context</div>
-          </div>
+        <div class="ap-select-divider"></div>
+        <button type="button" class="ap-select-option" data-context-id="__detach__" role="option">
+          <span class="composer-context__dot" style="background: var(--ref-color-grey-100);"></span>
+          <span class="ap-select-option-text">No context</span>
         </button>
       `
     : "";
-  const noneItem =
-    !attachedContext && all.length === 0
-      ? `<div class="ap-action-dropdown-item composer-context__menu-empty muted">No saved contexts yet.</div>`
-      : "";
+  const noneItem = all.length === 0 ? `<div class="ap-select-option disabled muted">No saved contexts yet.</div>` : "";
   return `
-    <div class="composer-context" data-composer-context>
-      <button
-        type="button"
-        class="${triggerClass}"
-        data-context-trigger
-        aria-haspopup="menu"
-        aria-expanded="false"
-      >
+    <details class="ap-select composer-context-select" data-composer-context>
+      <summary class="ap-select-trigger">
         <span class="composer-context__dot" data-context-dot style="background: var(--ref-color-${escapeHtml(triggerColor)}-100);"></span>
-        <span data-context-label>${escapeHtml(triggerLabel)}</span>
-        <i class="ap-icon-arrow-down"></i>
-      </button>
-      <div class="ap-action-dropdown composer-context__menu" data-context-menu hidden role="menu">
-        ${noneItem}
-        ${items}
-        ${items || detachItem ? `<div class="ap-action-dropdown-divider"></div>` : ""}
-        ${detachItem}
-        <button type="button" class="ap-action-dropdown-item" data-context-id="__new__" role="menuitem">
-          <i class="ap-icon-plus"></i>
-          <div class="ap-action-dropdown-item-text">
-            <div class="ap-action-dropdown-item-label">New context…</div>
-          </div>
-        </button>
+        <span class="ap-select-inline-label">Context</span>
+        <span class="ap-select-value" data-context-label>${escapeHtml(triggerLabel)}</span>
+        <i class="ap-icon-chevron-down ap-select-arrow"></i>
+      </summary>
+      <div class="ap-select-dropdown">
+        <div class="ap-select-options" role="listbox">
+          ${noneItem}
+          ${options}
+          ${detachItem}
+          <div class="ap-select-divider"></div>
+          <button type="button" class="ap-select-option" data-context-id="__new__" role="option">
+            <i class="ap-icon-plus ap-select-create-icon"></i>
+            <span class="ap-select-option-text">New context…</span>
+          </button>
+        </div>
       </div>
-    </div>
+    </details>
   `;
 }
 
@@ -2310,23 +2316,17 @@ function bindSession(root, session) {
         if (menu && !menu.hidden) menu.hidden = true;
       }
 
-      // Composer context dropdown — toggle, select, or close on outside click.
-      if (event.target.closest("[data-context-trigger]")) {
-        event.preventDefault();
-        const menu = root.querySelector("[data-context-menu]");
-        const trigger = root.querySelector("[data-context-trigger]");
-        if (menu) menu.hidden = !menu.hidden;
-        if (trigger) trigger.setAttribute("aria-expanded", menu && !menu.hidden ? "true" : "false");
-        return;
-      }
+      // Composer context dropdown — picks + outside-click close. The DS
+      // .ap-select is built on the native <details>/<summary> pattern, so
+      // the browser handles open/close on the summary click. We only wire
+      // (a) the option pick and (b) outside-click close (since <details>
+      // doesn't natively close on outside clicks).
       const ctxItem = event.target.closest("[data-context-id]");
       if (ctxItem) {
         event.preventDefault();
         const id = ctxItem.dataset.contextId;
-        const menu = root.querySelector("[data-context-menu]");
-        const trigger = root.querySelector("[data-context-trigger]");
-        if (menu) menu.hidden = true;
-        if (trigger) trigger.setAttribute("aria-expanded", "false");
+        const sel = root.querySelector("details.composer-context-select");
+        if (sel) sel.open = false;
         if (id === "__new__") {
           // Hand the user over to the conversational create-context flow.
           navigate("/contexts/new");
@@ -2339,13 +2339,9 @@ function bindSession(root, session) {
         }
         return;
       }
-      if (!event.target.closest(".composer-context")) {
-        const menu = root.querySelector("[data-context-menu]");
-        const trigger = root.querySelector("[data-context-trigger]");
-        if (menu && !menu.hidden) {
-          menu.hidden = true;
-          if (trigger) trigger.setAttribute("aria-expanded", "false");
-        }
+      if (!event.target.closest(".composer-context-select")) {
+        const sel = root.querySelector("details.composer-context-select");
+        if (sel?.open) sel.open = false;
       }
     },
     { signal },
