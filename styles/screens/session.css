@@ -86,58 +86,7 @@
   pointer-events: none;
 }
 
-/* Match the composer-card's rounding (8px) so the wizard picker card
-   reads visually as part of the same composer family — same surface
-   treatment, same corner radius. */
-.session__assistant-wizard-bar .analyse__options {
-  border-radius: var(--ref-border-radius-md);
-  border-color: var(--ref-color-grey-10);
-}
-
-/* ---------- Claude-Code-style row treatment (scoped to the wizard) ----
-   Inactive rows: clean — no trailing chevron, just label + caption.
-   :focus-visible rows: subtle highlight + trailing ↵ glyph that hints
-   at "press Enter to pick". Mirrors the slash-command picker pattern. */
-
-.session__assistant-wizard-bar .analyse__option-chevron {
-  display: none;
-}
-
-/* Add a return-key glyph as a pseudo on the trailing edge — visible only
-   when the row is keyboard-focused. Using a UTF-8 ↵ avoids relying on
-   a non-existent DS icon. */
-.session__assistant-wizard-bar .analyse__option {
-  position: relative;
-}
-
-.session__assistant-wizard-bar .analyse__option:focus-visible::after {
-  content: "↵";
-  position: absolute;
-  right: var(--ref-spacing-sm);
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: var(--ref-font-size-md);
-  color: var(--ref-color-grey-150);
-  font-family: inherit;
-  line-height: 1;
-}
-
-/* Picker header — drop the bottom divider so the title sits flush
-   with the rows (the rows already have their own dividers between
-   them). Matches the Claude Code clean header. */
-.session__assistant-wizard-bar .analyse__picker-header {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
-
-/* Skip footer — sit INSIDE the picker frame, divider on top (like
-   another option row), with the Skip button right-aligned. Removes
-   the dead-space "row" the footer used to occupy below the picker. */
-.session__assistant-wizard-bar .analyse__options-submit {
-  margin-top: 0;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border-top: 1px solid var(--app-border-soft);
-}
+/* ---------- Claude-Code-style picker (scoped to the wizard) ---------- */
 
 /* Cap the wizard chrome at the same 740px the composer uses below so the
    wizard step (source picker, URL input, dropzone) lines up with the
@@ -149,20 +98,86 @@
   padding: 0;
 }
 
-.session__assistant-wizard-bar .analyse__option {
-  padding: var(--ref-spacing-xs);
-  gap: var(--ref-spacing-xs);
+/* Picker frame — rounded card with internal padding so the active row
+   pill can inset cleanly. Stronger border for definition. */
+.session__assistant-wizard-bar .analyse__options {
+  border-radius: var(--ref-border-radius-md);
+  border-color: var(--ref-color-grey-10);
+  padding: var(--ref-spacing-xxs);
+  background: var(--ref-color-white);
 }
 
-/* Hide DS-icon variant of the option-icon in the sidebar (compact layout),
- * but keep image-variant visible — image options carry brand logos that need
- * to render (e.g. inline-question social profile picker). */
+/* Header title — bigger and clearly the question, plus more breathing
+   room. No bottom divider; spacing alone separates the title from the
+   rows. */
+.session__assistant-wizard-bar .analyse__picker-header {
+  border-bottom: 0;
+  padding: var(--ref-spacing-sm) var(--ref-spacing-sm) var(--ref-spacing-xs);
+}
+
+.session__assistant-wizard-bar .analyse__picker-title {
+  font-size: var(--ref-font-size-lg);
+  line-height: var(--ref-font-line-height-lg);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+}
+
+/* Option rows — generous vertical padding, no dividers (the focus pill
+   provides all the visual separation needed). Rows round on focus so
+   the highlight reads as a pill, slightly inset from the frame edge
+   thanks to the picker's own padding. */
+.session__assistant-wizard-bar .analyse__option {
+  position: relative;
+  padding: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-sm);
+  border-bottom: 0;
+  border-radius: var(--ref-border-radius-sm);
+  transition: background-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.session__assistant-wizard-bar .analyse__option:hover {
+  background: var(--ref-color-grey-05);
+}
+
+.session__assistant-wizard-bar .analyse__option:focus-visible {
+  outline: none;
+  background: var(--ref-color-grey-10);
+}
+
+/* Show the DS icon back — it carries meaning (web globe / pdf / users). */
 .session__assistant-wizard-bar .analyse__option-icon:not(:has(img)) {
-  display: none;
+  display: inline-flex;
 }
 
 .session__assistant-wizard-bar .analyse__option-shortcut {
   flex-shrink: 0;
+}
+
+/* Drop the trailing chevron entirely — replaced by the focus ↵ glyph. */
+.session__assistant-wizard-bar .analyse__option-chevron {
+  display: none;
+}
+
+/* Return-key glyph on the focused row — bigger, with consistent
+   right-edge offset matching the row's internal padding. */
+.session__assistant-wizard-bar .analyse__option:focus-visible::after {
+  content: "↵";
+  position: absolute;
+  right: var(--ref-spacing-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--ref-font-size-lg);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+  font-family: inherit;
+  line-height: 1;
+}
+
+/* Skip footer — pushed inside the picker frame as a compact row, no
+   divider (the picker's own padding separates it from the rows). */
+.session__assistant-wizard-bar .analyse__options-submit {
+  margin-top: 0;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm) var(--ref-spacing-sm);
 }
 
 .session__assistant-wizard-bar .analyse__hints {
