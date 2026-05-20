@@ -946,6 +946,24 @@
   gap: var(--ref-spacing-xs);
 }
 
+/* Context name + color picker live in the same card — input on the left,
+   color swatches on the right, wrapping below the input on narrow widths. */
+.context-brief__name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+}
+
+.context-brief__name-input {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.context-brief__name-section .context-brief__color-swatches {
+  flex: 0 0 auto;
+}
+
 .context-brief__color-swatch {
   width: 28px;
   height: 28px;

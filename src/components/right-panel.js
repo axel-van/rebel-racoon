@@ -2031,7 +2031,7 @@ function renderContextBriefView() {
       suggested: d.suggestions?.language || "",
       isRead,
     }),
-    renderBriefColor(d, isRead),
+    isRead ? renderBriefColor(d, isRead) : "",
     renderBriefImageVoice(d),
   ].filter(Boolean);
   const footer = isRead
@@ -2128,16 +2128,34 @@ function renderBriefIntro() {
 }
 
 function renderBriefName(d) {
+  const colorValue = d.color || "orange";
+  const swatches = COLOR_SWATCHES.map((c) => {
+    const isSelected = c === colorValue;
+    return `
+      <button
+        type="button"
+        class="context-brief__color-swatch ${isSelected ? "is-selected" : ""}"
+        data-brief-color="${c}"
+        style="background: var(--ref-color-${c === "blue" ? "electric-blue" : c}-100);"
+        aria-label="${c}"
+        aria-pressed="${isSelected ? "true" : "false"}"
+      ></button>
+    `;
+  }).join("");
   return `
-    <section class="context-brief__section">
-      <h3 class="context-brief__title">Context name</h3>
-      <div class="ap-input-group">
-        <input
-          type="text"
-          data-brief-name
-          value="${escapeAttr(d.name || "")}"
-          placeholder="e.g. Acme · Q2 marketing"
-        />
+    <section class="context-brief__section context-brief__name-section">
+      <h3 class="context-brief__title">Context name &amp; color</h3>
+      <p class="context-brief__hint">Shown next to the context in chats and listings.</p>
+      <div class="context-brief__name-row">
+        <div class="ap-input-group context-brief__name-input">
+          <input
+            type="text"
+            data-brief-name
+            value="${escapeAttr(d.name || "")}"
+            placeholder="e.g. Acme · Q2 marketing"
+          />
+        </div>
+        <div class="context-brief__color-swatches">${swatches}</div>
       </div>
     </section>
   `;
