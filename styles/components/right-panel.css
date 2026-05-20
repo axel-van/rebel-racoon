@@ -1043,6 +1043,137 @@
   flex: 1;
 }
 
+/* Voice profile — richer card replacing the small "tone of voice" chip
+   row. Header with chevron collapses the whole card; each subsection
+   shows a snippet that expands to a textarea (edit) or full text (read).
+*/
+.context-brief__voice-profile {
+  gap: var(--ref-spacing-sm);
+}
+
+.context-brief__vp-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.context-brief__vp-collapse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  color: var(--ref-color-grey-100);
+  border-radius: var(--ref-border-radius-sm);
+}
+
+.context-brief__vp-collapse:hover {
+  background: var(--ref-color-grey-10);
+}
+
+.context-brief__vp-icon {
+  color: var(--ref-color-electric-blue-100);
+}
+
+.context-brief__voice-profile.is-collapsed .context-brief__vp-header {
+  margin: 0;
+}
+
+.context-brief__vp-headline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  background: var(--ref-color-grey-05);
+  border-radius: var(--ref-border-radius-sm);
+  color: var(--ref-color-grey-150);
+  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--ref-font-size-sm);
+  align-self: flex-start;
+}
+
+.context-brief__vp-headline > i {
+  color: var(--ref-color-grey-100);
+}
+
+.context-brief__vp-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+}
+
+.context-brief__vp-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  padding-top: var(--ref-spacing-xxs);
+  border-top: 1px dashed var(--ref-color-grey-10);
+}
+
+.context-brief__vp-section:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.context-brief__vp-section-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  color: var(--ref-color-grey-100);
+}
+
+.context-brief__vp-section-head > i {
+  font-size: var(--ref-font-size-sm);
+}
+
+.context-brief__vp-section-label {
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  font-weight: var(--ref-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ref-color-grey-80);
+}
+
+.context-brief__vp-snippet {
+  margin: 0;
+  color: var(--ref-color-grey-150);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+}
+
+.context-brief__vp-snippet.is-empty {
+  color: var(--ref-color-grey-80);
+  font-style: italic;
+}
+
+.context-brief__vp-body {
+  margin: 0;
+  color: var(--ref-color-grey-150);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  white-space: pre-wrap;
+}
+
+.context-brief__vp-toggle {
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--ref-color-electric-blue-100);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  cursor: pointer;
+}
+
+.context-brief__vp-toggle:hover {
+  text-decoration: underline;
+}
+
 /* Image Voice — Brand visual identity card. Read-only in V1 (values come
    from the mock website analysis). Section uses the same card chrome as
    the rest of the brief panel but stacks several sub-blocks inside. */

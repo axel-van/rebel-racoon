@@ -53,6 +53,27 @@ const AGORAPULSE = {
       "Adapting one piece of content to multiple formats",
     ],
     tones: ["Professional & authoritative"],
+    voiceProfile: {
+      headline: "Professional · data-driven · approachable",
+      writingStyle:
+        "Professional, data-grounded, and action-oriented. Combines analytical evidence with clear, immediate takeaways aimed at busy social media managers and marketing leaders. Sentences open with the value to the reader and back claims with measurable outcomes.",
+      vocabulary:
+        "Industry-specific marketing jargon balanced with plain-English: 'ROI', 'engagement', 'social inbox', 'reporting', 'workflow', alongside conversational terms like 'busy team', 'one place', 'in seconds'. Avoids hype words ('revolutionary', 'game-changer') in favour of measurable claims.",
+      sentenceStructure:
+        "Mostly short to medium sentences. Headlines are punchy and benefit-led. Body copy occasionally extends for product feature explanations or case studies. Bullet lists are favoured over long paragraphs when explaining capabilities.",
+      formality:
+        "Semi-formal. Direct address ('you', 'your team') keeps the brand approachable while remaining credible to enterprise buyers. Contractions are used freely, but the tone never drifts into slang or memes.",
+      personality:
+        "Confident, helpful, results-focused. Speaks with the authority of a tool that has supported thousands of social teams. Empathetic to the chaos of multi-platform work without being self-deprecating about the category.",
+      rhetoricalDevices:
+        "Lists for product benefits. Customer quotes for proof. Concrete numbers and percentages for credibility (time saved, response-rate gains, ROI). Frequent 'before / after' contrasts between fragmented workflows and the unified Agorapulse experience.",
+      emotionalTone:
+        "Reassuring and supportive. Acknowledges the daily firefight of multi-platform social media management and positions Agorapulse as the calm centre that gives teams back their time, their data, and their evenings.",
+      contentPatterns:
+        "Problem → solution → proof. Most pages open with a social-media-manager pain point ('lost in 8 tabs', 'can't prove ROI'), present Agorapulse's specific answer, and close with social proof or a CTA to start a free trial.",
+      uniqueTraits:
+        "Frequent 'social media inbox' framing. Emphasises ROI measurement and time-to-publish as the two big differentiators. Customer success stories from agencies and in-house teams are woven throughout the marketing site rather than ghettoised on a /customers page.",
+    },
     contentStyle: ["Data-driven with storytelling", "Direct and actionable"],
     objective: ["Lead generation", "Brand awareness"],
     contentAction: ["Sign up for a free trial", "Book a demo"],
@@ -118,6 +139,25 @@ const GENERIC = {
       "Scaling without adding headcount",
     ],
     tones: ["Professional & authoritative"],
+    voiceProfile: {
+      headline: "Professional · clear · helpful",
+      writingStyle:
+        "Clear, professional, and direct. Sentences are concise and reader-friendly. Each section opens with the benefit and follows with supporting evidence.",
+      vocabulary:
+        "Plain English with occasional industry terms where relevant. Avoids jargon that hasn't been earned and explains acronyms on first use.",
+      sentenceStructure:
+        "Mostly short to medium sentences with occasional structural variation for emphasis. Lists are used when explaining multi-step processes.",
+      formality: "Semi-formal — friendly enough for a marketing site, credible enough for an enterprise buyer.",
+      personality:
+        "Trustworthy, helpful, and knowledgeable. Speaks to the reader as an equal who happens to have done the homework.",
+      rhetoricalDevices:
+        "Lists for clarity. Evidence and customer proof for credibility. Occasional rhetorical questions to set up the value proposition.",
+      emotionalTone: "Neutral, supportive, and quietly confident. Reassures without overpromising.",
+      contentPatterns:
+        "Problem → solution → proof structure across most pages. Calls to action are clear and singular.",
+      uniqueTraits:
+        "Edit this profile to capture what makes your brand's voice distinctive — the words you reach for, the metaphors you avoid, the moments where the writing relaxes.",
+    },
     contentStyle: ["Direct and actionable"],
     objective: ["Brand awareness"],
     contentAction: ["Visit the website"],

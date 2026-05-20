@@ -76,6 +76,7 @@ export function addContext(ctx = {}) {
     audience: audienceVal,
     audienceProblems: Array.isArray(ctx.audienceProblems) ? ctx.audienceProblems.slice() : [],
     tones: Array.isArray(ctx.tones) ? ctx.tones.slice() : [],
+    voiceProfile: ctx.voiceProfile && typeof ctx.voiceProfile === "object" ? { ...ctx.voiceProfile } : null,
     contentStyle: Array.isArray(ctx.contentStyle) ? ctx.contentStyle.slice() : [],
     objective: Array.isArray(ctx.objective) ? ctx.objective.slice() : [],
     contentAction: Array.isArray(ctx.contentAction) ? ctx.contentAction.slice() : [],
@@ -122,6 +123,7 @@ export function updateContext(id, patch) {
   if (patch.audience !== undefined) c.audience = patch.audience;
   if (patch.briefSummary !== undefined) c.briefSummary = patch.briefSummary;
   if (patch.tones !== undefined) c.tones = patch.tones;
+  if (patch.voiceProfile !== undefined) c.voiceProfile = patch.voiceProfile;
   if (patch.doRules !== undefined) c.doRules = patch.doRules;
   if (patch.dontRules !== undefined) c.dontRules = patch.dontRules;
   if (patch.cta !== undefined) c.cta = patch.cta;

@@ -21,7 +21,7 @@
 
 import * as inlineQuestion from "./inline-question.js?v=21";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=28";
-import * as rightPanel from "./components/right-panel.js?v=49";
+import * as rightPanel from "./components/right-panel.js?v=50";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=25";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=20";
 
@@ -54,6 +54,7 @@ function emptyDraft(overrides = {}) {
     ctaLinks: [], // Array<{ label, url, checked, suggested }>
     language: "English",
     color: "orange",
+    voiceProfile: null,
     imageVoice: { websites: [] },
     suggestions: {
       audience: [],
@@ -140,6 +141,7 @@ export function startEdit(contextId) {
       ctaLinks: Array.isArray(ctx.ctaLinks) ? ctx.ctaLinks.map((l) => ({ ...l })) : [],
       language: ctx.language || "English",
       color: ctx.color || "orange",
+      voiceProfile: ctx.voiceProfile && typeof ctx.voiceProfile === "object" ? { ...ctx.voiceProfile } : null,
       imageVoice:
         ctx.imageVoice && Array.isArray(ctx.imageVoice.websites)
           ? { websites: ctx.imageVoice.websites.map((w) => ({ ...w })) }
@@ -216,6 +218,7 @@ function runAnalysis(sessionId) {
     d.ctaLinks = (analysis.suggestions.ctaLinks || []).map((l) => ({ ...l }));
     d.language = analysis.suggestions.language || "English";
     d.color = analysis.suggestions.color || "orange";
+    d.voiceProfile = analysis.suggestions.voiceProfile ? { ...analysis.suggestions.voiceProfile } : null;
     d.imageVoice = analysis.suggestions.imageVoice || { websites: [] };
     markSystemNoticeReady(sessionId, noticeId, { meta: "Extracted guidelines" });
     notify(sessionId);
@@ -234,6 +237,7 @@ function openBriefPanel(sessionId) {
     onRemoveChip: (field, value) => toggleChip(sessionId, field, value),
     onToggleCta: (url) => toggleCta(sessionId, url),
     onName: (name) => setName(sessionId, name),
+    onVoiceProfileChange: (fieldId, value) => setVoiceProfileField(sessionId, fieldId, value),
     onSave: () => save(sessionId),
     onCancel: () => cancel(sessionId),
   });
@@ -245,6 +249,15 @@ export function setAnswer(sessionId, field, value) {
   d[field] = value;
   notify(sessionId);
   rightPanel.refreshContextBriefPanel?.();
+}
+
+export function setVoiceProfileField(sessionId, fieldId, value) {
+  const d = drafts.get(sessionId);
+  if (!d) return;
+  if (!d.voiceProfile || typeof d.voiceProfile !== "object") d.voiceProfile = {};
+  d.voiceProfile[fieldId] = value;
+  notify(sessionId);
+  // No refresh — let the textarea keep its focus while typing.
 }
 
 export function setName(sessionId, name) {
@@ -311,6 +324,7 @@ export function save(sessionId) {
     ctaLinks: d.ctaLinks.filter((l) => l.checked),
     cta: d.ctaLinks.find((l) => l.checked)?.url || "",
     language: d.language,
+    voiceProfile: d.voiceProfile || null,
     imageVoice: d.imageVoice && Array.isArray(d.imageVoice.websites) ? d.imageVoice : { websites: [] },
     updatedAt: "just now",
   };

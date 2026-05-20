@@ -299,9 +299,20 @@ export function closeContextFormSilently() {
 //     persisted Context. onEnterEdit fires when the user clicks "Edit"
 //     in the footer (typically routes through contextBuilder.startEdit).
 let contextBriefConfig = null;
+
+// Voice-profile card UI state — survives re-renders triggered by
+// refreshContextBriefPanel. Keys are subsection field ids
+// ("writingStyle", "vocabulary", …). The whole-card collapse state
+// is tracked separately via `voiceProfileCollapsed`.
+const voiceProfileExpanded = new Set();
+let voiceProfileCollapsed = false;
 export function openContextBriefPanel(config = {}) {
   const prev = state.mode;
   contextBriefConfig = { mode: "edit", ...config };
+  // Fresh open — collapse all voice-profile subsections and uncollapse
+  // the card so the user lands on a clean overview.
+  voiceProfileExpanded.clear();
+  voiceProfileCollapsed = false;
   state = { ...state, mode: "context-brief" };
   maybeCollapseSidebarOnOpen(prev);
   renderPanel();
@@ -717,6 +728,19 @@ export function init() {
       contextBriefConfig?.onAddOther?.(field, v);
       return;
     }
+    const briefVoiceToggle = event.target.closest("[data-brief-voice-toggle]");
+    if (briefVoiceToggle) {
+      const id = briefVoiceToggle.dataset.briefVoiceToggle;
+      if (voiceProfileExpanded.has(id)) voiceProfileExpanded.delete(id);
+      else voiceProfileExpanded.add(id);
+      refreshContextBriefPanel?.();
+      return;
+    }
+    if (event.target.closest("[data-brief-voice-card-toggle]")) {
+      voiceProfileCollapsed = !voiceProfileCollapsed;
+      refreshContextBriefPanel?.();
+      return;
+    }
     const briefCta = event.target.closest("[data-brief-cta-toggle]");
     if (briefCta) {
       // The native checkbox toggles its own state; we just propagate.
@@ -786,6 +810,11 @@ export function init() {
     if (event.target.matches("[data-brief-summary]")) {
       // Pass-through without re-render so the textarea keeps focus.
       contextBriefConfig?.onAnswer?.("businessSummary", event.target.value);
+      return;
+    }
+    if (event.target.matches("[data-brief-voice-input]")) {
+      // Voice-profile subsection textarea — pass-through without re-render.
+      contextBriefConfig?.onVoiceProfileChange?.(event.target.dataset.briefVoiceInput, event.target.value);
       return;
     }
   });
@@ -1969,19 +1998,7 @@ function renderContextBriefView() {
         warningCount: 0,
       }),
     ),
-    renderBriefChips(
-      chipProps({
-        field: "tones",
-        title: "What's your brand's tone of voice?",
-        hint: "This shapes how Archie writes — word choice, energy, and style.",
-        fromWeb: true,
-        suggestions: d.suggestions?.tones || [],
-        fallback: TONE_FALLBACKS,
-        values: d.tones || [],
-        customs: d.customAdditions?.tones || [],
-        otherPlaceholder: "Describe your tone…",
-      }),
-    ),
+    renderBriefVoiceProfile(d, isRead),
     renderBriefChips(
       chipProps({
         field: "contentStyle",
@@ -2093,6 +2110,7 @@ function readBriefFromCtx(ctx) {
         : [],
     language: ctx.language || "English",
     color: ctx.color || "orange",
+    voiceProfile: ctx.voiceProfile && typeof ctx.voiceProfile === "object" ? ctx.voiceProfile : null,
     imageVoice: ctx.imageVoice && Array.isArray(ctx.imageVoice.websites) ? ctx.imageVoice : { websites: [] },
     suggestions: {},
     customAdditions: {},
@@ -2567,6 +2585,120 @@ function renderBriefImageVoice(d) {
         </div>
       `
           : ""
+      }
+    </section>
+  `;
+}
+
+// Voice profile — richer replacement for the small "tone of voice" chip
+// row. Renders a "Voice profile" card with a tones-pill headline and N
+// labelled subsections. Each subsection shows a 2-line snippet by default
+// with a "Show more" toggle. When expanded in edit mode the body is an
+// editable textarea; in read mode it's the full paragraph text.
+//
+// UI state (which subsections are expanded, whether the whole card is
+// collapsed) is module-local — it survives the brief panel's frequent
+// re-renders without bleeding into the persisted Context.
+const VOICE_PROFILE_SECTIONS = [
+  { id: "writingStyle", label: "Writing style", icon: "ap-icon-pen" },
+  { id: "vocabulary", label: "Vocabulary", icon: "ap-icon-note" },
+  { id: "sentenceStructure", label: "Sentence structure", icon: "ap-icon-numbered-list" },
+  { id: "formality", label: "Formality", icon: "ap-icon-target" },
+  { id: "personality", label: "Personality", icon: "ap-icon-sparkles" },
+  { id: "rhetoricalDevices", label: "Rhetorical devices", icon: "ap-icon-megaphone" },
+  { id: "emotionalTone", label: "Emotional tone", icon: "ap-icon-heart" },
+  { id: "contentPatterns", label: "Content patterns", icon: "ap-icon-view-grid" },
+  { id: "uniqueTraits", label: "Unique traits", icon: "ap-icon-tag" },
+];
+
+function renderBriefVoiceProfile(d, isRead) {
+  const vp = d?.voiceProfile || {};
+  const hasAnyText = VOICE_PROFILE_SECTIONS.some((s) => typeof vp[s.id] === "string" && vp[s.id].trim().length > 0);
+  // If no voice profile data and not in edit mode, hide the section
+  // entirely (legacy seeds without voiceProfile keep a clean panel).
+  if (isRead && !hasAnyText && !vp.headline) return "";
+
+  const tones = Array.isArray(d.tones) ? d.tones.filter(Boolean) : [];
+  const headline =
+    vp.headline || (tones.length ? tones.join(" · ").toLowerCase() : "Tap a section to refine the voice");
+
+  const collapsed = voiceProfileCollapsed;
+
+  const subSectionHtml = VOICE_PROFILE_SECTIONS.map((s) => {
+    const value = typeof vp[s.id] === "string" ? vp[s.id] : "";
+    const isExpanded = voiceProfileExpanded.has(s.id);
+    // In edit mode an empty section can still be opened to type into.
+    // In read mode an empty section is skipped (don't show empty cards).
+    if (isRead && !value) return "";
+    const snippetText = value
+      ? value.length > 140 && !isExpanded
+        ? value.slice(0, 140).replace(/\s+\S*$/, "") + "…"
+        : value
+      : isRead
+        ? ""
+        : "Tap to add a description.";
+    const isTruncated = !isExpanded && value && value.length > 140;
+    const bodyHtml = isExpanded
+      ? isRead
+        ? `<p class="context-brief__vp-body">${escapeText(value)}</p>`
+        : `
+          <div class="ap-textarea-field resizable">
+            <textarea
+              data-brief-voice-input="${escapeAttr(s.id)}"
+              rows="4"
+              placeholder="Describe the brand's ${escapeAttr(s.label.toLowerCase())}…"
+            >${escapeText(value)}</textarea>
+          </div>
+        `
+      : `<p class="context-brief__vp-snippet ${value ? "" : "is-empty"}">${escapeText(snippetText)}</p>`;
+    const toggleLabel = isExpanded ? (isRead ? "Show less" : "Done") : value ? "Show more" : "Add";
+    const showToggle = isExpanded || isTruncated || (!isRead && !value);
+    return `
+      <div class="context-brief__vp-section" data-voice-section="${escapeAttr(s.id)}">
+        <div class="context-brief__vp-section-head">
+          <i class="${escapeAttr(s.icon)}"></i>
+          <span class="context-brief__vp-section-label">${escapeText(s.label)}</span>
+        </div>
+        ${bodyHtml}
+        ${
+          showToggle
+            ? `<button
+                  type="button"
+                  class="context-brief__vp-toggle"
+                  data-brief-voice-toggle="${escapeAttr(s.id)}"
+                >${escapeText(toggleLabel)}</button>`
+            : ""
+        }
+      </div>
+    `;
+  })
+    .filter(Boolean)
+    .join("");
+
+  return `
+    <section class="context-brief__section context-brief__voice-profile ${collapsed ? "is-collapsed" : ""}">
+      <header class="context-brief__vp-header">
+        <button
+          type="button"
+          class="context-brief__vp-collapse"
+          data-brief-voice-card-toggle
+          aria-expanded="${collapsed ? "false" : "true"}"
+        >
+          <i class="ap-icon-chevron-${collapsed ? "right" : "down"}"></i>
+        </button>
+        <i class="ap-icon-megaphone context-brief__vp-icon"></i>
+        <h3 class="context-brief__title">Voice profile</h3>
+      </header>
+      ${
+        collapsed
+          ? ""
+          : `
+        <div class="context-brief__vp-headline">
+          <i class="ap-icon-sparkles"></i>
+          <span>${escapeText(headline)}</span>
+        </div>
+        <div class="context-brief__vp-sections">${subSectionHtml}</div>
+      `
       }
     </section>
   `;
