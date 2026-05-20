@@ -1824,8 +1824,24 @@ function bindSession(root, session) {
     if (!input) return;
     const text = input.value.trim();
     if (!text) return;
+    const wasFirstUserMessage = !getThread(session.id).some((m) => m.role === "user");
     sendMessage(session.id, text);
     input.value = "";
+
+    // First user message without a context attached → auto-launch the
+    // context-builder flow. The conversation starts the brief setup
+    // (website URL question) inline so the user defines a context
+    // before going further. They can still Skip if they really want
+    // to stay context-less.
+    if (!wasFirstUserMessage) return;
+    const q = readQuery();
+    const ctxAttached = q.contextId || session.contextId;
+    if (ctxAttached) return;
+    setTimeout(() => {
+      contextBuilder.start(session.id, {
+        onComplete: (created) => setQuery({ contextId: created.id }),
+      });
+    }, 200);
   }
 
   // Run the handler for a choice turn (freeze the message + dispatch). Called
