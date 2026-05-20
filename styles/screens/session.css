@@ -64,10 +64,13 @@
   background: var(--app-surface);
 }
 
-/* The default analyse picker rows are full-page width — tighten them so they
-   read well in the ~400px sidebar. */
+/* Cap the wizard chrome at the same 740px the composer uses below so the
+   wizard step (source picker, URL input, dropzone) lines up with the
+   regular composer textarea — same visual rhythm whether the user is
+   chatting or going through the playbook-builder. */
 .session__assistant-wizard-bar .analyse__sticky-bar-inner {
-  max-width: none;
+  max-width: 740px;
+  margin: 0 auto;
   padding: 0;
 }
 
