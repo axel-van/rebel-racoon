@@ -213,10 +213,27 @@ function filter(list, { query }) {
 
 function bind(root) {
   root.addEventListener("click", (event) => {
+    // Edit (pen icon) — launch the conversational Playbook editor via a
+    // transient session. Confirmation modal first so the user opts in
+    // (the editor takes over the chat surface). The form-based editor
+    // remains accessible by clicking the card body (read panel →
+    // "Edit fields" toggle) — cf. plan.
     const editBtn = event.target.closest("[data-contexts-edit]");
     if (editBtn) {
       event.stopPropagation();
-      startEdit(editBtn.dataset.contextsEdit);
+      const contextId = editBtn.dataset.contextsEdit;
+      const ctx = getContexts().find((c) => c.id === contextId);
+      if (!ctx) return;
+      openConfirmModal({
+        title: "Launch Playbook editor?",
+        body: `You'll open a chat to refine "${ctx.name}". Changes will only be saved when you click "Save changes" at the bottom.`,
+        confirmLabel: "Open editor",
+        cancelLabel: "Cancel",
+        onConfirm: () => {
+          setHandoff("pendingStartPlaybookEditor", { contextId, returnTo: "/contexts" });
+          navigate(`/session/playbook-edit-${contextId}-${Date.now().toString(36)}`);
+        },
+      });
       return;
     }
     if (event.target.closest("[data-contexts-new]")) {

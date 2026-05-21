@@ -19,9 +19,9 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=10";
 import { renderDashboard } from "./screens/dashboard.js?v=42";
-import { renderSession } from "./screens/session.js?v=96";
+import { renderSession } from "./screens/session.js?v=98";
 import { renderIdeas } from "./screens/ideas.js?v=24";
-import { renderContexts } from "./screens/contexts.js?v=29";
+import { renderContexts } from "./screens/contexts.js?v=30";
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
 // stays in sync with the active context.

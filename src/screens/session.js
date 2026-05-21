@@ -38,6 +38,7 @@ import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=24";
 import * as contextBuilder from "../context-builder.js?v=32";
+import * as playbookEditor from "../playbook-editor.js?v=1";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=27";
 import { renderSourceCard } from "../components/source-card.js?v=27";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
@@ -232,9 +233,10 @@ function renderAssistantPanel(session, attachedContext) {
   // of the panel (default) or inline inside the empty hero. We render it
   // once and place it via `${composerMarkup}` so click handlers (delegated
   // on #app) keep working in both positions.
-  const composerMarkup = renderComposer(attachedContext, hasUserMessage);
+  const composerMarkup = renderComposer(attachedContext, hasUserMessage, session);
   return html`
     <aside class="session__assistant" aria-label="Assistant panel">
+      ${raw(renderPlaybookEditorBar(session))}
       <div class="session__assistant-thread" id="assistantThread" data-assistant-thread>
         ${isEmptyConversation ? raw(renderEmptyHero(session.id, composerMarkup)) : raw(renderThread(thread))}
       </div>
@@ -248,7 +250,7 @@ function renderAssistantPanel(session, attachedContext) {
 // the conversation hasn't started yet). The click handlers in bindSession
 // are delegated on #app, so the same markup works in both positions
 // without re-wiring.
-function renderComposer(attachedContext, hasUserMessage) {
+function renderComposer(attachedContext, hasUserMessage, session) {
   return `
     <div class="session__composer">
       <div class="session__composer-inner">
@@ -318,6 +320,28 @@ function renderComposer(attachedContext, hasUserMessage) {
           anywhere · drop a file anywhere to add it as a source
         </div>
       </div>
+    </div>
+  `;
+}
+
+// Sticky bar above the composer — only rendered when the session is a
+// transient Playbook editor (id starts with `playbook-edit-`). Carries
+// the explicit Save / Cancel actions for the conversational editor.
+function renderPlaybookEditorBar(session) {
+  if (!session || !session.id || !session.id.startsWith("playbook-edit-")) return "";
+  const ctxId = playbookEditor.getContextId(session.id);
+  const ctx = ctxId ? getContextById(ctxId) : null;
+  const name = ctx?.name || "Playbook";
+  return `
+    <div class="playbook-editor-bar" data-playbook-editor-bar>
+      <button type="button" class="ap-button ghost grey" data-playbook-editor-cancel>
+        <i class="ap-icon-close"></i>
+        <span>Cancel</span>
+      </button>
+      <span class="playbook-editor-bar__hint">Editing <strong>${escapeHtml(name)}</strong></span>
+      <button type="button" class="ap-button primary orange" data-playbook-editor-save>
+        <span>Save changes</span>
+      </button>
     </div>
   `;
 }
@@ -526,6 +550,7 @@ function renderAssistantPanelQuestion(session) {
   if (!chrome) return "";
   return html`
     <aside class="session__assistant session__assistant--wizard" aria-label="Assistant panel">
+      ${raw(renderPlaybookEditorBar(session))}
       <div class="session__assistant-wizard-chat analyse__chat" id="inlineQuestionChat">
         <div class="analyse__chat-inner">${raw(chrome.body)}</div>
       </div>
@@ -1283,6 +1308,30 @@ function wireAssistantPanel(root, session, attachedContext) {
         },
       });
     }, 50);
+  }
+
+  // Same mechanism for the Playbook editor — `/contexts` mints a
+  // `/session/playbook-edit-{id}-{ts}` route + arms this handoff; we
+  // launch the conversational editor on mount. The session id pattern
+  // also drives the conditional Save/Cancel chrome in the composer
+  // (cf. renderPlaybookEditorBar).
+  const pendingPlaybookEditor = consumeHandoff("pendingStartPlaybookEditor");
+  if (pendingPlaybookEditor && session.id.startsWith("playbook-edit-")) {
+    const { contextId, returnTo } = pendingPlaybookEditor;
+    setTimeout(() => {
+      playbookEditor.start(session.id, contextId, {
+        onComplete: () => {
+          if (returnTo) navigate(returnTo);
+        },
+        onCancel: () => {
+          if (returnTo) navigate(returnTo);
+        },
+      });
+    }, 50);
+  } else if (session.id.startsWith("playbook-edit-") && !playbookEditor.isActive(session.id)) {
+    // Defensive: direct link to /session/playbook-edit-* without handoff.
+    // Bounce back to /contexts (no playbook to edit).
+    navigate("/contexts");
   }
 
   // Drag-and-drop a file anywhere on the assistant panel → kicks off the
@@ -2324,6 +2373,41 @@ function bindSession(root, session) {
         event.preventDefault();
         event.stopPropagation();
         removeComposerMention(session.id, mentionRemove.dataset.composerMentionRemove);
+        return;
+      }
+
+      // Playbook editor — Save changes button (sticky bar above composer).
+      // Commits the accumulated draft via updateContext and bounces back
+      // to /contexts. No-op when nothing was patched (dirty=false).
+      if (event.target.closest("[data-playbook-editor-save]")) {
+        event.preventDefault();
+        event.stopPropagation();
+        const ctxId = playbookEditor.save(session.id);
+        if (ctxId) {
+          import("../components/toast.js?v=20").then(({ showToast }) => showToast("Playbook updated"));
+        }
+        return;
+      }
+
+      // Playbook editor — Cancel. If the user has staged any change,
+      // confirm "Discard changes?" before dropping the draft.
+      if (event.target.closest("[data-playbook-editor-cancel]")) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (playbookEditor.isDirty(session.id)) {
+          import("../components/confirm-modal.js?v=20").then(({ open }) => {
+            open({
+              title: "Discard changes?",
+              body: "Your edits to this Playbook will be lost.",
+              confirmLabel: "Discard",
+              cancelLabel: "Keep editing",
+              danger: true,
+              onConfirm: () => playbookEditor.discard(session.id),
+            });
+          });
+        } else {
+          playbookEditor.discard(session.id);
+        }
         return;
       }
 
