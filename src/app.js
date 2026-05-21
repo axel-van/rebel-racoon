@@ -1,6 +1,6 @@
 import { route, setAfterRender, start } from "./router.js?v=21";
 import { initTopbar, renderTopbar } from "./components/topbar.js?v=47";
-import { initSidebar, renderSidebar } from "./components/sidebar.js?v=41";
+import { initSidebar, renderSidebar } from "./components/sidebar.js?v=42";
 import { init as initRightPanel } from "./components/right-panel.js?v=58";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=20";
 import { initUserModeChip } from "./components/user-mode-chip.js?v=21";
@@ -19,9 +19,9 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=10";
 import { renderDashboard } from "./screens/dashboard.js?v=44";
-import { renderSession } from "./screens/session.js?v=102";
+import { renderSession } from "./screens/session.js?v=103";
 import { renderIdeas } from "./screens/ideas.js?v=24";
-import { renderContexts } from "./screens/contexts.js?v=31";
+import { renderContexts } from "./screens/contexts.js?v=32";
 import { renderWelcome } from "./screens/welcome.js?v=3";
 import { renderWelcomeSources } from "./screens/welcome-sources.js?v=1";
 // Route table.
