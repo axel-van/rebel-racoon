@@ -24,6 +24,7 @@ import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeR
 import * as rightPanel from "./components/right-panel.js?v=58";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=26";
 import { analyzeWebsite, analyzeSocialProfile, analyzeDocument, detectPlatform } from "./context-mock-analysis.js?v=21";
+import { launch as launchPlaybookEditor } from "./playbook-editor.js?v=5";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -116,10 +117,14 @@ export function start(sessionId, { onComplete, autoLaunched = false } = {}) {
 // fields (briefSummary, plain-string audience, single cta) are normalized
 // inside readBriefFromCtx in right-panel.js.
 export function openRead(contextId) {
+  // The Edit button (panel footer) now launches the conversational
+  // Playbook editor — same entry point as the pen icon on the /contexts
+  // cards. The form-based startEdit() flow stays exported in case some
+  // future surface needs it.
   rightPanel.openContextBriefPanel({
     mode: "read",
     getCtx: () => getContextById(contextId),
-    onEnterEdit: () => startEdit(contextId),
+    onEnterEdit: () => launchPlaybookEditor(contextId, "/contexts"),
   });
 }
 

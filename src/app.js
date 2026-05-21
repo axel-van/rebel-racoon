@@ -21,7 +21,7 @@ import {
 import { renderDashboard } from "./screens/dashboard.js?v=42";
 import { renderSession } from "./screens/session.js?v=100";
 import { renderIdeas } from "./screens/ideas.js?v=24";
-import { renderContexts } from "./screens/contexts.js?v=30";
+import { renderContexts } from "./screens/contexts.js?v=31";
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
 // stays in sync with the active context.

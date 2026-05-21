@@ -7,9 +7,10 @@ import {
   deleteContext,
 } from "../contexts-store.js?v=26";
 import { navigate } from "../router.js?v=21";
-import { openRead, startEdit } from "../context-builder.js?v=32";
+import { openRead, startEdit } from "../context-builder.js?v=33";
 import { setHandoff } from "../handoff.js?v=20";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=20";
+import { launch as launchPlaybookEditor } from "../playbook-editor.js?v=5";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 
 // Contexts library — standalone page (handoff §2.4).
@@ -221,19 +222,7 @@ function bind(root) {
     const editBtn = event.target.closest("[data-contexts-edit]");
     if (editBtn) {
       event.stopPropagation();
-      const contextId = editBtn.dataset.contextsEdit;
-      const ctx = getContexts().find((c) => c.id === contextId);
-      if (!ctx) return;
-      openConfirmModal({
-        title: "Launch Playbook editor?",
-        body: `You'll open a chat to refine "${ctx.name}". Changes will only be saved when you click "Save changes" at the bottom.`,
-        confirmLabel: "Open editor",
-        cancelLabel: "Cancel",
-        onConfirm: () => {
-          setHandoff("pendingStartPlaybookEditor", { contextId, returnTo: "/contexts" });
-          navigate(`/session/playbook-edit-${contextId}-${Date.now().toString(36)}`);
-        },
-      });
+      launchPlaybookEditor(editBtn.dataset.contextsEdit, "/contexts");
       return;
     }
     if (event.target.closest("[data-contexts-new]")) {

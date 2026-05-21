@@ -24,6 +24,9 @@ import {
   refreshContextBriefPanel,
   closePanel as closeRightPanel,
 } from "./components/right-panel.js?v=58";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=20";
+import { setHandoff } from "./handoff.js?v=20";
+import { navigate } from "./router.js?v=21";
 
 const drafts = new Map(); // sessionId → { contextId, draft, dirty, onComplete, onCancel }
 
@@ -56,6 +59,26 @@ export function start(sessionId, contextId, { onComplete, onCancel } = {}) {
     mode: "read",
     hideFooter: true,
     getCtx: () => mergedContext(sessionId),
+  });
+}
+
+// Single entry point for "launch the conversational editor" — surfaces
+// the confirm modal first, then arms the handoff + mints a transient
+// session id so `renderSession` mounts the editor on the next route
+// change. Used by both the pen icon on the /contexts cards and the
+// Edit button at the bottom of the read-mode brief panel.
+export function launch(contextId, returnTo = "/contexts") {
+  const ctx = getContextById(contextId);
+  if (!ctx) return;
+  openConfirmModal({
+    title: "Launch Playbook editor?",
+    body: `You'll open a chat to refine "${ctx.name}". Changes will only be saved when you click "Save changes" at the bottom.`,
+    confirmLabel: "Open editor",
+    cancelLabel: "Cancel",
+    onConfirm: () => {
+      setHandoff("pendingStartPlaybookEditor", { contextId, returnTo });
+      navigate(`/session/playbook-edit-${contextId}-${Date.now().toString(36)}`);
+    },
   });
 }
 
