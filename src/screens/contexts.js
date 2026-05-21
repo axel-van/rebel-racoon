@@ -71,7 +71,9 @@ function renderPage() {
       <div class="contexts-view__body">
         ${visible.length === 0
           ? raw(renderContextsEmpty(all, pageState))
-          : raw(`<div class="contexts-view__grid">${visible.map(renderContextCard).join("")}</div>`)}
+          : raw(
+              `<div class="contexts-view__grid">${visible.map(renderContextCard).join("")}${renderGhostCard()}</div>`,
+            )}
       </div>
     </div>
   `;
@@ -115,6 +117,19 @@ function renderContextsEmpty(allContexts, pageState) {
 // top-right corner. DO/DON'T lists and the tones chip row moved
 // out: they bloated the card without helping identification, and
 // they live in the read panel where they belong.
+// Trailing "ghost" card — visually invites a new Playbook from the grid
+// itself, so the user doesn't have to chase the header CTA after scrolling.
+// Triggers the same `data-contexts-new` handler as the header button.
+function renderGhostCard() {
+  return `
+    <button type="button" class="contexts-card contexts-card--ghost" data-contexts-new aria-label="Crée un nouveau Playbook">
+      <span class="contexts-card--ghost__glyph"><i class="ap-icon-sparkles-mermaid"></i></span>
+      <span class="contexts-card--ghost__title">Crée un nouveau Playbook</span>
+      <span class="contexts-card--ghost__sub">Un brand, une voix, un objectif — Archie s'aligne.</span>
+    </button>
+  `;
+}
+
 function renderContextCard(ctx) {
   const color = ctx.color || "orange";
   const summary = (ctx.businessSummary || ctx.briefSummary || "").trim();

@@ -88,6 +88,77 @@
   padding: var(--ref-spacing-xl) var(--ref-spacing-md);
 }
 
+/* ── Ghost card ────────────────────────────────────────────────────
+   Trailing cell in the contexts grid that invites the user to create a
+   new Playbook from the grid itself (rather than chasing the header
+   button after scrolling). Matches the regular card footprint, but
+   uses a dashed border + centered glyph + mermaid hover tint so the
+   eye reads it as "an empty slot waiting for a Playbook". */
+
+.contexts-card--ghost {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xs);
+  text-align: center;
+  padding: var(--ref-spacing-lg) var(--ref-spacing-md);
+  background: transparent;
+  border: 2px dashed var(--app-border-soft);
+  border-radius: var(--app-radius-card);
+  cursor: pointer;
+  min-height: 200px;
+  color: var(--ref-color-grey-100);
+  font-family: inherit;
+  transition:
+    border-color var(--ref-animation-short) var(--app-ease-out),
+    background-color var(--ref-animation-short) var(--app-ease-out),
+    transform var(--ref-animation-short) var(--app-ease-out);
+}
+
+.contexts-card--ghost:hover,
+.contexts-card--ghost:focus-visible {
+  outline: none;
+  border-color: var(--ref-color-mermaid-gradient-from);
+  background: var(--ref-color-mermaid-10);
+  color: var(--ref-color-grey-150);
+  transform: translateY(-1px);
+}
+
+.contexts-card--ghost__glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-mermaid-10);
+  color: var(--ref-color-white);
+  transition: background-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.contexts-card--ghost__glyph i {
+  font-size: var(--sys-icon-css-md);
+}
+
+.contexts-card--ghost:hover .contexts-card--ghost__glyph,
+.contexts-card--ghost:focus-visible .contexts-card--ghost__glyph {
+  background: var(--ref-color-mermaid-gradient-background);
+}
+
+.contexts-card--ghost__title {
+  font-size: var(--ref-font-size-md);
+  font-weight: var(--ref-font-weight-extra-bold);
+  color: var(--ref-color-grey-150);
+}
+
+.contexts-card--ghost__sub {
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-80);
+  max-width: 220px;
+  line-height: 1.4;
+}
+
 /* ── ContextCard ───────────────────────────────────────────────────
    Summary card that lets a user spot which context is which at a
    glance. Modelled on the Claude Projects pattern: color stripe on
