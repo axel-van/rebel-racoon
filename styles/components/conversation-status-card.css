@@ -8,18 +8,17 @@
    the shell carries `.is-status-card-visible` — chat content reflows
    to leave room instead of being overlaid. When the right-panel is
    open, .is-status-card-visible is stripped (card hidden) and the
-   right-panel takes column 3 as before. */
+   right-panel takes column 3 as before.
+   Treated as a full-height side panel (like .app-right-panel): white
+   surface across the whole column, single border-left, no floating
+   margin/shadow so the column never reveals the shell's grey bg. */
 .conversation-status-card {
   grid-row: 2;
   grid-column: 3;
-  margin: var(--ref-spacing-md);
   min-height: 0;
-  align-self: start;
   overflow: hidden;
   background: var(--app-surface);
-  border: 1px solid var(--app-border-soft);
-  border-radius: var(--ref-border-radius-md);
-  box-shadow: var(--app-shadow-popover-md);
+  border-left: 1px solid var(--app-border-soft);
 }
 
 .conversation-status-card[hidden] {
