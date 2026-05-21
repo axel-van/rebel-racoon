@@ -1,5 +1,5 @@
 import { getSessions } from "../sessions-store.js?v=1";
-import { getContexts } from "../contexts-store.js?v=26";
+import { getContexts } from "../contexts-store.js?v=27";
 import { isNewUser } from "../user-mode.js?v=20";
 import { hasHandoff } from "../handoff.js?v=20";
 

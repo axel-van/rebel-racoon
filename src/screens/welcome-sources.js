@@ -11,7 +11,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=21";
 import { getConnectors, setConnectorStatus, subscribe } from "../connectors-store.js?v=20";
-import { getContexts } from "../contexts-store.js?v=26";
+import { getContexts } from "../contexts-store.js?v=27";
 import { setHandoff } from "../handoff.js?v=20";
 
 function escapeHtml(str) {

@@ -3,7 +3,7 @@ import { navigate } from "../router.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=47";
 import { socialAccounts, chatStarters } from "../mocks.js?v=29";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
-import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=26";
+import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=27";
 import { isNewUser } from "../user-mode.js?v=20";
 import {
   getThread,
@@ -37,7 +37,7 @@ import { startDraftFlow, executeDraft } from "../draft-flow.js?v=21";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=25";
-import * as contextBuilder from "../context-builder.js?v=34";
+import * as contextBuilder from "../context-builder.js?v=35";
 import * as playbookEditor from "../playbook-editor.js?v=9";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=28";
 import { renderSourceCard } from "../components/source-card.js?v=28";
