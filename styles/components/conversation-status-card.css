@@ -124,3 +124,18 @@
 .conversation-status-card__row .ap-counter {
   flex-shrink: 0;
 }
+
+/* Empty state — inline "None yet" placeholder for the trailing slot of
+   the Drafts / Outputs rows when the count is 0. Also rendered as a
+   block hint inside the Sources section when no source is attached. */
+.conversation-status-card__empty {
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-60);
+  font-style: italic;
+}
+
+.conversation-status-card__empty--block {
+  padding: var(--ref-spacing-xs) var(--ref-spacing-xxs);
+  font-style: normal;
+  line-height: var(--ref-font-line-height-sm);
+}

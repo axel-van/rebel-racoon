@@ -131,16 +131,14 @@ export function render() {
   const draftCount = latestDraftCount(thread);
   const pending = pendingProcesses(thread);
 
-  // If nothing to show, hide the card altogether — an empty card is noise.
-  const hasContent = pending.length > 0 || sources.length > 0 || draftCount > 0 || ideas.length > 0;
-  if (!hasContent) {
-    hideCard();
-    return;
-  }
+  // The card is always shown on /session/:id when no right-panel is open —
+  // empty sections render an "—" placeholder so the user has a reliable
+  // status anchor (and discovers the affordance to access Drafts/Outputs
+  // panels even on a brand-new chat).
 
   innerEl.innerHTML = html`
-    ${raw(renderPendingSection(pending))} ${raw(renderSourcesSection(sources))}
-    ${raw(renderCountsRow(draftCount, ideas.length))}
+    ${raw(renderPendingSection(pending))} ${raw(renderSourcesSection(sources))} ${raw(renderOutputsRow(ideas.length))}
+    ${raw(renderDraftsRow(draftCount))}
   `;
   rootEl.hidden = false;
 }
@@ -175,7 +173,21 @@ function renderPendingSection(pending) {
 }
 
 function renderSourcesSection(sources) {
-  if (sources.length === 0) return "";
+  const heading = `
+    <h3 class="conversation-status-card__heading">
+      Sources <span class="conversation-status-card__heading-count">${sources.length}</span>
+    </h3>
+  `;
+  if (sources.length === 0) {
+    return `
+      <section class="conversation-status-card__section">
+        ${heading}
+        <div class="conversation-status-card__empty conversation-status-card__empty--block">
+          None yet — attach a file or URL to get started
+        </div>
+      </section>
+    `;
+  }
   const items = sources
     .map((s) => {
       const name = s.title || s.name || s.filename || "Untitled";
@@ -194,40 +206,40 @@ function renderSourcesSection(sources) {
     .join("");
   return `
     <section class="conversation-status-card__section">
-      <h3 class="conversation-status-card__heading">
-        Sources <span class="conversation-status-card__heading-count">${sources.length}</span>
-      </h3>
+      ${heading}
       ${items}
     </section>
   `;
 }
 
-function renderCountsRow(draftCount, ideaCount) {
-  if (draftCount === 0 && ideaCount === 0) return "";
-  const draftsRow =
-    draftCount > 0
-      ? `
-    <button type="button" class="conversation-status-card__row" data-status-drafts title="Open Drafts panel">
-      <i class="ap-icon-pen" aria-hidden="true"></i>
-      <span class="conversation-status-card__row-label">Drafts</span>
-      <span class="ap-counter normal orange">${draftCount}</span>
-    </button>
-  `
-      : "";
-  const ideasRow =
+function renderOutputsRow(ideaCount) {
+  const trailing =
     ideaCount > 0
-      ? `
-    <button type="button" class="conversation-status-card__row" data-status-ideas title="Open Outputs panel">
-      <i class="ap-icon-sparkles" aria-hidden="true"></i>
-      <span class="conversation-status-card__row-label">Outputs</span>
-      <span class="ap-counter normal blue">${ideaCount}</span>
-    </button>
-  `
-      : "";
+      ? `<span class="ap-counter normal blue">${ideaCount}</span>`
+      : `<span class="conversation-status-card__empty">None yet</span>`;
   return `
     <section class="conversation-status-card__section">
-      ${draftsRow}
-      ${ideasRow}
+      <button type="button" class="conversation-status-card__row" data-status-ideas title="Open Outputs panel">
+        <i class="ap-icon-sparkles" aria-hidden="true"></i>
+        <span class="conversation-status-card__row-label">Outputs</span>
+        ${trailing}
+      </button>
+    </section>
+  `;
+}
+
+function renderDraftsRow(draftCount) {
+  const trailing =
+    draftCount > 0
+      ? `<span class="ap-counter normal orange">${draftCount}</span>`
+      : `<span class="conversation-status-card__empty">None yet</span>`;
+  return `
+    <section class="conversation-status-card__section">
+      <button type="button" class="conversation-status-card__row" data-status-drafts title="Open Drafts panel">
+        <i class="ap-icon-pen" aria-hidden="true"></i>
+        <span class="conversation-status-card__row-label">Drafts</span>
+        ${trailing}
+      </button>
     </section>
   `;
 }
