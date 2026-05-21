@@ -164,6 +164,64 @@
   color: var(--ref-color-electric-blue-100);
 }
 
+/* ── Composer mention pills ──────────────────────────────────────
+   Wrapper row at the top of the composer card. Hidden when empty
+   (via the `hidden` attribute, toggled by composer-mentions.js). */
+.session__composer-mentions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm) 0;
+}
+
+.session__composer-mentions[hidden] {
+  display: none;
+}
+
+.composer-mention {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  /* The DS .ap-tag.normal.blue paints the rest — colors, radius,
+     base typography. We layer the close-button affordance + label
+     truncation on top. */
+}
+
+.composer-mention__label {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.composer-mention__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: var(--ref-spacing-xxxs);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--app-radius-circle);
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity var(--ref-animation-short) var(--app-ease-out);
+}
+
+.composer-mention__remove:hover,
+.composer-mention__remove:focus-visible {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.08);
+  outline: none;
+}
+
+.composer-mention__remove i {
+  font-size: 10px;
+}
+
 .conversation-status-card__row-label {
   flex: 1 1 auto;
   min-width: 0;

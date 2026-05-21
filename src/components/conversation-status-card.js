@@ -31,6 +31,7 @@ import { getThread, subscribe as subscribeThread } from "../assistant.js?v=31";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=30";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=28";
 import { subscribe as subscribeSessions } from "../sessions-store.js?v=1";
+import { addMention } from "../composer-mentions.js?v=1";
 
 const HTML = `
 <aside class="conversation-status-card" id="conversationStatusCard" hidden aria-label="Conversation status">
@@ -91,14 +92,15 @@ export function init() {
 
   // Click delegate — one handler for all the action rows.
   rootEl.addEventListener("click", (event) => {
-    // Source row → insert `@<filename> ` at the composer cursor (mention).
-    // This is a more useful action than "open Sources panel" since the user
-    // can already see the filename right here; mentioning it in the
-    // composer wires it into the next message.
+    // Source row → push the filename as a mention pill into the composer.
+    // The composer renders the pills inline at the top of its card (cf.
+    // session.js + composer-mentions.js). More visible than an inline
+    // `@filename` token.
     const sourceMention = event.target.closest("[data-status-source-mention]");
     if (sourceMention) {
       event.preventDefault();
-      mentionInComposer(sourceMention.dataset.statusSourceMention);
+      const sid = currentSessionId();
+      if (sid) addMention(sid, sourceMention.dataset.statusSourceMention);
       return;
     }
     if (event.target.closest("[data-status-drafts]")) {
@@ -345,29 +347,4 @@ function escapeAttr(s) {
   return String(s || "")
     .replace(/&/g, "&amp;")
     .replace(/"/g, "&quot;");
-}
-
-// Insert `@<source name> ` at the composer's cursor position, focus it,
-// and notify any input listeners (auto-grow, send-button enable, etc.).
-// If the cursor isn't inside the textarea (e.g. user just clicked the
-// card), we insert at the end of the existing text.
-function mentionInComposer(name) {
-  const ta = document.getElementById("assistantInput");
-  if (!ta) return;
-  const token = `@${name} `;
-  const start = ta.selectionStart ?? ta.value.length;
-  const end = ta.selectionEnd ?? ta.value.length;
-  const before = ta.value.slice(0, start);
-  const after = ta.value.slice(end);
-  // Add a leading space if needed so the mention doesn't glue to a
-  // previous word ("hello@file" → "hello @file").
-  const pad = before && !/\s$/.test(before) ? " " : "";
-  const insertion = `${pad}${token}`;
-  ta.value = `${before}${insertion}${after}`;
-  const caret = before.length + insertion.length;
-  ta.setSelectionRange(caret, caret);
-  ta.focus();
-  // Trigger an input event so the session screen's auto-grow + send
-  // button enable logic kicks in.
-  ta.dispatchEvent(new Event("input", { bubbles: true }));
 }

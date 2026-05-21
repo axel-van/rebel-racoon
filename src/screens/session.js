@@ -22,6 +22,11 @@ import {
 import { getSources, getIdeas, injectIdeasForSource } from "../library.js?v=28";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
+  renderInto as renderComposerMentions,
+  removeMention as removeComposerMention,
+  subscribe as subscribeComposerMentions,
+} from "../composer-mentions.js?v=1";
+import {
   getPosts,
   addPostDraft,
   attachImageToDraft,
@@ -252,6 +257,11 @@ function renderComposer(attachedContext, hasUserMessage) {
           <span class="session__composer-thinking-text" data-thinking-text>0s · 1 credit</span>
         </div>
         <div class="session__composer-card">
+          <div
+            class="session__composer-mentions"
+            data-composer-mentions
+            hidden
+          ></div>
           <div class="session__composer-input">
             <textarea
               class="session__composer-input-field"
@@ -1028,6 +1038,15 @@ function wireAssistantPanel(root, session, attachedContext) {
   // carried over from a prior render, e.g. after a tab switch).
   updateThinkingChip(session.id);
 
+  // Composer mentions — the floating status card pushes source mentions
+  // here via the composer-mentions store. Render once on mount, then
+  // re-render on store updates (per-session subscription).
+  const mentionsContainer = root.querySelector("[data-composer-mentions]");
+  renderComposerMentions(mentionsContainer, session.id);
+  const unsubMentions = subscribeComposerMentions(session.id, () => {
+    renderComposerMentions(root.querySelector("[data-composer-mentions]"), session.id);
+  });
+
   // Subscribe to the assistant thread.
   // When a NEW draft message lands we auto-open the right panel in Drafts
   // mode pinned to that batch — matches the handoff App.jsx "if the reply
@@ -1328,6 +1347,7 @@ function wireAssistantPanel(root, session, attachedContext) {
     offInlineQuestion();
     offComposerSources();
     offComposerUploads();
+    unsubMentions();
     stopThinkingTimer();
   };
 }
@@ -2294,6 +2314,16 @@ function bindSession(root, session) {
         event.preventDefault();
         event.stopPropagation();
         openIdeasPanel();
+        return;
+      }
+
+      // × on a composer mention pill — remove that source from the
+      // session's composer-mentions state.
+      const mentionRemove = event.target.closest("[data-composer-mention-remove]");
+      if (mentionRemove) {
+        event.preventDefault();
+        event.stopPropagation();
+        removeComposerMention(session.id, mentionRemove.dataset.composerMentionRemove);
         return;
       }
 

@@ -1,0 +1,116 @@
+// Per-session list of source mentions surfaced as pills inside the
+// composer card. The user adds a mention by clicking a source row in
+// the conversation status card; pills can be dismissed individually
+// via their trailing ×.
+//
+// State is kept in memory (Map<sessionId, string[]>) and survives
+// route changes for the duration of the page. Cleared when the
+// session is deleted (clearSession).
+//
+// Public API:
+//   getMentions(sessionId)     → string[]
+//   addMention(sessionId, name)
+//   removeMention(sessionId, name)
+//   subscribe(sessionId, fn)   → unsubscribe
+//   clearSession(sessionId)
+//   renderInto(container, sessionId)  // helper for session.js composer
+
+const mentionsBySession = new Map();
+const subscribers = new Map();
+
+function ensure(sessionId) {
+  if (!mentionsBySession.has(sessionId)) mentionsBySession.set(sessionId, []);
+  return mentionsBySession.get(sessionId);
+}
+
+export function getMentions(sessionId) {
+  return ensure(sessionId).slice();
+}
+
+export function addMention(sessionId, name) {
+  if (!sessionId || !name) return;
+  const list = ensure(sessionId);
+  // De-dupe — re-clicking the same source shouldn't stack duplicates.
+  if (list.includes(name)) return;
+  list.push(name);
+  notify(sessionId);
+}
+
+export function removeMention(sessionId, name) {
+  const list = mentionsBySession.get(sessionId);
+  if (!list) return;
+  const idx = list.indexOf(name);
+  if (idx < 0) return;
+  list.splice(idx, 1);
+  notify(sessionId);
+}
+
+export function clearSession(sessionId) {
+  mentionsBySession.delete(sessionId);
+  notify(sessionId);
+}
+
+export function subscribe(sessionId, fn) {
+  if (!subscribers.has(sessionId)) subscribers.set(sessionId, new Set());
+  const set = subscribers.get(sessionId);
+  set.add(fn);
+  return () => set.delete(fn);
+}
+
+function notify(sessionId) {
+  const set = subscribers.get(sessionId);
+  if (!set) return;
+  const snap = getMentions(sessionId);
+  set.forEach((fn) => {
+    try {
+      fn(snap);
+    } catch {}
+  });
+}
+
+// Fill the given container with pills for each mention in the session.
+// Caller is expected to wire up the × click delegate (handled in
+// session.js's composer event listener for symmetry with the other
+// composer affordances).
+export function renderInto(container, sessionId) {
+  if (!container) return;
+  const list = getMentions(sessionId);
+  if (list.length === 0) {
+    container.innerHTML = "";
+    container.hidden = true;
+    return;
+  }
+  container.hidden = false;
+  container.innerHTML = list
+    .map(
+      (name) => `
+    <span class="ap-tag normal blue composer-mention" data-composer-mention="${escapeAttr(name)}">
+      <i class="ap-icon-file" aria-hidden="true"></i>
+      <span class="composer-mention__label">${escapeHtml(name)}</span>
+      <button
+        type="button"
+        class="composer-mention__remove"
+        data-composer-mention-remove="${escapeAttr(name)}"
+        aria-label="Remove ${escapeAttr(name)} mention"
+        title="Remove mention"
+      >
+        <i class="ap-icon-close"></i>
+      </button>
+    </span>
+  `,
+    )
+    .join("");
+}
+
+function escapeHtml(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function escapeAttr(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;");
+}
