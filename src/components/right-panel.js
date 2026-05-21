@@ -939,10 +939,6 @@ function renderPanel() {
   const shell = document.getElementById("appShell");
   if (shell) {
     shell.classList.toggle("is-right-panel-open", !!state.mode);
-    // Drafts + context-brief render rich, multi-section content — both
-    // need the wider panel column. The compact Ideas/Sources list stays
-    // on the default 460px.
-    shell.classList.toggle("is-right-panel-wide", state.mode === "drafts" || state.mode === "context-brief");
   }
   if (!state.mode) {
     el.hidden = true;
