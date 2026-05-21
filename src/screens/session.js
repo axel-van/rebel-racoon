@@ -25,7 +25,7 @@ import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
-} from "../composer-mentions.js?v=1";
+} from "../composer-mentions.js?v=2";
 import {
   getPosts,
   addPostDraft,
@@ -257,12 +257,12 @@ function renderComposer(attachedContext, hasUserMessage) {
           <span class="session__composer-thinking-text" data-thinking-text>0s · 1 credit</span>
         </div>
         <div class="session__composer-card">
-          <div
-            class="session__composer-mentions"
-            data-composer-mentions
-            hidden
-          ></div>
           <div class="session__composer-input">
+            <div
+              class="session__composer-mentions"
+              data-composer-mentions
+              hidden
+            ></div>
             <textarea
               class="session__composer-input-field"
               id="assistantInput"

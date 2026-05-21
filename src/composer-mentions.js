@@ -81,11 +81,14 @@ export function renderInto(container, sessionId) {
     return;
   }
   container.hidden = false;
+  // DS-compliant pill: `.ap-tag.mini.blue` is the compact variant.
+  // The DS only supports `ap-icon-close` inside a tag, so no file icon —
+  // the label alone carries the identity. Close button is auto-detected
+  // via :has(> button), no extra class needed.
   container.innerHTML = list
     .map(
       (name) => `
-    <span class="ap-tag normal blue composer-mention" data-composer-mention="${escapeAttr(name)}">
-      <i class="ap-icon-file" aria-hidden="true"></i>
+    <span class="ap-tag mini blue composer-mention" data-composer-mention="${escapeAttr(name)}">
       <span class="composer-mention__label">${escapeHtml(name)}</span>
       <button
         type="button"
