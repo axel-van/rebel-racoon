@@ -4,23 +4,37 @@
    on the root <aside> when conditions aren't met (off-route, panel open,
    nothing to surface). */
 
+/* The card is a real grid column on .app-shell (row 2, column 3) when
+   the shell carries `.is-status-card-visible` — chat content reflows
+   to leave room instead of being overlaid. When the right-panel is
+   open, .is-status-card-visible is stripped (card hidden) and the
+   right-panel takes column 3 as before. */
 .conversation-status-card {
-  position: fixed;
-  top: calc(var(--app-topbar-height) + var(--ref-spacing-md));
-  right: var(--ref-spacing-md);
-  z-index: 5;
-  width: min(280px, calc(100vw - 2 * var(--ref-spacing-md)));
-  max-height: calc(100vh - var(--app-topbar-height) - 2 * var(--ref-spacing-md));
+  grid-row: 2;
+  grid-column: 3;
+  margin: var(--ref-spacing-md);
+  min-height: 0;
+  align-self: start;
   overflow: hidden;
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--ref-border-radius-md);
   box-shadow: var(--app-shadow-popover-md);
-  pointer-events: auto;
 }
 
 .conversation-status-card[hidden] {
   display: none;
+}
+
+/* Grid template — add a 3rd column for the card when the shell flag
+   is on. Skipped when the right-panel is already open (its own rule
+   wins and adds the right-panel column). */
+.app-shell.is-status-card-visible:not(.is-right-panel-open) {
+  grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr) 296px;
+}
+
+.app-shell.is-status-card-visible.is-sidebar-collapsed:not(.is-right-panel-open) {
+  grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) 296px;
 }
 
 /* Topbar info-button — pressed state when the card is visible.

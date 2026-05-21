@@ -31,7 +31,7 @@ import { getThread, subscribe as subscribeThread } from "../assistant.js?v=31";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=30";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=28";
 import { subscribe as subscribeSessions } from "../sessions-store.js?v=1";
-import { addMention } from "../composer-mentions.js?v=1";
+import { addMention } from "../composer-mentions.js?v=2";
 
 const HTML = `
 <aside class="conversation-status-card" id="conversationStatusCard" hidden aria-label="Conversation status">
@@ -86,7 +86,11 @@ export function init() {
   if (initialized) return;
   const wrapper = document.createElement("div");
   wrapper.innerHTML = HTML;
-  document.body.appendChild(wrapper.firstElementChild);
+  // Append to .app-shell (not <body>) so the card can be grid-positioned
+  // as a real third column rather than overlaying the chat — the shell's
+  // grid template adds a column when `.is-status-card-visible` is set.
+  const shell = document.getElementById("appShell") || document.body;
+  shell.appendChild(wrapper.firstElementChild);
   rootEl = document.getElementById("conversationStatusCard");
   innerEl = rootEl.querySelector("[data-status-card-root]");
 
@@ -184,10 +188,21 @@ export function render() {
     ${raw(renderDraftsRow(draftCount))}
   `;
   rootEl.hidden = false;
+  setShellLayout(true);
 }
 
 function hideCard() {
   if (rootEl) rootEl.hidden = true;
+  setShellLayout(false);
+}
+
+// Toggle the .is-status-card-visible class on .app-shell — this is what
+// activates the grid 3rd-column reservation so the chat content gets
+// pushed instead of being overlaid.
+function setShellLayout(visible) {
+  const shell = document.getElementById("appShell");
+  if (!shell) return;
+  shell.classList.toggle("is-status-card-visible", !!visible);
 }
 
 // In progress — list any thread messages currently flagged loading.
