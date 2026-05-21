@@ -38,7 +38,7 @@ import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=25";
 import * as contextBuilder from "../context-builder.js?v=33";
-import * as playbookEditor from "../playbook-editor.js?v=7";
+import * as playbookEditor from "../playbook-editor.js?v=8";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=28";
 import { renderSourceCard } from "../components/source-card.js?v=27";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
@@ -525,10 +525,29 @@ function renderAssistantPanelWizard(session) {
 function renderAssistantPanelQuestion(session) {
   const chrome = inlineQuestion.renderChrome(session.id);
   if (!chrome) return "";
+  // The full assistant thread is rendered above the picker so the
+  // wizard reads as a real conversation — each pick / submit posts a
+  // user-turn and each AI prompt posts an assistant-turn, all visible
+  // and scrollable. `chrome.body` (the current question's intro) is
+  // only appended when callers chose to pass `intro:` to
+  // inlineQuestion.ask; with the conversational pattern (post the
+  // prompt via postAssistantMessage instead) it stays empty.
+  const thread = getThread(session.id);
+  // The thread container carries `data-assistant-thread` so the assistant
+  // subscriber in wireAssistantPanel repaints it on new turns (postUserTurn /
+  // postAssistantMessage / postSystemNotice during a wizard step). Without
+  // it, new messages would be invisible until the picker state next changes.
+  // `chrome.body` (legacy intro) sits in its own sibling div so the
+  // subscriber can swap the thread innerHTML without nuking it — most modern
+  // callers leave chrome.body empty by passing the prompt through
+  // postAssistantMessage instead.
   return html`
     <aside class="session__assistant session__assistant--wizard" aria-label="Assistant panel">
       <div class="session__assistant-wizard-chat analyse__chat" id="inlineQuestionChat">
-        <div class="analyse__chat-inner">${raw(chrome.body)}</div>
+        <div class="analyse__chat-inner">
+          <div data-assistant-thread>${raw(renderThread(thread, session.id))}</div>
+          ${raw(chrome.body)}
+        </div>
       </div>
       <div class="analyse__sticky-bar session__assistant-wizard-bar" role="group" aria-label="Answer">
         <div class="analyse__sticky-bar-inner">
@@ -547,8 +566,8 @@ function renderAssistantPanelQuestion(session) {
 // question. Triggered after the user clicks "Ask" on a source card and
 // picks the chat to ask in. Suggested prompts + a free-text custom row.
 function askWhatToKnow(sessionId, filename) {
+  postAssistantMessage(sessionId, `What would you like to know about **${filename}**?`);
   inlineQuestion.ask(sessionId, {
-    intro: `What would you like to know about ${filename}?`,
     title: filename || "About this source",
     stepLabel: "Source",
     items: [
@@ -569,8 +588,11 @@ function askWhatToKnow(sessionId, filename) {
 // Cancel quietly drops the request; Continue runs the section wizard.
 function startEditConfirmPrompt(session, section, ctxId) {
   const sectionTitle = section === "voice" ? "Voice" : section === "brief" ? "Strategy brief" : "Brand theme";
+  postAssistantMessage(
+    session.id,
+    `Editing the ${sectionTitle.toLowerCase()} will update this context across every chat using it.`,
+  );
   inlineQuestion.ask(session.id, {
-    intro: `Editing the ${sectionTitle.toLowerCase()} will update this context across every chat using it.`,
     title: "Continue editing?",
     stepLabel: "Confirm",
     items: [
@@ -764,8 +786,8 @@ function askProfileQuestion(sessionId, ideaId) {
     );
     return;
   }
+  postAssistantMessage(sessionId, "Which profile should I draft this for?");
   inlineQuestion.ask(sessionId, {
-    intro: "Which profile should I draft this for?",
     title: "Pick a connected social profile",
     stepLabel: "Profile",
     items: connected.map((a) => ({
@@ -1064,6 +1086,11 @@ function wireAssistantPanel(root, session, attachedContext) {
       thread.innerHTML = renderThread(messages, session.id);
       thread.scrollTop = thread.scrollHeight;
     }
+    // In wizard layouts the actual scroll container is the wizard chat
+    // wrapper, not the [data-assistant-thread] inner div — scroll it
+    // explicitly so newly posted turns stay pinned to the bottom.
+    const wizardChat = root.querySelector("#inlineQuestionChat, .session__assistant-wizard-chat");
+    if (wizardChat) wizardChat.scrollTop = wizardChat.scrollHeight;
     updateThinkingChip(session.id);
     if (!firstUserTurnSeen && messages.some((m) => m.role === "user")) {
       firstUserTurnSeen = true;
@@ -1160,6 +1187,14 @@ function wireAssistantPanel(root, session, attachedContext) {
       }
     }
     rebindWizardKeyboardIfActive();
+    // Wizard chat (inline-question / sidebar-wizard layouts) renders the
+    // full thread above the picker — keep it pinned to the bottom on every
+    // re-render so newly posted turns stay in view. Uses queueMicrotask so
+    // it runs after the DOM swap above has committed.
+    queueMicrotask(() => {
+      const wizardChat = root.querySelector("#inlineQuestionChat, .session__assistant-wizard-chat");
+      if (wizardChat) wizardChat.scrollTop = wizardChat.scrollHeight;
+    });
   };
   const offWizard = sidebarWizard.subscribe(session.id, refreshAssistantAside);
   const offInlineQuestion = inlineQuestion.subscribe(session.id, refreshAssistantAside);

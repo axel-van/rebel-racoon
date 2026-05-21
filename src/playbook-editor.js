@@ -15,9 +15,15 @@
 //
 // The session id is unique + never registered in sessions-store, so the
 // editor conversation never appears in the sidebar (transient).
+//
+// Conversational pattern: every step posts user + assistant turns into
+// the session thread (see assistant.js postUserTurn / postAssistantMessage)
+// so the picker reads as a real chat. Long-running analyses (website,
+// document) flash a mermaid "Analyzing…" pill via postSystemNotice +
+// markSystemNoticeReady, mirroring the context-builder creation flow.
 
 import { getContextById, updateContext } from "./contexts-store.js?v=26";
-import { postAssistantMessage } from "./assistant.js?v=31";
+import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=31";
 import * as inlineQuestion from "./inline-question.js?v=25";
 import {
   openContextBriefPanel,
@@ -30,6 +36,12 @@ import { navigate } from "./router.js?v=21";
 import { analyzeWebsite, analyzeDocument } from "./context-mock-analysis.js?v=21";
 
 const drafts = new Map(); // sessionId → { contextId, draft, dirty, onComplete, onCancel }
+
+// Mocked analysis delay — 1.2 s feels long enough that the mermaid pill
+// registers but short enough that nobody has time to bail. Same convention
+// as context-builder's website analysis (which uses 6 s for the full
+// creation flow; the editor's incremental tweaks should feel snappier).
+const ANALYSIS_DELAY_MS = 1200;
 
 // ---------- Public API ----------
 
@@ -148,15 +160,24 @@ const EDITOR_FOOTER_SLOT = `
   </button>
 `;
 
+// Labels for the chip menu — mapped twice (picker items + the user-turn
+// echo posted on click) so a single source of truth keeps them in sync.
+const CHIP_LABELS = {
+  voice: "Adjust voice",
+  brief: "Refine brief",
+  branding: "Update branding",
+  cta: "Change CTAs",
+};
+
 function showChipMenu(sessionId) {
   inlineQuestion.ask(sessionId, {
     title: "What would you like to refine?",
     stepLabel: "Editor",
     items: [
-      { value: "voice", label: "Adjust voice", icon: "ap-icon-sparkles" },
-      { value: "brief", label: "Refine brief", icon: "ap-icon-file" },
-      { value: "branding", label: "Update branding", icon: "ap-icon-target" },
-      { value: "cta", label: "Change CTAs", icon: "ap-icon-link" },
+      { value: "voice", label: CHIP_LABELS.voice, icon: "ap-icon-sparkles" },
+      { value: "brief", label: CHIP_LABELS.brief, icon: "ap-icon-file" },
+      { value: "branding", label: CHIP_LABELS.branding, icon: "ap-icon-target" },
+      { value: "cta", label: CHIP_LABELS.cta, icon: "ap-icon-link" },
     ],
     onPick: (value) => handleChipPick(sessionId, value),
     footerSlot: EDITOR_FOOTER_SLOT,
@@ -171,6 +192,10 @@ function handleChipPick(sessionId, choice) {
     discard(sessionId);
     return;
   }
+
+  // Echo the click as a user-turn before branching so the conversation
+  // shows what was picked.
+  postUserTurn(sessionId, CHIP_LABELS[choice] || choice);
 
   switch (choice) {
     case "voice":
@@ -194,15 +219,22 @@ function handleChipPick(sessionId, choice) {
 // drops in (re-runs analyzeDocument, same as the creation wizard), or
 // typed directly as a comma-separated tone list. The top-level chip
 // shows a 2-option picker that branches to one or the other.
+const VOICE_LABELS = {
+  analyze: "Analyze a document",
+  edit: "Edit tones directly",
+};
+
 function askVoice(sessionId, ctx) {
+  postAssistantMessage(sessionId, "How would you like to update the voice?");
   inlineQuestion.ask(sessionId, {
-    title: "Adjust voice — how would you like to update it?",
+    title: "Adjust voice",
     stepLabel: "Voice",
     items: [
-      { value: "analyze", label: "Analyze a document", icon: "ap-icon-file" },
-      { value: "edit", label: "Edit tones directly", icon: "ap-icon-pen" },
+      { value: "analyze", label: VOICE_LABELS.analyze, icon: "ap-icon-file" },
+      { value: "edit", label: VOICE_LABELS.edit, icon: "ap-icon-pen" },
     ],
     onPick: (which) => {
+      postUserTurn(sessionId, VOICE_LABELS[which] || which);
       if (which === "analyze") askVoiceDocument(sessionId, ctx);
       else if (which === "edit") askVoiceTones(sessionId, ctx);
     },
@@ -213,27 +245,21 @@ function askVoice(sessionId, ctx) {
 }
 
 function askVoiceDocument(sessionId, ctx) {
+  postAssistantMessage(
+    sessionId,
+    "Drop a brand or voice document — guidelines, a tone-of-voice doc, or past content. I'll extract the dominant tones and voice profile.",
+  );
   inlineQuestion.ask(sessionId, {
     title: "Drop a brand or voice document",
     stepLabel: "Voice · Document",
-    intro:
-      "Brand guidelines, a tone-of-voice doc, or any past content — Archie will extract the dominant tones and voice profile.",
     customFile: true,
     customFileAccept: ".pdf,.docx,.txt,.md",
     customFileLabel: "Drop a file here, or click to browse",
     customFileHint: "PDF · DOCX · TXT · MD",
     onFile: (file) => {
-      const result = analyzeDocument(file);
-      const patch = {};
-      if (Array.isArray(result?.tones)) patch.tones = result.tones;
-      if (result?.suggestions?.voiceProfile) patch.voiceProfile = result.suggestions.voiceProfile;
-      if (Object.keys(patch).length > 0) patchDraft(sessionId, patch);
       const filename = file?.name || "your document";
-      postAssistantMessage(
-        sessionId,
-        `Voice refreshed from **${filename}** — tones: ${(patch.tones || []).join(" + ") || "—"}.`,
-      );
-      showChipMenu(sessionId);
+      postUserTurn(sessionId, `Uploaded ${filename}`);
+      runDocumentAnalysis(sessionId, file, filename);
     },
     onSkip: () => askVoice(sessionId, ctx),
     onBack: () => askVoice(sessionId, ctx),
@@ -241,18 +267,51 @@ function askVoiceDocument(sessionId, ctx) {
   });
 }
 
+// Mock pill for the document analysis — flips from "Analyzing your
+// document — {filename}" to "Analyzed your document — {filename}" after
+// the simulated delay. Same chrome as the creation flow's "Extracting
+// guidelines" notice (mermaid variant).
+function runDocumentAnalysis(sessionId, file, filename) {
+  const noticeId = postSystemNotice(sessionId, {
+    meta: "Analyzing your document",
+    text: filename,
+    variant: "mermaid",
+  });
+  window.setTimeout(() => {
+    if (!drafts.has(sessionId)) return; // user bailed mid-analysis
+    const result = analyzeDocument(file);
+    const patch = {};
+    if (Array.isArray(result?.tones)) patch.tones = result.tones;
+    if (result?.suggestions?.voiceProfile) patch.voiceProfile = result.suggestions.voiceProfile;
+    if (Object.keys(patch).length > 0) patchDraft(sessionId, patch);
+    markSystemNoticeReady(sessionId, noticeId, {
+      meta: "Analyzed your document",
+      text: filename,
+    });
+    postAssistantMessage(
+      sessionId,
+      `Voice refreshed from **${filename}** — tones: ${(patch.tones || []).join(" + ") || "—"}.`,
+    );
+    showChipMenu(sessionId);
+  }, ANALYSIS_DELAY_MS);
+}
+
 function askVoiceTones(sessionId, ctx) {
   const current = (currentValue(sessionId, "tones") ?? ctx.tones ?? []).join(", ");
+  postAssistantMessage(
+    sessionId,
+    current ? `What tones should the voice carry? Current: **${current}**.` : "What tones should the voice carry?",
+  );
   inlineQuestion.ask(sessionId, {
-    title: "What tones should the voice carry?",
+    title: "Edit tones",
     stepLabel: "Voice · Tones",
-    intro: current ? `Current: **${current}**` : "",
     customPlaceholder: "e.g. conversational, sharp, warm…",
     onCustom: (text) => {
       const tones = text
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean);
+      postUserTurn(sessionId, tones.join(", ") || text || "(empty)");
       patchDraft(sessionId, { tones });
       postAssistantMessage(sessionId, `Voice updated to **${tones.join(" + ") || "—"}**.`);
       showChipMenu(sessionId);
@@ -265,12 +324,16 @@ function askVoiceTones(sessionId, ctx) {
 
 function askBrief(sessionId, ctx) {
   const current = currentValue(sessionId, "businessSummary") ?? ctx.businessSummary ?? ctx.briefSummary ?? "";
+  postAssistantMessage(
+    sessionId,
+    current ? `What's the new brief? Current: ${truncate(current, 120)}` : "What's the new brief?",
+  );
   inlineQuestion.ask(sessionId, {
-    title: "What's the new brief?",
+    title: "Refine brief",
     stepLabel: "Brief",
-    intro: current ? `Current: ${truncate(current, 120)}` : "",
     customPlaceholder: "Two or three sentences describing the playbook…",
     onCustom: (text) => {
+      postUserTurn(sessionId, text || "(empty)");
       patchDraft(sessionId, { businessSummary: text });
       postAssistantMessage(sessionId, `Brief updated.`);
       showChipMenu(sessionId);
@@ -285,16 +348,24 @@ function askBrief(sessionId, ctx) {
 // identity from a website (mock analysis) or tweak individual fields
 // (colors, fonts, the high-level Playbook accent). Top-level chip
 // routes to a sub-picker that splits the two paths.
+const BRANDING_LABELS = {
+  analyze: "Analyze a new website",
+  edit: "Edit colors and fonts directly",
+  "playbook-color": "Change Playbook accent color",
+};
+
 function askBranding(sessionId, ctx) {
+  postAssistantMessage(sessionId, "What would you like to update in the branding?");
   inlineQuestion.ask(sessionId, {
-    title: "Update branding — what would you like to do?",
+    title: "Update branding",
     stepLabel: "Branding",
     items: [
-      { value: "analyze", label: "Analyze a new website", icon: "ap-icon-link" },
-      { value: "edit", label: "Edit colors and fonts directly", icon: "ap-icon-pen" },
-      { value: "playbook-color", label: "Change Playbook accent color", icon: "ap-icon-target" },
+      { value: "analyze", label: BRANDING_LABELS.analyze, icon: "ap-icon-link" },
+      { value: "edit", label: BRANDING_LABELS.edit, icon: "ap-icon-pen" },
+      { value: "playbook-color", label: BRANDING_LABELS["playbook-color"], icon: "ap-icon-target" },
     ],
     onPick: (which) => {
+      postUserTurn(sessionId, BRANDING_LABELS[which] || which);
       if (which === "analyze") askBrandingWebsite(sessionId, ctx);
       else if (which === "edit") askBrandingField(sessionId, ctx);
       else if (which === "playbook-color") askPlaybookColor(sessionId, ctx);
@@ -308,21 +379,19 @@ function askBranding(sessionId, ctx) {
 function askBrandingWebsite(sessionId, ctx) {
   const merged = mergedImageVoice(sessionId, ctx);
   const currentUrl = merged?.websites?.[0]?.url || "";
+  postAssistantMessage(
+    sessionId,
+    currentUrl ? `Which website should I analyze? Current: ${currentUrl}` : "Which website should I analyze?",
+  );
   inlineQuestion.ask(sessionId, {
-    title: "Which website should I analyze?",
+    title: "Analyze a website",
     stepLabel: "Branding · Website",
-    intro: currentUrl ? `Current: ${currentUrl}` : "",
     customPlaceholder: "https://yourbrand.com",
     onCustom: (url) => {
       const trimmed = (url || "").trim();
       if (!trimmed) return;
-      const result = analyzeWebsite(trimmed);
-      const imageVoice = result?.suggestions?.imageVoice;
-      if (imageVoice) {
-        patchDraft(sessionId, { imageVoice });
-      }
-      postAssistantMessage(sessionId, `Brand visual identity refreshed from **${trimmed}**.`);
-      showChipMenu(sessionId);
+      postUserTurn(sessionId, trimmed);
+      runWebsiteAnalysis(sessionId, trimmed);
     },
     onSkip: () => askBranding(sessionId, ctx),
     onBack: () => askBranding(sessionId, ctx),
@@ -330,20 +399,55 @@ function askBrandingWebsite(sessionId, ctx) {
   });
 }
 
+// Mock pill for the website analysis — same flip pattern as the document
+// path (flips from "Analyzing the website — {url}" to "Analyzed the
+// website — {url}" after the simulated delay).
+function runWebsiteAnalysis(sessionId, url) {
+  const noticeId = postSystemNotice(sessionId, {
+    meta: "Analyzing the website",
+    text: url,
+    variant: "mermaid",
+  });
+  window.setTimeout(() => {
+    if (!drafts.has(sessionId)) return;
+    const result = analyzeWebsite(url);
+    const imageVoice = result?.suggestions?.imageVoice;
+    if (imageVoice) {
+      patchDraft(sessionId, { imageVoice });
+    }
+    markSystemNoticeReady(sessionId, noticeId, {
+      meta: "Analyzed the website",
+      text: url,
+    });
+    postAssistantMessage(sessionId, `Brand visual identity refreshed from **${url}**.`);
+    showChipMenu(sessionId);
+  }, ANALYSIS_DELAY_MS);
+}
+
+const BRANDING_FIELD_LABELS = {
+  "color-primary": "Primary color",
+  "color-accent": "Accent color",
+  "color-background": "Background color",
+  "color-text": "Text color",
+  "color-link": "Link color",
+  "font-primary": "Primary font",
+  "font-heading": "Heading font",
+};
+
 function askBrandingField(sessionId, ctx) {
+  postAssistantMessage(sessionId, "Which field would you like to edit?");
   inlineQuestion.ask(sessionId, {
-    title: "What would you like to edit?",
+    title: "Edit branding field",
     stepLabel: "Branding · Fields",
-    items: [
-      { value: "color-primary", label: "Primary color", icon: "ap-icon-circle" },
-      { value: "color-accent", label: "Accent color", icon: "ap-icon-circle" },
-      { value: "color-background", label: "Background color", icon: "ap-icon-circle" },
-      { value: "color-text", label: "Text color", icon: "ap-icon-circle" },
-      { value: "color-link", label: "Link color", icon: "ap-icon-link" },
-      { value: "font-primary", label: "Primary font", icon: "ap-icon-pen" },
-      { value: "font-heading", label: "Heading font", icon: "ap-icon-pen" },
-    ],
-    onPick: (field) => askBrandingFieldValue(sessionId, ctx, field),
+    items: Object.entries(BRANDING_FIELD_LABELS).map(([value, label]) => ({
+      value,
+      label,
+      icon: value.startsWith("font-") ? "ap-icon-pen" : value === "color-link" ? "ap-icon-link" : "ap-icon-circle",
+    })),
+    onPick: (field) => {
+      postUserTurn(sessionId, BRANDING_FIELD_LABELS[field] || field);
+      askBrandingFieldValue(sessionId, ctx, field);
+    },
     onBack: () => askBranding(sessionId, ctx),
     onSkip: () => askBranding(sessionId, ctx),
     footerSlot: EDITOR_FOOTER_SLOT,
@@ -366,14 +470,20 @@ function askBrandingFieldValue(sessionId, ctx, field) {
     askBrandingField(sessionId, ctx);
     return;
   }
+  postAssistantMessage(
+    sessionId,
+    fieldMeta.current
+      ? `What's the new ${fieldMeta.label.toLowerCase()}? Current: **${fieldMeta.current}**.`
+      : `What's the new ${fieldMeta.label.toLowerCase()}?`,
+  );
   inlineQuestion.ask(sessionId, {
     title: `New ${fieldMeta.label.toLowerCase()}`,
     stepLabel: "Branding",
-    intro: fieldMeta.current ? `Current: **${fieldMeta.current}**` : "",
     customPlaceholder: fieldMeta.placeholder,
     onCustom: (text) => {
       const value = (text || "").trim();
       if (!value) return;
+      postUserTurn(sessionId, value);
       const next = patchImageVoiceField(merged, field, value);
       patchDraft(sessionId, { imageVoice: next });
       postAssistantMessage(sessionId, `${fieldMeta.label} updated to **${value}**.`);
@@ -385,20 +495,26 @@ function askBrandingFieldValue(sessionId, ctx, field) {
   });
 }
 
+const COLOR_LABELS = {
+  orange: "Orange",
+  blue: "Blue",
+  green: "Green",
+  purple: "Purple",
+  red: "Red",
+};
+
 function askPlaybookColor(sessionId, ctx) {
   const current = currentValue(sessionId, "color") ?? ctx.color ?? "orange";
+  postAssistantMessage(
+    sessionId,
+    `Pick a Playbook accent color. Current: **${capitalize(current)}** · drives the card swatch in the Playbooks library.`,
+  );
   inlineQuestion.ask(sessionId, {
-    title: "Pick a Playbook accent color",
+    title: "Playbook accent color",
     stepLabel: "Branding · Accent",
-    intro: `Current: **${capitalize(current)}** · drives the card swatch in the Playbooks library.`,
-    items: [
-      { value: "orange", label: "Orange" },
-      { value: "blue", label: "Blue" },
-      { value: "green", label: "Green" },
-      { value: "purple", label: "Purple" },
-      { value: "red", label: "Red" },
-    ],
+    items: Object.entries(COLOR_LABELS).map(([value, label]) => ({ value, label })),
     onPick: (color) => {
+      postUserTurn(sessionId, COLOR_LABELS[color] || color);
       patchDraft(sessionId, { color });
       postAssistantMessage(sessionId, `Playbook accent updated to **${capitalize(color)}**.`);
       showChipMenu(sessionId);
@@ -458,13 +574,17 @@ function patchImageVoiceField(imageVoice, field, value) {
 
 function askCTA(sessionId, ctx) {
   const current = currentValue(sessionId, "ctaLinks")?.[0]?.url ?? ctx.ctaLinks?.[0]?.url ?? "";
+  postAssistantMessage(
+    sessionId,
+    current ? `What's the primary CTA URL? Current: ${current}` : "What's the primary CTA URL?",
+  );
   inlineQuestion.ask(sessionId, {
-    title: "What's the primary CTA URL?",
+    title: "Change CTAs",
     stepLabel: "CTAs",
-    intro: current ? `Current: ${current}` : "",
     customPlaceholder: "https://…",
     onCustom: (text) => {
       const url = text.trim();
+      postUserTurn(sessionId, url || "(empty)");
       patchDraft(sessionId, { ctaLinks: [{ label: "Primary CTA", url }] });
       postAssistantMessage(sessionId, `CTA updated to **${url}**.`);
       showChipMenu(sessionId);

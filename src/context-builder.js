@@ -24,7 +24,7 @@ import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeR
 import * as rightPanel from "./components/right-panel.js?v=58";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=26";
 import { analyzeWebsite, analyzeSocialProfile, analyzeDocument, detectPlatform } from "./context-mock-analysis.js?v=21";
-import { launch as launchPlaybookEditor } from "./playbook-editor.js?v=5";
+import { launch as launchPlaybookEditor } from "./playbook-editor.js?v=8";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -176,7 +176,6 @@ function askSource(sessionId, { autoLaunched = false } = {}) {
     : "Let's set up a new playbook.";
   postAssistantMessage(sessionId, intro);
   inlineQuestion.ask(sessionId, {
-    intro,
     title: "How should I start?",
     items: [
       {
@@ -228,7 +227,6 @@ function askUrl(sessionId) {
   const intro = "Got it — paste your website URL and I'll pull the brand voice, audience and visual identity from it.";
   postAssistantMessage(sessionId, intro);
   inlineQuestion.ask(sessionId, {
-    intro,
     title: "What's the URL of your company website?",
     items: [],
     customPlaceholder: "https://your-brand.com",
@@ -242,7 +240,6 @@ function askProfileUrl(sessionId) {
   const intro = "Got it — paste the profile URL. I'll detect the platform and analyse the voice from there.";
   postAssistantMessage(sessionId, intro);
   inlineQuestion.ask(sessionId, {
-    intro,
     title: "What's your social profile URL?",
     items: [],
     customPlaceholder: "linkedin.com/in/jdoe",
@@ -256,7 +253,6 @@ function askDocument(sessionId) {
   const intro = "Got it — drop a brand or strategy document and I'll build the playbook from it.";
   postAssistantMessage(sessionId, intro);
   inlineQuestion.ask(sessionId, {
-    intro,
     title: "Upload a brand or strategy document",
     items: [],
     customFile: true,

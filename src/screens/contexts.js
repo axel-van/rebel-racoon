@@ -10,7 +10,7 @@ import { navigate } from "../router.js?v=21";
 import { openRead, startEdit } from "../context-builder.js?v=33";
 import { setHandoff } from "../handoff.js?v=20";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=20";
-import { launch as launchPlaybookEditor } from "../playbook-editor.js?v=5";
+import { launch as launchPlaybookEditor } from "../playbook-editor.js?v=8";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 
 // Contexts library — standalone page (handoff §2.4).
