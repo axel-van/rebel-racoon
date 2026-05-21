@@ -1,0 +1,335 @@
+/* ---------- Onboarding (Welcome) screens ----------
+   Three full-screen surfaces rendered with `body.onboarding` so the app
+   shell (sidebar + topbar) is hidden — see layout.css. The screens own
+   their own header (Archie wordmark) since the topbar is gone.
+
+   Surfaces:
+     /welcome           → welcome-hero  (splash + 3-step roadmap + primary CTA)
+     /session/welcome-* → existing session shell handles the playbook
+                          conversation; only the shell wrapper changes.
+     /welcome/sources   → welcome-sources (4-connector grid + skip / continue)
+*/
+
+.welcome-screen {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--app-surface);
+  overflow-y: auto;
+}
+
+.welcome-screen__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ref-spacing-md) var(--ref-spacing-xl);
+  border-bottom: 1px solid var(--app-border-soft);
+  background: var(--app-surface);
+  flex-shrink: 0;
+}
+
+.welcome-screen__brand {
+  font-family: var(--sys-text-style-h4-font-family);
+  font-size: var(--ref-font-size-lg);
+  font-weight: var(--ref-font-weight-extra-bold);
+  color: var(--ref-color-grey-150);
+  letter-spacing: -0.01em;
+}
+
+.welcome-screen__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
+  border-radius: var(--app-radius-pill);
+  background: var(--app-surface-subtle);
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.welcome-screen__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ref-spacing-xxxl) var(--ref-spacing-xl);
+  gap: var(--ref-spacing-xl);
+}
+
+/* ---------- /welcome — splash hero ---------- */
+
+.welcome-hero {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.welcome-hero__glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  margin-bottom: var(--ref-spacing-md);
+  border-radius: var(--app-radius-circle);
+  background: linear-gradient(135deg, var(--ref-color-orange-05) 0%, var(--ref-color-purple-05) 100%);
+}
+
+.welcome-hero__glyph i {
+  font-size: var(--sys-icon-css-xxl);
+}
+
+.welcome-hero__title {
+  margin: 0 0 var(--ref-spacing-sm);
+  font-family: var(--sys-text-style-h1-font-family);
+  font-size: var(--sys-text-style-h1-size);
+  line-height: var(--sys-text-style-h1-line-height);
+  font-weight: var(--sys-text-style-h1-weight);
+  color: var(--ref-color-grey-150);
+  letter-spacing: -0.01em;
+}
+
+.welcome-hero__sub {
+  margin: 0 auto var(--ref-spacing-xl);
+  max-width: 520px;
+  font-size: var(--ref-font-size-lg);
+  line-height: var(--ref-font-line-height-lg);
+  color: var(--ref-color-grey-80);
+}
+
+.welcome-hero__sub strong {
+  color: var(--ref-color-grey-150);
+  font-weight: var(--ref-font-weight-extra-bold);
+}
+
+/* Mini 3-step roadmap — number-chip + label, horizontal. The current
+   step uses the orange accent; later steps stay neutral so the eye
+   knows where it's heading. */
+.welcome-roadmap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--ref-spacing-xs);
+  padding: 0;
+  margin: 0 0 var(--ref-spacing-xl);
+  list-style: none;
+}
+
+.welcome-roadmap__step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border-radius: var(--app-radius-pill);
+  background: var(--app-surface-subtle);
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.welcome-roadmap__step.is-current {
+  background: var(--ref-color-orange-05);
+  color: var(--ref-color-orange-150);
+}
+
+.welcome-roadmap__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-white);
+  color: var(--ref-color-grey-150);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-extra-bold);
+}
+
+.welcome-roadmap__step.is-current .welcome-roadmap__num {
+  background: var(--ref-color-orange-100);
+  color: var(--ref-color-white);
+}
+
+.welcome-hero__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-md);
+}
+
+.welcome-hero__actions .ap-button.primary {
+  padding: 0 var(--ref-spacing-xl);
+  height: 48px;
+  font-size: var(--ref-font-size-md);
+}
+
+.welcome-hero__skip {
+  font-size: var(--ref-font-size-sm);
+  color: var(--ref-color-grey-80);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-family: inherit;
+}
+
+.welcome-hero__skip:hover {
+  color: var(--ref-color-grey-150);
+}
+
+/* ---------- /welcome/sources — connectors grid ---------- */
+
+.welcome-sources {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.welcome-sources__header {
+  text-align: center;
+  margin-bottom: var(--ref-spacing-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.welcome-sources__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-electric-blue-05);
+  color: var(--ref-color-electric-blue-150);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-extra-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.welcome-sources__title {
+  margin: 0;
+  font-family: var(--sys-text-style-h2-font-family);
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  font-weight: var(--sys-text-style-h2-weight);
+  color: var(--ref-color-grey-150);
+  max-width: 560px;
+}
+
+.welcome-sources__sub {
+  margin: 0;
+  font-size: var(--ref-font-size-md);
+  line-height: var(--ref-font-line-height-md);
+  color: var(--ref-color-grey-80);
+  max-width: 560px;
+}
+
+.welcome-sources__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ref-spacing-sm);
+  padding: 0;
+  margin: 0 0 var(--ref-spacing-xl);
+  list-style: none;
+}
+
+@media (max-width: 720px) {
+  .welcome-sources__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Connector card — same visual rhythm as .add-source__connector-row but
+   stacked (logo + text on top, button below) so the 2x2 grid feels
+   intentional rather than crammed. */
+.welcome-sources__card {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-md);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-card);
+  transition:
+    border-color var(--ref-animation-short) var(--app-ease-out),
+    box-shadow var(--ref-animation-short) var(--app-ease-out);
+}
+
+.welcome-sources__card.is-connected {
+  border-color: var(--ref-color-green-100);
+  background: var(--ref-color-green-05);
+}
+
+.welcome-sources__logo {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--app-radius-md);
+  object-fit: cover;
+}
+
+.welcome-sources__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+}
+
+.welcome-sources__name {
+  font-size: var(--ref-font-size-md);
+  font-weight: var(--ref-font-weight-extra-bold);
+  color: var(--ref-color-grey-150);
+}
+
+.welcome-sources__desc {
+  font-size: var(--ref-font-size-sm);
+  color: var(--ref-color-grey-80);
+  line-height: var(--ref-font-line-height-sm);
+}
+
+.welcome-sources__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  margin-top: var(--ref-spacing-xxs);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-green-150);
+}
+
+.welcome-sources__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-md);
+  padding-top: var(--ref-spacing-md);
+  border-top: 1px solid var(--app-border-soft);
+}
+
+.welcome-sources__footer-skip {
+  background: none;
+  border: 0;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  font-family: inherit;
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-80);
+  cursor: pointer;
+  border-radius: var(--app-radius-button-sm);
+}
+
+.welcome-sources__footer-skip:hover {
+  color: var(--ref-color-grey-150);
+  background: var(--app-surface-subtle);
+}
+
+.welcome-sources__footer .ap-button.primary {
+  padding: 0 var(--ref-spacing-lg);
+  height: 44px;
+}
