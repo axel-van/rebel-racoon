@@ -1,7 +1,7 @@
 import { route, setAfterRender, start } from "./router.js?v=21";
 import { initTopbar, renderTopbar } from "./components/topbar.js?v=48";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=42";
-import { init as initRightPanel } from "./components/right-panel.js?v=61";
+import { init as initRightPanel } from "./components/right-panel.js?v=62";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=20";
 import { initUserModeChip } from "./components/user-mode-chip.js?v=23";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=21";
@@ -22,8 +22,10 @@ import { renderDashboard } from "./screens/dashboard.js?v=44";
 import { renderSession } from "./screens/session.js?v=106";
 import { renderIdeas } from "./screens/ideas.js?v=24";
 import { renderContexts } from "./screens/contexts.js?v=32";
-import { renderWelcome } from "./screens/welcome.js?v=3";
-import { renderWelcomeSources } from "./screens/welcome-sources.js?v=1";
+import { renderWelcome } from "./screens/welcome.js?v=4";
+import { renderWelcomeSocials } from "./screens/welcome-socials.js?v=2";
+import { renderWelcomeSources } from "./screens/welcome-sources.js?v=2";
+import { renderWelcomeRecap } from "./screens/welcome-recap.js?v=2";
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
 // stays in sync with the active context.
@@ -31,12 +33,15 @@ route("/", renderDashboard);
 route("/session/:id", renderSession);
 route("/ideas", renderIdeas);
 route("/contexts", renderContexts);
-// First-time onboarding (Lot 14). /welcome is the splash; the playbook
-// creation step itself runs inside a transient /session/welcome-* via the
-// existing pendingStartContextBuilder handoff; /welcome/sources is the
-// optional connectors step before landing on the dashboard.
+// First-time onboarding — 4-screen linear flow. /welcome is the URL
+// input that kicks off the background website analysis; /welcome/socials
+// lists the channels the brand publishes on; /welcome/sources is the
+// optional Slite/Notion/GDrive connectors; /welcome/recap is the final
+// Playbook review with Fine-tune / Entrer dans Archie CTAs.
 route("/welcome", renderWelcome);
+route("/welcome/socials", renderWelcomeSocials);
 route("/welcome/sources", renderWelcomeSources);
+route("/welcome/recap", renderWelcomeRecap);
 
 // Boot.
 initTopbar();

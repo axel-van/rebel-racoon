@@ -100,6 +100,34 @@
   }
 }
 
+/* Single-column centered variant used by the new linear /welcome (URL
+   input) and the recap screen. */
+.welcome-screen__body--centered {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--ref-spacing-xxl) var(--ref-spacing-lg);
+  align-items: center;
+  text-align: center;
+}
+
+.welcome-hero--centered {
+  text-align: center;
+  align-items: center;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.welcome-hero--centered .welcome-hero__title,
+.welcome-hero--centered .welcome-hero__sub {
+  text-align: center;
+}
+
+.welcome-hero--centered .welcome-hero__sub {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /* ---------- /welcome — split hero ---------- */
 
 .welcome-hero {
@@ -610,4 +638,367 @@
 .welcome-sources__footer .ap-button.primary {
   padding: 0 var(--ref-spacing-lg);
   height: 44px;
+}
+
+/* ---------- /welcome — URL input card ---------- */
+
+.welcome-input-card {
+  width: 100%;
+  max-width: 560px;
+  margin: var(--ref-spacing-md) auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  text-align: left;
+}
+
+.welcome-input-card__label {
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-extra-bold);
+  color: var(--ref-color-grey-100);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: left;
+}
+
+.welcome-input-card__row {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxs);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-modal);
+  box-shadow:
+    0 1px 3px rgba(26, 31, 54, 0.04),
+    0 12px 28px -10px rgba(26, 31, 54, 0.1);
+  transition:
+    border-color var(--ref-animation-short) var(--app-ease-out),
+    box-shadow var(--ref-animation-short) var(--app-ease-out);
+}
+
+.welcome-input-card__row:focus-within {
+  border-color: var(--ref-color-orange-100);
+  box-shadow:
+    0 1px 3px rgba(26, 31, 54, 0.04),
+    0 14px 30px -10px var(--ref-color-orange-40);
+}
+
+.welcome-input-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--sys-icon-css-md);
+  color: var(--ref-color-grey-80);
+  padding-left: var(--ref-spacing-xs);
+}
+
+.welcome-input-card__input {
+  flex: 1 1 auto;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--ref-font-size-md);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+  outline: none;
+  padding: var(--ref-spacing-xs) 0;
+}
+
+.welcome-input-card__input::placeholder {
+  color: var(--ref-color-grey-60);
+  font-weight: var(--ref-font-weight-regular);
+}
+
+.welcome-input-card__submit {
+  padding: 0 var(--ref-spacing-md);
+  height: 44px;
+  gap: var(--ref-spacing-xxs);
+  flex-shrink: 0;
+}
+
+.welcome-input-card__hint {
+  margin: var(--ref-spacing-xxs) 0 0;
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-80);
+  text-align: left;
+}
+
+.welcome-input-card__error {
+  margin: 0;
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-red-100);
+  text-align: left;
+}
+
+/* 4-step roadmap variant — same chrome as the 3-step but with the
+   line spanning between bullets 1 and 4. */
+.welcome-roadmap--four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.welcome-roadmap--four::before {
+  left: 11%;
+  right: 11%;
+}
+
+/* ---------- /welcome/socials and shared step chrome ---------- */
+
+.welcome-step {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.welcome-step__header {
+  text-align: center;
+  margin-bottom: var(--ref-spacing-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.welcome-step__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-orange-05);
+  color: var(--ref-color-orange-150);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-extra-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.welcome-step__title {
+  margin: 0;
+  font-family: var(--sys-text-style-h1-font-family);
+  font-size: var(--ref-font-size-xxxl);
+  line-height: 1.2;
+  font-weight: var(--ref-font-weight-extra-bold);
+  color: var(--ref-color-grey-150);
+  letter-spacing: -0.01em;
+  max-width: 640px;
+}
+
+.welcome-step__sub {
+  margin: 0;
+  font-size: var(--ref-font-size-md);
+  line-height: 1.5;
+  color: var(--ref-color-grey-80);
+  max-width: 560px;
+}
+
+.welcome-step__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-md);
+  padding-top: var(--ref-spacing-md);
+  border-top: 1px solid var(--app-border-soft);
+}
+
+.welcome-step__footer-skip {
+  background: none;
+  border: 0;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  font-family: inherit;
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-80);
+  cursor: pointer;
+  border-radius: var(--app-radius-button-sm);
+}
+
+.welcome-step__footer-skip:hover {
+  color: var(--ref-color-grey-150);
+  background: var(--app-surface-subtle);
+}
+
+.welcome-step__footer .ap-button.primary {
+  padding: 0 var(--ref-spacing-lg);
+  height: 44px;
+}
+
+/* Socials grid — 2x4 cards, mirrors welcome-sources__grid styling. */
+.welcome-socials__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ref-spacing-sm);
+  padding: 0;
+  margin: 0 0 var(--ref-spacing-xl);
+  list-style: none;
+}
+
+@media (max-width: 720px) {
+  .welcome-socials__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.welcome-socials__card {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-card);
+}
+
+.welcome-socials__card.is-connected {
+  border-color: var(--ref-color-green-100);
+  background: var(--ref-color-green-05);
+}
+
+.welcome-socials__logo {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--app-radius-md);
+  object-fit: cover;
+}
+
+.welcome-socials__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+}
+
+.welcome-socials__name {
+  font-size: var(--ref-font-size-md);
+  font-weight: var(--ref-font-weight-extra-bold);
+  color: var(--ref-color-grey-150);
+}
+
+.welcome-socials__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-green-150);
+}
+
+/* ---------- /welcome/recap ---------- */
+
+.welcome-screen--recap .welcome-screen__body {
+  padding: var(--ref-spacing-xl) var(--ref-spacing-lg) calc(var(--ref-spacing-xxxl) * 2);
+  align-items: stretch;
+}
+
+.welcome-recap {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-lg);
+}
+
+.welcome-recap__header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.welcome-recap__title {
+  margin: 0;
+  font-family: var(--sys-text-style-h1-font-family);
+  font-size: var(--ref-font-size-xxxl);
+  line-height: 1.15;
+  font-weight: var(--ref-font-weight-extra-bold);
+  color: var(--ref-color-grey-150);
+  letter-spacing: -0.01em;
+}
+
+.welcome-recap__sub {
+  margin: 0;
+  font-size: var(--ref-font-size-md);
+  color: var(--ref-color-grey-80);
+  max-width: 560px;
+  line-height: 1.5;
+}
+
+/* Wrap the brief-panel inner body in a card-like container so it
+   reads as a unified recap rather than naked floating sections. */
+.welcome-recap__body {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-modal);
+  padding: var(--ref-spacing-md);
+  box-shadow:
+    0 1px 3px rgba(26, 31, 54, 0.04),
+    0 16px 36px -10px rgba(26, 31, 54, 0.1);
+}
+
+.welcome-recap__body .context-brief__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+}
+
+.welcome-recap__pending {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxxl) var(--ref-spacing-md);
+  color: var(--ref-color-grey-100);
+  text-align: center;
+}
+
+.welcome-recap__pending i {
+  font-size: var(--sys-icon-css-xxl);
+  color: var(--ref-color-mermaid-gradient-from);
+  animation: welcome-recap-pulse 1.4s ease-in-out infinite;
+}
+
+.welcome-recap__pending p {
+  margin: 0;
+  font-size: var(--ref-font-size-md);
+  font-weight: var(--ref-font-weight-extra-bold);
+  color: var(--ref-color-grey-150);
+}
+
+.welcome-recap__pending-sub {
+  font-weight: var(--ref-font-weight-regular) !important;
+  color: var(--ref-color-grey-80) !important;
+}
+
+@keyframes welcome-recap-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.welcome-recap__footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-md) var(--ref-spacing-lg);
+  background: var(--app-surface);
+  border-top: 1px solid var(--app-border-soft);
+  box-shadow: 0 -8px 24px -16px rgba(26, 31, 54, 0.18);
+}
+
+.welcome-recap__footer .ap-button {
+  height: 44px;
+  padding: 0 var(--ref-spacing-lg);
+  gap: var(--ref-spacing-xxs);
 }

@@ -37,7 +37,7 @@ import { startDraftFlow, executeDraft } from "../draft-flow.js?v=21";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=25";
-import * as contextBuilder from "../context-builder.js?v=35";
+import * as contextBuilder from "../context-builder.js?v=36";
 import * as playbookEditor from "../playbook-editor.js?v=9";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=28";
 import { renderSourceCard } from "../components/source-card.js?v=28";
@@ -72,7 +72,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=61";
+} from "../components/right-panel.js?v=62";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=20";
 

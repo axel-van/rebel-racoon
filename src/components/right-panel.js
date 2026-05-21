@@ -2017,27 +2017,27 @@ const STYLE_FALLBACKS = ["Educational with case studies", "Inspirational & aspir
 const OBJECTIVE_FALLBACKS = ["Drive traffic", "Community engagement", "Thought leadership", "Customer retention"];
 const ACTION_FALLBACKS = ["Visit the website", "Download a resource", "Join the community", "Contact sales"];
 
-function renderContextBriefView() {
-  if (!contextBriefConfig) return "";
-  const isRead = contextBriefConfig.mode === "read";
-  // Read mode reads from a persisted Context; edit mode from the draft.
-  const d = isRead ? readBriefFromCtx(contextBriefConfig.getCtx?.()) : contextBriefConfig.getDraft?.() || {};
+// Public renderer for the brief panel's three section groups (Audience /
+// Voice profile / Branding) — extracted so surfaces outside the right
+// panel (the welcome-recap screen, future ones) can show the same
+// content without duplicating the layout. Accepts a draft-shaped object
+// (or a persisted Context normalized by readBriefFromCtx) plus a tiny
+// options bag. Does NOT include the panel header, footer, or scroll
+// container — pure section HTML.
+export function renderBriefSections(d, { isRead = true, canRefine = false } = {}) {
+  if (!d) return "";
   const chipProps = (cfg) => ({ ...cfg, isRead });
-  // Identité du panel — hors groupes. En read mode le nom du contexte est
-  // dans le header du right panel, donc on saute renderBriefName.
-  const nonGroupedTop = [isRead ? "" : renderBriefIntro(), isRead ? "" : renderBriefName(d)].filter(Boolean);
+  // Persisted contexts may not have the suggestion arrays the chip
+  // helpers expect — normalize via readBriefFromCtx when the shape
+  // looks like a saved Context (no `suggestions` field).
+  const draft = d.suggestions ? d : readBriefFromCtx(d) || d;
+  return _renderBriefSectionsInner(draft, isRead, canRefine, chipProps);
+}
 
-  // Chaque groupe a son propre conteneur. C'est essentiel pour le sticky
-  // push-out style iOS Settings : un sticky header siblings au même `top:
-  // 0` se stack, alors qu'un sticky header borné par son groupe parent
-  // est "poussé" hors écran quand le groupe suivant arrive.
-  //
-  // Per-card "Refine with Archie" button — only in read mode (the edit
-  // flow already lets the user type into every field). Each card declares
-  // its target sub-flow in the playbook-editor (brief / voice / branding
-  // / cta) so a click on Refine jumps the user straight there instead of
-  // through the chip menu. See `playbookEditor.refineField` + `withRefine`.
-  const canRefine = isRead && !!contextBriefConfig?.onRefineField;
+// Internal: builds the three groups (Audience / Voice / Branding) and
+// joins them. Pulled out of `renderContextBriefView` so the public
+// `renderBriefSections` can call the same code path.
+function _renderBriefSectionsInner(d, isRead, canRefine, chipProps) {
   const audienceCards = [
     withRefine(isRead ? renderBriefSummaryRead(d) : renderBriefBusinessSummary(d), "brief", canRefine),
     withRefine(
@@ -2142,12 +2142,37 @@ function renderContextBriefView() {
       `
       : "";
 
-  const sections = [
-    ...nonGroupedTop,
+  return [
     renderGroup("audience", "Audience and goals", "ap-icon-target", audienceCards),
     renderGroup("voice", "Voice profile", "ap-icon-megaphone", voiceCards),
     renderGroup("branding", "Branding", "ap-icon-view-grid", brandingCards),
-  ].filter(Boolean);
+  ]
+    .filter(Boolean)
+    .join("");
+}
+
+function renderContextBriefView() {
+  if (!contextBriefConfig) return "";
+  const isRead = contextBriefConfig.mode === "read";
+  // Read mode reads from a persisted Context; edit mode from the draft.
+  const d = isRead ? readBriefFromCtx(contextBriefConfig.getCtx?.()) : contextBriefConfig.getDraft?.() || {};
+  const chipProps = (cfg) => ({ ...cfg, isRead });
+  // Identité du panel — hors groupes. En read mode le nom du contexte est
+  // dans le header du right panel, donc on saute renderBriefName.
+  const nonGroupedTop = [isRead ? "" : renderBriefIntro(), isRead ? "" : renderBriefName(d)].filter(Boolean);
+
+  // Chaque groupe a son propre conteneur. C'est essentiel pour le sticky
+  // push-out style iOS Settings : un sticky header siblings au même `top:
+  // 0` se stack, alors qu'un sticky header borné par son groupe parent
+  // est "poussé" hors écran quand le groupe suivant arrive.
+  //
+  // Per-card "Refine with Archie" button — only in read mode (the edit
+  // flow already lets the user type into every field). Each card declares
+  // its target sub-flow in the playbook-editor (brief / voice / branding
+  // / cta) so a click on Refine jumps the user straight there instead of
+  // through the chip menu. See `playbookEditor.refineField` + `withRefine`.
+  const canRefine = isRead && !!contextBriefConfig?.onRefineField;
+  const sections = [...nonGroupedTop, _renderBriefSectionsInner(d, isRead, canRefine, chipProps)].filter(Boolean);
   // Callers can opt out of the read-mode footer (Close + Edit) via
   // `hideFooter: true` on the config — used by the playbook editor,
   // which has its own Cancel + Save controls and shouldn't show

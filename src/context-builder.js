@@ -21,7 +21,7 @@
 
 import * as inlineQuestion from "./inline-question.js?v=25";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=31";
-import * as rightPanel from "./components/right-panel.js?v=61";
+import * as rightPanel from "./components/right-panel.js?v=62";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=27";
 import { analyzeWebsite, analyzeDocument } from "./context-mock-analysis.js?v=21";
 import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=9";
@@ -91,6 +91,76 @@ export function isActive(sessionId) {
 
 export function getDraft(sessionId) {
   return drafts.get(sessionId) || null;
+}
+
+// Non-chat entry point used by the linear /welcome flow. Mints a draft
+// for the new sessionId, kicks off the mock website analysis on a 6s
+// timer, and returns immediately so the caller can navigate to the next
+// screen. The draft fields populate in the background; downstream
+// screens read via getDraft(sid) and either render immediately (if
+// analysis already done) or show a transient "Analysing…" state.
+//
+// Mirrors the patches that runAnalysis applies in the conversational
+// flow, minus the chat turns (no postSystemNotice / postAssistantMessage).
+export function startBackground(sessionId, websiteUrl) {
+  const url = (websiteUrl || "").trim();
+  drafts.set(
+    sessionId,
+    emptyDraft({
+      sourceType: "website",
+      sourceUrl: url,
+      websiteUrl: url,
+    }),
+  );
+  notify(sessionId);
+  window.setTimeout(() => {
+    const d = drafts.get(sessionId);
+    if (!d) return;
+    const analysis = analyzeWebsite(url);
+    applyAnalysisToDraft(d, analysis);
+    notify(sessionId);
+  }, 6000);
+}
+
+// Shared draft patch — used by the conversational `runAnalysis` and by
+// the linear `startBackground` so they stay in sync. Pre-selects every
+// suggested value so the brief panel reads as "Archie's best guess,
+// edit if anything's off".
+function applyAnalysisToDraft(d, analysis) {
+  d.name = d.name || analysis.name;
+  d.businessSummary = analysis.businessSummary;
+  d.suggestions = analysis.suggestions;
+  d.audience = (analysis.suggestions.audience || []).slice();
+  d.audienceProblems = (analysis.suggestions.audienceProblems || []).slice();
+  d.tones = (analysis.suggestions.tones || []).slice();
+  d.contentStyle = (analysis.suggestions.contentStyle || []).slice();
+  d.objective = (analysis.suggestions.objective || []).slice();
+  d.contentAction = (analysis.suggestions.contentAction || []).slice();
+  d.ctaLinks = (analysis.suggestions.ctaLinks || []).map((l) => ({ ...l }));
+  d.language = analysis.suggestions.language || "English";
+  d.color = analysis.suggestions.color || "orange";
+  d.voiceProfile = analysis.suggestions.voiceProfile ? { ...analysis.suggestions.voiceProfile } : null;
+  d.imageVoice = analysis.suggestions.imageVoice || { websites: [] };
+}
+
+// Patch the draft from outside the conversational flow — used by the
+// linear welcome screens to update connectedSocials / other draft
+// fields without going through inlineQuestion.
+export function patchDraft(sessionId, patch) {
+  const d = drafts.get(sessionId);
+  if (!d) return null;
+  Object.assign(d, patch);
+  notify(sessionId);
+  return d;
+}
+
+// True once the website analysis has populated the draft. The linear
+// recap screen polls this to decide between "Analyzing…" and "Show
+// the Playbook".
+export function isAnalysisReady(sessionId) {
+  const d = drafts.get(sessionId);
+  if (!d) return false;
+  return Boolean(d.businessSummary || (d.tones && d.tones.length));
 }
 
 export function subscribe(sessionId, fn) {
@@ -296,28 +366,9 @@ function runAnalysis(sessionId) {
     if (!d) return; // session bailed out mid-analysis
     // Dispatch on the user's chosen source type. Each mock returns the
     // same shape so the rest of the brief-panel pipeline is unchanged.
-    let analysis;
-    if (d.sourceType === "documents") {
-      analysis = analyzeDocument(d.sourceFile);
-    } else {
-      analysis = analyzeWebsite(d.sourceUrl || d.websiteUrl);
-    }
-    d.name = d.name || analysis.name;
-    d.businessSummary = analysis.businessSummary;
-    d.suggestions = analysis.suggestions;
-    // Pre-select the suggested values so the chips start in their "selected"
-    // (green / checked) state. The user toggles them off if not relevant.
-    d.audience = (analysis.suggestions.audience || []).slice();
-    d.audienceProblems = (analysis.suggestions.audienceProblems || []).slice();
-    d.tones = (analysis.suggestions.tones || []).slice();
-    d.contentStyle = (analysis.suggestions.contentStyle || []).slice();
-    d.objective = (analysis.suggestions.objective || []).slice();
-    d.contentAction = (analysis.suggestions.contentAction || []).slice();
-    d.ctaLinks = (analysis.suggestions.ctaLinks || []).map((l) => ({ ...l }));
-    d.language = analysis.suggestions.language || "English";
-    d.color = analysis.suggestions.color || "orange";
-    d.voiceProfile = analysis.suggestions.voiceProfile ? { ...analysis.suggestions.voiceProfile } : null;
-    d.imageVoice = analysis.suggestions.imageVoice || { websites: [] };
+    const analysis =
+      d.sourceType === "documents" ? analyzeDocument(d.sourceFile) : analyzeWebsite(d.sourceUrl || d.websiteUrl);
+    applyAnalysisToDraft(d, analysis);
     markSystemNoticeReady(sessionId, noticeId, { meta: "Extracted guidelines" });
     notify(sessionId);
     // Website path tails into the social-channels step so the user can
@@ -336,7 +387,7 @@ function runAnalysis(sessionId) {
 // can pick any combination via the inline-question multi-select. Logos
 // are the same SVGs used by mocks.socialAccounts so any future "show
 // me what I picked" view stays visually consistent.
-const SOCIAL_PLATFORMS = [
+export const SOCIAL_PLATFORMS = [
   { value: "linkedin", label: "LinkedIn", imgSrc: "assets/logos/social/linkedin.svg" },
   { value: "instagram", label: "Instagram", imgSrc: "assets/logos/social/instagram.svg" },
   { value: "x", label: "X (Twitter)", imgSrc: "assets/logos/social/x.svg" },
@@ -491,4 +542,5 @@ export function save(sessionId) {
   notify(sessionId);
   rightPanel.closeContextBriefPanelSilently?.();
   if (onComplete) onComplete(saved);
+  return saved;
 }

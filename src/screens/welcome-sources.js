@@ -11,8 +11,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=21";
 import { getConnectors, setConnectorStatus, subscribe } from "../connectors-store.js?v=20";
-import { getContexts } from "../contexts-store.js?v=27";
-import { setHandoff } from "../handoff.js?v=20";
 
 function escapeHtml(str) {
   return String(str ?? "").replace(/[&<>"']/g, (c) => {
@@ -43,10 +41,10 @@ function paint(target) {
       <div class="welcome-screen__body">
         <div class="welcome-sources">
           <div class="welcome-sources__header">
-            <span class="welcome-sources__tag">Étape finale · optionnelle</span>
-            <h1 class="welcome-sources__title">Tu as ton Playbook. Veux-tu qu'Archie lise tes documents ?</h1>
+            <span class="welcome-sources__tag">Étape 3 sur 4 · optionnelle</span>
+            <h1 class="welcome-sources__title">Connecte tes sources de documents</h1>
             <p class="welcome-sources__sub">
-              Connecte Slite, Notion ou Google Drive — Archie y puisera tes contenus existants pour s'aligner sur ton
+              Slite, Notion, Google Drive ou Slack — Archie y puisera tes contenus existants pour s'aligner sur ton
               style. Tu pourras en ajouter d'autres à tout moment.
             </p>
           </div>
@@ -55,8 +53,8 @@ function paint(target) {
           </ul>
           <footer class="welcome-sources__footer">
             <button type="button" class="welcome-sources__footer-skip" data-welcome-skip>Passer pour l'instant</button>
-            <button type="button" class="ap-button primary orange" data-welcome-done>
-              Entrer dans Archie
+            <button type="button" class="ap-button primary orange" data-welcome-continue>
+              Continuer
               <i class="ap-icon-arrow-right"></i>
             </button>
           </footer>
@@ -108,14 +106,12 @@ function onClick(event) {
     });
     return;
   }
-  if (event.target.closest("[data-welcome-done]") || event.target.closest("[data-welcome-skip]")) {
-    // Pass the freshly-created Playbook name to the dashboard so it can
-    // welcome the user by name. We use the most recently added context
-    // since context-builder's addContext puts new entries at the top.
-    const latest = getContexts()[0];
-    if (latest?.name) setHandoff("welcomeComplete", { playbookName: latest.name });
-    document.body.classList.remove("onboarding");
-    navigate("/");
+  if (event.target.closest("[data-welcome-continue]") || event.target.closest("[data-welcome-skip]")) {
+    // Final stop before the recap: keep the draft alive (don't save
+    // yet) — the recap commits via context-builder.save() depending on
+    // the next CTA (Fine-tune launches the editor; Entrer dans Archie
+    // commits + navigates to the dashboard).
+    navigate("/welcome/recap");
     return;
   }
 }
