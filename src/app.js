@@ -14,6 +14,10 @@ import { init as initAddSourceModal } from "./components/add-source-modal.js?v=2
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=20";
 import { init as initRenameModal } from "./components/rename-modal.js?v=1";
 import { init as initSearchModal } from "./components/search-modal.js?v=3";
+import {
+  init as initConversationStatusCard,
+  render as renderConversationStatusCard,
+} from "./components/conversation-status-card.js?v=2";
 import { renderDashboard } from "./screens/dashboard.js?v=42";
 import { renderSession } from "./screens/session.js?v=96";
 import { renderIdeas } from "./screens/ideas.js?v=24";
@@ -46,9 +50,14 @@ initAddSourceModal();
 initConfirmModal();
 initRenameModal();
 initSearchModal();
+initConversationStatusCard();
 
 // Re-render the sidebar on every route change so the active conversation row
-// stays highlighted.
-setAfterRender(() => renderSidebar());
+// stays highlighted. The conversation status card also re-renders here so it
+// hides when navigating away from /session/:id.
+setAfterRender(() => {
+  renderSidebar();
+  renderConversationStatusCard();
+});
 
 start();

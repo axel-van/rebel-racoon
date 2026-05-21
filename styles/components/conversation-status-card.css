@@ -1,0 +1,133 @@
+/* Floating status card — pinned to the top-right of the conversation
+   column. Surfaces in-progress work, attached sources, draft + idea
+   counts when no right-panel is open. Hidden via the `hidden` attribute
+   on the root <aside> when conditions aren't met (off-route, panel open,
+   nothing to surface). */
+
+.conversation-status-card {
+  position: fixed;
+  top: calc(var(--app-topbar-height) + var(--ref-spacing-md));
+  right: var(--ref-spacing-md);
+  z-index: 5;
+  width: min(280px, calc(100vw - 2 * var(--ref-spacing-md)));
+  max-height: calc(100vh - var(--app-topbar-height) - 2 * var(--ref-spacing-md));
+  overflow: hidden;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--ref-border-radius-md);
+  box-shadow: var(--app-shadow-popover-md);
+  pointer-events: auto;
+}
+
+.conversation-status-card[hidden] {
+  display: none;
+}
+
+/* When the card is shown the conversation column gets a right-side
+   reservation so chat bubbles wrap before they collide with the
+   overlay. Toggled by the component on render(). */
+body.has-conversation-status-card .app-content {
+  padding-right: calc(280px + var(--ref-spacing-md) * 2);
+}
+
+.conversation-status-card__inner {
+  display: flex;
+  flex-direction: column;
+  max-height: inherit;
+  overflow-y: auto;
+  padding: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-xs);
+}
+
+.conversation-status-card__section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.conversation-status-card__section + .conversation-status-card__section {
+  border-top: 1px solid var(--app-border-soft);
+  padding-top: var(--ref-spacing-xs);
+}
+
+.conversation-status-card__heading {
+  margin: 0;
+  padding: 2px var(--ref-spacing-xxs);
+  font-size: 10px;
+  line-height: var(--ref-font-line-height-xs);
+  font-weight: var(--ref-font-weight-extra-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ref-color-grey-60);
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.conversation-status-card__heading-count {
+  color: var(--ref-color-grey-100);
+  font-weight: var(--ref-font-weight-bold);
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/* In-progress rows — text-only, no click target. */
+.conversation-status-card__pending {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxs);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  color: var(--ref-color-grey-100);
+}
+
+.conversation-status-card__pending-label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Clickable rows — sources, drafts, outputs. */
+.conversation-status-card__row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: var(--ref-spacing-xxs);
+  background: transparent;
+  border: 0;
+  border-radius: var(--app-radius-button-sm);
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  color: var(--ref-color-grey-150);
+  transition: background-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.conversation-status-card__row:hover,
+.conversation-status-card__row:focus-visible {
+  background: var(--ref-color-grey-10);
+  outline: none;
+}
+
+.conversation-status-card__row > i {
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-grey-80);
+  flex-shrink: 0;
+}
+
+.conversation-status-card__row-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation-status-card__row .ap-counter {
+  flex-shrink: 0;
+}
