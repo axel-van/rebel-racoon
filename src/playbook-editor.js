@@ -27,6 +27,7 @@ import {
 import { open as openConfirmModal } from "./components/confirm-modal.js?v=20";
 import { setHandoff } from "./handoff.js?v=20";
 import { navigate } from "./router.js?v=21";
+import { analyzeWebsite } from "./context-mock-analysis.js?v=21";
 
 const drafts = new Map(); // sessionId → { contextId, draft, dirty, onComplete, onCancel }
 
@@ -229,12 +230,116 @@ function askBrief(sessionId, ctx) {
   });
 }
 
+// Branding is multi-faceted: the user can either pull a fresh visual
+// identity from a website (mock analysis) or tweak individual fields
+// (colors, fonts, the high-level Playbook accent). Top-level chip
+// routes to a sub-picker that splits the two paths.
 function askBranding(sessionId, ctx) {
+  inlineQuestion.ask(sessionId, {
+    title: "Update branding — what would you like to do?",
+    stepLabel: "Branding",
+    items: [
+      { value: "analyze", label: "Analyze a new website", icon: "ap-icon-link" },
+      { value: "edit", label: "Edit colors and fonts directly", icon: "ap-icon-pen" },
+      { value: "playbook-color", label: "Change Playbook accent color", icon: "ap-icon-target" },
+    ],
+    onPick: (which) => {
+      if (which === "analyze") askBrandingWebsite(sessionId, ctx);
+      else if (which === "edit") askBrandingField(sessionId, ctx);
+      else if (which === "playbook-color") askPlaybookColor(sessionId, ctx);
+    },
+    onSkip: () => showChipMenu(sessionId),
+    onBack: () => showChipMenu(sessionId),
+    footerSlot: EDITOR_FOOTER_SLOT,
+  });
+}
+
+function askBrandingWebsite(sessionId, ctx) {
+  const merged = mergedImageVoice(sessionId, ctx);
+  const currentUrl = merged?.websites?.[0]?.url || "";
+  inlineQuestion.ask(sessionId, {
+    title: "Which website should I analyze?",
+    stepLabel: "Branding · Website",
+    intro: currentUrl ? `Current: ${currentUrl}` : "",
+    customPlaceholder: "https://yourbrand.com",
+    onCustom: (url) => {
+      const trimmed = (url || "").trim();
+      if (!trimmed) return;
+      const result = analyzeWebsite(trimmed);
+      const imageVoice = result?.suggestions?.imageVoice;
+      if (imageVoice) {
+        patchDraft(sessionId, { imageVoice });
+      }
+      postAssistantMessage(sessionId, `Brand visual identity refreshed from **${trimmed}**.`);
+      showChipMenu(sessionId);
+    },
+    onSkip: () => askBranding(sessionId, ctx),
+    onBack: () => askBranding(sessionId, ctx),
+    footerSlot: EDITOR_FOOTER_SLOT,
+  });
+}
+
+function askBrandingField(sessionId, ctx) {
+  inlineQuestion.ask(sessionId, {
+    title: "What would you like to edit?",
+    stepLabel: "Branding · Fields",
+    items: [
+      { value: "color-primary", label: "Primary color", icon: "ap-icon-circle" },
+      { value: "color-accent", label: "Accent color", icon: "ap-icon-circle" },
+      { value: "color-background", label: "Background color", icon: "ap-icon-circle" },
+      { value: "color-text", label: "Text color", icon: "ap-icon-circle" },
+      { value: "color-link", label: "Link color", icon: "ap-icon-link" },
+      { value: "font-primary", label: "Primary font", icon: "ap-icon-pen" },
+      { value: "font-heading", label: "Heading font", icon: "ap-icon-pen" },
+    ],
+    onPick: (field) => askBrandingFieldValue(sessionId, ctx, field),
+    onBack: () => askBranding(sessionId, ctx),
+    onSkip: () => askBranding(sessionId, ctx),
+    footerSlot: EDITOR_FOOTER_SLOT,
+  });
+}
+
+function askBrandingFieldValue(sessionId, ctx, field) {
+  const merged = mergedImageVoice(sessionId, ctx);
+  const site = merged?.websites?.[0] || {};
+  const fieldMeta = {
+    "color-primary": { label: "Primary color", current: site.colors?.primary, placeholder: "#1A1F36" },
+    "color-accent": { label: "Accent color", current: site.colors?.accent, placeholder: "#FF6726" },
+    "color-background": { label: "Background color", current: site.colors?.background, placeholder: "#FFFFFF" },
+    "color-text": { label: "Text color", current: site.colors?.textPrimary, placeholder: "#1A1F36" },
+    "color-link": { label: "Link color", current: site.colors?.link, placeholder: "#FF6726" },
+    "font-primary": { label: "Primary font", current: site.typography?.primaryFont, placeholder: "Inter" },
+    "font-heading": { label: "Heading font", current: site.typography?.headingFont, placeholder: "Inter" },
+  }[field];
+  if (!fieldMeta) {
+    askBrandingField(sessionId, ctx);
+    return;
+  }
+  inlineQuestion.ask(sessionId, {
+    title: `New ${fieldMeta.label.toLowerCase()}`,
+    stepLabel: "Branding",
+    intro: fieldMeta.current ? `Current: **${fieldMeta.current}**` : "",
+    customPlaceholder: fieldMeta.placeholder,
+    onCustom: (text) => {
+      const value = (text || "").trim();
+      if (!value) return;
+      const next = patchImageVoiceField(merged, field, value);
+      patchDraft(sessionId, { imageVoice: next });
+      postAssistantMessage(sessionId, `${fieldMeta.label} updated to **${value}**.`);
+      askBrandingField(sessionId, ctx);
+    },
+    onBack: () => askBrandingField(sessionId, ctx),
+    onSkip: () => askBrandingField(sessionId, ctx),
+    footerSlot: EDITOR_FOOTER_SLOT,
+  });
+}
+
+function askPlaybookColor(sessionId, ctx) {
   const current = currentValue(sessionId, "color") ?? ctx.color ?? "orange";
   inlineQuestion.ask(sessionId, {
-    title: "Pick a brand color",
-    stepLabel: "Branding",
-    intro: `Current: **${capitalize(current)}**`,
+    title: "Pick a Playbook accent color",
+    stepLabel: "Branding · Accent",
+    intro: `Current: **${capitalize(current)}** · drives the card swatch in the Playbooks library.`,
     items: [
       { value: "orange", label: "Orange" },
       { value: "blue", label: "Blue" },
@@ -244,13 +349,60 @@ function askBranding(sessionId, ctx) {
     ],
     onPick: (color) => {
       patchDraft(sessionId, { color });
-      postAssistantMessage(sessionId, `Brand color updated to **${capitalize(color)}**.`);
+      postAssistantMessage(sessionId, `Playbook accent updated to **${capitalize(color)}**.`);
       showChipMenu(sessionId);
     },
-    onSkip: () => showChipMenu(sessionId),
-    onBack: () => showChipMenu(sessionId),
+    onBack: () => askBranding(sessionId, ctx),
+    onSkip: () => askBranding(sessionId, ctx),
     footerSlot: EDITOR_FOOTER_SLOT,
   });
+}
+
+// Resolve the imageVoice the user is currently editing — the staged
+// draft if present (after a partial branding edit), else the persisted
+// Context's value.
+function mergedImageVoice(sessionId, ctx) {
+  const staged = currentValue(sessionId, "imageVoice");
+  return staged ?? ctx?.imageVoice ?? { websites: [{}] };
+}
+
+// Apply a single-field patch on imageVoice immutably (shallow clones
+// the websites array + the affected site's nested objects).
+function patchImageVoiceField(imageVoice, field, value) {
+  const websites = (imageVoice?.websites?.length ? imageVoice.websites : [{}]).map((s, i) =>
+    i === 0
+      ? {
+          ...s,
+          colors: { ...(s.colors || {}) },
+          typography: { ...(s.typography || {}) },
+        }
+      : s,
+  );
+  const site = websites[0];
+  switch (field) {
+    case "color-primary":
+      site.colors.primary = value;
+      break;
+    case "color-accent":
+      site.colors.accent = value;
+      break;
+    case "color-background":
+      site.colors.background = value;
+      break;
+    case "color-text":
+      site.colors.textPrimary = value;
+      break;
+    case "color-link":
+      site.colors.link = value;
+      break;
+    case "font-primary":
+      site.typography.primaryFont = value;
+      break;
+    case "font-heading":
+      site.typography.headingFont = value;
+      break;
+  }
+  return { ...imageVoice, websites };
 }
 
 function askCTA(sessionId, ctx) {
