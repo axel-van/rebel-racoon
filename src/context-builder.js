@@ -22,8 +22,8 @@
 import * as inlineQuestion from "./inline-question.js?v=25";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=31";
 import * as rightPanel from "./components/right-panel.js?v=61";
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=26";
-import { analyzeWebsite, analyzeSocialProfile, analyzeDocument, detectPlatform } from "./context-mock-analysis.js?v=21";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=27";
+import { analyzeWebsite, analyzeDocument } from "./context-mock-analysis.js?v=21";
 import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=9";
 
 const drafts = new Map(); // sessionId → draft
@@ -60,6 +60,7 @@ function emptyDraft(overrides = {}) {
     sourceUrl: "",
     sourceFile: null,
     sourcePlatform: null,
+    connectedSocials: [],
     imageVoice: { websites: [] },
     suggestions: {
       audience: [],
@@ -157,6 +158,7 @@ export function startEdit(contextId) {
       language: ctx.language || "English",
       color: ctx.color || "orange",
       voiceProfile: ctx.voiceProfile && typeof ctx.voiceProfile === "object" ? { ...ctx.voiceProfile } : null,
+      connectedSocials: Array.isArray(ctx.connectedSocials) ? ctx.connectedSocials.slice() : [],
       imageVoice:
         ctx.imageVoice && Array.isArray(ctx.imageVoice.websites)
           ? { websites: ctx.imageVoice.websites.map((w) => ({ ...w })) }
@@ -174,8 +176,12 @@ export function cancel(sessionId) {
 
 // --- Phase 1 — Source picker + source-specific input -----------------------
 
-// Step 0: 3-card picker for the input type. Archie analyses whatever the
-// user provides and produces the playbook from it.
+// Step 0: 2-card picker for the input type. Archie analyses whatever the
+// user provides and produces the playbook from it. Social profiles used
+// to be a third path here; they now have their own dedicated step that
+// runs AFTER the website analysis (see `askSocial`), so the user can
+// describe the brand AND list the channels rather than choosing between
+// the two.
 function askSource(sessionId, { autoLaunched = false } = {}) {
   const intro = autoLaunched
     ? "Before I dive in — there's no playbook defined for this conversation yet. Let's create one together, it'll only take a minute."
@@ -196,12 +202,6 @@ function askSource(sessionId, { autoLaunched = false } = {}) {
         caption: "Drop a PDF, DOCX or TXT — brand doc, strategy deck…",
         icon: "ap-icon-file--pdf",
       },
-      {
-        value: "social",
-        label: "Social profile",
-        caption: "LinkedIn, X, Instagram, TikTok, Bluesky…",
-        icon: "ap-icon-multiple-users",
-      },
     ],
     onPick: (value) => setSourceType(sessionId, value),
     onSkip: () => exitWithoutSave(sessionId),
@@ -215,9 +215,10 @@ function setSourceType(sessionId, sourceType) {
   d.sourceType = sourceType;
   notify(sessionId);
   inlineQuestion.exit(sessionId);
-  // Route to the matching input step.
+  // Route to the matching input step. Only Website + Documents are
+  // reachable from the picker; the social step is part of the Website
+  // path tail (see runAnalysis → askSocial).
   if (sourceType === "website") askUrl(sessionId);
-  else if (sourceType === "social") askProfileUrl(sessionId);
   else if (sourceType === "documents") askDocument(sessionId);
 }
 
@@ -241,20 +242,7 @@ function askUrl(sessionId) {
   });
 }
 
-// Step 1b: Social profile URL. Same chrome as askUrl, different placeholder.
-function askProfileUrl(sessionId) {
-  const intro = "Got it — paste the profile URL. I'll detect the platform and analyse the voice from there.";
-  postAssistantMessage(sessionId, intro);
-  inlineQuestion.ask(sessionId, {
-    title: "What's your social profile URL?",
-    items: [],
-    customPlaceholder: "linkedin.com/in/jdoe",
-    onCustom: (value) => setUrl(sessionId, value),
-    onBack: () => askSource(sessionId),
-  });
-}
-
-// Step 1c: Document upload. customFile dropzone variant of inline-question.
+// Step 1b: Document upload. customFile dropzone variant of inline-question.
 function askDocument(sessionId) {
   const intro = "Got it — drop a brand or strategy document and I'll build the playbook from it.";
   postAssistantMessage(sessionId, intro);
@@ -309,10 +297,7 @@ function runAnalysis(sessionId) {
     // Dispatch on the user's chosen source type. Each mock returns the
     // same shape so the rest of the brief-panel pipeline is unchanged.
     let analysis;
-    if (d.sourceType === "social") {
-      analysis = analyzeSocialProfile(d.sourceUrl);
-      d.sourcePlatform = detectPlatform(d.sourceUrl);
-    } else if (d.sourceType === "documents") {
+    if (d.sourceType === "documents") {
       analysis = analyzeDocument(d.sourceFile);
     } else {
       analysis = analyzeWebsite(d.sourceUrl || d.websiteUrl);
@@ -335,8 +320,61 @@ function runAnalysis(sessionId) {
     d.imageVoice = analysis.suggestions.imageVoice || { websites: [] };
     markSystemNoticeReady(sessionId, noticeId, { meta: "Extracted guidelines" });
     notify(sessionId);
-    openBriefPanel(sessionId);
+    // Website path tails into the social-channels step so the user can
+    // tell Archie where the brand publishes. Documents path skips it —
+    // a strategy doc usually doesn't need a channel inventory and the
+    // step would feel out of place after a single upload.
+    if (d.sourceType === "website") askSocial(sessionId);
+    else openBriefPanel(sessionId);
   }, 6000);
+}
+
+// --- Phase 2b — Social channels (Website path only) -----------------------
+
+// Catalog of platforms surfaced in the social-channels step. Order
+// matches the conventional "publish priority" for B2B brands; the user
+// can pick any combination via the inline-question multi-select. Logos
+// are the same SVGs used by mocks.socialAccounts so any future "show
+// me what I picked" view stays visually consistent.
+const SOCIAL_PLATFORMS = [
+  { value: "linkedin", label: "LinkedIn", imgSrc: "assets/logos/social/linkedin.svg" },
+  { value: "instagram", label: "Instagram", imgSrc: "assets/logos/social/instagram.svg" },
+  { value: "x", label: "X (Twitter)", imgSrc: "assets/logos/social/x.svg" },
+  { value: "tiktok", label: "TikTok", imgSrc: "assets/logos/social/tiktok.svg" },
+  { value: "facebook", label: "Facebook", imgSrc: "assets/logos/social/facebook.svg" },
+  { value: "youtube", label: "YouTube", imgSrc: "assets/logos/social/youtube.svg" },
+  { value: "pinterest", label: "Pinterest", imgSrc: "assets/logos/social/pinterest.svg" },
+  { value: "bluesky", label: "Bluesky", imgSrc: "assets/logos/social/bluesky.svg" },
+];
+
+function askSocial(sessionId) {
+  postAssistantMessage(
+    sessionId,
+    "Where do you publish today? Pick every social channel this playbook applies to — I'll tailor the drafts to fit each one.",
+  );
+  inlineQuestion.ask(sessionId, {
+    title: "Where do you publish?",
+    stepLabel: "Channels",
+    items: SOCIAL_PLATFORMS,
+    multi: true,
+    submitLabel: "Continue",
+    skipLabel: "Skip",
+    onPick: (values) => setSocialConnections(sessionId, values || []),
+    onSkip: () => setSocialConnections(sessionId, []),
+    onBack: () => askUrl(sessionId),
+  });
+}
+
+function setSocialConnections(sessionId, values) {
+  const d = drafts.get(sessionId);
+  if (!d) return;
+  d.connectedSocials = values.slice();
+  const labelByValue = Object.fromEntries(SOCIAL_PLATFORMS.map((p) => [p.value, p.label]));
+  const echo = values.length === 0 ? "Skip" : values.map((v) => labelByValue[v] || v).join(" · ");
+  postUserTurn(sessionId, echo);
+  inlineQuestion.exit(sessionId);
+  notify(sessionId);
+  openBriefPanel(sessionId);
 }
 
 // --- Phase 3 — Brief panel -------------------------------------------------
@@ -430,6 +468,7 @@ export function save(sessionId) {
     sourceUrl: d.sourceUrl || d.websiteUrl || "",
     sourceFile: d.sourceFile || null,
     sourcePlatform: d.sourcePlatform || null,
+    connectedSocials: Array.isArray(d.connectedSocials) ? d.connectedSocials.slice() : [],
     businessSummary: d.businessSummary,
     briefSummary: d.businessSummary, // mirror to legacy field for backwards-read compat
     audience: d.audience,
