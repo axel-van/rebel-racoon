@@ -1902,8 +1902,12 @@ function startPillFromKind(_root, session, kind) {
     });
     return;
   }
-  // PDF / URL — keep the existing scripted intake: flip to ready in ~3-5s
-  // with 3-8 ideas attached.
+  // PDF / URL — schedule the scripted completion (~6s) AND launch the
+  // conversation right away. The user shouldn't have to type a prompt
+  // to get Archie engaged — attaching a source is itself an intent
+  // signal, so we acknowledge it and offer the most common next moves
+  // (draft a batch, repurpose, just extract ideas first). The video
+  // path already does this on its own with the clips/themes choice.
   const delay = 6000;
   const ideaCount = 3 + Math.floor(Math.random() * 6);
   setTimeout(() => {
@@ -1913,6 +1917,22 @@ function startPillFromKind(_root, session, kind) {
       ideaCount,
     });
   }, delay);
+  postAssistantMessage(
+    sessionId,
+    `Got it — I'm reading **${spec.filename}**. While I extract the strongest moments, what should I do with it?`,
+  );
+  postAssistantChoice(sessionId, {
+    text: "",
+    choices: [
+      { value: "batch", label: "Draft a batch of posts", icon: "ap-icon-sparkles-mermaid" },
+      { value: "repurpose", label: "Repurpose into 8 posts", icon: "ap-icon-pen" },
+      { value: "extract", label: "Just extract ideas first", icon: "ap-icon-tag" },
+    ],
+    multi: false,
+    instant: true,
+    handler: "source-intake-choice",
+    context: { sourceId, filename: spec.filename, kind },
+  });
 }
 
 function bindSession(root, session) {
@@ -1981,6 +2001,22 @@ function bindSession(root, session) {
         const label = pick === "none" ? "No subtitles" : SUBTITLE_PICK_LABEL[pick] || pick;
         showToast(`Subtitles applied · ${label}`, { duration: 3200 });
       }
+    } else if (msg.handler === "source-intake-choice") {
+      // PDF / URL intake picker fired right after the user attaches a
+      // source. Acknowledges the pick and routes to the right next beat
+      // (draft batch / repurpose / extract). The scripted source is
+      // already on the 6s ticker (see startPillFromKind), so we just
+      // post the assistant follow-up message — the actual draft/extract
+      // engines kick in only once the source flips to "Processed".
+      const { filename } = msg.context || {};
+      const pick = selectedValues[0];
+      const followups = {
+        batch: `Got it — I'll draft 5 posts from **${filename}** across LinkedIn, X, and Instagram as soon as the analysis lands.`,
+        repurpose: `Got it — I'll turn **${filename}** into 8 posts (3 LinkedIn, 3 X, 2 Instagram) keeping the brand voice consistent.`,
+        extract: `Got it — I'll surface the strongest ideas from **${filename}** first. You can decide what to draft from there.`,
+      };
+      const msgText = followups[pick];
+      if (msgText) postAssistantMessage(session.id, msgText);
     } else if (msg.handler === "video-intake-choice") {
       // Single-select picker between "clips" (cut into clip-extraction flow)
       // and "ideas" (inject mock ideas into the Ideas panel). For video,

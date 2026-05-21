@@ -19,7 +19,7 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=10";
 import { renderDashboard } from "./screens/dashboard.js?v=44";
-import { renderSession } from "./screens/session.js?v=104";
+import { renderSession } from "./screens/session.js?v=105";
 import { renderIdeas } from "./screens/ideas.js?v=24";
 import { renderContexts } from "./screens/contexts.js?v=32";
 import { renderWelcome } from "./screens/welcome.js?v=3";
