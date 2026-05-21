@@ -132,6 +132,28 @@
   }
 }
 
+/* ---------- Onboarding mode ----------
+   When `body.onboarding` is present (set by /welcome, /welcome/sources
+   and by /session/welcome-* sessions during the first-time playbook
+   build), the app shell collapses to a single full-viewport column —
+   no sidebar, no topbar. The welcome screens render their own slim
+   header (just "Archie" + chip) inside #app. */
+
+body.onboarding .app-sidebar,
+body.onboarding .app-topbar {
+  display: none;
+}
+
+body.onboarding .app-shell {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 1fr;
+}
+
+body.onboarding .app-content {
+  grid-row: 1;
+  grid-column: 1;
+}
+
 /* ---------- Top bar ---------- */
 
 .app-topbar {
