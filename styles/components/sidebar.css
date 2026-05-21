@@ -71,12 +71,22 @@
   color: var(--ref-color-white);
 }
 
-/* BETA badge inside the brand button — pinned just to the right of the
-   wordmark. The .ap-badge blue handles colors / radius / typography ;
-   we just align the inline-flex so it sits on the same baseline as
-   the brand text. */
-.app-sidebar__brand .ap-badge {
+/* BETA chip — compact pill with the mermaid AI gradient so the brand
+   carries the same signature as the sparkles mark next to it. White
+   text on the gradient background reads as "AI lives here", which is
+   the truth-claim Archie is making at the brand mark. */
+.app-sidebar__brand-beta {
+  display: inline-flex;
+  align-items: center;
   margin-left: var(--ref-spacing-xxxs);
+  padding: 1px 6px;
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-mermaid-gradient-background);
+  color: var(--ref-color-white);
+  font-size: 10px;
+  font-weight: var(--ref-font-weight-extra-bold);
+  letter-spacing: 0.08em;
+  line-height: 1.4;
   flex-shrink: 0;
 }
 
@@ -469,6 +479,25 @@
 .app-sidebar__foot-popmenu-wrap {
   position: relative;
   flex-shrink: 0;
+}
+
+/* Visible toolbar wrapper around the two footer icons (Feedback +
+   More options) in expanded mode — anchors them next to the user meta
+   as a single mini-bar instead of two free-floating icons. */
+.app-sidebar__foot-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: var(--app-surface-subtle);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-button-sm);
+  flex-shrink: 0;
+}
+
+.app-sidebar__foot-tools .ap-icon-button {
+  width: 28px;
+  height: 28px;
 }
 
 .app-sidebar__foot-popmenu {

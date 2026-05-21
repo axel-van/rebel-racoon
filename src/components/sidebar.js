@@ -311,7 +311,7 @@ export function renderSidebar() {
       <button type="button" class="app-sidebar__brand" data-sidebar-home aria-label="Go to Archie home">
         <span class="app-sidebar__brand-mark"><i class="ap-icon-sparkles-mermaid"></i></span>
         <span class="app-sidebar__brand-name">Archie</span>
-        <span class="ap-badge blue">BETA</span>
+        <span class="app-sidebar__brand-beta">BETA</span>
       </button>
       <button
         type="button"
@@ -367,7 +367,11 @@ function renderFootMenu({ collapsed }) {
     `;
   // Pop the menu UPWARDS from the trigger so it doesn't get cut off by the
   // viewport's bottom edge.
-  return `
+  //
+  // The expanded form wraps both buttons in a `.app-sidebar__foot-tools`
+  // container with a subtle background so they read as a mini toolbar
+  // anchored to the user row, not as two floating icons.
+  const inner = `
     ${feedbackBtn}
     <div class="app-sidebar__foot-popmenu-wrap">
       <button
@@ -408,6 +412,10 @@ function renderFootMenu({ collapsed }) {
       </div>
     </div>
   `;
+  // Collapsed mode keeps the icons stacked individually (vertical rail);
+  // expanded mode wraps them in a small bordered toolbar so the row reads
+  // as a grouped affordance next to the user meta.
+  return collapsed ? inner : `<div class="app-sidebar__foot-tools">${inner}</div>`;
 }
 
 // Library nav — Ideas / Contexts standalone views. `count` resolves to
