@@ -21,10 +21,10 @@
 
 import * as inlineQuestion from "./inline-question.js?v=25";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=31";
-import * as rightPanel from "./components/right-panel.js?v=60";
+import * as rightPanel from "./components/right-panel.js?v=61";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=26";
 import { analyzeWebsite, analyzeSocialProfile, analyzeDocument, detectPlatform } from "./context-mock-analysis.js?v=21";
-import { launch as launchPlaybookEditor } from "./playbook-editor.js?v=8";
+import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=9";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -121,10 +121,16 @@ export function openRead(contextId) {
   // Playbook editor — same entry point as the pen icon on the /contexts
   // cards. The form-based startEdit() flow stays exported in case some
   // future surface needs it.
+  //
+  // `onRefineField` wires the per-section hover-reveal Refine button —
+  // each card targets the matching playbook-editor sub-flow (brief /
+  // voice / branding / cta) so the user lands one click away from the
+  // field they want to change instead of going through the chip menu.
   rightPanel.openContextBriefPanel({
     mode: "read",
     getCtx: () => getContextById(contextId),
     onEnterEdit: () => launchPlaybookEditor(contextId, "/contexts"),
+    onRefineField: (fieldKey) => refinePlaybookField(contextId, fieldKey, "/contexts"),
   });
 }
 

@@ -49,13 +49,15 @@ import { open as openGenerateImageModal } from "./generate-image-modal.js?v=21";
 
 const PANEL_ID = "rightPanel";
 
-// Persisted user-resized width override. Read at boot ; rewritten as
-// the user drags the resize handle on the panel's left edge. Falls
-// back to the static --app-right-panel-width / wide variant when
-// unset, so the panel keeps working for users who haven't resized.
-const PANEL_WIDTH_KEY = "archie-rpanel-width";
+// Resize-handle bounds. The width is now driven by the (viewport −
+// sidebar) / 2 formula in layout.css ; the runtime override is only
+// set transiently while the user drags the handle and is reset on
+// every panel open so the formula reasserts as the canonical default.
 const PANEL_MIN_WIDTH = 380;
 const PANEL_MAX_RIGHT_GAP = 400; // leave at least this much for sidebar+content
+// Stale localStorage key from the pre-formula era — wiped on init so
+// upgrading users don't keep seeing the panel at their old custom width.
+const LEGACY_PANEL_WIDTH_KEY = "archie-rpanel-width";
 const DRAFT_INLINE_EDIT_FLAG = "draftInlineEdit";
 
 // Idea kind taxonomy — handoff Ideas filter rail (§ 2.6). Order is the order
@@ -204,6 +206,7 @@ function maybeCollapseSidebarOnOpen(prevMode) {
 // Called by the in-thread Drafts summary card (Lot 4.3).
 export function openDrafts(activeBatchRef) {
   const prev = state.mode;
+  if (prev === null) resetPanelWidthOverride();
   state = { mode: "drafts", activeBatchRef: activeBatchRef || state.activeBatchRef };
   maybeCollapseSidebarOnOpen(prev);
   rebindThread();
@@ -213,6 +216,7 @@ export function openDrafts(activeBatchRef) {
 
 export function openIdeas() {
   const prev = state.mode;
+  if (prev === null) resetPanelWidthOverride();
   state = { ...state, mode: "ideas" };
   maybeCollapseSidebarOnOpen(prev);
   renderPanel();
@@ -224,6 +228,7 @@ export function openIdeas() {
 // source is an INPUT to the conversation, not an AI-generated output.
 export function openSources() {
   const prev = state.mode;
+  if (prev === null) resetPanelWidthOverride();
   state = { ...state, mode: "sources" };
   maybeCollapseSidebarOnOpen(prev);
   renderPanel();
@@ -265,6 +270,7 @@ export function setMode(mode) {
 // panel re-renders against the latest values.
 export function openContextForm(config = {}) {
   const prev = state.mode;
+  if (prev === null) resetPanelWidthOverride();
   contextFormConfig = { mode: "edit", ...config };
   state = { ...state, mode: "context-form" };
   maybeCollapseSidebarOnOpen(prev);
@@ -308,6 +314,7 @@ const voiceProfileExpanded = new Set();
 let voiceProfileCollapsed = false;
 export function openContextBriefPanel(config = {}) {
   const prev = state.mode;
+  if (prev === null) resetPanelWidthOverride();
   contextBriefConfig = { mode: "edit", ...config };
   // Fresh open — collapse all voice-profile subsections and uncollapse
   // the card so the user lands on a clean overview.
@@ -365,9 +372,10 @@ export function init() {
     const shell = document.getElementById("appShell") || document.body;
     shell.appendChild(el);
   }
-  // Apply user-resized width (if any) before the first render so the
-  // grid template column sizes correctly on boot.
-  applyPersistedPanelWidth();
+  // Drop any leftover persisted width from the pre-formula era so the
+  // (viewport − sidebar) / 2 default takes hold on first paint.
+  clearLegacyPanelWidth();
+  resetPanelWidthOverride();
 
   // Resize handle — mousedown begins drag, document-level mousemove +
   // mouseup tracks until release.
@@ -760,6 +768,14 @@ export function init() {
       contextBriefConfig?.onEnterEdit?.();
       return;
     }
+    const refineBtn = event.target.closest("[data-brief-refine-field]");
+    if (refineBtn) {
+      // Hover-reveal Refine button on each read-mode section card.
+      // Routes to a field-targeted playbook-editor flow via the host
+      // (see `context-builder.openRead` → `playbookEditor.refineField`).
+      contextBriefConfig?.onRefineField?.(refineBtn.dataset.briefRefineField);
+      return;
+    }
   });
   el.addEventListener("change", (event) => {
     if (event.target.matches("[data-rpanel-drafts-network-select]")) {
@@ -1024,15 +1040,28 @@ function renderPanel() {
 
 // --- Resize handle -----------------------------------------------------
 
-// Apply a previously-persisted user width (if any) as a CSS custom
-// property on the shell. The grid-template-columns rules in layout.css
-// honor this var when set. Called once at init, before the first
-// renderPanel.
-function applyPersistedPanelWidth() {
+// Wipe any legacy persisted width left over from before the
+// (viewport − sidebar) / 2 formula. Pre-formula users had their
+// custom width in localStorage ; if we honored it the panel would
+// keep ignoring the formula on every reload.
+function clearLegacyPanelWidth() {
+  try {
+    localStorage.removeItem(LEGACY_PANEL_WIDTH_KEY);
+  } catch (_) {
+    // localStorage can throw in private mode / sandboxed contexts —
+    // not worth blocking init over.
+  }
+}
+
+// Drop any inline runtime override on the shell so the next render
+// resolves the grid column through the formula default. Called on
+// every "fresh open" (state.mode transition from null → something).
+// The mode-swap path (e.g. Ideas → Drafts) intentionally keeps the
+// override so a user's in-session resize survives the swap.
+function resetPanelWidthOverride() {
   const shell = document.getElementById("appShell");
   if (!shell) return;
-  const stored = localStorage.getItem(PANEL_WIDTH_KEY);
-  if (stored) shell.style.setProperty("--app-right-panel-width-runtime", `${stored}px`);
+  shell.style.removeProperty("--app-right-panel-width-runtime");
 }
 
 // Drag-to-resize handler bound on the panel root. Tracks mousemove on
@@ -1066,13 +1095,8 @@ function endResizeDrag() {
   document.body.style.userSelect = "";
   document.removeEventListener("mousemove", onResizeDrag);
   document.removeEventListener("mouseup", endResizeDrag);
-  // Persist the resolved width so it survives a reload.
-  const shell = document.getElementById("appShell");
-  const w = shell?.style.getPropertyValue("--app-right-panel-width-runtime");
-  if (w) {
-    const parsed = parseInt(w, 10);
-    if (Number.isFinite(parsed)) localStorage.setItem(PANEL_WIDTH_KEY, String(parsed));
-  }
+  // No persistence — the override lives on shell.style until the panel
+  // closes and reopens, at which point the formula reasserts.
 }
 
 // --- Drafts mode (Lot 21 — rich PostCard feed) -------------------------
@@ -1725,6 +1749,21 @@ function useIdea(ideaId) {
   closePanel();
 }
 
+// Inject a hover-reveal "Refine with Archie" button into the opening
+// `<section class="context-brief__section…">` tag of a card. Used in
+// read mode only — see `canRefine` in `renderContextBriefSections`.
+// The click is delegated through the panel's main click handler which
+// routes the `data-brief-refine-field` value to `contextBriefConfig.
+// onRefineField` (wired by callers like `context-builder.openRead`).
+function withRefine(sectionHtml, fieldKey, canRefine) {
+  if (!canRefine || !sectionHtml) return sectionHtml;
+  const button = `<button type="button" class="context-brief__refine" data-brief-refine-field="${escapeAttr(fieldKey)}" title="Refine with Archie" aria-label="Refine with Archie"><i class="ap-icon-sparkles-mermaid"></i><span>Refine</span></button>`;
+  // Inject right after the opening section tag (matches the section
+  // with any compound class string — voice profile uses extra classes
+  // alongside `context-brief__section`).
+  return sectionHtml.replace(/<section class="context-brief__section[^"]*">/, (match) => match + button);
+}
+
 function escapeText(str) {
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -1992,76 +2031,106 @@ function renderContextBriefView() {
   // push-out style iOS Settings : un sticky header siblings au même `top:
   // 0` se stack, alors qu'un sticky header borné par son groupe parent
   // est "poussé" hors écran quand le groupe suivant arrive.
+  //
+  // Per-card "Refine with Archie" button — only in read mode (the edit
+  // flow already lets the user type into every field). Each card declares
+  // its target sub-flow in the playbook-editor (brief / voice / branding
+  // / cta) so a click on Refine jumps the user straight there instead of
+  // through the chip menu. See `playbookEditor.refineField` + `withRefine`.
+  const canRefine = isRead && !!contextBriefConfig?.onRefineField;
   const audienceCards = [
-    isRead ? renderBriefSummaryRead(d) : renderBriefBusinessSummary(d),
-    renderBriefChips(
-      chipProps({
-        field: "audience",
-        title: "Who is your primary audience?",
-        hint: "Archie will tailor post topics and framing to speak directly to them.",
-        fromWeb: true,
-        suggestions: d.suggestions?.audience || [],
-        fallback: [],
-        values: d.audience || [],
-        customs: d.customAdditions?.audience || [],
-        otherPlaceholder: "Describe your audience…",
-        warningCount: 0,
-      }),
+    withRefine(isRead ? renderBriefSummaryRead(d) : renderBriefBusinessSummary(d), "brief", canRefine),
+    withRefine(
+      renderBriefChips(
+        chipProps({
+          field: "audience",
+          title: "Who is your primary audience?",
+          hint: "Archie will tailor post topics and framing to speak directly to them.",
+          fromWeb: true,
+          suggestions: d.suggestions?.audience || [],
+          fallback: [],
+          values: d.audience || [],
+          customs: d.customAdditions?.audience || [],
+          otherPlaceholder: "Describe your audience…",
+          warningCount: 0,
+        }),
+      ),
+      "brief",
+      canRefine,
     ),
-    renderBriefChips(
-      chipProps({
-        field: "contentStyle",
-        title: "What content style fits your brand?",
-        hint: "This guides the structure and format of every post Archie writes.",
-        fromWeb: true,
-        suggestions: d.suggestions?.contentStyle || [],
-        fallback: STYLE_FALLBACKS,
-        values: d.contentStyle || [],
-        customs: d.customAdditions?.contentStyle || [],
-        otherPlaceholder: "Describe your style…",
-      }),
+    withRefine(
+      renderBriefChips(
+        chipProps({
+          field: "contentStyle",
+          title: "What content style fits your brand?",
+          hint: "This guides the structure and format of every post Archie writes.",
+          fromWeb: true,
+          suggestions: d.suggestions?.contentStyle || [],
+          fallback: STYLE_FALLBACKS,
+          values: d.contentStyle || [],
+          customs: d.customAdditions?.contentStyle || [],
+          otherPlaceholder: "Describe your style…",
+        }),
+      ),
+      "brief",
+      canRefine,
     ),
-    renderBriefChips(
-      chipProps({
-        field: "objective",
-        title: "What's your primary social media objective?",
-        hint: "Archie will prioritize content angles that serve this goal.",
-        fromWeb: true,
-        suggestions: d.suggestions?.objective || [],
-        fallback: OBJECTIVE_FALLBACKS,
-        values: d.objective || [],
-        customs: d.customAdditions?.objective || [],
-        otherPlaceholder: "Describe your objective…",
-      }),
+    withRefine(
+      renderBriefChips(
+        chipProps({
+          field: "objective",
+          title: "What's your primary social media objective?",
+          hint: "Archie will prioritize content angles that serve this goal.",
+          fromWeb: true,
+          suggestions: d.suggestions?.objective || [],
+          fallback: OBJECTIVE_FALLBACKS,
+          values: d.objective || [],
+          customs: d.customAdditions?.objective || [],
+          otherPlaceholder: "Describe your objective…",
+        }),
+      ),
+      "brief",
+      canRefine,
     ),
-    renderBriefChips(
-      chipProps({
-        field: "contentAction",
-        title: "What action should your content drive?",
-        hint: "Archie will include relevant CTAs aligned with this action.",
-        fromWeb: true,
-        suggestions: d.suggestions?.contentAction || [],
-        fallback: ACTION_FALLBACKS,
-        values: d.contentAction || [],
-        customs: d.customAdditions?.contentAction || [],
-        otherPlaceholder: "Describe the action…",
-      }),
+    withRefine(
+      renderBriefChips(
+        chipProps({
+          field: "contentAction",
+          title: "What action should your content drive?",
+          hint: "Archie will include relevant CTAs aligned with this action.",
+          fromWeb: true,
+          suggestions: d.suggestions?.contentAction || [],
+          fallback: ACTION_FALLBACKS,
+          values: d.contentAction || [],
+          customs: d.customAdditions?.contentAction || [],
+          otherPlaceholder: "Describe the action…",
+        }),
+      ),
+      "brief",
+      canRefine,
     ),
-    renderBriefCtaList(d, isRead),
-    renderBriefSinglePick({
-      field: "language",
-      title: isRead ? "Language" : "Select a language for ideas and posts",
-      hint: isRead ? "" : "Archie will write in this language.",
-      options: LANGUAGE_OPTIONS,
-      value: d.language || "English",
-      suggested: d.suggestions?.language || "",
-      isRead,
-    }),
+    withRefine(renderBriefCtaList(d, isRead), "cta", canRefine),
+    withRefine(
+      renderBriefSinglePick({
+        field: "language",
+        title: isRead ? "Language" : "Select a language for ideas and posts",
+        hint: isRead ? "" : "Archie will write in this language.",
+        options: LANGUAGE_OPTIONS,
+        value: d.language || "English",
+        suggested: d.suggestions?.language || "",
+        isRead,
+      }),
+      "brief",
+      canRefine,
+    ),
   ].filter(Boolean);
 
-  const voiceCards = [renderBriefVoiceProfile(d, isRead)].filter(Boolean);
+  const voiceCards = [withRefine(renderBriefVoiceProfile(d, isRead), "voice", canRefine)].filter(Boolean);
 
-  const brandingCards = [isRead ? renderBriefColor(d, isRead) : "", renderBriefImageVoice(d)].filter(Boolean);
+  const brandingCards = [
+    isRead ? withRefine(renderBriefColor(d, isRead), "branding", canRefine) : "",
+    withRefine(renderBriefImageVoice(d), "branding", canRefine),
+  ].filter(Boolean);
 
   const renderGroup = (id, label, icon, cards) =>
     cards.length

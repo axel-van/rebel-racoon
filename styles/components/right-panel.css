@@ -861,6 +861,7 @@
    8px radius. Reads as a discrete unit. Capped at 500px so the
    form stays scannable even when the panel column is wide. */
 .context-brief__section {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
@@ -870,6 +871,58 @@
   padding: var(--ref-spacing-sm) var(--ref-spacing-md);
   max-width: 640px;
   width: 100%;
+}
+
+/* Hover-reveal "Refine with Archie" pill anchored to each section's
+   top-right corner. Hidden by default so the read panel reads clean;
+   surfaces on hover (and stays visible on keyboard focus) so the
+   affordance is discoverable without cluttering the resting state. */
+.context-brief__refine {
+  position: absolute;
+  top: var(--ref-spacing-xs);
+  right: var(--ref-spacing-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
+  border: 1px solid transparent;
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-mermaid-10);
+  color: var(--ref-color-grey-150);
+  font-family: inherit;
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-extra-bold);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--ref-animation-short) var(--app-ease-out),
+    transform var(--ref-animation-short) var(--app-ease-out),
+    background-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.context-brief__refine i {
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-mermaid-gradient-from);
+  transition: color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.context-brief__section:hover .context-brief__refine,
+.context-brief__section:focus-within .context-brief__refine,
+.context-brief__refine:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.context-brief__refine:hover {
+  background: var(--ref-color-mermaid-gradient-background);
+  color: var(--ref-color-white);
+  transform: translateY(-1px);
+}
+
+.context-brief__refine:hover i {
+  color: var(--ref-color-white);
 }
 
 /* Card chrome already separates sections — hide the divider noise. */

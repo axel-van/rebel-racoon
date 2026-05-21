@@ -29,7 +29,7 @@ import {
   openContextBriefPanel,
   refreshContextBriefPanel,
   closePanel as closeRightPanel,
-} from "./components/right-panel.js?v=60";
+} from "./components/right-panel.js?v=61";
 import { open as openConfirmModal } from "./components/confirm-modal.js?v=20";
 import { setHandoff } from "./handoff.js?v=20";
 import { navigate } from "./router.js?v=21";
@@ -45,7 +45,7 @@ const ANALYSIS_DELAY_MS = 1200;
 
 // ---------- Public API ----------
 
-export function start(sessionId, contextId, { onComplete, onCancel } = {}) {
+export function start(sessionId, contextId, { onComplete, onCancel, targetField } = {}) {
   const ctx = getContextById(contextId);
   if (!ctx) {
     onCancel?.();
@@ -59,9 +59,6 @@ export function start(sessionId, contextId, { onComplete, onCancel } = {}) {
     onCancel,
   });
 
-  postAssistantMessage(sessionId, `Let's refine **${ctx.name}**. Pick what you'd like to change.`);
-  showChipMenu(sessionId);
-
   // Open the brief panel on the right so the user sees the Playbook
   // they're editing as they go. `getCtx` returns the persisted Context
   // merged with the staged draft → the panel reflects in-progress
@@ -73,7 +70,65 @@ export function start(sessionId, contextId, { onComplete, onCancel } = {}) {
     hideFooter: true,
     getCtx: () => mergedContext(sessionId),
   });
+
+  // Targeted refine — entered from a section card's "Refine" button.
+  // Skips the chip menu and jumps straight to the relevant sub-flow so
+  // the user lands one click closer to the field they want to change.
+  // The sub-flow's natural exit still routes back to the chip menu, so
+  // the user can keep refining other sections from there.
+  const targetedFlow = {
+    voice: askVoice,
+    brief: askBrief,
+    branding: askBranding,
+    cta: askCTA,
+  }[targetField];
+  if (targetedFlow) {
+    postAssistantMessage(sessionId, `Let's refine **${ctx.name}** — ${TARGET_INTRO[targetField]}.`);
+    targetedFlow(sessionId, ctx);
+    return;
+  }
+
+  postAssistantMessage(sessionId, `Let's refine **${ctx.name}**. Pick what you'd like to change.`);
+  showChipMenu(sessionId);
 }
+
+// Single entry point for "refine a specific section of an existing
+// Playbook" — surfaces a lighter confirm modal than `launch()` (the user
+// already opted in by clicking the card's Refine button), arms the same
+// `pendingStartPlaybookEditor` handoff with an extra `targetField`, then
+// navigates to a transient session. `session.js` picks up the targetField
+// and forwards it to `start()`.
+export function refineField(contextId, fieldKey, returnTo = "/contexts") {
+  const ctx = getContextById(contextId);
+  if (!ctx) return;
+  const label = TARGET_LABEL[fieldKey] || "this section";
+  openConfirmModal({
+    title: `Refine ${label}?`,
+    body: `Archie will open a focused chat to refine **${ctx.name}**'s ${label}. Your changes only land when you hit "Save changes".`,
+    confirmLabel: "Refine with Archie",
+    cancelLabel: "Cancel",
+    onConfirm: () => {
+      setHandoff("pendingStartPlaybookEditor", { contextId, returnTo, targetField: fieldKey });
+      navigate(`/session/playbook-edit-${contextId}-${Date.now().toString(36)}`);
+    },
+  });
+}
+
+// Copy used in the start() intro message + the refineField confirm modal
+// — kept short so the conversation feels snappy.
+const TARGET_LABEL = {
+  voice: "the voice",
+  brief: "the brief",
+  branding: "the branding",
+  cta: "the CTAs",
+};
+
+const TARGET_INTRO = {
+  voice: "let's adjust the voice",
+  brief: "let's sharpen the brief",
+  branding: "let's update the branding",
+  cta: "let's revisit the CTAs",
+};
 
 // Single entry point for "launch the conversational editor" — surfaces
 // the confirm modal first, then arms the handoff + mints a transient
