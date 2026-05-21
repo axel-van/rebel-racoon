@@ -29,7 +29,7 @@ import {
 } from "./right-panel.js?v=55";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=31";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=30";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=27";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=28";
 import { subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 
 const HTML = `

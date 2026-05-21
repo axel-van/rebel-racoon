@@ -11,7 +11,7 @@ import {
   insertPost,
   updatePostContent,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=25";
+} from "../posts-store.js?v=26";
 import { renderPostCard } from "./post-card.js?v=23";
 import { renderClipCard } from "./clip-card.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=2";

@@ -7,8 +7,12 @@
 //   attachImageToDraft(sessionId, postId, imageUrl)
 //   subscribe(sessionId, fn)    → unsubscribe fn
 
-import { posts as mockPosts } from "./mocks.js?v=29";
+import { posts as mockPosts, recentSessions as seedRecentSessions } from "./mocks.js?v=29";
 import { isNewUser } from "./user-mode.js?v=20";
+
+// Demo session ids — only these get the seeded posts mock. Brand-new
+// conversations start empty (cf. library.js for the same rationale).
+const DEMO_SESSION_IDS = new Set(seedRecentSessions.map((s) => s.id));
 
 // --- Module state -------------------------------------------------------
 
@@ -162,11 +166,13 @@ export function clearSession(sessionId) {
 // --- Internals ----------------------------------------------------------
 
 function seed(sessionId) {
-  // Mirrors library.js: new users start with an empty list so the empty-state
-  // UX shows correctly. Posts are added when they draft from an idea.
-  // Shallow-copy each post so edits (image attachment, etc.) don't leak
-  // across sessions or mutate the shared mock array.
-  store.set(sessionId, isNewUser() ? [] : mockPosts.map((p) => ({ ...p })));
+  // Mirrors library.js: only demo sessions (s-acme-launch / s-riverside /
+  // etc.) get the seeded posts mock. New conversations created at runtime
+  // start empty so the user doesn't see "5 drafts" appear in a chat they
+  // just opened from "+ New conversation". Shallow-copy each post so
+  // edits don't leak across sessions or mutate the shared mock array.
+  const shouldSeed = !isNewUser() && DEMO_SESSION_IDS.has(sessionId);
+  store.set(sessionId, shouldSeed ? mockPosts.map((p) => ({ ...p })) : []);
 }
 
 function notify(sessionId) {

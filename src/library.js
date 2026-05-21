@@ -9,8 +9,14 @@
 //   appendExtractedIdeas(sessionId, sources)  bulk "extract more" flow
 //   removeIdeasForSources(sessionId, sourceIds)  cleanup after bulk-delete
 
-import { ideas as seedIdeas } from "./mocks.js?v=29";
+import { ideas as seedIdeas, recentSessions as seedRecentSessions } from "./mocks.js?v=29";
 import { isNewUser } from "./user-mode.js?v=20";
+
+// Demo session ids — the recentSessions seed (s-acme-launch / s-riverside /
+// etc.). Only these sessions get the seeded ideas mock; brand-new
+// conversations (created at runtime via "+ New conversation") start empty
+// to match the user's mental model. Anything else looked-up — same path.
+const DEMO_SESSION_IDS = new Set(seedRecentSessions.map((s) => s.id));
 import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=31";
 import {
   getSources as streamGetSources,
@@ -295,8 +301,13 @@ export function addSource(sessionId, kind) {
 // --- Internals ----------------------------------------------------------
 
 function seed(sessionId) {
-  const fresh = isNewUser();
-  ideasMap.set(sessionId, fresh ? [] : seedIdeas.map((i) => ({ ...i })));
+  // Seed ideas only for: (a) returning-user mode AND (b) demo sessions
+  // shipped in the recentSessions mock. New conversations created at
+  // runtime start empty — the mock library would otherwise spill into
+  // every fresh chat and confuse the user ("how can a new conversation
+  // already have 7 ideas?").
+  const shouldSeed = !isNewUser() && DEMO_SESSION_IDS.has(sessionId);
+  ideasMap.set(sessionId, shouldSeed ? seedIdeas.map((i) => ({ ...i })) : []);
 }
 
 function notify(sessionId) {

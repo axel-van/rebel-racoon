@@ -16,7 +16,7 @@ import {
 } from "./right-panel.js?v=55";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=30";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=31";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=27";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=28";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { open as openRenameModal } from "./rename-modal.js?v=1";
 

@@ -19,7 +19,7 @@ import {
   subscribe,
   submitAssistantChoice,
 } from "../assistant.js?v=31";
-import { getSources, getIdeas, injectIdeasForSource } from "../library.js?v=27";
+import { getSources, getIdeas, injectIdeasForSource } from "../library.js?v=28";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
   getPosts,
@@ -27,7 +27,7 @@ import {
   attachImageToDraft,
   setSubtitleStyle,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=25";
+} from "../posts-store.js?v=26";
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=21";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
