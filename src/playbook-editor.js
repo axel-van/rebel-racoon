@@ -19,6 +19,11 @@
 import { getContextById, updateContext } from "./contexts-store.js?v=26";
 import { postAssistantMessage } from "./assistant.js?v=31";
 import * as inlineQuestion from "./inline-question.js?v=25";
+import {
+  openContextBriefPanel,
+  refreshContextBriefPanel,
+  closePanel as closeRightPanel,
+} from "./components/right-panel.js?v=57";
 
 const drafts = new Map(); // sessionId → { contextId, draft, dirty, onComplete, onCancel }
 
@@ -40,6 +45,15 @@ export function start(sessionId, contextId, { onComplete, onCancel } = {}) {
 
   postAssistantMessage(sessionId, `Let's refine **${ctx.name}**. Pick what you'd like to change.`);
   showChipMenu(sessionId);
+
+  // Open the brief panel on the right so the user sees the Playbook
+  // they're editing as they go. `getCtx` returns the persisted Context
+  // merged with the staged draft → the panel reflects in-progress
+  // changes live (cf. patchDraft → refreshContextBriefPanel below).
+  openContextBriefPanel({
+    mode: "read",
+    getCtx: () => mergedContext(sessionId),
+  });
 }
 
 export function isActive(sessionId) {
@@ -65,6 +79,7 @@ export function save(sessionId) {
   const { onComplete, contextId } = state;
   drafts.delete(sessionId);
   inlineQuestion.exit(sessionId);
+  closeRightPanel();
   onComplete?.();
   return contextId;
 }
@@ -77,7 +92,17 @@ export function discard(sessionId) {
   const onCancel = state.onCancel;
   drafts.delete(sessionId);
   inlineQuestion.exit(sessionId);
+  closeRightPanel();
   onCancel?.();
+}
+
+// Persisted Context merged with the staged draft — drives the right-
+// panel's live preview as the user refines fields.
+function mergedContext(sessionId) {
+  const state = drafts.get(sessionId);
+  const persisted = state ? getContextById(state.contextId) : null;
+  if (!persisted) return null;
+  return { ...persisted, ...(state.draft || {}) };
 }
 
 // ---------- Conversation flow ----------
@@ -228,6 +253,8 @@ function patchDraft(sessionId, patch) {
   if (!state) return;
   Object.assign(state.draft, patch);
   state.dirty = true;
+  // Push the change into the right-panel's live preview.
+  refreshContextBriefPanel();
 }
 
 // Returns the staged draft value if the user has already patched the
