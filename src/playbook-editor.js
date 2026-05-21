@@ -23,7 +23,7 @@ import {
   openContextBriefPanel,
   refreshContextBriefPanel,
   closePanel as closeRightPanel,
-} from "./components/right-panel.js?v=57";
+} from "./components/right-panel.js?v=58";
 
 const drafts = new Map(); // sessionId → { contextId, draft, dirty, onComplete, onCancel }
 
@@ -50,8 +50,11 @@ export function start(sessionId, contextId, { onComplete, onCancel } = {}) {
   // they're editing as they go. `getCtx` returns the persisted Context
   // merged with the staged draft → the panel reflects in-progress
   // changes live (cf. patchDraft → refreshContextBriefPanel below).
+  // `hideFooter` suppresses the panel's Close + Edit buttons since
+  // the editor surfaces its own Cancel + Save changes in the picker.
   openContextBriefPanel({
     mode: "read",
+    hideFooter: true,
     getCtx: () => mergedContext(sessionId),
   });
 }

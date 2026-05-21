@@ -2075,8 +2075,14 @@ function renderContextBriefView() {
     renderGroup("voice", "Voice profile", "ap-icon-megaphone", voiceCards),
     renderGroup("branding", "Branding", "ap-icon-view-grid", brandingCards),
   ].filter(Boolean);
-  const footer = isRead
-    ? `
+  // Callers can opt out of the read-mode footer (Close + Edit) via
+  // `hideFooter: true` on the config — used by the playbook editor,
+  // which has its own Cancel + Save controls and shouldn't show
+  // redundant panel-level navigation.
+  const footer = contextBriefConfig.hideFooter
+    ? ""
+    : isRead
+      ? `
         <footer class="context-brief__footer">
           <span class="context-brief__footer-spacer"></span>
           <button type="button" class="ap-button stroked grey" data-rpanel-close>
@@ -2088,7 +2094,7 @@ function renderContextBriefView() {
           </button>
         </footer>
       `
-    : `
+      : `
         <footer class="context-brief__footer">
           <button type="button" class="ap-button stroked grey" data-brief-cancel aria-label="Cancel">
             <span>Cancel</span>
