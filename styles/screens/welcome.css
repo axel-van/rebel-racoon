@@ -664,9 +664,14 @@
 .welcome-input-card__row {
   position: relative;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xxs);
+  /* Bigger left padding (icon + breathing room) and tight right padding
+     so the button hugs the rounded corner with 6px to spare. Explicit
+     row height = 56px → 44px button sits with 6px above and below,
+     perfectly centered with the input text. */
+  padding: 6px 6px 6px var(--ref-spacing-sm);
+  height: 56px;
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--app-radius-modal);
@@ -691,7 +696,7 @@
   justify-content: center;
   font-size: var(--sys-icon-css-md);
   color: var(--ref-color-grey-80);
-  padding-left: var(--ref-spacing-xs);
+  flex-shrink: 0;
 }
 
 .welcome-input-card__input {
@@ -703,7 +708,9 @@
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-150);
   outline: none;
-  padding: var(--ref-spacing-xs) 0;
+  padding: 0;
+  height: 100%;
+  min-width: 0;
 }
 
 .welcome-input-card__input::placeholder {
