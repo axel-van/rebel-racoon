@@ -18,10 +18,12 @@ import {
   init as initConversationStatusCard,
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=10";
-import { renderDashboard } from "./screens/dashboard.js?v=42";
+import { renderDashboard } from "./screens/dashboard.js?v=43";
 import { renderSession } from "./screens/session.js?v=101";
 import { renderIdeas } from "./screens/ideas.js?v=24";
 import { renderContexts } from "./screens/contexts.js?v=31";
+import { renderWelcome } from "./screens/welcome.js?v=1";
+import { renderWelcomeSources } from "./screens/welcome-sources.js?v=1";
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
 // stays in sync with the active context.
@@ -29,6 +31,12 @@ route("/", renderDashboard);
 route("/session/:id", renderSession);
 route("/ideas", renderIdeas);
 route("/contexts", renderContexts);
+// First-time onboarding (Lot 14). /welcome is the splash; the playbook
+// creation step itself runs inside a transient /session/welcome-* via the
+// existing pendingStartContextBuilder handoff; /welcome/sources is the
+// optional connectors step before landing on the dashboard.
+route("/welcome", renderWelcome);
+route("/welcome/sources", renderWelcomeSources);
 
 // Boot.
 initTopbar();
