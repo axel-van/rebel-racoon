@@ -22,7 +22,7 @@ import { renderDashboard } from "./screens/dashboard.js?v=44";
 import { renderSession } from "./screens/session.js?v=102";
 import { renderIdeas } from "./screens/ideas.js?v=24";
 import { renderContexts } from "./screens/contexts.js?v=31";
-import { renderWelcome } from "./screens/welcome.js?v=1";
+import { renderWelcome } from "./screens/welcome.js?v=3";
 import { renderWelcomeSources } from "./screens/welcome-sources.js?v=1";
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb

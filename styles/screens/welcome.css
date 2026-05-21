@@ -1,16 +1,17 @@
 /* ---------- Onboarding (Welcome) screens ----------
-   Three full-screen surfaces rendered with `body.onboarding` so the app
-   shell (sidebar + topbar) is hidden — see layout.css. The screens own
-   their own header (Archie wordmark) since the topbar is gone.
+   Two surfaces rendered with `body.onboarding` so the app shell (sidebar +
+   topbar) is hidden — see layout.css.
 
    Surfaces:
-     /welcome           → welcome-hero  (splash + 3-step roadmap + primary CTA)
-     /session/welcome-* → existing session shell handles the playbook
-                          conversation; only the shell wrapper changes.
-     /welcome/sources   → welcome-sources (4-connector grid + skip / continue)
+     /welcome           → split hero (copy + roadmap + CTA) with a faux
+                          Playbook card preview on the right so the user
+                          sees the artefact they're about to create.
+     /session/welcome-* → existing session shell handles the conversation.
+     /welcome/sources   → 4-connector grid + skip / continue.
 */
 
 .welcome-screen {
+  position: relative;
   height: 100%;
   min-height: 0;
   display: flex;
@@ -19,22 +20,44 @@
   overflow-y: auto;
 }
 
+/* Decorative warm gradient blob anchored top-right — gives the screen
+   depth without competing with content. Pointer-events none. */
+.welcome-screen__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 50% at 100% 0%, var(--ref-color-orange-05) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 0% 100%, var(--ref-color-electric-blue-05) 0%, transparent 70%);
+  z-index: 0;
+}
+
+.welcome-screen > *:not(.welcome-screen__bg) {
+  position: relative;
+  z-index: 1;
+}
+
 .welcome-screen__top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: var(--ref-spacing-md) var(--ref-spacing-xl);
-  border-bottom: 1px solid var(--app-border-soft);
-  background: var(--app-surface);
   flex-shrink: 0;
 }
 
 .welcome-screen__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
   font-family: var(--sys-text-style-h4-font-family);
   font-size: var(--ref-font-size-lg);
   font-weight: var(--ref-font-weight-extra-bold);
   color: var(--ref-color-grey-150);
   letter-spacing: -0.01em;
+}
+
+.welcome-screen__brand i {
+  font-size: var(--sys-icon-css-md);
 }
 
 .welcome-screen__chip {
@@ -55,130 +78,387 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--ref-spacing-xxxl) var(--ref-spacing-xl);
+  padding: var(--ref-spacing-xl) var(--ref-spacing-xxl) var(--ref-spacing-xxl);
   gap: var(--ref-spacing-xl);
 }
 
-/* ---------- /welcome — splash hero ---------- */
+.welcome-screen__body--split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--ref-spacing-xxxl);
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  padding-bottom: var(--ref-spacing-xxxl);
+}
+
+@media (max-width: 960px) {
+  .welcome-screen__body--split {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ref-spacing-xl);
+  }
+}
+
+/* ---------- /welcome — split hero ---------- */
 
 .welcome-hero {
-  text-align: center;
-  max-width: 640px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ref-spacing-md);
+  max-width: 520px;
 }
 
-.welcome-hero__glyph {
+.welcome-hero__eyebrow {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 96px;
-  height: 96px;
-  margin-bottom: var(--ref-spacing-md);
-  border-radius: var(--app-radius-circle);
-  background: linear-gradient(135deg, var(--ref-color-orange-05) 0%, var(--ref-color-purple-05) 100%);
-}
-
-.welcome-hero__glyph i {
-  font-size: var(--sys-icon-css-xxl);
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-sm);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-orange-05);
+  color: var(--ref-color-orange-150);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-extra-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .welcome-hero__title {
-  margin: 0 0 var(--ref-spacing-sm);
+  margin: 0;
   font-family: var(--sys-text-style-h1-font-family);
-  font-size: var(--sys-text-style-h1-size);
-  line-height: var(--sys-text-style-h1-line-height);
-  font-weight: var(--sys-text-style-h1-weight);
+  font-size: var(--ref-font-size-xxxl);
+  line-height: 1.15;
+  font-weight: var(--ref-font-weight-extra-bold);
   color: var(--ref-color-grey-150);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 .welcome-hero__sub {
-  margin: 0 auto var(--ref-spacing-xl);
-  max-width: 520px;
-  font-size: var(--ref-font-size-lg);
-  line-height: var(--ref-font-line-height-lg);
+  margin: 0;
+  font-size: var(--ref-font-size-md);
+  line-height: 1.55;
   color: var(--ref-color-grey-80);
 }
 
 .welcome-hero__sub strong {
   color: var(--ref-color-grey-150);
   font-weight: var(--ref-font-weight-extra-bold);
+  background: linear-gradient(180deg, transparent 65%, var(--ref-color-orange-10) 65%);
+  padding: 0 4px;
+  border-radius: var(--app-radius-sm);
 }
 
-/* Mini 3-step roadmap — number-chip + label, horizontal. The current
-   step uses the orange accent; later steps stay neutral so the eye
-   knows where it's heading. */
+/* Roadmap — horizontal 3-step ladder. Steps connected by a 2px line
+   that runs behind the bullets so the bullets sit "on top of" the
+   path. The current step is filled in orange; future steps stay
+   neutral but still readable. */
 .welcome-roadmap {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--ref-spacing-xs);
-  padding: 0;
-  margin: 0 0 var(--ref-spacing-xl);
   list-style: none;
+  padding: 0;
+  margin: var(--ref-spacing-sm) 0 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  position: relative;
+  gap: var(--ref-spacing-xs);
+}
+
+.welcome-roadmap::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  left: 14%;
+  right: 14%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--ref-color-orange-100) 0%,
+    var(--ref-color-orange-40) 33%,
+    var(--app-border-soft) 50%,
+    var(--app-border-soft) 100%
+  );
+  z-index: 0;
 }
 
 .welcome-roadmap__step {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border-radius: var(--app-radius-pill);
-  background: var(--app-surface-subtle);
-  color: var(--ref-color-grey-80);
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xxs);
+  padding-top: var(--ref-spacing-xxxs);
 }
 
-.welcome-roadmap__step.is-current {
-  background: var(--ref-color-orange-05);
-  color: var(--ref-color-orange-150);
-}
-
-.welcome-roadmap__num {
+.welcome-roadmap__bullet {
+  width: 28px;
+  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
   border-radius: var(--app-radius-circle);
-  background: var(--ref-color-white);
-  color: var(--ref-color-grey-150);
+  background: var(--app-surface);
+  border: 2px solid var(--app-border-soft);
+  color: var(--ref-color-grey-80);
+  flex-shrink: 0;
+}
+
+.welcome-roadmap__num {
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-extra-bold);
+  line-height: 1;
+}
+
+.welcome-roadmap__step.is-current .welcome-roadmap__bullet {
+  background: var(--ref-color-orange-100);
+  border-color: var(--ref-color-orange-100);
+  color: var(--ref-color-white);
+  box-shadow: 0 0 0 4px var(--ref-color-orange-10);
 }
 
 .welcome-roadmap__step.is-current .welcome-roadmap__num {
-  background: var(--ref-color-orange-100);
   color: var(--ref-color-white);
+}
+
+.welcome-roadmap__label {
+  margin-top: var(--ref-spacing-xxxs);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-extra-bold);
+  color: var(--ref-color-grey-150);
+  line-height: 1.25;
+}
+
+.welcome-roadmap__step:not(.is-current) .welcome-roadmap__label {
+  color: var(--ref-color-grey-100);
+}
+
+.welcome-roadmap__meta {
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-60);
 }
 
 .welcome-hero__actions {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--ref-spacing-md);
+  align-items: flex-start;
+  gap: var(--ref-spacing-xs);
+  margin-top: var(--ref-spacing-sm);
 }
 
-.welcome-hero__actions .ap-button.primary {
-  padding: 0 var(--ref-spacing-xl);
+.welcome-hero__cta {
+  padding: 0 var(--ref-spacing-lg);
   height: 48px;
   font-size: var(--ref-font-size-md);
+  font-weight: var(--ref-font-weight-extra-bold);
+  gap: var(--ref-spacing-xxs);
+  box-shadow: 0 6px 16px -4px var(--ref-color-orange-40);
 }
 
-.welcome-hero__skip {
-  font-size: var(--ref-font-size-sm);
-  color: var(--ref-color-grey-80);
-  cursor: pointer;
-  background: none;
-  border: 0;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  font-family: inherit;
+.welcome-hero__hint {
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-60);
+  font-weight: var(--ref-font-weight-bold);
 }
 
-.welcome-hero__skip:hover {
+/* ---------- Right column — Playbook preview ---------- */
+
+.welcome-preview {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ref-spacing-lg);
+  min-height: 360px;
+}
+
+@media (max-width: 960px) {
+  .welcome-preview {
+    padding: 0;
+    min-height: 0;
+  }
+}
+
+.welcome-preview__card {
+  position: relative;
+  width: min(100%, 400px);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-card);
+  padding: var(--ref-spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  box-shadow:
+    0 1px 3px rgba(26, 31, 54, 0.04),
+    0 18px 40px -10px rgba(26, 31, 54, 0.14);
+  transform: rotate(-1.5deg);
+  transition:
+    transform var(--ref-animation-normal) var(--app-ease-out),
+    box-shadow var(--ref-animation-normal) var(--app-ease-out);
+}
+
+.welcome-preview__card:hover {
+  transform: rotate(0deg) translateY(-2px);
+  box-shadow:
+    0 1px 3px rgba(26, 31, 54, 0.04),
+    0 24px 48px -10px rgba(26, 31, 54, 0.18);
+}
+
+.welcome-preview__head {
+  padding: 0;
+  margin: 0;
+}
+
+.welcome-preview__name {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  font-size: var(--ref-font-size-md);
+  line-height: 1.2;
+  font-weight: var(--ref-font-weight-extra-bold);
   color: var(--ref-color-grey-150);
+}
+
+.welcome-preview__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ref-color-yellow-100);
+  font-size: var(--ref-font-size-sm);
+}
+
+.welcome-preview__voice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-grey-05);
+  color: var(--ref-color-grey-150);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.welcome-preview__voice i {
+  color: var(--ref-color-electric-blue-100);
+}
+
+.welcome-preview__brief {
+  margin: 0;
+  font-size: var(--ref-font-size-sm);
+  line-height: 1.45;
+  color: var(--ref-color-grey-100);
+}
+
+.welcome-preview__chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+  padding: 0;
+  margin: 0;
+}
+
+.welcome-preview__chips li {
+  padding: 2px 8px;
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-electric-blue-05);
+  color: var(--ref-color-electric-blue-150);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.welcome-preview__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding-top: var(--ref-spacing-xs);
+  border-top: 1px solid var(--app-border-soft);
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.welcome-preview__counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.welcome-preview__palette {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 3px;
+}
+
+.welcome-preview__palette span {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--app-radius-circle);
+}
+
+.welcome-preview__updated {
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-60);
+}
+
+/* Floating chips around the card — give the impression of an alive,
+   intelligent surface. They use absolute positioning relative to the
+   .welcome-preview container so the card itself stays centred. */
+.welcome-preview__floater {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-pill);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-extra-bold);
+  color: var(--ref-color-grey-150);
+  box-shadow: 0 8px 24px -8px rgba(26, 31, 54, 0.18);
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.welcome-preview__floater i {
+  font-size: var(--ref-font-size-sm);
+}
+
+.welcome-preview__floater--top {
+  top: 12px;
+  left: 4%;
+  transform: rotate(-3deg);
+  color: var(--ref-color-grey-150);
+}
+
+.welcome-preview__floater--top i {
+  color: var(--ref-color-electric-blue-100);
+}
+
+.welcome-preview__floater--bottom {
+  bottom: 8px;
+  right: 4%;
+  transform: rotate(3deg);
+}
+
+.welcome-preview__floater--bottom i {
+  color: var(--ref-color-green-100);
+}
+
+@media (max-width: 960px) {
+  .welcome-preview__floater--top,
+  .welcome-preview__floater--bottom {
+    display: none;
+  }
+  .welcome-preview__card {
+    transform: none;
+  }
 }
 
 /* ---------- /welcome/sources — connectors grid ---------- */
@@ -214,18 +494,19 @@
 
 .welcome-sources__title {
   margin: 0;
-  font-family: var(--sys-text-style-h2-font-family);
-  font-size: var(--sys-text-style-h2-size);
-  line-height: var(--sys-text-style-h2-line-height);
-  font-weight: var(--sys-text-style-h2-weight);
+  font-family: var(--sys-text-style-h1-font-family);
+  font-size: var(--ref-font-size-xxxl);
+  line-height: 1.2;
+  font-weight: var(--ref-font-weight-extra-bold);
   color: var(--ref-color-grey-150);
+  letter-spacing: -0.01em;
   max-width: 560px;
 }
 
 .welcome-sources__sub {
   margin: 0;
   font-size: var(--ref-font-size-md);
-  line-height: var(--ref-font-line-height-md);
+  line-height: 1.5;
   color: var(--ref-color-grey-80);
   max-width: 560px;
 }
@@ -245,9 +526,6 @@
   }
 }
 
-/* Connector card — same visual rhythm as .add-source__connector-row but
-   stacked (logo + text on top, button below) so the 2x2 grid feels
-   intentional rather than crammed. */
 .welcome-sources__card {
   display: grid;
   grid-template-columns: 48px 1fr auto;
