@@ -182,6 +182,10 @@ export function renderPicker(picker) {
     // When the wizard supports going back to a previous step, the
     // header renders a small ← back button on the left.
     showBack = false,
+    // Raw HTML appended to the footer row — used by the playbook editor
+    // to render its Cancel + Save buttons inside the picker card
+    // instead of a separate top bar.
+    footerSlot = "",
   } = picker;
 
   // Multi-select swaps the trailing chevron for a check icon (visible only
@@ -295,7 +299,10 @@ export function renderPicker(picker) {
   const submitBtn = multi
     ? `<button type="button" class="ap-button primary orange" data-${handler}-submit><span>${submitLabel}</span></button>`
     : "";
-  const footer = skipBtn || submitBtn ? `<div class="analyse__options-submit">${skipBtn}${submitBtn}</div>` : "";
+  const footer =
+    skipBtn || submitBtn || footerSlot
+      ? `<div class="analyse__options-submit">${skipBtn}${submitBtn}${footerSlot}</div>`
+      : "";
 
   return `<div class="analyse__options${multi ? " analyse__options--multi" : ""}" ${multi ? "data-multi" : ""}>${header}${rows}${customRow}${fileRow}${footer}</div>`;
 }

@@ -39,7 +39,7 @@
 //   onSkip()          fn      — called when Skip / Esc; if omitted, no skip btn
 //   onBack()          fn      — called when ← Back is clicked; if omitted, no back btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=27";
+import { chatTurn } from "./screens/_analyse-common.js?v=28";
 
 const states = new Map(); // sessionId → opts
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -154,6 +154,9 @@ export function renderChrome(sessionId) {
     customFileIcon: s.customFileIcon || "ap-icon-upload",
     multi: s.multi === true,
     submitLabel: s.submitLabel || "Continue",
+    // Pass-through for callers that want to inject custom buttons in
+    // the picker footer (used by the playbook editor for Cancel + Save).
+    footerSlot: s.footerSlot || "",
   };
   return { body, picker };
 }

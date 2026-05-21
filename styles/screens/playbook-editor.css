@@ -1,40 +1,8 @@
-/* Playbook editor — Save / Cancel header bar pinned to the top of the
-   assistant panel. Rendered only when the active session is a transient
-   editor (id starts with `playbook-edit-`). Always visible regardless
-   of the panel's mode (chat vs wizard) so the explicit-save model stays
-   anchored. */
+/* Playbook editor — Save / Cancel buttons now live INSIDE the picker
+   card's footer (via `footerSlot` of the inline-question picker), so
+   no top-bar chrome is needed. The Cancel button uses `margin-right:
+   auto` (inline) to anchor itself to the left of the footer while
+   Save sticks to the right.
 
-/* The assistant aside is a 2-row grid by default (thread + composer).
-   When the editor bar is present we re-template to 3 rows so the bar
-   sits cleanly above the existing content. */
-.session__assistant:has(.playbook-editor-bar) {
-  grid-template-rows: auto minmax(0, 1fr) auto;
-}
-
-.session__assistant.session__assistant--wizard:has(.playbook-editor-bar) {
-  grid-template-rows: auto minmax(0, 1fr) auto;
-}
-
-.playbook-editor-bar {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-md);
-  background: var(--app-surface);
-  border-bottom: 1px solid var(--app-border-soft);
-}
-
-.playbook-editor-bar__hint {
-  flex: 1 1 auto;
-  font-size: var(--ref-font-size-sm);
-  color: var(--ref-color-grey-100);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-
-.playbook-editor-bar__hint strong {
-  color: var(--ref-color-grey-150);
-  font-weight: var(--ref-font-weight-bold);
-}
+   Kept as a placeholder file in case we add editor-specific styles
+   later. Empty for now. */

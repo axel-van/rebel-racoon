@@ -36,10 +36,10 @@ import {
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=21";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
-import * as inlineQuestion from "../inline-question.js?v=24";
+import * as inlineQuestion from "../inline-question.js?v=25";
 import * as contextBuilder from "../context-builder.js?v=32";
 import * as playbookEditor from "../playbook-editor.js?v=1";
-import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=27";
+import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=28";
 import { renderSourceCard } from "../components/source-card.js?v=27";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
 import {
@@ -236,7 +236,6 @@ function renderAssistantPanel(session, attachedContext) {
   const composerMarkup = renderComposer(attachedContext, hasUserMessage, session);
   return html`
     <aside class="session__assistant" aria-label="Assistant panel">
-      ${raw(renderPlaybookEditorBar(session))}
       <div class="session__assistant-thread" id="assistantThread" data-assistant-thread>
         ${isEmptyConversation ? raw(renderEmptyHero(session.id, composerMarkup)) : raw(renderThread(thread))}
       </div>
@@ -320,28 +319,6 @@ function renderComposer(attachedContext, hasUserMessage, session) {
           anywhere · drop a file anywhere to add it as a source
         </div>
       </div>
-    </div>
-  `;
-}
-
-// Sticky bar above the composer — only rendered when the session is a
-// transient Playbook editor (id starts with `playbook-edit-`). Carries
-// the explicit Save / Cancel actions for the conversational editor.
-function renderPlaybookEditorBar(session) {
-  if (!session || !session.id || !session.id.startsWith("playbook-edit-")) return "";
-  const ctxId = playbookEditor.getContextId(session.id);
-  const ctx = ctxId ? getContextById(ctxId) : null;
-  const name = ctx?.name || "Playbook";
-  return `
-    <div class="playbook-editor-bar" data-playbook-editor-bar>
-      <button type="button" class="ap-button ghost grey" data-playbook-editor-cancel>
-        <i class="ap-icon-close"></i>
-        <span>Cancel</span>
-      </button>
-      <span class="playbook-editor-bar__hint">Editing <strong>${escapeHtml(name)}</strong></span>
-      <button type="button" class="ap-button primary orange" data-playbook-editor-save>
-        <span>Save changes</span>
-      </button>
     </div>
   `;
 }
@@ -550,7 +527,6 @@ function renderAssistantPanelQuestion(session) {
   if (!chrome) return "";
   return html`
     <aside class="session__assistant session__assistant--wizard" aria-label="Assistant panel">
-      ${raw(renderPlaybookEditorBar(session))}
       <div class="session__assistant-wizard-chat analyse__chat" id="inlineQuestionChat">
         <div class="analyse__chat-inner">${raw(chrome.body)}</div>
       </div>

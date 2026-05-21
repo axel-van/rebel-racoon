@@ -18,7 +18,7 @@
 
 import { getContextById, updateContext } from "./contexts-store.js?v=26";
 import { postAssistantMessage } from "./assistant.js?v=31";
-import * as inlineQuestion from "./inline-question.js?v=24";
+import * as inlineQuestion from "./inline-question.js?v=25";
 
 const drafts = new Map(); // sessionId → { contextId, draft, dirty, onComplete, onCancel }
 
@@ -82,6 +82,19 @@ export function discard(sessionId) {
 
 // ---------- Conversation flow ----------
 
+// Cancel + Save changes buttons injected at the bottom of every picker
+// card rendered by the editor (via the picker's footerSlot). Same data
+// attributes as before — bindSession's click delegate handles them.
+const EDITOR_FOOTER_SLOT = `
+  <button type="button" class="ap-button stroked grey" data-playbook-editor-cancel style="margin-right: auto;">
+    <i class="ap-icon-close"></i>
+    <span>Cancel</span>
+  </button>
+  <button type="button" class="ap-button primary orange" data-playbook-editor-save>
+    <span>Save changes</span>
+  </button>
+`;
+
 function showChipMenu(sessionId) {
   inlineQuestion.ask(sessionId, {
     title: "What would you like to refine?",
@@ -93,6 +106,7 @@ function showChipMenu(sessionId) {
       { value: "cta", label: "Change CTAs", icon: "ap-icon-link" },
     ],
     onPick: (value) => handleChipPick(sessionId, value),
+    footerSlot: EDITOR_FOOTER_SLOT,
   });
 }
 
@@ -141,6 +155,7 @@ function askVoice(sessionId, ctx) {
     },
     onSkip: () => showChipMenu(sessionId),
     onBack: () => showChipMenu(sessionId),
+    footerSlot: EDITOR_FOOTER_SLOT,
   });
 }
 
@@ -158,6 +173,7 @@ function askBrief(sessionId, ctx) {
     },
     onSkip: () => showChipMenu(sessionId),
     onBack: () => showChipMenu(sessionId),
+    footerSlot: EDITOR_FOOTER_SLOT,
   });
 }
 
@@ -181,6 +197,7 @@ function askBranding(sessionId, ctx) {
     },
     onSkip: () => showChipMenu(sessionId),
     onBack: () => showChipMenu(sessionId),
+    footerSlot: EDITOR_FOOTER_SLOT,
   });
 }
 
@@ -199,6 +216,7 @@ function askCTA(sessionId, ctx) {
     },
     onSkip: () => showChipMenu(sessionId),
     onBack: () => showChipMenu(sessionId),
+    footerSlot: EDITOR_FOOTER_SLOT,
   });
 }
 
