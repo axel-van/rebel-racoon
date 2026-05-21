@@ -63,9 +63,16 @@ initConversationStatusCard();
 // Re-render the sidebar on every route change so the active conversation row
 // stays highlighted. The conversation status card also re-renders here so it
 // hides when navigating away from /session/:id.
-setAfterRender(() => {
+//
+// The onboarding class flip is centralized here so /welcome screens get a
+// full-bleed shell without each screen having to add/remove the class.
+// Intentionally NOT applied to /session/welcome-* — the playbook creation
+// step needs the standard grid so the brief panel can occupy its 3rd
+// column; the sidebar and topbar render in their new-user empty state.
+setAfterRender((path) => {
   renderSidebar();
   renderConversationStatusCard();
+  document.body.classList.toggle("onboarding", path.startsWith("/welcome"));
 });
 
 start();
