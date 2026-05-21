@@ -16,6 +16,7 @@ import {
 } from "./right-panel.js?v=55";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=30";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=31";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=27";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { open as openRenameModal } from "./rename-modal.js?v=1";
 
@@ -40,13 +41,16 @@ export function renderTopbar(_options = {}) {
   const onSession = isSessionRoute();
   const rpMode = getRightPanelMode();
   const draftCount = onSession ? latestDraftCount() : 0;
-  // Empty conversation = no user turn yet. Used to disable Ideas (which is
-  // global content but not relevant before the user has even started) and
-  // — combined with draftCount — Drafts (no drafts produced for this chat).
+  // Empty conversation = no user turn yet. Used as one input to the
+  // Outputs gating logic (combined with the live idea count — ideas
+  // can land before the user types if a source got auto-extracted).
   const isEmpty = onSession ? isEmptyConversation() : true;
+  const ideaCount = onSession ? sessionIdeaCount() : 0;
   el.innerHTML = html`
     <div class="app-topbar__left">${raw(renderTitle(onSession))}</div>
-    <div class="app-topbar__right">${raw(onSession ? renderSessionPills(rpMode, draftCount, isEmpty) : "")}</div>
+    <div class="app-topbar__right">
+      ${raw(onSession ? renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) : "")}
+    </div>
   `;
 }
 
@@ -144,11 +148,13 @@ export function initTopbar() {
 
   // When the active session's thread updates (new drafts land), re-render
   // so the Drafts pill badge reflects the latest count. Re-attach when the
-  // route changes to a different session. Same goes for inputs (attached
-  // sources) — drives the Sources pill counter.
+  // route changes to a different session. Same goes for sources — drives
+  // the Sources pill counter — and for the library (ideas extracted from
+  // sources) — drives the Outputs pill badge + ungating.
   let lastSessionId = null;
   let unsubscribeThread = null;
   let unsubscribeSources = null;
+  let unsubscribeLibrary = null;
   function syncThreadSubscription() {
     const sid = currentSessionId();
     if (sid === lastSessionId) return;
@@ -160,10 +166,15 @@ export function initTopbar() {
       unsubscribeSources();
       unsubscribeSources = null;
     }
+    if (unsubscribeLibrary) {
+      unsubscribeLibrary();
+      unsubscribeLibrary = null;
+    }
     lastSessionId = sid;
     if (sid) {
       unsubscribeThread = subscribeThread(sid, () => renderTopbar());
       unsubscribeSources = subscribeSources(sid, () => renderTopbar());
+      unsubscribeLibrary = subscribeLibrary(sid, () => renderTopbar());
     }
   }
   syncThreadSubscription();
@@ -198,17 +209,19 @@ export function initTopbar() {
 // Sources blue. The Context pill is unrelated (composed exception
 // elsewhere in the layout — `.ap-button stroked grey` wrapped in
 // `.app-topbar__context-pill`).
-function renderSessionPills(rpMode, draftCount, isEmpty) {
+function renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) {
   const draftBadge = draftCount > 0 ? `<span class="ap-counter normal orange">${draftCount}</span>` : "";
+  const ideasBadge = ideaCount > 0 ? `<span class="ap-counter normal blue">${ideaCount}</span>` : "";
   const draftsClass = rpMode === "drafts" ? "stroked blue" : "ghost grey";
   const ideasClass = rpMode === "ideas" ? "stroked blue" : "ghost grey";
   const sourcesClass = rpMode === "sources" ? "stroked blue" : "ghost grey";
-  // Drafts disabled until at least one draft turn has landed in the thread
-  // (latestDraftCount > 0). Ideas disabled until the user has actually
-  // started the conversation — opening Ideas in a brand-new chat with no
-  // prompt sent yet has no useful context. Sources is always available.
+  // Drafts disabled until at least one draft turn has landed in the thread.
+  // Outputs disabled only when there are *neither* user turns nor extracted
+  // ideas — a source auto-extracted from a freshly attached file produces
+  // ideas before the user types, and that's exactly when the user wants
+  // to peek at them. Sources is always available.
   const draftsDisabled = draftCount === 0;
-  const ideasDisabled = isEmpty;
+  const ideasDisabled = isEmpty && ideaCount === 0;
   const sourcesCount = sessionSourceCount();
   const sourcesBadge = sourcesCount > 0 ? `<span class="ap-counter normal blue">${sourcesCount}</span>` : "";
   return `
@@ -241,10 +254,11 @@ function renderSessionPills(rpMode, draftCount, isEmpty) {
       data-topbar-ideas
       ${ideasDisabled ? "disabled" : ""}
       aria-pressed="${rpMode === "ideas"}"
-      title="${ideasDisabled ? "Send a message first" : "Toggle Outputs panel"}"
+      title="${ideasDisabled ? "No outputs yet — attach a source or send a message" : "Toggle Outputs panel"}"
     >
       <i class="ap-icon-sparkles"></i>
       <span>Outputs</span>
+      ${ideasBadge}
     </button>
   `;
 }
@@ -260,6 +274,13 @@ function sessionSourceCount() {
   const sid = currentSessionId();
   if (!sid) return 0;
   return getSessionSources(sid).length;
+}
+
+// Same shape for ideas (drives the Outputs pill badge + ungating).
+function sessionIdeaCount() {
+  const sid = currentSessionId();
+  if (!sid) return 0;
+  return getIdeas(sid).length;
 }
 
 // Resolve the latest draft message in the active session (if any) and return

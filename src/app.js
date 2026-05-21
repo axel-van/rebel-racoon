@@ -1,5 +1,5 @@
 import { route, setAfterRender, start } from "./router.js?v=21";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=45";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=46";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=41";
 import { init as initRightPanel } from "./components/right-panel.js?v=55";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=20";
@@ -15,7 +15,7 @@ import { init as initConfirmModal } from "./components/confirm-modal.js?v=20";
 import { init as initRenameModal } from "./components/rename-modal.js?v=1";
 import { init as initSearchModal } from "./components/search-modal.js?v=3";
 import { renderDashboard } from "./screens/dashboard.js?v=42";
-import { renderSession } from "./screens/session.js?v=95";
+import { renderSession } from "./screens/session.js?v=96";
 import { renderIdeas } from "./screens/ideas.js?v=24";
 import { renderContexts } from "./screens/contexts.js?v=29";
 // Route table.

@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=20";
-import { renderTopbar } from "../components/topbar.js?v=45";
+import { renderTopbar } from "../components/topbar.js?v=46";
 import { socialAccounts, chatStarters } from "../mocks.js?v=29";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=26";
@@ -891,14 +891,22 @@ function renderSourceIntakeTurn(message, sessionId) {
 
   // Live-derived sub-text. While loading we show "Uploading…"; once
   // marked ready, we show the source's idea count (or just "Processed"
-  // if zero ideas yet — e.g. video routed to clip extraction).
+  // if zero ideas yet — e.g. video routed to clip extraction). When
+  // ideas > 0 the "N ideas" portion is a clickable affordance that
+  // opens the Outputs panel — fixes the dead-end where users saw
+  // "Processed · 3 ideas" and had no path to those ideas.
   let subText = "";
   if (isLoading) {
     subText = "Uploading…";
   } else if (message.sourceId) {
     const src = getStreamSources(sessionId).find((s) => s.id === message.sourceId);
     const ideas = src?.ideaCount || 0;
-    subText = ideas > 0 ? `Processed · ${ideas} idea${ideas === 1 ? "" : "s"}` : "Processed";
+    if (ideas > 0) {
+      const label = `${ideas} idea${ideas === 1 ? "" : "s"}`;
+      subText = `Processed · <button type="button" class="chat-bubble-source-intake__ideas-link" data-source-intake-open-ideas title="Open Outputs panel">${label}</button>`;
+    } else {
+      subText = "Processed";
+    }
   } else if (message.size) {
     subText = message.size;
   }
@@ -2273,6 +2281,18 @@ function bindSession(root, session) {
       const openClipsBtn = event.target.closest("[data-clip-card-open]");
       if (openClipsBtn) {
         event.preventDefault();
+        openIdeasPanel();
+        return;
+      }
+
+      // "Processed · N ideas" link inside a source-intake bubble — opens
+      // the Outputs panel. Same destination as the topbar Outputs pill;
+      // gives users a direct path from the source they just attached to
+      // the ideas extracted from it.
+      const openIdeasLink = event.target.closest("[data-source-intake-open-ideas]");
+      if (openIdeasLink) {
+        event.preventDefault();
+        event.stopPropagation();
         openIdeasPanel();
         return;
       }

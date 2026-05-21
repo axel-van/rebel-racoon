@@ -142,6 +142,28 @@
   opacity: 0.8;
 }
 
+/* Clickable "N ideas" portion inside the sub-line — opens the Outputs
+   panel. Button-reset + an underline + a slight color shift on hover so
+   it reads as a link, not a regular button. */
+.chat-bubble-source-intake__ideas-link {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.chat-bubble-source-intake__ideas-link:hover,
+.chat-bubble-source-intake__ideas-link:focus-visible {
+  color: var(--ref-color-electric-blue-150);
+  opacity: 1;
+  outline: none;
+}
+
 .chat-bubble-source-intake__spinner {
   flex-shrink: 0;
 }
