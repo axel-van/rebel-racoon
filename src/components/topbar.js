@@ -160,6 +160,11 @@ export function initTopbar() {
     }
     if (event.target.closest("[data-topbar-toggle-status-card]")) {
       toggleStatusCard();
+      // Defensive: explicitly re-render the topbar so the button's
+      // aria-pressed + title reflect the new state immediately, even
+      // if the visibility subscription chain races with another
+      // subscriber firing renderTopbar with the previous state.
+      renderTopbar();
       return;
     }
   });
