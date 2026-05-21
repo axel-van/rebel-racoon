@@ -2071,7 +2071,7 @@ function renderContextBriefView() {
 
   const sections = [
     ...nonGroupedTop,
-    renderGroup("audience", "Audience", "ap-icon-target", audienceCards),
+    renderGroup("audience", "Audience and goals", "ap-icon-target", audienceCards),
     renderGroup("voice", "Voice profile", "ap-icon-megaphone", voiceCards),
     renderGroup("branding", "Branding", "ap-icon-view-grid", brandingCards),
   ].filter(Boolean);

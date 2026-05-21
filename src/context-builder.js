@@ -21,7 +21,7 @@
 
 import * as inlineQuestion from "./inline-question.js?v=24";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=31";
-import * as rightPanel from "./components/right-panel.js?v=55";
+import * as rightPanel from "./components/right-panel.js?v=57";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=26";
 import { analyzeWebsite, analyzeSocialProfile, analyzeDocument, detectPlatform } from "./context-mock-analysis.js?v=21";
 
