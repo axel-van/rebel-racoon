@@ -1345,6 +1345,17 @@ function wireAssistantPanel(root, session, attachedContext) {
     navigate("/contexts");
   }
 
+  // First-time onboarding hand-off. /welcome/sources arms this after the
+  // user finishes the Playbook creation step; the dashboard then forwards
+  // to a fresh /session/new?contextId={id} which lands here. We consume
+  // the handoff and surface a Playbook-named welcome toast.
+  const pendingWelcome = consumeHandoff("welcomeComplete");
+  if (pendingWelcome?.playbookName) {
+    setTimeout(() => {
+      showToast(`Bienvenue ${pendingWelcome.playbookName} !`);
+    }, 200);
+  }
+
   // Drag-and-drop a file anywhere on the assistant panel → kicks off the
   // upload pipeline directly (no modal). Matches the handoff "drop a file
   // anywhere to add it as a source" hint shown under the composer. Files
