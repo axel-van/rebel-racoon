@@ -1475,7 +1475,15 @@ function renderSourceRow(src) {
   const isProcessing = src.status !== "Processed";
   // Only surface a status pill while the source is in-flight. Once
   // Processed, the row stays uncluttered — the filename + meta carry it.
-  const statusEl = isProcessing ? `<span class="ap-status grey rpanel-sources__row-status">Processing</span>` : "";
+  // Mermaid-tinted pill mirrors source-card's processing chip so the
+  // "AI is working" cue stays consistent across surfaces.
+  const stageLabel = isProcessing ? src.stage || "Processing" : "";
+  const statusEl = isProcessing
+    ? `<span class="source-card__processing-pill rpanel-sources__row-status" role="status">
+         <i class="ap-icon-sparkles-mermaid"></i>
+         <span class="source-card__processing-pill-label">${escapeText(stageLabel)}…</span>
+       </span>`
+    : "";
   // Meta line: "addedAt · <clickable N ideas>". The ideas count is a
   // button that switches the panel to Outputs (Ideas tab) so the user
   // can review what the source produced. addedAt stays as static text.
