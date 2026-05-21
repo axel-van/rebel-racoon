@@ -23,13 +23,6 @@
   display: none;
 }
 
-/* When the card is shown the conversation column gets a right-side
-   reservation so chat bubbles wrap before they collide with the
-   overlay. Toggled by the component on render(). */
-body.has-conversation-status-card .app-content {
-  padding-right: calc(280px + var(--ref-spacing-md) * 2);
-}
-
 .conversation-status-card__inner {
   display: flex;
   flex-direction: column;

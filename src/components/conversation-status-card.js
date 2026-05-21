@@ -143,15 +143,10 @@ export function render() {
     ${raw(renderCountsRow(draftCount, ideas.length))}
   `;
   rootEl.hidden = false;
-  // Reserve right padding on the conversation column so chat bubbles
-  // wrap before they collide with the overlay (CSS in
-  // conversation-status-card.css).
-  document.body.classList.add("has-conversation-status-card");
 }
 
 function hideCard() {
   if (rootEl) rootEl.hidden = true;
-  document.body.classList.remove("has-conversation-status-card");
 }
 
 // In progress — list any thread messages currently flagged loading.
