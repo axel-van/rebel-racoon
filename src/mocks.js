@@ -54,19 +54,22 @@ export const recentSessions = [
 export const chatStarters = [
   {
     id: "starter-batch",
-    icon: "ap-icon-sparkles",
+    icon: "ap-icon-sparkles-mermaid",
+    tone: "mermaid",
     title: "Batch from a source",
     prompt: "Pull the strongest moments from {{source}} and draft 5 posts across LinkedIn, X, and Instagram.",
   },
   {
     id: "starter-launch",
     icon: "ap-icon-feature-publishing",
+    tone: "orange",
     title: "Plan a launch week",
     prompt: "Plan a 5-day launch sequence using {{source}}. One post per day, mixed networks, ready to schedule.",
   },
   {
     id: "starter-repurpose",
     icon: "ap-icon-pen",
+    tone: "blue",
     title: "Repurpose a long-form piece",
     prompt:
       "Turn {{source}} into 8 posts: 3 for LinkedIn, 3 for X, 2 for Instagram. Different angles, same brand voice.",
@@ -74,6 +77,7 @@ export const chatStarters = [
   {
     id: "starter-video-clips",
     icon: "ap-icon-video",
+    tone: "purple",
     title: "Extract video clips",
     prompt:
       "Surface the best moments from {{video-source}} and turn them into posts across LinkedIn, X, Instagram, and TikTok.",

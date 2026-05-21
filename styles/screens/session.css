@@ -375,25 +375,76 @@
 
 .starter-card:hover,
 .starter-card:focus-visible {
-  border-color: var(--ref-color-orange-100);
-  box-shadow: var(--app-shadow-orange-hover);
   outline: none;
-  transform: translateY(-1px);
+  transform: translateY(-2px) rotate(-0.6deg);
+  box-shadow:
+    0 1px 3px rgba(26, 31, 54, 0.04),
+    0 14px 28px -10px rgba(26, 31, 54, 0.18);
+}
+
+/* Even rows tilt the other way on hover so the grid stays balanced
+   instead of all cards leaning the same direction. */
+.starter-card:nth-child(2n):hover,
+.starter-card:nth-child(2n):focus-visible {
+  transform: translateY(-2px) rotate(0.6deg);
 }
 
 .starter-card__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   border-radius: var(--app-radius-button-sm);
   background: var(--ref-color-orange-10);
   color: var(--ref-color-orange-100);
 }
 
 .starter-card__icon i {
-  font-size: var(--sys-icon-css-sm);
+  font-size: var(--sys-icon-css-md);
+}
+
+/* Per-starter tone variants — colored icon tile + matching hover
+   border so each starter card carries its own visual identity:
+   mermaid (Batch) · orange (Launch) · electric-blue (Repurpose) ·
+   purple (Clips). Helps the user scan the grid by category. */
+.starter-card--mermaid .starter-card__icon {
+  background: var(--ref-color-mermaid-gradient-background);
+  color: var(--ref-color-white);
+}
+.starter-card--mermaid .starter-card__icon i {
+  color: var(--ref-color-white);
+}
+.starter-card--mermaid:hover,
+.starter-card--mermaid:focus-visible {
+  border-color: var(--ref-color-mermaid-gradient-from);
+}
+
+.starter-card--orange .starter-card__icon {
+  background: var(--ref-color-orange-10);
+  color: var(--ref-color-orange-100);
+}
+.starter-card--orange:hover,
+.starter-card--orange:focus-visible {
+  border-color: var(--ref-color-orange-100);
+}
+
+.starter-card--blue .starter-card__icon {
+  background: var(--ref-color-electric-blue-10);
+  color: var(--ref-color-electric-blue-100);
+}
+.starter-card--blue:hover,
+.starter-card--blue:focus-visible {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.starter-card--purple .starter-card__icon {
+  background: var(--ref-color-purple-10);
+  color: var(--ref-color-purple-100);
+}
+.starter-card--purple:hover,
+.starter-card--purple:focus-visible {
+  border-color: var(--ref-color-purple-100);
 }
 
 .starter-card__title {

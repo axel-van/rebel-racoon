@@ -40,7 +40,7 @@ import * as inlineQuestion from "../inline-question.js?v=25";
 import * as contextBuilder from "../context-builder.js?v=33";
 import * as playbookEditor from "../playbook-editor.js?v=8";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=28";
-import { renderSourceCard } from "../components/source-card.js?v=27";
+import { renderSourceCard } from "../components/source-card.js?v=28";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
 import {
   contentState,
@@ -464,8 +464,9 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
         .replace(/\{\{source\}\}/g, sourceLabel)
         .replace(/\{\{video-source\}\}/g, videoLabel);
       const actionAttr = s.action ? ` data-starter-action="${s.action}"` : "";
+      const tone = s.tone || "orange";
       return `
-        <button type="button" class="starter-card" data-starter="${s.id}"${actionAttr} data-starter-prompt="${escapeHtml(resolvedPrompt)}">
+        <button type="button" class="starter-card starter-card--${tone}" data-starter="${s.id}"${actionAttr} data-starter-prompt="${escapeHtml(resolvedPrompt)}">
           <span class="starter-card__icon"><i class="${s.icon}"></i></span>
           <span class="starter-card__title">${s.title}</span>
           <span class="starter-card__prompt">${escapeHtml(resolvedPrompt)}</span>
