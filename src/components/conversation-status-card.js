@@ -91,10 +91,14 @@ export function init() {
 
   // Click delegate — one handler for all the action rows.
   rootEl.addEventListener("click", (event) => {
-    const sourceItem = event.target.closest("[data-status-source]");
-    if (sourceItem) {
+    // Source row → insert `@<filename> ` at the composer cursor (mention).
+    // This is a more useful action than "open Sources panel" since the user
+    // can already see the filename right here; mentioning it in the
+    // composer wires it into the next message.
+    const sourceMention = event.target.closest("[data-status-source-mention]");
+    if (sourceMention) {
       event.preventDefault();
-      openSourcesPanel();
+      mentionInComposer(sourceMention.dataset.statusSourceMention);
       return;
     }
     if (event.target.closest("[data-status-drafts]")) {
@@ -228,14 +232,20 @@ function renderSourcesSection(sources) {
   const items = sources
     .map((s) => {
       const name = s.title || s.name || s.filename || "Untitled";
+      // Two stacked icons in the leading slot — file at rest, copy on
+      // hover. The CSS swap-on-hover lives in
+      // styles/components/conversation-status-card.css.
       return `
       <button
         type="button"
         class="conversation-status-card__row conversation-status-card__source"
-        data-status-source="${s.id}"
-        title="Open Sources panel"
+        data-status-source-mention="${escapeAttr(name)}"
+        title="Click to mention in the composer"
       >
-        <i class="ap-icon-file" aria-hidden="true"></i>
+        <span class="conversation-status-card__row-icons" aria-hidden="true">
+          <i class="ap-icon-file conversation-status-card__row-icon-rest"></i>
+          <i class="ap-icon-copy conversation-status-card__row-icon-hover"></i>
+        </span>
         <span class="conversation-status-card__row-label">${escapeHtml(name)}</span>
       </button>
     `;
@@ -329,4 +339,35 @@ function escapeHtml(s) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+function escapeAttr(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;");
+}
+
+// Insert `@<source name> ` at the composer's cursor position, focus it,
+// and notify any input listeners (auto-grow, send-button enable, etc.).
+// If the cursor isn't inside the textarea (e.g. user just clicked the
+// card), we insert at the end of the existing text.
+function mentionInComposer(name) {
+  const ta = document.getElementById("assistantInput");
+  if (!ta) return;
+  const token = `@${name} `;
+  const start = ta.selectionStart ?? ta.value.length;
+  const end = ta.selectionEnd ?? ta.value.length;
+  const before = ta.value.slice(0, start);
+  const after = ta.value.slice(end);
+  // Add a leading space if needed so the mention doesn't glue to a
+  // previous word ("hello@file" → "hello @file").
+  const pad = before && !/\s$/.test(before) ? " " : "";
+  const insertion = `${pad}${token}`;
+  ta.value = `${before}${insertion}${after}`;
+  const caret = before.length + insertion.length;
+  ta.setSelectionRange(caret, caret);
+  ta.focus();
+  // Trigger an input event so the session screen's auto-grow + send
+  // button enable logic kicks in.
+  ta.dispatchEvent(new Event("input", { bubbles: true }));
 }

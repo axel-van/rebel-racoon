@@ -124,6 +124,46 @@
   flex-shrink: 0;
 }
 
+/* Source rows have two stacked leading icons — file at rest, copy on
+   hover/focus. The swap signals "click to mention this in the composer"
+   without adding a separate hover-revealed button. The wrapper is a
+   square slot so layout doesn't shift between rest/hover. */
+.conversation-status-card__row-icons {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sys-icon-css-sm);
+  height: var(--sys-icon-css-sm);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.conversation-status-card__row-icons > i {
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-grey-80);
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--ref-animation-short) var(--app-ease-out);
+}
+
+.conversation-status-card__row-icon-hover {
+  opacity: 0;
+}
+
+.conversation-status-card__source:hover .conversation-status-card__row-icon-rest,
+.conversation-status-card__source:focus-visible .conversation-status-card__row-icon-rest {
+  opacity: 0;
+}
+
+.conversation-status-card__source:hover .conversation-status-card__row-icon-hover,
+.conversation-status-card__source:focus-visible .conversation-status-card__row-icon-hover {
+  opacity: 1;
+  color: var(--ref-color-electric-blue-100);
+}
+
 .conversation-status-card__row-label {
   flex: 1 1 auto;
   min-width: 0;
