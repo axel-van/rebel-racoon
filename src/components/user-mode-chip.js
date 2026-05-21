@@ -94,7 +94,10 @@ export function initUserModeChip() {
         } catch {
           // ignore — storage may be unavailable in private browsing
         }
-        window.location.replace(window.location.origin + "/#/welcome");
+        // Preserve the current pathname so the redirect works under any
+        // base path (e.g. GitHub Pages serves under /rebel-racoon/, so
+        // hard-coding origin + "/" would 404).
+        window.location.replace(window.location.href.split("#")[0] + "#/welcome");
       }
       return;
     }
