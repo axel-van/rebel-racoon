@@ -83,12 +83,12 @@ export function discard(sessionId) {
 // ---------- Conversation flow ----------
 
 // Cancel + Save changes buttons injected at the bottom of every picker
-// card rendered by the editor (via the picker's footerSlot). Cancel
-// uses the DS `ghost grey` variant (quiet, label-only) and anchors
-// left via `margin-right: auto`; Save sticks right with the standard
-// primary-orange treatment.
+// card rendered by the editor (via the picker's footerSlot). Both
+// right-aligned (the footer row uses `justify-content: flex-end` from
+// the DS), Cancel sits to the immediate left of Save. Cancel uses the
+// quiet `ghost grey` variant; Save is the primary orange.
 const EDITOR_FOOTER_SLOT = `
-  <button type="button" class="ap-button ghost grey" data-playbook-editor-cancel style="margin-right: auto;">
+  <button type="button" class="ap-button ghost grey" data-playbook-editor-cancel>
     <span>Cancel</span>
   </button>
   <button type="button" class="ap-button primary orange" data-playbook-editor-save>
