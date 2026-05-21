@@ -33,9 +33,16 @@ import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=28";
 import { subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { addMention } from "../composer-mentions.js?v=2";
 
+// Two-level structure:
+//   .conversation-status-column   — fills grid column 3 with white bg
+//                                    (no grey reveal between chat + card).
+//   .conversation-status-card     — the floating-card chrome (border +
+//                                    shadow + radius) sitting inside.
 const HTML = `
-<aside class="conversation-status-card" id="conversationStatusCard" hidden aria-label="Conversation status">
-  <div class="conversation-status-card__inner" data-status-card-root></div>
+<aside class="conversation-status-column" id="conversationStatusCard" hidden aria-label="Conversation status">
+  <div class="conversation-status-card">
+    <div class="conversation-status-card__inner" data-status-card-root></div>
+  </div>
 </aside>
 `;
 
@@ -277,32 +284,48 @@ function renderSourcesSection(sources) {
 }
 
 function renderOutputsRow(ideaCount) {
-  const trailing =
-    ideaCount > 0
-      ? `<span class="ap-counter normal blue">${ideaCount}</span>`
-      : `<span class="conversation-status-card__empty">None yet</span>`;
+  // Non-clickable static row when empty (nothing to show in the panel).
+  // The "None yet" trailing label carries the empty-state signal.
+  if (ideaCount === 0) {
+    return `
+      <section class="conversation-status-card__section">
+        <div class="conversation-status-card__row conversation-status-card__row--static">
+          <i class="ap-icon-sparkles" aria-hidden="true"></i>
+          <span class="conversation-status-card__row-label">Outputs</span>
+          <span class="conversation-status-card__empty">None yet</span>
+        </div>
+      </section>
+    `;
+  }
   return `
     <section class="conversation-status-card__section">
       <button type="button" class="conversation-status-card__row" data-status-ideas title="Open Outputs panel">
         <i class="ap-icon-sparkles" aria-hidden="true"></i>
         <span class="conversation-status-card__row-label">Outputs</span>
-        ${trailing}
+        <span class="ap-counter normal blue">${ideaCount}</span>
       </button>
     </section>
   `;
 }
 
 function renderDraftsRow(draftCount) {
-  const trailing =
-    draftCount > 0
-      ? `<span class="ap-counter normal orange">${draftCount}</span>`
-      : `<span class="conversation-status-card__empty">None yet</span>`;
+  if (draftCount === 0) {
+    return `
+      <section class="conversation-status-card__section">
+        <div class="conversation-status-card__row conversation-status-card__row--static">
+          <i class="ap-icon-pen" aria-hidden="true"></i>
+          <span class="conversation-status-card__row-label">Drafts</span>
+          <span class="conversation-status-card__empty">None yet</span>
+        </div>
+      </section>
+    `;
+  }
   return `
     <section class="conversation-status-card__section">
       <button type="button" class="conversation-status-card__row" data-status-drafts title="Open Drafts panel">
         <i class="ap-icon-pen" aria-hidden="true"></i>
         <span class="conversation-status-card__row-label">Drafts</span>
-        ${trailing}
+        <span class="ap-counter normal orange">${draftCount}</span>
       </button>
     </section>
   `;

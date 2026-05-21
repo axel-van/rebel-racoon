@@ -4,25 +4,30 @@
    on the root <aside> when conditions aren't met (off-route, panel open,
    nothing to surface). */
 
-/* The card is a real grid column on .app-shell (row 2, column 3) when
-   the shell carries `.is-status-card-visible` — chat content reflows
-   to leave room instead of being overlaid. When the right-panel is
-   open, .is-status-card-visible is stripped (card hidden) and the
-   right-panel takes column 3 as before.
-   Treated as a full-height side panel (like .app-right-panel): white
-   surface across the whole column, single border-left, no floating
-   margin/shadow so the column never reveals the shell's grey bg. */
-.conversation-status-card {
+/* Outer column — fills grid cell (row 2, col 3) with white surface so
+   the shell's grey bg never bleeds into the area around the card. */
+.conversation-status-column {
   grid-row: 2;
   grid-column: 3;
   min-height: 0;
   overflow: hidden;
+  padding: var(--ref-spacing-md);
   background: var(--app-surface);
   border-left: 1px solid var(--app-border-soft);
 }
 
-.conversation-status-card[hidden] {
+.conversation-status-column[hidden] {
   display: none;
+}
+
+/* Floating-card chrome — sits inside the white column with shadow +
+   rounded corners so it reads as an info card pinned to the top. */
+.conversation-status-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--ref-border-radius-md);
+  box-shadow: var(--app-shadow-popover-md);
+  overflow: hidden;
 }
 
 /* Grid template — add a 3rd column for the card when the shell flag
@@ -129,6 +134,18 @@
 .conversation-status-card__row:focus-visible {
   background: var(--ref-color-grey-10);
   outline: none;
+}
+
+/* Static row variant — non-clickable, used for Drafts / Outputs when
+   their count is 0 (nothing to open). No hover/focus highlight, no
+   pointer cursor — the row is purely informational. */
+.conversation-status-card__row--static {
+  cursor: default;
+}
+
+.conversation-status-card__row--static:hover,
+.conversation-status-card__row--static:focus-visible {
+  background: transparent;
 }
 
 .conversation-status-card__row > i {
