@@ -27,7 +27,7 @@ import {
 import { open as openConfirmModal } from "./components/confirm-modal.js?v=20";
 import { setHandoff } from "./handoff.js?v=20";
 import { navigate } from "./router.js?v=21";
-import { analyzeWebsite } from "./context-mock-analysis.js?v=21";
+import { analyzeWebsite, analyzeDocument } from "./context-mock-analysis.js?v=21";
 
 const drafts = new Map(); // sessionId → { contextId, draft, dirty, onComplete, onCancel }
 
@@ -190,11 +190,62 @@ function handleChipPick(sessionId, choice) {
   }
 }
 
+// Voice can be refined two ways: extracted from a document the user
+// drops in (re-runs analyzeDocument, same as the creation wizard), or
+// typed directly as a comma-separated tone list. The top-level chip
+// shows a 2-option picker that branches to one or the other.
 function askVoice(sessionId, ctx) {
+  inlineQuestion.ask(sessionId, {
+    title: "Adjust voice — how would you like to update it?",
+    stepLabel: "Voice",
+    items: [
+      { value: "analyze", label: "Analyze a document", icon: "ap-icon-file" },
+      { value: "edit", label: "Edit tones directly", icon: "ap-icon-pen" },
+    ],
+    onPick: (which) => {
+      if (which === "analyze") askVoiceDocument(sessionId, ctx);
+      else if (which === "edit") askVoiceTones(sessionId, ctx);
+    },
+    onSkip: () => showChipMenu(sessionId),
+    onBack: () => showChipMenu(sessionId),
+    footerSlot: EDITOR_FOOTER_SLOT,
+  });
+}
+
+function askVoiceDocument(sessionId, ctx) {
+  inlineQuestion.ask(sessionId, {
+    title: "Drop a brand or voice document",
+    stepLabel: "Voice · Document",
+    intro:
+      "Brand guidelines, a tone-of-voice doc, or any past content — Archie will extract the dominant tones and voice profile.",
+    customFile: true,
+    customFileAccept: ".pdf,.docx,.txt,.md",
+    customFileLabel: "Drop a file here, or click to browse",
+    customFileHint: "PDF · DOCX · TXT · MD",
+    onFile: (file) => {
+      const result = analyzeDocument(file);
+      const patch = {};
+      if (Array.isArray(result?.tones)) patch.tones = result.tones;
+      if (result?.suggestions?.voiceProfile) patch.voiceProfile = result.suggestions.voiceProfile;
+      if (Object.keys(patch).length > 0) patchDraft(sessionId, patch);
+      const filename = file?.name || "your document";
+      postAssistantMessage(
+        sessionId,
+        `Voice refreshed from **${filename}** — tones: ${(patch.tones || []).join(" + ") || "—"}.`,
+      );
+      showChipMenu(sessionId);
+    },
+    onSkip: () => askVoice(sessionId, ctx),
+    onBack: () => askVoice(sessionId, ctx),
+    footerSlot: EDITOR_FOOTER_SLOT,
+  });
+}
+
+function askVoiceTones(sessionId, ctx) {
   const current = (currentValue(sessionId, "tones") ?? ctx.tones ?? []).join(", ");
   inlineQuestion.ask(sessionId, {
-    title: "What tone should the voice carry?",
-    stepLabel: "Voice",
+    title: "What tones should the voice carry?",
+    stepLabel: "Voice · Tones",
     intro: current ? `Current: **${current}**` : "",
     customPlaceholder: "e.g. conversational, sharp, warm…",
     onCustom: (text) => {
@@ -206,8 +257,8 @@ function askVoice(sessionId, ctx) {
       postAssistantMessage(sessionId, `Voice updated to **${tones.join(" + ") || "—"}**.`);
       showChipMenu(sessionId);
     },
-    onSkip: () => showChipMenu(sessionId),
-    onBack: () => showChipMenu(sessionId),
+    onSkip: () => askVoice(sessionId, ctx),
+    onBack: () => askVoice(sessionId, ctx),
     footerSlot: EDITOR_FOOTER_SLOT,
   });
 }
