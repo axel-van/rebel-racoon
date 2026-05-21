@@ -666,11 +666,11 @@
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  /* Bigger left padding (icon + breathing room) and tight right padding
-     so the button hugs the rounded corner with 6px to spare. Explicit
-     row height = 56px → 44px button sits with 6px above and below,
-     perfectly centered with the input text. */
-  padding: 6px 6px 6px var(--ref-spacing-sm);
+  /* Symmetric 8px inset on all four sides — the button now sits with
+     equal breathing room top/right/bottom, and the icon mirrors it on
+     the left via its own padding-left below. Row height 56px = 8 +
+     40 (button) + 8, perfectly centered. */
+  padding: 8px;
   height: 56px;
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
@@ -697,6 +697,10 @@
   font-size: var(--sys-icon-css-md);
   color: var(--ref-color-grey-80);
   flex-shrink: 0;
+  /* Mirrors the implicit 8px the button gets on its right side — keeps
+     the icon and the button both inset by the same amount from their
+     respective rounded corners. */
+  padding-left: 8px;
 }
 
 .welcome-input-card__input {
@@ -720,7 +724,10 @@
 
 .welcome-input-card__submit {
   padding: 0 var(--ref-spacing-md);
-  height: 44px;
+  /* 40px — together with the row's 8px top/bottom padding, total is
+     56px and the button reads as a balanced unit inside the row,
+     not "stuck" against the border. */
+  height: 40px;
   gap: var(--ref-spacing-xxs);
   flex-shrink: 0;
 }
