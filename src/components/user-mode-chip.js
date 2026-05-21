@@ -78,7 +78,24 @@ export function initUserModeChip() {
     const modeBtn = event.target.closest("[data-admin-user-mode]");
     if (modeBtn) {
       const mode = getUserMode();
-      setUserMode(mode === "new" ? "returning" : "new");
+      if (mode === "new") {
+        // Switching off first-time → returning. Stay on the current page;
+        // the chip exists for demo switching, not for navigation.
+        setUserMode("returning");
+      } else {
+        // Switching INTO first-time → land directly on /welcome, every
+        // time. That's the whole point of the toggle: re-experience the
+        // onboarding from a clean state. We also wipe sessionStorage
+        // handoffs so a stale flow from the previous mode doesn't fire
+        // on the next render.
+        try {
+          window.localStorage.setItem("archie-user-mode", "new");
+          window.sessionStorage.clear();
+        } catch {
+          // ignore — storage may be unavailable in private browsing
+        }
+        window.location.replace(window.location.origin + "/#/welcome");
+      }
       return;
     }
 
