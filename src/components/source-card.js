@@ -23,6 +23,7 @@
 // Source shape: { id, filename, kind, status, ideaCount, addedAt, ... }
 
 import { iconFor } from "../file-kinds.js?v=20";
+import { escapeHtml } from "../utils.js?v=20";
 
 // ── Overflow menu — one open at a time ─────────────────────────────────
 //
@@ -107,9 +108,15 @@ export function renderSourceCard(source, allIdeas = [], { selectable = false, is
     : `<i class="${iconFor(source.kind)} source-card__kind-icon" aria-hidden="true"></i>`;
 
   // Processing pill — shown in place of actions while the source is still
-  // being analysed.
+  // being analysed. Mermaid-tinted gradient + sparkles icon + live stage
+  // label tie it to the same "AI is working" signature used by the
+  // assistant.js "Drafting / Extracting guidelines" pills.
+  const stageLabel = isProcessing ? source.stage || "Processing" : "";
   const processingPill = isProcessing
-    ? `<span class="ap-button secondary blue source-card__primary source-card__primary--processing" aria-disabled="true">Processing</span>`
+    ? `<span class="source-card__processing-pill" role="status" aria-live="polite">
+         <i class="ap-icon-sparkles-mermaid"></i>
+         <span class="source-card__processing-pill-label">${escapeHtml(stageLabel)}…</span>
+       </span>`
     : "";
 
   // "Ask" — available always, but visually muted while processing.

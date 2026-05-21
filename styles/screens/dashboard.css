@@ -288,6 +288,44 @@
   cursor: default;
 }
 
+/* Mermaid-tinted processing pill (Lot 14) — replaces the previous static
+   blue "Processing" pill. Same visual signature as the assistant.js
+   "Drafting" / "Extracting guidelines" pills so the user reads "AI is
+   working" consistently across the app. Pulses while loading; the
+   stage label inside is updated live from sources-stream. */
+.source-card__processing-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-mermaid-10);
+  color: var(--ref-color-grey-150);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-extra-bold);
+  white-space: nowrap;
+  animation: source-card-processing-pulse 1.6s ease-in-out infinite;
+}
+
+.source-card__processing-pill i {
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-mermaid-gradient-from);
+}
+
+.source-card__processing-pill-label {
+  letter-spacing: 0.01em;
+}
+
+@keyframes source-card-processing-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
 .source-card--processing .source-card__ask {
   opacity: 0.5;
   pointer-events: none;
