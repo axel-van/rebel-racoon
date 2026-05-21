@@ -2352,38 +2352,50 @@ function bindSession(root, session) {
         return;
       }
 
-      // Playbook editor — Save changes button (sticky bar above composer).
-      // Commits the accumulated draft via updateContext and bounces back
-      // to /contexts. No-op when nothing was patched (dirty=false).
+      // Playbook editor — Save changes (in the picker footer). Both Save
+      // and Cancel surface a confirmation modal so the user has a
+      // deliberate commit/discard step — no accidental clicks.
       if (event.target.closest("[data-playbook-editor-save]")) {
         event.preventDefault();
         event.stopPropagation();
-        const ctxId = playbookEditor.save(session.id);
-        if (ctxId) {
-          import("../components/toast.js?v=20").then(({ showToast }) => showToast("Playbook updated"));
-        }
+        const dirty = playbookEditor.isDirty(session.id);
+        import("../components/confirm-modal.js?v=20").then(({ open }) => {
+          open({
+            title: "Save changes?",
+            body: dirty
+              ? "Apply your edits to the Playbook. This overwrites the current version."
+              : "No edits were staged — closing the editor will return you to the Playbooks library.",
+            confirmLabel: dirty ? "Save changes" : "Close editor",
+            cancelLabel: "Keep editing",
+            onConfirm: () => {
+              const ctxId = playbookEditor.save(session.id);
+              if (ctxId && dirty) {
+                import("../components/toast.js?v=20").then(({ showToast }) => showToast("Playbook updated"));
+              }
+            },
+          });
+        });
         return;
       }
 
-      // Playbook editor — Cancel. If the user has staged any change,
-      // confirm "Discard changes?" before dropping the draft.
+      // Playbook editor — Cancel. Always prompt before dropping the
+      // session, with a stronger warning copy when the draft is dirty.
       if (event.target.closest("[data-playbook-editor-cancel]")) {
         event.preventDefault();
         event.stopPropagation();
-        if (playbookEditor.isDirty(session.id)) {
-          import("../components/confirm-modal.js?v=20").then(({ open }) => {
-            open({
-              title: "Discard changes?",
-              body: "Your edits to this Playbook will be lost.",
-              confirmLabel: "Discard",
-              cancelLabel: "Keep editing",
-              danger: true,
-              onConfirm: () => playbookEditor.discard(session.id),
-            });
+        const dirty = playbookEditor.isDirty(session.id);
+        import("../components/confirm-modal.js?v=20").then(({ open }) => {
+          open({
+            title: dirty ? "Discard changes?" : "Close editor?",
+            body: dirty
+              ? "Your edits to this Playbook will be lost."
+              : "You can re-open the editor anytime from the Playbooks library.",
+            confirmLabel: dirty ? "Discard" : "Close",
+            cancelLabel: "Keep editing",
+            danger: dirty,
+            onConfirm: () => playbookEditor.discard(session.id),
           });
-        } else {
-          playbookEditor.discard(session.id);
-        }
+        });
         return;
       }
 
