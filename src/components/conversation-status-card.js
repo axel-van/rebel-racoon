@@ -38,6 +38,38 @@ const HTML = `
 </aside>
 `;
 
+// User preference — the topbar info-button toggles the card visibility.
+// Default ON; stored as "0" in localStorage when explicitly hidden so a
+// missing key still resolves to "show".
+const STORAGE_KEY = "archie-status-card-visible";
+const visibilityListeners = new Set();
+
+export function isEnabled() {
+  return localStorage.getItem(STORAGE_KEY) !== "0";
+}
+
+export function setEnabled(on) {
+  if (on) localStorage.removeItem(STORAGE_KEY);
+  else localStorage.setItem(STORAGE_KEY, "0");
+  visibilityListeners.forEach((fn) => {
+    try {
+      fn(on);
+    } catch {}
+  });
+  render();
+}
+
+export function toggle() {
+  setEnabled(!isEnabled());
+}
+
+// Subscribe to visibility-pref changes so the topbar can repaint its
+// info button's pressed state. Returns an unsubscribe fn.
+export function subscribeVisibility(fn) {
+  visibilityListeners.add(fn);
+  return () => visibilityListeners.delete(fn);
+}
+
 let rootEl = null;
 let innerEl = null;
 let initialized = false;
@@ -122,6 +154,11 @@ export function render() {
   // When any right-panel mode is open the card is redundant — the user
   // has the full panel already. Hide.
   if (getRightPanelMode()) {
+    hideCard();
+    return;
+  }
+  // User has dismissed the card via the topbar info button.
+  if (!isEnabled()) {
     hideCard();
     return;
   }

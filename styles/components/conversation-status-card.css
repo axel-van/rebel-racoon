@@ -23,6 +23,17 @@
   display: none;
 }
 
+/* Topbar info-button — pressed state when the card is visible.
+   Subtle grey fill so the user can tell at a glance whether the
+   card is on. Inherits the rest from .ap-icon-button transparent. */
+.app-topbar__status-toggle[aria-pressed="true"] {
+  background: var(--ref-color-grey-10);
+}
+
+.app-topbar__status-toggle[aria-pressed="true"] i {
+  color: var(--ref-color-grey-150);
+}
+
 .conversation-status-card__inner {
   display: flex;
   flex-direction: column;

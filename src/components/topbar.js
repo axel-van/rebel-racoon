@@ -17,6 +17,11 @@ import {
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=30";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=31";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=28";
+import {
+  isEnabled as isStatusCardEnabled,
+  toggle as toggleStatusCard,
+  subscribeVisibility as subscribeStatusCardVisibility,
+} from "./conversation-status-card.js?v=6";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { open as openRenameModal } from "./rename-modal.js?v=1";
 
@@ -50,7 +55,27 @@ export function renderTopbar(_options = {}) {
     <div class="app-topbar__left">${raw(renderTitle(onSession))}</div>
     <div class="app-topbar__right">
       ${raw(onSession ? renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) : "")}
+      ${raw(onSession ? renderStatusCardToggle() : "")}
     </div>
+  `;
+}
+
+// "i" icon-button at the far right of the topbar — toggles the floating
+// conversation status card on/off. Persists across reloads via
+// localStorage (cf. conversation-status-card.js).
+function renderStatusCardToggle() {
+  const on = isStatusCardEnabled();
+  return `
+    <button
+      type="button"
+      class="ap-icon-button transparent app-topbar__status-toggle"
+      data-topbar-toggle-status-card
+      aria-pressed="${on}"
+      aria-label="${on ? "Hide details panel" : "Show details panel"}"
+      title="${on ? "Hide details panel" : "Show details panel"}"
+    >
+      <i class="ap-icon-info"></i>
+    </button>
   `;
 }
 
@@ -133,7 +158,15 @@ export function initTopbar() {
       else openSourcesPanel();
       return;
     }
+    if (event.target.closest("[data-topbar-toggle-status-card]")) {
+      toggleStatusCard();
+      return;
+    }
   });
+
+  // Re-render the topbar when the user flips the status-card visibility
+  // preference so the `i` button's pressed state + tooltip stay accurate.
+  subscribeStatusCardVisibility(() => renderTopbar());
 
   // Re-render the topbar whenever the right panel state changes so the
   // pills reflect the live mode (.is-on accent flips).
