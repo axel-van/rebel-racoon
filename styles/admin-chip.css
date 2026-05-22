@@ -88,6 +88,55 @@
   text-transform: uppercase;
 }
 
+/* User mode rows — radio group with label + 1-line hint, indicator on
+   the left via the DS .ap-radio-container pseudo-element. */
+.admin-menu__modes {
+  display: flex;
+  flex-direction: column;
+  padding: var(--ref-spacing-xxxs) 0 var(--ref-spacing-xxs);
+}
+
+.admin-menu__mode-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.admin-menu__mode-row:hover,
+.admin-menu__mode-row:focus-within {
+  background: var(--ref-color-grey-05);
+}
+
+.admin-menu__mode-row.is-active {
+  background: var(--ref-color-grey-05);
+}
+
+.admin-menu__mode-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-menu__mode-label {
+  color: var(--sys-text-color-default);
+  font-family: var(--sys-text-style-body-font-family);
+  font-size: var(--sys-text-style-body-size);
+  font-weight: var(--sys-text-style-body-weight);
+  line-height: var(--sys-text-style-body-line-height);
+}
+
+.admin-menu__mode-hint {
+  color: var(--sys-text-color-light);
+  font-family: var(--sys-text-style-caption-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-weight);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
 .admin-menu__flag-row {
   display: flex;
   align-items: center;

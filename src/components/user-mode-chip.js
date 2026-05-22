@@ -31,13 +31,12 @@ export function initUserModeChip() {
     if (mode === "new-alt") return "First-time ALT";
     return "Returning user";
   }
-  // Description of the NEXT mode you'd cycle into, so the menu row reads
-  // "first-time user · refresh" while you're returning, etc.
-  function nextModeLabel(mode) {
-    if (mode === "returning") return "first-time user";
-    if (mode === "new") return "first-time ALT";
-    return "returning user";
-  }
+
+  const MODE_OPTIONS = [
+    { value: "returning", label: "Returning user", hint: "Populated mocks (default)" },
+    { value: "new", label: "First-time user", hint: "Linear 4-screen /welcome wizard" },
+    { value: "new-alt", label: "First-time ALT", hint: "Visual picker + conversational chat" },
+  ];
 
   function render() {
     const mode = getUserMode();
@@ -56,18 +55,25 @@ export function initUserModeChip() {
 
     menu.hidden = !open;
     menu.innerHTML = `
-      <button type="button" class="ap-action-dropdown-item admin-menu__row" data-admin-user-mode role="menuitem">
-        <span class="ap-action-dropdown-item-text">
-          <span class="ap-action-dropdown-item-label bold">User mode</span>
-          <span class="ap-action-dropdown-item-description">
-            ${nextModeLabel(mode)} · refresh
-          </span>
-        </span>
-        <i class="ap-icon-refresh" aria-hidden="true"></i>
-      </button>
+      <div class="admin-menu__section-title">User mode</div>
+      <div class="admin-menu__modes" role="radiogroup" aria-label="User mode">
+        ${MODE_OPTIONS.map((opt) => renderModeRow(opt, opt.value === mode)).join("")}
+      </div>
       <div class="ap-action-dropdown-divider" role="separator"></div>
       <div class="admin-menu__section-title">Feature flags</div>
       ${FLAGS.map((flag) => renderFlagRow(flag, flags[flag.id])).join("")}
+    `;
+  }
+
+  function renderModeRow(opt, isActive) {
+    return `
+      <label class="ap-radio-container admin-menu__mode-row${isActive ? " is-active" : ""}" data-admin-mode="${opt.value}">
+        <input type="radio" name="archie-admin-user-mode" value="${opt.value}" ${isActive ? "checked" : ""} />
+        <span class="admin-menu__mode-text">
+          <span class="admin-menu__mode-label">${opt.label}</span>
+          <span class="admin-menu__mode-hint">${opt.hint}</span>
+        </span>
+      </label>
     `;
   }
 
@@ -81,64 +87,44 @@ export function initUserModeChip() {
     setOpen(!open);
   });
 
+  // Apply a target mode picked from the radio group. Mutates localStorage,
+  // repositions the URL so the user lands on a coherent screen for the
+  // target mode, then forces a full reload so every store re-seeds.
+  // location.replace alone is unreliable — replacing to the same URL is
+  // a no-op in Chrome — so we mutate location.hash and then reload().
+  function applyMode(target) {
+    if (target === getUserMode()) return;
+    try {
+      window.sessionStorage.clear();
+    } catch {
+      /* ignore — storage may be unavailable in private browsing */
+    }
+    try {
+      if (target === "new") window.localStorage.setItem("archie-user-mode", "new");
+      else if (target === "new-alt") window.localStorage.setItem("archie-user-mode", "new-alt");
+      else window.localStorage.removeItem("archie-user-mode");
+    } catch {
+      /* ignore */
+    }
+    if (target === "new" && !window.location.hash.startsWith("#/welcome")) {
+      window.location.hash = "#/welcome";
+    } else if (target === "new-alt" && !window.location.hash.startsWith("#/welcome-alt")) {
+      window.location.hash = "#/welcome-alt";
+    } else if (target === "returning") {
+      const h = window.location.hash;
+      if (h.startsWith("#/welcome") || h.startsWith("#/session/welcome-alt-")) {
+        window.location.hash = "#/";
+      }
+    }
+    window.location.reload();
+  }
+
   menu.addEventListener("click", (event) => {
     event.stopPropagation();
+    // Native radio inputs are interactive — let the click reach them,
+    // we handle the actual change in the 'change' listener below.
+    if (event.target.matches('[name="archie-admin-user-mode"]')) return;
     if (event.target.matches("[data-admin-flag] input")) return;
-    const modeBtn = event.target.closest("[data-admin-user-mode]");
-    if (modeBtn) {
-      // 3-state cycle: returning → new → new-alt → returning. Each
-      // transition mutates localStorage, optionally repositions the URL
-      // (so the user lands in a coherent screen for the new mode), then
-      // forces a full reload so every store re-seeds. location.replace
-      // alone is unreliable — replacing to the same URL is a no-op in
-      // Chrome, so we mutate location.hash explicitly and then call
-      // reload().
-      const mode = getUserMode();
-      try {
-        window.sessionStorage.clear();
-      } catch {
-        // ignore — storage may be unavailable in private browsing
-      }
-
-      if (mode === "returning") {
-        // → first-time (linear /welcome wizard).
-        try {
-          window.localStorage.setItem("archie-user-mode", "new");
-        } catch {
-          /* ignore */
-        }
-        if (!window.location.hash.startsWith("#/welcome")) {
-          window.location.hash = "#/welcome";
-        }
-      } else if (mode === "new") {
-        // → first-time ALT (visual profile picker → conversational chat).
-        try {
-          window.localStorage.setItem("archie-user-mode", "new-alt");
-        } catch {
-          /* ignore */
-        }
-        if (!window.location.hash.startsWith("#/welcome-alt")) {
-          window.location.hash = "#/welcome-alt";
-        }
-      } else {
-        // mode === "new-alt" → returning user. If the user is mid-
-        // onboarding (either linear /welcome* or the ALT session at
-        // /session/welcome-alt-*), send them to the dashboard so they
-        // actually see the returning-user state instead of being
-        // stranded on an onboarding screen.
-        try {
-          window.localStorage.removeItem("archie-user-mode");
-        } catch {
-          /* ignore */
-        }
-        const h = window.location.hash;
-        if (h.startsWith("#/welcome") || h.startsWith("#/session/welcome-alt-")) {
-          window.location.hash = "#/";
-        }
-      }
-      window.location.reload();
-      return;
-    }
 
     const flagRow = event.target.closest("[data-admin-flag]");
     if (flagRow) {
@@ -147,6 +133,13 @@ export function initUserModeChip() {
       setFlag(id, !flags[id]);
       window.location.reload();
     }
+  });
+
+  menu.addEventListener("change", (event) => {
+    const input = event.target.closest('[name="archie-admin-user-mode"]');
+    if (!input) return;
+    event.stopPropagation();
+    applyMode(input.value);
   });
 
   document.addEventListener("click", (event) => {
