@@ -367,7 +367,7 @@ function dotColorVar(colorName) {
 function renderComposerContextDropdown(attachedContext, { locked = false } = {}) {
   const all = getContexts();
   const triggerColor = attachedContext?.color || "grey";
-  const triggerLabel = attachedContext?.name || "No playbook";
+  const triggerLabel = attachedContext?.name || "No Playbook";
   // Locked state — conversation has at least one user turn. The context is
   // committed: swap the picker for a simple stroked button showing the
   // active context's color dot + name. Clicking it opens the right-panel
@@ -419,11 +419,11 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
         <div class="ap-select-divider"></div>
         <button type="button" class="ap-select-option" data-context-id="__detach__" role="option">
           <i class="ap-icon-close ap-select-option-icon"></i>
-          <span class="ap-select-option-text">No playbook</span>
+          <span class="ap-select-option-text">Detach Playbook</span>
         </button>
       `
     : "";
-  const noneItem = all.length === 0 ? `<div class="ap-select-option disabled muted">No saved playbooks yet.</div>` : "";
+  const noneItem = all.length === 0 ? `<div class="ap-select-option disabled muted">No saved Playbooks yet.</div>` : "";
   return `
     <details class="ap-select composer-context-select" data-composer-context>
       <summary class="ap-select-trigger">
@@ -440,7 +440,7 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
           <div class="ap-select-divider"></div>
           <button type="button" class="ap-select-option" data-context-id="__new__" role="option">
             <i class="ap-icon-plus ap-select-create-icon"></i>
-            <span class="ap-select-option-text">New playbook…</span>
+            <span class="ap-select-option-text">New Playbook…</span>
           </button>
         </div>
       </div>
@@ -491,12 +491,12 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
     .join("");
   return html`
     <div class="empty-chat" data-empty-chat>
-      <div class="empty-chat__hello">What are we creating today?</div>
+      <div class="empty-chat__hello">What are you working on?</div>
       <div class="empty-chat__sub">
-        Drop in a source and Archie will turn it into a batch of posts you can review, edit, and schedule.
+        Drop a source and I'll turn it into a batch of posts you can review, edit, and schedule.
       </div>
       ${raw(composerMarkup)}
-      <div class="empty-chat__starter-label">Start with a source or pick a starter pack</div>
+      <div class="empty-chat__starter-label">Start with a source or pick a starter</div>
       <div class="starter-grid">${raw(cards)}</div>
     </div>
   `;

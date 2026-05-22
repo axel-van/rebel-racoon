@@ -1946,7 +1946,7 @@ function renderBriefIntro() {
         <div class="ap-infobox-content">
           <div class="ap-infobox-texts">
             <div class="ap-infobox-title">Pre-filled from your website</div>
-            <div class="ap-infobox-message">Green chips were suggested by Archie. Click any to toggle off, or add your own via "Other…".</div>
+            <div class="ap-infobox-message">Green chips are Archie's suggestions. Click any to toggle off, or add your own via "Other…".</div>
           </div>
         </div>
       </div>

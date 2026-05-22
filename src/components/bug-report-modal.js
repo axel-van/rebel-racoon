@@ -50,7 +50,7 @@ const HTML = `
 >
   <div class="ap-dialog-header">
     <h2 class="ap-dialog-title" id="bugReportTitle">Report a bug</h2>
-    <p class="ap-dialog-subtitle" id="bugReportDescription">Share what happened and we will send the context with it.</p>
+    <p class="ap-dialog-subtitle" id="bugReportDescription">Share what happened. Archie attaches the screen context.</p>
   </div>
   <button class="ap-dialog-close" type="button" id="closeBugReportBtn" aria-label="Close">
     <i class="ap-icon-close"></i>
