@@ -105,21 +105,21 @@
 .chat-bubble--source-intake {
   background: var(--ref-color-electric-blue-20);
   color: var(--ref-color-electric-blue-150);
-  padding: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs);
   border: 0;
   border-radius: var(--app-radius-xl);
   border-top-right-radius: 0;
   flex-direction: row;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xs);
   font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  line-height: var(--ref-font-line-height-sm);
 }
 
 .chat-bubble--source-intake .chat-bubble-text {
   color: var(--ref-color-electric-blue-150);
   font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  line-height: var(--ref-font-line-height-sm);
 }
 
 .chat-bubble--source-intake i {
@@ -133,15 +133,15 @@
 .chat-bubble-source-intake__main {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--ref-spacing-xxs);
   min-width: 0;
   flex: 1;
 }
 
 .chat-bubble-source-intake__sub {
   margin: 0;
-  font-size: 11px;
-  line-height: 1.3;
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
   color: var(--ref-color-electric-blue-100);
   opacity: 0.8;
 }
