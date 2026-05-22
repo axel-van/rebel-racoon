@@ -79,8 +79,15 @@ export function initUserModeChip() {
     if (modeBtn) {
       const mode = getUserMode();
       if (mode === "new") {
-        // Switching off first-time → returning. Stay on the current page;
-        // the chip exists for demo switching, not for navigation.
+        // Switching off first-time → returning. If the user is mid-
+        // onboarding on /welcome*, send them to the dashboard so they
+        // actually land in the returning-user state (seeded sidebar +
+        // conversations) — staying on /welcome would just re-show the
+        // empty first-time onboarding. From any other route, stay put:
+        // the chip is a demo switch, not navigation.
+        if (window.location.hash.startsWith("#/welcome")) {
+          window.location.hash = "#/";
+        }
         setUserMode("returning");
       } else {
         // Switching INTO first-time → land directly on /welcome, every
