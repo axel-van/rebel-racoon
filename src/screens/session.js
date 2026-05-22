@@ -75,6 +75,7 @@ import {
 } from "../components/right-panel.js?v=62";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=20";
+import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
 
 // Session screen — persistent assistant panel on the left, workspace with
 // tabs on the right.
@@ -1407,94 +1408,6 @@ function wireAssistantPanel(root, session, attachedContext) {
     unsubMentions();
     stopThinkingTimer();
   };
-}
-
-// --- Thinking chip -------------------------------------------------------
-
-let thinkingIntervalId = null;
-// FIND-D1: 30-second cap on a single thinking turn — past that we surface a
-// "taking longer than expected" toast so the user knows the system is still
-// alive. We don't auto-cancel the message (the mock pipeline always finishes
-// in <2s), but the toast is the hook that wires to a real timeout / retry
-// path when the API lands.
-const THINKING_TIMEOUT_MS = 30000;
-const timedOutMessageIds = new Set();
-
-function updateThinkingChip(sessionId) {
-  const chip = document.querySelector("[data-assistant-thinking]");
-  if (!chip) return;
-  const thread = getThread(sessionId);
-  const loadingMessages = thread.filter((m) => m.status === "loading");
-  if (loadingMessages.length === 0) {
-    chip.hidden = true;
-    stopThinkingTimer();
-    return;
-  }
-  chip.hidden = false;
-  const startedAt = loadingMessages[0].createdAt || Date.now();
-  paintThinkingChip(chip, startedAt);
-  startThinkingTimer(sessionId);
-}
-
-function paintThinkingChip(chip, startedAt) {
-  const seconds = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
-  const credits = Math.max(1, Math.round(seconds / 6));
-  const label = formatElapsed(seconds);
-  const text = chip.querySelector("[data-thinking-text]");
-  if (text) {
-    text.textContent = `${label} · ${credits} credit${credits === 1 ? "" : "s"}`;
-  }
-}
-
-function formatElapsed(seconds) {
-  if (seconds < 60) return `${seconds}s`;
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}m ${s.toString().padStart(2, "0")}s`;
-}
-
-function startThinkingTimer(sessionId) {
-  // FIND-F: clear-and-restart rather than early-return — a new session
-  // opening its thinking-chip while another is still running would
-  // otherwise keep polling the previous sessionId.
-  if (thinkingIntervalId) {
-    clearInterval(thinkingIntervalId);
-    thinkingIntervalId = null;
-  }
-  thinkingIntervalId = setInterval(() => {
-    const chip = document.querySelector("[data-assistant-thinking]");
-    if (!chip || chip.hidden) {
-      stopThinkingTimer();
-      return;
-    }
-    const thread = getThread(sessionId);
-    const loading = thread.find((m) => m.status === "loading");
-    if (!loading) {
-      chip.hidden = true;
-      stopThinkingTimer();
-      return;
-    }
-    paintThinkingChip(chip, loading.createdAt || Date.now());
-
-    // Per-message timeout — show the toast once per loading turn that
-    // crosses the boundary, so successive long turns each get their own
-    // notice instead of a single early one and silence afterwards.
-    const elapsed = Date.now() - (loading.createdAt || Date.now());
-    if (elapsed >= THINKING_TIMEOUT_MS && !timedOutMessageIds.has(loading.id)) {
-      timedOutMessageIds.add(loading.id);
-      showToast("This is taking longer than expected. Hang tight, or refresh if it stays stuck.", {
-        variant: "error",
-        duration: 6000,
-      });
-    }
-  }, 1000);
-}
-
-function stopThinkingTimer() {
-  if (thinkingIntervalId) {
-    clearInterval(thinkingIntervalId);
-    thinkingIntervalId = null;
-  }
 }
 
 // --- Focused-idea highlight ---------------------------------------------
