@@ -1158,7 +1158,7 @@ function onPostRewrite(postId) {
   // The real rewrite-with-AI loop will reuse the assistant pipeline ;
   // stub for now with a toast so the wiring is visible.
   import("./toast.js?v=20").then(({ showToast }) => {
-    showToast("Regenerating draft… (mock)", { actionLabel: null });
+    showToast("Regenerating draft…", { actionLabel: null });
   });
 }
 
@@ -2312,8 +2312,8 @@ function renderBriefImageVoice(d) {
     <section class="context-brief__section context-brief__image-voice">
       <header class="context-brief__iv-header">
         <div class="context-brief__iv-heading">
-          <h3 class="context-brief__title">Image Voice</h3>
-          <p class="context-brief__hint">Brand visual identity extracted from websites</p>
+          <h3 class="context-brief__title">Visual identity</h3>
+          <p class="context-brief__hint">Pulled from your website</p>
         </div>
       </header>
 
@@ -2323,16 +2323,6 @@ function renderBriefImageVoice(d) {
           <span class="context-brief__iv-site-domain">${escapeText(site.domain || "")}</span>
           <span class="context-brief__iv-site-url">${escapeText(site.url || "")}</span>
         </div>
-        <button
-          type="button"
-          class="ap-icon-button transparent context-brief__iv-site-delete"
-          disabled
-          aria-disabled="true"
-          aria-label="Remove website"
-          title="Coming soon"
-        >
-          <i class="ap-icon-trash"></i>
-        </button>
       </div>
 
       <div class="context-brief__iv-block">
@@ -2341,7 +2331,7 @@ function renderBriefImageVoice(d) {
           ${colorRow("Primary", colors.primary)}
           ${colorRow("Accent", colors.accent)}
           ${colorRow("Background", colors.background)}
-          ${colorRow("Text Primary", colors.textPrimary)}
+          ${colorRow("Body text", colors.textPrimary)}
           ${colorRow("Link", colors.link)}
         </div>
       </div>

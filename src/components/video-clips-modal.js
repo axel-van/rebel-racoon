@@ -351,7 +351,7 @@ function editorPaneHTML() {
             <button class="vc-editor__transport-btn" data-vc-action="seek-start" title="Jump to clip start">
               <svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 6h2v12H6V6zm3.5 6l8.5 6V6l-8.5 6z" fill="currentColor"/></svg>
             </button>
-            <button class="vc-editor__transport-btn vc-editor__transport-btn--play" title="Play (preview only)">
+            <button class="vc-editor__transport-btn vc-editor__transport-btn--play" title="Play preview">
               <svg viewBox="0 0 24 24" width="14" height="14"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
             </button>
             <button class="vc-editor__transport-btn" data-vc-action="seek-end" title="Jump to clip end">
