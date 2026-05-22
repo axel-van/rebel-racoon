@@ -37,7 +37,7 @@ import { startDraftFlow, executeDraft } from "../draft-flow.js?v=21";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=26";
-import * as contextBuilder from "../context-builder.js?v=38";
+import * as contextBuilder from "../context-builder.js?v=39";
 import * as playbookEditor from "../playbook-editor.js?v=9";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=29";
 import { renderSourceCard } from "../components/source-card.js?v=28";
@@ -1319,29 +1319,34 @@ function wireAssistantPanel(root, session, attachedContext) {
   // state rather than redirecting back to /welcome-alt).
   const pendingCtxBuilder = consumeHandoff("pendingStartContextBuilder");
   if (pendingCtxBuilder) {
-    const { returnTo, prefill, finishMode } = pendingCtxBuilder;
+    const { returnTo, prefill, finishMode, flow } = pendingCtxBuilder;
+    const onComplete = () => {
+      if (finishMode === "switch-to-returning") {
+        try {
+          window.localStorage.removeItem("archie-user-mode");
+        } catch {
+          /* ignore */
+        }
+        // Full reload so all stores re-seed with the returning-user
+        // mocks (sessions, contexts, sources, etc.) and the admin
+        // chip re-renders with the new "Returning user" label. The
+        // hash change positions the landing target; the reload
+        // commits the new mode across the whole app.
+        if (returnTo) window.location.hash = "#" + returnTo;
+        window.location.reload();
+        return;
+      }
+      if (returnTo) navigate(returnTo);
+    };
     setTimeout(() => {
-      contextBuilder.start(session.id, {
-        prefill,
-        onComplete: () => {
-          if (finishMode === "switch-to-returning") {
-            try {
-              window.localStorage.removeItem("archie-user-mode");
-            } catch {
-              /* ignore */
-            }
-            // Full reload so all stores re-seed with the returning-user
-            // mocks (sessions, contexts, sources, etc.) and the admin
-            // chip re-renders with the new "Returning user" label. The
-            // hash change positions the landing target; the reload
-            // commits the new mode across the whole app.
-            if (returnTo) window.location.hash = "#" + returnTo;
-            window.location.reload();
-            return;
-          }
-          if (returnTo) navigate(returnTo);
-        },
-      });
+      if (flow === "alt") {
+        // First Time User ALT — 3-question orchestration (URL →
+        // profiles → optional documents) that mirrors the linear
+        // /welcome wizard but rendered inline in chat.
+        contextBuilder.startAlt(session.id, { onComplete });
+      } else {
+        contextBuilder.start(session.id, { prefill, onComplete });
+      }
     }, 50);
   }
 

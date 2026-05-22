@@ -25,6 +25,7 @@ import * as rightPanel from "./components/right-panel.js?v=62";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=28";
 import { analyzeWebsite, analyzeDocument } from "./context-mock-analysis.js?v=21";
 import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=9";
+import { socialAccounts, connectors as connectorMocks } from "./mocks.js?v=31";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -179,9 +180,9 @@ export function subscribe(sessionId, fn) {
 // existing concise intro since the user already opted in.
 export function start(sessionId, { onComplete, autoLaunched = false, prefill = null } = {}) {
   drafts.set(sessionId, emptyDraft({ onComplete }));
-  // First Time User ALT seeds the draft with the profile picked on the
-  // visual /welcome-alt screen, so the conversational askSocial step
-  // can pre-check the matching platform.
+  // Optional draft pre-seed — kept as a generic primitive even though no
+  // current call site uses it (the First Time User ALT flow has its own
+  // 3-question orchestration via startAlt below).
   if (prefill) {
     const d = drafts.get(sessionId);
     if (prefill.selectedProfileId) d.selectedProfileId = prefill.selectedProfileId;
@@ -189,6 +190,146 @@ export function start(sessionId, { onComplete, autoLaunched = false, prefill = n
   }
   notify(sessionId);
   askSource(sessionId, { autoLaunched });
+}
+
+// First Time User ALT — same 3 questions as the linear /welcome wizard
+// (URL → profiles → documents) but rendered as inline-questions inside
+// a chat with body.onboarding chrome. The website analysis kicks off in
+// the background as soon as the URL lands, so by the time the user
+// finishes the documents step the brief panel can open immediately.
+export function startAlt(sessionId, { onComplete } = {}) {
+  drafts.set(sessionId, emptyDraft({ onComplete, sourceType: "website" }));
+  notify(sessionId);
+  askAltUrl(sessionId);
+}
+
+function askAltUrl(sessionId) {
+  postAssistantMessage(
+    sessionId,
+    "Bienvenue 👋 On va construire ton Playbook ensemble. Colle l'URL de ton site et j'en extrais la voix, l'audience et l'identité visuelle.",
+  );
+  inlineQuestion.ask(sessionId, {
+    title: "Quelle est l'URL de ton site ?",
+    stepLabel: "1 / 3",
+    items: [],
+    customPlaceholder: "https://your-brand.com",
+    onCustom: (value) => {
+      const d = drafts.get(sessionId);
+      if (!d) return;
+      d.sourceUrl = (value || "").trim();
+      d.websiteUrl = d.sourceUrl;
+      postUserTurn(sessionId, d.sourceUrl);
+      inlineQuestion.exit(sessionId);
+      notify(sessionId);
+      // Kick off the website analysis in the background. It runs while
+      // the user moves through questions 2 and 3 — by the time they
+      // finish, the draft is hydrated and the brief panel can render
+      // without an additional pending state.
+      window.setTimeout(() => {
+        const dd = drafts.get(sessionId);
+        if (!dd) return;
+        applyAnalysisToDraft(dd, analyzeWebsite(dd.sourceUrl || dd.websiteUrl));
+        notify(sessionId);
+      }, 6000);
+      askAltProfile(sessionId);
+    },
+  });
+}
+
+function askAltProfile(sessionId) {
+  postAssistantMessage(
+    sessionId,
+    "Choisis le profil que tu veux utiliser pour ce Playbook — je l'utiliserai pour adapter le ton et le format des posts.",
+  );
+  const connectedProfiles = socialAccounts.filter((p) => p.status === "connected");
+  const items = connectedProfiles.map((p) => {
+    const captionParts = [];
+    if (p.kind) captionParts.push(p.kind);
+    if (p.handle) captionParts.push(p.handle);
+    return {
+      value: p.id,
+      label: p.platformLabel,
+      caption: captionParts.join(" · "),
+      imgSrc: p.logo,
+    };
+  });
+  inlineQuestion.ask(sessionId, {
+    title: "Sur quel profil veux-tu publier ?",
+    stepLabel: "2 / 3",
+    items,
+    onPick: (id) => {
+      const profile = connectedProfiles.find((p) => p.id === id);
+      const d = drafts.get(sessionId);
+      if (!d) return;
+      if (profile) {
+        d.selectedProfileId = profile.id;
+        d.connectedSocials = [profile.platform];
+        postUserTurn(sessionId, `${profile.platformLabel} · ${profile.handle || profile.kind || ""}`);
+      }
+      inlineQuestion.exit(sessionId);
+      notify(sessionId);
+      askAltDocuments(sessionId);
+    },
+    onBack: () => askAltUrl(sessionId),
+  });
+}
+
+function askAltDocuments(sessionId) {
+  postAssistantMessage(
+    sessionId,
+    "Tu peux aussi connecter des documents qui détaillent ta marque (brand book, brief stratégique, etc.) — ou passer à la suite.",
+  );
+  const items = connectorMocks.map((c) => ({
+    value: c.id,
+    label: c.name,
+    caption: c.desc,
+    imgSrc: c.logo,
+  }));
+  inlineQuestion.ask(sessionId, {
+    title: "Connecter des documents (optionnel)",
+    stepLabel: "3 / 3",
+    items,
+    multi: true,
+    submitLabel: "Continuer",
+    skipLabel: "Passer",
+    onPick: (ids) => {
+      postUserTurn(sessionId, ids?.length ? `${ids.length} source(s) connectée(s)` : "Passer");
+      inlineQuestion.exit(sessionId);
+      notify(sessionId);
+      maybeOpenAltBrief(sessionId);
+    },
+    onSkip: () => {
+      postUserTurn(sessionId, "Passer");
+      inlineQuestion.exit(sessionId);
+      notify(sessionId);
+      maybeOpenAltBrief(sessionId);
+    },
+    onBack: () => askAltProfile(sessionId),
+  });
+}
+
+// Open the brief panel once the background website analysis has landed.
+// If the user blew through questions 2+3 faster than the 6s timer, post
+// a transient "Extracting" notice and poll until isAnalysisReady().
+function maybeOpenAltBrief(sessionId) {
+  if (isAnalysisReady(sessionId)) {
+    openBriefPanel(sessionId);
+    return;
+  }
+  const noticeId = postSystemNotice(sessionId, { meta: "Extracting guidelines", variant: "mermaid" });
+  notify(sessionId);
+  const interval = window.setInterval(() => {
+    if (!drafts.get(sessionId)) {
+      window.clearInterval(interval);
+      return;
+    }
+    if (isAnalysisReady(sessionId)) {
+      window.clearInterval(interval);
+      markSystemNoticeReady(sessionId, noticeId, { meta: "Extracted guidelines" });
+      notify(sessionId);
+      openBriefPanel(sessionId);
+    }
+  }, 400);
 }
 
 // Open the right-panel brief panel in read mode for an existing context.
