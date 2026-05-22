@@ -173,3 +173,53 @@
 .admin-menu__toggle {
   flex-shrink: 0;
 }
+
+/* External-doc link rows (Docs section) — same row chrome as the mode
+   rows but with a trailing external-link icon. */
+.admin-menu__link {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  text-decoration: none;
+  color: var(--sys-text-color-default);
+  border-radius: var(--ref-border-radius-sm);
+  cursor: pointer;
+}
+
+.admin-menu__link:hover,
+.admin-menu__link:focus-visible {
+  background: var(--ref-color-grey-05);
+  outline: none;
+}
+
+.admin-menu__link-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-menu__link-label {
+  font-family: var(--sys-text-style-body-font-family);
+  font-size: var(--sys-text-style-body-size);
+  font-weight: var(--sys-text-style-body-weight);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--sys-text-color-default);
+}
+
+.admin-menu__link-hint {
+  font-family: var(--sys-text-style-caption-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-weight);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
+}
+
+.admin-menu__link-icon {
+  flex-shrink: 0;
+  color: var(--sys-text-color-light);
+  font-size: var(--sys-icon-css-sm);
+}

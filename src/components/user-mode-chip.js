@@ -62,6 +62,21 @@ export function initUserModeChip() {
       <div class="ap-action-dropdown-divider" role="separator"></div>
       <div class="admin-menu__section-title">Feature flags</div>
       ${FLAGS.map((flag) => renderFlagRow(flag, flags[flag.id])).join("")}
+      <div class="ap-action-dropdown-divider" role="separator"></div>
+      <div class="admin-menu__section-title">Docs</div>
+      <a
+        class="admin-menu__link"
+        href="/handoff/components.html"
+        target="_blank"
+        rel="noopener"
+        role="menuitem"
+      >
+        <span class="admin-menu__link-text">
+          <span class="admin-menu__link-label">Conversation thread components</span>
+          <span class="admin-menu__link-hint">Live HTML + tokens · dev handoff</span>
+        </span>
+        <i class="ap-icon-external-link admin-menu__link-icon" aria-hidden="true"></i>
+      </a>
     `;
   }
 
