@@ -10,7 +10,6 @@ import { navigate } from "../router.js?v=21";
 import { openRead, startEdit } from "../context-builder.js?v=41";
 import { setHandoff } from "../handoff.js?v=20";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=20";
-import { launch as launchPlaybookEditor } from "../playbook-editor.js?v=8";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 
 // Contexts library — standalone page (handoff §2.4).
@@ -229,15 +228,16 @@ function filter(list, { query }) {
 
 function bind(root) {
   root.addEventListener("click", (event) => {
-    // Edit (pen icon) — launch the conversational Playbook editor via a
-    // transient session. Confirmation modal first so the user opts in
-    // (the editor takes over the chat surface). The form-based editor
-    // remains accessible by clicking the card body (read panel →
-    // "Edit fields" toggle) — cf. plan.
+    // Edit (pen icon) — open the brief panel directly for fast, in-place
+    // edits (rename, toggle chips, change brand color, etc.). The
+    // conversational Playbook editor stays accessible via "Fine-tune mon
+    // Playbook" on the welcome recap and via Refine buttons inside the
+    // brief sections — heavier flows for when the user wants Archie to
+    // guide them through a stage.
     const editBtn = event.target.closest("[data-contexts-edit]");
     if (editBtn) {
       event.stopPropagation();
-      launchPlaybookEditor(editBtn.dataset.contextsEdit, "/contexts");
+      startEdit(editBtn.dataset.contextsEdit);
       return;
     }
     if (event.target.closest("[data-contexts-new]")) {
