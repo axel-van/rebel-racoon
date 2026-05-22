@@ -1,0 +1,266 @@
+/*
+ * Shared loader for the whole prototype.
+ *
+ * Every spinner in Archie — the DS `.ap-loader`, the per-component
+ * `*-spinner` classes scattered across screens and modals — collapses
+ * to the same 12-dot grid that fades dots in/out in waves. Paint colour
+ * is the mermaid gradient-from token, which gives the loader the same
+ * AI accent as the rest of the assistant surfaces.
+ *
+ * Sizing is driven by `--archie-loader-size` (the bounding-box width).
+ * The dot grid is 5 dot-widths wide × 4 tall, so dot diameter = size / 5
+ * and height = size * 0.8. Each consumer just sets its own size below.
+ *
+ * The dot grid lives on ::before so the element's bounding box matches
+ * the visual — surrounding flex layout sees the real footprint, not the
+ * collapsed 9×9 of the source pattern.
+ */
+
+.archie-loader,
+.ap-loader,
+.ap-loader.size-16,
+.ap-loader.size-24,
+.ap-loader.size-30,
+.ap-loader.size-48,
+.chat-bubble-source-intake__spinner,
+.extracting-notice__spinner,
+.clip-extraction-card__spinner,
+.session__composer-thinking-spinner,
+.source-card__spinner,
+.source-card__clips-spinner,
+.bug-report-modal__submit-spinner,
+.feedback-modal__submit-spinner,
+.gen-image-spinner,
+.schedule-modal__spinner,
+.add-source__file-spinner {
+  display: inline-block;
+  position: relative;
+  width: var(--archie-loader-size, 20px);
+  height: calc(var(--archie-loader-size, 20px) * 0.8);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  animation: none;
+  flex-shrink: 0;
+  line-height: 0;
+  vertical-align: middle;
+}
+
+/* `.ap-loader` ships with an inline <svg> from the DS — hide it so only
+   our dot grid paints. */
+.ap-loader > svg,
+.chat-bubble-source-intake__spinner > svg {
+  display: none;
+}
+
+.archie-loader::before,
+.ap-loader::before,
+.chat-bubble-source-intake__spinner::before,
+.extracting-notice__spinner::before,
+.clip-extraction-card__spinner::before,
+.session__composer-thinking-spinner::before,
+.source-card__spinner::before,
+.source-card__clips-spinner::before,
+.bug-report-modal__submit-spinner::before,
+.feedback-modal__submit-spinner::before,
+.gen-image-spinner::before,
+.schedule-modal__spinner::before,
+.add-source__file-spinner::before {
+  --d: calc(var(--archie-loader-size, 20px) / 5);
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--d);
+  height: var(--d);
+  /* The grid's 4 rows are centred at y = -d, 0, d, 2d → mid-row at 0.5d.
+     Shift up by d (= 0.5d to recentre the grid + 0.5d to centre the dot). */
+  margin-top: calc(var(--d) * -1);
+  margin-left: calc(var(--d) * -0.5);
+  background: var(--archie-loader-color, var(--ref-color-mermaid-gradient-from));
+  color: var(--archie-loader-color, var(--ref-color-mermaid-gradient-from));
+  box-shadow:
+    calc(var(--d) * -2) calc(var(--d) * -1),
+    0 calc(var(--d) * -1),
+    calc(var(--d) * 2) calc(var(--d) * -1),
+    calc(var(--d) * -2) 0,
+    calc(var(--d) * 2) 0,
+    calc(var(--d) * -2) var(--d),
+    0 var(--d),
+    calc(var(--d) * 2) var(--d),
+    calc(var(--d) * -2) calc(var(--d) * 2),
+    0 calc(var(--d) * 2),
+    calc(var(--d) * 2) calc(var(--d) * 2);
+  animation: archie-loader-l29 2s infinite;
+}
+
+/* Per-class size targets (driven by --archie-loader-size). */
+.add-source__file-spinner {
+  --archie-loader-size: 12px;
+}
+.bug-report-modal__submit-spinner,
+.feedback-modal__submit-spinner,
+.session__composer-thinking-spinner,
+.source-card__clips-spinner {
+  --archie-loader-size: 14px;
+}
+.gen-image-spinner,
+.schedule-modal__spinner {
+  --archie-loader-size: 16px;
+}
+.chat-bubble-source-intake__spinner,
+.extracting-notice__spinner,
+.source-card__spinner,
+.ap-loader.size-16 {
+  --archie-loader-size: 18px;
+}
+.clip-extraction-card__spinner {
+  --archie-loader-size: 20px;
+}
+.ap-loader.size-24 {
+  --archie-loader-size: 24px;
+}
+.ap-loader.size-30 {
+  --archie-loader-size: 30px;
+}
+.ap-loader.size-48 {
+  --archie-loader-size: 48px;
+}
+
+/* These three sit on coloured CTA buttons (orange / coloured surfaces)
+   where mermaid-blue would clash with the button paint. Inherit the
+   button's text colour instead (white on filled CTAs). */
+.bug-report-modal__submit-spinner,
+.feedback-modal__submit-spinner,
+.schedule-modal__spinner {
+  --archie-loader-color: currentColor;
+}
+
+@keyframes archie-loader-l29 {
+  10% {
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1),
+      0 calc(var(--d) * -1),
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0,
+      calc(var(--d) * 2) 0,
+      calc(var(--d) * -2) var(--d) #0000,
+      0 var(--d),
+      calc(var(--d) * 2) var(--d) #0000,
+      calc(var(--d) * -2) calc(var(--d) * 2),
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2);
+  }
+  20% {
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1),
+      0 calc(var(--d) * -1),
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0,
+      calc(var(--d) * 2) 0,
+      calc(var(--d) * -2) var(--d),
+      0 var(--d),
+      calc(var(--d) * 2) var(--d) #0000,
+      calc(var(--d) * -2) calc(var(--d) * 2) #0000,
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2);
+  }
+  30% {
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1),
+      0 calc(var(--d) * -1) #0000,
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0 #0000,
+      calc(var(--d) * 2) 0,
+      calc(var(--d) * -2) var(--d),
+      0 var(--d) #0000,
+      calc(var(--d) * 2) var(--d),
+      calc(var(--d) * -2) calc(var(--d) * 2) #0000,
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2) #0000;
+  }
+  40% {
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1),
+      0 calc(var(--d) * -1),
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0 #0000,
+      calc(var(--d) * 2) 0 #0000,
+      calc(var(--d) * -2) var(--d),
+      0 var(--d),
+      calc(var(--d) * 2) var(--d),
+      calc(var(--d) * -2) calc(var(--d) * 2),
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2);
+  }
+  50% {
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1),
+      0 calc(var(--d) * -1),
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0,
+      calc(var(--d) * 2) 0 #0000,
+      calc(var(--d) * -2) var(--d) #0000,
+      0 var(--d),
+      calc(var(--d) * 2) var(--d),
+      calc(var(--d) * -2) calc(var(--d) * 2),
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2);
+  }
+  60% {
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1),
+      0 calc(var(--d) * -1) #0000,
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0,
+      calc(var(--d) * 2) 0,
+      calc(var(--d) * -2) var(--d) #0000,
+      0 var(--d),
+      calc(var(--d) * 2) var(--d),
+      calc(var(--d) * -2) calc(var(--d) * 2) #0000,
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2);
+  }
+  70% {
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1),
+      0 calc(var(--d) * -1) #0000,
+      calc(var(--d) * 2) calc(var(--d) * -1) #0000,
+      calc(var(--d) * -2) 0,
+      calc(var(--d) * 2) 0,
+      calc(var(--d) * -2) var(--d),
+      0 var(--d),
+      calc(var(--d) * 2) var(--d),
+      calc(var(--d) * -2) calc(var(--d) * 2) #0000,
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2);
+  }
+  80% {
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1) #0000,
+      0 calc(var(--d) * -1),
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0,
+      calc(var(--d) * 2) 0,
+      calc(var(--d) * -2) var(--d),
+      0 var(--d),
+      calc(var(--d) * 2) var(--d),
+      calc(var(--d) * -2) calc(var(--d) * 2),
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2) #0000;
+  }
+  90% {
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1) #0000,
+      0 calc(var(--d) * -1),
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0,
+      calc(var(--d) * 2) 0,
+      calc(var(--d) * -2) var(--d),
+      0 var(--d) #0000,
+      calc(var(--d) * 2) var(--d),
+      calc(var(--d) * -2) calc(var(--d) * 2),
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2) #0000;
+  }
+}
