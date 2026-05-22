@@ -49,7 +49,7 @@ The voice is constant; the **tone** modulates by context.
 | **Empty states**                       | Helpful + actionable. Always offer a next move. No apology for emptiness.         | Mild warmth is welcome (`Nothing here yet — drop a source to get started.`).                                              |
 | **Errors**                             | Direct, factual, no apology. Name what happened, name what to do.                 | Never `Please`, never `We're sorry`, never `Something went wrong`. No exclamation.                                        |
 | **Loading / Pending**                  | Descriptive neutral. Tell the user what's happening if it takes more than 2s.     | `Reading 4 sources…`, `Drafting 3 variants…`. No narration in the 1st person (`I'm reading…`) unless the wait exceeds 6s. |
-| **Confirmations (destructive)**        | Spell out the consequence, name the action. No "Are you sure?"                    | `Delete playbook?` + `"Acme · Q2" will be removed. 4 conversations using it will need a new playbook.`                    |
+| **Confirmations (destructive)**        | Spell out the consequence, name the action. No "Are you sure?"                    | `Delete playbook?` + `"Acme · Q2" will be removed. 4 chats using it will need a new playbook.`                            |
 | **Toasts (success)**                   | Past-tense factual. No emoji. No exclamation.                                     | `Playbook duplicated.`, `Draft scheduled.`                                                                                |
 | **Toasts (error)**                     | Same as errors. Offer Retry where applicable.                                     | `Couldn't create those drafts.` + Retry action.                                                                           |
 | **Tooltips / titles**                  | Complement the UI, never duplicate the visible label. Max 80 chars.               | `Toggle Drafts panel`. Not `Drafts (click to toggle the Drafts panel)`.                                                   |
@@ -67,19 +67,19 @@ Source of truth. Phase 3 will replace every drift detected in Phase 1 §19.4 wit
 
 ### Core nouns
 
-| Concept                                                                            | Official term                              | Notes / banned synonyms                                                                                                                                                                                |
-| ---------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| The unit of work in the app                                                        | **Conversation**                           | Banned: `session`, `chat`, `thread`, `working session`, `workspace`. (Phase 0 had picked `Session` — overridden in Phase 1 §21.2 after seeing the codebase had naturally converged on `Conversation`.) |
-| A bundle of brand voice + audience + brief + branding                              | **Playbook**                               | Banned: `context`, `Context`, `bundle`, `profile` (in this sense), `setup`.                                                                                                                            |
-| Sub-elements **exposed inside the Playbook**                                       | **Voice profile**, **Brief**, **Branding** | These are _visible sub-labels_ inside the Playbook panel and addressable individually for editing. Each one is part of the Playbook, never a standalone entity.                                        |
-| Brand visual identity (colors, typography, images, buttons extracted from website) | **Visual identity**                        | Sub-section inside **Branding**. Banned: `Image Voice`, `image-voice`.                                                                                                                                 |
-| A file / URL / connector item the user attaches                                    | **Source**                                 | Banned: `resource`, `reference`, `input`, `document` (too narrow), `attachment`.                                                                                                                       |
-| Something Archie extracts from sources (hook, stat, quote, story, insight)         | **Idea**                                   | Banned: `theme`, `topic`, `output`, `Outputs`, `signal` (as a noun), `angle` (as a synonym; OK as a descriptor: `a contrarian angle`).                                                                 |
-| A generated post                                                                   | **Draft**                                  | Banned: `post` (when referring to the unit; OK in `post body`, `LinkedIn post`), `variant`, `version`, `proposal`.                                                                                     |
-| The Brand identity capitalised                                                     | **Brand**                                  | Phase 1 §21.9. Always capitalised when referring to the user's company brand.                                                                                                                          |
-| Saved items in the left sidebar                                                    | **Pinned**                                 | OK.                                                                                                                                                                                                    |
-| Where the user adds documents from external services                               | **Connector**                              | OK.                                                                                                                                                                                                    |
-| Pre-written suggestions Archie offers as chips                                     | **Suggestions**                            | Phase 1 §21.12. Banned: `custom additions`, `Other…` as a primary label (it stays as the input row only).                                                                                              |
+| Concept                                                                            | Official term                                        | Notes / banned synonyms                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The unit of work in the app                                                        | **chat** (EN) / **Conversation** (FR, future locale) | Banned: `session`, `conversation` (EN), `thread`, `working session`, `workspace`. Lowercase mid-string in EN (`New chat`, `Recent chats`, `No chats yet`). Plural is `chats`. Phase 0 picked `Session`; Phase 1 §21.2 overrode to `Conversation`; Phase 2 final override to **`chat`** in EN with `Conversation` reserved for FR localisation. |
+| A bundle of brand voice + audience + brief + branding                              | **Playbook**                                         | Banned: `context`, `Context`, `bundle`, `profile` (in this sense), `setup`.                                                                                                                                                                                                                                                                    |
+| Sub-elements **exposed inside the Playbook**                                       | **Voice profile**, **Brief**, **Branding**           | These are _visible sub-labels_ inside the Playbook panel and addressable individually for editing. Each one is part of the Playbook, never a standalone entity.                                                                                                                                                                                |
+| Brand visual identity (colors, typography, images, buttons extracted from website) | **Visual identity**                                  | Sub-section inside **Branding**. Banned: `Image Voice`, `image-voice`.                                                                                                                                                                                                                                                                         |
+| A file / URL / connector item the user attaches                                    | **Source**                                           | Banned: `resource`, `reference`, `input`, `document` (too narrow), `attachment`.                                                                                                                                                                                                                                                               |
+| Something Archie extracts from sources (hook, stat, quote, story, insight)         | **Idea**                                             | Banned: `theme`, `topic`, `output`, `Outputs`, `signal` (as a noun), `angle` (as a synonym; OK as a descriptor: `a contrarian angle`).                                                                                                                                                                                                         |
+| A generated post                                                                   | **Draft**                                            | Banned: `post` (when referring to the unit; OK in `post body`, `LinkedIn post`), `variant`, `version`, `proposal`.                                                                                                                                                                                                                             |
+| The Brand identity capitalised                                                     | **Brand**                                            | Phase 1 §21.9. Always capitalised when referring to the user's company brand.                                                                                                                                                                                                                                                                  |
+| Saved items in the left sidebar                                                    | **Pinned**                                           | OK.                                                                                                                                                                                                                                                                                                                                            |
+| Where the user adds documents from external services                               | **Connector**                                        | OK.                                                                                                                                                                                                                                                                                                                                            |
+| Pre-written suggestions Archie offers as chips                                     | **Suggestions**                                      | Phase 1 §21.12. Banned: `custom additions`, `Other…` as a primary label (it stays as the input row only).                                                                                                                                                                                                                                      |
 
 ### Core verbs
 
@@ -107,7 +107,7 @@ Source of truth. Phase 3 will replace every drift detected in Phase 1 §19.4 wit
 - `Generation preferences` (settings drawer section). **Section retired** — Phase 1 §21.10: there is only the Playbook. Tone, language, length, hashtags, emojis, CTA style live inside the Playbook's Voice profile / Brief sub-elements. _(This implies a code-level removal of the section in Phase 4 — not just a relabel.)_
 - `Image Voice`. Use **Visual identity**.
 - `(mock)`, `Coming soon`, `(preview only)`, `(s)` pluralisation. None survive Phase 4.
-- `chat`, `chats`, `Conversation` plural is "Conversations" — both pluralisations stay aligned.
+- `chat` is the EN term; `chats` is the plural. `Conversation` / `Conversations` are reserved for the future FR locale only.
 
 ### Archie as a speaker
 
@@ -229,8 +229,8 @@ Don't echo a button label verbatim as a `<You>` bubble (`Skip`, `Continue`). Eit
 
 **Examples**:
 
-- ✅ Title: `Delete playbook?` / Body: `"Acme · Q2" will be removed. 4 conversations using it will need a new playbook.` / Primary: `Delete playbook` / Secondary: `Keep`
-- ✅ Title: `Delete conversation?` / Body: `"Q2 launch" and its 6 sources, 7 ideas, and 3 drafts will be permanently removed.` / Primary: `Delete conversation` / Secondary: `Keep`
+- ✅ Title: `Delete playbook?` / Body: `"Acme · Q2" will be removed. 4 chats using it will need a new playbook.` / Primary: `Delete playbook` / Secondary: `Keep`
+- ✅ Title: `Delete chat?` / Body: `"Q2 launch" and its 6 sources, 7 ideas, and 3 drafts will be permanently removed.` / Primary: `Delete chat` / Secondary: `Keep`
 - ❌ Title: `Are you sure?` — banned.
 - ❌ Primary: `Delete` alone — should be `Delete {object}`.
 
@@ -261,7 +261,7 @@ Don't echo a button label verbatim as a `<You>` bubble (`Skip`, `Continue`). Eit
 - ✅ `Drag to resize`
 - ✅ `Toggle Drafts panel` (alternative phrasing OK on the same button)
 - ❌ `Drafts (click to open the Drafts panel and see all your drafts)` — duplicates + too long.
-- ❌ `Show details panel` when the label is just an `i` icon — fine, but the body of the panel should be obvious; if not, name it (`Show conversation status`).
+- ❌ `Show details panel` when the label is just an `i` icon — fine, but the body of the panel should be obvious; if not, name it (`Show chat status`).
 
 ### 4.8 Loading skeletons + progress
 
@@ -492,20 +492,20 @@ When inserting a Playbook name, source filename, etc. into a string, wrap in **s
 
 The 12 §21 arbitrations from Phase 1 are now official:
 
-| #   | Concept                                              | Decision                                                                                                   | Date       |
-| --- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------- |
-| 1   | Outputs vs Ideas                                     | **Ideas** everywhere; retire Outputs                                                                       | 2026-05-22 |
-| 2   | Conversation vs Session                              | **Conversation**                                                                                           | 2026-05-22 |
-| 3   | Brief / Strategy brief / Brand theme / Voice profile | Exposed as **sub-elements of the Playbook** (Voice profile / Brief / Branding); each editable individually | 2026-05-22 |
-| 4   | Context everywhere in error toasts/confirms          | **Playbook** everywhere                                                                                    | 2026-05-22 |
-| 5   | Themes (video flow) vs Ideas                         | **Ideas**                                                                                                  | 2026-05-22 |
-| 6   | Content ideas / Content Studio                       | **Drop**                                                                                                   | 2026-05-22 |
-| 7   | Library (eyebrow)                                    | **Drop**                                                                                                   | 2026-05-22 |
-| 8   | Working session / workspace                          | **Drop**                                                                                                   | 2026-05-22 |
-| 9   | `brand` vs `Brand`                                   | **Brand** (capitalised)                                                                                    | 2026-05-22 |
-| 10  | Generation preferences (Settings section)            | **Retire entirely** — there's only the Playbook                                                            | 2026-05-22 |
-| 11  | Image Voice rename                                   | **Visual identity** (proposed in Phase 2 since user delegated)                                             | 2026-05-22 |
-| 12  | Custom additions / Suggestions / Other…              | **Suggestions** (canonical), `Other…` stays only as the input row label                                    | 2026-05-22 |
+| #   | Concept                                              | Decision                                                                                                     | Date       |
+| --- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------- |
+| 1   | Outputs vs Ideas                                     | **Ideas** everywhere; retire Outputs                                                                         | 2026-05-22 |
+| 2   | Conversation vs Session vs chat                      | **`chat`** in EN (lowercase mid-string), **`Conversation`** reserved for future FR locale. `session` banned. | 2026-05-22 |
+| 3   | Brief / Strategy brief / Brand theme / Voice profile | Exposed as **sub-elements of the Playbook** (Voice profile / Brief / Branding); each editable individually   | 2026-05-22 |
+| 4   | Context everywhere in error toasts/confirms          | **Playbook** everywhere                                                                                      | 2026-05-22 |
+| 5   | Themes (video flow) vs Ideas                         | **Ideas**                                                                                                    | 2026-05-22 |
+| 6   | Content ideas / Content Studio                       | **Drop**                                                                                                     | 2026-05-22 |
+| 7   | Library (eyebrow)                                    | **Drop**                                                                                                     | 2026-05-22 |
+| 8   | Working session / workspace                          | **Drop**                                                                                                     | 2026-05-22 |
+| 9   | `brand` vs `Brand`                                   | **Brand** (capitalised)                                                                                      | 2026-05-22 |
+| 10  | Generation preferences (Settings section)            | **Retire entirely** — there's only the Playbook                                                              | 2026-05-22 |
+| 11  | Image Voice rename                                   | **Visual identity** (proposed in Phase 2 since user delegated)                                               | 2026-05-22 |
+| 12  | Custom additions / Suggestions / Other…              | **Suggestions** (canonical), `Other…` stays only as the input row label                                      | 2026-05-22 |
 
 ---
 
