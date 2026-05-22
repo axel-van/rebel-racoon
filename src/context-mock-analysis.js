@@ -6,7 +6,7 @@
 // The shape returned is consumed by context-builder.js after the ~10s
 // pending turn finishes, then passed to the right-panel brief renderer.
 // Suggested values become menthol chips (AI-suggested). Other static
-// option lists come from src/context-questions.js.
+// option lists come from the brief panel renderer.
 
 const AGORAPULSE = {
   name: "Agorapulse",
