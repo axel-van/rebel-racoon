@@ -866,44 +866,53 @@ function renderSourceIntakeTurn(message, sessionId) {
   const icon = iconByKind[kindKey] || "ap-icon-file";
   const isLoading = message.status === "loading";
 
-  // Live-derived sub-text. While loading we show "Uploading…"; once
-  // marked ready, we show the source's idea count (or just "Processed"
-  // if zero ideas yet — e.g. video routed to clip extraction). When
-  // ideas > 0 the "N ideas" portion is a clickable affordance that
-  // opens the Outputs panel — fixes the dead-end where users saw
-  // "Processed · 3 ideas" and had no path to those ideas.
-  let subText = "";
+  // v2 single-line layout (see styles/chat.css and handoff §2). The
+  // sub-line is gone — state lives in a trailing slot with three
+  // variants driven by (isLoading, ideaCount > 0):
+  //   loading      → muted grey pill with inline dot + "Uploading"
+  //   ready+ideas  → solid electric-blue pill "N ideas ›" (clickable —
+  //                  data-source-intake-open-ideas opens the Outputs panel)
+  //   ready, none  → bare green check icon
+  let trailing;
   if (isLoading) {
-    subText = "Uploading…";
+    trailing = `
+      <span class="chat-bubble-source-intake__loading" role="status" aria-label="Uploading">
+        <span class="chat-bubble-source-intake__loading-dot" aria-hidden="true"></span>
+        <span>Uploading</span>
+      </span>
+    `;
   } else if (message.sourceId) {
     const src = getStreamSources(sessionId).find((s) => s.id === message.sourceId);
     const ideas = src?.ideaCount || 0;
     if (ideas > 0) {
       const label = `${ideas} idea${ideas === 1 ? "" : "s"}`;
-      subText = `Processed · <button type="button" class="chat-bubble-source-intake__ideas-link" data-source-intake-open-ideas title="Open Ideas panel">${label}</button>`;
+      trailing = `
+        <button
+          type="button"
+          class="chat-bubble-source-intake__pill"
+          data-source-intake-open-ideas
+          aria-label="Open ${label} in Ideas panel"
+        >
+          <span>${label}</span>
+          <i class="ap-icon-chevron-right" aria-hidden="true"></i>
+        </button>
+      `;
     } else {
-      subText = "Processed";
+      trailing = `<i class="ap-icon-rounded-check_fill chat-bubble-source-intake__check" aria-hidden="true"></i>`;
     }
-  } else if (message.size) {
-    subText = message.size;
+  } else {
+    // Ready but no sourceId resolved yet — degrade to a bare check.
+    trailing = `<i class="ap-icon-rounded-check_fill chat-bubble-source-intake__check" aria-hidden="true"></i>`;
   }
 
-  const indicator = isLoading
-    ? `<span class="ap-loader blue size-16 chat-bubble-source-intake__spinner" aria-hidden="true">
-        <svg><circle></circle><circle></circle></svg>
-      </span>`
-    : `<i class="ap-icon-rounded-check_fill chat-bubble-source-intake__check" aria-hidden="true"></i>`;
-
+  const filename = message.filename || "";
   return `
     <div class="chat-turn chat-turn--user">
       <span class="chat-turn-role">${message.meta || "Source intake"}</span>
       <div class="chat-bubble chat-bubble--source-intake" data-intake-status="${message.status || "ready"}">
         <i class="${icon} chat-bubble-source-intake__kind" aria-hidden="true"></i>
-        <div class="chat-bubble-source-intake__main">
-          <p class="chat-bubble-text">${message.filename}</p>
-          ${subText ? `<p class="chat-bubble-source-intake__sub muted">${subText}</p>` : ""}
-        </div>
-        ${indicator}
+        <span class="chat-bubble-source-intake__name" title="${filename}">${filename}</span>
+        ${trailing}
       </div>
     </div>
   `;

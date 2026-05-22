@@ -100,86 +100,122 @@
   border-top-right-radius: 0;
 }
 
-/* Source-intake bubble (Figma 25:1131) — light electric-blue with icon + text.
-   Same 12 / 0 / 12 / 12 corner treatment as the regular user bubble. */
+/* Source-intake bubble — v2 single-line variant. See handoff §2.
+   Compact chip shape: icon + filename + trailing status pill.
+   Same 12 / 0 / 12 / 12 corner treatment as the regular user bubble so
+   it reads as a user-side message. */
 .chat-bubble--source-intake {
-  background: var(--ref-color-electric-blue-20);
-  color: var(--ref-color-electric-blue-150);
-  padding: var(--ref-spacing-xs);
-  border: 0;
-  border-radius: var(--app-radius-xl);
-  border-top-right-radius: 0;
+  display: inline-flex;
+  /* Override the .chat-bubble base which is flex-direction: column —
+     v2 lays icon + name + trailing slot in a single horizontal row. */
   flex-direction: row;
   align-items: center;
   gap: var(--ref-spacing-xs);
+  padding: 6px 8px 6px var(--ref-spacing-xs);
+  background: var(--ref-color-electric-blue-05);
+  color: var(--ref-color-electric-blue-150);
+  border: 1px solid var(--ref-color-electric-blue-20);
+  border-radius: var(--app-radius-xl);
+  border-top-right-radius: 0;
+  max-width: 480px;
+  min-height: 36px;
   font-size: var(--ref-font-size-xs);
   line-height: var(--ref-font-line-height-sm);
+  transition:
+    background var(--ref-animation-short) var(--app-ease-out),
+    border-color var(--ref-animation-short) var(--app-ease-out);
 }
 
-.chat-bubble--source-intake .chat-bubble-text {
-  color: var(--ref-color-electric-blue-150);
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-sm);
-}
-
-.chat-bubble--source-intake i {
-  color: var(--ref-color-electric-blue-150);
-  font-size: var(--sys-icon-css-sm);
-}
-
-/* Pending → ready lifecycle indicators (loading spinner / success check)
-   sit at the trailing edge of the bubble. The main column stacks the
-   filename + a small "Uploading…" / "Processed · N ideas" sub-line. */
-.chat-bubble-source-intake__main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  min-width: 0;
-  flex: 1;
-}
-
-.chat-bubble-source-intake__sub {
-  margin: 0;
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+/* File-kind icon (pdf / video / url / etc.) — sits at the leading edge. */
+.chat-bubble-source-intake__kind {
   color: var(--ref-color-electric-blue-100);
-  opacity: 0.8;
+  font-size: var(--sys-icon-css-sm);
+  flex-shrink: 0;
 }
 
-/* Clickable "N ideas" portion inside the sub-line — opens the Outputs
-   panel. Button-reset + an underline + a slight color shift on hover so
-   it reads as a link, not a regular button. */
-.chat-bubble-source-intake__ideas-link {
-  background: transparent;
-  border: 0;
-  padding: 0;
+/* Filename — single-line, ellipsis truncation. Carries a title attr in
+   the renderer so the full filename is recoverable on hover / by SR. */
+.chat-bubble-source-intake__name {
   margin: 0;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-electric-blue-150);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
-.chat-bubble-source-intake__ideas-link:hover,
-.chat-bubble-source-intake__ideas-link:focus-visible {
-  color: var(--ref-color-electric-blue-150);
-  opacity: 1;
+/* Trailing slot — three states slot in here:
+   1. Loading: __loading pill (grey muted with inline dot)
+   2. Ready + ideas: __pill (electric-blue, clickable, chevron nudges)
+   3. Ready, no ideas: __check (bare green check icon)
+*/
+
+/* (1) Loading pill */
+.chat-bubble-source-intake__loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-grey-100);
+  border-radius: var(--app-radius-pill);
+  font-size: 11px;
+  font-weight: var(--ref-font-weight-bold);
+  flex-shrink: 0;
+}
+
+.chat-bubble-source-intake__loading-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--app-radius-circle);
+  border: 1.5px solid var(--ref-color-grey-40);
+  border-top-color: var(--ref-color-electric-blue-100);
+  animation: app-spin 0.9s linear infinite;
+  flex-shrink: 0;
+}
+
+/* (2) Ideas pill — solid electric-blue, hover deepens + chevron nudges 2px */
+.chat-bubble-source-intake__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 10px;
+  background: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-white);
+  border: 0;
+  border-radius: var(--app-radius-pill);
+  font: inherit;
+  font-size: 11px;
+  font-weight: var(--ref-font-weight-bold);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--ref-animation-short) var(--app-ease-out);
+}
+
+.chat-bubble-source-intake__pill:hover,
+.chat-bubble-source-intake__pill:focus-visible {
+  background: var(--ref-color-electric-blue-150);
   outline: none;
 }
 
-.chat-bubble-source-intake__spinner {
-  flex-shrink: 0;
+.chat-bubble-source-intake__pill i {
+  font-size: 10px;
+  transition: transform var(--ref-animation-short) var(--app-ease-out);
 }
 
+.chat-bubble-source-intake__pill:hover i,
+.chat-bubble-source-intake__pill:focus-visible i {
+  transform: translateX(2px);
+}
+
+/* (3) Standalone check (ready, no ideas) — minimal green confirmation */
 .chat-bubble-source-intake__check {
+  color: var(--ref-color-green-100);
+  font-size: var(--sys-icon-css-sm);
   flex-shrink: 0;
-  color: var(--ref-color-green-100) !important;
-  font-size: var(--sys-icon-css-md) !important;
-}
-
-.chat-bubble-source-intake__kind {
-  flex-shrink: 0;
+  margin-right: 4px;
 }
 
 .chat-bubble.is-loading {

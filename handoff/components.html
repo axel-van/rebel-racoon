@@ -879,8 +879,11 @@
             <div>
               <p class="hd-comp__name"><code>.chat-bubble--source-intake</code></p>
               <p class="hd-comp__desc">
-                Light-blue file card with a kind icon, filename + status sub-line, and a trailing
-                <em>spinner</em> (loading) or <em>green check</em> (ready). Shown user-side.
+                Single-line compact chip with a kind icon, filename (ellipsis-truncated), and a trailing status pill.
+                Three trailing states: <em>loading</em> (muted grey pill + inline dot),
+                <em>ready &middot; N ideas</em> (electric-blue pill, clickable, chevron nudges 2px on hover),
+                <em>ready &middot; no ideas</em>
+                (bare green check). Shown user-side.
               </p>
             </div>
           </header>
@@ -892,68 +895,121 @@
                   <span class="chat-turn-role">Source intake</span>
                   <div class="chat-bubble chat-bubble--source-intake" data-intake-status="loading">
                     <i class="ap-icon-file--pdf chat-bubble-source-intake__kind" aria-hidden="true"></i>
-                    <div class="chat-bubble-source-intake__main">
-                      <p class="chat-bubble-text">riverside-discovery-call.pdf</p>
-                      <p class="chat-bubble-source-intake__sub muted">Uploading&hellip;</p>
-                    </div>
-                    <span class="ap-loader blue size-16 chat-bubble-source-intake__spinner" aria-hidden="true">
-                      <svg>
-                        <circle></circle>
-                        <circle></circle>
-                      </svg>
+                    <span class="chat-bubble-source-intake__name" title="riverside-discovery-call.pdf">
+                      riverside-discovery-call.pdf
+                    </span>
+                    <span class="chat-bubble-source-intake__loading" role="status" aria-label="Uploading">
+                      <span class="chat-bubble-source-intake__loading-dot" aria-hidden="true"></span>
+                      <span>Uploading</span>
                     </span>
                   </div>
                 </div>
               </div>
+
               <div class="hd-preview-row">
-                <span class="hd-preview-row__label">Ready (with N ideas link)</span>
+                <span class="hd-preview-row__label">Ready &middot; with N ideas</span>
                 <div class="chat-turn chat-turn--user">
                   <span class="chat-turn-role">Source intake</span>
                   <div class="chat-bubble chat-bubble--source-intake" data-intake-status="ready">
                     <i class="ap-icon-file--pdf chat-bubble-source-intake__kind" aria-hidden="true"></i>
-                    <div class="chat-bubble-source-intake__main">
-                      <p class="chat-bubble-text">riverside-discovery-call.pdf</p>
-                      <p class="chat-bubble-source-intake__sub muted">
-                        Processed ·
-                        <button type="button" class="chat-bubble-source-intake__ideas-link">3 ideas</button>
-                      </p>
-                    </div>
+                    <span class="chat-bubble-source-intake__name" title="riverside-discovery-call.pdf">
+                      riverside-discovery-call.pdf
+                    </span>
+                    <button
+                      type="button"
+                      class="chat-bubble-source-intake__pill"
+                      aria-label="Open 3 ideas in Ideas panel"
+                    >
+                      <span>3 ideas</span>
+                      <i class="ap-icon-chevron-right" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hd-preview-row">
+                <span class="hd-preview-row__label">Ready &middot; no ideas yet</span>
+                <div class="chat-turn chat-turn--user">
+                  <span class="chat-turn-role">Source intake</span>
+                  <div class="chat-bubble chat-bubble--source-intake" data-intake-status="ready">
+                    <i class="ap-icon-file--video chat-bubble-source-intake__kind" aria-hidden="true"></i>
+                    <span class="chat-bubble-source-intake__name" title="founder-keynote-2026.mp4">
+                      founder-keynote-2026.mp4
+                    </span>
                     <i class="ap-icon-rounded-check_fill chat-bubble-source-intake__check" aria-hidden="true"></i>
                   </div>
                 </div>
               </div>
+
+              <div class="hd-preview-row">
+                <span class="hd-preview-row__label">Long filename &mdash; ellipsis</span>
+                <div class="chat-turn chat-turn--user">
+                  <span class="chat-turn-role">Source intake</span>
+                  <div class="chat-bubble chat-bubble--source-intake" data-intake-status="ready">
+                    <i class="ap-icon-file--text chat-bubble-source-intake__kind" aria-hidden="true"></i>
+                    <span
+                      class="chat-bubble-source-intake__name"
+                      title="2026-Q1-customer-discovery-interview-transcripts-full-set.docx"
+                    >
+                      2026-Q1-customer-discovery-interview-transcripts-full-set.docx
+                    </span>
+                    <button
+                      type="button"
+                      class="chat-bubble-source-intake__pill"
+                      aria-label="Open 12 ideas in Ideas panel"
+                    >
+                      <span>12 ideas</span>
+                      <i class="ap-icon-chevron-right" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
+
             <div class="hd-comp__code">
               <pre>
 &lt;div class="chat-bubble chat-bubble--source-intake"
      data-intake-status="loading|ready"&gt;
   &lt;i class="ap-icon-file--pdf chat-bubble-source-intake__kind"
      aria-hidden="true"&gt;&lt;/i&gt;
-  &lt;div class="chat-bubble-source-intake__main"&gt;
-    &lt;p class="chat-bubble-text"&gt;filename.pdf&lt;/p&gt;
-    &lt;p class="chat-bubble-source-intake__sub muted"&gt;
-      Processed ·
-      &lt;button class="chat-bubble-source-intake__ideas-link"
-              data-source-intake-open-ideas&gt;3 ideas&lt;/button&gt;
-    &lt;/p&gt;
-  &lt;/div&gt;
-  &lt;!-- Trailing slot: spinner (loading) OR check (ready) --&gt;
+  &lt;span class="chat-bubble-source-intake__name"
+        title="filename.pdf"&gt;filename.pdf&lt;/span&gt;
+
+  &lt;!-- Trailing slot — pick one of three: --&gt;
+
+  &lt;!-- (1) Loading --&gt;
+  &lt;span class="chat-bubble-source-intake__loading"
+        role="status" aria-label="Uploading"&gt;
+    &lt;span class="chat-bubble-source-intake__loading-dot"&gt;&lt;/span&gt;
+    &lt;span&gt;Uploading&lt;/span&gt;
+  &lt;/span&gt;
+
+  &lt;!-- (2) Ready, with ideas --&gt;
+  &lt;button class="chat-bubble-source-intake__pill"
+          data-source-intake-open-ideas
+          aria-label="Open 3 ideas in Ideas panel"&gt;
+    &lt;span&gt;3 ideas&lt;/span&gt;
+    &lt;i class="ap-icon-chevron-right"&gt;&lt;/i&gt;
+  &lt;/button&gt;
+
+  &lt;!-- (3) Ready, no ideas --&gt;
   &lt;i class="ap-icon-rounded-check_fill
             chat-bubble-source-intake__check"&gt;&lt;/i&gt;
 &lt;/div&gt;</pre
               >
             </div>
+
             <dl class="hd-comp__meta">
               <div>
                 <dt>Classes</dt>
                 <dd>
                   <code>.chat-bubble--source-intake</code>
                   <code>__kind</code>
-                  <code>__main</code>
-                  <code>__sub</code>
-                  <code>__spinner</code>
+                  <code>__name</code>
+                  <code>__loading</code>
+                  <code>__loading-dot</code>
+                  <code>__pill</code>
                   <code>__check</code>
-                  <code>__ideas-link</code>
                 </dd>
               </div>
               <div>
@@ -968,272 +1024,27 @@
                 </dd>
               </div>
               <div>
+                <dt>Key tokens</dt>
+                <dd>
+                  <code>--ref-color-electric-blue-05</code> (bg)<br />
+                  <code>--ref-color-electric-blue-20</code> (border)<br />
+                  <code>--app-radius-xl</code> + top-right 0 (bubble)<br />
+                  <code>--app-radius-pill</code> (trailing pills)
+                </dd>
+              </div>
+              <div>
                 <dt>Source</dt>
                 <dd>
                   <code>postSourceIntake()</code>
                   <br />
                   <code>renderSourceIntakeTurn()</code>
                   <br />
-                  <code>session.js:853-911</code>
+                  <code>session.js:852&ndash;914</code>
                 </dd>
               </div>
             </dl>
           </div>
         </article>
-
-        <!-- ━━━ Proposed v2 — single-line variant ━━━━━━━━━━━━━━━━━━━━━━━ -->
-        <style>
-          /* Scoped to .si-v2 so it doesn't touch the live .chat-bubble--source-intake.
-             If we ship this, the migration is to swap the live styles for these and
-             drop the .si-v2 namespace. */
-          .si-v2 {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--ref-spacing-xs);
-            padding: 6px 8px 6px var(--ref-spacing-xs);
-            background: var(--ref-color-electric-blue-05);
-            color: var(--ref-color-electric-blue-150);
-            border: 1px solid var(--ref-color-electric-blue-20);
-            border-radius: var(--app-radius-xl);
-            border-top-right-radius: 0;
-            max-width: 480px;
-            min-height: 36px;
-            font-size: var(--ref-font-size-xs);
-            line-height: var(--ref-font-line-height-sm);
-            transition:
-              background var(--ref-animation-short) var(--app-ease-out),
-              border-color var(--ref-animation-short) var(--app-ease-out);
-          }
-
-          .si-v2__kind {
-            color: var(--ref-color-electric-blue-100);
-            font-size: var(--sys-icon-css-sm);
-            flex-shrink: 0;
-          }
-
-          .si-v2__name {
-            font-weight: var(--ref-font-weight-bold);
-            color: var(--ref-color-electric-blue-150);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            min-width: 0;
-            flex: 1 1 auto;
-          }
-
-          /* Trailing — ideas pill (clickable affordance) */
-          .si-v2__pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 8px 3px 10px;
-            background: var(--ref-color-electric-blue-100);
-            color: var(--ref-color-white);
-            border: 0;
-            border-radius: var(--app-radius-pill);
-            font: inherit;
-            font-size: 11px;
-            font-weight: var(--ref-font-weight-bold);
-            cursor: pointer;
-            flex-shrink: 0;
-            transition: background var(--ref-animation-short) var(--app-ease-out);
-          }
-          .si-v2__pill:hover,
-          .si-v2__pill:focus-visible {
-            background: var(--ref-color-electric-blue-150);
-            outline: none;
-          }
-          .si-v2__pill i {
-            font-size: 10px;
-            transition: transform var(--ref-animation-short) var(--app-ease-out);
-          }
-          .si-v2__pill:hover i,
-          .si-v2__pill:focus-visible i {
-            transform: translateX(2px);
-          }
-
-          /* Trailing — loading pill (muted) */
-          .si-v2__loading {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 3px 10px;
-            background: var(--ref-color-grey-10);
-            color: var(--ref-color-grey-100);
-            border-radius: var(--app-radius-pill);
-            font-size: 11px;
-            font-weight: var(--ref-font-weight-bold);
-            flex-shrink: 0;
-          }
-          .si-v2__loading-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: var(--app-radius-circle);
-            border: 1.5px solid var(--ref-color-grey-40);
-            border-top-color: var(--ref-color-electric-blue-100);
-            animation: app-spin 0.9s linear infinite;
-          }
-
-          /* Trailing — minimal check (ready, no ideas) */
-          .si-v2__check {
-            color: var(--ref-color-green-100);
-            font-size: var(--sys-icon-css-sm);
-            flex-shrink: 0;
-            margin-right: 4px;
-          }
-        </style>
-
-        <article
-          class="hd-comp"
-          style="
-            border-color: var(--ref-color-electric-blue-20);
-            background: linear-gradient(180deg, rgba(53, 113, 229, 0.025), transparent 40%);
-          "
-        >
-          <header class="hd-comp__head" style="background: transparent">
-            <div>
-              <p class="hd-comp__name"><code>.chat-bubble--source-intake</code> &mdash; <strong>Proposed v2</strong></p>
-              <p class="hd-comp__desc">
-                Single-line compact bubble. Sub-line dropped; state moves into a trailing pill. Lighter surface
-                (electric-blue-05 + 1px border), filename truncates with ellipsis, whole pill is the affordance for
-                &ldquo;N ideas&rdquo;. Hover the pill: chevron nudges 2px.
-              </p>
-            </div>
-          </header>
-          <div class="hd-comp__body">
-            <div class="hd-comp__preview">
-              <div class="hd-preview-row">
-                <span class="hd-preview-row__label">Loading</span>
-                <div class="chat-turn chat-turn--user">
-                  <span class="chat-turn-role">Source intake</span>
-                  <div class="si-v2" data-intake-status="loading">
-                    <i class="ap-icon-file--pdf si-v2__kind" aria-hidden="true"></i>
-                    <span class="si-v2__name" title="riverside-discovery-call.pdf"> riverside-discovery-call.pdf </span>
-                    <span class="si-v2__loading" role="status" aria-label="Uploading">
-                      <span class="si-v2__loading-dot" aria-hidden="true"></span>
-                      <span>Uploading</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="hd-preview-row">
-                <span class="hd-preview-row__label">Ready · with N ideas</span>
-                <div class="chat-turn chat-turn--user">
-                  <span class="chat-turn-role">Source intake</span>
-                  <div class="si-v2" data-intake-status="ready">
-                    <i class="ap-icon-file--pdf si-v2__kind" aria-hidden="true"></i>
-                    <span class="si-v2__name" title="riverside-discovery-call.pdf"> riverside-discovery-call.pdf </span>
-                    <button type="button" class="si-v2__pill" aria-label="Open 3 ideas in Ideas panel">
-                      <span>3 ideas</span>
-                      <i class="ap-icon-chevron-right" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="hd-preview-row">
-                <span class="hd-preview-row__label">Ready · no ideas yet</span>
-                <div class="chat-turn chat-turn--user">
-                  <span class="chat-turn-role">Source intake</span>
-                  <div class="si-v2" data-intake-status="ready">
-                    <i class="ap-icon-file--video si-v2__kind" aria-hidden="true"></i>
-                    <span class="si-v2__name" title="founder-keynote-2026.mp4"> founder-keynote-2026.mp4 </span>
-                    <i class="ap-icon-rounded-check_fill si-v2__check" aria-hidden="true"></i>
-                  </div>
-                </div>
-              </div>
-
-              <div class="hd-preview-row">
-                <span class="hd-preview-row__label">Long filename &mdash; ellipsis</span>
-                <div class="chat-turn chat-turn--user">
-                  <span class="chat-turn-role">Source intake</span>
-                  <div class="si-v2" data-intake-status="ready">
-                    <i class="ap-icon-file--text si-v2__kind" aria-hidden="true"></i>
-                    <span class="si-v2__name" title="2026-Q1-customer-discovery-interview-transcripts-full-set.docx">
-                      2026-Q1-customer-discovery-interview-transcripts-full-set.docx
-                    </span>
-                    <button type="button" class="si-v2__pill" aria-label="Open 12 ideas in Ideas panel">
-                      <span>12 ideas</span>
-                      <i class="ap-icon-chevron-right" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="hd-comp__code">
-              <pre>
-&lt;!-- Single-line bubble: icon + name + trailing status --&gt;
-&lt;div class="chat-bubble chat-bubble--source-intake"
-     data-intake-status="ready"&gt;
-  &lt;i class="ap-icon-file--pdf
-            chat-bubble-source-intake__kind"&gt;&lt;/i&gt;
-  &lt;span class="chat-bubble-source-intake__name"
-        title="filename.pdf"&gt;filename.pdf&lt;/span&gt;
-
-  &lt;!-- Trailing slot, 3 variants: --&gt;
-
-  &lt;!-- a) loading --&gt;
-  &lt;span class="chat-bubble-source-intake__loading"
-        role="status" aria-label="Uploading"&gt;
-    &lt;span class="chat-bubble-source-intake__loading-dot"&gt;&lt;/span&gt;
-    &lt;span&gt;Uploading&lt;/span&gt;
-  &lt;/span&gt;
-
-  &lt;!-- b) ready with ideas --&gt;
-  &lt;button class="chat-bubble-source-intake__pill"
-          data-source-intake-open-ideas
-          aria-label="Open 3 ideas"&gt;
-    &lt;span&gt;3 ideas&lt;/span&gt;
-    &lt;i class="ap-icon-chevron-right"&gt;&lt;/i&gt;
-  &lt;/button&gt;
-
-  &lt;!-- c) ready without ideas --&gt;
-  &lt;i class="ap-icon-rounded-check_fill
-            chat-bubble-source-intake__check"&gt;&lt;/i&gt;
-&lt;/div&gt;</pre
-              >
-            </div>
-
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>What changed vs v1</dt>
-                <dd>
-                  Two rows &rarr; one row (sub-line dropped)<br />
-                  Surface electric-blue-20 &rarr; electric-blue-05 + 1px border<br />
-                  Padding 12 &rarr; 6/8/12 (height ~36 vs ~64)<br />
-                  Text link &ldquo;3 ideas&rdquo; &rarr; clickable pill with chevron<br />
-                  Filename wraps &rarr; truncates with ellipsis (title attr for full)
-                </dd>
-              </div>
-              <div>
-                <dt>New tokens</dt>
-                <dd>
-                  <code>--ref-color-electric-blue-05</code> (bg)<br />
-                  <code>--app-radius-pill</code> (trailing pills)<br />
-                  <code>--app-ease-out</code> (chevron nudge)
-                </dd>
-              </div>
-              <div>
-                <dt>A11y deltas</dt>
-                <dd>
-                  Loading pill: <code>role="status"</code> + <code>aria-label="Uploading"</code><br />
-                  Ideas pill: native <code>&lt;button&gt;</code> with <code>aria-label="Open N ideas"</code><br />
-                  Filename has <code>title</code> so SR &amp; hover can recover full text after ellipsis
-                </dd>
-              </div>
-            </dl>
-          </div>
-        </article>
-
-        <div class="hd-note">
-          <strong>If you ship this</strong>, the renderer change is small: drop the
-          <code>chat-bubble-source-intake__main</code> wrapper + <code>__sub</code> paragraph, replace the indicator
-          slot with one of three trailing snippets driven by <code>(isLoading, ideaCount &gt; 0)</code>. CSS migration
-          is roughly 30 lines replaced in <code>styles/chat.css:105-180</code>. Live app remains untouched until you
-          give the go-ahead &mdash; this preview is sandboxed via <code>.si-v2</code>.
-        </div>
       </section>
 
       <!-- ════════════════════════════════════════════════════════════════
@@ -2496,11 +2307,25 @@
                 <td>&mdash;</td>
               </tr>
               <tr>
-                <td><code>.chat-bubble-source-intake__ideas-link</code></td>
+                <td><code>.chat-bubble-source-intake__pill</code></td>
                 <td>Hover / focus-visible</td>
-                <td>color &rarr; electric-blue-150, opacity &rarr; 1</td>
-                <td>browser default</td>
-                <td>browser default</td>
+                <td>background &rarr; electric-blue-150; child <code>&lt;i&gt;</code> translateX(2px)</td>
+                <td><code>--ref-animation-short</code> (150ms)</td>
+                <td><code>--app-ease-out</code></td>
+              </tr>
+              <tr>
+                <td><code>.chat-bubble-source-intake__loading-dot</code></td>
+                <td>Loading state</td>
+                <td>Rotate 360&deg; on a 2-color ring (grey-40 ring, electric-blue-100 top)</td>
+                <td>0.9s, infinite</td>
+                <td><code>linear</code></td>
+              </tr>
+              <tr>
+                <td><code>.chat-bubble--source-intake</code></td>
+                <td>Status / theme change</td>
+                <td><code>background, border-color</code></td>
+                <td><code>--ref-animation-short</code> (150ms)</td>
+                <td><code>--app-ease-out</code></td>
               </tr>
             </tbody>
           </table>
@@ -2555,19 +2380,27 @@
                 <td>Filename below carries the actual identity</td>
               </tr>
               <tr>
-                <td><code>.chat-bubble-source-intake__spinner</code></td>
-                <td><code>aria-hidden="true"</code></td>
-                <td>The "Uploading…" sub-line announces state to SR</td>
+                <td><code>.chat-bubble-source-intake__name</code> (filename)</td>
+                <td><code>title="filename"</code></td>
+                <td>Recovers full text after CSS ellipsis truncation, both on hover and for SR</td>
               </tr>
               <tr>
-                <td><code>.chat-bubble-source-intake__check</code> (ready)</td>
-                <td><code>aria-hidden="true"</code></td>
-                <td>"Processed · N ideas" sub-line carries the state</td>
+                <td><code>.chat-bubble-source-intake__loading</code> (loading pill)</td>
+                <td><code>role="status"</code> &middot; <code>aria-label="Uploading"</code></td>
+                <td>SR announces in-flight upload; the inner dot is <code>aria-hidden="true"</code></td>
               </tr>
               <tr>
-                <td><code>.chat-bubble-source-intake__ideas-link</code></td>
-                <td><code>&lt;button type="button"&gt;</code></td>
-                <td>Visible "3 ideas" label is its accessible name</td>
+                <td><code>.chat-bubble-source-intake__check</code> (ready, no ideas)</td>
+                <td><code>aria-hidden="true"</code></td>
+                <td>The "Source intake" role label + readied filename carry the state</td>
+              </tr>
+              <tr>
+                <td><code>.chat-bubble-source-intake__pill</code> (ideas pill)</td>
+                <td>
+                  <code>&lt;button type="button"&gt;</code> &middot;
+                  <code>aria-label="Open N ideas in Ideas panel"</code>
+                </td>
+                <td>Whole pill is the click target; chevron <code>&lt;i&gt;</code> is decorative</td>
               </tr>
               <tr>
                 <td><code>.chat-bubble-choice-chip</code> (interactive)</td>
@@ -2784,10 +2617,11 @@
                 <td>Required for the ellipsis above to fire inside the flex row</td>
               </tr>
               <tr>
-                <td><code>.chat-bubble-source-intake__main</code></td>
-                <td>Wraps; <code>min-width: 0</code> only</td>
+                <td><code>.chat-bubble-source-intake__name</code></td>
+                <td><code>white-space: nowrap; overflow: hidden; text-overflow: ellipsis</code></td>
                 <td>
-                  Filenames break onto a second line rather than ellipsing &mdash; users need to recognise the file
+                  Single-line truncation. Full filename preserved in <code>title</code> attribute so SR and hover
+                  tooltip recover it
                 </td>
               </tr>
               <tr>

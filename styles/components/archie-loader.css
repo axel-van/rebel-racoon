@@ -30,7 +30,6 @@
 .ap-loader.size-24,
 .ap-loader.size-30,
 .ap-loader.size-48,
-.chat-bubble-source-intake__spinner,
 .extracting-notice__spinner,
 .clip-extraction-card__spinner,
 .session__composer-thinking-spinner,
@@ -56,14 +55,12 @@
 
 /* `.ap-loader` ships with an inline <svg> from the DS — hide it so only
    our dot grid paints. */
-.ap-loader > svg,
-.chat-bubble-source-intake__spinner > svg {
+.ap-loader > svg {
   display: none;
 }
 
 .archie-loader::before,
 .ap-loader::before,
-.chat-bubble-source-intake__spinner::before,
 .extracting-notice__spinner::before,
 .clip-extraction-card__spinner::before,
 .session__composer-thinking-spinner::before,
@@ -123,7 +120,6 @@
 .schedule-modal__spinner {
   --archie-loader-size: 16px;
 }
-.chat-bubble-source-intake__spinner,
 .extracting-notice__spinner,
 .source-card__spinner,
 .ap-loader.size-16 {
