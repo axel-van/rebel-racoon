@@ -55,7 +55,7 @@ export function renderTopbar(_options = {}) {
     <div class="app-topbar__left">${raw(renderTitle(onSession))}</div>
     <div class="app-topbar__right">
       ${raw(onSession ? renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) : "")}
-      ${raw(onSession ? renderStatusCardToggle() : "")}
+      ${raw(onSession && !rpMode ? renderStatusCardToggle() : "")}
     </div>
   `;
 }
@@ -258,8 +258,12 @@ function renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) {
   // ideas — a source auto-extracted from a freshly attached file produces
   // ideas before the user types, and that's exactly when the user wants
   // to peek at them. Sources is always available.
-  const draftsDisabled = draftCount === 0;
-  const ideasDisabled = isEmpty && ideaCount === 0;
+  // Don't disable a pill whose panel is currently open — a button can't be
+  // semantically both `disabled` and `aria-pressed=true`, and the user must
+  // be able to re-click to close the panel even if the underlying count
+  // dropped to 0 while the panel was open.
+  const draftsDisabled = draftCount === 0 && rpMode !== "drafts";
+  const ideasDisabled = isEmpty && ideaCount === 0 && rpMode !== "ideas";
   const sourcesCount = sessionSourceCount();
   const sourcesBadge = sourcesCount > 0 ? `<span class="ap-counter normal blue">${sourcesCount}</span>` : "";
   return `
