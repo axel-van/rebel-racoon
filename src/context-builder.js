@@ -236,6 +236,17 @@ function askAltUrl(sessionId) {
   });
 }
 
+// Map our mock's `platform` slug to the DS's official, full-color
+// network icon used by .ap-avatar-network. Same mapping as
+// welcome-socials.js — duplicated here to keep the module local.
+const ALT_NETWORK_ICON_BY_PLATFORM = {
+  facebook: "ap-icon-facebook-official",
+  instagram: "ap-icon-instagram-official",
+  linkedin: "ap-icon-linkedin-official",
+  x: "ap-icon-x-official",
+};
+const ALT_BRAND_INITIALS = "NS";
+
 function askAltProfile(sessionId) {
   postAssistantMessage(
     sessionId,
@@ -250,7 +261,12 @@ function askAltProfile(sessionId) {
       value: p.id,
       label: p.platformLabel,
       caption: captionParts.join(" · "),
-      imgSrc: p.logo,
+      // Render via the DS .ap-avatar with the corner network badge,
+      // same look as the original step-2 welcome screen.
+      avatar: {
+        initials: ALT_BRAND_INITIALS,
+        networkIcon: ALT_NETWORK_ICON_BY_PLATFORM[p.platform],
+      },
     };
   });
   inlineQuestion.ask(sessionId, {

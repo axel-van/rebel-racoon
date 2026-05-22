@@ -203,6 +203,18 @@ export function renderPicker(picker) {
   const rows = items
     .map((it, i) => {
       const isPreset = multi && preset.has(it.value);
+      // Three icon variants: avatar (DS .ap-avatar with optional network
+      // badge), imgSrc (raw <img>), or icon font (default). The avatar
+      // variant strips the icon container's grey background and overflow
+      // clipping so the network badge in the corner stays visible.
+      const iconBody = it.avatar
+        ? `<div class="ap-avatar size-32" aria-hidden="true">
+             ${it.avatar.initials ? `<span class="ap-avatar-initials">${it.avatar.initials}</span>` : ""}
+             ${it.avatar.networkIcon ? `<span class="ap-avatar-network"><i class="${it.avatar.networkIcon}"></i></span>` : ""}
+           </div>`
+        : it.imgSrc
+          ? `<img src="${it.imgSrc}" alt="" />`
+          : `<i class="${it.icon || "ap-icon-circle"}"></i>`;
       return `
         <button
           type="button"
@@ -211,8 +223,8 @@ export function renderPicker(picker) {
           ${multi ? `aria-pressed="${isPreset ? "true" : "false"}"` : ""}
         >
           <span class="analyse__option-shortcut" aria-hidden="true">${i + 1}</span>
-          <span class="analyse__option-icon">
-            ${it.imgSrc ? `<img src="${it.imgSrc}" alt="" />` : `<i class="${it.icon || "ap-icon-circle"}"></i>`}
+          <span class="analyse__option-icon${it.avatar ? " analyse__option-icon--avatar" : ""}">
+            ${iconBody}
           </span>
           <span class="analyse__option-text">
             <span class="analyse__option-label">${it.label}</span>

@@ -214,6 +214,15 @@
   object-fit: contain;
 }
 
+/* Avatar variant — when the picker item ships an .avatar payload, the
+   .ap-avatar component handles its own background, shape, and the
+   network badge in the corner. Drop the icon container's grey fill
+   and overflow clipping so the badge stays visible. */
+.analyse__option-icon--avatar {
+  background: transparent;
+  overflow: visible;
+}
+
 .analyse__option-text {
   display: flex;
   flex-direction: column;
