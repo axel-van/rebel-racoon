@@ -61,6 +61,7 @@ function emptyDraft(overrides = {}) {
     sourceFile: null,
     sourcePlatform: null,
     connectedSocials: [],
+    selectedProfileId: null,
     imageVoice: { websites: [] },
     suggestions: {
       audience: [],
@@ -229,6 +230,7 @@ export function startEdit(contextId) {
       color: ctx.color || "orange",
       voiceProfile: ctx.voiceProfile && typeof ctx.voiceProfile === "object" ? { ...ctx.voiceProfile } : null,
       connectedSocials: Array.isArray(ctx.connectedSocials) ? ctx.connectedSocials.slice() : [],
+      selectedProfileId: ctx.selectedProfileId || null,
       imageVoice:
         ctx.imageVoice && Array.isArray(ctx.imageVoice.websites)
           ? { websites: ctx.imageVoice.websites.map((w) => ({ ...w })) }
@@ -520,6 +522,7 @@ export function save(sessionId) {
     sourceFile: d.sourceFile || null,
     sourcePlatform: d.sourcePlatform || null,
     connectedSocials: Array.isArray(d.connectedSocials) ? d.connectedSocials.slice() : [],
+    selectedProfileId: d.selectedProfileId || null,
     businessSummary: d.businessSummary,
     briefSummary: d.businessSummary, // mirror to legacy field for backwards-read compat
     audience: d.audience,

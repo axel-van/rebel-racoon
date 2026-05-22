@@ -87,6 +87,7 @@ export function addContext(ctx = {}) {
     ctaLinks: Array.isArray(ctx.ctaLinks) ? ctx.ctaLinks.map((l) => ({ ...l })) : [],
     language: ctx.language || "English",
     connectedSocials: Array.isArray(ctx.connectedSocials) ? ctx.connectedSocials.slice() : [],
+    selectedProfileId: ctx.selectedProfileId || null,
     imageVoice:
       ctx.imageVoice && Array.isArray(ctx.imageVoice.websites)
         ? { websites: ctx.imageVoice.websites.map((w) => ({ ...w })) }
@@ -147,6 +148,7 @@ export function updateContext(id, patch) {
   if (patch.imageVoice !== undefined) c.imageVoice = patch.imageVoice;
   if (patch.language !== undefined) c.language = patch.language;
   if (patch.connectedSocials !== undefined) c.connectedSocials = patch.connectedSocials;
+  if (patch.selectedProfileId !== undefined) c.selectedProfileId = patch.selectedProfileId;
   if (patch.usedIn !== undefined) c.usedIn = patch.usedIn;
   if (patch.updatedAt !== undefined) c.updatedAt = patch.updatedAt;
   // Legacy + analysis sub-object
