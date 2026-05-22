@@ -898,13 +898,6 @@
   box-shadow: var(--app-shadow-orange-hover);
 }
 
-.welcome-socials__logo {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--app-radius-md);
-  object-fit: cover;
-}
-
 .welcome-socials__body {
   display: flex;
   flex-direction: column;

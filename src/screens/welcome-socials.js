@@ -18,6 +18,21 @@ const WELCOME_SESSION_KEY = "welcomeSessionId";
 // in this step.
 const CONNECTED_PROFILES = socialAccounts.filter((p) => p.status === "connected");
 
+// All mock profiles belong to the same fictional brand (Northwind
+// Studio) — same initials on every avatar, the per-platform variation
+// comes from the network badge in the corner. If we ever switch the
+// mock to multi-brand, derive these per-profile instead.
+const BRAND_INITIALS = "NS";
+
+// Map our mock's `platform` slug to the DS's official, full-color icon
+// class. The DS requires `-official` variants for .ap-avatar-network.
+const NETWORK_ICON_BY_PLATFORM = {
+  facebook: "ap-icon-facebook-official",
+  instagram: "ap-icon-instagram-official",
+  linkedin: "ap-icon-linkedin-official",
+  x: "ap-icon-x-official",
+};
+
 export function renderWelcomeSocials(_params, target) {
   document.body.classList.add("onboarding");
   // The draft is mandatory — without it we have nothing to attach the
@@ -90,6 +105,7 @@ function renderProfileCard(profile, isSelected) {
   if (profile.kind) subtitleParts.push(profile.kind);
   if (profile.handle) subtitleParts.push(profile.handle);
   const subtitle = subtitleParts.join(" · ");
+  const networkIcon = NETWORK_ICON_BY_PLATFORM[profile.platform];
   return `
     <li>
       <button
@@ -98,7 +114,10 @@ function renderProfileCard(profile, isSelected) {
         data-profile-card="${profile.id}"
         aria-pressed="${isSelected}"
       >
-        <img class="welcome-socials__logo" src="${profile.logo}" alt="" width="40" height="40" />
+        <div class="ap-avatar size-40" aria-hidden="true">
+          <span class="ap-avatar-initials">${BRAND_INITIALS}</span>
+          ${networkIcon ? `<span class="ap-avatar-network"><i class="${networkIcon}"></i></span>` : ""}
+        </div>
         <div class="welcome-socials__body">
           <div class="welcome-socials__name">${profile.platformLabel}</div>
           ${subtitle ? `<div class="welcome-socials__meta">${subtitle}</div>` : ""}
