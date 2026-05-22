@@ -94,10 +94,17 @@ export function initUserModeChip() {
         } catch {
           // ignore — storage may be unavailable in private browsing
         }
-        // Preserve the current pathname so the redirect works under any
-        // base path (e.g. GitHub Pages serves under /rebel-racoon/, so
-        // hard-coding origin + "/" would 404).
-        window.location.replace(window.location.href.split("#")[0] + "#/welcome");
+        // Set the hash to /welcome (no-op if already there) and force a
+        // hard reload so every store re-seeds with the new mode.
+        // location.replace alone is unreliable: replacing to the *same*
+        // URL is a no-op in Chrome, so when the user is already on
+        // /welcome the page never refreshes and the toggle silently
+        // fails. Mutating location.hash preserves the current pathname,
+        // so this still works under any base path (e.g. GitHub Pages).
+        if (!window.location.hash.startsWith("#/welcome")) {
+          window.location.hash = "#/welcome";
+        }
+        window.location.reload();
       }
       return;
     }
