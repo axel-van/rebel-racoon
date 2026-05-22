@@ -18,9 +18,9 @@
 // switch-to-returning + dashboard navigation.
 
 import { html, raw } from "../utils.js?v=20";
-import { navigate } from "../router.js?v=21";
+import { navigate } from "../router.js?v=30";
 import { getDraft, isAnalysisReady, save } from "../context-builder.js?v=42";
-import { renderBriefSections } from "../components/right-panel.js?v=63";
+import { renderBriefSections } from "../components/right-panel.js?v=65";
 import { launch as launchPlaybookEditor } from "../playbook-editor.js?v=9";
 
 const WELCOME_ALT_KEY = "welcomeAltSessionId";

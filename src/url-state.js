@@ -5,7 +5,7 @@
 // shape of the returned object — they just delegate the parsing primitive
 // to parseHashParams() so each screen no longer hand-rolls the same split.
 
-import { navigate } from "./router.js?v=20";
+import { navigate } from "./router.js?v=30";
 
 export function parseHashParams() {
   const raw = window.location.hash.split("?")[1] || "";

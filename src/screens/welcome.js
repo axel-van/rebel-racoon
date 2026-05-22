@@ -10,7 +10,7 @@
 // (which keeps its own picker with Documents path).
 
 import { html } from "../utils.js?v=20";
-import { navigate } from "../router.js?v=21";
+import { navigate } from "../router.js?v=30";
 import { startBackground } from "../context-builder.js?v=42";
 
 const WELCOME_SESSION_KEY = "welcomeSessionId";

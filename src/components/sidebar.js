@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { navigate, getPath } from "../router.js?v=20";
+import { navigate, getPath } from "../router.js?v=30";
 import { open as openSettingsDrawer } from "./settings-drawer.js?v=23";
 import { open as openBugReportModal } from "./bug-report-modal.js?v=21";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=24";
@@ -19,7 +19,7 @@ import { isFlagOn } from "../feature-flags.js?v=3";
 import { isNewUser } from "../user-mode.js?v=21";
 import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=28";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=28";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=63";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=65";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=31";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=26";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=30";

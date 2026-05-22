@@ -19,14 +19,14 @@
 // right-panel mode, sessions).
 
 import { html, raw } from "../utils.js?v=20";
-import { getPath } from "../router.js?v=21";
+import { getPath } from "../router.js?v=30";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
   openSources as openSourcesPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=63";
+} from "./right-panel.js?v=65";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=31";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=30";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=28";

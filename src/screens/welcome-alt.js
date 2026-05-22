@@ -11,7 +11,7 @@
 // first screen — the profile pick is now question 2 of 3 inside the
 // chat, alongside URL (q1) and Documents (q3, skippable).
 
-import { navigate } from "../router.js?v=21";
+import { navigate } from "../router.js?v=30";
 import { setHandoff } from "../handoff.js?v=20";
 
 export function renderWelcomeAlt(_params, _target) {

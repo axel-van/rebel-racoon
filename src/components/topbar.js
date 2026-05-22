@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { getPath } from "../router.js?v=21";
+import { getPath } from "../router.js?v=30";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 // Lot 19 — topbar no longer carries its own sidebar-toggle button. The
 // sidebar head exposes the toggle in both expanded (chevron-left) and
@@ -13,7 +13,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=63";
+} from "./right-panel.js?v=65";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=30";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=31";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=28";

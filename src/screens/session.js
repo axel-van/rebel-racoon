@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { navigate } from "../router.js?v=20";
+import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=47";
 import { socialAccounts, chatStarters } from "../mocks.js?v=31";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
@@ -70,9 +70,9 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=63";
+} from "../components/right-panel.js?v=65";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
-import { parseHashParams, setHashQuery } from "../url-state.js?v=20";
+import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
 import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=1";
 import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=1";
