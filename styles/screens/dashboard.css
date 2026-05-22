@@ -808,30 +808,6 @@
   line-height: var(--ref-font-line-height-md);
 }
 
-/* Danger CTA — when confirm-modal is opened with danger=true. Uses the
-   DS red palette without depending on a non-existent .ap-button .danger
-   modifier in this DS version. */
-.ap-button.danger {
-  background: var(--ref-color-red-100);
-  color: var(--ref-color-white);
-  border-color: var(--ref-color-red-100);
-}
-
-.ap-button.danger:hover {
-  background: var(--ref-color-red-150, var(--ref-color-red-100));
-  border-color: var(--ref-color-red-150, var(--ref-color-red-100));
-}
-
-.ap-button.stroked.danger {
-  background: transparent;
-  color: var(--ref-color-red-100);
-  border-color: var(--ref-color-red-100);
-}
-
-.ap-button.stroked.danger:hover {
-  background: var(--ref-color-red-05, rgba(220, 38, 38, 0.05));
-}
-
 /* ---- Source-card overflow menu (mirrors idea-card__more-menu) -------- */
 
 .source-card__more-wrap {

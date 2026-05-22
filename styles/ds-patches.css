@@ -154,3 +154,27 @@
     display: none;
   }
 }
+
+/* Danger CTA — confirm-modal opens with .danger=true. The DS doesn't
+   ship a .ap-button.danger variant, so this patch synthesises one from
+   the DS red palette. */
+.ap-button.danger {
+  background: var(--ref-color-red-100);
+  color: var(--ref-color-white);
+  border-color: var(--ref-color-red-100);
+}
+
+.ap-button.danger:hover {
+  background: var(--ref-color-red-150, var(--ref-color-red-100));
+  border-color: var(--ref-color-red-150, var(--ref-color-red-100));
+}
+
+.ap-button.stroked.danger {
+  background: transparent;
+  color: var(--ref-color-red-100);
+  border-color: var(--ref-color-red-100);
+}
+
+.ap-button.stroked.danger:hover {
+  background: var(--ref-color-red-05, rgba(220, 38, 38, 0.05));
+}

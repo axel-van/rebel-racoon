@@ -382,7 +382,7 @@
 }
 
 .welcome-preview__chips li {
-  padding: 2px 8px;
+  padding: var(--app-spacing-micro) var(--ref-spacing-xxs);
   border-radius: var(--app-radius-pill);
   background: var(--ref-color-electric-blue-05);
   color: var(--ref-color-electric-blue-150);
