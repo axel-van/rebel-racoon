@@ -561,54 +561,77 @@ function runAnalysis(sessionId) {
   }, 6000);
 }
 
-// --- Phase 2b — Social channels (Website path only) -----------------------
+// --- Phase 2b — Profile picker (Website path only) -----------------------
+//
+// After the website analysis, Archie asks WHICH connected social
+// profile to analyse — the profile's voice feeds the playbook tone
+// and format. Single-select since voice is sourced from one profile.
+// Mirrors the askAltProfile pattern above (DS .ap-avatar with corner
+// network badge).
 
-// Catalog of platforms surfaced in the social-channels step. Order
-// matches the conventional "publish priority" for B2B brands; the user
-// can pick any combination via the inline-question multi-select. Logos
-// are the same SVGs used by mocks.socialAccounts so any future "show
-// me what I picked" view stays visually consistent.
-const SOCIAL_PLATFORMS = [
-  { value: "linkedin", label: "LinkedIn", imgSrc: "assets/logos/social/linkedin.svg" },
-  { value: "instagram", label: "Instagram", imgSrc: "assets/logos/social/instagram.svg" },
-  { value: "x", label: "X (Twitter)", imgSrc: "assets/logos/social/x.svg" },
-  { value: "tiktok", label: "TikTok", imgSrc: "assets/logos/social/tiktok.svg" },
-  { value: "facebook", label: "Facebook", imgSrc: "assets/logos/social/facebook.svg" },
-  { value: "youtube", label: "YouTube", imgSrc: "assets/logos/social/youtube.svg" },
-  { value: "pinterest", label: "Pinterest", imgSrc: "assets/logos/social/pinterest.svg" },
-  { value: "bluesky", label: "Bluesky", imgSrc: "assets/logos/social/bluesky.svg" },
-];
+function deriveBrandInitials(name) {
+  const parts = (name || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 function askSocial(sessionId) {
+  const d = getDraft(sessionId);
+  const connectedProfiles = socialAccounts.filter((p) => p.status === "connected");
+  // Edge case: no connected profiles. Skip the step rather than show an
+  // empty picker — the playbook can still be built from the website
+  // analysis alone.
+  if (connectedProfiles.length === 0) {
+    openBriefPanel(sessionId);
+    return;
+  }
+
   postAssistantMessage(
     sessionId,
-    "Where do you publish today? Pick every social channel this playbook applies to — I'll tailor the drafts to fit each one.",
+    "Which connected profile should I analyse? I'll capture its voice and use it to shape the playbook's tone and format.",
   );
-  // Pre-check whatever's already in the draft — used by First Time
-  // User ALT where the visual /welcome-alt picker pre-seeds
-  // connectedSocials with the picked profile's platform.
-  const preselected = getDraft(sessionId)?.connectedSocials || [];
+  const initials = deriveBrandInitials(d?.name);
+  const items = connectedProfiles.map((p) => {
+    const captionParts = [];
+    if (p.platformLabel) captionParts.push(p.platformLabel);
+    if (p.kind) captionParts.push(p.kind);
+    return {
+      value: p.id,
+      label: p.handle || p.platformLabel,
+      caption: captionParts.join(" · "),
+      avatar: {
+        initials,
+        networkIcon: ALT_NETWORK_ICON_BY_PLATFORM[p.platform],
+      },
+    };
+  });
   inlineQuestion.ask(sessionId, {
-    title: "Where do you publish?",
-    stepLabel: "Channels",
-    items: SOCIAL_PLATFORMS,
-    multi: true,
-    defaultSelected: preselected,
-    submitLabel: "Continue",
+    title: "Which profile to analyse?",
+    stepLabel: "Voice source",
+    items,
     skipLabel: "Skip",
-    onPick: (values) => setSocialConnections(sessionId, values || []),
-    onSkip: () => setSocialConnections(sessionId, []),
+    onPick: (id) => setSelectedProfile(sessionId, id),
+    onSkip: () => setSelectedProfile(sessionId, null),
     onBack: () => askUrl(sessionId),
   });
 }
 
-function setSocialConnections(sessionId, values) {
+function setSelectedProfile(sessionId, profileId) {
   const d = drafts.get(sessionId);
   if (!d) return;
-  d.connectedSocials = values.slice();
-  const labelByValue = Object.fromEntries(SOCIAL_PLATFORMS.map((p) => [p.value, p.label]));
-  const echo = values.length === 0 ? "Skip" : values.map((v) => labelByValue[v] || v).join(" · ");
-  postUserTurn(sessionId, echo);
+  if (profileId) {
+    const profile = socialAccounts.find((p) => p.id === profileId);
+    if (profile) {
+      d.selectedProfileId = profile.id;
+      d.connectedSocials = [profile.platform];
+      postUserTurn(sessionId, `${profile.platformLabel} · ${profile.handle || profile.kind || ""}`);
+    }
+  } else {
+    d.selectedProfileId = null;
+    d.connectedSocials = [];
+    postUserTurn(sessionId, "Skip");
+  }
   inlineQuestion.exit(sessionId);
   notify(sessionId);
   openBriefPanel(sessionId);
