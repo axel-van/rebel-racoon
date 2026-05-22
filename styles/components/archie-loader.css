@@ -1,0 +1,421 @@
+/*
+ * Shared loader for the whole prototype.
+ *
+ * Every spinner in Archie — the DS `.ap-loader`, the per-component
+ * `*-spinner` classes scattered across screens and modals — collapses
+ * to the same 12-dot grid that fades dots in/out in waves.
+ *
+ * The dots are NOT painted with box-shadow (which only carries a single
+ * solid colour). Instead, the bounding box is painted with the real
+ * mermaid linear-gradient (`--ref-color-mermaid-gradient-background`)
+ * and 12 radial-gradient mask layers clip it down to the dot pattern.
+ * Each dot therefore samples the gradient at its own x-position — the
+ * leftmost column reads blue, the rightmost reads purple, mid columns
+ * blend smoothly through the gradient. This is the AI accent used on
+ * every other assistant surface (starter cards, conversation status,
+ * sparkle icons), so loaders feel native to the rest of the surface.
+ *
+ * Sizing is driven by `--archie-loader-size` (the bounding-box width).
+ * The dot grid is 5 dot-widths wide × 4 tall, so dot diameter = size / 5
+ * and height = size * 0.8.
+ *
+ * To override the paint (e.g. white-on-orange CTA buttons), set
+ * `--archie-loader-color` to any <image> value — a `linear-gradient(...)`,
+ * a CSS colour, or `currentColor`. Default is the mermaid gradient.
+ */
+
+.archie-loader,
+.ap-loader,
+.ap-loader.size-16,
+.ap-loader.size-24,
+.ap-loader.size-30,
+.ap-loader.size-48,
+.chat-bubble-source-intake__spinner,
+.extracting-notice__spinner,
+.clip-extraction-card__spinner,
+.session__composer-thinking-spinner,
+.source-card__spinner,
+.source-card__clips-spinner,
+.bug-report-modal__submit-spinner,
+.feedback-modal__submit-spinner,
+.gen-image-spinner,
+.schedule-modal__spinner,
+.add-source__file-spinner {
+  display: inline-block;
+  position: relative;
+  width: var(--archie-loader-size, 20px);
+  height: calc(var(--archie-loader-size, 20px) * 0.8);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  animation: none;
+  flex-shrink: 0;
+  line-height: 0;
+  vertical-align: middle;
+}
+
+/* `.ap-loader` ships with an inline <svg> from the DS — hide it so only
+   our dot grid paints. */
+.ap-loader > svg,
+.chat-bubble-source-intake__spinner > svg {
+  display: none;
+}
+
+.archie-loader::before,
+.ap-loader::before,
+.chat-bubble-source-intake__spinner::before,
+.extracting-notice__spinner::before,
+.clip-extraction-card__spinner::before,
+.session__composer-thinking-spinner::before,
+.source-card__spinner::before,
+.source-card__clips-spinner::before,
+.bug-report-modal__submit-spinner::before,
+.feedback-modal__submit-spinner::before,
+.gen-image-spinner::before,
+.schedule-modal__spinner::before,
+.add-source__file-spinner::before {
+  --d: calc(var(--archie-loader-size, 20px) / 5);
+  --r: calc(var(--d) * 0.5);
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--archie-loader-color, var(--ref-color-mermaid-gradient-background));
+  -webkit-mask:
+    radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 50% 12.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 10% 62.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 10% 87.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 90% 87.5%, #000 99%, transparent 100%);
+  mask:
+    radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 50% 12.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 10% 62.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 10% 87.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+    radial-gradient(circle var(--r) at 90% 87.5%, #000 99%, transparent 100%);
+  animation: archie-loader-l29 2s infinite;
+}
+
+/* Per-class size targets (driven by --archie-loader-size). */
+.add-source__file-spinner {
+  --archie-loader-size: 12px;
+}
+.bug-report-modal__submit-spinner,
+.feedback-modal__submit-spinner,
+.session__composer-thinking-spinner,
+.source-card__clips-spinner {
+  --archie-loader-size: 14px;
+}
+.gen-image-spinner,
+.schedule-modal__spinner {
+  --archie-loader-size: 16px;
+}
+.chat-bubble-source-intake__spinner,
+.extracting-notice__spinner,
+.source-card__spinner,
+.ap-loader.size-16 {
+  --archie-loader-size: 18px;
+}
+.clip-extraction-card__spinner {
+  --archie-loader-size: 20px;
+}
+.ap-loader.size-24 {
+  --archie-loader-size: 24px;
+}
+.ap-loader.size-30 {
+  --archie-loader-size: 30px;
+}
+.ap-loader.size-48 {
+  --archie-loader-size: 48px;
+}
+
+/* These three sit on coloured CTA buttons (orange / coloured surfaces)
+   where the mermaid gradient would clash with the button paint. Repaint
+   with the button's text colour instead (white on filled CTAs). */
+.bug-report-modal__submit-spinner,
+.feedback-modal__submit-spinner,
+.schedule-modal__spinner {
+  --archie-loader-color: currentColor;
+}
+
+/*
+ * Animation: each keyframe redefines the mask, shrinking certain dots'
+ * radial-gradients to radius 0 (= invisible). The dot positions and
+ * fade pattern mirror the original l29 box-shadow loader exactly:
+ *
+ *   row 1 = y 12.5%   (originally y = -9)
+ *   row 2 = y 37.5%   (originally y =  0)
+ *   row 3 = y 62.5%   (originally y =  9)
+ *   row 4 = y 87.5%   (originally y = 18)
+ *
+ *   col 1 = x 10%     (originally x = -18)
+ *   col 2 = x 50%     (originally x =  0)
+ *   col 3 = x 90%     (originally x = 18)
+ */
+@keyframes archie-loader-l29 {
+  10% {
+    -webkit-mask:
+      radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 87.5%, #000 99%, transparent 100%);
+    mask:
+      radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 87.5%, #000 99%, transparent 100%);
+  }
+  20% {
+    -webkit-mask:
+      radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 87.5%, #000 99%, transparent 100%);
+    mask:
+      radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 87.5%, #000 99%, transparent 100%);
+  }
+  30% {
+    -webkit-mask:
+      radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 87.5%, #000 99%, transparent 100%);
+    mask:
+      radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 87.5%, #000 99%, transparent 100%);
+  }
+  40% {
+    -webkit-mask:
+      radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 87.5%, #000 99%, transparent 100%);
+    mask:
+      radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 87.5%, #000 99%, transparent 100%);
+  }
+  50% {
+    -webkit-mask:
+      radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 87.5%, #000 99%, transparent 100%);
+    mask:
+      radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 87.5%, #000 99%, transparent 100%);
+  }
+  60% {
+    -webkit-mask:
+      radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 87.5%, #000 99%, transparent 100%);
+    mask:
+      radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 87.5%, #000 99%, transparent 100%);
+  }
+  70% {
+    -webkit-mask:
+      radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 87.5%, #000 99%, transparent 100%);
+    mask:
+      radial-gradient(circle var(--r) at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 87.5%, #000 99%, transparent 100%);
+  }
+  80% {
+    -webkit-mask:
+      radial-gradient(circle 0 at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 87.5%, #000 99%, transparent 100%);
+    mask:
+      radial-gradient(circle 0 at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 87.5%, #000 99%, transparent 100%);
+  }
+  90% {
+    -webkit-mask:
+      radial-gradient(circle 0 at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 87.5%, #000 99%, transparent 100%);
+    mask:
+      radial-gradient(circle 0 at 10% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 12.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 37.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 50% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 90% 62.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 10% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle var(--r) at 50% 87.5%, #000 99%, transparent 100%),
+      radial-gradient(circle 0 at 90% 87.5%, #000 99%, transparent 100%);
+  }
+}
