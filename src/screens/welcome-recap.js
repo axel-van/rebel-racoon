@@ -15,7 +15,7 @@
 
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=21";
-import { getDraft, isAnalysisReady, save } from "../context-builder.js?v=36";
+import { getDraft, isAnalysisReady, save } from "../context-builder.js?v=37";
 import { renderBriefSections } from "../components/right-panel.js?v=62";
 import { launch as launchPlaybookEditor } from "../playbook-editor.js?v=9";
 import { setHandoff } from "../handoff.js?v=20";

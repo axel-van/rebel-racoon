@@ -1,20 +1,27 @@
-// Welcome step 2 of 4 — connect the social profiles where the brand
-// publishes. Cards visual mirroring /welcome/sources : each platform
-// gets a Connecter / Déconnecter toggle. Picks land on
-// `draft.connectedSocials` via context-builder.patchDraft. The website
-// analysis launched on step 1 keeps running in the background while the
-// user is here.
+// Welcome step 2 of 4 — pick one social profile that the user has
+// already connected to Agorapulse from outside Archie. Single-select:
+// the chosen profile id lands on `draft.selectedProfileId`, and we
+// mirror its platform into `draft.connectedSocials` so the persisted
+// context keeps that info. The website analysis launched on step 1
+// keeps running in the background while the user is here.
 
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=21";
-import { SOCIAL_PLATFORMS, getDraft, patchDraft } from "../context-builder.js?v=36";
+import { getDraft, patchDraft } from "../context-builder.js?v=37";
+import { socialAccounts } from "../mocks.js?v=29";
 
 const WELCOME_SESSION_KEY = "welcomeSessionId";
+
+// Profiles already connected to Agorapulse (outside Archie). We hardcode
+// the filter on `status === "connected"` so the picker stays focused on
+// what the user can actually pick — disconnected accounts don't belong
+// in this step.
+const CONNECTED_PROFILES = socialAccounts.filter((p) => p.status === "connected");
 
 export function renderWelcomeSocials(_params, target) {
   document.body.classList.add("onboarding");
   // The draft is mandatory — without it we have nothing to attach the
-  // picks to. Bounce back to step 1 so the user re-enters the URL.
+  // pick to. Bounce back to step 1 so the user re-enters the URL.
   const sid = readWelcomeSessionId();
   if (!sid || !getDraft(sid)) {
     navigate("/welcome");
@@ -42,7 +49,7 @@ function readWelcomeSessionId() {
 }
 
 function paint(target, sid) {
-  const selected = new Set(getDraft(sid)?.connectedSocials || []);
+  const selectedId = getDraft(sid)?.selectedProfileId || null;
   target.innerHTML = html`
     <section class="welcome-screen">
       <header class="welcome-screen__top">
@@ -56,13 +63,14 @@ function paint(target, sid) {
         <div class="welcome-step">
           <div class="welcome-step__header">
             <span class="welcome-step__tag">Étape 2 sur 4</span>
-            <h1 class="welcome-step__title">Où publies-tu aujourd'hui ?</h1>
+            <h1 class="welcome-step__title">Quel profil veux-tu utiliser ?</h1>
             <p class="welcome-step__sub">
-              Connecte les comptes sociaux où ce Playbook s'applique — Archie adaptera les drafts pour chaque canal.
+              Voici les comptes que tu as déjà connectés à Agorapulse — choisis-en un pour démarrer. Tu pourras en
+              ajouter d'autres plus tard.
             </p>
           </div>
           <ul class="welcome-socials__grid">
-            ${raw(SOCIAL_PLATFORMS.map((p) => renderSocialCard(p, selected.has(p.value))).join(""))}
+            ${raw(CONNECTED_PROFILES.map((p) => renderProfileCard(p, p.id === selectedId)).join(""))}
           </ul>
           <footer class="welcome-step__footer">
             <button type="button" class="welcome-step__footer-skip" data-welcome-skip>Passer pour l'instant</button>
@@ -77,33 +85,36 @@ function paint(target, sid) {
   `;
 }
 
-function renderSocialCard(platform, isConnected) {
+function renderProfileCard(profile, isSelected) {
+  const subtitleParts = [];
+  if (profile.kind) subtitleParts.push(profile.kind);
+  if (profile.handle) subtitleParts.push(profile.handle);
+  const subtitle = subtitleParts.join(" · ");
   return `
-    <li class="welcome-socials__card${isConnected ? " is-connected" : ""}" data-socials-card="${platform.value}">
-      <img class="welcome-socials__logo" src="${platform.imgSrc}" alt="" width="40" height="40" />
-      <div class="welcome-socials__body">
-        <div class="welcome-socials__name">${platform.label}</div>
-        ${isConnected ? `<div class="welcome-socials__status"><i class="ap-icon-rounded-check_fill"></i> Connecté · @archie</div>` : ""}
-      </div>
-      ${
-        isConnected
-          ? `<button type="button" class="ap-button stroked grey" data-welcome-disconnect="${platform.value}">Déconnecter</button>`
-          : `<button type="button" class="ap-button stroked blue" data-welcome-connect="${platform.value}">Connecter</button>`
-      }
+    <li>
+      <button
+        type="button"
+        class="welcome-socials__card${isSelected ? " is-selected" : ""}"
+        data-profile-card="${profile.id}"
+        aria-pressed="${isSelected}"
+      >
+        <img class="welcome-socials__logo" src="${profile.logo}" alt="" width="40" height="40" />
+        <div class="welcome-socials__body">
+          <div class="welcome-socials__name">${profile.platformLabel}</div>
+          ${subtitle ? `<div class="welcome-socials__meta">${subtitle}</div>` : ""}
+        </div>
+        <span class="welcome-socials__check" aria-hidden="true">
+          <i class="ap-icon-rounded-check_fill"></i>
+        </span>
+      </button>
     </li>
   `;
 }
 
 function onClick(event, target, sid) {
-  const connectBtn = event.target.closest("[data-welcome-connect]");
-  if (connectBtn) {
-    toggleConnection(sid, connectBtn.dataset.welcomeConnect, true);
-    paint(target, sid);
-    return;
-  }
-  const disconnectBtn = event.target.closest("[data-welcome-disconnect]");
-  if (disconnectBtn) {
-    toggleConnection(sid, disconnectBtn.dataset.welcomeDisconnect, false);
+  const card = event.target.closest("[data-profile-card]");
+  if (card) {
+    selectProfile(sid, card.dataset.profileCard);
     paint(target, sid);
     return;
   }
@@ -113,8 +124,16 @@ function onClick(event, target, sid) {
   }
 }
 
-function toggleConnection(sid, platform, connected) {
-  const current = getDraft(sid)?.connectedSocials || [];
-  const next = connected ? Array.from(new Set([...current, platform])) : current.filter((p) => p !== platform);
-  patchDraft(sid, { connectedSocials: next });
+function selectProfile(sid, profileId) {
+  const current = getDraft(sid)?.selectedProfileId || null;
+  // Toggle off when the user clicks the already-selected card so they
+  // can land on the next screen with no profile picked (same outcome as
+  // "Passer pour l'instant").
+  if (current === profileId) {
+    patchDraft(sid, { selectedProfileId: null, connectedSocials: [] });
+    return;
+  }
+  const profile = CONNECTED_PROFILES.find((p) => p.id === profileId);
+  if (!profile) return;
+  patchDraft(sid, { selectedProfileId: profileId, connectedSocials: [profile.platform] });
 }

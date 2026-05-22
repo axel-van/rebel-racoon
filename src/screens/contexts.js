@@ -7,7 +7,7 @@ import {
   deleteContext,
 } from "../contexts-store.js?v=27";
 import { navigate } from "../router.js?v=21";
-import { openRead, startEdit } from "../context-builder.js?v=36";
+import { openRead, startEdit } from "../context-builder.js?v=37";
 import { setHandoff } from "../handoff.js?v=20";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=20";
 import { launch as launchPlaybookEditor } from "../playbook-editor.js?v=8";
