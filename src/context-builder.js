@@ -482,7 +482,7 @@ function exitWithoutSave(sessionId) {
 // Step 1a: Website URL. No skip — the wizard needs something to analyse;
 // the back button is the way out (returns to source picker).
 function askUrl(sessionId) {
-  const intro = "Got it — paste your website URL and I'll pull the brand voice, audience and visual identity from it.";
+  const intro = "Paste your website URL and I'll pull the brand voice, audience, and visual identity.";
   postAssistantMessage(sessionId, intro);
   inlineQuestion.ask(sessionId, {
     title: "What's the URL of your company website?",
@@ -495,7 +495,7 @@ function askUrl(sessionId) {
 
 // Step 1b: Document upload. customFile dropzone variant of inline-question.
 function askDocument(sessionId) {
-  const intro = "Got it — drop a brand or strategy document and I'll build the playbook from it.";
+  const intro = "Drop a brand or strategy document and I'll build the Playbook from it.";
   postAssistantMessage(sessionId, intro);
   inlineQuestion.ask(sessionId, {
     title: "Upload a brand or strategy document",

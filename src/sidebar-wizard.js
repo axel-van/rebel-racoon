@@ -377,7 +377,7 @@ const VOICE_SECTION_PICKER_BASE = {
 
 const VOICE_SUMMARY = {
   items: [
-    { value: "yes", label: "Yes, looks great", icon: "ap-icon-rounded-check" },
+    { value: "yes", label: "Yes, looks good", icon: "ap-icon-rounded-check" },
     { value: "no", label: "No — start over", icon: "ap-icon-refresh" },
   ],
   handler: "wizard-answer",
@@ -479,7 +479,7 @@ const voiceScript = {
       return { pending: true, nextStep: "2", ms: 2000 };
     }
     if (step === "summary") {
-      state.history.push({ role: "user", text: value === "yes" ? "Yes, looks great" : "Start over" });
+      state.history.push({ role: "user", text: value === "yes" ? "Yes, looks good" : "Start over" });
       return "done";
     }
 

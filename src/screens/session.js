@@ -271,7 +271,7 @@ function renderComposer(attachedContext, hasUserMessage, session) {
       <div class="session__composer-inner">
         <div class="session__composer-thinking" data-assistant-thinking hidden>
           <span class="session__composer-thinking-spinner" aria-hidden="true"></span>
-          <span class="session__composer-thinking-text" data-thinking-text>0s · 1 credit</span>
+          <span class="session__composer-thinking-text" data-thinking-text>0s</span>
         </div>
         <div class="session__composer-card">
           <div class="session__composer-input">
@@ -283,7 +283,7 @@ function renderComposer(attachedContext, hasUserMessage, session) {
             <textarea
               class="session__composer-input-field"
               id="assistantInput"
-              placeholder="ask archie..."
+              placeholder="Ask Archie"
               rows="3"
             ></textarea>
             <button
@@ -331,8 +331,7 @@ function renderComposer(attachedContext, hasUserMessage, session) {
           </div>
         </div>
         <div class="session__composer-hint">
-          <kbd>↵</kbd> to send · <kbd>Shift</kbd>+<kbd>↵</kbd> for new line · <kbd>⌘</kbd>+<kbd>↵</kbd> sends from
-          anywhere · drop a file anywhere to add it as a source
+          <kbd>↵</kbd> to send · <kbd>Shift</kbd>+<kbd>↵</kbd> for new line · drop a file to add a source
         </div>
       </div>
     </div>
@@ -1724,7 +1723,7 @@ function startPillFromKind(_root, session, kind) {
   }, delay);
   postAssistantMessage(
     sessionId,
-    `Got it — I'm reading **${spec.filename}**. While I extract the strongest moments, what should I do with it?`,
+    `Reading **${spec.filename}** now. While I pull the strongest ideas, what should I do with it?`,
   );
   postAssistantChoice(sessionId, {
     text: "",
@@ -1816,9 +1815,9 @@ function bindSession(root, session) {
       const { filename } = msg.context || {};
       const pick = selectedValues[0];
       const followups = {
-        batch: `Got it — I'll draft 5 posts from **${filename}** across LinkedIn, X, and Instagram as soon as the analysis lands.`,
-        repurpose: `Got it — I'll turn **${filename}** into 8 posts (3 LinkedIn, 3 X, 2 Instagram) keeping the brand voice consistent.`,
-        extract: `Got it — I'll surface the strongest ideas from **${filename}** first. You can decide what to draft from there.`,
+        batch: `I'll draft 5 posts from **${filename}** across LinkedIn, X, and Instagram once the analysis lands.`,
+        repurpose: `I'll turn **${filename}** into 8 posts: 3 LinkedIn, 3 X, 2 Instagram, all in the brand voice.`,
+        extract: `I'll surface the strongest ideas from **${filename}** first. You can pick which to draft from there.`,
       };
       const msgText = followups[pick];
       if (msgText) postAssistantMessage(session.id, msgText);

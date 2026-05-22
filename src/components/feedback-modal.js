@@ -52,7 +52,7 @@ const HTML = `
     <div class="ap-form-field">
       <label for="feedbackText">Write a feedback <span class="bug-field__required">*</span></label>
       <textarea id="feedbackText" class="feedback-modal__textarea" rows="5" placeholder="Write your feedback here..." aria-describedby="feedbackTextError"></textarea>
-      <p class="form-field-error" id="feedbackTextError" role="alert" hidden>Please write your feedback before sending.</p>
+      <p class="form-field-error" id="feedbackTextError" role="alert" hidden>Write something before sending.</p>
     </div>
 
     <p class="feedback-modal__thank-you">
@@ -71,8 +71,8 @@ const HTML = `
         <path fill-rule="evenodd" d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd"/>
       </svg>
     </div>
-    <h3>Thanks for your feedback!</h3>
-    <p>We read every message and use it to improve Archie.</p>
+    <h3>Feedback sent</h3>
+    <p>Every message feeds into Archie's improvements.</p>
   </div>
 </aside>`;
 

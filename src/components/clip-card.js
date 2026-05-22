@@ -144,7 +144,7 @@ export function renderClipCard(clip, { selectable = false, isSelected = false, s
           <div class="clip-card__secondary-actions">
             <button type="button" class="ap-button mermaid" data-clip-draft="${clip.id}">
               <i class="ap-icon-sparkles"></i>
-              <span>Draft Post</span>
+              <span>Draft post</span>
             </button>
 
             <div class="clip-card__more-wrap">

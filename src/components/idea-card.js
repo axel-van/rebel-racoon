@@ -236,7 +236,7 @@ export function renderIdeaCard(idea, allSources = [], { selectable = false, isSe
               data-idea-generate="${idea.id}"
             >
               <i class="ap-icon-sparkles"></i>
-              <span>Draft Post</span>
+              <span>Draft post</span>
             </button>
 
             <div class="idea-card__more-wrap">
