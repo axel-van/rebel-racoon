@@ -57,7 +57,7 @@ export const chatStarters = [
     icon: "ap-icon-sparkles-mermaid",
     tone: "mermaid",
     title: "Batch from a source",
-    prompt: "Pull the strongest moments from {{source}} and draft 5 posts across LinkedIn, X, and Instagram.",
+    prompt: "Pull the strongest ideas from {{source}} and draft 5 posts across LinkedIn, X, and Instagram.",
   },
   {
     id: "starter-launch",
@@ -70,7 +70,7 @@ export const chatStarters = [
     id: "starter-repurpose",
     icon: "ap-icon-pen",
     tone: "blue",
-    title: "Repurpose a long-form piece",
+    title: "Repurpose a long-form source",
     prompt:
       "Turn {{source}} into 8 posts: 3 for LinkedIn, 3 for X, 2 for Instagram. Different angles, same brand voice.",
   },
@@ -80,7 +80,7 @@ export const chatStarters = [
     tone: "purple",
     title: "Extract video clips",
     prompt:
-      "Surface the best moments from {{video-source}} and turn them into posts across LinkedIn, X, Instagram, and TikTok.",
+      "Surface the best ideas from {{video-source}} and turn them into posts across LinkedIn, X, Instagram, and TikTok.",
     // `action` switches the starter from text-injection to a direct
     // dispatch in renderEmptyHero's click handler. See session.js.
     action: "open-video-clips",

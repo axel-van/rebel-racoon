@@ -40,11 +40,11 @@ let onUseCallback = null;
 let lastError = null;
 
 const STYLE_OPTIONS = [
-  { key: "photorealistic", label: "Photorealistic", icon: "📷" },
-  { key: "illustration", label: "Illustration", icon: "🎨" },
-  { key: "bold-graphic", label: "Bold graphic", icon: "⚡" },
-  { key: "editorial", label: "Editorial photo", icon: "📰" },
-  { key: "abstract", label: "Abstract", icon: "🌀" },
+  { key: "photorealistic", label: "Photorealistic" },
+  { key: "illustration", label: "Illustration" },
+  { key: "bold-graphic", label: "Bold graphic" },
+  { key: "editorial", label: "Editorial photo" },
+  { key: "abstract", label: "Abstract" },
 ];
 
 const MOOD_OPTIONS = [
@@ -209,7 +209,7 @@ function renderBody() {
         <button type="button" class="ap-button transparent grey" id="genImageCancel">Cancel</button>
         <button type="button" class="ap-button primary orange" id="genImageGenerate">
           <i class="ap-icon-sparkles"></i>
-          <span>Generate</span>
+          <span>Generate image</span>
         </button>
       </div>
     `;

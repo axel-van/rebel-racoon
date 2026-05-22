@@ -180,7 +180,7 @@ function confirmSchedule() {
 }
 
 function onConfirmSucceeded(slots) {
-  showToast(`${slots.length} ${slots.length === 1 ? "post" : "posts"} scheduled`);
+  showToast(`${slots.length} ${slots.length === 1 ? "draft" : "drafts"} scheduled`);
   close();
 }
 
@@ -188,7 +188,7 @@ function onConfirmFailed(err) {
   // eslint-disable-next-line no-console
   console.error("schedule-modal: confirm failed", err);
   state.status = "error";
-  state.errorMessage = (err && err.message) || "Couldn't schedule these posts. Try again.";
+  state.errorMessage = (err && err.message) || "Couldn't schedule those drafts. Try again.";
   render();
 }
 
@@ -262,7 +262,7 @@ function renderInner() {
   return html`
     <header class="schedule-modal__head">
       <div>
-        <div class="schedule-modal__title">Schedule ${n} ${n === 1 ? "post" : "posts"}</div>
+        <div class="schedule-modal__title">Schedule ${n} ${n === 1 ? "draft" : "drafts"}</div>
         <div class="schedule-modal__sub">
           Pick when each post should publish. Archie can spread them automatically across optimal times.
         </div>
@@ -340,7 +340,7 @@ function renderInner() {
           ${state.status === "scheduling"
             ? raw(`<span class="schedule-modal__spinner" aria-hidden="true"></span><span>Scheduling…</span>`)
             : raw(
-                `<i class="ap-icon-calendar"></i><span>${state.status === "error" ? "Try again" : `Schedule ${n} ${n === 1 ? "post" : "posts"}`}</span>`,
+                `<i class="ap-icon-calendar"></i><span>${state.status === "error" ? "Try again" : `Schedule ${n} ${n === 1 ? "draft" : "drafts"}`}</span>`,
               )}
         </button>
       </div>

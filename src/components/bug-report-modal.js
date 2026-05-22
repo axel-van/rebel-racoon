@@ -50,7 +50,7 @@ const HTML = `
 >
   <div class="ap-dialog-header">
     <h2 class="ap-dialog-title" id="bugReportTitle">Report a bug</h2>
-    <p class="ap-dialog-subtitle" id="bugReportDescription">Share what happened and we will send the context with it.</p>
+    <p class="ap-dialog-subtitle" id="bugReportDescription">Share what happened. Archie attaches the screen context.</p>
   </div>
   <button class="ap-dialog-close" type="button" id="closeBugReportBtn" aria-label="Close">
     <i class="ap-icon-close"></i>
@@ -70,13 +70,13 @@ const HTML = `
 
       <div class="bug-field">
         <label for="bugActionInput">What were you trying to do?</label>
-        <input class="bug-input" id="bugActionInput" type="text" placeholder="e.g. Schedule a post, add a source..." />
+        <input class="bug-input" id="bugActionInput" type="text" placeholder="e.g. Schedule a post, add a source…" />
       </div>
 
       <div class="bug-field">
         <label for="bugProblemInput">What went wrong? <span class="bug-field__required">*</span></label>
-        <textarea class="bug-textarea" id="bugProblemInput" rows="3" placeholder="e.g. The calendar didn't open, the button did nothing, or the state reset unexpectedly..." aria-describedby="bugProblemError"></textarea>
-        <p class="form-field-error" id="bugProblemError" role="alert" hidden>Please describe what went wrong before submitting.</p>
+        <textarea class="bug-textarea" id="bugProblemInput" rows="3" placeholder="e.g. The calendar didn't open, the button did nothing, or the state reset unexpectedly…" aria-describedby="bugProblemError"></textarea>
+        <p class="form-field-error" id="bugProblemError" role="alert" hidden>Describe what went wrong before submitting.</p>
       </div>
 
       <div class="bug-field">
@@ -117,8 +117,8 @@ const HTML = `
         <path fill-rule="evenodd" d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd"/>
       </svg>
     </div>
-    <h3>Bug reported!</h3>
-    <p>Thanks for helping improve Archie.<br/>We read every report.</p>
+    <h3>Bug reported</h3>
+    <p>Thanks for helping improve Archie. Every report gets read.</p>
   </div>
 </aside>`;
 

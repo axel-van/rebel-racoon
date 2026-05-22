@@ -558,7 +558,7 @@ function askPlaybookColor(sessionId, ctx) {
   const current = currentValue(sessionId, "color") ?? ctx.color ?? "orange";
   postAssistantMessage(
     sessionId,
-    `Pick a Playbook accent color. Current: **${capitalize(current)}** · drives the card swatch in the Playbooks library.`,
+    `Pick a Playbook accent color. Current: **${capitalize(current)}** · drives the card swatch in Playbooks.`,
   );
   inlineQuestion.ask(sessionId, {
     title: "Playbook accent color",

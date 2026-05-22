@@ -206,10 +206,10 @@ export function startAlt(sessionId, { onComplete } = {}) {
 function askAltUrl(sessionId) {
   postAssistantMessage(
     sessionId,
-    "Bienvenue 👋 On va construire ton Playbook ensemble. Colle l'URL de ton site et j'en extrais la voix, l'audience et l'identité visuelle.",
+    "Welcome. Let's build your Playbook together. Paste your website URL and I'll extract the voice, audience, and visual identity.",
   );
   inlineQuestion.ask(sessionId, {
-    title: "Quelle est l'URL de ton site ?",
+    title: "What's your website URL?",
     stepLabel: "1 / 3",
     items: [],
     customPlaceholder: "https://your-brand.com",
@@ -248,10 +248,7 @@ const ALT_NETWORK_ICON_BY_PLATFORM = {
 const ALT_BRAND_INITIALS = "NS";
 
 function askAltProfile(sessionId) {
-  postAssistantMessage(
-    sessionId,
-    "Choisis le profil que tu veux utiliser pour ce Playbook — je l'utiliserai pour adapter le ton et le format des posts.",
-  );
+  postAssistantMessage(sessionId, "Pick the profile to use for this Playbook. I'll tune tone and format for it.");
   const connectedProfiles = socialAccounts.filter((p) => p.status === "connected");
   const items = connectedProfiles.map((p) => {
     const captionParts = [];
@@ -270,7 +267,7 @@ function askAltProfile(sessionId) {
     };
   });
   inlineQuestion.ask(sessionId, {
-    title: "Sur quel profil veux-tu publier ?",
+    title: "Which profile will publish?",
     stepLabel: "2 / 3",
     items,
     onPick: (id) => {
@@ -293,7 +290,7 @@ function askAltProfile(sessionId) {
 function askAltDocuments(sessionId) {
   postAssistantMessage(
     sessionId,
-    "Tu peux aussi connecter des documents qui détaillent ta marque (brand book, brief stratégique, etc.) — ou passer à la suite.",
+    "Optional: connect documents that detail your Brand (brand book, brief, etc.). Or skip.",
   );
   const items = connectorMocks.map((c) => ({
     value: c.id,
@@ -302,20 +299,22 @@ function askAltDocuments(sessionId) {
     imgSrc: c.logo,
   }));
   inlineQuestion.ask(sessionId, {
-    title: "Connecter des documents (optionnel)",
+    title: "Connect documents (optional)",
     stepLabel: "3 / 3",
     items,
     multi: true,
-    submitLabel: "Continuer",
-    skipLabel: "Passer",
+    submitLabel: "Continue",
+    skipLabel: "Skip",
     onPick: (ids) => {
-      postUserTurn(sessionId, ids?.length ? `${ids.length} source(s) connectée(s)` : "Passer");
+      if (ids?.length) {
+        const noun = ids.length === 1 ? "source" : "sources";
+        postUserTurn(sessionId, `${ids.length} ${noun} connected`);
+      }
       inlineQuestion.exit(sessionId);
       notify(sessionId);
       maybeOpenAltBrief(sessionId);
     },
     onSkip: () => {
-      postUserTurn(sessionId, "Passer");
       inlineQuestion.exit(sessionId);
       notify(sessionId);
       maybeOpenAltBrief(sessionId);
@@ -346,7 +345,7 @@ function maybeOpenAltBrief(sessionId) {
     navigateToRecap();
     return;
   }
-  const noticeId = postSystemNotice(sessionId, { meta: "Extracting guidelines", variant: "mermaid" });
+  const noticeId = postSystemNotice(sessionId, { meta: "Reading your site", variant: "mermaid" });
   notify(sessionId);
   const interval = window.setInterval(() => {
     if (!drafts.get(sessionId)) {
@@ -355,7 +354,7 @@ function maybeOpenAltBrief(sessionId) {
     }
     if (isAnalysisReady(sessionId)) {
       window.clearInterval(interval);
-      markSystemNoticeReady(sessionId, noticeId, { meta: "Extracted guidelines" });
+      markSystemNoticeReady(sessionId, noticeId, { meta: "Site read" });
       notify(sessionId);
       navigateToRecap();
     }
@@ -435,8 +434,8 @@ export function cancel(sessionId) {
 // the two.
 function askSource(sessionId, { autoLaunched = false } = {}) {
   const intro = autoLaunched
-    ? "Before I dive in — there's no playbook defined for this conversation yet. Let's create one together, it'll only take a minute."
-    : "Let's set up a new playbook.";
+    ? "There's no Playbook in this chat yet. Let's build one — it takes a minute."
+    : "Let's set up a new Playbook.";
   postAssistantMessage(sessionId, intro);
   inlineQuestion.ask(sessionId, {
     title: "How should I start?",
@@ -444,7 +443,7 @@ function askSource(sessionId, { autoLaunched = false } = {}) {
       {
         value: "website",
         label: "Website",
-        caption: "Paste any URL — agorapulse.com, your blog, a landing page…",
+        caption: "Paste any URL — your website, blog, or landing page.",
         icon: "ap-icon-web",
       },
       {
@@ -482,7 +481,7 @@ function exitWithoutSave(sessionId) {
 // Step 1a: Website URL. No skip — the wizard needs something to analyse;
 // the back button is the way out (returns to source picker).
 function askUrl(sessionId) {
-  const intro = "Got it — paste your website URL and I'll pull the brand voice, audience and visual identity from it.";
+  const intro = "Paste your website URL and I'll pull the brand voice, audience, and visual identity.";
   postAssistantMessage(sessionId, intro);
   inlineQuestion.ask(sessionId, {
     title: "What's the URL of your company website?",
@@ -495,7 +494,7 @@ function askUrl(sessionId) {
 
 // Step 1b: Document upload. customFile dropzone variant of inline-question.
 function askDocument(sessionId) {
-  const intro = "Got it — drop a brand or strategy document and I'll build the playbook from it.";
+  const intro = "Drop a brand or strategy document and I'll build the Playbook from it.";
   postAssistantMessage(sessionId, intro);
   inlineQuestion.ask(sessionId, {
     title: "Upload a brand or strategy document",
@@ -517,7 +516,7 @@ function setUrl(sessionId, url) {
   d.sourceUrl = (url || "").trim();
   // Keep websiteUrl in sync for back-compat with downstream readers.
   if (d.sourceType === "website") d.websiteUrl = d.sourceUrl;
-  postUserTurn(sessionId, d.sourceUrl || "Skip");
+  if (d.sourceUrl) postUserTurn(sessionId, d.sourceUrl);
   inlineQuestion.exit(sessionId);
   notify(sessionId);
   runAnalysis(sessionId);
@@ -527,7 +526,7 @@ function setFile(sessionId, file) {
   const d = drafts.get(sessionId);
   if (!d) return;
   d.sourceFile = file ? { name: file.name, size: file.size, type: file.type } : null;
-  postUserTurn(sessionId, file ? file.name : "Skip");
+  if (file) postUserTurn(sessionId, file.name);
   inlineQuestion.exit(sessionId);
   notify(sessionId);
   runAnalysis(sessionId);
@@ -540,7 +539,7 @@ function runAnalysis(sessionId) {
   // labeled "Extracting guidelines" while the mocked website analysis is
   // in flight, then flipped to "Extracted guidelines" once the brief
   // panel is ready to open.
-  const noticeId = postSystemNotice(sessionId, { meta: "Extracting guidelines", variant: "mermaid" });
+  const noticeId = postSystemNotice(sessionId, { meta: "Reading your source", variant: "mermaid" });
   notify(sessionId);
   window.setTimeout(() => {
     const d = drafts.get(sessionId);
@@ -550,7 +549,7 @@ function runAnalysis(sessionId) {
     const analysis =
       d.sourceType === "documents" ? analyzeDocument(d.sourceFile) : analyzeWebsite(d.sourceUrl || d.websiteUrl);
     applyAnalysisToDraft(d, analysis);
-    markSystemNoticeReady(sessionId, noticeId, { meta: "Extracted guidelines" });
+    markSystemNoticeReady(sessionId, noticeId, { meta: "Source read" });
     notify(sessionId);
     // Website path tails into the social-channels step so the user can
     // tell Archie where the brand publishes. Documents path skips it —
@@ -589,7 +588,7 @@ function askSocial(sessionId) {
 
   postAssistantMessage(
     sessionId,
-    "Which connected profile should I analyse? I'll capture its voice and use it to shape the playbook's tone and format.",
+    "Which connected profile should I analyze? I'll capture its voice and shape the Playbook's tone and format around it.",
   );
   const initials = deriveBrandInitials(d?.name);
   const items = connectedProfiles.map((p) => {
@@ -630,7 +629,7 @@ function setSelectedProfile(sessionId, profileId) {
   } else {
     d.selectedProfileId = null;
     d.connectedSocials = [];
-    postUserTurn(sessionId, "Skip");
+    // Phase 2 §8.3: don't echo procedural "Skip" as a <You> bubble.
   }
   inlineQuestion.exit(sessionId);
   notify(sessionId);

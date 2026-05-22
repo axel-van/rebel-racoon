@@ -39,7 +39,7 @@ const HTML = `
   id="searchModal"
   role="dialog"
   aria-modal="true"
-  aria-label="Search conversations"
+  aria-label="Search chats"
   aria-hidden="true"
 >
   <div class="ap-dialog-header search-modal__header">
@@ -49,8 +49,8 @@ const HTML = `
         type="text"
         class="search-modal__input"
         id="searchModalInput"
-        placeholder="Search conversations…"
-        aria-label="Search conversations"
+        placeholder="Search chats…"
+        aria-label="Search chats"
         aria-controls="searchModalResults"
         autocomplete="off"
       />
@@ -61,7 +61,7 @@ const HTML = `
     class="ap-dialog-content search-modal__results"
     id="searchModalResults"
     role="listbox"
-    aria-label="Conversations"
+    aria-label="Chats"
   ></div>
 </aside>
 `;
@@ -181,7 +181,7 @@ function renderResults() {
   const filtered = currentFiltered();
   if (filtered.length === 0) {
     const all = getSessions();
-    const msg = all.length === 0 ? "No conversations yet" : "No conversations match";
+    const msg = all.length === 0 ? "No chats yet" : "No chats match";
     resultsEl.innerHTML = `
       <div class="search-modal__empty">
         <span class="search-modal__empty-text">${msg}</span>
@@ -208,7 +208,7 @@ function renderResults() {
 function renderResultRow(session, index) {
   const ctx = session.contextId ? getContextById(session.contextId) : null;
   const color = ctx?.color || "grey";
-  const safeName = escapeHtml(session.name || "Untitled conversation");
+  const safeName = escapeHtml(session.name || "Untitled chat");
   const isHighlighted = index === highlightIndex;
   // Pinned status is conveyed by the "Pinned" group heading above the row,
   // so no per-row pin glyph (Raycast/Linear pattern). The trailing slot

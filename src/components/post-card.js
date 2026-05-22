@@ -58,7 +58,7 @@ export function renderPostCard(post, opts = {}) {
   const editActions = editing
     ? `<div class="posts__card-edit-actions">
         <button type="button" class="ap-button ghost grey" data-post-edit-cancel="${post.id}">Cancel</button>
-        <button type="button" class="ap-button primary orange" data-post-edit-save="${post.id}">Save</button>
+        <button type="button" class="ap-button primary orange" data-post-edit-save="${post.id}">Save changes</button>
       </div>`
     : "";
 
@@ -159,7 +159,7 @@ export function renderPostCard(post, opts = {}) {
         <button
           type="button"
           class="ap-icon-button stroked"
-          aria-label="Rewrite with AI"
+          aria-label="Regenerate draft"
           data-post-rewrite="${post.id}"
         >
           <i class="ap-icon-sparkles"></i>

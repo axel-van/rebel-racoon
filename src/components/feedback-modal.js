@@ -24,40 +24,35 @@ const HTML = `
   aria-hidden="true"
 >
   <div class="ap-dialog-header">
-    <h2 class="ap-dialog-title" id="feedbackTitle">Give more feedback</h2>
+    <h2 class="ap-dialog-title" id="feedbackTitle">Send feedback</h2>
   </div>
   <button class="ap-dialog-close" type="button" id="closeFeedbackBtn" aria-label="Close">
     <i class="ap-icon-close"></i>
   </button>
   <div class="ap-dialog-content">
     <p class="feedback-modal__intro">
-      We read every piece of feedback sent through this form. If you require a response or urgent support please
-      <a href="mailto:support@agorapulse.com">contact our support team</a> instead.
+      Every piece of feedback gets read. For urgent support,
+      <a href="mailto:support@agorapulse.com">contact the team directly</a> instead.
     </p>
 
     <div class="ap-form-field">
       <label for="feedbackFeatureArea">Feature area</label>
       <select id="feedbackFeatureArea" class="ap-native-select">
-        <option value="content-studio">Content Studio</option>
-        <option value="library">Library</option>
-        <option value="ideas">Content ideas</option>
-        <option value="posts">Posts</option>
-        <option value="brief">Strategy brief</option>
-        <option value="voice">Voice profile</option>
-        <option value="brand">Brand theme</option>
+        <option value="content-studio">General</option>
+        <option value="ideas">Ideas</option>
+        <option value="posts">Drafts</option>
+        <option value="brief">Playbook — Brief</option>
+        <option value="voice">Playbook — Voice profile</option>
+        <option value="brand">Playbook — Branding</option>
         <option value="other">Other</option>
       </select>
     </div>
 
     <div class="ap-form-field">
-      <label for="feedbackText">Write a feedback <span class="bug-field__required">*</span></label>
-      <textarea id="feedbackText" class="feedback-modal__textarea" rows="5" placeholder="Write your feedback here..." aria-describedby="feedbackTextError"></textarea>
-      <p class="form-field-error" id="feedbackTextError" role="alert" hidden>Please write your feedback before sending.</p>
+      <label for="feedbackText">What's on your mind? <span class="bug-field__required">*</span></label>
+      <textarea id="feedbackText" class="feedback-modal__textarea" rows="5" placeholder="What worked, what didn't, what's missing…" aria-describedby="feedbackTextError"></textarea>
+      <p class="form-field-error" id="feedbackTextError" role="alert" hidden>Write something before sending.</p>
     </div>
-
-    <p class="feedback-modal__thank-you">
-      Thank you so much for your feedback, we will take it into account in the continuous improvements of our product!
-    </p>
   </div>
   <div class="ap-dialog-footer">
     <div class="ap-dialog-footer-right">
@@ -71,8 +66,8 @@ const HTML = `
         <path fill-rule="evenodd" d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd"/>
       </svg>
     </div>
-    <h3>Thanks for your feedback!</h3>
-    <p>We read every message and use it to improve Archie.</p>
+    <h3>Feedback sent</h3>
+    <p>Every message feeds into Archie's improvements.</p>
   </div>
 </aside>`;
 

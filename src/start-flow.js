@@ -21,14 +21,14 @@ export function startActionPickerFlow(sessionId, { contextName = "Your playbook"
     text: "",
     choices: [
       { value: "add-source", label: "Add a source", icon: "ap-icon-plus" },
-      { value: "browse", label: "Browse content", icon: "ap-icon-feature-library" },
+      { value: "browse", label: "Browse sources", icon: "ap-icon-feature-library" },
       { value: "compare", label: "Compare ideas", icon: "ap-icon-sparkles" },
       { value: "draft", label: "Draft a post", icon: "ap-icon-sparkles-mermaid" },
     ],
     multi: false,
     handler: "start-action",
     context: {},
-    submitLabel: "Go",
+    submitLabel: "Continue",
   });
 }
 
@@ -39,7 +39,7 @@ export function handleActionPick(sessionId, message, selectedValues, { setQuery 
   const label =
     {
       "add-source": "Add a source",
-      browse: "Browse content",
+      browse: "Browse sources",
       compare: "Compare ideas",
       draft: "Draft a post",
     }[value] || value;
@@ -59,17 +59,20 @@ export function handleActionPick(sessionId, message, selectedValues, { setQuery 
     }
     case "browse": {
       setQuery({ tab: "content", view: "sources" });
-      postAssistantMessage(sessionId, "Here's everything you've attached so far. Click any source to dig in.");
+      postAssistantMessage(sessionId, "Here's everything you've attached. Open the Sources panel to dig in.");
       return;
     }
     case "compare": {
       setQuery({ tab: "content", view: "ideas" });
-      postAssistantMessage(sessionId, "Here are your ideas. Pick two and I'll compare which one is more actionable.");
+      postAssistantMessage(sessionId, "Here are your ideas. Pick two and I'll compare them.");
       return;
     }
     case "draft": {
       setQuery({ tab: "content", view: "ideas" });
-      postAssistantMessage(sessionId, "Pick an idea below and hit Draft Post — I'll generate the post for you.");
+      postAssistantMessage(
+        sessionId,
+        "Open the Ideas panel and hit Draft post on the one you want — I'll generate the post.",
+      );
       return;
     }
   }

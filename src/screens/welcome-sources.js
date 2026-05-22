@@ -36,25 +36,25 @@ function paint(target) {
     <section class="welcome-screen">
       <header class="welcome-screen__top">
         <span class="welcome-screen__brand">Archie</span>
-        <span class="welcome-screen__chip">Powered by Agorapulse</span>
+        <span class="welcome-screen__chip">BETA</span>
       </header>
       <div class="welcome-screen__body">
         <div class="welcome-sources">
           <div class="welcome-sources__header">
-            <span class="welcome-sources__tag">Étape 3 sur 4 · optionnelle</span>
-            <h1 class="welcome-sources__title">Connecte tes sources de documents</h1>
+            <span class="welcome-sources__tag">Step 3 of 4 · optional</span>
+            <h1 class="welcome-sources__title">Connect your document sources</h1>
             <p class="welcome-sources__sub">
-              Slite, Notion, Google Drive ou Slack — Archie y puisera tes contenus existants pour s'aligner sur ton
-              style. Tu pourras en ajouter d'autres à tout moment.
+              Slite, Notion, Google Drive, or Slack. I'll pull your existing content to match your style. You can add
+              more any time.
             </p>
           </div>
           <ul class="welcome-sources__grid">
             ${raw(getConnectors().map(renderCard).join(""))}
           </ul>
           <footer class="welcome-sources__footer">
-            <button type="button" class="welcome-sources__footer-skip" data-welcome-skip>Passer pour l'instant</button>
+            <button type="button" class="welcome-sources__footer-skip" data-welcome-skip>Skip for now</button>
             <button type="button" class="ap-button primary orange" data-welcome-continue>
-              Continuer
+              Continue
               <i class="ap-icon-arrow-right"></i>
             </button>
           </footer>
@@ -74,14 +74,14 @@ function renderCard(c) {
         <div class="welcome-sources__desc">${escapeHtml(c.desc)}</div>
         ${
           isConnected
-            ? `<div class="welcome-sources__status"><i class="ap-icon-rounded-check_fill"></i> Connecté${c.account ? " · " + escapeHtml(c.account) : ""}</div>`
+            ? `<div class="welcome-sources__status"><i class="ap-icon-rounded-check_fill"></i> Connected${c.account ? " · " + escapeHtml(c.account) : ""}</div>`
             : ""
         }
       </div>
       ${
         isConnected
-          ? `<button type="button" class="ap-button stroked grey" data-welcome-disconnect="${escapeHtml(c.id)}">Déconnecter</button>`
-          : `<button type="button" class="ap-button stroked blue" data-welcome-connect="${escapeHtml(c.id)}">Connecter</button>`
+          ? `<button type="button" class="ap-button stroked grey" data-welcome-disconnect="${escapeHtml(c.id)}">Disconnect</button>`
+          : `<button type="button" class="ap-button stroked blue" data-welcome-connect="${escapeHtml(c.id)}">Connect</button>`
       }
     </li>
   `;

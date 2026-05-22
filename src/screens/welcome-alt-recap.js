@@ -95,8 +95,8 @@ function paint(target, sid) {
     : `
       <div class="welcome-recap__pending">
         <i class="ap-icon-sparkles-mermaid"></i>
-        <p>Archie analyse ton site…</p>
-        <p class="welcome-recap__pending-sub">Le récap apparaît dans un instant.</p>
+        <p>Reading your site…</p>
+        <p class="welcome-recap__pending-sub">The recap lands in a moment.</p>
       </div>
     `;
   target.innerHTML = html`
@@ -107,15 +107,14 @@ function paint(target, sid) {
           <i class="ap-icon-sparkles-mermaid"></i>
           Archie
         </span>
-        <span class="welcome-screen__chip">Powered by Agorapulse</span>
+        <span class="welcome-screen__chip">BETA</span>
       </header>
       <div class="welcome-screen__body welcome-recap">
         <div class="welcome-recap__header">
-          <span class="welcome-step__tag">Résultat</span>
-          <h1 class="welcome-recap__title">Voici ton Playbook.</h1>
+          <span class="welcome-step__tag">Result</span>
+          <h1 class="welcome-recap__title">Here's your Playbook.</h1>
           <p class="welcome-recap__sub">
-            Voici ce qu'Archie a compris de ton brand depuis la conversation. Tu peux le raffiner ou démarrer
-            directement.
+            Here's what I pulled from your Brand through our chat. Refine it or jump straight in.
           </p>
         </div>
         <div class="welcome-recap__body context-brief context-brief--read">
@@ -125,10 +124,10 @@ function paint(target, sid) {
       <footer class="welcome-recap__footer">
         <button type="button" class="ap-button stroked grey" data-welcome-finetune ${ready ? "" : "disabled"}>
           <i class="ap-icon-sparkles"></i>
-          <span>Fine-tune mon Playbook</span>
+          <span>Fine-tune Playbook</span>
         </button>
         <button type="button" class="ap-button primary orange" data-welcome-done ${ready ? "" : "disabled"}>
-          <span>Entrer dans Archie</span>
+          <span>Enter Archie</span>
           <i class="ap-icon-arrow-right"></i>
         </button>
       </footer>

@@ -39,7 +39,7 @@ import { addMention } from "../composer-mentions.js?v=2";
 //   .conversation-status-card     — the floating-card chrome (border +
 //                                    shadow + radius) sitting inside.
 const HTML = `
-<aside class="conversation-status-column" id="conversationStatusCard" hidden aria-label="Conversation status">
+<aside class="conversation-status-column" id="conversationStatusCard" hidden aria-label="Chat status">
   <div class="conversation-status-card">
     <div class="conversation-status-card__inner" data-status-card-root></div>
   </div>
@@ -291,7 +291,7 @@ function renderOutputsRow(ideaCount) {
       <section class="conversation-status-card__section">
         <div class="conversation-status-card__row conversation-status-card__row--static">
           <i class="ap-icon-sparkles" aria-hidden="true"></i>
-          <span class="conversation-status-card__row-label">Outputs</span>
+          <span class="conversation-status-card__row-label">Ideas</span>
           <span class="conversation-status-card__empty">None yet</span>
         </div>
       </section>
@@ -299,9 +299,9 @@ function renderOutputsRow(ideaCount) {
   }
   return `
     <section class="conversation-status-card__section">
-      <button type="button" class="conversation-status-card__row" data-status-ideas title="Open Outputs panel">
+      <button type="button" class="conversation-status-card__row" data-status-ideas title="Open Ideas panel">
         <i class="ap-icon-sparkles" aria-hidden="true"></i>
-        <span class="conversation-status-card__row-label">Outputs</span>
+        <span class="conversation-status-card__row-label">Ideas</span>
         <span class="ap-counter normal blue">${ideaCount}</span>
       </button>
     </section>
@@ -355,7 +355,7 @@ function pendingProcesses(thread) {
 
 function humanizePendingMessage(m) {
   if (m.role === "assistant") {
-    return m.meta || "Archie is thinking…";
+    return m.meta || "Thinking…";
   }
   if (m.role === "system-notice") {
     return m.meta || m.text || "Working…";

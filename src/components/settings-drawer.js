@@ -16,10 +16,14 @@ const OVERLAY_ID = "settingsDrawer";
 // Note: Connectors and Social accounts use an instant-save model — clicking
 // Connect / Disconnect mutates the source array directly, no working copy
 // and no Save button. That's intentional: the action IS the save, and the
-// user gets toast feedback (see FIND-02). Preferences and Notifications use
-// the working-copy + Save pattern because they're forms with multiple fields
+// user gets toast feedback (see FIND-02). Notifications uses the
+// working-copy + Save pattern because it's a form with multiple toggles
 // where intermediate states aren't meaningful.
-import { contextComponentsFor, socialAccounts, generationPrefs, notificationPrefs } from "../mocks.js?v=31";
+//
+// Phase 4 copy pass: the legacy Generation preferences section was
+// retired. Defaults that used to live there (tone, language, length,
+// auto-hashtags, auto-emojis, CTA style) belong inside the Playbook now.
+import { contextComponentsFor, socialAccounts, notificationPrefs } from "../mocks.js?v=31";
 import { getContexts } from "../contexts-store.js?v=28";
 import { getConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=21";
 
@@ -32,7 +36,6 @@ let confirmBackdrop, confirmDialog, confirmText;
 const SECTIONS = [
   { id: "connectors", label: "Connectors", icon: "ap-icon-link" },
   { id: "contexts", label: "Playbooks", icon: "ap-icon-headset" },
-  { id: "preferences", label: "Generation preferences", icon: "ap-icon-sparkles" },
   { id: "social", label: "Social accounts", icon: "ap-icon-multiple-users" },
   { id: "notifications", label: "Notifications", icon: "ap-icon-bell" },
 ];
@@ -42,8 +45,8 @@ const state = {
   activeSection: "connectors",
   dirty: false,
   pendingAction: null, // closure to run after the user confirms "Discard"
-  // Working copies for editable sections (committed to imported mocks on Save).
-  prefs: clone(generationPrefs),
+  // Working copy for the notifications section (committed to the imported
+  // mock on Save).
   notif: clone(notificationPrefs),
 };
 
@@ -106,7 +109,7 @@ function renderConnectorsSection() {
   return html`
     <header class="settings-drawer__section-header">
       <h3 class="settings-drawer__section-title">Connectors</h3>
-      <p class="settings-drawer__section-sub">Sources Archie pulls knowledge from when generating posts.</p>
+      <p class="settings-drawer__section-sub">Where Archie pulls source material when drafting posts.</p>
     </header>
     <ul class="settings-drawer__rows" data-rows="connectors">
       ${raw(getConnectors().map(renderConnectorRow).join(""))}
@@ -147,7 +150,7 @@ function renderContextsSection() {
       <div>
         <h3 class="settings-drawer__section-title">Playbooks</h3>
         <p class="settings-drawer__section-sub">
-          Saved bundles of voice, brief, and brand. Create or edit one from inside any chat.
+          Voice profile, Brief, and Branding bundled together. Create or edit one from inside any chat.
         </p>
       </div>
     </header>
@@ -156,10 +159,10 @@ function renderContextsSection() {
         ? `
             <div class="settings-drawer__empty">
               <div class="settings-drawer__empty-icon"><i class="ap-icon-headset lg"></i></div>
-              <h4 class="settings-drawer__empty-title">No saved playbooks yet</h4>
+              <h4 class="settings-drawer__empty-title">No saved Playbooks yet</h4>
               <p class="settings-drawer__empty-body">
-                Start a new chat — Archie will walk you through capturing a Voice, Strategy brief, and Brand theme,
-                then offer to save it here.
+                Start a new chat — I'll walk you through your voice, brief, and Branding, then offer to save the
+                Playbook here.
               </p>
               <div class="settings-drawer__empty-action">
                 <button type="button" class="ap-button primary orange" data-settings-new-chat>
@@ -191,88 +194,6 @@ function renderContextRow(ctx) {
         <div class="settings-row__tags">${components.length ? components.map(tagFor).join("") : `<span class="ap-tag grey">Empty</span>`}</div>
       </div>
     </li>
-  `;
-}
-
-function renderPreferencesSection() {
-  const p = state.prefs;
-  return html`
-    <header class="settings-drawer__section-header">
-      <h3 class="settings-drawer__section-title">Generation preferences</h3>
-      <p class="settings-drawer__section-sub">Defaults applied to every new post Archie drafts.</p>
-    </header>
-
-    <div class="ap-form-field">
-      <label for="pref-tone">Default tone</label>
-      <select id="pref-tone" class="ap-native-select" data-pref="tone">
-        ${raw(option("professional", "Professional", p.tone))} ${raw(option("friendly", "Friendly", p.tone))}
-        ${raw(option("casual", "Casual", p.tone))} ${raw(option("witty", "Witty", p.tone))}
-        ${raw(option("inspirational", "Inspirational", p.tone))} ${raw(option("educational", "Educational", p.tone))}
-      </select>
-    </div>
-
-    <div class="ap-form-field">
-      <label for="pref-language">Default language</label>
-      <select id="pref-language" class="ap-native-select" data-pref="language">
-        ${raw(option("en", "English", p.language))} ${raw(option("fr", "Français", p.language))}
-        ${raw(option("es", "Español", p.language))} ${raw(option("de", "Deutsch", p.language))}
-        ${raw(option("it", "Italiano", p.language))} ${raw(option("pt", "Português", p.language))}
-      </select>
-    </div>
-
-    <div class="ap-form-field">
-      <label>Default post length</label>
-      <div class="settings-drawer__radios">
-        ${raw(radioCard("length", "short", "Short", "≤ 100 chars", p.length))}
-        ${raw(radioCard("length", "medium", "Medium", "100–280", p.length))}
-        ${raw(radioCard("length", "long", "Long", "280+", p.length))}
-      </div>
-    </div>
-
-    <div class="settings-drawer__toggle-row">
-      <div class="settings-drawer__toggle-label">
-        <i class="ap-icon-hashtag"></i>
-        <div>
-          <div>Auto-add hashtags</div>
-          <div class="settings-row__sub">Add a small set of relevant hashtags to each post.</div>
-        </div>
-      </div>
-      ${raw(toggle("autoHashtags", p.autoHashtags))}
-    </div>
-
-    <div class="settings-drawer__toggle-row">
-      <div class="settings-drawer__toggle-label">
-        <i class="ap-icon-emoji"></i>
-        <div>
-          <div>Auto-add emojis</div>
-          <div class="settings-row__sub">Sprinkle emojis where they fit the brand tone.</div>
-        </div>
-      </div>
-      ${raw(toggle("autoEmojis", p.autoEmojis))}
-    </div>
-
-    ${raw(
-      p.autoEmojis
-        ? `
-            <div class="settings-drawer__sub-pref">
-              <label class="settings-drawer__sub-pref-label">Frequency</label>
-              <div class="settings-drawer__radios">
-                ${radioCard("emojiFreq", "minimal", "Minimal", "1 max", p.emojiFreq)}
-                ${radioCard("emojiFreq", "balanced", "Balanced", "2–3", p.emojiFreq)}
-                ${radioCard("emojiFreq", "generous", "Generous", "4+", p.emojiFreq)}
-              </div>
-            </div>
-          `
-        : "",
-    )}
-
-    <div class="ap-form-field">
-      <label for="pref-cta">Default CTA style</label>
-      <select id="pref-cta" class="ap-native-select" data-pref="ctaStyle">
-        ${raw(option("none", "None", p.ctaStyle))} ${raw(option("question", "Question", p.ctaStyle))}
-        ${raw(option("direct", "Direct ask", p.ctaStyle))} ${raw(option("soft", "Soft suggestion", p.ctaStyle))}
-      </select>
-    </div>
   `;
 }
 
@@ -343,37 +264,13 @@ function renderNotificationsSection() {
           ["mentions", "Mentions and replies", n.push.mentions, "push"],
           ["approvals", "Approval reminders", n.push.approvals, "push"],
         ],
-        "Available on the mobile app — toggles preview the experience.",
+        "Available on the mobile app. Toggle to preview here.",
       ),
     )}
   `;
 }
 
 // ─── Markup helpers ──────────────────────────────────────────────────────
-
-function option(value, label, current) {
-  return `<option value="${escapeHtml(value)}" ${current === value ? "selected" : ""}>${escapeHtml(label)}</option>`;
-}
-
-function radioCard(name, value, label, hint, current) {
-  const checked = current === value;
-  return `
-    <label class="settings-drawer__radio-card ${checked ? "selected" : ""}">
-      <input type="radio" name="${escapeHtml(name)}" value="${escapeHtml(value)}" data-pref="${escapeHtml(name)}" ${checked ? "checked" : ""} />
-      <span class="settings-drawer__radio-card-label">${escapeHtml(label)}</span>
-      <span class="settings-drawer__radio-card-hint">${escapeHtml(hint)}</span>
-    </label>
-  `;
-}
-
-function toggle(field, value) {
-  return `
-    <label class="ap-toggle-container">
-      <input type="checkbox" data-pref="${escapeHtml(field)}" ${value ? "checked" : ""} />
-      <i></i>
-    </label>
-  `;
-}
 
 function notifGroup(title, icon, rows, footnote) {
   const items = rows
@@ -409,8 +306,6 @@ function renderActiveSection() {
       return renderConnectorsSection();
     case "contexts":
       return renderContextsSection();
-    case "preferences":
-      return renderPreferencesSection();
     case "social":
       return renderSocialSection();
     case "notifications":
@@ -421,16 +316,6 @@ function renderActiveSection() {
 }
 
 function footerForSection() {
-  if (state.activeSection === "preferences") {
-    return {
-      visible: true,
-      html: `
-        <div class="ap-dialog-footer-right">
-          <button type="button" class="ap-button primary orange" data-prefs-save ${state.dirty ? "" : "disabled"}>Save</button>
-        </div>
-      `,
-    };
-  }
   if (state.activeSection === "notifications") {
     return {
       visible: true,
@@ -499,7 +384,6 @@ function setActiveSection(id) {
 }
 
 function revertWorkingCopies() {
-  state.prefs = clone(generationPrefs);
   state.notif = clone(notificationPrefs);
   state.dirty = false;
 }
@@ -604,14 +488,6 @@ function onClick(event) {
     return;
   }
 
-  // Preferences save
-  if (event.target.closest("[data-prefs-save]")) {
-    Object.assign(generationPrefs, state.prefs);
-    state.dirty = false;
-    render();
-    return;
-  }
-
   // Notifications save
   if (event.target.closest("[data-notif-save]")) {
     Object.assign(notificationPrefs.email, state.notif.email);
@@ -660,25 +536,6 @@ function onClick(event) {
 }
 
 function onChange(event) {
-  // Preferences inputs
-  const pref = event.target.closest("[data-pref]");
-  if (pref) {
-    const key = pref.dataset.pref;
-    if (pref.type === "checkbox") {
-      state.prefs[key] = pref.checked;
-    } else if (pref.type === "radio") {
-      if (pref.checked) state.prefs[key] = pref.value;
-    } else {
-      state.prefs[key] = pref.value;
-    }
-    state.dirty = true;
-    if (state.activeSection === "preferences") {
-      // Re-render so the conditional emoji-frequency block reflects the toggle.
-      renderContent();
-      renderFooter();
-    }
-    return;
-  }
   // Notification toggles
   const notif = event.target.closest("[data-notif]");
   if (notif) {

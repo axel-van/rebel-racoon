@@ -876,7 +876,7 @@ function renderPanel() {
   // (Earlier iteration had Drafts/Ideas tabs here too ; the user flagged
   // them as redundant on 2026-04-29.)
   let titleIcon = "ap-icon-sparkles";
-  let titleText = "Outputs";
+  let titleText = "Ideas";
   if (state.mode === "drafts") {
     titleIcon = "ap-icon-pen";
     titleText = "Drafts";
@@ -890,7 +890,7 @@ function renderPanel() {
       titleText = ctx?.name || "Playbook";
     } else {
       const draft = contextBriefConfig?.getDraft?.();
-      titleText = draft?.name?.trim() || "Define your content brief";
+      titleText = draft?.name?.trim() || "Define your Playbook";
     }
   }
   // The context-brief view manages its own scrolling body + sticky footer
@@ -1106,7 +1106,7 @@ function renderDraftsView() {
   const rail = `
     <aside class="posts__rail" aria-label="Post filters">
       <div class="posts__rail-group">
-        ${filterRow("all", "ap-icon-megaphone", "All posts", filterCounts.all)}
+        ${filterRow("all", "ap-icon-megaphone", "All drafts", filterCounts.all)}
         ${filterRow("needs_fixes", "ap-icon-error", "Needs fixes", filterCounts.needs_fixes)}
         ${filterRow("scheduled", "ap-icon-calendar", "Scheduled", filterCounts.scheduled)}
       </div>
@@ -1158,7 +1158,7 @@ function onPostRewrite(postId) {
   // The real rewrite-with-AI loop will reuse the assistant pipeline ;
   // stub for now with a toast so the wiring is visible.
   import("./toast.js?v=20").then(({ showToast }) => {
-    showToast("Regenerating draft… (mock)", { actionLabel: null });
+    showToast("Regenerating draft…", { actionLabel: null });
   });
 }
 
@@ -1329,8 +1329,8 @@ function renderSourcesView() {
       <div class="rpanel-sources">
         <div class="app-right-panel__empty">
           <div class="app-right-panel__empty-icon"><i class="ap-icon-file"></i></div>
-          <div class="app-right-panel__empty-title">Open a conversation</div>
-          <div class="app-right-panel__empty-sub">Sources attach to a conversation. Start or open one to manage its inputs.</div>
+          <div class="app-right-panel__empty-title">Open a chat</div>
+          <div class="app-right-panel__empty-sub">Sources attach to a chat. Start or open one to manage its sources.</div>
         </div>
       </div>
     `;
@@ -1341,11 +1341,11 @@ function renderSourcesView() {
     <div class="rpanel-sources__head">
       <div class="rpanel-sources__head-text">
         <div class="rpanel-sources__count">${sources.length} source${sources.length === 1 ? "" : "s"} in this chat</div>
-        <div class="rpanel-sources__sub muted">These files feed this conversation's outputs.</div>
+        <div class="rpanel-sources__sub muted">These sources feed this chat's ideas.</div>
       </div>
       <button type="button" class="ap-button stroked grey" data-rpanel-sources-attach>
         <i class="ap-icon-plus"></i>
-        <span>Attach</span>
+        <span>Attach source</span>
       </button>
     </div>
   `;
@@ -1356,7 +1356,7 @@ function renderSourcesView() {
         <div class="app-right-panel__empty rpanel-sources__empty">
           <div class="app-right-panel__empty-icon"><i class="ap-icon-file"></i></div>
           <div class="app-right-panel__empty-title">No sources yet</div>
-          <div class="app-right-panel__empty-sub">Attach a file or pick from your library to start.</div>
+          <div class="app-right-panel__empty-sub">Attach a file or pick from a connector to start.</div>
           <div class="app-right-panel__empty-action">
             <button type="button" class="ap-button primary orange" data-rpanel-sources-attach>
               <i class="ap-icon-plus"></i>
@@ -1624,7 +1624,7 @@ function renderIdeaCompact(idea) {
         <span class="rpanel-ideas__ref">${escapeText(idea.ref || "Generated")}</span>
         <button type="button" class="ap-button stroked orange rpanel-ideas__use" data-rpanel-use-idea="${idea.id}">
           <i class="ap-icon-arrow-up"></i>
-          <span>Use</span>
+          <span>Use idea</span>
         </button>
       </footer>
     </article>
@@ -1854,7 +1854,7 @@ function renderContextBriefView() {
           </button>
           <button type="button" class="ap-button primary orange" data-brief-edit-mode>
             <i class="ap-icon-pen"></i>
-            <span>Edit</span>
+            <span>Edit Playbook</span>
           </button>
         </footer>
       `
@@ -1946,7 +1946,7 @@ function renderBriefIntro() {
         <div class="ap-infobox-content">
           <div class="ap-infobox-texts">
             <div class="ap-infobox-title">Pre-filled from your website</div>
-            <div class="ap-infobox-message">Green chips were suggested by Archie. Click any to toggle off, or add your own via "Other…".</div>
+            <div class="ap-infobox-message">Green chips are Archie's suggestions. Click any to toggle off, or add your own via "Other…".</div>
           </div>
         </div>
       </div>
@@ -2312,8 +2312,8 @@ function renderBriefImageVoice(d) {
     <section class="context-brief__section context-brief__image-voice">
       <header class="context-brief__iv-header">
         <div class="context-brief__iv-heading">
-          <h3 class="context-brief__title">Image Voice</h3>
-          <p class="context-brief__hint">Brand visual identity extracted from websites</p>
+          <h3 class="context-brief__title">Visual identity</h3>
+          <p class="context-brief__hint">Pulled from your website</p>
         </div>
       </header>
 
@@ -2323,16 +2323,6 @@ function renderBriefImageVoice(d) {
           <span class="context-brief__iv-site-domain">${escapeText(site.domain || "")}</span>
           <span class="context-brief__iv-site-url">${escapeText(site.url || "")}</span>
         </div>
-        <button
-          type="button"
-          class="ap-icon-button transparent context-brief__iv-site-delete"
-          disabled
-          aria-disabled="true"
-          aria-label="Remove website"
-          title="Coming soon"
-        >
-          <i class="ap-icon-trash"></i>
-        </button>
       </div>
 
       <div class="context-brief__iv-block">
@@ -2341,7 +2331,7 @@ function renderBriefImageVoice(d) {
           ${colorRow("Primary", colors.primary)}
           ${colorRow("Accent", colors.accent)}
           ${colorRow("Background", colors.background)}
-          ${colorRow("Text Primary", colors.textPrimary)}
+          ${colorRow("Body text", colors.textPrimary)}
           ${colorRow("Link", colors.link)}
         </div>
       </div>
@@ -2419,7 +2409,7 @@ function renderBriefVoiceProfile(d, isRead) {
 
   const tones = Array.isArray(d.tones) ? d.tones.filter(Boolean) : [];
   const headline =
-    vp.headline || (tones.length ? tones.join(" · ").toLowerCase() : "Tap a section to refine the voice");
+    vp.headline || (tones.length ? tones.join(" · ").toLowerCase() : "Click a section to refine the voice");
 
   const collapsed = voiceProfileCollapsed;
 
@@ -2435,7 +2425,7 @@ function renderBriefVoiceProfile(d, isRead) {
         : value
       : isRead
         ? ""
-        : "Tap to add a description.";
+        : "Click to add a description.";
     const isTruncated = !isExpanded && value && value.length > 140;
     const bodyHtml = isExpanded
       ? isRead

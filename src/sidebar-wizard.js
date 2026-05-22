@@ -82,7 +82,8 @@ export function exit(sessionId) {
 export function skipStage(sessionId) {
   const state = states.get(sessionId);
   if (!state) return;
-  state.history.push({ role: "user", text: "Skip" });
+  // Phase 2 §8.3: don't echo procedural "Skip" as a <You> bubble. The
+  // next stage's AI bubble carries the conversational continuation.
   state.stageIdx += 1;
   state.step = "0";
   if (state.stageIdx >= state.stages.length) {
@@ -377,7 +378,7 @@ const VOICE_SECTION_PICKER_BASE = {
 
 const VOICE_SUMMARY = {
   items: [
-    { value: "yes", label: "Yes, looks great", icon: "ap-icon-rounded-check" },
+    { value: "yes", label: "Yes, looks good", icon: "ap-icon-rounded-check" },
     { value: "no", label: "No — start over", icon: "ap-icon-refresh" },
   ],
   handler: "wizard-answer",
@@ -479,7 +480,7 @@ const voiceScript = {
       return { pending: true, nextStep: "2", ms: 2000 };
     }
     if (step === "summary") {
-      state.history.push({ role: "user", text: value === "yes" ? "Yes, looks great" : "Start over" });
+      state.history.push({ role: "user", text: value === "yes" ? "Yes, looks good" : "Start over" });
       return "done";
     }
 
@@ -505,19 +506,19 @@ const BRIEF_INTAKE = {
   ],
   handler: "wizard-answer",
   customPlaceholder: "Something else — type your answer…",
-  title: "Want me to capture your strategy brief? I'll set goals, audience, and brand voice for this chat.",
-  stepIndicator: "Strategy brief",
+  title: "Want me to capture the brief? I'll set goals, audience, and brand voice for this chat.",
+  stepIndicator: "Brief",
   skipLabel: "Skip",
 };
 
 const BRIEF_SUMMARY_PICKER = {
   items: [
     { value: "yes", label: "Yes, that's right", icon: "ap-icon-rounded-check" },
-    { value: "no", label: "Tweak the brief", icon: "ap-icon-refresh" },
+    { value: "no", label: "Refine the brief", icon: "ap-icon-refresh" },
   ],
   handler: "wizard-answer",
   customPlaceholder: "Something else — type your answer…",
-  title: "Here's your strategy brief. Keep it or tweak.",
+  title: "Here's your brief. Keep it or refine.",
   stepIndicator: "Brief review",
   skipLabel: "Skip",
 };
@@ -530,7 +531,7 @@ const briefScript = {
       return {
         body: chatTurn({
           role: "ai",
-          text: "Want me to capture your strategy brief? I'll set goals, audience, and brand voice for this chat.",
+          text: "Want me to capture the brief? I'll set goals, audience, and brand voice for this chat.",
         }),
         picker: BRIEF_INTAKE,
       };
@@ -542,7 +543,7 @@ const briefScript = {
       return {
         body: chatTurn({
           role: "ai",
-          text: "Here's your strategy brief. Keep it or tweak.",
+          text: "Here's your brief. Keep it or refine.",
           contentHtml: fieldsBlock(fields),
         }),
         picker: BRIEF_SUMMARY_PICKER,
@@ -563,7 +564,7 @@ const briefScript = {
       return "summary";
     }
     if (step === "summary") {
-      state.history.push({ role: "user", text: value === "yes" ? "That's right" : "Tweak the brief" });
+      state.history.push({ role: "user", text: value === "yes" ? "That's right" : "Refine the brief" });
       return "done";
     }
     return "0";
@@ -579,15 +580,15 @@ const BRAND_INTAKE = {
   ],
   handler: "wizard-answer",
   customPlaceholder: "Something else — type your answer…",
-  title: "Want me to pull in your brand theme? I'll grab colors, imagery notes, and personality from your site.",
-  stepIndicator: "Brand theme",
+  title: "Want me to pull your Branding? I'll grab colors, imagery, and personality from your site.",
+  stepIndicator: "Branding",
   skipLabel: "Skip",
 };
 
 const BRAND_SUMMARY_PICKER = {
   items: [
     { value: "yes", label: "Yes, that's the brand", icon: "ap-icon-rounded-check" },
-    { value: "no", label: "Tweak the brand", icon: "ap-icon-refresh" },
+    { value: "no", label: "Refine Branding", icon: "ap-icon-refresh" },
   ],
   handler: "wizard-answer",
   customPlaceholder: "Something else — type your answer…",
@@ -617,7 +618,7 @@ const brandScript = {
       return {
         body: chatTurn({
           role: "ai",
-          text: "Want me to pull in your brand theme? I'll grab colors, imagery notes, and personality from your site.",
+          text: "Want me to pull your Branding? I'll grab colors, imagery, and personality from your site.",
         }),
         picker: BRAND_INTAKE,
       };
@@ -646,7 +647,7 @@ const brandScript = {
       return "summary";
     }
     if (step === "summary") {
-      state.history.push({ role: "user", text: value === "yes" ? "That's the brand" : "Tweak the brand" });
+      state.history.push({ role: "user", text: value === "yes" ? "That's the Brand" : "Refine Branding" });
       return "done";
     }
     return "0";

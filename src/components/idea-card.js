@@ -167,7 +167,7 @@ export function renderIdeaCard(idea, allSources = [], { selectable = false, isSe
       <div id="${panelId}" class="idea-card__source-info" hidden>
         <div class="idea-card__source-info-label">
           <i class="ap-icon-information-circle idea-card__source-info-icon" aria-hidden="true"></i>
-          <span>This idea has been generated using these sources</span>
+          <span>Sources used to generate this idea</span>
         </div>
         <ul class="idea-card__sources-list">${sourceChips}</ul>
       </div>
@@ -236,7 +236,7 @@ export function renderIdeaCard(idea, allSources = [], { selectable = false, isSe
               data-idea-generate="${idea.id}"
             >
               <i class="ap-icon-sparkles"></i>
-              <span>Draft Post</span>
+              <span>Draft post</span>
             </button>
 
             <div class="idea-card__more-wrap">

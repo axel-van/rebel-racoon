@@ -57,9 +57,8 @@ function renderPage() {
     <div class="contexts-view__page">
       <header class="contexts-view__head">
         <div class="contexts-view__head-text">
-          <div class="screen__placeholder-eyebrow">Library</div>
           <h1 class="contexts-view__title">Playbooks</h1>
-          <p class="contexts-view__sub">${all.length} playbooks · applied across ${totalChats} chats</p>
+          <p class="contexts-view__sub">${all.length} Playbooks · applied across ${totalChats} chats</p>
         </div>
         <div class="contexts-view__head-actions">
           <div class="ap-input-group contexts-view__search">
@@ -67,14 +66,14 @@ function renderPage() {
             <input
               type="search"
               class="ap-input"
-              placeholder="Search playbooks…"
+              placeholder="Search Playbooks…"
               value="${escapeAttr(pageState.query)}"
               data-contexts-search
             />
           </div>
           <button type="button" class="ap-button primary orange" data-contexts-new>
             <i class="ap-icon-plus"></i>
-            <span>New playbook</span>
+            <span>New Playbook</span>
           </button>
         </div>
       </header>
@@ -99,24 +98,24 @@ function renderContextsEmpty(allContexts, pageState) {
   if (allContexts.length === 0) {
     return renderEmptyState({
       icon: "ap-icon-target",
-      title: "No playbooks yet",
-      body: "Define brand, audience, brief and tone of voice — Archie applies it to every draft.",
-      actionHtml: `<button type="button" class="ap-button primary orange" data-contexts-new><i class="ap-icon-plus"></i><span>Create your first playbook</span></button>`,
+      title: "No Playbooks yet",
+      body: "Define Brand, audience, brief, and tone of voice — Archie applies it to every draft.",
+      actionHtml: `<button type="button" class="ap-button primary orange" data-contexts-new><i class="ap-icon-plus"></i><span>Create your first Playbook</span></button>`,
       wrapperClass: "contexts-view__empty contexts-view__empty--rich",
     });
   }
   if (hasQuery) {
     return renderEmptyState({
       icon: "ap-icon-search",
-      title: "No playbooks match",
-      body: `No playbook matches "${escapeText(pageState.query)}". Try a different term.`,
+      title: "No Playbooks match",
+      body: `No Playbook matches "${escapeText(pageState.query)}". Try a different term.`,
       actionHtml: `<button type="button" class="ap-button stroked grey" data-contexts-clear-query>Clear search</button>`,
       wrapperClass: "contexts-view__empty contexts-view__empty--rich",
     });
   }
   return renderEmptyState({
     icon: "ap-icon-target",
-    title: "No playbooks to show",
+    title: "No Playbooks to show",
     body: "Create one to get started.",
     wrapperClass: "contexts-view__empty contexts-view__empty--rich",
   });
@@ -133,10 +132,10 @@ function renderContextsEmpty(allContexts, pageState) {
 // Triggers the same `data-contexts-new` handler as the header button.
 function renderGhostCard() {
   return `
-    <button type="button" class="contexts-card contexts-card--ghost" data-contexts-new aria-label="Crée un nouveau Playbook">
+    <button type="button" class="contexts-card contexts-card--ghost" data-contexts-new aria-label="Create a new Playbook">
       <span class="contexts-card--ghost__glyph"><i class="ap-icon-sparkles-mermaid"></i></span>
-      <span class="contexts-card--ghost__title">Crée un nouveau Playbook</span>
-      <span class="contexts-card--ghost__sub">Un brand, une voix, un objectif — Archie s'aligne.</span>
+      <span class="contexts-card--ghost__title">New Playbook</span>
+      <span class="contexts-card--ghost__sub">One Brand, one voice, one goal — Archie aligns.</span>
     </button>
   `;
 }
@@ -164,7 +163,7 @@ function renderContextCard(ctx) {
         .join("")}</div>`
     : "";
   const isDefaultBadge = ctx.isDefault
-    ? `<span class="contexts-card__badge" title="Default playbook"><i class="ap-icon-star_fill"></i></span>`
+    ? `<span class="contexts-card__badge" title="Default Playbook"><i class="ap-icon-star_fill"></i></span>`
     : "";
   return `
     <article class="contexts-card contexts-card--${color}" data-contexts-card="${ctx.id}" role="button" tabindex="0">
@@ -201,12 +200,12 @@ function renderContextCard(ctx) {
       ${
         summary
           ? `<p class="contexts-card__brief">${escapeText(summary)}</p>`
-          : `<p class="contexts-card__brief contexts-card__brief--empty">No brief yet — open this playbook to add one.</p>`
+          : `<p class="contexts-card__brief contexts-card__brief--empty">No brief yet — open this Playbook to add one.</p>`
       }
 
       <footer class="contexts-card__foot">
         <div class="contexts-card__counters">
-          <span class="contexts-card__counter" title="${usedIn} ${usedIn === 1 ? "chat uses this playbook" : "chats use this playbook"}">
+          <span class="contexts-card__counter" title="${usedIn} ${usedIn === 1 ? "chat uses this Playbook" : "chats use this Playbook"}">
             <i class="ap-icon-single-chat-bubble"></i>
             <span>${usedIn}</span>
           </span>
@@ -289,21 +288,21 @@ function bind(root) {
       if (!ctx) return;
       if (getContexts().length <= 1) {
         import("../components/toast.js?v=20").then(({ showToast }) =>
-          showToast("Can't delete the last playbook — every chat needs one."),
+          showToast("Can't delete the last Playbook — every chat needs one."),
         );
         return;
       }
       // FIND-C1: DS confirm-modal so the delete prompt is keyboard-
       // accessible, themed, and consistent with the rest of the prototype.
       openConfirmModal({
-        title: "Delete playbook?",
-        body: `"${ctx.name}" will be removed. Chats currently referencing it will need a new playbook.`,
-        confirmLabel: "Delete",
+        title: "Delete Playbook?",
+        body: `"${ctx.name}" will be removed. Chats using it will need a new Playbook.`,
+        confirmLabel: "Delete Playbook",
         cancelLabel: "Keep",
         danger: true,
         onConfirm: () => {
           deleteContext(ctx.id);
-          import("../components/toast.js?v=20").then(({ showToast }) => showToast("Context deleted"));
+          import("../components/toast.js?v=20").then(({ showToast }) => showToast("Playbook deleted"));
         },
       });
       return;

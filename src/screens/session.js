@@ -271,7 +271,7 @@ function renderComposer(attachedContext, hasUserMessage, session) {
       <div class="session__composer-inner">
         <div class="session__composer-thinking" data-assistant-thinking hidden>
           <span class="session__composer-thinking-spinner" aria-hidden="true"></span>
-          <span class="session__composer-thinking-text" data-thinking-text>0s · 1 credit</span>
+          <span class="session__composer-thinking-text" data-thinking-text>0s</span>
         </div>
         <div class="session__composer-card">
           <div class="session__composer-input">
@@ -283,7 +283,7 @@ function renderComposer(attachedContext, hasUserMessage, session) {
             <textarea
               class="session__composer-input-field"
               id="assistantInput"
-              placeholder="ask archie..."
+              placeholder="Ask Archie"
               rows="3"
             ></textarea>
             <button
@@ -331,8 +331,7 @@ function renderComposer(attachedContext, hasUserMessage, session) {
           </div>
         </div>
         <div class="session__composer-hint">
-          <kbd>↵</kbd> to send · <kbd>Shift</kbd>+<kbd>↵</kbd> for new line · <kbd>⌘</kbd>+<kbd>↵</kbd> sends from
-          anywhere · drop a file anywhere to add it as a source
+          <kbd>↵</kbd> to send · <kbd>Shift</kbd>+<kbd>↵</kbd> for new line · drop a file to add a source
         </div>
       </div>
     </div>
@@ -368,7 +367,7 @@ function dotColorVar(colorName) {
 function renderComposerContextDropdown(attachedContext, { locked = false } = {}) {
   const all = getContexts();
   const triggerColor = attachedContext?.color || "grey";
-  const triggerLabel = attachedContext?.name || "No playbook";
+  const triggerLabel = attachedContext?.name || "No Playbook";
   // Locked state — conversation has at least one user turn. The context is
   // committed: swap the picker for a simple stroked button showing the
   // active context's color dot + name. Clicking it opens the right-panel
@@ -420,11 +419,11 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
         <div class="ap-select-divider"></div>
         <button type="button" class="ap-select-option" data-context-id="__detach__" role="option">
           <i class="ap-icon-close ap-select-option-icon"></i>
-          <span class="ap-select-option-text">No playbook</span>
+          <span class="ap-select-option-text">Detach Playbook</span>
         </button>
       `
     : "";
-  const noneItem = all.length === 0 ? `<div class="ap-select-option disabled muted">No saved playbooks yet.</div>` : "";
+  const noneItem = all.length === 0 ? `<div class="ap-select-option disabled muted">No saved Playbooks yet.</div>` : "";
   return `
     <details class="ap-select composer-context-select" data-composer-context>
       <summary class="ap-select-trigger">
@@ -441,7 +440,7 @@ function renderComposerContextDropdown(attachedContext, { locked = false } = {})
           <div class="ap-select-divider"></div>
           <button type="button" class="ap-select-option" data-context-id="__new__" role="option">
             <i class="ap-icon-plus ap-select-create-icon"></i>
-            <span class="ap-select-option-text">New playbook…</span>
+            <span class="ap-select-option-text">New Playbook…</span>
           </button>
         </div>
       </div>
@@ -492,12 +491,12 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
     .join("");
   return html`
     <div class="empty-chat" data-empty-chat>
-      <div class="empty-chat__hello">What are we creating today?</div>
+      <div class="empty-chat__hello">What are you working on?</div>
       <div class="empty-chat__sub">
-        Drop in a source and Archie will turn it into a batch of posts you can review, edit, and schedule.
+        Drop a source and I'll turn it into a batch of posts you can review, edit, and schedule.
       </div>
       ${raw(composerMarkup)}
-      <div class="empty-chat__starter-label">Start with a source or pick a starter pack</div>
+      <div class="empty-chat__starter-label">Start with a source or pick a starter</div>
       <div class="starter-grid">${raw(cards)}</div>
     </div>
   `;
@@ -604,10 +603,10 @@ function askWhatToKnow(sessionId, filename) {
 // context — so we surface that explicitly before launching the wizard.
 // Cancel quietly drops the request; Continue runs the section wizard.
 function startEditConfirmPrompt(session, section, ctxId) {
-  const sectionTitle = section === "voice" ? "Voice" : section === "brief" ? "Strategy brief" : "Brand theme";
+  const sectionTitle = section === "voice" ? "Voice profile" : section === "brief" ? "Brief" : "Branding";
   postAssistantMessage(
     session.id,
-    `Editing the ${sectionTitle.toLowerCase()} will update this context across every chat using it.`,
+    `Editing the ${sectionTitle.toLowerCase()} updates this Playbook in every chat using it.`,
   );
   inlineQuestion.ask(session.id, {
     title: "Continue editing?",
@@ -616,7 +615,7 @@ function startEditConfirmPrompt(session, section, ctxId) {
       {
         value: "continue",
         label: "Continue",
-        caption: "Run the edit wizard. Changes propagate to all chats using this context.",
+        caption: "Open the editor. Changes propagate to every chat using this Playbook.",
         icon: "ap-icon-check",
       },
       {
@@ -642,9 +641,9 @@ function startSectionEdit(session, section, contextId) {
     stages: [section],
     skipMemorize: true,
     onComplete: () => {
-      const sectionTitle = section === "voice" ? "Voice" : section === "brief" ? "Strategy brief" : "Brand theme";
+      const sectionTitle = section === "voice" ? "Voice profile" : section === "brief" ? "Brief" : "Branding";
       if (contextId) updateContext(contextId, { updatedAt: "just now" });
-      postAssistantMessage(session.id, `${sectionTitle} updated everywhere this context is used.`);
+      postAssistantMessage(session.id, `${sectionTitle} updated in every chat that uses this Playbook.`);
     },
   });
 }
@@ -727,7 +726,7 @@ function askProfileQuestion(sessionId, ideaId) {
   if (connected.length === 0) {
     postAssistantMessage(
       sessionId,
-      "You don't have any connected social profiles yet. Open Settings → Social accounts to connect one, then come back to draft.",
+      "No connected social profiles yet. Open Settings → Social accounts to connect one.",
     );
     return;
   }
@@ -881,7 +880,7 @@ function renderSourceIntakeTurn(message, sessionId) {
     const ideas = src?.ideaCount || 0;
     if (ideas > 0) {
       const label = `${ideas} idea${ideas === 1 ? "" : "s"}`;
-      subText = `Processed · <button type="button" class="chat-bubble-source-intake__ideas-link" data-source-intake-open-ideas title="Open Outputs panel">${label}</button>`;
+      subText = `Processed · <button type="button" class="chat-bubble-source-intake__ideas-link" data-source-intake-open-ideas title="Open Ideas panel">${label}</button>`;
     } else {
       subText = "Processed";
     }
@@ -951,7 +950,7 @@ function renderExtractionTurn(message) {
               href="#"
               class="ap-link standalone small extraction-turn__idea-card-view"
               data-focus-idea="${i.id || ""}"
-              aria-label="Open this idea in Content ideas"
+              aria-label="Open this idea in Ideas"
             >
               <span>View idea</span>
               <i class="ap-icon-external-link"></i>
@@ -1291,7 +1290,7 @@ function wireAssistantPanel(root, session, attachedContext) {
   const pendingWelcome = consumeHandoff("welcomeComplete");
   if (pendingWelcome?.playbookName) {
     setTimeout(() => {
-      showToast(`Bienvenue ${pendingWelcome.playbookName} !`);
+      showToast(`Welcome — your Playbook "${pendingWelcome.playbookName}" is ready.`);
     }, 200);
   }
 
@@ -1510,7 +1509,7 @@ function renderClipExtractionTurn(message, sessionId) {
           <span class="clip-extraction-card__spinner" role="status" aria-label="Extracting clips"></span>
           <span class="clip-extraction-card__main">
             <span class="clip-extraction-card__title">Cutting your clips…</span>
-            <span class="clip-extraction-card__sub">Up to 45s · you can keep chatting</span>
+            <span class="clip-extraction-card__sub">About 45s. You can keep chatting.</span>
           </span>
         </div>
       </div>
@@ -1547,10 +1546,10 @@ function renderIdeaExtractionTurn(message, sessionId) {
     return `
       <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
         <div class="clip-extraction-card clip-extraction-card--pending">
-          <span class="clip-extraction-card__spinner" role="status" aria-label="Reading video for themes"></span>
+          <span class="clip-extraction-card__spinner" role="status" aria-label="Reading video for ideas"></span>
           <span class="clip-extraction-card__main">
-            <span class="clip-extraction-card__title">Reading the video for themes…</span>
-            <span class="clip-extraction-card__sub">Up to 15s · you can keep chatting</span>
+            <span class="clip-extraction-card__title">Reading the video for ideas…</span>
+            <span class="clip-extraction-card__sub">About 15s. You can keep chatting.</span>
           </span>
         </div>
       </div>
@@ -1564,7 +1563,7 @@ function renderIdeaExtractionTurn(message, sessionId) {
           <i class="ap-icon-bulb"></i>
         </span>
         <span class="clip-extraction-card__main">
-          <span class="clip-extraction-card__title">Themes ready from ${filename}</span>
+          <span class="clip-extraction-card__title">Ideas ready from ${filename}</span>
           <span class="clip-extraction-card__sub">Check the Ideas panel on the right.</span>
         </span>
       </div>
@@ -1698,7 +1697,7 @@ function startPillFromKind(_root, session, kind) {
       text: "What should I do with this video?",
       choices: [
         { value: "clips", label: "Create clips", icon: "ap-icon-sparkles" },
-        { value: "ideas", label: "Extract themes", icon: "ap-icon-tag" },
+        { value: "ideas", label: "Extract ideas", icon: "ap-icon-tag" },
       ],
       multi: false,
       instant: true,
@@ -1724,14 +1723,14 @@ function startPillFromKind(_root, session, kind) {
   }, delay);
   postAssistantMessage(
     sessionId,
-    `Got it — I'm reading **${spec.filename}**. While I extract the strongest moments, what should I do with it?`,
+    `Reading **${spec.filename}** now. While I pull the strongest ideas, what should I do with it?`,
   );
   postAssistantChoice(sessionId, {
     text: "",
     choices: [
       { value: "batch", label: "Draft a batch of posts", icon: "ap-icon-sparkles-mermaid" },
       { value: "repurpose", label: "Repurpose into 8 posts", icon: "ap-icon-pen" },
-      { value: "extract", label: "Just extract ideas first", icon: "ap-icon-tag" },
+      { value: "extract", label: "Extract ideas first", icon: "ap-icon-tag" },
     ],
     multi: false,
     instant: true,
@@ -1816,9 +1815,9 @@ function bindSession(root, session) {
       const { filename } = msg.context || {};
       const pick = selectedValues[0];
       const followups = {
-        batch: `Got it — I'll draft 5 posts from **${filename}** across LinkedIn, X, and Instagram as soon as the analysis lands.`,
-        repurpose: `Got it — I'll turn **${filename}** into 8 posts (3 LinkedIn, 3 X, 2 Instagram) keeping the brand voice consistent.`,
-        extract: `Got it — I'll surface the strongest ideas from **${filename}** first. You can decide what to draft from there.`,
+        batch: `I'll draft 5 posts from **${filename}** across LinkedIn, X, and Instagram once the analysis lands.`,
+        repurpose: `I'll turn **${filename}** into 8 posts: 3 LinkedIn, 3 X, 2 Instagram, all in the brand voice.`,
+        extract: `I'll surface the strongest ideas from **${filename}** first. You can pick which to draft from there.`,
       };
       const msgText = followups[pick];
       if (msgText) postAssistantMessage(session.id, msgText);
@@ -2252,7 +2251,7 @@ function bindSession(root, session) {
             title: "Save changes?",
             body: dirty
               ? "Apply your edits to the Playbook. This overwrites the current version."
-              : "No edits were staged — closing the editor will return you to the Playbooks library.",
+              : "No edits staged — closing the editor returns you to Playbooks.",
             confirmLabel: dirty ? "Save changes" : "Close editor",
             cancelLabel: "Keep editing",
             onConfirm: () => {
@@ -2277,7 +2276,7 @@ function bindSession(root, session) {
             title: dirty ? "Discard changes?" : "Close editor?",
             body: dirty
               ? "Your edits to this Playbook will be lost."
-              : "You can re-open the editor anytime from the Playbooks library.",
+              : "You can re-open the editor anytime from Playbooks.",
             confirmLabel: dirty ? "Discard" : "Close",
             cancelLabel: "Keep editing",
             danger: dirty,
