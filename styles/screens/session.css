@@ -266,10 +266,10 @@
 
 .session__assistant-thread {
   overflow-y: auto;
-  padding: var(--ref-spacing-md);
+  padding: var(--ref-spacing-md) var(--ref-spacing-md) var(--ref-spacing-lg);
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-md);
   scroll-behavior: smooth;
 }
 
@@ -565,7 +565,7 @@
   align-items: center;
   gap: var(--ref-spacing-xs);
   width: 100%;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm);
   background: var(--ref-color-white);
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--app-radius-card);
@@ -620,7 +620,7 @@
 .clip-extraction-card__main {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
+  gap: var(--ref-spacing-xxs);
   min-width: 0;
   flex: 1 1 auto;
 }
@@ -650,17 +650,17 @@
 .chat-turn--extraction {
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--ref-spacing-xxs);
-  max-width: 420px;
+  gap: var(--ref-spacing-xs);
+  max-width: 480px;
   width: 100%;
 }
 
 /* When the extraction <details> is open, stack analyzed-row + idea cards. */
 .chat-turn--extraction .extraction-turn__detail {
-  margin-top: var(--ref-spacing-xxs);
+  margin-top: var(--ref-spacing-xs);
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xs);
 }
 
 /* Focused idea in the Content Ideas tab — briefly outlined in electric-blue
@@ -689,20 +689,20 @@
   background: var(--ref-color-grey-05);
   border: 1px solid var(--ref-color-grey-10);
   border-radius: var(--app-radius-md);
-  padding: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  width: 360px;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
   max-width: 100%;
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
 }
 
 .extraction-turn__idea-card-text {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
+  gap: var(--ref-spacing-xxs);
 }
 
 .extraction-turn__idea-card-title {
