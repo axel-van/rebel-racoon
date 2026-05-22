@@ -92,9 +92,9 @@ export function sendMessage(sessionId, text, options = {}) {
   thread.push({
     id: reasoningId,
     role: "system",
-    meta: "Drafting",
+    meta: "Thinking",
     variant: "mermaid",
-    text: "Thinking through the best next move…",
+    text: "Considering the best next move…",
     open: false,
     status: "loading",
     createdAt: Date.now(),
@@ -418,8 +418,8 @@ function seedThread(sessionId, { hasContext, skipGreeting }) {
   }
 
   const greeting = hasContext
-    ? "Hi — I can compare ideas, pick the strongest signal, or draft a post. Pick a suggestion below, type a question, or drop a source."
-    : "Hi — I'll help you pick sources, sharpen angles, and draft posts. Attach a playbook (Voice, Brief, Brand) any time to make my suggestions sharper.";
+    ? "Hi. Want me to compare ideas, pick the strongest one, or draft a post? You can also type a question or drop a source."
+    : "Hi. I'll help you pick sources, sharpen ideas, and draft posts. Attach a Playbook any time to make my suggestions sharper.";
 
   threads.set(sessionId, [
     {
@@ -546,14 +546,14 @@ function mockAiReply({ prompt }) {
     const weaker = stronger.id === leadIdea.id ? otherIdea : leadIdea;
     return {
       reasoning: `Compared confidence + relevance between "${leadIdea.title}" (${leadIdea.confidence}%) and "${otherIdea.title}" (${otherIdea.confidence}%). Picked the higher-confidence, more specific angle to lead with.`,
-      text: `Between "${leadIdea.title}" and "${otherIdea.title}", I'd move forward with "${stronger.title}" first — clearer proof point and a higher confidence signal. Keep "${weaker.title}" as a supporting beat or follow-up draft.`,
+      text: `Between "${leadIdea.title}" and "${otherIdea.title}", I'd lead with "${stronger.title}" — clearer proof, higher confidence. Keep "${weaker.title}" as a follow-up draft.`,
     };
   }
 
   if (/pin|priority|strongest|signal|actionable/i.test(prompt)) {
     return {
       reasoning: `Looked across ${ideaCount} ideas for the one closest to "specific, believable, publishable". "${leadIdea.title}" scored highest on all three.`,
-      text: `The strongest signal right now is "${leadIdea.title}" — specific, believable, and close to publishable. I'd pin it, pressure-test it against one secondary angle, then draft the first post.`,
+      text: `The strongest idea right now is "${leadIdea.title}" — specific, believable, close to publishable. I'd pin it, pressure-test it against one alternative, then draft the first post.`,
     };
   }
 
@@ -561,12 +561,12 @@ function mockAiReply({ prompt }) {
     return {
       reasoning:
         "Reviewed current source coverage and the ideas already extracted — most are derived from marketing-adjacent material.",
-      text: "Drop one more source to pressure-test the current angle — ideally something that isn't a marketing post. A transcript, a product retro, or a customer interview will shift the signal fastest.",
+      text: "Drop one more source to pressure-test the current idea — ideally something that isn't a marketing post. A transcript, a product retro, or a customer interview moves the needle fastest.",
     };
   }
 
   return {
     reasoning: `Reviewed session state: ${ideaCount} ideas extracted, strongest being "${leadIdea.title}". No draft in progress.`,
-    text: `I can keep working inside this session. My recommendation: tighten the angle in the Library tab, confirm the strongest idea, then generate a draft so the post stays grounded in the source context. "${leadIdea.title}" is the one I'd start with.`,
+    text: `I can keep working in this chat. My recommendation: confirm the strongest idea in the Ideas panel, then generate a draft so the post stays grounded in the source. "${leadIdea.title}" is the one I'd start with.`,
   };
 }

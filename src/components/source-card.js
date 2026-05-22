@@ -217,7 +217,7 @@ export function renderSourceCard(source, allIdeas = [], { selectable = false, is
           <li role="none">
             <button type="button" role="menuitem" class="source-card__more-item source-card__more-item--danger" data-source-delete-one="${source.id}">
               <i class="ap-icon-trash"></i>
-              <span>Delete</span>
+              <span>Delete source</span>
             </button>
           </li>
         </ul>

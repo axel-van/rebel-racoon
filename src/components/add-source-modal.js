@@ -79,7 +79,7 @@ const HTML = `
   aria-hidden="true"
 >
   <div class="ap-dialog-header">
-    <h2 class="ap-dialog-title" id="addSourceTitle">Add source</h2>
+    <h2 class="ap-dialog-title" id="addSourceTitle">Add a source</h2>
   </div>
   <button class="ap-dialog-close" type="button" id="addSourceClose" aria-label="Close">
     <i class="ap-icon-close"></i>
@@ -229,7 +229,7 @@ function renderUrlHistory() {
   if (items.length === 0) return "";
   return `
     <div class="add-source__url-history">
-      <h4 class="add-source__url-history-title">Added in this session</h4>
+      <h4 class="add-source__url-history-title">Added so far</h4>
       <ul class="add-source__file-list">
         ${items.map(renderUploadRow).join("")}
       </ul>

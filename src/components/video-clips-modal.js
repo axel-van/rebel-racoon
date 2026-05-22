@@ -110,7 +110,7 @@ const SHELL_HTML = `
     <div class="video-clips-modal__head-info">
       <div class="video-clips-modal__eyebrow">
         <i class="ap-icon-sparkles"></i>
-        <span>AI-suggested clips</span>
+        <span>Suggested clips</span>
       </div>
       <h2 class="video-clips-modal__title" id="videoClipsTitle"></h2>
       <p class="video-clips-modal__sub" id="videoClipsSub"></p>
@@ -200,7 +200,7 @@ function renderToolbar() {
     </div>
     <button class="ap-button stroked grey video-clips-modal__regen${regenerating ? " is-loading" : ""}" data-vc-action="regen" ${regenerating ? "disabled" : ""}>
       <i class="ap-icon-refresh"></i>
-      <span>${regenerating ? "Re-mining clips…" : "Suggest more"}</span>
+      <span>${regenerating ? "Suggesting more…" : "Suggest more"}</span>
     </button>
   `;
 }
@@ -312,7 +312,7 @@ function editorPaneHTML() {
   return `
     <div class="vc-editor" data-vc-editor data-vc-clip="${draft.id}">
       <header class="vc-editor__head">
-        <div class="vc-editor__head-eyebrow"><span class="vc-editor__head-dot"></span>EDITING CLIP</div>
+        <div class="vc-editor__head-eyebrow"><span class="vc-editor__head-dot"></span>Editing clip</div>
         <div class="vc-editor__head-time" data-vc-editor-time>
           <span data-vc-editor-time-start>${fmtTime(draft.start)}</span>
           <span>→</span>
@@ -375,7 +375,7 @@ function editorPaneHTML() {
           </div>
           <div class="vc-editor__field">
             <label class="vc-editor__label">Summary</label>
-            <div class="vc-editor__textarea vc-edit" contenteditable="true" data-vc-edit-field="summary" data-placeholder="What's in this moment — context the AI should know when drafting…">${escapeHtml(draft.summary || "")}</div>
+            <div class="vc-editor__textarea vc-edit" contenteditable="true" data-vc-edit-field="summary" data-placeholder="What's in this moment — context I should remember when drafting…">${escapeHtml(draft.summary || "")}</div>
           </div>
           <div class="vc-editor__field">
             <label class="vc-editor__label"><i class="ap-icon-sparkles"></i>Why this works</label>
@@ -390,7 +390,7 @@ function editorPaneHTML() {
 
       <div class="vc-editor__timeline">
         <div class="vc-editor__timeline-head">
-          <div class="vc-editor__timeline-title">TIMELINE · ${escapeHtml(currentSource?.filename || "")}</div>
+          <div class="vc-editor__timeline-title">Timeline · ${escapeHtml(currentSource?.filename || "")}</div>
           <div class="vc-editor__timeline-stepper">
             <span class="vc-stepper">
               <span class="vc-stepper__label">In</span>
@@ -525,7 +525,7 @@ function onModalClick(event) {
     if (regenerating) return;
     regenerating = true;
     renderToolbar();
-    showToast("Re-mining clips for new moments…", { duration: 1100 });
+    showToast("Suggesting new clips…", { duration: 1100 });
     setTimeout(() => {
       regenerating = false;
       renderToolbar();
@@ -965,7 +965,7 @@ export function open(source, callbacks = {}) {
   const subEl = document.getElementById("videoClipsSub");
   if (subEl) {
     const total = source.durationSec || 0;
-    subEl.textContent = `${clips.length} moment${clips.length === 1 ? "" : "s"} worth posting · pulled from ${fmtTime(total)} of footage`;
+    subEl.textContent = `${clips.length} ${clips.length === 1 ? "clip" : "clips"} worth posting · ${fmtTime(total)} of footage`;
   }
 
   backdrop.hidden = false;

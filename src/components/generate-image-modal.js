@@ -209,7 +209,7 @@ function renderBody() {
         <button type="button" class="ap-button transparent grey" id="genImageCancel">Cancel</button>
         <button type="button" class="ap-button primary orange" id="genImageGenerate">
           <i class="ap-icon-sparkles"></i>
-          <span>Generate</span>
+          <span>Generate image</span>
         </button>
       </div>
     `;

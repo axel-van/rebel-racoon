@@ -726,7 +726,7 @@ function askProfileQuestion(sessionId, ideaId) {
   if (connected.length === 0) {
     postAssistantMessage(
       sessionId,
-      "You don't have any connected social profiles yet. Open Settings → Social accounts to connect one, then come back to draft.",
+      "No connected social profiles yet. Open Settings → Social accounts to connect one.",
     );
     return;
   }
@@ -1509,7 +1509,7 @@ function renderClipExtractionTurn(message, sessionId) {
           <span class="clip-extraction-card__spinner" role="status" aria-label="Extracting clips"></span>
           <span class="clip-extraction-card__main">
             <span class="clip-extraction-card__title">Cutting your clips…</span>
-            <span class="clip-extraction-card__sub">Up to 45s · you can keep chatting</span>
+            <span class="clip-extraction-card__sub">About 45s. You can keep chatting.</span>
           </span>
         </div>
       </div>
@@ -1549,7 +1549,7 @@ function renderIdeaExtractionTurn(message, sessionId) {
           <span class="clip-extraction-card__spinner" role="status" aria-label="Reading video for ideas"></span>
           <span class="clip-extraction-card__main">
             <span class="clip-extraction-card__title">Reading the video for ideas…</span>
-            <span class="clip-extraction-card__sub">Up to 15s · you can keep chatting</span>
+            <span class="clip-extraction-card__sub">About 15s. You can keep chatting.</span>
           </span>
         </div>
       </div>
@@ -1730,7 +1730,7 @@ function startPillFromKind(_root, session, kind) {
     choices: [
       { value: "batch", label: "Draft a batch of posts", icon: "ap-icon-sparkles-mermaid" },
       { value: "repurpose", label: "Repurpose into 8 posts", icon: "ap-icon-pen" },
-      { value: "extract", label: "Just extract ideas first", icon: "ap-icon-tag" },
+      { value: "extract", label: "Extract ideas first", icon: "ap-icon-tag" },
     ],
     multi: false,
     instant: true,

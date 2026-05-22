@@ -516,7 +516,7 @@ function setUrl(sessionId, url) {
   d.sourceUrl = (url || "").trim();
   // Keep websiteUrl in sync for back-compat with downstream readers.
   if (d.sourceType === "website") d.websiteUrl = d.sourceUrl;
-  postUserTurn(sessionId, d.sourceUrl || "Skip");
+  if (d.sourceUrl) postUserTurn(sessionId, d.sourceUrl);
   inlineQuestion.exit(sessionId);
   notify(sessionId);
   runAnalysis(sessionId);
@@ -526,7 +526,7 @@ function setFile(sessionId, file) {
   const d = drafts.get(sessionId);
   if (!d) return;
   d.sourceFile = file ? { name: file.name, size: file.size, type: file.type } : null;
-  postUserTurn(sessionId, file ? file.name : "Skip");
+  if (file) postUserTurn(sessionId, file.name);
   inlineQuestion.exit(sessionId);
   notify(sessionId);
   runAnalysis(sessionId);
@@ -629,7 +629,7 @@ function setSelectedProfile(sessionId, profileId) {
   } else {
     d.selectedProfileId = null;
     d.connectedSocials = [];
-    postUserTurn(sessionId, "Skip");
+    // Phase 2 §8.3: don't echo procedural "Skip" as a <You> bubble.
   }
   inlineQuestion.exit(sessionId);
   notify(sessionId);

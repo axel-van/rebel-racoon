@@ -1345,7 +1345,7 @@ function renderSourcesView() {
       </div>
       <button type="button" class="ap-button stroked grey" data-rpanel-sources-attach>
         <i class="ap-icon-plus"></i>
-        <span>Attach</span>
+        <span>Attach source</span>
       </button>
     </div>
   `;
@@ -1624,7 +1624,7 @@ function renderIdeaCompact(idea) {
         <span class="rpanel-ideas__ref">${escapeText(idea.ref || "Generated")}</span>
         <button type="button" class="ap-button stroked orange rpanel-ideas__use" data-rpanel-use-idea="${idea.id}">
           <i class="ap-icon-arrow-up"></i>
-          <span>Use</span>
+          <span>Use idea</span>
         </button>
       </footer>
     </article>
@@ -1854,7 +1854,7 @@ function renderContextBriefView() {
           </button>
           <button type="button" class="ap-button primary orange" data-brief-edit-mode>
             <i class="ap-icon-pen"></i>
-            <span>Edit</span>
+            <span>Edit Playbook</span>
           </button>
         </footer>
       `
@@ -2409,7 +2409,7 @@ function renderBriefVoiceProfile(d, isRead) {
 
   const tones = Array.isArray(d.tones) ? d.tones.filter(Boolean) : [];
   const headline =
-    vp.headline || (tones.length ? tones.join(" · ").toLowerCase() : "Tap a section to refine the voice");
+    vp.headline || (tones.length ? tones.join(" · ").toLowerCase() : "Click a section to refine the voice");
 
   const collapsed = voiceProfileCollapsed;
 
@@ -2425,7 +2425,7 @@ function renderBriefVoiceProfile(d, isRead) {
         : value
       : isRead
         ? ""
-        : "Tap to add a description.";
+        : "Click to add a description.";
     const isTruncated = !isExpanded && value && value.length > 140;
     const bodyHtml = isExpanded
       ? isRead

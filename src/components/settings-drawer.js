@@ -109,7 +109,7 @@ function renderConnectorsSection() {
   return html`
     <header class="settings-drawer__section-header">
       <h3 class="settings-drawer__section-title">Connectors</h3>
-      <p class="settings-drawer__section-sub">Sources Archie pulls knowledge from when generating posts.</p>
+      <p class="settings-drawer__section-sub">Where Archie pulls source material when drafting posts.</p>
     </header>
     <ul class="settings-drawer__rows" data-rows="connectors">
       ${raw(getConnectors().map(renderConnectorRow).join(""))}
@@ -150,7 +150,7 @@ function renderContextsSection() {
       <div>
         <h3 class="settings-drawer__section-title">Playbooks</h3>
         <p class="settings-drawer__section-sub">
-          Saved bundles of voice, brief, and brand. Create or edit one from inside any chat.
+          Voice profile, Brief, and Branding bundled together. Create or edit one from inside any chat.
         </p>
       </div>
     </header>
@@ -159,10 +159,10 @@ function renderContextsSection() {
         ? `
             <div class="settings-drawer__empty">
               <div class="settings-drawer__empty-icon"><i class="ap-icon-headset lg"></i></div>
-              <h4 class="settings-drawer__empty-title">No saved playbooks yet</h4>
+              <h4 class="settings-drawer__empty-title">No saved Playbooks yet</h4>
               <p class="settings-drawer__empty-body">
-                Start a new chat — Archie will walk you through capturing a Voice, Strategy brief, and Brand theme,
-                then offer to save it here.
+                Start a new chat — I'll walk you through your voice, brief, and Branding, then offer to save the
+                Playbook here.
               </p>
               <div class="settings-drawer__empty-action">
                 <button type="button" class="ap-button primary orange" data-settings-new-chat>
@@ -264,7 +264,7 @@ function renderNotificationsSection() {
           ["mentions", "Mentions and replies", n.push.mentions, "push"],
           ["approvals", "Approval reminders", n.push.approvals, "push"],
         ],
-        "Available on the mobile app — toggles preview the experience.",
+        "Available on the mobile app. Toggle to preview here.",
       ),
     )}
   `;
