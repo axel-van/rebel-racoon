@@ -4,6 +4,7 @@ import { isFlagOn } from "../feature-flags.js?v=3";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=31";
 import { isNewUser } from "../user-mode.js?v=21";
 import { getPath } from "../router.js?v=20";
+import { parseHashParams, setHashQuery } from "../url-state.js?v=20";
 import {
   getPosts,
   addPostDraft,
@@ -104,6 +105,43 @@ let state = {
   activeBatchRef: null, // { sessionId, messageId } | null
 };
 
+// ── URL persistence ───────────────────────────────────────────────────
+// The user-facing panel modes (drafts / ideas / sources) are encoded in
+// the hash query as `?panel=<mode>` so the panel re-opens on reload and
+// deep-links work. `context-brief` is NOT persisted — it's driven by the
+// Playbooks navigation, not by a user-toggleable session control.
+const VALID_URL_MODES = new Set(["drafts", "ideas", "sources"]);
+
+function writeUrlPanel(mode) {
+  const params = parseHashParams();
+  if (mode && VALID_URL_MODES.has(mode)) {
+    params.set("panel", mode);
+  } else {
+    params.delete("panel");
+  }
+  setHashQuery(getPath(), Object.fromEntries(params));
+}
+
+function readUrlPanel() {
+  const m = parseHashParams().get("panel");
+  return VALID_URL_MODES.has(m) ? m : null;
+}
+
+// Sync internal state to the URL `panel` param. Called on boot AND on
+// hashchange so back/forward buttons work. No-op when state already
+// matches (avoids infinite write → hashchange → write loops).
+// Skipped off-session — the panel is a session-scoped affordance, so a
+// stray `?panel=drafts` on /contexts shouldn't pop the panel.
+function syncFromUrl() {
+  if (!/^\/session\//.test(getPath())) return;
+  const urlMode = readUrlPanel();
+  if (urlMode === state.mode) return;
+  if (urlMode === "drafts") openDrafts(null);
+  else if (urlMode === "ideas") openIdeas();
+  else if (urlMode === "sources") openSources();
+  else if (state.mode && VALID_URL_MODES.has(state.mode)) closePanel();
+}
+
 // Per-batch selection — Map<"sessionId::messageId", Set<postId>>. Defaults
 // to all-selected the first time a batch is shown so the Schedule CTA is
 // active out of the box.
@@ -195,6 +233,7 @@ export function openDrafts(activeBatchRef) {
   rebindThread();
   renderPanel();
   notify();
+  writeUrlPanel("drafts");
 }
 
 export function openIdeas() {
@@ -204,6 +243,7 @@ export function openIdeas() {
   maybeCollapseSidebarOnOpen(prev);
   renderPanel();
   notify();
+  writeUrlPanel("ideas");
 }
 
 // Sources mode — shows the list of sources currently attached to the
@@ -216,9 +256,11 @@ export function openSources() {
   maybeCollapseSidebarOnOpen(prev);
   renderPanel();
   notify();
+  writeUrlPanel("sources");
 }
 
 export function closePanel() {
+  const wasUserMode = VALID_URL_MODES.has(state.mode);
   if (state.mode === "context-brief") {
     contextBriefConfig?.onCancel?.();
     contextBriefConfig = null;
@@ -230,6 +272,10 @@ export function closePanel() {
   }
   renderPanel();
   notify();
+  // Only clear the `panel` URL param if we were in a user-toggleable mode.
+  // context-brief isn't URL-persisted, so closing it shouldn't touch the
+  // hash query (which might happen to carry an unrelated panel value).
+  if (wasUserMode) writeUrlPanel(null);
 }
 
 function setMode(mode) {
@@ -799,6 +845,13 @@ export function init() {
       maybeCollapseSidebar();
     });
   });
+
+  // Restore panel mode from the URL hash (`?panel=drafts|ideas|sources`)
+  // on boot, and re-sync on every hashchange so back/forward buttons +
+  // session navigation honor the URL. The no-op guard in syncFromUrl()
+  // breaks the write → hashchange → write loop.
+  syncFromUrl();
+  window.addEventListener("hashchange", syncFromUrl);
 }
 
 function renderPanel() {
