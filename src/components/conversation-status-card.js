@@ -168,6 +168,16 @@ export function render() {
     hideCard();
     return;
   }
+  // ALT first-time-user flow runs inside /session/welcome-alt-* with the
+  // full-bleed onboarding chrome (no sidebar, no topbar). The shell uses
+  // a single-column grid there, so reserving a 3rd column for the status
+  // card would collapse the chat (cf. styles/layout.css body.onboarding).
+  // Legacy /session/welcome-* (linear flow) keeps the standard grid and
+  // still gets the card.
+  if (sid.startsWith("welcome-alt-")) {
+    hideCard();
+    return;
+  }
   // When any right-panel mode is open the card is redundant — the user
   // has the full panel already. Hide.
   if (getRightPanelMode()) {
