@@ -747,14 +747,30 @@
 }
 
 /* 4-step roadmap variant — same chrome as the 3-step but with the
-   line spanning between bullets 1 and 4. */
+   line spanning between bullets 1 and 4. Steps use `align-items:
+   flex-start`, so bullets sit flush against the left of each cell:
+   bullet 1's center is `bullet-half-width` (14px) from the container's
+   left, and bullet 4's center is `cellWidth - 14px` from the right,
+   where `cellWidth = (100% - 3·gap) / 4`. Hardcoding 11% from each
+   side missed bullet 1 entirely and overshot past bullet 4.
+
+   The gradient is also re-tuned: bullet 2 lands at ~33% of the line
+   (not 50% as in the 3-step), so the orange→neutral transition
+   completes before bullet 2 rather than after it. */
 .welcome-roadmap--four {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .welcome-roadmap--four::before {
-  left: 11%;
-  right: 11%;
+  left: 14px;
+  right: calc((100% - 3 * var(--ref-spacing-xs)) / 4 - 14px);
+  background: linear-gradient(
+    90deg,
+    var(--ref-color-orange-100) 0%,
+    var(--ref-color-orange-40) 20%,
+    var(--app-border-soft) 33%,
+    var(--app-border-soft) 100%
+  );
 }
 
 /* ---------- /welcome/socials and shared step chrome ---------- */
