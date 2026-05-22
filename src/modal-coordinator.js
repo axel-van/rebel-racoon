@@ -69,3 +69,31 @@ export function notifyClose(id) {
     }
   }
 }
+
+// bindOverlayDismissal wires the common dismissal patterns (Escape key,
+// backdrop click) to a modal's close handler. Returns nothing — call
+// once during init().
+//
+// Each modal still owns its own DOM structure, open() signature, and
+// state reset; this helper just removes the boilerplate every overlay
+// would otherwise repeat. Centralising it makes "press Esc when this
+// modal is on top" behave identically everywhere.
+//
+// Usage:
+//   bindOverlayDismissal({
+//     modal,       // the .ap-dialog / .ap-drawer element with `.open` class
+//     backdrop,    // the click-to-dismiss backdrop element (optional)
+//     close,       // the modal-local close() function
+//     isOpen,      // optional: defaults to modal.classList.contains("open")
+//   });
+export function bindOverlayDismissal({ modal, backdrop, close, isOpen }) {
+  const opened = isOpen || (() => modal?.classList.contains("open"));
+  if (backdrop) {
+    backdrop.addEventListener("click", () => {
+      if (opened()) close();
+    });
+  }
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && opened()) close();
+  });
+}

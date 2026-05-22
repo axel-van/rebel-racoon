@@ -13,7 +13,7 @@
 //   });
 
 import { recentSessions } from "../mocks.js?v=31";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=20";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 
 const MODAL_ID = "chatPicker";
 import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "../screens/_analyse-common.js?v=30";
@@ -64,10 +64,6 @@ function renderBody() {
     items: buildItems(),
     handler: "chat-picker",
   });
-}
-
-function onKeydown(event) {
-  if (event.key === "Escape" && modal.classList.contains("open")) close();
 }
 
 function bindKeyboard() {
@@ -130,6 +126,5 @@ export function init() {
     if (event.target.closest("#chatPickerClose")) close();
   });
 
-  backdrop.addEventListener("click", close);
-  document.addEventListener("keydown", onKeydown);
+  bindOverlayDismissal({ modal, backdrop, close });
 }

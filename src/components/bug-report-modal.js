@@ -15,7 +15,7 @@
 // modal then closes itself. Nothing is actually posted.
 
 import { escapeHtml } from "../utils.js?v=20";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=20";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 
 const MODAL_ID = "bugReport";
 
@@ -236,12 +236,6 @@ function populateContext() {
   `;
 }
 
-function onKeydown(event) {
-  if (event.key === "Escape" && modal.classList.contains("open")) {
-    close();
-  }
-}
-
 export function open() {
   if (!initialized) init();
   requestOpen(MODAL_ID, close);
@@ -301,8 +295,7 @@ export function init() {
   // Close / dismiss
   document.getElementById("closeBugReportBtn").addEventListener("click", close);
   document.getElementById("cancelBugReportBtn").addEventListener("click", close);
-  backdrop.addEventListener("click", close);
-  document.addEventListener("keydown", onKeydown);
+  bindOverlayDismissal({ modal, backdrop, close });
 
   // Category chips — single-select with toggle-off.
   categoriesEl.addEventListener("click", (e) => {

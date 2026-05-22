@@ -17,7 +17,7 @@ import {
   setConnectorStatus,
   subscribe as subscribeConnectors,
 } from "../connectors-store.js?v=21";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=20";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 
 const MODAL_ID = "addSource";
 import {

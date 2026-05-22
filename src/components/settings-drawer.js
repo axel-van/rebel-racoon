@@ -8,7 +8,7 @@
 // editable forms with dirty/cancel semantics).
 
 import { html, raw, escapeHtml } from "../utils.js?v=20";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=20";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { showToast } from "./toast.js?v=20";
 
 const OVERLAY_ID = "settingsDrawer";

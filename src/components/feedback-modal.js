@@ -3,7 +3,7 @@
 // toggle its visibility. No persistence — submitting shows a success flash
 // and resets on close.
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=20";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 
 const MODAL_ID = "feedback";
 
@@ -100,12 +100,6 @@ function setTextAreaInvalid(invalid) {
   textAreaError.hidden = !invalid;
 }
 
-function onKeydown(event) {
-  if (event.key === "Escape" && modal.classList.contains("open")) {
-    close();
-  }
-}
-
 export function open() {
   if (!initialized) init();
   requestOpen(MODAL_ID, close);
@@ -141,8 +135,7 @@ export function init() {
 
   document.getElementById("closeFeedbackBtn").addEventListener("click", close);
   document.getElementById("cancelFeedbackBtn").addEventListener("click", close);
-  backdrop.addEventListener("click", close);
-  document.addEventListener("keydown", onKeydown);
+  bindOverlayDismissal({ modal, backdrop, close });
 
   textArea.addEventListener("input", () => {
     if (textArea.value.trim()) setTextAreaInvalid(false);

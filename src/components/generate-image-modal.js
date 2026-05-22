@@ -16,7 +16,7 @@
 // the picked image URL when the user confirms. No store, no persistence.
 
 import { escapeHtml } from "../utils.js?v=20";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=20";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 import { showToast } from "./toast.js?v=20";
 
 const MODAL_ID = "generateImage";
@@ -367,10 +367,6 @@ function onModalClick(event) {
   }
 }
 
-function onKeydown(event) {
-  if (event.key === "Escape" && modal.classList.contains("open")) close();
-}
-
 // ── Public API ────────────────────────────────────────────────────────
 
 export function init() {
@@ -384,9 +380,8 @@ export function init() {
   footer = document.getElementById("generateImageFooter");
 
   document.getElementById("closeGenerateImageBtn").addEventListener("click", close);
-  backdrop.addEventListener("click", close);
   modal.addEventListener("click", onModalClick);
-  document.addEventListener("keydown", onKeydown);
+  bindOverlayDismissal({ modal, backdrop, close });
 }
 
 export function open(postId, onUse) {

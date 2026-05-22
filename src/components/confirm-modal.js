@@ -15,7 +15,7 @@
 //   - Registers with modal-coordinator so opening the dialog auto-closes
 //     any other overlay (drawer, modal, shortcut legend).
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=20";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 
 const MODAL_ID = "confirm";
 
@@ -67,7 +67,6 @@ function injectOnce() {
 
   cancelBtn.addEventListener("click", close);
   closeBtn.addEventListener("click", close);
-  backdrop.addEventListener("click", close);
   confirmBtn.addEventListener("click", () => {
     const fn = pendingOnConfirm;
     // Clear before calling so onConfirm can open a new modal without race.
@@ -75,11 +74,7 @@ function injectOnce() {
     close();
     if (typeof fn === "function") fn();
   });
-
-  // Esc closes — only when this modal is the active overlay.
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && modal.classList.contains("open")) close();
-  });
+  bindOverlayDismissal({ modal, backdrop, close });
 
   initialized = true;
 }

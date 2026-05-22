@@ -20,7 +20,7 @@
 //   - Add   : a new 30s clip is inserted in the next gap and opened in edit.
 
 import { escapeHtml } from "../utils.js?v=20";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=20";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { showToast } from "./toast.js?v=20";
 
 const MODAL_ID = "videoClips";

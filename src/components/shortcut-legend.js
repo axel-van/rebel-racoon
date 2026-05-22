@@ -7,7 +7,7 @@
  * already used by other modals in this app.
  */
 
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=20";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 
 const OVERLAY_ID = "shortcutLegend";
 
@@ -81,13 +81,7 @@ function init() {
   backdrop = document.getElementById("shortcutLegendBackdrop");
   modal = document.getElementById("shortcutLegend");
   document.getElementById("shortcutLegendClose")?.addEventListener("click", close);
-  backdrop.addEventListener("click", close);
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && modal.classList.contains("open")) {
-      event.preventDefault();
-      close();
-    }
-  });
+  bindOverlayDismissal({ modal, backdrop, close });
 }
 
 export function open() {
