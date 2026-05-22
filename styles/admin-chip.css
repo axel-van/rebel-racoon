@@ -115,9 +115,15 @@
   background: var(--ref-color-grey-05);
 }
 
-.admin-menu__mode-text {
+/* The DS .ap-radio-container > span applies `display: flex` +
+   `align-items: center`. We stack label + hint as a column, so that
+   centering becomes a horizontal misalignment of the two lines.
+   Match the DS selector specificity (2 classes) and reset to
+   flex-start. */
+.ap-radio-container > .admin-menu__mode-text {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   min-width: 0;
 }
 
