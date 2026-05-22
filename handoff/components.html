@@ -1,0 +1,2216 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Archie — Conversation thread component handoff</title>
+
+    <!-- Agorapulse Design System (variables → font → icons → ui-css) -->
+    <link rel="stylesheet" href="../ds/desktop_variables.css" />
+    <link rel="stylesheet" href="../ds/css-ui/font-face.css" />
+    <link rel="stylesheet" href="../ds/ap-icons.css" />
+    <link rel="stylesheet" href="../ds/css-ui/index.css" />
+
+    <!-- App tokens + base + chat styles (so previews render exactly as in app) -->
+    <link rel="stylesheet" href="../styles/tokens.css" />
+    <link rel="stylesheet" href="../styles/base.css" />
+    <link rel="stylesheet" href="../styles/ds-patches.css" />
+    <link rel="stylesheet" href="../styles/chat.css" />
+    <link rel="stylesheet" href="../styles/screens/session.css" />
+
+    <style>
+      /* ── Handoff page chrome ───────────────────────────────────────── */
+      :root {
+        --hd-bg: #fafbfc;
+        --hd-surface: #ffffff;
+        --hd-border: #e3e6ea;
+        --hd-text: #1a1f2e;
+        --hd-muted: #5a6273;
+        --hd-code-bg: #f4f5f7;
+        --hd-accent: var(--ref-color-electric-blue-100);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--hd-bg);
+        color: var(--hd-text);
+        font-family: var(--ref-font-family, "Averta", system-ui, sans-serif);
+        font-size: 15px;
+        line-height: 1.55;
+      }
+
+      .hd-shell {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 48px 32px 96px;
+      }
+
+      .hd-header {
+        margin-bottom: 48px;
+      }
+
+      .hd-header h1 {
+        margin: 0 0 8px;
+        font-size: 32px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+      }
+
+      .hd-header p {
+        margin: 0;
+        color: var(--hd-muted);
+        max-width: 720px;
+      }
+
+      .hd-meta {
+        margin-top: 16px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        font-size: 12px;
+        color: var(--hd-muted);
+      }
+
+      .hd-meta code {
+        font-size: 12px;
+      }
+
+      /* TOC */
+      .hd-toc {
+        background: var(--hd-surface);
+        border: 1px solid var(--hd-border);
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin-bottom: 48px;
+      }
+
+      .hd-toc h2 {
+        margin: 0 0 12px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--hd-muted);
+      }
+
+      .hd-toc ol {
+        margin: 0;
+        padding-left: 20px;
+        columns: 2;
+        column-gap: 32px;
+      }
+
+      .hd-toc li {
+        margin: 4px 0;
+        break-inside: avoid;
+      }
+
+      .hd-toc a {
+        color: var(--hd-text);
+        text-decoration: none;
+        border-bottom: 1px solid transparent;
+      }
+
+      .hd-toc a:hover {
+        border-bottom-color: var(--hd-accent);
+        color: var(--hd-accent);
+      }
+
+      /* Section */
+      .hd-section {
+        margin-bottom: 64px;
+        scroll-margin-top: 24px;
+      }
+
+      .hd-section > h2 {
+        margin: 0 0 8px;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.005em;
+      }
+
+      .hd-section > p.hd-lead {
+        margin: 0 0 24px;
+        color: var(--hd-muted);
+        max-width: 720px;
+      }
+
+      /* Component card */
+      .hd-comp {
+        background: var(--hd-surface);
+        border: 1px solid var(--hd-border);
+        border-radius: 12px;
+        margin-bottom: 24px;
+        overflow: hidden;
+      }
+
+      .hd-comp__head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--hd-border);
+        background: #f8f9fb;
+      }
+
+      .hd-comp__name {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .hd-comp__name code {
+        background: rgba(33, 46, 68, 0.06);
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .hd-comp__desc {
+        margin: 0;
+        color: var(--hd-muted);
+        font-size: 13px;
+      }
+
+      .hd-comp__body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+      }
+
+      @media (max-width: 900px) {
+        .hd-comp__body {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .hd-comp__preview {
+        padding: 24px;
+        background: #ffffff;
+        border-right: 1px solid var(--hd-border);
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        min-height: 120px;
+      }
+
+      @media (max-width: 900px) {
+        .hd-comp__preview {
+          border-right: 0;
+          border-bottom: 1px solid var(--hd-border);
+        }
+      }
+
+      .hd-comp__code {
+        padding: 0;
+        background: var(--hd-code-bg);
+        font-family: "SF Mono", "Menlo", "Monaco", monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        max-height: 480px;
+        overflow: auto;
+      }
+
+      .hd-comp__code pre {
+        margin: 0;
+        padding: 20px 24px;
+        white-space: pre;
+        overflow-x: auto;
+      }
+
+      .hd-comp__meta {
+        grid-column: 1 / -1;
+        padding: 16px 24px;
+        border-top: 1px solid var(--hd-border);
+        font-size: 13px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 24px;
+      }
+
+      @media (max-width: 900px) {
+        .hd-comp__meta {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .hd-comp__meta dt {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--hd-muted);
+        margin-bottom: 6px;
+      }
+
+      .hd-comp__meta dd {
+        margin: 0;
+      }
+
+      .hd-comp__meta dd code {
+        background: rgba(33, 46, 68, 0.06);
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-family: "SF Mono", "Menlo", monospace;
+        font-size: 11px;
+        display: inline-block;
+        margin: 2px 4px 2px 0;
+      }
+
+      /* Notes block */
+      .hd-note {
+        background: #fffaf0;
+        border-left: 3px solid #f0a04b;
+        padding: 12px 16px;
+        margin: 16px 0;
+        font-size: 13px;
+        color: #5a4626;
+        border-radius: 0 6px 6px 0;
+      }
+
+      .hd-note strong {
+        color: #3a2e16;
+      }
+
+      /* Token reference table */
+      .hd-tokens {
+        background: var(--hd-surface);
+        border: 1px solid var(--hd-border);
+        border-radius: 12px;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .hd-tokens table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      .hd-tokens th,
+      .hd-tokens td {
+        padding: 10px 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--hd-border);
+      }
+
+      .hd-tokens th {
+        background: #f8f9fb;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--hd-muted);
+        font-weight: 700;
+      }
+
+      .hd-tokens tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .hd-tokens code {
+        font-family: "SF Mono", "Menlo", monospace;
+        font-size: 12px;
+        background: rgba(33, 46, 68, 0.06);
+        padding: 1px 6px;
+        border-radius: 4px;
+      }
+
+      .hd-swatch {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+
+      /* Variants row inside preview */
+      .hd-preview-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .hd-preview-row__label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--hd-muted);
+        font-weight: 700;
+      }
+
+      /* Force the preview area to use the app's body text rules without
+         depending on the session shell. */
+      .hd-comp__preview {
+        font-family: var(--ref-font-family, "Averta", system-ui, sans-serif);
+      }
+
+      /* Some chat-turn variants are normally constrained by .session__assistant-thread
+         (max-width 740 centered). In the handoff preview we let them flow at the
+         preview column's natural width. */
+      .hd-comp__preview .chat-turn {
+        max-width: 100%;
+      }
+
+      .hd-comp__preview .chat-turn--user {
+        align-self: flex-end;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="hd-shell">
+      <header class="hd-header">
+        <h1>Conversation thread — component handoff</h1>
+        <p>
+          Visual reference of every component that renders inside the
+          <code>.session__assistant-thread</code> on <code>/session/:id</code>. Each card shows a live preview, the
+          canonical HTML, the BEM classes in use, and the DS tokens that drive the chrome. Use this as a starting point
+          when implementing any new variant — copy the HTML, swap content, and the styles cascade for free.
+        </p>
+        <div class="hd-meta">
+          <span>
+            <strong>Source:</strong>
+            <code>src/screens/session.js</code> (renderTurn dispatch) + <code>src/assistant.js</code> (turn types)
+          </span>
+          <span>
+            <strong>Styles:</strong>
+            <code>styles/chat.css</code> +
+            <code>styles/screens/session.css</code>
+          </span>
+          <span>
+            <strong>DS:</strong>
+            <code>@agorapulse/ui-theme</code> +
+            <code>@agorapulse/ui-symbol</code>
+          </span>
+        </div>
+      </header>
+
+      <nav class="hd-toc" aria-label="Table of contents">
+        <h2>Sections</h2>
+        <ol>
+          <li><a href="#turns">1. Turn wrappers</a></li>
+          <li><a href="#bubbles">2. Bubbles (AI / User / Source intake)</a></li>
+          <li><a href="#bubble-content">3. Bubble content blocks</a></li>
+          <li><a href="#choices">4. Choice chips</a></li>
+          <li><a href="#extraction">5. Extraction turn (Idea cards)</a></li>
+          <li><a href="#drafts">6. Drafts summary card</a></li>
+          <li><a href="#clip-extraction">7. Clip / Idea extraction card</a></li>
+          <li><a href="#notices">8. Notices (mermaid, grey, extracting)</a></li>
+          <li><a href="#tokens">9. Token quick reference</a></li>
+        </ol>
+      </nav>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            1. TURN WRAPPERS
+            ════════════════════════════════════════════════════════════ -->
+      <section class="hd-section" id="turns">
+        <h2>1. Turn wrappers</h2>
+        <p class="hd-lead">
+          Every message in the thread is wrapped in a <code>.chat-turn</code>. The variant modifier sets alignment
+          (left/right), avatar position, and whether the children inherit a bubble or stand alone as cards.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.chat-turn--ai</code></p>
+              <p class="hd-comp__desc">AI message — sparkle avatar on the left, content beside it. No bubble chrome.</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--ai">
+                <i class="ap-icon-sparkles-mermaid chat-turn-avatar" aria-hidden="true"></i>
+                <div class="chat-bubble chat-bubble--ai">
+                  <p class="chat-bubble-text">
+                    I&rsquo;ll help you pick sources, sharpen angles, and draft posts. Attach a playbook (Voice, Brief,
+                    Brand) any time to make my suggestions sharper.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="chat-turn chat-turn--ai"&gt;
+  &lt;i class="ap-icon-sparkles-mermaid chat-turn-avatar"
+     aria-hidden="true"&gt;&lt;/i&gt;
+  &lt;div class="chat-bubble chat-bubble--ai"&gt;
+    &lt;p class="chat-bubble-text"&gt;...&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Classes</dt>
+                <dd>
+                  <code>.chat-turn</code>
+                  <code>.chat-turn--ai</code>
+                  <code>.chat-turn-avatar</code>
+                  <code>.chat-bubble</code>
+                  <code>.chat-bubble--ai</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Key tokens</dt>
+                <dd>
+                  <code>--ref-spacing-xs</code> (gap 12) <code>--app-spacing-micro</code> (avatar mt 2)
+                  <code>--app-text-message-size</code> (15) <code>--app-text-message-line</code> (1.55)
+                </dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  <code>renderTurn()</code>
+                  <br />
+                  <code>session.js:814-820</code>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.chat-turn--user</code></p>
+              <p class="hd-comp__desc">
+                User message — right-aligned <code>You</code> label stacked over a solid blue bubble.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--user">
+                <span class="chat-turn-role">You</span>
+                <div class="chat-bubble chat-bubble--user">
+                  <p class="chat-bubble-text">Pull the strongest moments from the customer call and draft a post.</p>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="chat-turn chat-turn--user"&gt;
+  &lt;span class="chat-turn-role"&gt;You&lt;/span&gt;
+  &lt;div class="chat-bubble chat-bubble--user"&gt;
+    &lt;p class="chat-bubble-text"&gt;...&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Classes</dt>
+                <dd>
+                  <code>.chat-turn</code>
+                  <code>.chat-turn--user</code>
+                  <code>.chat-turn-role</code>
+                  <code>.chat-bubble</code>
+                  <code>.chat-bubble--user</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Key tokens</dt>
+                <dd>
+                  <code>--ref-color-electric-blue-100</code> (bg) <code>--ref-color-white</code> (text)
+                  <code>--app-radius-xl</code> (radius)
+                  <code>padding: 12 / 16</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  <code>renderTurn()</code>
+                  <br />
+                  <code>session.js:806-820</code>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name">
+                <code>.chat-turn--ai.chat-turn--extraction</code> /
+                <code>.chat-turn--clip-extraction</code>
+              </p>
+              <p class="hd-comp__desc">
+                AI turn with NO sparkle avatar — the child card has its own leading glyph (pen, sparkles, bulb, file).
+                Stacks vertically and gets a max-width.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
+                <div class="clip-extraction-card clip-extraction-card--ready">
+                  <span class="clip-extraction-card__icon" aria-hidden="true">
+                    <i class="ap-icon-sparkles"></i>
+                  </span>
+                  <span class="clip-extraction-card__main">
+                    <span class="clip-extraction-card__title">Clips ready · 5 clips from founder-keynote.mp4</span>
+                    <span class="clip-extraction-card__sub">Pick the ones you want and turn them into posts.</span>
+                  </span>
+                  <button type="button" class="ap-button ghost grey clip-extraction-card__cta">
+                    <span>Open clips</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="chat-turn chat-turn--ai chat-turn--extraction"&gt;
+  &lt;!-- card child (drafts-card, clip-extraction-card,
+       extraction-turn idea cards, idea-extraction card) --&gt;
+&lt;/div&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Classes</dt>
+                <dd>
+                  <code>.chat-turn--extraction</code> (max-width 480, gap 12)
+                  <code>.chat-turn--clip-extraction</code> (max-width 100%, no inner gap)
+                </dd>
+              </div>
+              <div>
+                <dt>When to use</dt>
+                <dd>
+                  When the turn IS a card (drafts, clip-extraction, idea-extraction, extraction with idea cards). Avatar
+                  is implicit in the card's own icon tile.
+                </dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  <code>renderDraftTurn()</code>
+                  <br />
+                  <code>renderClipExtractionTurn()</code>
+                  <br />
+                  <code>renderExtractionTurn()</code>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+
+        <div class="hd-note">
+          <strong>Note on max-width.</strong> <code>.chat-turn</code> no longer carries a generic
+          <code>max-width</code>. Only <code>.chat-turn--user</code> (560px) and
+          <code>.chat-turn--extraction</code> (480px) are bounded. Other AI turns flow at the thread's natural width
+          (740px via <code>.session__assistant-thread &gt; *</code>).
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            2. BUBBLES
+            ════════════════════════════════════════════════════════════ -->
+      <section class="hd-section" id="bubbles">
+        <h2>2. Bubbles (AI / User / Source intake)</h2>
+        <p class="hd-lead">
+          The bubble wraps the message body. <strong>AI bubble is borderless</strong> — text sits directly next to the
+          sparkle avatar, no chrome. <strong>User bubble</strong> is a solid blue card. <strong>Source intake</strong>
+          is a light-blue file-attachment card aligned with the user.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.chat-bubble--ai</code></p>
+              <p class="hd-comp__desc">
+                Borderless AI bubble. Defensive reset on background/border/padding so a card child can&rsquo;t
+                accidentally inherit chrome.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--ai">
+                <i class="ap-icon-sparkles-mermaid chat-turn-avatar" aria-hidden="true"></i>
+                <div class="chat-bubble chat-bubble--ai">
+                  <p class="chat-bubble-text">
+                    Sounds good. I have the call. Want me to extract themes or jump straight to drafts?
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="chat-bubble chat-bubble--ai"&gt;
+  &lt;p class="chat-bubble-text"&gt;...&lt;/p&gt;
+&lt;/div&gt;
+
+/* CSS — chat.css */
+.chat-bubble--ai {
+  color: var(--ref-color-grey-150);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  border-radius: 0;
+}
+.chat-bubble--ai .chat-bubble-text {
+  font-size: var(--app-text-message-size);  /* 15 */
+  line-height: var(--app-text-message-line); /* 1.55 */
+}</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Classes</dt>
+                <dd>
+                  <code>.chat-bubble</code>
+                  <code>.chat-bubble--ai</code>
+                  <code>.chat-bubble-text</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Key tokens</dt>
+                <dd>
+                  <code>--ref-color-grey-150</code> (text) <code>--app-text-message-size</code> (15px)
+                  <code>--app-text-message-line</code> (1.55)
+                </dd>
+              </div>
+              <div>
+                <dt>Modifiers</dt>
+                <dd><code>.is-loading</code> → opacity 0.7 (pending state)</dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.chat-bubble--user</code></p>
+              <p class="hd-comp__desc">Solid electric-blue card. Sharp top-right corner points at the user "avatar".</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--user">
+                <span class="chat-turn-role">You</span>
+                <div class="chat-bubble chat-bubble--user">
+                  <p class="chat-bubble-text">Plan a 5-day launch sequence using the offsite notes.</p>
+                </div>
+              </div>
+              <div class="chat-turn chat-turn--user">
+                <span class="chat-turn-role">You</span>
+                <div class="chat-bubble chat-bubble--user is-loading">
+                  <p class="chat-bubble-text">Pending message (is-loading)…</p>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="chat-bubble chat-bubble--user"&gt;
+  &lt;p class="chat-bubble-text"&gt;...&lt;/p&gt;
+&lt;/div&gt;
+
+/* CSS — chat.css */
+.chat-bubble--user {
+  background: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-white);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm); /* 12 / 16 */
+  border-radius: var(--app-radius-xl);
+  border-top-right-radius: 0;
+}</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Classes</dt>
+                <dd>
+                  <code>.chat-bubble--user</code>
+                  <code>.is-loading</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Key tokens</dt>
+                <dd>
+                  <code>--ref-color-electric-blue-100</code>
+                  <code>--ref-color-white</code>
+                  <code>--ref-spacing-xs</code> (12) <code>--ref-spacing-sm</code> (16)
+                </dd>
+              </div>
+              <div>
+                <dt>Max-width</dt>
+                <dd><code>560px</code> (carried by <code>.chat-turn--user</code>)</dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.chat-bubble--source-intake</code></p>
+              <p class="hd-comp__desc">
+                Light-blue file card with a kind icon, filename + status sub-line, and a trailing
+                <em>spinner</em> (loading) or <em>green check</em> (ready). Shown user-side.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="hd-preview-row">
+                <span class="hd-preview-row__label">Loading</span>
+                <div class="chat-turn chat-turn--user">
+                  <span class="chat-turn-role">Source intake</span>
+                  <div class="chat-bubble chat-bubble--source-intake" data-intake-status="loading">
+                    <i class="ap-icon-file--pdf chat-bubble-source-intake__kind" aria-hidden="true"></i>
+                    <div class="chat-bubble-source-intake__main">
+                      <p class="chat-bubble-text">riverside-discovery-call.pdf</p>
+                      <p class="chat-bubble-source-intake__sub muted">Uploading&hellip;</p>
+                    </div>
+                    <span class="ap-loader blue size-16 chat-bubble-source-intake__spinner" aria-hidden="true">
+                      <svg>
+                        <circle></circle>
+                        <circle></circle>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="hd-preview-row">
+                <span class="hd-preview-row__label">Ready (with N ideas link)</span>
+                <div class="chat-turn chat-turn--user">
+                  <span class="chat-turn-role">Source intake</span>
+                  <div class="chat-bubble chat-bubble--source-intake" data-intake-status="ready">
+                    <i class="ap-icon-file--pdf chat-bubble-source-intake__kind" aria-hidden="true"></i>
+                    <div class="chat-bubble-source-intake__main">
+                      <p class="chat-bubble-text">riverside-discovery-call.pdf</p>
+                      <p class="chat-bubble-source-intake__sub muted">
+                        Processed ·
+                        <button type="button" class="chat-bubble-source-intake__ideas-link">3 ideas</button>
+                      </p>
+                    </div>
+                    <i class="ap-icon-rounded-check_fill chat-bubble-source-intake__check" aria-hidden="true"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="chat-bubble chat-bubble--source-intake"
+     data-intake-status="loading|ready"&gt;
+  &lt;i class="ap-icon-file--pdf chat-bubble-source-intake__kind"
+     aria-hidden="true"&gt;&lt;/i&gt;
+  &lt;div class="chat-bubble-source-intake__main"&gt;
+    &lt;p class="chat-bubble-text"&gt;filename.pdf&lt;/p&gt;
+    &lt;p class="chat-bubble-source-intake__sub muted"&gt;
+      Processed ·
+      &lt;button class="chat-bubble-source-intake__ideas-link"
+              data-source-intake-open-ideas&gt;3 ideas&lt;/button&gt;
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;!-- Trailing slot: spinner (loading) OR check (ready) --&gt;
+  &lt;i class="ap-icon-rounded-check_fill
+            chat-bubble-source-intake__check"&gt;&lt;/i&gt;
+&lt;/div&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Classes</dt>
+                <dd>
+                  <code>.chat-bubble--source-intake</code>
+                  <code>__kind</code>
+                  <code>__main</code>
+                  <code>__sub</code>
+                  <code>__spinner</code>
+                  <code>__check</code>
+                  <code>__ideas-link</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Icon by kind</dt>
+                <dd>
+                  <code>ap-icon-file--pdf</code> (pdf)<br />
+                  <code>ap-icon-file--video</code> (video)<br />
+                  <code>ap-icon-link</code> (url)<br />
+                  <code>ap-icon-file--text</code> (word/text)<br />
+                  <code>ap-icon-file--image</code> (image)<br />
+                  <code>ap-icon-file</code> (audio/default)
+                </dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  <code>postSourceIntake()</code>
+                  <br />
+                  <code>renderSourceIntakeTurn()</code>
+                  <br />
+                  <code>session.js:853-911</code>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            3. BUBBLE CONTENT BLOCKS
+            ════════════════════════════════════════════════════════════ -->
+      <section class="hd-section" id="bubble-content">
+        <h2>3. Bubble content blocks</h2>
+        <p class="hd-lead">
+          Sub-blocks that can be composed inside an AI bubble&rsquo;s flex column. Used by the Analyse wizards
+          (voice-profile sections), the brief summary, and observation cards.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.chat-bubble-card</code></p>
+              <p class="hd-comp__desc">Observation finding card — grey-05 surface with a thin border.</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--ai">
+                <i class="ap-icon-sparkles-mermaid chat-turn-avatar" aria-hidden="true"></i>
+                <div class="chat-bubble chat-bubble--ai">
+                  <p class="chat-bubble-text">Three angles surfaced from the call:</p>
+                  <div class="chat-bubble-card">
+                    Time-to-value collapses with playbook templates — Riverside cut onboarding by 38%.
+                  </div>
+                  <div class="chat-bubble-card">
+                    Cross-team alignment is the unlock — PMs and marketers stopped duplicating effort.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="chat-bubble-card"&gt;
+  Observation text…
+&lt;/div&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Tokens</dt>
+                <dd>
+                  <code>--ref-color-grey-05</code>
+                  <code>--ref-color-grey-10</code> (border)
+                  <code>--ref-border-radius-md</code>
+                  <code>--ref-spacing-xs</code> (padding 12) <code>--ref-font-size-xs</code> (12)
+                </dd>
+              </div>
+              <div>
+                <dt>Stack</dt>
+                <dd>Multiple cards stack via the AI bubble&rsquo;s own column-flex + gap-xs.</dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>Figma 73:1394</dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.chat-bubble-fields</code></p>
+              <p class="hd-comp__desc">
+                Definition-list of label / value pairs. Used for action-pick recap (network, count, channel).
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--ai">
+                <i class="ap-icon-sparkles-mermaid chat-turn-avatar" aria-hidden="true"></i>
+                <div class="chat-bubble chat-bubble--ai">
+                  <p class="chat-bubble-text">Ready to draft. Here&rsquo;s what I&rsquo;ll do:</p>
+                  <dl class="chat-bubble-fields">
+                    <div>
+                      <dt>Networks</dt>
+                      <dd>LinkedIn, X, Instagram</dd>
+                    </div>
+                    <div>
+                      <dt>Count</dt>
+                      <dd>5 drafts</dd>
+                    </div>
+                    <div>
+                      <dt>Source</dt>
+                      <dd>riverside-discovery-call.pdf</dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;dl class="chat-bubble-fields"&gt;
+  &lt;div&gt;
+    &lt;dt&gt;Networks&lt;/dt&gt;
+    &lt;dd&gt;LinkedIn, X, Instagram&lt;/dd&gt;
+  &lt;/div&gt;
+  ...
+&lt;/dl&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Tokens</dt>
+                <dd>
+                  <code>--ref-spacing-xs</code> (gap 12) <code>--ref-spacing-xxxs</code> (intra gap 4)
+                  <code>--ref-font-size-xs</code> (12)
+                  <code>--sys-text-color-light</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Behavior</dt>
+                <dd>Each <code>&lt;div&gt;</code> is a row: dt uppercase label, dd bold value.</dd>
+              </div>
+              <div>
+                <dt>Used by</dt>
+                <dd>Action-pick recap, brief summary fields.</dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.chat-bubble-header-extra</code></p>
+              <p class="hd-comp__desc">
+                Inline callout strip on top of the message body — electric-blue tint, low-noise. Used for context
+                badges.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--ai">
+                <i class="ap-icon-sparkles-mermaid chat-turn-avatar" aria-hidden="true"></i>
+                <div class="chat-bubble chat-bubble--ai">
+                  <div class="chat-bubble-header-extra">Using playbook <strong>Customer stories</strong></div>
+                  <p class="chat-bubble-text">I&rsquo;ll draft in their voice. Want LinkedIn, X, or both?</p>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="chat-bubble-header-extra"&gt;
+  Using playbook &lt;strong&gt;Customer stories&lt;/strong&gt;
+&lt;/div&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Tokens</dt>
+                <dd>
+                  <code>--ref-color-electric-blue-05</code>
+                  <code>--ref-color-electric-blue-20</code> (border)
+                  <code>--ref-spacing-xs / sm</code>
+                  <code>--app-radius-md</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Placement</dt>
+                <dd>First child of the bubble, before the <code>.chat-bubble-text</code>.</dd>
+              </div>
+              <div>
+                <dt>Used by</dt>
+                <dd>Playbook attach feedback turn.</dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.chat-bubble-summary</code> + <code>.chat-bubble-section</code></p>
+              <p class="hd-comp__desc">
+                Voice-profile / brief summary stack — each section is a bordered card with a grey-05 header strip and a
+                bullet list body.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--ai">
+                <i class="ap-icon-sparkles-mermaid chat-turn-avatar" aria-hidden="true"></i>
+                <div class="chat-bubble chat-bubble--ai">
+                  <p class="chat-bubble-text">Here&rsquo;s the brand voice I&rsquo;ve built so far:</p>
+                  <div class="chat-bubble-summary">
+                    <section class="chat-bubble-section">
+                      <h4>Tone</h4>
+                      <ul>
+                        <li>Direct &amp; punchy</li>
+                        <li>Operator confidence, never preachy</li>
+                        <li>Plain language, zero jargon</li>
+                      </ul>
+                    </section>
+                    <section class="chat-bubble-section">
+                      <h4>Vocabulary</h4>
+                      <ul>
+                        <li>Says &ldquo;operator&rdquo; instead of &ldquo;manager&rdquo;</li>
+                        <li>Talks in metrics, not adjectives</li>
+                      </ul>
+                    </section>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="chat-bubble-summary"&gt;
+  &lt;section class="chat-bubble-section"&gt;
+    &lt;h4&gt;Tone&lt;/h4&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Direct &amp;amp; punchy&lt;/li&gt;
+      &lt;li&gt;...&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/section&gt;
+  &lt;section class="chat-bubble-section"&gt;...&lt;/section&gt;
+&lt;/div&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Classes</dt>
+                <dd>
+                  <code>.chat-bubble-summary</code>
+                  <code>.chat-bubble-section</code>
+                  <code>.chat-bubble-section h4</code> (grey-05 header strip)
+                </dd>
+              </div>
+              <div>
+                <dt>Tokens</dt>
+                <dd>
+                  <code>--ref-color-grey-20</code> (border) <code>--ref-color-grey-05</code> (header strip)
+                  <code>--ref-border-radius-md</code>
+                  <code>--ref-spacing-xs</code> (vertical padding)
+                </dd>
+              </div>
+              <div>
+                <dt>Used by</dt>
+                <dd>Analyse Voice / Brief wizard recap. Figma 75:234.</dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            4. CHOICE CHIPS
+            ════════════════════════════════════════════════════════════ -->
+      <section class="hd-section" id="choices">
+        <h2>4. Choice chips</h2>
+        <p class="hd-lead">
+          Inline picker that appears inside an AI bubble — multi-select chips with optional icons or visual previews,
+          plus a Submit button when <code>multi: true</code>. Becomes static spans once answered.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.chat-bubble-choices</code> (text + icon)</p>
+              <p class="hd-comp__desc">
+                Channel picker variant — pill-shaped chips with brand icon + label. Multi-select with Submit footer.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--ai">
+                <i class="ap-icon-sparkles-mermaid chat-turn-avatar" aria-hidden="true"></i>
+                <div class="chat-bubble chat-bubble--ai">
+                  <p class="chat-bubble-text">Which channels should I draft for?</p>
+                  <div class="chat-bubble-choices">
+                    <button type="button" class="chat-bubble-choice-chip is-selected">
+                      <i class="ap-icon-linkedin" aria-hidden="true"></i>
+                      <span>LinkedIn</span>
+                    </button>
+                    <button type="button" class="chat-bubble-choice-chip">
+                      <i class="ap-icon-twitter-official" aria-hidden="true"></i>
+                      <span>X</span>
+                    </button>
+                    <button type="button" class="chat-bubble-choice-chip">
+                      <i class="ap-icon-instagram" aria-hidden="true"></i>
+                      <span>Instagram</span>
+                    </button>
+                    <button type="button" class="chat-bubble-choice-chip">
+                      <i class="ap-icon-tiktok-official" aria-hidden="true"></i>
+                      <span>TikTok</span>
+                    </button>
+                  </div>
+                  <div class="chat-bubble-choices-footer">
+                    <button type="button" class="ap-button primary orange">
+                      <span>Draft them</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="chat-bubble-choices"&gt;
+  &lt;button type="button"
+          class="chat-bubble-choice-chip is-selected"
+          data-assistant-choice="linkedin"
+          data-assistant-choice-msg="MSG_ID"&gt;
+    &lt;i class="ap-icon-linkedin"&gt;&lt;/i&gt;
+    &lt;span&gt;LinkedIn&lt;/span&gt;
+  &lt;/button&gt;
+  ...
+&lt;/div&gt;
+&lt;div class="chat-bubble-choices-footer"&gt;
+  &lt;button class="ap-button primary orange"
+          data-assistant-choice-submit="MSG_ID"&gt;
+    Draft them
+  &lt;/button&gt;
+&lt;/div&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Classes</dt>
+                <dd>
+                  <code>.chat-bubble-choices</code>
+                  <code>.chat-bubble-choice-chip</code>
+                  <code>.is-selected</code>
+                  <code>.chat-bubble-choices-footer</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Key tokens</dt>
+                <dd>
+                  <code>--ref-spacing-xxs / sm</code> (chip padding 8/16)
+                  <code>--app-radius-pill</code>
+                  <code>--ref-color-electric-blue-100</code> (selected border + text)
+                  <code>--ref-color-electric-blue-10</code> (selected bg)
+                </dd>
+              </div>
+              <div>
+                <dt>States</dt>
+                <dd>
+                  <code>:hover</code> grey-60 border · <code>:active</code> grey-05 bg · <code>.is-selected</code> blue
+                  · <code>&lt;span&gt;</code> tag = answered (non-interactive)
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.chat-bubble-choices--visual</code> (preview tiles)</p>
+              <p class="hd-comp__desc">
+                Subtitle-style picker — 2-row tile: visual sample on top (POST in the style), label below. Each style
+                gets its own preview class.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--ai">
+                <i class="ap-icon-sparkles-mermaid chat-turn-avatar" aria-hidden="true"></i>
+                <div class="chat-bubble chat-bubble--ai">
+                  <p class="chat-bubble-text">Pick a subtitle style for the clips:</p>
+                  <div class="chat-bubble-choices chat-bubble-choices--visual">
+                    <button type="button" class="chat-bubble-choice-chip chat-bubble-choice-chip--bold">
+                      <span class="chat-bubble-choice-preview chat-bubble-choice-preview--bold">POST</span>
+                      <span class="chat-bubble-choice-label">Bold</span>
+                    </button>
+                    <button type="button" class="chat-bubble-choice-chip chat-bubble-choice-chip--minimal">
+                      <span class="chat-bubble-choice-preview chat-bubble-choice-preview--minimal">POST</span>
+                      <span class="chat-bubble-choice-label">Minimal</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="chat-bubble-choices chat-bubble-choices--visual"&gt;
+  &lt;button class="chat-bubble-choice-chip
+                 chat-bubble-choice-chip--bold"&gt;
+    &lt;span class="chat-bubble-choice-preview
+                 chat-bubble-choice-preview--bold"&gt;POST&lt;/span&gt;
+    &lt;span class="chat-bubble-choice-label"&gt;Bold&lt;/span&gt;
+  &lt;/button&gt;
+  ...
+&lt;/div&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Variants</dt>
+                <dd>
+                  <code>--bold</code>
+                  <code>--minimal</code>
+                  <code>--karaoke</code>
+                  <code>--neon</code>
+                  <code>--none</code> (preview-kind classes)
+                </dd>
+              </div>
+              <div>
+                <dt>Used by</dt>
+                <dd>PDF flow 06.B — subtitle preset picker after clip drafts land.</dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  <code>renderChoiceTurn()</code>
+                  <br />
+                  <code>session.js:1349-1410</code>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            5. EXTRACTION TURN
+            ════════════════════════════════════════════════════════════ -->
+      <section class="hd-section" id="extraction">
+        <h2>5. Extraction turn (Idea cards)</h2>
+        <p class="hd-lead">
+          Mermaid &ldquo;Extracted N ideas&rdquo; pill that wraps an expandable <code>&lt;details&gt;</code>. When open,
+          shows the analyzed source filename + N idea cards. Each idea has a title/body and a footer with thumbs +
+          &ldquo;View idea&rdquo; link.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.chat-turn--extraction</code></p>
+              <p class="hd-comp__desc">Full extraction turn — collapsed by default, open here for demo.</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--ai chat-turn--extraction">
+                <details class="assistant-notice assistant-notice--mermaid" open>
+                  <summary class="assistant-notice__toggle">
+                    <span class="ap-status mermaid">Extracted 3 ideas</span>
+                    <i class="ap-icon-chevron-down assistant-notice__chevron" aria-hidden="true"></i>
+                  </summary>
+                  <div class="extraction-turn__detail">
+                    <div class="extraction-turn__analyzed-row">
+                      <strong>Analyzed</strong>
+                      <span>riverside-discovery-call.pdf</span>
+                    </div>
+                    <div class="ap-card extraction-turn__idea-card">
+                      <div class="extraction-turn__idea-card-text">
+                        <p class="extraction-turn__idea-card-title">Time-to-value collapses with playbook templates</p>
+                        <p class="extraction-turn__idea-card-body">
+                          Riverside cut onboarding by 38% after switching to a templated weekly cadence.
+                        </p>
+                      </div>
+                      <div class="extraction-turn__idea-card-footer">
+                        <div class="extraction-turn__idea-card-feedback" role="group" aria-label="Rate this idea">
+                          <button type="button" class="extraction-turn__idea-card-thumb" data-idea-feedback="up">
+                            <i class="ap-icon-thumb-up" aria-hidden="true"></i>
+                          </button>
+                          <button type="button" class="extraction-turn__idea-card-thumb" data-idea-feedback="down">
+                            <i class="ap-icon-thumb-down" aria-hidden="true"></i>
+                          </button>
+                        </div>
+                        <a class="ap-link standalone small extraction-turn__idea-card-view" href="#">
+                          <span>View idea</span>
+                          <i class="ap-icon-external-link" aria-hidden="true"></i>
+                        </a>
+                      </div>
+                    </div>
+                    <div class="ap-card extraction-turn__idea-card">
+                      <div class="extraction-turn__idea-card-text">
+                        <p class="extraction-turn__idea-card-title">Cross-team alignment is the unlock</p>
+                        <p class="extraction-turn__idea-card-body">
+                          Their PMs and marketers stopped duplicating effort once the playbook formalised hand-offs.
+                        </p>
+                      </div>
+                      <div class="extraction-turn__idea-card-footer">
+                        <div class="extraction-turn__idea-card-feedback" role="group" aria-label="Rate this idea">
+                          <button type="button" class="extraction-turn__idea-card-thumb" data-idea-feedback="up">
+                            <i class="ap-icon-thumb-up" aria-hidden="true"></i>
+                          </button>
+                          <button type="button" class="extraction-turn__idea-card-thumb" data-idea-feedback="down">
+                            <i class="ap-icon-thumb-down" aria-hidden="true"></i>
+                          </button>
+                        </div>
+                        <a class="ap-link standalone small extraction-turn__idea-card-view" href="#">
+                          <span>View idea</span>
+                          <i class="ap-icon-external-link" aria-hidden="true"></i>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="chat-turn chat-turn--ai chat-turn--extraction"&gt;
+  &lt;details class="assistant-notice assistant-notice--mermaid" open&gt;
+    &lt;summary class="assistant-notice__toggle"&gt;
+      &lt;span class="ap-status mermaid"&gt;Extracted 3 ideas&lt;/span&gt;
+      &lt;i class="ap-icon-chevron-down
+                assistant-notice__chevron"&gt;&lt;/i&gt;
+    &lt;/summary&gt;
+    &lt;div class="extraction-turn__detail"&gt;
+      &lt;div class="extraction-turn__analyzed-row"&gt;
+        &lt;strong&gt;Analyzed&lt;/strong&gt;
+        &lt;span&gt;filename.pdf&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="ap-card extraction-turn__idea-card"&gt;
+        &lt;div class="extraction-turn__idea-card-text"&gt;
+          &lt;p class="extraction-turn__idea-card-title"&gt;...&lt;/p&gt;
+          &lt;p class="extraction-turn__idea-card-body"&gt;...&lt;/p&gt;
+        &lt;/div&gt;
+        &lt;div class="extraction-turn__idea-card-footer"&gt;
+          &lt;div class="extraction-turn__idea-card-feedback"&gt;
+            &lt;button class="extraction-turn__idea-card-thumb"
+                    data-idea-feedback="up"&gt;...&lt;/button&gt;
+            &lt;button class="extraction-turn__idea-card-thumb"
+                    data-idea-feedback="down"&gt;...&lt;/button&gt;
+          &lt;/div&gt;
+          &lt;a class="ap-link standalone small
+                    extraction-turn__idea-card-view"
+             data-focus-idea="IDEA_ID"&gt;View idea&lt;/a&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/details&gt;
+&lt;/div&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Classes</dt>
+                <dd>
+                  <code>.chat-turn--extraction</code>
+                  <code>.extraction-turn__detail</code>
+                  <code>.extraction-turn__analyzed-row</code>
+                  <code>.extraction-turn__idea-card</code>
+                  <code>__idea-card-text/title/body</code>
+                  <code>__idea-card-footer</code>
+                  <code>__idea-card-feedback / __idea-card-thumb</code>
+                  <code>__idea-card-view</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Tokens</dt>
+                <dd>
+                  <code>--ref-spacing-sm</code> (idea-card padding 16) <code>--ref-spacing-xs</code> (gap 12)
+                  <code>--ref-spacing-xxs</code> (text gap 8)
+                  <code>--ref-font-size-sm / --ref-font-line-height-sm</code>
+                  <code>--app-radius-md</code>
+                  <code>--ref-color-grey-05 / 10 / 80 / 100</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  <code>postExtractionResult()</code>
+                  <br />
+                  <code>renderExtractionTurn()</code>
+                  <br />
+                  <code>session.js:913-981</code>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            6. DRAFTS CARD
+            ════════════════════════════════════════════════════════════ -->
+      <section class="hd-section" id="drafts">
+        <h2>6. Drafts summary card</h2>
+        <p class="hd-lead">
+          Horizontal in-thread card surfacing the AI&rsquo;s draft batch. Click anywhere opens the Drafts right-panel
+          pinned to this batch.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.drafts-card</code></p>
+              <p class="hd-comp__desc">
+                Pen icon · &ldquo;N drafts ready&rdquo; title · network glyphs + descriptor · chevron.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="hd-preview-row">
+                <span class="hd-preview-row__label">Default</span>
+                <div class="chat-turn chat-turn--ai chat-turn--extraction">
+                  <button type="button" class="ap-card drafts-card">
+                    <span class="drafts-card__icon" aria-hidden="true">
+                      <i class="ap-icon-pen"></i>
+                    </span>
+                    <span class="drafts-card__main">
+                      <span class="drafts-card__title">5 drafts ready</span>
+                      <span class="drafts-card__sub">
+                        <span class="ap-tag-list drafts-card__nets">
+                          <i class="ap-icon-linkedin"></i>
+                          <i class="ap-icon-twitter-official"></i>
+                          <i class="ap-icon-instagram"></i>
+                        </span>
+                        <span class="drafts-card__sub-text">Across 3 networks · review, edit, and schedule</span>
+                      </span>
+                    </span>
+                    <i class="ap-icon-chevron-right drafts-card__chevron" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="hd-preview-row">
+                <span class="hd-preview-row__label">Active (panel pinned to this batch)</span>
+                <div class="chat-turn chat-turn--ai chat-turn--extraction">
+                  <button type="button" class="ap-card drafts-card is-active">
+                    <span class="drafts-card__icon" aria-hidden="true">
+                      <i class="ap-icon-pen"></i>
+                    </span>
+                    <span class="drafts-card__main">
+                      <span class="drafts-card__title">3 drafts ready</span>
+                      <span class="drafts-card__sub">
+                        <span class="ap-tag-list drafts-card__nets">
+                          <i class="ap-icon-linkedin"></i>
+                          <i class="ap-icon-twitter-official"></i>
+                        </span>
+                        <span class="drafts-card__sub-text">Across 2 networks · review, edit, and schedule</span>
+                      </span>
+                    </span>
+                    <i class="ap-icon-chevron-right drafts-card__chevron" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="chat-turn chat-turn--ai chat-turn--extraction"&gt;
+  &lt;button class="ap-card drafts-card"
+          data-drafts-card-message="MSG_ID"&gt;
+    &lt;span class="drafts-card__icon"&gt;
+      &lt;i class="ap-icon-pen"&gt;&lt;/i&gt;
+    &lt;/span&gt;
+    &lt;span class="drafts-card__main"&gt;
+      &lt;span class="drafts-card__title"&gt;5 drafts ready&lt;/span&gt;
+      &lt;span class="drafts-card__sub"&gt;
+        &lt;span class="ap-tag-list drafts-card__nets"&gt;
+          &lt;i class="ap-icon-linkedin"&gt;&lt;/i&gt;
+          &lt;i class="ap-icon-twitter-official"&gt;&lt;/i&gt;
+          &lt;i class="ap-icon-instagram"&gt;&lt;/i&gt;
+        &lt;/span&gt;
+        &lt;span class="drafts-card__sub-text"&gt;
+          Across 3 networks · review, edit, and schedule
+        &lt;/span&gt;
+      &lt;/span&gt;
+    &lt;/span&gt;
+    &lt;i class="ap-icon-chevron-right drafts-card__chevron"&gt;&lt;/i&gt;
+  &lt;/button&gt;
+&lt;/div&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Classes</dt>
+                <dd>
+                  <code>.drafts-card</code>
+                  <code>.is-active</code>
+                  <code>__icon</code>
+                  <code>__main</code>
+                  <code>__title</code>
+                  <code>__sub</code>
+                  <code>__nets</code>
+                  <code>__sub-text</code>
+                  <code>__chevron</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Tokens</dt>
+                <dd>
+                  <code>--ref-spacing-xs</code> (gap 12) <code>--ref-spacing-xxs</code> (main gap 8)
+                  <code>--sys-color-accent-default-bg-default</code> (orange tile)
+                  <code>--app-radius-button-sm</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  <code>postDraftResult()</code>
+                  <br />
+                  <code>renderDraftTurn()</code>
+                  <br />
+                  <code>session.js:1439-1475</code>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            7. CLIP / IDEA EXTRACTION CARD
+            ════════════════════════════════════════════════════════════ -->
+      <section class="hd-section" id="clip-extraction">
+        <h2>7. Clip / Idea extraction card</h2>
+        <p class="hd-lead">
+          Same chrome family used for clip extraction AND idea extraction from a source. Three states: pending (spinner)
+          → ready (mermaid gradient border + CTA) → gone (source was removed).
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name">
+                <code>.clip-extraction-card--pending</code>
+              </p>
+              <p class="hd-comp__desc">
+                In-progress state — orange spinner + &ldquo;Cutting your clips&hellip;&rdquo;.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
+                <div class="clip-extraction-card clip-extraction-card--pending">
+                  <span class="clip-extraction-card__spinner" role="status" aria-label="Extracting clips"></span>
+                  <span class="clip-extraction-card__main">
+                    <span class="clip-extraction-card__title">Cutting your clips&hellip;</span>
+                    <span class="clip-extraction-card__sub">Up to 45s · you can keep chatting</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="chat-turn chat-turn--ai chat-turn--clip-extraction"&gt;
+  &lt;div class="clip-extraction-card clip-extraction-card--pending"&gt;
+    &lt;span class="clip-extraction-card__spinner"
+          role="status"
+          aria-label="Extracting clips"&gt;&lt;/span&gt;
+    &lt;span class="clip-extraction-card__main"&gt;
+      &lt;span class="clip-extraction-card__title"&gt;
+        Cutting your clips…
+      &lt;/span&gt;
+      &lt;span class="clip-extraction-card__sub"&gt;
+        Up to 45s · you can keep chatting
+      &lt;/span&gt;
+    &lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Tokens</dt>
+                <dd>
+                  <code>--ref-color-orange-100</code> (spinner top-color) <code>--ref-color-grey-10</code> (spinner
+                  ring) <code>--ref-spacing-sm</code> (padding 16) <code>--ref-spacing-xs</code> (gap 12)
+                  <code>--app-radius-card</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Sub-line</dt>
+                <dd>Use plain text — sets expectations on duration and non-blocking nature.</dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  <code>postClipExtractionTurn()</code>
+                  <br />
+                  <code>renderClipExtractionTurn()</code>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name">
+                <code>.clip-extraction-card--ready</code>
+              </p>
+              <p class="hd-comp__desc">
+                Done state — mermaid gradient border, sparkles tile, &ldquo;Open clips&rdquo; CTA on the right.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
+                <div class="clip-extraction-card clip-extraction-card--ready">
+                  <span class="clip-extraction-card__icon" aria-hidden="true">
+                    <i class="ap-icon-sparkles"></i>
+                  </span>
+                  <span class="clip-extraction-card__main">
+                    <span class="clip-extraction-card__title">Clips ready · 5 clips from founder-keynote.mp4</span>
+                    <span class="clip-extraction-card__sub">Pick the ones you want and turn them into posts.</span>
+                  </span>
+                  <button type="button" class="ap-button ghost grey clip-extraction-card__cta">
+                    <span>Open clips</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="clip-extraction-card clip-extraction-card--ready"&gt;
+  &lt;span class="clip-extraction-card__icon"&gt;
+    &lt;i class="ap-icon-sparkles"&gt;&lt;/i&gt;
+  &lt;/span&gt;
+  &lt;span class="clip-extraction-card__main"&gt;
+    &lt;span class="clip-extraction-card__title"&gt;...&lt;/span&gt;
+    &lt;span class="clip-extraction-card__sub"&gt;...&lt;/span&gt;
+  &lt;/span&gt;
+  &lt;button class="ap-button ghost grey
+                 clip-extraction-card__cta"
+          data-clip-card-open="SOURCE_ID"&gt;
+    Open clips
+  &lt;/button&gt;
+&lt;/div&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Tokens</dt>
+                <dd>
+                  <code>--ref-color-mermaid-gradient-background</code> (gradient border)
+                  <code>--ref-color-white</code> (inner bg)
+                  <code>--app-shadow-subtle</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Icon variants</dt>
+                <dd>
+                  Clips ready: <code>ap-icon-sparkles</code><br />
+                  Themes ready (idea-extraction): <code>ap-icon-bulb</code><br />
+                  Gone: <code>ap-icon-file--video</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  <code>renderClipExtractionTurn()</code> · <code>renderIdeaExtractionTurn()</code> shares the same
+                  chrome.
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name">
+                <code>.clip-extraction-card--gone</code>
+              </p>
+              <p class="hd-comp__desc">
+                The source backing this card was removed. Card is dimmed (opacity 0.65), no CTA.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
+                <div class="clip-extraction-card clip-extraction-card--gone">
+                  <span class="clip-extraction-card__icon" aria-hidden="true">
+                    <i class="ap-icon-file--video"></i>
+                  </span>
+                  <span class="clip-extraction-card__main">
+                    <span class="clip-extraction-card__title">Clips no longer available</span>
+                    <span class="clip-extraction-card__sub">founder-keynote.mp4 was removed.</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="clip-extraction-card clip-extraction-card--gone"&gt;
+  &lt;span class="clip-extraction-card__icon"&gt;
+    &lt;i class="ap-icon-file--video"&gt;&lt;/i&gt;
+  &lt;/span&gt;
+  &lt;span class="clip-extraction-card__main"&gt;
+    &lt;span class="clip-extraction-card__title"&gt;
+      Clips no longer available
+    &lt;/span&gt;
+    &lt;span class="clip-extraction-card__sub"&gt;
+      filename was removed.
+    &lt;/span&gt;
+  &lt;/span&gt;
+&lt;/div&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Tokens</dt>
+                <dd>
+                  <code>opacity: 0.65</code>
+                  <code>--ref-color-grey-05</code> (icon tile bg) <code>--ref-color-grey-100</code> (icon color)
+                </dd>
+              </div>
+              <div>
+                <dt>Trigger</dt>
+                <dd>
+                  Source was removed (<code>removeSources()</code>) but the message stays in the thread as a receipt.
+                </dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  <code>renderClipExtractionTurn()</code>
+                  <br />
+                  <code>session.js:1481-1537</code>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            8. NOTICES
+            ════════════════════════════════════════════════════════════ -->
+      <section class="hd-section" id="notices">
+        <h2>8. Notices (mermaid, grey, extracting)</h2>
+        <p class="hd-lead">
+          Lightweight status pills posted into the thread by the assistant. <strong>Mermaid</strong> = AI work (drafting
+          / extracting). <strong>Grey</strong> = system note. <strong>Extracting</strong> = inline pill + spinner for
+          non-blocking work.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.assistant-notice--mermaid</code></p>
+              <p class="hd-comp__desc">
+                Foldable mermaid pill — toggle reveals a grey-05 card with the detail text. Used for
+                &ldquo;Drafting&rdquo; / &ldquo;Extracted N ideas&rdquo;.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="hd-preview-row">
+                <span class="hd-preview-row__label">Loading</span>
+                <details class="assistant-notice assistant-notice--mermaid is-loading" open>
+                  <summary class="assistant-notice__toggle">
+                    <span class="ap-status mermaid">Drafting</span>
+                    <i class="ap-icon-chevron-down assistant-notice__chevron" aria-hidden="true"></i>
+                  </summary>
+                  <div class="assistant-notice__detail">Thinking through the best next move&hellip;</div>
+                </details>
+              </div>
+              <div class="hd-preview-row">
+                <span class="hd-preview-row__label">Done (closed)</span>
+                <details class="assistant-notice assistant-notice--mermaid">
+                  <summary class="assistant-notice__toggle">
+                    <span class="ap-status mermaid">Drafted 5 posts</span>
+                    <i class="ap-icon-chevron-down assistant-notice__chevron" aria-hidden="true"></i>
+                  </summary>
+                  <div class="assistant-notice__detail">
+                    Drafts ready in the right panel — open Drafts to review and edit.
+                  </div>
+                </details>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;details class="assistant-notice assistant-notice--mermaid"
+         open&gt;
+  &lt;summary class="assistant-notice__toggle"&gt;
+    &lt;span class="ap-status mermaid"&gt;Drafting&lt;/span&gt;
+    &lt;i class="ap-icon-chevron-down
+              assistant-notice__chevron"&gt;&lt;/i&gt;
+  &lt;/summary&gt;
+  &lt;div class="assistant-notice__detail"&gt;
+    Thinking through the best next move…
+  &lt;/div&gt;
+&lt;/details&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Classes</dt>
+                <dd>
+                  <code>.assistant-notice</code>
+                  <code>--mermaid</code>
+                  <code>.is-loading</code>
+                  <code>__toggle</code>
+                  <code>__chevron</code>
+                  <code>__detail</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Tokens</dt>
+                <dd>
+                  <code>--ref-color-grey-05</code> (detail bg) <code>--ref-color-grey-10</code> (detail border)
+                  <code>--ref-spacing-sm</code> (detail padding 16) <code>.ap-status.mermaid</code> from DS
+                </dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  <code>postSystemNotice()</code>
+                  <br />
+                  <code>renderSystemNotice()</code>
+                  <br />
+                  <code>session.js:823-837</code>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.assistant-notice</code> (grey)</p>
+              <p class="hd-comp__desc">Same foldable pattern, neutral grey pill — for system-level messages.</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <details class="assistant-notice" open>
+                <summary class="assistant-notice__toggle">
+                  <span class="ap-status grey">Playbook switched</span>
+                  <i class="ap-icon-chevron-down assistant-notice__chevron" aria-hidden="true"></i>
+                </summary>
+                <div class="assistant-notice__detail">Now using <strong>Customer stories</strong> for this thread.</div>
+              </details>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;details class="assistant-notice" open&gt;
+  &lt;summary class="assistant-notice__toggle"&gt;
+    &lt;span class="ap-status grey"&gt;Playbook switched&lt;/span&gt;
+    &lt;i class="ap-icon-chevron-down
+              assistant-notice__chevron"&gt;&lt;/i&gt;
+  &lt;/summary&gt;
+  &lt;div class="assistant-notice__detail"&gt;
+    Now using &lt;strong&gt;Customer stories&lt;/strong&gt;.
+  &lt;/div&gt;
+&lt;/details&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Variants</dt>
+                <dd>
+                  Drop the <code>--mermaid</code> modifier and use <code>.ap-status.grey</code> (or any DS status color)
+                  for non-AI events.
+                </dd>
+              </div>
+              <div>
+                <dt>Tokens</dt>
+                <dd>Same as mermaid notice — only the pill color differs.</dd>
+              </div>
+              <div>
+                <dt>Used by</dt>
+                <dd>Playbook switch, session rename, generic system updates.</dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.extracting-notice</code></p>
+              <p class="hd-comp__desc">
+                Inline pill + spinner shown while a non-blocking extraction is running. Dissolves once status flips to
+                ready.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="chat-turn chat-turn--ai chat-turn--extracting">
+                <div class="extracting-notice">
+                  <span class="ap-status mermaid">Extracting</span>
+                  <span class="extracting-notice__spinner" aria-hidden="true"></span>
+                </div>
+              </div>
+            </div>
+            <div class="hd-comp__code">
+              <pre>
+&lt;div class="chat-turn chat-turn--ai chat-turn--extracting"&gt;
+  &lt;div class="extracting-notice"&gt;
+    &lt;span class="ap-status mermaid"&gt;Extracting&lt;/span&gt;
+    &lt;span class="extracting-notice__spinner"
+          aria-hidden="true"&gt;&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre
+              >
+            </div>
+            <dl class="hd-comp__meta">
+              <div>
+                <dt>Classes</dt>
+                <dd>
+                  <code>.chat-turn--extracting</code>
+                  <code>.extracting-notice</code>
+                  <code>__spinner</code>
+                  <code>.ap-status.mermaid</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Behavior</dt>
+                <dd>
+                  Lives in the thread only while <code>status === "loading"</code>. <code>finishPending()</code> removes
+                  the message.
+                </dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  <code>startPending()</code> · <code>finishPending()</code>
+                  <br />
+                  <code>renderExtractingNotice()</code>
+                  <br />
+                  <code>session.js:842-851</code>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            9. TOKENS QUICK REFERENCE
+            ════════════════════════════════════════════════════════════ -->
+      <section class="hd-section" id="tokens">
+        <h2>9. Token quick reference</h2>
+        <p class="hd-lead">
+          The handful of DS / app tokens you'll touch most when extending the thread. Full source in
+          <code>ds/desktop_variables.css</code> + <code>styles/tokens.css</code>.
+        </p>
+
+        <h3 style="margin: 24px 0 12px; font-size: 16px">Spacing scale</h3>
+        <div class="hd-tokens">
+          <table>
+            <thead>
+              <tr>
+                <th>Token</th>
+                <th>Value</th>
+                <th>Used for</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--app-spacing-micro</code></td>
+                <td>2px</td>
+                <td>Avatar offset for baseline alignment</td>
+              </tr>
+              <tr>
+                <td><code>--ref-spacing-xxxs</code></td>
+                <td>4px</td>
+                <td>Tight intra-text gap (chip icon ↔ label)</td>
+              </tr>
+              <tr>
+                <td><code>--ref-spacing-xxs</code></td>
+                <td>8px</td>
+                <td>Default card title ↔ sub gap</td>
+              </tr>
+              <tr>
+                <td><code>--ref-spacing-xs</code></td>
+                <td>12px</td>
+                <td>Card row gap, choice-chip column gap</td>
+              </tr>
+              <tr>
+                <td><code>--ref-spacing-sm</code></td>
+                <td>16px</td>
+                <td>User-bubble horizontal padding, idea-card padding, chips footer margin</td>
+              </tr>
+              <tr>
+                <td><code>--ref-spacing-md</code></td>
+                <td>24px</td>
+                <td>Thread inter-turn gap, thread outer padding</td>
+              </tr>
+              <tr>
+                <td><code>--ref-spacing-lg</code></td>
+                <td>32px</td>
+                <td>Thread bottom padding (breathing room before composer)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin: 32px 0 12px; font-size: 16px">Typography</h3>
+        <div class="hd-tokens">
+          <table>
+            <thead>
+              <tr>
+                <th>Token</th>
+                <th>Value</th>
+                <th>Used for</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--app-text-message-size</code></td>
+                <td>15px</td>
+                <td>AI body text (handoff Claude/ChatGPT rhythm)</td>
+              </tr>
+              <tr>
+                <td><code>--app-text-message-line</code></td>
+                <td>1.55</td>
+                <td>AI body line-height</td>
+              </tr>
+              <tr>
+                <td><code>--ref-font-size-sm</code></td>
+                <td>14px</td>
+                <td>User body, idea-card body, choice-chip label</td>
+              </tr>
+              <tr>
+                <td><code>--ref-font-line-height-sm</code></td>
+                <td>18px</td>
+                <td>Idea-card body line-height</td>
+              </tr>
+              <tr>
+                <td><code>--ref-font-size-xs</code></td>
+                <td>12px</td>
+                <td>Source-intake sub, analyzed-row, role label</td>
+              </tr>
+              <tr>
+                <td><code>--ref-font-line-height-xs</code></td>
+                <td>16px</td>
+                <td>Source-intake sub line-height</td>
+              </tr>
+              <tr>
+                <td><code>--ref-font-line-height-md</code></td>
+                <td>20px</td>
+                <td>User bubble body line-height</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin: 32px 0 12px; font-size: 16px">Color (chat surfaces)</h3>
+        <div class="hd-tokens">
+          <table>
+            <thead>
+              <tr>
+                <th>Token</th>
+                <th>Sample</th>
+                <th>Used for</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--ref-color-grey-150</code></td>
+                <td><span class="hd-swatch" style="background: var(--ref-color-grey-150)"></span></td>
+                <td>AI body text · idea-card title</td>
+              </tr>
+              <tr>
+                <td><code>--ref-color-grey-100</code></td>
+                <td><span class="hd-swatch" style="background: var(--ref-color-grey-100)"></span></td>
+                <td>Idea-card body · clip-card sub</td>
+              </tr>
+              <tr>
+                <td><code>--ref-color-grey-05</code></td>
+                <td><span class="hd-swatch" style="background: var(--ref-color-grey-05)"></span></td>
+                <td>Idea-card bg · notice detail bg · section header strip</td>
+              </tr>
+              <tr>
+                <td><code>--ref-color-grey-10</code></td>
+                <td><span class="hd-swatch" style="background: var(--ref-color-grey-10)"></span></td>
+                <td>Card borders, dividers</td>
+              </tr>
+              <tr>
+                <td><code>--ref-color-electric-blue-100</code></td>
+                <td><span class="hd-swatch" style="background: var(--ref-color-electric-blue-100)"></span></td>
+                <td>User bubble bg · role label · selected chip border</td>
+              </tr>
+              <tr>
+                <td><code>--ref-color-electric-blue-20</code></td>
+                <td><span class="hd-swatch" style="background: var(--ref-color-electric-blue-20)"></span></td>
+                <td>Source-intake bubble bg</td>
+              </tr>
+              <tr>
+                <td><code>--ref-color-electric-blue-150</code></td>
+                <td><span class="hd-swatch" style="background: var(--ref-color-electric-blue-150)"></span></td>
+                <td>Source-intake text</td>
+              </tr>
+              <tr>
+                <td><code>--ref-color-mermaid-gradient-background</code></td>
+                <td><span class="hd-swatch" style="background: linear-gradient(135deg, #a06dff, #ff6db4)"></span></td>
+                <td>Sparkle avatar fill · clip-card ready border · mermaid pill</td>
+              </tr>
+              <tr>
+                <td><code>--ref-color-green-100</code></td>
+                <td><span class="hd-swatch" style="background: var(--ref-color-green-100)"></span></td>
+                <td>Source-intake ready check icon</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin: 32px 0 12px; font-size: 16px">Radius</h3>
+        <div class="hd-tokens">
+          <table>
+            <thead>
+              <tr>
+                <th>Token</th>
+                <th>Value</th>
+                <th>Used for</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--app-radius-xl</code></td>
+                <td>12px</td>
+                <td>User + source-intake bubble (top-right 0)</td>
+              </tr>
+              <tr>
+                <td><code>--app-radius-card</code></td>
+                <td>12px</td>
+                <td>clip-extraction-card outer radius</td>
+              </tr>
+              <tr>
+                <td><code>--app-radius-pill</code></td>
+                <td>999px</td>
+                <td>Choice chips</td>
+              </tr>
+              <tr>
+                <td><code>--ref-border-radius-md</code></td>
+                <td>4px (DS)</td>
+                <td>chat-bubble-card, section borders</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer
+        style="
+          margin-top: 64px;
+          padding-top: 24px;
+          border-top: 1px solid var(--hd-border);
+          color: var(--hd-muted);
+          font-size: 12px;
+        "
+      >
+        <p>
+          To open this file locally: <code>open handoff/components.html</code> or browse to
+          <code>http://localhost:8000/handoff/components.html</code> when the dev server is running. Styles cascade from
+          the live <code>ds/</code> + <code>styles/</code> directories, so any token change is reflected here on reload.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
