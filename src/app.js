@@ -3,7 +3,7 @@ import { initTopbar, renderTopbar } from "./components/topbar.js?v=48";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=42";
 import { init as initRightPanel } from "./components/right-panel.js?v=62";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=20";
-import { initUserModeChip } from "./components/user-mode-chip.js?v=27";
+import { initUserModeChip } from "./components/user-mode-chip.js?v=28";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=21";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=24";
 import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=21";
@@ -21,7 +21,7 @@ import {
 import { renderDashboard } from "./screens/dashboard.js?v=45";
 import { renderSession } from "./screens/session.js?v=110";
 import { renderIdeas } from "./screens/ideas.js?v=24";
-import { renderContexts } from "./screens/contexts.js?v=33";
+import { renderContexts } from "./screens/contexts.js?v=34";
 import { renderWelcome } from "./screens/welcome.js?v=4";
 import { renderWelcomeSocials } from "./screens/welcome-socials.js?v=4";
 import { renderWelcomeSources } from "./screens/welcome-sources.js?v=2";

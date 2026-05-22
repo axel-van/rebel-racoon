@@ -14,4 +14,14 @@ export const FLAGS = Object.freeze([
     default: false,
     hides: "Ideas entry in the left sidebar navigation.",
   },
+  {
+    id: "conversationalPlaybookEdit",
+    label: "Conversational edit from /contexts",
+    default: false,
+    hides:
+      "When ON, the pen icon on a Playbook card launches the " +
+      "conversational Playbook editor (spawns /session/playbook-edit-*). " +
+      "When OFF (default), it opens the brief panel directly for " +
+      "in-place editing.",
+  },
 ]);

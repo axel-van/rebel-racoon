@@ -11,6 +11,8 @@ import { openRead, startEdit } from "../context-builder.js?v=41";
 import { setHandoff } from "../handoff.js?v=20";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=20";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
+import { isFlagOn } from "../feature-flags.js?v=2";
+import { launch as launchPlaybookEditor } from "../playbook-editor.js?v=8";
 
 // Contexts library — standalone page (handoff §2.4).
 // Header → search → grid of ContextCards. Each card surfaces brand /
@@ -228,16 +230,22 @@ function filter(list, { query }) {
 
 function bind(root) {
   root.addEventListener("click", (event) => {
-    // Edit (pen icon) — open the brief panel directly for fast, in-place
-    // edits (rename, toggle chips, change brand color, etc.). The
-    // conversational Playbook editor stays accessible via "Fine-tune mon
-    // Playbook" on the welcome recap and via Refine buttons inside the
-    // brief sections — heavier flows for when the user wants Archie to
-    // guide them through a stage.
+    // Edit (pen icon) — default behavior opens the brief panel directly
+    // for fast in-place edits (rename, toggle chips, change brand color,
+    // etc.). The legacy conversational Playbook editor is gated behind
+    // the `conversationalPlaybookEdit` feature flag (admin chip) so we
+    // can A/B the two surfaces. Either way, "Fine-tune mon Playbook" on
+    // the welcome recap and the Refine buttons inside the brief
+    // sections keep the conversational flow accessible on demand.
     const editBtn = event.target.closest("[data-contexts-edit]");
     if (editBtn) {
       event.stopPropagation();
-      startEdit(editBtn.dataset.contextsEdit);
+      const contextId = editBtn.dataset.contextsEdit;
+      if (isFlagOn("conversationalPlaybookEdit")) {
+        launchPlaybookEditor(contextId, "/contexts");
+      } else {
+        startEdit(contextId);
+      }
       return;
     }
     if (event.target.closest("[data-contexts-new]")) {
