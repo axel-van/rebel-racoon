@@ -84,7 +84,7 @@ export function init() {
 }
 
 export function open({
-  title = "Are you sure?",
+  title = "Confirm action",
   body = "",
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",

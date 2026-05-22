@@ -876,7 +876,7 @@ function renderPanel() {
   // (Earlier iteration had Drafts/Ideas tabs here too ; the user flagged
   // them as redundant on 2026-04-29.)
   let titleIcon = "ap-icon-sparkles";
-  let titleText = "Outputs";
+  let titleText = "Ideas";
   if (state.mode === "drafts") {
     titleIcon = "ap-icon-pen";
     titleText = "Drafts";
@@ -890,7 +890,7 @@ function renderPanel() {
       titleText = ctx?.name || "Playbook";
     } else {
       const draft = contextBriefConfig?.getDraft?.();
-      titleText = draft?.name?.trim() || "Define your content brief";
+      titleText = draft?.name?.trim() || "Define your Playbook";
     }
   }
   // The context-brief view manages its own scrolling body + sticky footer
@@ -1106,7 +1106,7 @@ function renderDraftsView() {
   const rail = `
     <aside class="posts__rail" aria-label="Post filters">
       <div class="posts__rail-group">
-        ${filterRow("all", "ap-icon-megaphone", "All posts", filterCounts.all)}
+        ${filterRow("all", "ap-icon-megaphone", "All drafts", filterCounts.all)}
         ${filterRow("needs_fixes", "ap-icon-error", "Needs fixes", filterCounts.needs_fixes)}
         ${filterRow("scheduled", "ap-icon-calendar", "Scheduled", filterCounts.scheduled)}
       </div>
@@ -1329,8 +1329,8 @@ function renderSourcesView() {
       <div class="rpanel-sources">
         <div class="app-right-panel__empty">
           <div class="app-right-panel__empty-icon"><i class="ap-icon-file"></i></div>
-          <div class="app-right-panel__empty-title">Open a conversation</div>
-          <div class="app-right-panel__empty-sub">Sources attach to a conversation. Start or open one to manage its inputs.</div>
+          <div class="app-right-panel__empty-title">Open a chat</div>
+          <div class="app-right-panel__empty-sub">Sources attach to a chat. Start or open one to manage its sources.</div>
         </div>
       </div>
     `;
@@ -1341,7 +1341,7 @@ function renderSourcesView() {
     <div class="rpanel-sources__head">
       <div class="rpanel-sources__head-text">
         <div class="rpanel-sources__count">${sources.length} source${sources.length === 1 ? "" : "s"} in this chat</div>
-        <div class="rpanel-sources__sub muted">These files feed this conversation's outputs.</div>
+        <div class="rpanel-sources__sub muted">These sources feed this chat's ideas.</div>
       </div>
       <button type="button" class="ap-button stroked grey" data-rpanel-sources-attach>
         <i class="ap-icon-plus"></i>
@@ -1356,7 +1356,7 @@ function renderSourcesView() {
         <div class="app-right-panel__empty rpanel-sources__empty">
           <div class="app-right-panel__empty-icon"><i class="ap-icon-file"></i></div>
           <div class="app-right-panel__empty-title">No sources yet</div>
-          <div class="app-right-panel__empty-sub">Attach a file or pick from your library to start.</div>
+          <div class="app-right-panel__empty-sub">Attach a file or pick from a connector to start.</div>
           <div class="app-right-panel__empty-action">
             <button type="button" class="ap-button primary orange" data-rpanel-sources-attach>
               <i class="ap-icon-plus"></i>

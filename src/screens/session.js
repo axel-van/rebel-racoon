@@ -604,10 +604,10 @@ function askWhatToKnow(sessionId, filename) {
 // context — so we surface that explicitly before launching the wizard.
 // Cancel quietly drops the request; Continue runs the section wizard.
 function startEditConfirmPrompt(session, section, ctxId) {
-  const sectionTitle = section === "voice" ? "Voice" : section === "brief" ? "Strategy brief" : "Brand theme";
+  const sectionTitle = section === "voice" ? "Voice profile" : section === "brief" ? "Brief" : "Branding";
   postAssistantMessage(
     session.id,
-    `Editing the ${sectionTitle.toLowerCase()} will update this context across every chat using it.`,
+    `Editing the ${sectionTitle.toLowerCase()} updates this Playbook in every chat using it.`,
   );
   inlineQuestion.ask(session.id, {
     title: "Continue editing?",
@@ -616,7 +616,7 @@ function startEditConfirmPrompt(session, section, ctxId) {
       {
         value: "continue",
         label: "Continue",
-        caption: "Run the edit wizard. Changes propagate to all chats using this context.",
+        caption: "Open the editor. Changes propagate to every chat using this Playbook.",
         icon: "ap-icon-check",
       },
       {
@@ -642,9 +642,9 @@ function startSectionEdit(session, section, contextId) {
     stages: [section],
     skipMemorize: true,
     onComplete: () => {
-      const sectionTitle = section === "voice" ? "Voice" : section === "brief" ? "Strategy brief" : "Brand theme";
+      const sectionTitle = section === "voice" ? "Voice profile" : section === "brief" ? "Brief" : "Branding";
       if (contextId) updateContext(contextId, { updatedAt: "just now" });
-      postAssistantMessage(session.id, `${sectionTitle} updated everywhere this context is used.`);
+      postAssistantMessage(session.id, `${sectionTitle} updated in every chat that uses this Playbook.`);
     },
   });
 }
@@ -881,7 +881,7 @@ function renderSourceIntakeTurn(message, sessionId) {
     const ideas = src?.ideaCount || 0;
     if (ideas > 0) {
       const label = `${ideas} idea${ideas === 1 ? "" : "s"}`;
-      subText = `Processed · <button type="button" class="chat-bubble-source-intake__ideas-link" data-source-intake-open-ideas title="Open Outputs panel">${label}</button>`;
+      subText = `Processed · <button type="button" class="chat-bubble-source-intake__ideas-link" data-source-intake-open-ideas title="Open Ideas panel">${label}</button>`;
     } else {
       subText = "Processed";
     }
@@ -951,7 +951,7 @@ function renderExtractionTurn(message) {
               href="#"
               class="ap-link standalone small extraction-turn__idea-card-view"
               data-focus-idea="${i.id || ""}"
-              aria-label="Open this idea in Content ideas"
+              aria-label="Open this idea in Ideas"
             >
               <span>View idea</span>
               <i class="ap-icon-external-link"></i>
@@ -1547,9 +1547,9 @@ function renderIdeaExtractionTurn(message, sessionId) {
     return `
       <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
         <div class="clip-extraction-card clip-extraction-card--pending">
-          <span class="clip-extraction-card__spinner" role="status" aria-label="Reading video for themes"></span>
+          <span class="clip-extraction-card__spinner" role="status" aria-label="Reading video for ideas"></span>
           <span class="clip-extraction-card__main">
-            <span class="clip-extraction-card__title">Reading the video for themes…</span>
+            <span class="clip-extraction-card__title">Reading the video for ideas…</span>
             <span class="clip-extraction-card__sub">Up to 15s · you can keep chatting</span>
           </span>
         </div>
@@ -1564,7 +1564,7 @@ function renderIdeaExtractionTurn(message, sessionId) {
           <i class="ap-icon-bulb"></i>
         </span>
         <span class="clip-extraction-card__main">
-          <span class="clip-extraction-card__title">Themes ready from ${filename}</span>
+          <span class="clip-extraction-card__title">Ideas ready from ${filename}</span>
           <span class="clip-extraction-card__sub">Check the Ideas panel on the right.</span>
         </span>
       </div>
@@ -1698,7 +1698,7 @@ function startPillFromKind(_root, session, kind) {
       text: "What should I do with this video?",
       choices: [
         { value: "clips", label: "Create clips", icon: "ap-icon-sparkles" },
-        { value: "ideas", label: "Extract themes", icon: "ap-icon-tag" },
+        { value: "ideas", label: "Extract ideas", icon: "ap-icon-tag" },
       ],
       multi: false,
       instant: true,
@@ -2252,7 +2252,7 @@ function bindSession(root, session) {
             title: "Save changes?",
             body: dirty
               ? "Apply your edits to the Playbook. This overwrites the current version."
-              : "No edits were staged — closing the editor will return you to the Playbooks library.",
+              : "No edits staged — closing the editor returns you to Playbooks.",
             confirmLabel: dirty ? "Save changes" : "Close editor",
             cancelLabel: "Keep editing",
             onConfirm: () => {
@@ -2277,7 +2277,7 @@ function bindSession(root, session) {
             title: dirty ? "Discard changes?" : "Close editor?",
             body: dirty
               ? "Your edits to this Playbook will be lost."
-              : "You can re-open the editor anytime from the Playbooks library.",
+              : "You can re-open the editor anytime from Playbooks.",
             confirmLabel: dirty ? "Discard" : "Close",
             cancelLabel: "Keep editing",
             danger: dirty,

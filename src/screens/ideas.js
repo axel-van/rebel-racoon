@@ -59,14 +59,13 @@ function renderPage() {
     <div class="ideas-view__page">
       <header class="ideas-view__head">
         <div class="ideas-view__head-text">
-          <div class="screen__placeholder-eyebrow">Library</div>
           <h1 class="ideas-view__title">Ideas</h1>
           <p class="ideas-view__sub">${total} ideas · ${used} used in posts · ${unused} unused</p>
         </div>
         <div class="ideas-view__head-actions">
           <button type="button" class="ap-button stroked grey" data-ideas-remine>
             <i class="ap-icon-refresh"></i>
-            <span>Re-mine sources</span>
+            <span>Re-extract from sources</span>
           </button>
           <button type="button" class="ap-button primary orange" data-ideas-new>
             <i class="ap-icon-plus"></i>
@@ -204,11 +203,7 @@ function bind(root) {
       return;
     }
     if (event.target.closest("[data-ideas-new]") || event.target.closest("[data-ideas-remine]")) {
-      // Wired in a follow-up — surface a placeholder toast for now so the
-      // user knows the click registered.
-      import("../components/toast.js?v=20").then(({ showToast }) =>
-        showToast("This action lands in a follow-up — pinning the page surface first."),
-      );
+      // Not wired yet — silently no-op until a real handler lands.
     }
   });
 

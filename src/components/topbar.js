@@ -71,8 +71,8 @@ function renderStatusCardToggle() {
       class="ap-icon-button transparent app-topbar__status-toggle"
       data-topbar-toggle-status-card
       aria-pressed="${on}"
-      aria-label="${on ? "Hide details panel" : "Show details panel"}"
-      title="${on ? "Hide details panel" : "Show details panel"}"
+      aria-label="${on ? "Hide chat status" : "Show chat status"}"
+      title="${on ? "Hide chat status" : "Show chat status"}"
     >
       <i class="ap-icon-info"></i>
     </button>
@@ -91,7 +91,7 @@ function renderTitle(onSession) {
         type="button"
         class="app-topbar__title app-topbar__title--rename"
         data-topbar-rename-session="${sid || ""}"
-        title="Rename conversation"
+        title="Rename chat"
       >
         ${title}
         <i class="ap-icon-pen app-topbar__title-pen" aria-hidden="true"></i>
@@ -120,10 +120,10 @@ export function initTopbar() {
       const session = sid ? getSessionById(sid) : null;
       if (!session) return;
       openRenameModal({
-        title: "Rename conversation",
+        title: "Rename chat",
         initialName: session.name,
-        placeholder: "Conversation name",
-        confirmLabel: "Save",
+        placeholder: "Chat name",
+        confirmLabel: "Save name",
         onSubmit: (name) => updateSession(sid, { name }),
       });
       return;
@@ -284,7 +284,7 @@ function renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) {
       data-topbar-drafts
       ${draftsDisabled ? "disabled" : ""}
       aria-pressed="${rpMode === "drafts"}"
-      title="${draftsDisabled ? "No drafts in this conversation yet" : "Toggle Drafts panel"}"
+      title="${draftsDisabled ? "No drafts in this chat yet" : "Toggle Drafts panel"}"
     >
       <i class="ap-icon-pen"></i>
       <span>Drafts</span>
@@ -296,10 +296,10 @@ function renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) {
       data-topbar-ideas
       ${ideasDisabled ? "disabled" : ""}
       aria-pressed="${rpMode === "ideas"}"
-      title="${ideasDisabled ? "No outputs yet — attach a source or send a message" : "Toggle Outputs panel"}"
+      title="${ideasDisabled ? "No ideas yet — attach a source or send a message" : "Toggle Ideas panel"}"
     >
       <i class="ap-icon-sparkles"></i>
-      <span>Outputs</span>
+      <span>Ideas</span>
       ${ideasBadge}
     </button>
   `;
@@ -353,14 +353,13 @@ function currentSessionId() {
 function currentTitle() {
   const path = getPath();
   if (path === "/") return "Home";
-  if (path === "/sources") return "Sources";
   if (path === "/ideas") return "Ideas";
   if (path === "/contexts") return "Playbooks";
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);
   if (sessionMatch) {
     const id = sessionMatch[1];
     const known = getSessionById(id);
-    return known?.name || "New conversation";
+    return known?.name || "New chat";
   }
   return "Archie";
 }

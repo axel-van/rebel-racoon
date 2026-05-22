@@ -380,8 +380,8 @@ function renderFootMenu({ collapsed }) {
         data-sidebar-foot-toggle
         aria-haspopup="menu"
         aria-expanded="false"
-        aria-label="More options"
-        title="More options"
+        aria-label="More actions"
+        title="More actions"
       >
         <i class="ap-icon-cog"></i>
       </button>
@@ -451,11 +451,11 @@ function renderNav(path) {
       type="button"
       class="app-sidebar__nav-item"
       data-sidebar-new
-      aria-label="New conversation"
-      title="New conversation (⇧⌘O)"
+      aria-label="New chat"
+      title="New chat (⇧⌘O)"
     >
       <i class="ap-icon-plus"></i>
-      <span>New conversation</span>
+      <span>New chat</span>
       <kbd class="app-sidebar__nav-kbd" aria-hidden="true">⇧⌘O</kbd>
     </button>
   `;
@@ -465,8 +465,8 @@ function renderNav(path) {
       type="button"
       class="app-sidebar__nav-item"
       data-sidebar-search-open
-      aria-label="Search conversations"
-      title="Search conversations (⌘K)"
+      aria-label="Search chats"
+      title="Search chats (⌘K)"
     >
       <i class="ap-icon-search"></i>
       <span>Search…</span>
@@ -509,10 +509,10 @@ function renderRecentLists(activeSessionId) {
     // primary CTA.
     return `
       <div class="app-sidebar__empty app-sidebar__empty--first-run">
-        <span class="app-sidebar__empty-text">No conversations yet</span>
+        <span class="app-sidebar__empty-text">No chats yet</span>
         <span class="app-sidebar__empty-hint">
           <i class="ap-icon-arrow-up" aria-hidden="true"></i>
-          <span>Start one with the button above.</span>
+          <span>Start one with the <strong>New chat</strong> button above.</span>
         </span>
       </div>
     `;
@@ -612,7 +612,7 @@ function togglePinSidebar(sessionId) {
   const after = togglePinSession(sessionId);
   if (!after) return;
   import("./toast.js?v=20").then(({ showToast }) => {
-    showToast(after.pinned ? "Conversation pinned" : "Conversation unpinned", {
+    showToast(after.pinned ? "Chat pinned" : "Chat unpinned", {
       action: {
         label: "Undo",
         onClick: () => togglePinSession(sessionId),
@@ -630,10 +630,10 @@ function startRenameSidebar(sessionId) {
   // Close any open dropdown menus that may have triggered this rename.
   document.querySelectorAll(".app-sidebar__row-menu[open]").forEach((el) => el.removeAttribute("open"));
   openRenameModal({
-    title: "Rename conversation",
+    title: "Rename chat",
     initialName: session.name,
-    placeholder: "Conversation name",
-    confirmLabel: "Save",
+    placeholder: "Chat name",
+    confirmLabel: "Save name",
     onSubmit: (name) => updateSession(sessionId, { name }),
   });
 }
@@ -645,9 +645,9 @@ function deleteSidebarSession(sessionId) {
   const session = getSessionById(sessionId);
   if (!session) return;
   openConfirmModal({
-    title: "Delete conversation?",
-    body: `"${session.name}" will be permanently removed.`,
-    confirmLabel: "Delete",
+    title: "Delete chat?",
+    body: `"${session.name}" and its sources, ideas, and drafts will be permanently removed.`,
+    confirmLabel: "Delete chat",
     cancelLabel: "Keep",
     danger: true,
     onConfirm: () => {
@@ -671,7 +671,7 @@ function deleteSidebarSession(sessionId) {
         closeRightPanel();
         navigate("/");
       }
-      import("./toast.js?v=20").then(({ showToast }) => showToast("Conversation deleted"));
+      import("./toast.js?v=20").then(({ showToast }) => showToast("Chat deleted"));
     },
   });
 }

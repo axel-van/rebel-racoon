@@ -47,13 +47,13 @@ function buildItems() {
   const newItem = {
     value: "new",
     label: "Start a new chat",
-    caption: "Empty chat — bring this draft to a fresh thread",
+    caption: "Empty chat — start fresh",
     icon: "ap-icon-plus",
   };
   const existing = recentSessions.map((s) => ({
     value: s.id,
     label: s.name,
-    caption: `${s.sourceCount} sources · ${s.ideaCount} ideas · ${s.postCount} posts · ${s.lastActivity}`,
+    caption: `${s.sourceCount} sources · ${s.ideaCount} ideas · ${s.postCount} drafts · ${s.lastActivity}`,
     icon: "ap-icon-single-chat-bubble",
   }));
   return [newItem, ...existing];
