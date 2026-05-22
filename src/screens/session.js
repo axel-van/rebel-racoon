@@ -13,8 +13,6 @@ import {
   postClipExtractionTurn,
   postIdeaExtractionTurn,
   markIdeaExtractionReady,
-  postSourceIntake,
-  markSourceIntakeReady,
   postDraftResult,
   subscribe,
   submitAssistantChoice,
@@ -39,7 +37,7 @@ import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=26";
 import * as contextBuilder from "../context-builder.js?v=41";
 import * as playbookEditor from "../playbook-editor.js?v=9";
-import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=30";
+import { renderPicker } from "./_analyse-common.js?v=30";
 import { renderSourceCard } from "../components/source-card.js?v=28";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
 import {
@@ -76,6 +74,8 @@ import {
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=20";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=1";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=1";
 
 // Session screen — persistent assistant panel on the left, workspace with
 // tabs on the right.
@@ -1126,55 +1126,7 @@ function wireAssistantPanel(root, session, attachedContext) {
   // entire assistant panel (wizard chrome <-> normal thread+composer) and
   // re-bind keyboard nav for the wizard picker.
   const rebindWizardKeyboardIfActive = () => {
-    const aside = root.querySelector(".session__assistant");
-    if (!aside) return;
-    if (sidebarWizard.isActive(session.id)) {
-      bindWizardKeyboard(aside, {
-        handler: "wizard-answer",
-        onExit: () => {
-          unbindWizardKeyboard();
-          sidebarWizard.exit(session.id);
-        },
-        onCustomSubmit: (value) => {
-          sidebarWizard.answer(session.id, "other", value);
-        },
-        onMultiSubmit: (selectedValues) => {
-          sidebarWizard.answer(session.id, selectedValues);
-        },
-      });
-    } else if (inlineQuestion.isActive(session.id)) {
-      bindWizardKeyboard(aside, {
-        handler: "inline-question",
-        onExit: () => {
-          unbindWizardKeyboard();
-          inlineQuestion.skip(session.id);
-        },
-        onCustomSubmit: (value) => {
-          inlineQuestion.submitCustom(session.id, value);
-        },
-        onMultiSubmit: (selectedValues) => {
-          inlineQuestion.submitMulti(session.id, selectedValues);
-        },
-      });
-      // File dropzone variant — bind `change` on the hidden <input type=file>
-      // so picking a file submits via the dedicated submitFile path.
-      const fileInput = aside.querySelector("[data-inline-question-custom-file]");
-      if (fileInput) {
-        fileInput.addEventListener("change", (event) => {
-          const file = event.target.files?.[0];
-          if (file) inlineQuestion.submitFile(session.id, file);
-        });
-      }
-      // When the question has only a free-text input (no `items`), focus
-      // it on render so the user can type immediately without clicking.
-      const customInput = aside.querySelector("[data-inline-question-custom]");
-      const firstItem = aside.querySelector("[data-inline-question]");
-      if (customInput && !firstItem) {
-        Promise.resolve().then(() => customInput.focus());
-      }
-    } else {
-      unbindWizardKeyboard();
-    }
+    rebindWizardKeyboard(root.querySelector(".session__assistant"), session.id);
   };
   const refreshAssistantAside = () => {
     const aside = root.querySelector(".session__assistant");
@@ -1221,61 +1173,10 @@ function wireAssistantPanel(root, session, attachedContext) {
     if (!thread) return;
     thread.innerHTML = renderThread(getThread(session.id), session.id);
   };
-  // Intake-turn lifecycle (loading → ready)
-  //
-  // seenSourceIds is a snapshot baseline of which sources were already
-  // attached when bindSession mounted. Any sourceId that appears in
-  // attachedSourceIds AFTER this baseline counts as a "new attach" — we
-  // post an intake turn for it (unless the source is already Processed,
-  // which means it's a Library re-attach, not an upload).
-  //
-  // sentReadyForSourceIds dedupes the markReady call: once a turn flips
-  // to ready, we don't re-fire on every notify.
-  // Intake-turn lifecycle (loading → ready)
-  //
-  // seenSourceIds is a snapshot baseline of the session's sources at
-  // mount time. Any sourceId that appears in this session's sources
-  // AFTER this baseline counts as a "new upload" — we post an intake
-  // turn for it (Processing status). When the source flips to Processed,
-  // the turn flips to ready.
-  //
-  // sentReadyForSourceIds dedupes the markReady call: once a turn flips
-  // to ready, we don't re-fire on every notify.
-  const seenSourceIds = new Set(getStreamSources(session.id).map((s) => s.id));
-  const sentReadyForSourceIds = new Set();
 
-  const offComposerSources = subscribeSources(session.id, (sources) => {
-    // Post intake turns for any new source ids.
-    for (const src of sources) {
-      if (seenSourceIds.has(src.id)) continue;
-      seenSourceIds.add(src.id);
-      // Every new source in this session is a fresh upload (no library
-      // re-attach in the per-session model) → post a loading intake.
-      postSourceIntake(session.id, {
-        kind: src.kind,
-        filename: src.filename,
-        sourceId: src.id,
-        status: "loading",
-      });
-    }
-
-    // Repaint the thread on every source flip — intake turns derive
-    // ideaCount + status live from sources-stream, so re-rendering is
-    // how "Processed · N ideas" lands.
-    repaintThreadFromSources();
-
-    // Flip pending intake turns to ready as their source completes.
-    const thread = getThread(session.id);
-    for (const msg of thread) {
-      if (msg.role !== "source-intake") continue;
-      if (!msg.sourceId || msg.status === "ready") continue;
-      if (sentReadyForSourceIds.has(msg.sourceId)) continue;
-      const src = sources.find((s) => s.id === msg.sourceId);
-      if (src && src.status === "Processed") {
-        sentReadyForSourceIds.add(msg.sourceId);
-        markSourceIntakeReady(session.id, msg.sourceId);
-      }
-    }
+  // Intake-turn lifecycle (loading → ready) — see intake-lifecycle.js.
+  const offComposerSources = startIntakeLifecycle(session.id, {
+    onSourcesChange: repaintThreadFromSources,
   });
 
   // Uploads → no extra wiring needed: startFileUpload already takes a
