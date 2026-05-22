@@ -72,25 +72,24 @@ function paint(target, sid) {
           <i class="ap-icon-sparkles-mermaid"></i>
           Archie
         </span>
-        <span class="welcome-screen__chip">Powered by Agorapulse</span>
+        <span class="welcome-screen__chip">BETA</span>
       </header>
       <div class="welcome-screen__body">
         <div class="welcome-step">
           <div class="welcome-step__header">
-            <span class="welcome-step__tag">Étape 2 sur 4</span>
-            <h1 class="welcome-step__title">Quel profil veux-tu utiliser ?</h1>
+            <span class="welcome-step__tag">Step 2 of 4</span>
+            <h1 class="welcome-step__title">Which profile should I use?</h1>
             <p class="welcome-step__sub">
-              Voici les comptes que tu as déjà connectés à Agorapulse — choisis-en un pour démarrer. Tu pourras en
-              ajouter d'autres plus tard.
+              Here are the accounts you've already connected. Pick one to start — you can add more later.
             </p>
           </div>
           <ul class="welcome-socials__grid">
             ${raw(CONNECTED_PROFILES.map((p) => renderProfileCard(p, p.id === selectedId)).join(""))}
           </ul>
           <footer class="welcome-step__footer">
-            <button type="button" class="welcome-step__footer-skip" data-welcome-skip>Passer pour l'instant</button>
+            <button type="button" class="welcome-step__footer-skip" data-welcome-skip>Skip for now</button>
             <button type="button" class="ap-button primary orange" data-welcome-continue>
-              Continuer
+              Continue
               <i class="ap-icon-arrow-right"></i>
             </button>
           </footer>

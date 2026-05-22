@@ -1290,7 +1290,7 @@ function wireAssistantPanel(root, session, attachedContext) {
   const pendingWelcome = consumeHandoff("welcomeComplete");
   if (pendingWelcome?.playbookName) {
     setTimeout(() => {
-      showToast(`Bienvenue ${pendingWelcome.playbookName} !`);
+      showToast(`Welcome — your Playbook "${pendingWelcome.playbookName}" is ready.`);
     }, 200);
   }
 

@@ -26,19 +26,19 @@ export function renderWelcome(_params, target) {
           <i class="ap-icon-sparkles-mermaid"></i>
           Archie
         </span>
-        <span class="welcome-screen__chip">Powered by Agorapulse</span>
+        <span class="welcome-screen__chip">BETA</span>
       </header>
       <div class="welcome-screen__body welcome-screen__body--centered">
         <div class="welcome-hero welcome-hero--centered">
-          <span class="welcome-hero__eyebrow">Bienvenue 👋</span>
-          <h1 class="welcome-hero__title">Faisons connaissance<br />avec ton brand.</h1>
+          <span class="welcome-hero__eyebrow">Welcome</span>
+          <h1 class="welcome-hero__title">Let's get to know<br />your Brand.</h1>
           <p class="welcome-hero__sub">
-            Colle l'URL de ton site et Archie en extrait ta voix, ton audience et ton identité visuelle. On construit
-            ton Playbook ensemble en quelques étapes.
+            Paste your website URL and I'll extract your voice, audience, and visual identity. We'll build your Playbook
+            in a few steps.
           </p>
 
           <form class="welcome-input-card" data-welcome-form>
-            <label for="welcomeUrlInput" class="welcome-input-card__label">URL de ton site</label>
+            <label for="welcomeUrlInput" class="welcome-input-card__label">Your website URL</label>
             <div class="welcome-input-card__row">
               <i class="ap-icon-web welcome-input-card__icon"></i>
               <input
@@ -51,12 +51,12 @@ export function renderWelcome(_params, target) {
                 required
               />
               <button type="submit" class="ap-button primary orange welcome-input-card__submit">
-                <span>Continuer</span>
+                <span>Continue</span>
                 <i class="ap-icon-arrow-right"></i>
               </button>
             </div>
             <p class="welcome-input-card__hint">
-              On analyse ton site pour démarrer ton Playbook. Tu pourras tout modifier après.
+              Archie analyses your site to seed the Playbook. You can edit anything later.
             </p>
             <p class="welcome-input-card__error" data-welcome-error hidden></p>
           </form>
@@ -64,19 +64,19 @@ export function renderWelcome(_params, target) {
           <ol class="welcome-roadmap welcome-roadmap--horizontal welcome-roadmap--four">
             <li class="welcome-roadmap__step is-current">
               <span class="welcome-roadmap__bullet"><span class="welcome-roadmap__num">1</span></span>
-              <span class="welcome-roadmap__label">Ton site</span>
+              <span class="welcome-roadmap__label">Site</span>
             </li>
             <li class="welcome-roadmap__step">
               <span class="welcome-roadmap__bullet"><span class="welcome-roadmap__num">2</span></span>
-              <span class="welcome-roadmap__label">Tes réseaux</span>
+              <span class="welcome-roadmap__label">Profile</span>
             </li>
             <li class="welcome-roadmap__step">
               <span class="welcome-roadmap__bullet"><span class="welcome-roadmap__num">3</span></span>
-              <span class="welcome-roadmap__label">Tes sources</span>
+              <span class="welcome-roadmap__label">Sources</span>
             </li>
             <li class="welcome-roadmap__step">
               <span class="welcome-roadmap__bullet"><span class="welcome-roadmap__num">4</span></span>
-              <span class="welcome-roadmap__label">Ton Playbook</span>
+              <span class="welcome-roadmap__label">Playbook</span>
             </li>
           </ol>
         </div>
@@ -103,7 +103,7 @@ function onSubmit(event) {
   // the inline error.
   if (!/^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(raw)) {
     if (errorEl) {
-      errorEl.textContent = "Colle une URL valide pour démarrer (ex : acme.com).";
+      errorEl.textContent = "Enter a URL like acme.com or https://acme.com.";
       errorEl.hidden = false;
     }
     input?.focus();
