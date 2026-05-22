@@ -9,8 +9,7 @@
 .chat-turn {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  max-width: 560px;
+  gap: var(--ref-spacing-xs);
 }
 
 .chat-turn--ai {
@@ -21,6 +20,7 @@
 .chat-turn--user {
   align-self: flex-end;
   align-items: flex-end;
+  max-width: 560px;
 }
 
 /* Inline AI layout (Figma 25:881) — when the sparkle avatar is a direct child
@@ -44,10 +44,9 @@
 }
 
 /* When the avatar is a direct child (inline AI turn), nudge it down slightly
-   so the 16px sparkle aligns with the first line of the 14/20 body text.
-   Uses the DS --ref-spacing-xxxs scale (4px). */
+   so the 16px sparkle aligns with the first line of the 15/1.55 body text. */
 .chat-turn--ai > .chat-turn-avatar {
-  margin-top: var(--ref-spacing-xxxs);
+  margin-top: var(--app-spacing-micro);
 }
 
 /* AI sparkles icon is a mask-based glyph (see ds/ap-icons.css) — its visible
@@ -75,22 +74,27 @@
   border-radius: var(--app-radius-lg);
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xs);
 }
 
 /* AI bubble (Figma 25:886) — borderless, no background, no padding; the text
-   sits directly beside the sparkle avatar. */
+   sits directly beside the sparkle avatar. Defensive reset so an ascending
+   .ap-card / surface rule can't reintroduce chrome when the AI bubble holds
+   a card child (drafts-card, idea-card, etc.). */
 .chat-bubble--ai {
   color: var(--ref-color-grey-150);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  border-radius: 0;
 }
 
-/* User bubble (Figma 25:892) — solid electric-blue with spacing-xxs padding. */
-/* User bubble (Figma 25:1040) — solid electric-blue with spacing-xxs padding.
+/* User bubble (Figma 25:1040) — solid electric-blue.
    Corners 12 / 0 / 12 / 12 — sharp top-right corner points at the user avatar. */
 .chat-bubble--user {
   background: var(--ref-color-electric-blue-100);
   color: var(--ref-color-white);
-  padding: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   border: 0;
   border-radius: var(--app-radius-xl);
   border-top-right-radius: 0;
@@ -187,12 +191,19 @@
   line-height: var(--ref-font-line-height-md);
 }
 
+/* AI body uses the handoff message scale (15/1.55) — aired-out reading rhythm
+   that matches Claude/ChatGPT bodies. */
 .chat-bubble--ai .chat-bubble-text {
   color: var(--ref-color-grey-150);
+  font-size: var(--app-text-message-size);
+  line-height: var(--app-text-message-line);
 }
 
+/* User bubble stays at the compact 14/20 caisse — the blue chip already
+   reads well, no need to upscale. */
 .chat-bubble--user .chat-bubble-text {
   color: var(--ref-color-white);
+  line-height: var(--ref-font-line-height-md);
 }
 
 /* -- Content blocks rendered INSIDE an AI bubble --------------------------- */
