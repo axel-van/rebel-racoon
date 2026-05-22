@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="../styles/ds-patches.css" />
     <link rel="stylesheet" href="../styles/chat.css" />
     <link rel="stylesheet" href="../styles/screens/session.css" />
+    <link rel="stylesheet" href="../styles/components/archie-loader.css" />
 
     <style>
       /* ── Handoff page chrome ───────────────────────────────────────── */
@@ -899,7 +900,7 @@
                       riverside-discovery-call.pdf
                     </span>
                     <span class="chat-bubble-source-intake__loading" role="status" aria-label="Uploading">
-                      <span class="chat-bubble-source-intake__loading-dot" aria-hidden="true"></span>
+                      <span class="chat-bubble-source-intake__spinner" aria-hidden="true"></span>
                       <span>Uploading</span>
                     </span>
                   </div>
@@ -977,10 +978,10 @@
 
   &lt;!-- Trailing slot — pick one of three: --&gt;
 
-  &lt;!-- (1) Loading --&gt;
+  &lt;!-- (1) Loading — uses the shared Archie 12-dot mermaid loader --&gt;
   &lt;span class="chat-bubble-source-intake__loading"
         role="status" aria-label="Uploading"&gt;
-    &lt;span class="chat-bubble-source-intake__loading-dot"&gt;&lt;/span&gt;
+    &lt;span class="chat-bubble-source-intake__spinner"&gt;&lt;/span&gt;
     &lt;span&gt;Uploading&lt;/span&gt;
   &lt;/span&gt;
 
@@ -1007,7 +1008,7 @@
                   <code>__kind</code>
                   <code>__name</code>
                   <code>__loading</code>
-                  <code>__loading-dot</code>
+                  <code>__spinner</code> (shared Archie loader)
                   <code>__pill</code>
                   <code>__check</code>
                 </dd>
@@ -2314,11 +2315,15 @@
                 <td><code>--app-ease-out</code></td>
               </tr>
               <tr>
-                <td><code>.chat-bubble-source-intake__loading-dot</code></td>
+                <td><code>.chat-bubble-source-intake__spinner</code></td>
                 <td>Loading state</td>
-                <td>Rotate 360&deg; on a 2-color ring (grey-40 ring, electric-blue-100 top)</td>
-                <td>0.9s, infinite</td>
-                <td><code>linear</code></td>
+                <td>
+                  Shared Archie loader &mdash; 12-dot grid masked from a mermaid-gradient bounding box (keyframes
+                  <code>archie-loader-l29</code>, see <code>styles/components/archie-loader.css</code>). Same loader
+                  used by composer-thinking, source-card, clip-extraction, etc.
+                </td>
+                <td>2s, infinite</td>
+                <td>linear (fade pattern)</td>
               </tr>
               <tr>
                 <td><code>.chat-bubble--source-intake</code></td>

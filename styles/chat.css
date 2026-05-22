@@ -152,7 +152,11 @@
    3. Ready, no ideas: __check (bare green check icon)
 */
 
-/* (1) Loading pill */
+/* (1) Loading pill — uses the shared Archie loader (12-dot mermaid
+   gradient grid, see styles/components/archie-loader.css). The
+   .chat-bubble-source-intake__spinner selector is wired into the
+   loader's class list and sized to 14px (same scale as the composer
+   thinking spinner). */
 .chat-bubble-source-intake__loading {
   display: inline-flex;
   align-items: center;
@@ -163,16 +167,6 @@
   border-radius: var(--app-radius-pill);
   font-size: 11px;
   font-weight: var(--ref-font-weight-bold);
-  flex-shrink: 0;
-}
-
-.chat-bubble-source-intake__loading-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: var(--app-radius-circle);
-  border: 1.5px solid var(--ref-color-grey-40);
-  border-top-color: var(--ref-color-electric-blue-100);
-  animation: app-spin 0.9s linear infinite;
   flex-shrink: 0;
 }
 

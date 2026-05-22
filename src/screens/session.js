@@ -877,7 +877,7 @@ function renderSourceIntakeTurn(message, sessionId) {
   if (isLoading) {
     trailing = `
       <span class="chat-bubble-source-intake__loading" role="status" aria-label="Uploading">
-        <span class="chat-bubble-source-intake__loading-dot" aria-hidden="true"></span>
+        <span class="chat-bubble-source-intake__spinner" aria-hidden="true"></span>
         <span>Uploading</span>
       </span>
     `;

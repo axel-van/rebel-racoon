@@ -30,6 +30,7 @@
 .ap-loader.size-24,
 .ap-loader.size-30,
 .ap-loader.size-48,
+.chat-bubble-source-intake__spinner,
 .extracting-notice__spinner,
 .clip-extraction-card__spinner,
 .session__composer-thinking-spinner,
@@ -61,6 +62,7 @@
 
 .archie-loader::before,
 .ap-loader::before,
+.chat-bubble-source-intake__spinner::before,
 .extracting-notice__spinner::before,
 .clip-extraction-card__spinner::before,
 .session__composer-thinking-spinner::before,
@@ -111,6 +113,7 @@
   --archie-loader-size: 12px;
 }
 .bug-report-modal__submit-spinner,
+.chat-bubble-source-intake__spinner,
 .feedback-modal__submit-spinner,
 .session__composer-thinking-spinner,
 .source-card__clips-spinner {
