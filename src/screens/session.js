@@ -1,9 +1,9 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=47";
-import { socialAccounts, chatStarters } from "../mocks.js?v=29";
+import { socialAccounts, chatStarters } from "../mocks.js?v=31";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
-import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=27";
+import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=28";
 import { isNewUser } from "../user-mode.js?v=20";
 import {
   getThread,

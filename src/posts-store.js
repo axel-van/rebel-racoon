@@ -7,7 +7,7 @@
 //   attachImageToDraft(sessionId, postId, imageUrl)
 //   subscribe(sessionId, fn)    → unsubscribe fn
 
-import { posts as mockPosts, recentSessions as seedRecentSessions } from "./mocks.js?v=29";
+import { posts as mockPosts, recentSessions as seedRecentSessions } from "./mocks.js?v=31";
 import { isNewUser } from "./user-mode.js?v=20";
 
 // Demo session ids — only these get the seeded posts mock. Brand-new

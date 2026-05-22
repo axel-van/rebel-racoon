@@ -15,7 +15,7 @@
 //   addSession(session)          → Session     (used by future "new chat" flows)
 //   subscribe(fn)                → unsubscribe
 
-import { recentSessions as seed } from "./mocks.js?v=29";
+import { recentSessions as seed } from "./mocks.js?v=31";
 import { isNewUser } from "./user-mode.js?v=20";
 
 // First-time user starts with an empty session list (matches every other

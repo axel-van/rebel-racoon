@@ -8,7 +8,7 @@ import { init as initBugReportModal } from "./components/bug-report-modal.js?v=2
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=24";
 import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=21";
 import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=1";
-import { init as initSettingsDrawer } from "./components/settings-drawer.js?v=23";
+import { init as initSettingsDrawer } from "./components/settings-drawer.js?v=24";
 import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=21";
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=22";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=20";
@@ -19,11 +19,11 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=10";
 import { renderDashboard } from "./screens/dashboard.js?v=44";
-import { renderSession } from "./screens/session.js?v=106";
+import { renderSession } from "./screens/session.js?v=107";
 import { renderIdeas } from "./screens/ideas.js?v=24";
 import { renderContexts } from "./screens/contexts.js?v=32";
 import { renderWelcome } from "./screens/welcome.js?v=4";
-import { renderWelcomeSocials } from "./screens/welcome-socials.js?v=2";
+import { renderWelcomeSocials } from "./screens/welcome-socials.js?v=3";
 import { renderWelcomeSources } from "./screens/welcome-sources.js?v=2";
 import { renderWelcomeRecap } from "./screens/welcome-recap.js?v=2";
 // Route table.

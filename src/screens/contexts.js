@@ -5,7 +5,7 @@ import {
   subscribe as subscribeContexts,
   duplicateContext,
   deleteContext,
-} from "../contexts-store.js?v=27";
+} from "../contexts-store.js?v=28";
 import { navigate } from "../router.js?v=21";
 import { openRead, startEdit } from "../context-builder.js?v=37";
 import { setHandoff } from "../handoff.js?v=20";

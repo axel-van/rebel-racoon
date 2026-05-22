@@ -22,7 +22,7 @@
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=20";
 import { navigate } from "../router.js?v=21";
 import { getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
-import { getContextById } from "../contexts-store.js?v=27";
+import { getContextById } from "../contexts-store.js?v=28";
 
 const MODAL_ID = "search";
 
