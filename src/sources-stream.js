@@ -10,6 +10,7 @@
 
 import { sourcesBySession as seedByCsesssion } from "./mocks.js?v=31";
 import { isNewUser } from "./user-mode.js?v=21";
+import { createNotifier } from "./store-utils.js?v=1";
 
 // ─── State ───────────────────────────────────────────────────────────────
 
@@ -30,9 +31,12 @@ if (!isNewUser()) {
 //   { id, name, size, kind, status: 'uploading'|'processing'|'done'|'cancelled', progress, sourceId?, sessionId }
 const uploads = [];
 
-// Per-session source subscribers. Map<sessionId, Set<fn>>.
+// Per-session source subscribers. Map<sessionId, Set<fn>> — keeps the
+// per-key fan-out the createNotifier factory doesn't support.
 const sourceSubsBySession = new Map();
-const uploadSubs = new Set();
+// Global uploads notifier — single subscriber set, snapshot is the whole
+// uploads array.
+const uploadsNotifier = createNotifier("sources-stream/uploads");
 
 let counter = 0;
 function newId(prefix) {
@@ -57,7 +61,7 @@ function notifySources(sessionId) {
 }
 
 function notifyUploads() {
-  for (const fn of uploadSubs) fn(uploads);
+  uploadsNotifier.notify(uploads);
 }
 
 // Resolve which session owns a given sourceId. Used by mutators that take
@@ -91,10 +95,7 @@ export function subscribeSources(sessionId, fn) {
   return () => subs.delete(fn);
 }
 
-export function subscribeUploads(fn) {
-  uploadSubs.add(fn);
-  return () => uploadSubs.delete(fn);
-}
+export const subscribeUploads = uploadsNotifier.subscribe;
 
 // Drop all sources + subscribers for a session — used by the
 // conversation-delete flow in the sidebar.

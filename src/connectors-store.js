@@ -18,9 +18,13 @@
 // this module return the same store; a full page reload re-seeds.
 
 import { connectors as seed } from "./mocks.js?v=31";
+import { createNotifier } from "./store-utils.js?v=1";
 
 const connectors = seed.map((c) => ({ ...c }));
-const subscribers = new Set();
+const notifier = createNotifier("connectors-store");
+
+export const subscribe = notifier.subscribe;
+const notify = () => notifier.notify(getConnectors());
 
 export function getConnectors() {
   return connectors.slice();
@@ -48,20 +52,4 @@ export function setConnectorStatus(id, patch) {
   else if (patch.lastSync !== undefined) c.lastSync = patch.lastSync;
   notify();
   return c;
-}
-
-export function subscribe(fn) {
-  subscribers.add(fn);
-  return () => subscribers.delete(fn);
-}
-
-function notify() {
-  const snapshot = getConnectors();
-  subscribers.forEach((fn) => {
-    try {
-      fn(snapshot);
-    } catch (err) {
-      console.warn("[connectors-store] subscriber threw", err);
-    }
-  });
 }

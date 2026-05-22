@@ -19,11 +19,15 @@
 
 import { contexts as seed } from "./mocks.js?v=31";
 import { isNewUser } from "./user-mode.js?v=21";
+import { createNotifier } from "./store-utils.js?v=1";
 
 // Lot 15 — first-time user mode starts empty so the standalone /contexts
 // page renders its empty state. Returning user keeps the mock seed.
 const contexts = isNewUser() ? [] : seed.map((c) => ({ ...c }));
-const subscribers = new Set();
+const notifier = createNotifier("contexts-store");
+
+export const subscribe = notifier.subscribe;
+const notify = () => notifier.notify(getContexts());
 
 function freshId() {
   // Stable-enough id for the proto: "ctx-" + base36 timestamp + random suffix.
@@ -194,20 +198,4 @@ export function deleteContext(id) {
   contexts.splice(idx, 1);
   notify();
   return true;
-}
-
-export function subscribe(fn) {
-  subscribers.add(fn);
-  return () => subscribers.delete(fn);
-}
-
-function notify() {
-  const snapshot = getContexts();
-  subscribers.forEach((fn) => {
-    try {
-      fn(snapshot);
-    } catch (err) {
-      console.warn("[contexts-store] subscriber threw", err);
-    }
-  });
 }

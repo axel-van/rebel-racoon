@@ -17,11 +17,15 @@
 
 import { recentSessions as seed } from "./mocks.js?v=31";
 import { isNewUser } from "./user-mode.js?v=21";
+import { createNotifier } from "./store-utils.js?v=1";
 
 // First-time user starts with an empty session list (matches every other
 // store's first-run mode); returning users get the seeded conversations.
 const sessions = isNewUser() ? [] : seed.map((s) => ({ ...s }));
-const subscribers = new Set();
+const notifier = createNotifier("sessions-store");
+
+export const subscribe = notifier.subscribe;
+const notify = () => notifier.notify(getSessions());
 
 export function getSessions() {
   return sessions.slice();
@@ -73,20 +77,4 @@ function addSession(session) {
   sessions.unshift(next);
   notify();
   return next;
-}
-
-export function subscribe(fn) {
-  subscribers.add(fn);
-  return () => subscribers.delete(fn);
-}
-
-function notify() {
-  const snap = getSessions();
-  for (const fn of subscribers) {
-    try {
-      fn(snap);
-    } catch (err) {
-      console.warn("[sessions-store] subscriber threw", err);
-    }
-  }
 }
