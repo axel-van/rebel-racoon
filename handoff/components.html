@@ -34,6 +34,17 @@
         box-sizing: border-box;
       }
 
+      /* The app's base.css locks html/body to overflow:hidden (the app shell
+         scrolls its own panes). This is a standalone doc — restore native
+         page scroll. */
+      html,
+      body {
+        height: auto !important;
+        min-height: 100%;
+        overflow: visible !important;
+        overflow-y: auto !important;
+      }
+
       body {
         margin: 0;
         padding: 0;
