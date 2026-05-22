@@ -408,6 +408,7 @@
       <nav class="hd-toc" aria-label="Table of contents">
         <h2>Sections</h2>
         <ol>
+          <li><a href="#decision">0. Decision matrix &mdash; which turn type?</a></li>
           <li><a href="#turns">1. Turn wrappers</a></li>
           <li><a href="#bubbles">2. Bubbles (AI / User / Source intake)</a></li>
           <li><a href="#bubble-content">3. Bubble content blocks</a></li>
@@ -416,9 +417,120 @@
           <li><a href="#drafts">6. Drafts summary card</a></li>
           <li><a href="#clip-extraction">7. Clip / Idea extraction card</a></li>
           <li><a href="#notices">8. Notices (mermaid, grey, extracting)</a></li>
-          <li><a href="#tokens">9. Token quick reference</a></li>
+          <li><a href="#motion">9. Motion &amp; transitions</a></li>
+          <li><a href="#a11y">10. Accessibility &amp; keyboard</a></li>
+          <li><a href="#edge-cases">11. Edge cases &amp; content rules</a></li>
+          <li><a href="#tokens">12. Token quick reference</a></li>
         </ol>
       </nav>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            0. DECISION MATRIX
+            ════════════════════════════════════════════════════════════ -->
+      <section class="hd-section" id="decision">
+        <h2>0. Decision matrix &mdash; which turn type?</h2>
+        <p class="hd-lead">
+          Every renderable thread message hits a single dispatcher: <code>renderTurn(message)</code> in
+          <code>src/screens/session.js</code> (~ln 756). It branches on <code>message.role</code> and
+          <code>message.variant</code>. Use this table to pick the right shape before composing markup &mdash; the
+          render function names match exactly so you can grep them.
+        </p>
+
+        <div class="hd-tokens">
+          <table>
+            <thead>
+              <tr>
+                <th>message.role</th>
+                <th>message.variant</th>
+                <th>Render function</th>
+                <th>Component</th>
+                <th>Section</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>"assistant"</code></td>
+                <td>&mdash;</td>
+                <td><code>renderTurn()</code> default branch</td>
+                <td><code>.chat-bubble--ai</code></td>
+                <td><a href="#bubbles">§2</a></td>
+              </tr>
+              <tr>
+                <td><code>"user"</code></td>
+                <td>&mdash;</td>
+                <td><code>renderTurn()</code> default branch</td>
+                <td><code>.chat-bubble--user</code></td>
+                <td><a href="#bubbles">§2</a></td>
+              </tr>
+              <tr>
+                <td><code>"source-intake"</code></td>
+                <td>&mdash;</td>
+                <td><code>renderSourceIntakeTurn()</code></td>
+                <td><code>.chat-bubble--source-intake</code></td>
+                <td><a href="#bubbles">§2</a></td>
+              </tr>
+              <tr>
+                <td><code>"assistant"</code></td>
+                <td><code>"extraction"</code></td>
+                <td><code>renderExtractionTurn()</code></td>
+                <td><code>.extraction-turn__idea-card</code></td>
+                <td><a href="#extraction">§5</a></td>
+              </tr>
+              <tr>
+                <td><code>"assistant"</code></td>
+                <td><code>"draft"</code></td>
+                <td><code>renderDraftTurn()</code></td>
+                <td><code>.drafts-card</code></td>
+                <td><a href="#drafts">§6</a></td>
+              </tr>
+              <tr>
+                <td><code>"assistant"</code></td>
+                <td><code>"clip-extraction"</code></td>
+                <td><code>renderClipExtractionTurn()</code></td>
+                <td><code>.clip-extraction-card</code></td>
+                <td><a href="#clip-extraction">§7</a></td>
+              </tr>
+              <tr>
+                <td><code>"assistant"</code></td>
+                <td><code>"idea-extraction"</code></td>
+                <td><code>renderIdeaExtractionTurn()</code></td>
+                <td><code>.clip-extraction-card</code> (bulb icon)</td>
+                <td><a href="#clip-extraction">§7</a></td>
+              </tr>
+              <tr>
+                <td><code>"assistant-choice"</code></td>
+                <td>&mdash;</td>
+                <td><code>renderChoiceTurn()</code></td>
+                <td><code>.chat-bubble-choices</code></td>
+                <td><a href="#choices">§4</a></td>
+              </tr>
+              <tr>
+                <td><code>"system"</code></td>
+                <td><code>"mermaid"</code> or unset</td>
+                <td><code>renderSystemNotice()</code></td>
+                <td><code>.assistant-notice</code></td>
+                <td><a href="#notices">§8</a></td>
+              </tr>
+              <tr>
+                <td><code>"pending"</code></td>
+                <td>&mdash;</td>
+                <td><code>renderExtractingNotice()</code></td>
+                <td><code>.extracting-notice</code></td>
+                <td><a href="#notices">§8</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="hd-note">
+          <strong>Lifecycle.</strong> Stores in <code>src/assistant.js</code> mutate the message list (per-session
+          <code>Map(sessionId &rarr; turns[])</code>). Every mutation reruns <code>renderTurn</code> for the touched
+          message in place &mdash; so a <code>source-intake</code> turn with <code>status: "loading"</code> flips chrome
+          to <code>status: "ready"</code> simply by updating the same object. The renderer reads live state (e.g.
+          <code>renderClipExtractionTurn</code> reads the current <code>sources-stream</code> source to derive pending /
+          ready / gone), which is why clip cards can transition without a new message being pushed.
+        </div>
+      </section>
 
       <!-- ════════════════════════════════════════════════════════════════
             1. TURN WRAPPERS
@@ -2002,10 +2114,563 @@
       </section>
 
       <!-- ════════════════════════════════════════════════════════════════
-            9. TOKENS QUICK REFERENCE
+            9. MOTION & TRANSITIONS
+            ════════════════════════════════════════════════════════════ -->
+      <section class="hd-section" id="motion">
+        <h2>9. Motion &amp; transitions</h2>
+        <p class="hd-lead">
+          Every animation in the thread is driven by DS duration tokens (<code
+            >--ref-animation-xshort/short/normal/long</code
+          >
+          = 75 / 150 / 250 / 400&nbsp;ms) and a small set of app easings declared in <code>styles/tokens.css</code>.
+          When extending the thread, reuse these &mdash; never write raw ms / cubic-bezier values.
+        </p>
+
+        <h3 style="margin: 24px 0 12px; font-size: 16px">Easing tokens (styles/tokens.css)</h3>
+        <div class="hd-tokens">
+          <table>
+            <thead>
+              <tr>
+                <th>Token</th>
+                <th>Value</th>
+                <th>Use for</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--app-ease-out</code></td>
+                <td><code>cubic-bezier(0.2, 0.8, 0.2, 1)</code></td>
+                <td>State changes that feel "snappy on entry" &mdash; chip selection, thumb toggle</td>
+              </tr>
+              <tr>
+                <td><code>--app-ease-standard</code></td>
+                <td><code>cubic-bezier(0.2, 0, 0, 1)</code></td>
+                <td>Symmetric ease, default for hover chrome transitions (drafts-card)</td>
+              </tr>
+              <tr>
+                <td><code>--app-ease-bounce</code></td>
+                <td><code>cubic-bezier(0.34, 1.56, 0.64, 1)</code></td>
+                <td>
+                  Reserved for affirmative pops (success check, "saved" toasts) &mdash; not used in the thread today
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin: 32px 0 12px; font-size: 16px">Motion catalogue</h3>
+        <div class="hd-tokens">
+          <table>
+            <thead>
+              <tr>
+                <th>Element</th>
+                <th>Trigger</th>
+                <th>Properties</th>
+                <th>Duration</th>
+                <th>Easing</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>.chat-bubble-choice-chip</code></td>
+                <td>Hover · select · answer</td>
+                <td><code>border-color, background, color</code></td>
+                <td><code>--ref-animation-short</code> (150ms)</td>
+                <td>browser default</td>
+              </tr>
+              <tr>
+                <td><code>.drafts-card</code></td>
+                <td>Hover, focus-visible, <code>.is-active</code></td>
+                <td><code>border-color, box-shadow</code></td>
+                <td><code>--ref-animation-short</code> (150ms)</td>
+                <td><code>--app-ease-standard</code></td>
+              </tr>
+              <tr>
+                <td><code>.extraction-turn__idea-card-thumb</code></td>
+                <td>Hover · focus-visible · <code>.is-active</code></td>
+                <td><code>color, background-color</code></td>
+                <td><code>--ref-animation-short</code> (150ms)</td>
+                <td><code>--app-ease-out</code></td>
+              </tr>
+              <tr>
+                <td><code>.assistant-notice__chevron</code></td>
+                <td><code>&lt;details&gt;</code> open / close</td>
+                <td><code>transform: rotate(0&deg; &rarr; 180&deg;)</code></td>
+                <td>160ms</td>
+                <td><code>ease</code></td>
+              </tr>
+              <tr>
+                <td><code>.assistant-notice.is-loading .ap-status.mermaid</code></td>
+                <td>Pill carries <code>.is-loading</code></td>
+                <td>Opacity 1 &rarr; 0.55 (keyframes <code>assistant-notice-pulse</code>)</td>
+                <td>1.4s, infinite</td>
+                <td><code>ease-in-out</code></td>
+              </tr>
+              <tr>
+                <td><code>.extracting-notice__spinner</code></td>
+                <td>Always (while turn alive)</td>
+                <td>Rotate 360&deg; (keyframes <code>app-spin</code>, see <code>base.css</code>)</td>
+                <td>0.9s, infinite</td>
+                <td><code>linear</code></td>
+              </tr>
+              <tr>
+                <td><code>.clip-extraction-card__spinner</code></td>
+                <td>Pending state</td>
+                <td>Same <code>app-spin</code>, orange-100 top-color on grey-10 ring</td>
+                <td>0.9s, infinite</td>
+                <td><code>linear</code></td>
+              </tr>
+              <tr>
+                <td><code>.ap-loader.blue.size-16</code> (intake spinner)</td>
+                <td>Source-intake loading</td>
+                <td>DS-owned loader animation</td>
+                <td>DS default</td>
+                <td>DS default</td>
+              </tr>
+              <tr>
+                <td><code>.idea-card.is-focused</code></td>
+                <td>Navigate from "View idea" link</td>
+                <td>Border-color pulse (keyframes <code>app-focus-pulse</code>, see <code>base.css</code>)</td>
+                <td>1.6s, runs once</td>
+                <td><code>ease</code></td>
+              </tr>
+              <tr>
+                <td><code>.chat-bubble--ai.is-loading</code> /<br /><code>.chat-bubble--user.is-loading</code></td>
+                <td><code>message.status === "loading"</code></td>
+                <td>Static opacity: 0.7 (no keyframes)</td>
+                <td>&mdash;</td>
+                <td>&mdash;</td>
+              </tr>
+              <tr>
+                <td><code>.chat-bubble-source-intake__ideas-link</code></td>
+                <td>Hover / focus-visible</td>
+                <td>color &rarr; electric-blue-150, opacity &rarr; 1</td>
+                <td>browser default</td>
+                <td>browser default</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="hd-note">
+          <strong>Reduced motion.</strong> The thread does not yet ship a
+          <code>@media (prefers-reduced-motion: reduce)</code> override. The two infinite animations (<code
+            >assistant-notice-pulse</code
+          >
+          and <code>app-spin</code>) and the one-shot focus pulse (<code>app-focus-pulse</code>) are the only motion
+          users see for more than 200&nbsp;ms. When implementing, disable just the keyframes &mdash; the 150&nbsp;ms
+          hover/state transitions are fine to keep.
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            10. ACCESSIBILITY & KEYBOARD
+            ════════════════════════════════════════════════════════════ -->
+      <section class="hd-section" id="a11y">
+        <h2>10. Accessibility &amp; keyboard</h2>
+        <p class="hd-lead">
+          The thread leans on semantic HTML (native <code>&lt;button&gt;</code>, <code>&lt;details&gt;</code>,
+          <code>&lt;a&gt;</code>) and a thin ARIA layer. The contract below is what <code>renderTurn()</code> and its
+          sub-renderers actually emit &mdash; respect it when extending.
+        </p>
+
+        <h3 style="margin: 24px 0 12px; font-size: 16px">ARIA contract per component</h3>
+        <div class="hd-tokens">
+          <table>
+            <thead>
+              <tr>
+                <th>Component</th>
+                <th>Role / attribute</th>
+                <th>Value &amp; behavior</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>.chat-turn-avatar</code> (sparkle icon)</td>
+                <td><code>aria-hidden="true"</code></td>
+                <td>Decorative; SR readers skip it &mdash; the message body carries meaning</td>
+              </tr>
+              <tr>
+                <td><code>.chat-turn-role</code> ("You" / "Source intake")</td>
+                <td>Visible text label</td>
+                <td>No <code>aria-label</code> needed &mdash; it's the visible role indicator</td>
+              </tr>
+              <tr>
+                <td><code>.chat-bubble-source-intake__kind</code> (file icon)</td>
+                <td><code>aria-hidden="true"</code></td>
+                <td>Filename below carries the actual identity</td>
+              </tr>
+              <tr>
+                <td><code>.chat-bubble-source-intake__spinner</code></td>
+                <td><code>aria-hidden="true"</code></td>
+                <td>The "Uploading…" sub-line announces state to SR</td>
+              </tr>
+              <tr>
+                <td><code>.chat-bubble-source-intake__check</code> (ready)</td>
+                <td><code>aria-hidden="true"</code></td>
+                <td>"Processed · N ideas" sub-line carries the state</td>
+              </tr>
+              <tr>
+                <td><code>.chat-bubble-source-intake__ideas-link</code></td>
+                <td><code>&lt;button type="button"&gt;</code></td>
+                <td>Visible "3 ideas" label is its accessible name</td>
+              </tr>
+              <tr>
+                <td><code>.chat-bubble-choice-chip</code> (interactive)</td>
+                <td><code>aria-pressed="true|false"</code></td>
+                <td>
+                  Toggled in click handler (<code>session.js:1990</code>); answered chips render as
+                  <code>&lt;span&gt;</code> with no <code>aria-pressed</code> &mdash; SR reads them as static text
+                </td>
+              </tr>
+              <tr>
+                <td><code>.chat-bubble-choices-footer .ap-button</code> ("Submit / Draft them")</td>
+                <td>Native <code>&lt;button&gt;</code></td>
+                <td>Disabled state inherits from DS <code>.ap-button</code>; not used today (always enabled)</td>
+              </tr>
+              <tr>
+                <td><code>.extraction-turn__idea-card-feedback</code></td>
+                <td><code>role="group"</code> · <code>aria-label="Rate this idea"</code></td>
+                <td>Bundles both thumb buttons as a single landmark</td>
+              </tr>
+              <tr>
+                <td><code>.extraction-turn__idea-card-thumb</code></td>
+                <td><code>aria-pressed</code> · <code>aria-label="Mark as helpful / not helpful"</code></td>
+                <td>Mutually exclusive in the handler (clicking up clears down's pressed state &amp; vice versa)</td>
+              </tr>
+              <tr>
+                <td><code>.extraction-turn__idea-card-view</code></td>
+                <td><code>aria-label="Open this idea in Ideas"</code></td>
+                <td>Visible "View idea" text + external-link icon; aria-label disambiguates against multiple cards</td>
+              </tr>
+              <tr>
+                <td><code>.drafts-card</code></td>
+                <td><code>&lt;button type="button"&gt;</code></td>
+                <td>Whole card is the click target; title + sub-text are the accessible name (read sequentially)</td>
+              </tr>
+              <tr>
+                <td><code>.drafts-card__icon</code> &amp; <code>__nets</code> &amp; <code>__chevron</code></td>
+                <td><code>aria-hidden="true"</code></td>
+                <td>Network glyphs carry a <code>title</code> for hover tooltips but are hidden from SR</td>
+              </tr>
+              <tr>
+                <td><code>.clip-extraction-card__spinner</code> (pending)</td>
+                <td><code>role="status"</code> · <code>aria-label="Extracting clips"</code></td>
+                <td>
+                  SR announces the in-flight work; <code>aria-label</code> changes to "Reading video for ideas" in the
+                  idea-extraction variant
+                </td>
+              </tr>
+              <tr>
+                <td><code>.clip-extraction-card__icon</code></td>
+                <td><code>aria-hidden="true"</code></td>
+                <td>Title + sub carry meaning</td>
+              </tr>
+              <tr>
+                <td><code>.assistant-notice</code> (<code>&lt;details&gt;</code>)</td>
+                <td>Native <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code></td>
+                <td>
+                  Browser handles the disclosure pattern (Enter / Space toggles); chevron is purely decorative (<code
+                    >::-webkit-details-marker</code
+                  >
+                  hidden, chevron <code>&lt;i&gt;</code> rotates via CSS)
+                </td>
+              </tr>
+              <tr>
+                <td><code>.extracting-notice__spinner</code></td>
+                <td><code>aria-hidden="true"</code></td>
+                <td>The "Extracting" status pill text is the accessible announcement</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin: 32px 0 12px; font-size: 16px">Keyboard model</h3>
+        <div class="hd-tokens">
+          <table>
+            <thead>
+              <tr>
+                <th>Context</th>
+                <th>Key</th>
+                <th>Behavior</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Composer textarea</td>
+                <td><kbd>Enter</kbd></td>
+                <td>Sends the message (<code>session.js:2367</code>)</td>
+              </tr>
+              <tr>
+                <td>Composer textarea</td>
+                <td><kbd>Shift</kbd>+<kbd>Enter</kbd></td>
+                <td>Newline</td>
+              </tr>
+              <tr>
+                <td>Composer textarea</td>
+                <td><kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Enter</kbd></td>
+                <td>Also sends (Claude.ai parity)</td>
+              </tr>
+              <tr>
+                <td>Choice chip (<code>multi: false</code>, <code>instant: true</code>)</td>
+                <td><kbd>Enter</kbd> / <kbd>Space</kbd></td>
+                <td>Clicks the chip &mdash; immediately submits the choice; no Submit button is rendered</td>
+              </tr>
+              <tr>
+                <td>Choice chip (<code>multi: true</code>)</td>
+                <td><kbd>Enter</kbd> / <kbd>Space</kbd></td>
+                <td>
+                  Toggles <code>aria-pressed</code> &amp; <code>.is-selected</code>; user tabs to Submit afterwards
+                </td>
+              </tr>
+              <tr>
+                <td>Choice chips between siblings</td>
+                <td><kbd>Tab</kbd></td>
+                <td>Linear tab order &mdash; no roving tabindex (each chip is its own tab stop)</td>
+              </tr>
+              <tr>
+                <td>Idea-card thumb buttons</td>
+                <td><kbd>Enter</kbd> / <kbd>Space</kbd></td>
+                <td>
+                  Toggles <code>aria-pressed</code>; sibling thumb's <code>aria-pressed</code> is cleared by the handler
+                </td>
+              </tr>
+              <tr>
+                <td><code>.assistant-notice</code> summary</td>
+                <td><kbd>Enter</kbd> / <kbd>Space</kbd></td>
+                <td>Native disclosure toggle; chevron rotates via CSS on <code>[open]</code></td>
+              </tr>
+              <tr>
+                <td>Drafts card</td>
+                <td><kbd>Enter</kbd> / <kbd>Space</kbd></td>
+                <td>Activates the card; navigates to / pins the Drafts right panel</td>
+              </tr>
+              <tr>
+                <td>Drafts card (focus-visible)</td>
+                <td><kbd>Tab</kbd> in</td>
+                <td>
+                  Border-color &rarr; orange (<code>--sys-color-accent-default-bg-default</code>), 150&nbsp;ms
+                  ease-standard
+                </td>
+              </tr>
+              <tr>
+                <td>Wizard / inline picker</td>
+                <td><kbd>&uarr;</kbd><kbd>&darr;</kbd> · <kbd>1</kbd>&ndash;<kbd>9</kbd> · <kbd>Enter</kbd></td>
+                <td>Documented in the sticky bar legend (<code>session.js:531</code>)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="hd-note">
+          <strong>Focus order inside a turn.</strong> Reads left-to-right, top-to-bottom on the rendered card. AI
+          bubble: the only focusables are link / button children (e.g. "View idea", thumb buttons, source-intake "N
+          ideas" link). Choice turn: chips first (in array order), then Submit. Extraction turn:
+          <code>&lt;summary&gt;</code> first, then per-card thumbs &rarr; "View idea". Drafts card: whole card is one
+          focus stop.
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            11. EDGE CASES & CONTENT RULES
+            ════════════════════════════════════════════════════════════ -->
+      <section class="hd-section" id="edge-cases">
+        <h2>11. Edge cases &amp; content rules</h2>
+        <p class="hd-lead">
+          What to do when content is too long, too short, missing, or the underlying data was removed. Most of these are
+          encoded in CSS; a few are renderer-side defensive paths in <code>session.js</code>.
+        </p>
+
+        <h3 style="margin: 24px 0 12px; font-size: 16px">Text overflow / truncation</h3>
+        <div class="hd-tokens">
+          <table>
+            <thead>
+              <tr>
+                <th>Element</th>
+                <th>Rule</th>
+                <th>Why</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>.chat-bubble-text</code> (AI &amp; user)</td>
+                <td>Wraps; no truncation</td>
+                <td>Message bodies are the primary content &mdash; never elide</td>
+              </tr>
+              <tr>
+                <td><code>.chat-turn--user</code></td>
+                <td><code>max-width: 560px</code></td>
+                <td>Bubble wraps; reading rhythm caps at ~80 chars/line</td>
+              </tr>
+              <tr>
+                <td><code>.chat-turn--extraction</code></td>
+                <td><code>max-width: 480px</code></td>
+                <td>Bounds the extraction card stack</td>
+              </tr>
+              <tr>
+                <td><code>.chat-turn--clip-extraction</code></td>
+                <td><code>max-width: 420px</code></td>
+                <td>Bounds the single clip card</td>
+              </tr>
+              <tr>
+                <td><code>.clip-extraction-card__title</code></td>
+                <td><code>overflow: hidden; text-overflow: ellipsis</code></td>
+                <td>
+                  Long filenames collapse to "Clips ready · 5 clips from very-long-fil&hellip;"; tooltip not provided
+                </td>
+              </tr>
+              <tr>
+                <td><code>.drafts-card__sub-text</code></td>
+                <td><code>white-space: nowrap; overflow: hidden; text-overflow: ellipsis</code></td>
+                <td>Network strip + ellipsised tail keeps the card single-line at any viewport</td>
+              </tr>
+              <tr>
+                <td><code>.drafts-card__main</code></td>
+                <td><code>min-width: 0</code> (flex)</td>
+                <td>Required for the ellipsis above to fire inside the flex row</td>
+              </tr>
+              <tr>
+                <td><code>.chat-bubble-source-intake__main</code></td>
+                <td>Wraps; <code>min-width: 0</code> only</td>
+                <td>
+                  Filenames break onto a second line rather than ellipsing &mdash; users need to recognise the file
+                </td>
+              </tr>
+              <tr>
+                <td><code>.extraction-turn__idea-card-title / -body</code></td>
+                <td>Wraps; no truncation</td>
+                <td>Idea text is the point of the card &mdash; full content always shown</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin: 32px 0 12px; font-size: 16px">Missing data &amp; degraded states</h3>
+        <div class="hd-tokens">
+          <table>
+            <thead>
+              <tr>
+                <th>Condition</th>
+                <th>What renders</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Source backing a clip-extraction card was removed</td>
+                <td><code>.clip-extraction-card--gone</code> &mdash; dimmed (opacity 0.65), grey icon, no CTA</td>
+                <td><code>renderClipExtractionTurn()</code> at <code>session.js:1486</code></td>
+              </tr>
+              <tr>
+                <td>Source intake ready with <code>ideaCount === 0</code></td>
+                <td>Sub-line is just <code>"Processed"</code> &mdash; no clickable "N ideas" link</td>
+                <td><code>renderSourceIntakeTurn()</code> at <code>session.js:884</code></td>
+              </tr>
+              <tr>
+                <td>Source intake while loading + no <code>size</code></td>
+                <td>Sub-line is <code>"Uploading&hellip;"</code></td>
+                <td><code>session.js:877</code></td>
+              </tr>
+              <tr>
+                <td>Source intake with no source &amp; no size</td>
+                <td>Sub-line is omitted entirely (just filename + spinner / check)</td>
+                <td><code>session.js:904</code> (conditional render)</td>
+              </tr>
+              <tr>
+                <td>Notice with no <code>message.text</code></td>
+                <td>Chevron icon is suppressed; pill is the entire content</td>
+                <td><code>renderSystemNotice()</code> at <code>session.js:832</code></td>
+              </tr>
+              <tr>
+                <td>Extraction with empty <code>ideas[]</code></td>
+                <td>Pill renders "Extracted 0 ideas" + empty detail block &mdash; nothing inside</td>
+                <td><code>renderExtractionTurn()</code> at <code>session.js:915</code> (no guard)</td>
+              </tr>
+              <tr>
+                <td>Draft turn with empty <code>drafts[]</code></td>
+                <td>"0 drafts ready" + "review, edit, and schedule" (no network strip)</td>
+                <td><code>renderDraftTurn()</code> at <code>session.js:1446</code></td>
+              </tr>
+              <tr>
+                <td>Pending marker, <code>status !== "loading"</code></td>
+                <td>Returns empty string &mdash; the turn dissolves once <code>finishPending()</code> fires</td>
+                <td><code>renderTurn()</code> at <code>session.js:763</code></td>
+              </tr>
+              <tr>
+                <td>AI / user message with <code>hidden: true</code></td>
+                <td>Skipped entirely (placeholder for pre-reply state)</td>
+                <td><code>renderTurn()</code> at <code>session.js:758</code></td>
+              </tr>
+              <tr>
+                <td>Choice turn with <code>status: "answered"</code></td>
+                <td>Chips become <code>&lt;span&gt;</code> (non-interactive); Submit footer is omitted</td>
+                <td><code>renderChoiceTurn()</code> at <code>session.js:1365</code></td>
+              </tr>
+              <tr>
+                <td>Choice turn with <code>instant: true</code></td>
+                <td>Submit footer is never rendered &mdash; chip click submits directly</td>
+                <td><code>session.js:1386</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin: 32px 0 12px; font-size: 16px">Responsive behavior</h3>
+        <div class="hd-tokens">
+          <table>
+            <thead>
+              <tr>
+                <th>Viewport</th>
+                <th>Behavior</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Desktop (default)</td>
+                <td>
+                  Thread column is centred at <code>max-width: 740px</code> via
+                  <code>.session__assistant-thread &gt; *</code>; turn max-widths (560 / 480 / 420) apply on top.
+                </td>
+              </tr>
+              <tr>
+                <td>Narrow desktop / panel collapsed</td>
+                <td>
+                  All cards remain inside the thread column &mdash; the 480px / 420px caps keep cards single-line until
+                  the thread itself shrinks below those.
+                </td>
+              </tr>
+              <tr>
+                <td>Mobile (untested)</td>
+                <td>
+                  Prototype is desktop-only. The drafts-card row stays horizontal &mdash; on mobile this may need a
+                  vertical reflow at &lt; 480px. Not in scope today.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin: 32px 0 12px; font-size: 16px">Internationalisation</h3>
+        <div class="hd-note">
+          <strong>French copy / long translations.</strong> The codebase mixes English UI and French in comments.
+          Strings ship from <code>src/screens/session.js</code> hard-coded. When a label runs ~30&ndash;40% longer
+          (German, Russian) three components need re-checking:
+          <ul style="margin: 8px 0 0 20px; padding: 0">
+            <li><code>.drafts-card__sub-text</code> &mdash; ellipsis already handles overflow.</li>
+            <li><code>.clip-extraction-card__title</code> &mdash; ellipsis handles it.</li>
+            <li>
+              <code>.chat-bubble-choice-chip</code> &mdash; chips wrap onto a second row (<code>flex-wrap</code>) but
+              labels themselves don't truncate. A 25-char label will widen the chip noticeably.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            12. TOKENS QUICK REFERENCE
             ════════════════════════════════════════════════════════════ -->
       <section class="hd-section" id="tokens">
-        <h2>9. Token quick reference</h2>
+        <h2>12. Token quick reference</h2>
         <p class="hd-lead">
           The handful of DS / app tokens you'll touch most when extending the thread. Full source in
           <code>ds/desktop_variables.css</code> + <code>styles/tokens.css</code>.
