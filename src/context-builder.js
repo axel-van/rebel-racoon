@@ -19,7 +19,7 @@
 // right-panel ContextForm read mode (openRead) stays for viewing existing
 // contexts that may still have the old shape.
 
-import * as inlineQuestion from "./inline-question.js?v=25";
+import * as inlineQuestion from "./inline-question.js?v=26";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=31";
 import * as rightPanel from "./components/right-panel.js?v=62";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=28";
@@ -177,8 +177,16 @@ export function subscribe(sessionId, fn) {
 // — used when session.js fires the wizard on the user's first message
 // without a context. Explicit "+ New context" entry points keep the
 // existing concise intro since the user already opted in.
-export function start(sessionId, { onComplete, autoLaunched = false } = {}) {
+export function start(sessionId, { onComplete, autoLaunched = false, prefill = null } = {}) {
   drafts.set(sessionId, emptyDraft({ onComplete }));
+  // First Time User ALT seeds the draft with the profile picked on the
+  // visual /welcome-alt screen, so the conversational askSocial step
+  // can pre-check the matching platform.
+  if (prefill) {
+    const d = drafts.get(sessionId);
+    if (prefill.selectedProfileId) d.selectedProfileId = prefill.selectedProfileId;
+    if (prefill.platform) d.connectedSocials = [prefill.platform];
+  }
   notify(sessionId);
   askSource(sessionId, { autoLaunched });
 }
@@ -405,11 +413,16 @@ function askSocial(sessionId) {
     sessionId,
     "Where do you publish today? Pick every social channel this playbook applies to — I'll tailor the drafts to fit each one.",
   );
+  // Pre-check whatever's already in the draft — used by First Time
+  // User ALT where the visual /welcome-alt picker pre-seeds
+  // connectedSocials with the picked profile's platform.
+  const preselected = getDraft(sessionId)?.connectedSocials || [];
   inlineQuestion.ask(sessionId, {
     title: "Where do you publish?",
     stepLabel: "Channels",
     items: SOCIAL_PLATFORMS,
     multi: true,
+    defaultSelected: preselected,
     submitLabel: "Continue",
     skipLabel: "Skip",
     onPick: (values) => setSocialConnections(sessionId, values || []),

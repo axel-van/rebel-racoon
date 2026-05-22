@@ -3,7 +3,7 @@ import { initTopbar, renderTopbar } from "./components/topbar.js?v=48";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=42";
 import { init as initRightPanel } from "./components/right-panel.js?v=62";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=20";
-import { initUserModeChip } from "./components/user-mode-chip.js?v=25";
+import { initUserModeChip } from "./components/user-mode-chip.js?v=26";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=21";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=24";
 import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=21";
@@ -18,14 +18,15 @@ import {
   init as initConversationStatusCard,
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=10";
-import { renderDashboard } from "./screens/dashboard.js?v=44";
-import { renderSession } from "./screens/session.js?v=107";
+import { renderDashboard } from "./screens/dashboard.js?v=45";
+import { renderSession } from "./screens/session.js?v=109";
 import { renderIdeas } from "./screens/ideas.js?v=24";
 import { renderContexts } from "./screens/contexts.js?v=32";
 import { renderWelcome } from "./screens/welcome.js?v=4";
 import { renderWelcomeSocials } from "./screens/welcome-socials.js?v=4";
 import { renderWelcomeSources } from "./screens/welcome-sources.js?v=2";
 import { renderWelcomeRecap } from "./screens/welcome-recap.js?v=2";
+import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=1";
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
 // stays in sync with the active context.
@@ -42,6 +43,11 @@ route("/welcome", renderWelcome);
 route("/welcome/socials", renderWelcomeSocials);
 route("/welcome/sources", renderWelcomeSources);
 route("/welcome/recap", renderWelcomeRecap);
+// First-time ALT — single-screen visual profile picker (re-uses
+// welcome-socials.js card markup). On Continue it mints a transient
+// /session/welcome-alt-{ts} session and the conversational Playbook
+// builder runs there in onboarding chrome.
+route("/welcome-alt", renderWelcomeAlt);
 
 // Boot.
 initTopbar();
@@ -71,13 +77,16 @@ initConversationStatusCard();
 //
 // The onboarding class flip is centralized here so /welcome screens get a
 // full-bleed shell without each screen having to add/remove the class.
-// Intentionally NOT applied to /session/welcome-* — the playbook creation
-// step needs the standard grid so the brief panel can occupy its 3rd
-// column; the sidebar and topbar render in their new-user empty state.
+// Not applied to legacy /session/welcome-* (the linear-onboarding
+// playbook-creation step keeps the standard grid for its 3rd-column
+// brief panel + empty-state sidebar/topbar). It IS applied to
+// /session/welcome-alt-* — the First Time User ALT flow runs the chat
+// inside the onboarding chrome.
 setAfterRender((path) => {
   renderSidebar();
   renderConversationStatusCard();
-  document.body.classList.toggle("onboarding", path.startsWith("/welcome"));
+  const isAltSession = path.startsWith("/session/welcome-alt-");
+  document.body.classList.toggle("onboarding", path.startsWith("/welcome") || isAltSession);
 });
 
 start();

@@ -9,7 +9,7 @@
 // continue in background after the user closes the modal.
 
 import { sourcesBySession as seedByCsesssion } from "./mocks.js?v=31";
-import { isNewUser } from "./user-mode.js?v=20";
+import { isNewUser } from "./user-mode.js?v=21";
 
 // ─── State ───────────────────────────────────────────────────────────────
 

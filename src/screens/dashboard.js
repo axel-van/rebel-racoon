@@ -1,6 +1,6 @@
 import { getSessions } from "../sessions-store.js?v=1";
 import { getContexts } from "../contexts-store.js?v=28";
-import { isNewUser } from "../user-mode.js?v=20";
+import { isNewUser, isNewUserAlt } from "../user-mode.js?v=21";
 import { hasHandoff } from "../handoff.js?v=20";
 
 // Dashboard route — pure redirect surface.
@@ -21,8 +21,11 @@ import { hasHandoff } from "../handoff.js?v=20";
 
 export function renderDashboard(_params, _target) {
   // Branch 1 — first-time user without a Playbook → onboarding.
+  // ALT mode lands on /welcome-alt (visual profile picker → conversational
+  // builder); regular new mode lands on the linear 4-screen /welcome.
   if (isNewUser() && getContexts().length === 0) {
-    window.location.replace(window.location.href.split("#")[0] + "#/welcome");
+    const target = isNewUserAlt() ? "#/welcome-alt" : "#/welcome";
+    window.location.replace(window.location.href.split("#")[0] + target);
     return;
   }
 

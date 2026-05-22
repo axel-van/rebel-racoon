@@ -10,7 +10,7 @@
 //   removeIdeasForSources(sessionId, sourceIds)  cleanup after bulk-delete
 
 import { ideas as seedIdeas, recentSessions as seedRecentSessions } from "./mocks.js?v=31";
-import { isNewUser } from "./user-mode.js?v=20";
+import { isNewUser } from "./user-mode.js?v=21";
 
 // Demo session ids — the recentSessions seed (s-acme-launch / s-riverside /
 // etc.). Only these sessions get the seeded ideas mock; brand-new

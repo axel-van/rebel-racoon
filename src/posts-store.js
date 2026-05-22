@@ -8,7 +8,7 @@
 //   subscribe(sessionId, fn)    → unsubscribe fn
 
 import { posts as mockPosts, recentSessions as seedRecentSessions } from "./mocks.js?v=31";
-import { isNewUser } from "./user-mode.js?v=20";
+import { isNewUser } from "./user-mode.js?v=21";
 
 // Demo session ids — only these get the seeded posts mock. Brand-new
 // conversations start empty (cf. library.js for the same rationale).

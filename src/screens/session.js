@@ -4,7 +4,7 @@ import { renderTopbar } from "../components/topbar.js?v=47";
 import { socialAccounts, chatStarters } from "../mocks.js?v=31";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=28";
-import { isNewUser } from "../user-mode.js?v=20";
+import { isNewUser } from "../user-mode.js?v=21";
 import {
   getThread,
   sendMessage,
@@ -36,10 +36,10 @@ import {
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=21";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
-import * as inlineQuestion from "../inline-question.js?v=25";
-import * as contextBuilder from "../context-builder.js?v=37";
+import * as inlineQuestion from "../inline-question.js?v=26";
+import * as contextBuilder from "../context-builder.js?v=38";
 import * as playbookEditor from "../playbook-editor.js?v=9";
-import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=28";
+import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "./_analyse-common.js?v=29";
 import { renderSourceCard } from "../components/source-card.js?v=28";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
 import {
@@ -1310,12 +1310,35 @@ function wireAssistantPanel(root, session, attachedContext) {
   // The page has no chat panel to host the wizard, so it minted this
   // fresh session for us. Launch the inline wizard now; onComplete
   // navigates back to the returnTo path (typically /contexts).
+  //
+  // The First Time User ALT flow uses the same handoff with two extra
+  // payload fields: `prefill` (seeds selectedProfileId + connectedSocials
+  // so askSocial can pre-check the platform) and `finishMode:
+  // "switch-to-returning"` (flip the admin mode to returning before
+  // navigating, so the dashboard renders the populated returning-user
+  // state rather than redirecting back to /welcome-alt).
   const pendingCtxBuilder = consumeHandoff("pendingStartContextBuilder");
   if (pendingCtxBuilder) {
-    const returnTo = pendingCtxBuilder.returnTo;
+    const { returnTo, prefill, finishMode } = pendingCtxBuilder;
     setTimeout(() => {
       contextBuilder.start(session.id, {
+        prefill,
         onComplete: () => {
+          if (finishMode === "switch-to-returning") {
+            try {
+              window.localStorage.removeItem("archie-user-mode");
+            } catch {
+              /* ignore */
+            }
+            // Full reload so all stores re-seed with the returning-user
+            // mocks (sessions, contexts, sources, etc.) and the admin
+            // chip re-renders with the new "Returning user" label. The
+            // hash change positions the landing target; the reload
+            // commits the new mode across the whole app.
+            if (returnTo) window.location.hash = "#" + returnTo;
+            window.location.reload();
+            return;
+          }
           if (returnTo) navigate(returnTo);
         },
       });

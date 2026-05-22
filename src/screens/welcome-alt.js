@@ -1,31 +1,25 @@
-// Welcome step 2 of 4 — pick one social profile that the user has
-// already connected to Agorapulse from outside Archie. Single-select:
-// the chosen profile id lands on `draft.selectedProfileId`, and we
-// mirror its platform into `draft.connectedSocials` so the persisted
-// context keeps that info. The website analysis launched on step 1
-// keeps running in the background while the user is here.
+// First Time User ALT — step 1 of 2. Visual single-select picker over the
+// brand's pre-connected social profiles, identical markup to
+// welcome-socials.js (DS .ap-avatar with network badge). On Continue we
+// mint a transient session id, arm the pendingStartContextBuilder handoff
+// with the picked profile as prefill + finishMode "switch-to-returning",
+// and navigate to /session/welcome-alt-{ts}. session.js then auto-launches
+// the conversational Playbook builder inside the onboarding chrome (the
+// app shell hides sidebar+topbar when path starts with /session/welcome-
+// alt-, see app.js setAfterRender).
+//
+// Unlike welcome-socials.js, this screen owns its own selection state in
+// memory — we don't go through the linear-welcome draft store here.
 
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=21";
-import { getDraft, patchDraft } from "../context-builder.js?v=38";
+import { setHandoff } from "../handoff.js?v=20";
 import { socialAccounts } from "../mocks.js?v=31";
 
-const WELCOME_SESSION_KEY = "welcomeSessionId";
-
-// Profiles already connected to Agorapulse (outside Archie). We hardcode
-// the filter on `status === "connected"` so the picker stays focused on
-// what the user can actually pick — disconnected accounts don't belong
-// in this step.
 const CONNECTED_PROFILES = socialAccounts.filter((p) => p.status === "connected");
 
-// All mock profiles belong to the same fictional brand (Northwind
-// Studio) — same initials on every avatar, the per-platform variation
-// comes from the network badge in the corner. If we ever switch the
-// mock to multi-brand, derive these per-profile instead.
 const BRAND_INITIALS = "NS";
 
-// Map our mock's `platform` slug to the DS's official, full-color icon
-// class. The DS requires `-official` variants for .ap-avatar-network.
 const NETWORK_ICON_BY_PLATFORM = {
   facebook: "ap-icon-facebook-official",
   instagram: "ap-icon-instagram-official",
@@ -33,38 +27,19 @@ const NETWORK_ICON_BY_PLATFORM = {
   x: "ap-icon-x-official",
 };
 
-export function renderWelcomeSocials(_params, target) {
+let selectedId = null;
+
+export function renderWelcomeAlt(_params, target) {
   document.body.classList.add("onboarding");
-  // The draft is mandatory — without it we have nothing to attach the
-  // pick to. Bounce back to step 1 so the user re-enters the URL.
-  const sid = readWelcomeSessionId();
-  if (!sid || !getDraft(sid)) {
-    navigate("/welcome");
-    return () => {};
-  }
-
-  paint(target, sid);
-  // Named handler ref so the cleanup actually unbinds when the route
-  // changes — anonymous arrows would leak the listener and intercept
-  // clicks on the next welcome screen.
-  const handler = (event) => onClick(event, target, sid);
+  paint(target);
+  const handler = (event) => onClick(event, target);
   target.addEventListener("click", handler);
-
   return () => {
     target.removeEventListener("click", handler);
   };
 }
 
-function readWelcomeSessionId() {
-  try {
-    return window.sessionStorage.getItem(WELCOME_SESSION_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function paint(target, sid) {
-  const selectedId = getDraft(sid)?.selectedProfileId || null;
+function paint(target) {
   target.innerHTML = html`
     <section class="welcome-screen">
       <header class="welcome-screen__top">
@@ -77,11 +52,11 @@ function paint(target, sid) {
       <div class="welcome-screen__body">
         <div class="welcome-step">
           <div class="welcome-step__header">
-            <span class="welcome-step__tag">Étape 2 sur 4</span>
+            <span class="welcome-step__tag">Étape 1 sur 2</span>
             <h1 class="welcome-step__title">Quel profil veux-tu utiliser ?</h1>
             <p class="welcome-step__sub">
-              Voici les comptes que tu as déjà connectés à Agorapulse — choisis-en un pour démarrer. Tu pourras en
-              ajouter d'autres plus tard.
+              Voici les comptes que tu as déjà connectés à Agorapulse — choisis-en un pour démarrer. On enchaîne avec
+              quelques questions pour construire ton Playbook.
             </p>
           </div>
           <ul class="welcome-socials__grid">
@@ -130,29 +105,31 @@ function renderProfileCard(profile, isSelected) {
   `;
 }
 
-function onClick(event, target, sid) {
+function onClick(event, target) {
   const card = event.target.closest("[data-profile-card]");
   if (card) {
-    selectProfile(sid, card.dataset.profileCard);
-    paint(target, sid);
+    const id = card.dataset.profileCard;
+    selectedId = selectedId === id ? null : id;
+    paint(target);
     return;
   }
   if (event.target.closest("[data-welcome-skip]") || event.target.closest("[data-welcome-continue]")) {
-    navigate("/welcome/sources");
+    enterConversationalFlow();
     return;
   }
 }
 
-function selectProfile(sid, profileId) {
-  const current = getDraft(sid)?.selectedProfileId || null;
-  // Toggle off when the user clicks the already-selected card so they
-  // can land on the next screen with no profile picked (same outcome as
-  // "Passer pour l'instant").
-  if (current === profileId) {
-    patchDraft(sid, { selectedProfileId: null, connectedSocials: [] });
-    return;
-  }
-  const profile = CONNECTED_PROFILES.find((p) => p.id === profileId);
-  if (!profile) return;
-  patchDraft(sid, { selectedProfileId: profileId, connectedSocials: [profile.platform] });
+function enterConversationalFlow() {
+  const profile = selectedId ? CONNECTED_PROFILES.find((p) => p.id === selectedId) : null;
+  const sid = `welcome-alt-${Date.now().toString(36)}`;
+  setHandoff("pendingStartContextBuilder", {
+    returnTo: "/",
+    finishMode: "switch-to-returning",
+    prefill: profile
+      ? { selectedProfileId: profile.id, platform: profile.platform }
+      : { selectedProfileId: null, platform: null },
+  });
+  // Reset local state so a second pass through this screen starts blank.
+  selectedId = null;
+  navigate(`/session/${sid}`);
 }

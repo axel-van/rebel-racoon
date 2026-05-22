@@ -186,7 +186,12 @@ export function renderPicker(picker) {
     // to render its Cancel + Save buttons inside the picker card
     // instead of a separate top bar.
     footerSlot = "",
+    // Multi-select only: list of `value`s to render pre-checked. Used
+    // by the First Time User ALT flow where the visual profile picker
+    // pre-seeds the platform in connectedSocials before askSocial runs.
+    defaultSelected = [],
   } = picker;
+  const preset = new Set(defaultSelected);
 
   // Multi-select swaps the trailing chevron for a check icon (visible only
   // when the option is selected via .is-selected) so the user understands
@@ -196,13 +201,14 @@ export function renderPicker(picker) {
     : `<i class="ap-icon-chevron-right analyse__option-chevron" aria-hidden="true"></i>`;
 
   const rows = items
-    .map(
-      (it, i) => `
+    .map((it, i) => {
+      const isPreset = multi && preset.has(it.value);
+      return `
         <button
           type="button"
-          class="analyse__option"
+          class="analyse__option${isPreset ? " is-selected" : ""}"
           data-${handler}="${it.value}"
-          ${multi ? 'aria-pressed="false"' : ""}
+          ${multi ? `aria-pressed="${isPreset ? "true" : "false"}"` : ""}
         >
           <span class="analyse__option-shortcut" aria-hidden="true">${i + 1}</span>
           <span class="analyse__option-icon">
@@ -214,8 +220,8 @@ export function renderPicker(picker) {
           </span>
           ${trailingIcon}
         </button>
-      `,
-    )
+      `;
+    })
     .join("");
 
   const customRow = customPlaceholder

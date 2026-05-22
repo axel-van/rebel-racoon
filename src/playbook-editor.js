@@ -24,7 +24,7 @@
 
 import { getContextById, updateContext } from "./contexts-store.js?v=28";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=31";
-import * as inlineQuestion from "./inline-question.js?v=25";
+import * as inlineQuestion from "./inline-question.js?v=26";
 import {
   openContextBriefPanel,
   refreshContextBriefPanel,

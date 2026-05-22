@@ -18,7 +18,7 @@
 // when scope is "Update everywhere".
 
 import { contexts as seed } from "./mocks.js?v=31";
-import { isNewUser } from "./user-mode.js?v=20";
+import { isNewUser } from "./user-mode.js?v=21";
 
 // Lot 15 — first-time user mode starts empty so the standalone /contexts
 // page renders its empty state. Returning user keeps the mock seed.

@@ -1,6 +1,6 @@
 import { FLAGS } from "../ff-catalog.js?v=2";
 import { getFlags, setFlag } from "../feature-flags.js?v=2";
-import { getUserMode, setUserMode } from "../user-mode.js?v=20";
+import { getUserMode, setUserMode } from "../user-mode.js?v=21";
 
 // Floating admin chip in the bottom-right. Opens prototype-only controls
 // (user-mode toggle + feature flags). Controls reload the page on change.
@@ -26,22 +26,31 @@ export function initUserModeChip() {
   menu.setAttribute("role", "menu");
   menu.hidden = true;
 
+  function modeLabel(mode) {
+    if (mode === "new") return "First-time user";
+    if (mode === "new-alt") return "First-time ALT";
+    return "Returning user";
+  }
+  // Description of the NEXT mode you'd cycle into, so the menu row reads
+  // "first-time user · refresh" while you're returning, etc.
+  function nextModeLabel(mode) {
+    if (mode === "returning") return "first-time user";
+    if (mode === "new") return "first-time ALT";
+    return "returning user";
+  }
+
   function render() {
     const mode = getUserMode();
     const flags = getFlags();
 
-    el.className = "admin-chip" + (mode === "new" ? " admin-chip--new" : "");
-    el.setAttribute(
-      "aria-label",
-      mode === "new"
-        ? "Admin: currently showing first-time user. Open controls."
-        : "Admin: currently showing returning user. Open controls.",
-    );
+    const isNewish = mode === "new" || mode === "new-alt";
+    el.className = "admin-chip" + (isNewish ? " admin-chip--new" : "");
+    el.setAttribute("aria-label", `Admin: currently showing ${modeLabel(mode).toLowerCase()}. Open controls.`);
     el.setAttribute("aria-expanded", open ? "true" : "false");
     el.innerHTML = `
       <span class="admin-chip__label">Admin</span>
       <span class="admin-chip__divider">·</span>
-      <span class="admin-chip__mode">${mode === "new" ? "First-time user" : "Returning user"}</span>
+      <span class="admin-chip__mode">${modeLabel(mode)}</span>
       <i class="ap-icon-chevron-${open ? "down" : "up"} admin-chip__icon"></i>
     `;
 
@@ -51,7 +60,7 @@ export function initUserModeChip() {
         <span class="ap-action-dropdown-item-text">
           <span class="ap-action-dropdown-item-label bold">User mode</span>
           <span class="ap-action-dropdown-item-description">
-            ${mode === "new" ? "first-time" : "returning user"} · refresh
+            ${nextModeLabel(mode)} · refresh
           </span>
         </span>
         <i class="ap-icon-refresh" aria-hidden="true"></i>
@@ -77,42 +86,57 @@ export function initUserModeChip() {
     if (event.target.matches("[data-admin-flag] input")) return;
     const modeBtn = event.target.closest("[data-admin-user-mode]");
     if (modeBtn) {
+      // 3-state cycle: returning → new → new-alt → returning. Each
+      // transition mutates localStorage, optionally repositions the URL
+      // (so the user lands in a coherent screen for the new mode), then
+      // forces a full reload so every store re-seeds. location.replace
+      // alone is unreliable — replacing to the same URL is a no-op in
+      // Chrome, so we mutate location.hash explicitly and then call
+      // reload().
       const mode = getUserMode();
-      if (mode === "new") {
-        // Switching off first-time → returning. If the user is mid-
-        // onboarding on /welcome*, send them to the dashboard so they
-        // actually land in the returning-user state (seeded sidebar +
-        // conversations) — staying on /welcome would just re-show the
-        // empty first-time onboarding. From any other route, stay put:
-        // the chip is a demo switch, not navigation.
-        if (window.location.hash.startsWith("#/welcome")) {
-          window.location.hash = "#/";
-        }
-        setUserMode("returning");
-      } else {
-        // Switching INTO first-time → land directly on /welcome, every
-        // time. That's the whole point of the toggle: re-experience the
-        // onboarding from a clean state. We also wipe sessionStorage
-        // handoffs so a stale flow from the previous mode doesn't fire
-        // on the next render.
+      try {
+        window.sessionStorage.clear();
+      } catch {
+        // ignore — storage may be unavailable in private browsing
+      }
+
+      if (mode === "returning") {
+        // → first-time (linear /welcome wizard).
         try {
           window.localStorage.setItem("archie-user-mode", "new");
-          window.sessionStorage.clear();
         } catch {
-          // ignore — storage may be unavailable in private browsing
+          /* ignore */
         }
-        // Set the hash to /welcome (no-op if already there) and force a
-        // hard reload so every store re-seeds with the new mode.
-        // location.replace alone is unreliable: replacing to the *same*
-        // URL is a no-op in Chrome, so when the user is already on
-        // /welcome the page never refreshes and the toggle silently
-        // fails. Mutating location.hash preserves the current pathname,
-        // so this still works under any base path (e.g. GitHub Pages).
         if (!window.location.hash.startsWith("#/welcome")) {
           window.location.hash = "#/welcome";
         }
-        window.location.reload();
+      } else if (mode === "new") {
+        // → first-time ALT (visual profile picker → conversational chat).
+        try {
+          window.localStorage.setItem("archie-user-mode", "new-alt");
+        } catch {
+          /* ignore */
+        }
+        if (!window.location.hash.startsWith("#/welcome-alt")) {
+          window.location.hash = "#/welcome-alt";
+        }
+      } else {
+        // mode === "new-alt" → returning user. If the user is mid-
+        // onboarding (either linear /welcome* or the ALT session at
+        // /session/welcome-alt-*), send them to the dashboard so they
+        // actually see the returning-user state instead of being
+        // stranded on an onboarding screen.
+        try {
+          window.localStorage.removeItem("archie-user-mode");
+        } catch {
+          /* ignore */
+        }
+        const h = window.location.hash;
+        if (h.startsWith("#/welcome") || h.startsWith("#/session/welcome-alt-")) {
+          window.location.hash = "#/";
+        }
       }
+      window.location.reload();
       return;
     }
 

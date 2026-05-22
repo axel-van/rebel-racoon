@@ -26,6 +26,7 @@
 //   skipLabel         string  — label on the Skip button (default "Skip")
 //   items             array   — [{ value, label, caption?, icon?, imgSrc? }]
 //   multi             bool    — when true, render multi-select toggles + Continue button
+//   defaultSelected   array   — values to render pre-selected (multi mode only)
 //   submitLabel       string  — multi-select submit button label (default "Continue")
 //   customPlaceholder string  — when set, render a free-text option row
 //   customFile        bool    — when true, render a dropzone row instead of a text input
@@ -39,7 +40,7 @@
 //   onSkip()          fn      — called when Skip / Esc; if omitted, no skip btn
 //   onBack()          fn      — called when ← Back is clicked; if omitted, no back btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=28";
+import { chatTurn } from "./screens/_analyse-common.js?v=29";
 
 const states = new Map(); // sessionId → opts
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -153,6 +154,7 @@ export function renderChrome(sessionId) {
     customFileHint: s.customFileHint || "",
     customFileIcon: s.customFileIcon || "ap-icon-upload",
     multi: s.multi === true,
+    defaultSelected: Array.isArray(s.defaultSelected) ? s.defaultSelected : [],
     submitLabel: s.submitLabel || "Continue",
     // Pass-through for callers that want to inject custom buttons in
     // the picker footer (used by the playbook editor for Cancel + Save).
