@@ -100,32 +100,22 @@
   }
 }
 
-/* Single-column centered variant used by the new linear /welcome (URL
-   input) and the recap screen. */
+/* Single-column variant used by the new linear /welcome (URL input).
+   The column is centered in the viewport via max-width + margin auto,
+   but text inside stays left-aligned to match the form and roadmap
+   that sit below the hero. */
 .welcome-screen__body--centered {
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
   padding: var(--ref-spacing-xxl) var(--ref-spacing-lg);
-  align-items: center;
-  text-align: center;
+  align-items: stretch;
+  text-align: left;
 }
 
 .welcome-hero--centered {
-  text-align: center;
-  align-items: center;
   max-width: 640px;
   margin: 0 auto;
-}
-
-.welcome-hero--centered .welcome-hero__title,
-.welcome-hero--centered .welcome-hero__sub {
-  text-align: center;
-}
-
-.welcome-hero--centered .welcome-hero__sub {
-  margin-left: auto;
-  margin-right: auto;
 }
 
 /* ---------- /welcome — split hero ---------- */
