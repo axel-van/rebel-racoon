@@ -1,9 +1,10 @@
 import { route, setAfterRender, start } from "./router.js?v=21";
+import { isFlagOn } from "./feature-flags.js?v=3";
 import { initTopbar, renderTopbar } from "./components/topbar.js?v=48";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=42";
 import { init as initRightPanel } from "./components/right-panel.js?v=62";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=20";
-import { initUserModeChip } from "./components/user-mode-chip.js?v=28";
+import { initUserModeChip } from "./components/user-mode-chip.js?v=29";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=21";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=24";
 import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=21";
@@ -85,6 +86,10 @@ initConversationStatusCard();
 // brief panel + empty-state sidebar/topbar). It IS applied to
 // /session/welcome-alt-* — the First Time User ALT flow runs the chat
 // inside the onboarding chrome.
+// Feature flag → body class. Driven once at boot (flag changes always
+// reload the page, so we don't need to re-evaluate on every route).
+document.body.classList.toggle("hide-playbook-colors", isFlagOn("hidePlaybookColors"));
+
 setAfterRender((path) => {
   renderSidebar();
   renderConversationStatusCard();

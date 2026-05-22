@@ -1,5 +1,5 @@
-import { FLAGS } from "../ff-catalog.js?v=3";
-import { getFlags, setFlag } from "../feature-flags.js?v=2";
+import { FLAGS } from "../ff-catalog.js?v=4";
+import { getFlags, setFlag } from "../feature-flags.js?v=3";
 import { getUserMode, setUserMode } from "../user-mode.js?v=21";
 
 // Floating admin chip in the bottom-right. Opens prototype-only controls

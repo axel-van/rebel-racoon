@@ -1115,6 +1115,13 @@
   border-color: var(--ref-color-grey-150);
 }
 
+/* Feature flag: hide playbook colors. Drops every color swatch
+   container in the brief panel — both the editable picker in
+   renderBriefName and the read-mode display elsewhere. */
+body.hide-playbook-colors .context-brief__color-swatches {
+  display: none;
+}
+
 .context-brief__readonly-text {
   margin: 0;
   color: var(--ref-color-grey-100);

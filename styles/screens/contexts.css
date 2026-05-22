@@ -379,3 +379,12 @@
   font-size: var(--ref-font-size-xs);
   color: var(--ref-color-grey-60);
 }
+
+/* Feature flag: hide playbook colors. Suppresses the top stripe and
+   palette dots so the card reads as neutral. The color modifier class
+   on the card stays in the markup — only the color surfaces are
+   hidden. */
+body.hide-playbook-colors .contexts-card__swatch,
+body.hide-playbook-colors .contexts-card__palette {
+  display: none;
+}

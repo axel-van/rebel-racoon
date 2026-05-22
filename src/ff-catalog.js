@@ -24,4 +24,14 @@ export const FLAGS = Object.freeze([
       "When OFF (default), it opens the brief panel directly for " +
       "in-place editing.",
   },
+  {
+    id: "hidePlaybookColors",
+    label: "Hide playbook colors",
+    default: false,
+    hides:
+      "When ON, hides the playbook color visuals everywhere: the top " +
+      "stripe + palette dots on /contexts cards, the color dot on " +
+      "sidebar conversation rows, and the color swatch picker in the " +
+      "brief panel. Used to evaluate the UI without color coding.",
+  },
 ]);

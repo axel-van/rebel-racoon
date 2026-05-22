@@ -301,6 +301,12 @@
   --dot-color: var(--ref-color-grey-40);
 }
 
+/* Feature flag: hide playbook colors. Drops the dot from every
+   sidebar conversation row. */
+body.hide-playbook-colors .app-sidebar__row-color-dot {
+  display: none;
+}
+
 /* ⋮ More-actions menu — Claude-style hover-reveal on the trailing edge.
    Absolute-positioned so it overlays the row without taking flex space
    (the title can use the full width at rest). Stays visible while the
