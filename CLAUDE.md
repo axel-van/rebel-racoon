@@ -191,7 +191,8 @@ All `.ap-*` components come from the DS (`ds/css-ui/index.css`). Available: butt
 
 ## Audit & flow docs
 
-- `FLOW-AUDIT.md` (root) — exhaustive flow audit (44 surfaces, 189 elements, 38 flows, findings + Mermaid diagrams).
+- `AUDIT-stabilisation.md` (root) — current stabilisation audit, 44 findings across 4 axes with prioritised lots.
+- `docs/archive/FLOW-AUDIT.md` — exhaustive flow audit (44 surfaces, 189 elements, 38 flows, findings + Mermaid diagrams). Archived alongside earlier audit reports (`AUDIT-archie-states.md`, `CLEANUP-AUDIT.md`, `STUDIO_HANDOFF_AUDIT.md`, `STUDIO_FLOW_VERIFICATION.md`).
 - `audit-assets/` — Mermaid sources + SVG renders, drag-droppable into the Figma cartography (node `223-2046` of the Archie file).
 - `FLOW-CHANGELOG.md` (root, post-fix) — table commit ↔ FIND-XXX with Done / Skipped / Deferred status.
 

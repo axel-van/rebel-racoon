@@ -940,42 +940,6 @@ export const posts = [
   },
 ];
 
-let generatedPostCounter = 0;
-
-export function createPostFromIdea(idea, source = null) {
-  generatedPostCounter += 1;
-  const title = idea?.title || "Untitled idea";
-  const sourceLabel = source?.filename ? ` from ${source.filename}` : "";
-  const post = {
-    id: `post-generated-${Date.now().toString(36)}-${generatedPostCounter}`,
-    author: AUTHOR_MC,
-    network: idea?.channels?.[0] === "x" ? "twitter" : "linkedin",
-    status: "ready",
-    timeLabel: "just now",
-    text: [
-      title,
-      idea?.body ||
-        "Archie turned this idea into a first draft. Tighten the proof point, then schedule it when it feels ready.",
-      `Drafted from the selected idea${sourceLabel}.`,
-    ],
-    hashtags: ["Draft", "Archie"],
-    cta: "Pressure-test the angle, then schedule the final version.",
-    stats: { likes: 0, comments: 0, reposts: 0 },
-    hasImage: false,
-    generatedFromIdeaId: idea?.id || null,
-  };
-  posts.unshift(post);
-  return post;
-}
-
-export function attachImageToPost(postId, imageUrl) {
-  const post = posts.find((p) => p.id === postId);
-  if (!post) return null;
-  post.hasImage = true;
-  post.imageUrl = imageUrl;
-  return post;
-}
-
 // Lookup helpers ----------------------------------------------------------------
 
 export function getSessionById(id) {
@@ -995,23 +959,6 @@ export function contextComponentsFor(context) {
   if (context.brief) out.push("Brief");
   if (context.brand) out.push("Brand");
   return out;
-}
-
-// Derived — used by the sidebar filter rail.
-export function postCountsByFilter() {
-  return {
-    all: posts.length,
-    needs_fixes: posts.filter((p) => p.status === "needs_fixes").length,
-    scheduled: posts.filter((p) => p.status === "scheduled").length,
-  };
-}
-
-export function postCountsByNetwork() {
-  return {
-    all: posts.length,
-    linkedin: posts.filter((p) => p.network === "linkedin").length,
-    twitter: posts.filter((p) => p.network === "twitter").length,
-  };
 }
 
 // ── Settings drawer mocks ─────────────────────────────────────────────────

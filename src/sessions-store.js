@@ -55,7 +55,10 @@ export function togglePin(id) {
   return s;
 }
 
-export function addSession(session) {
+// Reserved for a future "new chat from sidebar" flow — the entry path
+// today is the dashboard redirect into /session/new. Kept un-exported
+// until a consumer needs it.
+function addSession(session) {
   const next = {
     id: session.id || `s-${Date.now().toString(36)}`,
     name: session.name || "New conversation",
