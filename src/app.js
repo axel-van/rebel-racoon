@@ -27,6 +27,7 @@ import { renderWelcomeSocials } from "./screens/welcome-socials.js?v=4";
 import { renderWelcomeSources } from "./screens/welcome-sources.js?v=2";
 import { renderWelcomeRecap } from "./screens/welcome-recap.js?v=2";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=2";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=2";
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
 // stays in sync with the active context.
@@ -43,11 +44,13 @@ route("/welcome", renderWelcome);
 route("/welcome/socials", renderWelcomeSocials);
 route("/welcome/sources", renderWelcomeSources);
 route("/welcome/recap", renderWelcomeRecap);
-// First-time ALT — single-screen visual profile picker (re-uses
-// welcome-socials.js card markup). On Continue it mints a transient
-// /session/welcome-alt-{ts} session and the conversational Playbook
-// builder runs there in onboarding chrome.
+// First-time ALT — thin redirect that mints a transient
+// /session/welcome-alt-{ts} session. The conversational Playbook
+// builder (3-question chat: URL → profile → optional documents) runs
+// inside that session in onboarding chrome. At the end of the chat,
+// the user lands on /welcome-alt/recap below.
 route("/welcome-alt", renderWelcomeAlt);
+route("/welcome-alt/recap", renderWelcomeAltRecap);
 
 // Boot.
 initTopbar();

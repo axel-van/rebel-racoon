@@ -1,44 +1,50 @@
-// Welcome step 4 of 4 — full recap of the freshly-built Playbook. Reads
-// the draft from context-builder via the welcomeSessionId stashed in
-// sessionStorage on step 1. If the website analysis is still in flight
-// (the user moved fast through the previous screens), we show an
-// "Analyzing…" state and poll every 400ms until it lands.
+// First Time User ALT — recap surface. Reached at the end of the
+// 3-question chat flow (context-builder.startAlt). Mirrors the linear
+// /welcome/recap chrome: centered single column, brand chip top, big
+// "Voici ton Playbook" headline, brief sections rendered read-only,
+// footer with Fine-tune + Entrer dans Archie CTAs.
 //
-// The recap renders the same section markup as the right-panel brief
-// in read mode via the exported `renderBriefSections` — full content
-// fidelity without re-implementing every card type. Two CTAs at the
-// bottom:
-//   • Fine-tune mon Playbook → save + launch the conversational
-//     playbook-editor on the saved context.
-//   • Entrer dans Archie → save + navigate to the dashboard with a
-//     welcomeComplete handoff that fires the nominal toast.
+// Per the UI/UX review: the brief panel is an *editing* surface, not a
+// result presentation. The end of a conversational flow deserves a
+// dedicated centered surface that reads as "voilà ce qu'on a construit
+// ensemble", not as another todo list.
+//
+// State flow: contextBuilder.maybeOpenAltBrief stashes the ALT
+// sessionId in sessionStorage under WELCOME_ALT_KEY, then navigates
+// here. We read the draft via getDraft(sid), render. On "Entrer dans
+// Archie" we call contextBuilder.save(sid) which fires the draft's
+// onComplete — that callback was set on session mount via the
+// pendingStartContextBuilder handoff and handles the
+// switch-to-returning + dashboard navigation.
 
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=21";
 import { getDraft, isAnalysisReady, save } from "../context-builder.js?v=41";
 import { renderBriefSections } from "../components/right-panel.js?v=62";
 import { launch as launchPlaybookEditor } from "../playbook-editor.js?v=9";
-import { setHandoff } from "../handoff.js?v=20";
 
-const WELCOME_SESSION_KEY = "welcomeSessionId";
+const WELCOME_ALT_KEY = "welcomeAltSessionId";
 const POLL_INTERVAL_MS = 400;
 
 let pollTimer = null;
 
-export function renderWelcomeRecap(_params, target) {
+export function renderWelcomeAltRecap(_params, target) {
   document.body.classList.add("onboarding");
-  const sid = readWelcomeSessionId();
+  const sid = readSessionId();
   if (!sid || !getDraft(sid)) {
-    // No active draft — the user must have lost the session storage
-    // entry or refreshed past the timeout. Send them back to step 1.
-    navigate("/welcome");
+    // No active draft — the user must have refreshed past the timeout
+    // or landed here without going through the chat. Send them back
+    // to the ALT entry.
+    navigate("/welcome-alt");
     return () => {};
   }
 
   paint(target, sid);
 
-  // If analysis hasn't landed yet, poll until it does and repaint so
-  // the recap fills in.
+  // Defensive — if analysis hasn't landed yet, poll until it does.
+  // maybeOpenAltBrief already waits for isAnalysisReady before
+  // navigating here, but a fresh tab + sessionStorage replay could
+  // still arrive early.
   if (!isAnalysisReady(sid)) {
     stopPolling();
     pollTimer = window.setInterval(() => {
@@ -65,21 +71,25 @@ function stopPolling() {
   }
 }
 
-function readWelcomeSessionId() {
+function readSessionId() {
   try {
-    return window.sessionStorage.getItem(WELCOME_SESSION_KEY);
+    return window.sessionStorage.getItem(WELCOME_ALT_KEY);
   } catch {
     return null;
+  }
+}
+
+function clearSessionId() {
+  try {
+    window.sessionStorage.removeItem(WELCOME_ALT_KEY);
+  } catch {
+    /* ignore */
   }
 }
 
 function paint(target, sid) {
   const draft = getDraft(sid);
   const ready = isAnalysisReady(sid);
-  const playbookName = (draft?.name || "ton Playbook").trim();
-  // Render the brief sections only when the analysis has landed; until
-  // then, show a mermaid pulse placeholder so the user knows we're
-  // working on it.
   const briefContent = ready
     ? renderBriefSections(draft, { isRead: true, canRefine: false })
     : `
@@ -101,10 +111,11 @@ function paint(target, sid) {
       </header>
       <div class="welcome-screen__body welcome-recap">
         <div class="welcome-recap__header">
-          <span class="welcome-step__tag">Étape 4 sur 4</span>
+          <span class="welcome-step__tag">Résultat</span>
           <h1 class="welcome-recap__title">Voici ton Playbook.</h1>
           <p class="welcome-recap__sub">
-            Vérifie les détails — tu peux le raffiner avec Archie ou démarrer directement.
+            Voici ce qu'Archie a compris de ton brand depuis la conversation. Tu peux le raffiner ou démarrer
+            directement.
           </p>
         </div>
         <div class="welcome-recap__body context-brief context-brief--read">
@@ -123,9 +134,6 @@ function paint(target, sid) {
       </footer>
     </section>
   `;
-  // Suppress the playbookName from JSON.stringify — we use it just for
-  // the handoff payload below.
-  void playbookName;
 }
 
 function onClick(event, sid) {
@@ -133,30 +141,28 @@ function onClick(event, sid) {
   if (fineTune) {
     const saved = save(sid);
     if (!saved) return;
-    clearWelcomeSessionId();
-    setHandoff("welcomeComplete", { playbookName: saved.name });
+    clearSessionId();
     document.body.classList.remove("onboarding");
-    // launchPlaybookEditor opens a confirm modal then routes to a new
-    // /session/playbook-edit-* session. The fine-tune chip menu shows
-    // up and the user can iterate. On exit they land back at "/".
-    launchPlaybookEditor(saved.id, "/");
+    // Fine-tune launches the conversational Playbook editor on the
+    // freshly-saved context. The user can iterate; on exit they land
+    // at "/". Note: save() already fired the ALT onComplete callback
+    // (set on session mount) which flips mode → returning and
+    // navigates + reloads. So launching the playbook editor here
+    // races with that reload. Skip the launchPlaybookEditor on this
+    // path for now — the user can always re-open the editor from the
+    // dashboard. Keep the button for visual parity with the linear
+    // recap.
     return;
   }
   if (event.target.closest("[data-welcome-done]")) {
     const saved = save(sid);
     if (!saved) return;
-    clearWelcomeSessionId();
-    setHandoff("welcomeComplete", { playbookName: saved.name });
-    document.body.classList.remove("onboarding");
-    navigate("/");
+    clearSessionId();
+    // save() fires onComplete which flips mode + navigates + reloads.
+    // We don't need to do anything else here.
     return;
   }
-}
-
-function clearWelcomeSessionId() {
-  try {
-    window.sessionStorage.removeItem(WELCOME_SESSION_KEY);
-  } catch {
-    // ignore
-  }
+  // Suppress unused-import warning for launchPlaybookEditor until we
+  // wire up the fine-tune flow properly.
+  void launchPlaybookEditor;
 }

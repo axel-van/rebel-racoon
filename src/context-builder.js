@@ -324,12 +324,26 @@ function askAltDocuments(sessionId) {
   });
 }
 
-// Open the brief panel once the background website analysis has landed.
-// If the user blew through questions 2+3 faster than the 6s timer, post
-// a transient "Extracting" notice and poll until isAnalysisReady().
+// At the end of the ALT chat, navigate to the centered /welcome-alt/recap
+// surface instead of opening the right-anchored brief panel. The brief
+// panel is an editing surface; the end of a conversational flow deserves
+// a dedicated result presentation (UI/UX review).
+//
+// Stashes the ALT sessionId in sessionStorage so the recap screen can
+// re-attach to the same draft after navigation.
 function maybeOpenAltBrief(sessionId) {
+  const navigateToRecap = () => {
+    try {
+      window.sessionStorage.setItem("welcomeAltSessionId", sessionId);
+    } catch {
+      /* ignore */
+    }
+    // Use the hash router — context-builder doesn't import navigate()
+    // directly to avoid a cycle with the router module.
+    window.location.hash = "#/welcome-alt/recap";
+  };
   if (isAnalysisReady(sessionId)) {
-    openBriefPanel(sessionId);
+    navigateToRecap();
     return;
   }
   const noticeId = postSystemNotice(sessionId, { meta: "Extracting guidelines", variant: "mermaid" });
@@ -343,7 +357,7 @@ function maybeOpenAltBrief(sessionId) {
       window.clearInterval(interval);
       markSystemNoticeReady(sessionId, noticeId, { meta: "Extracted guidelines" });
       notify(sessionId);
-      openBriefPanel(sessionId);
+      navigateToRecap();
     }
   }, 400);
 }
