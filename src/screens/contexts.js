@@ -31,6 +31,16 @@ export function renderContexts(_params, target) {
   pageState = { query: "" };
   paint(target);
   unsubscribe = subscribeContexts(() => paint(target));
+
+  // FIND-B: tear down the contexts-store subscription on route change so
+  // off-route notifications don't repaint a target that no longer holds
+  // this view.
+  return () => {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+  };
 }
 
 function paint(target) {

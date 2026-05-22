@@ -19,9 +19,15 @@
 // Re-entry safety: requestOpen detects when the active overlay is the
 // same id (e.g. the user pressed the toggle twice) and is a no-op so we
 // don't recursively call close on ourselves.
+//
+// Focus restore (FIND-C): the coordinator snapshots document.activeElement
+// when an overlay opens and re-focuses it on close. This makes every
+// overlay keyboard-friendly without each one having to track focus itself
+// (only search-modal.js used to do this).
 
 let activeId = null;
 let activeClose = null;
+let lastFocus = null;
 
 export function requestOpen(id, closeFn) {
   if (activeId === id) return;
@@ -37,6 +43,12 @@ export function requestOpen(id, closeFn) {
     } catch (err) {
       console.warn(`[modal-coordinator] close handler for ${prevId} threw`, err);
     }
+  } else {
+    // Snapshot focus ONLY on a fresh open. Modal→modal swaps reuse the
+    // first overlay's snapshot so the user lands back on the trigger
+    // that started the chain.
+    const active = document.activeElement;
+    lastFocus = active instanceof HTMLElement ? active : null;
   }
   activeId = id;
   activeClose = closeFn;
@@ -46,5 +58,14 @@ export function notifyClose(id) {
   if (activeId === id) {
     activeId = null;
     activeClose = null;
+    const target = lastFocus;
+    lastFocus = null;
+    if (target && typeof target.focus === "function" && document.body.contains(target)) {
+      try {
+        target.focus({ preventScroll: true });
+      } catch {
+        // ignore — element may have been removed from the DOM
+      }
+    }
   }
 }

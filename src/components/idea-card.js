@@ -76,43 +76,51 @@ function setPinned(pinBtn, pinned) {
   if (labelEl) labelEl.textContent = pinned ? "Unpin idea" : "Pin idea";
 }
 
-document.addEventListener("click", (event) => {
-  // Sources toggle — show/hide the attribution panel
-  const sourcesBtn = event.target.closest("[data-sources-toggle]");
-  if (sourcesBtn) {
-    event.preventDefault();
-    const card = sourcesBtn.closest(".idea-card");
-    const willOpen = card?.dataset.sourcesOpen !== "true";
-    if (card) card.dataset.sourcesOpen = willOpen ? "true" : "false";
-    sourcesBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
-    const panelId = sourcesBtn.getAttribute("aria-controls");
-    const panel = panelId ? document.getElementById(panelId) : null;
-    if (panel) panel.hidden = !willOpen;
-    return;
-  }
-  // Open/close handler
-  const moreBtn = event.target.closest("[data-idea-more]");
-  if (moreBtn) {
-    event.preventDefault();
-    toggleIdeaMoreMenu(moreBtn);
-    return;
-  }
-  // Pin menu item — visual toggle only (mocks don't persist)
-  const pinBtn = event.target.closest("[data-idea-pin]");
-  if (pinBtn) {
-    event.preventDefault();
-    togglePinMenuItem(pinBtn);
-    return;
-  }
-  // Clicks inside an open menu shouldn't bubble-close it
-  if (event.target.closest(".idea-card__more-menu")) return;
-  // Anywhere else — close everything
-  closeAllIdeaMoreMenus();
-});
+// FIND-E: idempotent guard so the document delegate is attached at most
+// once, even if the module is re-evaluated.
+let globalListenersBound = false;
+function bindGlobalListeners() {
+  if (globalListenersBound) return;
+  globalListenersBound = true;
+  document.addEventListener("click", (event) => {
+    // Sources toggle — show/hide the attribution panel
+    const sourcesBtn = event.target.closest("[data-sources-toggle]");
+    if (sourcesBtn) {
+      event.preventDefault();
+      const card = sourcesBtn.closest(".idea-card");
+      const willOpen = card?.dataset.sourcesOpen !== "true";
+      if (card) card.dataset.sourcesOpen = willOpen ? "true" : "false";
+      sourcesBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+      const panelId = sourcesBtn.getAttribute("aria-controls");
+      const panel = panelId ? document.getElementById(panelId) : null;
+      if (panel) panel.hidden = !willOpen;
+      return;
+    }
+    // Open/close handler
+    const moreBtn = event.target.closest("[data-idea-more]");
+    if (moreBtn) {
+      event.preventDefault();
+      toggleIdeaMoreMenu(moreBtn);
+      return;
+    }
+    // Pin menu item — visual toggle only (mocks don't persist)
+    const pinBtn = event.target.closest("[data-idea-pin]");
+    if (pinBtn) {
+      event.preventDefault();
+      togglePinMenuItem(pinBtn);
+      return;
+    }
+    // Clicks inside an open menu shouldn't bubble-close it
+    if (event.target.closest(".idea-card__more-menu")) return;
+    // Anywhere else — close everything
+    closeAllIdeaMoreMenus();
+  });
 
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") closeAllIdeaMoreMenus();
-});
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeAllIdeaMoreMenus();
+  });
+}
+bindGlobalListeners();
 
 export function renderIdeaCard(idea, allSources = [], { selectable = false, isSelected = false } = {}) {
   const sourceIds = idea.sourceIds || [];

@@ -49,30 +49,38 @@ function toggleSourceMoreMenu(triggerBtn) {
   triggerBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
 }
 
-document.addEventListener("click", (event) => {
-  // Open / close the more menu
-  const moreBtn = event.target.closest("[data-source-more]");
-  if (moreBtn) {
-    event.preventDefault();
-    toggleSourceMoreMenu(moreBtn);
-    return;
-  }
-  // Per-row Extract / Delete — close the menu after click; the actual
-  // action is handled by screen-level delegators on the same data-* hooks.
-  if (event.target.closest("[data-source-extract-one]") || event.target.closest("[data-source-delete-one]")) {
+// FIND-E: idempotent guard so the document delegate is attached at most
+// once, even if the module is re-evaluated.
+let globalListenersBound = false;
+function bindGlobalListeners() {
+  if (globalListenersBound) return;
+  globalListenersBound = true;
+  document.addEventListener("click", (event) => {
+    // Open / close the more menu
+    const moreBtn = event.target.closest("[data-source-more]");
+    if (moreBtn) {
+      event.preventDefault();
+      toggleSourceMoreMenu(moreBtn);
+      return;
+    }
+    // Per-row Extract / Delete — close the menu after click; the actual
+    // action is handled by screen-level delegators on the same data-* hooks.
+    if (event.target.closest("[data-source-extract-one]") || event.target.closest("[data-source-delete-one]")) {
+      closeAllSourceMoreMenus();
+      // Don't preventDefault — let the screen handler run.
+      return;
+    }
+    // Clicks inside an open menu shouldn't bubble-close it
+    if (event.target.closest(".source-card__more-menu")) return;
+    // Anywhere else — close every open menu
     closeAllSourceMoreMenus();
-    // Don't preventDefault — let the screen handler run.
-    return;
-  }
-  // Clicks inside an open menu shouldn't bubble-close it
-  if (event.target.closest(".source-card__more-menu")) return;
-  // Anywhere else — close every open menu
-  closeAllSourceMoreMenus();
-});
+  });
 
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") closeAllSourceMoreMenus();
-});
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeAllSourceMoreMenus();
+  });
+}
+bindGlobalListeners();
 
 // ── Card renderer ──────────────────────────────────────────────────────
 

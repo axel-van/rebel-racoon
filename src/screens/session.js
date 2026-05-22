@@ -191,6 +191,21 @@ export function renderSession(params, target) {
 
   bindSession(target, session);
   wireAssistantPanel(target, session, attachedContext);
+
+  // FIND-B: return a cleanup so the router tears down per-screen state on
+  // route change (and not only on the next session mount). Without this,
+  // navigating from /session/:id to /ideas left the assistant subscribers
+  // wired against stale DOM nodes for the lifetime of the next route.
+  return () => {
+    if (currentUnsubscribe) {
+      currentUnsubscribe();
+      currentUnsubscribe = null;
+    }
+    if (currentListenerController) {
+      currentListenerController.abort();
+      currentListenerController = null;
+    }
+  };
 }
 
 function renderAssistantPanel(session, attachedContext) {
@@ -658,78 +673,6 @@ function startAskFlowFromSession(sessionId, sourceId, filename) {
   }
 }
 
-// "Extract video clips" starter → multi-step flow:
-//   1. Snapshot the current source ids, open the Add Source modal so the
-//      user can upload a video file.
-//   2. Subscribe to sources-stream; pick up the first new source whose kind
-//      resolves to "video".
-//   3. Wait for that source to reach `Processed` status (the existing
-//      upload pipeline already runs 2s upload + 3-5s processing).
-//   4. Kick off the non-blocking clip extraction (30s background job). The
-//      UI stays usable; the user gets a toast with an "Open clips" action
-//      when extraction completes, which opens the Video Clips modal.
-//   5. "Draft posts from N clips" pipes drafts into the current session
-//      with full clipRef so each draft card renders its video player.
-//
-// Bail conditions: a 2-minute watchdog clears subscriptions if the user
-// cancels the Add Source modal so we don't leak listeners.
-
-function startClipsExtractionFlow(session) {
-  const initialIds = new Set(getStreamSources(session.id).map((s) => s.id));
-  let newSourceId = null;
-  let unsubNew = null;
-  let unsubProcessed = null;
-  let watchdog = null;
-
-  const cleanup = () => {
-    if (unsubNew) {
-      unsubNew();
-      unsubNew = null;
-    }
-    if (unsubProcessed) {
-      unsubProcessed();
-      unsubProcessed = null;
-    }
-    if (watchdog) {
-      clearTimeout(watchdog);
-      watchdog = null;
-    }
-  };
-
-  // After the user picks a file, the Add Source modal kicks off the
-  // existing upload pipeline which pushes a new source. We catch the
-  // first new VIDEO source — anything else is ignored and the user
-  // can re-trigger the starter.
-  unsubNew = subscribeSources(session.id, (sources) => {
-    const fresh = sources.find((s) => !initialIds.has(s.id) && (s.kind || "").toLowerCase() === "video");
-    if (!fresh) return;
-    newSourceId = fresh.id;
-    unsubNew();
-    unsubNew = null;
-
-    // Now wait for the upload + processing pipeline to finish on this
-    // specific source.
-    unsubProcessed = subscribeSources(session.id, (latest) => {
-      const target = latest.find((s) => s.id === newSourceId);
-      if (!target || target.status !== "Processed") return;
-      unsubProcessed();
-      unsubProcessed = null;
-      if (watchdog) {
-        clearTimeout(watchdog);
-        watchdog = null;
-      }
-      startClipExtraction(target, {
-        onReady: () => openIdeasPanel(),
-      });
-    });
-  });
-
-  // Drop listeners if the user backs out for 2 minutes without uploading.
-  watchdog = setTimeout(cleanup, 120000);
-
-  openAddSourceModal({ tab: "upload" });
-}
-
 // Open the Video Clips modal with the standard "session" callback wiring:
 // save persists clip edits in sources-stream; use-clips drafts the picked
 // clips into THIS session (drafts pill increments + inline draft turn +
@@ -1036,6 +979,63 @@ function renderExtractionTurn(message) {
   `;
 }
 
+// Drag-and-drop a file anywhere on the assistant panel → kicks off the
+// upload pipeline directly (no modal). Matches the handoff "drop a file
+// anywhere to add it as a source" hint shown under the composer. Files
+// that don't classify (wrong extension, too big) fall back to the Add
+// Source modal so the user gets the explicit error UX.
+//
+// Called from wireAssistantPanel on first mount AND from
+// refreshAssistantAside after each wholesale swap of the
+// `.session__assistant` element (FIND-A).
+function bindDragAndDrop(aside, session) {
+  if (!aside) return;
+  let dragDepth = 0;
+  aside.addEventListener("dragenter", (event) => {
+    if (!event.dataTransfer || !Array.from(event.dataTransfer.types || []).includes("Files")) return;
+    event.preventDefault();
+    dragDepth += 1;
+    aside.classList.add("is-drop-target");
+  });
+  aside.addEventListener("dragover", (event) => {
+    if (!event.dataTransfer || !Array.from(event.dataTransfer.types || []).includes("Files")) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+  });
+  aside.addEventListener("dragleave", () => {
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0) aside.classList.remove("is-drop-target");
+  });
+  aside.addEventListener("drop", (event) => {
+    if (!event.dataTransfer || !event.dataTransfer.files?.length) return;
+    event.preventDefault();
+    dragDepth = 0;
+    aside.classList.remove("is-drop-target");
+    const files = Array.from(event.dataTransfer.files);
+    let started = 0;
+    let firstReject = null;
+    for (const file of files) {
+      const classification = classifyFile(file);
+      if (classification.ok) {
+        startFileUpload(file, classification, session.id);
+        started += 1;
+      } else if (!firstReject) {
+        firstReject = classification.reason;
+      }
+    }
+    if (started > 0) {
+      showToast(
+        started === 1 ? `Uploading "${files[0].name}"…` : `Uploading ${started} file${started === 1 ? "" : "s"}…`,
+      );
+    }
+    if (firstReject) {
+      // Fall back to the modal so the user sees the explicit error UX
+      // and can retry with a supported file.
+      openAddSourceModal({ tab: "upload" });
+    }
+  });
+}
+
 function wireAssistantPanel(root, session, attachedContext) {
   // Tear down any subscriptions attached to the previous render.
   if (currentUnsubscribe) {
@@ -1188,6 +1188,10 @@ function wireAssistantPanel(root, session, attachedContext) {
       }
     }
     rebindWizardKeyboardIfActive();
+    // The previous aside was swapped wholesale — re-bind drag/drop on the
+    // fresh element. Without this, dropping a file after any wizard
+    // refresh became a silent no-op (FIND-A).
+    bindDragAndDrop(root.querySelector(".session__assistant"), session);
     // Wizard chat (inline-question / sidebar-wizard layouts) renders the
     // full thread above the picker — keep it pinned to the bottom on every
     // re-render so newly posted turns stay in view. Uses queueMicrotask so
@@ -1389,58 +1393,7 @@ function wireAssistantPanel(root, session, attachedContext) {
     }, 200);
   }
 
-  // Drag-and-drop a file anywhere on the assistant panel → kicks off the
-  // upload pipeline directly (no modal). Matches the handoff "drop a file
-  // anywhere to add it as a source" hint shown under the composer. Files
-  // that don't classify (wrong extension, too big) fall back to the Add
-  // Source modal so the user gets the explicit error UX.
-  const aside = root.querySelector(".session__assistant");
-  if (aside) {
-    let dragDepth = 0;
-    aside.addEventListener("dragenter", (event) => {
-      if (!event.dataTransfer || !Array.from(event.dataTransfer.types || []).includes("Files")) return;
-      event.preventDefault();
-      dragDepth += 1;
-      aside.classList.add("is-drop-target");
-    });
-    aside.addEventListener("dragover", (event) => {
-      if (!event.dataTransfer || !Array.from(event.dataTransfer.types || []).includes("Files")) return;
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "copy";
-    });
-    aside.addEventListener("dragleave", () => {
-      dragDepth = Math.max(0, dragDepth - 1);
-      if (dragDepth === 0) aside.classList.remove("is-drop-target");
-    });
-    aside.addEventListener("drop", (event) => {
-      if (!event.dataTransfer || !event.dataTransfer.files?.length) return;
-      event.preventDefault();
-      dragDepth = 0;
-      aside.classList.remove("is-drop-target");
-      const files = Array.from(event.dataTransfer.files);
-      let started = 0;
-      let firstReject = null;
-      for (const file of files) {
-        const classification = classifyFile(file);
-        if (classification.ok) {
-          startFileUpload(file, classification, session.id);
-          started += 1;
-        } else if (!firstReject) {
-          firstReject = classification.reason;
-        }
-      }
-      if (started > 0) {
-        showToast(
-          started === 1 ? `Uploading "${files[0].name}"…` : `Uploading ${started} file${started === 1 ? "" : "s"}…`,
-        );
-      }
-      if (firstReject) {
-        // Fall back to the modal so the user sees the explicit error UX
-        // and can retry with a supported file.
-        openAddSourceModal({ tab: "upload" });
-      }
-    });
-  }
+  bindDragAndDrop(root.querySelector(".session__assistant"), session);
 
   currentUnsubscribe = () => {
     offThread();
@@ -1501,7 +1454,13 @@ function formatElapsed(seconds) {
 }
 
 function startThinkingTimer(sessionId) {
-  if (thinkingIntervalId) return;
+  // FIND-F: clear-and-restart rather than early-return — a new session
+  // opening its thinking-chip while another is still running would
+  // otherwise keep polling the previous sessionId.
+  if (thinkingIntervalId) {
+    clearInterval(thinkingIntervalId);
+    thinkingIntervalId = null;
+  }
   thinkingIntervalId = setInterval(() => {
     const chip = document.querySelector("[data-assistant-thinking]");
     if (!chip || chip.hidden) {

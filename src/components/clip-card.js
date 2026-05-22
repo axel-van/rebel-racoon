@@ -56,20 +56,29 @@ function toggleClipMoreMenu(triggerBtn) {
   triggerBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
 }
 
-document.addEventListener("click", (event) => {
-  const moreBtn = event.target.closest("[data-clip-more]");
-  if (moreBtn) {
-    event.preventDefault();
-    toggleClipMoreMenu(moreBtn);
-    return;
-  }
-  if (event.target.closest(".clip-card__more-menu")) return;
-  closeAllClipMoreMenus();
-});
+// Top-level guard so the document-scoped delegate is attached at most once,
+// even if the module is somehow re-evaluated (HMR, test harness, dynamic
+// import). FIND-E.
+let globalListenersBound = false;
+function bindGlobalListeners() {
+  if (globalListenersBound) return;
+  globalListenersBound = true;
+  document.addEventListener("click", (event) => {
+    const moreBtn = event.target.closest("[data-clip-more]");
+    if (moreBtn) {
+      event.preventDefault();
+      toggleClipMoreMenu(moreBtn);
+      return;
+    }
+    if (event.target.closest(".clip-card__more-menu")) return;
+    closeAllClipMoreMenus();
+  });
 
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") closeAllClipMoreMenus();
-});
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeAllClipMoreMenus();
+  });
+}
+bindGlobalListeners();
 
 function escapeText(s) {
   return String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
