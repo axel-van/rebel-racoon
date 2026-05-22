@@ -568,7 +568,7 @@ function runAnalysis(sessionId) {
 // can pick any combination via the inline-question multi-select. Logos
 // are the same SVGs used by mocks.socialAccounts so any future "show
 // me what I picked" view stays visually consistent.
-export const SOCIAL_PLATFORMS = [
+const SOCIAL_PLATFORMS = [
   { value: "linkedin", label: "LinkedIn", imgSrc: "assets/logos/social/linkedin.svg" },
   { value: "instagram", label: "Instagram", imgSrc: "assets/logos/social/instagram.svg" },
   { value: "x", label: "X (Twitter)", imgSrc: "assets/logos/social/x.svg" },
@@ -631,7 +631,7 @@ function openBriefPanel(sessionId) {
   });
 }
 
-export function setAnswer(sessionId, field, value) {
+function setAnswer(sessionId, field, value) {
   const d = drafts.get(sessionId);
   if (!d) return;
   d[field] = value;
@@ -639,7 +639,7 @@ export function setAnswer(sessionId, field, value) {
   rightPanel.refreshContextBriefPanel?.();
 }
 
-export function setVoiceProfileField(sessionId, fieldId, value) {
+function setVoiceProfileField(sessionId, fieldId, value) {
   const d = drafts.get(sessionId);
   if (!d) return;
   if (!d.voiceProfile || typeof d.voiceProfile !== "object") d.voiceProfile = {};
@@ -648,7 +648,7 @@ export function setVoiceProfileField(sessionId, fieldId, value) {
   // No refresh — let the textarea keep its focus while typing.
 }
 
-export function setName(sessionId, name) {
+function setName(sessionId, name) {
   const d = drafts.get(sessionId);
   if (!d) return;
   d.name = name || "";

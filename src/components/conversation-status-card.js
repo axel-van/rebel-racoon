@@ -56,7 +56,7 @@ export function isEnabled() {
   return localStorage.getItem(STORAGE_KEY) !== "0";
 }
 
-export function setEnabled(on) {
+function setEnabled(on) {
   if (on) localStorage.removeItem(STORAGE_KEY);
   else localStorage.setItem(STORAGE_KEY, "0");
   visibilityListeners.forEach((fn) => {

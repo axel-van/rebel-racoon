@@ -91,7 +91,7 @@ export function open({ posts, onConfirm }) {
   render();
 }
 
-export function close() {
+function close() {
   state = {
     open: false,
     posts: [],

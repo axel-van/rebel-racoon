@@ -64,7 +64,7 @@ export function setSidebarCollapsed(collapsed) {
   renderSidebar();
 }
 
-export function toggleSidebar() {
+function toggleSidebar() {
   setSidebarCollapsed(!isSidebarCollapsed());
 }
 

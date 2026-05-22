@@ -265,7 +265,7 @@ export function open() {
   });
 }
 
-export function close() {
+function close() {
   modal.classList.remove("open");
   backdrop.classList.remove("open");
   backdrop.hidden = true;

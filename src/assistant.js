@@ -287,12 +287,6 @@ export function postUserTurn(sessionId, text) {
   notify(sessionId);
 }
 
-// Convenience alias — same implementation as postUserTurn but semantically
-// signals "channel selection echo" at call sites.
-export function postUserChoice(sessionId, { text }) {
-  postUserTurn(sessionId, text);
-}
-
 // Push an "assistant-choice" turn that renders a set of toggle chips plus a
 // submit button. Keeps the module generic — the handler string identifies
 // what the click delegate in session.js should do on submit.

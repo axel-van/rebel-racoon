@@ -108,15 +108,3 @@ export const CONTEXT_QUESTIONS = [
     options: ["orange", "blue", "green", "purple", "red", "yellow"],
   },
 ];
-
-// Default answer shape — used by the orchestrator to seed an empty draft.
-// Keys match `field` of each question; types match what addContext() expects.
-export function emptyAnswers() {
-  const out = {};
-  for (const q of CONTEXT_QUESTIONS) {
-    if (q.type === "chips-multi" || q.type === "chips-multi-add") out[q.field] = [];
-    else out[q.field] = "";
-  }
-  out.color = "orange"; // sensible default so the swatch renders even before the user picks
-  return out;
-}

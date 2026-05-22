@@ -117,7 +117,7 @@ export function open() {
   window.setTimeout(() => focusSafe(textArea), 50);
 }
 
-export function close() {
+function close() {
   modal.classList.remove("open");
   backdrop.classList.remove("open");
   backdrop.hidden = true;

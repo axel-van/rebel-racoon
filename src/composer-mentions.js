@@ -23,7 +23,7 @@ function ensure(sessionId) {
   return mentionsBySession.get(sessionId);
 }
 
-export function getMentions(sessionId) {
+function getMentions(sessionId) {
   return ensure(sessionId).slice();
 }
 

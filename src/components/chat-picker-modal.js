@@ -92,7 +92,7 @@ export function open(opts = {}) {
   bindKeyboard();
 }
 
-export function close() {
+function close() {
   if (!initialized) return;
   unbindWizardKeyboard();
   modal.classList.remove("open");

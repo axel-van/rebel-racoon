@@ -47,7 +47,7 @@ export function setFlag(id, value) {
   }
 }
 
-export function resetFlags() {
+function resetFlags() {
   try {
     window.localStorage.removeItem(KEY);
   } catch {

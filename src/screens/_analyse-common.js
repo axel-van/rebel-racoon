@@ -1,6 +1,4 @@
 import { html, raw } from "../utils.js?v=20";
-import { navigate } from "../router.js?v=20";
-import { parseHashParams } from "../url-state.js?v=20";
 
 // Shared pieces for all three Analyse wizards.
 //
@@ -16,46 +14,6 @@ import { parseHashParams } from "../url-state.js?v=20";
 //     stickyFooter?: raw HTML to render inside the sticky bar INSTEAD of a
 //                    picker (used by Brand preview step for Start over / Apply)
 //   }
-
-// -- Stage orchestration ---------------------------------------------------
-//
-// The context wizard is a linear walk through any subset of {voice, brief,
-// brand}. The selected stage list + current context name/id are carried as
-// URL query params so each stage wizard knows where to go on completion.
-//
-//   ?stages=voice,brief,brand&name=Acme&contextId=ctx-acme
-//
-// advanceContextStage(currentStage) navigates to the next selected stage, or
-// to the context summary if this was the last.
-
-export function advanceContextStage(currentStage) {
-  const params = parseHashParams();
-  const stages = (params.get("stages") || "").split(",").filter(Boolean);
-  const idx = stages.indexOf(currentStage);
-  const nextStage = idx >= 0 ? stages[idx + 1] : null;
-
-  // Reset any step state but keep the stages/name/contextId in the URL.
-  params.delete("step");
-
-  if (nextStage) {
-    navigate(`/analyse/${nextStage}?${params.toString()}`);
-  } else {
-    navigate(`/analyse/summary?${params.toString()}`);
-  }
-}
-
-// -- Step param in the URL --------------------------------------------------
-
-export function getStep(defaultStep) {
-  return parseHashParams().get("step") || defaultStep;
-}
-
-export function setStep(step) {
-  const path = window.location.hash.split("?")[0].replace(/^#/, "") || "/";
-  const params = parseHashParams();
-  params.set("step", step);
-  navigate(`${path}?${params.toString()}`);
-}
 
 // -- Wizard shell (conversational layout) -----------------------------------
 
@@ -76,16 +34,6 @@ export function wizardChrome({ body, picker = null, stickyFooter = null }) {
       </div>
     </section>
   `;
-}
-
-// Called by each wizard after innerHTML = wizardChrome(...). Once the thread
-// grows past the viewport the flex `margin: auto` trick in .analyse__chat-inner
-// (styles/screens/analyse.css) stops pinning the content to the bottom —
-// force the scroll container to its latest message so the new AI question is
-// always in view on advance.
-export function scrollChatToLatest(target) {
-  const chat = target.querySelector("#analyseChat");
-  if (chat) chat.scrollTop = chat.scrollHeight;
 }
 
 // -- Chat turns -------------------------------------------------------------

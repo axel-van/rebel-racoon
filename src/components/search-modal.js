@@ -267,7 +267,7 @@ export function open() {
   setTimeout(() => inputEl?.focus({ preventScroll: true }), 0);
 }
 
-export function close() {
+function close() {
   if (!initialized) return;
   modal.classList.remove("open");
   backdrop.classList.remove("open");

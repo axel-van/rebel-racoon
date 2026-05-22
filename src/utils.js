@@ -35,19 +35,3 @@ export function html(strings, ...values) {
 export function raw(value) {
   return { __raw: true, value: value == null ? "" : String(value) };
 }
-
-export function setHtml(target, markup) {
-  target.innerHTML = markup;
-}
-
-export function on(root, selector, eventName, handler) {
-  // Event delegation on a container. Returns a dispose function.
-  const listener = (event) => {
-    const match = event.target.closest(selector);
-    if (match && root.contains(match)) {
-      handler(event, match);
-    }
-  };
-  root.addEventListener(eventName, listener);
-  return () => root.removeEventListener(eventName, listener);
-}

@@ -407,7 +407,7 @@ export function open(postId, onUse) {
   if (!promptText && !promptLoading) runDerive();
 }
 
-export function close() {
+function close() {
   if (!initialized) return;
   modal.classList.remove("open");
   backdrop.classList.remove("open");

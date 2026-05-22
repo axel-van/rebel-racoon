@@ -553,7 +553,7 @@ export function open(opts = {}) {
   }, 60);
 }
 
-export function close() {
+function close() {
   if (!initialized) return;
   state.open = false;
   drawer.classList.remove("open");

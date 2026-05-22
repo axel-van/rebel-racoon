@@ -977,7 +977,7 @@ export function open(source, callbacks = {}) {
   render();
 }
 
-export function close() {
+function close() {
   if (!initialized || !modal?.classList.contains("open")) return;
   modal.classList.remove("open");
   backdrop.classList.remove("open");

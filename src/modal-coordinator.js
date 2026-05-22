@@ -48,7 +48,3 @@ export function notifyClose(id) {
     activeClose = null;
   }
 }
-
-export function getActive() {
-  return activeId;
-}

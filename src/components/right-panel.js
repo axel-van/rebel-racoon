@@ -257,7 +257,7 @@ export function closePanel() {
   notify();
 }
 
-export function setMode(mode) {
+function setMode(mode) {
   if (mode !== "drafts" && mode !== "ideas" && mode !== "context-form") return;
   state = { ...state, mode };
   rebindThread();

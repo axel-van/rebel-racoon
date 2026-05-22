@@ -158,10 +158,6 @@ export function isDirty(sessionId) {
   return !!drafts.get(sessionId)?.dirty;
 }
 
-export function getContextId(sessionId) {
-  return drafts.get(sessionId)?.contextId || null;
-}
-
 // Commit the accumulated draft to the contexts store. Returns the
 // contextId so the caller (session.js Save handler) can toast/navigate.
 export function save(sessionId) {

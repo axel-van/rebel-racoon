@@ -673,7 +673,7 @@ export function open(opts = {}) {
   render();
 }
 
-export function close() {
+function close() {
   if (!initialized) return;
   modal.classList.remove("open");
   backdrop.classList.remove("open");
