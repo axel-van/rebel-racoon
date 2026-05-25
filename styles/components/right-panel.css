@@ -588,10 +588,14 @@
    row (card + action stack). Drop the leading checkbox slot since
    selection mode isn't part of this redesign. The card-wrap keeps
    its fixed 500px width (posts.css) so previews always render at the
-   same size — free space sits to the right of the action stack on
-   wide panels, and the row reflows to column at the narrow breakpoint. */
+   same size; center the card+actions so any extra room sits evenly
+   on both sides rather than dangling off the right. */
 .rpanel-drafts__feed .posts__row-check {
   display: none;
+}
+
+.rpanel-drafts__feed .posts__row {
+  justify-content: center;
 }
 
 /* Network select sizing — fills the rail column at the wide breakpoint. */
