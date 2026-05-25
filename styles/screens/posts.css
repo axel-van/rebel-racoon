@@ -138,15 +138,15 @@
 /* ---------- Post card ---------- */
 
 /* Wrapper that holds the per-post error infobox + the card itself in a column.
-   The 500px cap lives here (not on .posts__card) so the infobox tracks the
-   card's width and both align to the same left edge. */
+   Fixed 500px width — the preview should always render at the same size so
+   the layout stays predictable regardless of panel width or right-panel
+   resizes. Container clips/scrolls if it can't fit. */
 .posts__card-wrap {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
-  min-width: 0;
-  max-width: 500px;
-  width: 100%;
+  width: 500px;
+  flex-shrink: 0;
 }
 
 .posts__card-errors-list {
