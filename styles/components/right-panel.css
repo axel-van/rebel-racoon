@@ -475,18 +475,15 @@
   font-weight: var(--ref-font-weight-regular);
 }
 
-/* Card grid — single column by default, switches to 2 columns when the
-   panel container is wide enough to keep cards readable (≥ 580px). */
+/* Card grid — always one column. We tried a 2-col breakpoint at wide
+   panel widths but each card carries too much chrome (kind badge,
+   source, pin link, title, body, "Why this idea" toggle, Draft CTA,
+   more menu) to read cleanly side-by-side. Keeping one card per row
+   trades horizontal density for vertical clarity. */
 .rpanel-ideas__grid {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: var(--ref-spacing-xs);
-}
-
-@container (min-width: 580px) {
-  .rpanel-ideas__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 .rpanel-ideas__no-match {
