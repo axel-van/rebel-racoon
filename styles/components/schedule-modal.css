@@ -89,6 +89,10 @@
 }
 
 /* ── Mode picker ────────────────────────────────────────────────────── */
+/* The mode picker uses the DS .ap-radio-card.card composition — that
+   class already carries border, padding, radius, hover and the
+   checked-state accent-blue border. We only add the two-column grid
+   and tint the leading icon to match the accent. */
 
 .schedule-modal__modes {
   display: grid;
@@ -96,49 +100,8 @@
   gap: var(--ref-spacing-xs);
 }
 
-.schedule-modal__mode {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--ref-spacing-xxxs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  background: var(--app-surface);
-  border: 1px solid var(--app-border-soft);
-  border-radius: var(--app-radius-card);
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: all var(--ref-animation-short) var(--app-ease-standard);
-}
-
-.schedule-modal__mode:hover,
-.schedule-modal__mode:focus-visible {
-  border-color: var(--ref-color-grey-40);
-  outline: none;
-}
-
-.schedule-modal__mode.is-on {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-10);
-}
-
-.schedule-modal__mode-title {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
-}
-
-.schedule-modal__mode-title i {
-  font-size: var(--sys-icon-css-sm);
+.schedule-modal__mode .ap-radio-card-header > i {
   color: var(--ref-color-electric-blue-100);
-}
-
-.schedule-modal__mode-sub {
-  font-size: var(--ref-font-size-xs);
-  color: var(--ref-color-grey-60);
 }
 
 /* ── Slot rows ──────────────────────────────────────────────────────── */

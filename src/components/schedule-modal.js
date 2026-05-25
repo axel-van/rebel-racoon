@@ -43,12 +43,16 @@ let state = {
 
 let unsubscribeQueue = null;
 
+// DS branded network glyphs — the `-official` variants carry each
+// network's brand color. The generic `ap-icon-<network>` set is grey
+// and meant for inline-text usage, not for identifying a profile or
+// destination in a scheduling list.
 const NETWORK_ICON = {
-  linkedin: "ap-icon-linkedin",
+  linkedin: "ap-icon-linkedin-official",
   twitter: "ap-icon-twitter-official",
-  x: "ap-icon-twitter-official",
-  instagram: "ap-icon-instagram",
-  facebook: "ap-icon-facebook",
+  x: "ap-icon-x-official",
+  instagram: "ap-icon-instagram-official",
+  facebook: "ap-icon-facebook-official",
   tiktok: "ap-icon-tiktok-official",
 };
 
@@ -214,15 +218,6 @@ function onClick(event) {
     close();
     return;
   }
-  const modeBtn = event.target.closest("[data-schedule-mode]");
-  if (modeBtn) {
-    const next = modeBtn.dataset.scheduleMode;
-    if (next === state.mode) return;
-    state.mode = next;
-    state.slots = next === "optimal" ? optimalSlots(state.posts) : customDefaultSlots(state.posts);
-    render();
-    return;
-  }
   const monthNav = event.target.closest("[data-schedule-month]");
   if (monthNav) {
     const dir = monthNav.dataset.scheduleMonth === "next" ? 1 : -1;
@@ -311,31 +306,38 @@ function onConfirmFailed(err) {
 }
 
 function onInput(event) {
+  // Mode picker (radio cards) — flipping a radio rebuilds the slot
+  // list under the chosen strategy and triggers a full repaint so
+  // the calendar dots track the new times too.
+  if (event.target.matches('input[name="schedule-mode"]')) {
+    const next = event.target.value;
+    if (next === state.mode) return;
+    state.mode = next;
+    state.slots = next === "optimal" ? optimalSlots(state.posts) : customDefaultSlots(state.posts);
+    render();
+    return;
+  }
   const slotInput = event.target.closest("[data-schedule-slot]");
   if (slotInput) {
     const idx = parseInt(slotInput.dataset.scheduleSlot, 10);
     const ts = new Date(slotInput.value).getTime();
     if (!isNaN(ts)) {
       state.slots[idx] = { ...state.slots[idx], when: ts };
-      state.mode = "custom";
-      // Avoid a full repaint while the user is mid-edit — sync only the
-      // surfaces that should react (mode pill, focused day, calendar
-      // dot rebuild happens on the next interaction).
-      syncAfterSlotEdit(idx);
+      // A manual edit implies Custom mode — flip the radio checked
+      // state without a full re-render so we don't steal focus from
+      // the datetime input the user is mid-edit on.
+      if (state.mode !== "custom") {
+        state.mode = "custom";
+        const customRadio = document.querySelector('input[name="schedule-mode"][value="custom"]');
+        if (customRadio) customRadio.checked = true;
+      }
+      // Repaint the slot label so the "scheduled for X" tag tracks.
+      const row = document.querySelector(`[data-schedule-row="${idx}"]`);
+      if (row) {
+        const label = row.querySelector(".schedule-modal__slot-when-label");
+        if (label) label.textContent = formatSlotLabel(state.slots[idx].when);
+      }
     }
-  }
-}
-
-function syncAfterSlotEdit(idx) {
-  document.querySelectorAll("[data-schedule-mode]").forEach((btn) => {
-    btn.classList.toggle("is-on", btn.dataset.scheduleMode === state.mode);
-    btn.setAttribute("aria-selected", btn.dataset.scheduleMode === state.mode);
-  });
-  // Repaint the slot label so the "scheduled for X" tag tracks.
-  const row = document.querySelector(`[data-schedule-row="${idx}"]`);
-  if (row) {
-    const label = row.querySelector(".schedule-modal__slot-when-label");
-    if (label) label.textContent = formatSlotLabel(state.slots[idx].when);
   }
 }
 
@@ -418,34 +420,41 @@ function renderInner() {
 }
 
 function renderModePicker() {
+  // DS `.ap-radio-card.card` — interactive card with a leading radio
+  // indicator, native role="radio" semantics via <input type="radio">,
+  // and a built-in selected state that paints the border accent blue.
   return `
-    <div class="schedule-modal__modes" role="tablist">
-      <button
-        type="button"
-        class="schedule-modal__mode ${state.mode === "optimal" ? "is-on" : ""}"
-        data-schedule-mode="optimal"
-        role="tab"
-        aria-selected="${state.mode === "optimal"}"
-      >
-        <span class="schedule-modal__mode-title">
-          <i class="ap-icon-sparkles" aria-hidden="true"></i>
-          Optimal times
-        </span>
-        <span class="schedule-modal__mode-sub">Spread across each network's best hours</span>
-      </button>
-      <button
-        type="button"
-        class="schedule-modal__mode ${state.mode === "custom" ? "is-on" : ""}"
-        data-schedule-mode="custom"
-        role="tab"
-        aria-selected="${state.mode === "custom"}"
-      >
-        <span class="schedule-modal__mode-title">
-          <i class="ap-icon-pen" aria-hidden="true"></i>
-          Custom
-        </span>
-        <span class="schedule-modal__mode-sub">Pick each time below</span>
-      </button>
+    <div class="schedule-modal__modes" role="radiogroup" aria-label="Scheduling mode">
+      <label class="ap-radio-card card schedule-modal__mode">
+        <input
+          type="radio"
+          name="schedule-mode"
+          value="optimal"
+          ${state.mode === "optimal" ? "checked" : ""}
+        />
+        <div>
+          <div class="ap-radio-card-header">
+            <i class="ap-icon-sparkles" aria-hidden="true"></i>
+            <span class="ap-radio-card-title">Optimal times</span>
+          </div>
+          <span>Spread across each network's best hours</span>
+        </div>
+      </label>
+      <label class="ap-radio-card card schedule-modal__mode">
+        <input
+          type="radio"
+          name="schedule-mode"
+          value="custom"
+          ${state.mode === "custom" ? "checked" : ""}
+        />
+        <div>
+          <div class="ap-radio-card-header">
+            <i class="ap-icon-pen" aria-hidden="true"></i>
+            <span class="ap-radio-card-title">Custom</span>
+          </div>
+          <span>Pick each time below</span>
+        </div>
+      </label>
     </div>
   `;
 }
