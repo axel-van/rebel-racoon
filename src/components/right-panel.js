@@ -1762,13 +1762,14 @@ function renderIdeasView() {
               (k) => `
                 <button
                   type="button"
-                  class="rpanel-ideas__filter ${ideasFilter === k.id ? "is-on" : ""}"
+                  class="ap-filter-chip"
                   data-rpanel-ideas-filter="${k.id}"
                   role="tab"
+                  aria-pressed="${ideasFilter === k.id}"
                   aria-selected="${ideasFilter === k.id}"
                 >
                   <span>${k.label}</span>
-                  <span class="rpanel-ideas__filter-count">${kindCounts[k.id]}</span>
+                  <span class="ap-filter-chip-count">${kindCounts[k.id]}</span>
                 </button>
               `,
             ).join(""),
