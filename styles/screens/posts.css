@@ -182,6 +182,7 @@
 .posts__card {
   gap: var(--ref-spacing-sm);
   min-width: 0;
+  border-color: var(--ref-color-grey-20);
 }
 
 .posts__card-header {
