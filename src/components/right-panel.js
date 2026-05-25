@@ -401,9 +401,12 @@ export function init() {
       renderPanel();
       return;
     }
-    // Network select changes are caught in the panel's "change" handler
-    // (set up below in init()) — selects don't surface meaningful click
-    // events on the chosen option across browsers.
+    const networkChip = event.target.closest("[data-rpanel-drafts-network]");
+    if (networkChip) {
+      draftsNetwork = networkChip.dataset.rpanelDraftsNetwork;
+      renderPanel();
+      return;
+    }
     if (event.target.closest("[data-rpanel-drafts-clear]")) {
       draftsFilter = "all";
       draftsNetwork = "all";
@@ -709,13 +712,6 @@ export function init() {
       // Routes to a field-targeted playbook-editor flow via the host
       // (see `context-builder.openRead` → `playbookEditor.refineField`).
       contextBriefConfig?.onRefineField?.(refineBtn.dataset.briefRefineField);
-      return;
-    }
-  });
-  el.addEventListener("change", (event) => {
-    if (event.target.matches("[data-rpanel-drafts-network-select]")) {
-      draftsNetwork = event.target.value || "all";
-      renderPanel();
       return;
     }
   });
@@ -1083,25 +1079,23 @@ function renderDraftsView() {
     `;
   };
 
-  // Network filter is a DS native select, not a row of buttons or a
-  // segmented control: its 3 mutually-exclusive options take less room
-  // than 3 pills (matters in the compact ≤1440 layout where the rail
-  // shares a single horizontal row with the status filters), and the
-  // browser-native picker keeps the wide layout from wasting vertical
-  // space on a label list.
-  const networkOpt = (id, label, count) =>
-    `<option value="${id}" ${draftsNetwork === id ? "selected" : ""}>${label} (${count})</option>`;
-  const networkSelect = `
-    <select
-      class="ap-native-select posts__rail-network-select"
-      data-rpanel-drafts-network-select
-      aria-label="Filter by network"
-    >
-      ${networkOpt("all", "All networks", networkCounts.all)}
-      ${networkOpt("linkedin", "LinkedIn", networkCounts.linkedin)}
-      ${networkOpt("twitter", "X", networkCounts.twitter)}
-    </select>
-  `;
+  // Network filter — same button list as the status group above so the
+  // rail reads as one consistent column of filter rows. Three options:
+  // All / LinkedIn / X.
+  const networkRow = (id, icon, label, count) => {
+    const active = draftsNetwork === id;
+    return `
+      <button
+        type="button"
+        class="posts__filter ${active ? "is-active" : ""}"
+        data-rpanel-drafts-network="${id}"
+      >
+        <i class="${icon}"></i>
+        <span class="posts__filter-label">${label}</span>
+        <span class="posts__filter-count">${count}</span>
+      </button>
+    `;
+  };
 
   const rail = `
     <aside class="posts__rail" aria-label="Post filters">
@@ -1112,7 +1106,9 @@ function renderDraftsView() {
       </div>
       <div class="posts__rail-group posts__rail-group--network">
         <h3 class="posts__rail-heading">Network</h3>
-        ${networkSelect}
+        ${networkRow("all", "ap-icon-web", "All networks", networkCounts.all)}
+        ${networkRow("linkedin", "ap-icon-linkedin", "LinkedIn", networkCounts.linkedin)}
+        ${networkRow("twitter", "ap-icon-twitter-official", "X", networkCounts.twitter)}
       </div>
     </aside>
   `;

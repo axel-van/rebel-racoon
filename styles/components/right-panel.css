@@ -598,15 +598,10 @@
   justify-content: center;
 }
 
-/* Network select sizing — fills the rail column at the wide breakpoint. */
-.rpanel-drafts .posts__rail-network-select {
-  width: 100%;
-}
-
 /* ── Medium container — filters on top ──────────────────────────────
    The panel is too narrow for a side rail. Switch to one column with
-   the filter rail flattened onto a horizontal row above the feed:
-   status filters as pills on the left, network select on the right. */
+   both filter groups flattened onto a horizontal row above the feed:
+   status pills on the left, network pills on the right. */
 @container (max-width: 800px) {
   .rpanel-drafts {
     grid-template-columns: minmax(0, 1fr);
@@ -623,28 +618,28 @@
     position: static;
   }
 
-  /* Status group → flex row of pills. */
+  /* Both groups → flex row of pills. */
   .rpanel-drafts .posts__rail-group {
     flex-direction: row;
     align-items: center;
     gap: var(--ref-spacing-xxs);
   }
 
-  /* Status pills shrink to fit content (no full-width row). */
+  /* Pills shrink to fit content (no full-width row). */
   .rpanel-drafts .posts__filter {
     width: auto;
     gap: var(--ref-spacing-xxs);
   }
 
-  /* Status pill icons are decorative — the label carries the meaning.
-     Drop them in the compact layout to claw back ~24px per pill so all
-     three fit alongside the network select on a single row. */
+  /* Pill icons are decorative — the label carries the meaning. Drop
+     them in the compact layout to claw back ~24px per pill so all
+     six fit alongside each other on one or two rows. */
   .rpanel-drafts .posts__filter > i {
     display: none;
   }
 
-  /* Hide the "Network" eyebrow — the select's own labels carry the
-     network info and the heading would steal a line of vertical space. */
+  /* Hide the "Network" eyebrow — its own pills carry the network
+     info and the heading would steal a line of vertical space. */
   .rpanel-drafts .posts__rail-heading {
     display: none;
   }
@@ -653,15 +648,6 @@
      and network sit on opposite ends. */
   .rpanel-drafts .posts__rail-group--network {
     margin-left: auto;
-  }
-
-  /* Compact-mode select width — let the option labels (with counts)
-     define the natural width, but cap it so a long label doesn't bump
-     the status pills onto another row. */
-  .rpanel-drafts .posts__rail-network-select {
-    width: auto;
-    min-width: 160px;
-    max-width: 220px;
   }
 }
 

@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=50";
+import { renderTopbar } from "../components/topbar.js?v=51";
 import { socialAccounts, chatStarters } from "../mocks.js?v=31";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=28";
@@ -70,7 +70,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=65";
+} from "../components/right-panel.js?v=66";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
