@@ -648,7 +648,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=121").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=122").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -1248,7 +1248,7 @@ function renderDraftsView() {
         <h3 class="posts__rail-heading">Network</h3>
         <div class="posts__rail-buttons">
           ${networkButton("all", "ap-icon-web", "All networks", networkCounts.all)}
-          ${networkButton("linkedin", "ap-icon-linkedin", "LinkedIn", networkCounts.linkedin)}
+          ${networkButton("linkedin", "ap-icon-linkedin-official", "LinkedIn", networkCounts.linkedin)}
           ${networkButton("twitter", "ap-icon-twitter-official", "X", networkCounts.twitter)}
         </div>
         ${networkSelect}
@@ -2118,7 +2118,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=121").then(({ askDraftCountQuestion }) => {
+  import("../screens/session.js?v=122").then(({ askDraftCountQuestion }) => {
     askDraftCountQuestion(sid, ideaId);
   });
 }

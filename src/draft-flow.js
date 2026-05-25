@@ -29,10 +29,13 @@ function resolveIdea(sessionId, ideaId) {
 }
 
 const CHANNEL_META = {
-  linkedin: { icon: "ap-icon-linkedin", label: "LinkedIn" },
+  linkedin: { icon: "ap-icon-linkedin-official", label: "LinkedIn" },
   x: { icon: "ap-icon-twitter-official", label: "X" },
   twitter: { icon: "ap-icon-twitter-official", label: "X" },
-  instagram: { icon: "ap-icon-instagram", label: "Instagram" },
+  instagram: { icon: "ap-icon-instagram-official", label: "Instagram" },
+  facebook: { icon: "ap-icon-facebook-official", label: "Facebook" },
+  tiktok: { icon: "ap-icon-tiktok-official", label: "TikTok" },
+  youtube: { icon: "ap-icon-youtube-official", label: "YouTube" },
 };
 
 function labelFor(channel) {

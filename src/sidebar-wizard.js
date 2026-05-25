@@ -321,7 +321,12 @@ const VOICE_INTAKE = {
 
 const VOICE_SOURCE = {
   items: [
-    { value: "linkedin", label: "Select a social profile", icon: "ap-icon-linkedin", caption: "LinkedIn, X, Threads…" },
+    {
+      value: "linkedin",
+      label: "Select a social profile",
+      icon: "ap-icon-linkedin-official",
+      caption: "LinkedIn, X, Threads…",
+    },
     { value: "document", label: "Upload a document", icon: "ap-icon-file--text", caption: "PDF, DOCX, Markdown" },
     { value: "done", label: "Use the sources already attached", icon: "ap-icon-sparkles" },
   ],
@@ -341,7 +346,7 @@ const VOICE_PROFILE = {
     {
       value: "profile-linkedin-maya",
       label: "linkedin.com/in/maya-chen",
-      icon: "ap-icon-linkedin",
+      icon: "ap-icon-linkedin-official",
       caption: "LinkedIn · 1.2k followers · last post 3 days ago",
     },
     {
@@ -353,7 +358,7 @@ const VOICE_PROFILE = {
     {
       value: "profile-instagram-maya",
       label: "@maya.chen",
-      icon: "ap-icon-instagram",
+      icon: "ap-icon-instagram-official",
       caption: "Instagram · 412 followers · last post 2 weeks ago",
     },
   ],

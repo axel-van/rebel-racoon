@@ -31,9 +31,9 @@ import {
   setSubtitleStyle,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=27";
-import { startDraftFlow, executeDraft } from "../draft-flow.js?v=28";
+import { startDraftFlow, executeDraft } from "../draft-flow.js?v=29";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
-import * as sidebarWizard from "../sidebar-wizard.js?v=31";
+import * as sidebarWizard from "../sidebar-wizard.js?v=32";
 import * as inlineQuestion from "../inline-question.js?v=26";
 import * as contextBuilder from "../context-builder.js?v=42";
 import * as playbookEditor from "../playbook-editor.js?v=9";
@@ -70,7 +70,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=74";
+} from "../components/right-panel.js?v=75";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
@@ -1462,12 +1462,13 @@ function renderChoiceTurn(message) {
 // and (later) by the Drafts work-surface in Lot 4. Keep the slug list aligned
 // with mocks.socialAccounts so the visual surfaces never miss a network.
 const NETWORK_ICON = {
-  linkedin: "ap-icon-linkedin",
+  linkedin: "ap-icon-linkedin-official",
   twitter: "ap-icon-twitter-official",
   x: "ap-icon-twitter-official",
-  instagram: "ap-icon-instagram",
-  facebook: "ap-icon-facebook",
+  instagram: "ap-icon-instagram-official",
+  facebook: "ap-icon-facebook-official",
   tiktok: "ap-icon-tiktok-official",
+  youtube: "ap-icon-youtube-official",
 };
 
 function networkLabel(network) {
