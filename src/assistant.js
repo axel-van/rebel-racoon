@@ -6,7 +6,7 @@
 //
 // Subscribers re-render the thread DOM on any change — no global store.
 
-import { ideas } from "./mocks.js?v=31";
+import { ideas } from "./mocks.js?v=32";
 
 const threads = new Map(); // sessionId → messages[]
 const subscribers = new Map(); // sessionId → Set<(messages) => void>

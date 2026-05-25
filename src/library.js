@@ -9,7 +9,7 @@
 //   appendExtractedIdeas(sessionId, sources)  bulk "extract more" flow
 //   removeIdeasForSources(sessionId, sourceIds)  cleanup after bulk-delete
 
-import { ideas as seedIdeas, recentSessions as seedRecentSessions } from "./mocks.js?v=31";
+import { ideas as seedIdeas, recentSessions as seedRecentSessions } from "./mocks.js?v=32";
 import { isNewUser } from "./user-mode.js?v=21";
 
 // Demo session ids — the recentSessions seed (s-acme-launch / s-riverside /

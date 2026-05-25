@@ -23,7 +23,7 @@ const OVERLAY_ID = "settingsDrawer";
 // Phase 4 copy pass: the legacy Generation preferences section was
 // retired. Defaults that used to live there (tone, language, length,
 // auto-hashtags, auto-emojis, CTA style) belong inside the Playbook now.
-import { contextComponentsFor, socialAccounts, notificationPrefs } from "../mocks.js?v=31";
+import { contextComponentsFor, socialAccounts, notificationPrefs } from "../mocks.js?v=32";
 import { getContexts } from "../contexts-store.js?v=28";
 import { getConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=21";
 

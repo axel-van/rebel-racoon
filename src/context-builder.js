@@ -25,7 +25,7 @@ import * as rightPanel from "./components/right-panel.js?v=65";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=28";
 import { analyzeWebsite, analyzeDocument } from "./context-mock-analysis.js?v=21";
 import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=9";
-import { socialAccounts, connectors as connectorMocks } from "./mocks.js?v=31";
+import { socialAccounts, connectors as connectorMocks } from "./mocks.js?v=32";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
