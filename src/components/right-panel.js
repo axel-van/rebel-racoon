@@ -2204,121 +2204,284 @@ export function renderBriefSections(d, { isRead = true, canRefine = false } = {}
   return _renderBriefSectionsInner(draft, isRead, canRefine, chipProps);
 }
 
-// Internal: builds the three groups (Audience / Voice / Branding) and
-// joins them. Pulled out of `renderContextBriefView` so the public
+// Internal: composes the five editorial zones (Hero / Personality grid /
+// Voice feature / Essentials bar / Branding showcase) and joins them.
+// Pulled out of `renderContextBriefView` so the public
 // `renderBriefSections` can call the same code path.
 function _renderBriefSectionsInner(d, isRead, canRefine, chipProps) {
-  const audienceCards = [
-    withRefine(isRead ? renderBriefSummaryRead(d) : renderBriefBusinessSummary(d), "brief", canRefine),
-    withRefine(
-      renderBriefChips(
-        chipProps({
-          field: "audience",
-          title: "Who is your primary audience?",
-          hint: "Archie will tailor post topics and framing to speak directly to them.",
-          fromWeb: true,
-          suggestions: d.suggestions?.audience || [],
-          fallback: [],
-          values: d.audience || [],
-          customs: d.customAdditions?.audience || [],
-          otherPlaceholder: "Describe your audience…",
-          warningCount: 0,
-        }),
-      ),
-      "brief",
-      canRefine,
-    ),
-    withRefine(
-      renderBriefChips(
-        chipProps({
-          field: "contentStyle",
-          title: "What content style fits your brand?",
-          hint: "This guides the structure and format of every post Archie writes.",
-          fromWeb: true,
-          suggestions: d.suggestions?.contentStyle || [],
-          fallback: STYLE_FALLBACKS,
-          values: d.contentStyle || [],
-          customs: d.customAdditions?.contentStyle || [],
-          otherPlaceholder: "Describe your style…",
-        }),
-      ),
-      "brief",
-      canRefine,
-    ),
-    withRefine(
-      renderBriefChips(
-        chipProps({
-          field: "objective",
-          title: "What's your primary social media objective?",
-          hint: "Archie will prioritize content angles that serve this goal.",
-          fromWeb: true,
-          suggestions: d.suggestions?.objective || [],
-          fallback: OBJECTIVE_FALLBACKS,
-          values: d.objective || [],
-          customs: d.customAdditions?.objective || [],
-          otherPlaceholder: "Describe your objective…",
-        }),
-      ),
-      "brief",
-      canRefine,
-    ),
-    withRefine(
-      renderBriefChips(
-        chipProps({
-          field: "contentAction",
-          title: "What action should your content drive?",
-          hint: "Archie will include relevant CTAs aligned with this action.",
-          fromWeb: true,
-          suggestions: d.suggestions?.contentAction || [],
-          fallback: ACTION_FALLBACKS,
-          values: d.contentAction || [],
-          customs: d.customAdditions?.contentAction || [],
-          otherPlaceholder: "Describe the action…",
-        }),
-      ),
-      "brief",
-      canRefine,
-    ),
-    withRefine(renderBriefCtaList(d, isRead), "cta", canRefine),
-    withRefine(
-      renderBriefSinglePick({
-        field: "language",
-        title: isRead ? "Language" : "Select a language for ideas and posts",
-        hint: isRead ? "" : "Archie will write in this language.",
-        options: LANGUAGE_OPTIONS,
-        value: d.language || "English",
-        suggested: d.suggestions?.language || "",
-        isRead,
-      }),
-      "brief",
-      canRefine,
-    ),
-  ].filter(Boolean);
-
-  const voiceCards = [withRefine(renderBriefVoiceProfile(d, isRead), "voice", canRefine)].filter(Boolean);
-
-  const brandingCards = [
-    isRead ? withRefine(renderBriefColor(d, isRead), "branding", canRefine) : "",
-    withRefine(renderBriefImageVoice(d), "branding", canRefine),
-  ].filter(Boolean);
-
-  const renderGroup = (id, label, icon, cards) =>
-    cards.length
-      ? `
-        <section class="context-brief__group" data-brief-group="${id}">
-          ${renderBriefGroupHeader({ id, label, icon })}
-          ${cards.join("")}
-        </section>
-      `
-      : "";
-
   return [
-    renderGroup("audience", "Audience and goals", "ap-icon-target", audienceCards),
-    renderGroup("voice", "Voice profile", "ap-icon-megaphone", voiceCards),
-    renderGroup("branding", "Branding", "ap-icon-view-grid", brandingCards),
+    withRefine(renderBriefHero(d, isRead), "brief", canRefine),
+    withRefine(renderBriefPersonalityGrid(d, isRead, chipProps), "brief", canRefine),
+    withRefine(renderBriefVoiceFeature(d, isRead), "voice", canRefine),
+    withRefine(renderBriefEssentialsBar(d, isRead), "cta", canRefine),
+    withRefine(renderBriefBrandingShowcase(d, isRead), "branding", canRefine),
   ]
     .filter(Boolean)
     .join("");
+}
+
+// ── Editorial zone renderers ─────────────────────────────────────────
+//
+// Each zone owns a slice of the playbook data and emits a single
+// `<section class="context-brief__<zone>">` so the `withRefine` helper
+// can anchor the hover-reveal "Refine with Archie" pill to it. Empty
+// zones return "" so the body collapses gracefully when context data
+// is partial (legacy seeds, freshly-created drafts).
+
+// Hero — identity strip (color dot + name + business summary as an
+// editorial paragraph). Replaces the legacy intro + name + business
+// summary cards. In edit mode the name becomes an input + color
+// swatches inline, and the summary a textarea. The data attributes
+// (`data-brief-name`, `data-brief-color`, `data-brief-summary`) are
+// preserved verbatim — they are read by the panel-level input
+// handlers (`right-panel.js` ~lines 836-851).
+function renderBriefHero(d, isRead) {
+  const name = d?.name || "";
+  const colorValue = d?.color || "orange";
+  const colorVar = `var(--ref-color-${colorValue === "blue" ? "electric-blue" : colorValue}-100)`;
+  const summary = d?.businessSummary || "";
+
+  if (isRead) {
+    if (!name && !summary) return "";
+    return `
+      <section class="context-brief__hero" aria-label="Playbook identity">
+        <div class="context-brief__hero-identity">
+          <span
+            class="context-brief__hero-color"
+            style="background: ${colorVar};"
+            aria-hidden="true"
+          ></span>
+          <h2 class="context-brief__hero-name">${escapeText(name)}</h2>
+        </div>
+        ${
+          summary
+            ? `
+              ${d.websiteUrl ? `<p class="context-brief__hero-source"><i class="ap-icon-web"></i> ${escapeText(d.websiteUrl)}</p>` : ""}
+              <p class="context-brief__hero-summary">${escapeText(summary)}</p>
+            `
+            : ""
+        }
+      </section>
+    `;
+  }
+
+  // Edit mode — name input, inline color swatches, summary textarea.
+  const swatches = COLOR_SWATCHES.map((c) => {
+    const isSelected = c === colorValue;
+    return `
+      <button
+        type="button"
+        class="context-brief__color-swatch ${isSelected ? "is-selected" : ""}"
+        data-brief-color="${c}"
+        style="background: var(--ref-color-${c === "blue" ? "electric-blue" : c}-100);"
+        aria-label="${c}"
+        aria-pressed="${isSelected ? "true" : "false"}"
+      ></button>
+    `;
+  }).join("");
+
+  return `
+    <section class="context-brief__hero" aria-label="Playbook identity">
+      <div class="context-brief__hero-identity">
+        <div class="ap-input-group context-brief__hero-name-input">
+          <input
+            type="text"
+            data-brief-name
+            value="${escapeAttr(name)}"
+            placeholder="e.g. Acme · Q2 marketing"
+            aria-label="Context name"
+          />
+        </div>
+        <div class="context-brief__color-swatches context-brief__hero-swatches">${swatches}</div>
+      </div>
+      <div class="context-brief__hero-summary-wrap">
+        <span class="context-brief__from-web"><i class="ap-icon-sparkles"></i> Generated from your website</span>
+        <div class="ap-textarea-field resizable">
+          <textarea
+            data-brief-summary
+            rows="4"
+            placeholder="Describe your business in a few sentences…"
+          >${escapeText(summary)}</textarea>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+// Personality grid — 2-column responsive grid that pairs the four chip
+// groups thematically: Audience ↔ Content style (who + how), and
+// Objective ↔ Content action (why + what next). Each cell reuses
+// `renderBriefChips` and the existing `.context-brief__section` markup;
+// CSS scoped to `.context-brief__personality .context-brief__section`
+// strips the card chrome so the grid reads as one cohesive zone with
+// hairline dividers.
+function renderBriefPersonalityGrid(d, isRead, chipProps) {
+  const cells = [
+    renderBriefChips(
+      chipProps({
+        field: "audience",
+        title: "Who is your primary audience?",
+        hint: "Archie will tailor post topics and framing to speak directly to them.",
+        fromWeb: true,
+        suggestions: d.suggestions?.audience || [],
+        fallback: [],
+        values: d.audience || [],
+        customs: d.customAdditions?.audience || [],
+        otherPlaceholder: "Describe your audience…",
+        warningCount: 0,
+      }),
+    ),
+    renderBriefChips(
+      chipProps({
+        field: "contentStyle",
+        title: "What content style fits your brand?",
+        hint: "This guides the structure and format of every post Archie writes.",
+        fromWeb: true,
+        suggestions: d.suggestions?.contentStyle || [],
+        fallback: STYLE_FALLBACKS,
+        values: d.contentStyle || [],
+        customs: d.customAdditions?.contentStyle || [],
+        otherPlaceholder: "Describe your style…",
+      }),
+    ),
+    renderBriefChips(
+      chipProps({
+        field: "objective",
+        title: "What's your primary social media objective?",
+        hint: "Archie will prioritize content angles that serve this goal.",
+        fromWeb: true,
+        suggestions: d.suggestions?.objective || [],
+        fallback: OBJECTIVE_FALLBACKS,
+        values: d.objective || [],
+        customs: d.customAdditions?.objective || [],
+        otherPlaceholder: "Describe your objective…",
+      }),
+    ),
+    renderBriefChips(
+      chipProps({
+        field: "contentAction",
+        title: "What action should your content drive?",
+        hint: "Archie will include relevant CTAs aligned with this action.",
+        fromWeb: true,
+        suggestions: d.suggestions?.contentAction || [],
+        fallback: ACTION_FALLBACKS,
+        values: d.contentAction || [],
+        customs: d.customAdditions?.contentAction || [],
+        otherPlaceholder: "Describe the action…",
+      }),
+    ),
+  ].filter(Boolean);
+
+  if (cells.length === 0) return "";
+
+  return `
+    <section class="context-brief__personality" aria-label="Audience and content">
+      ${cells.join("")}
+    </section>
+  `;
+}
+
+// Voice feature — soft mermaid-tinted surface around the existing
+// `renderBriefVoiceProfile`. The visual differentiation lives entirely
+// in CSS (`.context-brief__voice-profile` is repainted with mermaid-10
+// background + mermaid-20 border in the new layout). Returns "" when
+// there's nothing to show (empty voice data in read mode).
+function renderBriefVoiceFeature(d, isRead) {
+  return renderBriefVoiceProfile(d, isRead);
+}
+
+// Essentials bar — compact horizontal row combining language picker
+// and CTA links. In read mode the CTA list collapses behind a counter
+// chip (`<details>`); in edit mode the full CTA editor renders inline
+// below the row so the user never has to "open" a control to edit.
+function renderBriefEssentialsBar(d, isRead) {
+  const language = d?.language || "";
+  const ctas = Array.isArray(d?.ctaLinks) ? d.ctaLinks : [];
+
+  if (isRead) {
+    const activeCtas = ctas.filter((l) => l.checked);
+    if (!language && activeCtas.length === 0) return "";
+    const langPill = language
+      ? `
+        <span class="context-brief__essentials-item">
+          <span class="context-brief__essentials-label">Language</span>
+          <span class="ap-tag blue context-brief__chip-readonly">${escapeText(language)}</span>
+        </span>
+      `
+      : "";
+    const ctaBlock =
+      activeCtas.length > 0
+        ? `
+          <details class="context-brief__essentials-ctas">
+            <summary>
+              <span class="context-brief__essentials-label">CTA links</span>
+              <span class="ap-tag grey context-brief__essentials-cta-count">
+                ${activeCtas.length} ${activeCtas.length > 1 ? "links" : "link"}
+                <i class="ap-icon-chevron-down"></i>
+              </span>
+            </summary>
+            <ul class="context-brief__cta-readonly-list">
+              ${activeCtas
+                .map(
+                  (cta) => `
+                    <li class="context-brief__cta-readonly">
+                      <span class="context-brief__cta-label">${escapeText(cta.label)}</span>
+                      <span class="context-brief__cta-url">${escapeText(cta.url)}</span>
+                    </li>
+                  `,
+                )
+                .join("")}
+            </ul>
+          </details>
+        `
+        : "";
+    return `
+      <section class="context-brief__essentials" aria-label="Essentials">
+        <div class="context-brief__essentials-row">
+          ${langPill}
+          ${ctaBlock}
+        </div>
+      </section>
+    `;
+  }
+
+  // Edit mode — language picker as a single-pick chip row + full CTA
+  // editor visible below (never collapsed). Reuses the existing
+  // renderBriefSinglePick + renderBriefCtaList outputs; CSS resets the
+  // inner card chrome inside `.context-brief__essentials`.
+  const langPicker = renderBriefSinglePick({
+    field: "language",
+    title: "Select a language for ideas and posts",
+    hint: "Archie will write in this language.",
+    options: LANGUAGE_OPTIONS,
+    value: language || "English",
+    suggested: d?.suggestions?.language || "",
+    isRead: false,
+  });
+  const ctaEditor = renderBriefCtaList(d, false);
+  return `
+    <section class="context-brief__essentials" aria-label="Essentials">
+      ${langPicker}
+      ${ctaEditor}
+    </section>
+  `;
+}
+
+// Branding showcase — horizontal strip combining the color tag
+// (read mode only) and the image-voice / mood-board block. Both inner
+// sections keep their existing markup; CSS scoped to
+// `.context-brief__showcase .context-brief__section` strips the card
+// chrome so they sit flush inside the showcase.
+function renderBriefBrandingShowcase(d, isRead) {
+  const color = isRead ? renderBriefColor(d, true) : "";
+  const moodBoard = renderBriefImageVoice(d);
+  if (!color && !moodBoard) return "";
+  return `
+    <section class="context-brief__showcase" aria-label="Branding">
+      ${color}
+      ${moodBoard}
+    </section>
+  `;
 }
 
 function renderContextBriefView() {
@@ -2327,20 +2490,16 @@ function renderContextBriefView() {
   // Read mode reads from a persisted Context; edit mode from the draft.
   const d = isRead ? readBriefFromCtx(contextBriefConfig.getCtx?.()) : contextBriefConfig.getDraft?.() || {};
   const chipProps = (cfg) => ({ ...cfg, isRead });
-  // Identité du panel — hors groupes. En read mode le nom du contexte est
-  // dans le header du right panel, donc on saute renderBriefName.
-  const nonGroupedTop = [isRead ? "" : renderBriefIntro(), isRead ? "" : renderBriefName(d)].filter(Boolean);
+  // Edit-mode-only: keep the intro infobox above the zones — it teaches
+  // the chip color semantics (menthol = suggested, blue = selected) that
+  // the rest of the panel relies on. Hero owns name + color in both modes.
+  const nonGroupedTop = [isRead ? "" : renderBriefIntro()].filter(Boolean);
 
-  // Chaque groupe a son propre conteneur. C'est essentiel pour le sticky
-  // push-out style iOS Settings : un sticky header siblings au même `top:
-  // 0` se stack, alors qu'un sticky header borné par son groupe parent
-  // est "poussé" hors écran quand le groupe suivant arrive.
-  //
-  // Per-card "Refine with Archie" button — only in read mode (the edit
-  // flow already lets the user type into every field). Each card declares
-  // its target sub-flow in the playbook-editor (brief / voice / branding
-  // / cta) so a click on Refine jumps the user straight there instead of
-  // through the chip menu. See `playbookEditor.refineField` + `withRefine`.
+  // Per-zone "Refine with Archie" button — read mode only (edit mode is
+  // already an editable form). Each zone declares its target sub-flow in
+  // the playbook-editor (brief / voice / branding / cta) so clicking
+  // Refine jumps the user straight there. See `playbookEditor.refineField`
+  // + `withRefine`.
   const canRefine = isRead && !!contextBriefConfig?.onRefineField;
   const sections = [...nonGroupedTop, _renderBriefSectionsInner(d, isRead, canRefine, chipProps)].filter(Boolean);
   // Callers can opt out of the read-mode footer (Close + Edit) via
@@ -2386,21 +2545,6 @@ function renderContextBriefView() {
   `;
 }
 
-// Group header — sticky uppercase label inserted between the three logical
-// groups of the brief panel (Audience / Voice profile / Branding). Not a
-// card — just a horizontal band that introduces the next set of cards and
-// stays pinned at the top of the scroll body while the user reads its
-// group (iOS Settings style). See `renderContextBriefView` for the
-// section ordering.
-function renderBriefGroupHeader({ id, label, icon }) {
-  return `
-    <div class="context-brief__group-header" data-brief-group="${escapeAttr(id)}">
-      <i class="${escapeAttr(icon)}"></i>
-      <span class="context-brief__group-label">${escapeText(label)}</span>
-    </div>
-  `;
-}
-
 // Map a persisted Context into the shape the brief renderer expects.
 // Legacy seeds may have briefSummary instead of businessSummary, or
 // audience as a string instead of an array — normalize both.
@@ -2430,17 +2574,6 @@ function readBriefFromCtx(ctx) {
   };
 }
 
-function renderBriefSummaryRead(d) {
-  if (!d.businessSummary) return "";
-  return `
-    <section class="context-brief__section">
-      <h3 class="context-brief__title">Business summary</h3>
-      ${d.websiteUrl ? `<p class="context-brief__hint">${escapeText(d.websiteUrl)}</p>` : ""}
-      <p class="context-brief__readonly-text">${escapeText(d.businessSummary)}</p>
-    </section>
-  `;
-}
-
 function renderBriefIntro() {
   return `
     <section class="context-brief__intro">
@@ -2453,54 +2586,6 @@ function renderBriefIntro() {
             <div class="ap-infobox-message">Green chips are Archie's suggestions. Click any to toggle off, or add your own via "Other…".</div>
           </div>
         </div>
-      </div>
-    </section>
-  `;
-}
-
-function renderBriefName(d) {
-  const colorValue = d.color || "orange";
-  const swatches = COLOR_SWATCHES.map((c) => {
-    const isSelected = c === colorValue;
-    return `
-      <button
-        type="button"
-        class="context-brief__color-swatch ${isSelected ? "is-selected" : ""}"
-        data-brief-color="${c}"
-        style="background: var(--ref-color-${c === "blue" ? "electric-blue" : c}-100);"
-        aria-label="${c}"
-        aria-pressed="${isSelected ? "true" : "false"}"
-      ></button>
-    `;
-  }).join("");
-  return `
-    <section class="context-brief__section context-brief__name-section">
-      <h3 class="context-brief__title">Context name &amp; color</h3>
-      <p class="context-brief__hint">Shown next to the context in chats and listings.</p>
-      <div class="context-brief__name-row">
-        <div class="ap-input-group context-brief__name-input">
-          <input
-            type="text"
-            data-brief-name
-            value="${escapeAttr(d.name || "")}"
-            placeholder="e.g. Acme · Q2 marketing"
-          />
-        </div>
-        <div class="context-brief__color-swatches">${swatches}</div>
-      </div>
-    </section>
-  `;
-}
-
-function renderBriefBusinessSummary(d) {
-  const text = d.businessSummary || "";
-  return `
-    <section class="context-brief__section">
-      <h3 class="context-brief__title">Does this describe your business correctly?</h3>
-      <p class="context-brief__hint">Archie analysed your website and wrote this summary. Edit it directly if anything needs adjusting.</p>
-      <span class="context-brief__from-web"><i class="ap-icon-sparkles"></i> Generated from your website</span>
-      <div class="ap-textarea-field resizable">
-        <textarea data-brief-summary rows="5">${escapeText(text)}</textarea>
       </div>
     </section>
   `;
