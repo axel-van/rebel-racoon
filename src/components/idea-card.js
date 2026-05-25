@@ -122,7 +122,11 @@ function bindGlobalListeners() {
 }
 bindGlobalListeners();
 
-export function renderIdeaCard(idea, allSources = [], { selectable = false, isSelected = false } = {}) {
+export function renderIdeaCard(
+  idea,
+  allSources = [],
+  { selectable = false, isSelected = false, sessionId = null } = {},
+) {
   const sourceIds = idea.sourceIds || [];
   const sources = sourceIds.map((id) => allSources.find((s) => s.id === id)).filter(Boolean);
   const potential = potentialFor(idea.confidence || 0);
@@ -230,6 +234,18 @@ export function renderIdeaCard(idea, allSources = [], { selectable = false, isSe
           ${extractedAt}
 
           <div class="idea-card__secondary-actions">
+            ${
+              sessionId
+                ? `<button
+                type="button"
+                class="ap-button transparent grey idea-card__mention"
+                data-idea-mention="${idea.id}"
+              >
+                <i class="ap-icon-at"></i>
+                <span>Mention</span>
+              </button>`
+                : ""
+            }
             <button
               type="button"
               class="ap-button mermaid"

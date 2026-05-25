@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=54";
-import { renderIdeaCard } from "../components/idea-card.js?v=26";
+import { renderIdeaCard } from "../components/idea-card.js?v=27";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=34";
 
 // Sources moved to a per-session model — there's no workspace-wide

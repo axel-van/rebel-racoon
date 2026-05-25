@@ -38,14 +38,14 @@ import * as inlineQuestion from "../inline-question.js?v=27";
 import * as contextBuilder from "../context-builder.js?v=43";
 import * as playbookEditor from "../playbook-editor.js?v=10";
 import { renderPicker } from "./_analyse-common.js?v=31";
-import { renderSourceCard } from "../components/source-card.js?v=29";
-import { renderIdeaCard } from "../components/idea-card.js?v=26";
+import { renderSourceCard } from "../components/source-card.js?v=30";
+import { renderIdeaCard } from "../components/idea-card.js?v=27";
 import {
   contentState,
   renderContentWorkspace as renderSharedContentWorkspace,
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
-} from "../components/content-workspace.js?v=23";
+} from "../components/content-workspace.js?v=24";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=22";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";
 import { startClipExtraction } from "../components/clip-extraction-loader.js?v=2";
@@ -1339,6 +1339,7 @@ function rerenderContentWorkspace(root, session) {
     sourcesBulkBar: sourceSel && sourceSel.size > 0 ? renderSourcesBulkBar(sourceSel.size) : "",
     ideaSelection: ideaSel,
     ideasBulkBar: ideaSel && ideaSel.size > 0 ? renderIdeasBulkBar(ideaSel.size) : "",
+    sessionId: session.id,
   });
 }
 

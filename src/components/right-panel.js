@@ -24,6 +24,7 @@ import {
   removeSources,
 } from "../sources-stream.js?v=30";
 import { open as openAddSourceModal } from "./add-source-modal.js?v=22";
+import { addMention } from "../composer-mentions.js?v=2";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
@@ -647,6 +648,24 @@ export function init() {
           drafts.map((d) => d.id),
         );
       });
+      return;
+    }
+    // Mention this idea in the composer.
+    const mentionIdeaBtn = event.target.closest("[data-rpanel-mention-idea]");
+    if (mentionIdeaBtn) {
+      const sid = activeSessionId();
+      if (!sid) return;
+      const idea = IDEAS.find((i) => i.id === mentionIdeaBtn.dataset.rpanelMentionIdea);
+      if (idea) addMention(sid, idea.title);
+      return;
+    }
+    // Mention this source in the composer.
+    const mentionSourceBtn = event.target.closest("[data-rpanel-mention-source]");
+    if (mentionSourceBtn) {
+      const sid = activeSessionId();
+      if (!sid) return;
+      const src = getStreamSources(sid).find((s) => s.id === mentionSourceBtn.dataset.rpanelMentionSource);
+      if (src) addMention(sid, src.filename);
       return;
     }
     // Use this idea → opens the count + profile picker flow.
@@ -1596,6 +1615,17 @@ function renderSourceRow(src) {
   if (src.addedAt) metaParts.push(`<span>${escapeText(src.addedAt)}</span>`);
   if (ideasButton) metaParts.push(ideasButton);
   const meta = metaParts.length ? metaParts.join(' <span aria-hidden="true">·</span> ') : "";
+  const mentionBtn = !isProcessing
+    ? `<button
+        type="button"
+        class="ap-icon-button transparent rpanel-sources__row-mention"
+        data-rpanel-mention-source="${src.id}"
+        aria-label="Mention ${escapeAttr(src.filename)} in composer"
+        title="Mention"
+      >
+        <i class="ap-icon-at"></i>
+      </button>`
+    : "";
   return `
     <div class="rpanel-sources__row" data-source-id="${src.id}">
       <span class="rpanel-sources__row-icon" aria-hidden="true"><i class="${icon}"></i></span>
@@ -1604,6 +1634,7 @@ function renderSourceRow(src) {
         ${meta ? `<div class="rpanel-sources__row-meta muted">${meta}</div>` : ""}
       </div>
       ${statusEl}
+      ${mentionBtn}
       <button
         type="button"
         class="ap-icon-button transparent rpanel-sources__row-detach"
@@ -1865,6 +1896,10 @@ function renderIdeaCompact(idea) {
           ${thumbBtn("up")}
           ${thumbBtn("down")}
         </div>
+        <button type="button" class="ap-button transparent grey rpanel-ideas__mention" data-rpanel-mention-idea="${escapeAttr(idea.id)}">
+          <i class="ap-icon-at"></i>
+          <span>Mention</span>
+        </button>
         <button type="button" class="ap-button stroked blue rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
           <i class="ap-icon-sparkles"></i>
           <span>Draft</span>

@@ -31,8 +31,8 @@
 // rerenderContentWorkspaceBody(...) on each tick.
 
 import { html, raw } from "../utils.js?v=20";
-import { renderSourceCard } from "./source-card.js?v=29";
-import { renderIdeaCard } from "./idea-card.js?v=26";
+import { renderSourceCard } from "./source-card.js?v=30";
+import { renderIdeaCard } from "./idea-card.js?v=27";
 import { renderEmptyState } from "./empty-state.js?v=1";
 
 export const contentState = { q: "", sort: "potential" };
@@ -68,7 +68,7 @@ function sortIdeas(ideas, sort) {
 
 // ─── Body renderers ───────────────────────────────────────────────────────
 
-function renderBySourceBody(sources, allIdeas, search, selection = null) {
+function renderBySourceBody(sources, allIdeas, search, selection = null, sessionId = null) {
   if (sources.length === 0) {
     return renderEmptyState({
       icon: "ap-icon-feature-library",
@@ -78,11 +78,11 @@ function renderBySourceBody(sources, allIdeas, search, selection = null) {
   }
   const selectable = !!selection;
   return `<div class="stack-sm">${sources
-    .map((s) => renderSourceCard(s, allIdeas, { selectable, isSelected: selectable && selection.has(s.id) }))
+    .map((s) => renderSourceCard(s, allIdeas, { selectable, isSelected: selectable && selection.has(s.id), sessionId }))
     .join("")}</div>`;
 }
 
-function renderAllIdeasBody(ideas, allSources, search, selection = null) {
+function renderAllIdeasBody(ideas, allSources, search, selection = null, sessionId = null) {
   if (ideas.length === 0) {
     return renderEmptyState({
       icon: "ap-icon-sparkles",
@@ -92,7 +92,7 @@ function renderAllIdeasBody(ideas, allSources, search, selection = null) {
   }
   const selectable = !!selection;
   return `<div class="dashboard__ideas-grid">${ideas
-    .map((i) => renderIdeaCard(i, allSources, { selectable, isSelected: selectable && selection.has(i.id) }))
+    .map((i) => renderIdeaCard(i, allSources, { selectable, isSelected: selectable && selection.has(i.id), sessionId }))
     .join("")}</div>`;
 }
 
@@ -164,14 +164,15 @@ export function renderContentWorkspace({
   sourcesBulkBar = "",
   ideaSelection = null,
   ideasBulkBar = "",
+  sessionId = null,
 }) {
   const search = contentState.q;
   const { filteredSources, filteredIdeas } = filterContent(sources, ideas, search);
   const sortedIdeas = sortIdeas(filteredIdeas, contentState.sort);
   const isSources = view === "sources";
   const cardsHtml = isSources
-    ? renderBySourceBody(filteredSources, ideas, search, sourceSelection)
-    : renderAllIdeasBody(sortedIdeas, sources, search, ideaSelection);
+    ? renderBySourceBody(filteredSources, ideas, search, sourceSelection, sessionId)
+    : renderAllIdeasBody(sortedIdeas, sources, search, ideaSelection, sessionId);
   const activeBulkBar = isSources ? sourcesBulkBar : ideasBulkBar;
   return html`
     <section class="content-workspace">
@@ -200,7 +201,16 @@ export function renderContentWorkspace({
 // and cursor position because the input itself is left untouched.
 export function rerenderContentWorkspaceBody(
   root,
-  { sources, ideas, view, sourceSelection = null, sourcesBulkBar = "", ideaSelection = null, ideasBulkBar = "" },
+  {
+    sources,
+    ideas,
+    view,
+    sourceSelection = null,
+    sourcesBulkBar = "",
+    ideaSelection = null,
+    ideasBulkBar = "",
+    sessionId = null,
+  },
 ) {
   const search = contentState.q;
   const { filteredSources, filteredIdeas } = filterContent(sources, ideas, search);
@@ -209,8 +219,8 @@ export function rerenderContentWorkspaceBody(
   if (body) {
     const isSources = view === "sources";
     const cardsHtml = isSources
-      ? renderBySourceBody(filteredSources, ideas, search, sourceSelection)
-      : renderAllIdeasBody(sortedIdeas, sources, search, ideaSelection);
+      ? renderBySourceBody(filteredSources, ideas, search, sourceSelection, sessionId)
+      : renderAllIdeasBody(sortedIdeas, sources, search, ideaSelection, sessionId);
     const activeBulkBar = isSources ? sourcesBulkBar : ideasBulkBar;
     // Re-render preserving the bulk-slot wrapper so partial repaints don't
     // recreate the sticky reference node.

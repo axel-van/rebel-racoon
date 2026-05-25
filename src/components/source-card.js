@@ -84,7 +84,11 @@ bindGlobalListeners();
 
 // ── Card renderer ──────────────────────────────────────────────────────
 
-export function renderSourceCard(source, allIdeas = [], { selectable = false, isSelected = false } = {}) {
+export function renderSourceCard(
+  source,
+  allIdeas = [],
+  { selectable = false, isSelected = false, sessionId = null } = {},
+) {
   const isProcessing = source.status === "Processing";
   const totalIdeas =
     typeof source.ideaCount === "number"
@@ -137,6 +141,21 @@ export function renderSourceCard(source, allIdeas = [], { selectable = false, is
         <i class="ap-icon-single-chat-bubble"></i>
         <span>Ask</span>
       </button>`;
+
+  // "Mention" — only when rendered inside a session (sessionId provided)
+  // and the source is finished processing. Pushes the filename into the
+  // composer-mentions store; the composer subscriber repaints the pills.
+  const mentionButton =
+    sessionId && !isProcessing
+      ? `<button
+          type="button"
+          class="ap-button transparent grey source-card__mention"
+          data-source-mention="${source.id}"
+        >
+          <i class="ap-icon-at"></i>
+          <span>Mention</span>
+        </button>`
+      : "";
 
   // "Suggest clips" — surfaces on every processed video source. The
   // sources.js click handler kicks off a non-blocking extraction if the
@@ -244,6 +263,7 @@ export function renderSourceCard(source, allIdeas = [], { selectable = false, is
       <div class="source-card__actions">
         ${clipsButton}
         ${askButton}
+        ${mentionButton}
         ${processingPill}
         ${moreMenu}
       </div>
