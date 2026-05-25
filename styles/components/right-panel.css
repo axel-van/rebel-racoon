@@ -400,26 +400,33 @@
   color: var(--ref-color-grey-60);
 }
 
-/* Compact DS .ap-select trigger — fits next to the title without
-   dominating the head chrome. Padding/height shaved so the dropdown
-   reads as a quiet utility next to "Ideas N". */
+/* The DS .ap-select trigger stretches to 100% of its container by
+   default (assumes form-width usage). Constrain it to its intrinsic
+   content so it sits compact next to the title instead of spanning
+   the whole head row. Same trick as .composer-context-select in
+   session.css. */
 .ap-select.rpanel-ideas__sort {
-  min-width: 0;
+  width: fit-content;
+  max-width: 100%;
 }
 
-.ap-select.rpanel-ideas__sort > .ap-select-trigger {
-  height: auto;
-  min-height: 0;
-  padding: 4px var(--ref-spacing-xs);
-  font-size: var(--app-text-micro);
-  gap: var(--ref-spacing-xxs);
+/* The DS .ap-select-option example uses <div>; we use <button> so
+   keyboard activation works natively. Reset the browser default
+   border/background so the option matches the DS visual. */
+.ap-select.rpanel-ideas__sort button.ap-select-option {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  width: 100%;
 }
 
-.ap-select.rpanel-ideas__sort .ap-select-inline-label {
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: var(--app-text-micro);
-  color: var(--ref-color-grey-80);
+/* Anchor the dropdown panel under the trigger with a sensible min
+   width so the option labels never feel cramped (their natural width
+   is shorter than the trigger when "Recent" is selected). */
+.ap-select.rpanel-ideas__sort .ap-select-dropdown {
+  min-width: 200px;
 }
 
 .rpanel-ideas__filters {
