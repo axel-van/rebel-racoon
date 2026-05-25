@@ -410,34 +410,39 @@ span.chat-bubble-choice-chip {
 
 /* Composes .ap-card with a horizontal layout. .ap-card supplies the
    surface (bg, border, radius, padding); .drafts-card adds the row layout
-   + the orange icon tile + the active state. Whole card is the click
-   target; the trailing chevron is the affordance hint. */
+   + the mermaid icon tile + the active state.
+   Mermaid-tinted because the batch is AI-generated — same visual family
+   as the chat AI avatar, Drafting pill, and source-processing pill. */
 .drafts-card {
   /* .ap-card defaults to flex-direction: column with --ref-spacing-sm gap;
      compose horizontally with a tighter gap for this list-item style. */
   flex-direction: row;
   align-items: center;
-  gap: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-sm);
   width: 100%;
   cursor: pointer;
   font-family: inherit;
   text-align: left;
   transition:
     border-color var(--ref-animation-short) var(--app-ease-standard),
+    background-color var(--ref-animation-short) var(--app-ease-standard),
     box-shadow var(--ref-animation-short) var(--app-ease-standard);
 }
 
 .drafts-card:hover,
 .drafts-card:focus-visible {
-  border-color: var(--sys-color-accent-default-bg-default);
+  border-color: var(--ref-color-mermaid-gradient-from);
   outline: none;
 }
 
 .drafts-card.is-active {
-  border-color: var(--sys-color-accent-default-bg-default);
-  background: var(--sys-color-accent-light-bg);
+  border-color: var(--ref-color-mermaid-gradient-from);
+  background: var(--ref-color-mermaid-10);
 }
 
+/* Icon tile — soft mermaid background; the sparkles icon is mask-based,
+   so painting its OWN background with the mermaid gradient renders the
+   glyph itself in the purple→pink AI accent. */
 .drafts-card__icon {
   display: inline-flex;
   align-items: center;
@@ -445,20 +450,30 @@ span.chat-bubble-choice-chip {
   width: var(--ref-spacing-lg);
   height: var(--ref-spacing-lg);
   border-radius: var(--app-radius-button-sm);
-  background: var(--sys-color-accent-default-bg-default);
-  color: var(--sys-color-accent-default-text);
+  background: var(--ref-color-mermaid-10);
   flex-shrink: 0;
 }
 
 .drafts-card__icon > i {
   font-size: var(--sys-icon-css-sm);
+  background: var(--ref-color-mermaid-gradient-background);
 }
 
 .drafts-card__main {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--app-spacing-micro);
   flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Title + inline network glyphs sit on the same baseline; the network
+   strip is a passive context cue (full info lives in the right-panel
+   cards), so we keep it small and muted. */
+.drafts-card__title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
   min-width: 0;
 }
 
@@ -466,16 +481,6 @@ span.chat-bubble-choice-chip {
   font: var(--sys-text-style-body-bold-weight) var(--sys-text-style-body-bold-size) /
     var(--sys-text-style-body-bold-line-height) var(--sys-text-style-body-bold-font-family);
   color: var(--sys-text-color-default);
-}
-
-.drafts-card__sub {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  font: var(--sys-text-style-body-weight) var(--sys-text-style-body-size) / var(--sys-text-style-body-line-height)
-    var(--sys-text-style-body-font-family);
-  color: var(--sys-text-color-light);
-  min-width: 0;
 }
 
 .drafts-card__nets {
@@ -489,17 +494,40 @@ span.chat-bubble-choice-chip {
   color: var(--sys-text-color-light);
 }
 
-.drafts-card__sub-text {
+/* Subtitle: "From '<lead idea title>'". Single line, truncates with
+   ellipsis. The quoted title is rendered in a slightly heavier weight
+   so the citation reads as a proper noun. */
+.drafts-card__sub {
+  display: block;
+  font: var(--sys-text-style-body-weight) var(--sys-text-style-body-size) / var(--sys-text-style-body-line-height)
+    var(--sys-text-style-body-font-family);
+  color: var(--sys-text-color-light);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
 }
 
-.drafts-card__chevron {
-  font-size: var(--sys-icon-css-sm);
-  color: var(--sys-text-color-light);
+.drafts-card__sub-quote {
+  color: var(--sys-text-color-default);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+/* "Review ›" tag — mermaid-tinted text pill replacing the bare chevron.
+   Reads as a quiet button label without competing with the title; the
+   whole card stays clickable. */
+.drafts-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--app-spacing-micro);
   flex-shrink: 0;
+  font: var(--sys-text-style-body-bold-weight) var(--sys-text-style-body-bold-size) /
+    var(--sys-text-style-body-bold-line-height) var(--sys-text-style-body-bold-font-family);
+  color: var(--ref-color-mermaid-gradient-from);
+}
+
+.drafts-card__cta > i {
+  font-size: var(--sys-icon-css-sm);
 }
 
 /* Subtitle preset chips (PDF flow 06.B). When the choice carries a

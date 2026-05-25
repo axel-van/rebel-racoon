@@ -1435,15 +1435,16 @@ function networkLabel(network) {
   return network.charAt(0).toUpperCase() + network.slice(1);
 }
 
-// In-thread Drafts summary card — handoff §2.1 spec. Replaces the previous
-// accordion-style "Drafted N posts" turn with a flat horizontal card:
+// In-thread Drafts summary card — mermaid-tinted to mark this as an AI
+// result, not a user-written artifact.
 //
-//   [ pen icon tile ]  N drafts ready  [pill]    View drafts ›
-//                      [network logos] Across N networks · review, edit…
+//   [ ✦ tile ]  N drafts ready  [LI][X]                  Review ›
+//               From "The lead idea title"
 //
-// Click anywhere on the card → currently navigates to the Posts tab. In
-// Lot 4 this rewires to setActiveBatchRef + open the right-panel Drafts
-// surface (the actual editable BatchCards land there, never inline).
+// Click anywhere on the card → opens the right-panel Drafts surface
+// pinned to this batch (setActiveBatchRef path). The trailing "Review"
+// tag carries the chevron affordance so the click target reads as
+// intentional rather than passive.
 function renderDraftTurn(message) {
   const drafts = message.drafts || [];
   const count = message.count ?? drafts.length;
@@ -1451,11 +1452,12 @@ function renderDraftTurn(message) {
   const networkIcons = networks
     .map((n) => `<i class="${NETWORK_ICON[n] || "ap-icon-megaphone"}" title="${networkLabel(n)}"></i>`)
     .join("");
-  const networkCount = networks.length;
-  const networkLabelText =
-    networkCount === 0
-      ? "review, edit, and schedule"
-      : `Across ${networkCount} ${networkCount === 1 ? "network" : "networks"} · review, edit, and schedule`;
+  // Subtitle: prefer the lead idea title (anchors the card to the
+  // conversation context). Falls back to the action hint when the
+  // payload didn't carry one.
+  const subText = message.ideaTitle
+    ? `From <span class="drafts-card__sub-quote">&ldquo;${message.ideaTitle}&rdquo;</span>`
+    : "Review, edit, and schedule";
 
   // Active when the right panel is open in Drafts mode and pinned to THIS
   // message — gives the user a visual anchor between the chat thread and
@@ -1467,16 +1469,19 @@ function renderDraftTurn(message) {
     <div class="chat-turn chat-turn--ai chat-turn--extraction">
       <button type="button" class="ap-card drafts-card ${isActive ? "is-active" : ""}" data-drafts-card-message="${message.id || ""}">
         <span class="drafts-card__icon" aria-hidden="true">
-          <i class="ap-icon-pen"></i>
+          <i class="ap-icon-sparkles-mermaid"></i>
         </span>
         <span class="drafts-card__main">
-          <span class="drafts-card__title">${count} draft${count === 1 ? "" : "s"} ready</span>
-          <span class="drafts-card__sub">
-            ${networks.length ? `<span class="ap-tag-list drafts-card__nets">${networkIcons}</span>` : ""}
-            <span class="drafts-card__sub-text">${networkLabelText}</span>
+          <span class="drafts-card__title-row">
+            <span class="drafts-card__title">${count} draft${count === 1 ? "" : "s"} ready</span>
+            ${networks.length ? `<span class="ap-tag-list drafts-card__nets" aria-hidden="true">${networkIcons}</span>` : ""}
           </span>
+          <span class="drafts-card__sub">${subText}</span>
         </span>
-        <i class="ap-icon-chevron-right drafts-card__chevron" aria-hidden="true"></i>
+        <span class="drafts-card__cta" aria-hidden="true">
+          <span class="drafts-card__cta-label">Review</span>
+          <i class="ap-icon-chevron-right"></i>
+        </span>
       </button>
     </div>
   `;

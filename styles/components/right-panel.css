@@ -727,11 +727,117 @@
   color: var(--ref-color-grey-60);
 }
 
+/* Reference line shown below the footer when the expand button has
+   replaced the ref in the footer (cards with a rationale). */
+.rpanel-ideas__ref-line {
+  font-size: var(--app-text-micro-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-60);
+  margin-top: var(--ref-spacing-xxxs);
+}
+
+/* Expand toggle — quiet text affordance with rotating chevron. Uses the
+   same affordance language as the full idea-card's Sources toggle. */
+.rpanel-ideas__expand {
+  background: none;
+  border: 0;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  font-family: inherit;
+  font-size: var(--app-text-micro);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-80);
+  cursor: pointer;
+}
+
+.rpanel-ideas__expand:hover,
+.rpanel-ideas__expand:focus-visible {
+  color: var(--ref-color-grey-150);
+  outline: none;
+}
+
+.rpanel-ideas__expand i {
+  transition: transform var(--ref-animation-short) var(--app-ease-out);
+}
+
+.rpanel-ideas__expand[aria-expanded="true"] i {
+  transform: rotate(180deg);
+}
+
+.rpanel-ideas__foot-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
 .ap-button.rpanel-ideas__use {
   height: auto;
   min-height: 0;
   padding: 4px 10px;
   font-size: var(--app-text-micro);
+}
+
+/* More menu — popover anchored under the kebab button. Mirrors the
+   .idea-card__more-menu pattern from the dashboard full card. */
+.rpanel-ideas__more-wrap {
+  position: relative;
+}
+
+.rpanel-ideas__more-menu {
+  position: absolute;
+  top: calc(100% + var(--ref-spacing-xxs));
+  right: 0;
+  z-index: 10;
+  margin: 0;
+  padding: var(--ref-spacing-xxxs);
+  list-style: none;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-card);
+  box-shadow: var(--app-shadow-popover-md, 0 8px 24px rgba(0, 0, 0, 0.12));
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.rpanel-ideas__more-menu[hidden] {
+  display: none;
+}
+
+.rpanel-ideas__more-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  width: 100%;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  background: transparent;
+  border: 0;
+  border-radius: var(--app-radius-card);
+  color: var(--ref-color-grey-100);
+  font-family: inherit;
+  font-size: var(--app-text-micro);
+  font-weight: var(--ref-font-weight-bold);
+  text-align: left;
+  cursor: pointer;
+}
+
+.rpanel-ideas__more-item:hover,
+.rpanel-ideas__more-item:focus-visible {
+  background: var(--ref-color-grey-05);
+  outline: none;
+}
+
+/* Honour the user's motion preference — chevron rotation and any
+   future expand/collapse height transitions snap instead of animate. */
+@media (prefers-reduced-motion: reduce) {
+  .rpanel-ideas__expand i,
+  .rpanel-ideas__filter,
+  .rpanel-ideas__card {
+    transition: none;
+  }
 }
 
 /* ── Drafts mode (Lot 21) — rich PostCard feed ──────────────────────
