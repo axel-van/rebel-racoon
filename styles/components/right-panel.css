@@ -1317,7 +1317,7 @@
 .context-brief__personality {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   grid-auto-flow: row dense;
   max-width: 640px;
   width: 100%;
