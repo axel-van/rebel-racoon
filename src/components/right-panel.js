@@ -1946,17 +1946,16 @@ function renderIdeaCompact(idea) {
     <article class="rpanel-ideas__card" data-idea-id="${escapeAttr(idea.id)}">
       <header class="rpanel-ideas__card-head">
         <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${kind}</span>
-        <span class="rpanel-ideas__source" title="${escapeAttr(sourceLabel)}">
-          <i class="ap-icon-file" aria-hidden="true"></i>
-          <span class="rpanel-ideas__source-text">${escapeText(sourceLabel)}</span>
-        </span>
         ${infoBubble}
       </header>
       ${idea.title ? `<h4 class="rpanel-ideas__card-title">${escapeText(idea.title)}</h4>` : ""}
       <p class="rpanel-ideas__card-body">${escapeText(idea.body || "")}</p>
       ${tags ? `<div class="rpanel-ideas__tag-row">${tags}</div>` : ""}
       <footer class="rpanel-ideas__card-foot">
-        <span class="rpanel-ideas__foot-spacer"></span>
+        <span class="rpanel-ideas__source" title="${escapeAttr(sourceLabel)}">
+          <i class="ap-icon-file" aria-hidden="true"></i>
+          <span class="rpanel-ideas__source-text">${escapeText(sourceLabel)}</span>
+        </span>
         <div class="rpanel-ideas__foot-actions">
           <button type="button" class="ap-button stroked blue rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
             <i class="ap-icon-sparkles"></i>

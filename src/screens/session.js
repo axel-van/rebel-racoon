@@ -70,7 +70,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=79";
+} from "../components/right-panel.js?v=80";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";

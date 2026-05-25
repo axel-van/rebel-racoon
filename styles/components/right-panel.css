@@ -482,9 +482,10 @@
   border-color: var(--ref-color-electric-blue-100);
 }
 
-/* Card header — three logical slots: kind badge (fixed), source chip
-   (flex, ellipsis), pin button (fixed). Stays single-line at any panel
-   width — the source text truncates first. */
+/* Card header — kind badge anchored left, info icon to its right
+   (pushed to the right edge by the auto-margin on the info wrapper).
+   Source moved to the footer so the header reads as "what kind of
+   idea + why" only. */
 .rpanel-ideas__card-head {
   display: flex;
   align-items: center;
@@ -492,9 +493,13 @@
   min-height: 24px;
 }
 
-/* Source chip — file icon + truncating label, sits between the kind
-   badge and the pin button. Takes all remaining horizontal space so the
-   pin stays anchored right. Single line with ellipsis when narrow. */
+.rpanel-ideas__card-head .rpanel-ideas__info {
+  margin-left: auto;
+}
+
+/* Source chip — file icon + truncating label. Sits in the footer at
+   the left, opposite the Draft button. Takes all remaining horizontal
+   space so the Draft + more menu stay anchored right. */
 .rpanel-ideas__source {
   flex: 1 1 0;
   min-width: 0;
@@ -656,29 +661,6 @@
   margin-top: var(--ref-spacing-xxxs);
 }
 
-/* When the card has no rationale, this empty span anchors the footer
-   left edge so the Use button stays right-aligned. */
-.rpanel-ideas__foot-spacer {
-  flex: 1 1 auto;
-}
-
-/* Expand toggle — DS .ap-link.small.standalone provides the link
-   styling, color, and hover state. We only own the inline-flex layout
-   for the icon + label pairing and the chevron rotation on expand. */
-.ap-link.rpanel-ideas__expand {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-}
-
-.rpanel-ideas__expand i {
-  transition: transform var(--ref-animation-short) var(--app-ease-out);
-}
-
-.rpanel-ideas__expand[aria-expanded="true"] i {
-  transform: rotate(180deg);
-}
-
 .rpanel-ideas__foot-actions {
   display: inline-flex;
   align-items: center;
@@ -704,10 +686,8 @@
   display: none;
 }
 
-/* Honour the user's motion preference — chevron rotation and any
-   future expand/collapse height transitions snap instead of animate. */
+/* Honour the user's motion preference — collapse hover transitions. */
 @media (prefers-reduced-motion: reduce) {
-  .rpanel-ideas__expand i,
   .rpanel-ideas__filter,
   .rpanel-ideas__card {
     transition: none;
