@@ -646,7 +646,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=122").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=123").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -2139,7 +2139,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=122").then(({ askDraftCountQuestion }) => {
+  import("../screens/session.js?v=123").then(({ askDraftCountQuestion }) => {
     askDraftCountQuestion(sid, ideaId);
   });
 }
@@ -2155,8 +2155,14 @@ function withRefine(sectionHtml, fieldKey, canRefine) {
   const button = `<button type="button" class="context-brief__refine" data-brief-refine-field="${escapeAttr(fieldKey)}" title="Refine with Archie" aria-label="Refine with Archie"><i class="ap-icon-sparkles-mermaid"></i><span>Refine</span></button>`;
   // Inject right after the opening section tag (matches the section
   // with any compound class string — voice profile uses extra classes
-  // alongside `context-brief__section`).
-  return sectionHtml.replace(/<section class="context-brief__section[^"]*">/, (match) => match + button);
+  // alongside `context-brief__section`, and the new editorial zones
+  // (`__hero`, `__personality`, `__voice-feature`, `__essentials`,
+  // `__showcase`) open with their own root class instead of the
+  // legacy card chrome).
+  return sectionHtml.replace(
+    /<section class="context-brief__(?:section|hero|personality|voice-feature|essentials|showcase)[^"]*">/,
+    (match) => match + button,
+  );
 }
 
 function escapeText(str) {
