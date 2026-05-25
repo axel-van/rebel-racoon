@@ -78,6 +78,7 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  container-type: inline-size;
 }
 
 /* ── Empty states (drafts + ideas) ────────────────────────────────── */
@@ -553,12 +554,18 @@
 }
 
 /* ── Drafts mode (Lot 21) — rich PostCard feed ──────────────────────
-   Default layout (> 1440px): 2-col grid — vertical filter rail on the
-   left, feed on the right. The .posts__* classes from posts.css drive
-   both the rail items AND the cards themselves.
-   Compact layout (≤ 1440px): rail flattens onto a single row at the top
-   so the panel can shrink down to roughly post + action-stack width.
-   Cf. layout.css for the matching grid-column widths. */
+   Container-query driven (`container-type: inline-size` on the root)
+   so the layout reacts to the *panel's* width, not the viewport — the
+   panel can be narrowed independently via the resize handle or by
+   another column (status card) sharing the row.
+   Three breakpoints:
+     • wide   (> 800px) — vertical filter rail on the left, feed right
+     • medium (≤ 800px) — rail flattens to a row above the feed
+     • narrow (≤ 580px) — post row stacks: actions wrap below the card
+       so the action buttons stay reachable even when the 500px card
+       overflows the panel horizontally.
+   The .posts__* classes from posts.css drive both the rail items and
+   the cards themselves. */
 
 .rpanel-drafts {
   display: grid;
@@ -579,25 +586,24 @@
 
 /* Inside the right-panel feed, .posts__row already lays out as a flex
    row (card + action stack). Drop the leading checkbox slot since
-   selection mode isn't part of this redesign. The card-wrap inherits
-   its `max-width: 500px` cap from posts.css so the card stays
-   readable even when the panel is dragged wider. Free space sits to
-   the right of the action stack. */
+   selection mode isn't part of this redesign. The card-wrap keeps
+   its fixed 500px width (posts.css) so previews always render at the
+   same size — free space sits to the right of the action stack on
+   wide panels, and the row reflows to column at the narrow breakpoint. */
 .rpanel-drafts__feed .posts__row-check {
   display: none;
 }
 
-/* Network select sizing — fixed comfortable width in both layouts. */
+/* Network select sizing — fills the rail column at the wide breakpoint. */
 .rpanel-drafts .posts__rail-network-select {
   width: 100%;
 }
 
-/* ── Compact layout — filters on top ────────────────────────────────
-   Below 1440px the side rail doesn't have room. Switch to a single
-   column with the filter rail flattened onto a horizontal row above
-   the feed: status filters as pills on the left, the network select
-   on the right. */
-@media (max-width: 1440px) {
+/* ── Medium container — filters on top ──────────────────────────────
+   The panel is too narrow for a side rail. Switch to one column with
+   the filter rail flattened onto a horizontal row above the feed:
+   status filters as pills on the left, network select on the right. */
+@container (max-width: 800px) {
   .rpanel-drafts {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--ref-spacing-sm);
@@ -652,6 +658,24 @@
     width: auto;
     min-width: 160px;
     max-width: 220px;
+  }
+}
+
+/* ── Narrow container — actions below the card ──────────────────────
+   When the panel is narrower than the card (500px) + action stack, the
+   row reflows to column so the action buttons stay flush with the left
+   edge of the panel and remain fully reachable. The card itself keeps
+   its 500px width and overflows horizontally (intentional per spec). */
+@container (max-width: 580px) {
+  .rpanel-drafts__feed .posts__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rpanel-drafts__feed .posts__row-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding-top: 0;
   }
 }
 
