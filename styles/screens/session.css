@@ -831,27 +831,21 @@
    matches Figma 278:1852 (ref-border-radius-md, no padding — inner
    sections own their own spacing). The hint row sits OUTSIDE this
    card so it floats under the card surface. */
+/* Composer card — single flat white surface wrapping the textarea and
+   the toolbar chip row. The hint row sits OUTSIDE this card so it
+   floats under the card surface. Inner padding gives the textarea +
+   toolbar room to breathe inside the single card. */
 .session__composer-card {
-  background: var(--ref-color-grey-05);
-  border: 1px solid var(--ref-color-grey-10);
-  border-radius: var(--ref-border-radius-md);
-  display: flex;
-  flex-direction: column;
-}
-
-/* Composer input shell — Figma 278:1689 (Form-Textarea). White bg, 1px
-   grey-20 border, 8px radius, 9px/12px padding. `position: relative`
-   anchors the absolute-positioned send button at the bottom-right of
-   the input area. */
-.session__composer-input {
   background: var(--ref-color-white);
   border: 1px solid var(--ref-color-grey-20);
-  border-radius: 8px;
-  padding: 9px var(--ref-spacing-xs);
-  position: relative;
+  border-radius: var(--ref-border-radius-md);
+  padding: var(--ref-spacing-xs);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
 }
 
-.session__composer-input:focus-within {
+.session__composer-card:focus-within {
   border-color: var(--ref-color-electric-blue-100);
 }
 
@@ -861,14 +855,11 @@
   border: 0;
   background: transparent;
   padding: 0;
-  /* Right padding leaves room for the absolute-positioned send button at
-     the top-right of the input area. */
-  padding-right: calc(32px + var(--ref-spacing-xs));
   font-family: inherit;
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   color: var(--ref-color-grey-150);
-  min-height: 60px;
+  min-height: calc(var(--ref-font-line-height-sm) * 2);
 }
 
 .session__composer-input-field::placeholder {
@@ -880,17 +871,13 @@
   outline: none;
 }
 
-/* Send button — handoff spec: 32×32 square (radius 8), brand orange, white
-   arrow icon. Qualified with .ap-button to raise specificity to (0,2,0) so
-   it wins against the default DS .ap-button.primary box-model. The DS
-   ships --comp-button-height: 36px on .ap-button, so we override both
-   height and min-height to land on the handoff size. Positioned absolute
-   at the bottom-right of the input shell (cf. .session__composer-input
-   position: relative). */
+/* Send button — 32×32 square in the toolbar row, pushed to the far right
+   by margin-left:auto. Qualified with .ap-button to raise specificity to
+   (0,2,0) so it wins against the default DS .ap-button.primary box-model.
+   The DS ships --comp-button-height: 36px on .ap-button, so we override
+   both height and min-height to land on the handoff size. */
 .ap-button.session__composer-send {
-  position: absolute;
-  bottom: var(--ref-spacing-xs);
-  right: var(--ref-spacing-xs);
+  margin-left: auto;
   width: 32px;
   min-width: 32px;
   height: 32px;
@@ -901,6 +888,19 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+/* While the textarea is empty (placeholder visible), the send button is
+   muted grey — signals "nothing to send yet". As soon as the user types,
+   :placeholder-shown stops matching and the default .ap-button.primary
+   orange paint wins again. Pure CSS, no JS state to keep in sync. */
+.session__composer-card:has(.session__composer-input-field:placeholder-shown) .ap-button.session__composer-send {
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-grey-60);
+}
+
+.session__composer-card:has(.session__composer-input-field:placeholder-shown) .ap-button.session__composer-send:hover {
+  background: var(--ref-color-grey-20);
 }
 
 /* Composer hint — small caption below the composer card listing the
@@ -1099,43 +1099,20 @@
   pointer-events: none;
 }
 
-/* ---------- Composer context (Zone 2 — DS .ap-select above the textarea) -- */
+/* ---------- Composer context (read-only pill below the textarea) -------- */
 
-/* Toolbar row below the textarea — Figma 280:1146. Buttons (context
-   picker on the left, Attach files on the right) sit inside an 8px
-   padded wrapper, with 12px gap between them. */
+/* Toolbar row below the textarea — holds the context pill, the attach
+   trigger, and the send button (pushed to the right via margin-left:auto
+   on the send button itself). */
 .session__composer-toolbar {
-  padding: var(--ref-spacing-xxs);
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
   flex-wrap: wrap;
 }
 
-/* The DS .ap-select-trigger stretches to 100% of its container by default
-   (assumes form-width usage). Constrain it to its intrinsic content so the
-   picker sits left-aligned in the row instead of spanning the full card. */
-.composer-context-select {
-  width: fit-content;
-  max-width: 100%;
-}
-
-/* The DS .ap-select-option example uses <div>, so DS styles don't include
-   a browser-default reset. We use <button> for accessibility (native Enter
-   support), which inherits the agent's default 2px outset black border.
-   Reset it explicitly so the option looks like the DS div pattern. */
-.composer-context-select button.ap-select-option {
-  border: 0;
-  background: transparent;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  width: 100%;
-}
-
-/* Color dot reused inside the unlocked .ap-select trigger and the locked
-   stroked button (composer-context__locked) — shows the context's accent
-   color at a glance. */
+/* Color dot inside the context pill — shows the context's accent color
+   at a glance. */
 .composer-context__dot {
   display: inline-block;
   width: 12px;
@@ -1144,14 +1121,53 @@
   flex-shrink: 0;
 }
 
-/* Anchor the DS .ap-select-dropdown above the trigger. The toolbar sits
-   inside the composer panel which is itself at the bottom of the viewport,
-   so the dropdown still flips upward to stay inside the viewport even
-   though the trigger is now at the TOP of the composer card. */
-.composer-context-select .ap-select-dropdown {
-  bottom: calc(100% + var(--ref-spacing-xxs));
-  top: auto;
-  min-width: 240px;
+/* Read-only context pill — tinted background driven by the context's
+   color (via [data-context-color]), with the matching dot + name.
+   Sized to align with the sibling .ap-button.stroked.grey attach
+   trigger (32px DS button height). Click opens the right-panel
+   ContextForm in read mode (bindSession data-context-view handler). */
+.composer-context__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  height: 32px;
+  padding: 0 var(--ref-spacing-xs);
+  border: 0;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  cursor: pointer;
+  background: var(--ref-color-green-10);
+  color: var(--ref-color-green-100);
+  transition: filter var(--ref-animation-short) var(--app-ease-out);
+}
+
+.composer-context__pill:hover,
+.composer-context__pill:focus-visible {
+  filter: brightness(0.96);
+  outline: none;
+}
+
+.composer-context__pill[data-context-color="orange"] {
+  background: var(--ref-color-orange-10);
+  color: var(--ref-color-orange-100);
+}
+
+.composer-context__pill[data-context-color="red"] {
+  background: var(--ref-color-red-10);
+  color: var(--ref-color-red-100);
+}
+
+.composer-context__pill[data-context-color="blue"],
+.composer-context__pill[data-context-color="electric-blue"] {
+  background: var(--ref-color-electric-blue-05);
+  color: var(--ref-color-electric-blue-100);
+}
+
+.composer-context__pill[data-context-color="grey"] {
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-grey-100);
 }
 
 /* ---------- Workspace ---------- */

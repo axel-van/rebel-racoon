@@ -70,7 +70,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=82";
+} from "../components/right-panel.js?v=86";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
@@ -249,7 +249,7 @@ function renderAssistantPanel(session, attachedContext) {
   // of the panel (default) or inline inside the empty hero. We render it
   // once and place it via `${composerMarkup}` so click handlers (delegated
   // on #app) keep working in both positions.
-  const composerMarkup = renderComposer(attachedContext, hasUserMessage, session);
+  const composerMarkup = renderComposer(attachedContext, session);
   return html`
     <aside class="session__assistant" aria-label="Assistant panel">
       <div class="session__assistant-thread" id="assistantThread" data-assistant-thread>
@@ -265,7 +265,7 @@ function renderAssistantPanel(session, attachedContext) {
 // the conversation hasn't started yet). The click handlers in bindSession
 // are delegated on #app, so the same markup works in both positions
 // without re-wiring.
-function renderComposer(attachedContext, hasUserMessage, session) {
+function renderComposer(attachedContext, session) {
   return `
     <div class="session__composer">
       <div class="session__composer-inner">
@@ -274,38 +274,28 @@ function renderComposer(attachedContext, hasUserMessage, session) {
           <span class="session__composer-thinking-text" data-thinking-text>0s</span>
         </div>
         <div class="session__composer-card">
-          <div class="session__composer-input">
-            <div
-              class="session__composer-mentions"
-              data-composer-mentions
-              hidden
-            ></div>
-            <textarea
-              class="session__composer-input-field"
-              id="assistantInput"
-              placeholder="Ask Archie"
-              rows="3"
-            ></textarea>
-            <button
-              type="button"
-              class="ap-button primary orange session__composer-send"
-              aria-label="Send"
-              data-assistant-send
-            >
-              <i class="ap-icon-arrow-up"></i>
-            </button>
-          </div>
+          <div
+            class="session__composer-mentions"
+            data-composer-mentions
+            hidden
+          ></div>
+          <textarea
+            class="session__composer-input-field"
+            id="assistantInput"
+            placeholder="Ask a follow-up, or refine a draft…"
+            rows="2"
+          ></textarea>
           <div class="session__composer-toolbar">
-            ${renderComposerContextDropdown(attachedContext, { locked: hasUserMessage })}
+            ${renderComposerContextPill(attachedContext)}
             <div class="assistant-attach">
               <button
                 type="button"
                 class="ap-button stroked grey assistant-attach__trigger"
-                aria-label="Attach files"
+                aria-label="Attach a source"
                 data-assistant-attach-toggle
               >
                 <i class="ap-icon-paper-clip"></i>
-                <span>Attach files</span>
+                <span>Attach a source</span>
               </button>
               <div class="ap-action-dropdown assistant-attach__menu" data-assistant-attach-menu hidden role="menu">
                 <button type="button" class="ap-action-dropdown-item" data-add-source="pdf" role="menuitem">
@@ -334,6 +324,14 @@ function renderComposer(attachedContext, hasUserMessage, session) {
                 </button>
               </div>
             </div>
+            <button
+              type="button"
+              class="ap-button primary orange session__composer-send"
+              aria-label="Send"
+              data-assistant-send
+            >
+              <i class="ap-icon-arrow-up"></i>
+            </button>
           </div>
         </div>
         <div class="session__composer-hint">
@@ -344,20 +342,10 @@ function renderComposer(attachedContext, hasUserMessage, session) {
   `;
 }
 
-// Composer context dropdown — trigger + menu items derived live from the
-// contexts-store, replacing the previous hardcoded markup that diverged
-// from the actual store (esp. broken in `isNewUser()` mode where the store
-// is empty but the dropdown still showed three Agorapulse contexts).
-//
-// FIND-A5: trigger reflects the currently attached context (or a neutral
-// "No context" fallback); menu lists every saved context plus a New CTA.
-// Click handler at the bottom of bindSession updates the URL via setQuery,
-// so the session re-renders with the chosen context attached.
-// `locked` — once the chat has at least one user turn, the attached
-// context is committed: render the trigger as a static span (no menu, no
-// chevron) so the user can read it but can't swap it. Swapping mid-chat
-// would invalidate the citations / drafts already produced under the
-// original context.
+// Composer context pill — read-only chip showing the active playbook's
+// color dot + name. Click opens the right-panel ContextForm in read mode
+// (bindSession, data-context-view handler) so users can review the
+// brief / voice / do-don't details without leaving the chat.
 // The DS doesn't ship a plain --ref-color-blue-* family — its blue is
 // split across electric-blue / soft-blue / bluesky. Map the legacy "blue"
 // context color (used by ctx-founder-voice in the mocks) to electric-blue,
@@ -370,87 +358,22 @@ function dotColorVar(colorName) {
   return `var(--ref-color-${token}-100)`;
 }
 
-function renderComposerContextDropdown(attachedContext, { locked = false } = {}) {
-  const all = getContexts();
-  const triggerColor = attachedContext?.color || "grey";
-  const triggerLabel = attachedContext?.name || "No Playbook";
-  // Locked state — conversation has at least one user turn. The context is
-  // committed: swap the picker for a simple stroked button showing the
-  // active context's color dot + name. Clicking it opens the right-panel
-  // ContextForm in read mode (via contextBuilder.openRead) so the user
-  // can review the brief / voice / do-don't details without leaving the
-  // chat. If no context is attached when the lock kicks in, render
-  // nothing in this slot — a "No context" view button would have no
-  // content to show.
-  if (locked) {
-    if (!attachedContext) return "";
-    return `
-      <button
-        type="button"
-        class="ap-button stroked grey composer-context__locked"
-        data-context-view
-        title="View playbook"
-        aria-label="View playbook: ${escapeHtml(triggerLabel)}"
-      >
-        <span class="composer-context__dot" style="background: ${dotColorVar(triggerColor)};"></span>
-        <span>${escapeHtml(triggerLabel)}</span>
-      </button>
-    `;
-  }
-  // Unlocked state — DS .ap-select built on the native <details>/<summary>
-  // pattern. The browser handles open/close on summary clicks; we only
-  // wire pick (data-context-id) + outside-click in bindSession. The
-  // inline-label DS sub-element ("Context") prefixes the active value so
-  // the picker reads as "Context · {name}" at a glance.
-  const options = all
-    .map((c) => {
-      const isSelected = c.id === attachedContext?.id;
-      const color = c.color || "grey";
-      return `
-        <button
-          type="button"
-          class="ap-select-option ${isSelected ? "selected" : ""}"
-          data-context-id="${escapeHtml(c.id)}"
-          role="option"
-        >
-          <span class="composer-context__dot" style="background: ${dotColorVar(color)};"></span>
-          <span class="ap-select-option-text">${escapeHtml(c.name)}</span>
-          ${isSelected ? `<i class="ap-icon-check ap-select-option-check"></i>` : ""}
-        </button>
-      `;
-    })
-    .join("");
-  const detachItem = attachedContext
-    ? `
-        <div class="ap-select-divider"></div>
-        <button type="button" class="ap-select-option" data-context-id="__detach__" role="option">
-          <i class="ap-icon-close ap-select-option-icon"></i>
-          <span class="ap-select-option-text">Detach Playbook</span>
-        </button>
-      `
-    : "";
-  const noneItem = all.length === 0 ? `<div class="ap-select-option disabled muted">No saved Playbooks yet.</div>` : "";
+function renderComposerContextPill(attachedContext) {
+  if (!attachedContext) return "";
+  const color = attachedContext.color || "grey";
+  const name = attachedContext.name;
   return `
-    <details class="ap-select composer-context-select" data-composer-context>
-      <summary class="ap-select-trigger">
-        <span class="composer-context__dot" data-context-dot style="background: ${dotColorVar(triggerColor)};"></span>
-        <span class="ap-select-inline-label">Playbook</span>
-        <span class="ap-select-value" data-context-label>${escapeHtml(triggerLabel)}</span>
-        <i class="ap-icon-chevron-down ap-select-arrow"></i>
-      </summary>
-      <div class="ap-select-dropdown">
-        <div class="ap-select-options" role="listbox">
-          ${noneItem}
-          ${options}
-          ${detachItem}
-          <div class="ap-select-divider"></div>
-          <button type="button" class="ap-select-option" data-context-id="__new__" role="option">
-            <i class="ap-icon-plus ap-select-create-icon"></i>
-            <span class="ap-select-option-text">New Playbook…</span>
-          </button>
-        </div>
-      </div>
-    </details>
+    <button
+      type="button"
+      class="composer-context__pill"
+      data-context-color="${escapeHtml(color)}"
+      data-context-view
+      title="View playbook"
+      aria-label="View playbook: ${escapeHtml(name)}"
+    >
+      <span class="composer-context__dot" style="background: ${dotColorVar(color)};"></span>
+      <span>${escapeHtml(name)}</span>
+    </button>
   `;
 }
 
@@ -2392,46 +2315,15 @@ function bindSession(root, session) {
         if (menu && !menu.hidden) menu.hidden = true;
       }
 
-      // Locked composer context — click on the stroked button opens the
-      // right-panel ContextForm in read mode so the user can review the
-      // active context's details without leaving the chat. Falls back
-      // through the URL contextId (wizard-driven) then the session seed.
+      // Read-only composer context pill — click opens the right-panel
+      // ContextForm in read mode so the user can review the active
+      // context's details without leaving the chat. Falls back through
+      // the URL contextId (wizard-driven) then the session seed.
       if (event.target.closest("[data-context-view]")) {
         event.preventDefault();
         const ctxId = readQuery().contextId || session.contextId;
         if (ctxId) contextBuilder.openRead(ctxId);
         return;
-      }
-
-      // Composer context dropdown — picks + outside-click close. The DS
-      // .ap-select is built on the native <details>/<summary> pattern, so
-      // the browser handles open/close on the summary click. We only wire
-      // (a) the option pick and (b) outside-click close (since <details>
-      // doesn't natively close on outside clicks).
-      const ctxItem = event.target.closest("[data-context-id]");
-      if (ctxItem) {
-        event.preventDefault();
-        const id = ctxItem.dataset.contextId;
-        const sel = root.querySelector("details.composer-context-select");
-        if (sel) sel.open = false;
-        if (id === "__new__") {
-          // Launch the conversational create-context wizard inline in
-          // this session. onComplete attaches the new context once saved.
-          contextBuilder.start(session.id, {
-            onComplete: (created) => setQuery({ contextId: created.id }),
-          });
-        } else if (id === "__detach__") {
-          setQuery({ contextId: "" });
-        } else {
-          // Update the URL so renderSession resolves the new context and
-          // re-renders the panel with attachedContext / hasContext refreshed.
-          setQuery({ contextId: id });
-        }
-        return;
-      }
-      if (!event.target.closest(".composer-context-select")) {
-        const sel = root.querySelector("details.composer-context-select");
-        if (sel?.open) sel.open = false;
       }
     },
     { signal },
