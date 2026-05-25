@@ -12,7 +12,10 @@
 //     onPick({ kind: "new" } | { kind: "existing", session })
 //   });
 
-import { recentSessions } from "../mocks.js?v=32";
+import { recentSessions } from "../mocks.js?v=33";
+import { getSources } from "../sources-stream.js?v=30";
+import { getIdeas } from "../library.js?v=29";
+import { getPosts } from "../posts-store.js?v=27";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 
 const MODAL_ID = "chatPicker";
@@ -50,12 +53,22 @@ function buildItems() {
     caption: "Empty chat — start fresh",
     icon: "ap-icon-plus",
   };
-  const existing = recentSessions.map((s) => ({
-    value: s.id,
-    label: s.name,
-    caption: `${s.sourceCount} sources · ${s.ideaCount} ideas · ${s.postCount} drafts · ${s.lastActivity}`,
-    icon: "ap-icon-single-chat-bubble",
-  }));
+  const existing = recentSessions.map((s) => {
+    // Counts derive from the live stores — the conversation-level counters
+    // shown elsewhere (topbar pill, status card, content workspace tabs)
+    // read the same source of truth, so the picker stays in sync as users
+    // add sources / ideas / drafts in either chat.
+    const sources = getSources(s.id).length;
+    const ideas = getIdeas(s.id).length;
+    const drafts = getPosts(s.id).length;
+    const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+    return {
+      value: s.id,
+      label: s.name,
+      caption: `${plural(sources, "source")} · ${plural(ideas, "idea")} · ${plural(drafts, "draft")} · ${s.lastActivity}`,
+      icon: "ap-icon-single-chat-bubble",
+    };
+  });
   return [newItem, ...existing];
 }
 

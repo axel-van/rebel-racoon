@@ -7,7 +7,7 @@
 //   attachImageToDraft(sessionId, postId, imageUrl)
 //   subscribe(sessionId, fn)    → unsubscribe fn
 
-import { posts as mockPosts, recentSessions as seedRecentSessions } from "./mocks.js?v=32";
+import { postsBySession as seedPostsBySession, recentSessions as seedRecentSessions } from "./mocks.js?v=33";
 import { isNewUser } from "./user-mode.js?v=21";
 
 // Demo session ids — only these get the seeded posts mock. Brand-new
@@ -169,10 +169,17 @@ function seed(sessionId) {
   // Mirrors library.js: only demo sessions (s-acme-launch / s-riverside /
   // etc.) get the seeded posts mock. New conversations created at runtime
   // start empty so the user doesn't see "5 drafts" appear in a chat they
-  // just opened from "+ New conversation". Shallow-copy each post so
-  // edits don't leak across sessions or mutate the shared mock array.
+  // just opened from "+ New conversation".
+  //
+  // Pulls from the per-session bucket in mocks (`postsBySession`) so each
+  // demo session has its own distinct drafts list. Shallow-copy each post
+  // so edits don't leak across sessions or mutate the shared mock array.
   const shouldSeed = !isNewUser() && DEMO_SESSION_IDS.has(sessionId);
-  store.set(sessionId, shouldSeed ? mockPosts.map((p) => ({ ...p })) : []);
+  const seedForSession = shouldSeed ? seedPostsBySession[sessionId] || [] : [];
+  store.set(
+    sessionId,
+    seedForSession.map((p) => ({ ...p })),
+  );
 }
 
 function notify(sessionId) {

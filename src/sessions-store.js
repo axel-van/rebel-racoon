@@ -15,7 +15,7 @@
 //   addSession(session)          → Session     (used by future "new chat" flows)
 //   subscribe(fn)                → unsubscribe
 
-import { recentSessions as seed } from "./mocks.js?v=32";
+import { recentSessions as seed } from "./mocks.js?v=33";
 import { isNewUser } from "./user-mode.js?v=21";
 import { createNotifier } from "./store-utils.js?v=1";
 
@@ -61,15 +61,13 @@ export function togglePin(id) {
 
 // Reserved for a future "new chat from sidebar" flow — the entry path
 // today is the dashboard redirect into /session/new. Kept un-exported
-// until a consumer needs it.
+// until a consumer needs it. Counts (sources / ideas / drafts) derive
+// from the per-session stores, not from fields on the session record.
 function addSession(session) {
   const next = {
     id: session.id || `s-${Date.now().toString(36)}`,
     name: session.name || "New conversation",
     lastActivity: session.lastActivity || "just now",
-    sourceCount: session.sourceCount || 0,
-    ideaCount: session.ideaCount || 0,
-    postCount: session.postCount || 0,
     contextId: session.contextId || null,
     pinned: session.pinned === true,
     ...session,

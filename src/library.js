@@ -9,7 +9,11 @@
 //   appendExtractedIdeas(sessionId, sources)  bulk "extract more" flow
 //   removeIdeasForSources(sessionId, sourceIds)  cleanup after bulk-delete
 
-import { ideas as seedIdeas, recentSessions as seedRecentSessions } from "./mocks.js?v=32";
+import {
+  ideas as seedIdeas,
+  ideasBySession as seedIdeasBySession,
+  recentSessions as seedRecentSessions,
+} from "./mocks.js?v=33";
 import { isNewUser } from "./user-mode.js?v=21";
 
 // Demo session ids — the recentSessions seed (s-acme-launch / s-riverside /
@@ -306,8 +310,16 @@ function seed(sessionId) {
   // runtime start empty — the mock library would otherwise spill into
   // every fresh chat and confuse the user ("how can a new conversation
   // already have 7 ideas?").
+  //
+  // Pulls from the per-session bucket in mocks (`ideasBySession`) so each
+  // demo session has its own distinct content — counters in the topbar,
+  // status card and chat picker therefore vary realistically per session.
   const shouldSeed = !isNewUser() && DEMO_SESSION_IDS.has(sessionId);
-  ideasMap.set(sessionId, shouldSeed ? seedIdeas.map((i) => ({ ...i })) : []);
+  const seedForSession = shouldSeed ? seedIdeasBySession[sessionId] || [] : [];
+  ideasMap.set(
+    sessionId,
+    seedForSession.map((i) => ({ ...i })),
+  );
 }
 
 function notify(sessionId) {

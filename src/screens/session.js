@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=52";
-import { socialAccounts, chatStarters } from "../mocks.js?v=32";
+import { socialAccounts, chatStarters } from "../mocks.js?v=33";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=28";
 import { isNewUser } from "../user-mode.js?v=21";
@@ -17,7 +17,7 @@ import {
   subscribe,
   submitAssistantChoice,
 } from "../assistant.js?v=31";
-import { getSources, getIdeas, injectIdeasForSource } from "../library.js?v=28";
+import { getSources, getIdeas, injectIdeasForSource } from "../library.js?v=29";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
   renderInto as renderComposerMentions,
@@ -30,7 +30,7 @@ import {
   attachImageToDraft,
   setSubtitleStyle,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=26";
+} from "../posts-store.js?v=27";
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=21";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
@@ -50,7 +50,7 @@ import { open as openGenerateImageModal } from "../components/generate-image-mod
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";
 import { startClipExtraction } from "../components/clip-extraction-loader.js?v=2";
 import { open as openSettingsDrawer } from "../components/settings-drawer.js?v=23";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=21";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=23";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=22";
 import {
   classifyFile,
