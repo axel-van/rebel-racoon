@@ -1566,14 +1566,23 @@ body.hide-playbook-colors .context-brief__hero-color {
    summary line, then nine labelled paragraphs separated by hairlines.
    Edit mode swaps each paragraph for a textarea so the user can
    revise inline. */
+/* Anchored to a 2px grey accent rail on the left so the voice profile
+   reads as a deliberate editorial block — clearly its own object in
+   the brief's flow without falling back on a heavy card chrome. The
+   rail plus the soft grey-05 surface give the zone presence; the
+   2-column glossary layout (label left, body right) gives it
+   rhythm. */
 .context-brief__voice-feature {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-md);
   max-width: 640px;
   width: 100%;
-  padding: 0 var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-md);
+  background: var(--ref-color-grey-05);
+  border-left: 2px solid var(--ref-color-grey-150);
+  border-radius: 0 var(--ref-border-radius-md) var(--ref-border-radius-md) 0;
 }
 
 .context-brief__voice-header {
@@ -1588,48 +1597,64 @@ body.hide-playbook-colors .context-brief__hero-color {
   line-height: var(--ref-font-line-height-lg);
   font-weight: var(--ref-font-weight-extra-bold);
   color: var(--ref-color-grey-150);
+  letter-spacing: -0.01em;
 }
 
+/* Inline tone summary — italic muted text. Mirrors the way a magazine
+   sets a deck under a section title. */
 .context-brief__voice-headline {
   margin: 0;
-  color: var(--ref-color-grey-80);
+  color: var(--ref-color-grey-100);
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
+  font-style: italic;
 }
 
 .context-brief__vp-sections {
   display: flex;
   flex-direction: column;
+  gap: var(--ref-spacing-sm);
 }
 
+/* Single column by default — label stacks above its body paragraph.
+   The wider container query below switches to a glossary layout where
+   the label hangs in a 132px column to the left of the body. */
 .context-brief__vp-section {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-sm) 0;
+  padding-top: var(--ref-spacing-sm);
   border-top: 1px solid var(--ref-color-grey-10);
 }
 
 .context-brief__vp-section:first-child {
+  padding-top: 0;
   border-top: none;
-  padding-top: var(--ref-spacing-xs);
+}
+
+@container (min-width: 420px) {
+  .context-brief__vp-section {
+    grid-template-columns: 132px minmax(0, 1fr);
+    gap: var(--ref-spacing-md);
+    align-items: baseline;
+  }
 }
 
 .context-brief__vp-section-label {
   margin: 0;
   font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
-  font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-md);
+  font-weight: var(--ref-font-weight-extra-bold);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--ref-color-grey-80);
+  letter-spacing: 0.06em;
+  color: var(--ref-color-grey-100);
 }
 
 .context-brief__vp-body {
   margin: 0;
   color: var(--ref-color-grey-150);
   font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
+  line-height: var(--ref-font-line-height-md);
   white-space: pre-wrap;
 }
 
