@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=31";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=32";
 import { isFlagOn } from "../feature-flags.js?v=3";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=33";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=34";
 import { isNewUser } from "../user-mode.js?v=21";
 import { getPath } from "../router.js?v=30";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -72,10 +72,17 @@ const IDEA_KINDS = [
   { id: "insight", label: "Insights" },
 ];
 
-// Ideas-mode local UI state — filter chip + search query. Resets each time
-// the panel reopens in Ideas mode.
+// Ideas-mode local UI state — filter chip + search query + sort axis +
+// the id of the single card currently expanded (accordion: only one open
+// at a time). Survives across renderPanel() calls but is reset when the
+// panel re-opens in a fresh session via renderIdeasBodyOnly().
 let ideasFilter = "all";
 let ideasQuery = "";
+let ideasSort = "recent"; // 'recent' | 'used' | 'confidence'
+let expandedIdeaId = null;
+// Ideas the user has dismissed via the More menu — kept in a Set so the
+// list re-render filters them out without mutating the mocks array.
+let dismissedIdeaIds = new Set();
 
 // Outputs sub-view inside Ideas mode — "ideas" or "clips". Unifies the
 // two AI-extracted output types of a source under one persistent surface
@@ -1659,10 +1666,39 @@ function renderIdeasView() {
     `;
   }
 
+  // Counts per kind for the filter chips — "All (12)" / "Stats (4)".
+  // Dismissed ideas are excluded so the chip counts match what the user
+  // can actually see in the list.
+  const visibleIdeas = IDEAS.filter((i) => !dismissedIdeaIds.has(i.id));
+  const totalCount = visibleIdeas.length;
+  const kindCounts = IDEA_KINDS.reduce((acc, k) => {
+    acc[k.id] = k.id === "all" ? totalCount : visibleIdeas.filter((i) => i.kind === k.id).length;
+    return acc;
+  }, {});
+
+  const sortOptions = [
+    { id: "recent", label: "Recent" },
+    { id: "used", label: "Most used" },
+    { id: "confidence", label: "Highest confidence" },
+  ];
+
   return html`
     <div class="rpanel-ideas">
       ${raw(tabs)}
       <div class="rpanel-ideas__head">
+        <div class="rpanel-ideas__title-bar">
+          <h4 class="rpanel-ideas__title">Ideas <span class="rpanel-ideas__title-count">${totalCount}</span></h4>
+          <label class="rpanel-ideas__sort">
+            <span class="rpanel-ideas__sort-label">Sort</span>
+            <select class="ap-native-select rpanel-ideas__sort-select" data-rpanel-ideas-sort>
+              ${raw(
+                sortOptions
+                  .map((o) => `<option value="${o.id}" ${ideasSort === o.id ? "selected" : ""}>${o.label}</option>`)
+                  .join(""),
+              )}
+            </select>
+          </label>
+        </div>
         <div class="ap-input-group rpanel-ideas__search">
           <i class="ap-icon-search"></i>
           <input
@@ -1683,7 +1719,10 @@ function renderIdeasView() {
                   data-rpanel-ideas-filter="${k.id}"
                   role="tab"
                   aria-selected="${ideasFilter === k.id}"
-                >${k.label}</button>
+                >
+                  <span>${k.label}</span>
+                  <span class="rpanel-ideas__filter-count">${kindCounts[k.id]}</span>
+                </button>
               `,
             ).join(""),
           )}
@@ -1755,10 +1794,16 @@ function renderClipsList(entries) {
 
 function renderIdeasList() {
   const q = ideasQuery.trim().toLowerCase();
-  const list = IDEAS.filter((i) => ideasFilter === "all" || i.kind === ideasFilter).filter(
-    (i) => !q || (i.body || "").toLowerCase().includes(q) || (i.title || "").toLowerCase().includes(q),
-  );
-  if (list.length === 0) {
+  const list = IDEAS.filter((i) => !dismissedIdeaIds.has(i.id))
+    .filter((i) => ideasFilter === "all" || i.kind === ideasFilter)
+    .filter((i) => !q || (i.body || "").toLowerCase().includes(q) || (i.title || "").toLowerCase().includes(q));
+  // Sort axis — applied to the filtered set so the visible order matches
+  // the dropdown choice. "recent" keeps the seed order (already newest-
+  // first in mocks). Sort is stable via .slice() before mutating.
+  const sorted = list.slice();
+  if (ideasSort === "used") sorted.sort((a, b) => (b.used || 0) - (a.used || 0));
+  else if (ideasSort === "confidence") sorted.sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
+  if (sorted.length === 0) {
     // FIND-B6: align with the rich empty pattern. When the user has a
     // search query, propose to clear it; otherwise the filter chip is
     // the only narrowing axis so we point them at the All chip.
@@ -1778,7 +1823,7 @@ function renderIdeasList() {
       </div>
     `;
   }
-  return list.map((i) => renderIdeaCompact(i)).join("");
+  return sorted.map((i) => renderIdeaCompact(i)).join("");
 }
 
 function renderIdeasBodyOnly() {

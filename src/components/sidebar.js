@@ -20,7 +20,7 @@ import { isNewUser } from "../user-mode.js?v=21";
 import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=29";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=28";
 import { closePanel as closeRightPanel } from "./right-panel.js?v=65";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=31";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=32";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=27";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=30";
 

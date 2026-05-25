@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=52";
 import { renderIdeaCard } from "../components/idea-card.js?v=25";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=33";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=34";
 
 // Sources moved to a per-session model — there's no workspace-wide
 // source list on this standalone /ideas page. idea-card renders source

@@ -6,7 +6,7 @@
 //
 // Subscribers re-render the thread DOM on any change — no global store.
 
-import { ideas } from "./mocks.js?v=33";
+import { ideas, threadsBySession as seedThreadsBySession } from "./mocks.js?v=34";
 
 const threads = new Map(); // sessionId → messages[]
 const subscribers = new Map(); // sessionId → Set<(messages) => void>
@@ -414,6 +414,26 @@ function seedThread(sessionId, { hasContext, skipGreeting }) {
   // double up "Hi —" + the flow's first AI turn.
   if (skipGreeting) {
     threads.set(sessionId, []);
+    return;
+  }
+
+  // Demo sessions ship with a scripted thread so opening one looks like
+  // a real, mid-flight conversation (source intakes + extractions +
+  // user prompt + draft result). Materialised lazily on first read:
+  // each turn gets a fresh id + createdAt so the renderer and future
+  // mutations behave like any in-flight thread.
+  const scripted = seedThreadsBySession?.[sessionId];
+  if (Array.isArray(scripted) && scripted.length > 0) {
+    const baseTime = Date.now() - scripted.length * 1000;
+    threads.set(
+      sessionId,
+      scripted.map((turn, idx) => ({
+        ...turn,
+        id: newId(),
+        status: turn.status || "ready",
+        createdAt: baseTime + idx * 1000,
+      })),
+    );
     return;
   }
 

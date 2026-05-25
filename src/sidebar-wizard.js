@@ -31,7 +31,7 @@
 // _analyse-common.js (items + handler + optional customPlaceholder).
 
 import { chatTurn, bulletsBlock, fieldsBlock, summarySections } from "./screens/_analyse-common.js?v=30";
-import { voiceAnalysis, strategyBrief, brandTheme } from "./mocks.js?v=33";
+import { voiceAnalysis, strategyBrief, brandTheme } from "./mocks.js?v=34";
 
 // ---- State -----------------------------------------------------------------
 

@@ -12,7 +12,7 @@
 //     onPick({ kind: "new" } | { kind: "existing", session })
 //   });
 
-import { recentSessions } from "../mocks.js?v=33";
+import { recentSessions } from "../mocks.js?v=34";
 import { getSources } from "../sources-stream.js?v=30";
 import { getIdeas } from "../library.js?v=29";
 import { getPosts } from "../posts-store.js?v=27";
