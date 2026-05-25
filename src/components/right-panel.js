@@ -29,7 +29,7 @@ import { open as openAddSourceModal } from "./add-source-modal.js?v=22";
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
-import { open as openScheduleModal } from "./schedule-modal.js?v=20";
+import { open as openScheduleModal } from "./schedule-modal.js?v=21";
 import { open as openGenerateImageModal } from "./generate-image-modal.js?v=21";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays

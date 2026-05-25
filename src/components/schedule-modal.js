@@ -1,32 +1,47 @@
 import { html, raw } from "../utils.js?v=20";
 import { showToast } from "./toast.js?v=20";
+import {
+  getQueue,
+  getQueueOn,
+  busyCountsByDay,
+  dayKey,
+  addToQueue,
+  subscribe as subscribeQueue,
+} from "../schedule-store.js?v=1";
 
-// Schedule modal (handoff §3.5).
-//   • Centered, 720px wide, radius 16, shadow large
-//   • Header: "Schedule {N} posts" + close
-//   • Mode picker: Daily (one per day, 9am) / Optimal times / Manual
-//   • Body: per-post slot row with a <input type="datetime-local"> + post
-//     preview (network logo + first text line)
-//   • Footer: Cancel + "Schedule {N} posts" primary
+// Schedule modal (multi-draft).
+//   • 960px wide, two-column body
+//   • Left  — Mode picker (Optimal / Custom) + one slot row per draft
+//              (network glyph + first line + datetime input + remove)
+//   • Right — Month calendar with dots on days that already have
+//              scheduled posts (seeded queue + posts scheduled this
+//              session). Click a day to see its existing list.
+//   • Footer — Cancel + primary "Schedule N drafts"
 //
-// Per Q9 the mock end-to-end is the entire scope — confirm flags the
-// posts as scheduled in the right-panel local state and fires a toast.
-// A real Publishing API call is the replacement point.
+// "Optimal times" uses a per-network suggested map (PER_NETWORK_OPTIMAL)
+// and falls back to a generic spread. We skip slots that would collide
+// with an already-busy day for the same network so the spread feels
+// smart rather than naive.
+//
+// The mock end-to-end is the entire scope — confirm pushes new entries
+// into schedule-store, marks the source posts as scheduled, fires a
+// toast. Real Publishing API call is the replacement point.
 
 const ROOT_ID = "scheduleModal";
 
 let state = {
   open: false,
-  posts: [], // [{id, network, text}]
+  posts: [], // [{id, network, text/preview}]
   slots: [], // [{post, when: epoch ms}]
-  mode: "daily",
+  mode: "optimal", // 'optimal' | 'custom'
   onConfirm: null,
-  // FIND-D3: track the scheduling phase so the user gets feedback while
-  // the (currently mocked) confirm callback runs and so a real backend
-  // failure can surface inline instead of vanishing into a no-op toast.
   status: "idle", // 'idle' | 'scheduling' | 'error'
   errorMessage: "",
+  calendarMonth: null, // Date pinned to the 1st of the visible month
+  focusedDayKey: null, // string from dayKey()
 };
+
+let unsubscribeQueue = null;
 
 const NETWORK_ICON = {
   linkedin: "ap-icon-linkedin",
@@ -46,6 +61,22 @@ const NETWORK_NAME = {
   tiktok: "TikTok",
 };
 
+// Per-network suggested publishing windows. Each entry lists
+// { dow: [0..6 sunday-first], hours: [24h]} — the optimal picker walks
+// the upcoming days and finds the next dow/hour combo that isn't
+// already busy for that network. These mirror the kind of static
+// benchmarks a publishing tool ships with out of the box.
+const PER_NETWORK_OPTIMAL = {
+  linkedin: { dow: [2, 3, 4], hours: [9, 12] }, // Tue/Wed/Thu, 9 + noon
+  twitter: { dow: [1, 2, 3, 4, 5], hours: [10, 14, 17] },
+  x: { dow: [1, 2, 3, 4, 5], hours: [10, 14, 17] },
+  instagram: { dow: [2, 4, 0], hours: [11, 19] }, // Tue/Thu/Sun
+  facebook: { dow: [1, 3, 5], hours: [13, 16] }, // Mon/Wed/Fri
+  tiktok: { dow: [2, 3, 4], hours: [18, 20, 22] },
+};
+
+const FALLBACK_OPTIMAL = { dow: [1, 2, 3, 4, 5], hours: [9, 13, 17] };
+
 export function init() {
   let scrim = document.getElementById(`${ROOT_ID}Scrim`);
   let modal = document.getElementById(ROOT_ID);
@@ -58,7 +89,7 @@ export function init() {
 
     modal = document.createElement("div");
     modal.id = ROOT_ID;
-    modal.className = "schedule-modal";
+    modal.className = "schedule-modal schedule-modal--wide";
     modal.setAttribute("role", "dialog");
     modal.setAttribute("aria-modal", "true");
     modal.setAttribute("aria-label", "Schedule posts");
@@ -79,15 +110,25 @@ export function init() {
 
 export function open({ posts, onConfirm }) {
   if (!posts || posts.length === 0) return;
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const slots = optimalSlots(posts);
   state = {
     open: true,
     posts,
-    mode: "daily",
-    slots: defaultDailySlots(posts),
+    mode: "optimal",
+    slots,
     onConfirm: typeof onConfirm === "function" ? onConfirm : null,
     status: "idle",
     errorMessage: "",
+    calendarMonth: monthStart,
+    focusedDayKey: slots[0] ? dayKey(slots[0].when) : dayKey(today.getTime()),
   };
+  if (!unsubscribeQueue) {
+    unsubscribeQueue = subscribeQueue(() => {
+      if (state.open) render();
+    });
+  }
   render();
 }
 
@@ -96,37 +137,74 @@ function close() {
     open: false,
     posts: [],
     slots: [],
-    mode: "daily",
+    mode: "optimal",
     onConfirm: null,
     status: "idle",
     errorMessage: "",
+    calendarMonth: null,
+    focusedDayKey: null,
   };
+  if (unsubscribeQueue) {
+    unsubscribeQueue();
+    unsubscribeQueue = null;
+  }
   render();
 }
 
-function defaultDailySlots(posts) {
-  // One per day starting tomorrow at 9am.
+// ── Optimal slot picker ───────────────────────────────────────────────
+// Walks forward day-by-day and tries each network's preferred (dow,
+// hour) cells in order. Skips a cell if the queue already has 2+ posts
+// in the same day to spread load. Falls back to the generic spread if
+// the network has no map. Bound is 60 days so a pathological mock can't
+// loop forever.
+function optimalSlots(posts) {
+  const queue = getQueue();
+  const busy = busyCountsByDay();
+  const usedSlotKeys = new Set();
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+
+  return posts.map((p, idx) => {
+    const network = (p.network || "linkedin").toLowerCase();
+    const map = PER_NETWORK_OPTIMAL[network] || FALLBACK_OPTIMAL;
+    const offsetStart = Math.floor(idx / map.hours.length);
+    for (let d = offsetStart; d < offsetStart + 60; d++) {
+      const day = new Date(tomorrow);
+      day.setDate(day.getDate() + d);
+      if (!map.dow.includes(day.getDay())) continue;
+      const dKey = dayKey(day.getTime());
+      const busyOnDay = busy.get(dKey) || 0;
+      if (busyOnDay >= 3) continue; // already crowded
+      for (const hour of map.hours) {
+        const slot = new Date(day);
+        slot.setHours(hour, 0, 0, 0);
+        const slotKey = `${dKey}::${network}::${hour}`;
+        if (usedSlotKeys.has(slotKey)) continue;
+        const collides = queue.some((q) => q.network === network && Math.abs(q.when - slot.getTime()) < 30 * 60 * 1000);
+        if (collides) continue;
+        usedSlotKeys.add(slotKey);
+        return { post: p, when: slot.getTime() };
+      }
+    }
+    // Pathological fallback — schedule for tomorrow 9am + idx hours.
+    const fallback = new Date(tomorrow);
+    fallback.setHours(9 + idx, 0, 0, 0);
+    return { post: p, when: fallback.getTime() };
+  });
+}
+
+function customDefaultSlots(posts) {
+  // One per day, 9am, starting tomorrow. Used as the seed when the user
+  // flips to Custom mode and we want to keep the times legible while
+  // they edit.
   const start = new Date();
   start.setDate(start.getDate() + 1);
   start.setHours(9, 0, 0, 0);
   return posts.map((p, i) => {
     const d = new Date(start);
     d.setDate(d.getDate() + i);
-    return { post: p, when: d.getTime() };
-  });
-}
-
-function optimalSlots(posts) {
-  // 3 optimal hours per day, cycling through posts. Mirrors the handoff
-  // optimal pattern (9am / 1pm / 5pm).
-  const start = new Date();
-  start.setDate(start.getDate() + 1);
-  start.setHours(9, 0, 0, 0);
-  const optimalHours = [9, 13, 17];
-  return posts.map((p, i) => {
-    const d = new Date(start);
-    d.setDate(d.getDate() + Math.floor(i / 3));
-    d.setHours(optimalHours[i % 3], 0, 0, 0);
     return { post: p, when: d.getTime() };
   });
 }
@@ -138,32 +216,65 @@ function onClick(event) {
   }
   const modeBtn = event.target.closest("[data-schedule-mode]");
   if (modeBtn) {
-    state.mode = modeBtn.dataset.scheduleMode;
-    if (state.mode === "daily") state.slots = defaultDailySlots(state.posts);
-    else if (state.mode === "optimal") state.slots = optimalSlots(state.posts);
-    // Manual mode: keep current slots, user edits each row.
+    const next = modeBtn.dataset.scheduleMode;
+    if (next === state.mode) return;
+    state.mode = next;
+    state.slots = next === "optimal" ? optimalSlots(state.posts) : customDefaultSlots(state.posts);
     render();
     return;
   }
+  const monthNav = event.target.closest("[data-schedule-month]");
+  if (monthNav) {
+    const dir = monthNav.dataset.scheduleMonth === "next" ? 1 : -1;
+    const m = new Date(state.calendarMonth);
+    m.setMonth(m.getMonth() + dir);
+    state.calendarMonth = m;
+    render();
+    return;
+  }
+  const dayBtn = event.target.closest("[data-schedule-day]");
+  if (dayBtn) {
+    state.focusedDayKey = dayBtn.dataset.scheduleDay;
+    render();
+    return;
+  }
+  const removeBtn = event.target.closest("[data-schedule-remove]");
+  if (removeBtn) {
+    const idx = parseInt(removeBtn.dataset.scheduleRemove, 10);
+    state.posts = state.posts.filter((_, i) => i !== idx);
+    state.slots = state.slots.filter((_, i) => i !== idx);
+    if (state.posts.length === 0) {
+      close();
+    } else {
+      render();
+    }
+    return;
+  }
   if (event.target.closest("[data-schedule-confirm]")) {
-    if (state.status === "scheduling") return; // ignore double-click
+    if (state.status === "scheduling") return;
     confirmSchedule();
   }
 }
 
-// FIND-D3: drive the confirm through a small async wrapper so we can:
-//   • disable the CTA + paint the spinner while it runs
-//   • catch a downstream onConfirm throw + surface an inline error
-//     with retry-able state instead of silently closing on success
-//
-// onConfirm may itself be async (a real publishing API). We treat it as
-// thenable to support both shapes.
 function confirmSchedule() {
   state.status = "scheduling";
   state.errorMessage = "";
   render();
 
   const slots = state.slots.map((s) => ({ postId: s.post.id, when: s.when }));
+
+  // Push into the live schedule queue so the calendar immediately
+  // reflects them on the next open. This happens before onConfirm
+  // because onConfirm may close the modal.
+  addToQueue(
+    state.slots.map((s) => ({
+      id: `q-${s.post.id}-${s.when}`,
+      network: s.post.network || "linkedin",
+      text: extractFirstLine(s.post),
+      when: s.when,
+    })),
+  );
+
   let result;
   try {
     result = state.onConfirm ? state.onConfirm(slots) : undefined;
@@ -177,6 +288,13 @@ function confirmSchedule() {
   } else {
     onConfirmSucceeded(slots);
   }
+}
+
+function extractFirstLine(post) {
+  const text = (post.preview || post.text || "").toString();
+  // post.text may be an array of paragraphs on real drafts.
+  if (Array.isArray(post.text) && post.text.length > 0) return post.text[0];
+  return text.split("\n")[0] || text;
 }
 
 function onConfirmSucceeded(slots) {
@@ -199,20 +317,26 @@ function onInput(event) {
     const ts = new Date(slotInput.value).getTime();
     if (!isNaN(ts)) {
       state.slots[idx] = { ...state.slots[idx], when: ts };
-      // Manual edit implies Manual mode (otherwise the slot would be
-      // recomputed on the next mode flip).
-      state.mode = "manual";
-      // Light repaint of just the active mode pill — avoid losing focus
-      // on the input the user is currently typing into.
-      syncModeOnly();
+      state.mode = "custom";
+      // Avoid a full repaint while the user is mid-edit — sync only the
+      // surfaces that should react (mode pill, focused day, calendar
+      // dot rebuild happens on the next interaction).
+      syncAfterSlotEdit(idx);
     }
   }
 }
 
-function syncModeOnly() {
+function syncAfterSlotEdit(idx) {
   document.querySelectorAll("[data-schedule-mode]").forEach((btn) => {
     btn.classList.toggle("is-on", btn.dataset.scheduleMode === state.mode);
+    btn.setAttribute("aria-selected", btn.dataset.scheduleMode === state.mode);
   });
+  // Repaint the slot label so the "scheduled for X" tag tracks.
+  const row = document.querySelector(`[data-schedule-row="${idx}"]`);
+  if (row) {
+    const label = row.querySelector(".schedule-modal__slot-when-label");
+    if (label) label.textContent = formatSlotLabel(state.slots[idx].when);
+  }
 }
 
 function render() {
@@ -232,39 +356,12 @@ function render() {
 
 function renderInner() {
   const n = state.posts.length;
-  const rows = state.slots
-    .map((s, i) => {
-      const network = s.post.network || "linkedin";
-      const text = (s.post.preview || s.post.text || "").toString();
-      const oneLine = text.split("\n")[0] || text;
-      return `
-        <div class="schedule-modal__slot">
-          <div class="schedule-modal__slot-when">
-            <input
-              type="datetime-local"
-              class="ap-input"
-              value="${toLocalInput(s.when)}"
-              data-schedule-slot="${i}"
-            />
-          </div>
-          <div class="schedule-modal__slot-post">
-            <div class="schedule-modal__slot-head">
-              <i class="${NETWORK_ICON[network] || "ap-icon-megaphone"}" aria-hidden="true"></i>
-              <span class="schedule-modal__slot-net">${NETWORK_NAME[network] || network}</span>
-            </div>
-            <div class="schedule-modal__slot-text">${escapeText(oneLine)}</div>
-          </div>
-        </div>
-      `;
-    })
-    .join("");
-
   return html`
     <header class="schedule-modal__head">
       <div>
         <div class="schedule-modal__title">Schedule ${n} ${n === 1 ? "draft" : "drafts"}</div>
         <div class="schedule-modal__sub">
-          Pick when each post should publish. Archie can spread them automatically across optimal times.
+          Pick when each post should publish. Archie can spread them automatically across optimal times per network.
         </div>
       </div>
       <button type="button" class="ap-icon-button transparent" data-schedule-close aria-label="Close (Esc)">
@@ -272,40 +369,12 @@ function renderInner() {
       </button>
     </header>
 
-    <div class="schedule-modal__modes" role="tablist">
-      <button
-        type="button"
-        class="schedule-modal__mode ${state.mode === "daily" ? "is-on" : ""}"
-        data-schedule-mode="daily"
-        role="tab"
-        aria-selected="${state.mode === "daily"}"
-      >
-        <span class="schedule-modal__mode-title">Daily</span>
-        <span class="schedule-modal__mode-sub">One per day, 9am</span>
-      </button>
-      <button
-        type="button"
-        class="schedule-modal__mode ${state.mode === "optimal" ? "is-on" : ""}"
-        data-schedule-mode="optimal"
-        role="tab"
-        aria-selected="${state.mode === "optimal"}"
-      >
-        <span class="schedule-modal__mode-title">Optimal times</span>
-        <span class="schedule-modal__mode-sub">When your audience is most active</span>
-      </button>
-      <button
-        type="button"
-        class="schedule-modal__mode ${state.mode === "manual" ? "is-on" : ""}"
-        data-schedule-mode="manual"
-        role="tab"
-        aria-selected="${state.mode === "manual"}"
-      >
-        <span class="schedule-modal__mode-title">Manual</span>
-        <span class="schedule-modal__mode-sub">Pick each time below</span>
-      </button>
+    <div class="schedule-modal__body schedule-modal__body--split">
+      <section class="schedule-modal__left" aria-label="Drafts to schedule">
+        ${raw(renderModePicker())} ${raw(renderSlotList())}
+      </section>
+      <aside class="schedule-modal__right" aria-label="Already scheduled">${raw(renderCalendarPanel())}</aside>
     </div>
-
-    <div class="schedule-modal__body">${raw(rows)}</div>
 
     ${state.status === "error"
       ? raw(`
@@ -346,6 +415,219 @@ function renderInner() {
       </div>
     </footer>
   `;
+}
+
+function renderModePicker() {
+  return `
+    <div class="schedule-modal__modes" role="tablist">
+      <button
+        type="button"
+        class="schedule-modal__mode ${state.mode === "optimal" ? "is-on" : ""}"
+        data-schedule-mode="optimal"
+        role="tab"
+        aria-selected="${state.mode === "optimal"}"
+      >
+        <span class="schedule-modal__mode-title">
+          <i class="ap-icon-sparkles" aria-hidden="true"></i>
+          Optimal times
+        </span>
+        <span class="schedule-modal__mode-sub">Spread across each network's best hours</span>
+      </button>
+      <button
+        type="button"
+        class="schedule-modal__mode ${state.mode === "custom" ? "is-on" : ""}"
+        data-schedule-mode="custom"
+        role="tab"
+        aria-selected="${state.mode === "custom"}"
+      >
+        <span class="schedule-modal__mode-title">
+          <i class="ap-icon-pen" aria-hidden="true"></i>
+          Custom
+        </span>
+        <span class="schedule-modal__mode-sub">Pick each time below</span>
+      </button>
+    </div>
+  `;
+}
+
+function renderSlotList() {
+  const rows = state.slots
+    .map((s, i) => {
+      const network = (s.post.network || "linkedin").toLowerCase();
+      const text = extractFirstLine(s.post);
+      return `
+        <div class="schedule-modal__slot" data-schedule-row="${i}">
+          <div class="schedule-modal__slot-post">
+            <div class="schedule-modal__slot-head">
+              <i class="${NETWORK_ICON[network] || "ap-icon-megaphone"}" aria-hidden="true"></i>
+              <span class="schedule-modal__slot-net">${NETWORK_NAME[network] || network}</span>
+              <span class="schedule-modal__slot-when-label">${escapeText(formatSlotLabel(s.when))}</span>
+            </div>
+            <div class="schedule-modal__slot-text">${escapeText(text)}</div>
+          </div>
+          <div class="schedule-modal__slot-when">
+            <input
+              type="datetime-local"
+              class="ap-input"
+              value="${toLocalInput(s.when)}"
+              data-schedule-slot="${i}"
+              aria-label="Scheduled time"
+            />
+            <button
+              type="button"
+              class="ap-icon-button transparent schedule-modal__slot-remove"
+              data-schedule-remove="${i}"
+              aria-label="Remove from batch"
+              title="Remove from batch"
+            >
+              <i class="ap-icon-close"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+  return `<div class="schedule-modal__slots">${rows}</div>`;
+}
+
+// ── Calendar (month grid) ─────────────────────────────────────────────
+function renderCalendarPanel() {
+  const month = state.calendarMonth;
+  const monthLabel = month.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const busy = busyCountsByDay();
+  const slotCounts = new Map();
+  for (const slot of state.slots) {
+    const k = dayKey(slot.when);
+    slotCounts.set(k, (slotCounts.get(k) || 0) + 1);
+  }
+  // Build the visible 6×7 grid starting at the Sunday before the 1st of
+  // the month so weeks render consistently.
+  const firstOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
+  const gridStart = new Date(firstOfMonth);
+  gridStart.setDate(gridStart.getDate() - gridStart.getDay()); // back to Sunday
+  const todayKey = dayKey(Date.now());
+
+  let cells = "";
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(gridStart);
+    d.setDate(d.getDate() + i);
+    const k = dayKey(d.getTime());
+    const inMonth = d.getMonth() === month.getMonth();
+    const isToday = k === todayKey;
+    const isFocused = k === state.focusedDayKey;
+    const existing = busy.get(k) || 0;
+    const queued = slotCounts.get(k) || 0;
+    const dotClass = queued > 0 ? "is-queued" : existing > 0 ? "is-existing" : "";
+    cells += `
+      <button
+        type="button"
+        class="schedule-modal__day ${inMonth ? "" : "is-out"} ${isToday ? "is-today" : ""} ${isFocused ? "is-focused" : ""}"
+        data-schedule-day="${k}"
+        aria-label="${d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })} — ${existing + queued} scheduled"
+      >
+        <span class="schedule-modal__day-num">${d.getDate()}</span>
+        ${existing + queued > 0 ? `<span class="schedule-modal__day-dot ${dotClass}"></span>` : ""}
+      </button>
+    `;
+  }
+
+  return `
+    <header class="schedule-modal__cal-head">
+      <button
+        type="button"
+        class="ap-icon-button transparent xs"
+        data-schedule-month="prev"
+        aria-label="Previous month"
+      >
+        <i class="ap-icon-chevron-left"></i>
+      </button>
+      <span class="schedule-modal__cal-title">${monthLabel}</span>
+      <button
+        type="button"
+        class="ap-icon-button transparent xs"
+        data-schedule-month="next"
+        aria-label="Next month"
+      >
+        <i class="ap-icon-chevron-right"></i>
+      </button>
+    </header>
+    <div class="schedule-modal__cal-dow" aria-hidden="true">
+      <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+    </div>
+    <div class="schedule-modal__cal-grid" role="grid">${cells}</div>
+    ${renderDayList()}
+  `;
+}
+
+function renderDayList() {
+  const key = state.focusedDayKey;
+  if (!key) return "";
+  const focusedDate = parseDayKey(key);
+  const heading = focusedDate.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+  const existing = getQueueOn(focusedDate.getTime());
+  const inThisBatch = state.slots
+    .filter((s) => dayKey(s.when) === key)
+    .map((s) => ({
+      id: `slot-${s.post.id}`,
+      network: (s.post.network || "linkedin").toLowerCase(),
+      text: extractFirstLine(s.post),
+      when: s.when,
+      isBatch: true,
+    }));
+
+  const combined = inThisBatch.concat(existing.map((e) => ({ ...e, isBatch: false }))).sort((a, b) => a.when - b.when);
+
+  if (combined.length === 0) {
+    return `
+      <div class="schedule-modal__day-list">
+        <div class="schedule-modal__day-list-head">${heading} <span class="muted">nothing scheduled</span></div>
+        <div class="schedule-modal__day-list-empty">No posts on this day — a good window to schedule.</div>
+      </div>
+    `;
+  }
+
+  const items = combined
+    .map((entry) => {
+      const network = entry.network || "linkedin";
+      return `
+        <li class="schedule-modal__day-item ${entry.isBatch ? "is-batch" : ""}">
+          <span class="schedule-modal__day-time">${formatTime(entry.when)}</span>
+          <i class="${NETWORK_ICON[network] || "ap-icon-megaphone"} schedule-modal__day-icon" aria-hidden="true"></i>
+          <span class="schedule-modal__day-text">${escapeText(entry.text)}</span>
+          ${entry.isBatch ? `<span class="ap-status orange no-dot schedule-modal__day-tag">This batch</span>` : ""}
+        </li>
+      `;
+    })
+    .join("");
+
+  return `
+    <div class="schedule-modal__day-list">
+      <div class="schedule-modal__day-list-head">
+        ${heading}
+        <span class="muted">${combined.length} scheduled</span>
+      </div>
+      <ul class="schedule-modal__day-list-items">${items}</ul>
+    </div>
+  `;
+}
+
+function parseDayKey(key) {
+  const [y, m, d] = key.split("-").map((n) => parseInt(n, 10));
+  return new Date(y, m - 1, d);
+}
+
+function formatTime(ts) {
+  return new Date(ts).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+function formatSlotLabel(ts) {
+  const d = new Date(ts);
+  const date = d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  return `· ${date} · ${formatTime(ts)}`;
 }
 
 function toLocalInput(ts) {

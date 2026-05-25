@@ -1,5 +1,5 @@
-/* Schedule modal — handoff §3.5. Centered 720px dialog with a soft scrim
-   behind. Header → 3-mode picker → per-post slot rows → footer. */
+/* Schedule modal — multi-draft scheduler with calendar context.
+   Wide variant: 960px, two-column body (slot rows + calendar/day list). */
 
 .schedule-modal__scrim {
   position: fixed;
@@ -24,6 +24,10 @@
   overflow: hidden;
 }
 
+.schedule-modal--wide {
+  width: min(960px, calc(100vw - var(--ref-spacing-xl)));
+}
+
 .schedule-modal__head {
   display: flex;
   align-items: flex-start;
@@ -46,19 +50,57 @@
   color: var(--ref-color-grey-80);
 }
 
+/* ── Body ────────────────────────────────────────────────────────────── */
+
+.schedule-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--ref-spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.schedule-modal__body--split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-md);
+  overflow: hidden; /* inner panels manage their own overflow */
+}
+
+.schedule-modal__left,
+.schedule-modal__right {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+}
+
+.schedule-modal__left {
+  overflow: hidden;
+}
+
+.schedule-modal__right {
+  border-left: 1px solid var(--app-border-soft);
+  padding-left: var(--ref-spacing-md);
+  overflow-y: auto;
+}
+
+/* ── Mode picker ────────────────────────────────────────────────────── */
+
 .schedule-modal__modes {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-md);
-  border-bottom: 1px solid var(--app-border-soft);
 }
 
 .schedule-modal__mode {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: var(--ref-spacing-xxxs);
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
@@ -81,37 +123,44 @@
 }
 
 .schedule-modal__mode-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-150);
 }
 
+.schedule-modal__mode-title i {
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-orange-100);
+}
+
 .schedule-modal__mode-sub {
-  font-size: 11px;
+  font-size: var(--ref-font-size-xs);
   color: var(--ref-color-grey-60);
 }
 
-.schedule-modal__body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  padding: var(--ref-spacing-md);
+/* ── Slot rows ──────────────────────────────────────────────────────── */
+
+.schedule-modal__slots {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-xxs);
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: var(--ref-spacing-xxs);
 }
 
 .schedule-modal__slot {
   display: grid;
-  grid-template-columns: 200px 1fr;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-xs);
+  align-items: center;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--app-radius-card);
-}
-
-.schedule-modal__slot-when input {
-  width: 100%;
+  background: var(--app-surface);
 }
 
 .schedule-modal__slot-post {
@@ -125,6 +174,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
+  flex-wrap: wrap;
 }
 
 .schedule-modal__slot-head i {
@@ -133,9 +183,14 @@
 }
 
 .schedule-modal__slot-net {
-  font-size: 11px;
+  font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-100);
+}
+
+.schedule-modal__slot-when-label {
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-60);
 }
 
 .schedule-modal__slot-text {
@@ -147,6 +202,192 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+.schedule-modal__slot-when {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.schedule-modal__slot-when input {
+  min-width: 200px;
+}
+
+/* ── Calendar ───────────────────────────────────────────────────────── */
+
+.schedule-modal__cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+}
+
+.schedule-modal__cal-title {
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+}
+
+.schedule-modal__cal-dow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--ref-spacing-xxxs);
+  text-align: center;
+  font-size: 11px;
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-60);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.schedule-modal__cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--ref-spacing-xxxs);
+}
+
+.schedule-modal__day {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--ref-radius-xs);
+  font-family: inherit;
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-150);
+  cursor: pointer;
+  transition: all var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.schedule-modal__day:hover,
+.schedule-modal__day:focus-visible {
+  border-color: var(--ref-color-grey-30);
+  background: var(--ref-color-grey-10);
+  outline: none;
+}
+
+.schedule-modal__day.is-out {
+  color: var(--ref-color-grey-40);
+}
+
+.schedule-modal__day.is-today {
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-orange-100);
+}
+
+.schedule-modal__day.is-focused {
+  background: var(--ref-color-orange-10);
+  border-color: var(--ref-color-orange-100);
+}
+
+.schedule-modal__day-num {
+  line-height: 1;
+}
+
+.schedule-modal__day-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ref-color-grey-60);
+}
+
+.schedule-modal__day-dot.is-existing {
+  background: var(--ref-color-blue-100);
+}
+
+.schedule-modal__day-dot.is-queued {
+  background: var(--ref-color-orange-100);
+}
+
+/* ── Day list (right column, below calendar) ───────────────────────── */
+
+.schedule-modal__day-list {
+  padding-top: var(--ref-spacing-xs);
+  border-top: 1px dashed var(--app-border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.schedule-modal__day-list-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xxs);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+}
+
+.schedule-modal__day-list-head .muted {
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-normal);
+  color: var(--ref-color-grey-60);
+}
+
+.schedule-modal__day-list-empty {
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-60);
+  padding: var(--ref-spacing-xs);
+  background: var(--ref-color-grey-10);
+  border-radius: var(--ref-radius-xs);
+}
+
+.schedule-modal__day-list-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.schedule-modal__day-item {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--ref-radius-xs);
+  font-size: var(--ref-font-size-xs);
+}
+
+.schedule-modal__day-item.is-batch {
+  border-color: var(--ref-color-orange-100);
+  background: var(--ref-color-orange-10);
+}
+
+.schedule-modal__day-time {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+  white-space: nowrap;
+}
+
+.schedule-modal__day-icon {
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-grey-100);
+}
+
+.schedule-modal__day-text {
+  color: var(--ref-color-grey-100);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-modal__day-tag {
+  white-space: nowrap;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
 
 .schedule-modal__foot {
   display: flex;
@@ -174,9 +415,7 @@
   margin: 0 var(--ref-spacing-md) var(--ref-spacing-xs);
 }
 
-/* Spinner shown inside the primary CTA while the confirm callback runs.
-   Same visual language as the other modal spinners (gen-image-spinner,
-   add-source__file-spinner). */
+/* Spinner shown inside the primary CTA while the confirm callback runs. */
 .schedule-modal__spinner {
   width: 14px;
   height: 14px;
@@ -190,5 +429,18 @@
 @keyframes schedule-modal__spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* Narrow viewport — stack columns. */
+@container (max-width: 720px) {
+  .schedule-modal__body--split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .schedule-modal__right {
+    border-left: 0;
+    border-top: 1px solid var(--app-border-soft);
+    padding-left: 0;
+    padding-top: var(--ref-spacing-md);
   }
 }
