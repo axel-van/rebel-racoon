@@ -15,7 +15,7 @@
 .session__assistant {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
-  background: var(--app-surface);
+  background: var(--app-bg);
   border-right: 1px solid var(--app-border-soft);
   overflow: hidden;
 }
@@ -839,20 +839,23 @@
 .session__composer {
   position: relative;
   padding: var(--ref-spacing-sm);
-  background: var(--app-surface);
+  background: var(--app-bg);
 }
 
 /* Fade the thread content into the composer surface as it scrolls past
    the visible bottom. The pseudo sits ABOVE the composer (bottom: 100%)
    so it overlaps the thread's bottom band, fading from fully-transparent
-   white to the composer's solid background. pointer-events: none keeps
+   to the composer's solid background. pointer-events: none keeps
    buttons in the underlying thread (cards, drafts, etc.) clickable
-   through the gradient. Use rgba(255,255,255,0) rather than `transparent`
-   to avoid Safari's grey midpoint when interpolating through black.
+   through the gradient. Use an explicit rgba() with the grey-bg RGB at
+   alpha 0 (not `transparent`) to avoid Safari's grey midpoint when
+   interpolating through black.
 
    Multi-stop ease-in curve (most of the dissolve happens in the bottom
    third) over 96px — softer than the previous straight linear ramp,
-   which felt like a hard edge halfway through. */
+   which felt like a hard edge halfway through.
+
+   249,249,250 = --ref-color-grey-bg (#F9F9FA). */
 .session__composer::before {
   content: "";
   position: absolute;
@@ -862,11 +865,11 @@
   height: 96px;
   background: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.05) 25%,
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0.55) 75%,
-    rgba(255, 255, 255, 1) 100%
+    rgba(249, 249, 250, 0) 0%,
+    rgba(249, 249, 250, 0.05) 25%,
+    rgba(249, 249, 250, 0.2) 50%,
+    rgba(249, 249, 250, 0.55) 75%,
+    rgba(249, 249, 250, 1) 100%
   );
   pointer-events: none;
 }
