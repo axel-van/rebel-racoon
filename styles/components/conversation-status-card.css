@@ -4,17 +4,16 @@
    on the root <aside> when conditions aren't met (off-route, panel open,
    nothing to surface). */
 
-/* Outer column — fills grid cell (row 2, col 3) with white surface so
-   the shell's grey bg never bleeds into the area around the card.
-   No border — the column reads as a continuous extension of the chat
-   panel; only the inner card carries the visual chrome. */
+/* Outer column — fills grid cell (row 2, col 3) with the grey canvas
+   tone so it reads as a continuous extension of the chat panel. Only
+   the inner card carries the visual chrome (white surface + shadow). */
 .conversation-status-column {
   grid-row: 2;
   grid-column: 3;
   min-height: 0;
   overflow: hidden;
   padding: var(--ref-spacing-md);
-  background: var(--app-surface);
+  background: var(--app-bg);
 }
 
 .conversation-status-column[hidden] {
