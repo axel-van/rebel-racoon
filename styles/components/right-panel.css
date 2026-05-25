@@ -445,39 +445,9 @@
   gap: var(--ref-spacing-md);
 }
 
-/* Each pinned / unpinned bucket — small header (pin icon + label +
-   count) on top of its grid of cards. Section stays full-width even
-   when the grid switches to 2 columns. */
-.rpanel-ideas__section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-}
-
-.rpanel-ideas__section-head {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-80);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.rpanel-ideas__section-head .ap-icon-pin {
-  color: var(--ref-color-orange-100);
-  font-size: var(--sys-icon-css-sm);
-}
-
-.rpanel-ideas__section-count {
-  color: var(--ref-color-grey-60);
-  font-weight: var(--ref-font-weight-regular);
-}
-
 /* Card grid — always one column. We tried a 2-col breakpoint at wide
    panel widths but each card carries too much chrome (kind badge,
-   source, pin link, title, body, "Why this idea" toggle, Draft CTA,
+   source, "Why this idea" tooltip, title, body, tags, Draft CTA,
    more menu) to read cleanly side-by-side. Keeping one card per row
    trades horizontal density for vertical clarity. */
 .rpanel-ideas__grid {
@@ -546,18 +516,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* Pin affordance — text link instead of an icon-only button so the
-   action reads at a glance ("Pin" / "Unpin"). Pinned cards still get
-   the orange accent via the link color flip so the state is visible
-   without needing to read the label. */
-.ap-link.rpanel-ideas__pin {
-  flex: 0 0 auto;
-}
-
-.ap-link.rpanel-ideas__pin[aria-pressed="true"] {
-  color: var(--ref-color-orange-100);
 }
 
 .rpanel-ideas__kind {

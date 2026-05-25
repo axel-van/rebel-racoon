@@ -672,16 +672,6 @@ export function init() {
       renderPanel();
       return;
     }
-    // Pin / unpin an idea — mutates the idea object in the shared mocks
-    // module so the dashboard's full card sees the same state on next
-    // open. Repaints the card header in place to keep the pin button
-    // focused (Tab order would otherwise reset to the top).
-    const pinBtn = event.target.closest("[data-rpanel-pin-idea]");
-    if (pinBtn) {
-      const id = pinBtn.dataset.rpanelPinIdea;
-      toggleIdeaPinned(id);
-      return;
-    }
     // More menu trigger — closes any other open menu first, then flips
     // hidden on the target one. Outside-click + Escape close it.
     const moreBtn = event.target.closest("[data-rpanel-ideas-more]");
@@ -1862,38 +1852,7 @@ function renderIdeasList() {
     `;
   }
 
-  // Pinned cards bubble to the top as their own section so the user
-  // doesn't have to hunt them down once the list grows. Unpinned cards
-  // sit below under "All ideas". Skip the section chrome entirely when
-  // there are no pinned ideas so the panel reads as a flat grid.
-  const pinned = sorted.filter((i) => i.pinned);
-  const rest = sorted.filter((i) => !i.pinned);
-  const renderGrid = (items) =>
-    `<div class="rpanel-ideas__grid">${items.map((i) => renderIdeaCompact(i)).join("")}</div>`;
-
-  if (pinned.length === 0) return renderGrid(rest);
-
-  return `
-    <section class="rpanel-ideas__section">
-      <header class="rpanel-ideas__section-head">
-        <i class="ap-icon-pin"></i>
-        <span class="rpanel-ideas__section-label">Pinned</span>
-        <span class="rpanel-ideas__section-count">${pinned.length}</span>
-      </header>
-      ${renderGrid(pinned)}
-    </section>
-    ${
-      rest.length > 0
-        ? `<section class="rpanel-ideas__section">
-            <header class="rpanel-ideas__section-head">
-              <span class="rpanel-ideas__section-label">All ideas</span>
-              <span class="rpanel-ideas__section-count">${rest.length}</span>
-            </header>
-            ${renderGrid(rest)}
-          </section>`
-        : ""
-    }
-  `;
+  return `<div class="rpanel-ideas__grid">${sorted.map((i) => renderIdeaCompact(i)).join("")}</div>`;
 }
 
 function renderIdeasBodyOnly() {
@@ -1901,28 +1860,11 @@ function renderIdeasBodyOnly() {
   if (body) body.innerHTML = renderIdeasList();
 }
 
-// ── Card-level helpers — pin / more / copy / dismiss ────────────────
+// ── Card-level helpers — more / copy / dismiss ──────────────────────
 //
-// All mutate either local state (dismissedIdeaIds) or the shared idea
-// object (pinned). Pin moves the card between sections, so we just
-// re-render the body. Dismiss reshapes the list (including the kind
-// filter counts) — also re-render.
-
-function toggleIdeaPinned(id) {
-  const idea = IDEAS.find((i) => i.id === id);
-  if (!idea) return;
-  const nextPinned = !idea.pinned;
-  idea.pinned = nextPinned;
-  // Pinned cards live in their own top section now, so flipping the
-  // state moves the card between sections — repaint the whole list
-  // rather than try to mutate header chrome in place.
-  renderIdeasBodyOnly();
-  import("./toast.js").then(({ showToast }) =>
-    showToast(nextPinned ? "Idea pinned" : "Idea unpinned", {
-      action: { label: "Undo", onClick: () => toggleIdeaPinned(id) },
-    }),
-  );
-}
+// Mutate local state (dismissedIdeaIds) and re-render. Dismiss reshapes
+// the list (including the kind filter counts) so we run a full panel
+// render rather than a body-only patch.
 
 function toggleIdeaMoreMenu(triggerBtn) {
   const wrap = triggerBtn.closest(".rpanel-ideas__more-wrap");
@@ -1983,7 +1925,6 @@ bindRpanelIdeasGlobals();
 
 function renderIdeaCompact(idea) {
   const kind = idea.kind || "insight";
-  const isPinned = !!idea.pinned;
   const sourceLabel = idea.ref || "Generated";
   const tags = (idea.tags || [])
     .slice(0, 3)
@@ -2002,7 +1943,7 @@ function renderIdeaCompact(idea) {
     : "";
 
   return `
-    <article class="rpanel-ideas__card" data-idea-id="${escapeAttr(idea.id)}"${isPinned ? ' data-pinned="true"' : ""}>
+    <article class="rpanel-ideas__card" data-idea-id="${escapeAttr(idea.id)}">
       <header class="rpanel-ideas__card-head">
         <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${kind}</span>
         <span class="rpanel-ideas__source" title="${escapeAttr(sourceLabel)}">
@@ -2010,14 +1951,6 @@ function renderIdeaCompact(idea) {
           <span class="rpanel-ideas__source-text">${escapeText(sourceLabel)}</span>
         </span>
         ${infoBubble}
-        <button
-          type="button"
-          class="ap-link small standalone rpanel-ideas__pin"
-          data-rpanel-pin-idea="${escapeAttr(idea.id)}"
-          aria-pressed="${isPinned}"
-        >
-          ${isPinned ? "Unpin" : "Pin"}
-        </button>
       </header>
       ${idea.title ? `<h4 class="rpanel-ideas__card-title">${escapeText(idea.title)}</h4>` : ""}
       <p class="rpanel-ideas__card-body">${escapeText(idea.body || "")}</p>
