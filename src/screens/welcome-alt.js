@@ -14,6 +14,12 @@
 import { navigate } from "../router.js?v=30";
 import { setHandoff } from "../handoff.js?v=20";
 
+// Mock URL — the brand site is supposed to be collected by an earlier
+// step that lives outside the prototype. We hardcode a believable value
+// here so the conversational entry feels like a continuation, not the
+// first beat. Matches the "NS" brand initials used by askAltProfile.
+const PREFILLED_URL = "https://nicesoap.com";
+
 export function renderWelcomeAlt(_params, _target) {
   document.body.classList.add("onboarding");
   const sid = `welcome-alt-${Date.now().toString(36)}`;
@@ -21,6 +27,7 @@ export function renderWelcomeAlt(_params, _target) {
     returnTo: "/",
     finishMode: "switch-to-returning",
     flow: "alt",
+    prefilledUrl: PREFILLED_URL,
   });
   navigate(`/session/${sid}`);
   return () => {};

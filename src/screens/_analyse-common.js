@@ -113,6 +113,7 @@ export function renderPicker(picker) {
     items = [],
     handler,
     customPlaceholder = null,
+    customValue = "",
     customHandler = null,
     multi = false,
     submitLabel = "Continue",
@@ -195,6 +196,7 @@ export function renderPicker(picker) {
           type="text"
           class="analyse__option-input"
           placeholder="${customPlaceholder}"
+          value="${customValue}"
           data-${customHandler || handler}-custom
           aria-label="${customPlaceholder}"
         />

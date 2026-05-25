@@ -1598,32 +1598,13 @@ body.hide-playbook-colors .context-brief__hero-color {
   border-radius: var(--ref-border-radius-md);
 }
 
-/* Header row — chevron (folds the whole zone) + small megaphone icon
-   + h3 title. Sticks to a single 32px-ish row so it reads like a
-   collapsible section header, not a heavy hero. */
+/* Header row — small megaphone icon + h3 title. Sits at the top of
+   the grey container as a section label; no chevron, no collapse —
+   the voice profile flows inline like the other brief zones. */
 .context-brief__voice-header {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xs);
-}
-
-.context-brief__voice-collapse {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  color: var(--ref-color-grey-100);
-  border-radius: var(--ref-border-radius-sm);
-  flex-shrink: 0;
-}
-
-.context-brief__voice-collapse:hover {
-  background: var(--ref-color-grey-10);
+  gap: var(--ref-spacing-xxs);
 }
 
 .context-brief__voice-icon {
@@ -1760,12 +1741,6 @@ body.hide-playbook-colors .context-brief__hero-color {
 
 .context-brief__vp-body.is-empty {
   color: var(--ref-color-grey-80);
-}
-
-/* Collapsed state — hide everything except the header row. */
-.context-brief__voice-feature.is-collapsed {
-  padding-bottom: var(--ref-spacing-xs);
-  padding-top: var(--ref-spacing-xs);
 }
 
 /* Image Voice — Brand visual identity card. Read-only in V1 (values come

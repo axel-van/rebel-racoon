@@ -29,6 +29,7 @@
 //   defaultSelected   array   — values to render pre-selected (multi mode only)
 //   submitLabel       string  — multi-select submit button label (default "Continue")
 //   customPlaceholder string  — when set, render a free-text option row
+//   customValue       string  — initial value for the free-text input (pre-fill)
 //   customFile        bool    — when true, render a dropzone row instead of a text input
 //   customFileAccept  string  — accept attribute for the dropzone <input type=file>
 //   customFileLabel   string  — primary label on the dropzone row
@@ -40,7 +41,7 @@
 //   onSkip()          fn      — called when Skip / Esc; if omitted, no skip btn
 //   onBack()          fn      — called when ← Back is clicked; if omitted, no back btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=30";
+import { chatTurn } from "./screens/_analyse-common.js?v=31";
 
 const states = new Map(); // sessionId → opts
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -148,6 +149,7 @@ export function renderChrome(sessionId) {
     skipLabel: s.onSkip ? s.skipLabel || "Skip" : null,
     showBack: !!s.onBack,
     customPlaceholder: s.customPlaceholder || null,
+    customValue: s.customValue || "",
     customFile: s.customFile === true,
     customFileAccept: s.customFileAccept || "",
     customFileLabel: s.customFileLabel || "Drop a file here, or click to browse",

@@ -12,8 +12,8 @@
 //     swap. No-op if no wizard is active.
 
 import * as sidebarWizard from "../../sidebar-wizard.js?v=32";
-import * as inlineQuestion from "../../inline-question.js?v=26";
-import { bindWizardKeyboard, unbindWizardKeyboard } from "../_analyse-common.js?v=30";
+import * as inlineQuestion from "../../inline-question.js?v=27";
+import { bindWizardKeyboard, unbindWizardKeyboard } from "../_analyse-common.js?v=31";
 
 export function rebindWizardKeyboard(aside, sessionId) {
   if (!aside) return;

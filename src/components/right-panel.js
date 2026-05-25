@@ -301,22 +301,19 @@ function setMode(mode) {
 let contextBriefConfig = null;
 
 // Voice-profile UI state — survives the brief panel's frequent
-// re-renders triggered by `refreshContextBriefPanel`. `voiceProfileCollapsed`
-// folds the whole nested zone (chevron toggle in the header);
-// `voiceProfileExpanded` is a Set of subsection ids whose body has
-// been expanded past the ~140-char snippet via the per-card "Show more"
-// link. Module-local so the state doesn't bleed into the persisted Context.
+// re-renders triggered by `refreshContextBriefPanel`. Tracks the set
+// of subsection ids whose body has been expanded past the ~140-char
+// snippet via the per-card "Show more" link. Module-local so the
+// state doesn't bleed into the persisted Context.
 const voiceProfileExpanded = new Set();
-let voiceProfileCollapsed = false;
 
 export function openContextBriefPanel(config = {}) {
   const prev = state.mode;
   if (prev === null) resetPanelWidthOverride();
   contextBriefConfig = { mode: "edit", ...config };
-  // Fresh open — collapse all expanded snippets and uncollapse the zone
-  // so the user lands on a clean overview.
+  // Fresh open — collapse all expanded snippets so the user lands on
+  // a clean overview.
   voiceProfileExpanded.clear();
-  voiceProfileCollapsed = false;
   state = { ...state, mode: "context-brief" };
   maybeCollapseSidebarOnOpen(prev);
   renderPanel();
@@ -715,13 +712,6 @@ export function init() {
       const id = briefVoiceToggle.dataset.briefVoiceToggle;
       if (voiceProfileExpanded.has(id)) voiceProfileExpanded.delete(id);
       else voiceProfileExpanded.add(id);
-      refreshContextBriefPanel?.();
-      return;
-    }
-    // Voice profile: chevron in the zone header folds/unfolds the
-    // whole nested zone (headline pill + all sub-cards).
-    if (event.target.closest("[data-brief-voice-card-toggle]")) {
-      voiceProfileCollapsed = !voiceProfileCollapsed;
       refreshContextBriefPanel?.();
       return;
     }
@@ -2761,7 +2751,6 @@ function renderBriefVoiceProfile(d, isRead) {
 
   const tones = Array.isArray(d?.tones) ? d.tones.filter(Boolean) : [];
   const headline = vp.headline || (tones.length ? tones.join(" · ").toLowerCase() : "");
-  const collapsed = voiceProfileCollapsed;
 
   // Per-card refine routes through the same handler as the hover-Refine
   // pill on other zones — playbookEditor reads the field id and opens
@@ -2852,28 +2841,13 @@ function renderBriefVoiceProfile(d, isRead) {
     .join("");
 
   return `
-    <section class="context-brief__voice-feature ${collapsed ? "is-collapsed" : ""}" aria-label="Voice profile">
+    <section class="context-brief__voice-feature" aria-label="Voice profile">
       <header class="context-brief__voice-header">
-        <button
-          type="button"
-          class="context-brief__voice-collapse"
-          data-brief-voice-card-toggle
-          aria-expanded="${collapsed ? "false" : "true"}"
-          aria-label="${collapsed ? "Expand voice profile" : "Collapse voice profile"}"
-        >
-          <i class="ap-icon-chevron-${collapsed ? "right" : "down"}"></i>
-        </button>
         <i class="ap-icon-megaphone context-brief__voice-icon"></i>
         <h3 class="context-brief__voice-title">Voice profile</h3>
       </header>
-      ${
-        collapsed
-          ? ""
-          : `
-            ${headlinePill}
-            <div class="context-brief__vp-sections">${subSectionHtml}</div>
-          `
-      }
+      ${headlinePill}
+      <div class="context-brief__vp-sections">${subSectionHtml}</div>
     </section>
   `;
 }

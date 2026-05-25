@@ -45,6 +45,51 @@
   margin: 0 auto;
 }
 
+/* First Time User ALT — marketing hero rendered at the top of the
+   wizard chat for /session/welcome-alt-* sessions. The inner
+   .welcome-hero (welcome.css) owns the flex column, gap, alignment,
+   and 520px reading width. This wrapper only handles the outer
+   column width (matches .analyse__chat-inner so the hero left edge
+   aligns with the conversation avatars) and the breathing room
+   above/below. */
+.welcome-alt-hero {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--ref-spacing-xl) 0 var(--ref-spacing-md);
+  flex-shrink: 0;
+}
+
+/* Subtle decorative canvas for the welcome-alt session — soft warm
+   blob top-right + cool blob bottom-left, same recipe as
+   `.welcome-screen__bg` on the linear /welcome surface. Keeps the
+   conversation bottom-anchored (default `.analyse__chat-inner`
+   behavior) but stops the empty space above the conversation from
+   feeling austere. Scoped via :has() so it only paints when the
+   marketing hero is present. Uses the lightest defined tints
+   (--ref-color-orange-10 + --ref-color-electric-blue-05) — note
+   `--ref-color-orange-05` is not defined in the DS. */
+.session__assistant--wizard:has(.welcome-alt-hero) {
+  background:
+    radial-gradient(ellipse 60% 50% at 100% 0%, var(--ref-color-orange-10) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 0% 100%, var(--ref-color-electric-blue-05) 0%, transparent 70%),
+    var(--app-surface);
+}
+
+/* The wizard chat renders the thread inside `<div data-assistant-thread>`
+   so the assistant subscriber can repaint it without nuking
+   `chrome.body`. That wrapper is a plain block by default, which means
+   chat-turn--user's `align-self: flex-end` (chat.css) has no effect and
+   user bubbles end up clipped to their 560px max-width at the LEFT of
+   the column. Making the wrapper a flex column restores the same
+   right-aligned bubble behavior as `.session__assistant-thread` in the
+   regular session view. */
+.analyse__chat-inner > [data-assistant-thread] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+}
+
 /* Wizard mode — same panel, two rows: scrollable chat + sticky picker bar.
    Reuses the .analyse__chat and .analyse__sticky-bar rules from analyse.css
    (which already work in any flex column container) and just constrains
@@ -826,11 +871,6 @@
   pointer-events: none;
 }
 
-/* Composer card — wraps the input + toolbar as one visually distinct
-   surface that sits above the chat. grey-05 fill + 1px grey-10 border
-   matches Figma 278:1852 (ref-border-radius-md, no padding — inner
-   sections own their own spacing). The hint row sits OUTSIDE this
-   card so it floats under the card surface. */
 /* Composer card — single flat white surface wrapping the textarea and
    the toolbar chip row. The hint row sits OUTSIDE this card so it
    floats under the card surface. Inner padding gives the textarea +
