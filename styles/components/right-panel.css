@@ -409,15 +409,35 @@
   color: var(--ref-color-grey-60);
 }
 
+/* ── Idea card — 3-zone layout ────────────────────────────────────────
+   The card is split into three horizontally-aligned bands so each
+   slot owns a single concept type and stops competing for attention:
+
+     1. .rpanel-ideas__card-meta      — classification + provenance
+     2. .rpanel-ideas__card-content   — title + body + tags (the hero)
+     3. .rpanel-ideas__card-actions   — feedback + primary CTA
+
+   The card itself owns padding only on the vertical edges; each zone
+   handles its own horizontal inset so the actions band can carry a
+   full-width top border without a side gap. */
 .rpanel-ideas__card {
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--app-radius-card);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-  transition: border-color var(--ref-animation-short) var(--app-ease-out);
+  /* Overflow stays visible so the info tooltip can escape the card
+     bounds. Inner zones (meta + actions) own their own rounded
+     corners so the tinted band still respects the card's outer
+     radius without needing overflow: hidden. */
+  transition:
+    border-color var(--ref-animation-short) var(--app-ease-out),
+    box-shadow var(--ref-animation-short) var(--app-ease-out);
+}
+
+.rpanel-ideas__card:hover {
+  border-color: var(--ref-color-grey-40);
+  box-shadow: var(--app-shadow-card-hover, 0 2px 6px rgba(0, 0, 0, 0.04));
 }
 
 /* Pulse highlight applied when the user clicks a composer pill's
@@ -428,24 +448,24 @@
   border-color: var(--ref-color-electric-blue-100);
 }
 
-/* Card header — kind badge anchored left, info icon to its right
-   (pushed to the right edge by the auto-margin on the info wrapper).
-   Source moved to the footer so the header reads as "what kind of
-   idea + why" only. */
-.rpanel-ideas__card-head {
+/* Zone 1 — meta band. Kind tag anchored left, source label flex-grows
+   with single-line ellipsis, info icon hugs the right edge. Background
+   tint distinguishes it from the white content band. */
+.rpanel-ideas__card-meta {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  min-height: 24px;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  background: var(--ref-color-grey-05);
+  border-bottom: 1px solid var(--app-border-soft);
+  /* Match the card's outer top radius so the tinted band still
+     looks clipped to the card silhouette without forcing
+     overflow: hidden on the card itself (which would clip the
+     info tooltip rendered above the icon). */
+  border-top-left-radius: var(--app-radius-card);
+  border-top-right-radius: var(--app-radius-card);
 }
 
-.rpanel-ideas__card-head .rpanel-ideas__info {
-  margin-left: auto;
-}
-
-/* Source chip — file icon + truncating label. Sits in the footer at
-   the left, opposite the Draft button. Takes all remaining horizontal
-   space so the Draft + more menu stay anchored right. */
 .rpanel-ideas__source {
   flex: 1 1 0;
   min-width: 0;
@@ -454,13 +474,13 @@
   gap: var(--ref-spacing-xxxs);
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-regular);
-  color: var(--ref-color-grey-60);
+  color: var(--ref-color-grey-80);
 }
 
 .rpanel-ideas__source i {
   flex: 0 0 auto;
   font-size: var(--sys-icon-css-xs);
-  color: var(--ref-color-grey-40);
+  color: var(--ref-color-grey-60);
 }
 
 .rpanel-ideas__source-text {
@@ -470,6 +490,7 @@
 }
 
 .rpanel-ideas__kind {
+  flex: 0 0 auto;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-size: var(--ref-font-size-xs);
@@ -507,12 +528,22 @@
   border: 1px solid var(--comp-tag-green-border-color);
 }
 
+/* Zone 2 — content block. Hero typography: title (md, bold) is the
+   visual anchor; body sits under it as supporting text; tags wrap
+   below as compact descriptors. Single vertical rhythm via gap. */
+.rpanel-ideas__card-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
+}
+
 .rpanel-ideas__card-title {
   margin: 0;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--ref-font-size-md);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-150);
-  line-height: 1.3;
+  line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -522,23 +553,54 @@
 .rpanel-ideas__card-body {
   margin: 0;
   font-size: var(--ref-font-size-xs);
-  line-height: 1.45;
-  color: var(--ref-color-grey-80);
+  line-height: 1.5;
+  color: var(--ref-color-grey-100);
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* Expanded state — body uncaps so the full text is visible. The title
-   already wraps at 2 lines max in collapsed form; that's enough — we
-   don't need to re-flow it. */
-.rpanel-ideas__card[data-expanded="true"] .rpanel-ideas__card-body {
-  -webkit-line-clamp: unset;
-  display: block;
+/* Tag chips — small inline descriptors at the bottom of the content
+   block. Single-line wrap so 3+ tags flow gracefully on narrow widths. */
+.rpanel-ideas__tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxxs);
+  margin-top: var(--ref-spacing-xxxs);
 }
 
-/* "Why this idea" affordance — a small info icon in the card header
+.rpanel-ideas__tag {
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-80);
+}
+
+/* Zone 3 — action bar. Feedback (secondary, left) opposite the
+   primary Draft CTA (right). Top border anchors it as a distinct
+   "act on this idea" zone, separated from the content above. */
+.rpanel-ideas__card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border-top: 1px solid var(--app-border-soft);
+}
+
+.rpanel-ideas__feedback {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+}
+
+/* Individual thumb button — DS .ap-icon-button.transparent.sm
+   provides the chrome (size, hover surface). We only add an
+   active-state color flip when the user has picked that side. */
+.rpanel-ideas__thumb.is-active i {
+  color: var(--ref-color-electric-blue-100);
+}
+
+/* "Why this idea" affordance — a small info icon in the meta band
    that reveals the rationale in a DS .ap-tooltip on hover/focus. The
    wrapper is position: relative so the tooltip can absolute-position
    above it without escaping the card. Hidden by default; revealed by
@@ -568,8 +630,7 @@
 .ap-tooltip.rpanel-ideas__info-tip {
   display: none;
   bottom: calc(100% + var(--ap-arrow-height, 8px));
-  left: 50%;
-  transform: translateX(-50%);
+  right: 0;
   width: max-content;
   min-width: 220px;
   max-width: 280px;
@@ -580,48 +641,6 @@
 .rpanel-ideas__info:hover .rpanel-ideas__info-tip,
 .rpanel-ideas__info:focus-visible .rpanel-ideas__info-tip {
   display: block;
-}
-
-/* Tags row — hidden in the collapsed state to save vertical space;
-   revealed alongside the rationale block when the card expands. */
-.rpanel-ideas__tag-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxxs);
-}
-
-.rpanel-ideas__tag-row[hidden] {
-  display: none;
-}
-
-.rpanel-ideas__tag {
-  font-size: var(--ref-font-size-xs);
-  color: var(--ref-color-grey-80);
-}
-
-.rpanel-ideas__card-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ref-spacing-xs);
-  margin-top: var(--ref-spacing-xxxs);
-}
-
-/* Thumbs feedback cluster — grouped inside the card header, sits to
-   the right of the info icon. Spacing is tight so the two thumb
-   buttons feel like a single binary control rather than two separate
-   actions. */
-.rpanel-ideas__feedback {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-}
-
-/* Individual thumb button — DS .ap-icon-button.transparent.sm
-   provides the chrome (size, hover surface). We only add an
-   active-state color flip when the user has picked that side. */
-.rpanel-ideas__thumb.is-active i {
-  color: var(--ref-color-electric-blue-100);
 }
 
 /* Honour the user's motion preference — collapse hover transitions. */
