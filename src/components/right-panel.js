@@ -13,7 +13,7 @@ import {
   updatePostContent,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=26";
-import { renderPostCard } from "./post-card.js?v=26";
+import { renderPostCard } from "./post-card.js?v=27";
 import { renderClipCard } from "./clip-card.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=2";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=41";
@@ -449,6 +449,10 @@ export function init() {
     }
     const scheduleBtn = event.target.closest("[data-post-schedule]");
     if (scheduleBtn) {
+      // The Edit affordance on the scheduled status-card renders as an
+      // <a href="#"> per DS pattern — swallow the default so the URL
+      // hash doesn't get dirtied when it's clicked.
+      if (scheduleBtn.tagName === "A") event.preventDefault();
       onPostSchedule(scheduleBtn.dataset.postSchedule);
       return;
     }

@@ -330,14 +330,14 @@ function renderPostScheduled(post) {
       <div class="upper">
         <i class="ap-icon-calendar" aria-hidden="true"></i>
         <div class="flow"><span>Scheduled</span> ${when}</div>
-        <button
-          type="button"
-          class="ap-link small"
+        <a
+          class="ap-link small standalone"
+          href="#"
           data-post-schedule="${post.id}"
           aria-label="Edit scheduled time"
         >
           Edit
-        </button>
+        </a>
       </div>
     </div>
   `;
