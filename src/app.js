@@ -1,6 +1,6 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=3";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=52";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=53";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=42";
 import { init as initRightPanel } from "./components/right-panel.js?v=70";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=24";

@@ -17,6 +17,7 @@ import {
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=30";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=31";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=28";
+import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=26";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
@@ -193,6 +194,7 @@ export function initTopbar() {
   let unsubscribeThread = null;
   let unsubscribeSources = null;
   let unsubscribeLibrary = null;
+  let unsubscribePosts = null;
   function syncThreadSubscription() {
     const sid = currentSessionId();
     if (sid === lastSessionId) return;
@@ -208,11 +210,16 @@ export function initTopbar() {
       unsubscribeLibrary();
       unsubscribeLibrary = null;
     }
+    if (unsubscribePosts) {
+      unsubscribePosts();
+      unsubscribePosts = null;
+    }
     lastSessionId = sid;
     if (sid) {
       unsubscribeThread = subscribeThread(sid, () => renderTopbar());
       unsubscribeSources = subscribeSources(sid, () => renderTopbar());
       unsubscribeLibrary = subscribeLibrary(sid, () => renderTopbar());
+      unsubscribePosts = subscribePosts(sid, () => renderTopbar());
     }
   }
   syncThreadSubscription();
@@ -325,12 +332,20 @@ function sessionIdeaCount() {
   return getIdeas(sid).length;
 }
 
-// Resolve the latest draft message in the active session (if any) and return
-// its count. Used to show the badge on the Drafts pill so the user has a
-// visible cue that drafts are waiting in the panel even when it's closed.
+// Count of drafts available in the active session's Drafts panel.
+// Sources, in order:
+//   1. posts-store — the canonical store the right-panel Drafts feed
+//      reads from. Includes seeded mock drafts AND anything the user
+//      drafted in this session, regardless of whether an assistant
+//      "Drafted N posts" turn was ever posted.
+//   2. The latest variant:"draft" assistant turn — kept as a fallback
+//      so flows that post the turn before the store is populated
+//      still light up the pill.
 function latestDraftCount() {
   const sessionId = currentSessionId();
   if (!sessionId) return 0;
+  const storeCount = getPosts(sessionId).length;
+  if (storeCount > 0) return storeCount;
   const thread = getThread(sessionId);
   const latestDraft = [...thread].reverse().find((m) => m.variant === "draft");
   if (!latestDraft) return 0;
