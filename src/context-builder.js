@@ -20,8 +20,8 @@
 // contexts that may still have the old shape.
 
 import * as inlineQuestion from "./inline-question.js?v=26";
-import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=32";
-import * as rightPanel from "./components/right-panel.js?v=71";
+import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=35";
+import * as rightPanel from "./components/right-panel.js?v=74";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=28";
 import { analyzeWebsite, analyzeDocument } from "./context-mock-analysis.js?v=21";
 import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=9";

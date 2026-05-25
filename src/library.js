@@ -21,7 +21,7 @@ import { isNewUser } from "./user-mode.js?v=21";
 // conversations (created at runtime via "+ New conversation") start empty
 // to match the user's mental model. Anything else looked-up — same path.
 const DEMO_SESSION_IDS = new Set(seedRecentSessions.map((s) => s.id));
-import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=32";
+import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=35";
 import {
   getSources as streamGetSources,
   subscribeSources,

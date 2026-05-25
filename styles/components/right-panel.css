@@ -456,10 +456,10 @@
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--app-radius-card);
-  padding: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xxxs);
   transition: border-color var(--ref-animation-short) var(--app-ease-out);
 }
 
@@ -471,72 +471,48 @@
   border-color: var(--ref-color-electric-blue-100);
 }
 
-/* Signals row — kind badge, confidence pill, spacer, optional New
-   status, Used label, Pin button. The spacer absorbs free space so the
-   right-side cluster stays anchored even when one of the optional
-   pieces (confidence, New pill) is absent. */
+/* Card header — three logical slots: kind badge (fixed), source chip
+   (flex, ellipsis), pin button (fixed). Stays single-line at any panel
+   width — the source text truncates first. */
 .rpanel-ideas__card-head {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xs);
+  min-height: 24px;
 }
 
-.rpanel-ideas__head-spacer {
-  flex: 1 1 auto;
-}
-
-/* Confidence pill — left-aligned next to the kind badge. The dot is the
-   accessibility-friendly visual cue (colour-blind users still see the
-   numeric score). */
-.rpanel-ideas__confidence {
+/* Source chip — file icon + truncating label, sits between the kind
+   badge and the pin button. Takes all remaining horizontal space so the
+   pin stays anchored right. Single line with ellipsis when narrow. */
+.rpanel-ideas__source {
+  flex: 1 1 0;
+  min-width: 0;
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
-  padding: 0 var(--ref-spacing-xxs);
-  border-radius: var(--app-radius-pill);
-  font-size: var(--app-text-micro-sm);
-  font-weight: var(--ref-font-weight-bold);
-  font-variant-numeric: tabular-nums;
-  line-height: 1.7;
-  background: var(--ref-color-grey-05);
-  color: var(--ref-color-grey-100);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-regular);
+  color: var(--ref-color-grey-60);
 }
 
-.rpanel-ideas__confidence-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  display: inline-block;
+.rpanel-ideas__source i {
+  flex: 0 0 auto;
+  font-size: var(--sys-icon-css-xs);
+  color: var(--ref-color-grey-40);
 }
 
-.rpanel-ideas__confidence[data-tier="high"] {
-  background: var(--sys-color-success-light-bg);
-  color: var(--sys-color-success-light-text);
+.rpanel-ideas__source-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.rpanel-ideas__confidence[data-tier="mid"] {
-  background: var(--ref-color-orange-10);
-  color: var(--ref-color-orange-150);
+/* Pin icon-button — orange when pressed, ghost grey otherwise. The DS
+   provides the base sizing via .ap-icon-button.transparent.sm. */
+.rpanel-ideas__pin {
+  flex: 0 0 auto;
 }
 
-.rpanel-ideas__confidence[data-tier="low"] {
-  background: var(--ref-color-grey-05);
-  color: var(--ref-color-grey-80);
-}
-
-/* "New" pill — tightened to fit alongside the confidence + Used cluster
-   without dominating. Uses the DS .ap-status blue base. */
-.ap-status.rpanel-ideas__new {
-  font-size: var(--app-text-micro-sm);
-  padding: 0 var(--ref-spacing-xxs);
-  height: auto;
-  line-height: 1.7;
-}
-
-/* Pin icon-button — coloured only when pressed so the unpinned state
-   reads as a secondary affordance. The DS provides the base sizing via
-   .ap-icon-button.transparent.sm. */
 .rpanel-ideas__pin[aria-pressed="true"] {
   color: var(--ref-color-orange-100);
 }
@@ -579,18 +555,12 @@
   border: 1px solid var(--comp-tag-green-border-color);
 }
 
-.rpanel-ideas__used {
-  font-size: var(--app-text-micro-sm);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-60);
-}
-
 .rpanel-ideas__card-title {
   margin: 0;
-  font-size: var(--ref-font-size-md);
+  font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-150);
-  line-height: 1.35;
+  line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -600,41 +570,33 @@
 .rpanel-ideas__card-body {
   margin: 0;
   font-size: var(--ref-font-size-xs);
-  line-height: 1.5;
-  color: var(--ref-color-grey-100);
+  line-height: 1.45;
+  color: var(--ref-color-grey-80);
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* Expanded state — title de-clamps and body uncaps so the full text is
-   visible. Targets the article-level state attribute. */
-.rpanel-ideas__card[data-expanded="true"] .rpanel-ideas__card-title {
-  -webkit-line-clamp: unset;
-  display: block;
-}
-
+/* Expanded state — body uncaps so the full text is visible. The title
+   already wraps at 2 lines max in collapsed form; that's enough — we
+   don't need to re-flow it. */
 .rpanel-ideas__card[data-expanded="true"] .rpanel-ideas__card-body {
   -webkit-line-clamp: unset;
   display: block;
 }
 
-/* Pinned cards get a subtle orange left border so they read as
-   "saved for later" without overpowering the kind badge palette. */
-.rpanel-ideas__card[data-pinned="true"] {
-  border-left: 3px solid var(--ref-color-orange-100);
-  padding-left: calc(var(--ref-spacing-xs) - 2px);
-}
-
-/* Rationale block — revealed when the card is expanded. The
-   border-left + tinted background reads as a meta layer (the AI's
-   reasoning) distinct from the idea body itself. */
+/* Rationale block — revealed when the card is expanded. Reads as an
+   AI meta layer (the assistant's reasoning behind the idea), so it
+   adopts the mermaid identity family used elsewhere for AI surfaces
+   (drafts-card, Archie chat avatar, source-processing pill). Sharp
+   left edge anchors the mermaid accent line; the rest of the card
+   keeps the DS card radius. */
 .rpanel-ideas__rationale {
-  background: var(--ref-color-grey-05);
-  border-left: 2px solid var(--ref-color-orange-100);
-  padding: var(--ref-spacing-xs);
-  border-radius: var(--app-radius-card);
+  background: var(--ref-color-mermaid-10);
+  border-left: 2px solid var(--ref-color-mermaid-gradient-from);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border-radius: 0 var(--app-radius-card) var(--app-radius-card) 0;
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xxxs);
@@ -645,25 +607,28 @@
 }
 
 .rpanel-ideas__rationale-label {
-  font-size: var(--app-text-micro-sm);
+  font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-80);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: var(--ref-color-grey-100);
 }
 
 .rpanel-ideas__rationale-text {
   margin: 0;
   font-size: var(--ref-font-size-xs);
   line-height: 1.5;
-  font-style: italic;
   color: var(--ref-color-grey-100);
 }
 
+/* Tags row — hidden in the collapsed state to save vertical space;
+   revealed alongside the rationale block when the card expands. */
 .rpanel-ideas__tag-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxxs);
+}
+
+.rpanel-ideas__tag-row[hidden] {
+  display: none;
 }
 
 .rpanel-ideas__tag {
@@ -679,41 +644,19 @@
   margin-top: var(--ref-spacing-xxxs);
 }
 
-.rpanel-ideas__ref {
-  font-size: var(--app-text-micro-sm);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-60);
+/* When the card has no rationale, this empty span anchors the footer
+   left edge so the Use button stays right-aligned. */
+.rpanel-ideas__foot-spacer {
+  flex: 1 1 auto;
 }
 
-/* Reference line shown below the footer when the expand button has
-   replaced the ref in the footer (cards with a rationale). */
-.rpanel-ideas__ref-line {
-  font-size: var(--app-text-micro-sm);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-60);
-  margin-top: var(--ref-spacing-xxxs);
-}
-
-/* Expand toggle — quiet text affordance with rotating chevron. Uses the
-   same affordance language as the full idea-card's Sources toggle. */
-.rpanel-ideas__expand {
-  background: none;
-  border: 0;
-  padding: 0;
+/* Expand toggle — DS .ap-link.small.standalone provides the link
+   styling, color, and hover state. We only own the inline-flex layout
+   for the icon + label pairing and the chevron rotation on expand. */
+.ap-link.rpanel-ideas__expand {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
-  font-family: inherit;
-  font-size: var(--app-text-micro);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-80);
-  cursor: pointer;
-}
-
-.rpanel-ideas__expand:hover,
-.rpanel-ideas__expand:focus-visible {
-  color: var(--ref-color-grey-150);
-  outline: none;
 }
 
 .rpanel-ideas__expand i {
@@ -730,62 +673,23 @@
   gap: var(--ref-spacing-xxs);
 }
 
-.ap-button.rpanel-ideas__use {
-  height: auto;
-  min-height: 0;
-  padding: 4px 10px;
-  font-size: var(--app-text-micro);
-}
-
-/* More menu — popover anchored under the kebab button. Mirrors the
-   .idea-card__more-menu pattern from the dashboard full card. */
+/* More menu — DS .ap-action-dropdown anchored under the kebab button.
+   We only override positioning here ; the DS provides the surface,
+   border, shadow, item layout, hover / focus / red-mode states. */
 .rpanel-ideas__more-wrap {
   position: relative;
 }
 
-.rpanel-ideas__more-menu {
+.ap-action-dropdown.rpanel-ideas__more-menu {
   position: absolute;
   top: calc(100% + var(--ref-spacing-xxs));
   right: 0;
   z-index: 10;
-  margin: 0;
-  padding: var(--ref-spacing-xxxs);
-  list-style: none;
-  background: var(--app-surface);
-  border: 1px solid var(--app-border-soft);
-  border-radius: var(--app-radius-card);
-  box-shadow: var(--app-shadow-popover-md, 0 8px 24px rgba(0, 0, 0, 0.12));
-  min-width: 160px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  min-width: 180px;
 }
 
-.rpanel-ideas__more-menu[hidden] {
+.ap-action-dropdown.rpanel-ideas__more-menu[hidden] {
   display: none;
-}
-
-.rpanel-ideas__more-item {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  width: 100%;
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
-  background: transparent;
-  border: 0;
-  border-radius: var(--app-radius-card);
-  color: var(--ref-color-grey-100);
-  font-family: inherit;
-  font-size: var(--app-text-micro);
-  font-weight: var(--ref-font-weight-bold);
-  text-align: left;
-  cursor: pointer;
-}
-
-.rpanel-ideas__more-item:hover,
-.rpanel-ideas__more-item:focus-visible {
-  background: var(--ref-color-grey-05);
-  outline: none;
 }
 
 /* Honour the user's motion preference — chevron rotation and any

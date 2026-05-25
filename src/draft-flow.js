@@ -14,10 +14,19 @@
 //   3. Creates one draft post per channel via posts-store.js.
 //   4. Posts a structured "Drafted N posts" result turn.
 
-import { postUserTurn, postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=32";
+import { postUserTurn, postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=35";
 import { getIdeas } from "./library.js?v=29";
+import { ideas as GLOBAL_IDEAS } from "./mocks.js?v=34";
 import { addPostDraft } from "./posts-store.js?v=27";
 import { showToast } from "./components/toast.js?v=20";
+
+// Per-session ideas live in library.js while the right-panel browses a
+// flat global list (mocks.ideas). Some entry points only have a global
+// id, so fall back to the mock list when the per-session store doesn't
+// know about it — keeps the draft flow universal.
+function resolveIdea(sessionId, ideaId) {
+  return getIdeas(sessionId).find((i) => i.id === ideaId) || GLOBAL_IDEAS.find((i) => i.id === ideaId) || null;
+}
 
 const CHANNEL_META = {
   linkedin: { icon: "ap-icon-linkedin", label: "LinkedIn" },
@@ -30,14 +39,13 @@ function labelFor(channel) {
   return CHANNEL_META[channel.toLowerCase()]?.label || channel;
 }
 
-export function startDraftFlow(sessionId, ideaId) {
-  const idea = getIdeas(sessionId).find((i) => i.id === ideaId);
+export function startDraftFlow(sessionId, ideaId, count = 1) {
+  const idea = resolveIdea(sessionId, ideaId);
   if (!idea) return;
 
-  // 1. Echo the user's intent.
-  postUserTurn(sessionId, `Draft a post: ${idea.title}`);
+  const echo = count > 1 ? `Draft ${count} posts: ${idea.title}` : `Draft a post: ${idea.title}`;
+  postUserTurn(sessionId, echo);
 
-  // 2. Thinking chip while "deciding" which channels to suggest.
   const pendingId = startPending(sessionId);
 
   setTimeout(() => {
@@ -45,14 +53,15 @@ export function startDraftFlow(sessionId, ideaId) {
 
     const channels = (idea.channels || ["linkedin"]).filter((c) => CHANNEL_META[c.toLowerCase()]);
 
-    // 3a. Single-channel shortcut — skip the picker entirely.
-    if (channels.length <= 1) {
-      const chosen = channels.length === 1 ? channels : ["linkedin"];
-      executeDraft(sessionId, ideaId, chosen);
+    // When count > 1, the user has already committed to a batch size —
+    // skip the channel picker entirely and draft on the idea's primary
+    // channel so we don't stack two pickers back-to-back.
+    if (count > 1 || channels.length <= 1) {
+      const chosen = channels.length >= 1 ? [channels[0]] : ["linkedin"];
+      executeDraft(sessionId, ideaId, chosen, count);
       return;
     }
 
-    // 3b. Multi-channel — show the picker.
     const choices = channels.map((c) => ({
       value: c,
       label: labelFor(c),
@@ -70,13 +79,17 @@ export function startDraftFlow(sessionId, ideaId) {
   }, 6000);
 }
 
-export function executeDraft(sessionId, ideaId, selectedChannels) {
-  const idea = getIdeas(sessionId).find((i) => i.id === ideaId);
+export function executeDraft(sessionId, ideaId, selectedChannels, count = 1) {
+  const idea = resolveIdea(sessionId, ideaId);
   if (!idea || !selectedChannels || selectedChannels.length === 0) return;
 
-  // 1. Echo the user's channel selection.
-  const selectionText = selectedChannels.map(labelFor).join(", ");
-  postUserTurn(sessionId, selectionText);
+  // 1. Echo the user's channel selection (skip when the count flow
+  //    already implied a single channel — the count picker echo above
+  //    is enough on its own).
+  if (count <= 1) {
+    const selectionText = selectedChannels.map(labelFor).join(", ");
+    postUserTurn(sessionId, selectionText);
+  }
 
   // 2. Thinking chip while "generating" the drafts.
   const pendingId = startPending(sessionId);
@@ -90,9 +103,14 @@ export function executeDraft(sessionId, ideaId, selectedChannels) {
     // hook-able Retry action (idempotent — runs the same channels).
     finishPending(sessionId, pendingId);
     try {
-      const drafts = selectedChannels.map((channel) =>
+      // Total drafts = max(count, channels). When count > channels.length
+      // we cycle channels round-robin so a "5 drafts on linkedin" request
+      // produces 5 linkedin posts and a multi-channel "1 draft per
+      // channel" pick still creates one per channel.
+      const total = Math.max(count, selectedChannels.length);
+      const drafts = Array.from({ length: total }, (_, i) =>
         addPostDraft(sessionId, {
-          network: channel,
+          network: selectedChannels[i % selectedChannels.length],
           text: [idea.title, ...(idea.body ? [idea.body] : [])],
           hashtags: [],
         }),
@@ -112,7 +130,7 @@ export function executeDraft(sessionId, ideaId, selectedChannels) {
         duration: 6000,
         action: {
           label: "Retry",
-          onClick: () => executeDraft(sessionId, ideaId, selectedChannels),
+          onClick: () => executeDraft(sessionId, ideaId, selectedChannels, count),
         },
       });
     }

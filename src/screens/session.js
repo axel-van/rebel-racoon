@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=52";
+import { renderTopbar } from "../components/topbar.js?v=54";
 import { socialAccounts, chatStarters } from "../mocks.js?v=34";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=28";
@@ -16,7 +16,7 @@ import {
   postDraftResult,
   subscribe,
   submitAssistantChoice,
-} from "../assistant.js?v=32";
+} from "../assistant.js?v=35";
 import { getSources, getIdeas, injectIdeasForSource } from "../library.js?v=29";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
@@ -31,7 +31,7 @@ import {
   setSubtitleStyle,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=27";
-import { startDraftFlow, executeDraft } from "../draft-flow.js?v=21";
+import { startDraftFlow, executeDraft } from "../draft-flow.js?v=27";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=26";
@@ -46,7 +46,7 @@ import {
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=23";
-import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=21";
+import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=22";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";
 import { startClipExtraction } from "../components/clip-extraction-loader.js?v=2";
 import { open as openSettingsDrawer } from "../components/settings-drawer.js?v=23";
@@ -70,7 +70,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=71";
+} from "../components/right-panel.js?v=74";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
@@ -755,6 +755,27 @@ function askProfileQuestion(sessionId, ideaId) {
   });
 }
 
+// "Draft a post from this idea" picker — triggered by the right-panel
+// Ideas card. Asks how many drafts to generate before kicking off the
+// usual draft-flow pipeline. The flow then skips the channel picker
+// and produces N drafts on the idea's primary channel.
+export function askDraftCountQuestion(sessionId, ideaId) {
+  postAssistantMessage(sessionId, "How many drafts should I generate?");
+  inlineQuestion.ask(sessionId, {
+    title: "How many drafts from this idea?",
+    stepLabel: "Drafts",
+    items: [
+      { value: 1, label: "1 draft", caption: "A single angle to refine." },
+      { value: 3, label: "3 drafts", caption: "A few variations to compare." },
+      { value: 5, label: "5 drafts", caption: "A full batch to pick from." },
+    ],
+    onPick: (count) => {
+      startDraftFlow(sessionId, ideaId, Number(count) || 1);
+    },
+    onSkip: () => {},
+  });
+}
+
 function renderThread(messages, sessionId) {
   return messages.map((m) => renderTurn(m, sessionId)).join("");
 }
@@ -1091,7 +1112,12 @@ function wireAssistantPanel(root, session, attachedContext) {
   // mode pinned to that batch — matches the handoff App.jsx "if the reply
   // has a batch, set activeBatchRef and switch to drafts" rule (§ State
   // Management → send transitions).
-  let lastDraftMessageId = null;
+  //
+  // Seed from the existing latest draft so a fresh renderSession (e.g. after
+  // a panel-driven URL change) doesn't treat the seeded "drafts ready" turn
+  // as new and re-trigger openDraftsPanel → URL write → re-render → loop.
+  const seededLatestDraft = [...getThread(session.id)].reverse().find((m) => m.variant === "draft");
+  let lastDraftMessageId = seededLatestDraft?.id || null;
   // Track whether we've already crossed the empty → has-user-turn boundary.
   // The first time we cross it, the composer context picker locks in (its
   // markup changes shape), so we re-render the whole assistant aside.

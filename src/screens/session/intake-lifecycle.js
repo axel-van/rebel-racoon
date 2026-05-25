@@ -18,7 +18,7 @@
 // ideaCount/status live from sources-stream).
 
 import { subscribeSources, getSources as getStreamSources } from "../../sources-stream.js?v=31";
-import { getThread, postSourceIntake, markSourceIntakeReady } from "../../assistant.js?v=32";
+import { getThread, postSourceIntake, markSourceIntakeReady } from "../../assistant.js?v=35";
 
 export function startIntakeLifecycle(sessionId, { onSourcesChange } = {}) {
   // seenSourceIds is a snapshot baseline of the session's sources at

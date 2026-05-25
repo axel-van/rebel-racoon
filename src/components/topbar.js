@@ -13,9 +13,9 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=71";
+} from "./right-panel.js?v=74";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=30";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=32";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=35";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=29";
 import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=27";
 import {
@@ -287,18 +287,6 @@ function renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) {
     </button>
     <button
       type="button"
-      class="ap-button ${draftsClass} ${draftsDisabled ? "is-empty" : ""}"
-      data-topbar-drafts
-      ${draftsDisabled ? "disabled" : ""}
-      aria-pressed="${rpMode === "drafts"}"
-      title="${draftsDisabled ? "No drafts in this chat yet" : "Toggle Drafts panel"}"
-    >
-      <i class="ap-icon-pen"></i>
-      <span>Drafts</span>
-      ${draftBadge}
-    </button>
-    <button
-      type="button"
       class="ap-button ${ideasClass} ${ideasDisabled ? "is-empty" : ""}"
       data-topbar-ideas
       ${ideasDisabled ? "disabled" : ""}
@@ -308,6 +296,18 @@ function renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) {
       <i class="ap-icon-sparkles"></i>
       <span>Ideas</span>
       ${ideasBadge}
+    </button>
+    <button
+      type="button"
+      class="ap-button ${draftsClass} ${draftsDisabled ? "is-empty" : ""}"
+      data-topbar-drafts
+      ${draftsDisabled ? "disabled" : ""}
+      aria-pressed="${rpMode === "drafts"}"
+      title="${draftsDisabled ? "No drafts in this chat yet" : "Toggle Drafts panel"}"
+    >
+      <i class="ap-icon-pen"></i>
+      <span>Drafts</span>
+      ${draftBadge}
     </button>
   `;
 }

@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=32";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=35";
 import { isFlagOn } from "../feature-flags.js?v=3";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=34";
 import { isNewUser } from "../user-mode.js?v=21";
@@ -13,7 +13,7 @@ import {
   updatePostContent,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=27";
-import { renderPostCard } from "./post-card.js?v=28";
+import { renderPostCard } from "./post-card.js?v=29";
 import { renderClipCard } from "./clip-card.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=2";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=43";
@@ -30,7 +30,7 @@ import { open as openAddSourceModal } from "./add-source-modal.js?v=22";
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
 import { open as openScheduleModal } from "./schedule-modal.js?v=24";
-import { open as openGenerateImageModal } from "./generate-image-modal.js?v=21";
+import { open as openGenerateImageModal } from "./generate-image-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
 // the session workspace, hosts two modes:
@@ -648,7 +648,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=114").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=120").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -1356,10 +1356,13 @@ function renderDraftsEmpty() {
 // --- Per-card action handlers ------------------------------------------
 
 function onPostRewrite(postId) {
-  // The real rewrite-with-AI loop will reuse the assistant pipeline ;
-  // stub for now with a toast so the wiring is visible.
-  import("./toast.js?v=20").then(({ showToast }) => {
-    showToast("Regenerating draft…", { actionLabel: null });
+  const sid = activeSessionId();
+  if (!sid) return;
+  // draft-rewrite.js owns the full visual flow: ghost skeleton →
+  // streaming → commit. Loaded lazily so the rewrite code is only
+  // pulled in when the user actually triggers a regen.
+  import("../draft-rewrite.js?v=2").then(({ startRewrite }) => {
+    startRewrite(sid, postId);
   });
 }
 
@@ -1919,6 +1922,10 @@ function setCardExpanded(card, expanded) {
   }
   const rationale = card.querySelector(".rpanel-ideas__rationale");
   if (rationale) rationale.hidden = !expanded;
+  // Tags row is hidden in the collapsed state to save vertical space;
+  // it reveals alongside the rationale when the card expands.
+  const tagRow = card.querySelector(".rpanel-ideas__tag-row");
+  if (tagRow) tagRow.hidden = !expanded;
 }
 
 function toggleIdeaPinned(id) {
@@ -2007,37 +2014,23 @@ bindRpanelIdeasGlobals();
 
 function renderIdeaCompact(idea) {
   const kind = idea.kind || "insight";
-  const usedLabel = idea.used > 0 ? `Used ${idea.used}×` : "Unused";
+  const isPinned = !!idea.pinned;
+  const isExpanded = expandedIdeaId === idea.id;
+  const rationaleId = `rpanel-ideas-rationale-${idea.id}`;
+  const sourceLabel = idea.ref || "Generated";
   const tags = (idea.tags || [])
     .slice(0, 3)
     .map((t) => `<span class="rpanel-ideas__tag">#${escapeText(t)}</span>`)
     .join("");
 
-  // Confidence pill — tiered into high / mid / low so a glance is enough
-  // to triage. Threshold tuned to surface the top-quartile (≥85) as a
-  // green "safe pick" without flattening the gradient.
-  const confidence = typeof idea.confidence === "number" ? idea.confidence : null;
-  const tier = confidence == null ? null : confidence >= 85 ? "high" : confidence >= 65 ? "mid" : "low";
-  const confidencePill =
-    confidence == null
-      ? ""
-      : `<span class="rpanel-ideas__confidence" data-tier="${tier}" title="Confidence ${confidence}/100">
-          <span class="rpanel-ideas__confidence-dot" aria-hidden="true"></span>${confidence}
-        </span>`;
-
-  const isNew = idea.state === "New";
-  const isPinned = !!idea.pinned;
-  const isExpanded = expandedIdeaId === idea.id;
-  const rationaleId = `rpanel-ideas-rationale-${idea.id}`;
-
   return `
     <article class="rpanel-ideas__card" data-idea-id="${escapeAttr(idea.id)}" data-expanded="${isExpanded}"${isPinned ? ' data-pinned="true"' : ""}>
       <header class="rpanel-ideas__card-head">
         <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${kind}</span>
-        ${confidencePill}
-        <span class="rpanel-ideas__head-spacer"></span>
-        ${isNew ? `<span class="ap-status blue rpanel-ideas__new">New</span>` : ""}
-        <span class="rpanel-ideas__used">${usedLabel}</span>
+        <span class="rpanel-ideas__source" title="${escapeAttr(sourceLabel)}">
+          <i class="ap-icon-file" aria-hidden="true"></i>
+          <span class="rpanel-ideas__source-text">${escapeText(sourceLabel)}</span>
+        </span>
         <button
           type="button"
           class="ap-icon-button transparent sm rpanel-ideas__pin"
@@ -2059,13 +2052,13 @@ function renderIdeaCompact(idea) {
             </div>`
           : ""
       }
-      ${tags ? `<div class="rpanel-ideas__tag-row">${tags}</div>` : ""}
+      ${tags ? `<div class="rpanel-ideas__tag-row" ${isExpanded ? "" : "hidden"}>${tags}</div>` : ""}
       <footer class="rpanel-ideas__card-foot">
         ${
           idea.rationale
             ? `<button
                 type="button"
-                class="rpanel-ideas__expand"
+                class="ap-link small standalone rpanel-ideas__expand"
                 data-rpanel-ideas-expand="${escapeAttr(idea.id)}"
                 aria-expanded="${isExpanded}"
                 aria-controls="${rationaleId}"
@@ -2073,12 +2066,12 @@ function renderIdeaCompact(idea) {
                 <span>${isExpanded ? "Hide rationale" : "Why this idea"}</span>
                 <i class="ap-icon-chevron-down"></i>
               </button>`
-            : `<span class="rpanel-ideas__ref">${escapeText(idea.ref || "Generated")}</span>`
+            : `<span class="rpanel-ideas__foot-spacer"></span>`
         }
         <div class="rpanel-ideas__foot-actions">
-          <button type="button" class="ap-button stroked orange rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
-            <i class="ap-icon-arrow-up"></i>
-            <span>Use</span>
+          <button type="button" class="ap-button mermaid rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
+            <i class="ap-icon-sparkles-mermaid"></i>
+            <span>Draft a post from this idea</span>
           </button>
           <div class="rpanel-ideas__more-wrap">
             <button
@@ -2091,39 +2084,43 @@ function renderIdeaCompact(idea) {
             >
               <i class="ap-icon-more"></i>
             </button>
-            <ul class="rpanel-ideas__more-menu" role="menu" hidden>
-              <li role="none">
-                <button type="button" role="menuitem" class="rpanel-ideas__more-item" data-rpanel-ideas-copy="${escapeAttr(idea.id)}">
-                  <i class="ap-icon-copy"></i><span>Copy text</span>
-                </button>
-              </li>
-              <li role="none">
-                <button type="button" role="menuitem" class="rpanel-ideas__more-item" data-rpanel-ideas-dismiss="${escapeAttr(idea.id)}">
-                  <i class="ap-icon-trash"></i><span>Dismiss</span>
-                </button>
-              </li>
-            </ul>
+            <div class="ap-action-dropdown rpanel-ideas__more-menu" role="menu" hidden>
+              <button type="button" role="menuitem" class="ap-action-dropdown-item" data-rpanel-ideas-copy="${escapeAttr(idea.id)}">
+                <i class="ap-icon-copy"></i>
+                <div class="ap-action-dropdown-item-text">
+                  <div class="ap-action-dropdown-item-label-container">
+                    <span class="ap-action-dropdown-item-label">Copy text</span>
+                  </div>
+                </div>
+              </button>
+              <button type="button" role="menuitem" class="ap-action-dropdown-item red-mode" data-rpanel-ideas-dismiss="${escapeAttr(idea.id)}">
+                <i class="ap-icon-trash"></i>
+                <div class="ap-action-dropdown-item-text">
+                  <div class="ap-action-dropdown-item-label-container">
+                    <span class="ap-action-dropdown-item-label">Dismiss</span>
+                  </div>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
       </footer>
-      ${idea.rationale ? `<div class="rpanel-ideas__ref-line">${escapeText(idea.ref || "Generated")}</div>` : ""}
     </article>
   `;
 }
 
-// Inject a templated prompt into the assistant composer of whichever session
-// is currently mounted. Closes the panel so the user lands back on the chat
-// surface ready to send / tweak.
+// Closes the panel and hands off to the session screen's inline-question
+// picker: "How many drafts from this idea?". The picked count drives the
+// usual draft-flow pipeline, so the user lands back on the chat surface
+// with the picker mounted and ready to answer.
 function useIdea(ideaId) {
   const idea = IDEAS.find((i) => i.id === ideaId);
   if (!idea) return;
-  const input = document.getElementById("assistantInput");
-  if (!input) return;
-  const text = `Build a batch of posts around this ${idea.kind || "idea"}:\n\n"${idea.body}"`;
-  input.value = text;
-  input.focus();
-  input.setSelectionRange(input.value.length, input.value.length);
-  closePanel();
+  const sid = activeSessionId();
+  if (!sid) return;
+  import("../screens/session.js?v=120").then(({ askDraftCountQuestion }) => {
+    askDraftCountQuestion(sid, ideaId);
+  });
 }
 
 // Inject a hover-reveal "Refine with Archie" button into the opening
