@@ -950,16 +950,6 @@
   display: none;
 }
 
-.session__composer-thinking-spinner {
-  width: 12px;
-  height: 12px;
-  border-radius: var(--app-radius-circle);
-  border: 1.5px solid var(--ref-color-mermaid-20);
-  border-top-color: var(--ref-color-mermaid-gradient-from);
-  animation: app-spin 0.9s linear infinite;
-  flex-shrink: 0;
-}
-
 /* Session chip inside the composer card. */
 .session__composer-session {
   display: flex;
