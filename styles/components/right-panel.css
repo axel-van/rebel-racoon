@@ -598,10 +598,22 @@
   justify-content: center;
 }
 
-/* ── Medium container — filters on top ──────────────────────────────
-   The panel is too narrow for a side rail. Switch to one column with
-   both filter groups flattened onto a horizontal row above the feed:
-   status pills on the left, network pills on the right. */
+/* Each rail-group renders both a button list and a native select; the
+   button list is the wide default, the select is shown in compact. */
+.rpanel-drafts .posts__rail-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.rpanel-drafts .posts__rail-select {
+  display: none;
+}
+
+/* ── Medium container — filters collapse to selects ────────────────
+   The panel is too narrow for a side rail. Switch to one column
+   with the rail above the feed, and trade the button lists for two
+   native <select>s so the rail stays tight on a single row. */
 @container (max-width: 800px) {
   .rpanel-drafts {
     grid-template-columns: minmax(0, 1fr);
@@ -618,28 +630,25 @@
     position: static;
   }
 
-  /* Both groups → flex row of pills. */
   .rpanel-drafts .posts__rail-group {
     flex-direction: row;
     align-items: center;
     gap: var(--ref-spacing-xxs);
   }
 
-  /* Pills shrink to fit content (no full-width row). */
-  .rpanel-drafts .posts__filter {
-    width: auto;
-    gap: var(--ref-spacing-xxs);
-  }
-
-  /* Pill icons are decorative — the label carries the meaning. Drop
-     them in the compact layout to claw back ~24px per pill so all
-     six fit alongside each other on one or two rows. */
-  .rpanel-drafts .posts__filter > i {
+  /* Hide the wide-mode button list and reveal the native select. */
+  .rpanel-drafts .posts__rail-buttons {
     display: none;
   }
 
-  /* Hide the "Network" eyebrow — its own pills carry the network
-     info and the heading would steal a line of vertical space. */
+  .rpanel-drafts .posts__rail-select {
+    display: inline-block;
+    min-width: 160px;
+    max-width: 220px;
+  }
+
+  /* Hide the "Network" eyebrow — the select's own labels carry the
+     network info and the heading would steal a line of vertical space. */
   .rpanel-drafts .posts__rail-heading {
     display: none;
   }

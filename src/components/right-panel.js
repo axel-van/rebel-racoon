@@ -715,6 +715,18 @@ export function init() {
       return;
     }
   });
+  el.addEventListener("change", (event) => {
+    if (event.target.matches("[data-rpanel-drafts-filter-select]")) {
+      draftsFilter = event.target.value || "all";
+      renderPanel();
+      return;
+    }
+    if (event.target.matches("[data-rpanel-drafts-network-select]")) {
+      draftsNetwork = event.target.value || "all";
+      renderPanel();
+      return;
+    }
+  });
   el.addEventListener("input", (event) => {
     if (event.target.matches("[data-rpanel-ideas-search]")) {
       ideasQuery = event.target.value || "";
@@ -1061,10 +1073,13 @@ function renderDraftsView() {
     return true;
   });
 
-  // Filter rail — vertical, sticky, on the left. Reuses the same
-  // `.posts__rail / .posts__filter` chrome the source-prototype Posts
-  // tab used (driven by posts.css) so we don't reinvent the styling.
-  const filterRow = (id, icon, label, count) => {
+  // Filter rail — vertical, sticky, on the left at the wide breakpoint.
+  // Each filter axis (status + network) is rendered TWICE: once as a
+  // .posts__rail-buttons row (visible wide) and once as a native
+  // <select> (visible in compact). CSS container queries swap which
+  // one is shown — same state shared between the two so flipping
+  // viewports preserves the active filter.
+  const filterButton = (id, icon, label, count) => {
     const active = draftsFilter === id;
     return `
       <button
@@ -1079,10 +1094,7 @@ function renderDraftsView() {
     `;
   };
 
-  // Network filter — same button list as the status group above so the
-  // rail reads as one consistent column of filter rows. Three options:
-  // All / LinkedIn / X.
-  const networkRow = (id, icon, label, count) => {
+  const networkButton = (id, icon, label, count) => {
     const active = draftsNetwork === id;
     return `
       <button
@@ -1097,18 +1109,51 @@ function renderDraftsView() {
     `;
   };
 
+  const opt = (current, id, label, count) =>
+    `<option value="${id}" ${current === id ? "selected" : ""}>${label} (${count})</option>`;
+
+  const filterSelect = `
+    <select
+      class="ap-native-select posts__rail-select"
+      data-rpanel-drafts-filter-select
+      aria-label="Filter drafts by status"
+    >
+      ${opt(draftsFilter, "all", "All drafts", filterCounts.all)}
+      ${opt(draftsFilter, "needs_fixes", "Needs fixes", filterCounts.needs_fixes)}
+      ${opt(draftsFilter, "scheduled", "Scheduled", filterCounts.scheduled)}
+    </select>
+  `;
+
+  const networkSelect = `
+    <select
+      class="ap-native-select posts__rail-select"
+      data-rpanel-drafts-network-select
+      aria-label="Filter drafts by network"
+    >
+      ${opt(draftsNetwork, "all", "All networks", networkCounts.all)}
+      ${opt(draftsNetwork, "linkedin", "LinkedIn", networkCounts.linkedin)}
+      ${opt(draftsNetwork, "twitter", "X", networkCounts.twitter)}
+    </select>
+  `;
+
   const rail = `
     <aside class="posts__rail" aria-label="Post filters">
       <div class="posts__rail-group">
-        ${filterRow("all", "ap-icon-megaphone", "All drafts", filterCounts.all)}
-        ${filterRow("needs_fixes", "ap-icon-error", "Needs fixes", filterCounts.needs_fixes)}
-        ${filterRow("scheduled", "ap-icon-calendar", "Scheduled", filterCounts.scheduled)}
+        <div class="posts__rail-buttons">
+          ${filterButton("all", "ap-icon-megaphone", "All drafts", filterCounts.all)}
+          ${filterButton("needs_fixes", "ap-icon-error", "Needs fixes", filterCounts.needs_fixes)}
+          ${filterButton("scheduled", "ap-icon-calendar", "Scheduled", filterCounts.scheduled)}
+        </div>
+        ${filterSelect}
       </div>
       <div class="posts__rail-group posts__rail-group--network">
         <h3 class="posts__rail-heading">Network</h3>
-        ${networkRow("all", "ap-icon-web", "All networks", networkCounts.all)}
-        ${networkRow("linkedin", "ap-icon-linkedin", "LinkedIn", networkCounts.linkedin)}
-        ${networkRow("twitter", "ap-icon-twitter-official", "X", networkCounts.twitter)}
+        <div class="posts__rail-buttons">
+          ${networkButton("all", "ap-icon-web", "All networks", networkCounts.all)}
+          ${networkButton("linkedin", "ap-icon-linkedin", "LinkedIn", networkCounts.linkedin)}
+          ${networkButton("twitter", "ap-icon-twitter-official", "X", networkCounts.twitter)}
+        </div>
+        ${networkSelect}
       </div>
     </aside>
   `;
