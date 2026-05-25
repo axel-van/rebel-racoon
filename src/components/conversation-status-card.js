@@ -1,18 +1,16 @@
-// Floating status card — sits at the top-right of the conversation column
-// when no right-panel is open. Surfaces what's "happening / available" in
-// the active session at a glance, without forcing the user to crack open
-// each panel:
+// Floating status card — sits at the top-right of the conversation column.
+// Surfaces what's "happening / available" in the active session at a glance,
+// without forcing the user to crack open each panel:
 //   • In progress  — Archie generating / thinking (any thread message
 //                    flagged status:"loading").
 //   • Sources (N)  — list of attached source filenames.
 //   • Drafts  (N)  — latest draft-batch count.
 //   • Outputs (N)  — extracted-ideas count.
 //
-// Each row is clickable and opens the matching right-panel mode. The card
-// hides itself entirely when:
-//   • off /session/:id routes
-//   • a right-panel is already open (drafts / ideas / sources / context-brief)
-//   • the session has no content yet (nothing to surface)
+// Each row is clickable and opens the matching right-panel mode. Visibility
+// is owned by the user's preference (toggled via the topbar info button) —
+// the card coexists with any right-panel mode so the toggle works in every
+// state. It still hides itself off /session/:id routes.
 //
 // Pattern: inject markup once into <body>, then re-render reactively as
 // the underlying stores mutate (assistant thread, sources-stream, library,
@@ -24,7 +22,6 @@ import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
   openSources as openSourcesPanel,
-  getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
 } from "./right-panel.js?v=65";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=31";
@@ -175,12 +172,6 @@ export function render() {
   // Legacy /session/welcome-* (linear flow) keeps the standard grid and
   // still gets the card.
   if (sid.startsWith("welcome-alt-")) {
-    hideCard();
-    return;
-  }
-  // When any right-panel mode is open the card is redundant — the user
-  // has the full panel already. Hide.
-  if (getRightPanelMode()) {
     hideCard();
     return;
   }

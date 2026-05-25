@@ -32,14 +32,34 @@
 }
 
 /* Grid template — add a 3rd column for the card when the shell flag
-   is on. Skipped when the right-panel is already open (its own rule
-   wins and adds the right-panel column). */
+   is on. When a right-panel is also open, the panel moves to column 4
+   so card + panel can coexist alongside the chat. */
 .app-shell.is-status-card-visible:not(.is-right-panel-open) {
   grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr) 296px;
 }
 
 .app-shell.is-status-card-visible.is-sidebar-collapsed:not(.is-right-panel-open) {
   grid-template-columns: var(--app-sidebar-width-collapsed) minmax(0, 1fr) 296px;
+}
+
+.app-shell.is-status-card-visible.is-right-panel-open {
+  grid-template-columns:
+    var(--app-sidebar-width)
+    minmax(0, 1fr)
+    296px
+    var(--app-right-panel-width-runtime, max(380px, calc((100vw - var(--app-sidebar-width)) / 2)));
+}
+
+.app-shell.is-status-card-visible.is-right-panel-open.is-sidebar-collapsed {
+  grid-template-columns:
+    var(--app-sidebar-width-collapsed)
+    minmax(0, 1fr)
+    296px
+    var(--app-right-panel-width-runtime, max(380px, calc((100vw - var(--app-sidebar-width-collapsed)) / 2)));
+}
+
+.app-shell.is-status-card-visible.is-right-panel-open .app-right-panel {
+  grid-column: 4;
 }
 
 /* Topbar info-button — pressed state when the card is visible.
