@@ -316,7 +316,12 @@ function escapePlayerAttr(s) {
   return escapePlayerText(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-// "scheduled" notice — sits above the card with the scheduled-for label.
+// "scheduled" notice — sits flush above the card (visually glued via
+// posts.css). The DS `.ap-status-card .upper` is flex with
+// space-between, so a trailing .ap-link drops into the right edge
+// naturally. Clicking it re-opens the schedule modal for this post
+// via the same data-post-schedule hook the per-card calendar button
+// uses, so the wiring is reused 1:1.
 function renderPostScheduled(post) {
   if (post.status !== "scheduled") return "";
   const when = post.scheduledForLabel || "later";
@@ -325,6 +330,14 @@ function renderPostScheduled(post) {
       <div class="upper">
         <i class="ap-icon-calendar" aria-hidden="true"></i>
         <div class="flow"><span>Scheduled</span> ${when}</div>
+        <button
+          type="button"
+          class="ap-link small"
+          data-post-schedule="${post.id}"
+          aria-label="Edit scheduled time"
+        >
+          Edit
+        </button>
       </div>
     </div>
   `;

@@ -149,6 +149,30 @@
   flex-shrink: 0;
 }
 
+/* Scheduled status card sits flush above the post card — they read as
+   one composite surface. The status card keeps its own bottom-border
+   from the DS (acting as the seam) and rounds only its top corners;
+   the article below loses its top border + top radius so the two
+   meet seamlessly. Gap collapses to 0 only when a status card is
+   actually present so the regular `Draft ready` cards keep their
+   normal spacing. */
+.posts__card-wrap:has(> .ap-status-card) {
+  gap: 0;
+}
+
+.posts__card-wrap > .ap-status-card {
+  border-top-left-radius: var(--app-radius-card);
+  border-top-right-radius: var(--app-radius-card);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.posts__card-wrap > .ap-status-card + .ap-card {
+  border-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
 .posts__card-errors-list {
   margin: 0;
   padding-left: var(--ref-spacing-md);
