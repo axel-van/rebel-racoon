@@ -77,7 +77,6 @@ const IDEA_KINDS = [
 // at a time). Survives across renderPanel() calls but is reset when the
 // panel re-opens in a fresh session via renderIdeasBodyOnly().
 let ideasFilter = "all";
-let ideasSort = "recent"; // 'recent' | 'used' | 'confidence'
 // Ideas the user has dismissed via the More menu — kept in a Set so the
 // list re-render filters them out without mutating the mocks array.
 let dismissedIdeaIds = new Set();
@@ -657,19 +656,6 @@ export function init() {
     const useBtn = event.target.closest("[data-rpanel-use-idea]");
     if (useBtn) {
       useIdea(useBtn.dataset.rpanelUseIdea);
-      return;
-    }
-    // Sort option pick (DS .ap-select option click). Updates state, re-
-    // renders the body, and closes the <details> dropdown manually since
-    // we're handling the click ourselves instead of letting the summary
-    // toggle behavior fire.
-    const sortOpt = event.target.closest("[data-rpanel-ideas-sort]");
-    if (sortOpt) {
-      event.preventDefault();
-      ideasSort = sortOpt.dataset.rpanelIdeasSort || "recent";
-      const menu = el.querySelector("[data-rpanel-ideas-sort-menu]");
-      if (menu) menu.open = false;
-      renderPanel();
       return;
     }
     // More menu trigger — closes any other open menu first, then flips
@@ -1707,44 +1693,10 @@ function renderIdeasView() {
     return acc;
   }, {});
 
-  const sortOptions = [
-    { id: "recent", label: "Recent" },
-    { id: "used", label: "Most used" },
-    { id: "confidence", label: "Highest confidence" },
-  ];
-
-  const activeSort = sortOptions.find((o) => o.id === ideasSort) || sortOptions[0];
-
   return html`
     <div class="rpanel-ideas">
       ${raw(tabs)}
       <div class="rpanel-ideas__head">
-        <div class="rpanel-ideas__title-bar">
-          <h4 class="rpanel-ideas__title">Ideas <span class="rpanel-ideas__title-count">${totalCount}</span></h4>
-          <details class="ap-select rpanel-ideas__sort" data-rpanel-ideas-sort-menu>
-            <summary class="ap-select-trigger">
-              <span class="ap-select-inline-label">Sort</span>
-              <span class="ap-select-value">${activeSort.label}</span>
-              <i class="ap-icon-chevron-down ap-select-arrow"></i>
-            </summary>
-            <div class="ap-select-dropdown">
-              <div class="ap-select-options" role="listbox">
-                ${raw(
-                  sortOptions
-                    .map(
-                      (o) => `
-                        <button type="button" class="ap-select-option ${ideasSort === o.id ? "selected" : ""}" role="option" data-rpanel-ideas-sort="${o.id}">
-                          <span class="ap-select-option-text">${o.label}</span>
-                          ${ideasSort === o.id ? `<i class="ap-icon-check ap-select-option-check"></i>` : ""}
-                        </button>
-                      `,
-                    )
-                    .join(""),
-                )}
-              </div>
-            </div>
-          </details>
-        </div>
         <div class="rpanel-ideas__filters" role="tablist">
           ${raw(
             IDEA_KINDS.map(
@@ -1830,15 +1782,11 @@ function renderClipsList(entries) {
 }
 
 function renderIdeasList() {
-  const list = IDEAS.filter((i) => !dismissedIdeaIds.has(i.id)).filter(
+  // Order matches the seed array (newest-first by convention in mocks);
+  // dismissed cards are dropped, the active kind filter narrows the rest.
+  const sorted = IDEAS.filter((i) => !dismissedIdeaIds.has(i.id)).filter(
     (i) => ideasFilter === "all" || i.kind === ideasFilter,
   );
-  // Sort axis — applied to the filtered set so the visible order matches
-  // the dropdown choice. "recent" keeps the seed order (already newest-
-  // first in mocks). Sort is stable via .slice() before mutating.
-  const sorted = list.slice();
-  if (ideasSort === "used") sorted.sort((a, b) => (b.used || 0) - (a.used || 0));
-  else if (ideasSort === "confidence") sorted.sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
   if (sorted.length === 0) {
     return html`
       <div class="app-right-panel__empty rpanel-ideas__no-match">
