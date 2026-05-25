@@ -261,47 +261,60 @@
   color: var(--ref-color-grey-150);
 }
 
+/* "Generate an image" placeholder — quiet at rest, AI nature revealed
+   on interaction. Neutral grey surface + dashed border carry the
+   classic "empty drop zone" convention; hover/focus paints the icon
+   with the mermaid gradient and tints the surface with mermaid-10,
+   solidifying the border to confirm the AI affordance. Same height as
+   .ap-button (36px) so the card layout stays compact. */
 .posts__card-image-placeholder {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--ref-spacing-xs);
-  /* Match the DS .ap-button height (36px) so this placeholder reads as a
-     CTA-shaped affordance instead of a large drop zone. */
+  gap: var(--ref-spacing-xxs);
+  width: 100%;
   min-height: var(--comp-button-height);
   max-height: var(--comp-button-height);
   padding: 0 var(--ref-spacing-sm);
-  background: var(--ref-color-electric-blue-10);
-  border: 1px dashed var(--ref-color-electric-blue-100);
-  border-radius: var(--app-radius-md);
-  color: var(--ref-color-electric-blue-100);
-  font-family: inherit;
+  background: var(--ref-color-grey-05);
+  border: 1px dashed var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  color: var(--ref-color-grey-100);
+  font-family: var(--ref-font-family);
   font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--ref-font-weight-regular);
   cursor: pointer;
-}
-
-.posts__card-image-placeholder {
   transition:
     background-color var(--ref-animation-short) var(--app-ease-out),
     border-color var(--ref-animation-short) var(--app-ease-out),
     color var(--ref-animation-short) var(--app-ease-out);
 }
 
+.posts__card-image-placeholder > i {
+  font-size: var(--sys-icon-css-sm);
+}
+
 .posts__card-image-placeholder:hover,
 .posts__card-image-placeholder:focus-visible {
-  background: var(--ref-color-electric-blue-20, #cce4ff);
-  color: var(--ref-color-electric-blue-150);
-  border-color: var(--ref-color-electric-blue-150);
+  background: var(--ref-color-mermaid-10);
+  border-color: var(--ref-color-mermaid-gradient-from);
+  border-style: solid;
+  color: var(--ref-color-grey-150);
   outline: none;
 }
 
-.posts__card-image-placeholder:active {
-  background: var(--ref-color-electric-blue-40);
+.posts__card-image-placeholder:hover > i,
+.posts__card-image-placeholder:focus-visible > i {
+  background: var(--ref-color-mermaid-gradient-background);
 }
 
-.posts__card-image-placeholder i {
-  font-size: var(--sys-icon-css-md);
+.posts__card-image-placeholder:focus-visible {
+  outline: 3px solid var(--ref-color-electric-blue-100);
+  outline-offset: 1px;
+}
+
+.posts__card-image-placeholder:active {
+  background: var(--ref-color-mermaid-20);
 }
 
 /* ── Video clip player (drafts from Video Clips modal) ──────────────
