@@ -27,6 +27,7 @@ import {
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=31";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=30";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=28";
+import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=26";
 import { subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { addMention } from "../composer-mentions.js?v=2";
 
@@ -85,6 +86,7 @@ let lastSessionId = null;
 let unsubscribeThread = null;
 let unsubscribeSources = null;
 let unsubscribeLibrary = null;
+let unsubscribePosts = null;
 
 export function init() {
   if (initialized) return;
@@ -150,11 +152,16 @@ function syncSessionSubscriptions() {
     unsubscribeLibrary();
     unsubscribeLibrary = null;
   }
+  if (unsubscribePosts) {
+    unsubscribePosts();
+    unsubscribePosts = null;
+  }
   lastSessionId = sid;
   if (sid) {
     unsubscribeThread = subscribeThread(sid, () => render());
     unsubscribeSources = subscribeSources(sid, () => render());
     unsubscribeLibrary = subscribeLibrary(sid, () => render());
+    unsubscribePosts = subscribePosts(sid, () => render());
   }
 }
 
@@ -183,7 +190,7 @@ export function render() {
   const thread = getThread(sid);
   const sources = getSessionSources(sid);
   const ideas = getIdeas(sid);
-  const draftCount = latestDraftCount(thread);
+  const draftCount = sessionDraftCount(sid, thread);
   const pending = pendingProcesses(thread);
 
   // The card is always shown on /session/:id when no right-panel is open —
@@ -332,8 +339,14 @@ function renderDraftsRow(draftCount) {
   `;
 }
 
-// Latest draft-batch count — mirrors the topbar's draft-pill logic.
-function latestDraftCount(thread) {
+// Draft count for the active session — same precedence as the topbar
+// pill: posts-store is the canonical source (includes seeded mock
+// drafts), falling back to the latest assistant `variant:"draft"` turn
+// when the store is empty (covers flows that post the turn before any
+// post lands in the store).
+function sessionDraftCount(sessionId, thread) {
+  const storeCount = getPosts(sessionId).length;
+  if (storeCount > 0) return storeCount;
   const latestDraft = [...thread].reverse().find((m) => m.variant === "draft");
   if (!latestDraft) return 0;
   return latestDraft.count ?? latestDraft.drafts?.length ?? 0;

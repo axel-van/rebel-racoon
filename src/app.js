@@ -18,7 +18,7 @@ import { init as initSearchModal } from "./components/search-modal.js?v=3";
 import {
   init as initConversationStatusCard,
   render as renderConversationStatusCard,
-} from "./components/conversation-status-card.js?v=11";
+} from "./components/conversation-status-card.js?v=12";
 import { renderDashboard } from "./screens/dashboard.js?v=45";
 import { renderSession } from "./screens/session.js?v=113";
 import { renderIdeas } from "./screens/ideas.js?v=25";
