@@ -118,8 +118,8 @@
 }
 
 .schedule-modal__mode.is-on {
-  border-color: var(--ref-color-orange-100);
-  background: var(--ref-color-orange-10);
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-10);
 }
 
 .schedule-modal__mode-title {
@@ -133,7 +133,7 @@
 
 .schedule-modal__mode-title i {
   font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-orange-100);
+  color: var(--ref-color-electric-blue-100);
 }
 
 .schedule-modal__mode-sub {
@@ -277,12 +277,12 @@
 
 .schedule-modal__day.is-today {
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-orange-100);
+  color: var(--ref-color-electric-blue-100);
 }
 
 .schedule-modal__day.is-focused {
-  background: var(--ref-color-orange-10);
-  border-color: var(--ref-color-orange-100);
+  background: var(--ref-color-electric-blue-10);
+  border-color: var(--ref-color-electric-blue-100);
 }
 
 .schedule-modal__day-num {
@@ -296,12 +296,15 @@
   background: var(--ref-color-grey-60);
 }
 
+/* Existing posts in the queue read as informational (neutral dot).
+   Posts the user is queuing in this modal read as selection — accent
+   blue, matching every other "selected" surface in the app. */
 .schedule-modal__day-dot.is-existing {
-  background: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-grey-60);
 }
 
 .schedule-modal__day-dot.is-queued {
-  background: var(--ref-color-orange-100);
+  background: var(--ref-color-electric-blue-100);
 }
 
 /* ── Day list (right column, below calendar) ───────────────────────── */
@@ -360,8 +363,8 @@
 }
 
 .schedule-modal__day-item.is-batch {
-  border-color: var(--ref-color-orange-100);
-  background: var(--ref-color-orange-10);
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-10);
 }
 
 .schedule-modal__day-time {

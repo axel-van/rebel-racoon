@@ -599,7 +599,7 @@ function renderDayList() {
           <span class="schedule-modal__day-time">${formatTime(entry.when)}</span>
           <i class="${NETWORK_ICON[network] || "ap-icon-megaphone"} schedule-modal__day-icon" aria-hidden="true"></i>
           <span class="schedule-modal__day-text">${escapeText(entry.text)}</span>
-          ${entry.isBatch ? `<span class="ap-status orange no-dot schedule-modal__day-tag">This batch</span>` : ""}
+          ${entry.isBatch ? `<span class="ap-status blue no-dot schedule-modal__day-tag">This batch</span>` : ""}
         </li>
       `;
     })

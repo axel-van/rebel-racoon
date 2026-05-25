@@ -29,7 +29,7 @@ import { open as openAddSourceModal } from "./add-source-modal.js?v=22";
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
-import { open as openScheduleModal } from "./schedule-modal.js?v=22";
+import { open as openScheduleModal } from "./schedule-modal.js?v=23";
 import { open as openGenerateImageModal } from "./generate-image-modal.js?v=21";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
@@ -1263,7 +1263,7 @@ function renderDraftsView() {
           ${selectedCount} ${selectedCount === 1 ? "draft" : "drafts"} selected
         </div>
         <div class="rpanel-drafts__bulkbar-actions">
-          <button type="button" class="ap-button transparent grey" data-rpanel-drafts-bulk-clear>
+          <button type="button" class="ap-button ghost grey" data-rpanel-drafts-bulk-clear>
             Clear
           </button>
           <button type="button" class="ap-button primary orange" data-rpanel-drafts-bulk-schedule>

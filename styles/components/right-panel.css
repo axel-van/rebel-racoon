@@ -595,8 +595,8 @@
 }
 
 .rpanel-drafts__feed .posts__row.is-selected .posts__card {
-  border-color: var(--ref-color-orange-100);
-  box-shadow: 0 0 0 1px var(--ref-color-orange-100);
+  border-color: var(--ref-color-electric-blue-100);
+  box-shadow: 0 0 0 1px var(--ref-color-electric-blue-100);
 }
 
 /* ── Select-all pill ─────────────────────────────────────────────────
@@ -637,7 +637,7 @@
   margin: var(--ref-spacing-sm) auto 0;
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   background: var(--app-surface);
-  border: 1px solid var(--ref-color-orange-100);
+  border: 1px solid var(--ref-color-electric-blue-100);
   border-radius: var(--app-radius-card);
   box-shadow: var(--app-shadow-modal);
 }
@@ -652,7 +652,7 @@
 }
 
 .rpanel-drafts__bulkbar-label i {
-  color: var(--ref-color-orange-100);
+  color: var(--ref-color-electric-blue-100);
 }
 
 .rpanel-drafts__bulkbar-actions {
