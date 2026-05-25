@@ -646,7 +646,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=123").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=124").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -2092,7 +2092,7 @@ function renderIdeaCompact(idea) {
         <div class="rpanel-ideas__foot-actions">
           <button type="button" class="ap-button stroked blue rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
             <i class="ap-icon-sparkles"></i>
-            <span>Draft a post from this idea</span>
+            <span>Draft</span>
           </button>
           <div class="rpanel-ideas__more-wrap">
             <button
@@ -2139,7 +2139,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=123").then(({ askDraftCountQuestion }) => {
+  import("../screens/session.js?v=124").then(({ askDraftCountQuestion }) => {
     askDraftCountQuestion(sid, ideaId);
   });
 }

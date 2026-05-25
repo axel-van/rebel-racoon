@@ -2,7 +2,7 @@ import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=3";
 import { initTopbar, renderTopbar } from "./components/topbar.js?v=54";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=43";
-import { init as initRightPanel } from "./components/right-panel.js?v=76";
+import { init as initRightPanel } from "./components/right-panel.js?v=77";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=24";
 import { initUserModeChip } from "./components/user-mode-chip.js?v=30";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=22";
@@ -20,15 +20,15 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=12";
 import { renderDashboard } from "./screens/dashboard.js?v=45";
-import { renderSession } from "./screens/session.js?v=122";
+import { renderSession } from "./screens/session.js?v=124";
 import { renderIdeas } from "./screens/ideas.js?v=25";
 import { renderContexts } from "./screens/contexts.js?v=35";
-import { renderWelcome } from "./screens/welcome.js?v=4";
-import { renderWelcomeSocials } from "./screens/welcome-socials.js?v=4";
+import { renderWelcome } from "./screens/welcome.js?v=5";
+import { renderWelcomeSocials } from "./screens/welcome-socials.js?v=5";
 import { renderWelcomeSources } from "./screens/welcome-sources.js?v=2";
-import { renderWelcomeRecap } from "./screens/welcome-recap.js?v=2";
-import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=2";
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=2";
+import { renderWelcomeRecap } from "./screens/welcome-recap.js?v=3";
+import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=3";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=3";
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
 // stays in sync with the active context.

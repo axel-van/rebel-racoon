@@ -19,12 +19,12 @@
 // right-panel ContextForm read mode (openRead) stays for viewing existing
 // contexts that may still have the old shape.
 
-import * as inlineQuestion from "./inline-question.js?v=26";
+import * as inlineQuestion from "./inline-question.js?v=27";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=35";
-import * as rightPanel from "./components/right-panel.js?v=76";
+import * as rightPanel from "./components/right-panel.js?v=77";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=28";
 import { analyzeWebsite, analyzeDocument } from "./context-mock-analysis.js?v=21";
-import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=9";
+import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=10";
 import { socialAccounts, connectors as connectorMocks } from "./mocks.js?v=34";
 
 const drafts = new Map(); // sessionId → draft
@@ -197,22 +197,36 @@ export function start(sessionId, { onComplete, autoLaunched = false, prefill = n
 // a chat with body.onboarding chrome. The website analysis kicks off in
 // the background as soon as the URL lands, so by the time the user
 // finishes the documents step the brief panel can open immediately.
-export function startAlt(sessionId, { onComplete } = {}) {
-  drafts.set(sessionId, emptyDraft({ onComplete, sourceType: "website" }));
+//
+// `prefilledUrl` represents an URL collected by an earlier step that
+// lives outside the prototype — the chat surface uses it to pre-populate
+// the URL question card so the user just confirms instead of typing.
+export function startAlt(sessionId, { onComplete, prefilledUrl = "" } = {}) {
+  const url = (prefilledUrl || "").trim();
+  drafts.set(
+    sessionId,
+    emptyDraft({
+      onComplete,
+      sourceType: "website",
+      websiteUrl: url,
+      sourceUrl: url,
+    }),
+  );
   notify(sessionId);
-  askAltUrl(sessionId);
+  askAltUrl(sessionId, url);
 }
 
-function askAltUrl(sessionId) {
-  postAssistantMessage(
-    sessionId,
-    "Welcome. Let's build your Playbook together. Paste your website URL and I'll extract the voice, audience, and visual identity.",
-  );
+function askAltUrl(sessionId, prefilledUrl = "") {
+  const intro = prefilledUrl
+    ? "Welcome — I've already got your site. Confirm to extract the voice, audience, and visual identity."
+    : "Welcome. Let's build your Playbook together. Paste your website URL and I'll extract the voice, audience, and visual identity.";
+  postAssistantMessage(sessionId, intro);
   inlineQuestion.ask(sessionId, {
     title: "What's your website URL?",
     stepLabel: "1 / 3",
     items: [],
     customPlaceholder: "https://your-brand.com",
+    customValue: prefilledUrl,
     onCustom: (value) => {
       const d = drafts.get(sessionId);
       if (!d) return;
@@ -283,7 +297,12 @@ function askAltProfile(sessionId) {
       notify(sessionId);
       askAltDocuments(sessionId);
     },
-    onBack: () => askAltUrl(sessionId),
+    onBack: () => {
+      // Re-render question 1 with whatever URL the draft already holds
+      // (the prefilled value, or what the user typed when they advanced).
+      const d = drafts.get(sessionId);
+      askAltUrl(sessionId, d?.sourceUrl || d?.websiteUrl || "");
+    },
   });
 }
 

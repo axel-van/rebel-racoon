@@ -15,9 +15,9 @@
 
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { getDraft, isAnalysisReady, save } from "../context-builder.js?v=42";
-import { renderBriefSections } from "../components/right-panel.js?v=76";
-import { launch as launchPlaybookEditor } from "../playbook-editor.js?v=9";
+import { getDraft, isAnalysisReady, save } from "../context-builder.js?v=43";
+import { renderBriefSections } from "../components/right-panel.js?v=77";
+import { launch as launchPlaybookEditor } from "../playbook-editor.js?v=10";
 import { setHandoff } from "../handoff.js?v=20";
 
 const WELCOME_SESSION_KEY = "welcomeSessionId";

@@ -34,10 +34,10 @@ import {
 import { startDraftFlow, executeDraft } from "../draft-flow.js?v=29";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=32";
-import * as inlineQuestion from "../inline-question.js?v=26";
-import * as contextBuilder from "../context-builder.js?v=42";
-import * as playbookEditor from "../playbook-editor.js?v=9";
-import { renderPicker } from "./_analyse-common.js?v=30";
+import * as inlineQuestion from "../inline-question.js?v=27";
+import * as contextBuilder from "../context-builder.js?v=43";
+import * as playbookEditor from "../playbook-editor.js?v=10";
+import { renderPicker } from "./_analyse-common.js?v=31";
 import { renderSourceCard } from "../components/source-card.js?v=29";
 import { renderIdeaCard } from "../components/idea-card.js?v=26";
 import {
@@ -70,7 +70,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=76";
+} from "../components/right-panel.js?v=77";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
@@ -563,9 +563,34 @@ function renderAssistantPanelQuestion(session) {
   // subscriber can swap the thread innerHTML without nuking it — most modern
   // callers leave chrome.body empty by passing the prompt through
   // postAssistantMessage instead.
+  //
+  // First Time User ALT — when the chat is mounted inside a
+  // /session/welcome-alt-* route, prepend a marketing hero (eyebrow +
+  // headline + paragraph) above the chat thread so the entry feels less
+  // bare than the standalone conversational layout. Reuses the
+  // `.welcome-hero` block from welcome.css for layout + typography
+  // (flex column, gap, 520px reading width); `.welcome-alt-hero` only
+  // owns the outer positioning inside the wizard aside (column width
+  // matching .analyse__chat-inner + top/bottom padding).
+  const isWelcomeAlt = session.id.startsWith("welcome-alt-");
+  const heroMarkup = isWelcomeAlt
+    ? html`
+        <header class="welcome-alt-hero">
+          <div class="welcome-hero">
+            <span class="welcome-hero__eyebrow">Welcome</span>
+            <h1 class="welcome-hero__title">Let's get to know<br />your Brand.</h1>
+            <p class="welcome-hero__sub">
+              Paste your website URL and I'll extract your voice, audience, and visual identity. We'll build your
+              Playbook in a few steps.
+            </p>
+          </div>
+        </header>
+      `
+    : "";
   return html`
     <aside class="session__assistant session__assistant--wizard" aria-label="Assistant panel">
       <div class="session__assistant-wizard-chat analyse__chat" id="inlineQuestionChat">
+        ${raw(heroMarkup)}
         <div class="analyse__chat-inner">
           <div data-assistant-thread>${raw(renderThread(thread, session.id))}</div>
           ${raw(chrome.body)}
@@ -1274,7 +1299,7 @@ function wireAssistantPanel(root, session, attachedContext) {
   // state rather than redirecting back to /welcome-alt).
   const pendingCtxBuilder = consumeHandoff("pendingStartContextBuilder");
   if (pendingCtxBuilder) {
-    const { returnTo, prefill, finishMode, flow } = pendingCtxBuilder;
+    const { returnTo, prefill, finishMode, flow, prefilledUrl } = pendingCtxBuilder;
     const onComplete = () => {
       if (finishMode === "switch-to-returning") {
         try {
@@ -1298,7 +1323,7 @@ function wireAssistantPanel(root, session, attachedContext) {
         // First Time User ALT — 3-question orchestration (URL →
         // profiles → optional documents) that mirrors the linear
         // /welcome wizard but rendered inline in chat.
-        contextBuilder.startAlt(session.id, { onComplete });
+        contextBuilder.startAlt(session.id, { onComplete, prefilledUrl });
       } else {
         contextBuilder.start(session.id, { prefill, onComplete });
       }
