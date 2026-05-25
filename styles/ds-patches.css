@@ -178,3 +178,14 @@
 .ap-button.stroked.danger:hover {
   background: var(--ref-color-red-05, rgba(220, 38, 38, 0.05));
 }
+
+/* The DS .ap-link assumes an <a>. Buttons styled as links need their
+   user-agent chrome (border / background / padding) reset so the
+   link text renders without the native button box leaking through.
+   Font tokens stay on the .ap-link class itself — only the box
+   treatment is reset here. */
+button.ap-link {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
