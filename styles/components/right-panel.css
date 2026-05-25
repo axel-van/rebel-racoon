@@ -1095,10 +1095,11 @@
   padding-top: var(--ref-spacing-xl);
 }
 
-/* ─── V1 Brief panel ─────────────────────────────────────────────────────
-   Side-by-side context builder. The panel hosts a vertically scrollable
-   form (intro + name + business summary + Q1-Q9 + color) with a sticky
-   footer carrying the mermaid "Generate my brief" CTA. */
+/* ─── Brief panel ───────────────────────────────────────────────────────
+   Editorial brief layout — five zones (Hero / Personality grid / Voice
+   feature / Essentials bar / Branding showcase) replace the legacy
+   stack of identical cards. Shared with the welcome-recap screens via
+   the public `renderBriefSections` export. */
 
 .context-brief {
   display: flex;
@@ -1108,6 +1109,9 @@
   overflow: hidden;
 }
 
+/* container-type lives on the body (not the panel root) so the
+   personality grid breakpoint also fires when the brief is mounted
+   inside the welcome-recap screens. */
 .context-brief__body {
   flex: 1;
   overflow-y: auto;
@@ -1115,11 +1119,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-md);
+  container-type: inline-size;
 }
 
-/* Intro stays plain (no card chrome) — header text + infobox only.
-   Capped at the same 500px as the cards below for visual alignment. */
+/* Intro stays plain (edit mode only) — teaches the chip color
+   semantics with the DS infobox. */
 .context-brief__intro {
   display: flex;
   flex-direction: column;
@@ -1129,9 +1134,11 @@
   width: 100%;
 }
 
-/* Each question lives in its own card: white surface, grey-10 border,
-   8px radius. Reads as a discrete unit. Capped at 500px so the
-   form stays scannable even when the panel column is wide. */
+/* Fallback card chrome for any `<section class="context-brief__section">`
+   that still renders standalone (chips other-input wrappers etc.). The
+   new editorial zones reset this chrome where the section is nested
+   inside a zone wrapper (see `.context-brief__personality .context-brief__section`
+   etc. below). */
 .context-brief__section {
   position: relative;
   display: flex;
@@ -1182,6 +1189,14 @@
 
 .context-brief__section:hover .context-brief__refine,
 .context-brief__section:focus-within .context-brief__refine,
+.context-brief__hero:hover .context-brief__refine,
+.context-brief__hero:focus-within .context-brief__refine,
+.context-brief__personality:hover .context-brief__refine,
+.context-brief__personality:focus-within .context-brief__refine,
+.context-brief__essentials:hover .context-brief__refine,
+.context-brief__essentials:focus-within .context-brief__refine,
+.context-brief__showcase:hover .context-brief__refine,
+.context-brief__showcase:focus-within .context-brief__refine,
 .context-brief__refine:focus-visible {
   opacity: 1;
   pointer-events: auto;
@@ -1202,61 +1217,282 @@
   display: none;
 }
 
-/* Each of the 3 groups (Audience / Voice profile / Branding) wraps its
-   header + cards in a `<section>`. This containment is what enables the
-   iOS Settings "push-out" sticky behavior — without a parent container,
-   sibling sticky headers all stack at top: 0. The group container scopes
-   each sticky header so it scrolls out when its group's content ends. */
-.context-brief__group {
+/* ── Editorial zones ──────────────────────────────────────────────────
+   Five wrappers replacing the legacy stack of identical white cards:
+   Hero / Personality grid / Voice feature / Essentials bar / Branding
+   showcase. Each wrapper resets the inner `.context-brief__section`
+   card chrome so reused renderers (chips, language picker, CTA, color,
+   image voice) sit flush inside their host zone. */
+
+/* ── Hero ─────────────────────────────────────────────────────────── */
+
+/* Identity strip — color dot + large name, plus an editorial business
+   summary paragraph. No card chrome — reads as a header, not a form
+   field. Capped at the same 640px as the rest of the body for
+   alignment. */
+.context-brief__hero {
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-sm);
+  max-width: 640px;
   width: 100%;
+  padding: 0 var(--ref-spacing-xxs);
 }
 
-/* Group header — inline band that introduces the next set of cards in
-   the brief panel (Audience / Voice profile / Branding). Sticky at the
-   top of the scroll body so the user always knows which group they're
-   in while scrolling (iOS Settings pattern). */
-.context-brief__group-header {
-  position: sticky;
-  top: calc(
-    var(--ref-spacing-md) * -1
-  ); /* cancel the body's padding-top so the band sits flush against the scroll viewport top */
-  z-index: 2;
+.context-brief__hero-identity {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-sm);
+}
+
+.context-brief__hero-color {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--ref-color-white);
+  box-shadow: 0 0 0 1px var(--ref-color-grey-10);
+}
+
+.context-brief__hero-name {
   margin: 0;
-  padding: var(--ref-spacing-sm) 0 var(--ref-spacing-xs);
-  background: var(--ref-color-grey-05);
-  border-bottom: 1px solid var(--ref-color-grey-10);
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--ref-font-size-xxl);
+  line-height: var(--ref-font-line-height-xxl);
+  font-weight: var(--ref-font-weight-extra-bold);
+  color: var(--ref-color-grey-150);
+  letter-spacing: -0.01em;
+}
+
+.context-brief__hero-name-input {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.context-brief__hero-swatches {
+  flex: 0 0 auto;
+}
+
+.context-brief__hero-source {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  color: var(--ref-color-grey-80);
   font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ref-color-grey-100);
+  line-height: var(--ref-font-line-height-xs);
+}
+
+.context-brief__hero-source > i {
+  font-size: var(--ref-font-size-xs);
+}
+
+.context-brief__hero-summary {
+  margin: 0;
+  color: var(--ref-color-grey-150);
+  font-size: var(--ref-font-size-lg);
+  line-height: var(--ref-font-line-height-lg);
+  font-weight: var(--ref-font-weight-regular);
+}
+
+.context-brief__hero-summary-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+/* ── Personality grid ─────────────────────────────────────────────── */
+
+/* 2-column grid pairing the four chip groups thematically. CSS grid
+   handles the responsive collapse; container query lets the same
+   layout work in the right-panel (variable width) and the welcome
+   recap surfaces. */
+.context-brief__personality {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-flow: row dense;
+  max-width: 640px;
   width: 100%;
+  border-radius: var(--ref-border-radius-md);
+  border: 1px solid var(--ref-color-grey-10);
+  background: var(--ref-color-white);
+  overflow: hidden;
+}
+
+@container (min-width: 540px) {
+  .context-brief__personality {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Inner cells: reuse the existing `<section class="context-brief__section">`
+   markup from `renderBriefChips` but strip its card chrome — the grid
+   owns the chrome, cells own only the content. Hairlines at cell
+   boundaries via :not(:last-child) selectors. */
+.context-brief__personality > .context-brief__section {
+  max-width: none;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+}
+
+.context-brief__personality > .context-brief__section + .context-brief__section {
+  border-top: 1px solid var(--ref-color-grey-10);
+}
+
+@container (min-width: 540px) {
+  /* Reset all borders from the single-column rule, then re-apply for
+     the 2-column layout: vertical hairline between cells in the same
+     row, horizontal hairline between rows. */
+  .context-brief__personality > .context-brief__section + .context-brief__section {
+    border-top: none;
+  }
+  .context-brief__personality > .context-brief__section:nth-child(odd) {
+    border-right: 1px solid var(--ref-color-grey-10);
+  }
+  .context-brief__personality > .context-brief__section:nth-child(n + 3) {
+    border-top: 1px solid var(--ref-color-grey-10);
+  }
+}
+
+/* ── Voice feature ────────────────────────────────────────────────── */
+
+/* Repaints the voice profile card with a soft mermaid tint so it
+   reads as the "soul" of the playbook — distinct from the rest of
+   the body without adding another generic white card. */
+.context-brief__voice-profile {
+  background: var(--ref-color-mermaid-10);
+  border-color: var(--ref-color-mermaid-20);
   max-width: 640px;
 }
 
-.context-brief__group-header > i {
-  font-size: var(--ref-font-size-sm);
+.context-brief__voice-profile .context-brief__vp-icon {
+  color: var(--ref-color-mermaid-gradient-from);
+}
+
+.context-brief__voice-profile .context-brief__vp-headline {
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-mermaid-20);
+}
+
+.context-brief__voice-profile .context-brief__vp-section {
+  border-top-color: var(--ref-color-mermaid-20);
+}
+
+/* ── Essentials bar ───────────────────────────────────────────────── */
+
+/* Compact inline row combining language + CTA links. Reads as a
+   single sentence in read mode; expands into the full editor in
+   edit mode (CTAs visible, no collapse). */
+.context-brief__essentials {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  max-width: 640px;
+  width: 100%;
+}
+
+.context-brief__essentials-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ref-spacing-md);
+}
+
+.context-brief__essentials-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.context-brief__essentials-label {
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  font-weight: var(--ref-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--ref-color-grey-80);
 }
 
-.context-brief__group-header:first-of-type {
-  padding-top: 0;
+.context-brief__essentials-ctas {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
 }
 
-/* The voice profile card already has its own internal header (chevron +
-   megaphone + h3). Now that a "VOICE PROFILE" sticky band sits right
-   above the card, the internal label + icon are redundant — hide them
-   but keep the chevron-collapse button so the card stays collapsible. */
-.context-brief__voice-profile .context-brief__vp-header > .context-brief__title,
-.context-brief__voice-profile .context-brief__vp-icon {
+.context-brief__essentials-ctas > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  cursor: pointer;
+  list-style: none;
+}
+
+.context-brief__essentials-ctas > summary::-webkit-details-marker {
   display: none;
+}
+
+.context-brief__essentials-cta-count {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.context-brief__essentials-ctas[open] > summary .context-brief__essentials-cta-count > i {
+  transform: rotate(180deg);
+}
+
+.context-brief__essentials-cta-count > i {
+  font-size: var(--ref-font-size-xs);
+  transition: transform var(--ref-animation-short) var(--app-ease-out);
+}
+
+.context-brief__essentials-ctas > .context-brief__cta-readonly-list {
+  padding-left: calc(var(--ref-spacing-xs) + 4px);
+  border-left: 2px solid var(--ref-color-grey-10);
+}
+
+/* Edit mode — strip the card chrome from the inner language + CTA
+   sections so they read as one continuous editor. */
+.context-brief__essentials > .context-brief__section {
+  max-width: none;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+/* ── Branding showcase ────────────────────────────────────────────── */
+
+/* Horizontal strip combining color (read-mode swatch) and the
+   image-voice mood-board. Both inner sections drop their card chrome
+   to read as one cohesive zone. */
+.context-brief__showcase {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  max-width: 640px;
+  width: 100%;
+}
+
+.context-brief__showcase > .context-brief__section {
+  max-width: none;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+.context-brief__showcase > .context-brief__section + .context-brief__section {
+  padding-top: var(--ref-spacing-sm);
+  border-top: 1px solid var(--ref-color-grey-10);
 }
 
 .context-brief__intro-text {
@@ -1388,9 +1624,10 @@
 }
 
 /* Feature flag: hide playbook colors. Drops every color swatch
-   container in the brief panel — both the editable picker in
-   renderBriefName and the read-mode display elsewhere. */
-body.hide-playbook-colors .context-brief__color-swatches {
+   container in the brief panel (hero edit-mode picker + read-mode
+   display in the branding showcase). */
+body.hide-playbook-colors .context-brief__color-swatches,
+body.hide-playbook-colors .context-brief__hero-color {
   display: none;
 }
 

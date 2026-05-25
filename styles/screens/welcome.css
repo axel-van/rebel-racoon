@@ -990,12 +990,6 @@
     0 16px 36px -10px rgba(26, 31, 54, 0.1);
 }
 
-.welcome-recap__body .context-brief__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-md);
-}
-
 .welcome-recap__pending {
   display: flex;
   flex-direction: column;
