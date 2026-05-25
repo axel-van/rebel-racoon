@@ -39,7 +39,7 @@ function labelFor(channel) {
   return CHANNEL_META[channel.toLowerCase()]?.label || channel;
 }
 
-export function startDraftFlow(sessionId, ideaId, count = 1) {
+export function startDraftFlow(sessionId, ideaId, count = 1, channelOverride = null) {
   const idea = resolveIdea(sessionId, ideaId);
   if (!idea) return;
 
@@ -50,6 +50,14 @@ export function startDraftFlow(sessionId, ideaId, count = 1) {
 
   setTimeout(() => {
     finishPending(sessionId, pendingId);
+
+    // The caller picked a profile explicitly — honour it and skip the
+    // channel picker. Used by the right-panel count+profile flow where
+    // the user has already chosen which network to draft for.
+    if (Array.isArray(channelOverride) && channelOverride.length > 0) {
+      executeDraft(sessionId, ideaId, channelOverride, count);
+      return;
+    }
 
     const channels = (idea.channels || ["linkedin"]).filter((c) => CHANNEL_META[c.toLowerCase()]);
 

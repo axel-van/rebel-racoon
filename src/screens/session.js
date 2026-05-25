@@ -31,7 +31,7 @@ import {
   setSubtitleStyle,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=27";
-import { startDraftFlow, executeDraft } from "../draft-flow.js?v=27";
+import { startDraftFlow, executeDraft } from "../draft-flow.js?v=28";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=31";
 import * as inlineQuestion from "../inline-question.js?v=26";
@@ -726,8 +726,11 @@ function defaultChatNameLocal() {
 
 // Build + show the "Which profile?" question. Used both from the in-session
 // Draft Post button and from the dashboard's Draft Post handler (via the
-// pendingDraftIdeaId hand-off in handoff.js).
-function askProfileQuestion(sessionId, ideaId) {
+// pendingDraftIdeaId hand-off in handoff.js). The chosen profile's platform
+// becomes the draft's network so the user gets posts on the surface they
+// actually want to publish to. `count` is threaded through from the count
+// picker; `onBack` lets the second-step picker return to the first.
+function askProfileQuestion(sessionId, ideaId, { count = 1, onBack = null } = {}) {
   const connected = socialAccounts.filter((a) => a.status === "connected");
   if (connected.length === 0) {
     postAssistantMessage(
@@ -746,19 +749,20 @@ function askProfileQuestion(sessionId, ideaId) {
       caption: a.handle ? (a.kind ? `${a.kind} · ${a.handle}` : a.handle) : a.kind || "",
       imgSrc: a.logo,
     })),
-    onPick: () => {
-      startDraftFlow(sessionId, ideaId);
+    onPick: (accountId) => {
+      const account = connected.find((a) => a.id === accountId);
+      const channels = account?.platform ? [account.platform] : null;
+      startDraftFlow(sessionId, ideaId, count, channels);
     },
-    onSkip: () => {
-      // Just exit the question — no draft started, no error.
-    },
+    onBack: onBack || undefined,
+    onSkip: onBack ? undefined : () => {},
   });
 }
 
 // "Draft a post from this idea" picker — triggered by the right-panel
-// Ideas card. Asks how many drafts to generate before kicking off the
-// usual draft-flow pipeline. The flow then skips the channel picker
-// and produces N drafts on the idea's primary channel.
+// Ideas card. Two-step flow: (1) how many drafts, (2) which connected
+// profile. The profile choice determines the draft's network so the
+// user lands with posts on the surface they actually want to publish to.
 export function askDraftCountQuestion(sessionId, ideaId) {
   postAssistantMessage(sessionId, "How many drafts should I generate?");
   inlineQuestion.ask(sessionId, {
@@ -770,7 +774,12 @@ export function askDraftCountQuestion(sessionId, ideaId) {
       { value: 5, label: "5 drafts", caption: "A full batch to pick from." },
     ],
     onPick: (count) => {
-      startDraftFlow(sessionId, ideaId, Number(count) || 1);
+      const n = Number(count) || 1;
+      askProfileQuestion(sessionId, ideaId, {
+        count: n,
+        // ← Back returns to the count picker so the user can change their mind.
+        onBack: () => askDraftCountQuestion(sessionId, ideaId),
+      });
     },
     onSkip: () => {},
   });
