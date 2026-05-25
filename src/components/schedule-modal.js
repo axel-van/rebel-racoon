@@ -364,7 +364,7 @@ function renderInner() {
           Pick when each post should publish. Archie can spread them automatically across optimal times per network.
         </div>
       </div>
-      <button type="button" class="ap-icon-button transparent" data-schedule-close aria-label="Close (Esc)">
+      <button type="button" class="ap-icon-button stroked transparent" data-schedule-close aria-label="Close (Esc)">
         <i class="ap-icon-close"></i>
       </button>
     </header>
@@ -394,7 +394,7 @@ function renderInner() {
       <div class="schedule-modal__foot-actions">
         <button
           type="button"
-          class="ap-button transparent grey"
+          class="ap-button ghost grey"
           data-schedule-close
           ${state.status === "scheduling" ? "disabled" : ""}
         >
@@ -466,16 +466,17 @@ function renderSlotList() {
             <div class="schedule-modal__slot-text">${escapeText(text)}</div>
           </div>
           <div class="schedule-modal__slot-when">
-            <input
-              type="datetime-local"
-              class="ap-input"
-              value="${toLocalInput(s.when)}"
-              data-schedule-slot="${i}"
-              aria-label="Scheduled time"
-            />
+            <div class="ap-input-group">
+              <input
+                type="datetime-local"
+                value="${toLocalInput(s.when)}"
+                data-schedule-slot="${i}"
+                aria-label="Scheduled time"
+              />
+            </div>
             <button
               type="button"
-              class="ap-icon-button transparent schedule-modal__slot-remove"
+              class="ap-icon-button stroked transparent schedule-modal__slot-remove"
               data-schedule-remove="${i}"
               aria-label="Remove from batch"
               title="Remove from batch"
@@ -535,7 +536,7 @@ function renderCalendarPanel() {
     <header class="schedule-modal__cal-head">
       <button
         type="button"
-        class="ap-icon-button transparent xs"
+        class="ap-icon-button stroked transparent"
         data-schedule-month="prev"
         aria-label="Previous month"
       >
@@ -544,7 +545,7 @@ function renderCalendarPanel() {
       <span class="schedule-modal__cal-title">${monthLabel}</span>
       <button
         type="button"
-        class="ap-icon-button transparent xs"
+        class="ap-icon-button stroked transparent"
         data-schedule-month="next"
         aria-label="Next month"
       >

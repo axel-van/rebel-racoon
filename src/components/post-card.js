@@ -32,7 +32,7 @@ export function renderPostCard(post, opts = {}) {
   // surfaces that opt in via `opts.selectable`.
   const checkbox = selectable
     ? `<div class="posts__row-check">
-        <label class="ap-checkbox-container posts__row-check-label" aria-label="Select draft">
+        <label class="ap-checkbox-container" aria-label="Select draft">
           <input type="checkbox" data-post-select="${post.id}" ${selected ? "checked" : ""} />
           <i></i>
         </label>

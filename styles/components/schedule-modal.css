@@ -233,7 +233,7 @@
   grid-template-columns: repeat(7, 1fr);
   gap: var(--ref-spacing-xxxs);
   text-align: center;
-  font-size: 11px;
+  font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-60);
   text-transform: uppercase;
@@ -253,10 +253,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--ref-spacing-xxxs);
   background: transparent;
   border: 1px solid transparent;
-  border-radius: var(--ref-radius-xs);
+  border-radius: var(--ref-border-radius-sm);
   font-family: inherit;
   font-size: var(--ref-font-size-xs);
   color: var(--ref-color-grey-150);
@@ -266,7 +266,7 @@
 
 .schedule-modal__day:hover,
 .schedule-modal__day:focus-visible {
-  border-color: var(--ref-color-grey-30);
+  border-color: var(--ref-color-grey-20);
   background: var(--ref-color-grey-10);
   outline: none;
 }
@@ -290,14 +290,14 @@
 }
 
 .schedule-modal__day-dot {
-  width: 4px;
-  height: 4px;
+  width: var(--ref-spacing-xxxs);
+  height: var(--ref-spacing-xxxs);
   border-radius: 50%;
   background: var(--ref-color-grey-60);
 }
 
 .schedule-modal__day-dot.is-existing {
-  background: var(--ref-color-blue-100);
+  background: var(--ref-color-electric-blue-100);
 }
 
 .schedule-modal__day-dot.is-queued {
@@ -326,7 +326,7 @@
 
 .schedule-modal__day-list-head .muted {
   font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-normal);
+  font-weight: var(--ref-font-weight-regular);
   color: var(--ref-color-grey-60);
 }
 
@@ -335,7 +335,7 @@
   color: var(--ref-color-grey-60);
   padding: var(--ref-spacing-xs);
   background: var(--ref-color-grey-10);
-  border-radius: var(--ref-radius-xs);
+  border-radius: var(--ref-border-radius-sm);
 }
 
 .schedule-modal__day-list-items {
@@ -355,7 +355,7 @@
   padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
-  border-radius: var(--ref-radius-xs);
+  border-radius: var(--ref-border-radius-sm);
   font-size: var(--ref-font-size-xs);
 }
 
@@ -417,8 +417,8 @@
 
 /* Spinner shown inside the primary CTA while the confirm callback runs. */
 .schedule-modal__spinner {
-  width: 14px;
-  height: 14px;
+  width: var(--sys-icon-sm);
+  height: var(--sys-icon-sm);
   border-radius: 50%;
   border: 2px solid var(--ref-color-white);
   border-top-color: transparent;
