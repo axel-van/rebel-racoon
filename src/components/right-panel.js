@@ -77,7 +77,6 @@ const IDEA_KINDS = [
 // at a time). Survives across renderPanel() calls but is reset when the
 // panel re-opens in a fresh session via renderIdeasBodyOnly().
 let ideasFilter = "all";
-let ideasQuery = "";
 let ideasSort = "recent"; // 'recent' | 'used' | 'confidence'
 let expandedIdeaId = null;
 // Ideas the user has dismissed via the More menu — kept in a Set so the
@@ -548,7 +547,6 @@ export function init() {
     }
     if (event.target.closest("[data-rpanel-ideas-clear]")) {
       ideasFilter = "all";
-      ideasQuery = "";
       renderPanel();
       return;
     }
@@ -656,10 +654,23 @@ export function init() {
       });
       return;
     }
-    // Use this idea → injects a templated prompt into the assistant composer.
+    // Use this idea → opens the count + profile picker flow.
     const useBtn = event.target.closest("[data-rpanel-use-idea]");
     if (useBtn) {
       useIdea(useBtn.dataset.rpanelUseIdea);
+      return;
+    }
+    // Sort option pick (DS .ap-select option click). Updates state, re-
+    // renders the body, and closes the <details> dropdown manually since
+    // we're handling the click ourselves instead of letting the summary
+    // toggle behavior fire.
+    const sortOpt = event.target.closest("[data-rpanel-ideas-sort]");
+    if (sortOpt) {
+      event.preventDefault();
+      ideasSort = sortOpt.dataset.rpanelIdeasSort || "recent";
+      const menu = el.querySelector("[data-rpanel-ideas-sort-menu]");
+      if (menu) menu.open = false;
+      renderPanel();
       return;
     }
     // Expand / collapse a single card (accordion: closes any previously
@@ -782,11 +793,6 @@ export function init() {
     }
   });
   el.addEventListener("change", (event) => {
-    if (event.target.matches("[data-rpanel-ideas-sort]")) {
-      ideasSort = event.target.value || "recent";
-      renderIdeasBodyOnly();
-      return;
-    }
     if (event.target.matches("[data-rpanel-drafts-filter-select]")) {
       draftsFilter = event.target.value || "all";
       renderPanel();
@@ -826,11 +832,6 @@ export function init() {
     }
   });
   el.addEventListener("input", (event) => {
-    if (event.target.matches("[data-rpanel-ideas-search]")) {
-      ideasQuery = event.target.value || "";
-      renderIdeasBodyOnly();
-      return;
-    }
     // --- V1 brief panel inputs ---
     if (event.target.matches("[data-brief-name]")) {
       contextBriefConfig?.onName?.(event.target.value);
@@ -1732,32 +1733,37 @@ function renderIdeasView() {
     { id: "confidence", label: "Highest confidence" },
   ];
 
+  const activeSort = sortOptions.find((o) => o.id === ideasSort) || sortOptions[0];
+
   return html`
     <div class="rpanel-ideas">
       ${raw(tabs)}
       <div class="rpanel-ideas__head">
         <div class="rpanel-ideas__title-bar">
           <h4 class="rpanel-ideas__title">Ideas <span class="rpanel-ideas__title-count">${totalCount}</span></h4>
-          <label class="rpanel-ideas__sort">
-            <span class="rpanel-ideas__sort-label">Sort</span>
-            <select class="ap-native-select rpanel-ideas__sort-select" data-rpanel-ideas-sort>
-              ${raw(
-                sortOptions
-                  .map((o) => `<option value="${o.id}" ${ideasSort === o.id ? "selected" : ""}>${o.label}</option>`)
-                  .join(""),
-              )}
-            </select>
-          </label>
-        </div>
-        <div class="ap-input-group rpanel-ideas__search">
-          <i class="ap-icon-search"></i>
-          <input
-            type="search"
-            class="ap-input"
-            placeholder="Search ideas…"
-            value="${escapeAttr(ideasQuery)}"
-            data-rpanel-ideas-search
-          />
+          <details class="ap-select rpanel-ideas__sort" data-rpanel-ideas-sort-menu>
+            <summary class="ap-select-trigger">
+              <span class="ap-select-inline-label">Sort</span>
+              <span class="ap-select-value">${activeSort.label}</span>
+              <i class="ap-icon-chevron-down ap-select-arrow"></i>
+            </summary>
+            <div class="ap-select-dropdown">
+              <div class="ap-select-options" role="listbox">
+                ${raw(
+                  sortOptions
+                    .map(
+                      (o) => `
+                        <button type="button" class="ap-select-option ${ideasSort === o.id ? "selected" : ""}" role="option" data-rpanel-ideas-sort="${o.id}">
+                          <span class="ap-select-option-text">${o.label}</span>
+                          ${ideasSort === o.id ? `<i class="ap-icon-check ap-select-option-check"></i>` : ""}
+                        </button>
+                      `,
+                    )
+                    .join(""),
+                )}
+              </div>
+            </div>
+          </details>
         </div>
         <div class="rpanel-ideas__filters" role="tablist">
           ${raw(
@@ -1844,10 +1850,9 @@ function renderClipsList(entries) {
 }
 
 function renderIdeasList() {
-  const q = ideasQuery.trim().toLowerCase();
-  const list = IDEAS.filter((i) => !dismissedIdeaIds.has(i.id))
-    .filter((i) => ideasFilter === "all" || i.kind === ideasFilter)
-    .filter((i) => !q || (i.body || "").toLowerCase().includes(q) || (i.title || "").toLowerCase().includes(q));
+  const list = IDEAS.filter((i) => !dismissedIdeaIds.has(i.id)).filter(
+    (i) => ideasFilter === "all" || i.kind === ideasFilter,
+  );
   // Sort axis — applied to the filtered set so the visible order matches
   // the dropdown choice. "recent" keeps the seed order (already newest-
   // first in mocks). Sort is stable via .slice() before mutating.
@@ -1855,26 +1860,50 @@ function renderIdeasList() {
   if (ideasSort === "used") sorted.sort((a, b) => (b.used || 0) - (a.used || 0));
   else if (ideasSort === "confidence") sorted.sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
   if (sorted.length === 0) {
-    // FIND-B6: align with the rich empty pattern. When the user has a
-    // search query, propose to clear it; otherwise the filter chip is
-    // the only narrowing axis so we point them at the All chip.
-    const hasQuery = (ideasQuery || "").trim().length > 0;
     return html`
       <div class="app-right-panel__empty rpanel-ideas__no-match">
-        <div class="app-right-panel__empty-icon"><i class="ap-icon-search"></i></div>
+        <div class="app-right-panel__empty-icon"><i class="ap-icon-sparkles"></i></div>
         <div class="app-right-panel__empty-title">No ideas match</div>
-        <div class="app-right-panel__empty-sub">
-          ${hasQuery
-            ? `No idea matches "${escapeText(ideasQuery)}". Try a different term or clear the search.`
-            : "Switch to a different kind, or pick All to broaden the list."}
-        </div>
+        <div class="app-right-panel__empty-sub">Switch to a different kind, or pick All to broaden the list.</div>
         <div class="app-right-panel__empty-action">
           <button type="button" class="ap-button stroked grey" data-rpanel-ideas-clear>Clear filters</button>
         </div>
       </div>
     `;
   }
-  return sorted.map((i) => renderIdeaCompact(i)).join("");
+
+  // Pinned cards bubble to the top as their own section so the user
+  // doesn't have to hunt them down once the list grows. Unpinned cards
+  // sit below under "All ideas". Skip the section chrome entirely when
+  // there are no pinned ideas so the panel reads as a flat grid.
+  const pinned = sorted.filter((i) => i.pinned);
+  const rest = sorted.filter((i) => !i.pinned);
+  const renderGrid = (items) =>
+    `<div class="rpanel-ideas__grid">${items.map((i) => renderIdeaCompact(i)).join("")}</div>`;
+
+  if (pinned.length === 0) return renderGrid(rest);
+
+  return `
+    <section class="rpanel-ideas__section">
+      <header class="rpanel-ideas__section-head">
+        <i class="ap-icon-pin"></i>
+        <span class="rpanel-ideas__section-label">Pinned</span>
+        <span class="rpanel-ideas__section-count">${pinned.length}</span>
+      </header>
+      ${renderGrid(pinned)}
+    </section>
+    ${
+      rest.length > 0
+        ? `<section class="rpanel-ideas__section">
+            <header class="rpanel-ideas__section-head">
+              <span class="rpanel-ideas__section-label">All ideas</span>
+              <span class="rpanel-ideas__section-count">${rest.length}</span>
+            </header>
+            ${renderGrid(rest)}
+          </section>`
+        : ""
+    }
+  `;
 }
 
 function renderIdeasBodyOnly() {
@@ -1933,20 +1962,10 @@ function toggleIdeaPinned(id) {
   if (!idea) return;
   const nextPinned = !idea.pinned;
   idea.pinned = nextPinned;
-  // Repaint the affected card head in place — preserves focus on the
-  // pin button so keyboard users keep their place.
-  const card = document.querySelector(`.rpanel-ideas__card[data-idea-id="${cssEscape(id)}"]`);
-  if (card) {
-    if (nextPinned) card.dataset.pinned = "true";
-    else delete card.dataset.pinned;
-    const pinBtn = card.querySelector("[data-rpanel-pin-idea]");
-    if (pinBtn) {
-      pinBtn.setAttribute("aria-pressed", String(nextPinned));
-      const label = nextPinned ? "Unpin idea" : "Pin idea";
-      pinBtn.setAttribute("aria-label", label);
-      pinBtn.setAttribute("title", label);
-    }
-  }
+  // Pinned cards live in their own top section now, so flipping the
+  // state moves the card between sections — repaint the whole list
+  // rather than try to mutate header chrome in place.
+  renderIdeasBodyOnly();
   import("./toast.js").then(({ showToast }) =>
     showToast(nextPinned ? "Idea pinned" : "Idea unpinned", {
       action: { label: "Undo", onClick: () => toggleIdeaPinned(id) },
@@ -2033,22 +2052,24 @@ function renderIdeaCompact(idea) {
         </span>
         <button
           type="button"
-          class="ap-icon-button transparent sm rpanel-ideas__pin"
+          class="ap-link small standalone rpanel-ideas__pin"
           data-rpanel-pin-idea="${escapeAttr(idea.id)}"
           aria-pressed="${isPinned}"
-          aria-label="${isPinned ? "Unpin idea" : "Pin idea"}"
-          title="${isPinned ? "Unpin idea" : "Pin idea"}"
         >
-          <i class="ap-icon-pin"></i>
+          ${isPinned ? "Unpin" : "Pin"}
         </button>
       </header>
       ${idea.title ? `<h4 class="rpanel-ideas__card-title">${escapeText(idea.title)}</h4>` : ""}
       <p class="rpanel-ideas__card-body">${escapeText(idea.body || "")}</p>
       ${
         idea.rationale
-          ? `<div class="rpanel-ideas__rationale" id="${rationaleId}" ${isExpanded ? "" : "hidden"}>
-              <span class="rpanel-ideas__rationale-label">Why this idea</span>
-              <p class="rpanel-ideas__rationale-text">${escapeText(idea.rationale)}</p>
+          ? `<div class="ap-infobox info rpanel-ideas__rationale" id="${rationaleId}" ${isExpanded ? "" : "hidden"}>
+              <i class="ap-icon-info_fill"></i>
+              <div class="ap-infobox-content">
+                <div class="ap-infobox-texts">
+                  <span class="ap-infobox-message">${escapeText(idea.rationale)}</span>
+                </div>
+              </div>
             </div>`
           : ""
       }
@@ -2069,8 +2090,8 @@ function renderIdeaCompact(idea) {
             : `<span class="rpanel-ideas__foot-spacer"></span>`
         }
         <div class="rpanel-ideas__foot-actions">
-          <button type="button" class="ap-button mermaid rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
-            <i class="ap-icon-sparkles-mermaid"></i>
+          <button type="button" class="ap-button stroked blue rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
+            <i class="ap-icon-sparkles"></i>
             <span>Draft a post from this idea</span>
           </button>
           <div class="rpanel-ideas__more-wrap">

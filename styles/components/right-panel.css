@@ -400,33 +400,26 @@
   color: var(--ref-color-grey-60);
 }
 
-.rpanel-ideas__sort {
-  display: inline-flex;
-  align-items: center;
+/* Compact DS .ap-select trigger — fits next to the title without
+   dominating the head chrome. Padding/height shaved so the dropdown
+   reads as a quiet utility next to "Ideas N". */
+.ap-select.rpanel-ideas__sort {
+  min-width: 0;
+}
+
+.ap-select.rpanel-ideas__sort > .ap-select-trigger {
+  height: auto;
+  min-height: 0;
+  padding: 4px var(--ref-spacing-xs);
+  font-size: var(--app-text-micro);
   gap: var(--ref-spacing-xxs);
 }
 
-.rpanel-ideas__sort-label {
-  font-size: var(--app-text-micro);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-80);
+.ap-select.rpanel-ideas__sort .ap-select-inline-label {
   text-transform: uppercase;
   letter-spacing: 0.04em;
-}
-
-.rpanel-ideas__sort-select {
   font-size: var(--app-text-micro);
-  padding: 2px var(--ref-spacing-xs);
-  min-height: 0;
-  height: auto;
-}
-
-.rpanel-ideas__search {
-  width: 100%;
-}
-
-.rpanel-ideas__search .ap-icon-search {
-  color: var(--ref-color-grey-60);
+  color: var(--ref-color-grey-80);
 }
 
 .rpanel-ideas__filters {
@@ -442,7 +435,51 @@
   padding: var(--ref-spacing-xs) var(--ref-spacing-md) var(--ref-spacing-md);
   display: flex;
   flex-direction: column;
+  gap: var(--ref-spacing-md);
+}
+
+/* Each pinned / unpinned bucket — small header (pin icon + label +
+   count) on top of its grid of cards. Section stays full-width even
+   when the grid switches to 2 columns. */
+.rpanel-ideas__section {
+  display: flex;
+  flex-direction: column;
   gap: var(--ref-spacing-xs);
+}
+
+.rpanel-ideas__section-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  font-size: var(--app-text-micro);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-80);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rpanel-ideas__section-head .ap-icon-pin {
+  color: var(--ref-color-orange-100);
+  font-size: var(--sys-icon-css-sm);
+}
+
+.rpanel-ideas__section-count {
+  color: var(--ref-color-grey-60);
+  font-weight: var(--ref-font-weight-regular);
+}
+
+/* Card grid — single column by default, switches to 2 columns when the
+   panel container is wide enough to keep cards readable (≥ 580px). */
+.rpanel-ideas__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--ref-spacing-xs);
+}
+
+@container (min-width: 580px) {
+  .rpanel-ideas__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .rpanel-ideas__no-match {
@@ -507,13 +544,15 @@
   white-space: nowrap;
 }
 
-/* Pin icon-button — orange when pressed, ghost grey otherwise. The DS
-   provides the base sizing via .ap-icon-button.transparent.sm. */
-.rpanel-ideas__pin {
+/* Pin affordance — text link instead of an icon-only button so the
+   action reads at a glance ("Pin" / "Unpin"). Pinned cards still get
+   the orange accent via the link color flip so the state is visible
+   without needing to read the label. */
+.ap-link.rpanel-ideas__pin {
   flex: 0 0 auto;
 }
 
-.rpanel-ideas__pin[aria-pressed="true"] {
+.ap-link.rpanel-ideas__pin[aria-pressed="true"] {
   color: var(--ref-color-orange-100);
 }
 
@@ -586,37 +625,16 @@
   display: block;
 }
 
-/* Rationale block — revealed when the card is expanded. Reads as an
-   AI meta layer (the assistant's reasoning behind the idea), so it
-   adopts the mermaid identity family used elsewhere for AI surfaces
-   (drafts-card, Archie chat avatar, source-processing pill). Sharp
-   left edge anchors the mermaid accent line; the rest of the card
-   keeps the DS card radius. */
-.rpanel-ideas__rationale {
-  background: var(--ref-color-mermaid-10);
-  border-left: 2px solid var(--ref-color-mermaid-gradient-from);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border-radius: 0 var(--app-radius-card) var(--app-radius-card) 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-}
-
-.rpanel-ideas__rationale[hidden] {
-  display: none;
-}
-
-.rpanel-ideas__rationale-label {
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-}
-
-.rpanel-ideas__rationale-text {
+/* Rationale block — DS .ap-infobox info handles its own padding,
+   background, banner and icon. We only need to silence the default
+   bottom margin so the card chrome flows tightly and toggle visibility
+   via the [hidden] attribute. */
+.ap-infobox.rpanel-ideas__rationale {
   margin: 0;
-  font-size: var(--ref-font-size-xs);
-  line-height: 1.5;
-  color: var(--ref-color-grey-100);
+}
+
+.ap-infobox.rpanel-ideas__rationale[hidden] {
+  display: none;
 }
 
 /* Tags row — hidden in the collapsed state to save vertical space;
