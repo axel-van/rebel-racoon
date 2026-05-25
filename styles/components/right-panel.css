@@ -1310,6 +1310,10 @@
    handles the responsive collapse; container query lets the same
    layout work in the right-panel (variable width) and the welcome
    recap surfaces. */
+/* `overflow: hidden` on a grid inside a flex column collapses the grid
+   to 2px tall on Chrome (cells overflow rather than expanding the
+   parent). Cells own their own padding and clean borders, so the
+   outer border-radius reads correctly without clipping. */
 .context-brief__personality {
   position: relative;
   display: grid;
@@ -1320,12 +1324,14 @@
   border-radius: var(--ref-border-radius-md);
   border: 1px solid var(--ref-color-grey-10);
   background: var(--ref-color-white);
-  overflow: hidden;
 }
 
+/* minmax(0, 1fr) forces equal columns — without the 0 floor, grid
+   items default to `min-width: max-content` and the longest chip in
+   each column pushes the layout asymmetric. */
 @container (min-width: 540px) {
   .context-brief__personality {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
