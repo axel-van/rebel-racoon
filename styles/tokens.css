@@ -12,10 +12,9 @@
   --app-border: var(--ref-color-grey-20);
   --app-border-soft: var(--ref-color-grey-10);
 
-  /* Sidebar canvas — handoff uses #F2F3F5 (one tone darker than --ref-color-grey-bg).
-     No exact DS equivalent (closest is --ref-color-grey-05 = #F5F5F7). Kept as
-     app token so the cool-slate sidebar tone stays consistent across screens. */
-  --app-color-sidebar-bg: #f2f3f5;
+  /* Sidebar canvas — experimental inversion: sidebar is white, conversation
+     area takes the grey canvas tone. See experiment/invert-panel-backgrounds. */
+  --app-color-sidebar-bg: var(--ref-color-white);
 
   /* ── Radius (DS only ships sm=4 / md=4 / lg=8 — handoff uses 4/6/8/10/12/16
      across composer / cards / modals). Keep DS values as the default; expose

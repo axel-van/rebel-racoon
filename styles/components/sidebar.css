@@ -142,7 +142,7 @@
    "you-are-here" cue consistent across the whole sidebar: nav and
    conversations share one active style. */
 .app-sidebar__nav-item.is-active {
-  background: var(--app-surface);
+  background: var(--app-bg);
   color: var(--ref-color-electric-blue-100);
   box-shadow: var(--app-shadow-subtle);
 }
@@ -236,7 +236,7 @@
 }
 
 .app-sidebar__row.is-active {
-  background: var(--app-surface);
+  background: var(--app-bg);
   box-shadow: var(--app-shadow-subtle);
 }
 
