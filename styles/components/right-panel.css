@@ -629,16 +629,48 @@
   display: block;
 }
 
-/* Rationale block — DS .ap-infobox info handles its own padding,
-   background, banner and icon. We only need to silence the default
-   bottom margin so the card chrome flows tightly and toggle visibility
-   via the [hidden] attribute. */
-.ap-infobox.rpanel-ideas__rationale {
-  margin: 0;
+/* "Why this idea" affordance — a small info icon in the card header
+   that reveals the rationale in a DS .ap-tooltip on hover/focus. The
+   wrapper is position: relative so the tooltip can absolute-position
+   above it without escaping the card. Hidden by default; revealed by
+   :hover OR :focus-visible on the wrapper so keyboard users get it too. */
+.rpanel-ideas__info {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sys-icon-css-md);
+  height: var(--sys-icon-css-md);
+  color: var(--ref-color-grey-60);
+  cursor: help;
 }
 
-.ap-infobox.rpanel-ideas__rationale[hidden] {
+.rpanel-ideas__info > i {
+  font-size: var(--sys-icon-css-sm);
+}
+
+.rpanel-ideas__info:hover,
+.rpanel-ideas__info:focus-visible {
+  color: var(--sys-color-info-text);
+  outline: none;
+}
+
+.ap-tooltip.rpanel-ideas__info-tip {
   display: none;
+  bottom: calc(100% + var(--ap-arrow-height, 8px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  min-width: 220px;
+  max-width: 280px;
+  white-space: normal;
+  text-align: left;
+}
+
+.rpanel-ideas__info:hover .rpanel-ideas__info-tip,
+.rpanel-ideas__info:focus-visible .rpanel-ideas__info-tip {
+  display: block;
 }
 
 /* Tags row — hidden in the collapsed state to save vertical space;

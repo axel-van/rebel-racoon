@@ -78,7 +78,6 @@ const IDEA_KINDS = [
 // panel re-opens in a fresh session via renderIdeasBodyOnly().
 let ideasFilter = "all";
 let ideasSort = "recent"; // 'recent' | 'used' | 'confidence'
-let expandedIdeaId = null;
 // Ideas the user has dismissed via the More menu — kept in a Set so the
 // list re-render filters them out without mutating the mocks array.
 let dismissedIdeaIds = new Set();
@@ -671,15 +670,6 @@ export function init() {
       const menu = el.querySelector("[data-rpanel-ideas-sort-menu]");
       if (menu) menu.open = false;
       renderPanel();
-      return;
-    }
-    // Expand / collapse a single card (accordion: closes any previously
-    // expanded card). We mutate the DOM in place rather than re-render
-    // the whole list so focus and scroll position survive the toggle.
-    const expandBtn = event.target.closest("[data-rpanel-ideas-expand]");
-    if (expandBtn) {
-      const id = expandBtn.dataset.rpanelIdeasExpand;
-      toggleIdeaExpanded(id);
       return;
     }
     // Pin / unpin an idea — mutates the idea object in the shared mocks
@@ -1911,51 +1901,12 @@ function renderIdeasBodyOnly() {
   if (body) body.innerHTML = renderIdeasList();
 }
 
-// ── Card-level helpers — accordion / pin / more / copy / dismiss ────
+// ── Card-level helpers — pin / more / copy / dismiss ────────────────
 //
-// All mutate either local state (expandedIdeaId, dismissedIdeaIds) or
-// the shared idea object (pinned). When state can be reflected by a
-// targeted DOM mutation (expand toggle, pin) we avoid a full re-render
-// so focus and scroll position survive. When the change reshapes the
-// list (dismiss) we fall back to renderIdeasBodyOnly().
-
-function toggleIdeaExpanded(id) {
-  const body = document.querySelector("[data-rpanel-ideas-body]");
-  if (!body) return;
-  const next = expandedIdeaId === id ? null : id;
-  // Close any previously-expanded card first.
-  body.querySelectorAll('.rpanel-ideas__card[data-expanded="true"]').forEach((card) => {
-    setCardExpanded(card, false);
-  });
-  expandedIdeaId = next;
-  if (next) {
-    const card = body.querySelector(`.rpanel-ideas__card[data-idea-id="${cssEscape(next)}"]`);
-    if (card) {
-      setCardExpanded(card, true);
-      // Keep the expanded card visible — defer to next frame so the
-      // height transition has started before we measure.
-      requestAnimationFrame(() => {
-        card.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      });
-    }
-  }
-}
-
-function setCardExpanded(card, expanded) {
-  card.dataset.expanded = expanded ? "true" : "false";
-  const expandBtn = card.querySelector("[data-rpanel-ideas-expand]");
-  if (expandBtn) {
-    expandBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
-    const label = expandBtn.querySelector("span");
-    if (label) label.textContent = expanded ? "Hide rationale" : "Why this idea";
-  }
-  const rationale = card.querySelector(".rpanel-ideas__rationale");
-  if (rationale) rationale.hidden = !expanded;
-  // Tags row is hidden in the collapsed state to save vertical space;
-  // it reveals alongside the rationale when the card expands.
-  const tagRow = card.querySelector(".rpanel-ideas__tag-row");
-  if (tagRow) tagRow.hidden = !expanded;
-}
+// All mutate either local state (dismissedIdeaIds) or the shared idea
+// object (pinned). Pin moves the card between sections, so we just
+// re-render the body. Dismiss reshapes the list (including the kind
+// filter counts) — also re-render.
 
 function toggleIdeaPinned(id) {
   const idea = IDEAS.find((i) => i.id === id);
@@ -2004,7 +1955,6 @@ function copyIdeaText(id) {
 
 function dismissIdea(id) {
   dismissedIdeaIds.add(id);
-  if (expandedIdeaId === id) expandedIdeaId = null;
   // Full re-render of the body — list shape changes, including counts
   // shown in the filter chips above the body.
   renderPanel();
@@ -2034,22 +1984,32 @@ bindRpanelIdeasGlobals();
 function renderIdeaCompact(idea) {
   const kind = idea.kind || "insight";
   const isPinned = !!idea.pinned;
-  const isExpanded = expandedIdeaId === idea.id;
-  const rationaleId = `rpanel-ideas-rationale-${idea.id}`;
   const sourceLabel = idea.ref || "Generated";
   const tags = (idea.tags || [])
     .slice(0, 3)
     .map((t) => `<span class="rpanel-ideas__tag">#${escapeText(t)}</span>`)
     .join("");
 
+  // "Why this idea" → a small info-icon in the header that pops a DS
+  // .ap-tooltip on hover/focus. The wrapper is position: relative; the
+  // tooltip is rendered as a sibling that the wrapper CSS reveals on
+  // hover. tabindex=0 keeps it reachable for keyboard users.
+  const infoBubble = idea.rationale
+    ? `<span class="rpanel-ideas__info" tabindex="0" aria-label="Why this idea">
+        <i class="ap-icon-info" aria-hidden="true"></i>
+        <span class="ap-tooltip top rpanel-ideas__info-tip" role="tooltip">${escapeText(idea.rationale)}</span>
+      </span>`
+    : "";
+
   return `
-    <article class="rpanel-ideas__card" data-idea-id="${escapeAttr(idea.id)}" data-expanded="${isExpanded}"${isPinned ? ' data-pinned="true"' : ""}>
+    <article class="rpanel-ideas__card" data-idea-id="${escapeAttr(idea.id)}"${isPinned ? ' data-pinned="true"' : ""}>
       <header class="rpanel-ideas__card-head">
         <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${kind}</span>
         <span class="rpanel-ideas__source" title="${escapeAttr(sourceLabel)}">
           <i class="ap-icon-file" aria-hidden="true"></i>
           <span class="rpanel-ideas__source-text">${escapeText(sourceLabel)}</span>
         </span>
+        ${infoBubble}
         <button
           type="button"
           class="ap-link small standalone rpanel-ideas__pin"
@@ -2061,34 +2021,9 @@ function renderIdeaCompact(idea) {
       </header>
       ${idea.title ? `<h4 class="rpanel-ideas__card-title">${escapeText(idea.title)}</h4>` : ""}
       <p class="rpanel-ideas__card-body">${escapeText(idea.body || "")}</p>
-      ${
-        idea.rationale
-          ? `<div class="ap-infobox info rpanel-ideas__rationale" id="${rationaleId}" ${isExpanded ? "" : "hidden"}>
-              <i class="ap-icon-info_fill"></i>
-              <div class="ap-infobox-content">
-                <div class="ap-infobox-texts">
-                  <span class="ap-infobox-message">${escapeText(idea.rationale)}</span>
-                </div>
-              </div>
-            </div>`
-          : ""
-      }
-      ${tags ? `<div class="rpanel-ideas__tag-row" ${isExpanded ? "" : "hidden"}>${tags}</div>` : ""}
+      ${tags ? `<div class="rpanel-ideas__tag-row">${tags}</div>` : ""}
       <footer class="rpanel-ideas__card-foot">
-        ${
-          idea.rationale
-            ? `<button
-                type="button"
-                class="ap-link small standalone rpanel-ideas__expand"
-                data-rpanel-ideas-expand="${escapeAttr(idea.id)}"
-                aria-expanded="${isExpanded}"
-                aria-controls="${rationaleId}"
-              >
-                <span>${isExpanded ? "Hide rationale" : "Why this idea"}</span>
-                <i class="ap-icon-chevron-down"></i>
-              </button>`
-            : `<span class="rpanel-ideas__foot-spacer"></span>`
-        }
+        <span class="rpanel-ideas__foot-spacer"></span>
         <div class="rpanel-ideas__foot-actions">
           <button type="button" class="ap-button stroked blue rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
             <i class="ap-icon-sparkles"></i>
