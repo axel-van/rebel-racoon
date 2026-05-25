@@ -110,6 +110,11 @@ export function attachImageToDraft(sessionId, postId, imageUrl) {
 
 // Patch a post's editable body fields (text[], hashtags[], cta).
 // Undefined keys are left unchanged.
+//
+// Also accepts the runtime regenerate flags driven by draft-rewrite.js
+// (`isRegenerating`, `regenerateStage`). These never appear in seeded
+// mocks — they're transient state set during the streaming flow. Pass
+// `null` or `false` to clear them.
 export function updatePostContent(sessionId, postId, partial) {
   const posts = getPosts(sessionId);
   const post = posts.find((p) => p.id === postId);
@@ -117,6 +122,8 @@ export function updatePostContent(sessionId, postId, partial) {
   if (partial.text !== undefined) post.text = partial.text;
   if (partial.hashtags !== undefined) post.hashtags = partial.hashtags;
   if (partial.cta !== undefined) post.cta = partial.cta;
+  if (partial.isRegenerating !== undefined) post.isRegenerating = partial.isRegenerating;
+  if (partial.regenerateStage !== undefined) post.regenerateStage = partial.regenerateStage;
   notify(sessionId);
 }
 

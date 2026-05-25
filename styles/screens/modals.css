@@ -758,13 +758,13 @@ body.has-modal {
 
 .gen-chip:active {
   background: var(--ref-color-grey-05);
-  border-color: var(--ref-color-orange-100);
+  border-color: var(--ref-color-electric-blue-100);
 }
 
 .gen-chip.selected {
-  border-color: var(--ref-color-orange-100);
-  background: var(--ref-color-orange-10);
-  color: var(--ref-color-orange-100);
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-10);
+  color: var(--ref-color-electric-blue-100);
 }
 
 .gen-chip-icon {

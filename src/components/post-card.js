@@ -47,11 +47,31 @@ export function renderPostCard(post, opts = {}) {
 
   const cta = post.cta ? `<p class="posts__card-cta">${post.cta}</p>` : "";
 
+  // Regenerate state (sparkles click → draft-rewrite.js). Two stages :
+  //   - thinking  : show a 3-bar shimmer skeleton, hashtags + CTA hidden.
+  //   - streaming : empty body container that the streamer fills directly
+  //                 with paragraph tokens + a blinking caret.
+  // In both stages the inline-edit affordance is suppressed and the
+  // .posts__row-actions buttons render with `disabled` so the user
+  // can't fire conflicting actions mid-stream.
+  const regenerating = post.isRegenerating === true;
+  const regenerateStage = regenerating ? post.regenerateStage || "thinking" : null;
+
   // In edit mode the entire body (paragraphs + hashtags + CTA) collapses
   // into one contenteditable region. Hashtags lose their styling during
   // edit and re-style on save (per spec).
-  const editorBody = editing
-    ? `<div
+  let editorBody;
+  if (regenerating && regenerateStage === "thinking") {
+    editorBody = `<div class="posts__card-body posts__card-body--ghost" data-regenerating-body>
+        <span class="posts__card-ghost-bar"></span>
+        <span class="posts__card-ghost-bar"></span>
+        <span class="posts__card-ghost-bar"></span>
+      </div>`;
+  } else if (regenerating && regenerateStage === "streaming") {
+    // Empty container — draft-rewrite.js streams paragraphs into it.
+    editorBody = `<div class="posts__card-body" data-regenerating-body></div>`;
+  } else if (editing) {
+    editorBody = `<div
         class="posts__card-body posts__card-editor"
         contenteditable="true"
         role="textbox"
@@ -59,8 +79,10 @@ export function renderPostCard(post, opts = {}) {
         aria-label="Edit post body"
         data-post-editor="${post.id}"
         spellcheck="true"
-      >${escapeForEditor(serializeBody(post))}</div>`
-    : `<div class="posts__card-body">${bodyParagraphs} ${hashtags} ${cta}</div>`;
+      >${escapeForEditor(serializeBody(post))}</div>`;
+  } else {
+    editorBody = `<div class="posts__card-body">${bodyParagraphs} ${hashtags} ${cta}</div>`;
+  }
 
   const editActions = editing
     ? `<div class="posts__card-edit-actions">
@@ -108,6 +130,7 @@ export function renderPostCard(post, opts = {}) {
     <article
       class="posts__row ${opts.focusPost === post.id ? "is-focused" : ""} ${selected ? "is-selected" : ""}"
       data-post-id="${post.id}"
+      ${regenerating ? `data-regenerating="true" data-stage="${regenerateStage}"` : ""}
     >
       ${raw(checkbox)}
       <div class="posts__card-wrap">
@@ -161,6 +184,7 @@ export function renderPostCard(post, opts = {}) {
                 aria-label="Edit post"
                 title="Edit"
                 data-post-edit="${post.id}"
+                ${regenerating ? "disabled" : ""}
               >
                 <i class="ap-icon-pen"></i>
               </button>`
@@ -168,13 +192,20 @@ export function renderPostCard(post, opts = {}) {
         )}
         <button
           type="button"
-          class="ap-icon-button stroked"
+          class="ap-icon-button stroked ${regenerating ? "loading" : ""}"
           aria-label="Regenerate draft"
           data-post-rewrite="${post.id}"
+          ${regenerating ? "disabled" : ""}
         >
           <i class="ap-icon-sparkles"></i>
         </button>
-        <button type="button" class="ap-icon-button stroked" aria-label="Schedule post" data-post-schedule="${post.id}">
+        <button
+          type="button"
+          class="ap-icon-button stroked"
+          aria-label="Schedule post"
+          data-post-schedule="${post.id}"
+          ${regenerating ? "disabled" : ""}
+        >
           <i class="ap-icon-calendar"></i>
         </button>
         <button
@@ -182,6 +213,7 @@ export function renderPostCard(post, opts = {}) {
           class="ap-icon-button stroked"
           aria-label="Duplicate post"
           data-post-duplicate="${post.id}"
+          ${regenerating ? "disabled" : ""}
         >
           <i class="ap-icon-copy"></i>
         </button>
@@ -190,6 +222,7 @@ export function renderPostCard(post, opts = {}) {
           class="ap-icon-button stroked posts__row-action--danger"
           aria-label="Delete post"
           data-post-delete="${post.id}"
+          ${regenerating ? "disabled" : ""}
         >
           <i class="ap-icon-trash"></i>
         </button>

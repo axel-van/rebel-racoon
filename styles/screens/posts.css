@@ -261,6 +261,90 @@
   color: var(--ref-color-grey-150);
 }
 
+/* ── Regenerate flow ────────────────────────────────────────────────
+   Drives the visual states owned by draft-rewrite.js: a 400ms
+   "thinking" ghost shimmer, then the streamer empties the body and
+   writes paragraphs into it with a blinking caret at the cursor.
+   Other actions on the row are visually demoted via the `disabled`
+   attribute so the user can't fire conflicting mutations mid-stream. */
+
+.posts__card-body--ghost {
+  /* Replace the regular paragraph stack with three shimmer bars of
+     varying width so the loading body roughly approximates the shape
+     of a real post. The shimmer reuses the same linear-gradient
+     animation pattern as .gen-image-skeleton. */
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.posts__card-ghost-bar {
+  display: block;
+  height: 12px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--ref-color-grey-10) 25%,
+    var(--ref-color-grey-05) 50%,
+    var(--ref-color-grey-10) 75%
+  );
+  background-size: 200% 100%;
+  animation: gen-image-pulse 1.2s linear infinite;
+}
+
+.posts__card-ghost-bar:nth-child(1) {
+  width: 100%;
+}
+
+.posts__card-ghost-bar:nth-child(2) {
+  width: 92%;
+}
+
+.posts__card-ghost-bar:nth-child(3) {
+  width: 64%;
+}
+
+/* Streaming word fade-in — each token appended by draft-rewrite.js is
+   wrapped in a .posts__card-word span. The CSS animation runs once on
+   insertion (no replay since we append rather than re-render the
+   container), giving a soft "appearing" feel instead of the harder
+   typewriter cadence. */
+.posts__card-word {
+  display: inline;
+  animation: posts-card-word-fade-in 200ms ease-out both;
+}
+
+@keyframes posts-card-word-fade-in {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+/* Action stack during regen — disabled buttons read as "locked"
+   without disappearing, so the user can see they're still tied to
+   this card. The DS button already handles cursor:not-allowed via
+   the disabled attribute ; we just dim them further to signal the
+   transient state. */
+.posts__row[data-regenerating="true"] .posts__row-actions button[disabled] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .posts__card-ghost-bar,
+  .posts__card-word {
+    animation: none;
+  }
+  .posts__card-ghost-bar {
+    background: var(--ref-color-grey-10);
+  }
+}
+
 /* "Generate an image" placeholder — quiet at rest, AI nature revealed
    on interaction. Neutral grey surface + dashed border carry the
    classic "empty drop zone" convention; hover/focus paints the icon

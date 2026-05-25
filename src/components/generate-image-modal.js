@@ -233,8 +233,8 @@ function renderBody() {
     footer.innerHTML = `
       <div class="ap-dialog-footer-right">
         <button type="button" class="ap-button transparent grey" id="genImageCancel">Cancel</button>
-        <button type="button" class="ap-button primary orange" disabled>
-          <span class="gen-image-spinner"></span>
+        <button type="button" class="ap-button primary orange loading" disabled>
+          <span class="ap-loading-bar"></span>
           <span>Generating…</span>
         </button>
       </div>
