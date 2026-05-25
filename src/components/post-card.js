@@ -24,6 +24,20 @@ import { html, raw } from "../utils.js?v=20";
 export function renderPostCard(post, opts = {}) {
   const inlineEdit = opts.inlineEdit === true;
   const editing = inlineEdit && opts.editing === true;
+  const selectable = opts.selectable === true;
+  const selected = selectable && opts.selected === true;
+
+  // Multi-select affordance — a checkbox sits in the .posts__row-check
+  // gutter (CSS reserves the column unconditionally). Only rendered in
+  // surfaces that opt in via `opts.selectable`.
+  const checkbox = selectable
+    ? `<div class="posts__row-check">
+        <label class="ap-checkbox-container posts__row-check-label" aria-label="Select draft">
+          <input type="checkbox" data-post-select="${post.id}" ${selected ? "checked" : ""} />
+          <i></i>
+        </label>
+      </div>`
+    : "";
 
   const statusPill = (() => {
     // "needs_fixes" surfaces above the card via renderPostErrors — no header pill.
@@ -98,7 +112,11 @@ export function renderPostCard(post, opts = {}) {
         </button>`;
 
   return html`
-    <article class="posts__row ${opts.focusPost === post.id ? "is-focused" : ""}" data-post-id="${post.id}">
+    <article
+      class="posts__row ${opts.focusPost === post.id ? "is-focused" : ""} ${selected ? "is-selected" : ""}"
+      data-post-id="${post.id}"
+    >
+      ${raw(checkbox)}
       <div class="posts__card-wrap">
         ${raw(renderPostErrors(post))} ${raw(renderPostScheduled(post))}
         <article class="ap-card posts__card ${editing ? "is-editing" : ""}">

@@ -584,18 +584,88 @@
   min-width: 0;
 }
 
-/* Inside the right-panel feed, .posts__row already lays out as a flex
-   row (card + action stack). Drop the leading checkbox slot since
-   selection mode isn't part of this redesign. The card-wrap keeps
-   its fixed 500px width (posts.css) so previews always render at the
-   same size; center the card+actions so any extra room sits evenly
-   on both sides rather than dangling off the right. */
-.rpanel-drafts__feed .posts__row-check {
-  display: none;
-}
-
+/* Inside the right-panel feed, .posts__row lays out as a flex row
+   (checkbox · card · action stack). The card-wrap keeps its fixed
+   500px width (posts.css) so previews always render at the same size;
+   center the row so any extra room sits evenly on both sides rather
+   than dangling off the right. Selected rows get a subtle orange tint
+   on the card to mirror the bulk-bar accent. */
 .rpanel-drafts__feed .posts__row {
   justify-content: center;
+}
+
+.rpanel-drafts__feed .posts__row.is-selected .posts__card {
+  border-color: var(--ref-color-orange-100);
+  box-shadow: 0 0 0 1px var(--ref-color-orange-100);
+}
+
+/* ── Select-all pill ─────────────────────────────────────────────────
+   Sits flush above the first post card. Same horizontal centering as
+   the cards so the affordance reads as part of the feed, not a header. */
+.rpanel-drafts__selectbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  background: var(--ref-color-grey-10);
+  border-radius: var(--app-radius-card);
+}
+
+.rpanel-drafts__selectbar-meta {
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-80);
+}
+
+/* ── Sticky bulk-action bar ──────────────────────────────────────────
+   Sticks to the bottom of the scrolling rpanel-drafts container when
+   1+ draft is selected. Card-style chrome (radius + shadow) so it
+   reads as a floating action surface, not a footer. */
+.rpanel-drafts__bulkbar {
+  position: sticky;
+  bottom: var(--ref-spacing-sm);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  width: 100%;
+  max-width: 580px;
+  margin: var(--ref-spacing-sm) auto 0;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  background: var(--app-surface);
+  border: 1px solid var(--ref-color-orange-100);
+  border-radius: var(--app-radius-card);
+  box-shadow: var(--app-shadow-modal);
+}
+
+.rpanel-drafts__bulkbar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+}
+
+.rpanel-drafts__bulkbar-label i {
+  color: var(--ref-color-orange-100);
+}
+
+.rpanel-drafts__bulkbar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+/* Pad the bottom of the feed so the last card isn't tucked behind the
+   sticky bar when it's visible. The selector targets the parent with
+   the .has-selection flag set by the panel render. */
+.rpanel-drafts.has-selection .rpanel-drafts__feed {
+  padding-bottom: var(--ref-spacing-xl);
 }
 
 /* Each rail-group renders both a button list and a native select; the

@@ -13,7 +13,7 @@ import {
   updatePostContent,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=26";
-import { renderPostCard } from "./post-card.js?v=23";
+import { renderPostCard } from "./post-card.js?v=24";
 import { renderClipCard } from "./clip-card.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=2";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=41";
@@ -94,6 +94,10 @@ let clipSelection = new Set();
 // open/close cycles so the user keeps their filter when they re-open.
 let draftsFilter = "all";
 let draftsNetwork = "all";
+
+// Multi-select state for bulk scheduling. Lives across renders inside the
+// panel; cleared when a session change or a bulk-schedule confirm fires.
+let selectedDraftIds = new Set();
 
 // Inline-edit state — only one card in edit mode at a time. Snapshot of
 // the original body fields powers the "no spurious save" check.
@@ -413,6 +417,15 @@ export function init() {
       renderPanel();
       return;
     }
+    if (event.target.closest("[data-rpanel-drafts-bulk-clear]")) {
+      selectedDraftIds.clear();
+      renderPanel();
+      return;
+    }
+    if (event.target.closest("[data-rpanel-drafts-bulk-schedule]")) {
+      onBulkSchedule();
+      return;
+    }
     // Per-card actions on a single draft (Lot 21 rich PostCard).
     const editBtn = event.target.closest("[data-post-edit]");
     if (canDraftInlineEdit() && editBtn) {
@@ -723,6 +736,33 @@ export function init() {
     }
     if (event.target.matches("[data-rpanel-drafts-network-select]")) {
       draftsNetwork = event.target.value || "all";
+      renderPanel();
+      return;
+    }
+    // Per-card multi-select checkbox.
+    if (event.target.matches("[data-post-select]")) {
+      const id = event.target.dataset.postSelect;
+      if (event.target.checked) selectedDraftIds.add(id);
+      else selectedDraftIds.delete(id);
+      renderPanel();
+      return;
+    }
+    // "Select all visible" pill — flips every schedulable draft in the
+    // current filter on or off depending on the new checked state.
+    if (event.target.matches("[data-rpanel-drafts-select-all]")) {
+      const sid = activeSessionId();
+      if (!sid) return;
+      const visible = getPosts(sid).filter((p) => {
+        if (p.status === "scheduled") return false;
+        if (draftsFilter === "needs_fixes" && p.status !== "needs_fixes") return false;
+        if (draftsNetwork !== "all" && p.network !== draftsNetwork) return false;
+        return true;
+      });
+      if (event.target.checked) {
+        for (const p of visible) selectedDraftIds.add(p.id);
+      } else {
+        for (const p of visible) selectedDraftIds.delete(p.id);
+      }
       renderPanel();
       return;
     }
@@ -1162,8 +1202,29 @@ function renderDraftsView() {
   // pattern just below — icon + title + sub + Clear filters CTA. The
   // CTA resets both filter axes through data-rpanel-drafts-clear so the
   // rail buttons and state mutation stay in lockstep.
+  // Multi-select — surface schedulable drafts only (not already-
+  // scheduled). Keep the selection set in sync with what's actually
+  // visible so a hidden draft can't ghost-affect the bulk CTA.
+  const schedulableIds = new Set(allPosts.filter((p) => p.status !== "scheduled").map((p) => p.id));
+  for (const id of Array.from(selectedDraftIds)) {
+    if (!schedulableIds.has(id)) selectedDraftIds.delete(id);
+  }
+  const visibleSchedulable = filtered.filter((p) => p.status !== "scheduled");
+  const allVisibleSelected =
+    visibleSchedulable.length > 0 && visibleSchedulable.every((p) => selectedDraftIds.has(p.id));
+  const selectedCount = selectedDraftIds.size;
+
   const feed = filtered.length
-    ? filtered.map((p) => renderPostCard(p, { editing: p.id === editingPostId, inlineEdit })).join("")
+    ? filtered
+        .map((p) =>
+          renderPostCard(p, {
+            editing: p.id === editingPostId,
+            inlineEdit,
+            selectable: p.status !== "scheduled",
+            selected: selectedDraftIds.has(p.id),
+          }),
+        )
+        .join("")
     : `<div class="app-right-panel__empty">
          <div class="app-right-panel__empty-icon"><i class="ap-icon-search"></i></div>
          <div class="app-right-panel__empty-title">No drafts match this filter</div>
@@ -1173,10 +1234,51 @@ function renderDraftsView() {
          </div>
        </div>`;
 
+  // "Select all" pill — sits above the feed, only visible when there are
+  // schedulable drafts in the current filter. Uses an indeterminate
+  // checkbox visual when some-but-not-all of the visible drafts are
+  // selected, matching the DS .ap-checkbox-container.indeterminate state.
+  const someVisibleSelected = visibleSchedulable.some((p) => selectedDraftIds.has(p.id));
+  const selectAllIndeterminate = someVisibleSelected && !allVisibleSelected;
+  const selectAllBar = visibleSchedulable.length
+    ? `
+      <div class="rpanel-drafts__selectbar">
+        <label class="ap-checkbox-container ${selectAllIndeterminate ? "indeterminate" : ""}" aria-label="Select all visible drafts">
+          <input type="checkbox" data-rpanel-drafts-select-all ${allVisibleSelected ? "checked" : ""} />
+          <i></i>
+          <span>${allVisibleSelected ? "Deselect all" : "Select all"}</span>
+        </label>
+        <span class="rpanel-drafts__selectbar-meta">${selectedCount} of ${schedulableIds.size} selected</span>
+      </div>
+    `
+    : "";
+
+  // Sticky bulk-action bar — anchored at the bottom of the feed when 1+
+  // draft is selected. Schedule N drafts CTA + Clear selection.
+  const bulkBar = selectedCount
+    ? `
+      <div class="rpanel-drafts__bulkbar" role="region" aria-label="Bulk actions">
+        <div class="rpanel-drafts__bulkbar-label">
+          <i class="ap-icon-check" aria-hidden="true"></i>
+          ${selectedCount} ${selectedCount === 1 ? "draft" : "drafts"} selected
+        </div>
+        <div class="rpanel-drafts__bulkbar-actions">
+          <button type="button" class="ap-button transparent grey" data-rpanel-drafts-bulk-clear>
+            Clear
+          </button>
+          <button type="button" class="ap-button primary orange" data-rpanel-drafts-bulk-schedule>
+            <i class="ap-icon-calendar" aria-hidden="true"></i>
+            Schedule ${selectedCount} ${selectedCount === 1 ? "draft" : "drafts"}
+          </button>
+        </div>
+      </div>
+    `
+    : "";
+
   return html`
-    <div class="rpanel-drafts">
+    <div class="rpanel-drafts ${selectedCount ? "has-selection" : ""}">
       ${raw(rail)}
-      <div class="posts__feed rpanel-drafts__feed">${raw(feed)}</div>
+      <div class="posts__feed rpanel-drafts__feed">${raw(selectAllBar)} ${raw(feed)} ${raw(bulkBar)}</div>
     </div>
   `;
 }
@@ -1210,16 +1312,50 @@ function onPostSchedule(postId) {
   if (!post) return;
   openScheduleModal({
     posts: [post],
-    onConfirm: () => {
+    onConfirm: (slots) => {
       // Mark the post scheduled in-place — the store doesn't have a
       // dedicated mutator yet, so we mutate the object directly. Future
       // refactor: posts-store.markScheduled(sid, postId, label).
+      const slot = slots && slots[0];
       post.status = "scheduled";
-      post.scheduledForLabel = post.scheduledForLabel || "later";
+      post.scheduledForLabel = slot ? formatScheduledLabel(slot.when) : post.scheduledForLabel || "later";
       renderPanel();
-      import("./toast.js?v=20").then(({ showToast }) => showToast("Draft scheduled"));
     },
   });
+}
+
+// Bulk schedule — opens the modal seeded with every selected draft. On
+// confirm, each post is marked scheduled with its per-slot label and
+// the selection is cleared so the bar disappears.
+function onBulkSchedule() {
+  const sid = activeSessionId();
+  if (!sid) return;
+  const sessionPosts = getPosts(sid);
+  const selected = sessionPosts.filter((p) => selectedDraftIds.has(p.id) && p.status !== "scheduled");
+  if (selected.length === 0) return;
+  openScheduleModal({
+    posts: selected,
+    onConfirm: (slots) => {
+      const byPostId = new Map((slots || []).map((s) => [s.postId, s.when]));
+      for (const p of selected) {
+        const when = byPostId.get(p.id);
+        p.status = "scheduled";
+        p.scheduledForLabel = when ? formatScheduledLabel(when) : p.scheduledForLabel || "later";
+      }
+      selectedDraftIds.clear();
+      renderPanel();
+    },
+  });
+}
+
+// Compact label shown above the card when a post is scheduled. Same
+// shape as the seeded labels ("Thu · 9:00") so the in-feed scheduled
+// notice keeps a consistent visual weight regardless of the source.
+function formatScheduledLabel(ts) {
+  const d = new Date(ts);
+  const day = d.toLocaleDateString(undefined, { weekday: "short" });
+  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  return `${day} · ${time}`;
 }
 
 function onPostDuplicate(postId) {
@@ -1240,6 +1376,7 @@ function onPostDelete(postId) {
   if (!sid) return;
   const idx = getPosts(sid).findIndex((p) => p.id === postId);
   if (idx < 0) return;
+  selectedDraftIds.delete(postId);
   const removed = removePost(sid, postId);
   if (!removed) return;
   import("./toast.js?v=20").then(({ showToast }) => {
