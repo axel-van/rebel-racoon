@@ -39,13 +39,6 @@ export function renderPostCard(post, opts = {}) {
       </div>`
     : "";
 
-  const statusPill = (() => {
-    // "needs_fixes" surfaces above the card via renderPostErrors — no header pill.
-    // "scheduled" surfaces above the card via renderPostScheduled — no header pill.
-    if (post.status === "needs_fixes" || post.status === "scheduled") return "";
-    return '<span class="ap-status green">Draft ready</span>';
-  })();
-
   const bodyParagraphs = post.text.map((p) => `<p class="posts__card-paragraph">${p}</p>`).join("");
 
   const hashtags = post.hashtags.length
@@ -130,7 +123,6 @@ export function renderPostCard(post, opts = {}) {
               <div class="muted posts__card-title">${post.author.title}</div>
               <div class="muted posts__card-meta">${post.timeLabel} · ${post.author.visibility}</div>
             </div>
-            <div class="posts__card-status">${raw(statusPill)}</div>
           </header>
 
           ${raw(editorBody)} ${raw(editActions)} ${raw(mediaBlock)} ${raw(engagement)}

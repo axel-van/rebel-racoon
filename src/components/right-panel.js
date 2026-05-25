@@ -13,7 +13,7 @@ import {
   updatePostContent,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=26";
-import { renderPostCard } from "./post-card.js?v=27";
+import { renderPostCard } from "./post-card.js?v=28";
 import { renderClipCard } from "./clip-card.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=2";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=41";
