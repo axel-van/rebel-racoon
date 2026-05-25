@@ -207,20 +207,24 @@ export function renderSourceCard(source, allIdeas = [], { selectable = false, is
         >
           <i class="ap-icon-more"></i>
         </button>
-        <ul class="source-card__more-menu" id="${menuId}" role="menu" hidden>
-          <li role="none">
-            <button type="button" role="menuitem" class="source-card__more-item" data-source-extract-one="${source.id}">
-              <i class="ap-icon-sparkles"></i>
-              <span>Extract more ideas</span>
-            </button>
-          </li>
-          <li role="none">
-            <button type="button" role="menuitem" class="source-card__more-item source-card__more-item--danger" data-source-delete-one="${source.id}">
-              <i class="ap-icon-trash"></i>
-              <span>Delete source</span>
-            </button>
-          </li>
-        </ul>
+        <div class="ap-action-dropdown source-card__more-menu" id="${menuId}" role="menu" hidden>
+          <button type="button" role="menuitem" class="ap-action-dropdown-item" data-source-extract-one="${source.id}">
+            <i class="ap-icon-sparkles"></i>
+            <div class="ap-action-dropdown-item-text">
+              <div class="ap-action-dropdown-item-label-container">
+                <span class="ap-action-dropdown-item-label">Extract more ideas</span>
+              </div>
+            </div>
+          </button>
+          <button type="button" role="menuitem" class="ap-action-dropdown-item red-mode" data-source-delete-one="${source.id}">
+            <i class="ap-icon-trash"></i>
+            <div class="ap-action-dropdown-item-text">
+              <div class="ap-action-dropdown-item-label-container">
+                <span class="ap-action-dropdown-item-label">Delete source</span>
+              </div>
+            </div>
+          </button>
+        </div>
       </div>
     `
     : "";

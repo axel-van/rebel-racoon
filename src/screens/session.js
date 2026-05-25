@@ -38,8 +38,8 @@ import * as inlineQuestion from "../inline-question.js?v=26";
 import * as contextBuilder from "../context-builder.js?v=42";
 import * as playbookEditor from "../playbook-editor.js?v=9";
 import { renderPicker } from "./_analyse-common.js?v=30";
-import { renderSourceCard } from "../components/source-card.js?v=28";
-import { renderIdeaCard } from "../components/idea-card.js?v=25";
+import { renderSourceCard } from "../components/source-card.js?v=29";
+import { renderIdeaCard } from "../components/idea-card.js?v=26";
 import {
   contentState,
   renderContentWorkspace as renderSharedContentWorkspace,
@@ -311,19 +311,25 @@ function renderComposer(attachedContext, hasUserMessage, session) {
                 <button type="button" class="ap-action-dropdown-item" data-add-source="pdf" role="menuitem">
                   <i class="ap-icon-file--pdf"></i>
                   <div class="ap-action-dropdown-item-text">
-                    <div class="ap-action-dropdown-item-label">Add PDF</div>
+                    <div class="ap-action-dropdown-item-label-container">
+                      <span class="ap-action-dropdown-item-label">Add PDF</span>
+                    </div>
                   </div>
                 </button>
                 <button type="button" class="ap-action-dropdown-item" data-add-source="video" role="menuitem">
                   <i class="ap-icon-file--video"></i>
                   <div class="ap-action-dropdown-item-text">
-                    <div class="ap-action-dropdown-item-label">Add video</div>
+                    <div class="ap-action-dropdown-item-label-container">
+                      <span class="ap-action-dropdown-item-label">Add video</span>
+                    </div>
                   </div>
                 </button>
                 <button type="button" class="ap-action-dropdown-item" data-add-source="url" role="menuitem">
                   <i class="ap-icon-link"></i>
                   <div class="ap-action-dropdown-item-text">
-                    <div class="ap-action-dropdown-item-label">Add URL</div>
+                    <div class="ap-action-dropdown-item-label-container">
+                      <span class="ap-action-dropdown-item-label">Add URL</span>
+                    </div>
                   </div>
                 </button>
               </div>

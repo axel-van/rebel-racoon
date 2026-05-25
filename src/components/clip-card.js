@@ -159,20 +159,24 @@ export function renderClipCard(clip, { selectable = false, isSelected = false, s
               >
                 <i class="ap-icon-more"></i>
               </button>
-              <ul id="clip-more-${clip.id}" class="clip-card__more-menu" role="menu" hidden>
-                <li role="none">
-                  <button type="button" role="menuitem" class="clip-card__more-item" data-clip-edit="${clip.id}">
-                    <i class="ap-icon-pen"></i>
-                    <span>Edit clip</span>
-                  </button>
-                </li>
-                <li role="none">
-                  <button type="button" role="menuitem" class="clip-card__more-item clip-card__more-item--danger" data-clip-remove="${clip.id}">
-                    <i class="ap-icon-trash"></i>
-                    <span>Remove clip</span>
-                  </button>
-                </li>
-              </ul>
+              <div id="clip-more-${clip.id}" class="ap-action-dropdown clip-card__more-menu" role="menu" hidden>
+                <button type="button" role="menuitem" class="ap-action-dropdown-item" data-clip-edit="${clip.id}">
+                  <i class="ap-icon-pen"></i>
+                  <div class="ap-action-dropdown-item-text">
+                    <div class="ap-action-dropdown-item-label-container">
+                      <span class="ap-action-dropdown-item-label">Edit clip</span>
+                    </div>
+                  </div>
+                </button>
+                <button type="button" role="menuitem" class="ap-action-dropdown-item red-mode" data-clip-remove="${clip.id}">
+                  <i class="ap-icon-trash"></i>
+                  <div class="ap-action-dropdown-item-text">
+                    <div class="ap-action-dropdown-item-label-container">
+                      <span class="ap-action-dropdown-item-label">Remove clip</span>
+                    </div>
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -377,31 +377,21 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
   color: var(--ref-color-grey-150);
 }
 
-/* Dropdown content — `position: fixed` so it escapes the sidebar's
-   overflow and the row-list's vertical scroll. Coordinates are set by
-   JS on toggle (see initSidebar in sidebar.js — reads the trigger's
+/* Dropdown content — DS .ap-action-dropdown owns surface, border,
+   shadow, item layout, hover / focus / red-mode states.
+   `position: fixed` so it escapes the sidebar's overflow and the
+   row-list's vertical scroll. Coordinates are set by JS on toggle
+   (see initSidebar in sidebar.js — reads the trigger's
    getBoundingClientRect and sets inline top/left), placing the menu
    just to the right of the ⋮ icon so it lives outside the sidebar
    without covering conversation rows. */
-.app-sidebar__row-menu-dropdown {
+.ap-action-dropdown.app-sidebar__row-menu-dropdown {
   position: fixed;
   top: 0;
   left: 0;
   z-index: var(--app-z-modal, 200);
   min-width: 200px;
-  background: var(--ref-color-white);
-  border: 1px solid var(--ref-color-grey-10);
-  border-radius: var(--ref-border-radius-md);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  padding: var(--ref-spacing-xxs);
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-spacing-micro);
-}
-
-.app-sidebar__row-menu-danger,
-.app-sidebar__row-menu-danger i {
-  color: var(--ref-color-red-100);
+  width: auto;
 }
 
 .app-sidebar__empty {
@@ -506,61 +496,28 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
   height: 28px;
 }
 
-.app-sidebar__foot-popmenu {
+/* DS .ap-action-dropdown anchored above the cog button. We only
+   override positioning + the kbd shortcut hint here ; the DS provides
+   the surface, border, shadow, item layout, hover / focus states. */
+.ap-action-dropdown.app-sidebar__foot-popmenu {
   position: absolute;
   bottom: calc(100% + var(--ref-spacing-xxs));
   right: 0;
   min-width: 220px;
-  padding: var(--ref-spacing-xxs);
-  background: var(--app-surface);
-  border: 1px solid var(--app-border-soft);
-  border-radius: var(--app-radius-button-sm);
-  box-shadow: var(--app-shadow-popover-md);
+  width: auto;
   z-index: var(--app-z-overlay);
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-spacing-micro);
 }
 
 /* When the sidebar is collapsed the popmenu sits next to the icon rail
    (right of it) rather than on top of the avatar tile. */
-.app-sidebar__foot-popmenu--collapsed {
+.ap-action-dropdown.app-sidebar__foot-popmenu--collapsed {
   bottom: 0;
   right: auto;
   left: calc(100% + var(--ref-spacing-xxs));
 }
 
-.app-sidebar__foot-popmenu[hidden] {
+.ap-action-dropdown.app-sidebar__foot-popmenu[hidden] {
   display: none;
-}
-
-.app-sidebar__foot-item {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
-  background: transparent;
-  border: 0;
-  border-radius: var(--app-radius-button-sm);
-  font-family: inherit;
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
-  text-align: left;
-  cursor: pointer;
-  width: 100%;
-  transition: background-color var(--ref-animation-short) var(--app-ease-out);
-}
-
-.app-sidebar__foot-item i {
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-grey-80);
-}
-
-.app-sidebar__foot-item:hover,
-.app-sidebar__foot-item:focus-visible {
-  background: var(--ref-color-grey-10);
-  outline: none;
 }
 
 .app-sidebar__foot-kbd {
@@ -578,12 +535,6 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
   font-size: var(--app-text-micro-sm);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-80);
-}
-
-.app-sidebar__foot-divider {
-  margin: 4px 0;
-  border: 0;
-  border-top: 1px solid var(--app-border-soft);
 }
 
 /* ── Collapsed mode (56px) ────────────────────────────────────────────

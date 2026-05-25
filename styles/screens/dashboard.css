@@ -635,47 +635,25 @@
   gap: var(--ref-spacing-xxs);
 }
 
-/* More menu — a tiny overflow that only holds Pin / Unpin for now. Anchored
-   to the bottom-right of the more button. */
+/* More menu — DS .ap-action-dropdown anchored under the kebab button.
+   We only override positioning here ; the DS provides the surface,
+   border, shadow, item layout, hover / focus states. */
 
 .idea-card__more-wrap {
   position: relative;
 }
 
-.idea-card__more-menu {
+.ap-action-dropdown.idea-card__more-menu {
   position: absolute;
   top: calc(100% + var(--ref-spacing-xxxs));
   right: 0;
   min-width: 160px;
-  margin: 0;
-  padding: var(--ref-spacing-xxxs);
-  list-style: none;
-  background: var(--ref-color-white);
-  border: 1px solid var(--ref-color-grey-10);
-  border-radius: var(--ref-border-radius-md);
-  box-shadow: var(--app-shadow-popover-md);
+  width: auto;
   z-index: var(--app-z-content);
 }
 
-.idea-card__more-item {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  width: 100%;
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
-  background: transparent;
-  border: 0;
-  border-radius: var(--ref-border-radius-sm);
-  color: var(--ref-color-grey-100);
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.idea-card__more-item {
-  transition: background-color var(--ref-animation-short) var(--app-ease-out);
+.ap-action-dropdown.idea-card__more-menu[hidden] {
+  display: none;
 }
 
 /* Draft Post button while a draft is being generated (1.5–2s thinking
@@ -686,17 +664,10 @@
   pointer-events: none;
 }
 
-.idea-card__more-item:hover,
-.idea-card__more-item:focus-visible {
-  background: var(--ref-color-grey-05);
-  outline: none;
-}
-
-.idea-card__more-item:active {
-  background: var(--ref-color-grey-10);
-}
-
-.idea-card__more-item[aria-pressed="true"] {
+/* aria-pressed=true marks the pinned state — recolor the label to mirror
+   the dashboard's pinned tag tint. DS doesn't ship a "pressed" state for
+   action-dropdown items, so this is a legitimate extension. */
+.ap-action-dropdown.idea-card__more-menu .ap-action-dropdown-item[aria-pressed="true"] {
   color: var(--ref-color-electric-blue-100);
 }
 
@@ -808,59 +779,27 @@
   line-height: var(--ref-font-line-height-md);
 }
 
-/* ---- Source-card overflow menu (mirrors idea-card__more-menu) -------- */
+/* ---- Source-card overflow menu — DS .ap-action-dropdown anchored
+   under the kebab button. We only override positioning here ; the DS
+   provides the surface, border, shadow, item layout, hover / focus /
+   red-mode states. */
 
 .source-card__more-wrap {
   position: relative;
   margin-left: var(--ref-spacing-xxxs);
 }
 
-.source-card__more-menu {
+.ap-action-dropdown.source-card__more-menu {
   position: absolute;
   top: calc(100% + var(--ref-spacing-xxxs));
   right: 0;
   min-width: 200px;
-  margin: 0;
-  padding: var(--ref-spacing-xxxs);
-  list-style: none;
-  background: var(--ref-color-white);
-  border: 1px solid var(--ref-color-grey-10);
-  border-radius: var(--ref-border-radius-md);
-  box-shadow: var(--app-shadow-popover-md);
+  width: auto;
   z-index: var(--app-z-content);
 }
 
-.source-card__more-item {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  width: 100%;
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
-  background: transparent;
-  border: 0;
-  border-radius: var(--ref-border-radius-sm);
-  color: var(--ref-color-grey-100);
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color var(--ref-animation-short) var(--app-ease-out);
-}
-
-.source-card__more-item:hover,
-.source-card__more-item:focus-visible {
-  background: var(--ref-color-grey-05);
-  outline: none;
-}
-
-.source-card__more-item--danger {
-  color: var(--ref-color-red-100);
-}
-
-.source-card__more-item--danger:hover,
-.source-card__more-item--danger:focus-visible {
-  background: var(--ref-color-red-05, rgba(220, 38, 38, 0.05));
+.ap-action-dropdown.source-card__more-menu[hidden] {
+  display: none;
 }
 
 /* ---- Selection checkbox + highlight on idea cards (mirrors source-card) */

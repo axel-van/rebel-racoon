@@ -995,58 +995,25 @@
   font-size: var(--sys-icon-css-sm);
 }
 
-/* Attach dropdown */
+/* Attach dropdown — DS .ap-action-dropdown anchored above the trigger.
+   We only override positioning here ; the DS provides the surface,
+   border, shadow, item layout, hover / focus states. */
 
 .assistant-attach {
   position: relative;
 }
 
-.assistant-attach__menu {
+.ap-action-dropdown.assistant-attach__menu {
   position: absolute;
   left: 0;
   bottom: calc(100% + var(--ref-spacing-xxs));
   min-width: 180px;
-  padding: var(--ref-spacing-xxs);
-  background: var(--app-surface);
-  border: 1px solid var(--app-border-soft);
-  border-radius: var(--app-radius-md);
-  box-shadow: var(--app-shadow-popover-md);
+  width: auto;
   z-index: var(--app-z-overlay);
-  display: flex;
-  flex-direction: column;
 }
 
-.assistant-attach__menu[hidden] {
+.ap-action-dropdown.assistant-attach__menu[hidden] {
   display: none;
-}
-
-.assistant-attach__item {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
-  border: 0;
-  background: transparent;
-  border-radius: var(--app-radius-sm);
-  font-family: inherit;
-  font-size: var(--ref-font-size-sm);
-  color: var(--ref-color-grey-150);
-  cursor: pointer;
-  text-align: left;
-}
-
-.assistant-attach__item {
-  transition: background-color var(--ref-animation-short) var(--app-ease-out);
-}
-
-.assistant-attach__item:hover,
-.assistant-attach__item:focus-visible {
-  background: var(--app-surface-subtle);
-  outline: none;
-}
-
-.assistant-attach__item:active {
-  background: var(--ref-color-grey-10);
 }
 
 /* ---------- Composer pills (Zone 1 — attachments above the input) ---- */

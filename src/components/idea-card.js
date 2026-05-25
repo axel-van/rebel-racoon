@@ -251,20 +251,22 @@ export function renderIdeaCard(idea, allSources = [], { selectable = false, isSe
               >
                 <i class="ap-icon-more"></i>
               </button>
-              <ul id="idea-more-${idea.id}" class="idea-card__more-menu" role="menu" hidden>
-                <li role="none">
-                  <button
-                    type="button"
-                    role="menuitem"
-                    class="idea-card__more-item"
-                    data-idea-pin="${idea.id}"
-                    aria-pressed="${idea.pinned ? "true" : "false"}"
-                  >
-                    <i class="ap-icon-pin"></i>
-                    <span>${pinLabel}</span>
-                  </button>
-                </li>
-              </ul>
+              <div id="idea-more-${idea.id}" class="ap-action-dropdown idea-card__more-menu" role="menu" hidden>
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="ap-action-dropdown-item"
+                  data-idea-pin="${idea.id}"
+                  aria-pressed="${idea.pinned ? "true" : "false"}"
+                >
+                  <i class="ap-icon-pin"></i>
+                  <div class="ap-action-dropdown-item-text">
+                    <div class="ap-action-dropdown-item-label-container">
+                      <span class="ap-action-dropdown-item-label">${pinLabel}</span>
+                    </div>
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
         </div>

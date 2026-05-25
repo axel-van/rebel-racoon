@@ -170,58 +170,22 @@
   margin-left: auto;
 }
 
-/* More menu — same dropdown chrome as idea-card. */
+/* More menu — DS .ap-action-dropdown anchored under the kebab button.
+   We only override positioning here ; the DS provides the surface,
+   border, shadow, item layout, hover / focus / red-mode states. */
 .clip-card__more-wrap {
   position: relative;
 }
 
-.clip-card__more-menu {
+.ap-action-dropdown.clip-card__more-menu {
   position: absolute;
   right: 0;
   top: calc(100% + var(--ref-spacing-xxxs));
   z-index: 10;
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: var(--ref-spacing-xxxs);
-  list-style: none;
-  background: var(--ref-color-white);
-  border: 1px solid var(--ref-color-grey-10);
-  border-radius: var(--ref-border-radius-sm);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
   min-width: 180px;
+  width: auto;
 }
 
-.clip-card__more-menu[hidden] {
+.ap-action-dropdown.clip-card__more-menu[hidden] {
   display: none;
-}
-
-.clip-card__more-item {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
-  background: 0;
-  border: 0;
-  border-radius: var(--ref-border-radius-xs);
-  font: inherit;
-  font-size: var(--ref-font-size-sm);
-  color: var(--ref-color-grey-150);
-  text-align: left;
-  cursor: pointer;
-  width: 100%;
-}
-
-.clip-card__more-item:hover,
-.clip-card__more-item:focus-visible {
-  background: var(--ref-color-grey-05);
-  outline: none;
-}
-
-.clip-card__more-item--danger {
-  color: var(--sys-color-text-color-error);
-}
-
-.clip-card__more-item--danger i {
-  color: inherit;
 }

@@ -31,8 +31,8 @@
 // rerenderContentWorkspaceBody(...) on each tick.
 
 import { html, raw } from "../utils.js?v=20";
-import { renderSourceCard } from "./source-card.js?v=28";
-import { renderIdeaCard } from "./idea-card.js?v=24";
+import { renderSourceCard } from "./source-card.js?v=29";
+import { renderIdeaCard } from "./idea-card.js?v=26";
 import { renderEmptyState } from "./empty-state.js?v=1";
 
 export const contentState = { q: "", sort: "potential" };

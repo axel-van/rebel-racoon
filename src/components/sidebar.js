@@ -386,28 +386,44 @@ function renderFootMenu({ collapsed }) {
         <i class="ap-icon-cog"></i>
       </button>
       <div
-        class="app-sidebar__foot-popmenu ${collapsed ? "app-sidebar__foot-popmenu--collapsed" : ""}"
+        class="ap-action-dropdown app-sidebar__foot-popmenu ${collapsed ? "app-sidebar__foot-popmenu--collapsed" : ""}"
         role="menu"
         data-sidebar-foot-menu
         hidden
       >
-        <button type="button" role="menuitem" class="app-sidebar__foot-item" data-sidebar-feedback>
+        <button type="button" role="menuitem" class="ap-action-dropdown-item" data-sidebar-feedback>
           <i class="ap-icon-single-chat-bubble"></i>
-          <span>Send feedback</span>
+          <div class="ap-action-dropdown-item-text">
+            <div class="ap-action-dropdown-item-label-container">
+              <span class="ap-action-dropdown-item-label">Send feedback</span>
+            </div>
+          </div>
         </button>
-        <button type="button" role="menuitem" class="app-sidebar__foot-item" data-sidebar-bug>
+        <button type="button" role="menuitem" class="ap-action-dropdown-item" data-sidebar-bug>
           <i class="ap-icon-bug"></i>
-          <span>Report a bug</span>
+          <div class="ap-action-dropdown-item-text">
+            <div class="ap-action-dropdown-item-label-container">
+              <span class="ap-action-dropdown-item-label">Report a bug</span>
+            </div>
+          </div>
         </button>
-        <button type="button" role="menuitem" class="app-sidebar__foot-item" data-sidebar-shortcuts>
+        <button type="button" role="menuitem" class="ap-action-dropdown-item" data-sidebar-shortcuts>
           <i class="ap-icon-question"></i>
-          <span>Keyboard shortcuts</span>
+          <div class="ap-action-dropdown-item-text">
+            <div class="ap-action-dropdown-item-label-container">
+              <span class="ap-action-dropdown-item-label">Keyboard shortcuts</span>
+            </div>
+          </div>
           <kbd class="app-sidebar__foot-kbd">?</kbd>
         </button>
-        <hr class="app-sidebar__foot-divider" />
-        <button type="button" role="menuitem" class="app-sidebar__foot-item" data-sidebar-settings>
+        <div class="ap-action-dropdown-divider" role="separator"></div>
+        <button type="button" role="menuitem" class="ap-action-dropdown-item" data-sidebar-settings>
           <i class="ap-icon-cog"></i>
-          <span>Settings</span>
+          <div class="ap-action-dropdown-item-text">
+            <div class="ap-action-dropdown-item-label-container">
+              <span class="ap-action-dropdown-item-label">Settings</span>
+            </div>
+          </div>
         </button>
       </div>
     </div>
@@ -571,19 +587,25 @@ function renderSessionRow(session, activeSessionId) {
           <button type="button" class="ap-action-dropdown-item" role="menuitem" data-sidebar-row-rename="${session.id}">
             <i class="ap-icon-pen"></i>
             <div class="ap-action-dropdown-item-text">
-              <div class="ap-action-dropdown-item-label">Rename</div>
+              <div class="ap-action-dropdown-item-label-container">
+                <span class="ap-action-dropdown-item-label">Rename</span>
+              </div>
             </div>
           </button>
           <button type="button" class="ap-action-dropdown-item" role="menuitem" data-sidebar-pin="${session.id}">
             <i class="ap-icon-pin"></i>
             <div class="ap-action-dropdown-item-text">
-              <div class="ap-action-dropdown-item-label">${isPinned ? "Unpin" : "Pin"}</div>
+              <div class="ap-action-dropdown-item-label-container">
+                <span class="ap-action-dropdown-item-label">${isPinned ? "Unpin" : "Pin"}</span>
+              </div>
             </div>
           </button>
-          <button type="button" class="ap-action-dropdown-item app-sidebar__row-menu-danger" role="menuitem" data-sidebar-row-delete="${session.id}">
+          <button type="button" class="ap-action-dropdown-item red-mode" role="menuitem" data-sidebar-row-delete="${session.id}">
             <i class="ap-icon-trash"></i>
             <div class="ap-action-dropdown-item-text">
-              <div class="ap-action-dropdown-item-label">Delete</div>
+              <div class="ap-action-dropdown-item-label-container">
+                <span class="ap-action-dropdown-item-label">Delete</span>
+              </div>
             </div>
           </button>
         </div>

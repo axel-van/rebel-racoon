@@ -14,9 +14,9 @@ import {
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=27";
 import { renderPostCard } from "./post-card.js?v=28";
-import { renderClipCard } from "./clip-card.js?v=1";
+import { renderClipCard } from "./clip-card.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=2";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=41";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=43";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -648,7 +648,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=82").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=114").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
