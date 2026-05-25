@@ -23,7 +23,7 @@ import {
   openIdeas as openIdeasPanel,
   openSources as openSourcesPanel,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=82";
+} from "./right-panel.js?v=87";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=35";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=30";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=29";
