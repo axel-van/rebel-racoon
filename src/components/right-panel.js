@@ -662,6 +662,48 @@ export function init() {
       useIdea(useBtn.dataset.rpanelUseIdea);
       return;
     }
+    // Expand / collapse a single card (accordion: closes any previously
+    // expanded card). We mutate the DOM in place rather than re-render
+    // the whole list so focus and scroll position survive the toggle.
+    const expandBtn = event.target.closest("[data-rpanel-ideas-expand]");
+    if (expandBtn) {
+      const id = expandBtn.dataset.rpanelIdeasExpand;
+      toggleIdeaExpanded(id);
+      return;
+    }
+    // Pin / unpin an idea — mutates the idea object in the shared mocks
+    // module so the dashboard's full card sees the same state on next
+    // open. Repaints the card header in place to keep the pin button
+    // focused (Tab order would otherwise reset to the top).
+    const pinBtn = event.target.closest("[data-rpanel-pin-idea]");
+    if (pinBtn) {
+      const id = pinBtn.dataset.rpanelPinIdea;
+      toggleIdeaPinned(id);
+      return;
+    }
+    // More menu trigger — closes any other open menu first, then flips
+    // hidden on the target one. Outside-click + Escape close it.
+    const moreBtn = event.target.closest("[data-rpanel-ideas-more]");
+    if (moreBtn) {
+      toggleIdeaMoreMenu(moreBtn);
+      return;
+    }
+    // Copy idea body to clipboard.
+    const copyBtn = event.target.closest("[data-rpanel-ideas-copy]");
+    if (copyBtn) {
+      copyIdeaText(copyBtn.dataset.rpanelIdeasCopy);
+      closeAllIdeaMoreMenus();
+      return;
+    }
+    // Dismiss — adds to dismissed set and re-renders the body so the
+    // card disappears. Pin state and Use are preserved (so a dismissed
+    // idea can still be retrieved if the user clears filters later).
+    const dismissBtn = event.target.closest("[data-rpanel-ideas-dismiss]");
+    if (dismissBtn) {
+      dismissIdea(dismissBtn.dataset.rpanelIdeasDismiss);
+      closeAllIdeaMoreMenus();
+      return;
+    }
 
     // --- V1 brief panel handlers ---
     const briefChip = event.target.closest("[data-brief-chip-field]");
@@ -740,6 +782,11 @@ export function init() {
     }
   });
   el.addEventListener("change", (event) => {
+    if (event.target.matches("[data-rpanel-ideas-sort]")) {
+      ideasSort = event.target.value || "recent";
+      renderIdeasBodyOnly();
+      return;
+    }
     if (event.target.matches("[data-rpanel-drafts-filter-select]")) {
       draftsFilter = event.target.value || "all";
       renderPanel();
@@ -1831,6 +1878,132 @@ function renderIdeasBodyOnly() {
   if (body) body.innerHTML = renderIdeasList();
 }
 
+// ── Card-level helpers — accordion / pin / more / copy / dismiss ────
+//
+// All mutate either local state (expandedIdeaId, dismissedIdeaIds) or
+// the shared idea object (pinned). When state can be reflected by a
+// targeted DOM mutation (expand toggle, pin) we avoid a full re-render
+// so focus and scroll position survive. When the change reshapes the
+// list (dismiss) we fall back to renderIdeasBodyOnly().
+
+function toggleIdeaExpanded(id) {
+  const body = document.querySelector("[data-rpanel-ideas-body]");
+  if (!body) return;
+  const next = expandedIdeaId === id ? null : id;
+  // Close any previously-expanded card first.
+  body.querySelectorAll('.rpanel-ideas__card[data-expanded="true"]').forEach((card) => {
+    setCardExpanded(card, false);
+  });
+  expandedIdeaId = next;
+  if (next) {
+    const card = body.querySelector(`.rpanel-ideas__card[data-idea-id="${cssEscape(next)}"]`);
+    if (card) {
+      setCardExpanded(card, true);
+      // Keep the expanded card visible — defer to next frame so the
+      // height transition has started before we measure.
+      requestAnimationFrame(() => {
+        card.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      });
+    }
+  }
+}
+
+function setCardExpanded(card, expanded) {
+  card.dataset.expanded = expanded ? "true" : "false";
+  const expandBtn = card.querySelector("[data-rpanel-ideas-expand]");
+  if (expandBtn) {
+    expandBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+    const label = expandBtn.querySelector("span");
+    if (label) label.textContent = expanded ? "Hide rationale" : "Why this idea";
+  }
+  const rationale = card.querySelector(".rpanel-ideas__rationale");
+  if (rationale) rationale.hidden = !expanded;
+}
+
+function toggleIdeaPinned(id) {
+  const idea = IDEAS.find((i) => i.id === id);
+  if (!idea) return;
+  const nextPinned = !idea.pinned;
+  idea.pinned = nextPinned;
+  // Repaint the affected card head in place — preserves focus on the
+  // pin button so keyboard users keep their place.
+  const card = document.querySelector(`.rpanel-ideas__card[data-idea-id="${cssEscape(id)}"]`);
+  if (card) {
+    if (nextPinned) card.dataset.pinned = "true";
+    else delete card.dataset.pinned;
+    const pinBtn = card.querySelector("[data-rpanel-pin-idea]");
+    if (pinBtn) {
+      pinBtn.setAttribute("aria-pressed", String(nextPinned));
+      const label = nextPinned ? "Unpin idea" : "Pin idea";
+      pinBtn.setAttribute("aria-label", label);
+      pinBtn.setAttribute("title", label);
+    }
+  }
+  import("./toast.js").then(({ showToast }) =>
+    showToast(nextPinned ? "Idea pinned" : "Idea unpinned", {
+      action: { label: "Undo", onClick: () => toggleIdeaPinned(id) },
+    }),
+  );
+}
+
+function toggleIdeaMoreMenu(triggerBtn) {
+  const wrap = triggerBtn.closest(".rpanel-ideas__more-wrap");
+  const menu = wrap?.querySelector(".rpanel-ideas__more-menu");
+  if (!menu) return;
+  const willOpen = menu.hidden;
+  closeAllIdeaMoreMenus();
+  menu.hidden = !willOpen;
+  triggerBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+}
+
+function closeAllIdeaMoreMenus() {
+  document.querySelectorAll(".rpanel-ideas__more-menu:not([hidden])").forEach((menu) => {
+    menu.hidden = true;
+    const trigger = menu.closest(".rpanel-ideas__more-wrap")?.querySelector("[data-rpanel-ideas-more]");
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
+  });
+}
+
+function copyIdeaText(id) {
+  const idea = IDEAS.find((i) => i.id === id);
+  if (!idea) return;
+  const text = idea.body || idea.title || "";
+  if (!text) return;
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).catch(() => {});
+  }
+  import("./toast.js").then(({ showToast }) => showToast("Idea copied to clipboard", { duration: 2400 }));
+}
+
+function dismissIdea(id) {
+  dismissedIdeaIds.add(id);
+  if (expandedIdeaId === id) expandedIdeaId = null;
+  // Full re-render of the body — list shape changes, including counts
+  // shown in the filter chips above the body.
+  renderPanel();
+}
+
+function cssEscape(value) {
+  if (typeof CSS !== "undefined" && typeof CSS.escape === "function") return CSS.escape(value);
+  return String(value).replace(/[^a-zA-Z0-9_-]/g, "\\$&");
+}
+
+// Outside-click + Escape close behaviour for the More menus. Bound
+// once at module scope so re-renders don't stack listeners.
+let rpanelIdeasGlobalsBound = false;
+function bindRpanelIdeasGlobals() {
+  if (rpanelIdeasGlobalsBound) return;
+  rpanelIdeasGlobalsBound = true;
+  document.addEventListener("click", (event) => {
+    if (event.target.closest(".rpanel-ideas__more-wrap")) return;
+    closeAllIdeaMoreMenus();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeAllIdeaMoreMenus();
+  });
+}
+bindRpanelIdeasGlobals();
+
 function renderIdeaCompact(idea) {
   const kind = idea.kind || "insight";
   const usedLabel = idea.used > 0 ? `Used ${idea.used}×` : "Unused";
@@ -1838,22 +2011,101 @@ function renderIdeaCompact(idea) {
     .slice(0, 3)
     .map((t) => `<span class="rpanel-ideas__tag">#${escapeText(t)}</span>`)
     .join("");
+
+  // Confidence pill — tiered into high / mid / low so a glance is enough
+  // to triage. Threshold tuned to surface the top-quartile (≥85) as a
+  // green "safe pick" without flattening the gradient.
+  const confidence = typeof idea.confidence === "number" ? idea.confidence : null;
+  const tier = confidence == null ? null : confidence >= 85 ? "high" : confidence >= 65 ? "mid" : "low";
+  const confidencePill =
+    confidence == null
+      ? ""
+      : `<span class="rpanel-ideas__confidence" data-tier="${tier}" title="Confidence ${confidence}/100">
+          <span class="rpanel-ideas__confidence-dot" aria-hidden="true"></span>${confidence}
+        </span>`;
+
+  const isNew = idea.state === "New";
+  const isPinned = !!idea.pinned;
+  const isExpanded = expandedIdeaId === idea.id;
+  const rationaleId = `rpanel-ideas-rationale-${idea.id}`;
+
   return `
-    <article class="rpanel-ideas__card">
+    <article class="rpanel-ideas__card" data-idea-id="${escapeAttr(idea.id)}" data-expanded="${isExpanded}"${isPinned ? ' data-pinned="true"' : ""}>
       <header class="rpanel-ideas__card-head">
         <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${kind}</span>
+        ${confidencePill}
+        <span class="rpanel-ideas__head-spacer"></span>
+        ${isNew ? `<span class="ap-status blue rpanel-ideas__new">New</span>` : ""}
         <span class="rpanel-ideas__used">${usedLabel}</span>
+        <button
+          type="button"
+          class="ap-icon-button transparent sm rpanel-ideas__pin"
+          data-rpanel-pin-idea="${escapeAttr(idea.id)}"
+          aria-pressed="${isPinned}"
+          aria-label="${isPinned ? "Unpin idea" : "Pin idea"}"
+          title="${isPinned ? "Unpin idea" : "Pin idea"}"
+        >
+          <i class="ap-icon-pin"></i>
+        </button>
       </header>
-      ${idea.title ? `<div class="rpanel-ideas__card-title">${escapeText(idea.title)}</div>` : ""}
+      ${idea.title ? `<h4 class="rpanel-ideas__card-title">${escapeText(idea.title)}</h4>` : ""}
       <p class="rpanel-ideas__card-body">${escapeText(idea.body || "")}</p>
+      ${
+        idea.rationale
+          ? `<div class="rpanel-ideas__rationale" id="${rationaleId}" ${isExpanded ? "" : "hidden"}>
+              <span class="rpanel-ideas__rationale-label">Why this idea</span>
+              <p class="rpanel-ideas__rationale-text">${escapeText(idea.rationale)}</p>
+            </div>`
+          : ""
+      }
       ${tags ? `<div class="rpanel-ideas__tag-row">${tags}</div>` : ""}
       <footer class="rpanel-ideas__card-foot">
-        <span class="rpanel-ideas__ref">${escapeText(idea.ref || "Generated")}</span>
-        <button type="button" class="ap-button stroked orange rpanel-ideas__use" data-rpanel-use-idea="${idea.id}">
-          <i class="ap-icon-arrow-up"></i>
-          <span>Use idea</span>
-        </button>
+        ${
+          idea.rationale
+            ? `<button
+                type="button"
+                class="rpanel-ideas__expand"
+                data-rpanel-ideas-expand="${escapeAttr(idea.id)}"
+                aria-expanded="${isExpanded}"
+                aria-controls="${rationaleId}"
+              >
+                <span>${isExpanded ? "Hide rationale" : "Why this idea"}</span>
+                <i class="ap-icon-chevron-down"></i>
+              </button>`
+            : `<span class="rpanel-ideas__ref">${escapeText(idea.ref || "Generated")}</span>`
+        }
+        <div class="rpanel-ideas__foot-actions">
+          <button type="button" class="ap-button stroked orange rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
+            <i class="ap-icon-arrow-up"></i>
+            <span>Use</span>
+          </button>
+          <div class="rpanel-ideas__more-wrap">
+            <button
+              type="button"
+              class="ap-icon-button transparent sm rpanel-ideas__more"
+              data-rpanel-ideas-more="${escapeAttr(idea.id)}"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-label="More actions"
+            >
+              <i class="ap-icon-more"></i>
+            </button>
+            <ul class="rpanel-ideas__more-menu" role="menu" hidden>
+              <li role="none">
+                <button type="button" role="menuitem" class="rpanel-ideas__more-item" data-rpanel-ideas-copy="${escapeAttr(idea.id)}">
+                  <i class="ap-icon-copy"></i><span>Copy text</span>
+                </button>
+              </li>
+              <li role="none">
+                <button type="button" role="menuitem" class="rpanel-ideas__more-item" data-rpanel-ideas-dismiss="${escapeAttr(idea.id)}">
+                  <i class="ap-icon-trash"></i><span>Dismiss</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
       </footer>
+      ${idea.rationale ? `<div class="rpanel-ideas__ref-line">${escapeText(idea.ref || "Generated")}</div>` : ""}
     </article>
   `;
 }
