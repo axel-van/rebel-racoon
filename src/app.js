@@ -1,6 +1,6 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=3";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=48";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=49";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=42";
 import { init as initRightPanel } from "./components/right-panel.js?v=65";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=20";
@@ -20,9 +20,9 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=10";
 import { renderDashboard } from "./screens/dashboard.js?v=45";
-import { renderSession } from "./screens/session.js?v=112";
-import { renderIdeas } from "./screens/ideas.js?v=24";
-import { renderContexts } from "./screens/contexts.js?v=34";
+import { renderSession } from "./screens/session.js?v=113";
+import { renderIdeas } from "./screens/ideas.js?v=25";
+import { renderContexts } from "./screens/contexts.js?v=35";
 import { renderWelcome } from "./screens/welcome.js?v=4";
 import { renderWelcomeSocials } from "./screens/welcome-socials.js?v=4";
 import { renderWelcomeSources } from "./screens/welcome-sources.js?v=2";

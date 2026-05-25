@@ -55,7 +55,7 @@ export function renderTopbar(_options = {}) {
     <div class="app-topbar__left">${raw(renderTitle(onSession))}</div>
     <div class="app-topbar__right">
       ${raw(onSession ? renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) : "")}
-      ${raw(onSession && !rpMode ? renderStatusCardToggle() : "")}
+      ${raw(onSession ? renderStatusCardToggle() : "")}
     </div>
   `;
 }
