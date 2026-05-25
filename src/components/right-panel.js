@@ -77,9 +77,6 @@ const IDEA_KINDS = [
 // at a time). Survives across renderPanel() calls but is reset when the
 // panel re-opens in a fresh session via renderIdeasBodyOnly().
 let ideasFilter = "all";
-// Ideas the user has dismissed via the More menu — kept in a Set so the
-// list re-render filters them out without mutating the mocks array.
-let dismissedIdeaIds = new Set();
 
 // Outputs sub-view inside Ideas mode — "ideas" or "clips". Unifies the
 // two AI-extracted output types of a source under one persistent surface
@@ -658,27 +655,12 @@ export function init() {
       useIdea(useBtn.dataset.rpanelUseIdea);
       return;
     }
-    // More menu trigger — closes any other open menu first, then flips
-    // hidden on the target one. Outside-click + Escape close it.
-    const moreBtn = event.target.closest("[data-rpanel-ideas-more]");
-    if (moreBtn) {
-      toggleIdeaMoreMenu(moreBtn);
-      return;
-    }
-    // Copy idea body to clipboard.
-    const copyBtn = event.target.closest("[data-rpanel-ideas-copy]");
-    if (copyBtn) {
-      copyIdeaText(copyBtn.dataset.rpanelIdeasCopy);
-      closeAllIdeaMoreMenus();
-      return;
-    }
-    // Dismiss — adds to dismissed set and re-renders the body so the
-    // card disappears. Pin state and Use are preserved (so a dismissed
-    // idea can still be retrieved if the user clears filters later).
-    const dismissBtn = event.target.closest("[data-rpanel-ideas-dismiss]");
-    if (dismissBtn) {
-      dismissIdea(dismissBtn.dataset.rpanelIdeasDismiss);
-      closeAllIdeaMoreMenus();
+    // Thumbs-up / thumbs-down feedback on an idea card.
+    const feedbackBtn = event.target.closest("[data-rpanel-ideas-feedback]");
+    if (feedbackBtn) {
+      const id = feedbackBtn.dataset.rpanelIdeasFeedback;
+      const verdict = feedbackBtn.dataset.verdict;
+      toggleIdeaFeedback(id, verdict);
       return;
     }
 
@@ -1684,12 +1666,9 @@ function renderIdeasView() {
   }
 
   // Counts per kind for the filter chips — "All (12)" / "Stats (4)".
-  // Dismissed ideas are excluded so the chip counts match what the user
-  // can actually see in the list.
-  const visibleIdeas = IDEAS.filter((i) => !dismissedIdeaIds.has(i.id));
-  const totalCount = visibleIdeas.length;
+  const totalCount = IDEAS.length;
   const kindCounts = IDEA_KINDS.reduce((acc, k) => {
-    acc[k.id] = k.id === "all" ? totalCount : visibleIdeas.filter((i) => i.kind === k.id).length;
+    acc[k.id] = k.id === "all" ? totalCount : IDEAS.filter((i) => i.kind === k.id).length;
     return acc;
   }, {});
 
@@ -1783,10 +1762,8 @@ function renderClipsList(entries) {
 
 function renderIdeasList() {
   // Order matches the seed array (newest-first by convention in mocks);
-  // dismissed cards are dropped, the active kind filter narrows the rest.
-  const sorted = IDEAS.filter((i) => !dismissedIdeaIds.has(i.id)).filter(
-    (i) => ideasFilter === "all" || i.kind === ideasFilter,
-  );
+  // the active kind filter narrows the list.
+  const sorted = IDEAS.filter((i) => ideasFilter === "all" || i.kind === ideasFilter);
   if (sorted.length === 0) {
     return html`
       <div class="app-right-panel__empty rpanel-ideas__no-match">
@@ -1808,68 +1785,25 @@ function renderIdeasBodyOnly() {
   if (body) body.innerHTML = renderIdeasList();
 }
 
-// ── Card-level helpers — more / copy / dismiss ──────────────────────
+// ── Card-level helper — thumbs feedback ─────────────────────────────
 //
-// Mutate local state (dismissedIdeaIds) and re-render. Dismiss reshapes
-// the list (including the kind filter counts) so we run a full panel
-// render rather than a body-only patch.
+// Tracks the user's reaction per idea in a module-local Map so the
+// state survives renders without leaking onto the seeded mock object.
+// Clicking the same verdict again clears it (toggle off).
 
-function toggleIdeaMoreMenu(triggerBtn) {
-  const wrap = triggerBtn.closest(".rpanel-ideas__more-wrap");
-  const menu = wrap?.querySelector(".rpanel-ideas__more-menu");
-  if (!menu) return;
-  const willOpen = menu.hidden;
-  closeAllIdeaMoreMenus();
-  menu.hidden = !willOpen;
-  triggerBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+const ideaFeedback = new Map(); // ideaId → 'up' | 'down'
+
+function getIdeaFeedback(ideaId) {
+  return ideaFeedback.get(ideaId) || null;
 }
 
-function closeAllIdeaMoreMenus() {
-  document.querySelectorAll(".rpanel-ideas__more-menu:not([hidden])").forEach((menu) => {
-    menu.hidden = true;
-    const trigger = menu.closest(".rpanel-ideas__more-wrap")?.querySelector("[data-rpanel-ideas-more]");
-    if (trigger) trigger.setAttribute("aria-expanded", "false");
-  });
+function toggleIdeaFeedback(ideaId, verdict) {
+  if (verdict !== "up" && verdict !== "down") return;
+  const current = ideaFeedback.get(ideaId);
+  if (current === verdict) ideaFeedback.delete(ideaId);
+  else ideaFeedback.set(ideaId, verdict);
+  renderIdeasBodyOnly();
 }
-
-function copyIdeaText(id) {
-  const idea = IDEAS.find((i) => i.id === id);
-  if (!idea) return;
-  const text = idea.body || idea.title || "";
-  if (!text) return;
-  if (navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(text).catch(() => {});
-  }
-  import("./toast.js").then(({ showToast }) => showToast("Idea copied to clipboard", { duration: 2400 }));
-}
-
-function dismissIdea(id) {
-  dismissedIdeaIds.add(id);
-  // Full re-render of the body — list shape changes, including counts
-  // shown in the filter chips above the body.
-  renderPanel();
-}
-
-function cssEscape(value) {
-  if (typeof CSS !== "undefined" && typeof CSS.escape === "function") return CSS.escape(value);
-  return String(value).replace(/[^a-zA-Z0-9_-]/g, "\\$&");
-}
-
-// Outside-click + Escape close behaviour for the More menus. Bound
-// once at module scope so re-renders don't stack listeners.
-let rpanelIdeasGlobalsBound = false;
-function bindRpanelIdeasGlobals() {
-  if (rpanelIdeasGlobalsBound) return;
-  rpanelIdeasGlobalsBound = true;
-  document.addEventListener("click", (event) => {
-    if (event.target.closest(".rpanel-ideas__more-wrap")) return;
-    closeAllIdeaMoreMenus();
-  });
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeAllIdeaMoreMenus();
-  });
-}
-bindRpanelIdeasGlobals();
 
 function renderIdeaCompact(idea) {
   const kind = idea.kind || "insight";
@@ -1890,11 +1824,39 @@ function renderIdeaCompact(idea) {
       </span>`
     : "";
 
+  // Thumbs-up / thumbs-down feedback — the picked side renders with
+  // the _fill icon variant + aria-pressed=true. Clicking the same
+  // side again clears the feedback (see toggleIdeaFeedback).
+  const verdict = getIdeaFeedback(idea.id);
+  const thumbBtn = (side) => {
+    const isUp = side === "up";
+    const isActive = verdict === side;
+    const icon = isActive ? `ap-icon-thumb-${side}_fill` : `ap-icon-thumb-${side}`;
+    const label = isUp ? "Mark idea as useful" : "Mark idea as not useful";
+    return `
+      <button
+        type="button"
+        class="ap-icon-button transparent sm rpanel-ideas__thumb${isActive ? " is-active" : ""}"
+        data-rpanel-ideas-feedback="${escapeAttr(idea.id)}"
+        data-verdict="${side}"
+        aria-pressed="${isActive}"
+        aria-label="${label}"
+        title="${label}"
+      >
+        <i class="${icon}"></i>
+      </button>
+    `;
+  };
+
   return `
     <article class="rpanel-ideas__card" data-idea-id="${escapeAttr(idea.id)}">
       <header class="rpanel-ideas__card-head">
         <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${kind}</span>
         ${infoBubble}
+        <div class="rpanel-ideas__feedback">
+          ${thumbBtn("up")}
+          ${thumbBtn("down")}
+        </div>
       </header>
       ${idea.title ? `<h4 class="rpanel-ideas__card-title">${escapeText(idea.title)}</h4>` : ""}
       <p class="rpanel-ideas__card-body">${escapeText(idea.body || "")}</p>
@@ -1904,42 +1866,10 @@ function renderIdeaCompact(idea) {
           <i class="ap-icon-file" aria-hidden="true"></i>
           <span class="rpanel-ideas__source-text">${escapeText(sourceLabel)}</span>
         </span>
-        <div class="rpanel-ideas__foot-actions">
-          <button type="button" class="ap-button stroked blue rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
-            <i class="ap-icon-sparkles"></i>
-            <span>Draft</span>
-          </button>
-          <div class="rpanel-ideas__more-wrap">
-            <button
-              type="button"
-              class="ap-icon-button transparent sm rpanel-ideas__more"
-              data-rpanel-ideas-more="${escapeAttr(idea.id)}"
-              aria-haspopup="menu"
-              aria-expanded="false"
-              aria-label="More actions"
-            >
-              <i class="ap-icon-more"></i>
-            </button>
-            <div class="ap-action-dropdown rpanel-ideas__more-menu" role="menu" hidden>
-              <button type="button" role="menuitem" class="ap-action-dropdown-item" data-rpanel-ideas-copy="${escapeAttr(idea.id)}">
-                <i class="ap-icon-copy"></i>
-                <div class="ap-action-dropdown-item-text">
-                  <div class="ap-action-dropdown-item-label-container">
-                    <span class="ap-action-dropdown-item-label">Copy text</span>
-                  </div>
-                </div>
-              </button>
-              <button type="button" role="menuitem" class="ap-action-dropdown-item red-mode" data-rpanel-ideas-dismiss="${escapeAttr(idea.id)}">
-                <i class="ap-icon-trash"></i>
-                <div class="ap-action-dropdown-item-text">
-                  <div class="ap-action-dropdown-item-label-container">
-                    <span class="ap-action-dropdown-item-label">Dismiss</span>
-                  </div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
+        <button type="button" class="ap-button stroked blue rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
+          <i class="ap-icon-sparkles"></i>
+          <span>Draft</span>
+        </button>
       </footer>
     </article>
   `;

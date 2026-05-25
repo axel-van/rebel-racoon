@@ -607,29 +607,21 @@
   margin-top: var(--ref-spacing-xxxs);
 }
 
-.rpanel-ideas__foot-actions {
+/* Thumbs feedback cluster — grouped inside the card header, sits to
+   the right of the info icon. Spacing is tight so the two thumb
+   buttons feel like a single binary control rather than two separate
+   actions. */
+.rpanel-ideas__feedback {
   display: inline-flex;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xxxs);
 }
 
-/* More menu — DS .ap-action-dropdown anchored under the kebab button.
-   We only override positioning here ; the DS provides the surface,
-   border, shadow, item layout, hover / focus / red-mode states. */
-.rpanel-ideas__more-wrap {
-  position: relative;
-}
-
-.ap-action-dropdown.rpanel-ideas__more-menu {
-  position: absolute;
-  top: calc(100% + var(--ref-spacing-xxs));
-  right: 0;
-  z-index: 10;
-  min-width: 180px;
-}
-
-.ap-action-dropdown.rpanel-ideas__more-menu[hidden] {
-  display: none;
+/* Individual thumb button — DS .ap-icon-button.transparent.sm
+   provides the chrome (size, hover surface). We only add an
+   active-state color flip when the user has picked that side. */
+.rpanel-ideas__thumb.is-active i {
+  color: var(--ref-color-electric-blue-100);
 }
 
 /* Honour the user's motion preference — collapse hover transitions. */
