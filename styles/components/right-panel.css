@@ -458,7 +458,7 @@
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  font-size: var(--app-text-micro);
+  font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-80);
   text-transform: uppercase;
@@ -563,7 +563,7 @@
 .rpanel-ideas__kind {
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  font-size: var(--app-text-micro-sm);
+  font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-extra-bold);
 }
 
@@ -686,7 +686,7 @@
 }
 
 .rpanel-ideas__tag {
-  font-size: var(--app-text-micro-sm);
+  font-size: var(--ref-font-size-xs);
   color: var(--ref-color-grey-80);
 }
 
