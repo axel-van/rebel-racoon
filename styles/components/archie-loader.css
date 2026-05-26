@@ -5,25 +5,23 @@
  * `*-spinner` classes scattered across screens and modals — collapses
  * to the same 12-dot grid that fades dots in/out in waves.
  *
- * The dots are NOT painted with box-shadow (which only carries a single
- * solid colour). Instead, the bounding box is painted with the real
- * mermaid linear-gradient (`--ref-color-mermaid-gradient-background`)
- * and 12 solid linear-gradient mask layers (each a positioned d×d
- * square) clip it down to the dot pattern. Each dot therefore samples
- * the gradient at its own x-position — the leftmost column reads blue,
- * the rightmost reads purple, mid columns blend smoothly through the
- * gradient. This is the AI accent used on every other assistant
- * surface (starter cards, conversation status, sparkle icons), so
- * loaders feel native to the rest of the surface. Dots are sharp
- * squares — no rounded corners.
+ * Implementation: the dot at (col 2, row 2) is the `::before` element
+ * itself (a `d × d` square painted with `--archie-loader-color`).
+ * The other 11 dots are duplicates of that square drawn via
+ * `box-shadow`, each offset by a multiple of `d` so the whole grid
+ * lands on a 5d × 4d footprint. This is the canonical l29 pattern —
+ * sharp-edged squares, no rounded corners.
  *
  * Sizing is driven by `--archie-loader-size` (the bounding-box width).
  * The dot grid is 5 dot-widths wide × 4 tall, so dot diameter = size / 5
  * and height = size * 0.8.
  *
- * To override the paint (e.g. white-on-orange CTA buttons), set
- * `--archie-loader-color` to any <image> value — a `linear-gradient(...)`,
- * a CSS colour, or `currentColor`. Default is the mermaid gradient.
+ * Default colour is the mermaid gradient's left stop
+ * (`--ref-color-mermaid-gradient-from`) so loaders read on-brand even
+ * though box-shadow can only carry a single solid colour (the previous
+ * mask-based variant could sample the gradient per-column but rendered
+ * with rounded corners we no longer want). Override via
+ * `--archie-loader-color` (e.g. white CTA buttons set `currentColor`).
  */
 
 .archie-loader,
@@ -78,34 +76,24 @@
   --d: calc(var(--archie-loader-size, 20px) / 5);
   content: "";
   position: absolute;
-  inset: 0;
-  background: var(--archie-loader-color, var(--ref-color-mermaid-gradient-background));
-  -webkit-mask:
-    linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 50% 0% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 0% 66.67% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 0% 100% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 100% 100% / var(--d) var(--d) no-repeat;
-  mask:
-    linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 50% 0% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 0% 66.67% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 0% 100% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-    linear-gradient(#000, #000) 100% 100% / var(--d) var(--d) no-repeat;
+  top: var(--d);
+  left: calc(var(--d) * 2);
+  width: var(--d);
+  height: var(--d);
+  background: var(--archie-loader-color, var(--ref-color-mermaid-gradient-from));
+  color: var(--archie-loader-color, var(--ref-color-mermaid-gradient-from));
+  box-shadow:
+    calc(var(--d) * -2) calc(var(--d) * -1),
+    0 calc(var(--d) * -1),
+    calc(var(--d) * 2) calc(var(--d) * -1),
+    calc(var(--d) * -2) 0,
+    calc(var(--d) * 2) 0,
+    calc(var(--d) * -2) var(--d),
+    0 var(--d),
+    calc(var(--d) * 2) var(--d),
+    calc(var(--d) * -2) calc(var(--d) * 2),
+    0 calc(var(--d) * 2),
+    calc(var(--d) * 2) calc(var(--d) * 2);
   animation: archie-loader-l29 2s infinite;
 }
 
@@ -143,7 +131,7 @@
 }
 
 /* These three sit on coloured CTA buttons (orange / coloured surfaces)
-   where the mermaid gradient would clash with the button paint. Repaint
+   where the mermaid blue would clash with the button paint. Repaint
    with the button's text colour instead (white on filled CTAs). */
 .bug-report-modal__submit-spinner,
 .feedback-modal__submit-spinner,
@@ -152,262 +140,135 @@
 }
 
 /*
- * Animation: each keyframe redefines the mask, shrinking certain dots'
- * mask-size to 0 (= invisible). The dot positions and fade pattern
- * mirror the original l29 loader exactly — only the dot shape changed
- * from circle to square (radial-gradient → positioned linear-gradient).
+ * Animation: each keyframe redefines `box-shadow`, replacing certain
+ * dots with `#0000` (transparent) to produce the l29 fade-wave. The
+ * element-as-dot (col 2 row 2) stays visible throughout.
  */
 @keyframes archie-loader-l29 {
   10% {
-    -webkit-mask:
-      linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 0% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / var(--d) var(--d) no-repeat;
-    mask:
-      linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 0% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / var(--d) var(--d) no-repeat;
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1),
+      0 calc(var(--d) * -1),
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0,
+      calc(var(--d) * 2) 0,
+      calc(var(--d) * -2) var(--d) #0000,
+      0 var(--d),
+      calc(var(--d) * 2) var(--d) #0000,
+      calc(var(--d) * -2) calc(var(--d) * 2),
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2);
   }
   20% {
-    -webkit-mask:
-      linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 0% 100% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / var(--d) var(--d) no-repeat;
-    mask:
-      linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 0% 100% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / var(--d) var(--d) no-repeat;
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1),
+      0 calc(var(--d) * -1),
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0,
+      calc(var(--d) * 2) 0,
+      calc(var(--d) * -2) var(--d),
+      0 var(--d),
+      calc(var(--d) * 2) var(--d) #0000,
+      calc(var(--d) * -2) calc(var(--d) * 2) #0000,
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2);
   }
   30% {
-    -webkit-mask:
-      linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 0% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 100% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / 0 0 no-repeat;
-    mask:
-      linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 0% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 100% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / 0 0 no-repeat;
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1),
+      0 calc(var(--d) * -1) #0000,
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0 #0000,
+      calc(var(--d) * 2) 0,
+      calc(var(--d) * -2) var(--d),
+      0 var(--d) #0000,
+      calc(var(--d) * 2) var(--d),
+      calc(var(--d) * -2) calc(var(--d) * 2) #0000,
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2) #0000;
   }
   40% {
-    -webkit-mask:
-      linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / var(--d) var(--d) no-repeat;
-    mask:
-      linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / var(--d) var(--d) no-repeat;
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1),
+      0 calc(var(--d) * -1),
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0 #0000,
+      calc(var(--d) * 2) 0 #0000,
+      calc(var(--d) * -2) var(--d),
+      0 var(--d),
+      calc(var(--d) * 2) var(--d),
+      calc(var(--d) * -2) calc(var(--d) * 2),
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2);
   }
   50% {
-    -webkit-mask:
-      linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / var(--d) var(--d) no-repeat;
-    mask:
-      linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / var(--d) var(--d) no-repeat;
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1),
+      0 calc(var(--d) * -1),
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0,
+      calc(var(--d) * 2) 0 #0000,
+      calc(var(--d) * -2) var(--d) #0000,
+      0 var(--d),
+      calc(var(--d) * 2) var(--d),
+      calc(var(--d) * -2) calc(var(--d) * 2),
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2);
   }
   60% {
-    -webkit-mask:
-      linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 0% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 100% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / var(--d) var(--d) no-repeat;
-    mask:
-      linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 0% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 100% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / var(--d) var(--d) no-repeat;
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1),
+      0 calc(var(--d) * -1) #0000,
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0,
+      calc(var(--d) * 2) 0,
+      calc(var(--d) * -2) var(--d) #0000,
+      0 var(--d),
+      calc(var(--d) * 2) var(--d),
+      calc(var(--d) * -2) calc(var(--d) * 2) #0000,
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2);
   }
   70% {
-    -webkit-mask:
-      linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 0% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 100% 0% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 100% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / var(--d) var(--d) no-repeat;
-    mask:
-      linear-gradient(#000, #000) 0% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 0% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 100% 0% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 100% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / var(--d) var(--d) no-repeat;
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1),
+      0 calc(var(--d) * -1) #0000,
+      calc(var(--d) * 2) calc(var(--d) * -1) #0000,
+      calc(var(--d) * -2) 0,
+      calc(var(--d) * 2) 0,
+      calc(var(--d) * -2) var(--d),
+      0 var(--d),
+      calc(var(--d) * 2) var(--d),
+      calc(var(--d) * -2) calc(var(--d) * 2) #0000,
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2);
   }
   80% {
-    -webkit-mask:
-      linear-gradient(#000, #000) 0% 0% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / 0 0 no-repeat;
-    mask:
-      linear-gradient(#000, #000) 0% 0% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / 0 0 no-repeat;
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1) #0000,
+      0 calc(var(--d) * -1),
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0,
+      calc(var(--d) * 2) 0,
+      calc(var(--d) * -2) var(--d),
+      0 var(--d),
+      calc(var(--d) * 2) var(--d),
+      calc(var(--d) * -2) calc(var(--d) * 2),
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2) #0000;
   }
   90% {
-    -webkit-mask:
-      linear-gradient(#000, #000) 0% 0% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / 0 0 no-repeat;
-    mask:
-      linear-gradient(#000, #000) 0% 0% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 50% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 0% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 33.33% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 66.67% / 0 0 no-repeat,
-      linear-gradient(#000, #000) 100% 66.67% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 0% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 50% 100% / var(--d) var(--d) no-repeat,
-      linear-gradient(#000, #000) 100% 100% / 0 0 no-repeat;
+    box-shadow:
+      calc(var(--d) * -2) calc(var(--d) * -1) #0000,
+      0 calc(var(--d) * -1),
+      calc(var(--d) * 2) calc(var(--d) * -1),
+      calc(var(--d) * -2) 0,
+      calc(var(--d) * 2) 0,
+      calc(var(--d) * -2) var(--d),
+      0 var(--d) #0000,
+      calc(var(--d) * 2) var(--d),
+      calc(var(--d) * -2) calc(var(--d) * 2),
+      0 calc(var(--d) * 2),
+      calc(var(--d) * 2) calc(var(--d) * 2) #0000;
   }
 }
