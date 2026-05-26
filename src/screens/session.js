@@ -51,7 +51,6 @@ import {
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=22";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";
 import { startClipExtraction } from "../components/clip-extraction-loader.js?v=2";
-import { open as openSettingsDrawer } from "../components/settings-drawer.js?v=23";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=23";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=22";
 import {
@@ -2290,11 +2289,6 @@ function bindSession(root, session) {
       }
 
       // --- Context tab ---
-      if (event.target.closest("[data-manage-contexts]")) {
-        event.preventDefault();
-        openSettingsDrawer({ section: "contexts" });
-        return;
-      }
       // Edit a single section (Voice / Brief / Brand) via conversation.
       // Every context is global now — surface a confirm prompt because
       // edits propagate across every chat using the context.
