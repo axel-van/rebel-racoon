@@ -1063,16 +1063,16 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: calc(100% + var(--ref-spacing-md));
+  bottom: calc(100% + var(--ref-spacing-xs));
   background: var(--ref-color-white);
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
   box-shadow: var(--sys-shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.08));
-  padding: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xxs);
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-sm);
-  max-height: 320px;
+  gap: var(--ref-spacing-xxs);
+  max-height: 280px;
   overflow-y: auto;
   z-index: var(--app-z-overlay);
 }
@@ -1084,16 +1084,14 @@
 .composer-mention-picker__section {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxs);
 }
 
 .composer-mention-picker__header {
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--ref-font-size-xxs);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   color: var(--ref-color-grey-60);
-  padding: 0 var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs) 2px;
 }
 
 .composer-mention-picker__list {
@@ -1102,14 +1100,13 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
 }
 
 .composer-mention-picker__row {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
   border-radius: var(--ref-border-radius-sm);
   cursor: pointer;
   transition: background 120ms ease;
@@ -1125,10 +1122,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--ref-border-radius-sm);
-  background: var(--ref-color-grey-05);
+  width: 18px;
+  height: 18px;
   color: var(--ref-color-grey-100);
   flex-shrink: 0;
 }
@@ -1136,7 +1131,6 @@
 .composer-mention-picker__row-name {
   flex: 1;
   font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-150);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1144,12 +1138,12 @@
 }
 
 .composer-mention-picker__row-kind {
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--ref-font-size-xxs);
   flex-shrink: 0;
 }
 
 .composer-mention-picker__empty {
-  padding: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs);
   font-size: var(--ref-font-size-sm);
   text-align: center;
 }
