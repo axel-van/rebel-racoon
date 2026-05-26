@@ -894,10 +894,10 @@
   resize: none;
   border: 0;
   background: transparent;
-  /* 12px inset gives the placeholder + cursor breathing room from the
+  /* 8px inset gives the placeholder + cursor breathing room from the
      card border without nudging the toolbar buttons (the toolbar lives
      outside the textarea, so this padding only affects the input text). */
-  padding: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxs);
   font-family: inherit;
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
@@ -1114,7 +1114,7 @@
 
 .composer-mention-picker__row:hover,
 .composer-mention-picker__row:focus-visible {
-  background: var(--ref-color-grey-05);
+  background: var(--ref-color-electric-blue-05);
   outline: none;
 }
 

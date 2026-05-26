@@ -185,7 +185,7 @@ body.has-modal {
 }
 
 .search-modal__result.is-highlighted {
-  background: var(--ref-color-grey-10);
+  background: var(--ref-color-electric-blue-05);
 }
 
 .search-modal__result-title {
