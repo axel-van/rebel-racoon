@@ -1843,14 +1843,14 @@ function toggleIdeaFeedback(ideaId, verdict) {
 }
 
 // Per-idea collapse state for the "Why this idea" panel. Default
-// expanded (matches the Figma right-panel idea card spec which shows
-// the rationale + source line visible by default). Toggle persists for
-// the lifetime of the module so re-renders don't reset user intent.
+// collapsed so a long list of idea cards stays scannable; the user
+// opts in per-card via the head toggle. Toggle persists for the
+// lifetime of the module so re-renders don't reset user intent.
 const ideaWhyOpen = new Map(); // ideaId → boolean
 
 function isWhyOpen(ideaId) {
   const stored = ideaWhyOpen.get(ideaId);
-  return stored === undefined ? true : stored;
+  return stored === undefined ? false : stored;
 }
 
 function toggleWhyOpen(ideaId) {
