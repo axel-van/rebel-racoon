@@ -593,6 +593,15 @@
   gap: var(--ref-spacing-xxxs);
 }
 
+/* Right cluster — Mention (quiet) + Draft (primary CTA). Sits opposite
+   the feedback group so the row keeps its "feedback left / CTA right"
+   reading. */
+.rpanel-ideas__primary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
 /* Individual thumb button — DS .ap-icon-button.transparent.sm
    provides the chrome (size, hover surface). We only add an
    active-state color flip when the user has picked that side. */

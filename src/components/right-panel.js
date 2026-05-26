@@ -1896,14 +1896,16 @@ function renderIdeaCompact(idea) {
           ${thumbBtn("up")}
           ${thumbBtn("down")}
         </div>
-        <button type="button" class="ap-button transparent grey rpanel-ideas__mention" data-rpanel-mention-idea="${escapeAttr(idea.id)}">
-          <i class="ap-icon-at"></i>
-          <span>Mention</span>
-        </button>
-        <button type="button" class="ap-button stroked blue rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
-          <i class="ap-icon-sparkles"></i>
-          <span>Draft</span>
-        </button>
+        <div class="rpanel-ideas__primary">
+          <button type="button" class="ap-button transparent grey rpanel-ideas__mention" data-rpanel-mention-idea="${escapeAttr(idea.id)}">
+            <i class="ap-icon-at"></i>
+            <span>Mention</span>
+          </button>
+          <button type="button" class="ap-button stroked blue rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
+            <i class="ap-icon-sparkles"></i>
+            <span>Draft</span>
+          </button>
+        </div>
       </footer>
     </article>
   `;
