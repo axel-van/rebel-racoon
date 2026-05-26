@@ -29,7 +29,7 @@ import {
   openContextBriefPanel,
   refreshContextBriefPanel,
   closePanel as closeRightPanel,
-} from "./components/right-panel.js?v=95";
+} from "./components/right-panel.js?v=96";
 import { open as openConfirmModal } from "./components/confirm-modal.js?v=20";
 import { setHandoff } from "./handoff.js?v=20";
 import { navigate } from "./router.js?v=30";

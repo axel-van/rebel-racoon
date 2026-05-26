@@ -1898,7 +1898,7 @@ function renderIdeaCompact(idea) {
           ${thumbBtn("down")}
         </div>
         <div class="rpanel-ideas__primary">
-          <button type="button" class="ap-button transparent grey rpanel-ideas__mention" data-rpanel-mention-idea="${escapeAttr(idea.id)}">
+          <button type="button" class="ap-button ghost blue rpanel-ideas__mention" data-rpanel-mention-idea="${escapeAttr(idea.id)}">
             <i class="ap-icon-at"></i>
             <span>Mention</span>
           </button>
