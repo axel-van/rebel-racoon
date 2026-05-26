@@ -1618,7 +1618,7 @@ function renderSourceRow(src) {
   const mentionBtn = !isProcessing
     ? `<button
         type="button"
-        class="ap-button transparent grey rpanel-sources__row-mention"
+        class="ap-button ghost blue rpanel-sources__row-mention"
         data-rpanel-mention-source="${src.id}"
         aria-label="Mention ${escapeAttr(src.filename)} in composer"
         title="Mention"
