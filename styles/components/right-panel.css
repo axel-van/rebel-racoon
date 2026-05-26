@@ -99,8 +99,8 @@
   width: 56px;
   height: 56px;
   border-radius: var(--app-radius-circle);
-  background: var(--ref-color-orange-10);
-  color: var(--ref-color-orange-100);
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-grey-60);
 }
 
 .app-right-panel__empty-icon i {

@@ -1352,8 +1352,8 @@
   height: 64px;
   display: grid;
   place-items: center;
-  background: var(--ref-color-electric-blue-05);
-  color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-grey-60);
   border-radius: var(--app-radius-lg);
 }
 
