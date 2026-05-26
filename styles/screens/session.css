@@ -1115,7 +1115,17 @@
 .composer-mention-picker__row:hover,
 .composer-mention-picker__row:focus-visible {
   background: var(--ref-color-electric-blue-05);
+  color: var(--ref-color-electric-blue-100);
   outline: none;
+}
+
+.composer-mention-picker__row:hover .composer-mention-picker__row-name,
+.composer-mention-picker__row:focus-visible .composer-mention-picker__row-name,
+.composer-mention-picker__row:hover .composer-mention-picker__row-kind,
+.composer-mention-picker__row:focus-visible .composer-mention-picker__row-kind,
+.composer-mention-picker__row:hover .composer-mention-picker__row-icon i,
+.composer-mention-picker__row:focus-visible .composer-mention-picker__row-icon i {
+  color: var(--ref-color-electric-blue-100);
 }
 
 .composer-mention-picker__row-icon {

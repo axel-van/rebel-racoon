@@ -186,6 +186,11 @@ body.has-modal {
 
 .search-modal__result.is-highlighted {
   background: var(--ref-color-electric-blue-05);
+  color: var(--ref-color-electric-blue-100);
+}
+
+.search-modal__result.is-highlighted .search-modal__result-title {
+  color: var(--ref-color-electric-blue-100);
 }
 
 .search-modal__result-title {
