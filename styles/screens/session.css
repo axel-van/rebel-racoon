@@ -359,24 +359,11 @@
   color: var(--ref-color-grey-60);
 }
 
-/* Composer rendered inline INSIDE the empty hero (Figma 285:1164) — same
-   markup as the bottom composer, just placed between sub-text and the
-   starter grid. Override the persistent-bottom-composer chrome (border-
-   top fade, surface padding) since the empty-hero parent handles its own
-   spacing. */
-.empty-chat .session__composer {
-  background: transparent;
-  padding: 0;
-  width: 100%;
-  max-width: 651px;
-  margin-top: var(--ref-spacing-sm);
-}
-.empty-chat .session__composer::before {
-  display: none;
-}
-.empty-chat .session__composer-inner {
-  margin: 0;
-}
+/* Composer rendered inline INSIDE the empty hero (Figma 285:1164) uses
+   the EXACT same chrome as the bottom-of-thread composer — same
+   background, padding, fade gradient, max-width, and centred inner.
+   No empty-chat-specific overrides so the composer reads identically
+   wherever it's surfaced. */
 
 /* Section header above the starter grid — matches Figma 280:1169
    (Averta Bold 12px / line-height 16px, color grey-100 #344563). */
