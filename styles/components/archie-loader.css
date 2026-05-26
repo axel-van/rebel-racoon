@@ -16,12 +16,9 @@
  * The dot grid is 5 dot-widths wide × 4 tall, so dot diameter = size / 5
  * and height = size * 0.8.
  *
- * Default colour is the mermaid gradient's left stop
- * (`--ref-color-mermaid-gradient-from`) so loaders read on-brand even
- * though box-shadow can only carry a single solid colour (the previous
- * mask-based variant could sample the gradient per-column but rendered
- * with rounded corners we no longer want). Override via
- * `--archie-loader-color` (e.g. white CTA buttons set `currentColor`).
+ * Default colour is the Agorapulse brand orange
+ * (`--ref-color-orange-100`). Override via `--archie-loader-color`
+ * (e.g. white CTA buttons set `currentColor`).
  */
 
 .archie-loader,
@@ -80,8 +77,8 @@
   left: calc(var(--d) * 2);
   width: var(--d);
   height: var(--d);
-  background: var(--archie-loader-color, var(--ref-color-mermaid-gradient-from));
-  color: var(--archie-loader-color, var(--ref-color-mermaid-gradient-from));
+  background: var(--archie-loader-color, var(--ref-color-orange-100));
+  color: var(--archie-loader-color, var(--ref-color-orange-100));
   box-shadow:
     calc(var(--d) * -2) calc(var(--d) * -1),
     0 calc(var(--d) * -1),
