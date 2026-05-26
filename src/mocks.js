@@ -1926,31 +1926,3 @@ export const socialAccounts = [
     status: "disconnected",
   },
 ];
-
-export const generationPrefs = {
-  tone: "friendly",
-  language: "en",
-  length: "medium",
-  autoHashtags: false,
-  autoEmojis: true,
-  emojiFreq: "balanced",
-  ctaStyle: "soft",
-};
-
-export const notificationPrefs = {
-  email: {
-    weeklyRecap: true,
-    approvals: true,
-    failures: true,
-    productUpdates: false,
-  },
-  inApp: {
-    mentions: true,
-    voiceReady: true,
-    syncIssues: true,
-  },
-  push: {
-    mentions: false,
-    approvals: false,
-  },
-};
