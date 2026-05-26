@@ -894,7 +894,10 @@
   resize: none;
   border: 0;
   background: transparent;
-  padding: 0;
+  /* 12px inset gives the placeholder + cursor breathing room from the
+     card border without nudging the toolbar buttons (the toolbar lives
+     outside the textarea, so this padding only affects the input text). */
+  padding: var(--ref-spacing-xs);
   font-family: inherit;
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
