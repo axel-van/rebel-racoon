@@ -2,7 +2,7 @@
 //
 // Three patterns coexisted in the codebase before this module landed:
 //   1. Rich card with icon + title + body + optional CTA (content-workspace
-//      "renderEmptyState", settings-drawer Contexts, right-panel Drafts).
+//      "renderEmptyState", right-panel Drafts).
 //   2. Minimal text-only paragraph (sources / ideas / contexts library
 //      pages, right-panel filter no-match).
 //   3. Drop tile / interactive empty (sources page drop tile, add-source

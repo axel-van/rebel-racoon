@@ -37,25 +37,31 @@ const SECTIONS = [
 ];
 
 let unsubscribe = null;
+let boundTarget = null;
+let boundHandler = null;
 
 export function renderSettings(_params, target) {
   renderTopbar();
-  if (unsubscribe) {
-    unsubscribe();
-    unsubscribe = null;
-  }
+  teardown();
   paint(target);
   bind(target);
   // Connectors mutate via the store — repaint when an external surface
   // (add-source-modal) flips a connector's state.
   unsubscribe = subscribeConnectors(() => paint(target));
 
-  return () => {
-    if (unsubscribe) {
-      unsubscribe();
-      unsubscribe = null;
-    }
-  };
+  return teardown;
+}
+
+function teardown() {
+  if (unsubscribe) {
+    unsubscribe();
+    unsubscribe = null;
+  }
+  if (boundTarget && boundHandler) {
+    boundTarget.removeEventListener("click", boundHandler);
+  }
+  boundTarget = null;
+  boundHandler = null;
 }
 
 // ─── Render ──────────────────────────────────────────────────────────────
@@ -199,12 +205,17 @@ function renderSocialRow(a) {
 // ─── Event handling ──────────────────────────────────────────────────────
 
 function bind(target) {
-  target.addEventListener("click", (event) => {
-    // Section nav
+  boundTarget = target;
+  boundHandler = (event) => {
+    // Section nav — URL change doesn't re-trigger the route (same path),
+    // so repaint manually after updating the hash.
     const navBtn = event.target.closest("[data-section]");
     if (navBtn) {
       const id = navBtn.dataset.section;
-      if (id !== readSection()) setHashQuery("/settings", { section: id });
+      if (id !== readSection()) {
+        setHashQuery("/settings", { section: id });
+        paint(target);
+      }
       return;
     }
 
@@ -246,5 +257,6 @@ function bind(target) {
       showToast(`${label} ${wasConnected ? "disconnected" : "connected"}`);
       return;
     }
-  });
+  };
+  target.addEventListener("click", boundHandler);
 }

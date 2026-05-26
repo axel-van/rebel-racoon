@@ -1,6 +1,6 @@
 // Connectors store — single source of truth for the connectors list.
 //
-// FIND-01 (resolved): the audit found that settings-drawer and
+// FIND-01 (resolved): the audit found that the settings surface and
 // add-source-modal both imported `connectors` directly from mocks.js and
 // mutated the array in place. It worked at runtime via the shared ES
 // module reference, but there was no observer pattern and the moment any
