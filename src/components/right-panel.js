@@ -1837,10 +1837,10 @@ function toggleIdeaFeedback(ideaId, verdict) {
 function renderIdeaCompact(idea) {
   const kind = idea.kind || "insight";
   const sourceLabel = idea.ref || "Generated";
-  const tags = (idea.tags || [])
-    .slice(0, 3)
-    .map((t) => `<span class="rpanel-ideas__tag">#${escapeText(t)}</span>`)
-    .join("");
+  // Hashtags removed from the card surface — the kind badge + source
+  // label in the meta band already communicate provenance; the tag row
+  // mostly added clutter without driving any action.
+  const tags = "";
 
   // "Why this idea" → a small info-icon in the header that pops a DS
   // .ap-tooltip on hover/focus. The wrapper is position: relative; the
