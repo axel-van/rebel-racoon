@@ -562,6 +562,13 @@
   gap: var(--ref-spacing-xxs);
 }
 
+/* Re-assert the UA [hidden] behaviour — display: flex on the rule
+   above would otherwise win the specificity battle against the
+   browser's default `[hidden] { display: none }`. */
+.rpanel-ideas__why-body[hidden] {
+  display: none;
+}
+
 .rpanel-ideas__why-rationale {
   margin: 0;
   font-size: var(--ref-font-size-xs);
