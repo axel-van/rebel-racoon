@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=54";
+import { renderTopbar } from "../components/topbar.js?v=56";
 import { socialAccounts, chatStarters } from "../mocks.js?v=34";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=28";
@@ -267,7 +267,7 @@ function renderAssistantPanel(session, attachedContext) {
 // the conversation hasn't started yet). The click handlers in bindSession
 // are delegated on #app, so the same markup works in both positions
 // without re-wiring.
-function renderComposer(attachedContext, session) {
+function renderComposer(_attachedContext, session) {
   return `
     <div class="session__composer">
       <div class="session__composer-inner">
@@ -296,7 +296,6 @@ function renderComposer(attachedContext, session) {
             rows="2"
           ></textarea>
           <div class="session__composer-toolbar">
-            ${renderComposerContextPill(attachedContext)}
             <div class="assistant-attach">
               <button
                 type="button"
@@ -476,40 +475,8 @@ function toggleMentionPicker(root, sessionId) {
   else closeMentionPicker(root);
 }
 
-// Composer context pill — read-only chip showing the active playbook's
-// color dot + name. Click opens the right-panel ContextForm in read mode
-// (bindSession, data-context-view handler) so users can review the
-// brief / voice / do-don't details without leaving the chat.
-// The DS doesn't ship a plain --ref-color-blue-* family — its blue is
-// split across electric-blue / soft-blue / bluesky. Map the legacy "blue"
-// context color (used by ctx-founder-voice in the mocks) to electric-blue,
-// the same alias the sidebar uses (styles/components/sidebar.css:277).
-// Without this mapping, `var(--ref-color-blue-100)` silently resolves to
-// transparent and the dot vanishes.
-const CONTEXT_DOT_TOKEN = { blue: "electric-blue" };
-function dotColorVar(colorName) {
-  const token = CONTEXT_DOT_TOKEN[colorName] || colorName || "grey";
-  return `var(--ref-color-${token}-100)`;
-}
-
-function renderComposerContextPill(attachedContext) {
-  if (!attachedContext) return "";
-  const color = attachedContext.color || "grey";
-  const name = attachedContext.name;
-  return `
-    <button
-      type="button"
-      class="composer-context__pill"
-      data-context-color="${escapeHtml(color)}"
-      data-context-view
-      title="View playbook"
-      aria-label="View playbook: ${escapeHtml(name)}"
-    >
-      <span class="composer-context__dot" style="background: ${dotColorVar(color)};"></span>
-      <span>${escapeHtml(name)}</span>
-    </button>
-  `;
-}
+// (The context pill that used to live here moved to the app header next
+// to the chat title — see components/topbar.js → renderContextPill.)
 
 // Empty-state hero — shown inside the assistant thread region when the user
 // hasn't sent a first message yet. Mirrors the handoff (Chat.jsx empty state):
@@ -2495,16 +2462,8 @@ function bindSession(root, session) {
         if (menu && !menu.hidden) menu.hidden = true;
       }
 
-      // Read-only composer context pill — click opens the right-panel
-      // ContextForm in read mode so the user can review the active
-      // context's details without leaving the chat. Falls back through
-      // the URL contextId (wizard-driven) then the session seed.
-      if (event.target.closest("[data-context-view]")) {
-        event.preventDefault();
-        const ctxId = readQuery().contextId || session.contextId;
-        if (ctxId) contextBuilder.openRead(ctxId);
-        return;
-      }
+      // (Context pill click is now handled in topbar.js — the pill moved
+      // out of the composer into the app header next to the chat title.)
     },
     { signal },
   );

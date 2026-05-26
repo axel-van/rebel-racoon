@@ -25,6 +25,51 @@ import {
 } from "./conversation-status-card.js?v=12";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { open as openRenameModal } from "./rename-modal.js?v=1";
+import { getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=28";
+import { parseHashParams } from "../url-state.js?v=21";
+
+// Map context.color → DS color token. Mirrors src/screens/session.js — the
+// pill formerly lived in the composer and used the same alias.
+const CONTEXT_DOT_TOKEN = { blue: "electric-blue" };
+function dotColorVar(colorName) {
+  const token = CONTEXT_DOT_TOKEN[colorName] || colorName || "grey";
+  return `var(--ref-color-${token}-100)`;
+}
+
+// Resolve the active session's attached playbook/context, honouring the
+// same precedence the session screen uses: URL contextId → session seed.
+function currentAttachedContext() {
+  const sid = currentSessionId();
+  if (!sid) return null;
+  const session = getSessionById(sid);
+  if (!session) return null;
+  const hashParams = parseHashParams();
+  const contextId = hashParams.contextId || session.contextId;
+  return contextId ? getContextById(contextId) : null;
+}
+
+function renderContextPill() {
+  const ctx = currentAttachedContext();
+  if (!ctx) return "";
+  const color = ctx.color || "grey";
+  return `
+    <button
+      type="button"
+      class="composer-context__pill app-topbar__context-pill"
+      data-context-color="${escapeAttr(color)}"
+      data-topbar-context-view="${escapeAttr(ctx.id)}"
+      title="View playbook"
+      aria-label="View playbook: ${escapeAttr(ctx.name)}"
+    >
+      <span class="composer-context__dot" style="background: ${dotColorVar(color)};"></span>
+      <span>${escapeText(ctx.name)}</span>
+    </button>
+  `;
+}
+
+function escapeAttr(s) {
+  return escapeText(s).replace(/"/g, "&quot;");
+}
 
 // Persistent top bar.
 //
@@ -53,7 +98,7 @@ export function renderTopbar(_options = {}) {
   const isEmpty = onSession ? isEmptyConversation() : true;
   const ideaCount = onSession ? sessionIdeaCount() : 0;
   el.innerHTML = html`
-    <div class="app-topbar__left">${raw(renderTitle(onSession))}</div>
+    <div class="app-topbar__left">${raw(renderTitle(onSession))}${raw(onSession ? renderContextPill() : "")}</div>
     <div class="app-topbar__right">
       ${raw(onSession ? renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) : "")}
       ${raw(onSession ? renderStatusCardToggle() : "")}
@@ -129,6 +174,17 @@ export function initTopbar() {
       });
       return;
     }
+    // Context pill (Acme · Q2 marketing, etc.) — click opens the
+    // right-panel ContextForm in read mode. Lazy import context-builder
+    // so the topbar doesn't drag the whole module in at boot.
+    const ctxBtn = event.target.closest("[data-topbar-context-view]");
+    if (ctxBtn) {
+      const ctxId = ctxBtn.dataset.topbarContextView;
+      if (ctxId) {
+        import("../context-builder.js?v=43").then((mod) => mod.openRead(ctxId));
+      }
+      return;
+    }
     // Drafts pill — toggle the right panel between Drafts mode and closed.
     // If the panel is open in Ideas mode, switch to Drafts (don't close).
     if (event.target.closest("[data-topbar-drafts]")) {
@@ -173,6 +229,11 @@ export function initTopbar() {
   // Re-render the topbar when the user flips the status-card visibility
   // preference so the `i` button's pressed state + tooltip stay accurate.
   subscribeStatusCardVisibility(() => renderTopbar());
+
+  // Re-render when a context is renamed / deleted / created so the
+  // active-session pill stays in sync (covers playbook editor saves and
+  // wizard finalisation).
+  subscribeContexts(() => renderTopbar());
 
   // Re-render the topbar whenever the right panel state changes so the
   // pills reflect the live mode (.is-on accent flips).
