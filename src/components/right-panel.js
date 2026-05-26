@@ -1902,7 +1902,7 @@ function renderIdeaCompact(idea) {
             <i class="ap-icon-at"></i>
             <span>Mention</span>
           </button>
-          <button type="button" class="ap-button stroked blue rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
+          <button type="button" class="ap-button secondary blue rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
             <i class="ap-icon-sparkles"></i>
             <span>Draft</span>
           </button>
