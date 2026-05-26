@@ -2,57 +2,34 @@
 // Same init/open/close pattern as feedback-modal/bug-report-modal: HTML
 // injected once, all state module-local, no router involvement.
 //
-// All settings are mocked in-memory. Connect/disconnect, save preferences —
-// every action mutates either the imported mock arrays directly (for instant
-// flips like Connect) or a working copy that's committed on Save (for
-// editable forms with dirty/cancel semantics).
+// Connectors and Social accounts use an instant-save model — clicking
+// Connect / Disconnect mutates the source array directly, no working copy
+// and no Save button. That's intentional: the action IS the save, and the
+// user gets toast feedback (see FIND-02).
 
 import { html, raw, escapeHtml } from "../utils.js?v=20";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { showToast } from "./toast.js?v=20";
 
-const OVERLAY_ID = "settingsDrawer";
-
-// Note: Connectors and Social accounts use an instant-save model — clicking
-// Connect / Disconnect mutates the source array directly, no working copy
-// and no Save button. That's intentional: the action IS the save, and the
-// user gets toast feedback (see FIND-02). Notifications uses the
-// working-copy + Save pattern because it's a form with multiple toggles
-// where intermediate states aren't meaningful.
-//
-// Phase 4 copy pass: the legacy Generation preferences section was
-// retired. Defaults that used to live there (tone, language, length,
-// auto-hashtags, auto-emojis, CTA style) belong inside the Playbook now.
-import { contextComponentsFor, socialAccounts, notificationPrefs } from "../mocks.js?v=34";
-import { getContexts } from "../contexts-store.js?v=28";
+import { socialAccounts } from "../mocks.js?v=34";
 import { getConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=21";
+
+const OVERLAY_ID = "settingsDrawer";
 
 // ─── State ───────────────────────────────────────────────────────────────
 
 let initialized = false;
-let backdrop, drawer, navEl, contentEl, footerEl;
-let confirmBackdrop, confirmDialog, confirmText;
+let backdrop, drawer, navEl, contentEl;
 
 const SECTIONS = [
   { id: "connectors", label: "Connectors", icon: "ap-icon-link" },
-  { id: "contexts", label: "Playbooks", icon: "ap-icon-headset" },
   { id: "social", label: "Social accounts", icon: "ap-icon-multiple-users" },
-  { id: "notifications", label: "Notifications", icon: "ap-icon-bell" },
 ];
 
 const state = {
   open: false,
   activeSection: "connectors",
-  dirty: false,
-  pendingAction: null, // closure to run after the user confirms "Discard"
-  // Working copy for the notifications section (committed to the imported
-  // mock on Save).
-  notif: clone(notificationPrefs),
 };
-
-function clone(obj) {
-  return JSON.parse(JSON.stringify(obj));
-}
 
 // ─── Markup ──────────────────────────────────────────────────────────────
 
@@ -75,30 +52,6 @@ const HTML = `
   <div class="settings-drawer__body">
     <nav class="settings-drawer__nav ap-list-panel" id="settingsNav" aria-label="Settings sections"></nav>
     <div class="settings-drawer__content" id="settingsContent" tabindex="-1"></div>
-  </div>
-  <div class="ap-dialog-footer settings-drawer__footer" id="settingsFooter" hidden></div>
-</aside>
-
-<div class="app-modal-backdrop settings-confirm__backdrop" id="settingsConfirmBackdrop" hidden></div>
-<aside
-  class="ap-dialog settings-confirm"
-  id="settingsConfirm"
-  role="dialog"
-  aria-modal="true"
-  aria-labelledby="settingsConfirmTitle"
-  aria-hidden="true"
->
-  <div class="ap-dialog-header">
-    <h2 class="ap-dialog-title" id="settingsConfirmTitle">Discard changes?</h2>
-  </div>
-  <div class="ap-dialog-content">
-    <p id="settingsConfirmText" class="settings-confirm__text">You have unsaved changes. They'll be lost if you continue.</p>
-  </div>
-  <div class="ap-dialog-footer">
-    <div class="ap-dialog-footer-right">
-      <button type="button" class="ap-button transparent grey" id="settingsConfirmCancel">Keep editing</button>
-      <button type="button" class="ap-button stroked red" id="settingsConfirmOk">Discard</button>
-    </div>
   </div>
 </aside>
 `;
@@ -143,60 +96,6 @@ function renderConnectorRow(c) {
   `;
 }
 
-function renderContextsSection() {
-  const all = getContexts();
-  return html`
-    <header class="settings-drawer__section-header">
-      <div>
-        <h3 class="settings-drawer__section-title">Playbooks</h3>
-        <p class="settings-drawer__section-sub">
-          Voice profile, Brief, and Branding bundled together. Create or edit one from inside any chat.
-        </p>
-      </div>
-    </header>
-    ${raw(
-      all.length === 0
-        ? `
-            <div class="settings-drawer__empty">
-              <div class="settings-drawer__empty-icon"><i class="ap-icon-headset lg"></i></div>
-              <h4 class="settings-drawer__empty-title">No saved Playbooks yet</h4>
-              <p class="settings-drawer__empty-body">
-                Start a new chat — I'll walk you through your voice, brief, and Branding, then offer to save the
-                Playbook here.
-              </p>
-              <div class="settings-drawer__empty-action">
-                <button type="button" class="ap-button primary orange" data-settings-new-chat>
-                  <i class="ap-icon-plus"></i>
-                  <span>Start a new chat</span>
-                </button>
-              </div>
-            </div>
-          `
-        : `<ul class="settings-drawer__rows">${all.map(renderContextRow).join("")}</ul>`,
-    )}
-  `;
-}
-
-function renderContextRow(ctx) {
-  const components = contextComponentsFor(ctx);
-  const tagFor = (name) => {
-    const color = name === "Voice" ? "blue" : name === "Brief" ? "tagOrange" : "menthol";
-    return `<span class="ap-tag ${color}">${name}</span>`;
-  };
-  return `
-    <li class="ap-card settings-row" data-row-id="${escapeHtml(ctx.id)}">
-      <div class="settings-row__avatar settings-row__avatar--ctx" aria-hidden="true">
-        <i class="ap-icon-headset"></i>
-      </div>
-      <div class="settings-row__body">
-        <div class="settings-row__title">${escapeHtml(ctx.name)}</div>
-        <div class="settings-row__sub">Updated ${escapeHtml(ctx.updatedAt)}</div>
-        <div class="settings-row__tags">${components.length ? components.map(tagFor).join("") : `<span class="ap-tag grey">Empty</span>`}</div>
-      </div>
-    </li>
-  `;
-}
-
 function renderSocialSection() {
   return html`
     <header class="settings-drawer__section-header">
@@ -233,100 +132,17 @@ function renderSocialRow(a) {
   `;
 }
 
-function renderNotificationsSection() {
-  const n = state.notif;
-  return html`
-    <header class="settings-drawer__section-header">
-      <h3 class="settings-drawer__section-title">Notifications</h3>
-      <p class="settings-drawer__section-sub">How and when Archie pings you about activity in your sessions.</p>
-    </header>
-
-    ${raw(
-      notifGroup("Email notifications", "ap-icon-envelope", [
-        ["weeklyRecap", "Weekly performance recap", n.email.weeklyRecap, "email"],
-        ["approvals", "Post approval requests", n.email.approvals, "email"],
-        ["failures", "Generation failures", n.email.failures, "email"],
-        ["productUpdates", "Product updates from Archie", n.email.productUpdates, "email"],
-      ]),
-    )}
-    ${raw(
-      notifGroup("In-app notifications", "ap-icon-single-chat-bubble", [
-        ["mentions", "Mentions and replies on published posts", n.inApp.mentions, "inApp"],
-        ["voiceReady", "New brand voice analysis ready", n.inApp.voiceReady, "inApp"],
-        ["syncIssues", "Connector sync issues", n.inApp.syncIssues, "inApp"],
-      ]),
-    )}
-    ${raw(
-      notifGroup(
-        "Push notifications",
-        "ap-icon-smartphone",
-        [
-          ["mentions", "Mentions and replies", n.push.mentions, "push"],
-          ["approvals", "Approval reminders", n.push.approvals, "push"],
-        ],
-        "Available on the mobile app. Toggle to preview here.",
-      ),
-    )}
-  `;
-}
-
-// ─── Markup helpers ──────────────────────────────────────────────────────
-
-function notifGroup(title, icon, rows, footnote) {
-  const items = rows
-    .map(
-      ([key, label, value, group]) => `
-        <li class="settings-drawer__notif-row">
-          <span>${escapeHtml(label)}</span>
-          <label class="ap-toggle-container">
-            <input type="checkbox" data-notif="${escapeHtml(group)}.${escapeHtml(key)}" ${value ? "checked" : ""} />
-            <i></i>
-          </label>
-        </li>
-      `,
-    )
-    .join("");
-  return `
-    <section class="settings-drawer__notif-group">
-      <header class="settings-drawer__notif-group-header">
-        <i class="${icon}"></i>
-        <h4>${escapeHtml(title)}</h4>
-      </header>
-      <ul>${items}</ul>
-      ${footnote ? `<p class="settings-drawer__notif-footnote">${escapeHtml(footnote)}</p>` : ""}
-    </section>
-  `;
-}
-
-// ─── Section dispatch + footer ───────────────────────────────────────────
+// ─── Section dispatch ────────────────────────────────────────────────────
 
 function renderActiveSection() {
   switch (state.activeSection) {
     case "connectors":
       return renderConnectorsSection();
-    case "contexts":
-      return renderContextsSection();
     case "social":
       return renderSocialSection();
-    case "notifications":
-      return renderNotificationsSection();
     default:
       return "";
   }
-}
-
-function footerForSection() {
-  if (state.activeSection === "notifications") {
-    return {
-      visible: true,
-      html: `
-        <div class="ap-dialog-footer-right">
-          <button type="button" class="ap-button primary orange" data-notif-save ${state.dirty ? "" : "disabled"}>Save</button>
-        </div>
-      `,
-    };
-  }
-  return { visible: false, html: "" };
 }
 
 // ─── Render ──────────────────────────────────────────────────────────────
@@ -351,73 +167,24 @@ function renderContent() {
   contentEl.scrollTop = 0;
 }
 
-function renderFooter() {
-  const f = footerForSection();
-  footerEl.hidden = !f.visible;
-  footerEl.innerHTML = f.html;
-}
-
 function render() {
   renderNav();
   renderContent();
-  renderFooter();
-}
-
-// ─── Section change with dirty guard ─────────────────────────────────────
-
-function attemptSectionChange(targetId) {
-  if (state.dirty) {
-    state.pendingAction = () => {
-      revertWorkingCopies();
-      setActiveSection(targetId);
-    };
-    openConfirm("Discard changes?", "You have unsaved changes. They'll be lost if you switch sections.");
-  } else {
-    setActiveSection(targetId);
-  }
 }
 
 function setActiveSection(id) {
   state.activeSection = id;
-  state.dirty = false;
   render();
-}
-
-function revertWorkingCopies() {
-  state.notif = clone(notificationPrefs);
-  state.dirty = false;
-}
-
-// ─── Confirm dialog ──────────────────────────────────────────────────────
-
-function openConfirm(title, text) {
-  document.getElementById("settingsConfirmTitle").textContent = title;
-  confirmText.textContent = text;
-  confirmBackdrop.hidden = false;
-  confirmBackdrop.classList.add("open");
-  confirmDialog.classList.add("open");
-  confirmDialog.setAttribute("aria-hidden", "false");
-}
-
-function closeConfirm() {
-  confirmDialog.classList.remove("open");
-  confirmBackdrop.classList.remove("open");
-  confirmBackdrop.hidden = true;
-  confirmDialog.setAttribute("aria-hidden", "true");
-  state.pendingAction = null;
 }
 
 // ─── Drawer open/close ───────────────────────────────────────────────────
 
 export function open(opts = {}) {
   if (!initialized) init();
-  // Use attemptClose so an unsaved-changes confirmation isn't silently
-  // skipped when another modal asks the coordinator to close us.
-  requestOpen(OVERLAY_ID, attemptClose);
+  requestOpen(OVERLAY_ID, close);
   if (opts.section && SECTIONS.find((s) => s.id === opts.section)) {
     state.activeSection = opts.section;
   }
-  state.dirty = false;
   state.open = true;
   backdrop.hidden = false;
   backdrop.classList.add("open");
@@ -445,19 +212,8 @@ function close() {
   backdrop.hidden = true;
   drawer.setAttribute("aria-hidden", "true");
   document.body.classList.remove("has-modal");
-  // Reset working copies so a fresh open shows fresh state.
-  revertWorkingCopies();
   state.activeSection = "connectors";
   notifyClose(OVERLAY_ID);
-}
-
-function attemptClose() {
-  if (state.dirty) {
-    state.pendingAction = () => close();
-    openConfirm("Discard changes?", "You have unsaved changes. They'll be lost if you close the drawer.");
-  } else {
-    close();
-  }
 }
 
 // ─── Event handling ──────────────────────────────────────────────────────
@@ -467,7 +223,7 @@ function onClick(event) {
   const navBtn = event.target.closest("[data-section]");
   if (navBtn) {
     const target = navBtn.dataset.section;
-    if (target !== state.activeSection) attemptSectionChange(target);
+    if (target !== state.activeSection) setActiveSection(target);
     return;
   }
 
@@ -485,16 +241,6 @@ function onClick(event) {
       renderContent();
       showToast(`${updated.name} ${wasConnected ? "disconnected" : "connected"}`);
     }
-    return;
-  }
-
-  // Notifications save
-  if (event.target.closest("[data-notif-save]")) {
-    Object.assign(notificationPrefs.email, state.notif.email);
-    Object.assign(notificationPrefs.inApp, state.notif.inApp);
-    Object.assign(notificationPrefs.push, state.notif.push);
-    state.dirty = false;
-    render();
     return;
   }
 
@@ -520,41 +266,15 @@ function onClick(event) {
 
   // Drawer close
   if (event.target.closest("#settingsDrawerClose")) {
-    attemptClose();
-    return;
-  }
-
-  // FIND-E1: empty-state CTA on the Contexts section — close the drawer
-  // and route the user to the new-session entry point so the wizard can
-  // walk them through Voice / Brief / Brand and save the resulting
-  // context back into this list.
-  if (event.target.closest("[data-settings-new-chat]")) {
     close();
-    window.location.replace(window.location.href.split("#")[0] + "#/session/new");
-    return;
-  }
-}
-
-function onChange(event) {
-  // Notification toggles
-  const notif = event.target.closest("[data-notif]");
-  if (notif) {
-    const [group, key] = notif.dataset.notif.split(".");
-    state.notif[group][key] = notif.checked;
-    state.dirty = true;
-    renderFooter();
     return;
   }
 }
 
 function onKeydown(event) {
   if (event.key !== "Escape") return;
-  if (confirmDialog.classList.contains("open")) {
-    closeConfirm();
-    return;
-  }
   if (drawer.classList.contains("open")) {
-    attemptClose();
+    close();
   }
 }
 
@@ -569,25 +289,8 @@ export function init() {
   drawer = document.getElementById("settingsDrawer");
   navEl = document.getElementById("settingsNav");
   contentEl = document.getElementById("settingsContent");
-  footerEl = document.getElementById("settingsFooter");
-  confirmBackdrop = document.getElementById("settingsConfirmBackdrop");
-  confirmDialog = document.getElementById("settingsConfirm");
-  confirmText = document.getElementById("settingsConfirmText");
 
   drawer.addEventListener("click", onClick);
-  drawer.addEventListener("change", onChange);
-  drawer.addEventListener("input", onChange);
-
-  backdrop.addEventListener("click", attemptClose);
-
+  backdrop.addEventListener("click", close);
   document.addEventListener("keydown", onKeydown);
-
-  // Confirm dialog wiring.
-  document.getElementById("settingsConfirmCancel").addEventListener("click", closeConfirm);
-  document.getElementById("settingsConfirmOk").addEventListener("click", () => {
-    const action = state.pendingAction;
-    closeConfirm();
-    if (typeof action === "function") action();
-  });
-  confirmBackdrop.addEventListener("click", closeConfirm);
 }
