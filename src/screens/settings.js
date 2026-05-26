@@ -139,7 +139,7 @@ function renderActiveSection(activeId) {
         <span class="ap-status grey no-dot">${escapeHtml(c.label)}</span>
       </header>
       <div class="ap-card settings-view__list">
-        ${raw(items.map((item, i) => (i === 0 ? "" : `<hr class="ap-divider" />`) + rowFn(item)).join(""))}
+        ${raw(items.map((item, i) => (i === 0 ? "" : `<div class="ap-divider"></div>`) + rowFn(item)).join(""))}
       </div>
     </main>
   `;

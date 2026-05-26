@@ -1,24 +1,30 @@
 /* Settings — full-page route /settings.
  *
- * Two-pane layout: .ap-list-panel rail (left) + .ap-card list (right).
- * All visuals come from DS tokens. The only non-trivial override is
- * dropping the .ap-card internal padding/gap so the card can act as a
- * bounded list container with .ap-divider between rows. Documented
- * exception, scoped to .settings-view__list.
+ * Two-pane layout: a transparent rail with .ap-list-panel-item buttons on
+ * the left, a single .ap-card list container on the right. Mirrors the
+ * page chrome of /contexts (max-width, padding scale) so widths line up
+ * across routes.
+ *
+ * The .ap-list-panel-item DS class is designed to live inside a styled
+ * .ap-list-panel sidebar — when used standalone on a page rail, the host
+ * <button> UA defaults (grey background, inset border) bleed through. We
+ * reset them locally here, the same pattern the old settings drawer used.
  */
 
 .settings-view {
-  /* The standard .screen mount already sets the page chrome (topbar,
-   * gutter). We add page-level padding inside the screen body. */
-  padding: var(--ref-spacing-lg);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
 .settings-view__page {
-  max-width: 1080px;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-lg);
+  padding: var(--ref-spacing-md) var(--ref-spacing-xl) var(--ref-spacing-xl);
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 /* ── Page header ──────────────────────────────────────────────────────── */
@@ -35,20 +41,59 @@
 
 .settings-view__head > .ap-subtitle {
   margin: 0;
+  color: var(--ref-color-grey-60);
 }
 
 /* ── Two-pane body ────────────────────────────────────────────────────── */
 
 .settings-view__body {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 220px 1fr;
   gap: var(--ref-spacing-lg);
   align-items: start;
 }
 
-.settings-view__nav {
+/* ── Rail nav ─────────────────────────────────────────────────────────── */
+
+/* Strip the DS .ap-list-panel chrome (white bg, right border, full height)
+ * — the rail lives on a page now, not inside a sidebar. */
+.settings-view__nav.ap-list-panel {
+  background: transparent;
+  border-right: 0;
+  height: auto;
   position: sticky;
-  top: var(--ref-spacing-lg);
+  top: var(--ref-spacing-md);
+}
+
+.settings-view__nav .ap-list-panel-items {
+  padding: 0;
+  gap: var(--ref-spacing-xxs);
+  overflow: visible;
+}
+
+/* Reset <button> UA styles. .ap-list-panel-item ships without these and
+ * the browser default (grey background, inset border) is what made each
+ * rail item look like a boxed card. */
+.settings-view__nav .ap-list-panel-item {
+  background: transparent;
+  border: 0;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  border-radius: var(--ref-border-radius-md);
+}
+
+.settings-view__nav .ap-list-panel-item > i {
+  color: var(--ref-color-grey-60);
+  font-size: var(--ref-font-size-md);
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.settings-view__nav .ap-list-panel-item.selected > i {
+  color: var(--ref-color-electric-blue-150);
 }
 
 /* ── Content pane ─────────────────────────────────────────────────────── */
@@ -88,13 +133,16 @@
 /* ── List card (single .ap-card wrapping all rows) ────────────────────── */
 
 .settings-view__list {
-  /* Override .ap-card internal layout: this card is a list container, not
-   * a stack of free content. Rows handle their own padding; dividers
+  /* Override .ap-card internal layout: the card is a list container, not
+   * a stack of free content. Rows handle their own padding, dividers
    * separate them. */
   padding: 0;
   gap: 0;
   overflow: hidden;
 }
+
+/* The DS .ap-divider is { height: 1px; background-color: ... } designed
+ * for a <div>. Our list uses a <div>, so the rule applies cleanly. */
 
 /* ── Rows ─────────────────────────────────────────────────────────────── */
 
@@ -164,27 +212,18 @@
   flex-shrink: 0;
 }
 
-/* The .ap-divider sits between rows inside .settings-view__list. The DS
- * default has `margin: var(--ref-spacing-md) 0` — flatten it so the
- * divider runs flush between rows. */
-.settings-view__list > .ap-divider {
-  margin: 0;
-}
-
 /* ── Mobile (≤720px) ──────────────────────────────────────────────────── */
 
 @media (max-width: 720px) {
-  .settings-view {
-    padding: var(--ref-spacing-md);
-  }
   .settings-view__page {
+    padding: var(--ref-spacing-md);
     gap: var(--ref-spacing-md);
   }
   .settings-view__body {
     grid-template-columns: 1fr;
     gap: var(--ref-spacing-md);
   }
-  .settings-view__nav {
+  .settings-view__nav.ap-list-panel {
     position: static;
   }
   /* Horizontal scrollable rail on mobile. */

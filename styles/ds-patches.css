@@ -289,3 +289,12 @@ button.ap-link {
 .ap-filter-chip[aria-disabled="true"] .ap-filter-chip-count {
   color: var(--ref-color-grey-40);
 }
+
+/* The DS ships `.ap-divider { background-color: var(--sys-color-border-color-default); }`
+ * but this prototype's tokens file defines `--sys-border-color-default`
+ * (one fewer "color"), so the variable resolves to empty and the divider
+ * is invisible. Fall back to the canonical light-grey border colour. */
+.ap-divider,
+.divider {
+  background-color: var(--ref-color-grey-10);
+}

@@ -22,7 +22,7 @@ import { renderDashboard } from "./screens/dashboard.js?v=45";
 import { renderSession } from "./screens/session.js?v=131";
 import { renderIdeas } from "./screens/ideas.js?v=25";
 import { renderContexts } from "./screens/contexts.js?v=35";
-import { renderSettings } from "./screens/settings.js?v=1";
+import { renderSettings } from "./screens/settings.js?v=2";
 import { renderWelcome } from "./screens/welcome.js?v=5";
 import { renderWelcomeSocials } from "./screens/welcome-socials.js?v=5";
 import { renderWelcomeSources } from "./screens/welcome-sources.js?v=2";
@@ -36,6 +36,12 @@ import * as __capBug from "./components/bug-report-modal.js?v=22";
 import * as __capFeedback from "./components/feedback-modal.js?v=25";
 import * as __capChatPicker from "./components/chat-picker-modal.js?v=23";
 import * as __capSearch from "./components/search-modal.js?v=3";
+import {
+  openDrafts as __capOpenDrafts,
+  openIdeas as __capOpenIdeas,
+  openSources as __capOpenSources,
+  openContextBriefPanel as __capOpenContextPanel,
+} from "./components/right-panel.js?v=104";
 
 // Figma capture helper — seed a welcome draft synchronously so the multi-step
 // welcome flow (which requires sessionStorage.welcomeSessionId + a draft) renders
@@ -150,5 +156,33 @@ start();
         console.error("[capture] failed to open modal", which, err);
       }
     }, 600);
+  }
+
+  // Right-panel programmatic open (used by Figma capture)
+  const panel = params.get("openPanel");
+  if (panel) {
+    window.setTimeout(() => {
+      try {
+        switch (panel) {
+          case "drafts":
+            __capOpenDrafts();
+            break;
+          case "ideas":
+            __capOpenIdeas();
+            break;
+          case "sources":
+            __capOpenSources();
+            break;
+          case "context": {
+            const m = (params.get("route") || "").match(/^\/session\/([^/?]+)/);
+            const sessionId = m ? m[1] : null;
+            if (sessionId) __capOpenContextPanel({ sessionId, mode: "read" });
+            break;
+          }
+        }
+      } catch (err) {
+        console.error("[capture] failed to open panel", panel, err);
+      }
+    }, 1000);
   }
 }
