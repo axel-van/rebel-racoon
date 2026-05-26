@@ -23,7 +23,9 @@ import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
-} from "../composer-mentions.js?v=2";
+  addMention as addComposerMention,
+} from "../composer-mentions.js?v=3";
+import { iconFor as iconForKind } from "../file-kinds.js?v=20";
 import {
   getPosts,
   addPostDraft,
@@ -275,6 +277,14 @@ function renderComposer(attachedContext, session) {
         </div>
         <div class="session__composer-card">
           <div
+            class="composer-mention-picker"
+            id="composerMentionPicker"
+            data-composer-mention-picker
+            role="listbox"
+            aria-label="Reference a source or idea"
+            hidden
+          ></div>
+          <div
             class="session__composer-mentions"
             data-composer-mentions
             hidden
@@ -326,6 +336,18 @@ function renderComposer(attachedContext, session) {
             </div>
             <button
               type="button"
+              class="ap-button stroked grey composer-mention-trigger"
+              aria-label="Mention a source or idea"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-controls="composerMentionPicker"
+              data-composer-mention-trigger
+            >
+              <i class="ap-icon-at"></i>
+              <span>Mention</span>
+            </button>
+            <button
+              type="button"
               class="ap-button primary orange session__composer-send"
               aria-label="Send"
               data-assistant-send
@@ -340,6 +362,118 @@ function renderComposer(attachedContext, session) {
       </div>
     </div>
   `;
+}
+
+// ── Composer mention picker ───────────────────────────────────────────
+// Popup that floats above the composer card listing the session's
+// sources + ideas. Picking one delegates to addComposerMention(name);
+// the existing composer-mentions subscriber repaints the pill row.
+//
+// Triggered by:
+//   • Click on the composer "@ Mention" toolbar button
+//   • Typing "@" in the textarea
+//
+// Closed by:
+//   • Picking an item
+//   • Clicking outside the picker / trigger
+//   • Pressing Escape
+function escapeHtmlAttr(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function renderMentionPickerInto(container, sessionId) {
+  if (!container) return;
+  const sources = getSources(sessionId).filter((s) => s.status !== "Processing");
+  const ideas = getIdeas(sessionId);
+  const renderRow = (icon, name, kindLabel, dataAttr) => `
+    <li
+      class="composer-mention-picker__row"
+      role="option"
+      tabindex="0"
+      ${dataAttr}
+    >
+      <span class="composer-mention-picker__row-icon" aria-hidden="true">
+        <i class="${icon}"></i>
+      </span>
+      <span class="composer-mention-picker__row-name">${escapeHtmlAttr(name)}</span>
+      ${kindLabel ? `<span class="composer-mention-picker__row-kind muted">${escapeHtmlAttr(kindLabel)}</span>` : ""}
+    </li>
+  `;
+  const sourcesSection =
+    sources.length > 0
+      ? `
+        <div class="composer-mention-picker__section">
+          <div class="composer-mention-picker__header">Reference a source</div>
+          <ul class="composer-mention-picker__list" role="group">
+            ${sources
+              .map((s) =>
+                renderRow(
+                  iconForKind(s.kind),
+                  s.filename,
+                  (s.kind || "").toUpperCase(),
+                  `data-mention-pick-source="${escapeHtmlAttr(s.id)}"`,
+                ),
+              )
+              .join("")}
+          </ul>
+        </div>
+      `
+      : "";
+  const ideasSection =
+    ideas.length > 0
+      ? `
+        <div class="composer-mention-picker__section">
+          <div class="composer-mention-picker__header">Reference an idea</div>
+          <ul class="composer-mention-picker__list" role="group">
+            ${ideas
+              .map((i) =>
+                renderRow(
+                  "ap-icon-sparkles",
+                  i.title,
+                  (i.kind || "").toUpperCase(),
+                  `data-mention-pick-idea="${escapeHtmlAttr(i.id)}"`,
+                ),
+              )
+              .join("")}
+          </ul>
+        </div>
+      `
+      : "";
+  const body =
+    sourcesSection || ideasSection
+      ? sourcesSection + ideasSection
+      : `<div class="composer-mention-picker__empty muted">No sources or ideas yet.</div>`;
+  container.innerHTML = body;
+}
+
+function openMentionPicker(root, sessionId) {
+  const picker = root.querySelector("[data-composer-mention-picker]");
+  const trigger = root.querySelector("[data-composer-mention-trigger]");
+  if (!picker) return;
+  renderMentionPickerInto(picker, sessionId);
+  picker.hidden = false;
+  if (trigger) trigger.setAttribute("aria-expanded", "true");
+}
+
+function closeMentionPicker(root) {
+  const picker = root.querySelector("[data-composer-mention-picker]");
+  const trigger = root.querySelector("[data-composer-mention-trigger]");
+  if (picker) {
+    picker.hidden = true;
+    picker.innerHTML = "";
+  }
+  if (trigger) trigger.setAttribute("aria-expanded", "false");
+}
+
+function toggleMentionPicker(root, sessionId) {
+  const picker = root.querySelector("[data-composer-mention-picker]");
+  if (!picker) return;
+  if (picker.hidden) openMentionPicker(root, sessionId);
+  else closeMentionPicker(root);
 }
 
 // Composer context pill — read-only chip showing the active playbook's
@@ -2244,6 +2378,51 @@ function bindSession(root, session) {
         return;
       }
 
+      // Composer "@ Mention" toolbar button — toggles the picker popup.
+      const mentionTrigger = event.target.closest("[data-composer-mention-trigger]");
+      if (mentionTrigger) {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleMentionPicker(root, session.id);
+        return;
+      }
+
+      // Pick a source from the picker → add as pill, close the picker,
+      // return focus to the textarea so the user can keep typing.
+      const pickSource = event.target.closest("[data-mention-pick-source]");
+      if (pickSource) {
+        event.preventDefault();
+        event.stopPropagation();
+        const src = getSources(session.id).find((s) => s.id === pickSource.dataset.mentionPickSource);
+        if (src) addComposerMention(session.id, src.filename);
+        closeMentionPicker(root);
+        getInput()?.focus();
+        return;
+      }
+
+      // Pick an idea from the picker → same flow as sources.
+      const pickIdea = event.target.closest("[data-mention-pick-idea]");
+      if (pickIdea) {
+        event.preventDefault();
+        event.stopPropagation();
+        const idea = getIdeas(session.id).find((i) => i.id === pickIdea.dataset.mentionPickIdea);
+        if (idea) addComposerMention(session.id, idea.title);
+        closeMentionPicker(root);
+        getInput()?.focus();
+        return;
+      }
+
+      // Click anywhere outside the picker / trigger → close it. This
+      // runs last so the picks above still fire when clicking a row.
+      const picker = root.querySelector("[data-composer-mention-picker]");
+      if (picker && !picker.hidden) {
+        const insidePicker = event.target.closest("[data-composer-mention-picker]");
+        const onTrigger = event.target.closest("[data-composer-mention-trigger]");
+        if (!insidePicker && !onTrigger) {
+          closeMentionPicker(root);
+        }
+      }
+
       // Playbook editor — Save changes (in the picker footer). Both Save
       // and Cancel surface a confirmation modal so the user has a
       // deliberate commit/discard step — no accidental clicks.
@@ -2343,6 +2522,21 @@ function bindSession(root, session) {
       if (isCmdEnter || isPlainEnter) {
         event.preventDefault();
         submitInput();
+        return;
+      }
+      // Typing "@" opens the mention picker. The "@" character itself is
+      // still inserted into the textarea (we don't preventDefault) — same
+      // behaviour Slack / Linear use. Escape closes the picker.
+      if (event.key === "@") {
+        openMentionPicker(root, session.id);
+        return;
+      }
+      if (event.key === "Escape") {
+        const picker = root.querySelector("[data-composer-mention-picker]");
+        if (picker && !picker.hidden) {
+          event.preventDefault();
+          closeMentionPicker(root);
+        }
       }
     },
     { signal },

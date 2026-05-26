@@ -24,7 +24,7 @@ import {
   removeSources,
 } from "../sources-stream.js?v=30";
 import { open as openAddSourceModal } from "./add-source-modal.js?v=22";
-import { addMention } from "../composer-mentions.js?v=2";
+import { addMention } from "../composer-mentions.js?v=3";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
@@ -642,7 +642,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=127").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=128").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -1921,7 +1921,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=127").then(({ askDraftCountQuestion }) => {
+  import("../screens/session.js?v=128").then(({ askDraftCountQuestion }) => {
     askDraftCountQuestion(sid, ideaId);
   });
 }
