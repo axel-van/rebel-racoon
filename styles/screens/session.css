@@ -876,7 +876,10 @@
   background: var(--ref-color-white);
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
-  padding: var(--ref-spacing-xs);
+  /* Top keeps the textarea visually breathing; the toolbar row hugs
+     tighter to the card edges (left/right/bottom = 8px) so the
+     Attach / Mention buttons feel snug inside the card. */
+  padding: var(--ref-spacing-xs) var(--ref-spacing-xxs) var(--ref-spacing-xxs);
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
