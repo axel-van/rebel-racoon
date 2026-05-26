@@ -54,10 +54,10 @@ src/
     analyse-brand.js      renderAnalyseBrand — route /analyse/brand
     analyse-summary.js    renderAnalyseSummary — route /analyse/summary
     _analyse-common.js    bindWizardKeyboard, renderPicker, advanceContextStage
+    settings.js           renderSettings — route /settings (Connectors + Social accounts)
 
   components/
     topbar.js               persistent header (Home / Feedback / Bug / ? / Settings)
-    settings-drawer.js      right-anchored drawer, 5 tabs
     add-source-modal.js     Upload / URL / Connectors tabs + connector browse
     generate-image-modal.js prompt + style/mood chips, derive vs generate
     bug-report-modal.js     auto-screenshot via html2canvas + form
@@ -130,7 +130,7 @@ This project is built on the official Agorapulse Design System (`@agorapulse/ui-
 5. **Custom CSS only if nothing in the DS fits** — pick the right file:
    - `styles/ds-patches.css` when you need to **extend** a DS class with a missing variant (e.g. `.ap-status.yellow` because the DS only ships orange/red/green/blue/grey) or add a primitive the DS forgot (e.g. `.modal-backdrop`). This file is the only legitimate place to touch `.ap-*` selectors, and it should shrink as the DS evolves.
    - `styles/screens/<screen>.css` for screen-specific styling (dashboard, session, analyse, posts, modals).
-   - `styles/components/<component>.css` for shared component styling (settings-drawer, add-source-modal).
+   - `styles/components/<component>.css` for shared component styling (add-source-modal, etc.).
    - **Never** redeclare a `.ap-*` class with overrides outside `ds-patches.css` — it defeats the DS and flips the cascade silently.
 6. **Validate before committing** — run `validate_css` on the ds-css MCP to catch hardcoded values that should be tokens.
 
@@ -163,9 +163,9 @@ styles/
   chat.css               — composer + thread chrome (shared composer styles)
   admin-chip.css         — admin user-mode floating chip
   screens/               — feature/screen-specific styles
-    dashboard.css, session.css, posts.css, analyse.css, modals.css
+    dashboard.css, session.css, posts.css, analyse.css, modals.css, settings.css
   components/            — shared component styles
-    settings-drawer.css, add-source-modal.css
+    add-source-modal.css
 ```
 
 ### Token tiers

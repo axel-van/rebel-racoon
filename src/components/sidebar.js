@@ -1,6 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate, getPath } from "../router.js?v=30";
-import { open as openSettingsDrawer } from "./settings-drawer.js?v=26";
 import { open as openBugReportModal } from "./bug-report-modal.js?v=21";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=24";
 import { open as openConfirmModal } from "./confirm-modal.js?v=20";
@@ -192,7 +191,7 @@ export function initSidebar() {
     }
     if (event.target.closest("[data-sidebar-settings]")) {
       setMenuOpen(false);
-      openSettingsDrawer();
+      navigate("/settings");
     }
   });
 

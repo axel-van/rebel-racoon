@@ -1,0 +1,217 @@
+/* Settings — full-page route /settings.
+ *
+ * Two-pane layout: .ap-list-panel rail (left) + .ap-card list (right).
+ * All visuals come from DS tokens. The only non-trivial override is
+ * dropping the .ap-card internal padding/gap so the card can act as a
+ * bounded list container with .ap-divider between rows. Documented
+ * exception, scoped to .settings-view__list.
+ */
+
+.settings-view {
+  /* The standard .screen mount already sets the page chrome (topbar,
+   * gutter). We add page-level padding inside the screen body. */
+  padding: var(--ref-spacing-lg);
+}
+
+.settings-view__page {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-lg);
+}
+
+/* ── Page header ──────────────────────────────────────────────────────── */
+
+.settings-view__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.settings-view__head > h1 {
+  margin: 0;
+}
+
+.settings-view__head > .ap-subtitle {
+  margin: 0;
+}
+
+/* ── Two-pane body ────────────────────────────────────────────────────── */
+
+.settings-view__body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: var(--ref-spacing-lg);
+  align-items: start;
+}
+
+.settings-view__nav {
+  position: sticky;
+  top: var(--ref-spacing-lg);
+}
+
+/* ── Content pane ─────────────────────────────────────────────────────── */
+
+.settings-view__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  min-width: 0;
+}
+
+.settings-view__section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ref-spacing-md);
+}
+
+.settings-view__section-head > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+}
+
+.settings-view__section-head h2 {
+  margin: 0;
+}
+
+.settings-view__section-head p {
+  margin: 0;
+  color: var(--ref-color-grey-60);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-md);
+}
+
+/* ── List card (single .ap-card wrapping all rows) ────────────────────── */
+
+.settings-view__list {
+  /* Override .ap-card internal layout: this card is a list container, not
+   * a stack of free content. Rows handle their own padding; dividers
+   * separate them. */
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* ── Rows ─────────────────────────────────────────────────────────────── */
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-md);
+  transition: background-color var(--ref-animation-short);
+}
+
+.settings-row:hover {
+  background-color: var(--ref-color-grey-05);
+}
+
+.settings-row__logo {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--ref-border-radius-sm);
+  object-fit: contain;
+}
+
+.settings-row__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.settings-row__title-line {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  flex-wrap: wrap;
+}
+
+.settings-row__title {
+  font-size: var(--ref-font-size-md);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-150);
+  line-height: var(--ref-font-line-height-md);
+}
+
+.settings-row__sub {
+  font-size: var(--ref-font-size-sm);
+  color: var(--ref-color-grey-60);
+  line-height: var(--ref-font-line-height-md);
+}
+
+.settings-row__meta {
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-60);
+  margin-top: var(--ref-spacing-xxxs);
+}
+
+.settings-row__meta strong {
+  color: var(--ref-color-grey-100);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.settings-row__action {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  flex-shrink: 0;
+}
+
+/* The .ap-divider sits between rows inside .settings-view__list. The DS
+ * default has `margin: var(--ref-spacing-md) 0` — flatten it so the
+ * divider runs flush between rows. */
+.settings-view__list > .ap-divider {
+  margin: 0;
+}
+
+/* ── Mobile (≤720px) ──────────────────────────────────────────────────── */
+
+@media (max-width: 720px) {
+  .settings-view {
+    padding: var(--ref-spacing-md);
+  }
+  .settings-view__page {
+    gap: var(--ref-spacing-md);
+  }
+  .settings-view__body {
+    grid-template-columns: 1fr;
+    gap: var(--ref-spacing-md);
+  }
+  .settings-view__nav {
+    position: static;
+  }
+  /* Horizontal scrollable rail on mobile. */
+  .settings-view__nav .ap-list-panel-items {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: var(--ref-spacing-xs);
+    flex-wrap: nowrap;
+  }
+  .settings-view__nav .ap-list-panel-item {
+    flex: 0 0 auto;
+  }
+  .settings-view__nav .ap-list-panel-item-subtitle {
+    display: none;
+  }
+  .settings-view__section-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--ref-spacing-xs);
+  }
+  .settings-row {
+    flex-wrap: wrap;
+  }
+  .settings-row__action {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+}

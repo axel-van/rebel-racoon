@@ -9,7 +9,6 @@ import { init as initBugReportModal } from "./components/bug-report-modal.js?v=2
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=25";
 import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=23";
 import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=2";
-import { init as initSettingsDrawer } from "./components/settings-drawer.js?v=26";
 import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=23";
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=23";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=21";
@@ -23,6 +22,7 @@ import { renderDashboard } from "./screens/dashboard.js?v=45";
 import { renderSession } from "./screens/session.js?v=131";
 import { renderIdeas } from "./screens/ideas.js?v=25";
 import { renderContexts } from "./screens/contexts.js?v=35";
+import { renderSettings } from "./screens/settings.js?v=1";
 import { renderWelcome } from "./screens/welcome.js?v=5";
 import { renderWelcomeSocials } from "./screens/welcome-socials.js?v=5";
 import { renderWelcomeSources } from "./screens/welcome-sources.js?v=2";
@@ -31,7 +31,6 @@ import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=3";
 import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=3";
 import { startBackground as __captureSeedDraft } from "./context-builder.js?v=43";
 import * as __capAddSource from "./components/add-source-modal.js?v=23";
-import * as __capSettings from "./components/settings-drawer.js?v=26";
 import * as __capGenImage from "./components/generate-image-modal.js?v=23";
 import * as __capBug from "./components/bug-report-modal.js?v=22";
 import * as __capFeedback from "./components/feedback-modal.js?v=25";
@@ -54,6 +53,7 @@ route("/", renderDashboard);
 route("/session/:id", renderSession);
 route("/ideas", renderIdeas);
 route("/contexts", renderContexts);
+route("/settings", renderSettings);
 // First-time onboarding — 4-screen linear flow. /welcome is the URL
 // input that kicks off the background website analysis; /welcome/socials
 // lists the channels the brand publishes on; /welcome/sources is the
@@ -85,7 +85,6 @@ initBugReportModal();
 initFeedbackModal();
 initGenerateImageModal();
 initVideoClipsModal();
-initSettingsDrawer();
 initChatPickerModal();
 initAddSourceModal();
 initConfirmModal();
@@ -130,9 +129,6 @@ start();
         switch (which) {
           case "add-source":
             __capAddSource.open({ tab: tab || "upload" });
-            break;
-          case "settings":
-            __capSettings.open({ section: tab || "connectors" });
             break;
           case "generate-image":
             __capGenImage.open(null, () => {});
