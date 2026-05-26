@@ -39,6 +39,13 @@
   align-self: center;
 }
 
+/* The outer composer fills its parent so the centred 740px inner has
+   a known width to work with. Without this, the empty-chat flex column
+   (align-items: center) collapses the composer to its intrinsic content
+   width, making it visibly narrower than the bottom-of-thread variant. */
+.session__composer {
+  width: 100%;
+}
 .session__composer-inner {
   width: 100%;
   max-width: 740px;
