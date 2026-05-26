@@ -2375,11 +2375,10 @@ function renderContextBriefView() {
           </button>
           <button
             type="button"
-            class="ap-button mermaid"
+            class="ap-button primary orange"
             data-brief-save
             ${(d.name || "").trim() ? "" : "disabled"}
           >
-            <i class="ap-icon-sparkles-mermaid"></i>
             <span>Save playbook</span>
           </button>
         </footer>
