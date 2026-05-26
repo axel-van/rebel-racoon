@@ -423,6 +423,10 @@ span.chat-bubble-choice-chip {
   cursor: pointer;
   font-family: inherit;
   text-align: left;
+  /* Override .ap-card's default grey border with electric blue so the
+     card reads as an actionable, AI-produced batch from across the
+     thread (matches the user message bubble + the Review CTA). */
+  border-color: var(--ref-color-electric-blue-100);
   transition:
     border-color var(--ref-animation-short) var(--app-ease-standard),
     background-color var(--ref-animation-short) var(--app-ease-standard),
@@ -431,13 +435,13 @@ span.chat-bubble-choice-chip {
 
 .drafts-card:hover,
 .drafts-card:focus-visible {
-  border-color: var(--ref-color-mermaid-gradient-from);
+  border-color: var(--ref-color-electric-blue-150);
   outline: none;
 }
 
 .drafts-card.is-active {
-  border-color: var(--ref-color-mermaid-gradient-from);
-  background: var(--ref-color-mermaid-10);
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-10);
 }
 
 /* Icon tile — soft mermaid background; the sparkles icon is mask-based,
