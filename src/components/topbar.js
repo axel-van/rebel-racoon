@@ -98,7 +98,7 @@ export function renderTopbar(_options = {}) {
   const isEmpty = onSession ? isEmptyConversation() : true;
   const ideaCount = onSession ? sessionIdeaCount() : 0;
   el.innerHTML = html`
-    <div class="app-topbar__left">${raw(renderTitle(onSession))}${raw(onSession ? renderContextPill() : "")}</div>
+    <div class="app-topbar__left">${raw(onSession ? renderContextPill() : "")}${raw(renderTitle(onSession))}</div>
     <div class="app-topbar__right">
       ${raw(onSession ? renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) : "")}
       ${raw(onSession ? renderStatusCardToggle() : "")}
