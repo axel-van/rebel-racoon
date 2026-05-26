@@ -384,15 +384,25 @@ function escapeHtmlAttr(s) {
     .replace(/>/g, "&gt;");
 }
 
+// Module-local index of the currently-highlighted row in the @mention
+// picker — mirrors the search-modal pattern (search-modal.js). Arrow
+// keys increment/decrement, Enter selects, mousemove syncs to row
+// under the cursor. Reset to 0 every time the picker opens.
+let mentionHighlightIndex = 0;
+
 function renderMentionPickerInto(container, sessionId) {
   if (!container) return;
   const sources = getSources(sessionId).filter((s) => s.status !== "Processing");
   const ideas = getIdeas(sessionId);
-  const renderRow = (icon, name, kindLabel, dataAttr) => `
+  let cursor = 0;
+  const renderRow = (icon, name, kindLabel, dataAttr) => {
+    const index = cursor++;
+    return `
     <li
       class="composer-mention-picker__row"
       role="option"
       tabindex="0"
+      data-mention-row-index="${index}"
       ${dataAttr}
     >
       <span class="composer-mention-picker__row-icon" aria-hidden="true">
@@ -402,6 +412,7 @@ function renderMentionPickerInto(container, sessionId) {
       ${kindLabel ? `<span class="composer-mention-picker__row-kind muted">${escapeHtmlAttr(kindLabel)}</span>` : ""}
     </li>
   `;
+  };
   const sourcesSection =
     sources.length > 0
       ? `
@@ -455,6 +466,8 @@ function openMentionPicker(root, sessionId) {
   if (!picker) return;
   renderMentionPickerInto(picker, sessionId);
   picker.hidden = false;
+  mentionHighlightIndex = 0;
+  syncMentionHighlight(picker);
   if (trigger) trigger.setAttribute("aria-expanded", "true");
 }
 
@@ -473,6 +486,30 @@ function toggleMentionPicker(root, sessionId) {
   if (!picker) return;
   if (picker.hidden) openMentionPicker(root, sessionId);
   else closeMentionPicker(root);
+}
+
+// Toggle .is-highlighted + aria-selected on the row at the current
+// index. Scroll it into view so keyboard nav stays on screen.
+function syncMentionHighlight(picker) {
+  const rows = picker.querySelectorAll("[data-mention-row-index]");
+  if (!rows.length) return;
+  if (mentionHighlightIndex < 0) mentionHighlightIndex = rows.length - 1;
+  else if (mentionHighlightIndex >= rows.length) mentionHighlightIndex = 0;
+  rows.forEach((row) => {
+    const idx = Number(row.dataset.mentionRowIndex);
+    const active = idx === mentionHighlightIndex;
+    row.classList.toggle("is-highlighted", active);
+    row.setAttribute("aria-selected", active ? "true" : "false");
+    if (active) row.scrollIntoView({ block: "nearest" });
+  });
+}
+
+// Click the row at the current highlight — selects + closes the
+// picker via the existing pickSource / pickIdea click delegates.
+function activateHighlightedMention(picker) {
+  const rows = picker.querySelectorAll("[data-mention-row-index]");
+  const row = rows[mentionHighlightIndex];
+  if (row) row.click();
 }
 
 // (The context pill that used to live here moved to the app header next
@@ -2472,6 +2509,36 @@ function bindSession(root, session) {
     "keydown",
     (event) => {
       if (!event.target.matches("#assistantInput")) return;
+      // When the @mention picker is open, arrow keys / Enter / Escape
+      // drive the picker instead of the textarea — same pattern as the
+      // search modal. Checked first so Enter selects a mention rather
+      // than submitting the message.
+      const pickerEl = root.querySelector("[data-composer-mention-picker]");
+      const pickerOpen = pickerEl && !pickerEl.hidden;
+      if (pickerOpen) {
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          mentionHighlightIndex += 1;
+          syncMentionHighlight(pickerEl);
+          return;
+        }
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          mentionHighlightIndex -= 1;
+          syncMentionHighlight(pickerEl);
+          return;
+        }
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          activateHighlightedMention(pickerEl);
+          return;
+        }
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeMentionPicker(root);
+          return;
+        }
+      }
       // Cmd/Ctrl+Enter sends from anywhere in the textarea (matches Claude.ai
       // and the handoff README spec). Plain Enter (no shift, no modifier)
       // also sends — preserves the archie default. Shift+Enter newlines.
@@ -2490,13 +2557,23 @@ function bindSession(root, session) {
         openMentionPicker(root, session.id);
         return;
       }
-      if (event.key === "Escape") {
-        const picker = root.querySelector("[data-composer-mention-picker]");
-        if (picker && !picker.hidden) {
-          event.preventDefault();
-          closeMentionPicker(root);
-        }
-      }
+    },
+    { signal },
+  );
+
+  // Mouse hover over a picker row updates the highlight, so keyboard
+  // + mouse stay in sync (mirrors search-modal.js behaviour).
+  root.addEventListener(
+    "mousemove",
+    (event) => {
+      const row = event.target.closest("[data-mention-row-index]");
+      if (!row) return;
+      const picker = row.closest("[data-composer-mention-picker]");
+      if (!picker || picker.hidden) return;
+      const idx = Number(row.dataset.mentionRowIndex);
+      if (idx === mentionHighlightIndex) return;
+      mentionHighlightIndex = idx;
+      syncMentionHighlight(picker);
     },
     { signal },
   );
