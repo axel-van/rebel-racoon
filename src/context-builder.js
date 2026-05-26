@@ -21,7 +21,7 @@
 
 import * as inlineQuestion from "./inline-question.js?v=27";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=35";
-import * as rightPanel from "./components/right-panel.js?v=101";
+import * as rightPanel from "./components/right-panel.js?v=102";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=28";
 import { analyzeWebsite, analyzeDocument } from "./context-mock-analysis.js?v=21";
 import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=10";
@@ -386,20 +386,101 @@ function maybeOpenAltBrief(sessionId) {
 // fields (briefSummary, plain-string audience, single cta) are normalized
 // inside readBriefFromCtx in right-panel.js.
 export function openRead(contextId) {
-  // The Edit button (panel footer) now launches the conversational
-  // Playbook editor — same entry point as the pen icon on the /contexts
-  // cards. The form-based startEdit() flow stays exported in case some
-  // future surface needs it.
-  //
-  // `onRefineField` wires the per-section hover-reveal Refine button —
-  // each card targets the matching playbook-editor sub-flow (brief /
-  // voice / branding / cta) so the user lands one click away from the
-  // field they want to change instead of going through the chip menu.
+  // The Edit button (panel footer) flips the same panel into edit mode in
+  // place via `openEdit` — no transient session, no confirm modal. The
+  // per-section hover-reveal Refine button still routes to the
+  // conversational playbook-editor sub-flow (`refinePlaybookField`) so
+  // section-targeted Archie refinement remains available from read mode.
   rightPanel.openContextBriefPanel({
     mode: "read",
     getCtx: () => getContextById(contextId),
-    onEnterEdit: () => launchPlaybookEditor(contextId, "/contexts"),
+    onEnterEdit: () => openEdit(contextId),
     onRefineField: (fieldKey) => refinePlaybookField(contextId, fieldKey, "/contexts"),
+  });
+}
+
+// Open the right-panel brief panel directly in edit mode for an existing
+// context. The draft is a shallow copy of the saved Context — every chip
+// toggle / textarea input mutates it through the panel's existing
+// `data-brief-*` delegate (see right-panel.js click + input handlers).
+// Save persists the draft via `updateContext`; Cancel discards it and
+// flips back to read mode.
+export function openEdit(contextId) {
+  const saved = getContextById(contextId);
+  if (!saved) return;
+  // Shape the draft to match what the brief renderer expects (chip
+  // arrays, suggestions/customAdditions buckets). `readBriefFromCtx`
+  // lives in right-panel.js, but the same normalization is duplicated
+  // in `startEdit` above — re-use that fan-out here for consistency.
+  const draft = {
+    websiteUrl: saved.websiteUrl || "",
+    name: saved.name || "",
+    businessSummary: saved.businessSummary || saved.briefSummary || "",
+    audience: Array.isArray(saved.audience) ? saved.audience.slice() : saved.audience ? [saved.audience] : [],
+    audienceProblems: Array.isArray(saved.audienceProblems) ? saved.audienceProblems.slice() : [],
+    tones: Array.isArray(saved.tones) ? saved.tones.slice() : [],
+    contentStyle: Array.isArray(saved.contentStyle) ? saved.contentStyle.slice() : [],
+    objective: Array.isArray(saved.objective) ? saved.objective.slice() : [],
+    contentAction: Array.isArray(saved.contentAction) ? saved.contentAction.slice() : [],
+    ctaLinks: Array.isArray(saved.ctaLinks) ? saved.ctaLinks.map((l) => ({ ...l })) : [],
+    language: saved.language || "English",
+    color: saved.color || "orange",
+    voiceProfile: saved.voiceProfile && typeof saved.voiceProfile === "object" ? { ...saved.voiceProfile } : null,
+    imageVoice:
+      saved.imageVoice && Array.isArray(saved.imageVoice.websites)
+        ? { websites: saved.imageVoice.websites.map((w) => ({ ...w })) }
+        : { websites: [] },
+    // Empty buckets — no AI suggestions surface in the direct-edit flow.
+    suggestions: {},
+    customAdditions: {},
+  };
+
+  const toggleInArray = (field, value) => {
+    if (!Array.isArray(draft[field])) draft[field] = [];
+    const idx = draft[field].indexOf(value);
+    if (idx === -1) draft[field].push(value);
+    else draft[field].splice(idx, 1);
+  };
+
+  rightPanel.openContextBriefPanel({
+    mode: "edit",
+    getDraft: () => draft,
+    getCtx: () => saved,
+    onName: (value) => {
+      draft.name = value;
+    },
+    onAnswer: (field, value) => {
+      draft[field] = value;
+      rightPanel.refreshContextBriefPanel();
+    },
+    onToggleChip: (field, value) => {
+      toggleInArray(field, value);
+      rightPanel.refreshContextBriefPanel();
+    },
+    onAddOther: (field, value) => {
+      if (!Array.isArray(draft[field])) draft[field] = [];
+      if (!draft[field].includes(value)) draft[field].push(value);
+      rightPanel.refreshContextBriefPanel();
+    },
+    onToggleCta: (url) => {
+      const cta = (draft.ctaLinks || []).find((l) => l.url === url);
+      if (cta) cta.checked = !cta.checked;
+    },
+    onVoiceProfileChange: (key, value) => {
+      if (!draft.voiceProfile || typeof draft.voiceProfile !== "object") draft.voiceProfile = {};
+      draft.voiceProfile[key] = value;
+    },
+    onSave: () => {
+      updateContext(contextId, draft);
+      openRead(contextId);
+    },
+    onCancel: () => {
+      // Returning truthy tells the panel's cancel delegate not to
+      // tear itself down — we want to keep the panel open and flip
+      // straight into read mode.
+      openRead(contextId);
+      return true;
+    },
   });
 }
 

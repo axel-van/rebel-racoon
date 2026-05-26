@@ -747,8 +747,12 @@ export function init() {
       return;
     }
     if (event.target.closest("[data-brief-cancel]")) {
-      contextBriefConfig?.onCancel?.();
-      closePanel();
+      // Hosts that want to redirect (e.g. flip back to read mode in
+      // place) can return a truthy value from onCancel to suppress the
+      // default panel teardown. Everything else falls through to a
+      // full close.
+      const handled = contextBriefConfig?.onCancel?.();
+      if (!handled) closePanel();
       return;
     }
     if (event.target.closest("[data-brief-edit-mode]")) {
@@ -2139,7 +2143,6 @@ function renderBriefHero(d, isRead) {
         <div class="context-brief__color-swatches context-brief__hero-swatches">${swatches}</div>
       </div>
       <div class="context-brief__hero-summary-wrap">
-        <span class="context-brief__from-web"><i class="ap-icon-sparkles"></i> Generated from your website</span>
         <div class="ap-textarea-field resizable">
           <textarea
             data-brief-summary
@@ -2510,7 +2513,6 @@ function renderBriefChips({
     <section class="context-brief__section" data-brief-field-section="${escapeAttr(field)}">
       <h3 class="context-brief__title">${escapeText(title)}</h3>
       ${hint ? `<p class="context-brief__hint">${escapeText(hint)}</p>` : ""}
-      ${fromWeb ? `<span class="context-brief__from-web"><i class="ap-icon-web"></i> From your website</span>` : ""}
       ${warning}
       <div class="context-brief__chips" data-brief-field="${escapeAttr(field)}">${chipNodes.join("")}</div>
       <div class="context-brief__other" data-brief-other-wrap="${escapeAttr(field)}" hidden>
@@ -2589,7 +2591,6 @@ function renderBriefCtaList(d, isRead) {
     <section class="context-brief__section">
       <h3 class="context-brief__title">Which links should Archie use as CTAs?</h3>
       <p class="context-brief__hint">These URLs will be included in your posts when relevant.</p>
-      <span class="context-brief__from-web"><i class="ap-icon-web"></i> From your website</span>
       <div class="context-brief__cta-list">${cards || `<p class="context-brief__hint">No CTA links suggested yet.</p>`}</div>
     </section>
   `;
