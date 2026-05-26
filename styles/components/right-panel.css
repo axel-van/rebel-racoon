@@ -1487,6 +1487,158 @@
   margin-top: 2px;
 }
 
+/* ── New CTA editor (compact list + Manage sub-panel) ────────────────
+   Replaces the legacy ap-card checkbox cards. The compact view sits
+   under the section title with a Manage affordance on the right; the
+   manage sub-panel slides in below with editable inputs + Cancel/Done. */
+.context-brief__cta-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.context-brief__cta-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+}
+
+.context-brief__cta-title {
+  margin: 0;
+}
+
+.context-brief__cta-manage-btn {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  color: var(--ref-color-grey-100);
+  font: inherit;
+  font-size: var(--ref-font-size-sm);
+}
+
+.context-brief__cta-manage-btn:hover,
+.context-brief__cta-manage-btn:focus-visible {
+  color: var(--sys-color-info-text, var(--ref-color-electric-blue-100));
+  outline: none;
+}
+
+.context-brief__cta-manage-btn > i {
+  font-size: var(--sys-icon-css-sm);
+}
+
+.context-brief__cta-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.context-brief__cta-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.context-brief__cta-row .context-brief__cta-label {
+  font-weight: var(--ref-font-weight-regular);
+  color: var(--ref-color-grey-150);
+}
+
+.context-brief__cta-row .context-brief__cta-url {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.context-brief__cta-manage {
+  margin-top: var(--ref-spacing-xs);
+  padding-top: var(--ref-spacing-sm);
+  border-top: 1px solid var(--app-border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+}
+
+.context-brief__cta-manage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+}
+
+.context-brief__cta-manage-title {
+  margin: 0;
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ref-color-grey-100);
+}
+
+.context-brief__cta-manage-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.context-brief__cta-manage-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.context-brief__cta-manage-row {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr auto;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.context-brief__cta-manage-label,
+.context-brief__cta-manage-url {
+  min-width: 0;
+}
+
+.context-brief__cta-add {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  align-self: flex-start;
+  color: var(--ref-color-grey-100);
+  font: inherit;
+  font-size: var(--ref-font-size-sm);
+}
+
+.context-brief__cta-add:hover,
+.context-brief__cta-add:focus-visible {
+  color: var(--sys-color-info-text, var(--ref-color-electric-blue-100));
+  outline: none;
+}
+
+.context-brief__cta-add > i {
+  font-size: var(--sys-icon-css-sm);
+}
+
 .context-brief__color-swatches {
   display: flex;
   gap: var(--ref-spacing-xs);

@@ -309,6 +309,12 @@ let contextBriefConfig = null;
 // state doesn't bleed into the persisted Context.
 const voiceProfileExpanded = new Set();
 
+// CTA editor manage-mode state. Open → renders an editable sub-panel
+// beneath the compact list. Snapshot is taken when Manage opens so
+// Cancel can revert to the pre-edit ctaLinks.
+let ctaManageOpen = false;
+let ctaManageSnapshot = null;
+
 export function openContextBriefPanel(config = {}) {
   const prev = state.mode;
   if (prev === null) resetPanelWidthOverride();
@@ -316,6 +322,8 @@ export function openContextBriefPanel(config = {}) {
   // Fresh open — collapse all expanded snippets so the user lands on
   // a clean overview.
   voiceProfileExpanded.clear();
+  ctaManageOpen = false;
+  ctaManageSnapshot = null;
   state = { ...state, mode: "context-brief" };
   maybeCollapseSidebarOnOpen(prev);
   renderPanel();
@@ -732,6 +740,56 @@ export function init() {
       contextBriefConfig?.onToggleCta?.(briefCta.dataset.briefCtaToggle);
       return;
     }
+    // New CTA editor — index-based toggle (URLs can change in manage
+    // mode so we keep identity stable via position in the list).
+    const briefCtaIdx = event.target.closest("[data-brief-cta-toggle-idx]");
+    if (briefCtaIdx) {
+      const idx = Number(briefCtaIdx.dataset.briefCtaToggleIdx);
+      contextBriefConfig?.onCtaToggleAt?.(idx);
+      return;
+    }
+    // Manage CTA panel open / close.
+    if (event.target.closest("[data-brief-cta-manage]")) {
+      event.preventDefault();
+      const draft = contextBriefConfig?.getDraft?.();
+      ctaManageSnapshot = JSON.parse(JSON.stringify(draft?.ctaLinks || []));
+      ctaManageOpen = true;
+      refreshContextBriefPanel?.();
+      return;
+    }
+    if (event.target.closest("[data-brief-cta-manage-done]")) {
+      event.preventDefault();
+      ctaManageOpen = false;
+      ctaManageSnapshot = null;
+      refreshContextBriefPanel?.();
+      return;
+    }
+    if (event.target.closest("[data-brief-cta-manage-cancel]")) {
+      event.preventDefault();
+      contextBriefConfig?.onCtaRestore?.(ctaManageSnapshot || []);
+      ctaManageOpen = false;
+      ctaManageSnapshot = null;
+      refreshContextBriefPanel?.();
+      return;
+    }
+    const briefCtaDelete = event.target.closest("[data-brief-cta-delete]");
+    if (briefCtaDelete) {
+      event.preventDefault();
+      contextBriefConfig?.onCtaDelete?.(Number(briefCtaDelete.dataset.briefCtaDelete));
+      refreshContextBriefPanel?.();
+      return;
+    }
+    if (event.target.closest("[data-brief-cta-add]")) {
+      event.preventDefault();
+      contextBriefConfig?.onCtaAdd?.();
+      refreshContextBriefPanel?.();
+      // Focus the newly-appended label input so the user can start typing.
+      setTimeout(() => {
+        const inputs = document.querySelectorAll("[data-brief-cta-label]");
+        inputs[inputs.length - 1]?.focus();
+      }, 0);
+      return;
+    }
     // Voice profile: per-card "Show more" link toggles the snippet/full
     // body for that subsection (module-local state, see voiceProfileExpanded).
     const briefVoiceToggle = event.target.closest("[data-brief-voice-toggle]");
@@ -827,6 +885,17 @@ export function init() {
     if (event.target.matches("[data-brief-voice-input]")) {
       // Voice-profile subsection textarea — pass-through without re-render.
       contextBriefConfig?.onVoiceProfileChange?.(event.target.dataset.briefVoiceInput, event.target.value);
+      return;
+    }
+    if (event.target.matches("[data-brief-cta-label]")) {
+      // CTA label edit in manage panel — mutate draft without
+      // re-rendering so the input keeps focus mid-type.
+      contextBriefConfig?.onCtaUpdate?.(Number(event.target.dataset.briefCtaLabel), "label", event.target.value);
+      return;
+    }
+    if (event.target.matches("[data-brief-cta-url]")) {
+      // CTA URL edit in manage panel — same pass-through-without-render.
+      contextBriefConfig?.onCtaUpdate?.(Number(event.target.dataset.briefCtaUrl), "url", event.target.value);
       return;
     }
   });
@@ -2572,25 +2641,116 @@ function renderBriefCtaList(d, isRead) {
       </section>
     `;
   }
-  const cards = ctas
-    .map((cta) => {
-      const checked = cta.checked ? "checked" : "";
-      return `
-        <label class="ap-card context-brief__cta-card">
+
+  // Edit mode — compact checkbox list on top + (when expanded) a Manage
+  // sub-panel with editable label / url inputs, delete affordance, and
+  // an "Add a CTA link" row. Manage state lives module-local
+  // (`ctaManageOpen` + `ctaManageSnapshot`) so it survives the panel's
+  // re-renders. Cancel restores the snapshot; Done just closes.
+  const compactRows = ctas
+    .map(
+      (cta, i) => `
+        <li class="context-brief__cta-row">
           <label class="ap-checkbox-container">
-            <input type="checkbox" data-brief-cta-toggle="${escapeAttr(cta.url)}" ${checked} />
+            <input
+              type="checkbox"
+              data-brief-cta-toggle-idx="${i}"
+              ${cta.checked ? "checked" : ""}
+            />
             <i></i>
-            <span>${escapeText(cta.label)}<small>${escapeText(cta.url)}</small></span>
           </label>
-        </label>
-      `;
-    })
+          <span class="context-brief__cta-label">${escapeText(cta.label)}</span>
+          <span class="context-brief__cta-url">${escapeText(cta.url)}</span>
+        </li>
+      `,
+    )
     .join("");
+
+  const compactList = compactRows
+    ? `<ul class="context-brief__cta-rows">${compactRows}</ul>`
+    : `<p class="context-brief__hint">No CTA links yet — click Manage to add one.</p>`;
+
+  const manageRows = ctas
+    .map(
+      (cta, i) => `
+        <li class="context-brief__cta-manage-row">
+          <label class="ap-checkbox-container">
+            <input
+              type="checkbox"
+              data-brief-cta-toggle-idx="${i}"
+              ${cta.checked ? "checked" : ""}
+            />
+            <i></i>
+          </label>
+          <div class="ap-input-group context-brief__cta-manage-label">
+            <input
+              type="text"
+              data-brief-cta-label="${i}"
+              value="${escapeAttr(cta.label)}"
+              placeholder="Label"
+              aria-label="CTA label"
+            />
+          </div>
+          <div class="ap-input-group context-brief__cta-manage-url">
+            <input
+              type="text"
+              data-brief-cta-url="${i}"
+              value="${escapeAttr(cta.url)}"
+              placeholder="https://…"
+              aria-label="CTA URL"
+            />
+          </div>
+          <button
+            type="button"
+            class="ap-icon-button transparent context-brief__cta-delete"
+            data-brief-cta-delete="${i}"
+            aria-label="Remove CTA"
+          >
+            <i class="ap-icon-trash"></i>
+          </button>
+        </li>
+      `,
+    )
+    .join("");
+
+  const managePanel = ctaManageOpen
+    ? `
+      <div class="context-brief__cta-manage">
+        <div class="context-brief__cta-manage-head">
+          <h4 class="context-brief__cta-manage-title">Manage CTA links</h4>
+          <div class="context-brief__cta-manage-actions">
+            <button type="button" class="ap-button ghost grey" data-brief-cta-manage-cancel>
+              <span>Cancel</span>
+            </button>
+            <button type="button" class="ap-button primary orange" data-brief-cta-manage-done>
+              <span>Done</span>
+            </button>
+          </div>
+        </div>
+        <ul class="context-brief__cta-manage-rows">${manageRows}</ul>
+        <button type="button" class="context-brief__cta-add" data-brief-cta-add>
+          <i class="ap-icon-plus"></i><span>Add a CTA link</span>
+        </button>
+      </div>
+    `
+    : "";
+
+  const manageBtn = ctaManageOpen
+    ? ""
+    : `
+      <button type="button" class="context-brief__cta-manage-btn" data-brief-cta-manage>
+        <i class="ap-icon-pen"></i><span>Manage</span>
+      </button>
+    `;
+
   return `
-    <section class="context-brief__section">
-      <h3 class="context-brief__title">Which links should Archie use as CTAs?</h3>
-      <p class="context-brief__hint">These URLs will be included in your posts when relevant.</p>
-      <div class="context-brief__cta-list">${cards || `<p class="context-brief__hint">No CTA links suggested yet.</p>`}</div>
+    <section class="context-brief__section context-brief__cta-section">
+      <div class="context-brief__cta-head">
+        <h3 class="context-brief__title context-brief__cta-title">CTA links</h3>
+        ${manageBtn}
+      </div>
+      ${compactList}
+      ${managePanel}
     </section>
   `;
 }

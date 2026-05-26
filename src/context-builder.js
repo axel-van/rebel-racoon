@@ -21,7 +21,7 @@
 
 import * as inlineQuestion from "./inline-question.js?v=27";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=35";
-import * as rightPanel from "./components/right-panel.js?v=103";
+import * as rightPanel from "./components/right-panel.js?v=104";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=28";
 import { analyzeWebsite, analyzeDocument } from "./context-mock-analysis.js?v=21";
 import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=10";
@@ -466,6 +466,24 @@ export function openEdit(contextId) {
       const cta = (draft.ctaLinks || []).find((l) => l.url === url);
       if (cta) cta.checked = !cta.checked;
     },
+    onCtaToggleAt: (i) => {
+      const cta = (draft.ctaLinks || [])[i];
+      if (cta) cta.checked = !cta.checked;
+    },
+    onCtaUpdate: (i, field, value) => {
+      const cta = (draft.ctaLinks || [])[i];
+      if (cta) cta[field] = value;
+    },
+    onCtaDelete: (i) => {
+      if (Array.isArray(draft.ctaLinks)) draft.ctaLinks.splice(i, 1);
+    },
+    onCtaAdd: () => {
+      if (!Array.isArray(draft.ctaLinks)) draft.ctaLinks = [];
+      draft.ctaLinks.push({ label: "", url: "", checked: true });
+    },
+    onCtaRestore: (snapshot) => {
+      draft.ctaLinks = Array.isArray(snapshot) ? snapshot.map((c) => ({ ...c })) : [];
+    },
     onVoiceProfileChange: (key, value) => {
       if (!draft.voiceProfile || typeof draft.voiceProfile !== "object") draft.voiceProfile = {};
       draft.voiceProfile[key] = value;
@@ -746,6 +764,11 @@ function openBriefPanel(sessionId) {
     onAddOther: (field, value) => addCustomChip(sessionId, field, value),
     onRemoveChip: (field, value) => toggleChip(sessionId, field, value),
     onToggleCta: (url) => toggleCta(sessionId, url),
+    onCtaToggleAt: (i) => toggleCtaAt(sessionId, i),
+    onCtaUpdate: (i, field, value) => updateCta(sessionId, i, field, value),
+    onCtaDelete: (i) => deleteCta(sessionId, i),
+    onCtaAdd: () => addCta(sessionId),
+    onCtaRestore: (snapshot) => restoreCtas(sessionId, snapshot),
     onName: (name) => setName(sessionId, name),
     onVoiceProfileChange: (fieldId, value) => setVoiceProfileField(sessionId, fieldId, value),
     onSave: () => save(sessionId),
@@ -810,6 +833,47 @@ function toggleCta(sessionId, url) {
   const d = drafts.get(sessionId);
   if (!d) return;
   d.ctaLinks = d.ctaLinks.map((l) => (l.url === url ? { ...l, checked: !l.checked } : l));
+  notify(sessionId);
+  rightPanel.refreshContextBriefPanel?.();
+}
+
+function toggleCtaAt(sessionId, i) {
+  const d = drafts.get(sessionId);
+  if (!d || !Array.isArray(d.ctaLinks) || !d.ctaLinks[i]) return;
+  d.ctaLinks = d.ctaLinks.map((l, idx) => (idx === i ? { ...l, checked: !l.checked } : l));
+  notify(sessionId);
+  rightPanel.refreshContextBriefPanel?.();
+}
+
+function updateCta(sessionId, i, field, value) {
+  const d = drafts.get(sessionId);
+  if (!d || !Array.isArray(d.ctaLinks) || !d.ctaLinks[i]) return;
+  // No refresh — let the input keep its focus while typing.
+  d.ctaLinks[i][field] = value;
+  notify(sessionId);
+}
+
+function deleteCta(sessionId, i) {
+  const d = drafts.get(sessionId);
+  if (!d || !Array.isArray(d.ctaLinks)) return;
+  d.ctaLinks.splice(i, 1);
+  notify(sessionId);
+  rightPanel.refreshContextBriefPanel?.();
+}
+
+function addCta(sessionId) {
+  const d = drafts.get(sessionId);
+  if (!d) return;
+  if (!Array.isArray(d.ctaLinks)) d.ctaLinks = [];
+  d.ctaLinks.push({ label: "", url: "", checked: true });
+  notify(sessionId);
+  rightPanel.refreshContextBriefPanel?.();
+}
+
+function restoreCtas(sessionId, snapshot) {
+  const d = drafts.get(sessionId);
+  if (!d) return;
+  d.ctaLinks = Array.isArray(snapshot) ? snapshot.map((c) => ({ ...c })) : [];
   notify(sessionId);
   rightPanel.refreshContextBriefPanel?.();
 }
