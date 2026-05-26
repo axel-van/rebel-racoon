@@ -105,7 +105,7 @@
 
 .app-right-panel__empty-icon i {
   font-size: var(--sys-icon-css-md);
-  color: var(--ref-color-orange-100);
+  color: var(--ref-color-grey-60);
 }
 
 .app-right-panel__empty-title {
