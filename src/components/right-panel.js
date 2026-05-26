@@ -25,6 +25,7 @@ import {
 } from "../sources-stream.js?v=30";
 import { open as openAddSourceModal } from "./add-source-modal.js?v=22";
 import { addMention } from "../composer-mentions.js?v=3";
+import { iconFor } from "../file-kinds.js?v=20";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
@@ -680,6 +681,13 @@ export function init() {
       const id = feedbackBtn.dataset.rpanelIdeasFeedback;
       const verdict = feedbackBtn.dataset.verdict;
       toggleIdeaFeedback(id, verdict);
+      return;
+    }
+    // "Why this idea" panel — collapse / expand.
+    const whyBtn = event.target.closest("[data-rpanel-idea-why-toggle]");
+    if (whyBtn) {
+      event.preventDefault();
+      toggleWhyOpen(whyBtn.dataset.rpanelIdeaWhyToggle);
       return;
     }
 
@@ -1834,24 +1842,32 @@ function toggleIdeaFeedback(ideaId, verdict) {
   renderIdeasBodyOnly();
 }
 
+// Per-idea collapse state for the "Why this idea" panel. Default
+// expanded (matches the Figma right-panel idea card spec which shows
+// the rationale + source line visible by default). Toggle persists for
+// the lifetime of the module so re-renders don't reset user intent.
+const ideaWhyOpen = new Map(); // ideaId → boolean
+
+function isWhyOpen(ideaId) {
+  const stored = ideaWhyOpen.get(ideaId);
+  return stored === undefined ? true : stored;
+}
+
+function toggleWhyOpen(ideaId) {
+  ideaWhyOpen.set(ideaId, !isWhyOpen(ideaId));
+  renderIdeasBodyOnly();
+}
+
 function renderIdeaCompact(idea) {
   const kind = idea.kind || "insight";
-  const sourceLabel = idea.ref || "Generated";
-  // Hashtags removed from the card surface — the kind badge + source
-  // label in the meta band already communicate provenance; the tag row
-  // mostly added clutter without driving any action.
-  const tags = "";
 
-  // "Why this idea" → a small info-icon in the header that pops a DS
-  // .ap-tooltip on hover/focus. The wrapper is position: relative; the
-  // tooltip is rendered as a sibling that the wrapper CSS reveals on
-  // hover. tabindex=0 keeps it reachable for keyboard users.
-  const infoBubble = idea.rationale
-    ? `<span class="rpanel-ideas__info" tabindex="0" aria-label="Why this idea">
-        <i class="ap-icon-info" aria-hidden="true"></i>
-        <span class="ap-tooltip top rpanel-ideas__info-tip" role="tooltip">${escapeText(idea.rationale)}</span>
-      </span>`
-    : "";
+  // Resolve linked sources for the current session so we can show real
+  // filenames + per-kind file icons inside the Why panel. Falls back to
+  // the legacy idea.ref label when nothing matches (e.g. seed ideas
+  // pointing at unknown source ids, or empty new-user state).
+  const sid = activeSessionId();
+  const sessionSources = sid ? getStreamSources(sid) : [];
+  const linkedSources = (idea.sourceIds || []).map((id) => sessionSources.find((s) => s.id === id)).filter(Boolean);
 
   // Thumbs-up / thumbs-down feedback — the picked side renders with
   // the _fill icon variant + aria-pressed=true. Clicking the same
@@ -1877,20 +1893,66 @@ function renderIdeaCompact(idea) {
     `;
   };
 
+  // Why-this-idea panel — collapsible grey-05 block holding rationale
+  // + source attribution. Rendered only when we have something to
+  // show (rationale or at least one linked source / ref fallback).
+  const whyId = `rpanel-idea-why-${idea.id}`;
+  const open = isWhyOpen(idea.id);
+  const sourceTags = linkedSources.length
+    ? linkedSources
+        .map(
+          (s) => `
+            <span class="rpanel-ideas__source-tag" title="${escapeAttr(s.filename)}">
+              <i class="${iconFor(s.kind)}" aria-hidden="true"></i>
+              <span class="rpanel-ideas__source-tag-text">${escapeText(s.filename)}</span>
+            </span>
+          `,
+        )
+        .join("")
+    : idea.ref
+      ? `<span class="rpanel-ideas__source-tag" title="${escapeAttr(idea.ref)}">
+           <i class="ap-icon-file" aria-hidden="true"></i>
+           <span class="rpanel-ideas__source-tag-text">${escapeText(idea.ref)}</span>
+         </span>`
+      : "";
+
+  const hasWhyBody = Boolean(idea.rationale) || Boolean(sourceTags);
+  const whyPanel = hasWhyBody
+    ? `
+      <section class="rpanel-ideas__why" data-why-open="${open ? "true" : "false"}">
+        <button
+          type="button"
+          class="rpanel-ideas__why-head"
+          data-rpanel-idea-why-toggle="${escapeAttr(idea.id)}"
+          aria-expanded="${open ? "true" : "false"}"
+          aria-controls="${whyId}"
+        >
+          <i class="ap-icon-info rpanel-ideas__why-info" aria-hidden="true"></i>
+          <span class="rpanel-ideas__why-title">Why this idea</span>
+          <i class="ap-icon-chevron-${open ? "up" : "down"} rpanel-ideas__why-chevron" aria-hidden="true"></i>
+        </button>
+        <div id="${whyId}" class="rpanel-ideas__why-body" ${open ? "" : "hidden"}>
+          ${idea.rationale ? `<p class="rpanel-ideas__why-rationale">${escapeText(idea.rationale)}</p>` : ""}
+          ${
+            sourceTags
+              ? `<div class="rpanel-ideas__why-source">
+                  <span class="rpanel-ideas__why-source-label">Source</span>
+                  <div class="rpanel-ideas__why-source-tags">${sourceTags}</div>
+                </div>`
+              : ""
+          }
+        </div>
+      </section>
+    `
+    : "";
+
   return `
     <article class="rpanel-ideas__card" data-idea-id="${escapeAttr(idea.id)}">
-      <div class="rpanel-ideas__card-meta">
-        <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${kind}</span>
-        <span class="rpanel-ideas__source" title="${escapeAttr(sourceLabel)}">
-          <i class="ap-icon-file" aria-hidden="true"></i>
-          <span class="rpanel-ideas__source-text">${escapeText(sourceLabel)}</span>
-        </span>
-        ${infoBubble}
-      </div>
       <div class="rpanel-ideas__card-content">
+        <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${kind}</span>
         ${idea.title ? `<h4 class="rpanel-ideas__card-title">${escapeText(idea.title)}</h4>` : ""}
         <p class="rpanel-ideas__card-body">${escapeText(idea.body || "")}</p>
-        ${tags ? `<div class="rpanel-ideas__tag-row">${tags}</div>` : ""}
+        ${whyPanel}
       </div>
       <footer class="rpanel-ideas__card-actions">
         <div class="rpanel-ideas__feedback">

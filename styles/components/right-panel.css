@@ -409,27 +409,23 @@
   color: var(--ref-color-grey-60);
 }
 
-/* ── Idea card — 3-zone layout ────────────────────────────────────────
-   The card is split into three horizontally-aligned bands so each
-   slot owns a single concept type and stops competing for attention:
+/* ── Idea card — content + Why panel + actions ──────────────────────
+   Matches Figma 357:1272 (Idea Card / Right panel). Three zones:
 
-     1. .rpanel-ideas__card-meta      — classification + provenance
-     2. .rpanel-ideas__card-content   — title + body + tags (the hero)
-     3. .rpanel-ideas__card-actions   — feedback + primary CTA
+     1. .rpanel-ideas__card-content — kind tag, title, body, Why panel
+     2. .rpanel-ideas__why          — grey-05 collapsible block
+                                       inside the content zone, holds
+                                       rationale + source attribution
+     3. .rpanel-ideas__card-actions — thumbs (left) + Mention/Draft
 
-   The card itself owns padding only on the vertical edges; each zone
-   handles its own horizontal inset so the actions band can carry a
-   full-width top border without a side gap. */
+   The card holds its outer chrome (border + radius); inner zones use
+   --ref-spacing-xs padding so the layout breathes without crowding. */
 .rpanel-ideas__card {
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--app-radius-card);
   display: flex;
   flex-direction: column;
-  /* Overflow stays visible so the info tooltip can escape the card
-     bounds. Inner zones (meta + actions) own their own rounded
-     corners so the tinted band still respects the card's outer
-     radius without needing overflow: hidden. */
   transition:
     border-color var(--ref-animation-short) var(--app-ease-out),
     box-shadow var(--ref-animation-short) var(--app-ease-out);
@@ -448,53 +444,10 @@
   border-color: var(--ref-color-electric-blue-100);
 }
 
-/* Zone 1 — meta band. Kind tag anchored left, source label flex-grows
-   with single-line ellipsis, info icon hugs the right edge. Background
-   tint distinguishes it from the white content band. */
-.rpanel-ideas__card-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
-  background: var(--ref-color-grey-05);
-  border-bottom: 1px solid var(--app-border-soft);
-  /* Match the card's outer top radius so the tinted band still
-     looks clipped to the card silhouette without forcing
-     overflow: hidden on the card itself (which would clip the
-     info tooltip rendered above the icon). */
-  border-top-left-radius: var(--app-radius-card);
-  border-top-right-radius: var(--app-radius-card);
-}
-
-.rpanel-ideas__source {
-  flex: 1 1 0;
-  min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-regular);
-  color: var(--ref-color-grey-80);
-}
-
-.rpanel-ideas__source i {
-  flex: 0 0 auto;
-  font-size: var(--sys-icon-css-xs);
-  color: var(--ref-color-grey-60);
-}
-
-.rpanel-ideas__source-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .rpanel-ideas__kind {
-  flex: 0 0 auto;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-extra-bold);
+  /* Self-align so the tag stays its intrinsic width inside the
+     flex-column content zone (would otherwise stretch full-width). */
+  align-self: flex-start;
 }
 
 /* Per-kind palette — uses the existing tag color tokens. */
@@ -528,63 +481,155 @@
   border: 1px solid var(--comp-tag-green-border-color);
 }
 
-/* Zone 2 — content block. Hero typography: title (md, bold) is the
-   visual anchor; body sits under it as supporting text; tags wrap
-   below as compact descriptors. Single vertical rhythm via gap. */
+/* Zone 1 — content block (Figma "content" frame). Kind tag, H3 title,
+   body, and the Why panel stack here. 12px padding all around with
+   8px vertical rhythm matching the design's --ref-spacing-xxs gap. */
 .rpanel-ideas__card-content {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs);
 }
 
 .rpanel-ideas__card-title {
   margin: 0;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--ref-font-size-md);
   font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-lg);
   color: var(--ref-color-grey-150);
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  word-break: break-word;
 }
 
 .rpanel-ideas__card-body {
   margin: 0;
-  font-size: var(--ref-font-size-xs);
-  line-height: 1.4;
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
   color: var(--ref-color-grey-100);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  word-break: break-word;
 }
 
-/* Tag chips — small inline descriptors at the bottom of the content
-   block. Single-line wrap so 3+ tags flow gracefully on narrow widths. */
-.rpanel-ideas__tag-row {
+/* Why-this-idea panel — grey-05 collapsible block. Sits inside the
+   content zone so it shares the card's 12px padding gutter. Title row
+   doubles as the toggle button (full-row click target). */
+.rpanel-ideas__why {
+  background: var(--ref-color-grey-05);
+  border-radius: var(--ref-border-radius-md);
+  padding: var(--ref-spacing-xs);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.rpanel-ideas__why-head {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  width: 100%;
+  cursor: pointer;
+  color: var(--ref-color-grey-100);
+  font-family: inherit;
+}
+
+.rpanel-ideas__why-info {
+  flex: 0 0 auto;
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-grey-100);
+}
+
+.rpanel-ideas__why-title {
+  flex: 1 1 auto;
+  text-align: left;
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-xs);
+  color: var(--ref-color-grey-100);
+}
+
+.rpanel-ideas__why-chevron {
+  flex: 0 0 auto;
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-grey-100);
+}
+
+.rpanel-ideas__why-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.rpanel-ideas__why-rationale {
+  margin: 0;
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  color: var(--ref-color-grey-100);
+  word-break: break-word;
+}
+
+.rpanel-ideas__why-source {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+}
+
+.rpanel-ideas__why-source-label {
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-xs);
+  color: var(--ref-color-grey-100);
+}
+
+.rpanel-ideas__why-source-tags {
   display: flex;
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxxs);
-  margin-top: 2px;
+  min-width: 0;
 }
 
-.rpanel-ideas__tag {
+/* Source pill — mimics the DS grey tag visual but supports a leading
+   file icon (ap-tag forbids arbitrary icons). Uses the same comp
+   tokens as .ap-tag.grey so it stays palette-correct. */
+.rpanel-ideas__source-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  max-width: 100%;
+  padding: 2px var(--ref-spacing-xxs);
+  background: var(--comp-tag-grey-background-color);
+  color: var(--comp-tag-grey-text-color);
+  border: 1px solid var(--comp-tag-grey-border-color);
+  border-radius: var(--ref-border-radius-sm);
   font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+}
+
+.rpanel-ideas__source-tag > i {
+  flex: 0 0 auto;
+  font-size: var(--sys-icon-css-sm);
   color: var(--ref-color-grey-80);
 }
 
+.rpanel-ideas__source-tag-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Zone 3 — action bar. Feedback (secondary, left) opposite the
-   primary Draft CTA (right). Top border anchors it as a distinct
-   "act on this idea" zone, separated from the content above. */
+   primary Draft CTA (right). No top border — the Why panel above
+   already provides the visual break, and the design keeps the
+   footer flush with the content for a quieter card silhouette. */
 .rpanel-ideas__card-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
-  border-top: 1px solid var(--app-border-soft);
+  padding: 0 var(--ref-spacing-xs) var(--ref-spacing-xxs);
 }
 
 .rpanel-ideas__feedback {
@@ -607,49 +652,6 @@
    active-state color flip when the user has picked that side. */
 .rpanel-ideas__thumb.is-active i {
   color: var(--ref-color-electric-blue-100);
-}
-
-/* "Why this idea" affordance — a small info icon in the meta band
-   that reveals the rationale in a DS .ap-tooltip on hover/focus. The
-   wrapper is position: relative so the tooltip can absolute-position
-   above it without escaping the card. Hidden by default; revealed by
-   :hover OR :focus-visible on the wrapper so keyboard users get it too. */
-.rpanel-ideas__info {
-  position: relative;
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--sys-icon-css-md);
-  height: var(--sys-icon-css-md);
-  color: var(--ref-color-grey-60);
-  cursor: help;
-}
-
-.rpanel-ideas__info > i {
-  font-size: var(--sys-icon-css-sm);
-}
-
-.rpanel-ideas__info:hover,
-.rpanel-ideas__info:focus-visible {
-  color: var(--sys-color-info-text);
-  outline: none;
-}
-
-.ap-tooltip.rpanel-ideas__info-tip {
-  display: none;
-  bottom: calc(100% + var(--ap-arrow-height, 8px));
-  right: 0;
-  width: max-content;
-  min-width: 220px;
-  max-width: 280px;
-  white-space: normal;
-  text-align: left;
-}
-
-.rpanel-ideas__info:hover .rpanel-ideas__info-tip,
-.rpanel-ideas__info:focus-visible .rpanel-ideas__info-tip {
-  display: block;
 }
 
 /* Honour the user's motion preference — collapse hover transitions. */
