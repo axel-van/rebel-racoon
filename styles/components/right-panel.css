@@ -455,7 +455,7 @@
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
   background: var(--ref-color-grey-05);
   border-bottom: 1px solid var(--app-border-soft);
   /* Match the card's outer top radius so the tinted band still
@@ -534,16 +534,16 @@
 .rpanel-ideas__card-content {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
 }
 
 .rpanel-ideas__card-title {
   margin: 0;
-  font-size: var(--ref-font-size-md);
+  font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-150);
-  line-height: 1.35;
+  line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -553,7 +553,7 @@
 .rpanel-ideas__card-body {
   margin: 0;
   font-size: var(--ref-font-size-xs);
-  line-height: 1.5;
+  line-height: 1.4;
   color: var(--ref-color-grey-100);
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -567,7 +567,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxxs);
-  margin-top: var(--ref-spacing-xxxs);
+  margin-top: 2px;
 }
 
 .rpanel-ideas__tag {
@@ -583,7 +583,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
   border-top: 1px solid var(--app-border-soft);
 }
 

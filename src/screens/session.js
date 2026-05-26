@@ -413,7 +413,7 @@ function renderMentionPickerInto(container, sessionId) {
                 renderRow(
                   iconForKind(s.kind),
                   s.filename,
-                  (s.kind || "").toUpperCase(),
+                  s.kind || "",
                   `data-mention-pick-source="${escapeHtmlAttr(s.id)}"`,
                 ),
               )
@@ -433,7 +433,7 @@ function renderMentionPickerInto(container, sessionId) {
                 renderRow(
                   "ap-icon-sparkles",
                   i.title,
-                  (i.kind || "").toUpperCase(),
+                  i.kind || "",
                   `data-mention-pick-idea="${escapeHtmlAttr(i.id)}"`,
                 ),
               )
