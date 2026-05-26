@@ -9,7 +9,7 @@ import { init as initBugReportModal } from "./components/bug-report-modal.js?v=2
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=25";
 import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=23";
 import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=2";
-import { init as initSettingsDrawer } from "./components/settings-drawer.js?v=25";
+import { init as initSettingsDrawer } from "./components/settings-drawer.js?v=26";
 import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=23";
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=23";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=21";
@@ -29,6 +29,24 @@ import { renderWelcomeSources } from "./screens/welcome-sources.js?v=2";
 import { renderWelcomeRecap } from "./screens/welcome-recap.js?v=3";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=3";
 import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=3";
+import { startBackground as __captureSeedDraft } from "./context-builder.js?v=43";
+import * as __capAddSource from "./components/add-source-modal.js?v=23";
+import * as __capSettings from "./components/settings-drawer.js?v=26";
+import * as __capGenImage from "./components/generate-image-modal.js?v=23";
+import * as __capBug from "./components/bug-report-modal.js?v=22";
+import * as __capFeedback from "./components/feedback-modal.js?v=25";
+import * as __capChatPicker from "./components/chat-picker-modal.js?v=23";
+import * as __capSearch from "./components/search-modal.js?v=3";
+
+// Figma capture helper — seed a welcome draft synchronously so the multi-step
+// welcome flow (which requires sessionStorage.welcomeSessionId + a draft) renders
+// instead of redirecting back to /welcome on direct capture.
+if (new URLSearchParams(window.location.search).get("setup") === "welcome") {
+  const sid = "capture-welcome";
+  sessionStorage.setItem("welcomeSessionId", sid);
+  __captureSeedDraft(sid, "https://acme-launch.example.com");
+}
+
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
 // stays in sync with the active context.
@@ -98,3 +116,43 @@ setAfterRender((path) => {
 });
 
 start();
+
+// Figma capture helper — programmatically open a modal after the route
+// renders so it can be captured. Query: ?openModal=add-source[&tab=url|connectors]
+{
+  const params = new URLSearchParams(window.location.search);
+  const which = params.get("openModal");
+  if (which) {
+    const tab = params.get("tab");
+    // Defer to after first render so the topbar/sidebar/screen are mounted.
+    window.setTimeout(() => {
+      try {
+        switch (which) {
+          case "add-source":
+            __capAddSource.open({ tab: tab || "upload" });
+            break;
+          case "settings":
+            __capSettings.open({ section: tab || "connectors" });
+            break;
+          case "generate-image":
+            __capGenImage.open(null, () => {});
+            break;
+          case "bug":
+            __capBug.open();
+            break;
+          case "feedback":
+            __capFeedback.open();
+            break;
+          case "chat-picker":
+            __capChatPicker.open({ ideaId: null });
+            break;
+          case "search":
+            __capSearch.open();
+            break;
+        }
+      } catch (err) {
+        console.error("[capture] failed to open modal", which, err);
+      }
+    }, 600);
+  }
+}
