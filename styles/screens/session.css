@@ -1467,6 +1467,18 @@
   margin-right: var(--ref-spacing-xxs);
 }
 
+/* Feature flag: hide playbook colors. Neutralises the pill to grey and
+   drops the colour dot (on the pill + dropdown rows), matching the
+   /contexts cards and sidebar conversation rows. */
+body.hide-playbook-colors .composer-context__pill {
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-grey-100);
+}
+
+body.hide-playbook-colors .composer-context__dot {
+  display: none;
+}
+
 /* ---------- Workspace ---------- */
 
 .session__workspace {

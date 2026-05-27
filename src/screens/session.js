@@ -384,7 +384,6 @@ function renderComposer(attachedContext, session, selectable) {
             rows="2"
           ></textarea>
           <div class="session__composer-toolbar">
-            ${renderPlaybookControl(attachedContext, selectable)}
             <div class="assistant-attach">
               <button
                 type="button"
@@ -434,6 +433,7 @@ function renderComposer(attachedContext, session, selectable) {
               <i class="ap-icon-at"></i>
               <span>Mention</span>
             </button>
+            ${renderPlaybookControl(attachedContext, selectable)}
             <button
               type="button"
               class="ap-button primary orange session__composer-send"
