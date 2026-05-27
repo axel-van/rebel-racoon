@@ -434,7 +434,7 @@ function isPlaybookRoute() {
 // Playbooks list, in place of the route title.
 function renderBack() {
   return `
-    <button type="button" class="app-topbar__back" data-topbar-back="/contexts" title="Back to Playbooks">
+    <button type="button" class="ap-button ghost grey app-topbar__back" data-topbar-back="/contexts" title="Back to Playbooks">
       <i class="ap-icon-arrow-left" aria-hidden="true"></i>
       <span>Back to Playbooks</span>
     </button>

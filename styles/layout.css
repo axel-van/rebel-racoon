@@ -123,35 +123,12 @@ body.onboarding .app-content {
   min-width: 0;
 }
 
-/* Back control on the Playbook page — leads the topbar in place of the
-   route title. */
+/* Back control on the Playbook page — a DS ghost button (.ap-button ghost
+   grey), nudged left so it lines up with the route title it replaces. All
+   visual styling (height, padding, radius, hover, icon size) comes from
+   the DS component; this rule only handles edge alignment. */
 .app-topbar__back {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
   margin-left: calc(var(--ref-spacing-xs) * -1);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
-  background: transparent;
-  border: 0;
-  border-radius: var(--app-radius-button-sm);
-  font-family: var(--sys-text-style-h4-font-family);
-  font-size: var(--sys-text-style-h4-size);
-  font-weight: var(--sys-text-style-h4-weight);
-  line-height: var(--sys-text-style-h4-line-height);
-  color: var(--ref-color-grey-100);
-  cursor: pointer;
-  transition:
-    background 160ms var(--app-ease-out),
-    color 160ms var(--app-ease-out);
-}
-
-.app-topbar__back i {
-  font-size: var(--sys-icon-css-md);
-  color: var(--ref-color-grey-60);
-}
-
-.app-topbar__back:hover {
-  background: var(--app-surface-subtle);
 }
 
 /* Click-to-rename variant on session routes — the title is a button.
