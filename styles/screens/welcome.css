@@ -1158,7 +1158,6 @@
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--ref-border-radius-md);
-  box-shadow: var(--app-shadow-low);
 }
 
 .recap__overview-head {
@@ -1299,7 +1298,6 @@
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--ref-border-radius-md);
-  box-shadow: var(--app-shadow-low);
 }
 
 .recap__stat-icon {
@@ -1382,7 +1380,6 @@
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--ref-border-radius-md);
-  box-shadow: var(--app-shadow-low);
 }
 
 .recap__trait-label {
@@ -1416,7 +1413,6 @@
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--ref-border-radius-md);
-  box-shadow: var(--app-shadow-low);
 }
 
 .recap__brand-mark {
@@ -1914,9 +1910,14 @@
   display: none;
 }
 
-/* The edit container reads as a plain card — the inputs and the ×/✓
-   controls signal "editing". No coloured border: the card isn't in an
-   error or alert state. */
+/* Cards are flat by default (DS .ap-card has no shadow). Only the card
+   being edited lifts with Shadow/Low so it reads as the active surface —
+   still a neutral grey border (not an error/alert state). */
+.recap__stat.is-editing,
+.recap__overview--edit {
+  box-shadow: var(--app-shadow-low);
+}
+
 .recap__editbox {
   display: flex;
   flex-direction: column;
