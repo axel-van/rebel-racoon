@@ -82,9 +82,21 @@
   color: var(--ref-color-grey-60);
 }
 
-/* Rich empty-state variant — icon + title + body + optional CTA, sharing
-   the `session__empty` chrome from styles/base.css. */
+/* Rich empty-state variant — centered icon + title + body + CTA. The shared
+   renderEmptyState markup ships the `.session__empty-*` children but not the
+   wrapper layout, so we mirror the canonical `.session__empty` chrome here:
+   a centered flex column so the icon and CTA line up under the copy instead
+   of drifting to the left edge. */
 .contexts-view__empty--rich {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--ref-spacing-sm);
+  max-width: 460px;
+  min-height: 48vh;
+  margin: 0 auto;
   padding: var(--ref-spacing-xl) var(--ref-spacing-md);
 }
 
