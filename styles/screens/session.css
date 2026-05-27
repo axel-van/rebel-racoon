@@ -52,19 +52,101 @@
   margin: 0 auto;
 }
 
-/* First Time User ALT — marketing hero rendered at the top of the
-   wizard chat for /session/welcome-alt-* sessions. The inner
-   .welcome-hero (welcome.css) owns the flex column, gap, alignment,
-   and 520px reading width. This wrapper only handles the outer
-   column width (matches .analyse__chat-inner so the hero left edge
-   aligns with the conversation avatars) and the breathing room
-   above/below. */
+/* First Time User ALT — editorial marketing hero rendered at the top of
+   the wizard chat for /session/welcome-alt-* sessions. The inner
+   .welcome-hero (welcome.css) owns the flex column + typography; the
+   `--alt` modifier (below) recentres it. This wrapper grows to fill the
+   space above the conversation and vertically centres the hero block, so
+   the screen reads as a composed page (hero top/middle, conversation
+   anchored at the bottom) rather than a small block floating over a void.
+   `flex: 1 0 auto` claims the free space but never shrinks below the
+   hero's own content, so a long conversation still scrolls normally. */
 .welcome-alt-hero {
+  position: relative;
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
-  padding: var(--ref-spacing-xl) 0 var(--ref-spacing-md);
-  flex-shrink: 0;
+  padding: var(--ref-spacing-xxl) 0 var(--ref-spacing-lg);
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* Clip the decorative orb to the hero so it never spills past the
+     column edge and triggers a horizontal scrollbar on narrow widths. */
+  overflow: hidden;
+}
+
+/* The hero claims the free space via flex-grow; for that to win, the
+   conversation column must drop the `margin-top: auto` it inherits from
+   .analyse__chat-inner (auto margins absorb free space before flex-grow,
+   which would otherwise re-open the void above the conversation). */
+.session__assistant-wizard-chat:has(.welcome-alt-hero) .analyse__chat-inner {
+  margin-top: 0;
+}
+
+/* Editorial variant of the shared .welcome-hero column — centred copy and
+   a slightly wider reading width so the headline + chips sit symmetric
+   under the focal orb. */
+.welcome-alt-hero .welcome-hero--alt {
+  position: relative;
+  z-index: 1;
+  align-items: center;
+  text-align: center;
+  max-width: 560px;
+  gap: var(--ref-spacing-sm);
+}
+
+.welcome-alt-hero .welcome-hero__eyebrow i {
+  font-size: var(--sys-icon-css-xs);
+}
+
+/* Decorative focal glow behind the headline. Soft brand-orange radial —
+   not the mermaid gradient (reserved for live AI surfaces). Sized in px
+   because it is a free-form decorative blob with no spacing token. */
+.welcome-alt-hero__orb {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 640px;
+  height: 640px;
+  transform: translate(-50%, -50%);
+  border-radius: var(--app-radius-circle);
+  background: radial-gradient(circle, var(--ref-color-orange-20) 0%, transparent 70%);
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Capability chips — visualise the three facets the URL extraction
+   produces (voice / audience / visual identity). */
+.welcome-alt-hero__chips {
+  list-style: none;
+  margin: var(--ref-spacing-xs) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.welcome-alt-hero__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  border-radius: var(--app-radius-pill);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-soft);
+  color: var(--ref-color-grey-150);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  box-shadow: var(--app-shadow-subtle);
+}
+
+.welcome-alt-hero__chip i {
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-orange-100);
 }
 
 /* Subtle decorative canvas for the welcome-alt session — soft warm
@@ -151,13 +233,15 @@
 }
 
 /* Picker frame — rounded card with internal padding so the active row
-   pill can inset cleanly. Border at grey-20 for clear definition
-   against the surrounding surface. */
+   pill can inset cleanly. Border at grey-20 for clear definition, plus
+   the DS Shadow/Low elevation so the picker lifts off the conversation
+   surface and reads as the primary action. */
 .session__assistant-wizard-bar .analyse__options {
   border-radius: var(--ref-border-radius-md);
   border-color: var(--ref-color-grey-20);
   padding: var(--ref-spacing-xxs);
   background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-low);
 }
 
 /* Header title — bigger and clearly the question, plus more breathing

@@ -19,7 +19,7 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=12";
 import { renderDashboard } from "./screens/dashboard.js?v=45";
-import { renderSession } from "./screens/session.js?v=131";
+import { renderSession } from "./screens/session.js?v=134";
 import { renderIdeas } from "./screens/ideas.js?v=25";
 import { renderContexts } from "./screens/contexts.js?v=35";
 import { renderSettings } from "./screens/settings.js?v=2";
@@ -29,7 +29,7 @@ import { renderWelcomeSources } from "./screens/welcome-sources.js?v=2";
 import { renderWelcomeRecap } from "./screens/welcome-recap.js?v=3";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=3";
 import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=3";
-import { startBackground as __captureSeedDraft } from "./context-builder.js?v=43";
+import { startBackground as __captureSeedDraft } from "./context-builder.js?v=44";
 import * as __capAddSource from "./components/add-source-modal.js?v=23";
 import * as __capGenImage from "./components/generate-image-modal.js?v=23";
 import * as __capBug from "./components/bug-report-modal.js?v=22";

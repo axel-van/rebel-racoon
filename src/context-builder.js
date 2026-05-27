@@ -20,7 +20,7 @@
 // contexts that may still have the old shape.
 
 import * as inlineQuestion from "./inline-question.js?v=27";
-import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=35";
+import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=36";
 import * as rightPanel from "./components/right-panel.js?v=108";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=28";
 import { analyzeWebsite, analyzeDocument } from "./context-mock-analysis.js?v=21";
@@ -218,8 +218,8 @@ export function startAlt(sessionId, { onComplete, prefilledUrl = "" } = {}) {
 
 function askAltUrl(sessionId, prefilledUrl = "") {
   const intro = prefilledUrl
-    ? "Welcome — I've already got your site. Confirm to extract the voice, audience, and visual identity."
-    : "Welcome. Let's build your Playbook together. Paste your website URL and I'll extract the voice, audience, and visual identity.";
+    ? "Here's the site I found — confirm it below to begin. Three quick steps (site, profile, optional docs) and your Playbook's ready."
+    : "Drop your website URL below to begin. Three quick steps (site, profile, optional docs) and your Playbook's ready.";
   postAssistantMessage(sessionId, intro);
   inlineQuestion.ask(sessionId, {
     title: "What's your website URL?",

@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=35";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=36";
 import { isFlagOn } from "../feature-flags.js?v=3";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=34";
 import { isNewUser } from "../user-mode.js?v=21";
@@ -656,7 +656,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=131").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=134").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -2099,7 +2099,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=131").then(({ askDraftCountQuestion }) => {
+  import("../screens/session.js?v=134").then(({ askDraftCountQuestion }) => {
     askDraftCountQuestion(sid, ideaId);
   });
 }

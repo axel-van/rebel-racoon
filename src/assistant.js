@@ -411,8 +411,11 @@ function notify(sessionId) {
 
 function seedThread(sessionId, { hasContext, skipGreeting }) {
   // Start-flow takes over the intro — skip the default greeting so we don't
-  // double up "Hi —" + the flow's first AI turn.
-  if (skipGreeting) {
+  // double up "Hi —" + the flow's first AI turn. Welcome-alt onboarding owns
+  // its own intro too (context-builder startAlt); seed it empty regardless of
+  // which read (topbar / status card / panel) triggers the seed first, so the
+  // chat never opens with a stray greeting above the onboarding message.
+  if (skipGreeting || sessionId.startsWith("welcome-alt-")) {
     threads.set(sessionId, []);
     return;
   }

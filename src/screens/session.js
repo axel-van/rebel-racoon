@@ -16,7 +16,7 @@ import {
   postDraftResult,
   subscribe,
   submitAssistantChoice,
-} from "../assistant.js?v=35";
+} from "../assistant.js?v=36";
 import { getSources, getIdeas, injectIdeasForSource } from "../library.js?v=29";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
@@ -37,7 +37,7 @@ import { startDraftFlow, executeDraft } from "../draft-flow.js?v=29";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=32";
 import * as inlineQuestion from "../inline-question.js?v=27";
-import * as contextBuilder from "../context-builder.js?v=43";
+import * as contextBuilder from "../context-builder.js?v=44";
 import * as playbookEditor from "../playbook-editor.js?v=10";
 import { renderPicker } from "./_analyse-common.js?v=31";
 import { renderSourceCard } from "../components/source-card.js?v=30";
@@ -642,9 +642,10 @@ function renderAssistantPanelQuestion(session) {
               <i class="ap-icon-sparkles" aria-hidden="true"></i>
               Welcome
             </span>
-            <h1 class="welcome-hero__title">Let's get to know<br />your Brand.</h1>
+            <h1 class="welcome-hero__title">Let's get to know<br />your brand.</h1>
             <p class="welcome-hero__sub">
-              Paste your website URL and I'll do the rest — building your Playbook in a few guided steps.
+              Point me at your website and I'll capture what makes your brand yours — then shape it into a Playbook that
+              keeps every post sounding like you.
             </p>
             <ul class="welcome-alt-hero__chips" aria-hidden="true">
               <li class="welcome-alt-hero__chip">

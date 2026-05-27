@@ -23,7 +23,7 @@
 // markSystemNoticeReady, mirroring the context-builder creation flow.
 
 import { getContextById, updateContext } from "./contexts-store.js?v=28";
-import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=35";
+import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=36";
 import * as inlineQuestion from "./inline-question.js?v=27";
 import {
   openContextBriefPanel,

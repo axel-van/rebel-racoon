@@ -15,7 +15,7 @@ import {
   subscribe as subscribeRightPanel,
 } from "./right-panel.js?v=108";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=30";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=35";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=36";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=29";
 import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=27";
 import {
@@ -181,7 +181,7 @@ export function initTopbar() {
     if (ctxBtn) {
       const ctxId = ctxBtn.dataset.topbarContextView;
       if (ctxId) {
-        import("../context-builder.js?v=43").then((mod) => mod.openRead(ctxId));
+        import("../context-builder.js?v=44").then((mod) => mod.openRead(ctxId));
       }
       return;
     }
