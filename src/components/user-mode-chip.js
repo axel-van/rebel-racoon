@@ -27,13 +27,13 @@ export function initUserModeChip() {
   menu.hidden = true;
 
   function modeLabel(mode) {
-    if (mode === "new-alt") return "First-time ALT";
+    if (mode === "new-alt") return "Welcome - First Time XP";
     return "Returning user";
   }
 
   const MODE_OPTIONS = [
     { value: "returning", label: "Returning user", hint: "Populated mocks (default)" },
-    { value: "new-alt", label: "First-time ALT", hint: "Visual picker + conversational chat" },
+    { value: "new-alt", label: "Welcome - First Time XP", hint: "Visual picker + conversational chat" },
   ];
 
   function render() {
