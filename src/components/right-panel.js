@@ -1370,19 +1370,18 @@ function renderDraftsView() {
       <div class="rpanel-drafts__bulkbar" role="region" aria-label="Bulk actions">
         <div class="rpanel-drafts__bulkbar-label">
           <i class="ap-icon-check" aria-hidden="true"></i>
-          ${selectedCount} ${draftWord} selected
+          ${selectedCount} selected
         </div>
         <div class="rpanel-drafts__bulkbar-actions">
           <button type="button" class="ap-button ghost grey" data-rpanel-drafts-bulk-clear>
             Clear
           </button>
-          <button type="button" class="ap-button ghost red" data-rpanel-drafts-bulk-delete>
-            <i class="ap-icon-trash" aria-hidden="true"></i>
-            Delete ${selectedCount} ${draftWord}
-          </button>
           <button type="button" class="ap-button primary orange" data-rpanel-drafts-bulk-schedule>
             <i class="ap-icon-calendar" aria-hidden="true"></i>
             Schedule ${selectedCount} ${draftWord}
+          </button>
+          <button type="button" class="ap-icon-button stroked red" data-rpanel-drafts-bulk-delete aria-label="Delete ${selectedCount} ${draftWord}">
+            <i class="ap-icon-trash" aria-hidden="true"></i>
           </button>
         </div>
       </div>
