@@ -18,7 +18,7 @@
 // when scope is "Update everywhere".
 
 import { contexts as seed } from "./mocks.js?v=35";
-import { isNewUser } from "./user-mode.js?v=21";
+import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=1";
 
 // Lot 15 — first-time user mode starts empty so the standalone /contexts

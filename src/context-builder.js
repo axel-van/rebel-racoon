@@ -95,38 +95,9 @@ export function getDraft(sessionId) {
   return drafts.get(sessionId) || null;
 }
 
-// Non-chat entry point used by the linear /welcome flow. Mints a draft
-// for the new sessionId, kicks off the mock website analysis on a 6s
-// timer, and returns immediately so the caller can navigate to the next
-// screen. The draft fields populate in the background; downstream
-// screens read via getDraft(sid) and either render immediately (if
-// analysis already done) or show a transient "Analysing…" state.
-//
-// Mirrors the patches that runAnalysis applies in the conversational
-// flow, minus the chat turns (no postSystemNotice / postAssistantMessage).
-export function startBackground(sessionId, websiteUrl) {
-  const url = (websiteUrl || "").trim();
-  drafts.set(
-    sessionId,
-    emptyDraft({
-      sourceType: "website",
-      sourceUrl: url,
-      websiteUrl: url,
-    }),
-  );
-  notify(sessionId);
-  window.setTimeout(() => {
-    const d = drafts.get(sessionId);
-    if (!d) return;
-    const analysis = analyzeWebsite(url);
-    applyAnalysisToDraft(d, analysis);
-    notify(sessionId);
-  }, 6000);
-}
-
-// Shared draft patch — used by the conversational `runAnalysis` and by
-// the linear `startBackground` so they stay in sync. Pre-selects every
-// suggested value so the brief panel reads as "Archie's best guess,
+// Shared draft patch — used by the conversational `runAnalysis` and the
+// First Time User ALT flow (`startAlt`) so they stay in sync. Pre-selects
+// every suggested value so the brief panel reads as "Archie's best guess,
 // edit if anything's off".
 function applyAnalysisToDraft(d, analysis) {
   d.name = d.name || analysis.name;
@@ -146,8 +117,8 @@ function applyAnalysisToDraft(d, analysis) {
 }
 
 // Patch the draft from outside the conversational flow — used by the
-// linear welcome screens to update connectedSocials / other draft
-// fields without going through inlineQuestion.
+// welcome-alt recap to edit Playbook fields without going through
+// inlineQuestion.
 export function patchDraft(sessionId, patch) {
   const d = drafts.get(sessionId);
   if (!d) return null;
@@ -166,7 +137,7 @@ export function restoreDraft(sessionId, draft) {
   return draft;
 }
 
-// True once the website analysis has populated the draft. The linear
+// True once the website analysis has populated the draft. The welcome-alt
 // recap screen polls this to decide between "Analyzing…" and "Show
 // the Playbook".
 export function isAnalysisReady(sessionId) {
@@ -202,9 +173,9 @@ export function start(sessionId, { onComplete, autoLaunched = false, prefill = n
   askSource(sessionId, { autoLaunched });
 }
 
-// First Time User ALT — same 3 questions as the linear /welcome wizard
-// (URL → profiles → documents) but rendered as inline-questions inside
-// a chat with body.onboarding chrome. The website analysis kicks off in
+// First Time User ALT — a 3-question onboarding (URL → profiles →
+// documents) rendered as inline-questions inside a chat with
+// body.onboarding chrome. The website analysis kicks off in
 // the background as soon as the URL lands, so by the time the user
 // finishes the documents step the brief panel can open immediately.
 //
@@ -261,8 +232,7 @@ function askAltUrl(sessionId, prefilledUrl = "") {
 }
 
 // Map our mock's `platform` slug to the DS's official, full-color
-// network icon used by .ap-avatar-network. Same mapping as
-// welcome-socials.js — duplicated here to keep the module local.
+// network icon used by .ap-avatar-network.
 const ALT_NETWORK_ICON_BY_PLATFORM = {
   facebook: "ap-icon-facebook-official",
   instagram: "ap-icon-instagram-official",

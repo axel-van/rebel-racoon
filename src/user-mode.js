@@ -1,5 +1,4 @@
-// Tiny admin helper: lets the prototype preview three entry-point states.
-//   "new"       → first-time user, linear 4-screen /welcome wizard
+// Tiny admin helper: lets the prototype preview two entry-point states.
 //   "new-alt"   → first-time user, hybrid flow: visual profile picker then
 //                 conversational Playbook builder (no sidebar/topbar)
 //   "returning" → populated mocks everywhere
@@ -12,7 +11,6 @@ const KEY = "archie-user-mode";
 export function getUserMode() {
   try {
     const v = window.localStorage.getItem(KEY);
-    if (v === "new") return "new";
     if (v === "new-alt") return "new-alt";
     return "returning";
   } catch {
@@ -22,8 +20,7 @@ export function getUserMode() {
 
 export function setUserMode(mode) {
   try {
-    if (mode === "new") window.localStorage.setItem(KEY, "new");
-    else if (mode === "new-alt") window.localStorage.setItem(KEY, "new-alt");
+    if (mode === "new-alt") window.localStorage.setItem(KEY, "new-alt");
     else window.localStorage.removeItem(KEY);
   } catch {
     // ignore
@@ -31,11 +28,10 @@ export function setUserMode(mode) {
   window.location.reload();
 }
 
-// Both first-time variants count as "new" for empty-store seeding —
-// ALT users still start with no contexts/sessions in the mocks.
+// First-time users start with empty stores (no contexts/sessions in the
+// mocks) so the onboarding flow seeds them from scratch.
 export function isNewUser() {
-  const m = getUserMode();
-  return m === "new" || m === "new-alt";
+  return getUserMode() === "new-alt";
 }
 
 export function isNewUserAlt() {

@@ -2,7 +2,7 @@ import { html, raw } from "../utils.js?v=20";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=36";
 import { isFlagOn } from "../feature-flags.js?v=3";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=35";
-import { isNewUser } from "../user-mode.js?v=21";
+import { isNewUser } from "../user-mode.js?v=22";
 import { getPath } from "../router.js?v=30";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import {
@@ -2149,8 +2149,8 @@ const ACTION_FALLBACKS = ["Visit the website", "Download a resource", "Join the 
 
 // Public renderer for the brief panel's three section groups (Audience /
 // Voice profile / Branding) — extracted so surfaces outside the right
-// panel (the welcome-recap screen, future ones) can show the same
-// content without duplicating the layout. Accepts a draft-shaped object
+// panel can show the same content without duplicating the layout.
+// Accepts a draft-shaped object
 // (or a persisted Context normalized by readBriefFromCtx) plus a tiny
 // options bag. Does NOT include the panel header, footer, or scroll
 // container — pure section HTML.

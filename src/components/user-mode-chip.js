@@ -1,6 +1,6 @@
 import { FLAGS } from "../ff-catalog.js?v=4";
 import { getFlags, setFlag } from "../feature-flags.js?v=3";
-import { getUserMode, setUserMode } from "../user-mode.js?v=21";
+import { getUserMode, setUserMode } from "../user-mode.js?v=22";
 
 // Floating admin chip in the bottom-right. Opens prototype-only controls
 // (user-mode toggle + feature flags). Controls reload the page on change.
@@ -27,14 +27,12 @@ export function initUserModeChip() {
   menu.hidden = true;
 
   function modeLabel(mode) {
-    if (mode === "new") return "First-time user";
     if (mode === "new-alt") return "First-time ALT";
     return "Returning user";
   }
 
   const MODE_OPTIONS = [
     { value: "returning", label: "Returning user", hint: "Populated mocks (default)" },
-    { value: "new", label: "First-time user", hint: "Linear 4-screen /welcome wizard" },
     { value: "new-alt", label: "First-time ALT", hint: "Visual picker + conversational chat" },
   ];
 
@@ -42,7 +40,7 @@ export function initUserModeChip() {
     const mode = getUserMode();
     const flags = getFlags();
 
-    const isNewish = mode === "new" || mode === "new-alt";
+    const isNewish = mode === "new-alt";
     el.className = "admin-chip" + (isNewish ? " admin-chip--new" : "");
     el.setAttribute("aria-label", `Admin: currently showing ${modeLabel(mode).toLowerCase()}. Open controls.`);
     el.setAttribute("aria-expanded", open ? "true" : "false");
@@ -115,15 +113,12 @@ export function initUserModeChip() {
       /* ignore — storage may be unavailable in private browsing */
     }
     try {
-      if (target === "new") window.localStorage.setItem("archie-user-mode", "new");
-      else if (target === "new-alt") window.localStorage.setItem("archie-user-mode", "new-alt");
+      if (target === "new-alt") window.localStorage.setItem("archie-user-mode", "new-alt");
       else window.localStorage.removeItem("archie-user-mode");
     } catch {
       /* ignore */
     }
-    if (target === "new" && !window.location.hash.startsWith("#/welcome")) {
-      window.location.hash = "#/welcome";
-    } else if (target === "new-alt" && !window.location.hash.startsWith("#/welcome-alt")) {
+    if (target === "new-alt" && !window.location.hash.startsWith("#/welcome-alt")) {
       window.location.hash = "#/welcome-alt";
     } else if (target === "returning") {
       const h = window.location.hash;

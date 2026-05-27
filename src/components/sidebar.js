@@ -15,7 +15,7 @@ import {
   subscribe as subscribeSessions,
 } from "../sessions-store.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=3";
-import { isNewUser } from "../user-mode.js?v=21";
+import { isNewUser } from "../user-mode.js?v=22";
 import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=29";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=28";
 import { closePanel as closeRightPanel } from "./right-panel.js?v=108";

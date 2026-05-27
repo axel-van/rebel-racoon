@@ -14,7 +14,7 @@ import {
   ideasBySession as seedIdeasBySession,
   recentSessions as seedRecentSessions,
 } from "./mocks.js?v=35";
-import { isNewUser } from "./user-mode.js?v=21";
+import { isNewUser } from "./user-mode.js?v=22";
 
 // Demo session ids — the recentSessions seed (s-acme-launch / s-riverside /
 // etc.). Only these sessions get the seeded ideas mock; brand-new

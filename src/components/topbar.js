@@ -190,7 +190,7 @@ export function initTopbar() {
     if (ctxBtn) {
       const ctxId = ctxBtn.dataset.topbarContextView;
       if (ctxId) {
-        import("../context-builder.js?v=46").then((mod) => mod.openRead(ctxId));
+        import("../context-builder.js?v=47").then((mod) => mod.openRead(ctxId));
       }
       return;
     }
