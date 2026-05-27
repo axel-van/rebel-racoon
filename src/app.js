@@ -4,7 +4,7 @@ import { initTopbar, renderTopbar } from "./components/topbar.js?v=57";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=43";
 import { init as initRightPanel } from "./components/right-panel.js?v=108";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=24";
-import { initUserModeChip } from "./components/user-mode-chip.js?v=30";
+import { initUserModeChip } from "./components/user-mode-chip.js?v=31";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=22";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=25";
 import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=23";
@@ -18,18 +18,14 @@ import {
   init as initConversationStatusCard,
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=12";
-import { renderDashboard } from "./screens/dashboard.js?v=45";
-import { renderSession } from "./screens/session.js?v=134";
+import { renderDashboard } from "./screens/dashboard.js?v=46";
+import { renderSession } from "./screens/session.js?v=135";
 import { renderIdeas } from "./screens/ideas.js?v=25";
-import { renderContexts } from "./screens/contexts.js?v=35";
+import { renderContexts } from "./screens/contexts.js?v=36";
 import { renderSettings } from "./screens/settings.js?v=2";
-import { renderWelcome } from "./screens/welcome.js?v=5";
-import { renderWelcomeSocials } from "./screens/welcome-socials.js?v=5";
-import { renderWelcomeSources } from "./screens/welcome-sources.js?v=2";
-import { renderWelcomeRecap } from "./screens/welcome-recap.js?v=3";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=3";
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=10";
-import { startBackground as __captureSeedDraft } from "./context-builder.js?v=46";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=11";
+import { renderPlaybook } from "./screens/playbook.js?v=1";
 import * as __capAddSource from "./components/add-source-modal.js?v=23";
 import * as __capGenImage from "./components/generate-image-modal.js?v=23";
 import * as __capBug from "./components/bug-report-modal.js?v=22";
@@ -43,15 +39,6 @@ import {
   openContextBriefPanel as __capOpenContextPanel,
 } from "./components/right-panel.js?v=108";
 
-// Figma capture helper — seed a welcome draft synchronously so the multi-step
-// welcome flow (which requires sessionStorage.welcomeSessionId + a draft) renders
-// instead of redirecting back to /welcome on direct capture.
-if (new URLSearchParams(window.location.search).get("setup") === "welcome") {
-  const sid = "capture-welcome";
-  sessionStorage.setItem("welcomeSessionId", sid);
-  __captureSeedDraft(sid, "https://acme-launch.example.com");
-}
-
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
 // stays in sync with the active context.
@@ -59,16 +46,8 @@ route("/", renderDashboard);
 route("/session/:id", renderSession);
 route("/ideas", renderIdeas);
 route("/contexts", renderContexts);
+route("/playbook/:id", renderPlaybook);
 route("/settings", renderSettings);
-// First-time onboarding — 4-screen linear flow. /welcome is the URL
-// input that kicks off the background website analysis; /welcome/socials
-// lists the channels the brand publishes on; /welcome/sources is the
-// optional Slite/Notion/GDrive connectors; /welcome/recap is the final
-// Playbook review with Fine-tune / Entrer dans Archie CTAs.
-route("/welcome", renderWelcome);
-route("/welcome/socials", renderWelcomeSocials);
-route("/welcome/sources", renderWelcomeSources);
-route("/welcome/recap", renderWelcomeRecap);
 // First-time ALT — thin redirect that mints a transient
 // /session/welcome-alt-{ts} session. The conversational Playbook
 // builder (3-question chat: URL → profile → optional documents) runs
@@ -102,13 +81,10 @@ initConversationStatusCard();
 // stays highlighted. The conversation status card also re-renders here so it
 // hides when navigating away from /session/:id.
 //
-// The onboarding class flip is centralized here so /welcome screens get a
-// full-bleed shell without each screen having to add/remove the class.
-// Not applied to legacy /session/welcome-* (the linear-onboarding
-// playbook-creation step keeps the standard grid for its 3rd-column
-// brief panel + empty-state sidebar/topbar). It IS applied to
-// /session/welcome-alt-* — the First Time User ALT flow runs the chat
-// inside the onboarding chrome.
+// The onboarding class flip is centralized here so the /welcome-alt screens
+// get a full-bleed shell without each screen having to add/remove the class.
+// It is also applied to /session/welcome-alt-* — the First Time User ALT
+// flow runs the chat inside the onboarding chrome.
 // Feature flag → body class. Driven once at boot (flag changes always
 // reload the page, so we don't need to re-evaluate on every route).
 document.body.classList.toggle("hide-playbook-colors", isFlagOn("hidePlaybookColors"));
