@@ -1,29 +1,23 @@
-// Conversational context-builder orchestrator (V1).
+// Conversational context-builder orchestrator.
 //
-// Two-phase flow:
-//   1. Inline Q (website URL) — free-text via inline-question (custom row).
-//   2. Pending "Reading your website…" (~10s) → analyzeWebsite(url) mocks an
-//      analysis result, which seeds the draft (businessSummary, suggested
-//      values for each multi-pick question).
-//   3. Brief panel opens side-by-side with the chat (Claude-Artifact style)
-//      via rightPanel.openContextBriefPanel(...). User edits the brief
-//      directly — chips, CTAs, language, color — and clicks "Generate my
-//      brief" to save.
+// Playbook CREATION is the First Time User ALT flow (`startAlt`): a 3-question
+// chat (URL → profile → optional documents) that kicks off a mock website
+// analysis, then reveals the editable recap (see playbook-view + the
+// welcome-alt-recap / integrated New-Playbook wrappers). `save()` persists the
+// draft into the contexts-store. The older brief-builder (a "Website /
+// Documents" source picker → right-panel brief form) was removed once the ALT
+// flow became the single creation path.
 //
-// State per "session" (a synthetic id when invoked outside a real chat) is
-// the draft: { websiteUrl, name, businessSummary, audience, audienceProblems,
+// State per "session" (a synthetic id when invoked outside a real chat) is the
+// draft: { websiteUrl, name, businessSummary, audience, audienceProblems,
 // tones, contentStyle, objective, contentAction, ctaLinks, language, color,
 // suggestions, editingId, onComplete }.
-//
-// The legacy 3-phase form (URL → profiles → right-panel form) is gone. The
-// right-panel ContextForm read mode (openRead) stays for viewing existing
-// contexts that may still have the old shape.
 
 import * as inlineQuestion from "./inline-question.js?v=27";
-import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=36";
+import { postAssistantMessage, postUserTurn } from "./assistant.js?v=36";
 import * as rightPanel from "./components/right-panel.js?v=108";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=29";
-import { analyzeWebsite, analyzeDocument } from "./context-mock-analysis.js?v=21";
+import { analyzeWebsite } from "./context-mock-analysis.js?v=21";
 import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=10";
 import { socialAccounts, connectors as connectorMocks } from "./mocks.js?v=35";
 
@@ -95,10 +89,9 @@ export function getDraft(sessionId) {
   return drafts.get(sessionId) || null;
 }
 
-// Shared draft patch — used by the conversational `runAnalysis` and the
-// First Time User ALT flow (`startAlt`) so they stay in sync. Pre-selects
-// every suggested value so the brief panel reads as "Archie's best guess,
-// edit if anything's off".
+// Shared draft patch — applied by the First Time User ALT flow (`startAlt`)
+// after the website analysis lands. Pre-selects every suggested value so the
+// recap reads as "Archie's best guess, edit if anything's off".
 function applyAnalysisToDraft(d, analysis) {
   d.name = d.name || analysis.name;
   d.businessSummary = analysis.businessSummary;
@@ -150,27 +143,6 @@ export function subscribe(sessionId, fn) {
   if (!subscribers.has(sessionId)) subscribers.set(sessionId, new Set());
   subscribers.get(sessionId).add(fn);
   return () => subscribers.get(sessionId)?.delete(fn);
-}
-
-// Kick off the V1 brief-builder flow. The inline question asks for the URL
-// inside `sessionId`'s assistant panel; once submitted, a ~10s "Reading
-// your website…" pending turn fires before the brief panel opens.
-// `autoLaunched: true` softens the entry copy with a transitional message
-// — used when session.js fires the wizard on the user's first message
-// without a context. Explicit "+ New context" entry points keep the
-// existing concise intro since the user already opted in.
-export function start(sessionId, { onComplete, autoLaunched = false, prefill = null } = {}) {
-  drafts.set(sessionId, emptyDraft({ onComplete }));
-  // Optional draft pre-seed — kept as a generic primitive even though no
-  // current call site uses it (the First Time User ALT flow has its own
-  // 3-question orchestration via startAlt below).
-  if (prefill) {
-    const d = drafts.get(sessionId);
-    if (prefill.selectedProfileId) d.selectedProfileId = prefill.selectedProfileId;
-    if (prefill.platform) d.connectedSocials = [prefill.platform];
-  }
-  notify(sessionId);
-  askSource(sessionId, { autoLaunched });
 }
 
 // First Time User ALT — a 3-question onboarding (URL → profiles →
@@ -509,218 +481,6 @@ export function cancel(sessionId) {
   drafts.delete(sessionId);
   inlineQuestion.exit(sessionId);
   notify(sessionId);
-}
-
-// --- Phase 1 — Source picker + source-specific input -----------------------
-
-// Step 0: 2-card picker for the input type. Archie analyses whatever the
-// user provides and produces the playbook from it. Social profiles used
-// to be a third path here; they now have their own dedicated step that
-// runs AFTER the website analysis (see `askSocial`), so the user can
-// describe the brand AND list the channels rather than choosing between
-// the two.
-function askSource(sessionId, { autoLaunched = false } = {}) {
-  const intro = autoLaunched
-    ? "There's no Playbook in this chat yet. Let's build one — it takes a minute."
-    : "Let's set up a new Playbook.";
-  postAssistantMessage(sessionId, intro);
-  inlineQuestion.ask(sessionId, {
-    title: "How should I start?",
-    items: [
-      {
-        value: "website",
-        label: "Website",
-        caption: "Paste any URL — your website, blog, or landing page.",
-        icon: "ap-icon-web",
-      },
-      {
-        value: "documents",
-        label: "Documents",
-        caption: "Drop a PDF, DOCX or TXT — brand doc, strategy deck…",
-        icon: "ap-icon-file--pdf",
-      },
-    ],
-    onPick: (value) => setSourceType(sessionId, value),
-    onSkip: () => exitWithoutSave(sessionId),
-    skipLabel: "Skip",
-  });
-}
-
-function setSourceType(sessionId, sourceType) {
-  const d = drafts.get(sessionId);
-  if (!d) return;
-  d.sourceType = sourceType;
-  notify(sessionId);
-  inlineQuestion.exit(sessionId);
-  // Route to the matching input step. Only Website + Documents are
-  // reachable from the picker; the social step is part of the Website
-  // path tail (see runAnalysis → askSocial).
-  if (sourceType === "website") askUrl(sessionId);
-  else if (sourceType === "documents") askDocument(sessionId);
-}
-
-function exitWithoutSave(sessionId) {
-  drafts.delete(sessionId);
-  inlineQuestion.exit(sessionId);
-  notify(sessionId);
-}
-
-// Step 1a: Website URL. No skip — the wizard needs something to analyse;
-// the back button is the way out (returns to source picker).
-function askUrl(sessionId) {
-  const intro = "Paste your website URL and I'll pull the brand voice, audience, and visual identity.";
-  postAssistantMessage(sessionId, intro);
-  inlineQuestion.ask(sessionId, {
-    title: "What's the URL of your company website?",
-    items: [],
-    customPlaceholder: "https://your-brand.com",
-    onCustom: (value) => setUrl(sessionId, value),
-    onBack: () => askSource(sessionId),
-  });
-}
-
-// Step 1b: Document upload. customFile dropzone variant of inline-question.
-function askDocument(sessionId) {
-  const intro = "Drop a brand or strategy document and I'll build the Playbook from it.";
-  postAssistantMessage(sessionId, intro);
-  inlineQuestion.ask(sessionId, {
-    title: "Upload a brand or strategy document",
-    items: [],
-    customFile: true,
-    customFileAccept:
-      ".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain",
-    customFileLabel: "Drop a file here, or click to browse",
-    customFileHint: "PDF · DOCX · TXT — max 10 MB",
-    customFileIcon: "ap-icon-upload",
-    onFile: (file) => setFile(sessionId, file),
-    onBack: () => askSource(sessionId),
-  });
-}
-
-function setUrl(sessionId, url) {
-  const d = drafts.get(sessionId);
-  if (!d) return;
-  d.sourceUrl = (url || "").trim();
-  // Keep websiteUrl in sync for back-compat with downstream readers.
-  if (d.sourceType === "website") d.websiteUrl = d.sourceUrl;
-  if (d.sourceUrl) postUserTurn(sessionId, d.sourceUrl);
-  inlineQuestion.exit(sessionId);
-  notify(sessionId);
-  runAnalysis(sessionId);
-}
-
-function setFile(sessionId, file) {
-  const d = drafts.get(sessionId);
-  if (!d) return;
-  d.sourceFile = file ? { name: file.name, size: file.size, type: file.type } : null;
-  if (file) postUserTurn(sessionId, file.name);
-  inlineQuestion.exit(sessionId);
-  notify(sessionId);
-  runAnalysis(sessionId);
-}
-
-// --- Phase 2 — Mock website analysis (~10s) -------------------------------
-
-function runAnalysis(sessionId) {
-  // Mermaid status pill — same chrome as the "Drafting" reasoning pill,
-  // labeled "Extracting guidelines" while the mocked website analysis is
-  // in flight, then flipped to "Extracted guidelines" once the brief
-  // panel is ready to open.
-  const noticeId = postSystemNotice(sessionId, { meta: "Reading your source", variant: "mermaid" });
-  notify(sessionId);
-  window.setTimeout(() => {
-    const d = drafts.get(sessionId);
-    if (!d) return; // session bailed out mid-analysis
-    // Dispatch on the user's chosen source type. Each mock returns the
-    // same shape so the rest of the brief-panel pipeline is unchanged.
-    const analysis =
-      d.sourceType === "documents" ? analyzeDocument(d.sourceFile) : analyzeWebsite(d.sourceUrl || d.websiteUrl);
-    applyAnalysisToDraft(d, analysis);
-    markSystemNoticeReady(sessionId, noticeId, { meta: "Source read" });
-    notify(sessionId);
-    // Website path tails into the social-channels step so the user can
-    // tell Archie where the brand publishes. Documents path skips it —
-    // a strategy doc usually doesn't need a channel inventory and the
-    // step would feel out of place after a single upload.
-    if (d.sourceType === "website") askSocial(sessionId);
-    else openBriefPanel(sessionId);
-  }, 6000);
-}
-
-// --- Phase 2b — Profile picker (Website path only) -----------------------
-//
-// After the website analysis, Archie asks WHICH connected social
-// profile to analyse — the profile's voice feeds the playbook tone
-// and format. Single-select since voice is sourced from one profile.
-// Mirrors the askAltProfile pattern above (DS .ap-avatar with corner
-// network badge).
-
-function deriveBrandInitials(name) {
-  const parts = (name || "").trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-function askSocial(sessionId) {
-  const d = getDraft(sessionId);
-  const connectedProfiles = socialAccounts.filter((p) => p.status === "connected");
-  // Edge case: no connected profiles. Skip the step rather than show an
-  // empty picker — the playbook can still be built from the website
-  // analysis alone.
-  if (connectedProfiles.length === 0) {
-    openBriefPanel(sessionId);
-    return;
-  }
-
-  postAssistantMessage(
-    sessionId,
-    "Which connected profile should I analyze? I'll capture its voice and shape the Playbook's tone and format around it.",
-  );
-  const initials = deriveBrandInitials(d?.name);
-  const items = connectedProfiles.map((p) => {
-    const captionParts = [];
-    if (p.platformLabel) captionParts.push(p.platformLabel);
-    if (p.kind) captionParts.push(p.kind);
-    return {
-      value: p.id,
-      label: p.handle || p.platformLabel,
-      caption: captionParts.join(" · "),
-      avatar: {
-        initials,
-        networkIcon: ALT_NETWORK_ICON_BY_PLATFORM[p.platform],
-      },
-    };
-  });
-  inlineQuestion.ask(sessionId, {
-    title: "Which profile to analyse?",
-    stepLabel: "Voice source",
-    items,
-    skipLabel: "Skip",
-    onPick: (id) => setSelectedProfile(sessionId, id),
-    onSkip: () => setSelectedProfile(sessionId, null),
-    onBack: () => askUrl(sessionId),
-  });
-}
-
-function setSelectedProfile(sessionId, profileId) {
-  const d = drafts.get(sessionId);
-  if (!d) return;
-  if (profileId) {
-    const profile = socialAccounts.find((p) => p.id === profileId);
-    if (profile) {
-      d.selectedProfileId = profile.id;
-      d.connectedSocials = [profile.platform];
-      postUserTurn(sessionId, `${profile.platformLabel} · ${profile.handle || profile.kind || ""}`);
-    }
-  } else {
-    d.selectedProfileId = null;
-    d.connectedSocials = [];
-    // Phase 2 §8.3: don't echo procedural "Skip" as a <You> bubble.
-  }
-  inlineQuestion.exit(sessionId);
-  notify(sessionId);
-  openBriefPanel(sessionId);
 }
 
 // --- Phase 3 — Brief panel -------------------------------------------------

@@ -19,12 +19,12 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=12";
 import { renderDashboard } from "./screens/dashboard.js?v=46";
-import { renderSession } from "./screens/session.js?v=139";
+import { renderSession } from "./screens/session.js?v=140";
 import { renderIdeas } from "./screens/ideas.js?v=25";
 import { renderContexts } from "./screens/contexts.js?v=37";
 import { renderSettings } from "./screens/settings.js?v=2";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=12";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=13";
 import { renderPlaybook } from "./screens/playbook.js?v=2";
 import * as __capAddSource from "./components/add-source-modal.js?v=23";
 import * as __capGenImage from "./components/generate-image-modal.js?v=23";
