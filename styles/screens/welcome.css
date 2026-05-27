@@ -17,7 +17,9 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: var(--app-surface);
+  /* Grey canvas (grey-bg) so the white recap cards read as raised panels —
+     shared by the welcome-alt recap and the /playbook view/edit page. */
+  background: var(--app-bg);
   overflow-y: auto;
 }
 
