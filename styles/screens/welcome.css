@@ -1744,6 +1744,95 @@
   color: var(--ref-color-orange-100);
 }
 
+/* ── Per-card edit affordance ─────────────────────────────────────────── */
+/* Each editable card carries a hover-reveal pencil, mirroring the
+   /contexts Playbook cards. Anchored to the card via position:relative. */
+.recap__overview,
+.recap__stat {
+  position: relative;
+}
+
+/* Reserve room so the hover pencil never collides with the URL link. */
+.recap__overview-head {
+  padding-right: var(--ref-spacing-xxl);
+}
+
+.recap__card-actions {
+  position: absolute;
+  top: var(--ref-spacing-sm);
+  right: var(--ref-spacing-sm);
+  display: flex;
+  padding: var(--app-spacing-micro);
+  border-radius: var(--app-radius-button-sm);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-soft);
+  box-shadow: var(--app-shadow-subtle);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms var(--app-ease-out);
+}
+
+.recap__overview:hover .recap__card-actions,
+.recap__overview:focus-within .recap__card-actions,
+.recap__stat:hover .recap__card-actions,
+.recap__stat:focus-within .recap__card-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.recap__card-actions .ap-icon-button,
+.recap__section-edit {
+  width: 28px;
+  height: 28px;
+}
+
+/* Section-level pencil (Voice, Essentials) lives in the section head. */
+.recap__section-edit {
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 160ms var(--app-ease-out);
+}
+
+.recap__section:hover .recap__section-edit,
+.recap__section:focus-within .recap__section-edit {
+  opacity: 1;
+}
+
+/* While a card is being edited, suppress every other pencil so the user
+   finishes one edit before starting another. */
+.welcome-screen--reveal.is-editing .recap__card-actions,
+.welcome-screen--reveal.is-editing .recap__section-edit {
+  display: none;
+}
+
+/* Accent the card / section currently in edit. */
+.recap__stat.is-editing,
+.recap__overview--edit,
+.recap__editbox {
+  border: 1px solid var(--ref-color-orange-100);
+  box-shadow: var(--app-shadow-orange-hover);
+}
+
+.recap__editbox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-lg);
+  border-radius: var(--app-radius-card);
+  background: var(--app-surface);
+}
+
+/* Touch devices have no hover — keep the pencils permanently visible so
+   the edit affordance stays discoverable (suppressed mid-edit by the
+   .is-editing display:none rule above). */
+@media (hover: none) {
+  .recap__card-actions,
+  .recap__section-edit {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 @media (max-width: 720px) {
   .recap__grid--strategy,
   .recap__grid--voice {

@@ -1,27 +1,26 @@
 // First Time User ALT — Playbook reveal. Reached at the end of the
 // 3-question chat flow (context-builder.startAlt). A curated, celebratory
-// presentation of what Archie captured, with an inline EDIT mode: the
-// reveal flips into an editable sheet in place (no conversational editor),
-// the user tweaks fields directly, then Saves back to the read view.
+// presentation of what Archie captured, with PER-CARD inline editing: each
+// card carries a hover-reveal pencil (like the /contexts Playbook cards);
+// clicking it flips just that card into an editable form while the rest
+// stays read-only. Cancel restores, Save commits back to the read view.
 //
 // Layout (top → bottom):
 //   • Hero — brand monogram (captured accent), eyebrow, headline, the
 //     voice descriptor pill, a short lead.
-//   • Brand overview — name + site + business summary.
-//   • Strategy — audience / content style / objective / action.
-//   • Voice — featured writing-style lead + a compact trait grid.
-//   • Visual identity — condensed brand snapshot (palette + type). Always
-//     read-only — it's scraped from the site, not user-authored.
-//   • Essentials — language + active CTA links.
-//   • Sticky footer — read: Edit + Enter Archie · edit: Cancel + Save.
+//   • Edit hint — infobox teaching the per-card pencil affordance.
+//   • Brand overview — name + site + business summary.        [editable]
+//   • Strategy — audience / content style / objective / action. [each editable]
+//   • Voice — featured writing-style lead + a compact trait grid. [editable]
+//   • Visual identity — condensed brand snapshot (palette + type). Read-only
+//     — it's scraped from the site, not user-authored.
+//   • Essentials — language + active CTA links.               [editable]
+//   • Sticky footer — read: Enter Archie · editing a card: Cancel + Save.
 //
-// State flow: contextBuilder.maybeOpenAltBrief stashes the ALT sessionId
-// in sessionStorage under WELCOME_ALT_KEY, then navigates here. We read
-// the draft via getDraft(sid), render. "Edit" snapshots the draft and
-// flips every section (except visual identity) into inputs; edits mutate
-// the live draft. "Save" keeps them, "Cancel" restores the snapshot.
-// "Enter Archie" → save(sid) fires the draft's onComplete (switch-to-
-// returning + reload, set on session mount).
+// State: `editScope` is null (read) or a section key. Entering edit
+// snapshots the editable fields so Cancel can revert; text edits mutate
+// the live draft in place (no repaint, keeps focus). "Enter Archie" →
+// save(sid) fires the draft's onComplete (switch-to-returning + reload).
 
 import { html, raw, escapeHtml as esc } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
@@ -32,8 +31,8 @@ const POLL_INTERVAL_MS = 400;
 
 const LANGUAGE_OPTIONS = ["English", "Français", "Español", "Deutsch", "Italiano", "Português"];
 
-// Strategy chip groups — order + presentation metadata. `key` matches the
-// draft field; `placeholder` seeds the inline "add" input in edit mode.
+// Strategy chip groups — order + presentation metadata. `key` doubles as
+// the draft field AND the edit scope; `placeholder` seeds the add input.
 const STRATEGY_FIELDS = [
   {
     key: "audience",
@@ -75,7 +74,7 @@ const VOICE_TRAITS = [
 
 let pollTimer = null;
 let mountTarget = null;
-let editing = false;
+let editScope = null; // null (read) | "overview" | strategy key | "voice" | "essentials"
 let snapshot = null; // deep copy of editable fields, for Cancel
 
 export function renderWelcomeAltRecap(_params, target) {
@@ -89,7 +88,7 @@ export function renderWelcomeAltRecap(_params, target) {
   }
 
   // Fresh mount always starts in read mode.
-  editing = false;
+  editScope = null;
   snapshot = null;
   mountTarget = target;
 
@@ -193,15 +192,33 @@ function snapshotDraft(d) {
   );
 }
 
-// ── Read-mode fragment renderers ─────────────────────────────────────────
+// ── Shared bits ──────────────────────────────────────────────────────────
 
-function renderSectionHead(title, hint) {
+// Hover-reveal pencil for a card (absolute, top-right). Mirrors the
+// /contexts Playbook card affordance. `scope` is the edit target.
+function cardPen(scope) {
+  return `
+    <div class="recap__card-actions">
+      <button type="button" class="ap-icon-button transparent recap__card-edit" data-recap-edit-card="${scope}" title="Edit" aria-label="Edit">
+        <i class="ap-icon-pen"></i>
+      </button>
+    </div>
+  `;
+}
+
+// Section header. `penScope` (optional) renders a hover-reveal pencil on
+// the right for section-level edits (Voice, Essentials).
+function renderSectionHead(title, hint, penScope) {
+  const pen = penScope
+    ? `<button type="button" class="ap-icon-button transparent recap__section-edit" data-recap-edit-card="${penScope}" title="Edit" aria-label="Edit"><i class="ap-icon-pen"></i></button>`
+    : "";
   return `
     <div class="recap__section-head">
       <div class="recap__section-heading">
         <h2 class="recap__section-title">${esc(title)}</h2>
         ${hint ? `<p class="recap__section-hint">${esc(hint)}</p>` : ""}
       </div>
+      ${pen}
     </div>
   `;
 }
@@ -214,8 +231,8 @@ function renderChips(values) {
     .join("")}</div>`;
 }
 
-// Editable chip group — removable chips (DS close button) + an inline
-// add input. Mutations route through onClick / onKeydown by field key.
+// Editable chip group — removable chips (DS close button) + an inline add
+// input. Mutations route through onClick / onKeydown by field key.
 function renderEditChips(field, values, placeholder) {
   const list = Array.isArray(values) ? values : [];
   const chips = list
@@ -249,14 +266,18 @@ function renderEditChips(field, values, placeholder) {
   `;
 }
 
-function renderStrategy(draft, edit) {
+// ── Section renderers (each branches on whether it's the active scope) ────
+
+function renderStrategy(draft, scope) {
   return `
     <section class="recap__section">
       ${renderSectionHead("What Archie will create", "The strategy behind every post.")}
       <div class="recap__grid recap__grid--strategy">
-        ${STRATEGY_FIELDS.map(
-          (c) => `
-            <article class="recap__stat">
+        ${STRATEGY_FIELDS.map((c) => {
+          const edit = scope === c.key;
+          return `
+            <article class="recap__stat ${edit ? "is-editing" : ""}" ${edit ? "data-recap-editing-card" : ""}>
+              ${edit ? "" : cardPen(c.key)}
               <span class="recap__stat-icon"><i class="${c.icon}" aria-hidden="true"></i></span>
               <div class="recap__stat-body">
                 <h3 class="recap__stat-label">${esc(c.label)}</h3>
@@ -264,8 +285,8 @@ function renderStrategy(draft, edit) {
                 ${edit ? renderEditChips(c.key, draft[c.key], c.placeholder) : renderChips(draft[c.key])}
               </div>
             </article>
-          `,
-        ).join("")}
+          `;
+        }).join("")}
       </div>
     </section>
   `;
@@ -276,31 +297,33 @@ function renderVoice(draft, edit) {
 
   if (edit) {
     return `
-      <section class="recap__section">
+      <section class="recap__section is-editing" data-recap-editing-card>
         ${renderSectionHead("How you sound", "The voice Archie writes in.")}
-        <div class="recap__field">
-          <label class="recap__field-label">Voice in three words</label>
-          <div class="ap-input-group">
-            <input type="text" data-recap-headline value="${esc(vp.headline || "")}" placeholder="e.g. Professional · data-driven · approachable" />
+        <div class="recap__editbox">
+          <div class="recap__field">
+            <label class="recap__field-label">Voice in three words</label>
+            <div class="ap-input-group">
+              <input type="text" data-recap-headline value="${esc(vp.headline || "")}" placeholder="e.g. Professional · data-driven · approachable" />
+            </div>
           </div>
-        </div>
-        <div class="recap__field">
-          <label class="recap__field-label">Writing style</label>
-          <div class="ap-textarea-field resizable">
-            <textarea data-recap-voice="writingStyle" rows="3" placeholder="How the writing reads…">${esc(vp.writingStyle || "")}</textarea>
+          <div class="recap__field">
+            <label class="recap__field-label">Writing style</label>
+            <div class="ap-textarea-field resizable">
+              <textarea data-recap-voice="writingStyle" rows="3" placeholder="How the writing reads…">${esc(vp.writingStyle || "")}</textarea>
+            </div>
           </div>
-        </div>
-        <div class="recap__grid recap__grid--voice">
-          ${VOICE_TRAITS.map(
-            (t) => `
-              <div class="recap__field">
-                <label class="recap__field-label">${esc(t.label)}</label>
-                <div class="ap-textarea-field resizable">
-                  <textarea data-recap-voice="${t.key}" rows="3">${esc(vp[t.key] || "")}</textarea>
+          <div class="recap__grid recap__grid--voice">
+            ${VOICE_TRAITS.map(
+              (t) => `
+                <div class="recap__field">
+                  <label class="recap__field-label">${esc(t.label)}</label>
+                  <div class="ap-textarea-field resizable">
+                    <textarea data-recap-voice="${t.key}" rows="3">${esc(vp[t.key] || "")}</textarea>
+                  </div>
                 </div>
-              </div>
-            `,
-          ).join("")}
+              `,
+            ).join("")}
+          </div>
         </div>
       </section>
     `;
@@ -311,7 +334,7 @@ function renderVoice(draft, edit) {
   if (!lead && !traits.length) return "";
   return `
     <section class="recap__section">
-      ${renderSectionHead("How you sound", "The voice Archie writes in.")}
+      ${renderSectionHead("How you sound", "The voice Archie writes in.", "voice")}
       ${
         lead
           ? `<blockquote class="recap__voice-lead">
@@ -417,9 +440,9 @@ function renderEssentials(draft, edit) {
       )
       .join("");
     return `
-      <section class="recap__section recap__section--essentials">
+      <section class="recap__section recap__section--essentials is-editing" data-recap-editing-card>
         ${renderSectionHead("Essentials")}
-        <div class="recap__essentials recap__essentials--edit">
+        <div class="recap__editbox">
           <div class="recap__field recap__field--language">
             <label class="recap__field-label">Language</label>
             <select class="ap-native-select" data-recap-language aria-label="Language">
@@ -442,7 +465,7 @@ function renderEssentials(draft, edit) {
   if (!language && !ctas.length) return "";
   return `
     <section class="recap__section recap__section--essentials">
-      ${renderSectionHead("Essentials")}
+      ${renderSectionHead("Essentials", null, "essentials")}
       <div class="recap__essentials">
         ${
           language
@@ -476,7 +499,7 @@ function renderEssentials(draft, edit) {
   `;
 }
 
-function renderHero(draft, edit) {
+function renderHero(draft) {
   const site = brandSite(draft);
   const colors = site?.colors || {};
   const accent = colors.accent || colors.primary || "var(--ref-color-orange-100)";
@@ -486,21 +509,30 @@ function renderHero(draft, edit) {
   return `
     <header class="recap__hero">
       <span class="recap__monogram" style="--brand-accent:${esc(accent)}; --brand-primary:${esc(primary)};">${esc(initials(draft.name))}</span>
-      <span class="recap__eyebrow"><i class="ap-icon-sparkles-mermaid" aria-hidden="true"></i> ${edit ? "Editing your Playbook" : "Your Playbook"}</span>
+      <span class="recap__eyebrow"><i class="ap-icon-sparkles-mermaid" aria-hidden="true"></i> Your Playbook</span>
       <h1 class="recap__title">Here's your Playbook.</h1>
       ${
-        !edit && voiceHeadline
+        voiceHeadline
           ? `<span class="recap__voice-tag"><i class="ap-icon-quote" aria-hidden="true"></i>${esc(voiceHeadline)}</span>`
           : ""
       }
       <p class="recap__lead">
-        ${
-          edit
-            ? "Tweak anything below, then save. Visual identity is pulled from your site and stays as-is."
-            : `Built from ${url ? `<strong>${esc(url)}</strong>` : "your site"} and our chat. Everything below is what Archie will use to write posts that sound like you.`
-        }
+        Built from ${url ? `<strong>${esc(url)}</strong>` : "your site"} and our chat. Everything below is what Archie will use to write posts that sound like you.
       </p>
     </header>
+  `;
+}
+
+function renderEditHint() {
+  return `
+    <div class="ap-infobox info recap__edit-hint">
+      <i class="ap-icon-info_fill" aria-hidden="true"></i>
+      <div class="ap-infobox-content">
+        <div class="ap-infobox-texts">
+          <span class="ap-infobox-message">This Playbook is yours to shape. Hover any card and hit the pencil to edit it — then jump into Archie.</span>
+        </div>
+      </div>
+    </div>
   `;
 }
 
@@ -510,7 +542,7 @@ function renderOverview(draft, edit) {
 
   if (edit) {
     return `
-      <article class="recap__overview recap__overview--edit">
+      <article class="recap__overview recap__overview--edit is-editing" data-recap-editing-card>
         <div class="recap__field">
           <label class="recap__field-label" for="recap-name">Brand name</label>
           <div class="ap-input-group">
@@ -531,6 +563,7 @@ function renderOverview(draft, edit) {
   if (!draft.name && !summary) return "";
   return `
     <article class="recap__overview">
+      ${cardPen("overview")}
       <div class="recap__overview-head">
         <h2 class="recap__overview-name">${esc(draft.name || "Your brand")}</h2>
         ${
@@ -554,8 +587,8 @@ function renderPending() {
   `;
 }
 
-function renderFooter(ready, edit) {
-  if (edit) {
+function renderFooter(ready, scope) {
+  if (scope) {
     return `
       <button type="button" class="ap-button stroked grey" data-recap-cancel>
         <span>Cancel</span>
@@ -567,10 +600,6 @@ function renderFooter(ready, edit) {
     `;
   }
   return `
-    <button type="button" class="ap-button stroked grey" data-recap-edit ${ready ? "" : "disabled"}>
-      <i class="ap-icon-pen"></i>
-      <span>Edit</span>
-    </button>
     <button type="button" class="ap-button primary orange" data-welcome-done ${ready ? "" : "disabled"}>
       <span>Enter Archie</span>
       <i class="ap-icon-arrow-right"></i>
@@ -581,22 +610,23 @@ function renderFooter(ready, edit) {
 function paint(target, sid) {
   const draft = getDraft(sid);
   const ready = isAnalysisReady(sid);
-  const edit = editing && ready;
+  const scope = ready ? editScope : null;
   const body = ready
     ? [
-        renderHero(draft, edit),
-        renderOverview(draft, edit),
-        renderStrategy(draft, edit),
-        renderVoice(draft, edit),
+        renderHero(draft),
+        scope ? "" : renderEditHint(),
+        renderOverview(draft, scope === "overview"),
+        renderStrategy(draft, scope),
+        renderVoice(draft, scope === "voice"),
         renderBrandSnapshot(draft),
-        renderEssentials(draft, edit),
+        renderEssentials(draft, scope === "essentials"),
       ]
         .filter(Boolean)
         .join("")
     : renderPending();
 
   target.innerHTML = html`
-    <section class="welcome-screen welcome-screen--reveal ${edit ? "is-editing" : ""}">
+    <section class="welcome-screen welcome-screen--reveal ${scope ? "is-editing" : ""}">
       <div class="welcome-screen__bg" aria-hidden="true"></div>
       <header class="welcome-screen__top">
         <span class="welcome-screen__brand">
@@ -606,7 +636,7 @@ function paint(target, sid) {
         <span class="welcome-screen__chip">BETA</span>
       </header>
       <div class="welcome-screen__body recap">${raw(body)}</div>
-      <footer class="recap__footer">${raw(renderFooter(ready, edit))}</footer>
+      <footer class="recap__footer">${raw(renderFooter(ready, scope))}</footer>
     </section>
   `;
 }
@@ -630,31 +660,37 @@ function onClick(event, sid) {
   const draft = getDraft(sid);
   if (!draft) return;
 
-  // Enter edit mode.
-  if (event.target.closest("[data-recap-edit]")) {
+  // Enter edit mode for a single card.
+  const penBtn = event.target.closest("[data-recap-edit-card]");
+  if (penBtn) {
     snapshot = snapshotDraft(draft);
-    editing = true;
+    editScope = penBtn.dataset.recapEditCard;
     repaint(sid);
+    mountTarget
+      ?.querySelector(
+        "[data-recap-editing-card] input, [data-recap-editing-card] textarea, [data-recap-editing-card] select",
+      )
+      ?.focus();
     return;
   }
 
-  // Cancel — restore the pre-edit snapshot and leave edit mode.
+  // Cancel — restore the pre-edit snapshot, back to read.
   if (event.target.closest("[data-recap-cancel]")) {
     if (snapshot) patchDraft(sid, snapshot);
     snapshot = null;
-    editing = false;
+    editScope = null;
     repaint(sid);
     return;
   }
 
-  // Save — trim, keep the changes, leave edit mode.
+  // Save — trim, keep the changes, back to read.
   if (event.target.closest("[data-recap-save]")) {
     if (typeof draft.name === "string") draft.name = draft.name.trim();
     if (Array.isArray(draft.ctaLinks)) {
       draft.ctaLinks = draft.ctaLinks.filter((c) => (c.label || "").trim() || (c.url || "").trim() || c.suggested);
     }
     snapshot = null;
-    editing = false;
+    editScope = null;
     repaint(sid);
     return;
   }
@@ -709,7 +745,7 @@ function onClick(event, sid) {
 // Text edits mutate the live draft in place WITHOUT a repaint so inputs
 // keep focus mid-type.
 function onInput(event, sid) {
-  if (!editing) return;
+  if (!editScope) return;
   const draft = getDraft(sid);
   if (!draft) return;
   const t = event.target;
@@ -729,7 +765,7 @@ function onInput(event, sid) {
 }
 
 function onChange(event, sid) {
-  if (!editing) return;
+  if (!editScope) return;
   const draft = getDraft(sid);
   if (!draft) return;
   if (event.target.matches("[data-recap-language]")) {
@@ -738,7 +774,7 @@ function onChange(event, sid) {
 }
 
 function onKeydown(event, sid) {
-  if (!editing) return;
+  if (!editScope) return;
   if (event.target.matches("[data-recap-chip-input]") && event.key === "Enter") {
     event.preventDefault();
     addChip(sid, event.target.dataset.recapChipInput);
