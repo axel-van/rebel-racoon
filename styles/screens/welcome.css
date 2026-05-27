@@ -1591,6 +1591,159 @@
   gap: var(--ref-spacing-xxs);
 }
 
+/* ── Edit mode ────────────────────────────────────────────────────────── */
+.recap__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.recap__field-label {
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-extra-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ref-color-grey-60);
+}
+
+.recap__overview--edit {
+  gap: var(--ref-spacing-md);
+}
+
+/* Editable strategy chips — DS close button + an inline add control. */
+.recap__chips--edit {
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.recap__chip-add {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.recap__chip-add-input {
+  min-width: 132px;
+  height: 30px;
+  padding: 0 var(--ref-spacing-sm);
+  border: 1px dashed var(--app-border);
+  border-radius: var(--app-radius-pill);
+  background: var(--app-surface);
+  font-family: inherit;
+  font-size: var(--ref-font-size-sm);
+  color: var(--ref-color-grey-100);
+}
+
+.recap__chip-add-input:focus {
+  outline: none;
+  border-style: solid;
+  border-color: var(--ref-color-orange-100);
+}
+
+.recap__chip-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-circle);
+  background: var(--app-surface);
+  color: var(--ref-color-grey-80);
+  cursor: pointer;
+  transition:
+    background 160ms var(--app-ease-out),
+    color 160ms var(--app-ease-out),
+    border-color 160ms var(--app-ease-out);
+}
+
+.recap__chip-add-btn i {
+  font-size: var(--sys-icon-css-sm);
+}
+
+.recap__chip-add-btn:hover {
+  border-color: var(--ref-color-orange-100);
+  color: var(--ref-color-orange-100);
+}
+
+/* CTA editor */
+.recap__essentials--edit {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ref-spacing-lg);
+}
+
+.recap__field--ctas {
+  gap: var(--ref-spacing-sm);
+}
+
+.recap__cta-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+}
+
+.recap__cta-edit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+}
+
+.recap__cta-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-lg);
+  background: var(--app-surface);
+  color: var(--ref-color-grey-60);
+  cursor: pointer;
+  transition:
+    background 160ms var(--app-ease-out),
+    color 160ms var(--app-ease-out),
+    border-color 160ms var(--app-ease-out);
+}
+
+.recap__cta-remove i {
+  font-size: var(--sys-icon-css-sm);
+}
+
+.recap__cta-remove:hover {
+  border-color: var(--ref-color-red-100);
+  color: var(--ref-color-red-100);
+}
+
+.recap__add-link {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border: 1px dashed var(--app-border);
+  border-radius: var(--app-radius-lg);
+  background: var(--app-surface);
+  color: var(--ref-color-grey-80);
+  font-family: inherit;
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  cursor: pointer;
+  transition:
+    border-color 160ms var(--app-ease-out),
+    color 160ms var(--app-ease-out);
+}
+
+.recap__add-link i {
+  font-size: var(--sys-icon-css-sm);
+}
+
+.recap__add-link:hover {
+  border-color: var(--ref-color-orange-100);
+  color: var(--ref-color-orange-100);
+}
+
 @media (max-width: 720px) {
   .recap__grid--strategy,
   .recap__grid--voice {
@@ -1603,5 +1756,25 @@
 
   .recap__type {
     margin-left: 0;
+  }
+
+  .recap__cta-edit {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "label remove"
+      "url remove";
+  }
+
+  .recap__cta-edit-label {
+    grid-area: label;
+  }
+
+  .recap__cta-edit-url {
+    grid-area: url;
+  }
+
+  .recap__cta-remove {
+    grid-area: remove;
+    align-self: start;
   }
 }
