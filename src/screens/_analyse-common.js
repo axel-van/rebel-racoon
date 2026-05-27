@@ -158,7 +158,13 @@ export function renderPicker(picker) {
       // clipping so the network badge in the corner stays visible.
       const iconBody = it.avatar
         ? `<div class="ap-avatar size-32" aria-hidden="true">
-             ${it.avatar.initials ? `<span class="ap-avatar-initials">${it.avatar.initials}</span>` : ""}
+             ${
+               it.avatar.imageUrl
+                 ? `<img src="${it.avatar.imageUrl}" alt="" />`
+                 : it.avatar.initials
+                   ? `<span class="ap-avatar-initials">${it.avatar.initials}</span>`
+                   : ""
+             }
              ${it.avatar.networkIcon ? `<span class="ap-avatar-network"><i class="${it.avatar.networkIcon}"></i></span>` : ""}
            </div>`
         : it.imgSrc

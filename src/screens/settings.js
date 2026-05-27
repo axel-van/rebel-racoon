@@ -13,7 +13,7 @@ import { html, raw, escapeHtml } from "../utils.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=57";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=4";
 import { showToast } from "../components/toast.js?v=20";
-import { socialAccounts } from "../mocks.js?v=34";
+import { socialAccounts } from "../mocks.js?v=35";
 import {
   getConnectors,
   findConnector,

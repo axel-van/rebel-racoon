@@ -7,8 +7,8 @@
 
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { getDraft, patchDraft } from "../context-builder.js?v=44";
-import { socialAccounts } from "../mocks.js?v=34";
+import { getDraft, patchDraft } from "../context-builder.js?v=45";
+import { socialAccounts } from "../mocks.js?v=35";
 
 const WELCOME_SESSION_KEY = "welcomeSessionId";
 
