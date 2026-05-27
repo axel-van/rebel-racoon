@@ -172,87 +172,8 @@ button.app-topbar__title--rename:focus-visible .app-topbar__title-pen {
      drafts on  → .ap-button stroked orange
      ideas on   → .ap-button stroked blue
    The Drafts count badge uses .ap-counter normal orange (DS native).
-   Context pill is the only composed exception — it needs a 2-line
-   inner label, so it keeps a thin app-level wrapper class but starts
-   from .ap-button stroked grey. */
-
-.app-topbar__context-pill {
-  /* Override the DS button base padding/min-height so the 2-line label
-     fits without forcing the button to be 36px tall. */
-  padding: 4px var(--ref-spacing-xs) 4px 8px;
-  min-height: 0;
-  height: auto;
-  gap: var(--ref-spacing-xxs);
-}
-
-.app-topbar__context-pill.is-empty .app-topbar__context-name {
-  font-style: italic;
-  color: var(--ref-color-grey-60);
-  font-weight: var(--ref-font-weight-bold);
-}
-
-.app-topbar__context-swatch {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: var(--app-radius-circle);
-  flex-shrink: 0;
-  background: var(--ref-color-grey-40);
-}
-
-.app-topbar__context-swatch--orange {
-  background: var(--ref-color-orange-100);
-}
-.app-topbar__context-swatch--blue {
-  background: var(--ref-color-electric-blue-100);
-}
-.app-topbar__context-swatch--green {
-  background: var(--ref-color-green-100);
-}
-.app-topbar__context-swatch--purple {
-  background: var(--ref-color-purple-100);
-}
-.app-topbar__context-swatch--red {
-  background: var(--ref-color-red-100);
-}
-.app-topbar__context-swatch--yellow {
-  background: var(--ref-color-yellow-100);
-}
-.app-topbar__context-swatch--slate,
-.app-topbar__context-swatch--grey {
-  background: var(--ref-color-grey-60);
-}
-
-.app-topbar__context-label {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  line-height: 1.1;
-  min-width: 0;
-}
-
-.app-topbar__context-eyebrow {
-  font-size: 9px;
-  font-weight: var(--ref-font-weight-extra-bold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ref-color-grey-60);
-}
-
-.app-topbar__context-name {
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-extra-bold);
-  color: var(--ref-color-grey-100);
-  max-width: 180px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.app-topbar__context-pill .ap-icon-chevron-down {
-  font-size: var(--sys-icon-css-xs);
-  color: var(--ref-color-grey-60);
-}
+   The playbook/context pill moved into the composer (session.js) — the
+   topbar no longer renders it. */
 
 .app-topbar__feedback {
   display: inline-flex;

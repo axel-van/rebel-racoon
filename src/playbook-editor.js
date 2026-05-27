@@ -22,7 +22,7 @@
 // document) flash a mermaid "Analyzing…" pill via postSystemNotice +
 // markSystemNoticeReady, mirroring the context-builder creation flow.
 
-import { getContextById, updateContext } from "./contexts-store.js?v=28";
+import { getContextById, updateContext } from "./contexts-store.js?v=29";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=36";
 import * as inlineQuestion from "./inline-question.js?v=27";
 import {

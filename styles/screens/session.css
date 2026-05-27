@@ -1414,6 +1414,59 @@
   color: var(--ref-color-grey-100);
 }
 
+.composer-context__pill[data-context-color="purple"] {
+  background: var(--ref-color-purple-10);
+  color: var(--ref-color-purple-100);
+}
+
+.composer-context__pill[data-context-color="yellow"] {
+  background: var(--ref-color-yellow-10);
+  color: var(--ref-color-yellow-100);
+}
+
+/* Static (non-interactive) variant — shown once the conversation has
+   started: the playbook is locked in and only indicated, not selectable. */
+.composer-context__pill.is-static {
+  cursor: default;
+}
+
+.composer-context__pill.is-static:hover,
+.composer-context__pill.is-static:focus-visible {
+  filter: none;
+}
+
+/* Caret on the selectable pill (New Chat) signalling the playbook picker. */
+.composer-context__caret {
+  font-size: var(--sys-icon-css-xs);
+  margin-left: var(--ref-spacing-xxxs);
+}
+
+/* Playbook picker — the pill is the trigger; the DS .ap-action-dropdown
+   floats above it (the composer sits at the bottom). Positioning only — the
+   DS provides the surface, border, shadow, and item layout. */
+.composer-playbook {
+  position: relative;
+  display: inline-flex;
+}
+
+.ap-action-dropdown.composer-playbook__menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + var(--ref-spacing-xxs));
+  min-width: 200px;
+  width: auto;
+  z-index: var(--app-z-overlay);
+}
+
+.ap-action-dropdown.composer-playbook__menu[hidden] {
+  display: none;
+}
+
+/* Dropdown rows carry the playbook's colour dot before the label. */
+.composer-playbook__menu .composer-context__dot {
+  margin-right: var(--ref-spacing-xxs);
+}
+
 /* ---------- Workspace ---------- */
 
 .session__workspace {

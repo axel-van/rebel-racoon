@@ -17,7 +17,7 @@ import {
 import { isFlagOn } from "../feature-flags.js?v=3";
 import { isNewUser } from "../user-mode.js?v=22";
 import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=29";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=28";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=29";
 import { closePanel as closeRightPanel } from "./right-panel.js?v=108";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=36";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=27";

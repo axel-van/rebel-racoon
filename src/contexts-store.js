@@ -42,6 +42,12 @@ export function getContextById(id) {
   return contexts.find((c) => c.id === id) || null;
 }
 
+// The playbook a fresh chat starts with — the one flagged isDefault, else
+// the first available. Returns null only when there are no playbooks at all.
+export function getDefaultContext() {
+  return contexts.find((c) => c.isDefault) || contexts[0] || null;
+}
+
 /**
  * Add a new global context to the store. Q2 hybrid shape — flat editable
  * fields (color, brandName, audience, briefSummary, tones, doRules,

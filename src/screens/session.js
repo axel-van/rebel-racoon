@@ -3,7 +3,7 @@ import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=58";
 import { socialAccounts, chatStarters } from "../mocks.js?v=35";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
-import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=28";
+import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=29";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
   getThread,
@@ -152,7 +152,12 @@ export function renderSession(params, target) {
   const session = mockedSession || {
     id: params.id,
     name: q.title || (params.id === "new" ? "Untitled session" : "Session"),
-    contextId: q.contextId || null,
+    // New Chat starts pre-bound to the default playbook so the composer pill
+    // shows a real selection (and the first send uses it instead of
+    // auto-launching the create-a-playbook wizard). The user can swap it via
+    // the composer pill before sending. Creation flows (welcome-alt-*,
+    // new-ctx-*, playbook-edit-*) never hit this "new" branch.
+    contextId: q.contextId || (params.id === "new" ? getDefaultContext()?.id || null : null),
   };
   // Reset selection when switching to a different chat. Tab + URL-param
   // changes within the same session keep the selection intact.
@@ -250,7 +255,7 @@ function renderAssistantPanel(session, attachedContext) {
   // of the panel (default) or inline inside the empty hero. We render it
   // once and place it via `${composerMarkup}` so click handlers (delegated
   // on #app) keep working in both positions.
-  const composerMarkup = renderComposer(attachedContext, session);
+  const composerMarkup = renderComposer(attachedContext, session, isEmptyConversation);
   return html`
     <aside class="session__assistant" aria-label="Assistant panel">
       <div class="session__assistant-thread" id="assistantThread" data-assistant-thread>
@@ -266,7 +271,91 @@ function renderAssistantPanel(session, attachedContext) {
 // the conversation hasn't started yet). The click handlers in bindSession
 // are delegated on #app, so the same markup works in both positions
 // without re-wiring.
-function renderComposer(_attachedContext, session) {
+// context.color → DS color token for the pill dot (blue maps to the
+// electric-blue ramp, matching the [data-context-color] pill tints).
+const CONTEXT_DOT_TOKEN = { blue: "electric-blue" };
+function dotColorVar(colorName) {
+  const token = CONTEXT_DOT_TOKEN[colorName] || colorName || "grey";
+  return `var(--ref-color-${token}-100)`;
+}
+
+// Playbook pill in the composer toolbar.
+//   • selectable (New Chat / empty conversation) → a button that toggles a
+//     dropdown of every playbook so the user can pick which one the chat
+//     uses before sending the first message.
+//   • static (active conversation) → a non-interactive indicator showing the
+//     locked-in playbook.
+// Returns "" when there are no playbooks at all. Selection is handled by the
+// delegated [data-playbook-pick] handler in bindSession.
+function renderPlaybookControl(ctx, selectable) {
+  if (!ctx) return "";
+  const color = ctx.color || "grey";
+  if (!selectable) {
+    return `
+      <div class="composer-playbook" data-composer-playbook>
+        <span
+          class="composer-context__pill is-static"
+          data-context-color="${escapeHtml(color)}"
+          title="Playbook: ${escapeHtml(ctx.name)}"
+        >
+          <span class="composer-context__dot" style="background: ${dotColorVar(color)};"></span>
+          <span>${escapeHtml(ctx.name)}</span>
+        </span>
+      </div>
+    `;
+  }
+  const items = getContexts()
+    .map((c) => {
+      const cColor = c.color || "grey";
+      const isSel = c.id === ctx.id;
+      return `
+        <button
+          type="button"
+          class="ap-action-dropdown-item${isSel ? " is-selected" : ""}"
+          data-playbook-pick="${escapeHtml(c.id)}"
+          role="menuitemradio"
+          aria-checked="${isSel ? "true" : "false"}"
+        >
+          <span class="composer-context__dot" style="background: ${dotColorVar(cColor)};"></span>
+          <div class="ap-action-dropdown-item-text">
+            <div class="ap-action-dropdown-item-label-container">
+              <span class="ap-action-dropdown-item-label">${escapeHtml(c.name)}</span>
+            </div>
+          </div>
+          ${isSel ? `<i class="ap-icon-check" aria-hidden="true"></i>` : ""}
+        </button>
+      `;
+    })
+    .join("");
+  return `
+    <div class="composer-playbook" data-composer-playbook>
+      <button
+        type="button"
+        class="composer-context__pill"
+        data-context-color="${escapeHtml(color)}"
+        data-playbook-toggle
+        aria-haspopup="menu"
+        aria-expanded="false"
+        title="Choose the playbook for this chat"
+      >
+        <span class="composer-context__dot" style="background: ${dotColorVar(color)};"></span>
+        <span>${escapeHtml(ctx.name)}</span>
+        <i class="ap-icon-arrow-down composer-context__caret" aria-hidden="true"></i>
+      </button>
+      <div
+        class="ap-action-dropdown composer-playbook__menu"
+        data-playbook-menu
+        hidden
+        role="menu"
+        aria-label="Choose a playbook"
+      >
+        ${items}
+      </div>
+    </div>
+  `;
+}
+
+function renderComposer(attachedContext, session, selectable) {
   return `
     <div class="session__composer">
       <div class="session__composer-inner">
@@ -295,6 +384,7 @@ function renderComposer(_attachedContext, session) {
             rows="2"
           ></textarea>
           <div class="session__composer-toolbar">
+            ${renderPlaybookControl(attachedContext, selectable)}
             <div class="assistant-attach">
               <button
                 type="button"
@@ -1284,7 +1374,16 @@ function wireAssistantPanel(root, session, attachedContext) {
     const aside = root.querySelector(".session__assistant");
     const screen = aside?.parentElement;
     if (screen) {
-      const fresh = renderAssistantPanel(session, attachedContext);
+      // Recompute the attached playbook from the live state so a pill the
+      // user picked (which set session.contextId) survives the empty→active
+      // re-render — not the stale value captured when the panel first mounted.
+      const liveQ = readQuery();
+      const liveCtx = liveQ.contextId
+        ? getContextById(liveQ.contextId)
+        : session.contextId
+          ? getContextById(session.contextId)
+          : attachedContext;
+      const fresh = renderAssistantPanel(session, liveCtx);
       const tmp = document.createElement("div");
       tmp.innerHTML = fresh;
       const newAside = tmp.firstElementChild;
@@ -2484,6 +2583,30 @@ function bindSession(root, session) {
         return;
       }
 
+      // Composer playbook pill (New Chat only) — toggle the playbook picker.
+      const pbToggle = event.target.closest("[data-playbook-toggle]");
+      if (pbToggle) {
+        event.preventDefault();
+        const menu = root.querySelector("[data-playbook-menu]");
+        if (menu) {
+          const willOpen = menu.hidden;
+          menu.hidden = !willOpen;
+          pbToggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
+        }
+        return;
+      }
+
+      // Pick a playbook for this chat — bind it to the session and re-render
+      // just the pill control in place (keeps the textarea + its text).
+      const pbPick = event.target.closest("[data-playbook-pick]");
+      if (pbPick) {
+        event.preventDefault();
+        session.contextId = pbPick.dataset.playbookPick;
+        const container = root.querySelector("[data-composer-playbook]");
+        if (container) container.outerHTML = renderPlaybookControl(getContextById(session.contextId), true);
+        return;
+      }
+
       // Quick scripted attach items inside the paper-clip menu.
       const addSrcItem = event.target.closest("[data-add-source]");
       if (addSrcItem) {
@@ -2500,8 +2623,11 @@ function bindSession(root, session) {
         if (menu && !menu.hidden) menu.hidden = true;
       }
 
-      // (Context pill click is now handled in topbar.js — the pill moved
-      // out of the composer into the app header next to the chat title.)
+      // Click outside the playbook control → close its picker.
+      if (!event.target.closest(".composer-playbook")) {
+        const menu = root.querySelector("[data-playbook-menu]");
+        if (menu && !menu.hidden) menu.hidden = true;
+      }
     },
     { signal },
   );
