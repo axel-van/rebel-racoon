@@ -288,9 +288,11 @@ function dotColorVar(colorName) {
 // Returns "" when there are no playbooks at all. Selection is handled by the
 // delegated [data-playbook-pick] handler in bindSession.
 function renderPlaybookControl(ctx, selectable) {
-  if (!ctx) return "";
-  const color = ctx.color || "grey";
+  const color = ctx?.color || "grey";
+
+  // Static indicator on active chats — only when a playbook is attached.
   if (!selectable) {
+    if (!ctx) return "";
     return `
       <div class="composer-playbook" data-composer-playbook>
         <span
@@ -304,10 +306,14 @@ function renderPlaybookControl(ctx, selectable) {
       </div>
     `;
   }
-  const items = getContexts()
+
+  // Selectable pill (New Chat) — always shown, even with no playbooks yet
+  // (then it reads "No playbook" and the menu offers to create one).
+  const playbooks = getContexts();
+  const items = playbooks
     .map((c) => {
       const cColor = c.color || "grey";
-      const isSel = c.id === ctx.id;
+      const isSel = ctx && c.id === ctx.id;
       return `
         <button
           type="button"
@@ -327,6 +333,20 @@ function renderPlaybookControl(ctx, selectable) {
       `;
     })
     .join("");
+  const createItem = `
+    <button type="button" class="ap-action-dropdown-item" data-playbook-create role="menuitem">
+      <i class="ap-icon-plus"></i>
+      <div class="ap-action-dropdown-item-text">
+        <div class="ap-action-dropdown-item-label-container">
+          <span class="ap-action-dropdown-item-label">Create a playbook</span>
+        </div>
+      </div>
+    </button>
+  `;
+  const divider = playbooks.length ? `<div class="ap-action-dropdown-divider" role="separator"></div>` : "";
+  const pillInner = ctx
+    ? `<span class="composer-context__dot" style="background: ${dotColorVar(color)};"></span><span>${escapeHtml(ctx.name)}</span>`
+    : `<span>No playbook</span>`;
   return `
     <div class="composer-playbook" data-composer-playbook>
       <button
@@ -338,8 +358,7 @@ function renderPlaybookControl(ctx, selectable) {
         aria-expanded="false"
         title="Choose the playbook for this chat"
       >
-        <span class="composer-context__dot" style="background: ${dotColorVar(color)};"></span>
-        <span>${escapeHtml(ctx.name)}</span>
+        ${pillInner}
         <i class="ap-icon-arrow-down composer-context__caret" aria-hidden="true"></i>
       </button>
       <div
@@ -350,6 +369,8 @@ function renderPlaybookControl(ctx, selectable) {
         aria-label="Choose a playbook"
       >
         ${items}
+        ${divider}
+        ${createItem}
       </div>
     </div>
   `;
@@ -2604,6 +2625,16 @@ function bindSession(root, session) {
         session.contextId = pbPick.dataset.playbookPick;
         const container = root.querySelector("[data-composer-playbook]");
         if (container) container.outerHTML = renderPlaybookControl(getContextById(session.contextId), true);
+        return;
+      }
+
+      // "Create a playbook" from the picker — spawn a fresh context-builder
+      // session (mirrors the /contexts new-playbook entry) and return to the
+      // chat once saved, where the new playbook becomes the default.
+      if (event.target.closest("[data-playbook-create]")) {
+        event.preventDefault();
+        setHandoff("pendingStartContextBuilder", { returnTo: "/" });
+        navigate(`/session/new-ctx-${Date.now().toString(36)}`);
         return;
       }
 
