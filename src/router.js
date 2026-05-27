@@ -27,6 +27,11 @@ export function navigate(path) {
 }
 
 export function getPath() {
+  // Capture override — Figma's capture script requires hash to start with
+  // "#figmacapture=", which is incompatible with our hash-based router.
+  // When a ?route=/foo query param is present, use it as the active route.
+  const queryRoute = new URLSearchParams(window.location.search).get("route");
+  if (queryRoute) return queryRoute.split("?")[0] || "/";
   const raw = (window.location.hash || "#/").replace(/^#/, "") || "/";
   // Strip the query string — route patterns only match the path.
   return raw.split("?")[0] || "/";

@@ -8,6 +8,18 @@
 import { navigate } from "./router.js?v=30";
 
 export function parseHashParams() {
+  // Capture-mode bridge: when the hash holds figma capture params, source
+  // hash-style params from window.location.search instead (set by the
+  // capture URL alongside ?route=).
+  const search = window.location.search;
+  if (search && /[?&](panel|tab|focusIdea|contextId|view|filter)=/.test(search)) {
+    const params = new URLSearchParams(search);
+    // Strip our routing-only keys so screens don't get confused.
+    params.delete("route");
+    params.delete("setup");
+    params.delete("openModal");
+    if ([...params.keys()].length) return params;
+  }
   const raw = window.location.hash.split("?")[1] || "";
   return new URLSearchParams(raw);
 }
