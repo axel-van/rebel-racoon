@@ -758,9 +758,9 @@
   margin: var(--ref-spacing-sm) auto 0;
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   background: var(--app-surface);
-  border: 1px solid var(--ref-color-electric-blue-100);
+  border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--app-radius-card);
-  box-shadow: var(--app-shadow-modal);
+  box-shadow: var(--app-shadow-high);
 }
 
 .rpanel-drafts__bulkbar-label {

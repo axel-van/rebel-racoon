@@ -38,6 +38,10 @@
      Mirrors the Figma V2 token (node 957-3); aliases the internal
      --comp-select-shadow so app code never reaches a --comp-* directly. */
   --app-shadow-low: 0px 4px 6px -2px rgba(52, 69, 99, 0.15), 0px 4px 25px -2px rgba(52, 69, 99, 0.15);
+
+  /* DS "Shadow/High" — single soft, far-cast layer for floating overlays.
+     Mirrors the Figma V2 token (node 957-4): #0000000A drop shadow. */
+  --app-shadow-high: 0px 25px 50px 0px rgba(0, 0, 0, 0.04);
   --app-shadow-popover-md: 0 8px 24px rgba(33, 46, 68, 0.12);
   --app-shadow-popover-lg: 0 12px 32px rgba(33, 46, 68, 0.12);
   --app-shadow-drawer-left: -8px 0 32px rgba(33, 46, 68, 0.12);
