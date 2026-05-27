@@ -2,7 +2,7 @@ import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=3";
 import { initTopbar, renderTopbar } from "./components/topbar.js?v=57";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=43";
-import { init as initRightPanel } from "./components/right-panel.js?v=105";
+import { init as initRightPanel } from "./components/right-panel.js?v=106";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=24";
 import { initUserModeChip } from "./components/user-mode-chip.js?v=30";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=22";
@@ -41,7 +41,7 @@ import {
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=105";
+} from "./components/right-panel.js?v=106";
 
 // Figma capture helper — seed a welcome draft synchronously so the multi-step
 // welcome flow (which requires sessionStorage.welcomeSessionId + a draft) renders

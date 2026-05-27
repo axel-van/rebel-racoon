@@ -33,6 +33,7 @@ import { iconFor } from "../file-kinds.js?v=20";
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
 import { open as openScheduleModal } from "./schedule-modal.js?v=24";
 import { open as openGenerateImageModal } from "./generate-image-modal.js?v=22";
+import { open as openConfirmModal } from "./confirm-modal.js?v=21";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
 // the session workspace, hosts two modes:
@@ -431,6 +432,10 @@ export function init() {
     if (event.target.closest("[data-rpanel-drafts-bulk-clear]")) {
       selectedDraftIds.clear();
       renderPanel();
+      return;
+    }
+    if (event.target.closest("[data-rpanel-drafts-bulk-delete]")) {
+      onBulkDelete();
       return;
     }
     if (event.target.closest("[data-rpanel-drafts-bulk-schedule]")) {
@@ -1358,21 +1363,26 @@ function renderDraftsView() {
     : "";
 
   // Sticky bulk-action bar — anchored at the bottom of the feed when 1+
-  // draft is selected. Schedule N drafts CTA + Clear selection.
+  // draft is selected. Clear selection · Delete (confirmed) · Schedule CTA.
+  const draftWord = selectedCount === 1 ? "draft" : "drafts";
   const bulkBar = selectedCount
     ? `
       <div class="rpanel-drafts__bulkbar" role="region" aria-label="Bulk actions">
         <div class="rpanel-drafts__bulkbar-label">
           <i class="ap-icon-check" aria-hidden="true"></i>
-          ${selectedCount} ${selectedCount === 1 ? "draft" : "drafts"} selected
+          ${selectedCount} ${draftWord} selected
         </div>
         <div class="rpanel-drafts__bulkbar-actions">
           <button type="button" class="ap-button ghost grey" data-rpanel-drafts-bulk-clear>
             Clear
           </button>
+          <button type="button" class="ap-button ghost red" data-rpanel-drafts-bulk-delete>
+            <i class="ap-icon-trash" aria-hidden="true"></i>
+            Delete ${selectedCount} ${draftWord}
+          </button>
           <button type="button" class="ap-button primary orange" data-rpanel-drafts-bulk-schedule>
             <i class="ap-icon-calendar" aria-hidden="true"></i>
-            Schedule ${selectedCount} ${selectedCount === 1 ? "draft" : "drafts"}
+            Schedule ${selectedCount} ${draftWord}
           </button>
         </div>
       </div>
@@ -1427,6 +1437,43 @@ function onPostSchedule(postId) {
       post.status = "scheduled";
       post.scheduledForLabel = slot ? formatScheduledLabel(slot.when) : post.scheduledForLabel || "later";
       renderPanel();
+    },
+  });
+}
+
+// Bulk delete — confirm-modal gate (destructive, so no silent removal),
+// then drop every selected draft. Snapshots each post with its original
+// index so the toast Undo can restore the whole batch in place.
+function onBulkDelete() {
+  const sid = activeSessionId();
+  if (!sid) return;
+  const snapshot = getPosts(sid)
+    .map((post, idx) => ({ post, idx }))
+    .filter(({ post }) => selectedDraftIds.has(post.id));
+  if (snapshot.length === 0) return;
+  const count = snapshot.length;
+  const draftWord = count === 1 ? "draft" : "drafts";
+  openConfirmModal({
+    title: `Delete ${count} ${draftWord}?`,
+    body: `${count === 1 ? "This draft" : `These ${count} drafts`} will be removed from the session. You can undo right after.`,
+    confirmLabel: `Delete ${count} ${draftWord}`,
+    danger: true,
+    onConfirm: () => {
+      for (const { post } of snapshot) removePost(sid, post.id);
+      selectedDraftIds.clear();
+      renderPanel();
+      import("./toast.js?v=20").then(({ showToast }) => {
+        showToast(`${count} ${draftWord} deleted`, {
+          action: {
+            label: "Undo",
+            onClick: () => {
+              // Re-insert in ascending original index so positions line up.
+              for (const { post, idx } of snapshot) insertPost(sid, post, idx);
+              renderPanel();
+            },
+          },
+        });
+      });
     },
   });
 }
