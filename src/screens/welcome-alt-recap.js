@@ -357,14 +357,10 @@ function renderEditChips(field, values, placeholder) {
     <div class="recap__chips recap__chips--edit">
       ${chips}
       <span class="recap__chip-add">
-        <input
-          type="text"
-          class="recap__chip-add-input"
-          data-recap-chip-input="${field}"
-          placeholder="${esc(placeholder)}"
-          aria-label="${esc(placeholder)}"
-        />
-        <button type="button" class="recap__chip-add-btn" data-recap-chip-add="${field}" aria-label="Add">
+        <div class="ap-input-group recap__chip-add-field">
+          <input type="text" data-recap-chip-input="${field}" placeholder="${esc(placeholder)}" aria-label="${esc(placeholder)}" />
+        </div>
+        <button type="button" class="ap-icon-button transparent recap__chip-add-btn" data-recap-chip-add="${field}" aria-label="Add">
           <i class="ap-icon-plus"></i>
         </button>
       </span>

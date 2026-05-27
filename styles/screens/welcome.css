@@ -1706,48 +1706,16 @@
   gap: var(--ref-spacing-xxs);
 }
 
-.recap__chip-add-input {
-  min-width: 132px;
-  height: 30px;
-  padding: 0 var(--ref-spacing-sm);
-  border: 1px dashed var(--app-border);
-  border-radius: var(--app-radius-pill);
-  background: var(--app-surface);
-  font-family: inherit;
-  font-size: var(--ref-font-size-sm);
-  color: var(--ref-color-grey-100);
-}
-
-.recap__chip-add-input:focus {
-  outline: none;
-  border-style: solid;
-  border-color: var(--ref-color-orange-100);
+/* The add-chip field is a DS input (.ap-input-group); the + is a DS
+   icon-button. Only width + button size are app-level layout. */
+.recap__chip-add-field {
+  width: 200px;
+  max-width: 100%;
 }
 
 .recap__chip-add-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: 1px solid var(--app-border-soft);
-  border-radius: var(--app-radius-circle);
-  background: var(--app-surface);
-  color: var(--ref-color-grey-80);
-  cursor: pointer;
-  transition:
-    background 160ms var(--app-ease-out),
-    color 160ms var(--app-ease-out),
-    border-color 160ms var(--app-ease-out);
-}
-
-.recap__chip-add-btn i {
-  font-size: var(--sys-icon-css-sm);
-}
-
-.recap__chip-add-btn:hover {
-  border-color: var(--ref-color-orange-100);
-  color: var(--ref-color-orange-100);
+  width: 28px;
+  height: 28px;
 }
 
 /* CTA editor */
