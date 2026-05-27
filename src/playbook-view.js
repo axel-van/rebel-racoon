@@ -658,12 +658,14 @@ function paint() {
     .filter(Boolean)
     .join("");
 
+  const footerHtml = cfg.footer ? `<footer class="recap__footer">${cfg.footer()}</footer>` : "";
+
   mountTarget.innerHTML = html`
     <section class="welcome-screen welcome-screen--reveal ${modeClass} ${scope ? "is-editing" : ""}">
       <div class="welcome-screen__bg" aria-hidden="true"></div>
       ${raw(renderTop())}
       <div class="welcome-screen__body recap">${raw(body)}</div>
-      <footer class="recap__footer">${raw(cfg.footer ? cfg.footer() : "")}</footer>
+      ${raw(footerHtml)}
     </section>
   `;
 }

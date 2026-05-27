@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { getPath } from "../router.js?v=30";
+import { getPath, navigate } from "../router.js?v=30";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 // Lot 19 — topbar no longer carries its own sidebar-toggle button. The
 // sidebar head exposes the toggle in both expanded (chevron-left) and
@@ -90,6 +90,7 @@ export function renderTopbar(_options = {}) {
   const el = document.getElementById("topbar");
   if (!el) return;
   const onSession = isSessionRoute();
+  const onPlaybook = isPlaybookRoute();
   const rpMode = getRightPanelMode();
   const draftCount = onSession ? latestDraftCount() : 0;
   // Empty conversation = no user turn yet. Used as one input to the
@@ -98,7 +99,9 @@ export function renderTopbar(_options = {}) {
   const isEmpty = onSession ? isEmptyConversation() : true;
   const ideaCount = onSession ? sessionIdeaCount() : 0;
   el.innerHTML = html`
-    <div class="app-topbar__left">${raw(onSession ? renderContextPill() : "")}${raw(renderTitle(onSession))}</div>
+    <div class="app-topbar__left">
+      ${raw(onPlaybook ? renderBack() : (onSession ? renderContextPill() : "") + renderTitle(onSession))}
+    </div>
     <div class="app-topbar__right">
       ${raw(onSession ? renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) : "")}
       ${raw(onSession ? renderStatusCardToggle() : "")}
@@ -159,6 +162,12 @@ export function initTopbar() {
   const el = document.getElementById("topbar");
   if (!el) return;
   el.addEventListener("click", (event) => {
+    // Back to Playbooks — shown on the /playbook/:id page.
+    const backBtn = event.target.closest("[data-topbar-back]");
+    if (backBtn) {
+      navigate(backBtn.dataset.topbarBack || "/");
+      return;
+    }
     // Click the conversation title → open the rename modal for it.
     const renameBtn = event.target.closest("[data-topbar-rename-session]");
     if (renameBtn) {
@@ -415,6 +424,21 @@ function latestDraftCount() {
 
 function isSessionRoute() {
   return /^\/session\//.test(getPath());
+}
+
+function isPlaybookRoute() {
+  return /^\/playbook\//.test(getPath());
+}
+
+// On the Playbook page the topbar leads with a back control to the
+// Playbooks list, in place of the route title.
+function renderBack() {
+  return `
+    <button type="button" class="app-topbar__back" data-topbar-back="/contexts" title="Back to Playbooks">
+      <i class="ap-icon-arrow-left" aria-hidden="true"></i>
+      <span>Back to Playbooks</span>
+    </button>
+  `;
 }
 
 function currentSessionId() {

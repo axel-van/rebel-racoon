@@ -1,10 +1,10 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=57";
+import { renderTopbar } from "../components/topbar.js?v=58";
 import { socialAccounts, chatStarters } from "../mocks.js?v=35";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, updateContext } from "../contexts-store.js?v=28";
-import { isNewUser } from "../user-mode.js?v=21";
+import { isNewUser } from "../user-mode.js?v=22";
 import {
   getThread,
   sendMessage,
@@ -37,7 +37,7 @@ import { startDraftFlow, executeDraft } from "../draft-flow.js?v=29";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=32";
 import * as inlineQuestion from "../inline-question.js?v=27";
-import * as contextBuilder from "../context-builder.js?v=46";
+import * as contextBuilder from "../context-builder.js?v=47";
 import * as playbookEditor from "../playbook-editor.js?v=10";
 import { renderPicker } from "./_analyse-common.js?v=32";
 import { renderSourceCard } from "../components/source-card.js?v=30";
@@ -1434,17 +1434,6 @@ function wireAssistantPanel(root, session, attachedContext) {
     // Defensive: direct link to /session/playbook-edit-* without handoff.
     // Bounce back to /contexts (no playbook to edit).
     navigate("/contexts");
-  }
-
-  // First-time onboarding hand-off. /welcome/sources arms this after the
-  // user finishes the Playbook creation step; the dashboard then forwards
-  // to a fresh /session/new?contextId={id} which lands here. We consume
-  // the handoff and surface a Playbook-named welcome toast.
-  const pendingWelcome = consumeHandoff("welcomeComplete");
-  if (pendingWelcome?.playbookName) {
-    setTimeout(() => {
-      showToast(`Welcome — your Playbook "${pendingWelcome.playbookName}" is ready.`);
-    }, 200);
   }
 
   bindDragAndDrop(root.querySelector(".session__assistant"), session);

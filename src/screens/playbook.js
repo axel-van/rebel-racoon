@@ -6,9 +6,9 @@
 
 import { navigate } from "../router.js?v=30";
 import { escapeHtml as esc } from "../utils.js?v=20";
-import { renderTopbar } from "../components/topbar.js?v=57";
+import { renderTopbar } from "../components/topbar.js?v=58";
 import { getContextById, updateContext } from "../contexts-store.js?v=28";
-import { mount, snapshotEditable } from "../playbook-view.js?v=1";
+import { mount, snapshotEditable } from "../playbook-view.js?v=2";
 
 export function renderPlaybook(params, target) {
   const id = params.id;
@@ -36,18 +36,6 @@ export function renderPlaybook(params, target) {
       lead: (d) => `Everything below is what Archie uses to write for <strong>${esc(d.name || "your brand")}</strong>.`,
     },
     editHint: "Hover any card and hit the pencil to edit it — your changes save as you go.",
-    footer: () => `
-      <button type="button" class="ap-button stroked grey" data-pv-back>
-        <i class="ap-icon-arrow-left"></i>
-        <span>Back to Playbooks</span>
-      </button>
-    `,
-    onFooter: (event) => {
-      if (event.target.closest("[data-pv-back]")) {
-        navigate("/contexts");
-        return true;
-      }
-      return false;
-    },
+    // No footer — the "Back to Playbooks" control lives in the topbar.
   });
 }

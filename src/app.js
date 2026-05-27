@@ -1,6 +1,6 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=3";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=57";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=58";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=43";
 import { init as initRightPanel } from "./components/right-panel.js?v=108";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=24";
@@ -25,7 +25,7 @@ import { renderContexts } from "./screens/contexts.js?v=36";
 import { renderSettings } from "./screens/settings.js?v=2";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=3";
 import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=11";
-import { renderPlaybook } from "./screens/playbook.js?v=1";
+import { renderPlaybook } from "./screens/playbook.js?v=2";
 import * as __capAddSource from "./components/add-source-modal.js?v=23";
 import * as __capGenImage from "./components/generate-image-modal.js?v=23";
 import * as __capBug from "./components/bug-report-modal.js?v=22";
