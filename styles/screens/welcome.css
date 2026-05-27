@@ -1666,7 +1666,7 @@
   width: fit-content;
   max-width: calc(100% - var(--ref-spacing-xxl));
   margin: var(--ref-spacing-lg) auto 0;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xxs);
   background: var(--app-surface);
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--app-radius-card);
@@ -1914,14 +1914,9 @@
   display: none;
 }
 
-/* Accent the card / section currently in edit. */
-.recap__stat.is-editing,
-.recap__overview--edit,
-.recap__editbox {
-  border: 1px solid var(--ref-color-orange-100);
-  box-shadow: var(--app-shadow-low);
-}
-
+/* The edit container reads as a plain card — the inputs and the ×/✓
+   controls signal "editing". No coloured border: the card isn't in an
+   error or alert state. */
 .recap__editbox {
   display: flex;
   flex-direction: column;
@@ -1929,6 +1924,8 @@
   padding: var(--ref-spacing-lg);
   border-radius: var(--ref-border-radius-md);
   background: var(--app-surface);
+  border: 1px solid var(--app-border-soft);
+  box-shadow: var(--app-shadow-low);
 }
 
 /* Touch devices have no hover — keep the pencils permanently visible so
