@@ -692,11 +692,11 @@
 }
 
 .recap-loading__step.is-done {
-  background: var(--ref-color-orange-40);
+  background: var(--ref-color-electric-blue-40);
 }
 
 .recap-loading__step.is-active {
-  background: var(--ref-color-orange-100);
+  background: var(--ref-color-electric-blue-100);
   animation: recap-loading-pulse 1.2s ease-in-out infinite;
 }
 
