@@ -953,6 +953,7 @@
   margin-top: var(--ref-spacing-xxs);
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxxs);
   padding: 0 var(--ref-spacing-xxs);
