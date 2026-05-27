@@ -156,6 +156,16 @@ export function patchDraft(sessionId, patch) {
   return d;
 }
 
+// Re-seed a draft from a persisted snapshot (e.g. the welcome-alt recap
+// rehydrating itself after a page reload, where the in-memory Map is
+// empty). Replaces any existing draft for the session wholesale.
+export function restoreDraft(sessionId, draft) {
+  if (!draft) return null;
+  drafts.set(sessionId, draft);
+  notify(sessionId);
+  return draft;
+}
+
 // True once the website analysis has populated the draft. The linear
 // recap screen polls this to decide between "Analyzing…" and "Show
 // the Playbook".

@@ -24,9 +24,10 @@
 
 import { html, raw, escapeHtml as esc } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { getDraft, isAnalysisReady, save, patchDraft } from "../context-builder.js?v=45";
+import { getDraft, isAnalysisReady, save, patchDraft, restoreDraft } from "../context-builder.js?v=46";
 
 const WELCOME_ALT_KEY = "welcomeAltSessionId";
+const WELCOME_ALT_DRAFT_KEY = "welcomeAltDraft";
 
 const LANGUAGE_OPTIONS = ["English", "Français", "Español", "Deutsch", "Italiano", "Português"];
 
@@ -93,11 +94,24 @@ let snapshot = null; // deep copy of editable fields, for Cancel
 export function renderWelcomeAltRecap(_params, target) {
   document.body.classList.add("onboarding");
   const sid = readSessionId();
-  if (!sid || !getDraft(sid)) {
-    // No active draft — refreshed past the timeout or arrived without
-    // going through the chat. Send back to the ALT entry.
+  if (!sid) {
     navigate("/welcome-alt");
     return () => {};
+  }
+
+  // On reload the in-memory draft is gone — rehydrate from the persisted
+  // snapshot so a refresh stays on this step instead of bouncing to the
+  // chat. With no snapshot either, there's nothing to show.
+  let restored = false;
+  if (!getDraft(sid)) {
+    const snap = readPersistedDraft(sid);
+    if (snap) {
+      restoreDraft(sid, snap);
+      restored = true;
+    } else {
+      navigate("/welcome-alt");
+      return () => {};
+    }
   }
 
   // Fresh mount always starts in read mode (no card being edited).
@@ -105,9 +119,10 @@ export function renderWelcomeAltRecap(_params, target) {
   snapshot = null;
   mountTarget = target;
 
-  // Play the branded loading sequence once per session before revealing
-  // the Playbook; a re-render of an already-revealed recap skips it.
-  if (introDoneSid === sid && isAnalysisReady(sid)) {
+  // Skip the loader when this session was already revealed, or was just
+  // restored after a reload; otherwise play the branded sequence.
+  if (restored || (introDoneSid === sid && isAnalysisReady(sid))) {
+    introDoneSid = sid;
     phase = "ready";
     paint(target, sid);
   } else {
@@ -182,6 +197,39 @@ function clearSessionId() {
   }
 }
 
+// Draft persistence — so a page reload stays on the recap. We stash a
+// serializable snapshot of the draft (JSON.stringify drops the onComplete
+// function) keyed by sid, and rehydrate it on mount when the in-memory
+// Map has been cleared by the reload.
+function persistDraft(sid) {
+  try {
+    const d = getDraft(sid);
+    if (!d) return;
+    window.sessionStorage.setItem(WELCOME_ALT_DRAFT_KEY, JSON.stringify({ sid, draft: d }));
+  } catch {
+    /* ignore */
+  }
+}
+
+function readPersistedDraft(sid) {
+  try {
+    const raw = window.sessionStorage.getItem(WELCOME_ALT_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && parsed.sid === sid ? parsed.draft : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearPersistedDraft() {
+  try {
+    window.sessionStorage.removeItem(WELCOME_ALT_DRAFT_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 // ── Data helpers ───────────────────────────────────────────────────────
 
 function brandSite(draft) {
@@ -237,19 +285,46 @@ function cardPen(scope) {
   `;
 }
 
+// Cancel (×) + Save (✓) icon buttons shown in place of the pencil while a
+// card/section is being edited. DS icon-buttons only offer stroked
+// blue/green/red + transparent, so Save uses stroked green (confirm) and
+// Cancel a transparent close.
+function editActionButtons() {
+  return `
+    <button type="button" class="ap-icon-button transparent recap__edit-cancel" data-recap-cancel title="Cancel" aria-label="Cancel changes">
+      <i class="ap-icon-close"></i>
+    </button>
+    <button type="button" class="ap-icon-button stroked green recap__edit-save" data-recap-save title="Save" aria-label="Save changes">
+      <i class="ap-icon-check"></i>
+    </button>
+  `;
+}
+
+// Card-level edit controls — absolute top-right, replacing the pencil.
+function cardEditActions() {
+  return `<div class="recap__edit-actions">${editActionButtons()}</div>`;
+}
+
+// Section-level pencil (Voice, Essentials) — lives in the section head.
+function sectionPen(scope) {
+  return `<button type="button" class="ap-icon-button transparent recap__section-edit" data-recap-edit-card="${scope}" title="Edit" aria-label="Edit"><i class="ap-icon-pen"></i></button>`;
+}
+
+// Section-level edit controls — sit in the section head.
+function sectionEditActions() {
+  return `<div class="recap__section-actions">${editActionButtons()}</div>`;
+}
+
 // Section header. `penScope` (optional) renders a hover-reveal pencil on
 // the right for section-level edits (Voice, Essentials).
-function renderSectionHead(title, hint, penScope) {
-  const pen = penScope
-    ? `<button type="button" class="ap-icon-button transparent recap__section-edit" data-recap-edit-card="${penScope}" title="Edit" aria-label="Edit"><i class="ap-icon-pen"></i></button>`
-    : "";
+function renderSectionHead(title, hint, actions = "") {
   return `
     <div class="recap__section-head">
       <div class="recap__section-heading">
         <h2 class="recap__section-title">${esc(title)}</h2>
         ${hint ? `<p class="recap__section-hint">${esc(hint)}</p>` : ""}
       </div>
-      ${pen}
+      ${actions}
     </div>
   `;
 }
@@ -308,7 +383,7 @@ function renderStrategy(draft, scope) {
           const edit = scope === c.key;
           return `
             <article class="recap__stat ${edit ? "is-editing" : ""}" ${edit ? "data-recap-editing-card" : ""}>
-              ${edit ? "" : cardPen(c.key)}
+              ${edit ? cardEditActions() : cardPen(c.key)}
               <span class="recap__stat-icon"><i class="${c.icon}" aria-hidden="true"></i></span>
               <div class="recap__stat-body">
                 <h3 class="recap__stat-label">${esc(c.label)}</h3>
@@ -329,7 +404,7 @@ function renderVoice(draft, edit) {
   if (edit) {
     return `
       <section class="recap__section is-editing" data-recap-editing-card>
-        ${renderSectionHead("How you sound", "The voice Archie writes in.")}
+        ${renderSectionHead("How you sound", "The voice Archie writes in.", sectionEditActions())}
         <div class="recap__editbox">
           <div class="recap__field">
             <label class="recap__field-label">Voice in three words</label>
@@ -365,7 +440,7 @@ function renderVoice(draft, edit) {
   if (!lead && !traits.length) return "";
   return `
     <section class="recap__section">
-      ${renderSectionHead("How you sound", "The voice Archie writes in.", "voice")}
+      ${renderSectionHead("How you sound", "The voice Archie writes in.", sectionPen("voice"))}
       ${
         lead
           ? `<blockquote class="recap__voice-lead">
@@ -472,7 +547,7 @@ function renderEssentials(draft, edit) {
       .join("");
     return `
       <section class="recap__section recap__section--essentials is-editing" data-recap-editing-card>
-        ${renderSectionHead("Essentials")}
+        ${renderSectionHead("Essentials", null, sectionEditActions())}
         <div class="recap__editbox">
           <div class="recap__field recap__field--language">
             <label class="recap__field-label">Language</label>
@@ -496,7 +571,7 @@ function renderEssentials(draft, edit) {
   if (!language && !ctas.length) return "";
   return `
     <section class="recap__section recap__section--essentials">
-      ${renderSectionHead("Essentials", null, "essentials")}
+      ${renderSectionHead("Essentials", null, sectionPen("essentials"))}
       <div class="recap__essentials">
         ${
           language
@@ -574,6 +649,7 @@ function renderOverview(draft, edit) {
   if (edit) {
     return `
       <article class="recap__overview recap__overview--edit is-editing" data-recap-editing-card>
+        ${cardEditActions()}
         <div class="recap__field">
           <label class="recap__field-label" for="recap-name">Brand name</label>
           <div class="ap-input-group">
@@ -633,20 +709,9 @@ function renderLoading(stageIdx) {
   `;
 }
 
-function renderFooter(ready, scope) {
-  if (scope) {
-    return `
-      <button type="button" class="ap-button stroked grey" data-recap-cancel>
-        <span>Cancel</span>
-      </button>
-      <button type="button" class="ap-button primary orange" data-recap-save>
-        <i class="ap-icon-check"></i>
-        <span>Save</span>
-      </button>
-    `;
-  }
+function renderFooter() {
   return `
-    <button type="button" class="ap-button primary orange" data-welcome-done ${ready ? "" : "disabled"}>
+    <button type="button" class="ap-button primary orange" data-welcome-done>
       <span>Enter Archie</span>
       <i class="ap-icon-arrow-right"></i>
     </button>
@@ -654,6 +719,9 @@ function renderFooter(ready, scope) {
 }
 
 function paint(target, sid) {
+  // Keep the reload snapshot fresh whenever the analysis is in hand.
+  if (isAnalysisReady(sid)) persistDraft(sid);
+
   // Loading phase — branded centered loader, no footer.
   if (phase === "loading") {
     target.innerHTML = html`
@@ -699,7 +767,7 @@ function paint(target, sid) {
         <span class="welcome-screen__chip">BETA</span>
       </header>
       <div class="welcome-screen__body recap">${raw(body)}</div>
-      <footer class="recap__footer">${raw(renderFooter(true, scope))}</footer>
+      <footer class="recap__footer">${raw(renderFooter())}</footer>
     </section>
   `;
 }
@@ -795,14 +863,31 @@ function onClick(event, sid) {
     return;
   }
 
-  // Proceed into Archie — save() fires the ALT onComplete (switch-to-
-  // returning + reload + dashboard nav).
+  // Proceed into Archie.
   if (event.target.closest("[data-welcome-done]")) {
-    const saved = save(sid);
-    if (!saved) return;
-    clearSessionId();
+    enterArchie(sid);
     return;
   }
+}
+
+// "Enter Archie" — persist the Playbook, then finish the ALT flow: become
+// a returning user and reload into the populated app. The recap owns this
+// (rather than the draft's onComplete) so it still works after a reload,
+// where the in-memory onComplete is gone.
+function enterArchie(sid) {
+  patchDraft(sid, { onComplete: null });
+  const saved = save(sid);
+  if (!saved) return;
+  clearSessionId();
+  clearPersistedDraft();
+  document.body.classList.remove("onboarding");
+  try {
+    window.localStorage.removeItem("archie-user-mode");
+  } catch {
+    /* ignore */
+  }
+  window.location.hash = "#/";
+  window.location.reload();
 }
 
 // Text edits mutate the live draft in place WITHOUT a repaint so inputs

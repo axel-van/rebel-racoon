@@ -11,7 +11,7 @@
 
 import { html } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { startBackground } from "../context-builder.js?v=45";
+import { startBackground } from "../context-builder.js?v=46";
 
 const WELCOME_SESSION_KEY = "welcomeSessionId";
 

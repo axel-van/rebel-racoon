@@ -1869,9 +1869,30 @@
 }
 
 .recap__card-actions .ap-icon-button,
+.recap__edit-actions .ap-icon-button,
+.recap__section-actions .ap-icon-button,
 .recap__section-edit {
   width: 28px;
   height: 28px;
+}
+
+/* Per-card Cancel (×) / Save (✓) controls — replace the pencil while a
+   card is in edit, in the same top-right slot. Always visible (not
+   hover-gated) and a distinct class so the .is-editing hide rule (which
+   targets read affordances) leaves them alone. */
+.recap__edit-actions {
+  position: absolute;
+  top: var(--ref-spacing-sm);
+  right: var(--ref-spacing-sm);
+  z-index: 1;
+  display: flex;
+  gap: var(--ref-spacing-xxs);
+}
+
+.recap__section-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: var(--ref-spacing-xxs);
 }
 
 /* Section-level pencil (Voice, Essentials) lives in the section head. */
