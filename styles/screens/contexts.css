@@ -105,7 +105,7 @@
   padding: var(--ref-spacing-lg) var(--ref-spacing-md);
   background: transparent;
   border: 2px dashed var(--app-border-soft);
-  border-radius: var(--app-radius-card);
+  border-radius: var(--ref-border-radius-md);
   cursor: pointer;
   min-height: 200px;
   color: var(--ref-color-grey-100);
@@ -176,8 +176,8 @@
   padding-top: var(--ref-spacing-md);
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
-  border-radius: var(--app-radius-card);
-  box-shadow: var(--app-shadow-card);
+  border-radius: var(--ref-border-radius-md);
+  box-shadow: var(--app-shadow-low);
   overflow: hidden;
   cursor: pointer;
   transition:
@@ -191,9 +191,7 @@
   border-color: var(--ref-color-grey-40);
   outline: none;
   transform: translateY(-1px);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 6px 16px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--app-shadow-low);
 }
 
 /* Swatch strip — top edge, full-width, colored per ctx.color. */
