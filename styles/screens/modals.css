@@ -125,7 +125,7 @@ body.has-modal {
   background: transparent;
   font-family: inherit;
   font-size: var(--ref-font-size-sm);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   outline: none;
   padding: var(--ref-spacing-xxxs) 0;
   min-width: 0;
@@ -181,7 +181,7 @@ body.has-modal {
   text-align: left;
   cursor: pointer;
   font-family: inherit;
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .search-modal__result.is-highlighted {
@@ -353,7 +353,7 @@ body.has-modal {
 
 .bug-category-chip:hover {
   border-color: var(--ref-color-orange-40);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .bug-category-chip:active {
@@ -379,7 +379,7 @@ body.has-modal {
   padding: 8px var(--ref-spacing-xs);
   font-size: var(--ref-font-size-sm);
   font-family: inherit;
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   background: var(--ref-color-white);
   transition:
     border-color var(--ref-animation-short),
@@ -619,7 +619,7 @@ body.has-modal {
 .feedback-modal__success h3 {
   font-size: var(--ref-font-size-md);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   margin: 0;
 }
 
@@ -660,7 +660,7 @@ body.has-modal {
   margin: 0;
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .gen-section-label span {
@@ -680,7 +680,7 @@ body.has-modal {
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-md);
   font-family: inherit;
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   background: var(--ref-color-white);
   transition:
     border-color var(--ref-animation-short),
@@ -747,7 +747,7 @@ body.has-modal {
   background: var(--ref-color-white);
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   cursor: pointer;
   font-family: inherit;
   line-height: 1.2;
@@ -916,6 +916,6 @@ body.has-modal {
   font-family: inherit;
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   line-height: 1;
 }

@@ -41,7 +41,7 @@
   font-size: var(--sys-text-style-h1-size);
   line-height: var(--sys-text-style-h1-line-height);
   font-weight: var(--sys-text-style-h1-weight);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .sources-view__sub {
@@ -214,7 +214,7 @@
 .sources-view__drop-title {
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .sources-view__drop-sub {

@@ -71,7 +71,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=107";
+} from "../components/right-panel.js?v=108";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
@@ -636,13 +636,30 @@ function renderAssistantPanelQuestion(session) {
   const heroMarkup = isWelcomeAlt
     ? html`
         <header class="welcome-alt-hero">
-          <div class="welcome-hero">
-            <span class="welcome-hero__eyebrow">Welcome</span>
+          <span class="welcome-alt-hero__orb" aria-hidden="true"></span>
+          <div class="welcome-hero welcome-hero--alt">
+            <span class="welcome-hero__eyebrow">
+              <i class="ap-icon-sparkles" aria-hidden="true"></i>
+              Welcome
+            </span>
             <h1 class="welcome-hero__title">Let's get to know<br />your Brand.</h1>
             <p class="welcome-hero__sub">
-              Paste your website URL and I'll extract your voice, audience, and visual identity. We'll build your
-              Playbook in a few steps.
+              Paste your website URL and I'll do the rest — building your Playbook in a few guided steps.
             </p>
+            <ul class="welcome-alt-hero__chips" aria-hidden="true">
+              <li class="welcome-alt-hero__chip">
+                <i class="ap-icon-single-chat-bubble" aria-hidden="true"></i>
+                Voice
+              </li>
+              <li class="welcome-alt-hero__chip">
+                <i class="ap-icon-multiple-users" aria-hidden="true"></i>
+                Audience
+              </li>
+              <li class="welcome-alt-hero__chip">
+                <i class="ap-icon-image" aria-hidden="true"></i>
+                Visual identity
+              </li>
+            </ul>
           </div>
         </header>
       `

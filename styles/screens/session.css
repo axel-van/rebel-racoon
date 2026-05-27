@@ -186,7 +186,7 @@
   font-size: var(--ref-font-size-lg);
   line-height: var(--ref-font-line-height-lg);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 /* Option rows — generous vertical padding, thin separator between rows
@@ -275,7 +275,7 @@
   transform: translateY(-50%);
   font-size: var(--ref-font-size-lg);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-family: inherit;
   line-height: 1;
 }
@@ -356,7 +356,7 @@
   line-height: var(--app-text-hero-line);
   font-weight: var(--app-text-hero-weight);
   letter-spacing: -0.01em;
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .empty-chat__sub {
@@ -489,7 +489,7 @@
 .starter-card__title {
   font-size: 13px;
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .starter-card__prompt {
@@ -666,7 +666,7 @@
 
 .clip-extraction-card__title {
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   overflow: hidden;
@@ -902,7 +902,7 @@
   font-family: inherit;
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   min-height: calc(var(--ref-font-line-height-sm) * 2);
 }
 
@@ -1147,7 +1147,7 @@
 .composer-mention-picker__row-name {
   flex: 1;
   font-size: var(--ref-font-size-sm);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1412,7 +1412,7 @@
 
 .session__context-option-title {
   display: block;
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-weight: var(--ref-font-weight-bold);
 }
 
@@ -1464,7 +1464,7 @@
   margin: 0;
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -1511,7 +1511,7 @@
 
 .session__component-section dl dd {
   margin: 0;
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-weight: var(--ref-font-weight-bold);
 }
 

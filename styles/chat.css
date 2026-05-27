@@ -59,7 +59,7 @@
 .chat-turn-role {
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 /* User + source-intake labels (Figma 25:1039 + 25:1130) — smaller caption size
@@ -82,7 +82,7 @@
    .ap-card / surface rule can't reintroduce chrome when the AI bubble holds
    a card child (drafts-card, idea-card, etc.). */
 .chat-bubble--ai {
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   background: transparent;
   border: 0;
   padding: 0;
@@ -224,7 +224,7 @@
 /* AI body uses the handoff message scale (15/1.55) — aired-out reading rhythm
    that matches Claude/ChatGPT bodies. */
 .chat-bubble--ai .chat-bubble-text {
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-size: var(--app-text-message-size);
   line-height: var(--app-text-message-line);
 }
@@ -275,7 +275,7 @@
 
 .chat-bubble-fields dd {
   margin: 0;
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-weight: var(--ref-font-weight-bold);
 }
 
@@ -314,7 +314,7 @@
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   /* Figma 75:234 renders section headers in their natural Title Case —
      dropped the former text-transform: uppercase + letter-spacing. */
 }
@@ -365,7 +365,7 @@
   background: var(--ref-color-white);
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-family: inherit;
   line-height: 1.2;
   cursor: pointer;
@@ -600,5 +600,5 @@ span.chat-bubble-choice-chip {
 .chat-bubble-choice-label {
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }

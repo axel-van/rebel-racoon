@@ -118,7 +118,7 @@
   font-size: var(--ref-font-size-md);
   line-height: var(--ref-font-line-height-lg);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .clip-card__hook {

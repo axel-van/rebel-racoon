@@ -45,7 +45,7 @@
   font-family: inherit;
   font-size: var(--ref-font-size-md);
   font-weight: var(--ref-font-weight-extra-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   transition: color var(--ref-animation-short) var(--app-ease-out);
 }
 
@@ -133,7 +133,7 @@
 .app-sidebar__nav-item:hover,
 .app-sidebar__nav-item:focus-visible {
   background: var(--ref-color-grey-10);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   outline: none;
 }
 
@@ -245,7 +245,7 @@
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   font-weight: var(--ref-font-weight-regular);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -361,7 +361,7 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
 .app-sidebar__row-more:hover,
 .app-sidebar__row-menu[open] .app-sidebar__row-more {
   background: var(--ref-color-grey-20);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .app-sidebar__row-more::-webkit-details-marker {
@@ -374,7 +374,7 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
 
 .app-sidebar__row-more:hover {
   background: var(--ref-color-grey-20);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 /* Dropdown content — DS .ap-action-dropdown owns surface, border,
@@ -452,7 +452,7 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
   font-size: var(--ref-font-size-xs);
   line-height: var(--ref-font-line-height-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

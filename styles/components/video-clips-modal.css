@@ -85,7 +85,7 @@
 .video-clips-modal__title {
   font-size: var(--ref-font-size-md);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   letter-spacing: -0.01em;
   line-height: 22px;
   white-space: nowrap;
@@ -389,7 +389,7 @@
   height: 44px;
   border-radius: var(--app-radius-circle);
   background: rgba(255, 255, 255, 0.92);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -448,7 +448,7 @@
 .vc-row__title {
   font-size: 14px;
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   letter-spacing: -0.005em;
   line-height: 19px;
 }
@@ -531,7 +531,7 @@
 }
 
 .video-clips-modal__foot-stats strong {
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-weight: var(--ref-font-weight-bold);
 }
 

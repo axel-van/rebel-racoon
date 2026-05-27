@@ -184,7 +184,7 @@
 .settings-row__title {
   font-size: var(--ref-font-size-md);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   line-height: var(--ref-font-line-height-md);
 }
 

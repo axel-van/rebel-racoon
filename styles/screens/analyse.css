@@ -160,7 +160,7 @@
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -233,7 +233,7 @@
 
 .analyse__option-label {
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .analyse__option-chevron {
@@ -261,7 +261,7 @@
   padding: 0;
   font-family: inherit;
   font-size: var(--ref-font-size-sm);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .analyse__option-input::placeholder {

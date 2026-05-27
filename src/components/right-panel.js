@@ -1368,10 +1368,7 @@ function renderDraftsView() {
   const bulkBar = selectedCount
     ? `
       <div class="rpanel-drafts__bulkbar" role="region" aria-label="Bulk actions">
-        <div class="rpanel-drafts__bulkbar-label">
-          <i class="ap-icon-check" aria-hidden="true"></i>
-          ${selectedCount} selected
-        </div>
+        <div class="rpanel-drafts__bulkbar-label">${selectedCount} selected</div>
         <div class="rpanel-drafts__bulkbar-actions">
           <button type="button" class="ap-button ghost grey" data-rpanel-drafts-bulk-clear>
             Clear

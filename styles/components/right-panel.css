@@ -64,7 +64,7 @@
   margin: 0;
   font-size: var(--ref-font-size-md);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .app-right-panel__title i {
@@ -112,7 +112,7 @@
   font-size: var(--sys-text-style-h3-size);
   font-weight: var(--sys-text-style-h3-weight);
   line-height: var(--sys-text-style-h3-line-height);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .app-right-panel__empty-sub {
@@ -155,7 +155,7 @@
   font-size: var(--sys-text-style-h3-size);
   font-weight: 800;
   line-height: var(--sys-text-style-h3-line-height);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .rpanel-drafts__sub {
@@ -327,7 +327,7 @@
 .rpanel-batch-card__body {
   font-size: var(--ref-font-size-xs);
   line-height: 17px;
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   white-space: pre-wrap;
 }
 
@@ -496,7 +496,7 @@
   font-size: var(--ref-font-size-md);
   font-weight: var(--ref-font-weight-bold);
   line-height: var(--ref-font-line-height-lg);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   word-break: break-word;
 }
 
@@ -769,7 +769,7 @@
   gap: var(--ref-spacing-xxs);
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .rpanel-drafts__bulkbar-label i {
@@ -944,7 +944,7 @@
 .rpanel-sources__count {
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .rpanel-sources__sub {
@@ -991,7 +991,7 @@
 .rpanel-sources__row-name {
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1109,7 +1109,7 @@
   border: 1px solid transparent;
   border-radius: var(--app-radius-pill);
   background: var(--ref-color-mermaid-10);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-family: inherit;
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-extra-bold);
@@ -1205,7 +1205,7 @@
   font-size: var(--ref-font-size-xxl);
   line-height: var(--ref-font-line-height-xxl);
   font-weight: var(--ref-font-weight-extra-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   letter-spacing: -0.01em;
 }
 
@@ -1234,7 +1234,7 @@
 
 .context-brief__hero-summary {
   margin: 0;
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-size: var(--ref-font-size-lg);
   line-height: var(--ref-font-line-height-lg);
   font-weight: var(--ref-font-weight-regular);
@@ -1435,7 +1435,7 @@
   font-size: var(--ref-font-size-md);
   line-height: var(--ref-font-line-height-md);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .context-brief__hint {
@@ -1549,7 +1549,7 @@
 
 .context-brief__cta-row .context-brief__cta-label {
   font-weight: var(--ref-font-weight-regular);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .context-brief__cta-row .context-brief__cta-url {
@@ -1736,7 +1736,7 @@ body.hide-playbook-colors .context-brief__hero-color {
 }
 
 .context-brief__cta-label {
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-weight: var(--ref-font-weight-bold);
 }
 
@@ -1787,7 +1787,7 @@ body.hide-playbook-colors .context-brief__hero-color {
   font-size: var(--ref-font-size-md);
   line-height: var(--ref-font-line-height-md);
   font-weight: var(--ref-font-weight-extra-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 /* Headline pill — white surface, rounded, small inline chip carrying a
@@ -1804,7 +1804,7 @@ body.hide-playbook-colors .context-brief__hero-color {
   background: var(--ref-color-white);
   border: 1px solid var(--ref-color-grey-10);
   border-radius: var(--app-radius-pill);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   font-weight: var(--ref-font-weight-bold);
@@ -1893,7 +1893,7 @@ body.hide-playbook-colors .context-brief__hero-color {
 
 .context-brief__vp-action:hover,
 .context-brief__vp-toggle:hover {
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   text-decoration: underline;
 }
 
@@ -1903,7 +1903,7 @@ body.hide-playbook-colors .context-brief__hero-color {
 
 .context-brief__vp-body {
   margin: 0;
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-md);
   white-space: pre-wrap;
@@ -1965,7 +1965,7 @@ body.hide-playbook-colors .context-brief__hero-color {
 }
 
 .context-brief__iv-site-domain {
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-weight: var(--ref-font-weight-bold);
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
@@ -2023,7 +2023,7 @@ body.hide-playbook-colors .context-brief__hero-color {
 }
 
 .context-brief__iv-color-label {
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   flex: 1;
@@ -2067,7 +2067,7 @@ body.hide-playbook-colors .context-brief__hero-color {
 }
 
 .context-brief__iv-typo-value {
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   font-weight: var(--ref-font-weight-bold);

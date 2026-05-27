@@ -71,7 +71,7 @@
   margin: 0;
   font-size: var(--ref-font-size-md);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .add-source__dropzone-sub {
@@ -130,7 +130,7 @@
 .add-source__file-name {
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -211,7 +211,7 @@
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   font-family: inherit;
   font-size: var(--ref-font-size-sm);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   background: var(--ref-color-white);
   box-sizing: border-box;
 }
@@ -275,7 +275,7 @@
 .add-source__connector-title {
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .add-source__connector-action {
@@ -302,7 +302,7 @@
 }
 
 .add-source__breadcrumb-current {
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-weight: var(--ref-font-weight-bold);
 }
 
@@ -356,7 +356,7 @@
 .add-source__doc-title {
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 /* Library tab (P2) — picker for re-attaching existing sources. Compact
@@ -476,7 +476,7 @@
 .add-source-modal__library-card-name {
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -511,7 +511,7 @@
 .add-source-modal__library-empty-title {
   font-size: var(--ref-font-size-md);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .add-source-modal__library-empty-sub {

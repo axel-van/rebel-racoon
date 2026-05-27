@@ -116,7 +116,7 @@ body.onboarding .app-content {
   font-size: var(--sys-text-style-h4-size);
   font-weight: var(--sys-text-style-h4-weight);
   line-height: var(--sys-text-style-h4-line-height);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -234,7 +234,7 @@ button.app-topbar__title--rename:focus-visible .app-topbar__title-pen {
 .app-topbar__context-name {
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-extra-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   max-width: 180px;
   white-space: nowrap;
   overflow: hidden;
@@ -327,7 +327,7 @@ button.app-topbar__title--rename:focus-visible .app-topbar__title-pen {
   font-size: var(--sys-text-style-h1-size);
   line-height: var(--sys-text-style-h1-line-height);
   font-weight: var(--sys-text-style-h1-weight);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .screen__placeholder-sub {
@@ -377,21 +377,21 @@ button.app-topbar__title--rename:focus-visible .app-topbar__title-pen {
   font-size: var(--ref-font-size-xxl);
   line-height: var(--ref-font-line-height-xl);
   font-weight: var(--ref-font-weight-extra-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .text-subtitle {
   font-size: var(--ref-font-size-lg);
   line-height: var(--ref-font-line-height-lg);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .text-section {
   font-size: var(--ref-font-size-md);
   line-height: var(--ref-font-line-height-md);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
 }
 
 .text-caption {
