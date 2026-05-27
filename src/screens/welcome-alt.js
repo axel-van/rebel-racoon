@@ -21,6 +21,15 @@ import { setHandoff } from "../handoff.js?v=20";
 const PREFILLED_URL = "https://nicesoap.com";
 
 export function renderWelcomeAlt(_params, _target) {
+  // First-time onboarding is full-bleed: make sure no leftover
+  // "integrated" flag (from a previous New-Playbook run) keeps the app
+  // shell visible here.
+  try {
+    window.sessionStorage.removeItem("welcomeAltIntegrated");
+    window.sessionStorage.removeItem("welcomeAltReturnTo");
+  } catch {
+    /* ignore */
+  }
   document.body.classList.add("onboarding");
   const sid = `welcome-alt-${Date.now().toString(36)}`;
   setHandoff("pendingStartContextBuilder", {

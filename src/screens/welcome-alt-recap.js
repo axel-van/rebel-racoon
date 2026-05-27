@@ -11,6 +11,8 @@ import { mount } from "../playbook-view.js?v=2";
 
 const WELCOME_ALT_KEY = "welcomeAltSessionId";
 const WELCOME_ALT_DRAFT_KEY = "welcomeAltDraft";
+const WELCOME_ALT_INTEGRATED_KEY = "welcomeAltIntegrated";
+const WELCOME_ALT_RETURN_KEY = "welcomeAltReturnTo";
 
 const LOADING_STAGES = [
   { title: "Reading your website", sub: "Scanning your pages, copy, and brand cues." },
@@ -22,7 +24,11 @@ const LOADING_STAGES = [
 let introDoneSid = null; // sid whose intro loader has already played
 
 export function renderWelcomeAltRecap(_params, target) {
-  document.body.classList.add("onboarding");
+  const integrated = isIntegrated();
+  // First-time onboarding is full-bleed; the integrated New-Playbook flow
+  // keeps the app shell (sidebar + topbar) — app.js skips the onboarding
+  // class when welcomeAltIntegrated is set, so we don't add it here either.
+  if (!integrated) document.body.classList.add("onboarding");
   const sid = readSessionId();
   if (!sid) {
     navigate("/welcome-alt");
@@ -62,7 +68,7 @@ export function renderWelcomeAltRecap(_params, target) {
     onIntroDone: () => {
       introDoneSid = sid;
     },
-    showTop: true,
+    showTop: !integrated,
     hero: {
       eyebrow: "Your Playbook",
       title: "Here's your Playbook.",
@@ -73,20 +79,36 @@ export function renderWelcomeAltRecap(_params, target) {
       },
     },
     editHint: "This Playbook is yours to shape. Hover any card and hit the pencil to edit it — then jump into Archie.",
-    footer: () => `
-      <button type="button" class="ap-button primary orange" data-welcome-done>
+    footer: () =>
+      integrated
+        ? `<button type="button" class="ap-button primary orange" data-welcome-done><span>Save Playbook</span></button>`
+        : `<button type="button" class="ap-button primary orange" data-welcome-done>
         <span>Enter Archie</span>
         <i class="ap-icon-arrow-right"></i>
-      </button>
-    `,
+      </button>`,
     onFooter: (event) => {
       if (event.target.closest("[data-welcome-done]")) {
-        enterArchie(sid);
+        if (integrated) finishIntegrated(sid);
+        else enterArchie(sid);
         return true;
       }
       return false;
     },
   });
+}
+
+// New Playbook (integrated) finish — persist the Playbook and return to the
+// page the flow was launched from, WITHOUT switching user mode or reloading
+// (the user is already a returning user). Mirrors enterArchie's save path.
+function finishIntegrated(sid) {
+  patchDraft(sid, { onComplete: null });
+  const saved = save(sid);
+  if (!saved) return;
+  const returnTo = readReturnTo();
+  clearSessionId();
+  clearPersistedDraft();
+  clearIntegrated();
+  navigate(returnTo || "/contexts");
 }
 
 // "Enter Archie" — persist the Playbook, then finish the ALT flow: become a
@@ -153,6 +175,33 @@ function readPersistedDraft(sid) {
 function clearPersistedDraft() {
   try {
     window.sessionStorage.removeItem(WELCOME_ALT_DRAFT_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+// Integrated New-Playbook mode (set by the /contexts + composer create
+// entry points) vs full-bleed first-time onboarding.
+function isIntegrated() {
+  try {
+    return window.sessionStorage.getItem(WELCOME_ALT_INTEGRATED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function readReturnTo() {
+  try {
+    return window.sessionStorage.getItem(WELCOME_ALT_RETURN_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function clearIntegrated() {
+  try {
+    window.sessionStorage.removeItem(WELCOME_ALT_INTEGRATED_KEY);
+    window.sessionStorage.removeItem(WELCOME_ALT_RETURN_KEY);
   } catch {
     /* ignore */
   }

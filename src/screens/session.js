@@ -1497,7 +1497,7 @@ function wireAssistantPanel(root, session, attachedContext) {
   // state rather than redirecting back to /welcome-alt).
   const pendingCtxBuilder = consumeHandoff("pendingStartContextBuilder");
   if (pendingCtxBuilder) {
-    const { returnTo, prefill, finishMode, flow, prefilledUrl } = pendingCtxBuilder;
+    const { returnTo, finishMode, prefilledUrl } = pendingCtxBuilder;
     const onComplete = () => {
       if (finishMode === "switch-to-returning") {
         try {
@@ -1517,14 +1517,10 @@ function wireAssistantPanel(root, session, attachedContext) {
       if (returnTo) navigate(returnTo);
     };
     setTimeout(() => {
-      if (flow === "alt") {
-        // First Time User ALT — 3-question orchestration (URL →
-        // profiles → optional documents) that mirrors the linear
-        // /welcome wizard but rendered inline in chat.
-        contextBuilder.startAlt(session.id, { onComplete, prefilledUrl });
-      } else {
-        contextBuilder.start(session.id, { prefill, onComplete });
-      }
+      // Conversational 3-question orchestration (URL → profiles → optional
+      // documents). Runs full-bleed for first-time onboarding, or integrated
+      // in the app shell for a New Playbook (driven by welcomeAltIntegrated).
+      contextBuilder.startAlt(session.id, { onComplete, prefilledUrl });
     }, 50);
   }
 
@@ -2034,25 +2030,8 @@ function bindSession(root, session) {
     if (!input) return;
     const text = input.value.trim();
     if (!text) return;
-    const wasFirstUserMessage = !getThread(session.id).some((m) => m.role === "user");
     sendMessage(session.id, text);
     input.value = "";
-
-    // First user message without a context attached → auto-launch the
-    // context-builder flow. The conversation starts the brief setup
-    // (website URL question) inline so the user defines a context
-    // before going further. They can still Skip if they really want
-    // to stay context-less.
-    if (!wasFirstUserMessage) return;
-    const q = readQuery();
-    const ctxAttached = q.contextId || session.contextId;
-    if (ctxAttached) return;
-    setTimeout(() => {
-      contextBuilder.start(session.id, {
-        autoLaunched: true,
-        onComplete: (created) => setQuery({ contextId: created.id }),
-      });
-    }, 200);
   }
 
   // Run the handler for a choice turn (freeze the message + dispatch). Called
@@ -2633,8 +2612,16 @@ function bindSession(root, session) {
       // chat once saved, where the new playbook becomes the default.
       if (event.target.closest("[data-playbook-create]")) {
         event.preventDefault();
-        setHandoff("pendingStartContextBuilder", { returnTo: "/" });
-        navigate(`/session/new-ctx-${Date.now().toString(36)}`);
+        // Same integrated conversational Playbook flow as the /contexts
+        // "New Playbook" CTA — runs in the app shell, returns to this chat.
+        try {
+          window.sessionStorage.setItem("welcomeAltIntegrated", "1");
+          window.sessionStorage.setItem("welcomeAltReturnTo", "/");
+        } catch {
+          /* ignore */
+        }
+        setHandoff("pendingStartContextBuilder", { flow: "alt", prefilledUrl: "", returnTo: "/" });
+        navigate(`/session/welcome-alt-${Date.now().toString(36)}`);
         return;
       }
 

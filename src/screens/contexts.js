@@ -250,12 +250,18 @@ function bind(root) {
       return;
     }
     if (event.target.closest("[data-contexts-new]")) {
-      // The /contexts page has no chat panel to host the wizard, so we
-      // spawn a fresh session and arm a handoff so session.js launches
-      // contextBuilder.start() on mount. After save, onComplete routes
-      // the user back to /contexts (returnTo).
-      setHandoff("pendingStartContextBuilder", { returnTo: "/contexts" });
-      navigate(`/session/new-ctx-${Date.now().toString(36)}`);
+      // Launch the conversational Playbook flow (welcome-alt) integrated in
+      // the app shell: the `welcomeAltIntegrated` flag keeps the sidebar +
+      // topbar visible and the recap finishes by returning here (no
+      // switch-to-returning). A `welcome-alt-` session id gets the flow + hero.
+      try {
+        window.sessionStorage.setItem("welcomeAltIntegrated", "1");
+        window.sessionStorage.setItem("welcomeAltReturnTo", "/contexts");
+      } catch {
+        /* ignore */
+      }
+      setHandoff("pendingStartContextBuilder", { flow: "alt", prefilledUrl: "", returnTo: "/contexts" });
+      navigate(`/session/welcome-alt-${Date.now().toString(36)}`);
       return;
     }
     if (event.target.closest("[data-contexts-clear-query]")) {

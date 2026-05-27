@@ -19,12 +19,12 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=12";
 import { renderDashboard } from "./screens/dashboard.js?v=46";
-import { renderSession } from "./screens/session.js?v=138";
+import { renderSession } from "./screens/session.js?v=139";
 import { renderIdeas } from "./screens/ideas.js?v=25";
-import { renderContexts } from "./screens/contexts.js?v=36";
+import { renderContexts } from "./screens/contexts.js?v=37";
 import { renderSettings } from "./screens/settings.js?v=2";
-import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=3";
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=11";
+import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=12";
 import { renderPlaybook } from "./screens/playbook.js?v=2";
 import * as __capAddSource from "./components/add-source-modal.js?v=23";
 import * as __capGenImage from "./components/generate-image-modal.js?v=23";
@@ -93,7 +93,17 @@ setAfterRender((path) => {
   renderSidebar();
   renderConversationStatusCard();
   const isAltSession = path.startsWith("/session/welcome-alt-");
-  document.body.classList.toggle("onboarding", path.startsWith("/welcome") || isAltSession);
+  // The welcome-alt flow runs either full-bleed (first-time onboarding) or
+  // integrated in the app shell — a returning user creating a Playbook keeps
+  // the sidebar + topbar. The `welcomeAltIntegrated` flag (set by the
+  // New-Playbook entry points, cleared on finish) drives the difference.
+  let integratedCreate = false;
+  try {
+    integratedCreate = window.sessionStorage.getItem("welcomeAltIntegrated") === "1";
+  } catch {
+    /* ignore */
+  }
+  document.body.classList.toggle("onboarding", (path.startsWith("/welcome") || isAltSession) && !integratedCreate);
 });
 
 start();
