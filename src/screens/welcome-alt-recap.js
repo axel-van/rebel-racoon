@@ -27,7 +27,6 @@ import { navigate } from "../router.js?v=30";
 import { getDraft, isAnalysisReady, save, patchDraft } from "../context-builder.js?v=45";
 
 const WELCOME_ALT_KEY = "welcomeAltSessionId";
-const POLL_INTERVAL_MS = 400;
 
 const LANGUAGE_OPTIONS = ["English", "Français", "Español", "Deutsch", "Italiano", "Português"];
 
@@ -72,8 +71,22 @@ const VOICE_TRAITS = [
   { key: "uniqueTraits", label: "Unique traits" },
 ];
 
-let pollTimer = null;
+// Staged loading sequence — a deliberate ~10s "here's what Archie is
+// doing" moment between the chat and the reveal. Each stage explains a
+// slice of the work while the website analysis lands in the background.
+const LOADING_STAGES = [
+  { title: "Reading your website", sub: "Scanning your pages, copy, and brand cues." },
+  { title: "Learning your voice", sub: "Capturing your tone, vocabulary, and rhythm." },
+  { title: "Mapping your audience", sub: "Working out who you're for — and what moves them." },
+  { title: "Building your Playbook", sub: "Turning it all into a brief every post draws from." },
+];
+const STAGE_MS = 2400;
+
 let mountTarget = null;
+let loadingTimer = null;
+let loadingStage = 0;
+let phase = "ready"; // "loading" | "ready"
+let introDoneSid = null; // sid whose intro loader has already played
 let editScope = null; // null (read) | "overview" | strategy key | "voice" | "essentials"
 let snapshot = null; // deep copy of editable fields, for Cancel
 
@@ -87,22 +100,21 @@ export function renderWelcomeAltRecap(_params, target) {
     return () => {};
   }
 
-  // Fresh mount always starts in read mode.
+  // Fresh mount always starts in read mode (no card being edited).
   editScope = null;
   snapshot = null;
   mountTarget = target;
 
-  paint(target, sid);
-
-  // Defensive — if analysis hasn't landed yet, poll until it does.
-  if (!isAnalysisReady(sid)) {
-    stopPolling();
-    pollTimer = window.setInterval(() => {
-      if (isAnalysisReady(sid)) {
-        stopPolling();
-        paint(target, sid);
-      }
-    }, POLL_INTERVAL_MS);
+  // Play the branded loading sequence once per session before revealing
+  // the Playbook; a re-render of an already-revealed recap skips it.
+  if (introDoneSid === sid && isAnalysisReady(sid)) {
+    phase = "ready";
+    paint(target, sid);
+  } else {
+    phase = "loading";
+    loadingStage = 0;
+    paint(target, sid);
+    startLoadingSequence(sid);
   }
 
   const onClickH = (event) => onClick(event, sid);
@@ -115,7 +127,7 @@ export function renderWelcomeAltRecap(_params, target) {
   target.addEventListener("keydown", onKeydownH);
 
   return () => {
-    stopPolling();
+    stopLoading();
     target.removeEventListener("click", onClickH);
     target.removeEventListener("input", onInputH);
     target.removeEventListener("change", onChangeH);
@@ -128,11 +140,30 @@ function repaint(sid) {
   if (mountTarget) paint(mountTarget, sid);
 }
 
-function stopPolling() {
-  if (pollTimer) {
-    window.clearInterval(pollTimer);
-    pollTimer = null;
+function stopLoading() {
+  if (loadingTimer) {
+    window.clearInterval(loadingTimer);
+    loadingTimer = null;
   }
+}
+
+// Advance one stage every STAGE_MS. On the final stage, reveal as soon as
+// the website analysis is ready — so the loader lasts ~10s but never
+// reveals an empty Playbook.
+function startLoadingSequence(sid) {
+  stopLoading();
+  loadingTimer = window.setInterval(() => {
+    if (loadingStage < LOADING_STAGES.length - 1) {
+      loadingStage += 1;
+      repaint(sid);
+    } else if (isAnalysisReady(sid)) {
+      stopLoading();
+      introDoneSid = sid;
+      phase = "ready";
+      repaint(sid);
+    }
+    // else: hold on the final stage until the analysis lands.
+  }, STAGE_MS);
 }
 
 function readSessionId() {
@@ -577,12 +608,27 @@ function renderOverview(draft, edit) {
   `;
 }
 
-function renderPending() {
+function renderLoading(stageIdx) {
+  const idx = Math.min(stageIdx, LOADING_STAGES.length - 1);
+  const stage = LOADING_STAGES[idx];
+  const steps = LOADING_STAGES.map((_, i) => {
+    const cls = i < idx ? "is-done" : i === idx ? "is-active" : "";
+    return `<span class="recap-loading__step ${cls}"></span>`;
+  }).join("");
   return `
-    <div class="recap__pending">
-      <i class="ap-icon-sparkles-mermaid" aria-hidden="true"></i>
-      <p>Reading your site…</p>
-      <p class="recap__pending-sub">Your Playbook lands in a moment.</p>
+    <div class="recap-loading">
+      <span class="recap-loading__spinner archie-loader" aria-hidden="true"></span>
+      <span class="recap-loading__eyebrow"><i class="ap-icon-sparkles-mermaid" aria-hidden="true"></i> Crafting your Playbook</span>
+      <h1 class="recap-loading__title">${esc(stage.title)}</h1>
+      <p class="recap-loading__sub">${esc(stage.sub)}</p>
+      <div
+        class="recap-loading__steps"
+        role="progressbar"
+        aria-valuemin="1"
+        aria-valuemax="${LOADING_STAGES.length}"
+        aria-valuenow="${idx + 1}"
+        aria-label="${esc(stage.title)}"
+      >${steps}</div>
     </div>
   `;
 }
@@ -608,22 +654,39 @@ function renderFooter(ready, scope) {
 }
 
 function paint(target, sid) {
+  // Loading phase — branded centered loader, no footer.
+  if (phase === "loading") {
+    target.innerHTML = html`
+      <section class="welcome-screen welcome-screen--reveal welcome-screen--loading">
+        <div class="welcome-screen__bg" aria-hidden="true"></div>
+        <header class="welcome-screen__top">
+          <span class="welcome-screen__brand">
+            <i class="ap-icon-sparkles-mermaid"></i>
+            Archie
+          </span>
+          <span class="welcome-screen__chip">BETA</span>
+        </header>
+        <div class="welcome-screen__body recap recap--loading">${raw(renderLoading(loadingStage))}</div>
+      </section>
+    `;
+    return;
+  }
+
+  // Ready phase — the analysis has landed (guaranteed by the loader), so
+  // every section renders with content.
   const draft = getDraft(sid);
-  const ready = isAnalysisReady(sid);
-  const scope = ready ? editScope : null;
-  const body = ready
-    ? [
-        renderHero(draft),
-        scope ? "" : renderEditHint(),
-        renderOverview(draft, scope === "overview"),
-        renderStrategy(draft, scope),
-        renderVoice(draft, scope === "voice"),
-        renderBrandSnapshot(draft),
-        renderEssentials(draft, scope === "essentials"),
-      ]
-        .filter(Boolean)
-        .join("")
-    : renderPending();
+  const scope = editScope;
+  const body = [
+    renderHero(draft),
+    scope ? "" : renderEditHint(),
+    renderOverview(draft, scope === "overview"),
+    renderStrategy(draft, scope),
+    renderVoice(draft, scope === "voice"),
+    renderBrandSnapshot(draft),
+    renderEssentials(draft, scope === "essentials"),
+  ]
+    .filter(Boolean)
+    .join("");
 
   target.innerHTML = html`
     <section class="welcome-screen welcome-screen--reveal ${scope ? "is-editing" : ""}">
@@ -636,7 +699,7 @@ function paint(target, sid) {
         <span class="welcome-screen__chip">BETA</span>
       </header>
       <div class="welcome-screen__body recap">${raw(body)}</div>
-      <footer class="recap__footer">${raw(renderFooter(ready, scope))}</footer>
+      <footer class="recap__footer">${raw(renderFooter(true, scope))}</footer>
     </section>
   `;
 }

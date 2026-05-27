@@ -354,34 +354,19 @@ function askAltDocuments(sessionId) {
 // Stashes the ALT sessionId in sessionStorage so the recap screen can
 // re-attach to the same draft after navigation.
 function maybeOpenAltBrief(sessionId) {
-  const navigateToRecap = () => {
-    try {
-      window.sessionStorage.setItem("welcomeAltSessionId", sessionId);
-    } catch {
-      /* ignore */
-    }
-    // Use the hash router — context-builder doesn't import navigate()
-    // directly to avoid a cycle with the router module.
-    window.location.hash = "#/welcome-alt/recap";
-  };
-  if (isAnalysisReady(sessionId)) {
-    navigateToRecap();
-    return;
+  // Navigate straight to the recap — it owns the branded loading
+  // sequence (centered Archie loader + staged "here's what we're doing"
+  // copy) and waits for the analysis to land before revealing the
+  // Playbook. No in-chat "Reading your site" notice: the loading moment
+  // belongs on the recap surface, not as a stray chat pill.
+  try {
+    window.sessionStorage.setItem("welcomeAltSessionId", sessionId);
+  } catch {
+    /* ignore */
   }
-  const noticeId = postSystemNotice(sessionId, { meta: "Reading your site", variant: "mermaid" });
-  notify(sessionId);
-  const interval = window.setInterval(() => {
-    if (!drafts.get(sessionId)) {
-      window.clearInterval(interval);
-      return;
-    }
-    if (isAnalysisReady(sessionId)) {
-      window.clearInterval(interval);
-      markSystemNoticeReady(sessionId, noticeId, { meta: "Site read" });
-      notify(sessionId);
-      navigateToRecap();
-    }
-  }, 400);
+  // Use the hash router — context-builder doesn't import navigate()
+  // directly to avoid a cycle with the router module.
+  window.location.hash = "#/welcome-alt/recap";
 }
 
 // Open the right-panel brief panel in read mode for an existing context.
