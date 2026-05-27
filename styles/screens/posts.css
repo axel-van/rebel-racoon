@@ -115,6 +115,8 @@
 }
 
 .posts__row-check {
+  width: 16px;
+  flex-shrink: 0;
   padding-top: var(--ref-spacing-sm);
 }
 
@@ -183,6 +185,7 @@
   gap: var(--ref-spacing-sm);
   min-width: 0;
   border-color: var(--ref-color-grey-20);
+  box-shadow: var(--app-shadow-low);
 }
 
 .posts__card-header {

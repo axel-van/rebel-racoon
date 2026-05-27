@@ -33,6 +33,11 @@
   /* ── Elevation — popover / modal / card shadows ────────────────────── */
   /* Subtle shadow under existing components (was the archie default). */
   --app-shadow-subtle: 0 1px 2px rgba(33, 46, 68, 0.06);
+
+  /* DS "Shadow/Low (default)" — two-layer #34456326 drop shadow.
+     Mirrors the Figma V2 token (node 957-3); aliases the internal
+     --comp-select-shadow so app code never reaches a --comp-* directly. */
+  --app-shadow-low: 0px 4px 6px -2px rgba(52, 69, 99, 0.15), 0px 4px 25px -2px rgba(52, 69, 99, 0.15);
   --app-shadow-popover-md: 0 8px 24px rgba(33, 46, 68, 0.12);
   --app-shadow-popover-lg: 0 12px 32px rgba(33, 46, 68, 0.12);
   --app-shadow-drawer-left: -8px 0 32px rgba(33, 46, 68, 0.12);

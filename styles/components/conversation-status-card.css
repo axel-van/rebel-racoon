@@ -26,7 +26,7 @@
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--ref-border-radius-md);
-  box-shadow: var(--app-shadow-popover-md);
+  box-shadow: var(--app-shadow-low);
   overflow: hidden;
 }
 

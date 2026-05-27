@@ -28,16 +28,18 @@ export function renderPostCard(post, opts = {}) {
   const selected = selectable && opts.selected === true;
 
   // Multi-select affordance — a checkbox sits in the .posts__row-check
-  // gutter (CSS reserves the column unconditionally). Only rendered in
-  // surfaces that opt in via `opts.selectable`.
-  const checkbox = selectable
-    ? `<div class="posts__row-check">
-        <label class="ap-checkbox-container" aria-label="Select draft">
+  // gutter, which CSS reserves at a fixed width on every row so a
+  // non-selectable card (e.g. a scheduled post) stays left-aligned with
+  // its selectable siblings instead of sliding into the gutter. Only
+  // selectable rows fill the gutter with an actual checkbox.
+  const checkbox = `<div class="posts__row-check"${selectable ? "" : ' aria-hidden="true"'}>${
+    selectable
+      ? `<label class="ap-checkbox-container" aria-label="Select draft">
           <input type="checkbox" data-post-select="${post.id}" ${selected ? "checked" : ""} />
           <i></i>
-        </label>
-      </div>`
-    : "";
+        </label>`
+      : ""
+  }</div>`;
 
   const bodyParagraphs = post.text.map((p) => `<p class="posts__card-paragraph">${p}</p>`).join("");
 
