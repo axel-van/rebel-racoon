@@ -175,15 +175,13 @@
   padding: var(--ref-spacing-md);
   padding-top: var(--ref-spacing-md);
   background: var(--app-surface);
-  border: 1px solid var(--app-border-soft);
+  border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
-  box-shadow: var(--app-shadow-low);
   overflow: hidden;
   cursor: pointer;
   transition:
     border-color var(--ref-animation-short) var(--app-ease-out),
-    transform var(--ref-animation-short) var(--app-ease-out),
-    box-shadow var(--ref-animation-short) var(--app-ease-out);
+    transform var(--ref-animation-short) var(--app-ease-out);
 }
 
 .contexts-card:hover,
@@ -191,7 +189,6 @@
   border-color: var(--ref-color-grey-40);
   outline: none;
   transform: translateY(-1px);
-  box-shadow: var(--app-shadow-low);
 }
 
 /* Swatch strip — top edge, full-width, colored per ctx.color. */
