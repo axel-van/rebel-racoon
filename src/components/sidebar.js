@@ -195,6 +195,19 @@ export function initSidebar() {
     }
   });
 
+  // Keyboard activation for the conversation row — it's a <div role="button">
+  // (HTML forbids nesting <details> inside <button>), so Enter/Space need
+  // explicit wiring to navigate. Other interactive children (rename, pin,
+  // delete, summary) are real <button>/<summary> elements and handle Enter
+  // natively; we only intervene when focus is on the row itself.
+  el.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const row = event.target.closest("[data-sidebar-session]");
+    if (!row || event.target !== row) return;
+    event.preventDefault();
+    navigate(`/session/${row.dataset.sidebarSession}`);
+  });
+
   // Live-rerender on store mutations so the nav counters and any context
   // colors used by session rows stay in sync without waiting for the next
   // route change.

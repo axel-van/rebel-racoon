@@ -611,6 +611,14 @@ function onKeydown(event) {
     close();
     return;
   }
+  // Dropzone is a <div role="button">; Enter/Space must trigger the file
+  // picker the same way a click does (line 485 below).
+  if ((event.key === "Enter" || event.key === " ") && event.target.id === "addSourceDropzone") {
+    event.preventDefault();
+    fileInput.value = "";
+    fileInput.click();
+    return;
+  }
   // Submit URL with Enter
   if (event.key === "Enter" && event.target.matches("[data-url-input]")) {
     event.preventDefault();
