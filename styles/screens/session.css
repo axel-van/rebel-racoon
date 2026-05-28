@@ -1437,6 +1437,9 @@
   max-width: 360px;
   margin-top: 0;
   z-index: var(--app-z-overlay);
+  /* Reset text-align from the empty-chat hero (which centres its
+     children); a select dropdown is always left-aligned. */
+  text-align: left;
 }
 
 /* Dropdown rows carry the playbook's colour dot before the label so
