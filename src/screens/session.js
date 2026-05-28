@@ -2731,6 +2731,13 @@ function bindSession(root, session) {
           closeMentionPicker(root);
           return;
         }
+        // Tab away — close the picker so the textarea behaves like a
+        // normal input again. Don't preventDefault: focus should still
+        // move to the next composer button.
+        if (event.key === "Tab") {
+          closeMentionPicker(root);
+          return;
+        }
       }
       // Cmd/Ctrl+Enter sends from anywhere in the textarea (matches Claude.ai
       // and the handoff README spec). Plain Enter (no shift, no modifier)
