@@ -58,6 +58,13 @@ let selected = new Set(); // clip ids
 let editingId = null; // clip id currently in edit mode, or null
 let regenerating = false;
 
+// When the modal is opened with a specific `editingClipId`, we run in
+// single-clip mode: the body shows only that clip's editor pane (no
+// browse list, no timeline, no toolbar, no bulk-action footer), and
+// the modal closes automatically after Save / Cancel / Delete. Set in
+// `open()` from `callbacks.editingClipId`, cleared in `close()`.
+let singleClipMode = false;
+
 // Edit-mode draft (live values while the user is editing — committed on Save).
 let draft = null;
 let draftPlayhead = 0;
@@ -113,7 +120,7 @@ const SHELL_HTML = `
     </div>
   </div>
 
-  <div class="video-clips-modal__timeline">
+  <div class="video-clips-modal__timeline" id="videoClipsTimeline">
     <div class="vc-timeline">
       <div class="vc-timeline__bar" id="videoClipsTimelineBar"></div>
       <div class="vc-timeline__ticks" id="videoClipsTimelineTicks"></div>
@@ -440,6 +447,15 @@ function editorPaneHTML() {
 function renderBody() {
   if (!bodyEl) return;
 
+  // Single-clip mode: render ONLY the editor pane. No browse grid, no
+  // dimmed siblings — the user is editing one clip in isolation.
+  if (singleClipMode) {
+    bodyEl.innerHTML = editingId
+      ? `<div class="vc-rows__cell vc-rows__cell--floating is-editing vc-rows__cell--solo" data-vc-floating>${editorPaneHTML()}</div>`
+      : "";
+    return;
+  }
+
   // Editor pane (sticky, only when in edit mode).
   const editorBlock = editingId
     ? `<div class="vc-rows__cell vc-rows__cell--floating is-editing" data-vc-floating>${editorPaneHTML()}</div>`
@@ -460,10 +476,20 @@ function renderBody() {
 }
 
 function render() {
-  renderTimeline();
-  renderToolbar();
+  // Single-clip mode strips every multi-clip surface from the modal: the
+  // timeline at the top, the bulk toolbar, and the "Draft posts from N
+  // clips" footer all get hidden so the user only sees the editor pane
+  // for the one clip they came to edit.
+  const wrapTimeline = document.getElementById("videoClipsTimeline");
+  if (wrapTimeline) wrapTimeline.hidden = singleClipMode;
+  if (toolbarEl) toolbarEl.hidden = singleClipMode;
+  if (footEl) footEl.hidden = singleClipMode;
+  if (!singleClipMode) {
+    renderTimeline();
+    renderToolbar();
+    renderFooter();
+  }
   renderBody();
-  renderFooter();
 }
 
 // ── Event delegation ─────────────────────────────────────────────────
@@ -836,12 +862,20 @@ function saveEdit() {
   }
   editingId = null;
   draft = null;
+  if (singleClipMode) {
+    close();
+    return;
+  }
   render();
 }
 
 function cancelEdit() {
   editingId = null;
   draft = null;
+  if (singleClipMode) {
+    close();
+    return;
+  }
   render();
 }
 
@@ -851,6 +885,10 @@ function deleteClip(clipId) {
   editingId = null;
   draft = null;
   notifySave();
+  if (singleClipMode) {
+    close();
+    return;
+  }
   render();
 }
 
@@ -962,32 +1000,39 @@ export function open(source, callbacks = {}) {
   draft = null;
   draftPlayhead = 0;
   regenerating = false;
+  singleClipMode = false;
   onUseCallback = typeof callbacks.onUseClips === "function" ? callbacks.onUseClips : null;
   onSaveCallback = typeof callbacks.onSaveClips === "function" ? callbacks.onSaveClips : null;
 
   // Optional pre-positioning into edit mode for a specific clip — used by
-  // the right-panel clip-card's Edit affordance. The browse list still
-  // renders behind, but the editor pane is opened immediately so the
-  // user lands on the trim/preview surface without an extra click.
+  // the right-panel clip-card's Edit affordance. Activates single-clip
+  // mode so the modal hides every multi-clip surface (browse grid,
+  // timeline, bulk toolbar, bulk footer) and only shows the editor pane
+  // for the target clip.
   if (callbacks.editingClipId) {
     const target = clips.find((c) => c.id === callbacks.editingClipId);
     if (target) {
+      singleClipMode = true;
       editingId = target.id;
       draft = { ...target };
       draftPlayhead = target.start || 0;
     }
   }
 
-  // Head info — file-kind badge + filename + clip stats. The title is
-  // a static "Suggested clips" (DS H1) ; the filename and counts live in
-  // the subtitle so the dialog reads like a regular .ap-dialog.
+  // Head info — file-kind badge + filename + clip stats. In single-clip
+  // mode the subtitle drops the multi-clip framing ("N clips worth
+  // posting…") for a quieter "Edit clip" cue.
   const kindEl = document.getElementById("videoClipsKind");
   if (kindEl) kindEl.textContent = (source.ext || "MP4").toUpperCase();
   const subEl = document.getElementById("videoClipsSub");
   if (subEl) {
-    const total = source.durationSec || 0;
-    const file = shortName(source.filename || "video");
-    subEl.textContent = `${file} · ${clips.length} ${clips.length === 1 ? "clip" : "clips"} worth posting · ${fmtTime(total)} of footage`;
+    if (singleClipMode) {
+      subEl.textContent = shortName(source.filename || "video");
+    } else {
+      const total = source.durationSec || 0;
+      const file = shortName(source.filename || "video");
+      subEl.textContent = `${file} · ${clips.length} ${clips.length === 1 ? "clip" : "clips"} worth posting · ${fmtTime(total)} of footage`;
+    }
   }
 
   backdrop.hidden = false;
@@ -1016,8 +1061,16 @@ function close() {
   draftPlayhead = 0;
   regenerating = false;
   dragState = null;
+  singleClipMode = false;
   onUseCallback = null;
   onSaveCallback = null;
+
+  // Restore the multi-clip surfaces that single-clip mode hid so the next
+  // open() in normal mode shows them.
+  const wrapTimeline = document.getElementById("videoClipsTimeline");
+  if (wrapTimeline) wrapTimeline.hidden = false;
+  if (toolbarEl) toolbarEl.hidden = false;
+  if (footEl) footEl.hidden = false;
 
   notifyClose(MODAL_ID);
 }
