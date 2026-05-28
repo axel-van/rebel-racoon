@@ -30,6 +30,19 @@
   background-position: center;
 }
 
+/* Bottom scrim — keeps the timeframe overlay legible regardless of
+   the underlying thumbnail color (dark gradient, bright frame, white
+   background, etc.). Pseudo-element so it doesn't interfere with the
+   play-icon centering. */
+.clip-card__thumb::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 55%;
+  background: var(--app-thumb-scrim);
+  pointer-events: none;
+}
+
 .clip-card__thumb-play {
   position: absolute;
   inset: 0;
@@ -53,14 +66,17 @@
   outline-offset: -2px;
 }
 
-/* Timeframe overlay — bottom-left of the thumb, "start → end" in white
-   tabular figures + the total duration in a DS .ap-tag.orange pill. The
-   row sits on the dark gradient so the text reads without an extra
-   background. */
+/* Timeframe overlay — bottom-left of the thumb, sitting on the dark
+   scrim so legibility holds on any thumbnail color (dark gradient,
+   white frame, mid-tone). Bounds are white bold; duration is a solid
+   orange pill with white text for unambiguous contrast — the DS
+   .ap-tag.orange (soft amber bg + dark amber text) was too washed
+   out over a thumbnail. */
 .clip-card__timeframe {
   position: absolute;
   left: var(--ref-spacing-xs);
   bottom: var(--ref-spacing-xs);
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
@@ -73,7 +89,6 @@
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-white);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .clip-card__timeframe-time {
@@ -83,17 +98,83 @@
 .clip-card__timeframe-arrow {
   font-size: var(--sys-icon-css-sm);
   color: var(--ref-color-white);
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
+/* Solid orange pill — DS reference orange-100 background + white text,
+   high-contrast against any thumbnail. Tabular figures so the pill
+   width stays consistent across clip durations. */
 .clip-card__timeframe-duration {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--ref-spacing-xxs);
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--ref-color-orange-100);
+  color: var(--ref-color-white);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-sm);
   font-variant-numeric: tabular-nums;
 }
 
-/* Clip-specific override for the shared .rpanel-ideas__kind tag: the
-   clip kind doesn't carry the per-kind semantic palette (stat/quote/
-   hook…), so we render it as a quiet grey chip via the DS .ap-tag.grey
-   companion class — no extra background/color rules needed. */
+/* Source line — kind tag + filename + kebab on one row at the top of
+   the content zone. Replaces the lone kind tag so the user sees where
+   the clip came from without opening the Why panel. */
+.clip-card__source-line {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  min-width: 0;
+}
+
 .clip-card__kind {
-  align-self: flex-start;
+  /* Override the .rpanel-ideas__kind align-self: flex-start so the
+     kind tag sits inline with the filename + kebab row above. */
+  align-self: auto;
+  flex: 0 0 auto;
+}
+
+.clip-card__source-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  color: var(--ref-color-grey-80);
+}
+
+.clip-card__source-name > i {
+  flex: 0 0 auto;
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-grey-80);
+}
+
+.clip-card__source-name > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Kebab menu — anchored top-right of the content zone, holds Edit
+   clip + Remove clip. DS .ap-action-dropdown supplies surface chrome;
+   we only override positioning. */
+.clip-card__more-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.ap-action-dropdown.clip-card__more-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--ref-spacing-xxxs));
+  z-index: 10;
+  min-width: 180px;
+  width: auto;
+}
+
+.ap-action-dropdown.clip-card__more-menu[hidden] {
+  display: none;
 }

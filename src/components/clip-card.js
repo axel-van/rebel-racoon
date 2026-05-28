@@ -49,6 +49,47 @@ function escapeAttr(s) {
     .replace(/"/g, "&quot;");
 }
 
+// One-at-a-time kebab menu — closes any other open card menu when the
+// user opens a new one, and closes everything on click outside / Escape.
+function closeAllClipMoreMenus(exceptMenu) {
+  document.querySelectorAll(".clip-card__more-menu:not([hidden])").forEach((menu) => {
+    if (menu === exceptMenu) return;
+    menu.hidden = true;
+    const trigger = document.querySelector(`[aria-controls="${menu.id}"]`);
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
+  });
+}
+
+function toggleClipMoreMenu(triggerBtn) {
+  const menuId = triggerBtn.getAttribute("aria-controls");
+  const menu = menuId ? document.getElementById(menuId) : null;
+  if (!menu) return;
+  const willOpen = menu.hidden;
+  closeAllClipMoreMenus(willOpen ? menu : null);
+  menu.hidden = !willOpen;
+  triggerBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+}
+
+let globalListenersBound = false;
+function bindGlobalListeners() {
+  if (globalListenersBound) return;
+  globalListenersBound = true;
+  document.addEventListener("click", (event) => {
+    const moreBtn = event.target.closest("[data-clip-more]");
+    if (moreBtn) {
+      event.preventDefault();
+      toggleClipMoreMenu(moreBtn);
+      return;
+    }
+    if (event.target.closest(".clip-card__more-menu")) return;
+    closeAllClipMoreMenus();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeAllClipMoreMenus();
+  });
+}
+bindGlobalListeners();
+
 export function renderClipCard(
   clip,
   { sourceName = "", sourceKind = "Video", sessionId = null, feedback = null, whyOpen = false } = {},
@@ -59,19 +100,11 @@ export function renderClipCard(
   const safeWhy = escapeText(clip.why || "");
 
   // Why-this-clip panel — mirrors the rpanel-ideas__why structure.
-  // Rationale = clip.why ; the source attribution becomes a source tag
-  // pointing at the parent video.
+  // Holds the per-clip rationale (clip.why). Source attribution lives
+  // in the source line at the top of the content zone (sibling of the
+  // kind tag), so it's NOT repeated here.
   const whyId = `rpanel-clip-why-${clip.id}`;
-  const sourceTag = sourceName
-    ? `
-      <span class="rpanel-ideas__source-tag" title="${escapeAttr(sourceName)}">
-        <i class="${iconFor(sourceKind)}" aria-hidden="true"></i>
-        <span class="rpanel-ideas__source-tag-text">${escapeText(sourceName)}</span>
-      </span>
-    `
-    : "";
-
-  const hasWhyBody = Boolean(safeWhy) || Boolean(sourceTag);
+  const hasWhyBody = Boolean(safeWhy);
   const whyPanel = hasWhyBody
     ? `
       <section class="rpanel-ideas__why" data-why-open="${whyOpen ? "true" : "false"}">
@@ -88,14 +121,6 @@ export function renderClipCard(
         </button>
         <div id="${whyId}" class="rpanel-ideas__why-body" ${whyOpen ? "" : "hidden"}>
           ${safeWhy ? `<p class="rpanel-ideas__why-rationale">${safeWhy}</p>` : ""}
-          ${
-            sourceTag
-              ? `<div class="rpanel-ideas__why-source">
-                  <span class="rpanel-ideas__why-source-label">Source</span>
-                  <div class="rpanel-ideas__why-source-tags">${sourceTag}</div>
-                </div>`
-              : ""
-          }
         </div>
       </section>
     `
@@ -160,7 +185,63 @@ export function renderClipCard(
       </button>
 
       <div class="rpanel-ideas__card-content">
-        <span class="ap-tag grey rpanel-ideas__kind clip-card__kind">clip</span>
+        <div class="clip-card__source-line">
+          <span class="ap-tag grey rpanel-ideas__kind clip-card__kind">clip</span>
+          ${
+            sourceName
+              ? `<span class="clip-card__source-name" title="${escapeAttr(sourceName)}">
+                  <i class="${iconFor(sourceKind)}" aria-hidden="true"></i>
+                  <span>${escapeText(sourceName)}</span>
+                </span>`
+              : ""
+          }
+          <div class="clip-card__more-wrap">
+            <button
+              type="button"
+              class="ap-icon-button transparent sm clip-card__more"
+              data-clip-more="${escapeAttr(clip.id)}"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="clip-more-${escapeAttr(clip.id)}"
+              aria-label="More actions"
+            >
+              <i class="ap-icon-more"></i>
+            </button>
+            <div
+              id="clip-more-${escapeAttr(clip.id)}"
+              class="ap-action-dropdown clip-card__more-menu"
+              role="menu"
+              hidden
+            >
+              <button
+                type="button"
+                role="menuitem"
+                class="ap-action-dropdown-item"
+                data-clip-edit="${escapeAttr(clip.id)}"
+              >
+                <i class="ap-icon-pen"></i>
+                <div class="ap-action-dropdown-item-text">
+                  <div class="ap-action-dropdown-item-label-container">
+                    <span class="ap-action-dropdown-item-label">Edit clip</span>
+                  </div>
+                </div>
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                class="ap-action-dropdown-item red-mode"
+                data-clip-remove="${escapeAttr(clip.id)}"
+              >
+                <i class="ap-icon-trash"></i>
+                <div class="ap-action-dropdown-item-text">
+                  <div class="ap-action-dropdown-item-label-container">
+                    <span class="ap-action-dropdown-item-label">Remove clip</span>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
         <h4 class="rpanel-ideas__card-title">${safeTitle}</h4>
         ${safeSummary ? `<p class="rpanel-ideas__card-body">${safeSummary}</p>` : ""}
         ${whyPanel}

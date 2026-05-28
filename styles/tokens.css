@@ -102,6 +102,12 @@
      and schedule-modal scrim. */
   --app-modal-backdrop: rgba(33, 46, 68, 0.32);
 
+  /* Thumbnail scrim — bottom-to-top fade burned into the lower half of
+     a video thumbnail so text/pills overlaid on it stay legible against
+     any frame (dark gradient, bright cap, white background). Pure black
+     ramp at 70% bottom alpha. */
+  --app-thumb-scrim: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
+
   /* ── Stacking — kept centralized so adding a new layer doesn't
      silently collide. admin-chip sits on top intentionally so the dev
      mode toggle stays visible above any modal. ──────────────────────── */
