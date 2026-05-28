@@ -9,41 +9,38 @@
 
 /* ── Modal shell ───────────────────────────────────────────────── */
 
-.video-clips-modal {
+/* Position + size of the dialog shell — the DS .ap-dialog ships
+   surface/radius/overflow/flex-column; we add the fixed-center
+   positioning, width and fixed height the clip browser needs (body's
+   `flex: 1` needs a constrained parent, otherwise the footer floats
+   mid-card on short videos). */
+.video-clips-modal.ap-dialog {
   position: fixed;
   top: 50vh;
   left: 50vw;
   transform: translate(-50%, -50%);
   display: none;
-  flex-direction: column;
   z-index: var(--app-z-modal);
   width: min(calc(100% - 48px), 1240px);
-  /* Fixed height (rather than max-height) so the body's `flex: 1` has a
-     constrained parent to fill — without this the modal collapsed to its
-     intrinsic content height and the footer floated mid-card on short
-     videos. Body still scrolls when clips overflow. */
   height: 94vh;
-  background: var(--ref-color-white);
-  border-radius: var(--app-radius-modal);
   box-shadow: var(--app-shadow-modal);
   border: 1px solid var(--sys-border-color-default);
-  overflow: hidden;
-  /* Sane defaults reused by every descendant — the handoff's all-tabular
-     numbers were one of the visual non-negotiables. */
+  /* Tabular numerics throughout — timestamps, clip counts, durations. */
   font-variant-numeric: tabular-nums;
 }
 
-.video-clips-modal.open {
+.video-clips-modal.ap-dialog.open {
   display: flex;
   animation: app-modal-fade-in var(--ref-animation-normal) ease;
 }
 
-.video-clips-modal__head {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--ref-spacing-xs);
-  padding: 18px 22px 14px;
-  border-bottom: 1px solid var(--sys-border-color-default);
+/* Override .ap-dialog-header — the clip browser wants a leading kind
+   badge inline with the title block, not the default flex-column. */
+.video-clips-modal__head.ap-dialog-header {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  /* Right padding still reserves room for the absolute .ap-dialog-close. */
 }
 
 .video-clips-modal__head-icon {
@@ -64,61 +61,17 @@
 .video-clips-modal__head-info {
   flex: 1;
   min-width: 0;
-}
-
-.video-clips-modal__eyebrow {
-  display: inline-flex;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
   gap: var(--ref-spacing-xxxs);
-  font-size: 10px;
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-orange-150);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 4px;
 }
 
-.video-clips-modal__eyebrow i {
-  font-size: 11px;
-}
-
-.video-clips-modal__title {
-  font-size: var(--ref-font-size-md);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-  letter-spacing: -0.01em;
-  line-height: 22px;
+/* The subtitle carries a long filename · clip count · duration string;
+   keep it on one line with ellipsis. */
+.video-clips-modal__head-info .ap-dialog-subtitle {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin: 0;
-}
-
-.video-clips-modal__sub {
-  font-size: var(--ref-font-size-xs);
-  color: var(--ref-color-grey-60);
-  margin: 2px 0 0;
-}
-
-.video-clips-modal__close {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  background: transparent;
-  border: 0;
-  border-radius: var(--app-radius-button-sm);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.55;
-  color: var(--ref-color-grey-100);
-  transition: all var(--ref-animation-short);
-}
-
-.video-clips-modal__close:hover {
-  background: var(--ref-color-grey-10);
-  opacity: 1;
 }
 
 /* ── Strip timeline (top) ──────────────────────────────────────── */
@@ -185,6 +138,12 @@
   gap: var(--ref-spacing-xxs);
 }
 
+.video-clips-modal__toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
 .vc-link {
   background: transparent;
   border: 0;
@@ -225,12 +184,12 @@
 
 /* ── Body / grid ───────────────────────────────────────────────── */
 
-.video-clips-modal__body {
+/* Body — override .ap-dialog-content (which ships gap:24px / padding 24
+   32) so the clip browser stays compact and gets a tinted background. */
+.video-clips-modal__body.ap-dialog-content {
   flex: 1;
   overflow-y: auto;
   padding: 14px 22px 18px;
-  display: flex;
-  flex-direction: column;
   gap: 10px;
   background: var(--app-surface-subtle);
 }
@@ -514,18 +473,15 @@
 }
 
 /* ── Footer ────────────────────────────────────────────────────── */
+/* Layout chrome comes from .ap-dialog-footer/-left/-right. We only add
+   the tinted background that distinguishes the clip browser's footer
+   from the rest. */
 
-.video-clips-modal__foot {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 22px;
-  border-top: 1px solid var(--sys-border-color-default);
+.video-clips-modal__foot.ap-dialog-footer {
   background: var(--ref-color-grey-05);
 }
 
 .video-clips-modal__foot-stats {
-  flex: 1;
   font-size: var(--ref-font-size-sm);
   color: var(--ref-color-grey-100);
 }

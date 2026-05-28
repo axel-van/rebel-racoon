@@ -103,26 +103,15 @@ function shortName(name) {
 
 const SHELL_HTML = `
 <div class="app-modal-backdrop" id="videoClipsBackdrop" hidden></div>
-<aside class="video-clips-modal" id="videoClipsModal" role="dialog" aria-modal="true"
+<aside class="ap-dialog video-clips-modal" id="videoClipsModal" role="dialog" aria-modal="true"
        aria-labelledby="videoClipsTitle" aria-hidden="true">
-  <header class="video-clips-modal__head">
+  <div class="ap-dialog-header video-clips-modal__head">
     <div class="video-clips-modal__head-icon" id="videoClipsKind">MP4</div>
     <div class="video-clips-modal__head-info">
-      <div class="video-clips-modal__eyebrow">
-        <i class="ap-icon-sparkles"></i>
-        <span>Suggested clips</span>
-      </div>
-      <h2 class="video-clips-modal__title" id="videoClipsTitle"></h2>
-      <p class="video-clips-modal__sub" id="videoClipsSub"></p>
+      <span class="ap-dialog-title" id="videoClipsTitle">Suggested clips</span>
+      <span class="ap-dialog-subtitle" id="videoClipsSub"></span>
     </div>
-    <button type="button" class="ap-button stroked grey video-clips-modal__add" data-vc-action="add-clip">
-      <i class="ap-icon-plus"></i>
-      <span>Add clip</span>
-    </button>
-    <button type="button" class="video-clips-modal__close" id="videoClipsClose" aria-label="Close">
-      <i class="ap-icon-close"></i>
-    </button>
-  </header>
+  </div>
 
   <div class="video-clips-modal__timeline">
     <div class="vc-timeline">
@@ -133,9 +122,13 @@ const SHELL_HTML = `
 
   <div class="video-clips-modal__toolbar" id="videoClipsToolbar"></div>
 
-  <div class="video-clips-modal__body" id="videoClipsBody"></div>
+  <div class="ap-dialog-content video-clips-modal__body" id="videoClipsBody"></div>
 
-  <footer class="video-clips-modal__foot" id="videoClipsFoot"></footer>
+  <div class="ap-dialog-footer video-clips-modal__foot" id="videoClipsFoot"></div>
+
+  <button type="button" class="ap-dialog-close" id="videoClipsClose" aria-label="Close">
+    <i class="ap-icon-close"></i>
+  </button>
 </aside>`;
 
 // ── Faux thumbnail backgrounds ───────────────────────────────────────
@@ -198,10 +191,16 @@ function renderToolbar() {
       <span class="video-clips-modal__sep"></span>
       <button class="vc-link" data-vc-action="clear" ${selected.size === 0 ? "disabled" : ""}>Clear</button>
     </div>
-    <button class="ap-button stroked grey video-clips-modal__regen${regenerating ? " is-loading" : ""}" data-vc-action="regen" ${regenerating ? "disabled" : ""}>
-      <i class="ap-icon-refresh"></i>
-      <span>${regenerating ? "Suggesting more…" : "Suggest more"}</span>
-    </button>
+    <div class="video-clips-modal__toolbar-actions">
+      <button class="ap-button stroked grey" data-vc-action="add-clip">
+        <i class="ap-icon-plus"></i>
+        <span>Add clip</span>
+      </button>
+      <button class="ap-button stroked grey video-clips-modal__regen${regenerating ? " is-loading" : ""}" data-vc-action="regen" ${regenerating ? "disabled" : ""}>
+        <i class="ap-icon-refresh"></i>
+        <span>${regenerating ? "Suggesting more…" : "Suggest more"}</span>
+      </button>
+    </div>
   `;
 }
 
@@ -213,14 +212,18 @@ function renderFooter() {
   const n = selected.size;
   const ctaLabel = n === 1 ? "Draft post from 1 clip" : `Draft posts from ${n} clips`;
   footEl.innerHTML = `
-    <div class="video-clips-modal__foot-stats">
-      <strong>${n}</strong> clip${n === 1 ? "" : "s"} selected${n > 0 ? `<span class="video-clips-modal__foot-meta"> · ${fmtTime(total)} of video</span>` : ""}
+    <div class="ap-dialog-footer-left">
+      <div class="video-clips-modal__foot-stats">
+        <strong>${n}</strong> clip${n === 1 ? "" : "s"} selected${n > 0 ? `<span class="video-clips-modal__foot-meta"> · ${fmtTime(total)} of video</span>` : ""}
+      </div>
     </div>
-    <button type="button" class="ap-button transparent grey" data-vc-action="cancel">Cancel</button>
-    <button type="button" class="ap-button primary orange" data-vc-action="use-clips" ${n === 0 || editingId ? "disabled" : ""} title="${editingId ? "Finish editing the clip first" : ""}">
-      <i class="ap-icon-sparkles"></i>
-      <span>${ctaLabel}</span>
-    </button>
+    <div class="ap-dialog-footer-right">
+      <button type="button" class="ap-button transparent grey" data-vc-action="cancel">Cancel</button>
+      <button type="button" class="ap-button primary orange" data-vc-action="use-clips" ${n === 0 || editingId ? "disabled" : ""} title="${editingId ? "Finish editing the clip first" : ""}">
+        <i class="ap-icon-sparkles"></i>
+        <span>${ctaLabel}</span>
+      </button>
+    </div>
   `;
 }
 
@@ -975,15 +978,16 @@ export function open(source, callbacks = {}) {
     }
   }
 
-  // Head info (file kind badge + filename + sub).
+  // Head info — file-kind badge + filename + clip stats. The title is
+  // a static "Suggested clips" (DS H1) ; the filename and counts live in
+  // the subtitle so the dialog reads like a regular .ap-dialog.
   const kindEl = document.getElementById("videoClipsKind");
   if (kindEl) kindEl.textContent = (source.ext || "MP4").toUpperCase();
-  const titleEl = document.getElementById("videoClipsTitle");
-  if (titleEl) titleEl.textContent = shortName(source.filename || "video");
   const subEl = document.getElementById("videoClipsSub");
   if (subEl) {
     const total = source.durationSec || 0;
-    subEl.textContent = `${clips.length} ${clips.length === 1 ? "clip" : "clips"} worth posting · ${fmtTime(total)} of footage`;
+    const file = shortName(source.filename || "video");
+    subEl.textContent = `${file} · ${clips.length} ${clips.length === 1 ? "clip" : "clips"} worth posting · ${fmtTime(total)} of footage`;
   }
 
   backdrop.hidden = false;
