@@ -227,6 +227,13 @@ function bind(target) {
       const c = findConnector(id);
       if (!c) return;
       const wasConnected = c.status === "connected";
+      // Snapshot the pre-toggle state so the toast's Undo can restore
+      // the previous account/lastSync exactly, not just flip status back.
+      const previous = {
+        status: c.status,
+        account: c.account || null,
+        lastSync: c.lastSync || null,
+      };
       const updated = wasConnected
         ? setConnectorStatus(id, { status: "disconnected", account: null, lastSync: null })
         : setConnectorStatus(id, { status: "connected", account: "matt@archie.io", lastSync: "just now" });
@@ -234,7 +241,15 @@ function bind(target) {
       // but we paint here too so the immediate UI feels instant if the
       // notifier ever debounces.
       paint(target);
-      showToast(`${updated.name} ${wasConnected ? "disconnected" : "connected"}`);
+      showToast(`${updated.name} ${wasConnected ? "disconnected" : "connected"}`, {
+        action: {
+          label: "Undo",
+          onClick: () => {
+            setConnectorStatus(id, previous);
+            paint(target);
+          },
+        },
+      });
       return;
     }
 
