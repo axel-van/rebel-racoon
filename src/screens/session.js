@@ -473,7 +473,7 @@ function renderComposer(attachedContext, session, selectable) {
           </div>
         </div>
         <div class="session__composer-hint">
-          <kbd>↵</kbd> to send · <kbd>Shift</kbd>+<kbd>↵</kbd> for new line · drop a file to add a source
+          <kbd>Enter</kbd> to send · <kbd>Shift</kbd>+<kbd>Enter</kbd> for new line · Drop a file to attach a source
         </div>
       </div>
     </div>
