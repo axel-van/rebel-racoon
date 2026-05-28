@@ -96,7 +96,7 @@ function renderContextsEmpty(allContexts, pageState) {
     return renderEmptyState({
       icon: "ap-icon-target",
       title: "No Playbooks yet",
-      body: "Define Brand, audience, brief, and tone of voice — Archie applies it to every draft.",
+      body: "Capture your brand, audience, brief, and tone of voice — I'll apply it to every draft.",
       actionHtml: `<button type="button" class="ap-button primary orange" data-contexts-new><i class="ap-icon-plus"></i><span>Create your first Playbook</span></button>`,
       wrapperClass: "contexts-view__empty contexts-view__empty--rich",
     });

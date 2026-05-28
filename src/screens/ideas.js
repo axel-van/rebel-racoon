@@ -129,7 +129,7 @@ function renderIdeasEmpty(allIdeas, pageState) {
     return renderEmptyState({
       icon: "ap-icon-sparkles",
       title: "No ideas yet",
-      body: "Add a source — Archie extracts hooks, stats, quotes, and stories you can use to draft posts.",
+      body: "Add a source and I'll pull out the key messages, facts, quotes, and stories you can turn into posts.",
       actionHtml: `<button type="button" class="ap-button primary orange" data-ideas-add-source><i class="ap-icon-plus"></i><span>Add a source</span></button>`,
       wrapperClass: "ideas-view__empty ideas-view__empty--rich",
     });
@@ -148,7 +148,7 @@ function renderIdeasEmpty(allIdeas, pageState) {
   return renderEmptyState({
     icon: "ap-icon-sparkles",
     title: "No ideas to show",
-    body: "Once your sources finish processing, ideas land here.",
+    body: "Ideas will appear here once I finish analyzing your sources.",
     wrapperClass: "ideas-view__empty ideas-view__empty--rich",
   });
 }
