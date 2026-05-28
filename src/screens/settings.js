@@ -160,7 +160,7 @@ function renderConnectorRow(c) {
     : "";
   return `
     <div class="settings-row" data-row-id="${escapeHtml(c.id)}">
-      <img class="settings-row__logo" src="${escapeHtml(c.logo)}" alt="" width="32" height="32" />
+      <img class="settings-row__logo" src="${escapeHtml(c.logo)}" alt="" width="32" height="32" loading="lazy" />
       <div class="settings-row__body">
         <div class="settings-row__title">${escapeHtml(c.name)}</div>
         <div class="settings-row__sub">${escapeHtml(c.desc)}</div>
@@ -182,7 +182,7 @@ function renderSocialRow(a) {
   const isConnected = a.status === "connected";
   return `
     <div class="settings-row" data-row-id="${escapeHtml(a.id)}">
-      <img class="settings-row__logo" src="${escapeHtml(a.logo)}" alt="" width="32" height="32" />
+      <img class="settings-row__logo" src="${escapeHtml(a.logo)}" alt="" width="32" height="32" loading="lazy" />
       <div class="settings-row__body">
         <div class="settings-row__title-line">
           <span class="settings-row__title">${escapeHtml(a.platformLabel)}</span>
