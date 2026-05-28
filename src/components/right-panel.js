@@ -2136,7 +2136,9 @@ function escapeAttr(str) {
 // --- V1 Brief panel ---------------------------------------------------
 
 const COLOR_SWATCHES = ["orange", "blue", "green", "purple", "red", "yellow"];
-const LANGUAGE_OPTIONS = ["English", "Français", "Español", "Deutsch", "Italiano", "Português"];
+// Archie's UI and AI generation are English-only today. Mirror of the list
+// in src/playbook-view.js — re-add other languages here when shipped.
+const LANGUAGE_OPTIONS = ["English"];
 const TONE_FALLBACKS = [
   "Conversational & approachable",
   "Bold & opinionated",
