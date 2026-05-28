@@ -67,7 +67,7 @@ function renderPage() {
             <i class="ap-icon-refresh"></i>
             <span>Re-extract from sources</span>
           </button>
-          <button type="button" class="ap-button primary orange" data-ideas-new>
+          <button type="button" class="ap-button primary blue" data-ideas-new>
             <i class="ap-icon-plus"></i>
             <span>Create an idea</span>
           </button>
@@ -130,7 +130,7 @@ function renderIdeasEmpty(allIdeas, pageState) {
       icon: "ap-icon-sparkles",
       title: "No ideas yet",
       body: "Add a source and I'll pull out the key messages, facts, quotes, and stories you can turn into posts.",
-      actionHtml: `<button type="button" class="ap-button primary orange" data-ideas-add-source><i class="ap-icon-plus"></i><span>Add a source</span></button>`,
+      actionHtml: `<button type="button" class="ap-button primary blue" data-ideas-add-source><i class="ap-icon-plus"></i><span>Add a source</span></button>`,
       wrapperClass: "ideas-view__empty ideas-view__empty--rich",
     });
   }
