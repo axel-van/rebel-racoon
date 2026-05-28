@@ -496,7 +496,20 @@ function onModalClick(event) {
   }
 
   if (action === "delete-clip") {
-    deleteClip(editingId);
+    // Editor state isn't externally persisted, so a destructive delete
+    // without a confirm has no recovery path. Gate on confirm-modal —
+    // same pattern as bulk-delete drafts in right-panel.
+    const id = editingId;
+    import("./confirm-modal.js?v=21").then(({ open }) => {
+      open({
+        title: "Delete this clip?",
+        body: "This removes the clip from the editor. You'll need to re-extract or re-create it manually.",
+        confirmLabel: "Delete clip",
+        cancelLabel: "Keep editing",
+        danger: true,
+        onConfirm: () => deleteClip(id),
+      });
+    });
     return;
   }
 
