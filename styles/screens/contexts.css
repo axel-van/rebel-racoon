@@ -60,6 +60,14 @@
   flex: 0 0 240px;
 }
 
+/* Narrow viewports (right panel open or mobile) — let the search input
+   shrink to fit so the row never overflows horizontally. */
+@media (max-width: 720px) {
+  .contexts-view__search {
+    flex: 1 1 100%;
+  }
+}
+
 .contexts-view__body {
   min-height: 200px;
 }

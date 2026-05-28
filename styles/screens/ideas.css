@@ -132,6 +132,16 @@
   min-width: 160px;
 }
 
+/* Below the 720px breakpoint the sort dropdown wraps awkwardly next to
+   the search input. Drop the min-width so it can collapse to its
+   intrinsic content width or stretch full row when wrapped. */
+@media (max-width: 720px) {
+  .ideas-view__sort {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
 /* ── Body ─────────────────────────────────────────────────────────── */
 
 .ideas-view__body {
