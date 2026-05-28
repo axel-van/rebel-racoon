@@ -180,46 +180,15 @@ export function subscribe(fn) {
   return () => subs.delete(fn);
 }
 
-// Floor for the chat column width — under this the assistant panel
-// (composer + thread) reads cramped regardless of viewport. When the
-// content column would land below this floor with the sidebar still
-// expanded, we collapse the sidebar to claw back ~204px (260 − 56).
-// The trigger is content-aware (depends on the live panel width) rather
-// than a hard viewport breakpoint, so a wide Drafts panel collapses
-// the sidebar earlier than a narrow Ideas panel.
-const CHAT_MIN_WIDTH_PX = 500;
-
-// Compute the chat column width that would result if the sidebar were
-// kept expanded. Reads the actual panel size from the DOM (post-layout)
-// so it works for both fit-content and fixed-width grid columns. When
-// the panel is closed, the panel.offsetWidth is 0 and the check
-// effectively short-circuits via the !state.mode guard above.
-function computeChatWidth() {
-  if (typeof window === "undefined") return Infinity;
-  const sidebar = document.getElementById("sidebar");
-  const panel = document.getElementById(PANEL_ID);
-  const sidebarW = sidebar ? sidebar.offsetWidth : 260;
-  const panelW = panel ? panel.offsetWidth : 0;
-  // If the sidebar is already collapsed we use its expanded width
-  // (260) for the projection — we want to know what would happen if
-  // it were re-expanded, not the current state. 56px collapsed +
-  // 204px delta = 260 expanded.
-  const projectedSidebar = sidebarW < 200 ? 260 : sidebarW;
-  return window.innerWidth - projectedSidebar - panelW;
-}
-
-// Collapse the sidebar when the projected chat column would dip below
-// CHAT_MIN_WIDTH_PX. Called on panel-open transitions and on window
-// resize. We deliberately don't auto-restore on close (the user
+// Auto-collapse the sidebar whenever a right-panel opens — clawing
+// back the ~204px (260 − 56) so the chat + panel breathe regardless
+// of viewport. We deliberately don't auto-restore on close (the user
 // re-expands manually) and we don't run on mode swaps inside an
-// already-open panel — only on the closed → open transition or on
-// genuine viewport changes.
+// already-open panel — only on the closed → open transition.
 function maybeCollapseSidebar() {
   if (!state.mode) return;
   if (isSidebarCollapsed()) return;
-  if (computeChatWidth() < CHAT_MIN_WIDTH_PX) {
-    setSidebarCollapsed(true);
-  }
+  setSidebarCollapsed(true);
 }
 
 function maybeCollapseSidebarOnOpen(prevMode) {
