@@ -231,11 +231,35 @@ function maybeCollapseSidebarOnOpen(prevMode) {
   requestAnimationFrame(maybeCollapseSidebar);
 }
 
+// Track the element that had focus when the panel opened so we can
+// return focus to it on close. Only captured on a fresh open (prev=null);
+// mode swaps reuse the original snapshot.
+let lastFocusBeforeOpen = null;
+
+function snapshotFocusOnOpen(prevMode) {
+  if (prevMode !== null) return;
+  const active = document.activeElement;
+  lastFocusBeforeOpen = active instanceof HTMLElement ? active : null;
+}
+
+function restoreFocusOnClose() {
+  const target = lastFocusBeforeOpen;
+  lastFocusBeforeOpen = null;
+  if (!target || typeof target.focus !== "function") return;
+  if (!document.body.contains(target)) return;
+  try {
+    target.focus({ preventScroll: true });
+  } catch {
+    // ignore — element may have been removed mid-frame
+  }
+}
+
 // Open in Drafts mode pinned to a specific assistant message in a session.
 // Called by the in-thread Drafts summary card (Lot 4.3).
 export function openDrafts(activeBatchRef) {
   const prev = state.mode;
   if (prev === null) resetPanelWidthOverride();
+  snapshotFocusOnOpen(prev);
   state = { mode: "drafts", activeBatchRef: activeBatchRef || state.activeBatchRef };
   maybeCollapseSidebarOnOpen(prev);
   rebindThread();
@@ -247,6 +271,7 @@ export function openDrafts(activeBatchRef) {
 export function openIdeas() {
   const prev = state.mode;
   if (prev === null) resetPanelWidthOverride();
+  snapshotFocusOnOpen(prev);
   state = { ...state, mode: "ideas" };
   maybeCollapseSidebarOnOpen(prev);
   renderPanel();
@@ -260,6 +285,7 @@ export function openIdeas() {
 export function openSources() {
   const prev = state.mode;
   if (prev === null) resetPanelWidthOverride();
+  snapshotFocusOnOpen(prev);
   state = { ...state, mode: "sources" };
   maybeCollapseSidebarOnOpen(prev);
   renderPanel();
@@ -284,6 +310,11 @@ export function closePanel() {
   // context-brief isn't URL-persisted, so closing it shouldn't touch the
   // hash query (which might happen to carry an unrelated panel value).
   if (wasUserMode) writeUrlPanel(null);
+  // Return focus to the element that had it before the panel opened so
+  // keyboard users don't get marooned. Modal-coordinator does this
+  // automatically for modals; the right-panel is a push panel so we
+  // mirror the pattern here.
+  restoreFocusOnClose();
 }
 
 function setMode(mode) {
@@ -319,6 +350,7 @@ let ctaManageSnapshot = null;
 export function openContextBriefPanel(config = {}) {
   const prev = state.mode;
   if (prev === null) resetPanelWidthOverride();
+  snapshotFocusOnOpen(prev);
   contextBriefConfig = { mode: "edit", ...config };
   // Fresh open — collapse all expanded snippets so the user lands on
   // a clean overview.
