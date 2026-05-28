@@ -352,6 +352,16 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
      cleanly. Matches the row's hover bg so the button visually merges
      with the row instead of looking like an overlay sticker. */
   background: var(--ref-color-grey-10);
+  /* The visual sits at 24px to fit the row, but a 40x40 hit area is
+     the WCAG-recommended touch target. ::before expands the effective
+     tap surface around the visible chip without changing layout. */
+  position: relative;
+}
+
+.app-sidebar__row-more::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
 }
 
 .app-sidebar__row-more::-webkit-details-marker {
@@ -557,8 +567,8 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
 }
 
 .app-shell.is-sidebar-collapsed .app-sidebar__nav-item {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   justify-content: center;
   gap: 0;
