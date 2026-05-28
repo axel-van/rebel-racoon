@@ -132,12 +132,16 @@ function renderUploadTab() {
 
 function renderUploadRow(u) {
   const showRemove = u.status !== "done";
+  // Clamp progress before scaling — an out-of-range value from the
+  // mock ticker (or a real backend later) would either overflow the
+  // bar (>100) or invert it (<0) and look like a regression.
+  const progressPct = Math.max(0, Math.min(100, u.progress || 0));
   const right =
     u.status === "uploading"
       ? `
         <div class="add-source__file-progress">
-          <div class="add-source__progress"><div class="add-source__progress-bar" style="transform: scaleX(${u.progress / 100})"></div></div>
-          <span class="add-source__file-meta muted">Uploading ${u.progress}%</span>
+          <div class="add-source__progress"><div class="add-source__progress-bar" style="transform: scaleX(${progressPct / 100})"></div></div>
+          <span class="add-source__file-meta muted">Uploading ${progressPct}%</span>
         </div>
       `
       : u.status === "processing"
