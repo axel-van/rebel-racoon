@@ -14,7 +14,7 @@ import {
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=27";
 import { renderPostCard } from "./post-card.js?v=30";
-import { renderClipCard } from "./clip-card.js?v=2";
+import { renderClipCard } from "./clip-card.js?v=3";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=3";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=44";
 import {
@@ -24,7 +24,7 @@ import {
   removeSources,
 } from "../sources-stream.js?v=32";
 import { open as openAddSourceModal } from "./add-source-modal.js?v=24";
-import { addMention } from "../composer-mentions.js?v=4";
+import { addMention as addComposerMention } from "../composer-mentions.js?v=4";
 import { iconFor } from "../file-kinds.js?v=20";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
@@ -626,6 +626,17 @@ export function init() {
       }
       return;
     }
+    // Per-card "Mention" — adds the clip to the composer mention pills
+    // for the active session. Same funnel as source/idea mentions so the
+    // user can cite a specific clip in their next prompt.
+    const clipMentionBtn = event.target.closest("[data-clip-mention]");
+    if (clipMentionBtn) {
+      const cid = clipMentionBtn.getAttribute("data-clip-mention");
+      const sid = activeSessionId();
+      const entry = collectAllClips().find(({ clip }) => clip.id === cid);
+      if (sid && entry) addComposerMention(sid, entry.clip.title);
+      return;
+    }
     // Per-card "Draft Post" — drafts that single clip into the active
     // session. Same payload shape as the footer multi-select CTA.
     const clipDraftBtn = event.target.closest("[data-clip-draft]");
@@ -690,7 +701,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid) return;
       const idea = IDEAS.find((i) => i.id === mentionIdeaBtn.dataset.rpanelMentionIdea);
-      if (idea) addMention(sid, idea.title);
+      if (idea) addComposerMention(sid, idea.title);
       return;
     }
     // Mention this source in the composer.
@@ -699,7 +710,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid) return;
       const src = getStreamSources(sid).find((s) => s.id === mentionSourceBtn.dataset.rpanelMentionSource);
-      if (src) addMention(sid, src.filename);
+      if (src) addComposerMention(sid, src.filename);
       return;
     }
     // Use this idea → opens the count + profile picker flow.
@@ -1925,12 +1936,14 @@ function renderClipsList(entries) {
     `;
   }
 
+  const sid = activeSessionId();
   const cards = entries
     .map(({ clip, sourceName }) =>
       renderClipCard(clip, {
         selectable: true,
         isSelected: clipSelection.has(clip.id),
         sourceName,
+        sessionId: sid,
       }),
     )
     .join("");

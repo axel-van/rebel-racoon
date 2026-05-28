@@ -1,26 +1,24 @@
-// Clip card for the unified right-panel Outputs surface. Structural
-// parallel of idea-card.js — same two-piece grammar (white inner card +
-// signals row + body + actions), tuned for short video segments instead
-// of textual ideas.
+// Clip card for the unified right-panel Outputs surface. Mirrors
+// idea-card structurally so the Ideas and Clips tabs read as variants
+// of the same grammar:
 //
-// Renders: hue-gradient thumbnail with duration overlay, title, summary,
-// optional source attribution, network badge, tags, Draft Post primary
-// action, kebab menu (Edit / Remove).
+//   ┌── signals row ─── [ ☐ ] [clip] From <source>.mp4 ──────────┐
+//   │ ── hero thumbnail (full-width, hue-gradient, play + dur.) ── │
+//   │ ── title (H3 Bold) ──                                        │
+//   │ ── summary line ──                                           │
+//   │ ── #tags …                                                   │
+//   │ ── actions row: timestamps · [Mention] [Draft post] [⋯] ──   │
+//   └──────────────────────────────────────────────────────────────┘
+//
+// Each clip is mentionable — the Mention button funnels through the
+// same composer-mentions pill machinery as sources and ideas.
 //
 // Clip shape: { id, start, end, hue, title, summary, why, network, tags }
 //
 // Event wiring follows the idea-card pattern: module-level click delegate
 // owns kebab open/close and outside-click dismissal so the caller only
-// has to handle data-clip-edit, data-clip-draft, data-clip-remove and
-// data-clip-select on its own root.
-
-const NETWORK_ICONS = {
-  facebook: "ap-icon-facebook-official",
-  instagram: "ap-icon-instagram-official",
-  linkedin: "ap-icon-linkedin-official",
-  x: "ap-icon-x-official",
-  tiktok: "ap-icon-tiktok-official",
-};
+// has to handle data-clip-edit, data-clip-draft, data-clip-mention,
+// data-clip-remove and data-clip-select on its own root.
 
 function fmtTime(s) {
   if (!Number.isFinite(s) || s < 0) return "0:00";
@@ -84,10 +82,12 @@ function escapeText(s) {
   return String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 }
 
-export function renderClipCard(clip, { selectable = false, isSelected = false, sourceName = "" } = {}) {
-  const network = clip.network || "";
-  const networkIcon = NETWORK_ICONS[network] || "";
+export function renderClipCard(
+  clip,
+  { selectable = false, isSelected = false, sourceName = "", sessionId = null } = {},
+) {
   const duration = fmtTime((clip.end || 0) - (clip.start || 0));
+  const timestamps = `${fmtTime(clip.start || 0)} – ${fmtTime(clip.end || 0)}`;
   const safeTitle = escapeText(clip.title || "Untitled clip");
   const safeSummary = escapeText(clip.summary || "");
 
@@ -100,8 +100,13 @@ export function renderClipCard(clip, { selectable = false, isSelected = false, s
     `
     : "";
 
-  const networkBadge = networkIcon
-    ? `<span class="ap-tag blue clip-card__network"><i class="${networkIcon}"></i><span>${escapeText(network)}</span></span>`
+  // Signals row mirrors idea-card: a "kind" tag identifying the surface
+  // (here always "clip") + the attribution line "From <source>.mp4".
+  // No network badge — picking a network is a downstream decision (the
+  // Draft post flow lets the user choose), not a property of the clip.
+  const kindBadge = `<span class="ap-tag clip-card__kind">clip</span>`;
+  const attribution = sourceName
+    ? `<span class="clip-card__source-attribution">From ${escapeText(sourceName)}</span>`
     : "";
 
   const tagsRow =
@@ -114,18 +119,40 @@ export function renderClipCard(clip, { selectable = false, isSelected = false, s
 
   const selectedClass = isSelected ? " clip-card--selected" : "";
 
+  // Mention button — analogue of the idea-card Mention affordance.
+  // sessionId-gated so it only renders inside an active conversation
+  // (the dashboard's All Clips view won't show it).
+  const mentionBtn = sessionId
+    ? `
+      <button
+        type="button"
+        class="ap-button transparent grey clip-card__mention"
+        data-clip-mention="${clip.id}"
+      >
+        <i class="ap-icon-at"></i>
+        <span>Mention</span>
+      </button>
+    `
+    : "";
+
   return `
     <article class="clip-card${selectedClass}" data-clip-id="${clip.id}">
       <div class="clip-card__inner">
         <div class="clip-card__signals">
           ${selectCheckbox}
-          ${networkBadge}
+          ${kindBadge}
+          ${attribution}
         </div>
 
-        <button type="button" class="clip-card__thumb-btn" data-clip-edit="${clip.id}" aria-label="Edit clip: ${safeTitle}">
+        <button
+          type="button"
+          class="clip-card__thumb-btn"
+          data-clip-edit="${clip.id}"
+          aria-label="Edit clip: ${safeTitle}"
+        >
           <span class="clip-card__thumb" style="background-image: ${thumbBackground(clip.hue)}">
             <span class="clip-card__thumb-play" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+              <svg viewBox="0 0 24 24" width="26" height="26"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
             </span>
             <span class="ap-tag grey mini clip-card__duration">${duration}</span>
           </span>
@@ -139,9 +166,10 @@ export function renderClipCard(clip, { selectable = false, isSelected = false, s
         ${tagsRow}
 
         <div class="clip-card__actions">
-          ${sourceName ? `<span class="clip-card__source">From ${escapeText(sourceName)}</span>` : '<span class="clip-card__source"></span>'}
+          <span class="clip-card__timestamps" title="Clip range">${timestamps}</span>
 
           <div class="clip-card__secondary-actions">
+            ${mentionBtn}
             <button type="button" class="ap-button mermaid" data-clip-draft="${clip.id}">
               <i class="ap-icon-sparkles"></i>
               <span>Draft post</span>

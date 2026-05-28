@@ -39,15 +39,31 @@
   margin: 0;
 }
 
-.clip-card__network {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  text-transform: capitalize;
+/* Kind tag — mirrors .idea-card__kind treatment (UPPERCASE 10px extra-bold)
+   so the Ideas and Clips tabs share the same signal grammar. Mermaid tint
+   marks clips as AI-extracted segments. */
+.clip-card__kind {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 10px;
+  font-weight: var(--ref-font-weight-extra-bold);
+  background: var(--ref-color-mermaid-10);
+  color: var(--ref-color-mermaid-gradient-to);
+  border: 1px solid var(--ref-color-mermaid-20);
 }
 
-.clip-card__network i {
-  font-size: var(--sys-icon-css-sm);
+/* Source attribution in the signals row — replaces the actions-row
+   "From X.mp4" placement so the card opens with provenance up front
+   (matches the layout the user picked). Single-line ellipsis when long. */
+.clip-card__source-attribution {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  color: var(--ref-color-grey-60);
 }
 
 /* Thumbnail — hue-gradient, fills card width, 16:9 ratio. Clickable as
@@ -152,7 +168,9 @@
   gap: var(--ref-spacing-xxs);
 }
 
-.clip-card__source {
+/* Timestamps "0:30 – 1:02" in the actions row left slot. Tabular figures
+   prevent layout shift across cards with different durations. */
+.clip-card__timestamps {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
@@ -161,6 +179,7 @@
   font-size: var(--ref-font-size-xs);
   line-height: var(--ref-font-line-height-xs);
   color: var(--ref-color-grey-60);
+  font-variant-numeric: tabular-nums;
 }
 
 .clip-card__secondary-actions {
