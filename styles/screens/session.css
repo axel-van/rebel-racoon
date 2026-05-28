@@ -939,6 +939,19 @@
   background: var(--app-bg);
 }
 
+/* Empty-chat hero: the composer renders inline inside .empty-chat,
+   on top of the warm/cool gradient canvas. The default flat
+   --app-bg fill + the thread-fade ::before draw a visible grey
+   "box" around the composer, which reads as a stray container.
+   Drop both so the composer floats on the gradient. */
+.empty-chat .session__composer {
+  background: transparent;
+}
+
+.empty-chat .session__composer::before {
+  display: none;
+}
+
 /* Fade the thread content into the composer surface as it scrolls past
    the visible bottom. The pseudo sits ABOVE the composer (bottom: 100%)
    so it overlaps the thread's bottom band, fading from fully-transparent
