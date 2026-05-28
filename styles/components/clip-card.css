@@ -104,62 +104,17 @@
   transition: transform var(--ref-animation-short) var(--app-ease-out);
 }
 
+/* Subtle scale-up on the play icon so the thumbnail reads as "playable"
+   at hover/focus. Editing stays a kebab-menu action — this thumbnail is
+   the play surface. */
+.clip-card__thumb-btn:hover .clip-card__thumb-play,
+.clip-card__thumb-btn:focus-visible .clip-card__thumb-play {
+  transform: scale(1.08);
+}
+
 .clip-card__thumb-btn:focus-visible {
   outline: 2px solid var(--ref-color-electric-blue-100);
   outline-offset: 2px;
-}
-
-/* Duration badge — .ap-tag grey mini posed absolute over the thumb. */
-.clip-card__duration {
-  position: absolute;
-  right: var(--ref-spacing-xxs);
-  bottom: var(--ref-spacing-xxs);
-  font-variant-numeric: tabular-nums;
-  z-index: 2;
-}
-
-/* Hover overlay — darkens the thumbnail and reveals an "Edit clip"
-   pill in the center. The play icon fades out so the affordance reads
-   as a single, unambiguous action (Edit) rather than competing with a
-   "play" cue we don't actually support. */
-.clip-card__thumb-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--app-thumb-scrim);
-  opacity: 0;
-  transition: opacity var(--ref-animation-short) var(--app-ease-out);
-  pointer-events: none;
-}
-
-.clip-card__thumb-btn:hover .clip-card__thumb-overlay,
-.clip-card__thumb-btn:focus-visible .clip-card__thumb-overlay {
-  opacity: 1;
-}
-
-.clip-card__thumb-btn:hover .clip-card__thumb-play,
-.clip-card__thumb-btn:focus-visible .clip-card__thumb-play {
-  opacity: 0;
-}
-
-.clip-card__thumb-edit-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
-  border-radius: var(--app-radius-pill);
-  background: var(--ref-color-white);
-  color: var(--ref-color-grey-100);
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
-  box-shadow: var(--app-shadow-popover-md);
-}
-
-.clip-card__thumb-edit-cta > i {
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-grey-100);
 }
 
 /* Body — same typography contract as idea-card. */
@@ -195,9 +150,35 @@
   flex-wrap: wrap;
 }
 
-/* Timestamps tag — rendered as a DS .ap-tag.grey ; we only add tabular
-   figures so durations line up across cards. */
-.clip-card__timestamps {
+/* Timeframe widget — combines the clip range "<start> → <end>" with the
+   total duration in a DS .ap-tag.orange pill. The bounds use tabular
+   figures so different clips line up; the arrow is rendered with the
+   DS .ap-icon-arrow-right. */
+.clip-card__timeframe {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.clip-card__timeframe-bounds {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-80);
+}
+
+.clip-card__timeframe-time {
+  font-variant-numeric: tabular-nums;
+}
+
+.clip-card__timeframe-arrow {
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-grey-60);
+}
+
+.clip-card__timeframe-duration {
   font-variant-numeric: tabular-nums;
 }
 

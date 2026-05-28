@@ -102,12 +102,6 @@
      and schedule-modal scrim. */
   --app-modal-backdrop: rgba(33, 46, 68, 0.32);
 
-  /* In-card scrim — darker than the modal backdrop so a centered CTA on
-     top of a thumbnail reads cleanly. Same slate undertone, ~50% alpha
-     (under Material's "scrim that lets background show" guidance for
-     media surfaces). Used by clip-card thumbnail hover overlay. */
-  --app-thumb-scrim: rgba(33, 46, 68, 0.5);
-
   /* ── Stacking — kept centralized so adding a new layer doesn't
      silently collide. admin-chip sits on top intentionally so the dev
      mode toggle stays visible above any modal. ──────────────────────── */

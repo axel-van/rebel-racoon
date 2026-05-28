@@ -87,7 +87,6 @@ export function renderClipCard(
   { selectable = false, isSelected = false, sourceName = "", sessionId = null } = {},
 ) {
   const duration = fmtTime((clip.end || 0) - (clip.start || 0));
-  const timestamps = `${fmtTime(clip.start || 0)} – ${fmtTime(clip.end || 0)}`;
   const safeTitle = escapeText(clip.title || "Untitled clip");
   const safeSummary = escapeText(clip.summary || "");
 
@@ -140,18 +139,11 @@ export function renderClipCard(
           type="button"
           class="clip-card__thumb-btn"
           data-clip-edit="${clip.id}"
-          aria-label="Edit clip: ${safeTitle}"
+          aria-label="Play clip: ${safeTitle}"
         >
           <span class="clip-card__thumb" style="background-image: ${thumbBackground(clip.hue)}">
             <span class="clip-card__thumb-play" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="26" height="26"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-            </span>
-            <span class="ap-tag grey mini clip-card__duration">${duration}</span>
-            <span class="clip-card__thumb-overlay" aria-hidden="true">
-              <span class="clip-card__thumb-edit-cta">
-                <i class="ap-icon-pen"></i>
-                <span>Edit clip</span>
-              </span>
             </span>
           </span>
         </button>
@@ -162,7 +154,14 @@ export function renderClipCard(
         </div>
 
         <div class="clip-card__actions">
-          <span class="ap-tag grey clip-card__timestamps" title="Clip range">${timestamps}</span>
+          <span class="clip-card__timeframe" title="Clip range">
+            <span class="clip-card__timeframe-bounds">
+              <span class="clip-card__timeframe-time">${fmtTime(clip.start || 0)}</span>
+              <i class="ap-icon-arrow-right clip-card__timeframe-arrow" aria-hidden="true"></i>
+              <span class="clip-card__timeframe-time">${fmtTime(clip.end || 0)}</span>
+            </span>
+            <span class="ap-tag orange clip-card__timeframe-duration">${duration}</span>
+          </span>
 
           <div class="clip-card__secondary-actions">
             ${mentionBtn}
