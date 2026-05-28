@@ -844,22 +844,22 @@ function startEditConfirmPrompt(session, section, ctxId) {
   const sectionTitle = section === "voice" ? "Voice profile" : section === "brief" ? "Brief" : "Branding";
   postAssistantMessage(
     session.id,
-    `Editing the ${sectionTitle.toLowerCase()} updates this Playbook in every chat using it.`,
+    `Editing the ${sectionTitle.toLowerCase()} will apply to every chat using this Playbook.`,
   );
   inlineQuestion.ask(session.id, {
-    title: "Continue editing?",
+    title: `Edit the ${sectionTitle}?`,
     stepLabel: "Confirm",
     items: [
       {
         value: "continue",
-        label: "Continue",
-        caption: "Open the editor. Changes propagate to every chat using this Playbook.",
+        label: `Yes, edit ${sectionTitle}`,
+        caption: "Open the editor. Changes apply to every chat using this Playbook.",
         icon: "ap-icon-check",
       },
       {
         value: "cancel",
         label: "Cancel",
-        caption: "Don't make any changes.",
+        caption: "Leave the Playbook as is.",
         icon: "ap-icon-close",
       },
     ],
