@@ -157,7 +157,11 @@ export function renderSession(params, target) {
     // auto-launching the create-a-playbook wizard). The user can swap it via
     // the composer pill before sending. Creation flows (welcome-alt-*,
     // new-ctx-*, playbook-edit-*) never hit this "new" branch.
-    contextId: q.contextId || (params.id === "new" ? getDefaultContext()?.id || null : null),
+    // A chat always needs a Playbook — pre-bind the default one whenever
+    // we land on a fresh `/session/new` or `/session/new-<id>`. The
+    // user can still swap it via the composer pill before the first send.
+    contextId:
+      q.contextId || (params.id === "new" || params.id.startsWith("new-") ? getDefaultContext()?.id || null : null),
   };
   // Reset selection when switching to a different chat. Tab + URL-param
   // changes within the same session keep the selection intact.
