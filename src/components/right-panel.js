@@ -1064,6 +1064,15 @@ function renderPanel() {
               : renderIdeasView()
         }</div>`;
 
+  // Preserve the body's scrollTop across re-renders so flipping a filter
+  // chip or selecting a draft doesn't yank the user back to the top of
+  // a long list. Keyed by mode so each tab gets its own remembered
+  // position; switching modes intentionally restarts at the top.
+  const previousBody = el.querySelector(".app-right-panel__body");
+  const previousScroll = previousBody?.scrollTop || 0;
+  const previousMode = el.dataset.rpanelLastMode;
+
+  el.dataset.rpanelLastMode = state.mode;
   el.innerHTML = html`
     <div
       class="app-right-panel__resize"
@@ -1090,6 +1099,15 @@ function renderPanel() {
     </div>
     ${raw(bodyHtml)}
   `;
+
+  if (previousMode === state.mode && previousScroll > 0) {
+    const nextBody = el.querySelector(".app-right-panel__body");
+    if (nextBody) {
+      requestAnimationFrame(() => {
+        nextBody.scrollTop = previousScroll;
+      });
+    }
+  }
 }
 
 // --- Resize handle -----------------------------------------------------
