@@ -104,11 +104,6 @@
   transition: transform var(--ref-animation-short) var(--app-ease-out);
 }
 
-.clip-card__thumb-btn:hover .clip-card__thumb-play,
-.clip-card__thumb-btn:focus-visible .clip-card__thumb-play {
-  transform: scale(1.08);
-}
-
 .clip-card__thumb-btn:focus-visible {
   outline: 2px solid var(--ref-color-electric-blue-100);
   outline-offset: 2px;
@@ -120,6 +115,51 @@
   right: var(--ref-spacing-xxs);
   bottom: var(--ref-spacing-xxs);
   font-variant-numeric: tabular-nums;
+  z-index: 2;
+}
+
+/* Hover overlay — darkens the thumbnail and reveals an "Edit clip"
+   pill in the center. The play icon fades out so the affordance reads
+   as a single, unambiguous action (Edit) rather than competing with a
+   "play" cue we don't actually support. */
+.clip-card__thumb-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--app-thumb-scrim);
+  opacity: 0;
+  transition: opacity var(--ref-animation-short) var(--app-ease-out);
+  pointer-events: none;
+}
+
+.clip-card__thumb-btn:hover .clip-card__thumb-overlay,
+.clip-card__thumb-btn:focus-visible .clip-card__thumb-overlay {
+  opacity: 1;
+}
+
+.clip-card__thumb-btn:hover .clip-card__thumb-play,
+.clip-card__thumb-btn:focus-visible .clip-card__thumb-play {
+  opacity: 0;
+}
+
+.clip-card__thumb-edit-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-white);
+  color: var(--ref-color-grey-100);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  box-shadow: var(--app-shadow-popover-md);
+}
+
+.clip-card__thumb-edit-cta > i {
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-grey-100);
 }
 
 /* Body — same typography contract as idea-card. */
@@ -144,49 +184,27 @@
   color: var(--ref-color-grey-80);
 }
 
-/* Tags row — same chip style as idea-card. */
-.clip-card__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxxs);
-}
-
-.clip-card__tag {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: var(--app-radius-pill);
-  background: var(--ref-color-grey-05);
-  color: var(--ref-color-grey-80);
-  font-size: 11px;
-  font-weight: var(--ref-font-weight-bold);
-}
-
-/* Actions row — source attribution left, Draft Post + more menu right. */
+/* Actions row — timestamps tag on the left, Mention + Draft Post + more
+   menu on the right. Layout mirrors .idea-card__actions for visual
+   parity across the Ideas/Clips tabs. */
 .clip-card__actions {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+  flex-wrap: wrap;
 }
 
-/* Timestamps "0:30 – 1:02" in the actions row left slot. Tabular figures
-   prevent layout shift across cards with different durations. */
+/* Timestamps tag — rendered as a DS .ap-tag.grey ; we only add tabular
+   figures so durations line up across cards. */
 .clip-card__timestamps {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
-  color: var(--ref-color-grey-60);
   font-variant-numeric: tabular-nums;
 }
 
 .clip-card__secondary-actions {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  margin-left: auto;
+  gap: var(--ref-spacing-xxs);
 }
 
 /* More menu — DS .ap-action-dropdown anchored under the kebab button.

@@ -14,7 +14,7 @@ import {
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=27";
 import { renderPostCard } from "./post-card.js?v=30";
-import { renderClipCard } from "./clip-card.js?v=3";
+import { renderClipCard } from "./clip-card.js?v=4";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=3";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=44";
 import {

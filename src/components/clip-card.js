@@ -109,14 +109,6 @@ export function renderClipCard(
     ? `<span class="clip-card__source-attribution">From ${escapeText(sourceName)}</span>`
     : "";
 
-  const tagsRow =
-    clip.tags && clip.tags.length
-      ? `<div class="clip-card__tags">${clip.tags
-          .slice(0, 4)
-          .map((t) => `<span class="clip-card__tag">#${escapeText(t)}</span>`)
-          .join("")}</div>`
-      : "";
-
   const selectedClass = isSelected ? " clip-card--selected" : "";
 
   // Mention button — analogue of the idea-card Mention affordance.
@@ -155,6 +147,12 @@ export function renderClipCard(
               <svg viewBox="0 0 24 24" width="26" height="26"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
             </span>
             <span class="ap-tag grey mini clip-card__duration">${duration}</span>
+            <span class="clip-card__thumb-overlay" aria-hidden="true">
+              <span class="clip-card__thumb-edit-cta">
+                <i class="ap-icon-pen"></i>
+                <span>Edit clip</span>
+              </span>
+            </span>
           </span>
         </button>
 
@@ -163,10 +161,8 @@ export function renderClipCard(
           ${safeSummary ? `<p class="clip-card__hook">${safeSummary}</p>` : ""}
         </div>
 
-        ${tagsRow}
-
         <div class="clip-card__actions">
-          <span class="clip-card__timestamps" title="Clip range">${timestamps}</span>
+          <span class="ap-tag grey clip-card__timestamps" title="Clip range">${timestamps}</span>
 
           <div class="clip-card__secondary-actions">
             ${mentionBtn}
