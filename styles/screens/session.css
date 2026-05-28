@@ -65,7 +65,13 @@
    chrome with no sidebar or topbar, so without this button the user
    has no obvious way out. Pinned to the wizard aside's top-right,
    subtle by default, more pronounced on hover. Click runs the same
-   confirm-modal that gates the playbook-editor cancel. */
+   confirm-modal that gates the playbook-editor cancel. The :has()
+   scope establishes the positioning context on the aside only when an
+   Exit button is rendered. */
+.session__assistant:has(.welcome-alt-exit) {
+  position: relative;
+}
+
 .welcome-alt-exit {
   position: absolute;
   top: var(--ref-spacing-md);
