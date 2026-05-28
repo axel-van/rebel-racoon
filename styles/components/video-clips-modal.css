@@ -29,6 +29,19 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Single-clip mode — the body holds only the editor pane (no browse
+   grid, no timeline, no toolbar, no footer), so the modal shrinks to
+   its content instead of stretching to 94vh. Max-height keeps long
+   editor forms scrollable on short screens. */
+.video-clips-modal.ap-dialog.is-single-clip {
+  height: auto;
+  max-height: 94vh;
+}
+
+.video-clips-modal.is-single-clip .video-clips-modal__body {
+  flex: 0 0 auto;
+}
+
 .video-clips-modal.ap-dialog.open {
   display: flex;
   animation: app-modal-fade-in var(--ref-animation-normal) ease;

@@ -1038,6 +1038,7 @@ export function open(source, callbacks = {}) {
   backdrop.hidden = false;
   backdrop.classList.add("open");
   modal.classList.add("open");
+  modal.classList.toggle("is-single-clip", singleClipMode);
   modal.setAttribute("aria-hidden", "false");
   document.body.classList.add("has-modal");
 
@@ -1047,6 +1048,7 @@ export function open(source, callbacks = {}) {
 function close() {
   if (!initialized || !modal?.classList.contains("open")) return;
   modal.classList.remove("open");
+  modal.classList.remove("is-single-clip");
   backdrop.classList.remove("open");
   backdrop.hidden = true;
   modal.setAttribute("aria-hidden", "true");
