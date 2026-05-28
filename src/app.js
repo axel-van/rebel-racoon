@@ -1,7 +1,7 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=3";
 import { initTopbar, renderTopbar } from "./components/topbar.js?v=63";
-import { initSidebar, renderSidebar } from "./components/sidebar.js?v=43";
+import { initSidebar, renderSidebar } from "./components/sidebar.js?v=44";
 import { init as initRightPanel } from "./components/right-panel.js?v=108";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=24";
 import { initUserModeChip } from "./components/user-mode-chip.js?v=32";

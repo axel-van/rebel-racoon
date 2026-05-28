@@ -89,19 +89,14 @@ export function initSidebar() {
       toggleSidebar();
       return;
     }
-    if (event.target.closest("[data-sidebar-home]")) {
-      navigate("/");
-      return;
-    }
-    if (event.target.closest("[data-sidebar-new]")) {
-      // Close any leftover right-panel from the previous chat — drafts /
-      // ideas / context-form should never spill into a fresh conversation.
+    if (event.target.closest("[data-sidebar-home]") || event.target.closest("[data-sidebar-new]")) {
+      // Brand button + "New chat" row both mint a fresh conversation.
+      // `/` resolves to the most-recent session for returning users
+      // (cf. dashboard.js redirect), which felt like the brand button
+      // was "swallowing" the click into an existing chat. Treat both
+      // entry-points the same: close any leftover right-panel and
+      // mint a unique session id so the per-id stores start clean.
       closeRightPanel();
-      // Mint a unique session id per click so the per-id stores
-      // (assistant thread, composer pills, posts-store, contextBuilder
-      // promptedSessions) all start clean. A literal "/session/new"
-      // would re-land on the same accumulated state — feels like a
-      // toggle to the user.
       navigate(`/session/new-${Date.now().toString(36)}`);
       return;
     }

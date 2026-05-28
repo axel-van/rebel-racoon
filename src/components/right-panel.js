@@ -16,7 +16,7 @@ import {
 import { renderPostCard } from "./post-card.js?v=30";
 import { renderClipCard } from "./clip-card.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=2";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=43";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=44";
 import {
   getSources as getStreamSources,
   subscribeSources,
