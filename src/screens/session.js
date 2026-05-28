@@ -1738,7 +1738,7 @@ function renderDraftTurn(message) {
         </span>
         <span class="drafts-card__main">
           <span class="drafts-card__title-row">
-            <span class="drafts-card__title">${count} draft${count === 1 ? "" : "s"} ready</span>
+            <span class="drafts-card__title">${count} draft${count === 1 ? "" : "s"} to review</span>
             ${networks.length ? `<span class="ap-tag-list drafts-card__nets" aria-hidden="true">${networkIcons}</span>` : ""}
           </span>
           <span class="drafts-card__sub">${subText}</span>
@@ -2002,7 +2002,7 @@ function startPillFromKind(_root, session, kind) {
   }, delay);
   postAssistantMessage(
     sessionId,
-    `Reading **${spec.filename}** now. While I pull the strongest ideas, what should I do with it?`,
+    `I'm analyzing **${spec.filename}**. What would you like me to do — draft a batch, repurpose it, or extract ideas first?`,
   );
   postAssistantChoice(sessionId, {
     text: "",
