@@ -401,6 +401,7 @@ function renderComposer(attachedContext, session, selectable) {
           <textarea
             class="session__composer-input-field"
             id="assistantInput"
+            aria-label="Message Archie"
             placeholder="Ask a follow-up, or refine a draft…"
             rows="2"
           ></textarea>
