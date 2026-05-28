@@ -14,6 +14,26 @@ body {
   overflow: hidden;
 }
 
+/* Reduced motion — global umbrella. WCAG 2.3.3 says any animation
+   triggered by interaction must be disablable when the user opts out.
+   The DS doesn't ship a global guard, and per-component coverage in
+   this prototype was inconsistent. This rule kills nearly all motion
+   in one place: animations and transitions collapse to ~instant,
+   scroll-behavior loses smooth scrolling, and iteration counts are
+   capped so infinite spinners stop at one frame. Components that need
+   to override (e.g. an indispensable loading shimmer) can re-enable
+   via a more specific media query. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Skip-to-main link — invisible until focused via Tab, so keyboard
    users (and screen readers) can bypass the sidebar/topbar chrome on
    every page. WCAG 2.4.1 (Bypass Blocks). */
