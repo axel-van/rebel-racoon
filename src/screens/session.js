@@ -1099,10 +1099,13 @@ function renderSystemNotice(message) {
 
 // Inline "Extracting" notice (Figma 25:1413) — mermaid status pill + small
 // blue spinner, sits in the thread while a source extraction is in flight.
+// Wrapped in role=status + aria-label so screen readers announce that
+// extraction is running (the bare "Extracting" pill is meaningless out
+// of context).
 function renderExtractingNotice() {
   return `
     <div class="chat-turn chat-turn--ai chat-turn--extracting">
-      <div class="extracting-notice">
+      <div class="extracting-notice" role="status" aria-label="Extracting ideas from this source">
         <span class="ap-status mermaid">Extracting</span>
         <span class="extracting-notice__spinner" aria-hidden="true"></span>
       </div>
