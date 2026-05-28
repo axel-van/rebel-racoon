@@ -42,10 +42,11 @@
     <link rel="stylesheet" href="./styles/components/archie-loader.css?v=5" />
   </head>
   <body>
+    <a class="skip-to-main" href="#app">Skip to main content</a>
     <div class="app-shell" id="appShell">
       <aside class="app-sidebar" id="sidebar" aria-label="Conversations"></aside>
       <header class="app-topbar" id="topbar"></header>
-      <main class="app-content" id="app"></main>
+      <main class="app-content" id="app" tabindex="-1"></main>
     </div>
     <div class="ap-snackbar-thread" id="toastRegion" role="status" aria-live="polite"></div>
     <script type="module" src="./src/app.js?v=241"></script>

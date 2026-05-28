@@ -14,6 +14,29 @@ body {
   overflow: hidden;
 }
 
+/* Skip-to-main link — invisible until focused via Tab, so keyboard
+   users (and screen readers) can bypass the sidebar/topbar chrome on
+   every page. WCAG 2.4.1 (Bypass Blocks). */
+.skip-to-main {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: var(--app-z-admin);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-md);
+  background: var(--ref-color-grey-150);
+  color: var(--ref-color-white);
+  text-decoration: none;
+  border-radius: 0 0 var(--app-radius-md) 0;
+  transform: translateY(-100%);
+  transition: transform 150ms var(--app-ease-out);
+}
+
+.skip-to-main:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
+}
+
 body {
   padding: 0;
 }
