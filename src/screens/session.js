@@ -386,7 +386,14 @@ function renderComposer(attachedContext, session, selectable) {
   return `
     <div class="session__composer">
       <div class="session__composer-inner">
-        <div class="session__composer-thinking" data-assistant-thinking hidden>
+        <div
+          class="session__composer-thinking"
+          data-assistant-thinking
+          role="status"
+          aria-live="polite"
+          aria-label="Archie is thinking"
+          hidden
+        >
           <span class="session__composer-thinking-spinner" aria-hidden="true"></span>
           <span class="session__composer-thinking-text" data-thinking-text>0s</span>
         </div>
