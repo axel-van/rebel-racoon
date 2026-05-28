@@ -55,8 +55,10 @@ export function showToast(message, opts = {}) {
       <span>${escapeHtml(message)}</span>
     </div>
     <div class="ap-snackbar-right">
-      ${action ? `<a data-toast-action>${escapeHtml(action.label)}</a>` : ""}
-      <button type="button" aria-label="Close" data-toast-close><i></i></button>
+      ${action ? `<button type="button" class="ap-link" data-toast-action>${escapeHtml(action.label)}</button>` : ""}
+      <button type="button" aria-label="Close" data-toast-close>
+        <i class="ap-icon-close" aria-hidden="true"></i>
+      </button>
     </div>
   `;
   region.appendChild(el);
