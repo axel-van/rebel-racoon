@@ -533,7 +533,7 @@
   gap: var(--ref-spacing-xxs);
   padding: var(--ref-spacing-xs);
   background: var(--app-surface);
-  border: 1px solid var(--app-border-soft);
+  border: 1px solid var(--app-border);
   border-radius: var(--app-radius-starter);
   font-family: inherit;
   cursor: pointer;
