@@ -196,10 +196,18 @@
     transform var(--ref-animation-short) var(--app-ease-out);
 }
 
-.contexts-card:hover,
-.contexts-card:focus-visible {
+.contexts-card:hover {
   border-color: var(--ref-color-grey-40);
-  outline: none;
+  transform: translateY(-1px);
+}
+
+/* Keyboard focus needs a visible ring — the border-color shift alone
+   isn't perceivable enough at 1.5:1 contrast. Brand electric-blue
+   matches the rest of the app's focus treatment. */
+.contexts-card:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
+  border-color: var(--ref-color-grey-40);
   transform: translateY(-1px);
 }
 
