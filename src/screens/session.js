@@ -2034,6 +2034,19 @@ function bindSession(root, session) {
     if (!text) return;
     sendMessage(session.id, text);
     input.value = "";
+    // Snap the textarea back to its CSS min-height — without this it
+    // keeps the autosized height from the last message.
+    autosizeInput(input);
+  }
+
+  // Grow the textarea with content. CSS provides min-height (2 lines)
+  // and max-height (clamped so the chrome doesn't get pushed off-
+  // screen on a long paste); we just keep the height pinned to the
+  // current content's scrollHeight.
+  function autosizeInput(input) {
+    if (!input) return;
+    input.style.height = "auto";
+    input.style.height = input.scrollHeight + "px";
   }
 
   // Run the handler for a choice turn (freeze the message + dispatch). Called
@@ -2647,6 +2660,19 @@ function bindSession(root, session) {
           details.removeAttribute("open");
         }
       }
+    },
+    { signal },
+  );
+
+  // Auto-grow the composer textarea as the user types — fires on
+  // every input event (typing, paste, IME composition end, …) and
+  // pegs the height to the current scrollHeight. CSS caps it via
+  // max-height so the chrome can't be pushed off-screen.
+  root.addEventListener(
+    "input",
+    (event) => {
+      if (!event.target.matches("#assistantInput")) return;
+      autosizeInput(event.target);
     },
     { signal },
   );

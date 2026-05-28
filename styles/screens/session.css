@@ -993,7 +993,14 @@
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   color: var(--ref-color-grey-100);
+  /* Floor at 2 lines so a fresh composer always reads at the same
+     height; cap at 12 so a long paste doesn't push the toolbar — or
+     the cards behind the composer — off-screen. autosizeInput in
+     session.js pegs the live height between these bounds. */
   min-height: calc(var(--ref-font-line-height-sm) * 2);
+  max-height: calc(var(--ref-font-line-height-sm) * 12);
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .session__composer-input-field::placeholder {
