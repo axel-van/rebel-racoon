@@ -84,6 +84,14 @@
   border-radius: var(--ref-border-radius-md);
 }
 
+/* Keyboard focus ring — the UA reset above also wipes the focus outline,
+   leaving keyboard users with no indication of where they are. Restore
+   it with the brand electric-blue token. */
+.settings-view__nav .ap-list-panel-item:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
+}
+
 .settings-view__nav .ap-list-panel-item > i {
   color: var(--ref-color-grey-60);
   font-size: var(--ref-font-size-md);

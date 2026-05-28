@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Archie</title>
+    <!-- Critical font preload — Averta Regular powers virtually every
+         text node, so let the browser kick its download in parallel with
+         the stylesheets instead of waiting on font-face.css to parse. -->
+    <link rel="preload" href="./ds/fonts/averta/AvertaStd-Regular.otf" as="font" type="font/otf" crossorigin />
+    <link rel="preload" href="./ds/fonts/averta/AvertaStd-Semibold.otf" as="font" type="font/otf" crossorigin />
     <!-- Agorapulse Design System -->
     <link rel="stylesheet" href="./ds/desktop_variables.css" />
     <link rel="stylesheet" href="./ds/css-ui/font-face.css" />
@@ -25,7 +30,7 @@
     <link rel="stylesheet" href="./styles/screens/modals.css?v=37" />
     <link rel="stylesheet" href="./styles/screens/playbook-editor.css?v=3" />
     <link rel="stylesheet" href="./styles/screens/welcome.css?v=22" />
-    <link rel="stylesheet" href="./styles/screens/settings.css?v=3" />
+    <link rel="stylesheet" href="./styles/screens/settings.css?v=4" />
     <link rel="stylesheet" href="./styles/components/sidebar.css?v=54" />
     <link rel="stylesheet" href="./styles/components/conversation-status-card.css?v=18" />
     <link rel="stylesheet" href="./styles/components/right-panel.css?v=92" />
