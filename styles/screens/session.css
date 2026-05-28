@@ -974,7 +974,6 @@
   padding: var(--ref-spacing-xs) var(--ref-spacing-xxs) var(--ref-spacing-xxs);
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
 }
 
 .session__composer-card:focus-within {
@@ -1359,7 +1358,11 @@
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  /* min-width lets the row truly stay on one line — the Playbook
+     select claims max-content otherwise, which forces a wrap when
+     the composer column is narrow. */
+  min-width: 0;
 }
 
 /* Color dot inside the context pill — shows the context's accent color

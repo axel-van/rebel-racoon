@@ -236,14 +236,6 @@
   display: none;
 }
 
-/* Pull the textarea up to cancel the .session__composer-card flex gap
-   (8px) when mention pills are present — the user wants the pill row
-   to sit tight against the input, not separated by the same gap the
-   toolbar uses below the textarea. */
-.session__composer-mentions:not([hidden]) + .session__composer-input-field {
-  margin-top: calc(-1 * var(--ref-spacing-xs));
-}
-
 .composer-mention__label {
   max-width: 220px;
   overflow: hidden;
