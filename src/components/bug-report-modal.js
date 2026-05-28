@@ -59,12 +59,12 @@ const HTML = `
     <div class="bug-report-modal__fields">
       <div class="bug-field">
         <label>What type of issue?</label>
-        <div class="bug-categories" id="bugCategories">
-          <button type="button" class="bug-category-chip" data-value="visual">Visual glitch</button>
-          <button type="button" class="bug-category-chip" data-value="behavior">Wrong behavior</button>
-          <button type="button" class="bug-category-chip" data-value="broken">Feature not working</button>
-          <button type="button" class="bug-category-chip" data-value="performance">Performance</button>
-          <button type="button" class="bug-category-chip" data-value="other">Other</button>
+        <div class="bug-categories" id="bugCategories" role="group" aria-label="Issue type">
+          <button type="button" class="bug-category-chip" data-value="visual" aria-pressed="false">Visual glitch</button>
+          <button type="button" class="bug-category-chip" data-value="behavior" aria-pressed="false">Wrong behavior</button>
+          <button type="button" class="bug-category-chip" data-value="broken" aria-pressed="false">Feature not working</button>
+          <button type="button" class="bug-category-chip" data-value="performance" aria-pressed="false">Performance</button>
+          <button type="button" class="bug-category-chip" data-value="other" aria-pressed="false">Other</button>
         </div>
       </div>
 
@@ -75,7 +75,7 @@ const HTML = `
 
       <div class="bug-field">
         <label for="bugProblemInput">What went wrong? <span class="bug-field__required">*</span></label>
-        <textarea class="bug-textarea" id="bugProblemInput" rows="3" placeholder="e.g. The calendar didn't open, the button did nothing, or the state reset unexpectedly…" aria-describedby="bugProblemError"></textarea>
+        <textarea class="bug-textarea" id="bugProblemInput" rows="3" required placeholder="e.g. The calendar didn't open, the button did nothing, or the state reset unexpectedly…" aria-describedby="bugProblemError"></textarea>
         <p class="form-field-error" id="bugProblemError" role="alert" hidden>Describe what went wrong before submitting.</p>
       </div>
 
@@ -297,14 +297,20 @@ export function init() {
   document.getElementById("cancelBugReportBtn").addEventListener("click", close);
   bindOverlayDismissal({ modal, backdrop, close });
 
-  // Category chips — single-select with toggle-off.
+  // Category chips — single-select with toggle-off. Keep aria-pressed in
+  // sync with the visual selected state so screen readers announce which
+  // chip is active.
   categoriesEl.addEventListener("click", (e) => {
     const chip = e.target.closest(".bug-category-chip");
     if (!chip) return;
     const wasSelected = chip.dataset.value === selectedCategory;
-    categoriesEl.querySelectorAll(".bug-category-chip").forEach((c) => c.classList.remove("selected"));
+    categoriesEl.querySelectorAll(".bug-category-chip").forEach((c) => {
+      c.classList.remove("selected");
+      c.setAttribute("aria-pressed", "false");
+    });
     if (!wasSelected) {
       chip.classList.add("selected");
+      chip.setAttribute("aria-pressed", "true");
       selectedCategory = chip.dataset.value;
     } else {
       selectedCategory = null;
