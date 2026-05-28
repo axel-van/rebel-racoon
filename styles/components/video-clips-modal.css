@@ -40,6 +40,34 @@
 
 .video-clips-modal.is-single-clip .video-clips-modal__body {
   flex: 0 0 auto;
+  /* Single-clip mode hands the body over entirely to the dark editor —
+     no padding, no surface bg layer behind it. The editor fills edge
+     to edge between the white modal header and the white footer. */
+  padding: 0;
+  background: transparent;
+}
+
+.video-clips-modal.is-single-clip .vc-rows__cell--floating {
+  /* No sticky behaviour, no bg lift, no fade trailer — there's only
+     ever this one cell in the body, nothing to scroll over. */
+  position: static;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+.video-clips-modal.is-single-clip .vc-rows__cell--floating::after {
+  display: none;
+}
+
+.video-clips-modal.is-single-clip .vc-editor {
+  /* Drop the floating-card chrome (border, radius, orange-glow shadow,
+     margin) so the editor reads as a single dark surface flush with
+     the modal sides. */
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .video-clips-modal.ap-dialog.open {
