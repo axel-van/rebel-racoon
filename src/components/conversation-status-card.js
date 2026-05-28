@@ -22,6 +22,7 @@ import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
   openSources as openSourcesPanel,
+  getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
 } from "./right-panel.js?v=108";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=36";
@@ -182,6 +183,15 @@ export function render() {
   }
   // User has dismissed the card via the topbar info button.
   if (!isEnabled()) {
+    hideCard();
+    return;
+  }
+  // A right-panel (Sources / Ideas / Drafts) is open — yield the column
+  // to the panel. The user's pref is left untouched: when the panel
+  // closes, the subscribeRightPanel listener re-renders and the card
+  // reappears if it was enabled.
+  const rpMode = getRightPanelMode();
+  if (rpMode === "drafts" || rpMode === "ideas" || rpMode === "sources") {
     hideCard();
     return;
   }
