@@ -230,7 +230,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxxs);
-  margin-bottom: var(--ref-spacing-xxs);
 }
 
 .session__composer-mentions[hidden] {
