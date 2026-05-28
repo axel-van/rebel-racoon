@@ -2072,7 +2072,13 @@ function bindSession(root, session) {
       if (draftIds.length > 0 && pick) {
         setSubtitleStyle(session.id, draftIds, pick);
         const label = pick === "none" ? "No subtitles" : SUBTITLE_PICK_LABEL[pick] || pick;
-        showToast(`Subtitles applied · ${label}`, { duration: 3200 });
+        const count = draftIds.length;
+        const clipWord = count === 1 ? "clip" : "clips";
+        const message =
+          pick === "none"
+            ? `Subtitles removed from ${count} ${clipWord}`
+            : `${label} subtitles added to ${count} ${clipWord}`;
+        showToast(message, { duration: 3200 });
       }
     } else if (msg.handler === "source-intake-choice") {
       // PDF / URL intake picker fired right after the user attaches a
