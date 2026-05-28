@@ -47,6 +47,16 @@
   background: transparent;
 }
 
+/* DS spec uses --ref-spacing-lg (32px) on the dialog header — generous
+   for informational full-page dialogs. In single-clip mode the modal
+   is compact (editor + footer), so the 32px gutter overpowers the
+   layout. Drop to --ref-spacing-md (24px) horizontally + top so the
+   header feels proportional. Close-button safe area on the right
+   (64px) stays per DS. */
+.video-clips-modal.is-single-clip .video-clips-modal__head.ap-dialog-header {
+  padding: var(--ref-spacing-md) 64px 0 var(--ref-spacing-md);
+}
+
 .video-clips-modal.is-single-clip .vc-rows__cell--floating {
   /* No sticky behaviour, no bg lift, no fade trailer — there's only
      ever this one cell in the body, nothing to scroll over. */
