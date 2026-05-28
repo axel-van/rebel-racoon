@@ -771,7 +771,7 @@ function renderAssistantPanelQuestion(session) {
               <i class="ap-icon-sparkles" aria-hidden="true"></i>
               Welcome
             </span>
-            <h1 class="welcome-hero__title">Let's get to know<br />your brand.</h1>
+            <h1 class="welcome-hero__title">Let's understand<br />your brand.</h1>
             <p class="welcome-hero__sub">
               Point me at your website and I'll capture what makes your brand yours — then shape it into a Playbook that
               guides every post toward your voice.
