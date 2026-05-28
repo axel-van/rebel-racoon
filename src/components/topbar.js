@@ -328,26 +328,24 @@ function renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) {
   const draftsClass = rpMode === "drafts" ? "stroked blue" : "ghost grey";
   const ideasClass = rpMode === "ideas" ? "stroked blue" : "ghost grey";
   const sourcesClass = rpMode === "sources" ? "stroked blue" : "ghost grey";
-  // Drafts disabled until at least one draft turn has landed in the thread.
-  // Outputs disabled only when there are *neither* user turns nor extracted
-  // ideas — a source auto-extracted from a freshly attached file produces
-  // ideas before the user types, and that's exactly when the user wants
-  // to peek at them. Sources is always available.
-  // Don't disable a pill whose panel is currently open — a button can't be
-  // semantically both `disabled` and `aria-pressed=true`, and the user must
-  // be able to re-click to close the panel even if the underlying count
-  // dropped to 0 while the panel was open.
+  // Each pill is disabled when its underlying count is 0 AND its panel
+  // isn't currently the active mode — a button can't be semantically
+  // both `disabled` and `aria-pressed=true`, and the user must be able
+  // to re-click to close a panel even if the count dropped to 0 while
+  // the panel was open.
   const draftsDisabled = draftCount === 0 && rpMode !== "drafts";
   const ideasDisabled = isEmpty && ideaCount === 0 && rpMode !== "ideas";
   const sourcesCount = sessionSourceCount();
+  const sourcesDisabled = sourcesCount === 0 && rpMode !== "sources";
   const sourcesBadge = sourcesCount > 0 ? `<span class="ap-counter normal blue">${sourcesCount}</span>` : "";
   return `
     <button
       type="button"
-      class="ap-button ${sourcesClass}"
+      class="ap-button ${sourcesClass} ${sourcesDisabled ? "is-empty" : ""}"
       data-topbar-sources
+      ${sourcesDisabled ? "disabled" : ""}
       aria-pressed="${rpMode === "sources"}"
-      title="Toggle Sources panel"
+      title="${sourcesDisabled ? "No sources attached yet — drop a file in the composer to add one" : "Toggle Sources panel"}"
     >
       <i class="ap-icon-file"></i>
       <span>Sources</span>
