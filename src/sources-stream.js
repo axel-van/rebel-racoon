@@ -14,8 +14,6 @@ import { createNotifier } from "./store-utils.js?v=1";
 
 // Canned extraction output attached to every Processed Video source.
 // Generic enough to plausibly come from any keynote / talk / demo video.
-// Lives here (not in clip-extraction-loader) because it's piece of source
-// data the state machine writes, not behavior of the manual-trigger UI.
 export const EXTRACTED_CLIPS_TEMPLATE = [
   {
     start: 252,

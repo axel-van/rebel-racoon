@@ -32,7 +32,6 @@
 .clip-extraction-card__spinner,
 .session__composer-thinking-spinner,
 .source-card__spinner,
-.source-card__clips-spinner,
 .bug-report-modal__submit-spinner,
 .feedback-modal__submit-spinner,
 .gen-image-spinner,
@@ -64,7 +63,6 @@
 .clip-extraction-card__spinner::before,
 .session__composer-thinking-spinner::before,
 .source-card__spinner::before,
-.source-card__clips-spinner::before,
 .bug-report-modal__submit-spinner::before,
 .feedback-modal__submit-spinner::before,
 .gen-image-spinner::before,
@@ -101,8 +99,7 @@
 .bug-report-modal__submit-spinner,
 .chat-bubble-source-intake__spinner,
 .feedback-modal__submit-spinner,
-.session__composer-thinking-spinner,
-.source-card__clips-spinner {
+.session__composer-thinking-spinner {
   --archie-loader-size: 14px;
 }
 .gen-image-spinner,
