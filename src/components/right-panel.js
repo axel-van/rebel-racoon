@@ -242,6 +242,23 @@ export function openIdeas() {
   if (prev === null) resetPanelWidthOverride();
   snapshotFocusOnOpen(prev);
   state = { ...state, mode: "ideas" };
+  outputsView = "ideas";
+  maybeCollapseSidebarOnOpen(prev);
+  renderPanel();
+  notify();
+  writeUrlPanel("ideas");
+}
+
+// Same surface as openIdeas (mode: "ideas"), but lands the user on the
+// Clips sub-tab. Used by the source-intake bubble's "M clips" pill so
+// the user goes directly to the clips view for the source they just
+// attached.
+export function openClips() {
+  const prev = state.mode;
+  if (prev === null) resetPanelWidthOverride();
+  snapshotFocusOnOpen(prev);
+  state = { ...state, mode: "ideas" };
+  outputsView = "clips";
   maybeCollapseSidebarOnOpen(prev);
   renderPanel();
   notify();
