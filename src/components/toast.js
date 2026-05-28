@@ -75,8 +75,18 @@ export function showToast(message, opts = {}) {
   el.querySelector("[data-toast-close]")?.addEventListener("click", () => dismiss(el));
 
   if (duration > 0) {
-    const timer = setTimeout(() => dismiss(el), duration);
-    el.addEventListener("mouseenter", () => clearTimeout(timer), { once: true });
+    // Pause auto-dismiss while the user hovers, resume on leave. Without
+    // the resume hook the toast would dwell forever after a brief hover,
+    // which silently kept old snackbars on screen while the user was
+    // reaching for the action button or just glancing at the message.
+    let timer = setTimeout(() => dismiss(el), duration);
+    el.addEventListener("mouseenter", () => {
+      clearTimeout(timer);
+      timer = null;
+    });
+    el.addEventListener("mouseleave", () => {
+      if (timer == null) timer = setTimeout(() => dismiss(el), duration);
+    });
   }
 
   return { dismiss: () => dismiss(el) };
