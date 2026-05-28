@@ -75,15 +75,15 @@ export function renderWelcomeAltRecap(_params, target) {
       lead: (d) => {
         const url = prettyUrl(d.websiteUrl);
         const from = url ? `<strong>${esc(url)}</strong>` : "your site";
-        return `Built from ${from} and our chat. Everything below is what Archie will use to write posts that sound like you.`;
+        return `Built from ${from} and our chat. Everything below is what I'll use to keep posts in your voice.`;
       },
     },
-    editHint: "This Playbook is yours to shape. Hover any card and hit the pencil to edit it — then jump into Archie.",
+    editHint: "This Playbook is yours to shape. Hover any card and hit the pencil to edit it — then jump in.",
     footer: () =>
       integrated
-        ? `<button type="button" class="ap-button primary orange" data-welcome-done><span>Save Playbook</span></button>`
+        ? `<button type="button" class="ap-button primary orange" data-welcome-done><span>Save and continue</span></button>`
         : `<button type="button" class="ap-button primary orange" data-welcome-done>
-        <span>Enter Archie</span>
+        <span>Save and start</span>
         <i class="ap-icon-arrow-right"></i>
       </button>`,
     onFooter: (event) => {
