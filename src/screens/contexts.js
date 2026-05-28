@@ -70,7 +70,7 @@ function renderPage() {
           </div>
           <button type="button" class="ap-button primary orange" data-contexts-new>
             <i class="ap-icon-plus"></i>
-            <span>New Playbook</span>
+            <span>Create a Playbook</span>
           </button>
         </div>
       </header>
@@ -131,8 +131,8 @@ function renderGhostCard() {
   return `
     <button type="button" class="contexts-card contexts-card--ghost" data-contexts-new aria-label="Create a new Playbook">
       <span class="contexts-card--ghost__glyph"><i class="ap-icon-sparkles-mermaid"></i></span>
-      <span class="contexts-card--ghost__title">New Playbook</span>
-      <span class="contexts-card--ghost__sub">One Brand, one voice, one goal — Archie aligns.</span>
+      <span class="contexts-card--ghost__title">Create a Playbook</span>
+      <span class="contexts-card--ghost__sub">One brand, one voice, one goal — I'll keep every draft aligned.</span>
     </button>
   `;
 }

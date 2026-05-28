@@ -69,7 +69,7 @@ function renderPage() {
           </button>
           <button type="button" class="ap-button primary orange" data-ideas-new>
             <i class="ap-icon-plus"></i>
-            <span>New idea</span>
+            <span>Create an idea</span>
           </button>
         </div>
       </header>
