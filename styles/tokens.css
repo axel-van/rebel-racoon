@@ -95,6 +95,13 @@
   --app-text-hero-line: 36px;
   --app-text-hero-weight: 800;
 
+  /* ── Modal scrim ──────────────────────────────────────────────────── */
+  /* Brand-tinted slate (--ref-color-grey-100 base) at ~32% — matches
+     Material's 32-40% guidance for foreground legibility while keeping
+     the Archie brand undertone. Used by ds-patches .app-modal-backdrop
+     and schedule-modal scrim. */
+  --app-modal-backdrop: rgba(33, 46, 68, 0.32);
+
   /* ── Stacking — kept centralized so adding a new layer doesn't
      silently collide. admin-chip sits on top intentionally so the dev
      mode toggle stays visible above any modal. ──────────────────────── */

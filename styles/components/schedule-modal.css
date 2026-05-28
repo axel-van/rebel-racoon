@@ -4,7 +4,7 @@
 .schedule-modal__scrim {
   position: fixed;
   inset: 0;
-  background: rgba(33, 46, 68, 0.32);
+  background: var(--app-modal-backdrop);
   z-index: var(--app-z-modal-backdrop);
 }
 
