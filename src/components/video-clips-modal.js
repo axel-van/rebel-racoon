@@ -234,6 +234,28 @@ function renderFooter() {
   `;
 }
 
+// Single-clip mode footer — Delete on the left, Cancel + Save on the
+// right. Same data-vc-action hooks the editor header used to expose,
+// so existing handlers keep working unchanged.
+function renderFooterEdit() {
+  if (!footEl) return;
+  footEl.innerHTML = `
+    <div class="ap-dialog-footer-left">
+      <button type="button" class="ap-button ghost red" data-vc-action="delete-clip" title="Delete this clip">
+        <i class="ap-icon-trash"></i>
+        <span>Delete</span>
+      </button>
+    </div>
+    <div class="ap-dialog-footer-right">
+      <button type="button" class="ap-button transparent grey" data-vc-action="cancel-edit">Cancel</button>
+      <button type="button" class="ap-button primary orange" data-vc-action="save-edit">
+        <i class="ap-icon-check"></i>
+        <span>Save changes</span>
+      </button>
+    </div>
+  `;
+}
+
 // ── Render: a single browse-mode clip card ───────────────────────────
 
 function clipCardHTML(clip) {
@@ -319,6 +341,23 @@ function editorPaneHTML() {
   `,
   ).join("");
 
+  // Edit-mode CTAs (Delete / Cancel / Save changes) live in the editor
+  // header in multi-clip mode (the modal footer is taken by the bulk
+  // "Draft posts from N clips" CTA). In single-clip mode the bulk
+  // footer is empty, so the CTAs render there instead — see
+  // renderFooter. Skip them here in that case to avoid duplication.
+  const headerCtas = singleClipMode
+    ? ""
+    : `
+        <button type="button" class="ap-button ghost red" data-vc-action="delete-clip" title="Delete this clip">
+          <i class="ap-icon-trash"></i><span>Delete</span>
+        </button>
+        <button type="button" class="ap-button ghost grey" data-vc-action="cancel-edit">Cancel</button>
+        <button type="button" class="ap-button primary orange" data-vc-action="save-edit">
+          <i class="ap-icon-check"></i><span>Save changes</span>
+        </button>
+      `;
+
   return `
     <div class="vc-editor" data-vc-editor data-vc-clip="${draft.id}">
       <header class="vc-editor__head">
@@ -330,13 +369,7 @@ function editorPaneHTML() {
           <span class="vc-editor__head-dur" data-vc-editor-time-dur>${fmtTime(draft.end - draft.start)}</span>
         </div>
         <span class="vc-editor__head-spacer"></span>
-        <button type="button" class="ap-button ghost red" data-vc-action="delete-clip" title="Delete this clip">
-          <i class="ap-icon-trash"></i><span>Delete</span>
-        </button>
-        <button type="button" class="ap-button ghost grey" data-vc-action="cancel-edit">Cancel</button>
-        <button type="button" class="ap-button primary orange" data-vc-action="save-edit">
-          <i class="ap-icon-check"></i><span>Save changes</span>
-        </button>
+        ${headerCtas}
       </header>
 
       <div class="vc-editor__top">
@@ -476,15 +509,16 @@ function renderBody() {
 }
 
 function render() {
-  // Single-clip mode strips every multi-clip surface from the modal: the
-  // timeline at the top, the bulk toolbar, and the "Draft posts from N
-  // clips" footer all get hidden so the user only sees the editor pane
-  // for the one clip they came to edit.
+  // Single-clip mode strips the multi-clip surfaces: the timeline at
+  // the top and the bulk toolbar. The footer stays visible but switches
+  // to the edit CTAs (Delete / Cancel / Save changes) instead of the
+  // "Draft posts from N clips" bulk action.
   const wrapTimeline = document.getElementById("videoClipsTimeline");
   if (wrapTimeline) wrapTimeline.hidden = singleClipMode;
   if (toolbarEl) toolbarEl.hidden = singleClipMode;
-  if (footEl) footEl.hidden = singleClipMode;
-  if (!singleClipMode) {
+  if (footEl) footEl.hidden = false;
+  if (singleClipMode) renderFooterEdit();
+  else {
     renderTimeline();
     renderToolbar();
     renderFooter();
