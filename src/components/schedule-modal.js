@@ -94,10 +94,10 @@ export function init() {
 
     modal = document.createElement("div");
     modal.id = ROOT_ID;
-    modal.className = "schedule-modal schedule-modal--wide";
+    modal.className = "ap-dialog schedule-modal schedule-modal--wide";
     modal.setAttribute("role", "dialog");
     modal.setAttribute("aria-modal", "true");
-    modal.setAttribute("aria-label", "Schedule posts");
+    modal.setAttribute("aria-labelledby", `${ROOT_ID}Title`);
     modal.hidden = true;
     document.body.appendChild(modal);
   }
@@ -371,41 +371,37 @@ function render() {
 function renderInner() {
   const n = state.posts.length;
   return html`
-    <header class="schedule-modal__head">
-      <div>
-        <div class="schedule-modal__title">Schedule ${n} ${n === 1 ? "draft" : "drafts"}</div>
-        <div class="schedule-modal__sub">
-          Pick when each post should publish. Archie can spread them automatically across optimal times per network.
-        </div>
-      </div>
-      <button type="button" class="ap-icon-button stroked transparent" data-schedule-close aria-label="Close (Esc)">
-        <i class="ap-icon-close"></i>
-      </button>
-    </header>
+    <div class="ap-dialog-header">
+      <span class="ap-dialog-title" id="${ROOT_ID}Title">Schedule ${n} ${n === 1 ? "draft" : "drafts"}</span>
+      <span class="ap-dialog-subtitle">
+        Pick when each post should publish. I can spread them automatically across optimal times per network.
+      </span>
+    </div>
 
-    <div class="schedule-modal__body schedule-modal__body--split">
+    <div class="ap-dialog-content schedule-modal__body schedule-modal__body--split">
+      ${state.status === "error"
+        ? raw(`
+            <div class="ap-infobox error schedule-modal__error" role="alert">
+              <i class="ap-icon-error_fill" aria-hidden="true"></i>
+              <div class="ap-infobox-content">
+                <div class="ap-infobox-texts">
+                  <span class="ap-infobox-message">${escapeText(state.errorMessage)}</span>
+                </div>
+              </div>
+            </div>
+          `)
+        : ""}
       <section class="schedule-modal__left" aria-label="Drafts to schedule">
         ${raw(renderModePicker())} ${raw(renderSlotList())}
       </section>
       <aside class="schedule-modal__right" aria-label="Already scheduled">${raw(renderCalendarPanel())}</aside>
     </div>
 
-    ${state.status === "error"
-      ? raw(`
-          <div class="ap-infobox error schedule-modal__error" role="alert">
-            <i class="ap-icon-error_fill" aria-hidden="true"></i>
-            <div class="ap-infobox-content">
-              <div class="ap-infobox-texts">
-                <span class="ap-infobox-message">${escapeText(state.errorMessage)}</span>
-              </div>
-            </div>
-          </div>
-        `)
-      : ""}
-
-    <footer class="schedule-modal__foot">
-      <span class="schedule-modal__foot-disclosure"> Posts will publish to your connected accounts. </span>
-      <div class="schedule-modal__foot-actions">
+    <div class="ap-dialog-footer">
+      <div class="ap-dialog-footer-left">
+        <span class="schedule-modal__foot-disclosure">Posts will publish to your connected accounts.</span>
+      </div>
+      <div class="ap-dialog-footer-right">
         <button
           type="button"
           class="ap-button ghost grey"
@@ -427,7 +423,11 @@ function renderInner() {
               )}
         </button>
       </div>
-    </footer>
+    </div>
+
+    <button type="button" class="ap-dialog-close" data-schedule-close aria-label="Close (Esc)">
+      <i class="ap-icon-close"></i>
+    </button>
   `;
 }
 

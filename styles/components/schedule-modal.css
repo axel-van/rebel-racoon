@@ -8,66 +8,36 @@
   z-index: var(--app-z-modal-backdrop);
 }
 
-.schedule-modal {
+/* Position + size of the dialog shell — the DS .ap-dialog ships
+   surface/radius/overflow; we add the fixed-center positioning and
+   width that the app needs (wider than the canonical 832 Large because
+   the body is a 2-column calendar layout). */
+.schedule-modal.ap-dialog {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: min(720px, calc(100vw - var(--ref-spacing-xl)));
   max-height: calc(100vh - var(--ref-spacing-xl));
-  display: flex;
-  flex-direction: column;
-  background: var(--app-surface);
-  border-radius: var(--app-radius-modal);
-  box-shadow: var(--app-shadow-modal);
   z-index: var(--app-z-modal);
-  overflow: hidden;
 }
 
-.schedule-modal--wide {
+.schedule-modal--wide.ap-dialog {
   width: min(960px, calc(100vw - var(--ref-spacing-xl)));
 }
 
-.schedule-modal__head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-md) var(--ref-spacing-md) var(--ref-spacing-sm);
-  border-bottom: 1px solid var(--app-border-soft);
-}
-
-.schedule-modal__title {
-  font-size: var(--sys-text-style-h2-size);
-  line-height: var(--sys-text-style-h2-line-height);
-  font-weight: 800;
-  color: var(--ref-color-grey-100);
-}
-
-.schedule-modal__sub {
-  margin-top: var(--ref-spacing-xxxs);
-  font-size: var(--ref-font-size-xs);
-  color: var(--ref-color-grey-80);
-}
-
 /* ── Body ────────────────────────────────────────────────────────────── */
+/* Overrides on top of .ap-dialog-content for the 2-column layout. The
+   DS content area is a flex column with gap:24px + padding:24 32; we
+   swap to a grid for the calendar+slots split and shrink the gap. */
 
-.schedule-modal__body {
+.schedule-modal__body--split.ap-dialog-content {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--ref-spacing-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-}
-
-.schedule-modal__body--split {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: var(--ref-spacing-md);
-  padding: var(--ref-spacing-md);
-  overflow: hidden; /* inner panels manage their own overflow */
 }
 
 .schedule-modal__left,
@@ -353,32 +323,21 @@
   white-space: nowrap;
 }
 
-/* ── Footer ─────────────────────────────────────────────────────────── */
-
-.schedule-modal__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
-  border-top: 1px solid var(--app-border-soft);
-}
+/* ── Footer disclosure ──────────────────────────────────────────────── */
+/* Footer chrome comes from .ap-dialog-footer / -left / -right. We only
+   ship the disclosure text styling here — it lives in the left cluster. */
 
 .schedule-modal__foot-disclosure {
   font-size: var(--ref-font-size-xs);
   color: var(--ref-color-grey-60);
 }
 
-.schedule-modal__foot-actions {
-  display: flex;
-  gap: var(--ref-spacing-xs);
-}
-
-/* Inline error infobox shown above the footer when the confirm callback
-   throws or returns a rejected Promise — keeps the modal open so the
-   user can adjust + retry instead of losing context. */
+/* Inline error infobox shown at the top of the body when the confirm
+   callback throws or returns a rejected Promise — keeps the modal open
+   so the user can adjust + retry instead of losing context. Spans the
+   whole 2-column grid. */
 .schedule-modal__error {
-  margin: 0 var(--ref-spacing-md) var(--ref-spacing-xs);
+  grid-column: 1 / -1;
 }
 
 /* Spinner shown inside the primary CTA while the confirm callback runs. */
