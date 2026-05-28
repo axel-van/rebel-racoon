@@ -153,9 +153,13 @@ export function renderPicker(picker) {
     .map((it, i) => {
       const isPreset = multi && preset.has(it.value);
       // Three icon variants: avatar (DS .ap-avatar with optional network
-      // badge), imgSrc (raw <img>), or icon font (default). The avatar
-      // variant strips the icon container's grey background and overflow
+      // badge), imgSrc (raw <img>), or icon font. The avatar variant
+      // strips the icon container's grey background and overflow
       // clipping so the network badge in the corner stays visible.
+      // When none of the three is provided, skip the icon column
+      // entirely — useful for purely textual picks (e.g. drafts count)
+      // that don't need a leading glyph.
+      const hasIcon = !!(it.avatar || it.imgSrc || it.icon);
       const iconBody = it.avatar
         ? `<div class="ap-avatar size-32" aria-hidden="true">
              ${
@@ -169,7 +173,12 @@ export function renderPicker(picker) {
            </div>`
         : it.imgSrc
           ? `<img src="${it.imgSrc}" alt="" />`
-          : `<i class="${it.icon || "ap-icon-circle"}"></i>`;
+          : it.icon
+            ? `<i class="${it.icon}"></i>`
+            : "";
+      const iconSlot = hasIcon
+        ? `<span class="analyse__option-icon${it.avatar ? " analyse__option-icon--avatar" : ""}">${iconBody}</span>`
+        : "";
       return `
         <button
           type="button"
@@ -178,9 +187,7 @@ export function renderPicker(picker) {
           ${multi ? `aria-pressed="${isPreset ? "true" : "false"}"` : ""}
         >
           <span class="analyse__option-shortcut" aria-hidden="true">${i + 1}</span>
-          <span class="analyse__option-icon${it.avatar ? " analyse__option-icon--avatar" : ""}">
-            ${iconBody}
-          </span>
+          ${iconSlot}
           <span class="analyse__option-text">
             <span class="analyse__option-label">${it.label}</span>
             ${it.caption ? `<span class="muted">${it.caption}</span>` : ""}

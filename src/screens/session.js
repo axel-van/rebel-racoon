@@ -39,7 +39,7 @@ import * as sidebarWizard from "../sidebar-wizard.js?v=32";
 import * as inlineQuestion from "../inline-question.js?v=27";
 import * as contextBuilder from "../context-builder.js?v=48";
 import * as playbookEditor from "../playbook-editor.js?v=10";
-import { renderPicker } from "./_analyse-common.js?v=32";
+import { renderPicker } from "./_analyse-common.js?v=33";
 import { renderSourceCard } from "../components/source-card.js?v=30";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
 import {
@@ -338,13 +338,6 @@ function renderPlaybookControl(ctx, selectable) {
       `;
     })
     .join("");
-  const createItem = `
-    <div class="ap-select-option ap-select-create" data-playbook-create role="option">
-      <i class="ap-icon-plus ap-select-create-icon" aria-hidden="true"></i>
-      <span class="ap-select-option-text">Create a playbook</span>
-    </div>
-  `;
-  const divider = playbooks.length ? `<div class="ap-select-divider" role="separator"></div>` : "";
   const valueMarkup = ctx
     ? `<span class="ap-select-value">${escapeHtml(ctx.name)}</span>`
     : `<span class="ap-select-value ap-select-placeholder">Select a playbook</span>`;
@@ -353,13 +346,15 @@ function renderPlaybookControl(ctx, selectable) {
       <summary class="ap-select-trigger composer-playbook__trigger" title="Choose the playbook for this chat">
         <span class="ap-select-inline-label">Playbook</span>
         ${valueMarkup}
-        <i class="ap-icon-arrow-down ap-select-arrow" aria-hidden="true"></i>
+        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
       </summary>
       <div class="ap-select-dropdown composer-playbook__dropdown" role="listbox" aria-label="Choose a playbook">
-        <div class="ap-select-options">
-          ${items}
-          ${divider}
-          ${createItem}
+        <div class="ap-select-options">${items}</div>
+        <div class="ap-select-footer">
+          <button type="button" class="ap-select-create" data-playbook-create>
+            <i class="ap-icon-plus ap-select-create-icon" aria-hidden="true"></i>
+            <span>Create a playbook</span>
+          </button>
         </div>
       </div>
     </details>
@@ -992,9 +987,9 @@ export function askDraftCountQuestion(sessionId, ideaId) {
     stepLabel: "Drafts",
     skipLabel: "Cancel",
     items: [
-      { value: 1, label: "1 draft", caption: "A single angle to refine." },
-      { value: 3, label: "3 drafts", caption: "A few variations to compare." },
-      { value: 5, label: "5 drafts", caption: "A full batch to pick from." },
+      { value: 1, label: "1 draft" },
+      { value: 3, label: "3 drafts" },
+      { value: 5, label: "5 drafts" },
     ],
     customPlaceholder: "Or type any number (1–20)",
     onPick: advance,
