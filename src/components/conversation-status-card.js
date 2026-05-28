@@ -30,7 +30,7 @@ import { getSources as getSessionSources, subscribeSources } from "../sources-st
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=29";
 import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=27";
 import { subscribe as subscribeSessions } from "../sessions-store.js?v=1";
-import { addMention } from "../composer-mentions.js?v=3";
+import { addMention } from "../composer-mentions.js?v=4";
 
 // Two-level structure:
 //   .conversation-status-column   — fills grid column 3 with white bg

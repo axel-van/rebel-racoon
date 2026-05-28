@@ -24,7 +24,7 @@ import {
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=3";
+} from "../composer-mentions.js?v=4";
 import { iconFor as iconForKind } from "../file-kinds.js?v=20";
 import {
   getPosts,

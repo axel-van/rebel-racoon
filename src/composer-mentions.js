@@ -88,7 +88,7 @@ export function renderInto(container, sessionId) {
   container.innerHTML = list
     .map(
       (name) => `
-    <span class="ap-tag mini blue composer-mention" data-composer-mention="${escapeAttr(name)}">
+    <span class="ap-tag blue composer-mention" data-composer-mention="${escapeAttr(name)}">
       <span class="composer-mention__label">${escapeHtml(name)}</span>
       <button
         type="button"
