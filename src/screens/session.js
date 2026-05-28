@@ -10,14 +10,11 @@ import {
   sendMessage,
   postAssistantChoice,
   postAssistantMessage,
-  postClipExtractionTurn,
-  postIdeaExtractionTurn,
-  markIdeaExtractionReady,
   postDraftResult,
   subscribe,
   submitAssistantChoice,
 } from "../assistant.js?v=36";
-import { getSources, getIdeas, injectIdeasForSource } from "../library.js?v=29";
+import { getSources, getIdeas } from "../library.js?v=29";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
   renderInto as renderComposerMentions,
@@ -50,14 +47,12 @@ import {
 } from "../components/content-workspace.js?v=24";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=24";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=3";
-import { startClipExtraction } from "../components/clip-extraction-loader.js?v=2";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=24";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=24";
 import {
   classifyFile,
   startFileUpload,
   getSources as getStreamSources,
-  getUploads as getStreamUploads,
   subscribeSources,
   subscribeUploads,
   pushScriptedSource,
@@ -68,6 +63,7 @@ import { showToast } from "../components/toast.js?v=20";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
+  openClips as openClipsPanel,
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
@@ -1119,12 +1115,12 @@ function renderSourceIntakeTurn(message, sessionId) {
   const isLoading = message.status === "loading";
 
   // v2 single-line layout (see styles/chat.css and handoff §2). The
-  // sub-line is gone — state lives in a trailing slot with three
-  // variants driven by (isLoading, ideaCount > 0):
-  //   loading      → muted grey pill with inline dot + "Uploading"
-  //   ready+ideas  → solid electric-blue pill "N ideas ›" (clickable —
-  //                  data-source-intake-open-ideas opens the Outputs panel)
-  //   ready, none  → bare green check icon
+  // sub-line is gone — state lives in a trailing slot with these
+  // variants driven by (isLoading, ideaCount > 0, clips > 0):
+  //   loading        → muted grey pill with inline dot + "Uploading"
+  //   ready + ideas  → solid electric-blue pill "N ideas ›" → Ideas panel
+  //   ready + clips  → second pill "M clips ›" → Clips panel (Video only)
+  //   ready, none    → bare green check icon
   let trailing;
   if (isLoading) {
     trailing = `
@@ -1136,19 +1132,38 @@ function renderSourceIntakeTurn(message, sessionId) {
   } else if (message.sourceId) {
     const src = getStreamSources(sessionId).find((s) => s.id === message.sourceId);
     const ideas = src?.ideaCount || 0;
+    const clips = Array.isArray(src?.clips) ? src.clips.length : 0;
+    const pills = [];
     if (ideas > 0) {
-      const label = `${ideas} idea${ideas === 1 ? "" : "s"}`;
-      trailing = `
+      const ideasLabel = `${ideas} idea${ideas === 1 ? "" : "s"}`;
+      pills.push(`
         <button
           type="button"
           class="chat-bubble-source-intake__pill"
           data-source-intake-open-ideas
-          aria-label="Open ${label} in Ideas panel"
+          aria-label="Open ${ideasLabel} in Ideas panel"
         >
-          <span>${label}</span>
+          <span>${ideasLabel}</span>
           <i class="ap-icon-chevron-right" aria-hidden="true"></i>
         </button>
-      `;
+      `);
+    }
+    if (clips > 0) {
+      const clipsLabel = `${clips} clip${clips === 1 ? "" : "s"}`;
+      pills.push(`
+        <button
+          type="button"
+          class="chat-bubble-source-intake__pill"
+          data-source-intake-open-clips
+          aria-label="Open ${clipsLabel} in Clips panel"
+        >
+          <span>${clipsLabel}</span>
+          <i class="ap-icon-chevron-right" aria-hidden="true"></i>
+        </button>
+      `);
+    }
+    if (pills.length > 0) {
+      trailing = pills.join("");
     } else {
       trailing = `<i class="ap-icon-rounded-check_fill chat-bubble-source-intake__check" aria-hidden="true"></i>`;
     }
@@ -1882,104 +1897,16 @@ const SCRIPTED_KINDS = {
   url: { kindLabel: "URL", filename: "blog.example.com/post" },
 };
 
-// Canned ideas injected into the Ideas panel when the user picks "Extract
-// ideas" on a video. Generic enough to plausibly come from any keynote /
-// demo / founder-talk video. Full idea shape (matches library.js's
-// EXTRA_IDEA_TEMPLATES) so the Ideas panel can render them with all
-// secondary fields (rationale, relevance, confidence, channels).
-function mockVideoIdeas(sourceId, filename) {
-  const ref = filename ? `Video · ${filename}` : "Video";
-  return [
-    {
-      id: `idea_${sourceId}_1`,
-      title: "Opening thesis — one-line framing",
-      body: "The video opens with the central claim. Reads as a standalone post or as the lede of a longer piece.",
-      kind: "hook",
-      tags: ["hook", "positioning"],
-      used: 0,
-      ref,
-      rationale: "Quotable single-sentence framing — strong cold open for a thought-leadership post.",
-      relevance: "High relevance",
-      relevanceColor: "orange",
-      confidence: 86,
-      channels: ["linkedin", "x"],
-    },
-    {
-      id: `idea_${sourceId}_2`,
-      title: "Demo segment — value lands visually",
-      body: "Short compact demo where the product's value lands in under a minute. Travels well on vertical formats.",
-      kind: "story",
-      tags: ["demo", "product"],
-      used: 0,
-      ref,
-      rationale: "Visual demos with a clear payoff outperform talking-head clips on vertical formats.",
-      relevance: "Medium relevance",
-      relevanceColor: "tagOrange",
-      confidence: 74,
-      channels: ["instagram", "tiktok"],
-    },
-    {
-      id: `idea_${sourceId}_3`,
-      title: "Headline stat with the story behind it",
-      body: "Specific number delivered with the customer context that earns it. Strong proof point for LinkedIn.",
-      kind: "stat",
-      tags: ["stat", "proof"],
-      used: 0,
-      ref,
-      rationale: "Numbers + before/after context land on LinkedIn audiences who over-index on time-savings proof.",
-      relevance: "High relevance",
-      relevanceColor: "orange",
-      confidence: 82,
-      channels: ["linkedin"],
-    },
-    {
-      id: `idea_${sourceId}_4`,
-      title: "Contrarian POV — the unpopular call",
-      body: "Founder explains a decision that goes against the obvious move. Single-beat thought-leadership material.",
-      kind: "insight",
-      tags: ["contrarian", "pov"],
-      used: 0,
-      ref,
-      rationale: "Strong POV in a single beat — drives debate without alienating either side.",
-      relevance: "Medium relevance",
-      relevanceColor: "tagOrange",
-      confidence: 71,
-      channels: ["linkedin", "x"],
-    },
-  ];
-}
-
 function startPillFromKind(_root, session, kind) {
   const spec = SCRIPTED_KINDS[kind];
   if (!spec) return;
   const sessionId = session.id;
+  // Uniform pipeline: push a Processing source, then flip it Processed
+  // after ~6s. Clips for Video sources are attached automatically by
+  // completeScriptedSource (see sources-stream.attachVideoClips). The
+  // chat stays interactive throughout — no follow-up picker, the user
+  // can keep typing and only sees the intake bubble + completion toast.
   const sourceId = pushScriptedSource({ filename: spec.filename, kind: spec.kindLabel, sessionId });
-  if (kind === "video") {
-    // Video kind: skip auto-complete and ask the user up-front whether
-    // they want clips or ideas. The choice handler completes the source
-    // with the right ideaCount (0 for clips, random 3–8 for ideas) so
-    // the composer pill's green "N nouvelles idées" badge never shows
-    // before the user has actually chosen the ideas path.
-    postAssistantChoice(sessionId, {
-      text: "What should I do with this video?",
-      choices: [
-        { value: "clips", label: "Create clips", icon: "ap-icon-sparkles" },
-        { value: "ideas", label: "Extract ideas", icon: "ap-icon-tag" },
-      ],
-      multi: false,
-      instant: true,
-      handler: "video-intake-choice",
-      context: { sourceId, filename: spec.filename },
-    });
-    return;
-  }
-  // PDF / URL — schedule the scripted completion (~6s) AND launch the
-  // conversation right away. The user shouldn't have to type a prompt
-  // to get Archie engaged — attaching a source is itself an intent
-  // signal, so we acknowledge it and offer the most common next moves
-  // (draft a batch, repurpose, just extract ideas first). The video
-  // path already does this on its own with the clips/themes choice.
-  const delay = 6000;
   const ideaCount = 3 + Math.floor(Math.random() * 6);
   setTimeout(() => {
     completeScriptedSource(sourceId, {
@@ -1987,23 +1914,7 @@ function startPillFromKind(_root, session, kind) {
       signalColor: "tagOrange",
       ideaCount,
     });
-  }, delay);
-  postAssistantMessage(
-    sessionId,
-    `I'm analyzing **${spec.filename}**. What would you like me to do — draft a batch, repurpose it, or extract ideas first?`,
-  );
-  postAssistantChoice(sessionId, {
-    text: "",
-    choices: [
-      { value: "batch", label: "Draft a batch of posts", icon: "ap-icon-sparkles-mermaid" },
-      { value: "repurpose", label: "Repurpose into 8 posts", icon: "ap-icon-pen" },
-      { value: "extract", label: "Extract ideas first", icon: "ap-icon-tag" },
-    ],
-    multi: false,
-    instant: true,
-    handler: "source-intake-choice",
-    context: { sourceId, filename: spec.filename, kind },
-  });
+  }, 6000);
 }
 
 function bindSession(root, session) {
@@ -2073,55 +1984,6 @@ function bindSession(root, session) {
             ? `Subtitles removed from ${count} ${clipWord}`
             : `${label} subtitles added to ${count} ${clipWord}`;
         showToast(message, { duration: 3200 });
-      }
-    } else if (msg.handler === "source-intake-choice") {
-      // PDF / URL intake picker fired right after the user attaches a
-      // source. Acknowledges the pick and routes to the right next beat
-      // (draft batch / repurpose / extract). The scripted source is
-      // already on the 6s ticker (see startPillFromKind), so we just
-      // post the assistant follow-up message — the actual draft/extract
-      // engines kick in only once the source flips to "Processed".
-      const { filename } = msg.context || {};
-      const pick = selectedValues[0];
-      const followups = {
-        batch: `I'll draft 5 posts from **${filename}** across LinkedIn, X, and Instagram once the analysis lands.`,
-        repurpose: `I'll turn **${filename}** into 8 posts: 3 LinkedIn, 3 X, 2 Instagram, all in the brand voice.`,
-        extract: `I'll surface the strongest ideas from **${filename}** first. You can pick which to draft from there.`,
-      };
-      const msgText = followups[pick];
-      if (msgText) postAssistantMessage(session.id, msgText);
-    } else if (msg.handler === "video-intake-choice") {
-      // Single-select picker between "clips" (cut into clip-extraction flow)
-      // and "ideas" (inject mock ideas into the Ideas panel). For video,
-      // startPillFromKind intentionally skips auto-complete — we complete
-      // the scripted source here so the pill's "N nouvelles idées" badge
-      // only reflects the chosen branch (0 for clips, random 3-8 for ideas).
-      const { sourceId, filename } = msg.context || {};
-      const pick = selectedValues[0];
-      if (sourceId && pick) {
-        const ideas = pick === "ideas" ? mockVideoIdeas(sourceId, filename) : [];
-        completeScriptedSource(sourceId, {
-          signal: ideas.length > 0 ? "Medium signal" : "Low signal",
-          signalColor: ideas.length > 0 ? "tagOrange" : "grey",
-          ideaCount: ideas.length,
-        });
-        const source = getStreamSources(session.id).find((s) => s.id === sourceId);
-        if (source && pick === "clips") {
-          postClipExtractionTurn(session.id, { sourceId, filename });
-          startClipExtraction(source, {
-            onReady: () => openIdeasPanel(),
-          });
-        } else if (source && pick === "ideas") {
-          // Ideas land in the Ideas panel (right-panel), not as an inline
-          // assistant result turn. We do post a transient pending notice
-          // ("Reading the video for themes… up to 15s") so the user knows
-          // the AI is working non-blocking before the panel updates.
-          const noticeId = postIdeaExtractionTurn(session.id, { sourceId, filename });
-          window.setTimeout(() => {
-            injectIdeasForSource(session.id, sourceId, ideas);
-            markIdeaExtractionReady(session.id, noticeId);
-          }, 6000);
-        }
       }
     }
   }
@@ -2490,6 +2352,16 @@ function bindSession(root, session) {
         event.preventDefault();
         event.stopPropagation();
         openIdeasPanel();
+        return;
+      }
+
+      // "M clips" link inside a video source-intake bubble — opens the
+      // Outputs panel on the Clips sub-tab.
+      const openClipsLink = event.target.closest("[data-source-intake-open-clips]");
+      if (openClipsLink) {
+        event.preventDefault();
+        event.stopPropagation();
+        openClipsPanel();
         return;
       }
 
