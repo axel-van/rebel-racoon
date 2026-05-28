@@ -12,6 +12,72 @@ import { sourcesBySession as seedByCsesssion } from "./mocks.js?v=35";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=1";
 
+// Canned extraction output attached to every Processed Video source.
+// Generic enough to plausibly come from any keynote / talk / demo video.
+// Lives here (not in clip-extraction-loader) because it's piece of source
+// data the state machine writes, not behavior of the manual-trigger UI.
+export const EXTRACTED_CLIPS_TEMPLATE = [
+  {
+    start: 252,
+    end: 282,
+    hue: 22,
+    title: "Opening hook — the thesis in one line",
+    summary: "Single-sentence framing that lands the whole talk. Strong cold open.",
+    why: "Quotable. Reads as a standalone post or as the lede of a longer story.",
+    network: "x",
+    tags: ["hook", "positioning"],
+  },
+  {
+    start: 510,
+    end: 568,
+    hue: 280,
+    title: "Live demo — the payoff moment",
+    summary: "Compact demo segment where the value lands visually in under a minute.",
+    why: "Short, kinetic, ends on a clear payoff. Travels well on vertical formats.",
+    network: "instagram",
+    tags: ["demo", "product"],
+  },
+  {
+    start: 890,
+    end: 938,
+    hue: 200,
+    title: "Headline stat with the story behind it",
+    summary: "Specific number delivered with the customer context that earns it.",
+    why: "Numbers + before/after. LinkedIn audiences over-index on time-savings proof.",
+    network: "linkedin",
+    tags: ["stat", "proof"],
+  },
+  {
+    start: 1102,
+    end: 1156,
+    hue: 12,
+    title: "Contrarian POV — why we did the unpopular thing",
+    summary: "Founder explains a decision that goes against the obvious move.",
+    why: "Strong POV in a single beat. Ideal for thought-leadership context.",
+    network: "linkedin",
+    tags: ["contrarian", "pov"],
+  },
+  {
+    start: 1340,
+    end: 1392,
+    hue: 145,
+    title: "Closing line — the quotable outro",
+    summary: "Clean closing delivery with room around it for graphics or captions.",
+    why: "Vertical-format reel material. Punchy, mid-length, ends on a quotable.",
+    network: "tiktok",
+    tags: ["closing", "reel"],
+  },
+];
+
+// Stable ids derived from the source id so downstream stores can
+// reference clips reliably.
+export function buildClipsForSource(sourceId) {
+  return EXTRACTED_CLIPS_TEMPLATE.map((c, i) => ({
+    ...c,
+    id: `clip_${sourceId}_${i}`,
+  }));
+}
+
 // ─── State ───────────────────────────────────────────────────────────────
 
 // Per-session source lists. Seeded from mocks for returning users; empty
@@ -289,6 +355,7 @@ function transitionToDone(upload) {
   if (upload.status === "cancelled") return;
   upload.status = "done";
   let ideaCount = 0;
+  let clipCount = 0;
   const list = sourcesBySession.get(upload.sessionId);
   const src = list && list.find((s) => s.id === upload.sourceId);
   if (src) {
@@ -301,14 +368,35 @@ function transitionToDone(upload) {
     src.progress = 1;
     src.stage = undefined;
     src.etaSec = undefined;
+    if (src.kind === "Video") {
+      clipCount = attachVideoClips(src);
+    }
     notifySources(upload.sessionId);
   }
   notifyUploads();
 
   import("./components/toast.js").then(({ showToast }) => {
-    const ideas = ideaCount === 1 ? "1 idea" : `${ideaCount} ideas`;
-    showToast(`${upload.name} ready · ${ideas} extracted`);
+    showToast(`${upload.name} ready · ${formatExtractionSummary(ideaCount, clipCount)}`);
   });
+}
+
+// Hydrate a freshly-Processed Video source with the canned clip set so
+// every video — regardless of attach path — ends up with both ideas AND
+// clips. Returns the number of clips attached so the caller can use it
+// in toasts / UI labels.
+function attachVideoClips(src) {
+  const clips = buildClipsForSource(src.id);
+  src.clips = clips;
+  src.clipExtractionStatus = "ready";
+  if (!src.durationSec) src.durationSec = 1458;
+  return clips.length;
+}
+
+function formatExtractionSummary(ideaCount, clipCount) {
+  const parts = [];
+  parts.push(`${ideaCount} ${ideaCount === 1 ? "idea" : "ideas"}`);
+  if (clipCount > 0) parts.push(`${clipCount} ${clipCount === 1 ? "clip" : "clips"}`);
+  return `${parts.join(" · ")} extracted`;
 }
 
 // URL import skips the upload phase — straight into Processing.
@@ -413,7 +501,18 @@ export function completeScriptedSource(sourceId, { signal, signalColor, ideaCoun
   src.signal = signal;
   src.signalColor = signalColor;
   src.ideaCount = ideaCount;
+  let clipCount = 0;
+  if (src.kind === "Video") {
+    clipCount = attachVideoClips(src);
+  }
   notifySources(sessionId);
+
+  // Symmetric toast with transitionToDone — the chat is no longer
+  // blocked during analysis, so the user may be mid-typing when the
+  // source completes and miss the inline bubble flip.
+  import("./components/toast.js").then(({ showToast }) => {
+    showToast(`${src.filename} ready · ${formatExtractionSummary(ideaCount, clipCount)}`);
+  });
 }
 
 // Cancel an in-flight upload. After Done it's a no-op.
