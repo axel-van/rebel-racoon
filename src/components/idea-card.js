@@ -155,12 +155,16 @@ export function renderIdeaCard(
     .map(
       (s) => `
         <li>
-          <a class="idea-card__source-chip" href="#" data-source-open="${s.id}">
+          <button
+            type="button"
+            class="idea-card__source-chip"
+            data-source-open="${s.id}"
+          >
             <span class="idea-card__source-chip-tile">
               <i class="${iconFor(s.kind)}" aria-hidden="true"></i>
             </span>
             <span>${s.filename}</span>
-          </a>
+          </button>
         </li>
       `,
     )

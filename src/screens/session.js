@@ -1212,15 +1212,15 @@ function renderExtractionTurn(message) {
                 <i class="ap-icon-thumb-down"></i>
               </button>
             </div>
-            <a
-              href="#"
+            <button
+              type="button"
               class="ap-link standalone small extraction-turn__idea-card-view"
               data-focus-idea="${i.id || ""}"
               aria-label="Open this idea in Ideas"
             >
               <span>View idea</span>
               <i class="ap-icon-external-link"></i>
-            </a>
+            </button>
           </div>
         </div>
       `,
