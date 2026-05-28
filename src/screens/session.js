@@ -760,8 +760,13 @@ function renderAssistantPanelQuestion(session) {
   const isWelcomeAlt = session.id.startsWith("welcome-alt-");
   const heroMarkup = isWelcomeAlt
     ? html`
-        <button type="button" class="welcome-alt-exit" data-welcome-alt-exit aria-label="Exit onboarding">
-          <span>Exit</span>
+        <button
+          type="button"
+          class="ap-button ghost grey welcome-alt-exit"
+          data-welcome-alt-exit
+          aria-label="Exit onboarding"
+        >
+          Exit
           <i class="ap-icon-close" aria-hidden="true"></i>
         </button>
         <header class="welcome-alt-hero">
