@@ -98,9 +98,16 @@ export function renderPostCard(post, opts = {}) {
     stats.likes || stats.comments || stats.reposts
       ? `
         <div class="posts__card-engagement">
-          <span class="posts__card-reactions">
-            <span class="posts__card-reaction">👍</span>
-            <span class="posts__card-reaction">💡</span>
+          <span
+            class="posts__card-reactions"
+            aria-label="${stats.likes || 0} reactions"
+          >
+            <span class="posts__card-reaction posts__card-reaction--thumb">
+              <i class="ap-icon-thumb-up_fill" aria-hidden="true"></i>
+            </span>
+            <span class="posts__card-reaction posts__card-reaction--heart">
+              <i class="ap-icon-heart_fill" aria-hidden="true"></i>
+            </span>
             <span class="posts__card-reaction-count">${stats.likes || 0}</span>
           </span>
           <span class="posts__card-meta muted">${stats.comments || 0} comments · ${stats.reposts || 0} reposts</span>

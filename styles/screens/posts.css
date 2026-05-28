@@ -557,11 +557,39 @@
 .posts__card-reactions {
   display: inline-flex;
   align-items: center;
-  gap: var(--ref-spacing-xxxs);
 }
 
+/* Overlapping LinkedIn-style reaction stamps. Each is a 16px disc tinted
+   to the reaction's intent (thumb = electric blue, heart = red). Stamps
+   overlap by 4px so the cluster reads as a reaction-pile, then the count
+   pulls left of the trailing stamp. */
 .posts__card-reaction {
-  font-size: var(--ref-font-size-sm);
+  width: 16px;
+  height: 16px;
+  border-radius: var(--app-radius-circle);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ref-color-white);
+  border: 1px solid var(--ref-color-white);
+  margin-left: -4px;
+}
+
+.posts__card-reaction:first-child {
+  margin-left: 0;
+}
+
+.posts__card-reaction i {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.posts__card-reaction--thumb {
+  background: var(--ref-color-electric-blue-100);
+}
+
+.posts__card-reaction--heart {
+  background: var(--ref-color-red-100);
 }
 
 .posts__card-reaction-count {
