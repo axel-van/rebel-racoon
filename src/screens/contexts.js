@@ -68,7 +68,7 @@ function renderPage() {
               data-contexts-search
             />
           </div>
-          <button type="button" class="ap-button primary orange" data-contexts-new>
+          <button type="button" class="ap-button primary blue" data-contexts-new>
             <i class="ap-icon-plus"></i>
             <span>Create a Playbook</span>
           </button>
@@ -97,7 +97,7 @@ function renderContextsEmpty(allContexts, pageState) {
       icon: "ap-icon-target",
       title: "No Playbooks yet",
       body: "Capture your brand, audience, brief, and tone of voice — I'll apply it to every draft.",
-      actionHtml: `<button type="button" class="ap-button primary orange" data-contexts-new><i class="ap-icon-plus"></i><span>Create your first Playbook</span></button>`,
+      actionHtml: `<button type="button" class="ap-button primary blue" data-contexts-new><i class="ap-icon-plus"></i><span>Create your first Playbook</span></button>`,
       wrapperClass: "contexts-view__empty contexts-view__empty--rich",
     });
   }
