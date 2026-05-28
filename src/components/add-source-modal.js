@@ -257,7 +257,7 @@ function renderConnectorRow(c) {
   const isConnected = c.status === "connected";
   return `
     <li class="ap-card add-source__connector-row" data-connector-id="${escapeHtml(c.id)}">
-      <img class="add-source__connector-logo" src="${escapeHtml(c.logo)}" alt="" width="32" height="32" />
+      <img class="add-source__connector-logo" src="${escapeHtml(c.logo)}" alt="" width="32" height="32" loading="lazy" />
       <div class="add-source__connector-body">
         <div class="add-source__connector-title">${escapeHtml(c.name)}</div>
         <div class="muted">${escapeHtml(c.desc)}</div>

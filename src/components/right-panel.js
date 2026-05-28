@@ -2923,7 +2923,7 @@ function renderBriefImageVoice(d) {
         <div class="context-brief__iv-image-thumb">
           ${
             asset.url
-              ? `<img src="${escapeAttr(asset.url)}" alt="${escapeAttr(asset.label || "")}" />`
+              ? `<img src="${escapeAttr(asset.url)}" alt="${escapeAttr(asset.label || "")}" loading="lazy" />`
               : `<span class="context-brief__iv-image-placeholder">${escapeText(asset.label || "")}</span>`
           }
         </div>

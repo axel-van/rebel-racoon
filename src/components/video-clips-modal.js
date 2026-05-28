@@ -303,7 +303,7 @@ function editorPaneHTML() {
   const netPills = NETWORKS.map(
     (n) => `
     <button type="button" class="vc-editor__net${n.id === draft.network ? " is-on" : ""}" data-vc-action="set-network" data-vc-network="${n.id}" title="${escapeHtml(n.label)}">
-      <img src="assets/video-clips/icons/${n.logo}" alt="" />
+      <img src="assets/video-clips/icons/${n.logo}" alt="" loading="lazy" />
       <span>${escapeHtml(n.label)}</span>
     </button>
   `,

@@ -129,7 +129,7 @@ export function renderPostCard(post, opts = {}) {
   const mediaBlock = post.clipRef
     ? `${renderClipPlayer(post)}${subtitleBadge}`
     : post.imageUrl
-      ? `<img class="posts__card-image" src="${post.imageUrl}" alt="Generated image for this post" />`
+      ? `<img class="posts__card-image" src="${post.imageUrl}" alt="Generated image for this post" loading="lazy" />`
       : `<button type="button" class="posts__card-image-placeholder" data-post-image="${post.id}">
           <i class="ap-icon-sparkles-mermaid"></i>
           <span>Generate an image</span>
