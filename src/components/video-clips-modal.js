@@ -662,6 +662,9 @@ function stepDraft(which, delta) {
 }
 
 // ── Drag (pro trimmer) ───────────────────────────────────────────────
+// Pointer Events unify mouse + touch + pen so the handles work on
+// tablets and touch laptops. Naming kept as Mousedown/Mousemove/Mouseup
+// for git-blame stability; the underlying events are pointer*.
 
 function onProtrimMousedown(event) {
   const dragEl = event.target.closest("[data-vc-drag]");
@@ -682,8 +685,9 @@ function onProtrimMousedown(event) {
     rectLeft: rect.left,
   };
   document.querySelector("[data-vc-protrim]")?.classList.add("is-dragging", `is-dragging--${kind}`);
-  window.addEventListener("mousemove", onProtrimMousemove);
-  window.addEventListener("mouseup", onProtrimMouseup);
+  window.addEventListener("pointermove", onProtrimMousemove);
+  window.addEventListener("pointerup", onProtrimMouseup);
+  window.addEventListener("pointercancel", onProtrimMouseup);
 }
 
 function onProtrimTrackClick(event) {
@@ -742,8 +746,9 @@ function onProtrimMouseup() {
       "is-dragging--window",
       "is-dragging--playhead",
     );
-  window.removeEventListener("mousemove", onProtrimMousemove);
-  window.removeEventListener("mouseup", onProtrimMouseup);
+  window.removeEventListener("pointermove", onProtrimMousemove);
+  window.removeEventListener("pointerup", onProtrimMouseup);
+  window.removeEventListener("pointercancel", onProtrimMouseup);
 }
 
 // Patches the in-editor DOM after a drag/seek so the contenteditable cursor
@@ -928,11 +933,11 @@ export function init() {
   modal.addEventListener("blur", onStepperBlur, true);
   // Drag is wired at the protrim level so handles + window + playhead are
   // all caught. Track click (for scrub) lives on the track wrapper.
-  modal.addEventListener("mousedown", (event) => {
+  modal.addEventListener("pointerdown", (event) => {
     const trackClick = event.target.closest("[data-vc-protrim-track]");
     if (trackClick && !event.target.closest("[data-vc-drag]")) {
       // We intentionally don't call onProtrimMousedown — the click handler
-      // moves the playhead instead. mousedown on the track itself is the
+      // moves the playhead instead. pointerdown on the track itself is the
       // scrub gesture.
       onProtrimTrackClick({ currentTarget: trackClick, clientX: event.clientX, target: event.target });
       return;
