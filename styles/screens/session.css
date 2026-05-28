@@ -1369,116 +1369,61 @@
   flex-shrink: 0;
 }
 
-/* Read-only context pill — tinted background driven by the context's
-   color (via [data-context-color]), with the matching dot + name.
-   Sized to align with the sibling .ap-button.stroked.grey attach
-   trigger (32px DS button height). Click opens the right-panel
-   ContextForm in read mode (bindSession data-context-view handler). */
-.composer-context__pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  height: 32px;
-  padding: 0 var(--ref-spacing-xs);
-  border: 0;
-  border-radius: 999px;
-  font-family: inherit;
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
-  cursor: pointer;
-  background: var(--ref-color-green-10);
-  color: var(--ref-color-green-100);
-  transition: filter var(--ref-animation-short) var(--app-ease-out);
-}
-
-.composer-context__pill:hover,
-.composer-context__pill:focus-visible {
-  filter: brightness(0.96);
-  outline: none;
-}
-
-.composer-context__pill[data-context-color="orange"] {
-  background: var(--ref-color-orange-10);
-  color: var(--ref-color-orange-100);
-}
-
-.composer-context__pill[data-context-color="red"] {
-  background: var(--ref-color-red-10);
-  color: var(--ref-color-red-100);
-}
-
-.composer-context__pill[data-context-color="blue"],
-.composer-context__pill[data-context-color="electric-blue"] {
-  background: var(--ref-color-electric-blue-05);
-  color: var(--ref-color-electric-blue-100);
-}
-
-.composer-context__pill[data-context-color="grey"] {
-  background: var(--ref-color-grey-10);
-  color: var(--ref-color-grey-100);
-}
-
-.composer-context__pill[data-context-color="purple"] {
-  background: var(--ref-color-purple-10);
-  color: var(--ref-color-purple-100);
-}
-
-.composer-context__pill[data-context-color="yellow"] {
-  background: var(--ref-color-yellow-10);
-  color: var(--ref-color-yellow-100);
-}
-
-/* Static (non-interactive) variant — shown once the conversation has
-   started: the playbook is locked in and only indicated, not selectable. */
-.composer-context__pill.is-static {
-  cursor: default;
-}
-
-.composer-context__pill.is-static:hover,
-.composer-context__pill.is-static:focus-visible {
-  filter: none;
-}
-
-/* Caret on the selectable pill (New Chat) signalling the playbook picker. */
-.composer-context__caret {
-  font-size: var(--sys-icon-css-xs);
-  margin-left: var(--ref-spacing-xxxs);
-}
-
-/* Playbook picker — the pill is the trigger; the DS .ap-action-dropdown
-   floats above it (the composer sits at the bottom). Positioning only — the
-   DS provides the surface, border, shadow, and item layout. */
+/* Playbook control — DS .ap-select with inline label "Playbook"
+   (cf. Figma form-select node 515:367). Positioning only; the DS
+   provides the trigger, dropdown, and item layout. */
 .composer-playbook {
   position: relative;
   display: inline-flex;
 }
 
-.ap-action-dropdown.composer-playbook__menu {
-  position: absolute;
-  left: 0;
-  bottom: calc(100% + var(--ref-spacing-xxs));
-  min-width: 200px;
+/* The DS .ap-select-trigger ships full-width — clamp it to its content
+   width so the playbook control sits inline with the @Mention + attach
+   buttons in the toolbar. */
+.composer-playbook__trigger {
   width: auto;
-  z-index: var(--app-z-overlay);
 }
 
-.ap-action-dropdown.composer-playbook__menu[hidden] {
+.composer-playbook[open] > summary,
+.composer-playbook__trigger {
+  user-select: none;
+}
+
+/* Native marker on <summary> — remove the disclosure triangle Chrome/
+   Firefox add by default so only the chevron renders. */
+.composer-playbook > summary::-webkit-details-marker {
   display: none;
 }
 
-/* Dropdown rows carry the playbook's colour dot before the label. */
-.composer-playbook__menu .composer-context__dot {
+.composer-playbook > summary {
+  list-style: none;
+}
+
+/* The composer sits at the bottom of the screen, so the dropdown
+   floats UPWARDS from the trigger. Clear the DS top/right anchoring
+   (which dropped the menu DOWNWARDS) and re-anchor to the trigger's
+   top-left so we can offset upward via bottom. */
+.composer-playbook__dropdown {
+  position: absolute;
+  top: auto;
+  right: auto;
+  left: 0;
+  bottom: calc(100% + var(--ref-spacing-xxs));
+  min-width: 240px;
+  width: max-content;
+  max-width: 360px;
+  margin-top: 0;
+  z-index: var(--app-z-overlay);
+}
+
+/* Dropdown rows carry the playbook's colour dot before the label so
+   the user can scan picks by colour. */
+.composer-playbook__dropdown .composer-context__dot {
   margin-right: var(--ref-spacing-xxs);
 }
 
-/* Feature flag: hide playbook colors. Neutralises the pill to grey and
-   drops the colour dot (on the pill + dropdown rows), matching the
-   /contexts cards and sidebar conversation rows. */
-body.hide-playbook-colors .composer-context__pill {
-  background: var(--ref-color-grey-10);
-  color: var(--ref-color-grey-100);
-}
-
+/* Feature flag: hide playbook colors. Drops the colour dot inside
+   the dropdown rows, matching the /contexts cards and sidebar rows. */
 body.hide-playbook-colors .composer-context__dot {
   display: none;
 }

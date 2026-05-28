@@ -289,100 +289,80 @@ function dotColorVar(colorName) {
   return `var(--ref-color-${token}-100)`;
 }
 
-// Playbook pill in the composer toolbar.
-//   • selectable (New Chat / empty conversation) → a button that toggles a
-//     dropdown of every playbook so the user can pick which one the chat
-//     uses before sending the first message.
-//   • static (active conversation) → a non-interactive indicator showing the
-//     locked-in playbook.
-// Returns "" when there are no playbooks at all. Selection is handled by the
-// delegated [data-playbook-pick] handler in bindSession.
+// Playbook control in the composer toolbar — matches the Figma form-select
+// inline-label pattern (node 515:367): "Playbook" label + value + chevron,
+// inside a .ap-select-trigger.
+//   • selectable (New Chat / empty conversation) → a <details> wrapping the
+//     .ap-select-trigger + .ap-select-dropdown. Picking a playbook routes
+//     through the delegated [data-playbook-pick] handler in bindSession.
+//   • static (active conversation) → a non-interactive .ap-select-trigger
+//     in disabled state. No dropdown.
+// Returns "" when there are no playbooks at all on a locked chat.
 function renderPlaybookControl(ctx, selectable) {
-  const color = ctx?.color || "grey";
-
   // Static indicator on active chats — only when a playbook is attached.
   if (!selectable) {
     if (!ctx) return "";
     return `
       <div class="composer-playbook" data-composer-playbook>
-        <span
-          class="composer-context__pill is-static"
-          data-context-color="${escapeHtml(color)}"
+        <div
+          class="ap-select-trigger disabled composer-playbook__trigger"
+          data-context-color="${escapeHtml(ctx.color || "grey")}"
           title="Playbook: ${escapeHtml(ctx.name)}"
         >
-          <span class="composer-context__dot" style="background: ${dotColorVar(color)};"></span>
-          <span>${escapeHtml(ctx.name)}</span>
-        </span>
+          <span class="ap-select-inline-label">Playbook</span>
+          <span class="ap-select-value">${escapeHtml(ctx.name)}</span>
+        </div>
       </div>
     `;
   }
 
-  // Selectable pill (New Chat) — always shown, even with no playbooks yet
-  // (then it reads "No playbook" and the menu offers to create one).
+  // Selectable (New Chat) — always shown, even with no playbooks yet (then
+  // the value placeholder reads "Select a playbook" and the dropdown offers
+  // to create one).
   const playbooks = getContexts();
   const items = playbooks
     .map((c) => {
       const cColor = c.color || "grey";
       const isSel = ctx && c.id === ctx.id;
       return `
-        <button
-          type="button"
-          class="ap-action-dropdown-item${isSel ? " is-selected" : ""}"
+        <div
+          class="ap-select-option${isSel ? " selected" : ""}"
           data-playbook-pick="${escapeHtml(c.id)}"
-          role="menuitemradio"
-          aria-checked="${isSel ? "true" : "false"}"
+          role="option"
+          aria-selected="${isSel ? "true" : "false"}"
         >
           <span class="composer-context__dot" style="background: ${dotColorVar(cColor)};"></span>
-          <div class="ap-action-dropdown-item-text">
-            <div class="ap-action-dropdown-item-label-container">
-              <span class="ap-action-dropdown-item-label">${escapeHtml(c.name)}</span>
-            </div>
-          </div>
-          ${isSel ? `<i class="ap-icon-check" aria-hidden="true"></i>` : ""}
-        </button>
+          <span class="ap-select-option-text">${escapeHtml(c.name)}</span>
+          ${isSel ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
+        </div>
       `;
     })
     .join("");
   const createItem = `
-    <button type="button" class="ap-action-dropdown-item" data-playbook-create role="menuitem">
-      <i class="ap-icon-plus"></i>
-      <div class="ap-action-dropdown-item-text">
-        <div class="ap-action-dropdown-item-label-container">
-          <span class="ap-action-dropdown-item-label">Create a playbook</span>
+    <div class="ap-select-option ap-select-create" data-playbook-create role="option">
+      <i class="ap-icon-plus ap-select-create-icon" aria-hidden="true"></i>
+      <span class="ap-select-option-text">Create a playbook</span>
+    </div>
+  `;
+  const divider = playbooks.length ? `<div class="ap-select-divider" role="separator"></div>` : "";
+  const valueMarkup = ctx
+    ? `<span class="ap-select-value">${escapeHtml(ctx.name)}</span>`
+    : `<span class="ap-select-value ap-select-placeholder">Select a playbook</span>`;
+  return `
+    <details class="ap-select composer-playbook" data-composer-playbook>
+      <summary class="ap-select-trigger composer-playbook__trigger" title="Choose the playbook for this chat">
+        <span class="ap-select-inline-label">Playbook</span>
+        ${valueMarkup}
+        <i class="ap-icon-arrow-down ap-select-arrow" aria-hidden="true"></i>
+      </summary>
+      <div class="ap-select-dropdown composer-playbook__dropdown" role="listbox" aria-label="Choose a playbook">
+        <div class="ap-select-options">
+          ${items}
+          ${divider}
+          ${createItem}
         </div>
       </div>
-    </button>
-  `;
-  const divider = playbooks.length ? `<div class="ap-action-dropdown-divider" role="separator"></div>` : "";
-  const pillInner = ctx
-    ? `<span class="composer-context__dot" style="background: ${dotColorVar(color)};"></span><span>${escapeHtml(ctx.name)}</span>`
-    : `<span>No playbook</span>`;
-  return `
-    <div class="composer-playbook" data-composer-playbook>
-      <button
-        type="button"
-        class="composer-context__pill"
-        data-context-color="${escapeHtml(color)}"
-        data-playbook-toggle
-        aria-haspopup="menu"
-        aria-expanded="false"
-        title="Choose the playbook for this chat"
-      >
-        ${pillInner}
-        <i class="ap-icon-arrow-down composer-context__caret" aria-hidden="true"></i>
-      </button>
-      <div
-        class="ap-action-dropdown composer-playbook__menu"
-        data-playbook-menu
-        hidden
-        role="menu"
-        aria-label="Choose a playbook"
-      >
-        ${items}
-        ${divider}
-        ${createItem}
-      </div>
-    </div>
+    </details>
   `;
 }
 
@@ -2610,21 +2590,10 @@ function bindSession(root, session) {
         return;
       }
 
-      // Composer playbook pill (New Chat only) — toggle the playbook picker.
-      const pbToggle = event.target.closest("[data-playbook-toggle]");
-      if (pbToggle) {
-        event.preventDefault();
-        const menu = root.querySelector("[data-playbook-menu]");
-        if (menu) {
-          const willOpen = menu.hidden;
-          menu.hidden = !willOpen;
-          pbToggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
-        }
-        return;
-      }
-
       // Pick a playbook for this chat — bind it to the session and re-render
-      // just the pill control in place (keeps the textarea + its text).
+      // just the control in place (keeps the textarea + its text). The
+      // <details> open/close is owned by the native element; we just need
+      // to keep the closing-on-outside-click logic below.
       const pbPick = event.target.closest("[data-playbook-pick]");
       if (pbPick) {
         event.preventDefault();
@@ -2668,10 +2637,14 @@ function bindSession(root, session) {
         if (menu && !menu.hidden) menu.hidden = true;
       }
 
-      // Click outside the playbook control → close its picker.
+      // Click outside the playbook control → close its picker. The
+      // <details> element drives its own open state, so closing means
+      // dropping the `open` attribute.
       if (!event.target.closest(".composer-playbook")) {
-        const menu = root.querySelector("[data-playbook-menu]");
-        if (menu && !menu.hidden) menu.hidden = true;
+        const details = root.querySelector("[data-composer-playbook]");
+        if (details && details.tagName === "DETAILS" && details.open) {
+          details.removeAttribute("open");
+        }
       }
     },
     { signal },
