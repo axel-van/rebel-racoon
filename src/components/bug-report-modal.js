@@ -98,7 +98,7 @@ const HTML = `
             <div class="bug-report-dropzone__primary">Drop an image here or <strong class="bug-report-dropzone__browse">browse</strong></div>
             <div class="bug-report-dropzone__hint">PNG, JPG, GIF — max 10 MB</div>
           </div>
-          <input type="file" id="bugFileInput" accept="image/*" hidden />
+          <input type="file" id="bugFileInput" accept="image/png,image/jpeg,image/gif" hidden />
         </div>
       </div>
 
@@ -177,11 +177,23 @@ function setProblemInvalid(invalid) {
 // one manually.
 async function loadHtml2Canvas() {
   if (window.html2canvas) return window.html2canvas;
+  // 3-second budget — past that the capture is dead weight and the
+  // "Capturing…" badge needs to flip to "Capture unavailable" so the
+  // user can upload manually instead of waiting on a stuck CDN.
   return new Promise((resolve, reject) => {
     const s = document.createElement("script");
     s.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
-    s.onload = () => resolve(window.html2canvas);
-    s.onerror = () => reject(new Error("html2canvas unavailable"));
+    const timer = setTimeout(() => {
+      reject(new Error("html2canvas timeout"));
+    }, 3000);
+    s.onload = () => {
+      clearTimeout(timer);
+      resolve(window.html2canvas);
+    };
+    s.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error("html2canvas unavailable"));
+    };
     document.head.appendChild(s);
   });
 }

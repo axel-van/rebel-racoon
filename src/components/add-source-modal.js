@@ -331,7 +331,7 @@ function footerForState() {
         <div class="ap-dialog-footer-right">
           <button type="button" class="ap-button transparent grey" data-connector-back>Cancel</button>
           <button type="button" class="ap-button primary orange" data-connector-import ${n === 0 ? "disabled" : ""}>
-            Import ${n} item${n === 1 ? "" : "s"}
+            Import ${n} ${n === 1 ? "source" : "sources"}
           </button>
         </div>
       `,
