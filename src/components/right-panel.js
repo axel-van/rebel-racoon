@@ -401,7 +401,9 @@ export function init() {
     el = document.createElement("aside");
     el.id = PANEL_ID;
     el.className = "app-right-panel";
-    el.setAttribute("aria-label", "Drafts and ideas panel");
+    // The aria-label is updated per mode in renderPanel() below — this
+    // is just the initial value for when the panel is hidden.
+    el.setAttribute("aria-label", "Side panel");
     el.hidden = true;
     // Lot 17.d — mount inside #appShell so the panel becomes a grid cell
     // (row 2, column 3). Falls back to <body> if the shell isn't there yet
@@ -1105,6 +1107,9 @@ function renderPanel() {
   const previousMode = el.dataset.rpanelLastMode;
 
   el.dataset.rpanelLastMode = state.mode;
+  // Keep the aside's accessible name in sync with the active mode so
+  // screen reader users can identify the panel from the landmark list.
+  el.setAttribute("aria-label", `${titleText} panel`);
   el.innerHTML = html`
     <div
       class="app-right-panel__resize"
