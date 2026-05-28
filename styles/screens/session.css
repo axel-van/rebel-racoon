@@ -1365,6 +1365,16 @@
   min-width: 0;
 }
 
+/* Lock the natural width of the icon-text buttons in the toolbar
+   (Add / Mention / Send). Without this, the flex container's shrink
+   pressure clips their text mid-word when the composer column is
+   narrow — at narrow widths only the Playbook select's value text
+   should ellipsis-truncate. */
+.session__composer-toolbar > .ap-button,
+.session__composer-toolbar > .assistant-attach > .ap-button {
+  flex-shrink: 0;
+}
+
 /* Color dot inside the context pill — shows the context's accent color
    at a glance. */
 .composer-context__dot {
