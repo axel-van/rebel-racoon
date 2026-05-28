@@ -8,6 +8,7 @@ import {
   addToQueue,
   subscribe as subscribeQueue,
 } from "../schedule-store.js?v=1";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=20";
 
 // Schedule modal (multi-draft).
 //   • 960px wide, two-column body
@@ -101,19 +102,27 @@ export function init() {
     document.body.appendChild(modal);
   }
 
-  scrim.addEventListener("click", () => close());
   modal.addEventListener("click", onClick);
   modal.addEventListener("input", onInput);
   modal.addEventListener("change", onInput);
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && state.open) {
-      close();
-    }
+  // Backdrop click + Escape go through the shared coordinator. `state.open`
+  // is the canonical isOpen — the modal element's `.open` class isn't set
+  // here (visibility is driven by .hidden), so we pass a custom isOpen.
+  bindOverlayDismissal({
+    modal,
+    backdrop: scrim,
+    close,
+    isOpen: () => state.open,
   });
 }
 
 export function open({ posts, onConfirm }) {
   if (!posts || posts.length === 0) return;
+  // Register with the coordinator first so any other overlay currently
+  // up gets closed before we paint. Also snapshots the trigger element so
+  // focus lands back on it after close (FIND-C). MODAL_ID == ROOT_ID since
+  // the coordinator just uses it as a key.
+  requestOpen(ROOT_ID, close);
   const today = new Date();
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
   const slots = optimalSlots(posts);
@@ -153,6 +162,9 @@ function close() {
     unsubscribeQueue = null;
   }
   render();
+  // Tell the coordinator we're gone so it can restore focus to the
+  // trigger element and free its active-overlay slot.
+  notifyClose(ROOT_ID);
 }
 
 // ── Optimal slot picker ───────────────────────────────────────────────
