@@ -61,6 +61,50 @@
    anchored at the bottom) rather than a small block floating over a void.
    `flex: 1 0 auto` claims the free space but never shrinks below the
    hero's own content, so a long conversation still scrolls normally. */
+/* Exit affordance — the welcome-alt flow runs in full-bleed onboarding
+   chrome with no sidebar or topbar, so without this button the user
+   has no obvious way out. Pinned to the wizard aside's top-right,
+   subtle by default, more pronounced on hover. Click runs the same
+   confirm-modal that gates the playbook-editor cancel. */
+.welcome-alt-exit {
+  position: absolute;
+  top: var(--ref-spacing-md);
+  right: var(--ref-spacing-md);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  background: transparent;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--app-radius-pill);
+  color: var(--ref-color-grey-80);
+  font: inherit;
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-medium);
+  cursor: pointer;
+  z-index: var(--app-z-overlay);
+  transition:
+    background 150ms var(--app-ease-out),
+    color 150ms var(--app-ease-out),
+    border-color 150ms var(--app-ease-out);
+}
+
+.welcome-alt-exit:hover,
+.welcome-alt-exit:focus-visible {
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-grey-100);
+  border-color: var(--ref-color-grey-30);
+}
+
+.welcome-alt-exit:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
+}
+
+.welcome-alt-exit i {
+  font-size: 10px;
+}
+
 .welcome-alt-hero {
   position: relative;
   width: 100%;

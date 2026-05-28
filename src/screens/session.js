@@ -753,6 +753,10 @@ function renderAssistantPanelQuestion(session) {
   const isWelcomeAlt = session.id.startsWith("welcome-alt-");
   const heroMarkup = isWelcomeAlt
     ? html`
+        <button type="button" class="welcome-alt-exit" data-welcome-alt-exit aria-label="Exit onboarding">
+          <span>Exit</span>
+          <i class="ap-icon-close" aria-hidden="true"></i>
+        </button>
         <header class="welcome-alt-hero">
           <span class="welcome-alt-hero__orb" aria-hidden="true"></span>
           <div class="welcome-hero welcome-hero--alt">
@@ -763,7 +767,7 @@ function renderAssistantPanelQuestion(session) {
             <h1 class="welcome-hero__title">Let's get to know<br />your brand.</h1>
             <p class="welcome-hero__sub">
               Point me at your website and I'll capture what makes your brand yours — then shape it into a Playbook that
-              keeps every post sounding like you.
+              guides every post toward your voice.
             </p>
             <ul class="welcome-alt-hero__chips" aria-hidden="true">
               <li class="welcome-alt-hero__chip">
@@ -776,7 +780,7 @@ function renderAssistantPanelQuestion(session) {
               </li>
               <li class="welcome-alt-hero__chip">
                 <i class="ap-icon-image" aria-hidden="true"></i>
-                Visual identity
+                Brand colors
               </li>
             </ul>
           </div>
@@ -2555,6 +2559,27 @@ function bindSession(root, session) {
                 import("../components/toast.js?v=20").then(({ showToast }) => showToast("Playbook updated"));
               }
             },
+          });
+        });
+        return;
+      }
+
+      // Welcome-alt exit — only rendered on /session/welcome-alt-* routes.
+      // Always discards any in-progress draft (the mock onboarding state
+      // isn't persisted anywhere worth restoring) and lands the user on
+      // the dashboard. Confirm-modal serves double duty: explicit exit
+      // affordance + unsaved-progress warning.
+      if (event.target.closest("[data-welcome-alt-exit]")) {
+        event.preventDefault();
+        event.stopPropagation();
+        import("../components/confirm-modal.js?v=20").then(({ open }) => {
+          open({
+            title: "Exit onboarding?",
+            body: "Your progress so far will be discarded. You can start over anytime from the dashboard.",
+            confirmLabel: "Exit",
+            cancelLabel: "Stay",
+            danger: true,
+            onConfirm: () => navigate("/"),
           });
         });
         return;
