@@ -26,13 +26,13 @@ const SECTIONS = [
     id: "connectors",
     label: "Connectors",
     icon: "ap-icon-link",
-    sub: "Where Archie pulls source material when drafting posts.",
+    sub: "Where I pull source material from when drafting posts.",
   },
   {
     id: "social",
     label: "Social accounts",
     icon: "ap-icon-multiple-users",
-    sub: "Where Archie can publish on your behalf once a post is approved.",
+    sub: "Where I publish your approved posts.",
   },
 ];
 
@@ -81,7 +81,7 @@ function renderPage(activeId) {
     <div class="settings-view__page">
       <header class="settings-view__head">
         <h1>Settings</h1>
-        <p class="ap-subtitle">Where Archie reads from and writes to.</p>
+        <p class="ap-subtitle">Connect your sources and social accounts.</p>
       </header>
       <div class="settings-view__body">${raw(renderNav(activeId))} ${raw(renderActiveSection(activeId))}</div>
     </div>

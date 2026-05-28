@@ -94,7 +94,7 @@ export function sendMessage(sessionId, text, options = {}) {
     role: "system",
     meta: "Thinking",
     variant: "mermaid",
-    text: "Considering the best next move…",
+    text: "Analyzing your request and sources…",
     open: false,
     status: "loading",
     createdAt: Date.now(),
