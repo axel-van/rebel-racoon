@@ -1,73 +1,12 @@
-/* Clip card — visual parallel of idea-card, used in the right-panel
-   Outputs surface (Clips tab) and anywhere else clips need a card render.
-   Two-piece grammar: signals row + thumbnail + body + actions row. */
+/* Clip card — reuses the rpanel-ideas__card chrome (see right-panel.css)
+   for the outer shell, content zone, Why panel, and footer. This file
+   only owns clip-specific bits: the hero thumbnail with the play icon
+   and the timeframe overlay. */
 
-.clip-card {
-  display: block;
-  border-radius: var(--ref-border-radius-md);
-  transition:
-    background var(--ref-animation-short) var(--app-ease-out),
-    box-shadow var(--ref-animation-short) var(--app-ease-out);
-}
-
-.clip-card--selected {
-  background: var(--ref-color-electric-blue-05);
-}
-
-.clip-card__inner {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-sm) var(--ref-spacing-xs);
-  background: var(--ref-color-white);
-  border: 1px solid var(--ref-color-grey-10);
-  border-radius: var(--ref-border-radius-md);
-}
-
-.clip-card--selected .clip-card__inner {
-  border-color: var(--ref-color-electric-blue-100);
-}
-
-.clip-card__signals {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  flex-wrap: wrap;
-}
-
-.clip-card__check {
-  margin: 0;
-}
-
-/* Kind tag — mirrors .idea-card__kind treatment (UPPERCASE 10px extra-bold)
-   so the Ideas and Clips tabs share the same signal grammar. Mermaid tint
-   marks clips as AI-extracted segments. */
-.clip-card__kind {
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: 10px;
-  font-weight: var(--ref-font-weight-extra-bold);
-  background: var(--ref-color-mermaid-10);
-  color: var(--ref-color-mermaid-gradient-to);
-  border: 1px solid var(--ref-color-mermaid-20);
-}
-
-/* Source attribution in the signals row — replaces the actions-row
-   "From X.mp4" placement so the card opens with provenance up front
-   (matches the layout the user picked). Single-line ellipsis when long. */
-.clip-card__source-attribution {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
-  color: var(--ref-color-grey-60);
-}
-
-/* Thumbnail — hue-gradient, fills card width, 16:9 ratio. Clickable as
-   an Edit affordance (parallels idea-card's title button). */
+/* Thumbnail wrapper button — sits at the top of the card (before the
+   content zone), edge-to-edge, with rounded top corners matching the
+   card's --app-radius-card. Clicking opens the video clips modal (which
+   acts as the preview/edit surface in this prototype). */
 .clip-card__thumb-btn {
   position: relative;
   display: block;
@@ -77,7 +16,8 @@
   border: 0;
   background: transparent;
   cursor: pointer;
-  border-radius: var(--ref-border-radius-sm);
+  border-top-left-radius: var(--app-radius-card);
+  border-top-right-radius: var(--app-radius-card);
   overflow: hidden;
 }
 
@@ -88,7 +28,6 @@
   aspect-ratio: 16 / 9;
   background-size: cover;
   background-position: center;
-  border-radius: var(--ref-border-radius-sm);
 }
 
 .clip-card__thumb-play {
@@ -104,9 +43,6 @@
   transition: transform var(--ref-animation-short) var(--app-ease-out);
 }
 
-/* Subtle scale-up on the play icon so the thumbnail reads as "playable"
-   at hover/focus. Editing stays a kebab-menu action — this thumbnail is
-   the play surface. */
 .clip-card__thumb-btn:hover .clip-card__thumb-play,
 .clip-card__thumb-btn:focus-visible .clip-card__thumb-play {
   transform: scale(1.08);
@@ -114,47 +50,17 @@
 
 .clip-card__thumb-btn:focus-visible {
   outline: 2px solid var(--ref-color-electric-blue-100);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 
-/* Body — same typography contract as idea-card. */
-.clip-card__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-}
-
-.clip-card__title {
-  margin: 0;
-  font-size: var(--ref-font-size-md);
-  line-height: var(--ref-font-line-height-lg);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-}
-
-.clip-card__hook {
-  margin: 0;
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
-  color: var(--ref-color-grey-80);
-}
-
-/* Actions row — timestamps tag on the left, Mention + Draft Post + more
-   menu on the right. Layout mirrors .idea-card__actions for visual
-   parity across the Ideas/Clips tabs. */
-.clip-card__actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ref-spacing-xs);
-  flex-wrap: wrap;
-}
-
-/* Timeframe widget — combines the clip range "<start> → <end>" with the
-   total duration in a DS .ap-tag.orange pill. The bounds use tabular
-   figures so different clips line up; the arrow is rendered with the
-   DS .ap-icon-arrow-right. */
+/* Timeframe overlay — bottom-left of the thumb, "start → end" in white
+   tabular figures + the total duration in a DS .ap-tag.orange pill. The
+   row sits on the dark gradient so the text reads without an extra
+   background. */
 .clip-card__timeframe {
+  position: absolute;
+  left: var(--ref-spacing-xs);
+  bottom: var(--ref-spacing-xs);
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
@@ -166,7 +72,8 @@
   gap: var(--ref-spacing-xxs);
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-80);
+  color: var(--ref-color-white);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .clip-card__timeframe-time {
@@ -175,35 +82,18 @@
 
 .clip-card__timeframe-arrow {
   font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-grey-60);
+  color: var(--ref-color-white);
+  opacity: 0.85;
 }
 
 .clip-card__timeframe-duration {
   font-variant-numeric: tabular-nums;
 }
 
-.clip-card__secondary-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-}
-
-/* More menu — DS .ap-action-dropdown anchored under the kebab button.
-   We only override positioning here ; the DS provides the surface,
-   border, shadow, item layout, hover / focus / red-mode states. */
-.clip-card__more-wrap {
-  position: relative;
-}
-
-.ap-action-dropdown.clip-card__more-menu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + var(--ref-spacing-xxxs));
-  z-index: 10;
-  min-width: 180px;
-  width: auto;
-}
-
-.ap-action-dropdown.clip-card__more-menu[hidden] {
-  display: none;
+/* Clip-specific override for the shared .rpanel-ideas__kind tag: the
+   clip kind doesn't carry the per-kind semantic palette (stat/quote/
+   hook…), so we render it as a quiet grey chip via the DS .ap-tag.grey
+   companion class — no extra background/color rules needed. */
+.clip-card__kind {
+  align-self: flex-start;
 }

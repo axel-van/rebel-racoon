@@ -14,7 +14,7 @@ import {
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=27";
 import { renderPostCard } from "./post-card.js?v=30";
-import { renderClipCard } from "./clip-card.js?v=5";
+import { renderClipCard } from "./clip-card.js?v=6";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=3";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=44";
 import {
@@ -624,6 +624,22 @@ export function init() {
           clipSelection.delete(cid);
         }
       }
+      return;
+    }
+    // Thumbs-up / thumbs-down feedback on a clip card. Mirrors the idea
+    // feedback handler — clicking the same side twice clears the verdict.
+    const clipFeedbackBtn = event.target.closest("[data-rpanel-clip-feedback]");
+    if (clipFeedbackBtn) {
+      const cid = clipFeedbackBtn.dataset.rpanelClipFeedback;
+      const verdict = clipFeedbackBtn.dataset.verdict;
+      toggleClipFeedback(cid, verdict);
+      return;
+    }
+    // "Why this clip" panel — collapse / expand.
+    const clipWhyBtn = event.target.closest("[data-rpanel-clip-why-toggle]");
+    if (clipWhyBtn) {
+      event.preventDefault();
+      toggleClipWhyOpen(clipWhyBtn.dataset.rpanelClipWhyToggle);
       return;
     }
     // Per-card "Mention" — adds the clip to the composer mention pills
@@ -1917,7 +1933,12 @@ function collectAllClips() {
   for (const src of sources) {
     if (!Array.isArray(src.clips) || src.clips.length === 0) continue;
     for (const clip of src.clips) {
-      out.push({ clip, sourceName: src.filename || "Source", sourceId: src.id });
+      out.push({
+        clip,
+        sourceName: src.filename || "Source",
+        sourceKind: src.kind || "Video",
+        sourceId: src.id,
+      });
     }
   }
   return out;
@@ -1938,12 +1959,13 @@ function renderClipsList(entries) {
 
   const sid = activeSessionId();
   const cards = entries
-    .map(({ clip, sourceName }) =>
+    .map(({ clip, sourceName, sourceKind }) =>
       renderClipCard(clip, {
-        selectable: true,
-        isSelected: clipSelection.has(clip.id),
         sourceName,
+        sourceKind,
         sessionId: sid,
+        feedback: getClipFeedback(clip.id),
+        whyOpen: isClipWhyOpen(clip.id),
       }),
     )
     .join("");
@@ -2026,6 +2048,34 @@ function isWhyOpen(ideaId) {
 function toggleWhyOpen(ideaId) {
   ideaWhyOpen.set(ideaId, !isWhyOpen(ideaId));
   renderIdeasBodyOnly();
+}
+
+// Per-clip feedback + Why-open state — mirrors the Idea card pattern.
+// Both states are module-local mocks (no persistence); they survive
+// re-renders during the session but reset on reload.
+const clipFeedback = new Map(); // clipId → 'up' | 'down'
+const clipWhyOpen = new Map(); // clipId → boolean
+
+function getClipFeedback(clipId) {
+  return clipFeedback.get(clipId) || null;
+}
+
+function toggleClipFeedback(clipId, verdict) {
+  if (verdict !== "up" && verdict !== "down") return;
+  const current = clipFeedback.get(clipId);
+  if (current === verdict) clipFeedback.delete(clipId);
+  else clipFeedback.set(clipId, verdict);
+  renderPanel();
+}
+
+function isClipWhyOpen(clipId) {
+  const stored = clipWhyOpen.get(clipId);
+  return stored === undefined ? false : stored;
+}
+
+function toggleClipWhyOpen(clipId) {
+  clipWhyOpen.set(clipId, !isClipWhyOpen(clipId));
+  renderPanel();
 }
 
 function renderIdeaCompact(idea) {
