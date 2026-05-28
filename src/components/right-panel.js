@@ -22,7 +22,7 @@ import {
   subscribeSources,
   updateSourceClips,
   removeSources,
-} from "../sources-stream.js?v=30";
+} from "../sources-stream.js?v=32";
 import { open as openAddSourceModal } from "./add-source-modal.js?v=24";
 import { addMention } from "../composer-mentions.js?v=4";
 import { iconFor } from "../file-kinds.js?v=20";
@@ -676,7 +676,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=146").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=147").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -2140,7 +2140,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=146").then(({ askDraftCountQuestion }) => {
+  import("../screens/session.js?v=147").then(({ askDraftCountQuestion }) => {
     askDraftCountQuestion(sid, ideaId);
   });
 }

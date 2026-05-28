@@ -2,7 +2,7 @@ import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=3";
 import { initTopbar, renderTopbar } from "./components/topbar.js?v=63";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=44";
-import { init as initRightPanel } from "./components/right-panel.js?v=109";
+import { init as initRightPanel } from "./components/right-panel.js?v=110";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=25";
 import { initUserModeChip } from "./components/user-mode-chip.js?v=32";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=23";
@@ -19,7 +19,7 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=13";
 import { renderDashboard } from "./screens/dashboard.js?v=46";
-import { renderSession } from "./screens/session.js?v=146";
+import { renderSession } from "./screens/session.js?v=147";
 import { renderIdeas } from "./screens/ideas.js?v=25";
 import { renderContexts } from "./screens/contexts.js?v=37";
 import { renderSettings } from "./screens/settings.js?v=2";
@@ -37,7 +37,7 @@ import {
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=109";
+} from "./components/right-panel.js?v=110";
 
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb

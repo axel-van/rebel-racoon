@@ -58,7 +58,7 @@ import {
   pushScriptedSource,
   completeScriptedSource,
   updateSourceClips,
-} from "../sources-stream.js?v=30";
+} from "../sources-stream.js?v=32";
 import { showToast } from "../components/toast.js?v=20";
 import {
   openDrafts as openDraftsPanel,
@@ -67,11 +67,11 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=109";
+} from "../components/right-panel.js?v=110";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=1";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=2";
 import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=1";
 
 // Session screen — persistent assistant panel on the left, workspace with
