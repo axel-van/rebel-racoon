@@ -52,6 +52,7 @@ export function renderTopbar(_options = {}) {
   if (!el) return;
   const onSession = isSessionRoute();
   const onPlaybook = isPlaybookRoute();
+  const onWelcomeAlt = onSession && isWelcomeAltSession();
   const rpMode = getRightPanelMode();
   const draftCount = onSession ? latestDraftCount() : 0;
   // Empty conversation = no user turn yet. Used as one input to the
@@ -59,12 +60,38 @@ export function renderTopbar(_options = {}) {
   // can land before the user types if a source got auto-extracted).
   const isEmpty = onSession ? isEmptyConversation() : true;
   const ideaCount = onSession ? sessionIdeaCount() : 0;
+  // Welcome-alt swaps the right-side pills cluster for a single Exit
+  // button — the wizard has no conversation to surface yet, so the
+  // session pills + chat-status toggle would just be dead controls.
+  const rightSide = onWelcomeAlt
+    ? renderWelcomeAltExit()
+    : onSession
+      ? `${renderSessionPills(rpMode, draftCount, isEmpty, ideaCount)}${renderStatusCardToggle()}`
+      : "";
   el.innerHTML = html`
     <div class="app-topbar__left">${raw(onPlaybook ? renderBack() : renderTitle(onSession))}</div>
-    <div class="app-topbar__right">
-      ${raw(onSession ? renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) : "")}
-      ${raw(onSession ? renderStatusCardToggle() : "")}
-    </div>
+    <div class="app-topbar__right">${raw(rightSide)}</div>
+  `;
+}
+
+// Right-side Exit affordance shown during the integrated Playbook
+// creation flow. The first-time onboarding flow has body.onboarding
+// applied, so the topbar is hidden — only the integrated returning-user
+// flow ever sees this button (the welcome-alt wizard chrome itself has
+// no Exit affordance any more; this is the canonical one). Click goes
+// through the session.js confirm-modal that was previously gating the
+// floating wizard Exit button.
+function renderWelcomeAltExit() {
+  return `
+    <button
+      type="button"
+      class="ap-button ghost grey"
+      data-topbar-welcome-alt-exit
+      aria-label="Exit Playbook creation"
+    >
+      Exit
+      <i class="ap-icon-close" aria-hidden="true"></i>
+    </button>
   `;
 }
 
@@ -170,6 +197,23 @@ export function initTopbar() {
       const mode = getRightPanelMode();
       if (mode === "sources") closeRightPanel();
       else openSourcesPanel();
+      return;
+    }
+    // Welcome-alt Exit — open the discard-progress confirm and navigate
+    // back to the dashboard. Pairs with the topbar button rendered by
+    // renderWelcomeAltExit() above. The wizard chrome no longer carries
+    // its own Exit affordance; this is the only entry.
+    if (event.target.closest("[data-topbar-welcome-alt-exit]")) {
+      import("./confirm-modal.js?v=21").then(({ open }) => {
+        open({
+          title: "Exit onboarding?",
+          body: "Your progress so far will be discarded. You can start over anytime from the dashboard.",
+          confirmLabel: "Exit",
+          cancelLabel: "Stay",
+          danger: true,
+          onConfirm: () => navigate("/"),
+        });
+      });
       return;
     }
     if (event.target.closest("[data-topbar-toggle-status-card]")) {
@@ -376,6 +420,19 @@ function isSessionRoute() {
 
 function isPlaybookRoute() {
   return /^\/playbook\//.test(getPath());
+}
+
+// The welcome-alt session hosts the conversational Playbook builder
+// (URL → profile → optional docs). It runs in app-shell chrome only
+// in the integrated entry (returning user creates a Playbook from
+// /contexts); the first-time onboarding hides chrome entirely via the
+// body.onboarding class set in app.js. Either way, the Sources / Ideas
+// / Drafts pills + the chat-status toggle don't apply during creation
+// — there's no thread yet, no drafts, no idea bank. Use this helper to
+// gate session-pill rendering.
+function isWelcomeAltSession() {
+  const sid = currentSessionId();
+  return !!sid && sid.startsWith("welcome-alt-");
 }
 
 // On the Playbook page the topbar leads with a back control to the

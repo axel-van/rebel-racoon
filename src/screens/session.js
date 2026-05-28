@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=58";
+import { renderTopbar } from "../components/topbar.js?v=60";
 import { socialAccounts, chatStarters } from "../mocks.js?v=35";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=29";
@@ -760,15 +760,6 @@ function renderAssistantPanelQuestion(session) {
   const isWelcomeAlt = session.id.startsWith("welcome-alt-");
   const heroMarkup = isWelcomeAlt
     ? html`
-        <button
-          type="button"
-          class="ap-button ghost grey welcome-alt-exit"
-          data-welcome-alt-exit
-          aria-label="Exit onboarding"
-        >
-          Exit
-          <i class="ap-icon-close" aria-hidden="true"></i>
-        </button>
         <header class="welcome-alt-hero">
           <span class="welcome-alt-hero__orb" aria-hidden="true"></span>
           <div class="welcome-hero welcome-hero--alt">
@@ -2580,27 +2571,6 @@ function bindSession(root, session) {
                 import("../components/toast.js?v=20").then(({ showToast }) => showToast("Playbook updated"));
               }
             },
-          });
-        });
-        return;
-      }
-
-      // Welcome-alt exit — only rendered on /session/welcome-alt-* routes.
-      // Always discards any in-progress draft (the mock onboarding state
-      // isn't persisted anywhere worth restoring) and lands the user on
-      // the dashboard. Confirm-modal serves double duty: explicit exit
-      // affordance + unsaved-progress warning.
-      if (event.target.closest("[data-welcome-alt-exit]")) {
-        event.preventDefault();
-        event.stopPropagation();
-        import("../components/confirm-modal.js?v=20").then(({ open }) => {
-          open({
-            title: "Exit onboarding?",
-            body: "Your progress so far will be discarded. You can start over anytime from the dashboard.",
-            confirmLabel: "Exit",
-            cancelLabel: "Stay",
-            danger: true,
-            onConfirm: () => navigate("/"),
           });
         });
         return;

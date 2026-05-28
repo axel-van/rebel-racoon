@@ -61,23 +61,9 @@
    anchored at the bottom) rather than a small block floating over a void.
    `flex: 1 0 auto` claims the free space but never shrinks below the
    hero's own content, so a long conversation still scrolls normally. */
-/* Exit affordance — the welcome-alt flow runs in full-bleed onboarding
-   chrome with no sidebar or topbar, so without this button the user
-   has no obvious way out. The button itself is a stock DS .ap-button
-   .ghost.grey — only the positioning (pin to the wizard aside's
-   top-right) is application-specific. The :has() scope establishes
-   the positioning context on the aside only when an Exit button is
-   rendered. */
-.session__assistant:has(.welcome-alt-exit) {
-  position: relative;
-}
-
-.welcome-alt-exit {
-  position: absolute;
-  top: var(--ref-spacing-md);
-  right: var(--ref-spacing-md);
-  z-index: var(--app-z-overlay);
-}
+/* The welcome-alt Exit affordance now lives in the topbar (see
+   topbar.js renderWelcomeAltExit), so the wizard chrome no longer
+   needs the floating button + its positioning context. */
 
 .welcome-alt-hero {
   position: relative;
