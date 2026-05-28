@@ -24,7 +24,7 @@ import {
   openSources as openSourcesPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=111";
+} from "./right-panel.js?v=112";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=36";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=32";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=29";

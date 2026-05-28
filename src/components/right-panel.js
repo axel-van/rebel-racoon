@@ -628,18 +628,21 @@ export function init() {
     }
     // Thumbs-up / thumbs-down feedback on a clip card. Mirrors the idea
     // feedback handler — clicking the same side twice clears the verdict.
+    // In-place DOM update so the scroll position of the clips list is
+    // preserved (full re-render would reset it).
     const clipFeedbackBtn = event.target.closest("[data-rpanel-clip-feedback]");
     if (clipFeedbackBtn) {
       const cid = clipFeedbackBtn.dataset.rpanelClipFeedback;
       const verdict = clipFeedbackBtn.dataset.verdict;
-      toggleClipFeedback(cid, verdict);
+      toggleClipFeedbackInPlace(cid, verdict, clipFeedbackBtn);
       return;
     }
-    // "Why this clip" panel — collapse / expand.
+    // "Why this clip" panel — collapse / expand. Toggle the section in
+    // place so the user's scroll position survives.
     const clipWhyBtn = event.target.closest("[data-rpanel-clip-why-toggle]");
     if (clipWhyBtn) {
       event.preventDefault();
-      toggleClipWhyOpen(clipWhyBtn.dataset.rpanelClipWhyToggle);
+      toggleClipWhyInPlace(clipWhyBtn.dataset.rpanelClipWhyToggle, clipWhyBtn);
       return;
     }
     // Per-card "Mention" — adds the clip to the composer mention pills
@@ -2051,8 +2054,11 @@ function toggleWhyOpen(ideaId) {
 }
 
 // Per-clip feedback + Why-open state — mirrors the Idea card pattern.
-// Both states are module-local mocks (no persistence); they survive
-// re-renders during the session but reset on reload.
+// Both states are module-local mocks (no persistence). State Maps
+// survive re-renders so a future full repaint reflects the user's
+// choices; the in-place toggle helpers below mutate the DOM directly
+// to keep the clips list's scroll position when the user is reacting
+// in the middle of a long list.
 const clipFeedback = new Map(); // clipId → 'up' | 'down'
 const clipWhyOpen = new Map(); // clipId → boolean
 
@@ -2060,22 +2066,50 @@ function getClipFeedback(clipId) {
   return clipFeedback.get(clipId) || null;
 }
 
-function toggleClipFeedback(clipId, verdict) {
-  if (verdict !== "up" && verdict !== "down") return;
-  const current = clipFeedback.get(clipId);
-  if (current === verdict) clipFeedback.delete(clipId);
-  else clipFeedback.set(clipId, verdict);
-  renderPanel();
-}
-
 function isClipWhyOpen(clipId) {
   const stored = clipWhyOpen.get(clipId);
   return stored === undefined ? false : stored;
 }
 
-function toggleClipWhyOpen(clipId) {
-  clipWhyOpen.set(clipId, !isClipWhyOpen(clipId));
-  renderPanel();
+// In-place feedback toggle — flips state Map AND updates both thumb
+// buttons on the same card without re-rendering. Avoids the scroll
+// jump a full panel re-render would cause.
+function toggleClipFeedbackInPlace(clipId, verdict, clickedBtn) {
+  if (verdict !== "up" && verdict !== "down") return;
+  const current = clipFeedback.get(clipId);
+  const nextVerdict = current === verdict ? null : verdict;
+  if (nextVerdict === null) clipFeedback.delete(clipId);
+  else clipFeedback.set(clipId, nextVerdict);
+
+  const card = clickedBtn.closest(".clip-card");
+  if (!card) return;
+  const buttons = card.querySelectorAll("[data-rpanel-clip-feedback]");
+  for (const btn of buttons) {
+    const side = btn.dataset.verdict;
+    const isActive = nextVerdict === side;
+    btn.classList.toggle("is-active", isActive);
+    btn.setAttribute("aria-pressed", String(isActive));
+  }
+}
+
+// In-place "Why this clip" toggle — flips state Map AND mutates the
+// section's open attribute, body hidden flag, chevron icon class, and
+// aria-expanded. No re-render → scroll stays put.
+function toggleClipWhyInPlace(clipId, headBtn) {
+  const next = !isClipWhyOpen(clipId);
+  clipWhyOpen.set(clipId, next);
+
+  const section = headBtn.closest(".rpanel-ideas__why");
+  if (section) section.setAttribute("data-why-open", next ? "true" : "false");
+  headBtn.setAttribute("aria-expanded", next ? "true" : "false");
+  const bodyId = headBtn.getAttribute("aria-controls");
+  const body = bodyId ? document.getElementById(bodyId) : null;
+  if (body) body.hidden = !next;
+  const chevron = headBtn.querySelector(".rpanel-ideas__why-chevron");
+  if (chevron) {
+    chevron.classList.toggle("ap-icon-chevron-down", !next);
+    chevron.classList.toggle("ap-icon-chevron-up", next);
+  }
 }
 
 function renderIdeaCompact(idea) {
