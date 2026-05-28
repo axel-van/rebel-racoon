@@ -49,20 +49,18 @@ let modal;
 let bodyEl;
 let timelineEl;
 let footEl;
-let toolbarEl;
 let initialized = false;
 
 let currentSource = null;
 let clips = []; // [{ id, start, end, title, summary, why, network, tags, hue }, …]
 let selected = new Set(); // clip ids
 let editingId = null; // clip id currently in edit mode, or null
-let regenerating = false;
 
 // When the modal is opened with a specific `editingClipId`, we run in
 // single-clip mode: the body shows only that clip's editor pane (no
-// browse list, no timeline, no toolbar, no bulk-action footer), and
-// the modal closes automatically after Save / Cancel / Delete. Set in
-// `open()` from `callbacks.editingClipId`, cleared in `close()`.
+// browse list, no timeline, no bulk-action footer), and the modal
+// closes automatically after Save / Cancel / Delete. Set in `open()`
+// from `callbacks.editingClipId`, cleared in `close()`.
 let singleClipMode = false;
 
 // Edit-mode draft (live values while the user is editing — committed on Save).
@@ -127,8 +125,6 @@ const SHELL_HTML = `
     </div>
   </div>
 
-  <div class="video-clips-modal__toolbar" id="videoClipsToolbar"></div>
-
   <div class="ap-dialog-content video-clips-modal__body" id="videoClipsBody"></div>
 
   <div class="ap-dialog-footer video-clips-modal__foot" id="videoClipsFoot"></div>
@@ -186,29 +182,6 @@ function renderTimeline() {
       <span>${fmtTime(duration)}</span>
     `;
   }
-}
-
-// ── Render: toolbar ──────────────────────────────────────────────────
-
-function renderToolbar() {
-  if (!toolbarEl) return;
-  toolbarEl.innerHTML = `
-    <div class="video-clips-modal__bulk">
-      <button class="vc-link" data-vc-action="select-all" ${selected.size === clips.length ? "disabled" : ""}>Select all</button>
-      <span class="video-clips-modal__sep"></span>
-      <button class="vc-link" data-vc-action="clear" ${selected.size === 0 ? "disabled" : ""}>Clear</button>
-    </div>
-    <div class="video-clips-modal__toolbar-actions">
-      <button class="ap-button stroked grey" data-vc-action="add-clip">
-        <i class="ap-icon-plus"></i>
-        <span>Add clip</span>
-      </button>
-      <button class="ap-button stroked grey video-clips-modal__regen${regenerating ? " is-loading" : ""}" data-vc-action="regen" ${regenerating ? "disabled" : ""}>
-        <i class="ap-icon-refresh"></i>
-        <span>${regenerating ? "Suggesting more…" : "Suggest more"}</span>
-      </button>
-    </div>
-  `;
 }
 
 // ── Render: footer ───────────────────────────────────────────────────
@@ -510,17 +483,15 @@ function renderBody() {
 
 function render() {
   // Single-clip mode strips the multi-clip surfaces: the timeline at
-  // the top and the bulk toolbar. The footer stays visible but switches
-  // to the edit CTAs (Delete / Cancel / Save changes) instead of the
-  // "Draft posts from N clips" bulk action.
+  // the top. The footer stays visible but switches to the edit CTAs
+  // (Delete / Cancel / Save changes) instead of the "Draft posts from
+  // N clips" bulk action.
   const wrapTimeline = document.getElementById("videoClipsTimeline");
   if (wrapTimeline) wrapTimeline.hidden = singleClipMode;
-  if (toolbarEl) toolbarEl.hidden = singleClipMode;
   if (footEl) footEl.hidden = false;
   if (singleClipMode) renderFooterEdit();
   else {
     renderTimeline();
-    renderToolbar();
     renderFooter();
   }
   renderBody();
@@ -582,35 +553,6 @@ function onModalClick(event) {
     // Re-render the editor pane only — the rest of the modal is unaffected.
     // Cheap to just re-render the body; cursor isn't in an editable field.
     renderBody();
-    return;
-  }
-
-  if (action === "select-all") {
-    selected = new Set(clips.map((c) => c.id));
-    render();
-    return;
-  }
-
-  if (action === "clear") {
-    selected = new Set();
-    render();
-    return;
-  }
-
-  if (action === "regen") {
-    if (regenerating) return;
-    regenerating = true;
-    renderToolbar();
-    showToast("Suggesting new clips…", { duration: 1100 });
-    setTimeout(() => {
-      regenerating = false;
-      renderToolbar();
-    }, 1100);
-    return;
-  }
-
-  if (action === "add-clip") {
-    addManualClip();
     return;
   }
 
@@ -926,41 +868,6 @@ function deleteClip(clipId) {
   render();
 }
 
-function addManualClip() {
-  const duration = currentSource?.durationSec || 1200;
-  const sorted = [...clips].sort((a, b) => a.start - b.start);
-
-  // Find a 35s+ gap or fall back to the middle of the source.
-  let start = Math.floor(duration / 2 - 15);
-  let prevEnd = 0;
-  for (const c of sorted) {
-    if (c.start - prevEnd >= 35) {
-      start = prevEnd + 5;
-      break;
-    }
-    prevEnd = c.end;
-  }
-  if (duration - prevEnd >= 35) start = prevEnd + 5;
-  start = clamp(start, 0, duration - 30);
-
-  const id = "clip_" + Math.random().toString(36).slice(2, 8);
-  const fresh = {
-    id,
-    start,
-    end: start + 30,
-    title: "",
-    summary: "",
-    why: "",
-    network: "linkedin",
-    tags: [],
-    hue: Math.floor(Math.random() * 360),
-  };
-  clips = [...clips, fresh];
-  selected.add(id);
-  enterEdit(id);
-  notifySave();
-}
-
 function notifySave() {
   if (typeof onSaveCallback === "function" && currentSource) {
     onSaveCallback(
@@ -994,7 +901,6 @@ export function init() {
   modal = document.getElementById("videoClipsModal");
   bodyEl = document.getElementById("videoClipsBody");
   timelineEl = document.getElementById("videoClipsTimelineBar");
-  toolbarEl = document.getElementById("videoClipsToolbar");
   footEl = document.getElementById("videoClipsFoot");
 
   document.getElementById("videoClipsClose").addEventListener("click", () => close());
@@ -1033,7 +939,6 @@ export function open(source, callbacks = {}) {
   editingId = null;
   draft = null;
   draftPlayhead = 0;
-  regenerating = false;
   singleClipMode = false;
   onUseCallback = typeof callbacks.onUseClips === "function" ? callbacks.onUseClips : null;
   onSaveCallback = typeof callbacks.onSaveClips === "function" ? callbacks.onSaveClips : null;
@@ -1097,7 +1002,6 @@ function close() {
   editingId = null;
   draft = null;
   draftPlayhead = 0;
-  regenerating = false;
   dragState = null;
   singleClipMode = false;
   onUseCallback = null;
@@ -1107,7 +1011,6 @@ function close() {
   // open() in normal mode shows them.
   const wrapTimeline = document.getElementById("videoClipsTimeline");
   if (wrapTimeline) wrapTimeline.hidden = false;
-  if (toolbarEl) toolbarEl.hidden = false;
   if (footEl) footEl.hidden = false;
 
   notifyClose(MODAL_ID);
