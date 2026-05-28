@@ -14,7 +14,11 @@
 
 import { html, raw, escapeHtml as esc } from "./utils.js?v=20";
 
-const LANGUAGE_OPTIONS = ["English", "Français", "Español", "Deutsch", "Italiano", "Português"];
+// Archie's UI and AI generation are English-only today. Other languages
+// were removed (audit B8) to keep the Playbook field honest — re-add them
+// here AND in components/right-panel.js LANGUAGE_OPTIONS when multilingual
+// generation ships.
+const LANGUAGE_OPTIONS = ["English"];
 
 const STRATEGY_FIELDS = [
   {
