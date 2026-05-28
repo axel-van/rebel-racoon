@@ -407,11 +407,11 @@ function renderComposer(attachedContext, session, selectable) {
               <button
                 type="button"
                 class="ap-button stroked grey assistant-attach__trigger"
-                aria-label="Attach a source"
+                aria-label="Add a source"
                 data-assistant-attach-toggle
               >
-                <i class="ap-icon-paper-clip"></i>
-                <span>Attach a source</span>
+                <i class="ap-icon-plus"></i>
+                <span>Add</span>
               </button>
               <div class="ap-action-dropdown assistant-attach__menu" data-assistant-attach-menu hidden role="menu">
                 <button type="button" class="ap-action-dropdown-item" data-add-source="pdf" role="menuitem">
@@ -977,22 +977,28 @@ function askProfileQuestion(sessionId, ideaId, { count = 1, onBack = null } = {}
 // user lands with posts on the surface they actually want to publish to.
 export function askDraftCountQuestion(sessionId, ideaId) {
   postAssistantMessage(sessionId, "How many drafts should I generate?");
+  const advance = (count) => {
+    // Clamp to a reasonable range — single-digit + custom typed numbers
+    // can land outside it (0, negative, NaN). 1 floors any nonsense.
+    const n = Math.max(1, Math.min(20, Math.floor(Number(count) || 1)));
+    askProfileQuestion(sessionId, ideaId, {
+      count: n,
+      // ← Back returns to the count picker so the user can change their mind.
+      onBack: () => askDraftCountQuestion(sessionId, ideaId),
+    });
+  };
   inlineQuestion.ask(sessionId, {
     title: "How many drafts from this idea?",
     stepLabel: "Drafts",
+    skipLabel: "Cancel",
     items: [
       { value: 1, label: "1 draft", caption: "A single angle to refine." },
       { value: 3, label: "3 drafts", caption: "A few variations to compare." },
       { value: 5, label: "5 drafts", caption: "A full batch to pick from." },
     ],
-    onPick: (count) => {
-      const n = Number(count) || 1;
-      askProfileQuestion(sessionId, ideaId, {
-        count: n,
-        // ← Back returns to the count picker so the user can change their mind.
-        onBack: () => askDraftCountQuestion(sessionId, ideaId),
-      });
-    },
+    customPlaceholder: "Or type any number (1–20)",
+    onPick: advance,
+    onCustom: advance,
     onSkip: () => {},
   });
 }

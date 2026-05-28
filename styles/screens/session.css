@@ -464,7 +464,10 @@
    (Averta Bold 12px / line-height 16px, color grey-100 #344563). */
 .empty-chat__starter-label {
   margin-top: var(--ref-spacing-sm);
-  align-self: flex-start;
+  /* Center within the empty-chat column so it sits in the same 651px
+     box as the starter grid below — using `align-self: flex-start`
+     anchored to the parent's left edge instead of the grid's. */
+  align-self: center;
   width: 100%;
   max-width: 651px;
   text-align: left;
