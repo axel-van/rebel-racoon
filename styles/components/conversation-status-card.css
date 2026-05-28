@@ -150,10 +150,25 @@
   transition: background-color var(--ref-animation-short) var(--app-ease-out);
 }
 
+/* Hover treatment shared across every clickable row (sources, ideas,
+   drafts). Soft electric-blue tint + label flips to electric-blue-100
+   so interactivity reads at a glance. The source variant adds an icon
+   swap on top (file → copy) to signal its mention-shortcut role; the
+   ideas/drafts rows keep their default icon since they're navigation. */
 .conversation-status-card__row:hover,
 .conversation-status-card__row:focus-visible {
-  background: var(--ref-color-grey-10);
+  background: var(--ref-color-electric-blue-10);
   outline: none;
+}
+
+.conversation-status-card__row:hover .conversation-status-card__row-label,
+.conversation-status-card__row:focus-visible .conversation-status-card__row-label {
+  color: var(--ref-color-electric-blue-100);
+}
+
+.conversation-status-card__row:hover > i,
+.conversation-status-card__row:focus-visible > i {
+  color: var(--ref-color-electric-blue-100);
 }
 
 /* Static row variant — non-clickable, used for Drafts / Outputs when
@@ -214,18 +229,9 @@
   color: var(--ref-color-electric-blue-100);
 }
 
-/* Mention-on-hover affordance: row background flips to a soft electric-
-   blue tint, and label + copy icon to electric-blue-100. Signals "this
-   row is a mention shortcut", not a navigation row. */
-.conversation-status-card__source:hover,
-.conversation-status-card__source:focus-visible {
-  background: var(--ref-color-electric-blue-10);
-}
-
-.conversation-status-card__source:hover .conversation-status-card__row-label,
-.conversation-status-card__source:focus-visible .conversation-status-card__row-label {
-  color: var(--ref-color-electric-blue-100);
-}
+/* Source-specific hover detail — the trailing copy icon flips to
+   electric-blue-100 to reinforce the mention-shortcut affordance. The
+   shared row hover already handles bg + label flip (see __row:hover). */
 
 /* ── Composer mention pills ──────────────────────────────────────
    Lives INSIDE `.session__composer-input` (the bordered white box
