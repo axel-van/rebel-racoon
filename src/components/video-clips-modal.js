@@ -1019,11 +1019,13 @@ export function open(source, callbacks = {}) {
     }
   }
 
-  // Head info — file-kind badge + filename + clip stats. In single-clip
-  // mode the subtitle drops the multi-clip framing ("N clips worth
-  // posting…") for a quieter "Edit clip" cue.
+  // Head info — file-kind badge + title + filename. The title flips to
+  // "Edit clip" in single-clip mode (matches the action that opened the
+  // modal); subtitle drops the multi-clip framing for a quiet filename.
   const kindEl = document.getElementById("videoClipsKind");
   if (kindEl) kindEl.textContent = (source.ext || "MP4").toUpperCase();
+  const titleEl = document.getElementById("videoClipsTitle");
+  if (titleEl) titleEl.textContent = singleClipMode ? "Edit clip" : "Suggested clips";
   const subEl = document.getElementById("videoClipsSub");
   if (subEl) {
     if (singleClipMode) {
