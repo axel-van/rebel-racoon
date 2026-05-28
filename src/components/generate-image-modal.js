@@ -204,21 +204,27 @@ function renderBody() {
     `;
 
     footer.hidden = false;
+    const promptValid = promptText.trim().length > 0;
     footer.innerHTML = `
       <div class="ap-dialog-footer-right">
         <button type="button" class="ap-button transparent grey" id="genImageCancel">Cancel</button>
-        <button type="button" class="ap-button primary orange" id="genImageGenerate">
+        <button type="button" class="ap-button primary orange" id="genImageGenerate"${promptValid ? "" : " disabled"}>
           <i class="ap-icon-sparkles"></i>
           <span>Generate image</span>
         </button>
       </div>
     `;
 
-    // Keep the textarea synced to module state as the user types.
+    // Keep the textarea synced to module state as the user types — and
+    // gate the Generate button on a non-empty prompt so the user can
+    // see the affordance for "you need to write something" without
+    // having to click and see nothing happen.
     const ta = body.querySelector("#genImagePrompt");
-    if (ta) {
+    const generateBtn = footer.querySelector("#genImageGenerate");
+    if (ta && generateBtn) {
       ta.addEventListener("input", () => {
         promptText = ta.value;
+        generateBtn.toggleAttribute("disabled", promptText.trim().length === 0);
       });
     }
   } else if (genState === "loading") {
@@ -413,12 +419,12 @@ function close() {
   // Reset ephemeral state — next open() starts fresh.
   genState = "idle";
   promptText = "";
+  lastError = null;
   promptLoading = false;
   styleKey = null;
   moodKey = null;
   imageUrl = null;
   currentPostId = null;
   onUseCallback = null;
-  lastError = null;
   notifyClose(MODAL_ID);
 }
