@@ -50,7 +50,7 @@ const HTML = `
 
     <div class="ap-form-field">
       <label for="feedbackText">What's on your mind? <span class="bug-field__required">*</span></label>
-      <textarea id="feedbackText" class="feedback-modal__textarea" rows="5" placeholder="What worked, what didn't, what's missing…" aria-describedby="feedbackTextError"></textarea>
+      <textarea id="feedbackText" class="feedback-modal__textarea" rows="5" required placeholder="What worked, what didn't, what's missing…" aria-describedby="feedbackTextError"></textarea>
       <p class="form-field-error" id="feedbackTextError" role="alert" hidden>Write something before sending.</p>
     </div>
   </div>
