@@ -23,7 +23,7 @@ import {
   updateSourceClips,
   removeSources,
 } from "../sources-stream.js?v=30";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=22";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=24";
 import { addMention } from "../composer-mentions.js?v=3";
 import { iconFor } from "../file-kinds.js?v=20";
 
@@ -32,8 +32,8 @@ import { iconFor } from "../file-kinds.js?v=20";
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
 import { open as openScheduleModal } from "./schedule-modal.js?v=24";
-import { open as openGenerateImageModal } from "./generate-image-modal.js?v=22";
-import { open as openConfirmModal } from "./confirm-modal.js?v=21";
+import { open as openGenerateImageModal } from "./generate-image-modal.js?v=24";
+import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
 // the session workspace, hosts two modes:

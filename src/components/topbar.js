@@ -24,7 +24,7 @@ import {
   subscribeVisibility as subscribeStatusCardVisibility,
 } from "./conversation-status-card.js?v=13";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
-import { open as openRenameModal } from "./rename-modal.js?v=1";
+import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=29";
 
 // The playbook/context pill now lives in the composer (session.js
@@ -210,7 +210,7 @@ export function initTopbar() {
     // renderWelcomeAltExit() above. The wizard chrome no longer carries
     // its own Exit affordance; this is the only entry.
     if (event.target.closest("[data-topbar-welcome-alt-exit]")) {
-      import("./confirm-modal.js?v=21").then(({ open }) => {
+      import("./confirm-modal.js?v=22").then(({ open }) => {
         open({
           title: "Exit onboarding?",
           body: "Your progress so far will be discarded. You can start over anytime from the dashboard.",

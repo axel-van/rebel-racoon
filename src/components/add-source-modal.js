@@ -79,7 +79,7 @@ const HTML = `
   aria-hidden="true"
 >
   <div class="ap-dialog-header">
-    <h2 class="ap-dialog-title" id="addSourceTitle">Add a source</h2>
+    <span class="ap-dialog-title" id="addSourceTitle">Add a source</span>
   </div>
   <button class="ap-dialog-close" type="button" id="addSourceClose" aria-label="Close">
     <i class="ap-icon-close"></i>

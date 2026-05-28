@@ -35,7 +35,7 @@ const HTML = `
   aria-hidden="true"
 >
   <div class="ap-dialog-header">
-    <h2 class="ap-dialog-title" id="confirmTitle">Confirm</h2>
+    <span class="ap-dialog-title" id="confirmTitle">Confirm</span>
   </div>
   <button class="ap-dialog-close" type="button" id="confirmClose" aria-label="Close">
     <i class="ap-icon-close"></i>

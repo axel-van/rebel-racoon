@@ -1,9 +1,9 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate, getPath } from "../router.js?v=30";
-import { open as openBugReportModal } from "./bug-report-modal.js?v=21";
-import { open as openFeedbackModal } from "./feedback-modal.js?v=24";
-import { open as openConfirmModal } from "./confirm-modal.js?v=20";
-import { open as openRenameModal } from "./rename-modal.js?v=1";
+import { open as openBugReportModal } from "./bug-report-modal.js?v=23";
+import { open as openFeedbackModal } from "./feedback-modal.js?v=26";
+import { open as openConfirmModal } from "./confirm-modal.js?v=22";
+import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { open as openSearchModal } from "./search-modal.js?v=3";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 import {

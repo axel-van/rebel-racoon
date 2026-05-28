@@ -48,11 +48,11 @@ import {
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=24";
-import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=22";
+import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=24";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=1";
 import { startClipExtraction } from "../components/clip-extraction-loader.js?v=2";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=23";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=22";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=24";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=24";
 import {
   classifyFile,
   startFileUpload,
@@ -2561,7 +2561,7 @@ function bindSession(root, session) {
         event.preventDefault();
         event.stopPropagation();
         const dirty = playbookEditor.isDirty(session.id);
-        import("../components/confirm-modal.js?v=20").then(({ open }) => {
+        import("../components/confirm-modal.js?v=22").then(({ open }) => {
           open({
             title: "Save changes?",
             body: dirty
@@ -2586,7 +2586,7 @@ function bindSession(root, session) {
         event.preventDefault();
         event.stopPropagation();
         const dirty = playbookEditor.isDirty(session.id);
-        import("../components/confirm-modal.js?v=20").then(({ open }) => {
+        import("../components/confirm-modal.js?v=22").then(({ open }) => {
           open({
             title: dirty ? "Discard changes?" : "Close editor?",
             body: dirty

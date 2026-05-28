@@ -49,8 +49,8 @@ const HTML = `
   aria-hidden="true"
 >
   <div class="ap-dialog-header">
-    <h2 class="ap-dialog-title" id="bugReportTitle">Report a bug</h2>
-    <p class="ap-dialog-subtitle" id="bugReportDescription">Share what happened. Archie attaches the screen context.</p>
+    <span class="ap-dialog-title" id="bugReportTitle">Report a bug</span>
+    <span class="ap-dialog-subtitle" id="bugReportDescription">Share what happened. Archie attaches the screen context.</span>
   </div>
   <button class="ap-dialog-close" type="button" id="closeBugReportBtn" aria-label="Close">
     <i class="ap-icon-close"></i>

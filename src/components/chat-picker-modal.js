@@ -36,8 +36,8 @@ const HTML = `
   aria-hidden="true"
 >
   <div class="ap-dialog-header">
-    <h2 class="ap-dialog-title" id="chatPickerTitle">Where should this draft go?</h2>
-    <p class="ap-dialog-subtitle">Drafts live inside chats. Pick one, or start fresh.</p>
+    <span class="ap-dialog-title" id="chatPickerTitle">Where should this draft go?</span>
+    <span class="ap-dialog-subtitle">Drafts live inside chats. Pick one, or start fresh.</span>
   </div>
   <button class="ap-dialog-close" type="button" id="chatPickerClose" aria-label="Close">
     <i class="ap-icon-close"></i>

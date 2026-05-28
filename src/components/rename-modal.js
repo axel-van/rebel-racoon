@@ -34,7 +34,7 @@ const HTML = `
   aria-hidden="true"
 >
   <div class="ap-dialog-header">
-    <h2 class="ap-dialog-title" id="renameTitle">Rename</h2>
+    <span class="ap-dialog-title" id="renameTitle">Rename</span>
   </div>
   <button class="ap-dialog-close" type="button" id="renameClose" aria-label="Close">
     <i class="ap-icon-close"></i>

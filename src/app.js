@@ -5,14 +5,14 @@ import { initSidebar, renderSidebar } from "./components/sidebar.js?v=44";
 import { init as initRightPanel } from "./components/right-panel.js?v=108";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=24";
 import { initUserModeChip } from "./components/user-mode-chip.js?v=32";
-import { init as initBugReportModal } from "./components/bug-report-modal.js?v=22";
-import { init as initFeedbackModal } from "./components/feedback-modal.js?v=25";
-import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=23";
+import { init as initBugReportModal } from "./components/bug-report-modal.js?v=23";
+import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
+import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=24";
 import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=2";
-import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=23";
-import { init as initAddSourceModal } from "./components/add-source-modal.js?v=23";
-import { init as initConfirmModal } from "./components/confirm-modal.js?v=21";
-import { init as initRenameModal } from "./components/rename-modal.js?v=1";
+import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=24";
+import { init as initAddSourceModal } from "./components/add-source-modal.js?v=24";
+import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
+import { init as initRenameModal } from "./components/rename-modal.js?v=2";
 import { init as initSearchModal } from "./components/search-modal.js?v=3";
 import {
   init as initConversationStatusCard,
@@ -26,11 +26,11 @@ import { renderSettings } from "./screens/settings.js?v=2";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=13";
 import { renderPlaybook } from "./screens/playbook.js?v=2";
-import * as __capAddSource from "./components/add-source-modal.js?v=23";
-import * as __capGenImage from "./components/generate-image-modal.js?v=23";
-import * as __capBug from "./components/bug-report-modal.js?v=22";
-import * as __capFeedback from "./components/feedback-modal.js?v=25";
-import * as __capChatPicker from "./components/chat-picker-modal.js?v=23";
+import * as __capAddSource from "./components/add-source-modal.js?v=24";
+import * as __capGenImage from "./components/generate-image-modal.js?v=24";
+import * as __capBug from "./components/bug-report-modal.js?v=23";
+import * as __capFeedback from "./components/feedback-modal.js?v=26";
+import * as __capChatPicker from "./components/chat-picker-modal.js?v=24";
 import * as __capSearch from "./components/search-modal.js?v=3";
 import {
   openDrafts as __capOpenDrafts,

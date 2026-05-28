@@ -500,7 +500,7 @@ function onModalClick(event) {
     // without a confirm has no recovery path. Gate on confirm-modal —
     // same pattern as bulk-delete drafts in right-panel.
     const id = editingId;
-    import("./confirm-modal.js?v=21").then(({ open }) => {
+    import("./confirm-modal.js?v=22").then(({ open }) => {
       open({
         title: "Delete this clip?",
         body: "This removes the clip from the editor. You'll need to re-extract or re-create it manually.",
