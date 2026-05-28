@@ -258,7 +258,13 @@ function renderAssistantPanel(session, attachedContext) {
   const composerMarkup = renderComposer(attachedContext, session, isEmptyConversation);
   return html`
     <aside class="session__assistant" aria-label="Assistant panel">
-      <div class="session__assistant-thread" id="assistantThread" data-assistant-thread>
+      <div
+        class="session__assistant-thread"
+        id="assistantThread"
+        data-assistant-thread
+        aria-live="polite"
+        aria-atomic="false"
+      >
         ${isEmptyConversation ? raw(renderEmptyHero(session.id, composerMarkup)) : raw(renderThread(thread))}
       </div>
       ${isEmptyConversation ? "" : raw(composerMarkup)}
