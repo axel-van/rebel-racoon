@@ -20,6 +20,18 @@
   overflow: hidden;
 }
 
+/* New-chat empty state — paint the same soft warm + cool gradient
+   canvas the welcome-alt onboarding uses (cf. .welcome-screen__bg
+   recipe further down). Scoped via :has(.empty-chat) so it only
+   appears before the first user turn lands and the hero is on
+   screen. */
+.session__assistant:has(.empty-chat) {
+  background:
+    radial-gradient(ellipse 60% 50% at 100% 0%, var(--ref-color-orange-10) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 0% 100%, var(--ref-color-electric-blue-05) 0%, transparent 70%),
+    var(--app-surface);
+}
+
 /* Chat thread + composer share a 740px max-width centered column, matching
    the handoff Chat.jsx layout. The wrappers themselves stay full-width (so
    the page background and the dropzone outline cover everything) ; the
