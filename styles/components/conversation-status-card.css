@@ -214,9 +214,14 @@
   color: var(--ref-color-electric-blue-100);
 }
 
-/* Mention-on-hover affordance: label also flips to electric-blue, in
-   sync with the copy icon — signals "this row is a mention shortcut",
-   not a navigation row. */
+/* Mention-on-hover affordance: row background flips to a soft electric-
+   blue tint, and label + copy icon to electric-blue-100. Signals "this
+   row is a mention shortcut", not a navigation row. */
+.conversation-status-card__source:hover,
+.conversation-status-card__source:focus-visible {
+  background: var(--ref-color-electric-blue-10);
+}
+
 .conversation-status-card__source:hover .conversation-status-card__row-label,
 .conversation-status-card__source:focus-visible .conversation-status-card__row-label {
   color: var(--ref-color-electric-blue-100);

@@ -487,15 +487,38 @@ span.chat-bubble-choice-chip {
   color: var(--sys-text-color-default);
 }
 
-.drafts-card__nets {
+/* Profile chips — one per unique target network, showing the connected
+   social account's handle alongside the platform glyph. Sits between
+   the title and the "From <idea>" subtitle so the card answers
+   "where will these drafts go?" at a glance. */
+.drafts-card__profiles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  min-width: 0;
+}
+
+.drafts-card__profile {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+  font: var(--sys-text-style-caption-weight) var(--sys-text-style-caption-size) /
+    var(--sys-text-style-caption-line-height) var(--sys-text-style-caption-font-family);
+  color: var(--sys-text-color-light);
 }
 
-.drafts-card__nets > i {
+.drafts-card__profile > i {
   font-size: var(--sys-icon-css-xs);
   color: var(--sys-text-color-light);
+  flex-shrink: 0;
+}
+
+.drafts-card__profile-handle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Subtitle: "From '<lead idea title>'". Single line, truncates with

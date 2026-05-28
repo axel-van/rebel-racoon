@@ -1717,8 +1717,22 @@ function renderDraftTurn(message) {
   const drafts = message.drafts || [];
   const count = message.count ?? drafts.length;
   const networks = [...new Set(drafts.map((d) => d.network).filter(Boolean))];
-  const networkIcons = networks
-    .map((n) => `<i class="${NETWORK_ICON[n] || "ap-icon-megaphone"}" title="${networkLabel(n)}"></i>`)
+  // Resolve each network to the connected profile so the card names the
+  // account the drafts target. `network === "twitter"` maps to the "x"
+  // social-accounts entry (posts-store rewrites x → twitter, we undo here).
+  const profileChips = networks
+    .map((n) => {
+      const platformKey = n === "twitter" ? "x" : n;
+      const account = socialAccounts.find((a) => a.platform === platformKey && a.status === "connected");
+      const handle = account?.handle || networkLabel(n);
+      const icon = NETWORK_ICON[n] || "ap-icon-megaphone";
+      return `
+        <span class="drafts-card__profile" title="${escapeHtml(handle)} · ${escapeHtml(networkLabel(n))}">
+          <i class="${icon}" aria-hidden="true"></i>
+          <span class="drafts-card__profile-handle">${escapeHtml(handle)}</span>
+        </span>
+      `;
+    })
     .join("");
   // Subtitle: prefer the lead idea title (anchors the card to the
   // conversation context). Falls back to the action hint when the
@@ -1742,8 +1756,8 @@ function renderDraftTurn(message) {
         <span class="drafts-card__main">
           <span class="drafts-card__title-row">
             <span class="drafts-card__title">${count} draft${count === 1 ? "" : "s"} to review</span>
-            ${networks.length ? `<span class="ap-tag-list drafts-card__nets" aria-hidden="true">${networkIcons}</span>` : ""}
           </span>
+          ${networks.length ? `<span class="drafts-card__profiles">${profileChips}</span>` : ""}
           <span class="drafts-card__sub">${subText}</span>
         </span>
         <span class="drafts-card__cta" aria-hidden="true">
