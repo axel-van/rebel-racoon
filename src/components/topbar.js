@@ -116,8 +116,14 @@ function renderStatusCardToggle() {
 
 // On session routes the title doubles as a rename trigger — click to
 // open the rename modal for the active conversation. Off-session the
-// title is a plain heading.
+// title is a plain heading. Welcome-alt sessions (Playbook creation)
+// override both: a fixed "New Playbook" label, no rename — the session
+// has no persisted name yet, and the user will name the Playbook
+// itself at the end of the flow.
 function renderTitle(onSession) {
+  if (onSession && isWelcomeAltSession()) {
+    return `<h1 class="app-topbar__title">New Playbook</h1>`;
+  }
   const title = currentTitle();
   if (onSession) {
     const sid = currentSessionId();

@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=60";
+import { renderTopbar } from "../components/topbar.js?v=61";
 import { socialAccounts, chatStarters } from "../mocks.js?v=35";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=29";
