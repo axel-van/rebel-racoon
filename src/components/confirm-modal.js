@@ -111,8 +111,13 @@ export function open({
   modal.setAttribute("aria-hidden", "false");
   document.body.classList.add("has-modal");
 
-  // Focus the confirm button by default — user can tab to Cancel or hit Esc.
-  setTimeout(() => confirmBtn?.focus({ preventScroll: true }), 0);
+  // On a destructive confirm, the safe default is Cancel — accidentally
+  // hitting Enter shouldn't trigger a delete. Otherwise focus the primary
+  // action so the common path is one keystroke away.
+  setTimeout(() => {
+    const target = danger ? cancelBtn : confirmBtn;
+    target?.focus({ preventScroll: true });
+  }, 0);
 }
 
 function close() {
