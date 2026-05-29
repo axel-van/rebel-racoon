@@ -2082,21 +2082,27 @@ function renderClipExtractionTurn(message, sessionId) {
     `;
   }
 
-  const countLabel = clipsCount === 1 ? "1 clip" : `${clipsCount} clips`;
+  // Ready card reuses the .drafts-card chrome (mermaid icon tile, quiet
+  // grey surface, electric-blue chevron CTA, full-card button) so the
+  // "clips ready" and "drafts to review" results read as one family.
+  const titleLabel = clipsCount === 1 ? "1 clip to review" : `${clipsCount} clips to review`;
   return `
     <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
-      <div class="clip-extraction-card clip-extraction-card--ready">
-        <span class="clip-extraction-card__icon" aria-hidden="true">
-          <i class="ap-icon-sparkles"></i>
+      <button type="button" class="ap-card drafts-card" data-clip-card-open="${source.id}">
+        <span class="drafts-card__icon" aria-hidden="true">
+          <i class="ap-icon-sparkles-mermaid"></i>
         </span>
-        <span class="clip-extraction-card__main">
-          <span class="clip-extraction-card__title">Clips ready · ${countLabel} from ${filename}</span>
-          <span class="clip-extraction-card__sub">Pick the ones you want and turn them into posts.</span>
+        <span class="drafts-card__main">
+          <span class="drafts-card__title-row">
+            <span class="drafts-card__title">${titleLabel}</span>
+          </span>
+          <span class="drafts-card__sub">From <span class="drafts-card__sub-quote">${filename}</span></span>
         </span>
-        <button type="button" class="ap-button ghost grey clip-extraction-card__cta" data-clip-card-open="${source.id}">
-          <span>Open clips</span>
-        </button>
-      </div>
+        <span class="drafts-card__cta" aria-hidden="true">
+          <span class="drafts-card__cta-label">Open clips</span>
+          <i class="ap-icon-chevron-right"></i>
+        </span>
+      </button>
     </div>
   `;
 }

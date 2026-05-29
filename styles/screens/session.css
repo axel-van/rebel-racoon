@@ -320,13 +320,16 @@
   display: none;
 }
 
+/* Quick-picker rows use the electric-blue interactive tint on hover and
+   keyboard focus (not the neutral grey of the analyse wizards) so every
+   row reads as actionable while the picker is up. */
 .session__assistant-wizard-bar .analyse__option:hover {
-  background: var(--ref-color-grey-05);
+  background: var(--ref-color-electric-blue-10);
 }
 
 .session__assistant-wizard-bar .analyse__option:focus-visible {
   outline: none;
-  background: var(--ref-color-grey-10);
+  background: var(--ref-color-electric-blue-10);
 }
 
 /* Align the number badge and the icon container — both are 28×28 squares
