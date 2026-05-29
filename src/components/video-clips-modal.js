@@ -42,6 +42,41 @@ const NETWORK_BY_ID = NETWORKS.reduce((acc, n) => {
   return acc;
 }, {});
 
+// Export formats a clip can be cropped to. `ratio` is width/height — drives
+// both the chip's aspect glyph and the preview crop frame. `tag` is the
+// short label on the chip; `label` the descriptive name (shown on hover).
+const FORMATS = {
+  "9:16": { id: "9:16", tag: "9:16", label: "Vertical", ratio: 9 / 16 },
+  "4:5": { id: "4:5", tag: "4:5", label: "Portrait", ratio: 4 / 5 },
+  "1:1": { id: "1:1", tag: "1:1", label: "Square", ratio: 1 },
+  "16:9": { id: "16:9", tag: "16:9", label: "Landscape", ratio: 16 / 9 },
+};
+
+// Optimized formats per network — first entry is the recommended default.
+const NETWORK_FORMATS = {
+  facebook: ["1:1", "4:5", "9:16", "16:9"],
+  instagram: ["9:16", "4:5", "1:1"],
+  linkedin: ["1:1", "4:5", "16:9"],
+  x: ["16:9", "1:1"],
+  tiktok: ["9:16"],
+};
+
+function formatsForNetwork(net) {
+  return (NETWORK_FORMATS[net] || ["16:9"]).map((id) => FORMATS[id]).filter(Boolean);
+}
+
+function defaultFormatFor(net) {
+  return (NETWORK_FORMATS[net] || ["16:9"])[0];
+}
+
+// Backfill the format on a clip draft: keep an existing valid value, else
+// fall back to the recommended format for its network.
+function ensureDraftFormat(d) {
+  if (!d) return;
+  const allowed = NETWORK_FORMATS[d.network] || ["16:9"];
+  if (!d.format || !allowed.includes(d.format)) d.format = allowed[0];
+}
+
 // ── Module state ─────────────────────────────────────────────────────
 
 let backdrop;
@@ -314,6 +349,21 @@ function editorPaneHTML() {
   `,
   ).join("");
 
+  // Format pills — the optimized aspect ratios for the selected network.
+  // The aspect glyph mirrors the ratio so the orientation reads at a glance.
+  const fmtPills = formatsForNetwork(draft.network)
+    .map(
+      (f) => `
+    <button type="button" class="vc-editor__net vc-editor__fmt${f.id === draft.format ? " is-on" : ""}" data-vc-action="set-format" data-vc-format="${f.id}" title="${escapeHtml(f.label)} · ${f.tag}">
+      <span class="vc-editor__ratio-glyph" style="aspect-ratio: ${f.ratio}" aria-hidden="true"></span>
+      <span>${f.tag}</span>
+    </button>
+  `,
+    )
+    .join("");
+
+  const cropRatio = (FORMATS[draft.format] || FORMATS["16:9"]).ratio;
+
   // Edit-mode CTAs (Delete / Cancel / Save changes) live in the editor
   // header in multi-clip mode (the modal footer is taken by the bulk
   // "Draft posts from N clips" CTA). In single-clip mode the bulk
@@ -348,12 +398,13 @@ function editorPaneHTML() {
       <div class="vc-editor__top">
         <div class="vc-editor__preview-col">
           <div class="vc-preview" style="background-image: ${previewBackground(draft.hue)}">
+            <div class="vc-preview__crop" data-vc-crop style="aspect-ratio: ${cropRatio}"></div>
             <div class="vc-preview__hud-tr" data-vc-editor-playtime>${fmtTime(draftPlayhead)}</div>
             <div class="vc-preview__center">
               <div class="vc-preview__play"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></div>
             </div>
             <div class="vc-preview__hud-bl" data-vc-editor-clipdur>${fmtTime(draft.end - draft.start)} · CLIP</div>
-            <div class="vc-preview__hud-br">${escapeHtml((draft.network || "").toUpperCase())}</div>
+            <div class="vc-preview__hud-br">${escapeHtml((draft.network || "").toUpperCase())} · ${escapeHtml((FORMATS[draft.format] || FORMATS["16:9"]).tag)}</div>
           </div>
           <div class="vc-editor__transport">
             <button class="vc-editor__transport-btn" data-vc-action="seek-start" title="Jump to clip start">
@@ -392,6 +443,10 @@ function editorPaneHTML() {
           <div class="vc-editor__field">
             <label class="vc-editor__label">Network</label>
             <div class="vc-editor__nets">${netPills}</div>
+          </div>
+          <div class="vc-editor__field">
+            <label class="vc-editor__label">Format</label>
+            <div class="vc-editor__nets">${fmtPills}</div>
           </div>
         </div>
       </div>
@@ -541,8 +596,18 @@ function onModalClick(event) {
   if (action === "set-network") {
     if (!draft) return;
     draft.network = actionEl.dataset.vcNetwork;
+    // Different networks expose different optimized formats — snap to the
+    // new network's recommended default rather than keeping an unsupported one.
+    draft.format = defaultFormatFor(draft.network);
     // Re-render the editor pane only — the rest of the modal is unaffected.
     // Cheap to just re-render the body; cursor isn't in an editable field.
+    renderBody();
+    return;
+  }
+
+  if (action === "set-format") {
+    if (!draft) return;
+    draft.format = actionEl.dataset.vcFormat;
     renderBody();
     return;
   }
@@ -810,6 +875,7 @@ function enterEdit(clipId) {
   if (!clip) return;
   editingId = clipId;
   draft = { ...clip };
+  ensureDraftFormat(draft);
   draftPlayhead = clip.start;
   render();
   // Reset the body's scroll position so the sticky editor sits at the top
@@ -945,6 +1011,7 @@ export function open(source, callbacks = {}) {
       singleClipMode = true;
       editingId = target.id;
       draft = { ...target };
+      ensureDraftFormat(draft);
       draftPlayhead = target.start || 0;
     }
   }

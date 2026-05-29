@@ -663,6 +663,24 @@
   border: 1px solid var(--app-vc-border);
 }
 
+/* Crop frame — centered viewfinder marking the selected export ratio.
+   The large box-shadow spread dims everything outside the frame (clipped
+   by the preview's overflow). First child of the preview so the HUD and
+   controls paint over it and stay legible on the dimmed area. The inline
+   aspect-ratio (set per format) drives the frame width at full height. */
+.vc-preview__crop {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 100%;
+  border: 2px solid var(--ref-color-white);
+  border-radius: var(--ref-border-radius-sm);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
 .vc-preview__hud-tr,
 .vc-preview__hud-bl,
 .vc-preview__hud-br {
@@ -918,6 +936,17 @@
   width: 14px;
   height: 14px;
   border-radius: var(--app-radius-circle);
+}
+
+/* Aspect-ratio glyph on a format chip — a small outlined rectangle whose
+   shape mirrors the ratio (tall for 9:16, wide for 16:9). Inherits the
+   chip's text color so it tracks the muted / hover / selected states. */
+.vc-editor__ratio-glyph {
+  display: inline-block;
+  height: 13px;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  flex-shrink: 0;
 }
 
 /* ── Pro timeline (full-width, below preview/form) ────────────── */
