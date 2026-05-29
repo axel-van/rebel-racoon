@@ -111,7 +111,7 @@ const SHELL_HTML = `
 <aside class="ap-dialog video-clips-modal" id="videoClipsModal" role="dialog" aria-modal="true"
        aria-labelledby="videoClipsTitle" aria-hidden="true">
   <div class="ap-dialog-header video-clips-modal__head">
-    <div class="video-clips-modal__head-icon" id="videoClipsKind">MP4</div>
+    <div class="video-clips-modal__head-icon" id="videoClipsKind"><i class="ap-icon-video" aria-hidden="true"></i></div>
     <div class="video-clips-modal__head-info">
       <span class="ap-dialog-title" id="videoClipsTitle">Suggested clips</span>
       <span class="ap-dialog-subtitle" id="videoClipsSub"></span>
@@ -949,11 +949,10 @@ export function open(source, callbacks = {}) {
     }
   }
 
-  // Head info — file-kind badge + title + filename. The title flips to
-  // "Edit clip" in single-clip mode (matches the action that opened the
-  // modal); subtitle drops the multi-clip framing for a quiet filename.
-  const kindEl = document.getElementById("videoClipsKind");
-  if (kindEl) kindEl.textContent = (source.ext || "MP4").toUpperCase();
+  // Head info — video badge (static icon) + title + filename. The title
+  // flips to "Edit clip" in single-clip mode (matches the action that
+  // opened the modal); subtitle drops the multi-clip framing for a quiet
+  // filename.
   const titleEl = document.getElementById("videoClipsTitle");
   if (titleEl) titleEl.textContent = singleClipMode ? "Edit clip" : "Suggested clips";
   const subEl = document.getElementById("videoClipsSub");

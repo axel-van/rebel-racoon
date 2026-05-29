@@ -54,7 +54,7 @@
    header feels proportional. Close-button safe area on the right
    (64px) stays per DS. */
 .video-clips-modal.is-single-clip .video-clips-modal__head.ap-dialog-header {
-  padding: var(--ref-spacing-md) 64px 0 var(--ref-spacing-md);
+  padding: var(--ref-spacing-md) 64px var(--ref-spacing-sm) var(--ref-spacing-md);
 }
 
 .video-clips-modal.is-single-clip .vc-rows__cell--floating {
@@ -95,18 +95,19 @@
 }
 
 .video-clips-modal__head-icon {
-  width: 36px;
-  height: 44px;
-  border-radius: var(--ref-border-radius-sm);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--app-radius-button-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
-  font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-white);
-  letter-spacing: 0.05em;
   flex-shrink: 0;
   background: var(--ref-color-grey-150);
+}
+
+.video-clips-modal__head-icon i {
+  font-size: var(--sys-icon-css-md);
 }
 
 .video-clips-modal__head-info {
