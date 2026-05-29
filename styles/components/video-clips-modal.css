@@ -277,7 +277,7 @@
   right: 0;
   bottom: -10px;
   height: 10px;
-  background: linear-gradient(180deg, var(--app-surface-subtle) 0%, rgba(245, 245, 247, 0) 100%);
+  background: linear-gradient(180deg, var(--app-surface-subtle) 0%, transparent 100%);
   pointer-events: none;
 }
 
@@ -316,15 +316,12 @@
 .vc-row.is-on {
   border-color: var(--ref-color-electric-blue-100);
   background: var(--ref-color-electric-blue-05);
-  box-shadow: 0 0 0 3px rgba(23, 141, 254, 0.08);
 }
 
 .vc-row.is-editing {
   border-color: var(--ref-color-electric-blue-100);
   background: var(--ref-color-white);
-  box-shadow:
-    var(--app-shadow-popover-md),
-    0 0 0 3px rgba(23, 141, 254, 0.12);
+  box-shadow: var(--app-shadow-popover-md);
 }
 
 .vc-row__check-wrap {
@@ -398,7 +395,7 @@
   width: 44px;
   height: 44px;
   border-radius: var(--app-radius-circle);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--ref-color-white);
   color: var(--ref-color-grey-100);
   display: flex;
   align-items: center;
@@ -416,7 +413,7 @@
   font-size: 10px;
   font-weight: var(--ref-font-weight-bold);
   padding: 2px 6px;
-  border-radius: 3px;
+  border-radius: var(--ref-border-radius-sm);
 }
 
 /* ── Row body (title / summary / why / tags) ───────────────────── */
@@ -505,7 +502,7 @@
   color: var(--ref-color-grey-80);
   background: var(--ref-color-grey-10);
   padding: 2px 6px;
-  border-radius: 3px;
+  border-radius: var(--ref-border-radius-sm);
 }
 
 /* Per-card "Edit" button — DS .ap-button.stroked.grey with no extras. */
@@ -548,7 +545,7 @@
 
 .video-clips-modal__foot-meta {
   color: var(--ref-color-grey-60);
-  font-weight: 500;
+  font-weight: var(--ref-font-weight-regular);
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -1045,7 +1042,7 @@
   position: absolute;
   inset: 0;
   display: flex;
-  border-radius: 5px;
+  border-radius: var(--app-radius-button-sm);
   overflow: hidden;
   pointer-events: none;
 }
