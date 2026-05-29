@@ -110,17 +110,6 @@
   flex-wrap: wrap;
 }
 
-.schedule-modal__slot-head i {
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-grey-100);
-}
-
-.schedule-modal__slot-net {
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-}
-
 .schedule-modal__slot-when-label {
   font-size: var(--ref-font-size-xs);
   color: var(--ref-color-grey-60);

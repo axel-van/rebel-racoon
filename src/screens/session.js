@@ -7,7 +7,9 @@ import {
   buildConnectedProfileItems,
   NETWORK_ICON_BY_PLATFORM,
   BRAND_INITIALS,
-} from "../social-profiles.js?v=1";
+  renderProfileTag,
+  profileForNetwork,
+} from "../social-profiles.js?v=2";
 import { FORMATS, formatsForNetworks } from "../clip-formats.js?v=1";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=29";
@@ -1992,20 +1994,9 @@ function renderDraftTurn(message) {
   // Resolve each network to the connected profile so the card names the
   // account the drafts target. `network === "twitter"` maps to the "x"
   // social-accounts entry (posts-store rewrites x → twitter, we undo here).
-  const profileChips = networks
-    .map((n) => {
-      const platformKey = n === "twitter" ? "x" : n;
-      const account = socialAccounts.find((a) => a.platform === platformKey && a.status === "connected");
-      const handle = account?.handle || networkLabel(n);
-      const icon = NETWORK_ICON[n] || "ap-icon-megaphone";
-      return `
-        <span class="drafts-card__profile" title="${escapeHtml(handle)} · ${escapeHtml(networkLabel(n))}">
-          <i class="${icon}" aria-hidden="true"></i>
-          <span class="drafts-card__profile-handle">${escapeHtml(handle)}</span>
-        </span>
-      `;
-    })
-    .join("");
+  // Shared profile tag (avatar + network badge + name) — same UI everywhere
+  // a profile is surfaced.
+  const profileChips = networks.map((n) => renderProfileTag(profileForNetwork(n), { network: n })).join("");
   // Subtitle: prefer the lead idea title (anchors the card to the
   // conversation context). Falls back to the action hint when the
   // payload didn't carry one.

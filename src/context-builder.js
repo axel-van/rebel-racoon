@@ -20,7 +20,7 @@ import { addContext, updateContext, getContextById } from "./contexts-store.js?v
 import { analyzeWebsite } from "./context-mock-analysis.js?v=21";
 import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=10";
 import { connectors as connectorMocks } from "./mocks.js?v=36";
-import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=1";
+import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=2";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>

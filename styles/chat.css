@@ -55,6 +55,28 @@
   white-space: nowrap;
 }
 
+/* Shared profile tag — the canonical "show a profile" UI: DS avatar
+   (brand photo + corner network badge) + the profile name. Used by the
+   drafts card, the schedule modal, and anywhere else a profile surfaces,
+   so the presentation is always identical. Name color inherits so each
+   context controls its own tone. */
+.profile-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  min-width: 0;
+}
+
+.profile-tag__name {
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
 /* Inline AI layout (Figma 25:881) — when the sparkle avatar is a direct child
    of the turn (no header wrapper), lay out horizontally: avatar | bubble.
    The Analyse wizards still emit a header wrapper (icon + role label), so
@@ -532,8 +554,9 @@ span.chat-bubble-choice-chip {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-sm);
   min-width: 0;
+  color: var(--sys-text-color-light);
 }
 
 .drafts-card__profile {

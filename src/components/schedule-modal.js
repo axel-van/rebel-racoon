@@ -9,6 +9,7 @@ import {
   subscribe as subscribeQueue,
 } from "../schedule-store.js?v=1";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=20";
+import { renderProfileTag, profileForNetwork } from "../social-profiles.js?v=2";
 
 // Schedule modal (multi-draft).
 //   • 960px wide, two-column body
@@ -480,8 +481,7 @@ function renderSlotList() {
         <div class="schedule-modal__slot" data-schedule-row="${i}">
           <div class="schedule-modal__slot-post">
             <div class="schedule-modal__slot-head">
-              <i class="${NETWORK_ICON[network] || "ap-icon-megaphone"}" aria-hidden="true"></i>
-              <span class="schedule-modal__slot-net">${NETWORK_NAME[network] || network}</span>
+              ${renderProfileTag(profileForNetwork(network), { network })}
               <span class="schedule-modal__slot-when-label">${escapeText(formatSlotLabel(s.when))}</span>
             </div>
             <div class="schedule-modal__slot-text">${escapeText(text)}</div>
