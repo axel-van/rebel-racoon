@@ -15,6 +15,27 @@
 //   clearSession(sessionId)
 //   renderInto(container, sessionId)  // helper for session.js composer
 
+import { getIdeas } from "./library.js?v=30";
+
+// Idea kind → DS .ap-tag color variant. Mirrors the per-kind palette the
+// right-panel idea cards use (rpanel-ideas__kind--*), so a mentioned idea's
+// pill carries the same color as its kind tag. Sources / unknown names fall
+// back to blue.
+const KIND_TAG_COLOR = {
+  stat: "blue",
+  quote: "menthol",
+  hook: "tagOrange",
+  story: "grey",
+  insight: "green",
+};
+
+// Resolve a mention name to its tag color: match the session's ideas by
+// title and use the kind color; otherwise default blue.
+function tagColorForName(sessionId, name) {
+  const idea = (getIdeas(sessionId) || []).find((i) => i.title === name);
+  return (idea && KIND_TAG_COLOR[idea.kind]) || "blue";
+}
+
 const mentionsBySession = new Map();
 const subscribers = new Map();
 
@@ -88,7 +109,7 @@ export function renderInto(container, sessionId) {
   container.innerHTML = list
     .map(
       (name) => `
-    <span class="ap-tag blue composer-mention" data-composer-mention="${escapeAttr(name)}">
+    <span class="ap-tag ${tagColorForName(sessionId, name)} composer-mention" data-composer-mention="${escapeAttr(name)}">
       <span class="composer-mention__label">${escapeHtml(name)}</span>
       <button
         type="button"
