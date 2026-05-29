@@ -280,7 +280,9 @@ function renderAssistantPanel(session, attachedContext) {
         aria-live="polite"
         aria-atomic="false"
       >
-        ${isEmptyConversation ? raw(renderEmptyHero(session.id, composerMarkup)) : raw(renderThread(thread))}
+        ${isEmptyConversation
+          ? raw(renderEmptyHero(session.id, composerMarkup))
+          : raw(renderThread(thread, session.id))}
       </div>
       ${isEmptyConversation ? "" : raw(composerMarkup)}
     </aside>
