@@ -16,7 +16,7 @@
 
 import { postUserTurn, postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=36";
 import { getIdeas } from "./library.js?v=29";
-import { ideas as GLOBAL_IDEAS } from "./mocks.js?v=35";
+import { ideas as GLOBAL_IDEAS, anglesByIdea } from "./mocks.js?v=36";
 import { addPostDraft } from "./posts-store.js?v=27";
 import { showToast } from "./components/toast.js?v=20";
 
@@ -26,6 +26,45 @@ import { showToast } from "./components/toast.js?v=20";
 // know about it — keeps the draft flow universal.
 function resolveIdea(sessionId, ideaId) {
   return getIdeas(sessionId).find((i) => i.id === ideaId) || GLOBAL_IDEAS.find((i) => i.id === ideaId) || null;
+}
+
+// Generic angle fallback for ideas without a handcrafted set in
+// anglesByIdea. Four fixed reframings (contrarian, how-to, story,
+// data-backed) seeded off the idea's own title so the output reads as
+// tailored without any randomness — keeps results stable across renders.
+function generateAngles(idea) {
+  const title = idea.title || "this idea";
+  return [
+    {
+      id: `angle-${idea.id}-1`,
+      title: "The contrarian take",
+      description: `Challenge the common assumption behind “${title}” and argue the opposite.`,
+    },
+    {
+      id: `angle-${idea.id}-2`,
+      title: "A practical how-to",
+      description: `Turn “${title}” into a step-by-step playbook readers can act on today.`,
+    },
+    {
+      id: `angle-${idea.id}-3`,
+      title: "The behind-the-scenes story",
+      description: `Share the real story and the lessons behind “${title}”.`,
+    },
+    {
+      id: `angle-${idea.id}-4`,
+      title: "The data-backed proof",
+      description: `Back “${title}” with concrete numbers and a result readers can trust.`,
+    },
+  ];
+}
+
+// Resolve the 4 angles to suggest for an idea: handcrafted set from
+// mocks when present, otherwise a generic generated set. Returns [] when
+// the idea can't be resolved.
+export function getAnglesForIdea(sessionId, ideaId) {
+  const idea = resolveIdea(sessionId, ideaId);
+  if (!idea) return [];
+  return anglesByIdea[ideaId] || generateAngles(idea);
 }
 
 const CHANNEL_META = {
@@ -42,11 +81,15 @@ function labelFor(channel) {
   return CHANNEL_META[channel.toLowerCase()]?.label || channel;
 }
 
-export function startDraftFlow(sessionId, ideaId, count = 1, channelOverride = null) {
+export function startDraftFlow(sessionId, ideaId, count = 1, channelOverride = null, angle = null) {
   const idea = resolveIdea(sessionId, ideaId);
   if (!idea) return;
 
-  const echo = count > 1 ? `Draft ${count} posts: ${idea.title}` : `Draft a post: ${idea.title}`;
+  // When the user picked an angle, name it in the echo so the chosen
+  // reframing is visible in the thread (e.g. "Draft 3 posts: <idea> —
+  // <angle>"). Falls back to the plain idea title otherwise.
+  const subject = angle ? `${idea.title} — ${angle.title}` : idea.title;
+  const echo = count > 1 ? `Draft ${count} posts: ${subject}` : `Draft a post: ${subject}`;
   postUserTurn(sessionId, echo);
 
   const pendingId = startPending(sessionId);
@@ -58,7 +101,7 @@ export function startDraftFlow(sessionId, ideaId, count = 1, channelOverride = n
     // channel picker. Used by the right-panel count+profile flow where
     // the user has already chosen which network to draft for.
     if (Array.isArray(channelOverride) && channelOverride.length > 0) {
-      executeDraft(sessionId, ideaId, channelOverride, count);
+      executeDraft(sessionId, ideaId, channelOverride, count, angle);
       return;
     }
 
@@ -69,7 +112,7 @@ export function startDraftFlow(sessionId, ideaId, count = 1, channelOverride = n
     // channel so we don't stack two pickers back-to-back.
     if (count > 1 || channels.length <= 1) {
       const chosen = channels.length >= 1 ? [channels[0]] : ["linkedin"];
-      executeDraft(sessionId, ideaId, chosen, count);
+      executeDraft(sessionId, ideaId, chosen, count, angle);
       return;
     }
 
@@ -84,13 +127,15 @@ export function startDraftFlow(sessionId, ideaId, count = 1, channelOverride = n
       choices,
       multi: true,
       handler: "draft-channels",
-      context: { ideaId: idea.id },
+      // Carry the chosen angle so the multi-channel fallback path can
+      // pass it on to executeDraft (see dispatchChoiceSubmit).
+      context: { ideaId: idea.id, angle },
       submitLabel: "Draft them",
     });
   }, 6000);
 }
 
-export function executeDraft(sessionId, ideaId, selectedChannels, count = 1) {
+export function executeDraft(sessionId, ideaId, selectedChannels, count = 1, angle = null) {
   const idea = resolveIdea(sessionId, ideaId);
   if (!idea || !selectedChannels || selectedChannels.length === 0) return;
 
@@ -119,10 +164,13 @@ export function executeDraft(sessionId, ideaId, selectedChannels, count = 1) {
       // produces 5 linkedin posts and a multi-channel "1 draft per
       // channel" pick still creates one per channel.
       const total = Math.max(count, selectedChannels.length);
+      // Mock draft body reflects the chosen angle when present so the
+      // generated preview feels shaped by the reframing the user picked.
+      const draftBody = angle ? angle.description : idea.body;
       const drafts = Array.from({ length: total }, (_, i) =>
         addPostDraft(sessionId, {
           network: selectedChannels[i % selectedChannels.length],
-          text: [idea.title, ...(idea.body ? [idea.body] : [])],
+          text: [idea.title, ...(draftBody ? [draftBody] : [])],
           hashtags: [],
         }),
       );
@@ -141,7 +189,7 @@ export function executeDraft(sessionId, ideaId, selectedChannels, count = 1) {
         duration: 6000,
         action: {
           label: "Retry",
-          onClick: () => executeDraft(sessionId, ideaId, selectedChannels, count),
+          onClick: () => executeDraft(sessionId, ideaId, selectedChannels, count, angle),
         },
       });
     }

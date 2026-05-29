@@ -15,11 +15,11 @@
 
 import * as inlineQuestion from "./inline-question.js?v=27";
 import { postAssistantMessage, postUserTurn } from "./assistant.js?v=36";
-import * as rightPanel from "./components/right-panel.js?v=112";
+import * as rightPanel from "./components/right-panel.js?v=113";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=29";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=21";
 import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=10";
-import { socialAccounts, connectors as connectorMocks } from "./mocks.js?v=35";
+import { socialAccounts, connectors as connectorMocks } from "./mocks.js?v=36";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>

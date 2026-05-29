@@ -6,7 +6,7 @@
 //
 // Subscribers re-render the thread DOM on any change — no global store.
 
-import { ideas, threadsBySession as seedThreadsBySession } from "./mocks.js?v=35";
+import { ideas, threadsBySession as seedThreadsBySession } from "./mocks.js?v=36";
 
 const threads = new Map(); // sessionId → messages[]
 const subscribers = new Map(); // sessionId → Set<(messages) => void>

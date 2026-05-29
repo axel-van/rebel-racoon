@@ -241,6 +241,126 @@ export const sourcesBySession = {
 // Partitioned by session so each conversation owns its own idea pool —
 // counts displayed in the topbar, status card and chat-picker match the
 // store contents on a per-session basis. Per-source `ideaCount` in
+// Handcrafted "angles" for the draft-from-idea flow. When the user clicks
+// Draft on an idea card, Archie suggests 4 AI-generated angles (title +
+// short description) the idea could be reframed into before asking how
+// many drafts. These are mocked per-idea for the main demo session; any
+// idea without a handcrafted set falls back to draft-flow's generateAngles().
+// Keyed by idea id; each angle is { id, title, description }.
+export const anglesByIdea = {
+  "idea-acme-1": [
+    {
+      id: "angle-acme-1-1",
+      title: "The honest founder retro",
+      description:
+        "Walk through the three bottlenecks — scope, distribution, onboarding — and what you'd do differently.",
+    },
+    {
+      id: "angle-acme-1-2",
+      title: "The contrarian take on launch hype",
+      description: "Argue that most launches fail on distribution, not product, using your scope-creep story as proof.",
+    },
+    {
+      id: "angle-acme-1-3",
+      title: "A playbook for first-time launchers",
+      description: "Turn the three constraints into a pre-launch checklist readers can steal before their own launch.",
+    },
+    {
+      id: "angle-acme-1-4",
+      title: "The data-backed post-mortem",
+      description: "Frame each constraint around the number it cost you, and the metric that finally moved.",
+    },
+  ],
+  "idea-acme-2": [
+    {
+      id: "angle-acme-2-1",
+      title: "The contrarian manifesto",
+      description: "Make the case that OKRs are a lagging signal, not a focus tool — and what you replaced them with.",
+    },
+    {
+      id: "angle-acme-2-2",
+      title: "The before-and-after story",
+      description: "Show one quarter run on OKRs versus one run without, and what changed for the team.",
+    },
+    {
+      id: "angle-acme-2-3",
+      title: "A how-to for ditching rituals",
+      description: "Give readers a three-step path to retire OKRs without losing alignment.",
+    },
+    {
+      id: "angle-acme-2-4",
+      title: "The reply to OKR defenders",
+      description: "Pre-empt the obvious objections and answer them head-on to spark debate.",
+    },
+  ],
+  "idea-acme-3": [
+    {
+      id: "angle-acme-3-1",
+      title: "The behind-the-scenes recap",
+      description: "Show the keynote as it really happened, including the bits that got cut.",
+    },
+    {
+      id: "angle-acme-3-2",
+      title: "The lessons-learned angle",
+      description: "Pull three things you'd change about presenting to a small, high-trust room.",
+    },
+    {
+      id: "angle-acme-3-3",
+      title: "The vulnerable founder story",
+      description: "Share the nerves and the moment it clicked, to make the post relatable.",
+    },
+    {
+      id: "angle-acme-3-4",
+      title: "The tactical breakdown",
+      description: "Turn the keynote structure into a template other founders can reuse.",
+    },
+  ],
+  "idea-acme-4": [
+    {
+      id: "angle-acme-4-1",
+      title: "The positioning statement",
+      description: "Lead with the quote and unpack what “removing the blank page” means for your users.",
+    },
+    {
+      id: "angle-acme-4-2",
+      title: "The contrarian framing",
+      description: "Use the quote to push back on the “AI replaces writers” narrative dominating the feed.",
+    },
+    {
+      id: "angle-acme-4-3",
+      title: "The customer-proof angle",
+      description: "Pair the quote with a short story of a writer who shipped faster, not less.",
+    },
+    {
+      id: "angle-acme-4-4",
+      title: "The manifesto post",
+      description: "Expand the quote into a three-line belief statement about how you build.",
+    },
+  ],
+  "idea-acme-5": [
+    {
+      id: "angle-acme-5-1",
+      title: "The editorial rule of thumb",
+      description: "Share the exact filter you use to decide what's safe to talk about publicly.",
+    },
+    {
+      id: "angle-acme-5-2",
+      title: "The thoughtful-vs-hype angle",
+      description: "Position your restraint as a deliberate choice in a market full of roadmap theater.",
+    },
+    {
+      id: "angle-acme-5-3",
+      title: "A how-to for transparent roadmaps",
+      description: "Give teams a simple framework for deciding what to share and what to hold.",
+    },
+    {
+      id: "angle-acme-5-4",
+      title: "The behind-the-curtain story",
+      description: "Tell the story of a roadmap item you almost announced — and why you didn't.",
+    },
+  ],
+};
+
 // `sourcesBySession` is kept in sync with the count of ideas pointing at
 // that source below.
 export const ideasBySession = {

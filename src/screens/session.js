@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=64";
-import { socialAccounts, chatStarters } from "../mocks.js?v=35";
+import { socialAccounts, chatStarters } from "../mocks.js?v=36";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=29";
 import { isNewUser } from "../user-mode.js?v=22";
@@ -30,7 +30,7 @@ import {
   setSubtitleStyle,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=27";
-import { startDraftFlow, executeDraft } from "../draft-flow.js?v=29";
+import { startDraftFlow, executeDraft, getAnglesForIdea } from "../draft-flow.js?v=30";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=32";
 import * as inlineQuestion from "../inline-question.js?v=27";
@@ -67,7 +67,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=112";
+} from "../components/right-panel.js?v=113";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
@@ -933,7 +933,7 @@ function defaultChatNameLocal() {
 // becomes the draft's network so the user gets posts on the surface they
 // actually want to publish to. `count` is threaded through from the count
 // picker; `onBack` lets the second-step picker return to the first.
-function askProfileQuestion(sessionId, ideaId, { count = 1, onBack = null } = {}) {
+function askProfileQuestion(sessionId, ideaId, { count = 1, angle = null, onBack = null } = {}) {
   const connected = socialAccounts.filter((a) => a.status === "connected");
   if (connected.length === 0) {
     postAssistantMessage(
@@ -955,18 +955,53 @@ function askProfileQuestion(sessionId, ideaId, { count = 1, onBack = null } = {}
     onPick: (accountId) => {
       const account = connected.find((a) => a.id === accountId);
       const channels = account?.platform ? [account.platform] : null;
-      startDraftFlow(sessionId, ideaId, count, channels);
+      startDraftFlow(sessionId, ideaId, count, channels, angle);
     },
     onBack: onBack || undefined,
     onSkip: onBack ? undefined : () => {},
   });
 }
 
-// "Draft a post from this idea" picker — triggered by the right-panel
-// Ideas card. Two-step flow: (1) how many drafts, (2) which connected
-// profile. The profile choice determines the draft's network so the
-// user lands with posts on the surface they actually want to publish to.
-export function askDraftCountQuestion(sessionId, ideaId) {
+// "Draft a post from this idea" — step 1: pick an angle. Triggered by the
+// right-panel Ideas card "Draft" button. Archie suggests 4 AI-generated
+// angles (title + short description) the idea could be reframed into; the
+// chosen angle is threaded through the rest of the flow (count → profile →
+// generate) so the produced drafts reflect it. Mirrors the screenshot
+// pattern by reusing the inline-question numbered-card picker.
+export function askAngleQuestion(sessionId, ideaId) {
+  const angles = getAnglesForIdea(sessionId, ideaId);
+  // No resolvable idea / angles — fall back to the original count flow so
+  // the Draft button never dead-ends.
+  if (!angles.length) {
+    askDraftCountQuestion(sessionId, ideaId);
+    return;
+  }
+  postAssistantMessage(sessionId, "Pick an angle for this post:");
+  inlineQuestion.ask(sessionId, {
+    title: "Suggested angles",
+    stepLabel: "Angle",
+    skipLabel: "Cancel",
+    items: angles.map((a) => ({
+      value: a.id,
+      label: a.title,
+      caption: a.description,
+    })),
+    onPick: (angleId) => {
+      const angle = angles.find((a) => a.id === angleId) || null;
+      askDraftCountQuestion(sessionId, ideaId, {
+        angle,
+        // ← Back returns to the angle picker so the user can re-choose.
+        onBack: () => askAngleQuestion(sessionId, ideaId),
+      });
+    },
+    onSkip: () => {},
+  });
+}
+
+// Step 2: how many drafts. Threads the chosen `angle` through to the
+// profile picker. When reached from the angle step (`onBack` set) the
+// picker shows a Back affordance; entered directly it shows Cancel.
+export function askDraftCountQuestion(sessionId, ideaId, { angle = null, onBack = null } = {}) {
   postAssistantMessage(sessionId, "How many drafts should I generate?");
   const advance = (count) => {
     // Clamp to a reasonable range — single-digit + custom typed numbers
@@ -974,8 +1009,9 @@ export function askDraftCountQuestion(sessionId, ideaId) {
     const n = Math.max(1, Math.min(20, Math.floor(Number(count) || 1)));
     askProfileQuestion(sessionId, ideaId, {
       count: n,
+      angle,
       // ← Back returns to the count picker so the user can change their mind.
-      onBack: () => askDraftCountQuestion(sessionId, ideaId),
+      onBack: () => askDraftCountQuestion(sessionId, ideaId, { angle, onBack }),
     });
   };
   inlineQuestion.ask(sessionId, {
@@ -990,7 +1026,9 @@ export function askDraftCountQuestion(sessionId, ideaId) {
     customPlaceholder: "Or type any number (1–20)",
     onPick: advance,
     onCustom: advance,
-    onSkip: () => {},
+    // When chained from the angle step, offer Back to it instead of Cancel.
+    onBack: onBack || undefined,
+    onSkip: onBack ? undefined : () => {},
   });
 }
 
@@ -1979,7 +2017,7 @@ function bindSession(root, session) {
   function dispatchChoiceSubmit(msg, selectedValues) {
     submitAssistantChoice(session.id, msg.id, selectedValues);
     if (msg.handler === "draft-channels" && msg.context?.ideaId) {
-      executeDraft(session.id, msg.context.ideaId, selectedValues);
+      executeDraft(session.id, msg.context.ideaId, selectedValues, 1, msg.context.angle || null);
     } else if (msg.handler === "start-action") {
       handleActionPick(session.id, msg, selectedValues, { setQuery });
     } else if (msg.handler === "subtitle-style-pick") {
