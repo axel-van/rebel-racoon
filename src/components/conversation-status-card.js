@@ -21,6 +21,7 @@ import { getPath } from "../router.js?v=30";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
+  openClips as openClipsPanel,
   openSources as openSourcesPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
@@ -124,6 +125,11 @@ export function init() {
       openIdeasPanel();
       return;
     }
+    if (event.target.closest("[data-status-clips]")) {
+      event.preventDefault();
+      openClipsPanel();
+      return;
+    }
   });
 
   // Global state subscriptions that don't depend on a session id.
@@ -200,6 +206,13 @@ export function render() {
   const ideas = getIdeas(sid);
   const draftCount = sessionDraftCount(sid, thread);
   const pending = pendingProcesses(thread);
+  // Aggregate clips across all sources in the session. Mirrors
+  // right-panel.collectAllClips but expressed inline since the math is
+  // trivial and we want to avoid the cross-module activeSessionId
+  // dependency. Re-runs on every render because subscribeSources
+  // notifies the status card on any source mutation (including the
+  // attachVideoClips call inside sources-stream.transitionToDone).
+  const clipCount = sources.reduce((sum, s) => sum + (Array.isArray(s.clips) ? s.clips.length : 0), 0);
 
   // The card is always shown on /session/:id when no right-panel is open —
   // empty sections render an "—" placeholder so the user has a reliable
@@ -208,7 +221,7 @@ export function render() {
 
   innerEl.innerHTML = html`
     ${raw(renderPendingSection(pending))} ${raw(renderSourcesSection(sources))} ${raw(renderOutputsRow(ideas.length))}
-    ${raw(renderDraftsRow(draftCount))}
+    ${raw(renderClipsRow(clipCount))} ${raw(renderDraftsRow(draftCount))}
   `;
   rootEl.hidden = false;
   setShellLayout(true);
@@ -319,6 +332,32 @@ function renderOutputsRow(ideaCount) {
         <i class="ap-icon-sparkles" aria-hidden="true"></i>
         <span class="conversation-status-card__row-label">Ideas</span>
         <span class="ap-counter normal blue">${ideaCount}</span>
+      </button>
+    </section>
+  `;
+}
+
+// Clips row — mirrors renderOutputsRow / renderDraftsRow exactly:
+// static "None yet" when count is 0, clickable button (opens the right-
+// panel Outputs surface on the Clips sub-tab) when count > 0.
+function renderClipsRow(clipCount) {
+  if (clipCount === 0) {
+    return `
+      <section class="conversation-status-card__section">
+        <div class="conversation-status-card__row conversation-status-card__row--static">
+          <i class="ap-icon-video" aria-hidden="true"></i>
+          <span class="conversation-status-card__row-label">Clips</span>
+          <span class="conversation-status-card__empty">None yet</span>
+        </div>
+      </section>
+    `;
+  }
+  return `
+    <section class="conversation-status-card__section">
+      <button type="button" class="conversation-status-card__row" data-status-clips title="Open Clips panel">
+        <i class="ap-icon-video" aria-hidden="true"></i>
+        <span class="conversation-status-card__row-label">Clips</span>
+        <span class="ap-counter normal blue">${clipCount}</span>
       </button>
     </section>
   `;
