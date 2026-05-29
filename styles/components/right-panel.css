@@ -400,6 +400,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
+  /* Center the (max-width-capped) cards so extra room on a wide panel sits
+     evenly on both sides — mirrors the Drafts panel feed centering. */
+  align-items: center;
 }
 
 .rpanel-ideas__no-match {
@@ -899,6 +902,8 @@
   flex-direction: column;
   gap: var(--ref-spacing-xs);
   padding: var(--ref-spacing-sm);
+  /* Center the capped clip cards — same as the ideas grid + Drafts feed. */
+  align-items: center;
 }
 
 /* Sticky footer with the multi-select Draft CTA. Sits at the bottom of
