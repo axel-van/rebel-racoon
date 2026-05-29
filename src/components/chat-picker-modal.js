@@ -14,7 +14,7 @@
 
 import { recentSessions } from "../mocks.js?v=36";
 import { getSources } from "../sources-stream.js?v=33";
-import { getIdeas } from "../library.js?v=30";
+import { getIdeas } from "../library.js?v=31";
 import { getPosts } from "../posts-store.js?v=28";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 

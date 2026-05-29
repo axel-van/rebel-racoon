@@ -21,7 +21,7 @@ import { isNewUser } from "./user-mode.js?v=22";
 // conversations (created at runtime via "+ New conversation") start empty
 // to match the user's mental model. Anything else looked-up — same path.
 const DEMO_SESSION_IDS = new Set(seedRecentSessions.map((s) => s.id));
-import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=37";
+import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=38";
 import {
   getSources as streamGetSources,
   subscribeSources,
@@ -413,6 +413,7 @@ const SCRIPTS = {
     ideas: [
       {
         title: "Three constraints that killed our first launch",
+        kind: "story",
         body: "A candid retro framed around the three bottlenecks the team kept underestimating: scope, distribution, onboarding.",
         rationale:
           "Concrete and personal — operator retros are the kind of post readers save and reread. Strong pull on discussion.",
@@ -423,6 +424,7 @@ const SCRIPTS = {
       },
       {
         title: "Why we stopped writing quarterly OKRs",
+        kind: "insight",
         body: "Contrarian take grounded in the offsite notes — frames OKRs as a lagging signal rather than a tool for focus.",
         rationale:
           "A contrarian frame on a rituals-heavy topic. High comment potential from teams with their own OKR scars.",
@@ -442,6 +444,7 @@ const SCRIPTS = {
     ideas: [
       {
         title: "What a founder keynote looks like at 50 people",
+        kind: "story",
         body: "Behind-the-scenes recap of the keynote, including the bits that got cut.",
         rationale:
           "Behind-the-scenes posts earn trust fast — readers get a rare look at how the company actually operates.",
@@ -452,6 +455,7 @@ const SCRIPTS = {
       },
       {
         title: "The one founder story we won't tell (and why)",
+        kind: "insight",
         body: "A meta-post about editorial restraint.",
         rationale:
           "Meta-post about judgement, not the story itself. Niche but memorable for founders in similar positions.",

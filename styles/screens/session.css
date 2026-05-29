@@ -858,10 +858,13 @@
 
 /* Idea card (Figma 25:1057 / 25:1053) — vertical stack: text column on top,
    feedback + "View idea" footer row below. */
+/* Mirrors the right-panel idea card (.rpanel-ideas__card): white surface +
+   card radius so the kind tag and the grey-05 "Why this idea" panel read
+   the same as in the panel. */
 .extraction-turn__idea-card {
-  background: var(--ref-color-grey-05);
-  border: 1px solid var(--ref-color-grey-10);
-  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-card);
   padding: var(--ref-spacing-sm);
   display: flex;
   flex-direction: column;
@@ -870,6 +873,11 @@
   max-width: 100%;
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
+  transition: border-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.extraction-turn__idea-card:hover {
+  border-color: var(--ref-color-grey-40);
 }
 
 .extraction-turn__idea-card-text {
@@ -880,6 +888,8 @@
 
 .extraction-turn__idea-card-title {
   margin: 0;
+  font-size: var(--ref-font-size-md);
+  line-height: var(--ref-font-line-height-lg);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-100);
 }

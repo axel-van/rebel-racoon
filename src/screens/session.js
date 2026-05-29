@@ -28,8 +28,8 @@ import {
   finishPending,
   subscribe,
   submitAssistantChoice,
-} from "../assistant.js?v=37";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=30";
+} from "../assistant.js?v=38";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=31";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
   renderInto as renderComposerMentions,
@@ -1463,13 +1463,57 @@ function renderExtractionTurn(message) {
   const openAttr = message.open === false ? "" : " open";
   const count = message.count ?? (message.ideas ? message.ideas.length : 0);
   const cards = (message.ideas || [])
-    .map(
-      (i) => `
-        <div class="ap-card extraction-turn__idea-card">
+    .map((i) => {
+      // Mirror the right-panel idea card: kind tag + title + body +
+      // collapsible "Why this idea" (rationale + source). Reuses the
+      // panel's .rpanel-ideas__kind / .rpanel-ideas__why styling so the two
+      // surfaces stay visually identical. Keeps the conversation footer
+      // (feedback thumbs + "View idea").
+      const kind = i.kind || "insight";
+      const whyId = `conv-idea-why-${i.id || ""}`;
+      const sourceName = message.filename || "";
+      const hasWhy = !!i.rationale || !!sourceName;
+      const why = hasWhy
+        ? `
+          <section class="rpanel-ideas__why" data-why-open="false">
+            <button
+              type="button"
+              class="rpanel-ideas__why-head"
+              data-conv-idea-why-toggle="${i.id || ""}"
+              aria-expanded="false"
+              aria-controls="${whyId}"
+            >
+              <i class="ap-icon-info rpanel-ideas__why-info" aria-hidden="true"></i>
+              <span class="rpanel-ideas__why-title">Why this idea</span>
+              <i class="ap-icon-chevron-down rpanel-ideas__why-chevron" aria-hidden="true"></i>
+            </button>
+            <div id="${whyId}" class="rpanel-ideas__why-body" hidden>
+              ${i.rationale ? `<p class="rpanel-ideas__why-rationale">${escapeHtml(i.rationale)}</p>` : ""}
+              ${
+                sourceName
+                  ? `<div class="rpanel-ideas__why-source">
+                      <span class="rpanel-ideas__why-source-label">Source</span>
+                      <div class="rpanel-ideas__why-source-tags">
+                        <span class="rpanel-ideas__source-tag" title="${escapeHtmlAttr(sourceName)}">
+                          <i class="ap-icon-file" aria-hidden="true"></i>
+                          <span class="rpanel-ideas__source-tag-text">${escapeHtml(sourceName)}</span>
+                        </span>
+                      </div>
+                    </div>`
+                  : ""
+              }
+            </div>
+          </section>
+        `
+        : "";
+      return `
+        <div class="ap-card extraction-turn__idea-card" data-idea-id="${i.id || ""}">
+          <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${escapeHtml(kind)}</span>
           <div class="extraction-turn__idea-card-text">
-            <p class="extraction-turn__idea-card-title">${i.title}</p>
-            <p class="extraction-turn__idea-card-body">${i.body}</p>
+            <p class="extraction-turn__idea-card-title">${escapeHtml(i.title || "")}</p>
+            <p class="extraction-turn__idea-card-body">${escapeHtml(i.body || "")}</p>
           </div>
+          ${why}
           <div class="extraction-turn__idea-card-footer">
             <div class="extraction-turn__idea-card-feedback" role="group" aria-label="Rate this idea">
               <button
@@ -1506,8 +1550,8 @@ function renderExtractionTurn(message) {
             </button>
           </div>
         </div>
-      `,
-    )
+      `;
+    })
     .join("");
   return `
     <div class="chat-turn chat-turn--ai chat-turn--extraction">
@@ -2274,6 +2318,27 @@ function bindSession(root, session) {
   root.addEventListener(
     "click",
     (event) => {
+      // "Why this idea" collapsible on an extraction idea card — in-place
+      // expand/collapse (mirrors the right-panel idea card's Why toggle).
+      const convWhy = event.target.closest("[data-conv-idea-why-toggle]");
+      if (convWhy) {
+        event.preventDefault();
+        const section = convWhy.closest(".rpanel-ideas__why");
+        if (section) {
+          const next = section.getAttribute("data-why-open") !== "true";
+          section.setAttribute("data-why-open", next ? "true" : "false");
+          convWhy.setAttribute("aria-expanded", next ? "true" : "false");
+          const body = document.getElementById(convWhy.getAttribute("aria-controls"));
+          if (body) body.hidden = !next;
+          const chev = convWhy.querySelector(".rpanel-ideas__why-chevron");
+          if (chev) {
+            chev.classList.toggle("ap-icon-chevron-down", !next);
+            chev.classList.toggle("ap-icon-chevron-up", next);
+          }
+        }
+        return;
+      }
+
       // Thumb up/down feedback on an extraction idea card — exclusive toggle.
       const thumb = event.target.closest("[data-idea-feedback]");
       if (thumb) {

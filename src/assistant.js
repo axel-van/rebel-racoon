@@ -235,7 +235,15 @@ export function postExtractionResult(sessionId, { filename, ideas }) {
     variant: "extraction",
     meta: "Archie",
     filename,
-    ideas: ideas.map((i) => ({ id: i.id, title: i.title, body: i.body })),
+    // Carry kind + rationale through so the conversation idea card can show
+    // the same kind tag + "Why this idea" rationale as the right-panel card.
+    ideas: ideas.map((i) => ({
+      id: i.id,
+      title: i.title,
+      body: i.body,
+      kind: i.kind,
+      rationale: i.rationale,
+    })),
     count: ideas.length,
     status: "ready",
     open: true,

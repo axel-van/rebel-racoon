@@ -12,7 +12,7 @@
 //   updateThinkingChip(sessionId)  — call after every thread change
 //   stopThinkingTimer()            — call on session unmount
 
-import { getThread } from "../../assistant.js?v=37";
+import { getThread } from "../../assistant.js?v=38";
 import { showToast } from "../../components/toast.js?v=20";
 
 const THINKING_TIMEOUT_MS = 30000;
