@@ -19,7 +19,8 @@ import * as rightPanel from "./components/right-panel.js?v=113";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=29";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=21";
 import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=10";
-import { socialAccounts, connectors as connectorMocks } from "./mocks.js?v=36";
+import { connectors as connectorMocks } from "./mocks.js?v=36";
+import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=1";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -203,39 +204,13 @@ function askAltUrl(sessionId, prefilledUrl = "") {
   });
 }
 
-// Map our mock's `platform` slug to the DS's official, full-color
-// network icon used by .ap-avatar-network.
-const ALT_NETWORK_ICON_BY_PLATFORM = {
-  facebook: "ap-icon-facebook-official",
-  instagram: "ap-icon-instagram-official",
-  linkedin: "ap-icon-linkedin-official",
-  x: "ap-icon-x-official",
-};
-const ALT_BRAND_INITIALS = "NS";
-
 function askAltProfile(sessionId) {
   postAssistantMessage(sessionId, "Pick the profile to use for this Playbook. I'll tune tone and format for it.");
-  const connectedProfiles = socialAccounts.filter((p) => p.status === "connected");
-  const items = connectedProfiles.map((p) => {
-    // The profile name is the primary identifier — the platform is a
-    // secondary detail (signalled both by the caption and the avatar's
-    // corner network badge), so lead with the handle and demote the
-    // "Facebook · Page" line to the muted caption.
-    const captionParts = [];
-    if (p.platformLabel) captionParts.push(p.platformLabel);
-    if (p.kind) captionParts.push(p.kind);
-    return {
-      value: p.id,
-      label: p.handle,
-      caption: captionParts.join(" · "),
-      // DS .ap-avatar with the brand profile picture + corner network badge.
-      avatar: {
-        imageUrl: p.photo,
-        initials: ALT_BRAND_INITIALS,
-        networkIcon: ALT_NETWORK_ICON_BY_PLATFORM[p.platform],
-      },
-    };
-  });
+  // Connected profiles + their picker presentation come from the shared
+  // social-profiles helper so this onboarding step and the in-session
+  // draft profile picker stay identical.
+  const connectedProfiles = getConnectedProfiles();
+  const items = buildConnectedProfileItems();
   inlineQuestion.ask(sessionId, {
     title: "Which profile will publish?",
     stepLabel: "2 / 3",

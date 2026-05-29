@@ -2,6 +2,7 @@ import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=64";
 import { socialAccounts, chatStarters } from "../mocks.js?v=36";
+import { getConnectedProfiles, buildConnectedProfileItems } from "../social-profiles.js?v=1";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=29";
 import { isNewUser } from "../user-mode.js?v=22";
@@ -35,7 +36,7 @@ import { startDraftFlow, executeDraft, getAnglesForIdea } from "../draft-flow.js
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=32";
 import * as inlineQuestion from "../inline-question.js?v=27";
-import * as contextBuilder from "../context-builder.js?v=48";
+import * as contextBuilder from "../context-builder.js?v=49";
 import * as playbookEditor from "../playbook-editor.js?v=10";
 import { renderPicker } from "./_analyse-common.js?v=33";
 import { renderSourceCard } from "../components/source-card.js?v=30";
@@ -935,7 +936,11 @@ function defaultChatNameLocal() {
 // actually want to publish to. `count` is threaded through from the count
 // picker; `onBack` lets the second-step picker return to the first.
 function askProfileQuestion(sessionId, ideaId, { count = 1, angle = null, onBack = null } = {}) {
-  const connected = socialAccounts.filter((a) => a.status === "connected");
+  // Connected profiles + their picker presentation come from the shared
+  // social-profiles helper, so this picker proposes the exact same
+  // accounts (brand handle + avatar with network badge) as the Playbook
+  // onboarding profile step.
+  const connected = getConnectedProfiles();
   if (connected.length === 0) {
     postAssistantMessage(
       sessionId,
@@ -947,17 +952,13 @@ function askProfileQuestion(sessionId, ideaId, { count = 1, angle = null, onBack
   inlineQuestion.ask(sessionId, {
     title: "Pick a connected social profile",
     stepLabel: "Profile",
-    items: connected.map((a) => ({
-      value: a.id,
-      label: a.platformLabel,
-      caption: a.handle ? (a.kind ? `${a.kind} · ${a.handle}` : a.handle) : a.kind || "",
-      imgSrc: a.logo,
-    })),
+    items: buildConnectedProfileItems(),
     onPick: (accountId) => {
       const account = connected.find((a) => a.id === accountId);
       // Echo the pick as a user turn so the chosen profile stays visible
-      // in the thread after the picker unmounts.
-      postUserTurn(sessionId, account?.platformLabel || "This profile");
+      // in the thread after the picker unmounts. Same "Platform · handle"
+      // format the onboarding profile step uses.
+      if (account) postUserTurn(sessionId, `${account.platformLabel} · ${account.handle || account.kind || ""}`);
       const channels = account?.platform ? [account.platform] : null;
       startDraftFlow(sessionId, ideaId, count, channels, angle);
     },
