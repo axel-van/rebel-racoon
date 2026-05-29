@@ -14,7 +14,7 @@
 //   3. Creates one draft post per channel via posts-store.js.
 //   4. Posts a structured "Drafted N posts" result turn.
 
-import { postUserTurn, postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=36";
+import { postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=36";
 import { getIdeas } from "./library.js?v=29";
 import { ideas as GLOBAL_IDEAS, anglesByIdea } from "./mocks.js?v=36";
 import { addPostDraft } from "./posts-store.js?v=27";
@@ -85,13 +85,10 @@ export function startDraftFlow(sessionId, ideaId, count = 1, channelOverride = n
   const idea = resolveIdea(sessionId, ideaId);
   if (!idea) return;
 
-  // When the user picked an angle, name it in the echo so the chosen
-  // reframing is visible in the thread (e.g. "Draft 3 posts: <idea> —
-  // <angle>"). Falls back to the plain idea title otherwise.
-  const subject = angle ? `${idea.title} — ${angle.title}` : idea.title;
-  const echo = count > 1 ? `Draft ${count} posts: ${subject}` : `Draft a post: ${subject}`;
-  postUserTurn(sessionId, echo);
-
+  // The angle / count / profile picks are each echoed as their own user
+  // turn by the pickers in session.js, so we no longer post a composite
+  // "Draft N posts: …" echo here — that would duplicate the per-step
+  // responses. Go straight to the thinking chip.
   const pendingId = startPending(sessionId);
 
   setTimeout(() => {
@@ -139,15 +136,10 @@ export function executeDraft(sessionId, ideaId, selectedChannels, count = 1, ang
   const idea = resolveIdea(sessionId, ideaId);
   if (!idea || !selectedChannels || selectedChannels.length === 0) return;
 
-  // 1. Echo the user's channel selection (skip when the count flow
-  //    already implied a single channel — the count picker echo above
-  //    is enough on its own).
-  if (count <= 1) {
-    const selectionText = selectedChannels.map(labelFor).join(", ");
-    postUserTurn(sessionId, selectionText);
-  }
-
-  // 2. Thinking chip while "generating" the drafts.
+  // The profile pick is already echoed as a user turn by the profile
+  // picker, and the rare multi-channel fallback keeps its choice chips
+  // visible in place — so no channel echo is posted here. Straight to
+  // the thinking chip while "generating" the drafts.
   const pendingId = startPending(sessionId);
 
   setTimeout(() => {

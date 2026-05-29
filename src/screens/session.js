@@ -10,6 +10,7 @@ import {
   sendMessage,
   postAssistantChoice,
   postAssistantMessage,
+  postUserTurn,
   postDraftResult,
   subscribe,
   submitAssistantChoice,
@@ -30,7 +31,7 @@ import {
   setSubtitleStyle,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=27";
-import { startDraftFlow, executeDraft, getAnglesForIdea } from "../draft-flow.js?v=30";
+import { startDraftFlow, executeDraft, getAnglesForIdea } from "../draft-flow.js?v=31";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=32";
 import * as inlineQuestion from "../inline-question.js?v=27";
@@ -954,6 +955,9 @@ function askProfileQuestion(sessionId, ideaId, { count = 1, angle = null, onBack
     })),
     onPick: (accountId) => {
       const account = connected.find((a) => a.id === accountId);
+      // Echo the pick as a user turn so the chosen profile stays visible
+      // in the thread after the picker unmounts.
+      postUserTurn(sessionId, account?.platformLabel || "This profile");
       const channels = account?.platform ? [account.platform] : null;
       startDraftFlow(sessionId, ideaId, count, channels, angle);
     },
@@ -988,6 +992,9 @@ export function askAngleQuestion(sessionId, ideaId) {
     })),
     onPick: (angleId) => {
       const angle = angles.find((a) => a.id === angleId) || null;
+      // Echo the chosen angle as a user turn so it stays visible in the
+      // thread once the picker unmounts.
+      if (angle) postUserTurn(sessionId, angle.title);
       askDraftCountQuestion(sessionId, ideaId, {
         angle,
         // ← Back returns to the angle picker so the user can re-choose.
@@ -1007,6 +1014,9 @@ export function askDraftCountQuestion(sessionId, ideaId, { angle = null, onBack 
     // Clamp to a reasonable range — single-digit + custom typed numbers
     // can land outside it (0, negative, NaN). 1 floors any nonsense.
     const n = Math.max(1, Math.min(20, Math.floor(Number(count) || 1)));
+    // Echo the count as a user turn so the pick stays visible once the
+    // picker unmounts (covers both the preset chips and the custom input).
+    postUserTurn(sessionId, `${n} draft${n === 1 ? "" : "s"}`);
     askProfileQuestion(sessionId, ideaId, {
       count: n,
       angle,
