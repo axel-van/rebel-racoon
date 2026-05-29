@@ -15,7 +15,7 @@
 //   4. Posts a structured "Drafted N posts" result turn.
 
 import { postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=37";
-import { getIdeas } from "./library.js?v=29";
+import { getIdeas } from "./library.js?v=30";
 import { ideas as GLOBAL_IDEAS, anglesByIdea } from "./mocks.js?v=36";
 import { addPostDraft } from "./posts-store.js?v=28";
 import { showToast } from "./components/toast.js?v=20";

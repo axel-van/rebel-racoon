@@ -20,12 +20,14 @@ import {
   postUserTurn,
   postUserProfilesTurn,
   postDraftResult,
+  postExtractionResult,
+  postClipExtractionTurn,
   startPending,
   finishPending,
   subscribe,
   submitAssistantChoice,
 } from "../assistant.js?v=37";
-import { getSources, getIdeas } from "../library.js?v=29";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=30";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
   renderInto as renderComposerMentions,
@@ -69,7 +71,9 @@ import {
   pushScriptedSource,
   completeScriptedSource,
   updateSourceClips,
-} from "../sources-stream.js?v=32";
+  extractClipsForSource,
+  setSourceIdeaCount,
+} from "../sources-stream.js?v=33";
 import { showToast } from "../components/toast.js?v=20";
 import {
   openDrafts as openDraftsPanel,
@@ -82,7 +86,7 @@ import {
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=2";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=3";
 import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=1";
 
 // Session screen — persistent assistant panel on the left, workspace with
@@ -1166,6 +1170,31 @@ function generateClipDrafts(sessionId, clip, sourceName, accounts, format, style
   }, 1600);
 }
 
+// ── Video-intake choice branches ──────────────────────────────────────────
+// Run after the user answers "what to do with this video?" (intake-lifecycle).
+// Extraction is deferred at upload, so each branch produces only its output.
+
+// "Analyze for ideas" — brief thinking chip, inject the canned video ideas,
+// surface the source-intake "N ideas" pill, then post the rich extraction turn.
+function runVideoIdeasChoice(sessionId, sourceId, filename) {
+  const pendingId = startPending(sessionId);
+  setTimeout(() => {
+    finishPending(sessionId, pendingId);
+    const ideas = extractVideoIdeas(sessionId, sourceId);
+    setSourceIdeaCount(sessionId, sourceId, ideas.length);
+    postExtractionResult(sessionId, { filename, ideas });
+  }, 1600);
+}
+
+// "Extract & create clips" — post the clip-extraction turn (renders pending
+// while no clips exist yet), then attach the clips so it flips to "ready".
+function runVideoClipsChoice(sessionId, sourceId, filename) {
+  postClipExtractionTurn(sessionId, { sourceId, filename });
+  setTimeout(() => {
+    extractClipsForSource(sessionId, sourceId);
+  }, 1600);
+}
+
 function renderThread(messages, sessionId) {
   return messages.map((m) => renderTurn(m, sessionId)).join("");
 }
@@ -2202,6 +2231,13 @@ function bindSession(root, session) {
             : `${label} subtitles added to ${count} ${clipWord}`;
         showToast(message, { duration: 3200 });
       }
+    } else if (msg.handler === "video-intake-choice") {
+      // Post-upload "what to do with this video?" — run only the picked
+      // branch (deferred from the upload; see intake-lifecycle.js).
+      const { sourceId, filename } = msg.context || {};
+      const pick = selectedValues[0];
+      if (sourceId && pick === "ideas") runVideoIdeasChoice(session.id, sourceId, filename);
+      else if (sourceId && pick === "clips") runVideoClipsChoice(session.id, sourceId, filename);
     }
   }
 

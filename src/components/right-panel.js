@@ -22,7 +22,7 @@ import {
   subscribeSources,
   updateSourceClips,
   removeSources,
-} from "../sources-stream.js?v=32";
+} from "../sources-stream.js?v=33";
 import { open as openAddSourceModal } from "./add-source-modal.js?v=24";
 import { addMention as addComposerMention } from "../composer-mentions.js?v=4";
 import { iconFor } from "../file-kinds.js?v=20";
@@ -666,7 +666,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName } = entry;
-      import("../screens/session.js?v=153").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=154").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, clip, sourceName);
       });
       return;
@@ -703,7 +703,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=153").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=154").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -2234,7 +2234,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=153").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=154").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

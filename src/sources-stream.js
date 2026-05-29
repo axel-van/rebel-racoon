@@ -361,20 +361,27 @@ function transitionToDone(upload) {
     src.status = "Processed";
     src.signal = sig.signal;
     src.signalColor = sig.signalColor;
-    src.ideaCount = randomIdeas();
-    ideaCount = src.ideaCount;
     src.progress = 1;
     src.stage = undefined;
     src.etaSec = undefined;
     if (src.kind === "Video") {
-      clipCount = attachVideoClips(src);
+      // Defer idea extraction + clip creation until the user picks
+      // "Analyze for ideas" / "Extract clips" in the post-upload choice
+      // (posted by the intake lifecycle once the source is Processed).
+      src.ideaCount = 0;
+    } else {
+      src.ideaCount = randomIdeas();
+      ideaCount = src.ideaCount;
     }
     notifySources(upload.sessionId);
   }
   notifyUploads();
 
+  const isVideo = !!(src && src.kind === "Video");
   import("./components/toast.js").then(({ showToast }) => {
-    showToast(`${upload.name} ready · ${formatExtractionSummary(ideaCount, clipCount)}`);
+    showToast(
+      isVideo ? `${upload.name} ready` : `${upload.name} ready · ${formatExtractionSummary(ideaCount, clipCount)}`,
+    );
   });
 }
 
@@ -388,6 +395,29 @@ function attachVideoClips(src) {
   src.clipExtractionStatus = "ready";
   if (!src.durationSec) src.durationSec = 1458;
   return clips.length;
+}
+
+// Post-hoc clip extraction — used by the "Extract clips" branch of the
+// video-intake choice. Attaches the canned clip set to an already-Processed
+// video source and notifies, so the inline clip-extraction turn flips to
+// "ready" and the source-intake "M clips" pill appears. Returns clip count.
+export function extractClipsForSource(sessionId, sourceId) {
+  const list = sourcesBySession.get(sessionId);
+  const src = list && list.find((s) => s.id === sourceId);
+  if (!src) return 0;
+  const count = attachVideoClips(src);
+  notifySources(sessionId);
+  return count;
+}
+
+// Set a source's idea count post-hoc — used by the "Analyze for ideas"
+// branch so the source-intake "N ideas" pill appears after deferred extraction.
+export function setSourceIdeaCount(sessionId, sourceId, n) {
+  const list = sourcesBySession.get(sessionId);
+  const src = list && list.find((s) => s.id === sourceId);
+  if (!src) return;
+  src.ideaCount = n;
+  notifySources(sessionId);
 }
 
 function formatExtractionSummary(ideaCount, clipCount) {
@@ -498,18 +528,20 @@ export function completeScriptedSource(sourceId, { signal, signalColor, ideaCoun
   src.status = "Processed";
   src.signal = signal;
   src.signalColor = signalColor;
-  src.ideaCount = ideaCount;
+  const isVideo = src.kind === "Video";
+  // Video defers idea extraction + clip creation to the post-upload
+  // "what to do?" choice; other kinds keep their immediate ideaCount.
+  src.ideaCount = isVideo ? 0 : ideaCount;
   let clipCount = 0;
-  if (src.kind === "Video") {
-    clipCount = attachVideoClips(src);
-  }
   notifySources(sessionId);
 
   // Symmetric toast with transitionToDone — the chat is no longer
   // blocked during analysis, so the user may be mid-typing when the
   // source completes and miss the inline bubble flip.
   import("./components/toast.js").then(({ showToast }) => {
-    showToast(`${src.filename} ready · ${formatExtractionSummary(ideaCount, clipCount)}`);
+    showToast(
+      isVideo ? `${src.filename} ready` : `${src.filename} ready · ${formatExtractionSummary(ideaCount, clipCount)}`,
+    );
   });
 }
 

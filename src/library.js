@@ -27,7 +27,7 @@ import {
   subscribeSources,
   pushScriptedSource,
   completeScriptedSource,
-} from "./sources-stream.js?v=32";
+} from "./sources-stream.js?v=33";
 
 // --- Module state -------------------------------------------------------
 
@@ -195,6 +195,14 @@ export function injectIdeasForSource(sessionId, sourceId, ideas) {
   return created;
 }
 
+// "Analyze for ideas" branch of the video-intake choice — inject the canned
+// video idea set against the given source. Reuses injectIdeasForSource so the
+// ideas land in both the per-session store and the global seed list. Returns
+// the created ideas so the caller can post the "Extracted N ideas" turn.
+export function extractVideoIdeas(sessionId, sourceId) {
+  return injectIdeasForSource(sessionId, sourceId, SCRIPTS.video.ideas);
+}
+
 // Bulk-delete ideas by id. Used by the "All ideas" view's bulk-action bar.
 // Returns the number of ideas actually removed (no-op for unknown ids).
 export function removeIdeas(sessionId, ideaIds) {
@@ -247,6 +255,21 @@ export function addSource(sessionId, kind) {
     filename: script.filename,
     kind: script.kindLabel,
   });
+
+  // Video defers all extraction to the post-upload "what to do?" choice —
+  // the intake lifecycle posts it once the source flips Processed, and the
+  // choice handler in session.js drives idea OR clip generation. Here we
+  // just run the source through Processing → Processed (no inline ideas).
+  if (script.kindLabel === "Video") {
+    setTimeout(() => {
+      completeScriptedSource(sourceId, {
+        signal: script.signal,
+        signalColor: script.signalColor,
+        ideaCount: 0,
+      });
+    }, 6000);
+    return;
+  }
 
   // Right-aligned "Source intake" turn is now posted by the centralized
   // subscription in session.js (bindSession → subscribeInputs path),
