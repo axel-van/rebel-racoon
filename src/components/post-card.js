@@ -20,6 +20,7 @@
 // `?focusPost=<id>`.
 
 import { html, raw } from "../utils.js?v=20";
+import { isPortraitFormat } from "../clip-formats.js?v=1";
 
 export function renderPostCard(post, opts = {}) {
   const inlineEdit = opts.inlineEdit === true;
@@ -300,7 +301,9 @@ const SUBTITLE_LABEL = {
 function renderClipPlayer(post) {
   const clip = post.clipRef;
   const duration = Math.max(1, Math.round(clip.end - clip.start));
-  const portrait = PORTRAIT_NETWORKS.has(post.network);
+  // Prefer the explicit export format chosen in the clip-draft flow; fall
+  // back to the network's default orientation when no format was set.
+  const portrait = post.format ? isPortraitFormat(post.format) : PORTRAIT_NETWORKS.has(post.network);
   const h = typeof clip.hue === "number" ? clip.hue : 24;
   const bg = `linear-gradient(135deg, oklch(0.28 0.08 ${h}) 0%, oklch(0.14 0.05 ${h}) 100%)`;
   const blob1 = `radial-gradient(circle at 30% 35%, oklch(0.74 0.20 ${h}) 0%, transparent 48%)`;

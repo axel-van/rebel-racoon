@@ -12,10 +12,10 @@ import {
   insertPost,
   updatePostContent,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=27";
-import { renderPostCard } from "./post-card.js?v=30";
+} from "../posts-store.js?v=28";
+import { renderPostCard } from "./post-card.js?v=31";
 import { renderClipCard } from "./clip-card.js?v=7";
-import { open as openVideoClipsModal } from "./video-clips-modal.js?v=11";
+import { open as openVideoClipsModal } from "./video-clips-modal.js?v=12";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=44";
 import {
   getSources as getStreamSources,
@@ -656,8 +656,9 @@ export function init() {
       if (sid && entry) addComposerMention(sid, entry.clip.title);
       return;
     }
-    // Per-card "Draft Post" — drafts that single clip into the active
-    // session. Same payload shape as the footer multi-select CTA.
+    // Per-card "Draft Post" — kicks off the 3-step quick-picker flow
+    // (accounts → aspect ratio → subtitle style) in the session assistant,
+    // which then generates one draft per chosen account.
     const clipDraftBtn = event.target.closest("[data-clip-draft]");
     if (clipDraftBtn) {
       const cid = clipDraftBtn.getAttribute("data-clip-draft");
@@ -665,13 +666,9 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName } = entry;
-      addPostDraft(sid, {
-        network: clip.network,
-        text: [clip.title, clip.summary].filter(Boolean),
-        hashtags: (clip.tags || []).map((t) => `#${t}`),
-        clipRef: { start: clip.start, end: clip.end, sourceName, hue: clip.hue },
+      import("../screens/session.js?v=152").then(({ startClipDraftFlow }) => {
+        startClipDraftFlow(sid, clip, sourceName);
       });
-      import("./toast.js").then(({ showToast }) => showToast(`Drafted a post from clip`, { duration: 3200 }));
       return;
     }
     // Footer CTA — draft posts from the selected clips into the active
@@ -706,7 +703,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=151").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=152").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -2237,7 +2234,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=151").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=152").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

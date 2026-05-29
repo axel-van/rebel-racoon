@@ -8,7 +8,7 @@ import { initUserModeChip } from "./components/user-mode-chip.js?v=32";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=23";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
 import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=24";
-import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=11";
+import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=12";
 import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=24";
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=24";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
@@ -19,7 +19,7 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=14";
 import { renderDashboard } from "./screens/dashboard.js?v=46";
-import { renderSession } from "./screens/session.js?v=151";
+import { renderSession } from "./screens/session.js?v=152";
 import { renderIdeas } from "./screens/ideas.js?v=25";
 import { renderContexts } from "./screens/contexts.js?v=37";
 import { renderSettings } from "./screens/settings.js?v=2";

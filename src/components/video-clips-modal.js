@@ -22,6 +22,7 @@
 import { escapeHtml } from "../utils.js?v=20";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { showToast } from "./toast.js?v=20";
+import { FORMATS, NETWORK_FORMATS, formatsForNetwork, defaultFormatFor } from "../clip-formats.js?v=1";
 
 const MODAL_ID = "videoClips";
 const MIN_CLIP = 5;
@@ -41,33 +42,6 @@ const NETWORK_BY_ID = NETWORKS.reduce((acc, n) => {
   acc[n.id] = n;
   return acc;
 }, {});
-
-// Export formats a clip can be cropped to. `ratio` is width/height — drives
-// both the chip's aspect glyph and the preview crop frame. `tag` is the
-// short label on the chip; `label` the descriptive name (shown on hover).
-const FORMATS = {
-  "9:16": { id: "9:16", tag: "9:16", label: "Vertical", ratio: 9 / 16 },
-  "4:5": { id: "4:5", tag: "4:5", label: "Portrait", ratio: 4 / 5 },
-  "1:1": { id: "1:1", tag: "1:1", label: "Square", ratio: 1 },
-  "16:9": { id: "16:9", tag: "16:9", label: "Landscape", ratio: 16 / 9 },
-};
-
-// Optimized formats per network — first entry is the recommended default.
-const NETWORK_FORMATS = {
-  facebook: ["1:1", "4:5", "9:16", "16:9"],
-  instagram: ["9:16", "4:5", "1:1"],
-  linkedin: ["1:1", "4:5", "16:9"],
-  x: ["16:9", "1:1"],
-  tiktok: ["9:16"],
-};
-
-function formatsForNetwork(net) {
-  return (NETWORK_FORMATS[net] || ["16:9"]).map((id) => FORMATS[id]).filter(Boolean);
-}
-
-function defaultFormatFor(net) {
-  return (NETWORK_FORMATS[net] || ["16:9"])[0];
-}
 
 // Backfill the format on a clip draft: keep an existing valid value, else
 // fall back to the recommended format for its network.
