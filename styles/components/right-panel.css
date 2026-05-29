@@ -426,6 +426,11 @@
   border-radius: var(--app-radius-card);
   display: flex;
   flex-direction: column;
+  /* Cap the card width so idea / clip cards don't sprawl edge-to-edge on a
+     wide panel — they carry a lot of chrome and read best at a contained
+     width. Left-aligned within the column. */
+  max-width: 560px;
+  width: 100%;
   transition:
     border-color var(--ref-animation-short) var(--app-ease-out),
     box-shadow var(--ref-animation-short) var(--app-ease-out);
