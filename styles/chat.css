@@ -21,6 +21,10 @@
   align-self: flex-end;
   align-items: flex-end;
   max-width: 560px;
+  /* Tighten the label→bubble gap so the "You" / "Source intake" label
+     reads as paired with its bubble (base .chat-turn uses spacing-xs/12px,
+     which felt too airy for this two-line unit). */
+  gap: var(--ref-spacing-xxxs);
 }
 
 /* Inline AI layout (Figma 25:881) — when the sparkle avatar is a direct child
