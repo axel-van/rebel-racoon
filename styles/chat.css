@@ -409,10 +409,13 @@ span.chat-bubble-choice-chip {
    Posts tab; rewired in Lot 4). */
 
 /* Composes .ap-card with a horizontal layout. .ap-card supplies the
-   surface (bg, border, radius, padding); .drafts-card adds the row layout
-   + the mermaid icon tile + the active state.
-   Mermaid-tinted because the batch is AI-generated — same visual family
-   as the chat AI avatar, Drafting pill, and source-processing pill. */
+   surface (border, radius, padding); .drafts-card adds the row layout
+   + the mermaid icon tile + the interactive states.
+   At rest it wears the same quiet grey-05 / grey-10 surface as the
+   "Extracted N ideas" idea cards so this AI-produced batch sits in the
+   same visual family as the rest of the thread — the mermaid icon tile
+   carries the AI signal, and the card only lights up electric blue on
+   interaction (matching the choice chips + source-intake pill). */
 .drafts-card {
   /* .ap-card defaults to flex-direction: column with --ref-spacing-sm gap;
      compose horizontally with a tighter gap for this list-item style. */
@@ -423,10 +426,10 @@ span.chat-bubble-choice-chip {
   cursor: pointer;
   font-family: inherit;
   text-align: left;
-  /* Override .ap-card's default grey border with electric blue so the
-     card reads as an actionable, AI-produced batch from across the
-     thread (matches the user message bubble + the Review CTA). */
-  border-color: var(--ref-color-electric-blue-100);
+  /* Quiet resting surface — mirrors the nested idea cards so the card
+     no longer shouts over the surrounding conversation. */
+  background: var(--ref-color-grey-05);
+  border-color: var(--ref-color-grey-10);
   transition:
     border-color var(--ref-animation-short) var(--app-ease-standard),
     background-color var(--ref-animation-short) var(--app-ease-standard),
@@ -435,7 +438,9 @@ span.chat-bubble-choice-chip {
 
 .drafts-card:hover,
 .drafts-card:focus-visible {
-  border-color: var(--ref-color-electric-blue-150);
+  /* Interactive lift: the border picks up the thread's electric-blue
+     clickable accent on hover/focus, same gesture as the choice chips. */
+  border-color: var(--ref-color-electric-blue-100);
   outline: none;
 }
 
@@ -540,9 +545,11 @@ span.chat-bubble-choice-chip {
   font-weight: var(--ref-font-weight-bold);
 }
 
-/* "Review ›" tag — mermaid-tinted text pill replacing the bare chevron.
-   Reads as a quiet button label without competing with the title; the
-   whole card stays clickable. */
+/* "Review ›" label — electric blue to match the thread's clickable
+   affordances (source-intake "View ideas" pill, the "View idea" links
+   inside the extraction turn). Reads as a quiet link beside the title
+   while the whole card stays clickable; the chevron nudges right on
+   hover/focus, the same micro-cue as the source-intake pill. */
 .drafts-card__cta {
   display: inline-flex;
   align-items: center;
@@ -550,11 +557,17 @@ span.chat-bubble-choice-chip {
   flex-shrink: 0;
   font: var(--sys-text-style-body-bold-weight) var(--sys-text-style-body-bold-size) /
     var(--sys-text-style-body-bold-line-height) var(--sys-text-style-body-bold-font-family);
-  color: var(--ref-color-mermaid-gradient-from);
+  color: var(--ref-color-electric-blue-100);
 }
 
 .drafts-card__cta > i {
   font-size: var(--sys-icon-css-sm);
+  transition: transform var(--ref-animation-short) var(--app-ease-out);
+}
+
+.drafts-card:hover .drafts-card__cta > i,
+.drafts-card:focus-visible .drafts-card__cta > i {
+  transform: translateX(2px);
 }
 
 /* Subtitle preset chips (PDF flow 06.B). When the choice carries a
