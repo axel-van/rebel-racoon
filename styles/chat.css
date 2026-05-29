@@ -27,6 +27,34 @@
   gap: var(--ref-spacing-xxxs);
 }
 
+/* Visual profiles echo — right-aligned wrap of avatar + handle chips, used
+   when the user answers "which account(s)?" so the thread shows the chosen
+   profiles (with their network badge) rather than bare network names. */
+.chat-profiles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--ref-spacing-xxs);
+  max-width: 460px;
+}
+
+.chat-profile-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: 3px var(--ref-spacing-xs) 3px 3px;
+  background: var(--ref-color-electric-blue-05);
+  border: 1px solid var(--ref-color-electric-blue-20);
+  border-radius: var(--app-radius-pill);
+}
+
+.chat-profile-chip__name {
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-electric-blue-150);
+  white-space: nowrap;
+}
+
 /* Inline AI layout (Figma 25:881) — when the sparkle avatar is a direct child
    of the turn (no header wrapper), lay out horizontally: avatar | bubble.
    The Analyse wizards still emit a header wrapper (icon + role label), so

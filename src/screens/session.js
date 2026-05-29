@@ -2,7 +2,12 @@ import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=64";
 import { socialAccounts, chatStarters } from "../mocks.js?v=36";
-import { getConnectedProfiles, buildConnectedProfileItems } from "../social-profiles.js?v=1";
+import {
+  getConnectedProfiles,
+  buildConnectedProfileItems,
+  NETWORK_ICON_BY_PLATFORM,
+  BRAND_INITIALS,
+} from "../social-profiles.js?v=1";
 import { FORMATS, formatsForNetworks } from "../clip-formats.js?v=1";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=29";
@@ -13,12 +18,13 @@ import {
   postAssistantChoice,
   postAssistantMessage,
   postUserTurn,
+  postUserProfilesTurn,
   postDraftResult,
   startPending,
   finishPending,
   subscribe,
   submitAssistantChoice,
-} from "../assistant.js?v=36";
+} from "../assistant.js?v=37";
 import { getSources, getIdeas } from "../library.js?v=29";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=20";
 import {
@@ -1091,7 +1097,17 @@ function askClipAccounts(sessionId, clip, sourceName) {
         .map((id) => connected.find((a) => a.id === id))
         .filter(Boolean);
       if (accounts.length === 0) return;
-      postUserTurn(sessionId, accounts.map((a) => a.platformLabel).join(", "));
+      // Echo the picked profiles visually — avatar + network badge + handle,
+      // not the bare network names.
+      postUserProfilesTurn(
+        sessionId,
+        accounts.map((a) => ({
+          handle: a.handle || a.platformLabel,
+          imageUrl: a.photo,
+          initials: BRAND_INITIALS,
+          networkIcon: NETWORK_ICON_BY_PLATFORM[a.platform],
+        })),
+      );
       askClipFormat(sessionId, clip, sourceName, accounts);
     },
     onSkip: () => {},
@@ -1193,6 +1209,12 @@ function renderTurn(message, sessionId) {
     return renderIdeaExtractionTurn(message, sessionId);
   }
 
+  // Profiles echo — right-aligned avatar (+ network badge) + handle chips,
+  // used when the user picks which account(s) to draft a clip for.
+  if (message.role === "user" && message.variant === "profiles") {
+    return renderProfilesTurn(message);
+  }
+
   // Channel-picker choice turn — chip row + "Draft them" button.
   if (message.role === "assistant-choice") {
     return renderChoiceTurn(message);
@@ -1216,6 +1238,31 @@ function renderTurn(message, sessionId) {
       <div class="chat-bubble ${bubbleClass}${loadingClass}">
         <p class="chat-bubble-text">${message.text}</p>
       </div>
+    </div>
+  `;
+}
+
+// Visual echo of the selected profiles — a right-aligned wrap of chips,
+// each a DS avatar (brand photo + corner network badge) beside the handle.
+function renderProfilesTurn(message) {
+  const chips = (message.profiles || [])
+    .map((p) => {
+      const inner = p.imageUrl
+        ? `<img src="${p.imageUrl}" alt="" />`
+        : `<span class="ap-avatar-initials">${escapeHtml(p.initials || "")}</span>`;
+      const badge = p.networkIcon ? `<span class="ap-avatar-network"><i class="${p.networkIcon}"></i></span>` : "";
+      return `
+        <span class="chat-profile-chip">
+          <span class="ap-avatar size-24" aria-hidden="true">${inner}${badge}</span>
+          <span class="chat-profile-chip__name">${escapeHtml(p.handle || "")}</span>
+        </span>
+      `;
+    })
+    .join("");
+  return `
+    <div class="chat-turn chat-turn--user">
+      <span class="chat-turn-role">You</span>
+      <div class="chat-profiles">${chips}</div>
     </div>
   `;
 }

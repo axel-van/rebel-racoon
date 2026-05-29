@@ -287,6 +287,23 @@ export function postUserTurn(sessionId, text) {
   notify(sessionId);
 }
 
+// Push a user turn that echoes the picked social profiles visually — a row
+// of avatar (+ network badge) + handle chips instead of a plain text bubble.
+// `profiles` = [{ handle, imageUrl?, initials?, networkIcon? }].
+export function postUserProfilesTurn(sessionId, profiles) {
+  const thread = getThread(sessionId);
+  thread.push({
+    id: newId(),
+    role: "user",
+    variant: "profiles",
+    meta: "You",
+    profiles: Array.isArray(profiles) ? profiles : [],
+    status: "ready",
+    createdAt: Date.now(),
+  });
+  notify(sessionId);
+}
+
 // Push an "assistant-choice" turn that renders a set of toggle chips plus a
 // submit button. Keeps the module generic — the handler string identifies
 // what the click delegate in session.js should do on submit.
