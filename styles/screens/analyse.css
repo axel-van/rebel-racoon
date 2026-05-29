@@ -148,10 +148,10 @@
    Sits above the option rows and inside the same .analyse__options frame. */
 .analyse__picker-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
   border-bottom: 1px solid var(--app-border-soft);
 }
 

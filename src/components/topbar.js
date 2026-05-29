@@ -22,7 +22,7 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=14";
+} from "./conversation-status-card.js?v=15";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=29";
@@ -63,10 +63,14 @@ export function renderTopbar(_options = {}) {
   // Welcome-alt swaps the right-side pills cluster for a single Exit
   // button — the wizard has no conversation to surface yet, so the
   // session pills + chat-status toggle would just be dead controls.
+  // The info toggle only appears once the chat has something to summarise —
+  // on a brand-new/empty chat the status card would be all "None yet", so we
+  // hide the control entirely (matches conversation-status-card.render).
+  const statusCardAvailable = onSession && (sessionSourceCount() > 0 || ideaCount > 0 || draftCount > 0);
   const rightSide = onWelcomeAlt
     ? renderWelcomeAltExit()
     : onSession
-      ? `${renderSessionPills(rpMode, draftCount, isEmpty, ideaCount)}${renderStatusCardToggle()}`
+      ? `${renderSessionPills(rpMode, draftCount, isEmpty, ideaCount)}${renderStatusCardToggle(statusCardAvailable)}`
       : "";
   el.innerHTML = html`
     <div class="app-topbar__left">${raw(onPlaybook ? renderBack() : renderTitle(onSession))}</div>
@@ -98,7 +102,8 @@ function renderWelcomeAltExit() {
 // "i" icon-button at the far right of the topbar — toggles the floating
 // conversation status card on/off. Persists across reloads via
 // localStorage (cf. conversation-status-card.js).
-function renderStatusCardToggle() {
+function renderStatusCardToggle(available) {
+  if (!available) return "";
   const on = isStatusCardEnabled();
   return `
     <button

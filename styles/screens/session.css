@@ -265,7 +265,7 @@
    rows. */
 .session__assistant-wizard-bar .analyse__picker-header {
   border-bottom: 0;
-  padding: var(--ref-spacing-sm) var(--ref-spacing-sm) var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm) var(--ref-spacing-xxs);
 }
 
 /* Header with a back button — pull the button into the header's left
@@ -283,8 +283,8 @@
 }
 
 .session__assistant-wizard-bar .analyse__picker-title {
-  font-size: var(--ref-font-size-lg);
-  line-height: var(--ref-font-line-height-lg);
+  font-size: var(--ref-font-size-md);
+  line-height: var(--ref-font-line-height-md);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-100);
 }

@@ -214,6 +214,17 @@ export function render() {
   // attachVideoClips call inside sources-stream.transitionToDone).
   const clipCount = sources.reduce((sum, s) => sum + (Array.isArray(s.clips) ? s.clips.length : 0), 0);
 
+  // Brand-new / empty chat — nothing to summarise yet (no sources, ideas,
+  // clips, drafts, or in-flight work). The card would be an all-"None yet"
+  // shell, so hide it entirely (and the topbar info toggle is hidden in
+  // lockstep — see topbar.renderStatusCardToggle) until there's content.
+  const isEmptyChat =
+    sources.length === 0 && ideas.length === 0 && clipCount === 0 && draftCount === 0 && pending.length === 0;
+  if (isEmptyChat) {
+    hideCard();
+    return;
+  }
+
   // The card is always shown on /session/:id when no right-panel is open —
   // empty sections render an "—" placeholder so the user has a reliable
   // status anchor (and discovers the affordance to access Drafts/Outputs

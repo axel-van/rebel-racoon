@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=64";
+import { renderTopbar } from "../components/topbar.js?v=65";
 import { socialAccounts, chatStarters } from "../mocks.js?v=36";
 import {
   getConnectedProfiles,
@@ -86,7 +86,7 @@ import {
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=3";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=4";
 import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=1";
 
 // Session screen — persistent assistant panel on the left, workspace with
@@ -1170,6 +1170,43 @@ function generateClipDrafts(sessionId, clip, sourceName, accounts, format, style
   }, 1600);
 }
 
+// "What would you like to do with this video?" — asked via the quick picker
+// once a freshly-added video is processed (intake-lifecycle → onVideoReady).
+// Each option carries a caption explaining what it does; picking one echoes
+// it as a user turn and runs only that branch.
+function askVideoIntake(sessionId, sourceId, filename) {
+  postAssistantMessage(sessionId, "What would you like to do with this video?");
+  inlineQuestion.ask(sessionId, {
+    title: "Use this video",
+    stepLabel: "Video",
+    skipLabel: "Cancel",
+    items: [
+      {
+        value: "ideas",
+        label: "Analyze for ideas",
+        caption: "Pull the key themes and talking points into your Ideas to draft posts from.",
+        icon: "ap-icon-sparkles",
+      },
+      {
+        value: "clips",
+        label: "Extract & create clips",
+        caption: "Cut the video into short, post-ready clips you can caption and publish.",
+        icon: "ap-icon-video",
+      },
+    ],
+    onPick: (value) => {
+      if (value === "ideas") {
+        postUserTurn(sessionId, "Analyze for ideas");
+        runVideoIdeasChoice(sessionId, sourceId, filename);
+      } else if (value === "clips") {
+        postUserTurn(sessionId, "Extract & create clips");
+        runVideoClipsChoice(sessionId, sourceId, filename);
+      }
+    },
+    onSkip: () => {},
+  });
+}
+
 // ── Video-intake choice branches ──────────────────────────────────────────
 // Run after the user answers "what to do with this video?" (intake-lifecycle).
 // Extraction is deferred at upload, so each branch produces only its output.
@@ -1698,6 +1735,7 @@ function wireAssistantPanel(root, session, attachedContext) {
   // Intake-turn lifecycle (loading → ready) — see intake-lifecycle.js.
   const offComposerSources = startIntakeLifecycle(session.id, {
     onSourcesChange: repaintThreadFromSources,
+    onVideoReady: (sourceId, filename) => askVideoIntake(session.id, sourceId, filename),
   });
 
   // Uploads → no extra wiring needed: startFileUpload already takes a
@@ -2231,13 +2269,6 @@ function bindSession(root, session) {
             : `${label} subtitles added to ${count} ${clipWord}`;
         showToast(message, { duration: 3200 });
       }
-    } else if (msg.handler === "video-intake-choice") {
-      // Post-upload "what to do with this video?" — run only the picked
-      // branch (deferred from the upload; see intake-lifecycle.js).
-      const { sourceId, filename } = msg.context || {};
-      const pick = selectedValues[0];
-      if (sourceId && pick === "ideas") runVideoIdeasChoice(session.id, sourceId, filename);
-      else if (sourceId && pick === "clips") runVideoClipsChoice(session.id, sourceId, filename);
     }
   }
 
