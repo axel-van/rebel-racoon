@@ -1,10 +1,10 @@
 /* Video Clips modal — AI-suggested clips for a video source.
  *
- * Ported from the standalone handoff prototype at
- * /Users/matthieu.bousendorfer/sources/video-clips-handoff/src/video-clips.css.
- * The dark editor pane keeps its hex palette (#14171D / #1B1F26 / #232830 …) —
- * those are part of the design and don't have DS equivalents. Everything
- * else maps to --ref-* / --sys-* / --app-* tokens.
+ * The editor is a dark surface, but its palette is NOT ad-hoc: every dark
+ * value comes from the systematic app-vc ramp defined in styles/tokens.css
+ * (the DS is light-only). Spacing, type and radius use the DS ref + app scales.
+ * Keep it flat and quiet — no decorative glows, grain, pulses, or fake
+ * waveforms; depth comes from the surface ramp + one subtle shadow.
  */
 
 /* ── Modal shell ───────────────────────────────────────────────── */
@@ -385,7 +385,7 @@
   width: 200px;
   height: 134px;
   border-radius: var(--app-radius-button-sm);
-  background-color: #1a1a1a;
+  background-color: var(--app-vc-surface-sunken);
   background-size: cover;
   display: flex;
   align-items: center;
@@ -552,90 +552,75 @@
 }
 
 /* ════════════════════════════════════════════════════════════════
- *  EDITOR PANE — cinematic dark video-editor surface.
- *  The colors here (#14171D / #1B1F26 / #232830 …) are part of the
- *  design and intentionally outside the DS palette. Don't replace
- *  them with --ref-color-grey-* — the editor needs a near-black
- *  cinematic context.
+ *  EDITOR PANE — dark video-editor surface.
+ *  Flat surfaces from the systematic --app-vc-* ramp (tokens.css).
+ *  Quiet by design: no glow rings, grain, pulses, or fake waveforms —
+ *  hierarchy comes from the surface ramp, spacing, and type.
  * ════════════════════════════════════════════════════════════════ */
 
 .vc-editor {
-  background: linear-gradient(180deg, #1b1f26 0%, #14171d 100%);
+  background: var(--app-vc-surface);
   border-radius: var(--app-radius-card);
-  padding: 14px 16px 16px;
-  color: #e7eaf0;
+  padding: var(--ref-spacing-sm);
+  color: var(--app-vc-text);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  box-shadow:
-    var(--app-shadow-popover-lg),
-    0 0 0 3px rgba(23, 141, 254, 0.16);
-  border: 1.5px solid #2a2f38;
-  margin: 6px -4px;
+  gap: var(--ref-spacing-sm);
+  box-shadow: var(--app-shadow-popover-lg);
+  border: 1px solid var(--app-vc-border);
+  margin: var(--ref-spacing-xxs) 0;
 }
 
 .vc-editor__head {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--ref-spacing-xs);
   padding-bottom: var(--ref-spacing-xs);
-  border-bottom: 1px solid #2a2f38;
+  border-bottom: 1px solid var(--app-vc-border);
 }
 
 .vc-editor__head-eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 10px;
+  gap: var(--ref-spacing-xxs);
+  font-size: 11px;
   font-weight: var(--ref-font-weight-bold);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--ref-color-electric-blue-100);
+  letter-spacing: 0.08em;
+  color: var(--app-vc-accent);
 }
 
 .vc-editor__head-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: var(--app-radius-circle);
-  background: var(--ref-color-electric-blue-100);
-  box-shadow: 0 0 0 3px rgba(23, 141, 254, 0.18);
-  animation: vc-pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes vc-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 3px rgba(23, 141, 254, 0.18);
-  }
-  50% {
-    box-shadow: 0 0 0 6px rgba(23, 141, 254, 0.05);
-  }
+  background: var(--app-vc-accent);
 }
 
 .vc-editor__head-time {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: var(--ref-spacing-xxs);
+  font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-white);
+  color: var(--app-vc-text);
 }
 
-/* Start/end timestamps + arrow — muted grey on the dark editor head.
+/* Start/end timestamps + arrow — muted on the dark editor head.
    :not() excludes the duration pill below so its own white-on-blue
    colors keep specificity over this rule. */
 .vc-editor__head-time > span:not(.vc-editor__head-dur) {
-  color: var(--ref-color-grey-40);
+  color: var(--app-vc-text-subtle);
 }
 
 .vc-editor__head-dur {
-  font-size: 11px;
+  font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
-  background: var(--ref-color-electric-blue-100);
+  background: var(--app-vc-accent);
   color: var(--ref-color-white);
-  padding: 2px 8px;
-  border-radius: 3px;
-  margin-left: 4px;
+  padding: 2px var(--ref-spacing-xxs);
+  border-radius: var(--ref-border-radius-sm);
+  margin-left: var(--ref-spacing-xxxs);
 }
 
 .vc-editor__head-spacer {
@@ -644,15 +629,15 @@
 
 /* Editor-header buttons (Delete / Cancel / Save) — Delete and Cancel use
  * .ap-button.ghost.{red,grey} which were designed for light surfaces;
- * tweak the grey text to read against the cinematic dark pane. The red
- * ghost variant already has enough contrast at default colors. */
+ * remap the grey text to the dark-surface muted token. The red ghost
+ * variant already has enough contrast at default colors. */
 .vc-editor__head .ap-button.ghost.grey {
-  color: #d1d5db;
+  color: var(--app-vc-text-muted);
 }
 
 .vc-editor__head .ap-button.ghost.grey:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--ref-color-white);
+  background: var(--app-vc-hover);
+  color: var(--app-vc-text);
 }
 
 /* ── Editor top: preview (left) + form (right) ─────────────────── */
@@ -660,14 +645,14 @@
 .vc-editor__top {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap: 18px;
+  gap: var(--ref-spacing-sm);
   align-items: stretch;
 }
 
 .vc-editor__preview-col {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--ref-spacing-xs);
 }
 
 .vc-preview {
@@ -675,68 +660,43 @@
   aspect-ratio: 16 / 9;
   border-radius: var(--ref-border-radius-md);
   background-size: cover;
-  background-color: #000;
+  background-color: var(--app-vc-surface-sunken);
   overflow: hidden;
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.4),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--app-vc-border);
 }
 
-.vc-preview__grain {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(circle at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.45) 100%);
-  pointer-events: none;
-}
-
-.vc-preview__hud-tl,
 .vc-preview__hud-tr,
 .vc-preview__hud-bl,
 .vc-preview__hud-br {
   position: absolute;
-  font-size: 10px;
+  font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-white);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-}
-
-.vc-preview__hud-tl::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: var(--app-radius-circle);
-  background: #ed4245;
-  box-shadow: 0 0 8px #ed4245;
-}
-
-.vc-preview__hud-tl {
-  top: 10px;
-  left: 12px;
+  gap: var(--ref-spacing-xxxs);
 }
 
 .vc-preview__hud-tr {
-  top: 10px;
-  right: 12px;
-  font-size: 13px;
+  top: var(--ref-spacing-xs);
+  right: var(--ref-spacing-xs);
   background: rgba(0, 0, 0, 0.55);
-  padding: 3px 8px;
-  border-radius: 3px;
+  padding: 2px var(--ref-spacing-xxs);
+  border-radius: var(--ref-border-radius-sm);
 }
 
 .vc-preview__hud-bl {
-  bottom: 10px;
-  left: 12px;
+  bottom: var(--ref-spacing-xs);
+  left: var(--ref-spacing-xs);
 }
 
 .vc-preview__hud-br {
-  bottom: 10px;
-  right: 12px;
-  opacity: 0.7;
+  bottom: var(--ref-spacing-xs);
+  right: var(--ref-spacing-xs);
+  opacity: 0.75;
 }
 
 .vc-preview__center {
@@ -751,38 +711,19 @@
   width: 56px;
   height: 56px;
   border-radius: var(--app-radius-circle);
-  background: rgba(255, 255, 255, 0.92);
-  color: #1b1f26;
+  background: var(--ref-color-white);
+  color: var(--app-vc-surface);
   display: flex;
   align-items: center;
   justify-content: center;
   padding-left: 3px;
   cursor: pointer;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
-  transition: transform 140ms;
+  transition: transform var(--ref-animation-short);
 }
 
 .vc-preview__play:hover {
   transform: scale(1.06);
-}
-
-.vc-preview__bars {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 36px;
-  height: 22px;
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  pointer-events: none;
-  opacity: 0.55;
-}
-
-.vc-preview__bars span {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.65);
-  border-radius: 1px;
 }
 
 /* ── Transport bar ─────────────────────────────────────────────── */
@@ -790,20 +731,20 @@
 .vc-editor__transport {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  background: #232830;
-  border: 1px solid #2d333e;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  background: var(--app-vc-surface-raised);
+  border: 1px solid var(--app-vc-border);
   border-radius: var(--app-radius-button-sm);
 }
 
 .vc-editor__transport-btn {
   width: 28px;
   height: 28px;
-  border-radius: 5px;
+  border-radius: var(--app-radius-button-sm);
   background: transparent;
   border: 0;
-  color: #d1d5db;
+  color: var(--app-vc-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -812,54 +753,54 @@
 }
 
 .vc-editor__transport-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--ref-color-white);
+  background: var(--app-vc-hover);
+  color: var(--app-vc-text);
 }
 
 .vc-editor__transport-btn--play {
-  background: var(--ref-color-electric-blue-100);
+  background: var(--app-vc-accent);
   color: var(--ref-color-white);
 }
 
 .vc-editor__transport-btn--play:hover {
-  background: var(--ref-color-electric-blue-150);
+  background: var(--app-vc-accent-hover);
 }
 
 .vc-editor__transport-time {
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-white);
-  margin-left: 4px;
+  color: var(--app-vc-text);
+  margin-left: var(--ref-spacing-xxxs);
 }
 
 .vc-editor__transport-dur {
-  color: var(--ref-color-grey-40);
-  font-weight: 500;
+  color: var(--app-vc-text-subtle);
+  font-weight: var(--ref-font-weight-regular);
 }
 
 .vc-editor__transport-set {
   display: inline-flex;
-  gap: 6px;
+  gap: var(--ref-spacing-xxs);
   margin-left: auto;
 }
 
 .vc-editor__set-btn {
   font-family: inherit;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: var(--ref-font-weight-bold);
-  letter-spacing: 0.08em;
-  padding: 5px 9px;
+  letter-spacing: 0.06em;
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
   border-radius: var(--ref-border-radius-sm);
-  border: 1px solid #3a4150;
+  border: 1px solid var(--app-vc-border-strong);
   background: transparent;
-  color: #d1d5db;
+  color: var(--app-vc-text-muted);
   cursor: pointer;
   transition: all var(--ref-animation-short);
 }
 
 .vc-editor__set-btn:hover {
-  background: var(--ref-color-electric-blue-100);
-  border-color: var(--ref-color-electric-blue-100);
+  background: var(--app-vc-accent);
+  border-color: var(--app-vc-accent);
   color: var(--ref-color-white);
 }
 
@@ -875,106 +816,104 @@
 .vc-editor__field {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: var(--ref-spacing-xxxs);
 }
 
 .vc-editor__label {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 9px;
+  gap: var(--ref-spacing-xxxs);
+  font-size: 11px;
   font-weight: var(--ref-font-weight-bold);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--ref-color-grey-40);
+  letter-spacing: 0.06em;
+  color: var(--app-vc-text-subtle);
 }
 
 .vc-editor__label i {
-  font-size: 11px;
-  opacity: 0.7;
+  font-size: var(--ref-font-size-xs);
+  opacity: 0.8;
 }
 
 .vc-editor__title-input {
-  font-size: 18px;
+  font-size: var(--ref-font-size-lg);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-white);
+  color: var(--app-vc-text);
   letter-spacing: -0.01em;
-  line-height: 1.3;
-  padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid #2d333e;
+  line-height: var(--ref-font-line-height-lg);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  background: var(--app-vc-field);
+  border: 1px solid var(--app-vc-border);
   border-radius: var(--app-radius-button-sm);
   outline: none;
-  transition: all var(--ref-animation-short);
+  transition: border-color var(--ref-animation-short);
   min-height: 40px;
 }
 
 .vc-editor__title-input:focus {
-  border-color: var(--ref-color-electric-blue-100);
-  background: rgba(23, 141, 254, 0.06);
+  border-color: var(--app-vc-accent);
 }
 
 .vc-editor__textarea {
-  font-size: 13px;
-  color: #d1d5db;
-  line-height: 1.55;
-  padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid #2d333e;
+  font-size: var(--ref-font-size-sm);
+  color: var(--app-vc-text-muted);
+  line-height: var(--ref-font-line-height-md);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  background: var(--app-vc-field);
+  border: 1px solid var(--app-vc-border);
   border-radius: var(--app-radius-button-sm);
   outline: none;
-  transition: all var(--ref-animation-short);
+  transition: border-color var(--ref-animation-short);
   min-height: 64px;
   text-wrap: pretty;
 }
 
 .vc-editor__textarea--small {
-  min-height: 50px;
+  min-height: 48px;
   font-size: var(--ref-font-size-xs);
   font-style: italic;
-  color: #b0b6c0;
+  color: var(--app-vc-text-subtle);
 }
 
 .vc-editor__textarea:focus {
-  border-color: var(--ref-color-electric-blue-100);
-  background: rgba(23, 141, 254, 0.06);
+  border-color: var(--app-vc-accent);
 }
 
 .vc-editor .vc-edit:empty::before {
-  color: var(--ref-color-grey-40);
+  color: var(--app-vc-text-subtle);
 }
 
 .vc-editor__nets {
   display: flex;
-  gap: 6px;
+  gap: var(--ref-spacing-xxs);
   flex-wrap: wrap;
 }
 
 .vc-editor__net {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--ref-spacing-xxs);
   font-family: inherit;
   font-size: 11px;
   font-weight: var(--ref-font-weight-bold);
-  padding: 6px 10px;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1.5px solid #2d333e;
-  color: #b0b6c0;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  border-radius: var(--app-radius-button-sm);
+  background: var(--app-vc-field);
+  border: 1px solid var(--app-vc-border);
+  color: var(--app-vc-text-muted);
   cursor: pointer;
   transition: all var(--ref-animation-short);
 }
 
 .vc-editor__net:hover {
-  border-color: var(--ref-color-grey-40);
-  color: var(--ref-color-white);
+  border-color: var(--app-vc-border-strong);
+  color: var(--app-vc-text);
 }
 
 .vc-editor__net.is-on {
-  background: rgba(23, 141, 254, 0.14);
-  border-color: var(--ref-color-electric-blue-100);
-  color: var(--ref-color-electric-blue-100);
+  background: var(--app-vc-accent-soft);
+  border-color: var(--app-vc-accent);
+  color: var(--app-vc-accent);
 }
 
 .vc-editor__net img {
@@ -986,28 +925,28 @@
 /* ── Pro timeline (full-width, below preview/form) ────────────── */
 
 .vc-editor__timeline {
-  background: #232830;
-  border: 1px solid #2d333e;
+  background: var(--app-vc-surface-raised);
+  border: 1px solid var(--app-vc-border);
   border-radius: var(--ref-border-radius-md);
-  padding: 12px 14px 16px;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-xs) var(--ref-spacing-sm);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--ref-spacing-xxs);
 }
 
 .vc-editor__timeline-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding-bottom: 6px;
+  gap: var(--ref-spacing-xs);
+  padding-bottom: var(--ref-spacing-xxs);
 }
 
 .vc-editor__timeline-title {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: var(--ref-font-weight-bold);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--ref-color-grey-40);
+  letter-spacing: 0.06em;
+  color: var(--app-vc-text-subtle);
   flex: 1;
   min-width: 0;
   white-space: nowrap;
@@ -1018,48 +957,48 @@
 .vc-editor__timeline-stepper {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--ref-spacing-sm);
 }
 
 .vc-editor__timeline-hint {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--ref-color-grey-40);
+  font-size: 11px;
+  font-weight: var(--ref-font-weight-regular);
+  color: var(--app-vc-text-subtle);
   font-style: italic;
-  margin-left: 6px;
+  margin-left: var(--ref-spacing-xxs);
 }
 
 .vc-stepper {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--ref-spacing-xxs);
 }
 
 .vc-stepper__label {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-40);
+  color: var(--app-vc-text-subtle);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
 }
 
 .vc-stepper__input {
-  width: 50px;
-  padding: 3px 6px;
-  border: 1px solid #3a4150;
+  width: 52px;
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
+  border: 1px solid var(--app-vc-border-strong);
   border-radius: var(--ref-border-radius-sm);
-  background: #14171d;
+  background: var(--app-vc-surface-sunken);
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-white);
+  color: var(--app-vc-text);
   text-align: center;
   outline: none;
 }
 
 .vc-stepper__input:focus {
-  border-color: var(--ref-color-electric-blue-100);
-  box-shadow: 0 0 0 2px rgba(23, 141, 254, 0.3);
+  border-color: var(--app-vc-accent);
+  box-shadow: 0 0 0 2px var(--app-vc-accent-soft);
 }
 
 /* Pro trim track */
@@ -1082,13 +1021,13 @@
 .vc-protrim__ruler-mark {
   width: 1px;
   height: 6px;
-  background: #3a4150;
+  background: var(--app-vc-border-strong);
 }
 
 .vc-protrim__ruler-label {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-40);
+  color: var(--app-vc-text-subtle);
   margin-bottom: 2px;
 }
 
@@ -1096,8 +1035,8 @@
   position: relative;
   height: 70px;
   border-radius: var(--app-radius-button-sm);
-  background: #14171d;
-  border: 1px solid #2d333e;
+  background: var(--app-vc-surface-sunken);
+  border: 1px solid var(--app-vc-border);
   cursor: crosshair;
   user-select: none;
 }
@@ -1144,13 +1083,10 @@
   position: absolute;
   top: -3px;
   bottom: -3px;
-  border: 2px solid var(--ref-color-electric-blue-100);
+  border: 2px solid var(--app-vc-accent);
   border-radius: var(--app-radius-button-sm);
-  background: rgba(23, 141, 254, 0.06);
+  background: var(--app-vc-accent-soft);
   cursor: grab;
-  box-shadow:
-    0 0 24px rgba(23, 141, 254, 0.2),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
   z-index: 2;
 }
 
@@ -1158,29 +1094,15 @@
   cursor: grabbing;
 }
 
-.vc-protrim__win-glow {
-  position: absolute;
-  inset: 0;
-  border-radius: 5px;
-  background: linear-gradient(
-    180deg,
-    rgba(23, 141, 254, 0.08),
-    transparent 40%,
-    transparent 60%,
-    rgba(23, 141, 254, 0.08)
-  );
-  pointer-events: none;
-}
-
 .vc-protrim__win-label {
   position: absolute;
   top: -22px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-white);
-  background: var(--ref-color-electric-blue-100);
-  padding: 2px 6px;
-  border-radius: 3px;
+  background: var(--app-vc-accent);
+  padding: 2px var(--ref-spacing-xxs);
+  border-radius: var(--ref-border-radius-sm);
   white-space: nowrap;
   pointer-events: none;
 }
@@ -1201,7 +1123,7 @@
   bottom: -22px;
   transform: translateX(-50%);
   background: var(--ref-color-white);
-  color: var(--ref-color-electric-blue-150);
+  color: var(--app-vc-accent-hover);
 }
 
 .vc-protrim__handle {
@@ -1213,7 +1135,7 @@
   align-items: center;
   justify-content: center;
   cursor: ew-resize;
-  background: var(--ref-color-electric-blue-100);
+  background: var(--app-vc-accent);
   z-index: 3;
   transition:
     background var(--ref-animation-short),
@@ -1231,12 +1153,12 @@
 }
 
 .vc-protrim__handle:hover {
-  background: var(--ref-color-electric-blue-150);
+  background: var(--app-vc-accent-hover);
 }
 
 .vc-protrim.is-dragging--start .vc-protrim__handle--l,
 .vc-protrim.is-dragging--end .vc-protrim__handle--r {
-  background: var(--ref-color-electric-blue-150);
+  background: var(--app-vc-accent-hover);
 }
 
 .vc-protrim__grip {
@@ -1265,7 +1187,7 @@
   width: 12px;
   height: 12px;
   background: var(--ref-color-white);
-  border: 2px solid var(--ref-color-grey-150);
+  border: 2px solid var(--app-vc-surface);
   border-radius: var(--app-radius-circle);
   transform: translateX(-50%);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
@@ -1278,11 +1200,10 @@
   left: 0;
   width: 1px;
   background: var(--ref-color-white);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
 }
 
 .vc-protrim.is-dragging--playhead .vc-protrim__playhead-knob {
-  background: var(--ref-color-electric-blue-100);
+  background: var(--app-vc-accent);
   border-color: var(--ref-color-white);
 }
 

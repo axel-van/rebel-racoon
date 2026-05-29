@@ -12,6 +12,27 @@
   --app-border: var(--ref-color-grey-20);
   --app-border-soft: var(--ref-color-grey-10);
 
+  /* ── Video-clips dark editor ramp ──────────────────────────────────────
+     The DS is light-only — its darkest grey (grey-150 #212E44) is navy and
+     not deep enough for a video-editor surface. This is the single place the
+     app defines a dark palette; it is consumed only by
+     styles/components/video-clips-modal.css. Cool-neutral and systematic:
+     one base + raised + sunken surface, two borders, three text levels, and
+     accent aliases that reuse the DS electric-blue. */
+  --app-vc-surface: #181c23; /* editor base */
+  --app-vc-surface-raised: #21262f; /* transport + timeline panels */
+  --app-vc-surface-sunken: #12151b; /* inputs, trim track, steppers */
+  --app-vc-field: #1e232b; /* text field background */
+  --app-vc-border: #2c323d; /* hairline borders */
+  --app-vc-border-strong: #3a4250; /* input / stepper borders */
+  --app-vc-text: #e7eaf0; /* primary text on dark */
+  --app-vc-text-muted: #aab2c0; /* body / secondary text */
+  --app-vc-text-subtle: #8b94a3; /* labels, meta (≥4.5:1 on surface) */
+  --app-vc-accent: var(--ref-color-electric-blue-100);
+  --app-vc-accent-hover: var(--ref-color-electric-blue-150);
+  --app-vc-accent-soft: rgba(23, 141, 254, 0.14); /* selected / focus tint */
+  --app-vc-hover: rgba(255, 255, 255, 0.06); /* neutral hover overlay */
+
   /* Sidebar canvas — experimental inversion: sidebar is white, conversation
      area takes the grey canvas tone. See experiment/invert-panel-backgrounds. */
   --app-color-sidebar-bg: var(--ref-color-white);

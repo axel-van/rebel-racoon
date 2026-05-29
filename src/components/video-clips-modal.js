@@ -348,20 +348,12 @@ function editorPaneHTML() {
       <div class="vc-editor__top">
         <div class="vc-editor__preview-col">
           <div class="vc-preview" style="background-image: ${previewBackground(draft.hue)}">
-            <div class="vc-preview__grain"></div>
-            <div class="vc-preview__hud-tl">REC · 4K · 30P</div>
             <div class="vc-preview__hud-tr" data-vc-editor-playtime>${fmtTime(draftPlayhead)}</div>
             <div class="vc-preview__center">
               <div class="vc-preview__play"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></div>
             </div>
             <div class="vc-preview__hud-bl" data-vc-editor-clipdur>${fmtTime(draft.end - draft.start)} · CLIP</div>
             <div class="vc-preview__hud-br">${escapeHtml((draft.network || "").toUpperCase())}</div>
-            <div class="vc-preview__bars" aria-hidden="true">
-              <span style="height: 32%"></span><span style="height: 64%"></span>
-              <span style="height: 46%"></span><span style="height: 78%"></span>
-              <span style="height: 54%"></span><span style="height: 38%"></span>
-              <span style="height: 70%"></span><span style="height: 48%"></span>
-            </div>
           </div>
           <div class="vc-editor__transport">
             <button class="vc-editor__transport-btn" data-vc-action="seek-start" title="Jump to clip start">
@@ -426,7 +418,6 @@ function editorPaneHTML() {
             <div class="vc-protrim__dim vc-protrim__dim--l" data-vc-protrim-dim-l style="width: ${leftPct}%"></div>
             <div class="vc-protrim__dim vc-protrim__dim--r" data-vc-protrim-dim-r style="left: ${leftPct + widthPct}%; right: 0"></div>
             <div class="vc-protrim__window" data-vc-protrim-window data-vc-drag="window" style="left: ${leftPct}%; width: ${widthPct}%">
-              <span class="vc-protrim__win-glow"></span>
               <span class="vc-protrim__win-label vc-protrim__win-label--l" data-vc-protrim-label-l>${fmtTime(draft.start)}</span>
               <span class="vc-protrim__win-label vc-protrim__win-label--c" data-vc-protrim-label-c>${fmtTime(draft.end - draft.start)}</span>
               <span class="vc-protrim__win-label vc-protrim__win-label--r" data-vc-protrim-label-r>${fmtTime(draft.end)}</span>
