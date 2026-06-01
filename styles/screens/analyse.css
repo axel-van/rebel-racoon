@@ -144,15 +144,33 @@
   align-items: center;
 }
 
-/* Picker header — full question on the left, step indicator pinned right.
-   Sits above the option rows and inside the same .analyse__options frame. */
+/* Picker header — a title row (full question left, step indicator pinned
+   right) with an optional helper subtitle beneath. Sits above the option
+   rows, inside the same .analyse__options frame. */
 .analyse__picker-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border-bottom: 1px solid var(--app-border-soft);
+}
+
+/* width:100% so the row + subtitle span the full header even where the
+   header is centred (the assistant wizard bar sets align-items:center on
+   .analyse__picker-header). Keeps the title left / step right. */
+.analyse__picker-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
-  border-bottom: 1px solid var(--app-border-soft);
+  width: 100%;
+}
+
+.analyse__picker-subtitle {
+  margin: 0;
+  width: 100%;
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
 }
 
 .analyse__picker-title {

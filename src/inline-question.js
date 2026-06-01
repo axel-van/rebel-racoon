@@ -22,6 +22,7 @@
 // Options accepted by ask():
 //   intro             string  — assistant message rendered above the picker
 //   title             string  — question header inside the picker card
+//   subtitle          string  — optional helper line under the title (what to do)
 //   stepLabel         string  — small label on the top right (e.g. "Profile")
 //   skipLabel         string  — label on the Skip button (default "Skip")
 //   items             array   — [{ value, label, caption?, icon?, imgSrc? }]
@@ -47,7 +48,7 @@
 //   onSkip()          fn      — called when Skip / Esc; if omitted, no skip btn
 //   onBack()          fn      — called when ← Back is clicked; if omitted, no back btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=35";
+import { chatTurn } from "./screens/_analyse-common.js?v=36";
 
 const states = new Map(); // sessionId → opts
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -201,6 +202,7 @@ export function renderChrome(sessionId) {
     items: s.items || [],
     handler: "inline-question",
     title: s.title || null,
+    subtitle: s.subtitle || null,
     stepIndicator: s.stepLabel || null,
     skipLabel: s.onSkip ? s.skipLabel || "Skip" : null,
     showBack: !!s.onBack,

@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=73";
+import { renderTopbar } from "../components/topbar.js?v=74";
 import { socialAccounts, chatStarters } from "../mocks.js?v=36";
 import {
   getConnectedProfiles,
@@ -47,11 +47,11 @@ import {
 } from "../posts-store.js?v=28";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=32";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
-import * as sidebarWizard from "../sidebar-wizard.js?v=34";
-import * as inlineQuestion from "../inline-question.js?v=29";
-import * as contextBuilder from "../context-builder.js?v=57";
-import * as playbookEditor from "../playbook-editor.js?v=18";
-import { renderPicker } from "./_analyse-common.js?v=35";
+import * as sidebarWizard from "../sidebar-wizard.js?v=35";
+import * as inlineQuestion from "../inline-question.js?v=30";
+import * as contextBuilder from "../context-builder.js?v=58";
+import * as playbookEditor from "../playbook-editor.js?v=19";
+import { renderPicker } from "./_analyse-common.js?v=36";
 import { renderSourceCard } from "../components/source-card.js?v=30";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
 import {
@@ -62,7 +62,7 @@ import {
 } from "../components/content-workspace.js?v=24";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=24";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=12";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=26";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=27";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=24";
 import {
   classifyFile,
@@ -84,12 +84,12 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=121";
+} from "../components/right-panel.js?v=122";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
 import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=4";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=3";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=4";
 
 // Session screen — persistent assistant panel on the left, workspace with
 // tabs on the right.
@@ -1004,9 +1004,10 @@ export function askAngleQuestion(sessionId, ideaId) {
     askDraftCountQuestion(sessionId, ideaId);
     return;
   }
-  postAssistantMessage(sessionId, "Pick how many drafts per angle:");
+  postAssistantMessage(sessionId, "Let's draft from these angles.");
   inlineQuestion.ask(sessionId, {
     title: "Suggested angles",
+    subtitle: "Set how many drafts I'll write for each angle — leave one at 0 to skip it.",
     stepLabel: "Drafts per angle",
     skipLabel: "Cancel",
     // Stepper mode — each angle row carries its own drafts counter (0 to

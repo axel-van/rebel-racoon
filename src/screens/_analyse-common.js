@@ -118,6 +118,7 @@ export function renderPicker(picker) {
     multi = false,
     submitLabel = "Continue",
     title = null, // text shown at the top of the picker (mirrors the AI question)
+    subtitle = null, // optional helper line under the title (what to do here)
     stepIndicator = null, // small label on the top right (e.g. "3 of 7")
     skipLabel = null, // when set, render a "Skip" button next to Submit
     // File-upload variant: when `customFile: true`, the trailing row swaps
@@ -313,12 +314,15 @@ export function renderPicker(picker) {
        </button>`
     : "";
   const header =
-    title || stepIndicator || showBack
+    title || stepIndicator || showBack || subtitle
       ? `
         <header class="analyse__picker-header">
-          ${backBtn}
-          ${title ? `<h3 class="analyse__picker-title">${title}</h3>` : ""}
-          ${stepIndicator ? `<span class="analyse__picker-step muted">${stepIndicator}</span>` : ""}
+          <div class="analyse__picker-header-row">
+            ${backBtn}
+            ${title ? `<h3 class="analyse__picker-title">${title}</h3>` : ""}
+            ${stepIndicator ? `<span class="analyse__picker-step muted">${stepIndicator}</span>` : ""}
+          </div>
+          ${subtitle ? `<p class="analyse__picker-subtitle muted">${subtitle}</p>` : ""}
         </header>
       `
       : "";
