@@ -25,6 +25,8 @@
     <link rel="stylesheet" href="../styles/components/right-panel.css?v=2" />
     <link rel="stylesheet" href="../styles/components/clip-card.css?v=2" />
     <link rel="stylesheet" href="../styles/screens/posts.css?v=2" />
+    <!-- Quick-picker (inline question) styles for the live picker previews. -->
+    <link rel="stylesheet" href="../styles/screens/analyse.css?v=2" />
 
     <style>
       /* ── Handoff page chrome ───────────────────────────────────────── */
@@ -416,6 +418,7 @@
           <li><a href="#drafts">6. Drafts summary card</a></li>
           <li><a href="#clip-extraction">7. Clip / Idea extraction card</a></li>
           <li><a href="#notices">8. Notices (mermaid, grey, extracting)</a></li>
+          <li><a href="#quick-picker">9. Quick picker (inline question)</a></li>
         </ol>
       </nav>
 
@@ -1192,17 +1195,101 @@
       </section>
 
       <!-- ════════════════════════════════════════════════════════════════
-            9. MOTION & TRANSITIONS
+            9. QUICK PICKER (inline question)
             ════════════════════════════════════════════════════════════ -->
-      <!-- ════════════════════════════════════════════════════════════════
-            10. ACCESSIBILITY & KEYBOARD
-            ════════════════════════════════════════════════════════════ -->
-      <!-- ════════════════════════════════════════════════════════════════
-            11. EDGE CASES & CONTENT RULES
-            ════════════════════════════════════════════════════════════ -->
-      <!-- ════════════════════════════════════════════════════════════════
-            12. TOKENS QUICK REFERENCE
-            ════════════════════════════════════════════════════════════ -->
+      <section class="hd-section" id="quick-picker">
+        <h2>9. Quick picker (inline question)</h2>
+        <p class="hd-lead">
+          A one-question picker that overlays the composer. Built by <code>renderPicker()</code> and driven by
+          <code>inline-question.js</code>. Same chrome, five modes — all previews below are rendered live from the real
+          <code>renderPicker()</code>, so they never drift. Header carries an optional title, step label, subtitle, and
+          back arrow.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.analyse__options</code> — single select</p>
+              <p class="hd-comp__desc">Numbered rows; click jumps straight to the choice (chevron affordance).</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="analyse__sticky-bar session__assistant-wizard-bar">
+                <div class="analyse__sticky-bar-inner" data-live="picker-single"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.analyse__options--multi</code> — multi select</p>
+              <p class="hd-comp__desc">Rows toggle on/off (check affordance); a Continue button submits the set.</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="analyse__sticky-bar session__assistant-wizard-bar">
+                <div class="analyse__sticky-bar-inner" data-live="picker-multi"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.analyse__options--stepper</code> — counters</p>
+              <p class="hd-comp__desc">
+                Each row carries a − N + counter (0 opts out); the submit shows the summed total. Title + subtitle, and
+                a Back button in the footer. Used by the "drafts per angle" step.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="analyse__sticky-bar session__assistant-wizard-bar">
+                <div class="analyse__sticky-bar-inner" data-live="picker-stepper"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.analyse__option--input</code> — free text</p>
+              <p class="hd-comp__desc">Trailing row swaps to a text input + send button for a typed answer.</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="analyse__sticky-bar session__assistant-wizard-bar">
+                <div class="analyse__sticky-bar-inner" data-live="picker-custom"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.analyse__option--file</code> — dropzone</p>
+              <p class="hd-comp__desc">Trailing row becomes a click/drop file zone (wraps a hidden file input).</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="analyse__sticky-bar session__assistant-wizard-bar">
+                <div class="analyse__sticky-bar-inner" data-live="picker-file"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
       <footer
         style="
           margin-top: 64px;
@@ -1226,6 +1313,7 @@
          a case here to make any other component preview live. -->
     <script type="module">
       import { renderCompactIdeaCard } from "../src/components/idea-card-compact.js";
+      import { renderPicker } from "../src/screens/_analyse-common.js";
 
       // Mock data — shaped like the real store objects the renderers expect.
       const SOURCES = [{ id: "s1", filename: "riverside-discovery-call.pdf", kind: "Document" }];
@@ -1247,6 +1335,69 @@
         },
       ];
 
+      // Quick-picker variants — same renderPicker(), five configs.
+      const PROFILE_ITEMS = [
+        { value: "li", label: "LinkedIn — Acme", caption: "Company page", icon: "ap-icon-linkedin-official" },
+        { value: "x", label: "X — @acme", caption: "Brand handle", icon: "ap-icon-twitter-official" },
+        { value: "ig", label: "Instagram — acme", caption: "Business", icon: "ap-icon-instagram" },
+      ];
+      const ANGLE_ITEMS = [
+        { value: "a1", label: "The honest founder retro", caption: "Walk through the three bottlenecks." },
+        { value: "a2", label: "The contrarian take", caption: "Most launches fail on distribution, not product." },
+        { value: "a3", label: "A playbook for launchers", caption: "Turn the constraints into a checklist." },
+      ];
+
+      const PICKERS = {
+        "picker-single": {
+          handler: "demo",
+          title: "Pick a connected social profile",
+          stepIndicator: "Profile",
+          items: PROFILE_ITEMS,
+        },
+        "picker-multi": {
+          handler: "demo",
+          title: "Which channels should I draft for?",
+          stepIndicator: "Channels",
+          multi: true,
+          submitLabel: "Draft them",
+          defaultSelected: ["li"],
+          items: PROFILE_ITEMS,
+        },
+        "picker-stepper": {
+          handler: "demo",
+          title: "Suggested angles",
+          subtitle: "Set how many drafts I'll write for each angle — leave one at 0 to skip it.",
+          stepIndicator: "Drafts per angle",
+          stepper: true,
+          showBack: true,
+          stepMin: 0,
+          stepMax: 20,
+          stepCounts: { a1: 2, a2: 0, a3: 1 },
+          stepTotal: 3,
+          submitLabel: "Generate 3 drafts",
+          items: ANGLE_ITEMS,
+        },
+        "picker-custom": {
+          handler: "demo",
+          title: "How many drafts should I generate?",
+          stepIndicator: "Drafts",
+          items: [
+            { value: "1", label: "1 draft" },
+            { value: "3", label: "3 drafts" },
+            { value: "5", label: "5 drafts" },
+          ],
+          customPlaceholder: "Or type any number (1–20)",
+        },
+        "picker-file": {
+          handler: "demo",
+          title: "Add a source",
+          stepIndicator: "Source",
+          customFile: true,
+          customFileLabel: "Drop a file here, or click to browse",
+          customFileHint: "PDF · DOCX · TXT",
+        },
+      };
+
       const FILLERS = {
         "idea-cards": (slot) => {
           slot.innerHTML = IDEAS.map((idea) =>
@@ -1254,6 +1405,11 @@
           ).join("");
         },
       };
+      for (const [key, cfg] of Object.entries(PICKERS)) {
+        FILLERS[key] = (slot) => {
+          slot.innerHTML = renderPicker(cfg);
+        };
+      }
 
       for (const slot of document.querySelectorAll("[data-live]")) {
         const fill = FILLERS[slot.dataset.live];
