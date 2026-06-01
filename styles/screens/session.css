@@ -265,7 +265,8 @@
    rows. */
 .session__assistant-wizard-bar .analyse__picker-header {
   border-bottom: 0;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm) var(--ref-spacing-xxs);
+  /* Equal top + bottom padding around the header block. */
+  padding: var(--ref-spacing-sm);
 }
 
 /* Header with a back button — pull the button into the header's left
@@ -279,7 +280,8 @@
 .session__assistant-wizard-bar .analyse__picker-header {
   align-items: stretch;
   text-align: left;
-  gap: var(--ref-spacing-xxs);
+  /* Tight gap between the title row and the subtitle. */
+  gap: var(--app-spacing-micro);
 }
 
 .session__assistant-wizard-bar .analyse__picker-back {
