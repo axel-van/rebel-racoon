@@ -692,19 +692,55 @@
    the cards themselves. */
 
 .rpanel-drafts {
-  display: grid;
-  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
-  gap: var(--ref-spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
   padding: var(--ref-spacing-md);
-  align-items: start;
-  /* Pack rows to the top of the panel — without this, when the rail
-     flattens to a row above the feed (narrow @container query below),
-     the two row tracks stretch to fill the available height and the
-     single-card feed ends up visually centered. */
-  align-content: start;
   height: 100%;
   min-height: 0;
   overflow-y: auto;
+}
+
+/* Filter header — status tabs (primary axis) sit on the left at their
+   intrinsic width; the network select (secondary axis) is pinned to the
+   trailing edge. Both share one continuous bottom hairline: the tabs
+   nav's own border is dropped and the line is carried by this wrapper so
+   it runs unbroken under the tabs AND the select. Bottom-aligned so the
+   active-tab underline lands on that shared line. */
+.rpanel-drafts__filters {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--ref-spacing-sm);
+  border-bottom: 1px solid var(--app-border-soft);
+}
+
+/* DS .ap-tabs (and its nav) are width:100% by default; shrink-wrap them
+   to the tabs' content width so the network select keeps its slot on the
+   trailing edge of the same row. */
+.rpanel-drafts__statustabs {
+  flex: 0 1 auto;
+  width: max-content;
+  max-width: 100%;
+}
+
+.rpanel-drafts__statustabs .ap-tabs-nav {
+  width: auto;
+  border-bottom: 0;
+}
+
+/* Keep the network select compact, trailing, and clear of the hairline.
+   The DS .ap-select is width:100% by default — override to intrinsic
+   width so it doesn't eat the whole row and collapse the tabs. */
+.rpanel-drafts__network {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 160px;
+  margin-left: auto;
+  margin-bottom: var(--ref-spacing-xs);
+}
+
+.rpanel-drafts__network .ap-select-inline-icon {
+  font-size: var(--sys-icon-css-sm);
 }
 
 .rpanel-drafts__feed {
@@ -795,68 +831,6 @@
    the .has-selection flag set by the panel render. */
 .rpanel-drafts.has-selection .rpanel-drafts__feed {
   padding-bottom: var(--ref-spacing-xl);
-}
-
-/* Each rail-group renders both a button list and a native select; the
-   button list is the wide default, the select is shown in compact. */
-.rpanel-drafts .posts__rail-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-}
-
-.rpanel-drafts .posts__rail-select {
-  display: none;
-}
-
-/* ── Medium container — filters collapse to selects ────────────────
-   The panel is too narrow for a side rail. Switch to one column
-   with the rail above the feed, and trade the button lists for two
-   native <select>s so the rail stays tight on a single row. */
-@container (max-width: 800px) {
-  .rpanel-drafts {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--ref-spacing-sm);
-  }
-
-  .rpanel-drafts .posts__rail {
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--ref-spacing-sm);
-    padding-bottom: var(--ref-spacing-xs);
-    border-bottom: 1px solid var(--app-border-soft);
-    position: static;
-  }
-
-  .rpanel-drafts .posts__rail-group {
-    flex-direction: row;
-    align-items: center;
-    gap: var(--ref-spacing-xxs);
-  }
-
-  /* Hide the wide-mode button list and reveal the native select. */
-  .rpanel-drafts .posts__rail-buttons {
-    display: none;
-  }
-
-  .rpanel-drafts .posts__rail-select {
-    display: inline-block;
-    min-width: 160px;
-    max-width: 220px;
-  }
-
-  /* Hide the "Network" eyebrow — the select's own labels carry the
-     network info and the heading would steal a line of vertical space. */
-  .rpanel-drafts .posts__rail-heading {
-    display: none;
-  }
-
-  /* Push the network group to the trailing edge of the row so status
-     and network sit on opposite ends. */
-  .rpanel-drafts .posts__rail-group--network {
-    margin-left: auto;
-  }
 }
 
 /* ── Narrow container — actions below the card ──────────────────────

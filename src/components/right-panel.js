@@ -16,7 +16,7 @@ import {
 import { renderPostCard } from "./post-card.js?v=31";
 import { renderClipCard } from "./clip-card.js?v=7";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=12";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=44";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=45";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -666,7 +666,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName } = entry;
-      import("../screens/session.js?v=160").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=161").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, clip, sourceName);
       });
       return;
@@ -703,7 +703,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=160").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=161").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -879,16 +879,6 @@ export function init() {
     }
   });
   el.addEventListener("change", (event) => {
-    if (event.target.matches("[data-rpanel-drafts-filter-select]")) {
-      draftsFilter = event.target.value || "all";
-      renderPanel();
-      return;
-    }
-    if (event.target.matches("[data-rpanel-drafts-network-select]")) {
-      draftsNetwork = event.target.value || "all";
-      renderPanel();
-      return;
-    }
     // Per-card multi-select checkbox.
     if (event.target.matches("[data-post-select]")) {
       const id = event.target.dataset.postSelect;
@@ -1290,89 +1280,72 @@ function renderDraftsView() {
     return true;
   });
 
-  // Filter rail — vertical, sticky, on the left at the wide breakpoint.
-  // Each filter axis (status + network) is rendered TWICE: once as a
-  // .posts__rail-buttons row (visible wide) and once as a native
-  // <select> (visible in compact). CSS container queries swap which
-  // one is shown — same state shared between the two so flipping
-  // viewports preserves the active filter.
-  const filterButton = (id, icon, label, count) => {
+  // Filter header — status is the primary axis (which view of the list
+  // you're looking at) so it uses the DS .ap-tabs component with
+  // .ap-counter badges, matching the Outputs Ideas|Clips tabs. Network
+  // is a secondary refinement, so it sits on the trailing edge as a
+  // single DS .ap-select (details/summary). Both are first-class DS
+  // controls — no native <select> form input, no ad-hoc filter buttons.
+  const statusTab = (id, label, count) => {
     const active = draftsFilter === id;
     return `
       <button
         type="button"
-        class="posts__filter ${active ? "is-active" : ""}"
+        class="ap-tabs-tab ${active ? "active" : ""}"
         data-rpanel-drafts-filter="${id}"
+        role="tab"
+        aria-selected="${active}"
       >
-        <i class="${icon}"></i>
-        <span class="posts__filter-label">${label}</span>
-        <span class="posts__filter-count">${count}</span>
+        <span>${label}</span>
+        <span class="ap-counter normal ${active ? "blue" : "grey"}">${count}</span>
       </button>
     `;
   };
 
-  const networkButton = (id, icon, label, count) => {
-    const active = draftsNetwork === id;
+  const networkMeta = {
+    all: { icon: "ap-icon-web", label: "All networks", count: networkCounts.all },
+    linkedin: { icon: "ap-icon-linkedin-official", label: "LinkedIn", count: networkCounts.linkedin },
+    twitter: { icon: "ap-icon-twitter-official", label: "X", count: networkCounts.twitter },
+  };
+  const currentNetwork = networkMeta[draftsNetwork] || networkMeta.all;
+
+  const networkOption = (id) => {
+    const meta = networkMeta[id];
+    const selected = draftsNetwork === id;
     return `
-      <button
-        type="button"
-        class="posts__filter ${active ? "is-active" : ""}"
-        data-rpanel-drafts-network="${id}"
-      >
-        <i class="${icon}"></i>
-        <span class="posts__filter-label">${label}</span>
-        <span class="posts__filter-count">${count}</span>
-      </button>
+      <div class="ap-select-option ${selected ? "selected" : ""}" data-rpanel-drafts-network="${id}">
+        <i class="${meta.icon} ap-select-option-icon"></i>
+        <span class="ap-select-option-text">${meta.label} (${meta.count})</span>
+        ${selected ? `<i class="ap-icon-check ap-select-option-check"></i>` : ""}
+      </div>
     `;
   };
 
-  const opt = (current, id, label, count) =>
-    `<option value="${id}" ${current === id ? "selected" : ""}>${label} (${count})</option>`;
-
-  const filterSelect = `
-    <select
-      class="ap-native-select posts__rail-select"
-      data-rpanel-drafts-filter-select
-      aria-label="Filter drafts by status"
-    >
-      ${opt(draftsFilter, "all", "All drafts", filterCounts.all)}
-      ${opt(draftsFilter, "needs_fixes", "Needs fixes", filterCounts.needs_fixes)}
-      ${opt(draftsFilter, "scheduled", "Scheduled", filterCounts.scheduled)}
-    </select>
-  `;
-
-  const networkSelect = `
-    <select
-      class="ap-native-select posts__rail-select"
-      data-rpanel-drafts-network-select
-      aria-label="Filter drafts by network"
-    >
-      ${opt(draftsNetwork, "all", "All networks", networkCounts.all)}
-      ${opt(draftsNetwork, "linkedin", "LinkedIn", networkCounts.linkedin)}
-      ${opt(draftsNetwork, "twitter", "X", networkCounts.twitter)}
-    </select>
-  `;
-
-  const rail = `
-    <aside class="posts__rail" aria-label="Post filters">
-      <div class="posts__rail-group">
-        <div class="posts__rail-buttons">
-          ${filterButton("all", "ap-icon-megaphone", "All drafts", filterCounts.all)}
-          ${filterButton("needs_fixes", "ap-icon-error", "Needs fixes", filterCounts.needs_fixes)}
-          ${filterButton("scheduled", "ap-icon-calendar", "Scheduled", filterCounts.scheduled)}
+  const filtersBar = `
+    <div class="rpanel-drafts__filters">
+      <div class="ap-tabs rpanel-drafts__statustabs">
+        <div class="ap-tabs-nav" role="tablist" aria-label="Filter drafts by status">
+          ${statusTab("all", "All drafts", filterCounts.all)}
+          ${statusTab("needs_fixes", "Needs fixes", filterCounts.needs_fixes)}
+          ${statusTab("scheduled", "Scheduled", filterCounts.scheduled)}
         </div>
-        ${filterSelect}
       </div>
-      <div class="posts__rail-group posts__rail-group--network">
-        <h3 class="posts__rail-heading">Network</h3>
-        <div class="posts__rail-buttons">
-          ${networkButton("all", "ap-icon-web", "All networks", networkCounts.all)}
-          ${networkButton("linkedin", "ap-icon-linkedin-official", "LinkedIn", networkCounts.linkedin)}
-          ${networkButton("twitter", "ap-icon-twitter-official", "X", networkCounts.twitter)}
+      <details class="ap-select rpanel-drafts__network">
+        <summary class="ap-select-trigger" aria-label="Filter drafts by network">
+          <span class="ap-select-value">
+            <i class="${currentNetwork.icon} ap-select-inline-icon"></i> ${currentNetwork.label}
+          </span>
+          <i class="ap-icon-chevron-down ap-select-arrow"></i>
+        </summary>
+        <div class="ap-select-dropdown">
+          <div class="ap-select-options">
+            ${networkOption("all")}
+            ${networkOption("linkedin")}
+            ${networkOption("twitter")}
+          </div>
         </div>
-        ${networkSelect}
-      </div>
-    </aside>
+      </details>
+    </div>
   `;
 
   // FIND-B5: align the no-match state with the rich `No drafts yet`
@@ -1455,7 +1428,7 @@ function renderDraftsView() {
 
   return html`
     <div class="rpanel-drafts ${selectedCount ? "has-selection" : ""}">
-      ${raw(rail)}
+      ${raw(filtersBar)}
       <div class="posts__feed rpanel-drafts__feed">${raw(selectAllBar)} ${raw(feed)} ${raw(bulkBar)}</div>
     </div>
   `;
@@ -2234,7 +2207,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=160").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=161").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
