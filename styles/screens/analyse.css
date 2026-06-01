@@ -144,6 +144,12 @@
   align-items: center;
 }
 
+/* Footer back button (stepper picker) — pinned to the far left so the
+   primary action stays on the right. */
+.analyse__footer-back {
+  margin-right: auto;
+}
+
 /* Picker header — a title row (full question left, step indicator pinned
    right) with an optional helper subtitle beneath. Sits above the option
    rows, inside the same .analyse__options frame. */

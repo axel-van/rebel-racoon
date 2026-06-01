@@ -308,17 +308,21 @@ export function renderPicker(picker) {
   // Mirrors the AI question text so the user has the full prompt in view
   // while scanning options. The step indicator (e.g. "3 of 7") sits on the
   // right and helps with multi-step wizards.
-  const backBtn = showBack
-    ? `<button type="button" class="analyse__picker-back ap-icon-button transparent" data-${handler}-back aria-label="Back">
-         <i class="ap-icon-arrow-left"></i>
-       </button>`
-    : "";
+  // Back affordance. Most pickers anchor it top-left in the header. Stepper
+  // pickers move it to the footer (far left, opposite the primary Generate
+  // button) so the title can sit flush-left without an indent.
+  const headerBackBtn =
+    showBack && !stepper
+      ? `<button type="button" class="analyse__picker-back ap-icon-button transparent" data-${handler}-back aria-label="Back">
+           <i class="ap-icon-arrow-left"></i>
+         </button>`
+      : "";
   const header =
-    title || stepIndicator || showBack || subtitle
+    title || stepIndicator || (showBack && !stepper) || subtitle
       ? `
         <header class="analyse__picker-header">
           <div class="analyse__picker-header-row">
-            ${backBtn}
+            ${headerBackBtn}
             ${title ? `<h3 class="analyse__picker-title">${title}</h3>` : ""}
             ${stepIndicator ? `<span class="analyse__picker-step muted">${stepIndicator}</span>` : ""}
           </div>
@@ -340,9 +344,17 @@ export function renderPicker(picker) {
   const generateBtn = stepper
     ? `<button type="button" class="ap-button primary orange" data-${handler}-generate ${stepTotal <= 0 ? "disabled" : ""}><span>${submitLabel}</span></button>`
     : "";
+  // Stepper back lives in the footer, pushed to the far left (margin-right
+  // auto) so the primary Generate button stays on the right.
+  const footerBackBtn =
+    showBack && stepper
+      ? `<button type="button" class="ap-button stroked grey analyse__footer-back" data-${handler}-back>
+           <i class="ap-icon-arrow-left"></i><span>Back</span>
+         </button>`
+      : "";
   const footer =
-    skipBtn || submitBtn || generateBtn || footerSlot
-      ? `<div class="analyse__options-submit">${skipBtn}${submitBtn}${generateBtn}${footerSlot}</div>`
+    footerBackBtn || skipBtn || submitBtn || generateBtn || footerSlot
+      ? `<div class="analyse__options-submit">${footerBackBtn}${skipBtn}${submitBtn}${generateBtn}${footerSlot}</div>`
       : "";
 
   return `<div class="analyse__options${multi ? " analyse__options--multi" : ""}${stepper ? " analyse__options--stepper" : ""}" ${multi ? "data-multi" : ""}${stepper ? " data-stepper" : ""}>${header}${rows}${customRow}${fileRow}${footer}</div>`;
