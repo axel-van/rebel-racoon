@@ -262,3 +262,88 @@
     justify-content: flex-end;
   }
 }
+
+/* ── Admin section (prototype controls — was the floating admin chip) ──
+   Grouped lists inside the standard settings card: user-mode radios,
+   feature-flag toggles, and a docs link. */
+.settings-admin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-md);
+}
+
+.settings-admin__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.settings-admin__group-title {
+  margin: 0 0 var(--ref-spacing-xxs);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sys-text-color-light);
+}
+
+.settings-admin__row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+  cursor: pointer;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.settings-admin__row + .settings-admin__row {
+  margin-top: var(--ref-spacing-xxs);
+}
+
+.settings-admin__row:hover {
+  border-color: var(--ref-color-grey-40);
+}
+
+.settings-admin__row.is-active {
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-05);
+}
+
+/* Flag + docs rows put their text on the left and the control on the right. */
+.settings-admin__row--flag,
+.settings-admin__link {
+  justify-content: space-between;
+}
+
+.settings-admin__row-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-spacing-micro);
+  min-width: 0;
+}
+
+.settings-admin__row-label {
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+}
+
+.settings-admin__row-hint {
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  color: var(--sys-text-color-light);
+}
+
+.settings-admin__toggle {
+  flex: 0 0 auto;
+}
+
+.settings-admin__link > i {
+  flex: 0 0 auto;
+  color: var(--sys-text-color-light);
+}
