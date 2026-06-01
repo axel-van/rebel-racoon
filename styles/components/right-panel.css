@@ -241,7 +241,8 @@
 .rpanel-batch-card {
   background: var(--app-surface);
   border: 1.5px solid var(--app-border-soft);
-  border-radius: var(--app-radius-starter);
+  border-radius: var(--app-radius-card);
+  box-shadow: var(--app-shadow-low);
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   display: flex;
   flex-direction: column;
@@ -390,7 +391,7 @@
 .rpanel-ideas__grid {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-sm);
   /* Center the (max-width-capped) cards so extra room on a wide panel sits
      evenly on both sides — mirrors the Drafts panel feed centering. */
   align-items: center;
@@ -420,6 +421,8 @@
      class) so every card in the panel reads with the same weight. */
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-card);
+  /* Shared card elevation — every right-panel card uses --app-shadow-low. */
+  box-shadow: var(--app-shadow-low);
   display: flex;
   flex-direction: column;
   /* Cap the card width so idea / clip cards don't sprawl edge-to-edge on a
@@ -427,14 +430,11 @@
      width. Left-aligned within the column. */
   max-width: 560px;
   width: 100%;
-  transition:
-    border-color var(--ref-animation-short) var(--app-ease-out),
-    box-shadow var(--ref-animation-short) var(--app-ease-out);
+  transition: border-color var(--ref-animation-short) var(--app-ease-out);
 }
 
 .rpanel-ideas__card:hover {
   border-color: var(--ref-color-grey-40);
-  box-shadow: var(--app-shadow-card-hover, 0 2px 6px rgba(0, 0, 0, 0.04));
 }
 
 /* Pulse highlight applied when the user clicks a composer pill's
@@ -743,9 +743,11 @@
 }
 
 .rpanel-drafts__feed {
-  /* posts.css already handles vertical stack + spacing via .posts__feed.
-     Just guard the min-width so cards inside don't blow out the grid. */
+  /* posts.css already handles vertical stack via .posts__feed; override the
+     gap so draft cards sit at the same vertical rhythm as the other panel
+     card lists (--ref-spacing-sm). */
   min-width: 0;
+  gap: var(--ref-spacing-sm);
   /* Gutter now lives on the feed (the container dropped its padding) so the
      header can sit flush — mirrors the Ideas body padding. */
   padding: var(--ref-spacing-md);
@@ -891,7 +893,7 @@
 .rpanel-outputs__clips {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-sm);
   padding: var(--ref-spacing-sm);
   /* Center the capped clip cards — same as the ideas grid + Drafts feed. */
   align-items: center;
@@ -955,7 +957,7 @@
 .rpanel-sources__list {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-sm);
 }
 
 .rpanel-sources__row {
@@ -964,7 +966,8 @@
   gap: var(--ref-spacing-xs);
   padding: var(--ref-spacing-xs);
   border: 1px solid var(--app-border);
-  border-radius: var(--ref-border-radius-sm);
+  border-radius: var(--app-radius-card);
+  box-shadow: var(--app-shadow-low);
   background: var(--ref-color-white);
 }
 
