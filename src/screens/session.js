@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=69";
+import { renderTopbar } from "../components/topbar.js?v=70";
 import { socialAccounts, chatStarters } from "../mocks.js?v=36";
 import {
   getConnectedProfiles,
@@ -49,8 +49,8 @@ import { startDraftFlow, executeDraft, getAnglesForIdea } from "../draft-flow.js
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=32";
 import * as inlineQuestion from "../inline-question.js?v=27";
-import * as contextBuilder from "../context-builder.js?v=53";
-import * as playbookEditor from "../playbook-editor.js?v=14";
+import * as contextBuilder from "../context-builder.js?v=54";
+import * as playbookEditor from "../playbook-editor.js?v=15";
 import { renderPicker } from "./_analyse-common.js?v=33";
 import { renderSourceCard } from "../components/source-card.js?v=30";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -84,7 +84,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=117";
+} from "../components/right-panel.js?v=118";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";

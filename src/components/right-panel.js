@@ -16,7 +16,7 @@ import {
 import { renderPostCard } from "./post-card.js?v=31";
 import { renderClipCard } from "./clip-card.js?v=7";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=12";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=48";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=49";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -666,7 +666,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName } = entry;
-      import("../screens/session.js?v=164").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=165").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, clip, sourceName);
       });
       return;
@@ -703,7 +703,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=164").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=165").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -2153,7 +2153,9 @@ function renderIdeaCompact(idea) {
          </span>`
       : "";
 
-  const hasWhyBody = Boolean(idea.rationale) || Boolean(sourceTags);
+  // Why-this-idea now holds the rationale only — the source attribution
+  // moved up to the card head, beside the kind tag (see cardHead below).
+  const hasWhyBody = Boolean(idea.rationale);
   const whyPanel = hasWhyBody
     ? `
       <section class="rpanel-ideas__why" data-why-open="${open ? "true" : "false"}">
@@ -2170,23 +2172,25 @@ function renderIdeaCompact(idea) {
         </button>
         <div id="${whyId}" class="rpanel-ideas__why-body" ${open ? "" : "hidden"}>
           ${idea.rationale ? `<p class="rpanel-ideas__why-rationale">${escapeText(idea.rationale)}</p>` : ""}
-          ${
-            sourceTags
-              ? `<div class="rpanel-ideas__why-source">
-                  <span class="rpanel-ideas__why-source-label">Source</span>
-                  <div class="rpanel-ideas__why-source-tags">${sourceTags}</div>
-                </div>`
-              : ""
-          }
         </div>
       </section>
     `
     : "";
 
+  // Card head — kind tag (left) + source attribution (right). The source
+  // sits beside the type so provenance reads at a glance instead of being
+  // tucked inside the collapsed Why panel.
+  const cardHead = `
+    <div class="rpanel-ideas__card-head">
+      <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${kind}</span>
+      ${sourceTags ? `<div class="rpanel-ideas__head-source">${sourceTags}</div>` : ""}
+    </div>
+  `;
+
   return `
     <article class="rpanel-ideas__card" data-idea-id="${escapeAttr(idea.id)}">
       <div class="rpanel-ideas__card-content">
-        <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${kind}</span>
+        ${cardHead}
         ${idea.title ? `<h4 class="rpanel-ideas__card-title">${escapeText(idea.title)}</h4>` : ""}
         <p class="rpanel-ideas__card-body">${escapeText(idea.body || "")}</p>
         ${whyPanel}
@@ -2220,7 +2224,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=164").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=165").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

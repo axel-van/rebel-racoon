@@ -443,10 +443,28 @@
   border-color: var(--ref-color-electric-blue-100);
 }
 
+/* Card head — kind tag (left) + source attribution (right) on one row. */
+.rpanel-ideas__card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
 .rpanel-ideas__kind {
-  /* Self-align so the tag stays its intrinsic width inside the
-     flex-column content zone (would otherwise stretch full-width). */
-  align-self: flex-start;
+  /* Keep the tag at its intrinsic width on the left of the head row. */
+  flex: 0 0 auto;
+}
+
+/* Source attribution, pushed to the trailing edge. min-width:0 lets a long
+   filename pill truncate (via .rpanel-ideas__source-tag-text) instead of
+   shoving the kind tag. */
+.rpanel-ideas__head-source {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--ref-spacing-xxxs);
+  margin-left: auto;
+  min-width: 0;
 }
 
 /* Per-kind palette — uses the existing tag color tokens. */
@@ -574,27 +592,6 @@
   line-height: var(--ref-font-line-height-xs);
   color: var(--ref-color-grey-100);
   word-break: break-word;
-}
-
-.rpanel-ideas__why-source {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxs);
-}
-
-.rpanel-ideas__why-source-label {
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
-  line-height: var(--ref-font-line-height-xs);
-  color: var(--ref-color-grey-100);
-}
-
-.rpanel-ideas__why-source-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxxs);
-  min-width: 0;
 }
 
 /* Source pill — mimics the DS grey tag visual but supports a leading
