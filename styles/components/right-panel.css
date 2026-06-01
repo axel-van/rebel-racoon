@@ -43,29 +43,22 @@
   display: none;
 }
 
-/* ── Floating close ───────────────────────────────────────────────────
+/* ── Close ─────────────────────────────────────────────────────────────
    The standalone title bar was dropped — the active mode is named by the
-   highlighted topbar pill and each mode's own tabs/header row. A single
-   close control floats at the panel's top-right corner instead, pinned to
-   the panel root (not the scrolling body) so it stays reachable. A white
-   circular surface keeps it legible over whatever scrolls beneath. Each
-   mode's first row reserves right padding so its controls clear it. */
+   highlighted topbar pill and each mode's own tabs/header row. The close
+   is a plain DS .ap-icon-button (transparent variant); we only pin it to
+   the panel's top-right corner here. No custom surface — the icon button
+   keeps its own DS chrome (hover state, sizing). Each mode's first row
+   reserves right padding so its controls clear it. */
 .app-right-panel__close {
   position: absolute;
   top: var(--ref-spacing-xs);
-  right: var(--ref-spacing-sm);
+  right: var(--ref-spacing-xs);
   z-index: 3;
-  background: var(--ref-color-white);
-  border-radius: var(--app-radius-circle);
-  box-shadow: var(--app-shadow-low);
 }
 
-.app-right-panel__close:hover {
-  background: var(--ref-color-grey-05);
-}
-
-/* Width of the floating close + breathing room — first rows pad by this
-   so tabs / selects never tuck under the button. */
+/* Width of the close button + breathing room — first rows pad by this so
+   tabs / selects never tuck under it. */
 .app-right-panel {
   --rpanel-close-clearance: calc(var(--sys-icon-css-md) + var(--ref-spacing-lg));
 }
