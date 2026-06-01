@@ -282,6 +282,14 @@
   cursor: default;
 }
 
+/* Count 0 → the angle is opted out: dim its content so it visually
+   recedes. The + button stays at full strength so re-adding is obvious. */
+.analyse__option--stepper.is-empty .analyse__option-shortcut,
+.analyse__option--stepper.is-empty .analyse__option-text,
+.analyse__option--stepper.is-empty .analyse__stepper-count {
+  opacity: 0.45;
+}
+
 /* Custom "Something else" input row */
 
 .analyse__option--input {

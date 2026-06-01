@@ -210,7 +210,7 @@ export function renderPicker(picker) {
         `;
         return `
           <div
-            class="analyse__option analyse__option--stepper${isActive ? " is-selected" : ""}"
+            class="analyse__option analyse__option--stepper${isActive ? " is-selected" : " is-empty"}"
             data-${handler}="${it.value}"
             role="button"
             tabindex="0"
