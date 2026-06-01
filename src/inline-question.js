@@ -28,11 +28,12 @@
 //   multi             bool    — when true, render multi-select toggles + Continue button
 //   defaultSelected   array   — values to render pre-selected (multi mode only)
 //   submitLabel       string  — multi-select submit button label (default "Continue")
-//   stepper           bool    — per-row count steppers; user picks ONE item + a count
+//   stepper           bool    — per-row count steppers; each row carries its
+//                               own count (0 opts it out) and the submit sums them
 //   defaultCount      number  — initial per-item count in stepper mode (default 1)
 //   countMin/countMax number  — clamp range in stepper mode (default 1 / 20)
-//   submitCountLabel  fn(n)   — submit button label given the selected count
-//                               (stepper mode); onPick gets { value, count }
+//   submitCountLabel  fn(total) — submit button label given the summed total
+//                               (stepper mode); onPick gets { picks:[{value,count}], total }
 //   customPlaceholder string  — when set, render a free-text option row
 //   customValue       string  — initial value for the free-text input (pre-fill)
 //   customFile        bool    — when true, render a dropzone row instead of a text input
@@ -46,7 +47,7 @@
 //   onSkip()          fn      — called when Skip / Esc; if omitted, no skip btn
 //   onBack()          fn      — called when ← Back is clicked; if omitted, no back btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=34";
+import { chatTurn } from "./screens/_analyse-common.js?v=35";
 
 const states = new Map(); // sessionId → opts
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -91,15 +92,21 @@ export function stepBump(sessionId, value, delta) {
   notify(sessionId);
 }
 
-// Stepper mode — resolve with { value, count } for the selected item.
+// Stepper mode — resolve with every row that has a count > 0. Each item can
+// carry its own count (and 0 to opt out), so the result is a batch:
+//   { picks: [{ value, count }], total }
+// onPick gets the batch; a total of 0 is a no-op (the submit is disabled).
 export function stepSubmit(sessionId) {
   const s = states.get(sessionId);
-  if (!s || !s.stepper || s._selected == null) return;
-  const value = s._selected;
-  const count = s._counts[value] ?? s.defaultCount ?? 1;
+  if (!s || !s.stepper) return;
+  const picks = (s.items || [])
+    .map((it) => ({ value: it.value, count: s._counts[it.value] ?? 0 }))
+    .filter((p) => p.count > 0);
+  const total = picks.reduce((sum, p) => sum + p.count, 0);
+  if (total <= 0) return;
   states.delete(sessionId);
   notify(sessionId);
-  s.onPick?.({ value, count });
+  s.onPick?.({ picks, total });
 }
 
 export function pick(sessionId, value) {
@@ -187,6 +194,9 @@ export function renderChrome(sessionId) {
   const s = states.get(sessionId);
   if (!s) return null;
   const body = s.intro ? chatTurn({ role: "ai", text: s.intro }) : "";
+  // Stepper total = sum of every row's count (drives the submit label +
+  // disabled state).
+  const stepTotal = s.stepper ? Object.values(s._counts || {}).reduce((sum, n) => sum + (Number(n) || 0), 0) : 0;
   const picker = {
     items: s.items || [],
     handler: "inline-question",
@@ -203,17 +213,17 @@ export function renderChrome(sessionId) {
     customFileIcon: s.customFileIcon || "ap-icon-upload",
     multi: s.multi === true,
     defaultSelected: Array.isArray(s.defaultSelected) ? s.defaultSelected : [],
-    // Stepper mode — per-row counts + a single submit reflecting the
-    // selected row's count.
+    // Stepper mode — per-row counts; the submit reflects the TOTAL across
+    // every row (each angle contributes its own count; 0 opts out).
     stepper: s.stepper === true,
-    stepSelected: s._selected ?? null,
     stepCounts: s._counts || {},
     stepMin: s.countMin ?? 1,
     stepMax: s.countMax ?? 20,
+    stepTotal: stepTotal,
     submitLabel: s.stepper
       ? s.submitCountLabel
-        ? s.submitCountLabel(s._counts?.[s._selected] ?? 1)
-        : `Generate ${s._counts?.[s._selected] ?? 1}`
+        ? s.submitCountLabel(stepTotal)
+        : `Generate ${stepTotal}`
       : s.submitLabel || "Continue",
     // Pass-through for callers that want to inject custom buttons in
     // the picker footer (used by the playbook editor for Cancel + Save).

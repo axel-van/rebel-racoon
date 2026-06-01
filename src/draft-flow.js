@@ -187,3 +187,48 @@ export function executeDraft(sessionId, ideaId, selectedChannels, count = 1, ang
     }
   }, 6000);
 }
+
+// Multi-angle batch — produces each angle's count of drafts in a single run,
+// then posts ONE combined result. `anglePicks` is [{ angle, count }] (count
+// already > 0). Channels are cycled round-robin across the whole batch so a
+// single chosen profile still yields the right total. Mirrors executeDraft's
+// pending + try/catch + Retry contract.
+export function executeDraftBatch(sessionId, ideaId, selectedChannels, anglePicks) {
+  const idea = resolveIdea(sessionId, ideaId);
+  const channels = Array.isArray(selectedChannels) && selectedChannels.length ? selectedChannels : ["linkedin"];
+  if (!idea || !Array.isArray(anglePicks) || anglePicks.length === 0) return;
+
+  const pendingId = startPending(sessionId);
+  setTimeout(() => {
+    finishPending(sessionId, pendingId);
+    try {
+      const drafts = [];
+      let ch = 0;
+      for (const { angle, count } of anglePicks) {
+        const draftBody = angle ? angle.description : idea.body;
+        for (let i = 0; i < count; i += 1) {
+          drafts.push(
+            addPostDraft(sessionId, {
+              network: channels[ch % channels.length],
+              text: [idea.title, ...(draftBody ? [draftBody] : [])],
+              hashtags: [],
+            }),
+          );
+          ch += 1;
+        }
+      }
+      postDraftResult(sessionId, { ideaTitle: idea.title, drafts });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("draft-flow: executeDraftBatch failed", err);
+      showToast("Couldn't create those drafts. Try again?", {
+        variant: "error",
+        duration: 6000,
+        action: {
+          label: "Retry",
+          onClick: () => executeDraftBatch(sessionId, ideaId, selectedChannels, anglePicks),
+        },
+      });
+    }
+  }, 6000);
+}

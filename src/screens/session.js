@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=72";
+import { renderTopbar } from "../components/topbar.js?v=73";
 import { socialAccounts, chatStarters } from "../mocks.js?v=36";
 import {
   getConnectedProfiles,
@@ -45,13 +45,13 @@ import {
   setSubtitleStyle,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=28";
-import { startDraftFlow, executeDraft, getAnglesForIdea } from "../draft-flow.js?v=31";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=32";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
-import * as sidebarWizard from "../sidebar-wizard.js?v=33";
-import * as inlineQuestion from "../inline-question.js?v=28";
-import * as contextBuilder from "../context-builder.js?v=56";
-import * as playbookEditor from "../playbook-editor.js?v=17";
-import { renderPicker } from "./_analyse-common.js?v=34";
+import * as sidebarWizard from "../sidebar-wizard.js?v=34";
+import * as inlineQuestion from "../inline-question.js?v=29";
+import * as contextBuilder from "../context-builder.js?v=57";
+import * as playbookEditor from "../playbook-editor.js?v=18";
+import { renderPicker } from "./_analyse-common.js?v=35";
 import { renderSourceCard } from "../components/source-card.js?v=30";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
 import {
@@ -62,7 +62,7 @@ import {
 } from "../components/content-workspace.js?v=24";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=24";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=12";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=25";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=26";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=24";
 import {
   classifyFile,
@@ -84,12 +84,12 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=120";
+} from "../components/right-panel.js?v=121";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
 import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=4";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=2";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=3";
 
 // Session screen — persistent assistant panel on the left, workspace with
 // tabs on the right.
@@ -952,7 +952,7 @@ function defaultChatNameLocal() {
 // becomes the draft's network so the user gets posts on the surface they
 // actually want to publish to. `count` is threaded through from the count
 // picker; `onBack` lets the second-step picker return to the first.
-function askProfileQuestion(sessionId, ideaId, { count = 1, angle = null, onBack = null } = {}) {
+function askProfileQuestion(sessionId, ideaId, { count = 1, angle = null, anglePicks = null, onBack = null } = {}) {
   // Connected profiles + their picker presentation come from the shared
   // social-profiles helper, so this picker proposes the exact same
   // accounts (brand handle + avatar with network badge) as the Playbook
@@ -977,7 +977,13 @@ function askProfileQuestion(sessionId, ideaId, { count = 1, angle = null, onBack
       // format the onboarding profile step uses.
       if (account) postUserTurn(sessionId, `${account.platformLabel} · ${account.handle || account.kind || ""}`);
       const channels = account?.platform ? [account.platform] : null;
-      startDraftFlow(sessionId, ideaId, count, channels, angle);
+      // Multi-angle batch (from the angle stepper) → one draft run that
+      // produces each angle's count. Otherwise the legacy single-angle path.
+      if (anglePicks && anglePicks.length) {
+        executeDraftBatch(sessionId, ideaId, channels, anglePicks);
+      } else {
+        startDraftFlow(sessionId, ideaId, count, channels, angle);
+      }
     },
     onBack: onBack || undefined,
     onSkip: onBack ? undefined : () => {},
@@ -998,33 +1004,38 @@ export function askAngleQuestion(sessionId, ideaId) {
     askDraftCountQuestion(sessionId, ideaId);
     return;
   }
-  postAssistantMessage(sessionId, "Pick an angle and how many drafts:");
+  postAssistantMessage(sessionId, "Pick how many drafts per angle:");
   inlineQuestion.ask(sessionId, {
     title: "Suggested angles",
-    stepLabel: "Angle · drafts",
+    stepLabel: "Drafts per angle",
     skipLabel: "Cancel",
-    // Stepper mode — each angle row carries a drafts counter so the angle
-    // and the count are chosen together, then "Generate N drafts" advances
-    // straight to the profile step (no separate count question).
+    // Stepper mode — each angle row carries its own drafts counter (0 to
+    // skip an angle). "Generate N drafts" sums every angle and advances
+    // straight to the profile step, where the whole batch is produced.
     stepper: true,
     defaultCount: 1,
-    countMin: 1,
+    countMin: 0,
     countMax: 20,
-    submitCountLabel: (n) => `Generate ${n} draft${n === 1 ? "" : "s"}`,
+    submitCountLabel: (total) => `Generate ${total} draft${total === 1 ? "" : "s"}`,
     items: angles.map((a) => ({
       value: a.id,
       label: a.title,
       caption: a.description,
     })),
-    onPick: ({ value, count }) => {
-      const angle = angles.find((a) => a.id === value) || null;
-      const n = Math.max(1, Math.min(20, Math.floor(Number(count) || 1)));
-      // Echo the chosen angle + count as a user turn so it stays visible in
-      // the thread once the picker unmounts.
-      if (angle) postUserTurn(sessionId, `${angle.title} · ${n} draft${n === 1 ? "" : "s"}`);
+    onPick: ({ picks }) => {
+      // Map each picked angle id → its angle object + count.
+      const anglePicks = picks
+        .map((p) => ({ angle: angles.find((a) => a.id === p.value) || null, count: p.count }))
+        .filter((p) => p.angle && p.count > 0);
+      const total = anglePicks.reduce((sum, p) => sum + p.count, 0);
+      // Echo the batch as a user turn so it stays visible once the picker
+      // unmounts — e.g. "3 drafts · 2 angles".
+      postUserTurn(
+        sessionId,
+        `${total} draft${total === 1 ? "" : "s"} · ${anglePicks.length} angle${anglePicks.length === 1 ? "" : "s"}`,
+      );
       askProfileQuestion(sessionId, ideaId, {
-        count: n,
-        angle,
+        anglePicks,
         // ← Back returns to the angle picker so the user can re-choose.
         onBack: () => askAngleQuestion(sessionId, ideaId),
       });

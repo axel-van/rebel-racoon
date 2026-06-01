@@ -139,12 +139,12 @@ export function renderPicker(picker) {
     // by the First Time User ALT flow where the visual profile picker
     // pre-seeds the platform in connectedSocials before askSocial runs.
     defaultSelected = [],
-    // Stepper mode — each row carries an adjustable count; the user picks
-    // ONE row + its count. `stepCounts` maps value→n, `stepSelected` is the
-    // active row, `stepMin`/`stepMax` clamp the steppers.
+    // Stepper mode — each row carries its own adjustable count (0 opts the
+    // row out). `stepCounts` maps value→n, `stepTotal` is the sum across all
+    // rows, `stepMin`/`stepMax` clamp each stepper.
     stepper = false,
-    stepSelected = null,
     stepCounts = {},
+    stepTotal = 0,
     stepMin = 1,
     stepMax = 20,
   } = picker;
@@ -193,7 +193,9 @@ export function renderPicker(picker) {
       // it stays click + keyboard focusable without illegal nesting.
       if (stepper) {
         const count = stepCounts[it.value] ?? stepMin;
-        const isActive = it.value === stepSelected;
+        // Rows that will generate (count > 0) get the active tint so the
+        // batch is visible at a glance.
+        const isActive = count > 0;
         const stepBtn = (dir, icon, disabled) => `
           <button
             type="button"
@@ -332,7 +334,7 @@ export function renderPicker(picker) {
   // Stepper mode submits via a dedicated "Generate N drafts" button whose
   // label reflects the selected row's count.
   const generateBtn = stepper
-    ? `<button type="button" class="ap-button primary orange" data-${handler}-generate><span>${submitLabel}</span></button>`
+    ? `<button type="button" class="ap-button primary orange" data-${handler}-generate ${stepTotal <= 0 ? "disabled" : ""}><span>${submitLabel}</span></button>`
     : "";
   const footer =
     skipBtn || submitBtn || generateBtn || footerSlot
