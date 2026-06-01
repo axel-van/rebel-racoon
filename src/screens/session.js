@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=78";
+import { renderTopbar } from "../components/topbar.js?v=79";
 import { socialAccounts, chatStarters } from "../mocks.js?v=36";
 import {
   getConnectedProfiles,
@@ -49,8 +49,8 @@ import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } fro
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=37";
 import * as inlineQuestion from "../inline-question.js?v=32";
-import * as contextBuilder from "../context-builder.js?v=62";
-import * as playbookEditor from "../playbook-editor.js?v=23";
+import * as contextBuilder from "../context-builder.js?v=63";
+import * as playbookEditor from "../playbook-editor.js?v=24";
 import { renderPicker } from "./_analyse-common.js?v=38";
 import { renderSourceCard } from "../components/source-card.js?v=30";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -84,7 +84,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=126";
+} from "../components/right-panel.js?v=127";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
@@ -1495,8 +1495,18 @@ function renderExtractionTurn(message) {
       const kind = i.kind || "insight";
       const whyId = `conv-idea-why-${i.id || ""}`;
       const sourceName = message.filename || "";
-      const hasWhy = !!i.rationale || !!sourceName;
-      const why = hasWhy
+      // Source now lives in the card head beside the kind tag — same as the
+      // right-panel idea card.
+      const sourceTag = sourceName
+        ? `<div class="rpanel-ideas__head-source">
+            <span class="rpanel-ideas__source-label">Source:</span>
+            <span class="rpanel-ideas__source-tag" title="${escapeHtmlAttr(sourceName)}">
+              <i class="ap-icon-file" aria-hidden="true"></i>
+              <span class="rpanel-ideas__source-tag-text">${escapeHtml(sourceName)}</span>
+            </span>
+          </div>`
+        : "";
+      const why = i.rationale
         ? `
           <section class="rpanel-ideas__why" data-why-open="false">
             <button
@@ -1511,37 +1521,30 @@ function renderExtractionTurn(message) {
               <i class="ap-icon-chevron-down rpanel-ideas__why-chevron" aria-hidden="true"></i>
             </button>
             <div id="${whyId}" class="rpanel-ideas__why-body" hidden>
-              ${i.rationale ? `<p class="rpanel-ideas__why-rationale">${escapeHtml(i.rationale)}</p>` : ""}
-              ${
-                sourceName
-                  ? `<div class="rpanel-ideas__why-source">
-                      <span class="rpanel-ideas__why-source-label">Source</span>
-                      <div class="rpanel-ideas__why-source-tags">
-                        <span class="rpanel-ideas__source-tag" title="${escapeHtmlAttr(sourceName)}">
-                          <i class="ap-icon-file" aria-hidden="true"></i>
-                          <span class="rpanel-ideas__source-tag-text">${escapeHtml(sourceName)}</span>
-                        </span>
-                      </div>
-                    </div>`
-                  : ""
-              }
+              <p class="rpanel-ideas__why-rationale">${escapeHtml(i.rationale)}</p>
             </div>
           </section>
         `
         : "";
+      // Reuse the right-panel idea card (.rpanel-ideas__card) so the two
+      // surfaces are the same component. Only the footer differs — the
+      // conversation offers feedback + "View idea" instead of Mention/Draft.
       return `
-        <div class="ap-card extraction-turn__idea-card" data-idea-id="${i.id || ""}">
-          <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${escapeHtml(kind)}</span>
-          <div class="extraction-turn__idea-card-text">
-            <p class="extraction-turn__idea-card-title">${escapeHtml(i.title || "")}</p>
-            <p class="extraction-turn__idea-card-body">${escapeHtml(i.body || "")}</p>
+        <article class="rpanel-ideas__card extraction-turn__idea-card" data-idea-id="${i.id || ""}">
+          <div class="rpanel-ideas__card-content">
+            <div class="rpanel-ideas__card-head">
+              <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${escapeHtml(kind)}</span>
+              ${sourceTag}
+            </div>
+            <h4 class="rpanel-ideas__card-title">${escapeHtml(i.title || "")}</h4>
+            <p class="rpanel-ideas__card-body">${escapeHtml(i.body || "")}</p>
+            ${why}
           </div>
-          ${why}
-          <div class="extraction-turn__idea-card-footer">
-            <div class="extraction-turn__idea-card-feedback" role="group" aria-label="Rate this idea">
+          <footer class="rpanel-ideas__card-actions">
+            <div class="rpanel-ideas__feedback" role="group" aria-label="Rate this idea">
               <button
                 type="button"
-                class="extraction-turn__idea-card-thumb"
+                class="ap-icon-button transparent sm rpanel-ideas__thumb"
                 title="Helpful"
                 aria-label="Mark as helpful"
                 aria-pressed="false"
@@ -1552,7 +1555,7 @@ function renderExtractionTurn(message) {
               </button>
               <button
                 type="button"
-                class="extraction-turn__idea-card-thumb"
+                class="ap-icon-button transparent sm rpanel-ideas__thumb"
                 title="Not helpful"
                 aria-label="Mark as not helpful"
                 aria-pressed="false"
@@ -1564,15 +1567,15 @@ function renderExtractionTurn(message) {
             </div>
             <button
               type="button"
-              class="ap-link standalone small extraction-turn__idea-card-view"
+              class="ap-link standalone small"
               data-focus-idea="${i.id || ""}"
               aria-label="Open this idea in Ideas"
             >
               <span>View idea</span>
               <i class="ap-icon-external-link"></i>
             </button>
-          </div>
-        </div>
+          </footer>
+        </article>
       `;
     })
     .join("");

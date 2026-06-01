@@ -862,113 +862,14 @@
   font-weight: var(--ref-font-weight-bold);
 }
 
-/* Idea card (Figma 25:1057 / 25:1053) — vertical stack: text column on top,
-   feedback + "View idea" footer row below. */
-/* Mirrors the right-panel idea card (.rpanel-ideas__card): white surface +
-   card radius so the kind tag and the grey-05 "Why this idea" panel read
-   the same as in the panel. */
+/* Idea card in the conversation — reuses the right-panel card wholesale
+   (.rpanel-ideas__card: chrome, head + Source, content, Why panel, actions
+   footer), so the two surfaces are the same component. The only override:
+   drop the panel's 560px cap so the card fills the chat column. The footer
+   actions (feedback + "View idea") are the conversation's own, but use the
+   shared .rpanel-ideas__* footer + thumb classes. */
 .extraction-turn__idea-card {
-  background: var(--ref-color-white);
-  border: 1px solid var(--app-border-soft);
-  border-radius: var(--app-radius-card);
-  padding: var(--ref-spacing-sm);
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  width: 100%;
-  max-width: 100%;
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
-  transition: border-color var(--ref-animation-short) var(--app-ease-out);
-}
-
-.extraction-turn__idea-card:hover {
-  border-color: var(--ref-color-grey-40);
-}
-
-.extraction-turn__idea-card-text {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-}
-
-.extraction-turn__idea-card-title {
-  margin: 0;
-  font-size: var(--ref-font-size-md);
-  line-height: var(--ref-font-line-height-lg);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-}
-
-.extraction-turn__idea-card-body {
-  margin: 0;
-  color: var(--ref-color-grey-80);
-}
-
-.extraction-turn__idea-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ref-spacing-xs);
-}
-
-.extraction-turn__idea-card-feedback {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-}
-
-/* Thumb up / down — 20x20 transparent icon button, grey-80 by default,
-   electric-blue on hover, electric-blue-100 + filled glyph when active. */
-.extraction-turn__idea-card-thumb {
-  width: 20px;
-  height: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  border-radius: var(--app-radius-sm);
-  color: var(--ref-color-grey-80);
-  cursor: pointer;
-  line-height: 1;
-}
-
-.extraction-turn__idea-card-thumb i {
-  font-size: var(--sys-icon-css-sm);
-}
-
-.extraction-turn__idea-card-thumb {
-  transition:
-    color var(--ref-animation-short) var(--app-ease-out),
-    background-color var(--ref-animation-short) var(--app-ease-out);
-}
-
-.extraction-turn__idea-card-thumb:hover,
-.extraction-turn__idea-card-thumb:focus-visible {
-  color: var(--ref-color-electric-blue-150);
-  outline: none;
-}
-
-.extraction-turn__idea-card-thumb:active {
-  background: var(--ref-color-electric-blue-10);
-}
-
-.extraction-turn__idea-card-thumb.is-active {
-  color: var(--ref-color-electric-blue-100);
-}
-
-/* "View idea" — text + external-link icon link, anchored bottom-right. */
-.extraction-turn__idea-card-view {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  cursor: pointer;
-}
-
-.extraction-turn__idea-card-view i {
-  font-size: var(--sys-icon-css-sm);
+  max-width: none;
 }
 
 /* Composer — Figma 35:764.
