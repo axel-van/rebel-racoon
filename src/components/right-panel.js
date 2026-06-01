@@ -15,6 +15,8 @@ import {
 } from "../posts-store.js?v=28";
 import { renderPostCard } from "./post-card.js?v=31";
 import { renderClipCard } from "./clip-card.js?v=7";
+// Shared compact idea card — same component the standalone Ideas page uses.
+import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=12";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=58";
 import {
@@ -2096,130 +2098,16 @@ function toggleClipWhyInPlace(clipId, headBtn) {
 }
 
 function renderIdeaCompact(idea) {
-  const kind = idea.kind || "insight";
-
-  // Resolve linked sources for the current session so we can show real
-  // filenames + per-kind file icons inside the Why panel. Falls back to
-  // the legacy idea.ref label when nothing matches (e.g. seed ideas
-  // pointing at unknown source ids, or empty new-user state).
+  // Resolve linked sources for the current session so the head shows real
+  // filenames + per-kind icons. The shared renderer owns the markup; the
+  // panel just feeds it the session sources + this card's feedback/why state.
   const sid = activeSessionId();
   const sessionSources = sid ? getStreamSources(sid) : [];
-  const linkedSources = (idea.sourceIds || []).map((id) => sessionSources.find((s) => s.id === id)).filter(Boolean);
-
-  // Thumbs-up / thumbs-down feedback — the picked side renders with
-  // the _fill icon variant + aria-pressed=true. Clicking the same
-  // side again clears the feedback (see toggleIdeaFeedback).
-  const verdict = getIdeaFeedback(idea.id);
-  const thumbBtn = (side) => {
-    const isUp = side === "up";
-    const isActive = verdict === side;
-    const icon = isActive ? `ap-icon-thumb-${side}_fill` : `ap-icon-thumb-${side}`;
-    const label = isUp ? "Mark idea as useful" : "Mark idea as not useful";
-    return `
-      <button
-        type="button"
-        class="ap-icon-button transparent sm rpanel-ideas__thumb${isActive ? " is-active" : ""}"
-        data-rpanel-ideas-feedback="${escapeAttr(idea.id)}"
-        data-verdict="${side}"
-        aria-pressed="${isActive}"
-        aria-label="${label}"
-        title="${label}"
-      >
-        <i class="${icon}"></i>
-      </button>
-    `;
-  };
-
-  // Why-this-idea panel — collapsible grey-05 block holding rationale
-  // + source attribution. Rendered only when we have something to
-  // show (rationale or at least one linked source / ref fallback).
-  const whyId = `rpanel-idea-why-${idea.id}`;
-  const open = isWhyOpen(idea.id);
-  const sourceTags = linkedSources.length
-    ? linkedSources
-        .map(
-          (s) => `
-            <span class="rpanel-ideas__source-tag" title="${escapeAttr(s.filename)}">
-              <i class="${iconFor(s.kind)}" aria-hidden="true"></i>
-              <span class="rpanel-ideas__source-tag-text">${escapeText(s.filename)}</span>
-            </span>
-          `,
-        )
-        .join("")
-    : idea.ref
-      ? `<span class="rpanel-ideas__source-tag" title="${escapeAttr(idea.ref)}">
-           <i class="ap-icon-file" aria-hidden="true"></i>
-           <span class="rpanel-ideas__source-tag-text">${escapeText(idea.ref)}</span>
-         </span>`
-      : "";
-
-  // Why-this-idea now holds the rationale only — the source attribution
-  // moved up to the card head, beside the kind tag (see cardHead below).
-  const hasWhyBody = Boolean(idea.rationale);
-  const whyPanel = hasWhyBody
-    ? `
-      <section class="rpanel-ideas__why" data-why-open="${open ? "true" : "false"}">
-        <button
-          type="button"
-          class="rpanel-ideas__why-head"
-          data-rpanel-idea-why-toggle="${escapeAttr(idea.id)}"
-          aria-expanded="${open ? "true" : "false"}"
-          aria-controls="${whyId}"
-        >
-          <i class="ap-icon-info rpanel-ideas__why-info" aria-hidden="true"></i>
-          <span class="rpanel-ideas__why-title">Why this idea</span>
-          <i class="ap-icon-chevron-${open ? "up" : "down"} rpanel-ideas__why-chevron" aria-hidden="true"></i>
-        </button>
-        <div id="${whyId}" class="rpanel-ideas__why-body" ${open ? "" : "hidden"}>
-          ${idea.rationale ? `<p class="rpanel-ideas__why-rationale">${escapeText(idea.rationale)}</p>` : ""}
-        </div>
-      </section>
-    `
-    : "";
-
-  // Card head — kind tag (left) + source attribution (right). The source
-  // sits beside the type so provenance reads at a glance instead of being
-  // tucked inside the collapsed Why panel.
-  const cardHead = `
-    <div class="rpanel-ideas__card-head">
-      <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${kind}</span>
-      ${
-        sourceTags
-          ? `<div class="rpanel-ideas__head-source">
-              <span class="rpanel-ideas__source-label">Source:</span>
-              ${sourceTags}
-            </div>`
-          : ""
-      }
-    </div>
-  `;
-
-  return `
-    <article class="rpanel-ideas__card" data-idea-id="${escapeAttr(idea.id)}">
-      <div class="rpanel-ideas__card-content">
-        ${cardHead}
-        ${idea.title ? `<h4 class="rpanel-ideas__card-title">${escapeText(idea.title)}</h4>` : ""}
-        <p class="rpanel-ideas__card-body">${escapeText(idea.body || "")}</p>
-        ${whyPanel}
-      </div>
-      <footer class="rpanel-ideas__card-actions">
-        <div class="rpanel-ideas__feedback">
-          ${thumbBtn("up")}
-          ${thumbBtn("down")}
-        </div>
-        <div class="rpanel-ideas__primary">
-          <button type="button" class="ap-button ghost blue rpanel-ideas__mention" data-rpanel-mention-idea="${escapeAttr(idea.id)}">
-            <i class="ap-icon-at"></i>
-            <span>Mention</span>
-          </button>
-          <button type="button" class="ap-button secondary blue rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
-            <i class="ap-icon-sparkles"></i>
-            <span>Draft</span>
-          </button>
-        </div>
-      </footer>
-    </article>
-  `;
+  return renderCompactIdeaCard(idea, sessionSources, {
+    verdict: getIdeaFeedback(idea.id),
+    whyOpen: isWhyOpen(idea.id),
+    showMention: true,
+  });
 }
 
 // Closes the panel and hands off to the session screen's inline-question

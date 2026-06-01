@@ -1,6 +1,8 @@
 import { html, raw } from "../utils.js?v=20";
-import { renderTopbar } from "../components/topbar.js?v=80";
-import { renderIdeaCard } from "../components/idea-card.js?v=27";
+import { renderTopbar } from "../components/topbar.js?v=81";
+// Same compact idea card as the right-panel Ideas mode.
+import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=1";
+import { showToast } from "../components/toast.js?v=20";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=36";
 
 // Sources moved to a per-session model — there's no workspace-wide
@@ -36,6 +38,20 @@ const SORTS = [
 ];
 
 let pageState = { kind: "all", query: "", sort: "recent" };
+
+// Per-card interaction state for the compact idea card (feedback thumbs +
+// "Why this idea" expand). Page-local — the panel keeps its own copy.
+const ideasFeedback = new Map(); // ideaId → "up" | "down"
+const ideasWhyOpen = new Set(); // ideaId set = expanded
+
+function renderIdeaGridCard(i) {
+  return renderCompactIdeaCard(i, SOURCES, {
+    verdict: ideasFeedback.get(i.id) || null,
+    whyOpen: ideasWhyOpen.has(i.id),
+    // No composer on the standalone Ideas page → no Mention button.
+    showMention: false,
+  });
+}
 
 export function renderIdeas(_params, target) {
   renderTopbar();
@@ -118,7 +134,7 @@ function renderPage() {
       <div class="ideas-view__body">
         ${visible.length === 0
           ? raw(renderIdeasEmpty(IDEAS, pageState))
-          : raw(`<div class="ideas-view__grid">${visible.map((i) => renderIdeaCard(i, SOURCES)).join("")}</div>`)}
+          : raw(`<div class="ideas-view__grid">${visible.map((i) => renderIdeaGridCard(i)).join("")}</div>`)}
       </div>
     </div>
   `;
@@ -190,6 +206,61 @@ function filterAndSort(list, { kind, query, sort }) {
 
 function bind(root) {
   root.addEventListener("click", (event) => {
+    // --- Compact idea card interactions ---
+    // Thumbs feedback — exclusive toggle, in place (no repaint).
+    const feedbackBtn = event.target.closest("[data-rpanel-ideas-feedback]");
+    if (feedbackBtn) {
+      event.preventDefault();
+      const card = feedbackBtn.closest(".rpanel-ideas__card");
+      const id = feedbackBtn.dataset.rpanelIdeasFeedback;
+      const side = feedbackBtn.dataset.verdict;
+      const wasActive = ideasFeedback.get(id) === side;
+      card?.querySelectorAll("[data-rpanel-ideas-feedback]").forEach((b) => {
+        b.classList.remove("is-active");
+        b.setAttribute("aria-pressed", "false");
+        const i = b.querySelector("i");
+        if (i) i.className = b.dataset.verdict === "up" ? "ap-icon-thumb-up" : "ap-icon-thumb-down";
+      });
+      if (wasActive) {
+        ideasFeedback.delete(id);
+      } else {
+        ideasFeedback.set(id, side);
+        feedbackBtn.classList.add("is-active");
+        feedbackBtn.setAttribute("aria-pressed", "true");
+        const i = feedbackBtn.querySelector("i");
+        if (i) i.className = `ap-icon-thumb-${side}_fill`;
+      }
+      return;
+    }
+    // "Why this idea" — expand / collapse in place.
+    const whyBtn = event.target.closest("[data-rpanel-idea-why-toggle]");
+    if (whyBtn) {
+      event.preventDefault();
+      const id = whyBtn.dataset.rpanelIdeaWhyToggle;
+      const section = whyBtn.closest(".rpanel-ideas__why");
+      const next = section?.getAttribute("data-why-open") !== "true";
+      if (next) ideasWhyOpen.add(id);
+      else ideasWhyOpen.delete(id);
+      if (section) section.setAttribute("data-why-open", next ? "true" : "false");
+      whyBtn.setAttribute("aria-expanded", next ? "true" : "false");
+      const body = document.getElementById(whyBtn.getAttribute("aria-controls"));
+      if (body) body.hidden = !next;
+      const chev = whyBtn.querySelector(".rpanel-ideas__why-chevron");
+      if (chev) {
+        chev.classList.toggle("ap-icon-chevron-down", !next);
+        chev.classList.toggle("ap-icon-chevron-up", next);
+      }
+      return;
+    }
+    // Draft — there's no chat session on the standalone Ideas page, so point
+    // the user to a chat rather than dead-ending.
+    const useBtn = event.target.closest("[data-rpanel-use-idea]");
+    if (useBtn) {
+      event.preventDefault();
+      showToast("Open a chat to draft from this idea.");
+      return;
+    }
+
     const filter = event.target.closest("[data-ideas-filter]");
     if (filter) {
       pageState.kind = filter.dataset.ideasFilter;
@@ -223,7 +294,7 @@ function bind(root) {
         body.innerHTML =
           visible.length === 0
             ? renderIdeasEmpty(IDEAS, pageState)
-            : `<div class="ideas-view__grid">${visible.map((i) => renderIdeaCard(i, SOURCES)).join("")}</div>`;
+            : `<div class="ideas-view__grid">${visible.map((i) => renderIdeaGridCard(i)).join("")}</div>`;
       }
     }
   });
