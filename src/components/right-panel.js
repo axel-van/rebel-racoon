@@ -16,7 +16,7 @@ import {
 import { renderPostCard } from "./post-card.js?v=31";
 import { renderClipCard } from "./clip-card.js?v=7";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=12";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=47";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=48";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -666,7 +666,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName } = entry;
-      import("../screens/session.js?v=163").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=164").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, clip, sourceName);
       });
       return;
@@ -703,7 +703,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=163").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=164").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -1048,6 +1048,19 @@ export function init() {
   window.addEventListener("hashchange", syncFromUrl);
 }
 
+// Inline close button — placed as the last item of a mode's first control
+// row so it aligns with the tabs / select on the row's flex baseline (no
+// absolute positioning, no custom surface — a plain DS icon-button).
+const RPANEL_CLOSE_INLINE = `
+  <button
+    type="button"
+    class="ap-icon-button transparent rpanel-row-close"
+    data-rpanel-close
+    aria-label="Close panel"
+    title="Close panel (Esc)"
+  ><i class="ap-icon-close"></i></button>
+`;
+
 function renderPanel() {
   const el = document.getElementById(PANEL_ID);
   if (!el) return;
@@ -1119,15 +1132,21 @@ function renderPanel() {
       aria-label="Resize panel"
       title="Drag to resize"
     ></div>
-    <button
-      type="button"
-      class="ap-icon-button transparent app-right-panel__close"
-      data-rpanel-close
-      aria-label="Close panel"
-      title="Close panel (Esc)"
-    >
-      <i class="ap-icon-close"></i>
-    </button>
+    ${
+      // List modes render the close inline in their first control row (so
+      // it shares the row's flex baseline with the tabs / select). The
+      // context-brief has no such row + its content is centred, so it gets
+      // the corner-pinned close instead.
+      state.mode === "context-brief"
+        ? `<button
+             type="button"
+             class="ap-icon-button transparent app-right-panel__close"
+             data-rpanel-close
+             aria-label="Close panel"
+             title="Close panel (Esc)"
+           ><i class="ap-icon-close"></i></button>`
+        : ""
+    }
     ${raw(bodyHtml)}
   `;
 
@@ -1336,6 +1355,7 @@ function renderDraftsView() {
           </div>
         </div>
       </details>
+      ${RPANEL_CLOSE_INLINE}
     </div>
   `;
 
@@ -1707,6 +1727,7 @@ function renderSourcesView() {
         <i class="ap-icon-plus"></i>
         <span>Attach source</span>
       </button>
+      ${RPANEL_CLOSE_INLINE}
     </div>
   `;
   if (sources.length === 0) {
@@ -1838,6 +1859,7 @@ function renderIdeasView() {
           ${clipCount > 0 ? `<span class="ap-counter normal ${!ideasActive ? "blue" : "grey"}">${clipCount}</span>` : ""}
         </button>
       </div>
+      ${RPANEL_CLOSE_INLINE}
     </div>
   `;
 
@@ -2198,7 +2220,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=163").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=164").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
