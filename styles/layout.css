@@ -48,7 +48,7 @@
 }
 
 /* Right-panel column width : default = (viewport − sidebar) / 3, floor
-   at 380px. Same formula for every mode (Ideas, Sources, Drafts,
+   at 610px. Same formula for every mode (Ideas, Sources, Drafts,
    Context-form, Context-brief) so the panel reads as a stable surface
    instead of resizing aleatoirely between modes. The runtime override
    (set by the resize handle, persisted via localStorage under
@@ -58,14 +58,14 @@
   grid-template-columns:
     var(--app-sidebar-width)
     minmax(0, 1fr)
-    var(--app-right-panel-width-runtime, max(380px, calc((100vw - var(--app-sidebar-width)) / 3)));
+    var(--app-right-panel-width-runtime, max(610px, calc((100vw - var(--app-sidebar-width)) / 3)));
 }
 
 .app-shell.is-right-panel-open.is-sidebar-collapsed {
   grid-template-columns:
     var(--app-sidebar-width-collapsed)
     minmax(0, 1fr)
-    var(--app-right-panel-width-runtime, max(380px, calc((100vw - var(--app-sidebar-width-collapsed)) / 3)));
+    var(--app-right-panel-width-runtime, max(610px, calc((100vw - var(--app-sidebar-width-collapsed)) / 3)));
 }
 
 /* ---------- Onboarding mode ----------
