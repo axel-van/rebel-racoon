@@ -273,8 +273,12 @@
    margin compensates for the spacing-sm padding so the button's outer
    edge lines up with the picker's outer edge while the title and
    subsequent rows keep their normal indent. */
+/* The header is a column (title row + optional subtitle) — stretch its
+   children to full width and keep everything left-aligned. (Vertical
+   centering of the title row's items lives on .analyse__picker-header-row.) */
 .session__assistant-wizard-bar .analyse__picker-header {
-  align-items: center;
+  align-items: stretch;
+  text-align: left;
   gap: var(--ref-spacing-xxs);
 }
 

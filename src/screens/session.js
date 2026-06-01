@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=74";
+import { renderTopbar } from "../components/topbar.js?v=75";
 import { socialAccounts, chatStarters } from "../mocks.js?v=36";
 import {
   getConnectedProfiles,
@@ -49,8 +49,8 @@ import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } fro
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=35";
 import * as inlineQuestion from "../inline-question.js?v=30";
-import * as contextBuilder from "../context-builder.js?v=58";
-import * as playbookEditor from "../playbook-editor.js?v=19";
+import * as contextBuilder from "../context-builder.js?v=59";
+import * as playbookEditor from "../playbook-editor.js?v=20";
 import { renderPicker } from "./_analyse-common.js?v=36";
 import { renderSourceCard } from "../components/source-card.js?v=30";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -84,7 +84,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=122";
+} from "../components/right-panel.js?v=123";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
@@ -1009,7 +1009,6 @@ export function askAngleQuestion(sessionId, ideaId) {
     title: "Suggested angles",
     subtitle: "Set how many drafts I'll write for each angle — leave one at 0 to skip it.",
     stepLabel: "Drafts per angle",
-    skipLabel: "Cancel",
     // Stepper mode — each angle row carries its own drafts counter (0 to
     // skip an angle). "Generate N drafts" sums every angle and advances
     // straight to the profile step, where the whole batch is produced.
@@ -1041,7 +1040,10 @@ export function askAngleQuestion(sessionId, ideaId) {
         onBack: () => askAngleQuestion(sessionId, ideaId),
       });
     },
-    onSkip: () => {},
+    // ← Back leaves the draft flow and returns to the conversation. Rendered
+    // as the header back arrow (the angle step is the flow's entry, so there
+    // is no earlier question to return to).
+    onBack: () => postAssistantMessage(sessionId, "No problem — tell me what you'd like to do instead."),
   });
 }
 
