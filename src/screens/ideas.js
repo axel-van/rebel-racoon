@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { renderTopbar } from "../components/topbar.js?v=79";
+import { renderTopbar } from "../components/topbar.js?v=80";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=36";
 
@@ -81,11 +81,15 @@ function renderPage() {
               (k) => `
                 <button
                   type="button"
-                  class="ideas-view__filter ${pageState.kind === k.id ? "is-on" : ""}"
+                  class="ap-filter-chip"
                   data-ideas-filter="${k.id}"
                   role="tab"
+                  aria-pressed="${pageState.kind === k.id}"
                   aria-selected="${pageState.kind === k.id}"
-                >${k.label} <span class="ideas-view__filter-count">${counts[k.id] ?? 0}</span></button>
+                >
+                  <span>${k.label}</span>
+                  <span class="ap-filter-chip-count">${counts[k.id] ?? 0}</span>
+                </button>
               `,
             ).join(""),
           )}
