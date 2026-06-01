@@ -685,8 +685,9 @@
 .rpanel-drafts {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-md);
-  padding: var(--ref-spacing-md);
+  /* No container padding — the filter header sits flush at the top (like
+     the Ideas tabs) and the feed below owns its own gutter. Avoids the
+     extra inset that made Drafts look heavier than Ideas. */
   height: 100%;
   min-height: 0;
   overflow-y: auto;
@@ -702,6 +703,8 @@
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-sm);
+  /* Flush header, matching the Ideas tabs row's horizontal inset. */
+  padding: 0 var(--ref-spacing-sm);
   border-bottom: 1px solid var(--app-border-soft);
 }
 
@@ -738,6 +741,9 @@
   /* posts.css already handles vertical stack + spacing via .posts__feed.
      Just guard the min-width so cards inside don't blow out the grid. */
   min-width: 0;
+  /* Gutter now lives on the feed (the container dropped its padding) so the
+     header can sit flush — mirrors the Ideas body padding. */
+  padding: var(--ref-spacing-md);
 }
 
 /* Inside the right-panel feed, .posts__row lays out as a flex row
