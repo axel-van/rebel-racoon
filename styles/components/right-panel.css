@@ -455,16 +455,22 @@
   flex: 0 0 auto;
 }
 
-/* Source attribution, pushed to the trailing edge. min-width:0 lets a long
-   filename pill truncate (via .rpanel-ideas__source-tag-text) instead of
-   shoving the kind tag. */
+/* Source attribution — "Source:" label + pill, left-aligned right after
+   the kind tag. min-width:0 lets a long filename pill truncate (via
+   .rpanel-ideas__source-tag-text) rather than overflow. */
 .rpanel-ideas__head-source {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--ref-spacing-xxxs);
-  margin-left: auto;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
   min-width: 0;
+}
+
+.rpanel-ideas__source-label {
+  flex: 0 0 auto;
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-xs);
+  color: var(--ref-color-grey-100);
 }
 
 /* Per-kind palette — uses the existing tag color tokens. */

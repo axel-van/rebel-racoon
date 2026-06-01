@@ -16,7 +16,7 @@ import {
 import { renderPostCard } from "./post-card.js?v=31";
 import { renderClipCard } from "./clip-card.js?v=7";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=12";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=49";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=50";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -666,7 +666,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName } = entry;
-      import("../screens/session.js?v=165").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=166").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, clip, sourceName);
       });
       return;
@@ -703,7 +703,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=165").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=166").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -2183,7 +2183,14 @@ function renderIdeaCompact(idea) {
   const cardHead = `
     <div class="rpanel-ideas__card-head">
       <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${kind}</span>
-      ${sourceTags ? `<div class="rpanel-ideas__head-source">${sourceTags}</div>` : ""}
+      ${
+        sourceTags
+          ? `<div class="rpanel-ideas__head-source">
+              <span class="rpanel-ideas__source-label">Source:</span>
+              ${sourceTags}
+            </div>`
+          : ""
+      }
     </div>
   `;
 
@@ -2224,7 +2231,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=165").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=166").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
