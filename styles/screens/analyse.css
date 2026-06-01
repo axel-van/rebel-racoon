@@ -241,6 +241,29 @@
   flex-shrink: 0;
 }
 
+/* Stepper rows (angle picker) — each row carries a drafts counter on the
+   trailing edge. The −/+ are DS icon-buttons; only the count + active-row
+   tint are bespoke. */
+.analyse__stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  flex: 0 0 auto;
+}
+
+.analyse__stepper-count {
+  min-width: 2ch;
+  text-align: center;
+  font-weight: var(--ref-font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--ref-color-grey-100);
+}
+
+.analyse__stepper-btn[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
 /* Custom "Something else" input row */
 
 .analyse__option--input {

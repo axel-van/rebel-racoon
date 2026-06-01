@@ -11,9 +11,9 @@
 //   rebindWizardKeyboard(aside, sessionId) — call after every aside
 //     swap. No-op if no wizard is active.
 
-import * as sidebarWizard from "../../sidebar-wizard.js?v=32";
-import * as inlineQuestion from "../../inline-question.js?v=27";
-import { bindWizardKeyboard, unbindWizardKeyboard } from "../_analyse-common.js?v=33";
+import * as sidebarWizard from "../../sidebar-wizard.js?v=33";
+import * as inlineQuestion from "../../inline-question.js?v=28";
+import { bindWizardKeyboard, unbindWizardKeyboard } from "../_analyse-common.js?v=34";
 
 export function rebindWizardKeyboard(aside, sessionId) {
   if (!aside) return;
@@ -45,6 +45,13 @@ export function rebindWizardKeyboard(aside, sessionId) {
       },
       onMultiSubmit: (selectedValues) => {
         inlineQuestion.submitMulti(sessionId, selectedValues);
+      },
+      // Stepper mode — ±/arrows adjust a row's count; Enter generates.
+      onStep: (value, delta) => {
+        inlineQuestion.stepBump(sessionId, value, delta);
+      },
+      onGenerate: () => {
+        inlineQuestion.stepSubmit(sessionId);
       },
     });
     // File dropzone variant — bind `change` on the hidden <input type=file>

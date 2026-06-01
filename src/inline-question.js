@@ -28,6 +28,11 @@
 //   multi             bool    — when true, render multi-select toggles + Continue button
 //   defaultSelected   array   — values to render pre-selected (multi mode only)
 //   submitLabel       string  — multi-select submit button label (default "Continue")
+//   stepper           bool    — per-row count steppers; user picks ONE item + a count
+//   defaultCount      number  — initial per-item count in stepper mode (default 1)
+//   countMin/countMax number  — clamp range in stepper mode (default 1 / 20)
+//   submitCountLabel  fn(n)   — submit button label given the selected count
+//                               (stepper mode); onPick gets { value, count }
 //   customPlaceholder string  — when set, render a free-text option row
 //   customValue       string  — initial value for the free-text input (pre-fill)
 //   customFile        bool    — when true, render a dropzone row instead of a text input
@@ -41,7 +46,7 @@
 //   onSkip()          fn      — called when Skip / Esc; if omitted, no skip btn
 //   onBack()          fn      — called when ← Back is clicked; if omitted, no back btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=33";
+import { chatTurn } from "./screens/_analyse-common.js?v=34";
 
 const states = new Map(); // sessionId → opts
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -52,8 +57,49 @@ function notify(sessionId) {
 }
 
 export function ask(sessionId, opts) {
+  // Stepper mode — each item carries an adjustable count and the user picks
+  // ONE item, then submits with its count (e.g. "Generate N drafts" from a
+  // chosen angle). Seed the mutable per-item counts + the initial selection.
+  if (opts.stepper) {
+    const def = opts.defaultCount ?? 1;
+    opts._counts = {};
+    for (const it of opts.items || []) opts._counts[it.value] = def;
+    opts._selected = opts.items?.[0]?.value ?? null;
+  }
   states.set(sessionId, opts);
   notify(sessionId);
+}
+
+// Stepper mode — set the active item (clicking a row or pressing its digit).
+export function stepSelect(sessionId, value) {
+  const s = states.get(sessionId);
+  if (!s || !s.stepper) return;
+  s._selected = value;
+  notify(sessionId);
+}
+
+// Stepper mode — bump the active item's count by ±delta, clamped, and make
+// it the selected row.
+export function stepBump(sessionId, value, delta) {
+  const s = states.get(sessionId);
+  if (!s || !s.stepper) return;
+  const min = s.countMin ?? 1;
+  const max = s.countMax ?? 20;
+  const cur = s._counts[value] ?? s.defaultCount ?? 1;
+  s._counts[value] = Math.max(min, Math.min(max, cur + delta));
+  s._selected = value;
+  notify(sessionId);
+}
+
+// Stepper mode — resolve with { value, count } for the selected item.
+export function stepSubmit(sessionId) {
+  const s = states.get(sessionId);
+  if (!s || !s.stepper || s._selected == null) return;
+  const value = s._selected;
+  const count = s._counts[value] ?? s.defaultCount ?? 1;
+  states.delete(sessionId);
+  notify(sessionId);
+  s.onPick?.({ value, count });
 }
 
 export function pick(sessionId, value) {
@@ -157,7 +203,18 @@ export function renderChrome(sessionId) {
     customFileIcon: s.customFileIcon || "ap-icon-upload",
     multi: s.multi === true,
     defaultSelected: Array.isArray(s.defaultSelected) ? s.defaultSelected : [],
-    submitLabel: s.submitLabel || "Continue",
+    // Stepper mode — per-row counts + a single submit reflecting the
+    // selected row's count.
+    stepper: s.stepper === true,
+    stepSelected: s._selected ?? null,
+    stepCounts: s._counts || {},
+    stepMin: s.countMin ?? 1,
+    stepMax: s.countMax ?? 20,
+    submitLabel: s.stepper
+      ? s.submitCountLabel
+        ? s.submitCountLabel(s._counts?.[s._selected] ?? 1)
+        : `Generate ${s._counts?.[s._selected] ?? 1}`
+      : s.submitLabel || "Continue",
     // Pass-through for callers that want to inject custom buttons in
     // the picker footer (used by the playbook editor for Cancel + Save).
     footerSlot: s.footerSlot || "",

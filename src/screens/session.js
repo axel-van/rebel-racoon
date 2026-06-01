@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=71";
+import { renderTopbar } from "../components/topbar.js?v=72";
 import { socialAccounts, chatStarters } from "../mocks.js?v=36";
 import {
   getConnectedProfiles,
@@ -47,11 +47,11 @@ import {
 } from "../posts-store.js?v=28";
 import { startDraftFlow, executeDraft, getAnglesForIdea } from "../draft-flow.js?v=31";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
-import * as sidebarWizard from "../sidebar-wizard.js?v=32";
-import * as inlineQuestion from "../inline-question.js?v=27";
-import * as contextBuilder from "../context-builder.js?v=55";
-import * as playbookEditor from "../playbook-editor.js?v=16";
-import { renderPicker } from "./_analyse-common.js?v=33";
+import * as sidebarWizard from "../sidebar-wizard.js?v=33";
+import * as inlineQuestion from "../inline-question.js?v=28";
+import * as contextBuilder from "../context-builder.js?v=56";
+import * as playbookEditor from "../playbook-editor.js?v=17";
+import { renderPicker } from "./_analyse-common.js?v=34";
 import { renderSourceCard } from "../components/source-card.js?v=30";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
 import {
@@ -62,7 +62,7 @@ import {
 } from "../components/content-workspace.js?v=24";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=24";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=12";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=24";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=25";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=24";
 import {
   classifyFile,
@@ -84,12 +84,12 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=119";
+} from "../components/right-panel.js?v=120";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
 import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=4";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=1";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=2";
 
 // Session screen — persistent assistant panel on the left, workspace with
 // tabs on the right.
@@ -998,22 +998,32 @@ export function askAngleQuestion(sessionId, ideaId) {
     askDraftCountQuestion(sessionId, ideaId);
     return;
   }
-  postAssistantMessage(sessionId, "Pick an angle for this post:");
+  postAssistantMessage(sessionId, "Pick an angle and how many drafts:");
   inlineQuestion.ask(sessionId, {
     title: "Suggested angles",
-    stepLabel: "Angle",
+    stepLabel: "Angle · drafts",
     skipLabel: "Cancel",
+    // Stepper mode — each angle row carries a drafts counter so the angle
+    // and the count are chosen together, then "Generate N drafts" advances
+    // straight to the profile step (no separate count question).
+    stepper: true,
+    defaultCount: 1,
+    countMin: 1,
+    countMax: 20,
+    submitCountLabel: (n) => `Generate ${n} draft${n === 1 ? "" : "s"}`,
     items: angles.map((a) => ({
       value: a.id,
       label: a.title,
       caption: a.description,
     })),
-    onPick: (angleId) => {
-      const angle = angles.find((a) => a.id === angleId) || null;
-      // Echo the chosen angle as a user turn so it stays visible in the
-      // thread once the picker unmounts.
-      if (angle) postUserTurn(sessionId, angle.title);
-      askDraftCountQuestion(sessionId, ideaId, {
+    onPick: ({ value, count }) => {
+      const angle = angles.find((a) => a.id === value) || null;
+      const n = Math.max(1, Math.min(20, Math.floor(Number(count) || 1)));
+      // Echo the chosen angle + count as a user turn so it stays visible in
+      // the thread once the picker unmounts.
+      if (angle) postUserTurn(sessionId, `${angle.title} · ${n} draft${n === 1 ? "" : "s"}`);
+      askProfileQuestion(sessionId, ideaId, {
+        count: n,
         angle,
         // ← Back returns to the angle picker so the user can re-choose.
         onBack: () => askAngleQuestion(sessionId, ideaId),
@@ -2406,6 +2416,21 @@ function bindSession(root, session) {
         return;
       }
 
+      // Stepper mode — per-row −/+ adjusts that row's count (and selects it).
+      const inlineQuestionStep = event.target.closest("[data-inline-question-step]");
+      if (inlineQuestionStep) {
+        event.preventDefault();
+        const delta = inlineQuestionStep.dataset.inlineQuestionStep === "inc" ? 1 : -1;
+        inlineQuestion.stepBump(session.id, inlineQuestionStep.dataset.stepValue, delta);
+        return;
+      }
+      // Stepper mode — "Generate N drafts" submits the selected row + count.
+      if (event.target.closest("[data-inline-question-generate]")) {
+        event.preventDefault();
+        inlineQuestion.stepSubmit(session.id);
+        return;
+      }
+
       // Inline single-question pick / skip / custom-submit / multi-submit.
       const inlineQuestionBtn = event.target.closest("[data-inline-question]");
       if (inlineQuestionBtn) {
@@ -2415,6 +2440,10 @@ function bindSession(root, session) {
           const wasSelected = inlineQuestionBtn.classList.contains("is-selected");
           inlineQuestionBtn.classList.toggle("is-selected", !wasSelected);
           inlineQuestionBtn.setAttribute("aria-pressed", !wasSelected ? "true" : "false");
+        } else if (opts?.dataset.stepper !== undefined) {
+          // Stepper mode — clicking a row selects it (the count drives the
+          // generate button); it doesn't pick-and-advance.
+          inlineQuestion.stepSelect(session.id, inlineQuestionBtn.dataset.inlineQuestion);
         } else {
           inlineQuestion.pick(session.id, inlineQuestionBtn.dataset.inlineQuestion);
         }

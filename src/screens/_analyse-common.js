@@ -139,6 +139,14 @@ export function renderPicker(picker) {
     // by the First Time User ALT flow where the visual profile picker
     // pre-seeds the platform in connectedSocials before askSocial runs.
     defaultSelected = [],
+    // Stepper mode — each row carries an adjustable count; the user picks
+    // ONE row + its count. `stepCounts` maps value→n, `stepSelected` is the
+    // active row, `stepMin`/`stepMax` clamp the steppers.
+    stepper = false,
+    stepSelected = null,
+    stepCounts = {},
+    stepMin = 1,
+    stepMax = 20,
   } = picker;
   const preset = new Set(defaultSelected);
 
@@ -179,6 +187,47 @@ export function renderPicker(picker) {
       const iconSlot = hasIcon
         ? `<span class="analyse__option-icon${it.avatar ? " analyse__option-icon--avatar" : ""}">${iconBody}</span>`
         : "";
+
+      // Stepper rows can't be a <button> (they hold the −/+ buttons, and
+      // nested buttons are invalid). Render a role="button" div instead so
+      // it stays click + keyboard focusable without illegal nesting.
+      if (stepper) {
+        const count = stepCounts[it.value] ?? stepMin;
+        const isActive = it.value === stepSelected;
+        const stepBtn = (dir, icon, disabled) => `
+          <button
+            type="button"
+            class="ap-icon-button transparent sm analyse__stepper-btn"
+            data-${handler}-step="${dir}"
+            data-step-value="${it.value}"
+            ${disabled ? "disabled" : ""}
+            tabindex="-1"
+            aria-label="${dir === "inc" ? "Increase" : "Decrease"} drafts for ${it.label}"
+          ><i class="${icon}"></i></button>
+        `;
+        return `
+          <div
+            class="analyse__option analyse__option--stepper${isActive ? " is-selected" : ""}"
+            data-${handler}="${it.value}"
+            role="button"
+            tabindex="0"
+            aria-pressed="${isActive ? "true" : "false"}"
+          >
+            <span class="analyse__option-shortcut" aria-hidden="true">${i + 1}</span>
+            ${iconSlot}
+            <span class="analyse__option-text">
+              <span class="analyse__option-label">${it.label}</span>
+              ${it.caption ? `<span class="muted">${it.caption}</span>` : ""}
+            </span>
+            <span class="analyse__stepper" aria-hidden="false">
+              ${stepBtn("dec", "ap-icon-minus", count <= stepMin)}
+              <span class="analyse__stepper-count">${count}</span>
+              ${stepBtn("inc", "ap-icon-plus", count >= stepMax)}
+            </span>
+          </div>
+        `;
+      }
+
       return `
         <button
           type="button"
@@ -280,12 +329,17 @@ export function renderPicker(picker) {
   const submitBtn = multi
     ? `<button type="button" class="ap-button primary orange" data-${handler}-submit><span>${submitLabel}</span></button>`
     : "";
+  // Stepper mode submits via a dedicated "Generate N drafts" button whose
+  // label reflects the selected row's count.
+  const generateBtn = stepper
+    ? `<button type="button" class="ap-button primary orange" data-${handler}-generate><span>${submitLabel}</span></button>`
+    : "";
   const footer =
-    skipBtn || submitBtn || footerSlot
-      ? `<div class="analyse__options-submit">${skipBtn}${submitBtn}${footerSlot}</div>`
+    skipBtn || submitBtn || generateBtn || footerSlot
+      ? `<div class="analyse__options-submit">${skipBtn}${submitBtn}${generateBtn}${footerSlot}</div>`
       : "";
 
-  return `<div class="analyse__options${multi ? " analyse__options--multi" : ""}" ${multi ? "data-multi" : ""}>${header}${rows}${customRow}${fileRow}${footer}</div>`;
+  return `<div class="analyse__options${multi ? " analyse__options--multi" : ""}${stepper ? " analyse__options--stepper" : ""}" ${multi ? "data-multi" : ""}${stepper ? " data-stepper" : ""}>${header}${rows}${customRow}${fileRow}${footer}</div>`;
 }
 
 // -- Keyboard wiring --------------------------------------------------------
@@ -303,12 +357,25 @@ export function renderPicker(picker) {
 
 let currentKeyListener = null;
 
-export function bindWizardKeyboard(target, { handler, onExit, onCustomSubmit = null, onMultiSubmit = null }) {
+export function bindWizardKeyboard(
+  target,
+  { handler, onExit, onCustomSubmit = null, onMultiSubmit = null, onStep = null, onGenerate = null },
+) {
   unbindWizardKeyboard();
 
   // Multi-select pickers expose `[data-{handler}-submit]`. When present,
   // digit + click toggle the option rows instead of jumping; Enter submits.
   const isMulti = () => !!target.querySelector(`[data-${handler}-submit]`);
+  // Stepper pickers expose `[data-{handler}-generate]`. Digits select a row,
+  // +/− (or ←/→) adjust its count, Enter generates.
+  const isStepper = () => !!target.querySelector(`[data-${handler}-generate]`);
+  const camel = (h) => h.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+  const activeStepValue = () => {
+    const a = document.activeElement;
+    if (a && a.matches?.(`[data-${handler}]`)) return a.dataset[camel(handler)];
+    const sel = target.querySelector(`[data-${handler}].is-selected`);
+    return sel ? sel.dataset[camel(handler)] : null;
+  };
 
   const listener = (event) => {
     const activeIsInput =
@@ -338,6 +405,27 @@ export function bindWizardKeyboard(target, { handler, onExit, onCustomSubmit = n
       return;
     }
 
+    // Stepper mode — +/= and ArrowRight bump up; -/_ and ArrowLeft bump
+    // down, on the focused (or selected) row.
+    if (isStepper() && onStep && !activeIsInput) {
+      if (event.key === "+" || event.key === "=" || event.key === "ArrowRight") {
+        const v = activeStepValue();
+        if (v != null) {
+          event.preventDefault();
+          onStep(v, 1);
+        }
+        return;
+      }
+      if (event.key === "-" || event.key === "_" || event.key === "ArrowLeft") {
+        const v = activeStepValue();
+        if (v != null) {
+          event.preventDefault();
+          onStep(v, -1);
+        }
+        return;
+      }
+    }
+
     // Digits — only when the user isn't typing into the input.
     // In multi-select mode, click() will toggle the option (handled by the
     // session.js click delegate) instead of advancing.
@@ -359,6 +447,11 @@ export function bindWizardKeyboard(target, { handler, onExit, onCustomSubmit = n
         event.preventDefault();
         const value = event.target.value.trim();
         if (value) onCustomSubmit(value);
+        return;
+      }
+      if (isStepper() && onGenerate) {
+        event.preventDefault();
+        onGenerate();
         return;
       }
       if (isMulti() && onMultiSubmit) {
