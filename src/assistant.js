@@ -297,7 +297,7 @@ export function postUserTurn(sessionId, text) {
 
 // Push a user turn that echoes the picked social profiles visually — a row
 // of avatar (+ network badge) + handle chips instead of a plain text bubble.
-// `profiles` = [{ handle, imageUrl?, initials?, networkIcon? }].
+// `profiles` = raw socialAccounts entries (rendered via renderProfileTag).
 export function postUserProfilesTurn(sessionId, profiles) {
   const thread = getThread(sessionId);
   thread.push({

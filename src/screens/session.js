@@ -1,12 +1,10 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=83";
+import { renderTopbar } from "../components/topbar.js?v=84";
 import { socialAccounts, chatStarters } from "../mocks.js?v=36";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
-  NETWORK_ICON_BY_PLATFORM,
-  BRAND_INITIALS,
   renderProfileTag,
   profileForNetwork,
 } from "../social-profiles.js?v=2";
@@ -49,8 +47,8 @@ import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } fro
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
 import * as inlineQuestion from "../inline-question.js?v=33";
-import * as contextBuilder from "../context-builder.js?v=67";
-import * as playbookEditor from "../playbook-editor.js?v=28";
+import * as contextBuilder from "../context-builder.js?v=68";
+import * as playbookEditor from "../playbook-editor.js?v=29";
 import { renderPicker } from "./_analyse-common.js?v=39";
 import { renderSourceCard } from "../components/source-card.js?v=30";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -84,7 +82,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=131";
+} from "../components/right-panel.js?v=132";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
@@ -1130,15 +1128,9 @@ function askClipAccounts(sessionId, clip, sourceName) {
       if (accounts.length === 0) return;
       // Echo the picked profiles visually — avatar + network badge + handle,
       // not the bare network names.
-      postUserProfilesTurn(
-        sessionId,
-        accounts.map((a) => ({
-          handle: a.handle || a.platformLabel,
-          imageUrl: a.photo,
-          initials: BRAND_INITIALS,
-          networkIcon: NETWORK_ICON_BY_PLATFORM[a.platform],
-        })),
-      );
+      // Echo the picked profiles via the canonical renderProfileTag — pass
+      // the raw socialAccounts entries straight through.
+      postUserProfilesTurn(sessionId, accounts);
       askClipFormat(sessionId, clip, sourceName, accounts);
     },
     onSkip: () => {},
@@ -1335,22 +1327,15 @@ function renderTurn(message, sessionId) {
   `;
 }
 
-// Visual echo of the selected profiles — a right-aligned wrap of chips,
-// each a DS avatar (brand photo + corner network badge) beside the handle.
+// Visual echo of the selected profiles — a right-aligned wrap of chips.
+// Each chip is the canonical profile tag (renderProfileTag: DS avatar +
+// corner network badge + handle), the same renderer the drafts card and
+// schedule modal use. The chat-row pill styling lives in
+// `.chat-profiles .profile-tag` (chat.css). The payload is the raw
+// socialAccounts entries picked in the accounts step.
 function renderProfilesTurn(message) {
   const chips = (message.profiles || [])
-    .map((p) => {
-      const inner = p.imageUrl
-        ? `<img src="${p.imageUrl}" alt="" />`
-        : `<span class="ap-avatar-initials">${escapeHtml(p.initials || "")}</span>`;
-      const badge = p.networkIcon ? `<span class="ap-avatar-network"><i class="${p.networkIcon}"></i></span>` : "";
-      return `
-        <span class="chat-profile-chip">
-          <span class="ap-avatar size-24" aria-hidden="true">${inner}${badge}</span>
-          <span class="chat-profile-chip__name">${escapeHtml(p.handle || "")}</span>
-        </span>
-      `;
-    })
+    .map((account) => renderProfileTag(account, { network: account?.platform }))
     .join("");
   return `
     <div class="chat-turn chat-turn--user">

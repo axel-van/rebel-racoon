@@ -38,21 +38,15 @@
   max-width: 460px;
 }
 
-.chat-profile-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
+/* Profile echo (renderProfilesTurn) — the canonical .profile-tag, pill-styled
+   for the right-aligned chat row. The renderer is shared with the drafts card
+   and schedule modal; only this chat-context pill chrome is local. */
+.chat-profiles .profile-tag {
   padding: 3px var(--ref-spacing-xs) 3px 3px;
   background: var(--ref-color-electric-blue-05);
   border: 1px solid var(--ref-color-electric-blue-20);
   border-radius: var(--app-radius-pill);
-}
-
-.chat-profile-chip__name {
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-electric-blue-150);
-  white-space: nowrap;
 }
 
 /* Shared profile tag — the canonical "show a profile" UI: DS avatar
@@ -493,28 +487,6 @@ span.chat-bubble-choice-chip {
   gap: var(--ref-spacing-sm);
   min-width: 0;
   color: var(--sys-text-color-light);
-}
-
-.drafts-card__profile {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  min-width: 0;
-  font: var(--sys-text-style-caption-weight) var(--sys-text-style-caption-size) /
-    var(--sys-text-style-caption-line-height) var(--sys-text-style-caption-font-family);
-  color: var(--sys-text-color-light);
-}
-
-.drafts-card__profile > i {
-  font-size: var(--sys-icon-css-xs);
-  color: var(--sys-text-color-light);
-  flex-shrink: 0;
-}
-
-.drafts-card__profile-handle {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* Subtitle: "From '<lead idea title>'". Single line, truncates with
