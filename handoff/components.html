@@ -20,6 +20,11 @@
     <link rel="stylesheet" href="../styles/chat.css?v=2" />
     <link rel="stylesheet" href="../styles/screens/session.css?v=2" />
     <link rel="stylesheet" href="../styles/components/archie-loader.css?v=2" />
+    <!-- Card styles, so the live previews (idea / clip / post cards) render
+         with their real chrome. -->
+    <link rel="stylesheet" href="../styles/components/right-panel.css?v=2" />
+    <link rel="stylesheet" href="../styles/components/clip-card.css?v=2" />
+    <link rel="stylesheet" href="../styles/screens/posts.css?v=2" />
 
     <style>
       /* ── Handoff page chrome ───────────────────────────────────────── */
@@ -1502,50 +1507,10 @@
                       <strong>Analyzed</strong>
                       <span>riverside-discovery-call.pdf</span>
                     </div>
-                    <div class="ap-card extraction-turn__idea-card">
-                      <div class="extraction-turn__idea-card-text">
-                        <p class="extraction-turn__idea-card-title">Time-to-value collapses with playbook templates</p>
-                        <p class="extraction-turn__idea-card-body">
-                          Riverside cut onboarding by 38% after switching to a templated weekly cadence.
-                        </p>
-                      </div>
-                      <div class="extraction-turn__idea-card-footer">
-                        <div class="extraction-turn__idea-card-feedback" role="group" aria-label="Rate this idea">
-                          <button type="button" class="extraction-turn__idea-card-thumb" data-idea-feedback="up">
-                            <i class="ap-icon-thumb-up" aria-hidden="true"></i>
-                          </button>
-                          <button type="button" class="extraction-turn__idea-card-thumb" data-idea-feedback="down">
-                            <i class="ap-icon-thumb-down" aria-hidden="true"></i>
-                          </button>
-                        </div>
-                        <a class="ap-link standalone small extraction-turn__idea-card-view" href="#">
-                          <span>View idea</span>
-                          <i class="ap-icon-external-link" aria-hidden="true"></i>
-                        </a>
-                      </div>
-                    </div>
-                    <div class="ap-card extraction-turn__idea-card">
-                      <div class="extraction-turn__idea-card-text">
-                        <p class="extraction-turn__idea-card-title">Cross-team alignment is the unlock</p>
-                        <p class="extraction-turn__idea-card-body">
-                          Their PMs and marketers stopped duplicating effort once the playbook formalised hand-offs.
-                        </p>
-                      </div>
-                      <div class="extraction-turn__idea-card-footer">
-                        <div class="extraction-turn__idea-card-feedback" role="group" aria-label="Rate this idea">
-                          <button type="button" class="extraction-turn__idea-card-thumb" data-idea-feedback="up">
-                            <i class="ap-icon-thumb-up" aria-hidden="true"></i>
-                          </button>
-                          <button type="button" class="extraction-turn__idea-card-thumb" data-idea-feedback="down">
-                            <i class="ap-icon-thumb-down" aria-hidden="true"></i>
-                          </button>
-                        </div>
-                        <a class="ap-link standalone small extraction-turn__idea-card-view" href="#">
-                          <span>View idea</span>
-                          <i class="ap-icon-external-link" aria-hidden="true"></i>
-                        </a>
-                      </div>
-                    </div>
+                    <!-- Live: rendered from the real renderCompactIdeaCard() — the
+                         shared idea card the panel, /ideas page and extraction
+                         turn all use. Never drifts. -->
+                    <div class="rpanel-ideas__grid" data-live="idea-cards"></div>
                   </div>
                 </details>
               </div>
@@ -1564,23 +1529,27 @@
         &lt;strong&gt;Analyzed&lt;/strong&gt;
         &lt;span&gt;filename.pdf&lt;/span&gt;
       &lt;/div&gt;
-      &lt;div class="ap-card extraction-turn__idea-card"&gt;
-        &lt;div class="extraction-turn__idea-card-text"&gt;
-          &lt;p class="extraction-turn__idea-card-title"&gt;...&lt;/p&gt;
-          &lt;p class="extraction-turn__idea-card-body"&gt;...&lt;/p&gt;
-        &lt;/div&gt;
-        &lt;div class="extraction-turn__idea-card-footer"&gt;
-          &lt;div class="extraction-turn__idea-card-feedback"&gt;
-            &lt;button class="extraction-turn__idea-card-thumb"
-                    data-idea-feedback="up"&gt;...&lt;/button&gt;
-            &lt;button class="extraction-turn__idea-card-thumb"
-                    data-idea-feedback="down"&gt;...&lt;/button&gt;
+      &lt;!-- Shared compact idea card (.rpanel-ideas__card): kind tag +
+           Source head, title, body, "Why this idea", footer. The
+           extraction turn keeps a feedback + "View idea" footer. --&gt;
+      &lt;article class="rpanel-ideas__card extraction-turn__idea-card"&gt;
+        &lt;div class="rpanel-ideas__card-content"&gt;
+          &lt;div class="rpanel-ideas__card-head"&gt;
+            &lt;span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--insight"&gt;insight&lt;/span&gt;
+            &lt;div class="rpanel-ideas__head-source"&gt;
+              &lt;span class="rpanel-ideas__source-label"&gt;Source:&lt;/span&gt;
+              &lt;span class="rpanel-ideas__source-tag"&gt;…filename.pdf&lt;/span&gt;
+            &lt;/div&gt;
           &lt;/div&gt;
-          &lt;a class="ap-link standalone small
-                    extraction-turn__idea-card-view"
-             data-focus-idea="IDEA_ID"&gt;View idea&lt;/a&gt;
+          &lt;h4 class="rpanel-ideas__card-title"&gt;…&lt;/h4&gt;
+          &lt;p class="rpanel-ideas__card-body"&gt;…&lt;/p&gt;
+          &lt;section class="rpanel-ideas__why"&gt;…&lt;/section&gt;
         &lt;/div&gt;
-      &lt;/div&gt;
+        &lt;footer class="rpanel-ideas__card-actions"&gt;
+          &lt;div class="rpanel-ideas__feedback"&gt;…thumbs…&lt;/div&gt;
+          &lt;a class="ap-link standalone small" data-focus-idea="ID"&gt;View idea&lt;/a&gt;
+        &lt;/footer&gt;
+      &lt;/article&gt;
     &lt;/div&gt;
   &lt;/details&gt;
 &lt;/div&gt;</pre
@@ -1593,21 +1562,19 @@
                   <code>.chat-turn--extraction</code>
                   <code>.extraction-turn__detail</code>
                   <code>.extraction-turn__analyzed-row</code>
-                  <code>.extraction-turn__idea-card</code>
-                  <code>__idea-card-text/title/body</code>
-                  <code>__idea-card-footer</code>
-                  <code>__idea-card-feedback / __idea-card-thumb</code>
-                  <code>__idea-card-view</code>
+                  <code>.rpanel-ideas__card</code> (shared) <code>.extraction-turn__idea-card</code> (width override)
+                  <code>__card-head / __kind / __head-source</code>
+                  <code>__card-title / __card-body / __why</code>
+                  <code>__card-actions / __feedback / __thumb</code>
                 </dd>
               </div>
               <div>
                 <dt>Tokens</dt>
                 <dd>
-                  <code>--ref-spacing-sm</code> (idea-card padding 16) <code>--ref-spacing-xs</code> (gap 12)
-                  <code>--ref-spacing-xxs</code> (text gap 8)
-                  <code>--ref-font-size-sm / --ref-font-line-height-sm</code>
-                  <code>--app-radius-md</code>
-                  <code>--ref-color-grey-05 / 10 / 80 / 100</code>
+                  <code>--app-radius-card</code> (12) <code>--app-shadow-low</code> <code>--app-border</code> (grey-20)
+                  <code>--ref-spacing-xs</code> (content gap)
+                  <code>--ref-font-size-md / -sm</code>
+                  <code>--ref-color-grey-100 / 80</code>
                 </dd>
               </div>
               <div>
@@ -2983,5 +2950,46 @@
         </p>
       </footer>
     </main>
+
+    <!-- Live previews — import the real component renderers so the previews
+         in this doc never drift from the app. Each [data-live] slot is filled
+         from the actual exported render function with mock data. Add a slot +
+         a case here to make any other component preview live. -->
+    <script type="module">
+      import { renderCompactIdeaCard } from "../src/components/idea-card-compact.js";
+
+      // Mock data — shaped like the real store objects the renderers expect.
+      const SOURCES = [{ id: "s1", filename: "riverside-discovery-call.pdf", kind: "Document" }];
+      const IDEAS = [
+        {
+          id: "demo-1",
+          kind: "insight",
+          title: "Time-to-value collapses with playbook templates",
+          body: "Riverside cut onboarding by 38% after switching to a templated weekly cadence.",
+          sourceIds: ["s1"],
+          rationale: "Concrete, numbers-backed — the kind of operator insight that earns saves and replies.",
+        },
+        {
+          id: "demo-2",
+          kind: "story",
+          title: "Cross-team alignment is the unlock",
+          body: "Their PMs and marketers stopped duplicating effort once the playbook formalised hand-offs.",
+          sourceIds: ["s1"],
+        },
+      ];
+
+      const FILLERS = {
+        "idea-cards": (slot) => {
+          slot.innerHTML = IDEAS.map((idea) =>
+            renderCompactIdeaCard(idea, SOURCES, { whyOpen: idea.id === "demo-1", showMention: false }),
+          ).join("");
+        },
+      };
+
+      for (const slot of document.querySelectorAll("[data-live]")) {
+        const fill = FILLERS[slot.dataset.live];
+        if (fill) fill(slot);
+      }
+    </script>
   </body>
 </html>
