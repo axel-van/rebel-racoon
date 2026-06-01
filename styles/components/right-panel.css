@@ -43,33 +43,31 @@
   display: none;
 }
 
-/* ── Head: tabs + close ───────────────────────────────────────────── */
-
-.app-right-panel__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border-bottom: 1px solid var(--app-border-soft);
+/* ── Floating close ───────────────────────────────────────────────────
+   The standalone title bar was dropped — the active mode is named by the
+   highlighted topbar pill and each mode's own tabs/header row. A single
+   close control floats at the panel's top-right corner instead, pinned to
+   the panel root (not the scrolling body) so it stays reachable. A white
+   circular surface keeps it legible over whatever scrolls beneath. Each
+   mode's first row reserves right padding so its controls clear it. */
+.app-right-panel__close {
+  position: absolute;
+  top: var(--ref-spacing-xs);
+  right: var(--ref-spacing-sm);
+  z-index: 3;
+  background: var(--ref-color-white);
+  border-radius: var(--app-radius-circle);
+  box-shadow: var(--app-shadow-low);
 }
 
-/* Static title (mode label) — replaces the earlier Drafts / Ideas tab
-   toggle. The mode toggle now lives exclusively in the topbar pills.
-   User feedback 2026-04-29: removed the in-panel tabs as a duplicate. */
-.app-right-panel__title {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  margin: 0;
-  font-size: var(--ref-font-size-md);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
+.app-right-panel__close:hover {
+  background: var(--ref-color-grey-05);
 }
 
-.app-right-panel__title i {
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-grey-100);
+/* Width of the floating close + breathing room — first rows pad by this
+   so tabs / selects never tuck under the button. */
+.app-right-panel {
+  --rpanel-close-clearance: calc(var(--sys-icon-css-md) + var(--ref-spacing-lg));
 }
 
 /* ── Body ─────────────────────────────────────────────────────────── */
@@ -712,6 +710,8 @@
   align-items: flex-end;
   gap: var(--ref-spacing-sm);
   border-bottom: 1px solid var(--app-border-soft);
+  /* Clear the floating close button pinned to the panel's top-right. */
+  padding-right: var(--rpanel-close-clearance);
 }
 
 /* DS .ap-tabs (and its nav) are width:100% by default; shrink-wrap them
@@ -855,6 +855,8 @@
 
 .rpanel-outputs__tabs {
   padding: 0 var(--ref-spacing-sm);
+  /* Right padding clears the floating close button. */
+  padding-right: var(--rpanel-close-clearance);
   border-bottom: 1px solid var(--ref-color-grey-10);
   background: var(--ref-color-white);
 }
@@ -916,6 +918,8 @@
   justify-content: space-between;
   gap: var(--ref-spacing-sm);
   padding-bottom: var(--ref-spacing-xs);
+  /* Clear the floating close button (Attach sits on this row's right). */
+  padding-right: var(--rpanel-close-clearance);
   border-bottom: 1px solid var(--ref-color-grey-10);
 }
 
@@ -1164,6 +1168,8 @@
   max-width: 640px;
   width: 100%;
   padding: 0 var(--ref-spacing-xxs);
+  /* Keep a long Playbook name clear of the floating close button. */
+  padding-right: var(--rpanel-close-clearance);
 }
 
 .context-brief__hero-identity {

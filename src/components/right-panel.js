@@ -16,7 +16,7 @@ import {
 import { renderPostCard } from "./post-card.js?v=31";
 import { renderClipCard } from "./clip-card.js?v=7";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=12";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=46";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=47";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -666,7 +666,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName } = entry;
-      import("../screens/session.js?v=162").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=163").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, clip, sourceName);
       });
       return;
@@ -703,7 +703,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=162").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=163").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -1065,20 +1065,17 @@ function renderPanel() {
     return;
   }
   el.hidden = false;
-  // The mode toggle lives in the topbar pills only — the panel head shows
-  // the active mode as a static title to avoid duplicating the toggle.
-  // (Earlier iteration had Drafts/Ideas tabs here too ; the user flagged
-  // them as redundant on 2026-04-29.)
-  let titleIcon = "ap-icon-sparkles";
+  // No standalone title bar — the active mode is already named by the
+  // highlighted topbar pill (and, inside the panel, by each mode's own
+  // tabs/header row). We only compute a label here to keep the panel
+  // landmark's accessible name in sync. The close affordance is a single
+  // floating control pinned to the panel's top-right corner across modes.
   let titleText = "Ideas";
   if (state.mode === "drafts") {
-    titleIcon = "ap-icon-pen";
     titleText = "Drafts";
   } else if (state.mode === "sources") {
-    titleIcon = "ap-icon-file";
     titleText = "Sources";
   } else if (state.mode === "context-brief") {
-    titleIcon = "ap-icon-target";
     if (contextBriefConfig?.mode === "read") {
       const ctx = contextBriefConfig.getCtx?.();
       titleText = ctx?.name || "Playbook";
@@ -1122,21 +1119,15 @@ function renderPanel() {
       aria-label="Resize panel"
       title="Drag to resize"
     ></div>
-    <div class="app-right-panel__head">
-      <h2 class="app-right-panel__title">
-        <i class="${titleIcon}" aria-hidden="true"></i>
-        <span>${titleText}</span>
-      </h2>
-      <button
-        type="button"
-        class="ap-icon-button transparent"
-        data-rpanel-close
-        aria-label="Close panel"
-        title="Close panel (Esc)"
-      >
-        <i class="ap-icon-close"></i>
-      </button>
-    </div>
+    <button
+      type="button"
+      class="ap-icon-button transparent app-right-panel__close"
+      data-rpanel-close
+      aria-label="Close panel"
+      title="Close panel (Esc)"
+    >
+      <i class="ap-icon-close"></i>
+    </button>
     ${raw(bodyHtml)}
   `;
 
@@ -2207,7 +2198,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=162").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=163").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
