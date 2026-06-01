@@ -416,7 +416,9 @@
    --ref-spacing-xs padding so the layout breathes without crowding. */
 .rpanel-ideas__card {
   background: var(--app-surface);
-  border: 1px solid var(--app-border-soft);
+  /* grey-20 border, shared by idea + clip cards (clip cards reuse this
+     class) so every card in the panel reads with the same weight. */
+  border: 1px solid var(--app-border);
   border-radius: var(--app-radius-card);
   display: flex;
   flex-direction: column;
@@ -961,7 +963,7 @@
   align-items: center;
   gap: var(--ref-spacing-xs);
   padding: var(--ref-spacing-xs);
-  border: 1px solid var(--ref-color-grey-10);
+  border: 1px solid var(--app-border);
   border-radius: var(--ref-border-radius-sm);
   background: var(--ref-color-white);
 }
