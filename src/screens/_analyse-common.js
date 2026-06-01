@@ -88,23 +88,6 @@ export function fieldsBlock(fields) {
   `;
 }
 
-export function summarySections(sections, headerExtra = "") {
-  const extraMarkup = headerExtra ? `<div class="chat-bubble-header-extra">${headerExtra}</div>` : "";
-
-  const sectionsMarkup = sections
-    .map(
-      (s) => `
-        <section class="chat-bubble-section">
-          <h4>${s.title}</h4>
-          <ul>${s.bullets.map((b) => `<li>${b}</li>`).join("")}</ul>
-        </section>
-      `,
-    )
-    .join("");
-
-  return `${extraMarkup}<div class="chat-bubble-summary">${sectionsMarkup}</div>`;
-}
-
 // -- Sticky picker (option rows + optional text input) ----------------------
 
 export function renderPicker(picker) {

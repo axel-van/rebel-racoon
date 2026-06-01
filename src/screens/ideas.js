@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { renderTopbar } from "../components/topbar.js?v=81";
+import { renderTopbar } from "../components/topbar.js?v=82";
 // Same compact idea card as the right-panel Ideas mode.
 import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=1";
 import { showToast } from "../components/toast.js?v=20";

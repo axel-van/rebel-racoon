@@ -30,7 +30,7 @@
 // `body` is HTML (chat turns) and `picker` is the standard picker shape from
 // _analyse-common.js (items + handler + optional customPlaceholder).
 
-import { chatTurn, bulletsBlock, fieldsBlock, summarySections } from "./screens/_analyse-common.js?v=38";
+import { chatTurn, bulletsBlock, fieldsBlock } from "./screens/_analyse-common.js?v=39";
 import { voiceAnalysis, strategyBrief, brandTheme } from "./mocks.js?v=36";
 
 // ---- State -----------------------------------------------------------------
@@ -423,7 +423,7 @@ const voiceScript = {
         body: chatTurn({
           role: "ai",
           text: "Here's your full voice profile. Keep it or start over.",
-          contentHtml: summarySections(VOICE_SECTIONS),
+          contentHtml: bulletsBlock(VOICE_SECTIONS.flatMap((s) => s.bullets)),
         }),
         picker: VOICE_SUMMARY,
       };
