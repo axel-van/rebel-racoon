@@ -200,7 +200,7 @@
 
       .hd-comp__body {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         gap: 0;
       }
 
@@ -213,18 +213,10 @@
       .hd-comp__preview {
         padding: 24px;
         background: #ffffff;
-        border-right: 1px solid var(--hd-border);
         display: flex;
         flex-direction: column;
         gap: 24px;
         min-height: 120px;
-      }
-
-      @media (max-width: 900px) {
-        .hd-comp__preview {
-          border-right: 0;
-          border-bottom: 1px solid var(--hd-border);
-        }
       }
 
       .hd-comp__code {
@@ -390,10 +382,10 @@
       <header class="hd-header">
         <h1>Conversation thread — component handoff</h1>
         <p>
-          Visual reference of every component that renders inside the
-          <code>.session__assistant-thread</code> on <code>/session/:id</code>. Each card shows a live preview, the
-          canonical HTML, the BEM classes in use, and the DS tokens that drive the chrome. Use this as a starting point
-          when implementing any new variant — copy the HTML, swap content, and the styles cascade for free.
+          A visual gallery of the components that render inside the
+          <code>.session__assistant-thread</code> on <code>/session/:id</code>. Each entry shows a live preview, its
+          name, and its main CSS class. Inspect a preview in dev tools for the full markup — styles cascade from the
+          live <code>styles/</code> directory, so this page always reflects the current tokens.
         </p>
         <div class="hd-meta">
           <span>
@@ -416,7 +408,6 @@
       <nav class="hd-toc" aria-label="Table of contents">
         <h2>Sections</h2>
         <ol>
-          <li><a href="#decision">0. Decision matrix &mdash; which turn type?</a></li>
           <li><a href="#turns">1. Turn wrappers</a></li>
           <li><a href="#bubbles">2. Bubbles (AI / User / Source intake)</a></li>
           <li><a href="#bubble-content">3. Bubble content blocks</a></li>
@@ -425,121 +416,12 @@
           <li><a href="#drafts">6. Drafts summary card</a></li>
           <li><a href="#clip-extraction">7. Clip / Idea extraction card</a></li>
           <li><a href="#notices">8. Notices (mermaid, grey, extracting)</a></li>
-          <li><a href="#motion">9. Motion &amp; transitions</a></li>
-          <li><a href="#a11y">10. Accessibility &amp; keyboard</a></li>
-          <li><a href="#edge-cases">11. Edge cases &amp; content rules</a></li>
-          <li><a href="#tokens">12. Token quick reference</a></li>
         </ol>
       </nav>
 
       <!-- ════════════════════════════════════════════════════════════════
             0. DECISION MATRIX
             ════════════════════════════════════════════════════════════ -->
-      <section class="hd-section" id="decision">
-        <h2>0. Decision matrix &mdash; which turn type?</h2>
-        <p class="hd-lead">
-          Every renderable thread message hits a single dispatcher: <code>renderTurn(message)</code> in
-          <code>src/screens/session.js</code> (~ln 756). It branches on <code>message.role</code> and
-          <code>message.variant</code>. Use this table to pick the right shape before composing markup &mdash; the
-          render function names match exactly so you can grep them.
-        </p>
-
-        <div class="hd-tokens">
-          <table>
-            <thead>
-              <tr>
-                <th>message.role</th>
-                <th>message.variant</th>
-                <th>Render function</th>
-                <th>Component</th>
-                <th>Section</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>"assistant"</code></td>
-                <td>&mdash;</td>
-                <td><code>renderTurn()</code> default branch</td>
-                <td><code>.chat-bubble--ai</code></td>
-                <td><a href="#bubbles">§2</a></td>
-              </tr>
-              <tr>
-                <td><code>"user"</code></td>
-                <td>&mdash;</td>
-                <td><code>renderTurn()</code> default branch</td>
-                <td><code>.chat-bubble--user</code></td>
-                <td><a href="#bubbles">§2</a></td>
-              </tr>
-              <tr>
-                <td><code>"source-intake"</code></td>
-                <td>&mdash;</td>
-                <td><code>renderSourceIntakeTurn()</code></td>
-                <td><code>.chat-bubble--source-intake</code></td>
-                <td><a href="#bubbles">§2</a></td>
-              </tr>
-              <tr>
-                <td><code>"assistant"</code></td>
-                <td><code>"extraction"</code></td>
-                <td><code>renderExtractionTurn()</code></td>
-                <td><code>.extraction-turn__idea-card</code></td>
-                <td><a href="#extraction">§5</a></td>
-              </tr>
-              <tr>
-                <td><code>"assistant"</code></td>
-                <td><code>"draft"</code></td>
-                <td><code>renderDraftTurn()</code></td>
-                <td><code>.drafts-card</code></td>
-                <td><a href="#drafts">§6</a></td>
-              </tr>
-              <tr>
-                <td><code>"assistant"</code></td>
-                <td><code>"clip-extraction"</code></td>
-                <td><code>renderClipExtractionTurn()</code></td>
-                <td><code>.clip-extraction-card</code></td>
-                <td><a href="#clip-extraction">§7</a></td>
-              </tr>
-              <tr>
-                <td><code>"assistant"</code></td>
-                <td><code>"idea-extraction"</code></td>
-                <td><code>renderIdeaExtractionTurn()</code></td>
-                <td><code>.clip-extraction-card</code> (bulb icon)</td>
-                <td><a href="#clip-extraction">§7</a></td>
-              </tr>
-              <tr>
-                <td><code>"assistant-choice"</code></td>
-                <td>&mdash;</td>
-                <td><code>renderChoiceTurn()</code></td>
-                <td><code>.chat-bubble-choices</code></td>
-                <td><a href="#choices">§4</a></td>
-              </tr>
-              <tr>
-                <td><code>"system"</code></td>
-                <td><code>"mermaid"</code> or unset</td>
-                <td><code>renderSystemNotice()</code></td>
-                <td><code>.assistant-notice</code></td>
-                <td><a href="#notices">§8</a></td>
-              </tr>
-              <tr>
-                <td><code>"pending"</code></td>
-                <td>&mdash;</td>
-                <td><code>renderExtractingNotice()</code></td>
-                <td><code>.extracting-notice</code></td>
-                <td><a href="#notices">§8</a></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="hd-note">
-          <strong>Lifecycle.</strong> Stores in <code>src/assistant.js</code> mutate the message list (per-session
-          <code>Map(sessionId &rarr; turns[])</code>). Every mutation reruns <code>renderTurn</code> for the touched
-          message in place &mdash; so a <code>source-intake</code> turn with <code>status: "loading"</code> flips chrome
-          to <code>status: "ready"</code> simply by updating the same object. The renderer reads live state (e.g.
-          <code>renderClipExtractionTurn</code> reads the current <code>sources-stream</code> source to derive pending /
-          ready / gone), which is why clip cards can transition without a new message being pushed.
-        </div>
-      </section>
-
       <!-- ════════════════════════════════════════════════════════════════
             1. TURN WRAPPERS
             ════════════════════════════════════════════════════════════ -->
@@ -569,44 +451,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="chat-turn chat-turn--ai"&gt;
-  &lt;i class="ap-icon-sparkles-mermaid chat-turn-avatar"
-     aria-hidden="true"&gt;&lt;/i&gt;
-  &lt;div class="chat-bubble chat-bubble--ai"&gt;
-    &lt;p class="chat-bubble-text"&gt;...&lt;/p&gt;
-  &lt;/div&gt;
-&lt;/div&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Classes</dt>
-                <dd>
-                  <code>.chat-turn</code>
-                  <code>.chat-turn--ai</code>
-                  <code>.chat-turn-avatar</code>
-                  <code>.chat-bubble</code>
-                  <code>.chat-bubble--ai</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Key tokens</dt>
-                <dd>
-                  <code>--ref-spacing-xs</code> (gap 12) <code>--app-spacing-micro</code> (avatar mt 2)
-                  <code>--app-text-message-size</code> (15) <code>--app-text-message-line</code> (1.55)
-                </dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd>
-                  <code>renderTurn()</code>
-                  <br />
-                  <code>session.js:814-820</code>
-                </dd>
-              </div>
-            </dl>
           </div>
         </article>
 
@@ -628,44 +472,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="chat-turn chat-turn--user"&gt;
-  &lt;span class="chat-turn-role"&gt;You&lt;/span&gt;
-  &lt;div class="chat-bubble chat-bubble--user"&gt;
-    &lt;p class="chat-bubble-text"&gt;...&lt;/p&gt;
-  &lt;/div&gt;
-&lt;/div&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Classes</dt>
-                <dd>
-                  <code>.chat-turn</code>
-                  <code>.chat-turn--user</code>
-                  <code>.chat-turn-role</code>
-                  <code>.chat-bubble</code>
-                  <code>.chat-bubble--user</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Key tokens</dt>
-                <dd>
-                  <code>--ref-color-electric-blue-100</code> (bg) <code>--ref-color-white</code> (text)
-                  <code>--app-radius-xl</code> (radius)
-                  <code>padding: 12 / 16</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd>
-                  <code>renderTurn()</code>
-                  <br />
-                  <code>session.js:806-820</code>
-                </dd>
-              </div>
-            </dl>
           </div>
         </article>
 
@@ -699,40 +505,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="chat-turn chat-turn--ai chat-turn--extraction"&gt;
-  &lt;!-- card child (drafts-card, clip-extraction-card,
-       extraction-turn idea cards, idea-extraction card) --&gt;
-&lt;/div&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Classes</dt>
-                <dd>
-                  <code>.chat-turn--extraction</code> (max-width 480, gap 12)
-                  <code>.chat-turn--clip-extraction</code> (max-width 100%, no inner gap)
-                </dd>
-              </div>
-              <div>
-                <dt>When to use</dt>
-                <dd>
-                  When the turn IS a card (drafts, clip-extraction, idea-extraction, extraction with idea cards). Avatar
-                  is implicit in the card's own icon tile.
-                </dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd>
-                  <code>renderDraftTurn()</code>
-                  <br />
-                  <code>renderClipExtractionTurn()</code>
-                  <br />
-                  <code>renderExtractionTurn()</code>
-                </dd>
-              </div>
-            </dl>
           </div>
         </article>
 
@@ -776,47 +548,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="chat-bubble chat-bubble--ai"&gt;
-  &lt;p class="chat-bubble-text"&gt;...&lt;/p&gt;
-&lt;/div&gt;
-
-/* CSS — chat.css */
-.chat-bubble--ai {
-  color: var(--ref-color-grey-150);
-  background: transparent;
-  border: 0;
-  padding: 0;
-  border-radius: 0;
-}
-.chat-bubble--ai .chat-bubble-text {
-  font-size: var(--app-text-message-size);  /* 15 */
-  line-height: var(--app-text-message-line); /* 1.55 */
-}</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Classes</dt>
-                <dd>
-                  <code>.chat-bubble</code>
-                  <code>.chat-bubble--ai</code>
-                  <code>.chat-bubble-text</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Key tokens</dt>
-                <dd>
-                  <code>--ref-color-grey-150</code> (text) <code>--app-text-message-size</code> (15px)
-                  <code>--app-text-message-line</code> (1.55)
-                </dd>
-              </div>
-              <div>
-                <dt>Modifiers</dt>
-                <dd><code>.is-loading</code> → opacity 0.7 (pending state)</dd>
-              </div>
-            </dl>
           </div>
         </article>
 
@@ -842,43 +573,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="chat-bubble chat-bubble--user"&gt;
-  &lt;p class="chat-bubble-text"&gt;...&lt;/p&gt;
-&lt;/div&gt;
-
-/* CSS — chat.css */
-.chat-bubble--user {
-  background: var(--ref-color-electric-blue-100);
-  color: var(--ref-color-white);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm); /* 12 / 16 */
-  border-radius: var(--app-radius-xl);
-  border-top-right-radius: 0;
-}</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Classes</dt>
-                <dd>
-                  <code>.chat-bubble--user</code>
-                  <code>.is-loading</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Key tokens</dt>
-                <dd>
-                  <code>--ref-color-electric-blue-100</code>
-                  <code>--ref-color-white</code>
-                  <code>--ref-spacing-xs</code> (12) <code>--ref-spacing-sm</code> (16)
-                </dd>
-              </div>
-              <div>
-                <dt>Max-width</dt>
-                <dd><code>560px</code> (carried by <code>.chat-turn--user</code>)</dd>
-              </div>
-            </dl>
           </div>
         </article>
 
@@ -973,84 +667,6 @@
                 </div>
               </div>
             </div>
-
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="chat-bubble chat-bubble--source-intake"
-     data-intake-status="loading|ready"&gt;
-  &lt;i class="ap-icon-file--pdf chat-bubble-source-intake__kind"
-     aria-hidden="true"&gt;&lt;/i&gt;
-  &lt;span class="chat-bubble-source-intake__name"
-        title="filename.pdf"&gt;filename.pdf&lt;/span&gt;
-
-  &lt;!-- Trailing slot — pick one of three: --&gt;
-
-  &lt;!-- (1) Loading — uses the shared Archie 12-dot mermaid loader --&gt;
-  &lt;span class="chat-bubble-source-intake__loading"
-        role="status" aria-label="Uploading"&gt;
-    &lt;span class="chat-bubble-source-intake__spinner"&gt;&lt;/span&gt;
-    &lt;span&gt;Uploading&lt;/span&gt;
-  &lt;/span&gt;
-
-  &lt;!-- (2) Ready, with ideas --&gt;
-  &lt;button class="chat-bubble-source-intake__pill"
-          data-source-intake-open-ideas
-          aria-label="Open 3 ideas in Ideas panel"&gt;
-    &lt;span&gt;3 ideas&lt;/span&gt;
-    &lt;i class="ap-icon-chevron-right"&gt;&lt;/i&gt;
-  &lt;/button&gt;
-
-  &lt;!-- (3) Ready, no ideas --&gt;
-  &lt;i class="ap-icon-rounded-check_fill
-            chat-bubble-source-intake__check"&gt;&lt;/i&gt;
-&lt;/div&gt;</pre
-              >
-            </div>
-
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Classes</dt>
-                <dd>
-                  <code>.chat-bubble--source-intake</code>
-                  <code>__kind</code>
-                  <code>__name</code>
-                  <code>__loading</code>
-                  <code>__spinner</code> (shared Archie loader)
-                  <code>__pill</code>
-                  <code>__check</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Icon by kind</dt>
-                <dd>
-                  <code>ap-icon-file--pdf</code> (pdf)<br />
-                  <code>ap-icon-file--video</code> (video)<br />
-                  <code>ap-icon-link</code> (url)<br />
-                  <code>ap-icon-file--text</code> (word/text)<br />
-                  <code>ap-icon-file--image</code> (image)<br />
-                  <code>ap-icon-file</code> (audio/default)
-                </dd>
-              </div>
-              <div>
-                <dt>Key tokens</dt>
-                <dd>
-                  <code>--ref-color-electric-blue-05</code> (bg)<br />
-                  <code>--ref-color-electric-blue-20</code> (border)<br />
-                  <code>--app-radius-xl</code> + top-right 0 (bubble)<br />
-                  <code>--app-radius-pill</code> (trailing pills)
-                </dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd>
-                  <code>postSourceIntake()</code>
-                  <br />
-                  <code>renderSourceIntakeTurn()</code>
-                  <br />
-                  <code>session.js:852&ndash;914</code>
-                </dd>
-              </div>
-            </dl>
           </div>
         </article>
       </section>
@@ -1087,32 +703,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="chat-bubble-card"&gt;
-  Observation text…
-&lt;/div&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Tokens</dt>
-                <dd>
-                  <code>--ref-color-grey-05</code>
-                  <code>--ref-color-grey-10</code> (border)
-                  <code>--ref-border-radius-md</code>
-                  <code>--ref-spacing-xs</code> (padding 12) <code>--ref-font-size-xs</code> (12)
-                </dd>
-              </div>
-              <div>
-                <dt>Stack</dt>
-                <dd>Multiple cards stack via the AI bubble&rsquo;s own column-flex + gap-xs.</dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd>Figma 73:1394</dd>
-              </div>
-            </dl>
           </div>
         </article>
 
@@ -1148,35 +738,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;dl class="chat-bubble-fields"&gt;
-  &lt;div&gt;
-    &lt;dt&gt;Networks&lt;/dt&gt;
-    &lt;dd&gt;LinkedIn, X, Instagram&lt;/dd&gt;
-  &lt;/div&gt;
-  ...
-&lt;/dl&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Tokens</dt>
-                <dd>
-                  <code>--ref-spacing-xs</code> (gap 12) <code>--ref-spacing-xxxs</code> (intra gap 4)
-                  <code>--ref-font-size-xs</code> (12)
-                  <code>--sys-text-color-light</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Behavior</dt>
-                <dd>Each <code>&lt;div&gt;</code> is a row: dt uppercase label, dd bold value.</dd>
-              </div>
-              <div>
-                <dt>Used by</dt>
-                <dd>Action-pick recap, brief summary fields.</dd>
-              </div>
-            </dl>
           </div>
         </article>
 
@@ -1200,32 +761,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="chat-bubble-header-extra"&gt;
-  Using playbook &lt;strong&gt;Customer stories&lt;/strong&gt;
-&lt;/div&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Tokens</dt>
-                <dd>
-                  <code>--ref-color-electric-blue-05</code>
-                  <code>--ref-color-electric-blue-20</code> (border)
-                  <code>--ref-spacing-xs / sm</code>
-                  <code>--app-radius-md</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Placement</dt>
-                <dd>First child of the bubble, before the <code>.chat-bubble-text</code>.</dd>
-              </div>
-              <div>
-                <dt>Used by</dt>
-                <dd>Playbook attach feedback turn.</dd>
-              </div>
-            </dl>
           </div>
         </article>
 
@@ -1265,42 +800,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="chat-bubble-summary"&gt;
-  &lt;section class="chat-bubble-section"&gt;
-    &lt;h4&gt;Tone&lt;/h4&gt;
-    &lt;ul&gt;
-      &lt;li&gt;Direct &amp;amp; punchy&lt;/li&gt;
-      &lt;li&gt;...&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/section&gt;
-  &lt;section class="chat-bubble-section"&gt;...&lt;/section&gt;
-&lt;/div&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Classes</dt>
-                <dd>
-                  <code>.chat-bubble-summary</code>
-                  <code>.chat-bubble-section</code>
-                  <code>.chat-bubble-section h4</code> (grey-05 header strip)
-                </dd>
-              </div>
-              <div>
-                <dt>Tokens</dt>
-                <dd>
-                  <code>--ref-color-grey-20</code> (border) <code>--ref-color-grey-05</code> (header strip)
-                  <code>--ref-border-radius-md</code>
-                  <code>--ref-spacing-xs</code> (vertical padding)
-                </dd>
-              </div>
-              <div>
-                <dt>Used by</dt>
-                <dd>Analyse Voice / Brief wizard recap. Figma 75:234.</dd>
-              </div>
-            </dl>
           </div>
         </article>
       </section>
@@ -1356,53 +855,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="chat-bubble-choices"&gt;
-  &lt;button type="button"
-          class="chat-bubble-choice-chip is-selected"
-          data-assistant-choice="linkedin"
-          data-assistant-choice-msg="MSG_ID"&gt;
-    &lt;i class="ap-icon-linkedin"&gt;&lt;/i&gt;
-    &lt;span&gt;LinkedIn&lt;/span&gt;
-  &lt;/button&gt;
-  ...
-&lt;/div&gt;
-&lt;div class="chat-bubble-choices-footer"&gt;
-  &lt;button class="ap-button primary orange"
-          data-assistant-choice-submit="MSG_ID"&gt;
-    Draft them
-  &lt;/button&gt;
-&lt;/div&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Classes</dt>
-                <dd>
-                  <code>.chat-bubble-choices</code>
-                  <code>.chat-bubble-choice-chip</code>
-                  <code>.is-selected</code>
-                  <code>.chat-bubble-choices-footer</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Key tokens</dt>
-                <dd>
-                  <code>--ref-spacing-xxs / sm</code> (chip padding 8/16)
-                  <code>--app-radius-pill</code>
-                  <code>--ref-color-electric-blue-100</code> (selected border + text)
-                  <code>--ref-color-electric-blue-10</code> (selected bg)
-                </dd>
-              </div>
-              <div>
-                <dt>States</dt>
-                <dd>
-                  <code>:hover</code> grey-60 border · <code>:active</code> grey-05 bg · <code>.is-selected</code> blue
-                  · <code>&lt;span&gt;</code> tag = answered (non-interactive)
-                </dd>
-              </div>
-            </dl>
           </div>
         </article>
 
@@ -1435,43 +887,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="chat-bubble-choices chat-bubble-choices--visual"&gt;
-  &lt;button class="chat-bubble-choice-chip
-                 chat-bubble-choice-chip--bold"&gt;
-    &lt;span class="chat-bubble-choice-preview
-                 chat-bubble-choice-preview--bold"&gt;POST&lt;/span&gt;
-    &lt;span class="chat-bubble-choice-label"&gt;Bold&lt;/span&gt;
-  &lt;/button&gt;
-  ...
-&lt;/div&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Variants</dt>
-                <dd>
-                  <code>--bold</code>
-                  <code>--minimal</code>
-                  <code>--karaoke</code>
-                  <code>--neon</code>
-                  <code>--none</code> (preview-kind classes)
-                </dd>
-              </div>
-              <div>
-                <dt>Used by</dt>
-                <dd>PDF flow 06.B — subtitle preset picker after clip drafts land.</dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd>
-                  <code>renderChoiceTurn()</code>
-                  <br />
-                  <code>session.js:1349-1410</code>
-                </dd>
-              </div>
-            </dl>
           </div>
         </article>
       </section>
@@ -1515,79 +930,6 @@
                 </details>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="chat-turn chat-turn--ai chat-turn--extraction"&gt;
-  &lt;details class="assistant-notice assistant-notice--mermaid" open&gt;
-    &lt;summary class="assistant-notice__toggle"&gt;
-      &lt;span class="ap-status mermaid"&gt;Extracted 3 ideas&lt;/span&gt;
-      &lt;i class="ap-icon-chevron-down
-                assistant-notice__chevron"&gt;&lt;/i&gt;
-    &lt;/summary&gt;
-    &lt;div class="extraction-turn__detail"&gt;
-      &lt;div class="extraction-turn__analyzed-row"&gt;
-        &lt;strong&gt;Analyzed&lt;/strong&gt;
-        &lt;span&gt;filename.pdf&lt;/span&gt;
-      &lt;/div&gt;
-      &lt;!-- Shared compact idea card (.rpanel-ideas__card): kind tag +
-           Source head, title, body, "Why this idea", footer. The
-           extraction turn keeps a feedback + "View idea" footer. --&gt;
-      &lt;article class="rpanel-ideas__card extraction-turn__idea-card"&gt;
-        &lt;div class="rpanel-ideas__card-content"&gt;
-          &lt;div class="rpanel-ideas__card-head"&gt;
-            &lt;span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--insight"&gt;insight&lt;/span&gt;
-            &lt;div class="rpanel-ideas__head-source"&gt;
-              &lt;span class="rpanel-ideas__source-label"&gt;Source:&lt;/span&gt;
-              &lt;span class="rpanel-ideas__source-tag"&gt;…filename.pdf&lt;/span&gt;
-            &lt;/div&gt;
-          &lt;/div&gt;
-          &lt;h4 class="rpanel-ideas__card-title"&gt;…&lt;/h4&gt;
-          &lt;p class="rpanel-ideas__card-body"&gt;…&lt;/p&gt;
-          &lt;section class="rpanel-ideas__why"&gt;…&lt;/section&gt;
-        &lt;/div&gt;
-        &lt;footer class="rpanel-ideas__card-actions"&gt;
-          &lt;div class="rpanel-ideas__feedback"&gt;…thumbs…&lt;/div&gt;
-          &lt;a class="ap-link standalone small" data-focus-idea="ID"&gt;View idea&lt;/a&gt;
-        &lt;/footer&gt;
-      &lt;/article&gt;
-    &lt;/div&gt;
-  &lt;/details&gt;
-&lt;/div&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Classes</dt>
-                <dd>
-                  <code>.chat-turn--extraction</code>
-                  <code>.extraction-turn__detail</code>
-                  <code>.extraction-turn__analyzed-row</code>
-                  <code>.rpanel-ideas__card</code> (shared) <code>.extraction-turn__idea-card</code> (width override)
-                  <code>__card-head / __kind / __head-source</code>
-                  <code>__card-title / __card-body / __why</code>
-                  <code>__card-actions / __feedback / __thumb</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Tokens</dt>
-                <dd>
-                  <code>--app-radius-card</code> (12) <code>--app-shadow-low</code> <code>--app-border</code> (grey-20)
-                  <code>--ref-spacing-xs</code> (content gap)
-                  <code>--ref-font-size-md / -sm</code>
-                  <code>--ref-color-grey-100 / 80</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd>
-                  <code>postExtractionResult()</code>
-                  <br />
-                  <code>renderExtractionTurn()</code>
-                  <br />
-                  <code>session.js:913-981</code>
-                </dd>
-              </div>
-            </dl>
           </div>
         </article>
       </section>
@@ -1657,66 +999,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="chat-turn chat-turn--ai chat-turn--extraction"&gt;
-  &lt;button class="ap-card drafts-card"
-          data-drafts-card-message="MSG_ID"&gt;
-    &lt;span class="drafts-card__icon"&gt;
-      &lt;i class="ap-icon-pen"&gt;&lt;/i&gt;
-    &lt;/span&gt;
-    &lt;span class="drafts-card__main"&gt;
-      &lt;span class="drafts-card__title"&gt;5 drafts ready&lt;/span&gt;
-      &lt;span class="drafts-card__sub"&gt;
-        &lt;span class="ap-tag-list drafts-card__nets"&gt;
-          &lt;i class="ap-icon-linkedin"&gt;&lt;/i&gt;
-          &lt;i class="ap-icon-twitter-official"&gt;&lt;/i&gt;
-          &lt;i class="ap-icon-instagram"&gt;&lt;/i&gt;
-        &lt;/span&gt;
-        &lt;span class="drafts-card__sub-text"&gt;
-          Across 3 networks · review, edit, and schedule
-        &lt;/span&gt;
-      &lt;/span&gt;
-    &lt;/span&gt;
-    &lt;i class="ap-icon-chevron-right drafts-card__chevron"&gt;&lt;/i&gt;
-  &lt;/button&gt;
-&lt;/div&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Classes</dt>
-                <dd>
-                  <code>.drafts-card</code>
-                  <code>.is-active</code>
-                  <code>__icon</code>
-                  <code>__main</code>
-                  <code>__title</code>
-                  <code>__sub</code>
-                  <code>__nets</code>
-                  <code>__sub-text</code>
-                  <code>__chevron</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Tokens</dt>
-                <dd>
-                  <code>--ref-spacing-xs</code> (gap 12) <code>--ref-spacing-xxs</code> (main gap 8)
-                  <code>--sys-color-accent-default-bg-default</code> (orange tile)
-                  <code>--app-radius-button-sm</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd>
-                  <code>postDraftResult()</code>
-                  <br />
-                  <code>renderDraftTurn()</code>
-                  <br />
-                  <code>session.js:1439-1475</code>
-                </dd>
-              </div>
-            </dl>
           </div>
         </article>
       </section>
@@ -1754,47 +1036,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="chat-turn chat-turn--ai chat-turn--clip-extraction"&gt;
-  &lt;div class="clip-extraction-card clip-extraction-card--pending"&gt;
-    &lt;span class="clip-extraction-card__spinner"
-          role="status"
-          aria-label="Extracting clips"&gt;&lt;/span&gt;
-    &lt;span class="clip-extraction-card__main"&gt;
-      &lt;span class="clip-extraction-card__title"&gt;
-        Cutting your clips…
-      &lt;/span&gt;
-      &lt;span class="clip-extraction-card__sub"&gt;
-        Up to 45s · you can keep chatting
-      &lt;/span&gt;
-    &lt;/span&gt;
-  &lt;/div&gt;
-&lt;/div&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Tokens</dt>
-                <dd>
-                  <code>--ref-color-orange-100</code> (spinner top-color) <code>--ref-color-grey-10</code> (spinner
-                  ring) <code>--ref-spacing-sm</code> (padding 16) <code>--ref-spacing-xs</code> (gap 12)
-                  <code>--app-radius-card</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Sub-line</dt>
-                <dd>Use plain text — sets expectations on duration and non-blocking nature.</dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd>
-                  <code>postClipExtractionTurn()</code>
-                  <br />
-                  <code>renderClipExtractionTurn()</code>
-                </dd>
-              </div>
-            </dl>
           </div>
         </article>
 
@@ -1826,49 +1067,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="clip-extraction-card clip-extraction-card--ready"&gt;
-  &lt;span class="clip-extraction-card__icon"&gt;
-    &lt;i class="ap-icon-sparkles"&gt;&lt;/i&gt;
-  &lt;/span&gt;
-  &lt;span class="clip-extraction-card__main"&gt;
-    &lt;span class="clip-extraction-card__title"&gt;...&lt;/span&gt;
-    &lt;span class="clip-extraction-card__sub"&gt;...&lt;/span&gt;
-  &lt;/span&gt;
-  &lt;button class="ap-button ghost grey
-                 clip-extraction-card__cta"
-          data-clip-card-open="SOURCE_ID"&gt;
-    Open clips
-  &lt;/button&gt;
-&lt;/div&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Tokens</dt>
-                <dd>
-                  <code>--ref-color-mermaid-gradient-background</code> (gradient border)
-                  <code>--ref-color-white</code> (inner bg)
-                  <code>--app-shadow-subtle</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Icon variants</dt>
-                <dd>
-                  Clips ready: <code>ap-icon-sparkles</code><br />
-                  Themes ready (idea-extraction): <code>ap-icon-bulb</code><br />
-                  Gone: <code>ap-icon-file--video</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd>
-                  <code>renderClipExtractionTurn()</code> · <code>renderIdeaExtractionTurn()</code> shares the same
-                  chrome.
-                </dd>
-              </div>
-            </dl>
           </div>
         </article>
 
@@ -1897,46 +1095,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="clip-extraction-card clip-extraction-card--gone"&gt;
-  &lt;span class="clip-extraction-card__icon"&gt;
-    &lt;i class="ap-icon-file--video"&gt;&lt;/i&gt;
-  &lt;/span&gt;
-  &lt;span class="clip-extraction-card__main"&gt;
-    &lt;span class="clip-extraction-card__title"&gt;
-      Clips no longer available
-    &lt;/span&gt;
-    &lt;span class="clip-extraction-card__sub"&gt;
-      filename was removed.
-    &lt;/span&gt;
-  &lt;/span&gt;
-&lt;/div&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Tokens</dt>
-                <dd>
-                  <code>opacity: 0.65</code>
-                  <code>--ref-color-grey-05</code> (icon tile bg) <code>--ref-color-grey-100</code> (icon color)
-                </dd>
-              </div>
-              <div>
-                <dt>Trigger</dt>
-                <dd>
-                  Source was removed (<code>removeSources()</code>) but the message stays in the thread as a receipt.
-                </dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd>
-                  <code>renderClipExtractionTurn()</code>
-                  <br />
-                  <code>session.js:1481-1537</code>
-                </dd>
-              </div>
-            </dl>
           </div>
         </article>
       </section>
@@ -1987,51 +1145,6 @@
                 </details>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;details class="assistant-notice assistant-notice--mermaid"
-         open&gt;
-  &lt;summary class="assistant-notice__toggle"&gt;
-    &lt;span class="ap-status mermaid"&gt;Drafting&lt;/span&gt;
-    &lt;i class="ap-icon-chevron-down
-              assistant-notice__chevron"&gt;&lt;/i&gt;
-  &lt;/summary&gt;
-  &lt;div class="assistant-notice__detail"&gt;
-    Thinking through the best next move…
-  &lt;/div&gt;
-&lt;/details&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Classes</dt>
-                <dd>
-                  <code>.assistant-notice</code>
-                  <code>--mermaid</code>
-                  <code>.is-loading</code>
-                  <code>__toggle</code>
-                  <code>__chevron</code>
-                  <code>__detail</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Tokens</dt>
-                <dd>
-                  <code>--ref-color-grey-05</code> (detail bg) <code>--ref-color-grey-10</code> (detail border)
-                  <code>--ref-spacing-sm</code> (detail padding 16) <code>.ap-status.mermaid</code> from DS
-                </dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd>
-                  <code>postSystemNotice()</code>
-                  <br />
-                  <code>renderSystemNotice()</code>
-                  <br />
-                  <code>session.js:823-837</code>
-                </dd>
-              </div>
-            </dl>
           </div>
         </article>
 
@@ -2052,37 +1165,6 @@
                 <div class="assistant-notice__detail">Now using <strong>Customer stories</strong> for this thread.</div>
               </details>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;details class="assistant-notice" open&gt;
-  &lt;summary class="assistant-notice__toggle"&gt;
-    &lt;span class="ap-status grey"&gt;Playbook switched&lt;/span&gt;
-    &lt;i class="ap-icon-chevron-down
-              assistant-notice__chevron"&gt;&lt;/i&gt;
-  &lt;/summary&gt;
-  &lt;div class="assistant-notice__detail"&gt;
-    Now using &lt;strong&gt;Customer stories&lt;/strong&gt;.
-  &lt;/div&gt;
-&lt;/details&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Variants</dt>
-                <dd>
-                  Drop the <code>--mermaid</code> modifier and use <code>.ap-status.grey</code> (or any DS status color)
-                  for non-AI events.
-                </dd>
-              </div>
-              <div>
-                <dt>Tokens</dt>
-                <dd>Same as mermaid notice — only the pill color differs.</dd>
-              </div>
-              <div>
-                <dt>Used by</dt>
-                <dd>Playbook switch, session rename, generic system updates.</dd>
-              </div>
-            </dl>
           </div>
         </article>
 
@@ -2105,45 +1187,6 @@
                 </div>
               </div>
             </div>
-            <div class="hd-comp__code">
-              <pre>
-&lt;div class="chat-turn chat-turn--ai chat-turn--extracting"&gt;
-  &lt;div class="extracting-notice"&gt;
-    &lt;span class="ap-status mermaid"&gt;Extracting&lt;/span&gt;
-    &lt;span class="extracting-notice__spinner"
-          aria-hidden="true"&gt;&lt;/span&gt;
-  &lt;/div&gt;
-&lt;/div&gt;</pre
-              >
-            </div>
-            <dl class="hd-comp__meta">
-              <div>
-                <dt>Classes</dt>
-                <dd>
-                  <code>.chat-turn--extracting</code>
-                  <code>.extracting-notice</code>
-                  <code>__spinner</code>
-                  <code>.ap-status.mermaid</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Behavior</dt>
-                <dd>
-                  Lives in the thread only while <code>status === "loading"</code>. <code>finishPending()</code> removes
-                  the message.
-                </dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd>
-                  <code>startPending()</code> · <code>finishPending()</code>
-                  <br />
-                  <code>renderExtractingNotice()</code>
-                  <br />
-                  <code>session.js:842-851</code>
-                </dd>
-              </div>
-            </dl>
           </div>
         </article>
       </section>
@@ -2151,789 +1194,15 @@
       <!-- ════════════════════════════════════════════════════════════════
             9. MOTION & TRANSITIONS
             ════════════════════════════════════════════════════════════ -->
-      <section class="hd-section" id="motion">
-        <h2>9. Motion &amp; transitions</h2>
-        <p class="hd-lead">
-          Every animation in the thread is driven by DS duration tokens (<code
-            >--ref-animation-xshort/short/normal/long</code
-          >
-          = 75 / 150 / 250 / 400&nbsp;ms) and a small set of app easings declared in <code>styles/tokens.css</code>.
-          When extending the thread, reuse these &mdash; never write raw ms / cubic-bezier values.
-        </p>
-
-        <h3 style="margin: 24px 0 12px; font-size: 16px">Easing tokens (styles/tokens.css)</h3>
-        <div class="hd-tokens">
-          <table>
-            <thead>
-              <tr>
-                <th>Token</th>
-                <th>Value</th>
-                <th>Use for</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>--app-ease-out</code></td>
-                <td><code>cubic-bezier(0.2, 0.8, 0.2, 1)</code></td>
-                <td>State changes that feel "snappy on entry" &mdash; chip selection, thumb toggle</td>
-              </tr>
-              <tr>
-                <td><code>--app-ease-standard</code></td>
-                <td><code>cubic-bezier(0.2, 0, 0, 1)</code></td>
-                <td>Symmetric ease, default for hover chrome transitions (drafts-card)</td>
-              </tr>
-              <tr>
-                <td><code>--app-ease-bounce</code></td>
-                <td><code>cubic-bezier(0.34, 1.56, 0.64, 1)</code></td>
-                <td>
-                  Reserved for affirmative pops (success check, "saved" toasts) &mdash; not used in the thread today
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3 style="margin: 32px 0 12px; font-size: 16px">Motion catalogue</h3>
-        <div class="hd-tokens">
-          <table>
-            <thead>
-              <tr>
-                <th>Element</th>
-                <th>Trigger</th>
-                <th>Properties</th>
-                <th>Duration</th>
-                <th>Easing</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>.chat-bubble-choice-chip</code></td>
-                <td>Hover · select · answer</td>
-                <td><code>border-color, background, color</code></td>
-                <td><code>--ref-animation-short</code> (150ms)</td>
-                <td>browser default</td>
-              </tr>
-              <tr>
-                <td><code>.drafts-card</code></td>
-                <td>Hover, focus-visible, <code>.is-active</code></td>
-                <td><code>border-color, box-shadow</code></td>
-                <td><code>--ref-animation-short</code> (150ms)</td>
-                <td><code>--app-ease-standard</code></td>
-              </tr>
-              <tr>
-                <td><code>.extraction-turn__idea-card-thumb</code></td>
-                <td>Hover · focus-visible · <code>.is-active</code></td>
-                <td><code>color, background-color</code></td>
-                <td><code>--ref-animation-short</code> (150ms)</td>
-                <td><code>--app-ease-out</code></td>
-              </tr>
-              <tr>
-                <td><code>.assistant-notice__chevron</code></td>
-                <td><code>&lt;details&gt;</code> open / close</td>
-                <td><code>transform: rotate(0&deg; &rarr; 180&deg;)</code></td>
-                <td>160ms</td>
-                <td><code>ease</code></td>
-              </tr>
-              <tr>
-                <td><code>.assistant-notice.is-loading .ap-status.mermaid</code></td>
-                <td>Pill carries <code>.is-loading</code></td>
-                <td>Opacity 1 &rarr; 0.55 (keyframes <code>assistant-notice-pulse</code>)</td>
-                <td>1.4s, infinite</td>
-                <td><code>ease-in-out</code></td>
-              </tr>
-              <tr>
-                <td><code>.extracting-notice__spinner</code></td>
-                <td>Always (while turn alive)</td>
-                <td>Rotate 360&deg; (keyframes <code>app-spin</code>, see <code>base.css</code>)</td>
-                <td>0.9s, infinite</td>
-                <td><code>linear</code></td>
-              </tr>
-              <tr>
-                <td><code>.clip-extraction-card__spinner</code></td>
-                <td>Pending state</td>
-                <td>Same <code>app-spin</code>, orange-100 top-color on grey-10 ring</td>
-                <td>0.9s, infinite</td>
-                <td><code>linear</code></td>
-              </tr>
-              <tr>
-                <td><code>.ap-loader.blue.size-16</code> (intake spinner)</td>
-                <td>Source-intake loading</td>
-                <td>DS-owned loader animation</td>
-                <td>DS default</td>
-                <td>DS default</td>
-              </tr>
-              <tr>
-                <td><code>.idea-card.is-focused</code></td>
-                <td>Navigate from "View idea" link</td>
-                <td>Border-color pulse (keyframes <code>app-focus-pulse</code>, see <code>base.css</code>)</td>
-                <td>1.6s, runs once</td>
-                <td><code>ease</code></td>
-              </tr>
-              <tr>
-                <td><code>.chat-bubble--ai.is-loading</code> /<br /><code>.chat-bubble--user.is-loading</code></td>
-                <td><code>message.status === "loading"</code></td>
-                <td>Static opacity: 0.7 (no keyframes)</td>
-                <td>&mdash;</td>
-                <td>&mdash;</td>
-              </tr>
-              <tr>
-                <td><code>.chat-bubble-source-intake__pill</code></td>
-                <td>Hover / focus-visible</td>
-                <td>background &rarr; electric-blue-150; child <code>&lt;i&gt;</code> translateX(2px)</td>
-                <td><code>--ref-animation-short</code> (150ms)</td>
-                <td><code>--app-ease-out</code></td>
-              </tr>
-              <tr>
-                <td><code>.chat-bubble-source-intake__spinner</code></td>
-                <td>Loading state</td>
-                <td>
-                  Shared Archie loader &mdash; 12-dot grid masked from a mermaid-gradient bounding box (keyframes
-                  <code>archie-loader-l29</code>, see <code>styles/components/archie-loader.css</code>). Same loader
-                  used by composer-thinking, source-card, clip-extraction, etc.
-                </td>
-                <td>2s, infinite</td>
-                <td>linear (fade pattern)</td>
-              </tr>
-              <tr>
-                <td><code>.chat-bubble--source-intake</code></td>
-                <td>Status / theme change</td>
-                <td><code>background, border-color</code></td>
-                <td><code>--ref-animation-short</code> (150ms)</td>
-                <td><code>--app-ease-out</code></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="hd-note">
-          <strong>Reduced motion.</strong> The thread does not yet ship a
-          <code>@media (prefers-reduced-motion: reduce)</code> override. The two infinite animations (<code
-            >assistant-notice-pulse</code
-          >
-          and <code>app-spin</code>) and the one-shot focus pulse (<code>app-focus-pulse</code>) are the only motion
-          users see for more than 200&nbsp;ms. When implementing, disable just the keyframes &mdash; the 150&nbsp;ms
-          hover/state transitions are fine to keep.
-        </div>
-      </section>
-
       <!-- ════════════════════════════════════════════════════════════════
             10. ACCESSIBILITY & KEYBOARD
             ════════════════════════════════════════════════════════════ -->
-      <section class="hd-section" id="a11y">
-        <h2>10. Accessibility &amp; keyboard</h2>
-        <p class="hd-lead">
-          The thread leans on semantic HTML (native <code>&lt;button&gt;</code>, <code>&lt;details&gt;</code>,
-          <code>&lt;a&gt;</code>) and a thin ARIA layer. The contract below is what <code>renderTurn()</code> and its
-          sub-renderers actually emit &mdash; respect it when extending.
-        </p>
-
-        <h3 style="margin: 24px 0 12px; font-size: 16px">ARIA contract per component</h3>
-        <div class="hd-tokens">
-          <table>
-            <thead>
-              <tr>
-                <th>Component</th>
-                <th>Role / attribute</th>
-                <th>Value &amp; behavior</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>.chat-turn-avatar</code> (sparkle icon)</td>
-                <td><code>aria-hidden="true"</code></td>
-                <td>Decorative; SR readers skip it &mdash; the message body carries meaning</td>
-              </tr>
-              <tr>
-                <td><code>.chat-turn-role</code> ("You" / "Source intake")</td>
-                <td>Visible text label</td>
-                <td>No <code>aria-label</code> needed &mdash; it's the visible role indicator</td>
-              </tr>
-              <tr>
-                <td><code>.chat-bubble-source-intake__kind</code> (file icon)</td>
-                <td><code>aria-hidden="true"</code></td>
-                <td>Filename below carries the actual identity</td>
-              </tr>
-              <tr>
-                <td><code>.chat-bubble-source-intake__name</code> (filename)</td>
-                <td><code>title="filename"</code></td>
-                <td>Recovers full text after CSS ellipsis truncation, both on hover and for SR</td>
-              </tr>
-              <tr>
-                <td><code>.chat-bubble-source-intake__loading</code> (loading pill)</td>
-                <td><code>role="status"</code> &middot; <code>aria-label="Uploading"</code></td>
-                <td>SR announces in-flight upload; the inner dot is <code>aria-hidden="true"</code></td>
-              </tr>
-              <tr>
-                <td><code>.chat-bubble-source-intake__check</code> (ready, no ideas)</td>
-                <td><code>aria-hidden="true"</code></td>
-                <td>The "Source intake" role label + readied filename carry the state</td>
-              </tr>
-              <tr>
-                <td><code>.chat-bubble-source-intake__pill</code> (ideas pill)</td>
-                <td>
-                  <code>&lt;button type="button"&gt;</code> &middot;
-                  <code>aria-label="Open N ideas in Ideas panel"</code>
-                </td>
-                <td>Whole pill is the click target; chevron <code>&lt;i&gt;</code> is decorative</td>
-              </tr>
-              <tr>
-                <td><code>.chat-bubble-choice-chip</code> (interactive)</td>
-                <td><code>aria-pressed="true|false"</code></td>
-                <td>
-                  Toggled in click handler (<code>session.js:1990</code>); answered chips render as
-                  <code>&lt;span&gt;</code> with no <code>aria-pressed</code> &mdash; SR reads them as static text
-                </td>
-              </tr>
-              <tr>
-                <td><code>.chat-bubble-choices-footer .ap-button</code> ("Submit / Draft them")</td>
-                <td>Native <code>&lt;button&gt;</code></td>
-                <td>Disabled state inherits from DS <code>.ap-button</code>; not used today (always enabled)</td>
-              </tr>
-              <tr>
-                <td><code>.extraction-turn__idea-card-feedback</code></td>
-                <td><code>role="group"</code> · <code>aria-label="Rate this idea"</code></td>
-                <td>Bundles both thumb buttons as a single landmark</td>
-              </tr>
-              <tr>
-                <td><code>.extraction-turn__idea-card-thumb</code></td>
-                <td><code>aria-pressed</code> · <code>aria-label="Mark as helpful / not helpful"</code></td>
-                <td>Mutually exclusive in the handler (clicking up clears down's pressed state &amp; vice versa)</td>
-              </tr>
-              <tr>
-                <td><code>.extraction-turn__idea-card-view</code></td>
-                <td><code>aria-label="Open this idea in Ideas"</code></td>
-                <td>Visible "View idea" text + external-link icon; aria-label disambiguates against multiple cards</td>
-              </tr>
-              <tr>
-                <td><code>.drafts-card</code></td>
-                <td><code>&lt;button type="button"&gt;</code></td>
-                <td>Whole card is the click target; title + sub-text are the accessible name (read sequentially)</td>
-              </tr>
-              <tr>
-                <td><code>.drafts-card__icon</code> &amp; <code>__nets</code> &amp; <code>__chevron</code></td>
-                <td><code>aria-hidden="true"</code></td>
-                <td>Network glyphs carry a <code>title</code> for hover tooltips but are hidden from SR</td>
-              </tr>
-              <tr>
-                <td><code>.clip-extraction-card__spinner</code> (pending)</td>
-                <td><code>role="status"</code> · <code>aria-label="Extracting clips"</code></td>
-                <td>
-                  SR announces the in-flight work; <code>aria-label</code> changes to "Reading video for ideas" in the
-                  idea-extraction variant
-                </td>
-              </tr>
-              <tr>
-                <td><code>.clip-extraction-card__icon</code></td>
-                <td><code>aria-hidden="true"</code></td>
-                <td>Title + sub carry meaning</td>
-              </tr>
-              <tr>
-                <td><code>.assistant-notice</code> (<code>&lt;details&gt;</code>)</td>
-                <td>Native <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code></td>
-                <td>
-                  Browser handles the disclosure pattern (Enter / Space toggles); chevron is purely decorative (<code
-                    >::-webkit-details-marker</code
-                  >
-                  hidden, chevron <code>&lt;i&gt;</code> rotates via CSS)
-                </td>
-              </tr>
-              <tr>
-                <td><code>.extracting-notice__spinner</code></td>
-                <td><code>aria-hidden="true"</code></td>
-                <td>The "Extracting" status pill text is the accessible announcement</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3 style="margin: 32px 0 12px; font-size: 16px">Keyboard model</h3>
-        <div class="hd-tokens">
-          <table>
-            <thead>
-              <tr>
-                <th>Context</th>
-                <th>Key</th>
-                <th>Behavior</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Composer textarea</td>
-                <td><kbd>Enter</kbd></td>
-                <td>Sends the message (<code>session.js:2367</code>)</td>
-              </tr>
-              <tr>
-                <td>Composer textarea</td>
-                <td><kbd>Shift</kbd>+<kbd>Enter</kbd></td>
-                <td>Newline</td>
-              </tr>
-              <tr>
-                <td>Composer textarea</td>
-                <td><kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Enter</kbd></td>
-                <td>Also sends (Claude.ai parity)</td>
-              </tr>
-              <tr>
-                <td>Choice chip (<code>multi: false</code>, <code>instant: true</code>)</td>
-                <td><kbd>Enter</kbd> / <kbd>Space</kbd></td>
-                <td>Clicks the chip &mdash; immediately submits the choice; no Submit button is rendered</td>
-              </tr>
-              <tr>
-                <td>Choice chip (<code>multi: true</code>)</td>
-                <td><kbd>Enter</kbd> / <kbd>Space</kbd></td>
-                <td>
-                  Toggles <code>aria-pressed</code> &amp; <code>.is-selected</code>; user tabs to Submit afterwards
-                </td>
-              </tr>
-              <tr>
-                <td>Choice chips between siblings</td>
-                <td><kbd>Tab</kbd></td>
-                <td>Linear tab order &mdash; no roving tabindex (each chip is its own tab stop)</td>
-              </tr>
-              <tr>
-                <td>Idea-card thumb buttons</td>
-                <td><kbd>Enter</kbd> / <kbd>Space</kbd></td>
-                <td>
-                  Toggles <code>aria-pressed</code>; sibling thumb's <code>aria-pressed</code> is cleared by the handler
-                </td>
-              </tr>
-              <tr>
-                <td><code>.assistant-notice</code> summary</td>
-                <td><kbd>Enter</kbd> / <kbd>Space</kbd></td>
-                <td>Native disclosure toggle; chevron rotates via CSS on <code>[open]</code></td>
-              </tr>
-              <tr>
-                <td>Drafts card</td>
-                <td><kbd>Enter</kbd> / <kbd>Space</kbd></td>
-                <td>Activates the card; navigates to / pins the Drafts right panel</td>
-              </tr>
-              <tr>
-                <td>Drafts card (focus-visible)</td>
-                <td><kbd>Tab</kbd> in</td>
-                <td>
-                  Border-color &rarr; orange (<code>--sys-color-accent-default-bg-default</code>), 150&nbsp;ms
-                  ease-standard
-                </td>
-              </tr>
-              <tr>
-                <td>Wizard / inline picker</td>
-                <td><kbd>&uarr;</kbd><kbd>&darr;</kbd> · <kbd>1</kbd>&ndash;<kbd>9</kbd> · <kbd>Enter</kbd></td>
-                <td>Documented in the sticky bar legend (<code>session.js:531</code>)</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="hd-note">
-          <strong>Focus order inside a turn.</strong> Reads left-to-right, top-to-bottom on the rendered card. AI
-          bubble: the only focusables are link / button children (e.g. "View idea", thumb buttons, source-intake "N
-          ideas" link). Choice turn: chips first (in array order), then Submit. Extraction turn:
-          <code>&lt;summary&gt;</code> first, then per-card thumbs &rarr; "View idea". Drafts card: whole card is one
-          focus stop.
-        </div>
-      </section>
-
       <!-- ════════════════════════════════════════════════════════════════
             11. EDGE CASES & CONTENT RULES
             ════════════════════════════════════════════════════════════ -->
-      <section class="hd-section" id="edge-cases">
-        <h2>11. Edge cases &amp; content rules</h2>
-        <p class="hd-lead">
-          What to do when content is too long, too short, missing, or the underlying data was removed. Most of these are
-          encoded in CSS; a few are renderer-side defensive paths in <code>session.js</code>.
-        </p>
-
-        <h3 style="margin: 24px 0 12px; font-size: 16px">Text overflow / truncation</h3>
-        <div class="hd-tokens">
-          <table>
-            <thead>
-              <tr>
-                <th>Element</th>
-                <th>Rule</th>
-                <th>Why</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>.chat-bubble-text</code> (AI &amp; user)</td>
-                <td>Wraps; no truncation</td>
-                <td>Message bodies are the primary content &mdash; never elide</td>
-              </tr>
-              <tr>
-                <td><code>.chat-turn--user</code></td>
-                <td><code>max-width: 560px</code></td>
-                <td>Bubble wraps; reading rhythm caps at ~80 chars/line</td>
-              </tr>
-              <tr>
-                <td><code>.chat-turn--extraction</code></td>
-                <td><code>max-width: 480px</code></td>
-                <td>Bounds the extraction card stack</td>
-              </tr>
-              <tr>
-                <td><code>.chat-turn--clip-extraction</code></td>
-                <td><code>max-width: 420px</code></td>
-                <td>Bounds the single clip card</td>
-              </tr>
-              <tr>
-                <td><code>.clip-extraction-card__title</code></td>
-                <td><code>overflow: hidden; text-overflow: ellipsis</code></td>
-                <td>
-                  Long filenames collapse to "Clips ready · 5 clips from very-long-fil&hellip;"; tooltip not provided
-                </td>
-              </tr>
-              <tr>
-                <td><code>.drafts-card__sub-text</code></td>
-                <td><code>white-space: nowrap; overflow: hidden; text-overflow: ellipsis</code></td>
-                <td>Network strip + ellipsised tail keeps the card single-line at any viewport</td>
-              </tr>
-              <tr>
-                <td><code>.drafts-card__main</code></td>
-                <td><code>min-width: 0</code> (flex)</td>
-                <td>Required for the ellipsis above to fire inside the flex row</td>
-              </tr>
-              <tr>
-                <td><code>.chat-bubble-source-intake__name</code></td>
-                <td><code>white-space: nowrap; overflow: hidden; text-overflow: ellipsis</code></td>
-                <td>
-                  Single-line truncation. Full filename preserved in <code>title</code> attribute so SR and hover
-                  tooltip recover it
-                </td>
-              </tr>
-              <tr>
-                <td><code>.extraction-turn__idea-card-title / -body</code></td>
-                <td>Wraps; no truncation</td>
-                <td>Idea text is the point of the card &mdash; full content always shown</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3 style="margin: 32px 0 12px; font-size: 16px">Missing data &amp; degraded states</h3>
-        <div class="hd-tokens">
-          <table>
-            <thead>
-              <tr>
-                <th>Condition</th>
-                <th>What renders</th>
-                <th>Source</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Source backing a clip-extraction card was removed</td>
-                <td><code>.clip-extraction-card--gone</code> &mdash; dimmed (opacity 0.65), grey icon, no CTA</td>
-                <td><code>renderClipExtractionTurn()</code> at <code>session.js:1486</code></td>
-              </tr>
-              <tr>
-                <td>Source intake ready with <code>ideaCount === 0</code></td>
-                <td>Sub-line is just <code>"Processed"</code> &mdash; no clickable "N ideas" link</td>
-                <td><code>renderSourceIntakeTurn()</code> at <code>session.js:884</code></td>
-              </tr>
-              <tr>
-                <td>Source intake while loading + no <code>size</code></td>
-                <td>Sub-line is <code>"Uploading&hellip;"</code></td>
-                <td><code>session.js:877</code></td>
-              </tr>
-              <tr>
-                <td>Source intake with no source &amp; no size</td>
-                <td>Sub-line is omitted entirely (just filename + spinner / check)</td>
-                <td><code>session.js:904</code> (conditional render)</td>
-              </tr>
-              <tr>
-                <td>Notice with no <code>message.text</code></td>
-                <td>Chevron icon is suppressed; pill is the entire content</td>
-                <td><code>renderSystemNotice()</code> at <code>session.js:832</code></td>
-              </tr>
-              <tr>
-                <td>Extraction with empty <code>ideas[]</code></td>
-                <td>Pill renders "Extracted 0 ideas" + empty detail block &mdash; nothing inside</td>
-                <td><code>renderExtractionTurn()</code> at <code>session.js:915</code> (no guard)</td>
-              </tr>
-              <tr>
-                <td>Draft turn with empty <code>drafts[]</code></td>
-                <td>"0 drafts ready" + "review, edit, and schedule" (no network strip)</td>
-                <td><code>renderDraftTurn()</code> at <code>session.js:1446</code></td>
-              </tr>
-              <tr>
-                <td>Pending marker, <code>status !== "loading"</code></td>
-                <td>Returns empty string &mdash; the turn dissolves once <code>finishPending()</code> fires</td>
-                <td><code>renderTurn()</code> at <code>session.js:763</code></td>
-              </tr>
-              <tr>
-                <td>AI / user message with <code>hidden: true</code></td>
-                <td>Skipped entirely (placeholder for pre-reply state)</td>
-                <td><code>renderTurn()</code> at <code>session.js:758</code></td>
-              </tr>
-              <tr>
-                <td>Choice turn with <code>status: "answered"</code></td>
-                <td>Chips become <code>&lt;span&gt;</code> (non-interactive); Submit footer is omitted</td>
-                <td><code>renderChoiceTurn()</code> at <code>session.js:1365</code></td>
-              </tr>
-              <tr>
-                <td>Choice turn with <code>instant: true</code></td>
-                <td>Submit footer is never rendered &mdash; chip click submits directly</td>
-                <td><code>session.js:1386</code></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3 style="margin: 32px 0 12px; font-size: 16px">Responsive behavior</h3>
-        <div class="hd-tokens">
-          <table>
-            <thead>
-              <tr>
-                <th>Viewport</th>
-                <th>Behavior</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Desktop (default)</td>
-                <td>
-                  Thread column is centred at <code>max-width: 740px</code> via
-                  <code>.session__assistant-thread &gt; *</code>; turn max-widths (560 / 480 / 420) apply on top.
-                </td>
-              </tr>
-              <tr>
-                <td>Narrow desktop / panel collapsed</td>
-                <td>
-                  All cards remain inside the thread column &mdash; the 480px / 420px caps keep cards single-line until
-                  the thread itself shrinks below those.
-                </td>
-              </tr>
-              <tr>
-                <td>Mobile (untested)</td>
-                <td>
-                  Prototype is desktop-only. The drafts-card row stays horizontal &mdash; on mobile this may need a
-                  vertical reflow at &lt; 480px. Not in scope today.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3 style="margin: 32px 0 12px; font-size: 16px">Internationalisation</h3>
-        <div class="hd-note">
-          <strong>French copy / long translations.</strong> The codebase mixes English UI and French in comments.
-          Strings ship from <code>src/screens/session.js</code> hard-coded. When a label runs ~30&ndash;40% longer
-          (German, Russian) three components need re-checking:
-          <ul style="margin: 8px 0 0 20px; padding: 0">
-            <li><code>.drafts-card__sub-text</code> &mdash; ellipsis already handles overflow.</li>
-            <li><code>.clip-extraction-card__title</code> &mdash; ellipsis handles it.</li>
-            <li>
-              <code>.chat-bubble-choice-chip</code> &mdash; chips wrap onto a second row (<code>flex-wrap</code>) but
-              labels themselves don't truncate. A 25-char label will widen the chip noticeably.
-            </li>
-          </ul>
-        </div>
-      </section>
-
       <!-- ════════════════════════════════════════════════════════════════
             12. TOKENS QUICK REFERENCE
             ════════════════════════════════════════════════════════════ -->
-      <section class="hd-section" id="tokens">
-        <h2>12. Token quick reference</h2>
-        <p class="hd-lead">
-          The handful of DS / app tokens you'll touch most when extending the thread. Full source in
-          <code>ds/desktop_variables.css</code> + <code>styles/tokens.css</code>.
-        </p>
-
-        <h3 style="margin: 24px 0 12px; font-size: 16px">Spacing scale</h3>
-        <div class="hd-tokens">
-          <table>
-            <thead>
-              <tr>
-                <th>Token</th>
-                <th>Value</th>
-                <th>Used for</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>--app-spacing-micro</code></td>
-                <td>2px</td>
-                <td>Avatar offset for baseline alignment</td>
-              </tr>
-              <tr>
-                <td><code>--ref-spacing-xxxs</code></td>
-                <td>4px</td>
-                <td>Tight intra-text gap (chip icon ↔ label)</td>
-              </tr>
-              <tr>
-                <td><code>--ref-spacing-xxs</code></td>
-                <td>8px</td>
-                <td>Default card title ↔ sub gap</td>
-              </tr>
-              <tr>
-                <td><code>--ref-spacing-xs</code></td>
-                <td>12px</td>
-                <td>Card row gap, choice-chip column gap</td>
-              </tr>
-              <tr>
-                <td><code>--ref-spacing-sm</code></td>
-                <td>16px</td>
-                <td>User-bubble horizontal padding, idea-card padding, chips footer margin</td>
-              </tr>
-              <tr>
-                <td><code>--ref-spacing-md</code></td>
-                <td>24px</td>
-                <td>Thread inter-turn gap, thread outer padding</td>
-              </tr>
-              <tr>
-                <td><code>--ref-spacing-lg</code></td>
-                <td>32px</td>
-                <td>Thread bottom padding (breathing room before composer)</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3 style="margin: 32px 0 12px; font-size: 16px">Typography</h3>
-        <div class="hd-tokens">
-          <table>
-            <thead>
-              <tr>
-                <th>Token</th>
-                <th>Value</th>
-                <th>Used for</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>--app-text-message-size</code></td>
-                <td>15px</td>
-                <td>AI body text (handoff Claude/ChatGPT rhythm)</td>
-              </tr>
-              <tr>
-                <td><code>--app-text-message-line</code></td>
-                <td>1.55</td>
-                <td>AI body line-height</td>
-              </tr>
-              <tr>
-                <td><code>--ref-font-size-sm</code></td>
-                <td>14px</td>
-                <td>User body, idea-card body, choice-chip label</td>
-              </tr>
-              <tr>
-                <td><code>--ref-font-line-height-sm</code></td>
-                <td>18px</td>
-                <td>Idea-card body line-height</td>
-              </tr>
-              <tr>
-                <td><code>--ref-font-size-xs</code></td>
-                <td>12px</td>
-                <td>Source-intake sub, analyzed-row, role label</td>
-              </tr>
-              <tr>
-                <td><code>--ref-font-line-height-xs</code></td>
-                <td>16px</td>
-                <td>Source-intake sub line-height</td>
-              </tr>
-              <tr>
-                <td><code>--ref-font-line-height-md</code></td>
-                <td>20px</td>
-                <td>User bubble body line-height</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3 style="margin: 32px 0 12px; font-size: 16px">Color (chat surfaces)</h3>
-        <div class="hd-tokens">
-          <table>
-            <thead>
-              <tr>
-                <th>Token</th>
-                <th>Sample</th>
-                <th>Used for</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>--ref-color-grey-150</code></td>
-                <td><span class="hd-swatch" style="background: var(--ref-color-grey-150)"></span></td>
-                <td>AI body text · idea-card title</td>
-              </tr>
-              <tr>
-                <td><code>--ref-color-grey-100</code></td>
-                <td><span class="hd-swatch" style="background: var(--ref-color-grey-100)"></span></td>
-                <td>Idea-card body · clip-card sub</td>
-              </tr>
-              <tr>
-                <td><code>--ref-color-grey-05</code></td>
-                <td><span class="hd-swatch" style="background: var(--ref-color-grey-05)"></span></td>
-                <td>Idea-card bg · notice detail bg · section header strip</td>
-              </tr>
-              <tr>
-                <td><code>--ref-color-grey-10</code></td>
-                <td><span class="hd-swatch" style="background: var(--ref-color-grey-10)"></span></td>
-                <td>Card borders, dividers</td>
-              </tr>
-              <tr>
-                <td><code>--ref-color-electric-blue-100</code></td>
-                <td><span class="hd-swatch" style="background: var(--ref-color-electric-blue-100)"></span></td>
-                <td>User bubble bg · role label · selected chip border</td>
-              </tr>
-              <tr>
-                <td><code>--ref-color-electric-blue-20</code></td>
-                <td><span class="hd-swatch" style="background: var(--ref-color-electric-blue-20)"></span></td>
-                <td>Source-intake bubble bg</td>
-              </tr>
-              <tr>
-                <td><code>--ref-color-electric-blue-150</code></td>
-                <td><span class="hd-swatch" style="background: var(--ref-color-electric-blue-150)"></span></td>
-                <td>Source-intake text</td>
-              </tr>
-              <tr>
-                <td><code>--ref-color-mermaid-gradient-background</code></td>
-                <td><span class="hd-swatch" style="background: linear-gradient(135deg, #a06dff, #ff6db4)"></span></td>
-                <td>Sparkle avatar fill · clip-card ready border · mermaid pill</td>
-              </tr>
-              <tr>
-                <td><code>--ref-color-green-100</code></td>
-                <td><span class="hd-swatch" style="background: var(--ref-color-green-100)"></span></td>
-                <td>Source-intake ready check icon</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3 style="margin: 32px 0 12px; font-size: 16px">Radius</h3>
-        <div class="hd-tokens">
-          <table>
-            <thead>
-              <tr>
-                <th>Token</th>
-                <th>Value</th>
-                <th>Used for</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>--app-radius-xl</code></td>
-                <td>12px</td>
-                <td>User + source-intake bubble (top-right 0)</td>
-              </tr>
-              <tr>
-                <td><code>--app-radius-card</code></td>
-                <td>12px</td>
-                <td>clip-extraction-card outer radius</td>
-              </tr>
-              <tr>
-                <td><code>--app-radius-pill</code></td>
-                <td>999px</td>
-                <td>Choice chips</td>
-              </tr>
-              <tr>
-                <td><code>--ref-border-radius-md</code></td>
-                <td>4px (DS)</td>
-                <td>chat-bubble-card, section borders</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
       <footer
         style="
           margin-top: 64px;
