@@ -751,19 +751,6 @@
   box-shadow: var(--app-shadow-subtle);
 }
 
-.clip-extraction-card--ready {
-  /* Mermaid gradient border — same AI gradient as the .mermaid button.
-     `border` is solid transparent + `background-image` paints the inner
-     fill + gradient frame via two layers (the inner one inset against
-     padding-box, the outer against border-box). */
-  border-color: transparent;
-  background-image:
-    linear-gradient(var(--ref-color-white), var(--ref-color-white)), var(--ref-color-mermaid-gradient-background);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-  box-shadow: var(--app-shadow-subtle);
-}
-
 .clip-extraction-card--gone {
   opacity: 0.65;
 }
@@ -817,10 +804,6 @@
   font-size: var(--ref-font-size-xs);
   line-height: var(--ref-font-line-height-xs);
   color: var(--ref-color-grey-100);
-}
-
-.clip-extraction-card__cta {
-  flex-shrink: 0;
 }
 
 /* --- Extraction turn (Figma 25:1053) ---------------------------------- */

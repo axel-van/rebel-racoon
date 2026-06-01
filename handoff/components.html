@@ -494,18 +494,23 @@
           <div class="hd-comp__body">
             <div class="hd-comp__preview">
               <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
-                <div class="clip-extraction-card clip-extraction-card--ready">
-                  <span class="clip-extraction-card__icon" aria-hidden="true">
-                    <i class="ap-icon-sparkles"></i>
+                <button type="button" class="ap-card drafts-card">
+                  <span class="drafts-card__icon" aria-hidden="true">
+                    <i class="ap-icon-sparkles-mermaid"></i>
                   </span>
-                  <span class="clip-extraction-card__main">
-                    <span class="clip-extraction-card__title">Clips ready · 5 clips from founder-keynote.mp4</span>
-                    <span class="clip-extraction-card__sub">Pick the ones you want and turn them into posts.</span>
+                  <span class="drafts-card__main">
+                    <span class="drafts-card__title-row">
+                      <span class="drafts-card__title">5 clips to review</span>
+                    </span>
+                    <span class="drafts-card__sub"
+                      >From <span class="drafts-card__sub-quote">founder-keynote.mp4</span></span
+                    >
                   </span>
-                  <button type="button" class="ap-button ghost grey clip-extraction-card__cta">
-                    <span>Open clips</span>
-                  </button>
-                </div>
+                  <span class="drafts-card__cta" aria-hidden="true">
+                    <span class="drafts-card__cta-label">Open clips</span>
+                    <i class="ap-icon-chevron-right"></i>
+                  </span>
+                </button>
               </div>
             </div>
           </div>
@@ -950,8 +955,9 @@
       <section class="hd-section" id="clip-extraction">
         <h2>7. Clip / Idea extraction card</h2>
         <p class="hd-lead">
-          Same chrome family used for clip extraction AND idea extraction from a source. Three states: pending (spinner)
-          → ready (mermaid gradient border + CTA) → gone (source was removed).
+          In-thread notice for clip / idea extraction from a source. Two transient states use
+          <code>.clip-extraction-card</code> — pending (spinner) and gone (source removed). The <strong>ready</strong>
+          state reuses the shared Drafts summary card (§6) so clips, ideas and drafts all land as the same result card.
         </p>
 
         <article class="hd-comp">
@@ -983,29 +989,33 @@
         <article class="hd-comp">
           <header class="hd-comp__head">
             <div>
-              <p class="hd-comp__name">
-                <code>.clip-extraction-card--ready</code>
-              </p>
+              <p class="hd-comp__name"><code>.drafts-card</code> — ready state</p>
               <p class="hd-comp__desc">
-                Done state — mermaid gradient border, sparkles tile, &ldquo;Open clips&rdquo; CTA on the right.
+                Done state reuses the shared result card (§6): full-card button, mermaid tile, chevron CTA — same as
+                drafts and ideas.
               </p>
             </div>
           </header>
           <div class="hd-comp__body">
             <div class="hd-comp__preview">
               <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
-                <div class="clip-extraction-card clip-extraction-card--ready">
-                  <span class="clip-extraction-card__icon" aria-hidden="true">
-                    <i class="ap-icon-sparkles"></i>
+                <button type="button" class="ap-card drafts-card">
+                  <span class="drafts-card__icon" aria-hidden="true">
+                    <i class="ap-icon-sparkles-mermaid"></i>
                   </span>
-                  <span class="clip-extraction-card__main">
-                    <span class="clip-extraction-card__title">Clips ready · 5 clips from founder-keynote.mp4</span>
-                    <span class="clip-extraction-card__sub">Pick the ones you want and turn them into posts.</span>
+                  <span class="drafts-card__main">
+                    <span class="drafts-card__title-row">
+                      <span class="drafts-card__title">5 clips to review</span>
+                    </span>
+                    <span class="drafts-card__sub"
+                      >From <span class="drafts-card__sub-quote">founder-keynote.mp4</span></span
+                    >
                   </span>
-                  <button type="button" class="ap-button ghost grey clip-extraction-card__cta">
-                    <span>Open clips</span>
-                  </button>
-                </div>
+                  <span class="drafts-card__cta" aria-hidden="true">
+                    <span class="drafts-card__cta-label">Open clips</span>
+                    <i class="ap-icon-chevron-right"></i>
+                  </span>
+                </button>
               </div>
             </div>
           </div>

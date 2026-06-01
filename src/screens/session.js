@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=82";
+import { renderTopbar } from "../components/topbar.js?v=83";
 import { socialAccounts, chatStarters } from "../mocks.js?v=36";
 import {
   getConnectedProfiles,
@@ -49,8 +49,8 @@ import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } fro
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
 import * as inlineQuestion from "../inline-question.js?v=33";
-import * as contextBuilder from "../context-builder.js?v=66";
-import * as playbookEditor from "../playbook-editor.js?v=27";
+import * as contextBuilder from "../context-builder.js?v=67";
+import * as playbookEditor from "../playbook-editor.js?v=28";
 import { renderPicker } from "./_analyse-common.js?v=39";
 import { renderSourceCard } from "../components/source-card.js?v=30";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -84,7 +84,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=130";
+} from "../components/right-panel.js?v=131";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
@@ -2191,17 +2191,27 @@ function renderIdeaExtractionTurn(message, sessionId) {
     `;
   }
 
+  // Ready card uses the shared .drafts-card chrome (full-card button +
+  // mermaid icon + chevron CTA) so "ideas ready", "clips ready" and
+  // "drafts to review" all read as one result-card family. Clicking opens
+  // the Ideas panel.
   return `
     <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
-      <div class="clip-extraction-card clip-extraction-card--ready">
-        <span class="clip-extraction-card__icon" aria-hidden="true">
-          <i class="ap-icon-bulb"></i>
+      <button type="button" class="ap-card drafts-card" data-ideas-card-open="${source.id}">
+        <span class="drafts-card__icon" aria-hidden="true">
+          <i class="ap-icon-sparkles-mermaid"></i>
         </span>
-        <span class="clip-extraction-card__main">
-          <span class="clip-extraction-card__title">Ideas ready from ${filename}</span>
-          <span class="clip-extraction-card__sub">Check the Ideas panel on the right.</span>
+        <span class="drafts-card__main">
+          <span class="drafts-card__title-row">
+            <span class="drafts-card__title">Ideas ready</span>
+          </span>
+          <span class="drafts-card__sub">From <span class="drafts-card__sub-quote">${filename}</span></span>
         </span>
-      </div>
+        <span class="drafts-card__cta" aria-hidden="true">
+          <span class="drafts-card__cta-label">View ideas</span>
+          <i class="ap-icon-chevron-right"></i>
+        </span>
+      </button>
     </div>
   `;
 }
@@ -2731,6 +2741,15 @@ function bindSession(root, session) {
       // than the modal; the modal is reserved for per-clip trim editing.
       const openClipsBtn = event.target.closest("[data-clip-card-open]");
       if (openClipsBtn) {
+        event.preventDefault();
+        openIdeasPanel();
+        return;
+      }
+
+      // "Ideas ready" result card → open the Ideas panel (same family as the
+      // clips / drafts result cards).
+      const openIdeasCard = event.target.closest("[data-ideas-card-open]");
+      if (openIdeasCard) {
         event.preventDefault();
         openIdeasPanel();
         return;
