@@ -966,8 +966,8 @@
 .rpanel-sources__row {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs);
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-card);
   box-shadow: var(--app-shadow-low);
@@ -977,7 +977,7 @@
 .rpanel-sources__card-head {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-xxs);
 }
 
 .rpanel-sources__row-icon {
@@ -985,12 +985,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: var(--ref-border-radius-xs);
   background: var(--ref-color-grey-05);
   color: var(--ref-color-grey-80);
-  font-size: var(--sys-icon-css-md);
+  font-size: var(--sys-icon-css-sm);
 }
 
 .rpanel-sources__row-name {
@@ -1021,9 +1021,9 @@
 .rpanel-sources__idea-link {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-xxs);
   width: 100%;
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
   background: var(--ref-color-grey-05);
   border: 0;
   border-radius: var(--ref-border-radius-xs);
