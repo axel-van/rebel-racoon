@@ -7,8 +7,30 @@
 import { navigate } from "../router.js?v=30";
 import { escapeHtml as esc } from "../utils.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=96";
-import { getContextById, updateContext } from "../contexts-store.js?v=29";
-import { mount, snapshotEditable } from "../playbook-view.js?v=2";
+import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=29";
+import { mount, snapshotEditable } from "../playbook-view.js?v=3";
+import { open as openRenameModal } from "../components/rename-modal.js?v=2";
+import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";
+
+// Hero action buttons — Start a chat (AI spotlight) · Edit name · Delete.
+const HERO_ACTIONS = `
+  <button type="button" class="ap-button primary orange" data-playbook-start>
+    <i class="ap-icon-sparkles"></i>
+    <span>Start a chat with this Playbook</span>
+  </button>
+  <button type="button" class="ap-button stroked grey" data-playbook-edit>
+    <i class="ap-icon-pen"></i>
+    <span>Edit name</span>
+  </button>
+  <button type="button" class="ap-button ghost red" data-playbook-delete>
+    <i class="ap-icon-trash"></i>
+    <span>Delete</span>
+  </button>
+`;
+
+function toast(msg) {
+  import("../components/toast.js?v=20").then(({ showToast }) => showToast(msg));
+}
 
 export function renderPlaybook(params, target) {
   const id = params.id;
@@ -19,7 +41,50 @@ export function renderPlaybook(params, target) {
     return () => {};
   }
 
-  return mount(target, {
+  // Hero actions are delegated on `target` (which mount re-renders into, so a
+  // listener on the element survives every internal re-render).
+  const onActionClick = (event) => {
+    if (event.target.closest("[data-playbook-start]")) {
+      // New chat pre-bound to this Playbook via ?contextId (session.js reads it).
+      navigate(`/session/new-${Date.now().toString(36)}?contextId=${id}`);
+      return;
+    }
+    if (event.target.closest("[data-playbook-edit]")) {
+      const ctx = getContextById(id);
+      openRenameModal({
+        title: "Rename Playbook",
+        initialName: ctx?.name || "",
+        placeholder: "Playbook name",
+        confirmLabel: "Save name",
+        onSubmit: (name) => updateContext(id, { name, updatedAt: "just now" }),
+      });
+      return;
+    }
+    if (event.target.closest("[data-playbook-delete]")) {
+      const ctx = getContextById(id);
+      // Guard: every chat needs a Playbook, so never delete the last one.
+      if (getContexts().length <= 1) {
+        toast("Can't delete the last Playbook — every chat needs one.");
+        return;
+      }
+      openConfirmModal({
+        title: "Delete Playbook?",
+        body: `“${esc(ctx?.name || "This Playbook")}” will be removed. Chats using it will need a new Playbook. This can’t be undone.`,
+        confirmLabel: "Delete Playbook",
+        cancelLabel: "Keep",
+        danger: true,
+        onConfirm: () => {
+          deleteContext(id);
+          toast("Playbook deleted");
+          navigate("/contexts");
+        },
+      });
+      return;
+    }
+  };
+  target.addEventListener("click", onActionClick);
+
+  const unmount = mount(target, {
     mode: "library",
     getData: () => getContextById(id),
     isReady: () => true,
@@ -34,8 +99,14 @@ export function renderPlaybook(params, target) {
       eyebrow: "Playbook",
       title: (d) => d.name || "Playbook",
       lead: (d) => `Everything below is what Archie uses to write for <strong>${esc(d.name || "your brand")}</strong>.`,
+      actions: HERO_ACTIONS,
     },
     editHint: "Hover any card and hit the pencil to edit it — your changes save as you go.",
     // No footer — the "Back to Playbooks" control lives in the topbar.
   });
+
+  return () => {
+    target.removeEventListener("click", onActionClick);
+    unmount?.();
+  };
 }

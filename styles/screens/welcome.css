@@ -233,6 +233,14 @@
   font-weight: var(--ref-font-weight-bold);
 }
 
+/* Playbook detail hero actions — Start a chat · Edit name · Delete. */
+.recap__hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xs);
+  margin-top: var(--ref-spacing-md);
+}
+
 /* ── Brand overview ───────────────────────────────────────────────────── */
 .recap__overview {
   display: flex;

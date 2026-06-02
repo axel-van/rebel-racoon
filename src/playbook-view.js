@@ -301,6 +301,11 @@ function renderHero(data) {
           : ""
       }
       ${h.lead ? `<p class="recap__lead">${typeof h.lead === "function" ? h.lead(data) : h.lead}</p>` : ""}
+      ${
+        h.actions
+          ? `<div class="recap__hero-actions">${typeof h.actions === "function" ? h.actions(data) : h.actions}</div>`
+          : ""
+      }
     </header>
   `;
 }
