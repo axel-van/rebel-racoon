@@ -753,7 +753,9 @@
   box-shadow: var(--app-shadow-low);
 }
 
-.recap__footer .ap-button {
+/* Onboarding recap CTA gets the larger fixed treatment. The library
+   (playbook detail) footer keeps default DS button sizing — hug content. */
+.welcome-screen:not(.welcome-screen--library) .recap__footer .ap-button {
   height: 44px;
   padding: 0 var(--ref-spacing-lg);
   gap: var(--ref-spacing-xxs);
