@@ -727,83 +727,17 @@
   flex-shrink: 0;
 }
 
-/* --- Clip-extraction turn (composer "Add video" beat) ----------------- */
-/* Pending state: muted card + ring spinner. Ready state: orange-accented
-   card with an "Open clips" CTA. The same turn flips state from pending
-   to ready when sources-stream notifies (see renderClipExtractionTurn in
-   session.js — reads live source state at render time). */
+/* --- Clip / idea extraction turn (composer "Add video" beat) ---------- */
+/* The card itself is the shared .drafts-card result card (see chat.css) in
+   its pending / ready / unavailable states — this turn only owns the
+   wrapper width. The same turn flips state when sources-stream notifies
+   (renderClipExtractionTurn / renderIdeaExtractionTurn read live source
+   state at render time). */
 
 .chat-turn--clip-extraction {
   align-items: flex-start;
   max-width: 420px;
   width: 100%;
-}
-
-.clip-extraction-card {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  width: 100%;
-  padding: var(--ref-spacing-sm);
-  background: var(--ref-color-white);
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--app-radius-card);
-  box-shadow: var(--app-shadow-subtle);
-}
-
-.clip-extraction-card--gone {
-  opacity: 0.65;
-}
-
-.clip-extraction-card__spinner {
-  width: 18px;
-  height: 18px;
-  border-radius: var(--app-radius-circle);
-  border: 2px solid var(--ref-color-grey-10);
-  border-top-color: var(--ref-color-orange-100);
-  animation: app-spin 0.9s linear infinite;
-  flex-shrink: 0;
-}
-
-.clip-extraction-card__icon {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--app-radius-circle);
-  background: var(--ref-color-mermaid-gradient-background);
-  color: var(--ref-color-white);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-.clip-extraction-card--gone .clip-extraction-card__icon {
-  background: var(--ref-color-grey-05);
-  color: var(--ref-color-grey-100);
-}
-
-.clip-extraction-card__main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-.clip-extraction-card__title {
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.clip-extraction-card__sub {
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
-  color: var(--ref-color-grey-100);
 }
 
 /* --- Extraction turn (Figma 25:1053) ---------------------------------- */

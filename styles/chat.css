@@ -433,6 +433,39 @@ span.chat-bubble-choice-chip {
   background: var(--ref-color-electric-blue-10);
 }
 
+/* Non-interactive result-card states (folded in from the old
+   .clip-extraction-card family). Pending = shared dot-grid loader in the
+   tile; unavailable = muted file-icon tile. Neither is a <button>, so
+   neutralise the interactive hover. */
+.drafts-card--pending,
+.drafts-card--unavailable {
+  cursor: default;
+}
+
+.drafts-card--pending:hover,
+.drafts-card--unavailable:hover {
+  border-color: var(--ref-color-grey-10);
+}
+
+.drafts-card--unavailable {
+  opacity: 0.65;
+}
+
+/* Transparent tile so the shared dot-grid loader (.drafts-card__spinner,
+   styled in archie-loader.css) paints directly on the card surface. */
+.drafts-card__icon--spinner {
+  background: transparent;
+}
+
+.drafts-card__icon--muted {
+  background: var(--ref-color-grey-05);
+}
+
+.drafts-card__icon--muted > i {
+  background: none;
+  color: var(--ref-color-grey-100);
+}
+
 /* Icon tile — soft mermaid background; the sparkles icon is mask-based,
    so painting its OWN background with the mermaid gradient renders the
    glyph itself in the purple→pink AI accent. */

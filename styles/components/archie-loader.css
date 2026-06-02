@@ -29,7 +29,7 @@
 .ap-loader.size-48,
 .chat-bubble-source-intake__spinner,
 .extracting-notice__spinner,
-.clip-extraction-card__spinner,
+.drafts-card__spinner,
 .session__composer-thinking-spinner,
 .source-card__spinner,
 .bug-report-modal__submit-spinner,
@@ -60,7 +60,7 @@
 .ap-loader::before,
 .chat-bubble-source-intake__spinner::before,
 .extracting-notice__spinner::before,
-.clip-extraction-card__spinner::before,
+.drafts-card__spinner::before,
 .session__composer-thinking-spinner::before,
 .source-card__spinner::before,
 .bug-report-modal__submit-spinner::before,
@@ -111,8 +111,8 @@
 .ap-loader.size-16 {
   --archie-loader-size: 18px;
 }
-.clip-extraction-card__spinner {
-  --archie-loader-size: 20px;
+.drafts-card__spinner {
+  --archie-loader-size: 18px;
 }
 .ap-loader.size-24 {
   --archie-loader-size: 24px;

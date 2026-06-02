@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=84";
+import { renderTopbar } from "../components/topbar.js?v=86";
 import { socialAccounts, chatStarters } from "../mocks.js?v=36";
 import {
   getConnectedProfiles,
@@ -47,8 +47,8 @@ import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } fro
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
 import * as inlineQuestion from "../inline-question.js?v=33";
-import * as contextBuilder from "../context-builder.js?v=68";
-import * as playbookEditor from "../playbook-editor.js?v=29";
+import * as contextBuilder from "../context-builder.js?v=70";
+import * as playbookEditor from "../playbook-editor.js?v=31";
 import { renderPicker } from "./_analyse-common.js?v=39";
 import { renderSourceCard } from "../components/source-card.js?v=30";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -82,7 +82,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=132";
+} from "../components/right-panel.js?v=134";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
@@ -2032,57 +2032,102 @@ function networkLabel(network) {
   return network.charAt(0).toUpperCase() + network.slice(1);
 }
 
-// In-thread Drafts summary card — mermaid-tinted to mark this as an AI
-// result, not a user-written artifact.
+// ─── Shared in-thread result card ──────────────────────────────────────────
 //
-//   [ ✦ tile ]  N drafts ready  [LI][X]                  Review ›
+// One renderer for every "result of a long AI job" card in the thread: the
+// drafts batch, the clips-ready card, the ideas-ready card, plus the pending
+// ("…cutting your clips") and unavailable ("clips no longer available")
+// states. Composes .ap-card + .drafts-card so all of them read as one family
+// (the user's brief: "globalement la même chose: le résultat d'un long
+// travail").
+//
+//   state="ready"        → full-width <button>, mermaid tile + chevron CTA
+//   state="pending"      → non-interactive, ring spinner in the tile, no CTA
+//   state="unavailable"  → non-interactive, muted file-icon tile, no CTA
+//
+// opts:
+//   state, title, sub (HTML), extraHtml (inserted between title + sub),
+//   icon (glyph class for ready/unavailable tiles; ready defaults to the
+//   mermaid sparkles), cta { label }, dataAttr (root <button> data-* hook),
+//   active (drafts is-active anchor), busyLabel (pending spinner a11y label).
+function renderResultCard({
+  state = "ready",
+  title = "",
+  sub = "",
+  extraHtml = "",
+  icon = "ap-icon-sparkles-mermaid",
+  cta = null,
+  dataAttr = "",
+  active = false,
+  busyLabel = "Working",
+} = {}) {
+  const tile =
+    state === "pending"
+      ? `<span class="drafts-card__icon drafts-card__icon--spinner">
+           <span class="drafts-card__spinner" role="status" aria-label="${escapeHtmlAttr(busyLabel)}"></span>
+         </span>`
+      : `<span class="drafts-card__icon${state === "unavailable" ? " drafts-card__icon--muted" : ""}" aria-hidden="true">
+           <i class="${icon}"></i>
+         </span>`;
+  const ctaHtml =
+    state === "ready" && cta
+      ? `<span class="drafts-card__cta" aria-hidden="true">
+           <span class="drafts-card__cta-label">${escapeHtml(cta.label)}</span>
+           <i class="ap-icon-chevron-right"></i>
+         </span>`
+      : "";
+  const body = `
+    ${tile}
+    <span class="drafts-card__main">
+      <span class="drafts-card__title-row">
+        <span class="drafts-card__title">${escapeHtml(title)}</span>
+      </span>
+      ${extraHtml}
+      ${sub ? `<span class="drafts-card__sub">${sub}</span>` : ""}
+    </span>
+    ${ctaHtml}
+  `;
+  if (state === "ready") {
+    return `<button type="button" class="ap-card drafts-card${active ? " is-active" : ""}" ${dataAttr}>${body}</button>`;
+  }
+  return `<div class="ap-card drafts-card drafts-card--${state}">${body}</div>`;
+}
+
+// In-thread Drafts summary card — the "ready" result card with a profiles
+// strip. Click anywhere → opens the right-panel Drafts surface pinned to this
+// batch (setActiveBatchRef path).
+//
+//   [ ✦ tile ]  N drafts to review                        Review ›
+//               [LI][X]
 //               From "The lead idea title"
-//
-// Click anywhere on the card → opens the right-panel Drafts surface
-// pinned to this batch (setActiveBatchRef path). The trailing "Review"
-// tag carries the chevron affordance so the click target reads as
-// intentional rather than passive.
 function renderDraftTurn(message) {
   const drafts = message.drafts || [];
   const count = message.count ?? drafts.length;
   const networks = [...new Set(drafts.map((d) => d.network).filter(Boolean))];
-  // Resolve each network to the connected profile so the card names the
-  // account the drafts target. `network === "twitter"` maps to the "x"
-  // social-accounts entry (posts-store rewrites x → twitter, we undo here).
-  // Shared profile tag (avatar + network badge + name) — same UI everywhere
-  // a profile is surfaced.
+  // Resolve each network to the connected profile via the shared profile tag
+  // (avatar + network badge + name). `twitter` maps to the "x" account.
   const profileChips = networks.map((n) => renderProfileTag(profileForNetwork(n), { network: n })).join("");
   // Subtitle: prefer the lead idea title (anchors the card to the
-  // conversation context). Falls back to the action hint when the
-  // payload didn't carry one.
+  // conversation context); fall back to the action hint otherwise.
   const subText = message.ideaTitle
-    ? `From <span class="drafts-card__sub-quote">&ldquo;${message.ideaTitle}&rdquo;</span>`
+    ? `From <span class="drafts-card__sub-quote">&ldquo;${escapeHtml(message.ideaTitle)}&rdquo;</span>`
     : "Review, edit, and schedule";
-
   // Active when the right panel is open in Drafts mode and pinned to THIS
-  // message — gives the user a visual anchor between the chat thread and
-  // the editable batch surface.
+  // message — a visual anchor between the thread and the editable batch.
   const activeRef = getRightPanelMode() === "drafts" ? getActiveDraftsBatchRef() : null;
-  const isActive = activeRef && activeRef.messageId === message.id;
+  const isActive = !!(activeRef && activeRef.messageId === message.id);
 
   return `
     <div class="chat-turn chat-turn--ai chat-turn--extraction">
-      <button type="button" class="ap-card drafts-card ${isActive ? "is-active" : ""}" data-drafts-card-message="${message.id || ""}">
-        <span class="drafts-card__icon" aria-hidden="true">
-          <i class="ap-icon-sparkles-mermaid"></i>
-        </span>
-        <span class="drafts-card__main">
-          <span class="drafts-card__title-row">
-            <span class="drafts-card__title">${count} draft${count === 1 ? "" : "s"} to review</span>
-          </span>
-          ${networks.length ? `<span class="drafts-card__profiles">${profileChips}</span>` : ""}
-          <span class="drafts-card__sub">${subText}</span>
-        </span>
-        <span class="drafts-card__cta" aria-hidden="true">
-          <span class="drafts-card__cta-label">Review</span>
-          <i class="ap-icon-chevron-right"></i>
-        </span>
-      </button>
+      ${renderResultCard({
+        state: "ready",
+        title: `${count} draft${count === 1 ? "" : "s"} to review`,
+        extraHtml: networks.length ? `<span class="drafts-card__profiles">${profileChips}</span>` : "",
+        sub: subText,
+        cta: { label: "Review" },
+        dataAttr: `data-drafts-card-message="${message.id || ""}"`,
+        active: isActive,
+      })}
     </div>
   `;
 }
@@ -2096,19 +2141,16 @@ function renderClipExtractionTurn(message, sessionId) {
   const filename = escapeHtml(source?.filename || message.filename || "your video");
 
   // Source was removed (e.g. user deleted it from /sources) — degrade to a
-  // muted notice rather than leave a broken CTA.
+  // muted "unavailable" card rather than leave a broken CTA.
   if (!source) {
     return `
       <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
-        <div class="clip-extraction-card clip-extraction-card--gone">
-          <span class="clip-extraction-card__icon" aria-hidden="true">
-            <i class="ap-icon-file--video"></i>
-          </span>
-          <span class="clip-extraction-card__main">
-            <span class="clip-extraction-card__title">Clips no longer available</span>
-            <span class="clip-extraction-card__sub">${filename} was removed.</span>
-          </span>
-        </div>
+        ${renderResultCard({
+          state: "unavailable",
+          icon: "ap-icon-file--video",
+          title: "Clips no longer available",
+          sub: `${filename} was removed.`,
+        })}
       </div>
     `;
   }
@@ -2119,45 +2161,33 @@ function renderClipExtractionTurn(message, sessionId) {
   if (!isReady) {
     return `
       <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
-        <div class="clip-extraction-card clip-extraction-card--pending">
-          <span class="clip-extraction-card__spinner" role="status" aria-label="Extracting clips"></span>
-          <span class="clip-extraction-card__main">
-            <span class="clip-extraction-card__title">Cutting your clips…</span>
-            <span class="clip-extraction-card__sub">About 45s. You can keep chatting.</span>
-          </span>
-        </div>
+        ${renderResultCard({
+          state: "pending",
+          busyLabel: "Extracting clips",
+          title: "Cutting your clips…",
+          sub: "About 45s. You can keep chatting.",
+        })}
       </div>
     `;
   }
 
-  // Ready card reuses the .drafts-card chrome (mermaid icon tile, quiet
-  // grey surface, electric-blue chevron CTA, full-card button) so the
-  // "clips ready" and "drafts to review" results read as one family.
   const titleLabel = clipsCount === 1 ? "1 clip to review" : `${clipsCount} clips to review`;
   return `
     <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
-      <button type="button" class="ap-card drafts-card" data-clip-card-open="${source.id}">
-        <span class="drafts-card__icon" aria-hidden="true">
-          <i class="ap-icon-sparkles-mermaid"></i>
-        </span>
-        <span class="drafts-card__main">
-          <span class="drafts-card__title-row">
-            <span class="drafts-card__title">${titleLabel}</span>
-          </span>
-          <span class="drafts-card__sub">From <span class="drafts-card__sub-quote">${filename}</span></span>
-        </span>
-        <span class="drafts-card__cta" aria-hidden="true">
-          <span class="drafts-card__cta-label">Open clips</span>
-          <i class="ap-icon-chevron-right"></i>
-        </span>
-      </button>
+      ${renderResultCard({
+        state: "ready",
+        title: titleLabel,
+        sub: `From <span class="drafts-card__sub-quote">${filename}</span>`,
+        cta: { label: "Open clips" },
+        dataAttr: `data-clip-card-open="${source.id}"`,
+      })}
     </div>
   `;
 }
 
 // Pending → ready idea-extraction notice for the "Extract themes" branch.
-// Reuses the .clip-extraction-card chrome so the visual language stays
-// consistent across both Flow A and Flow B non-blocking turns.
+// Uses the shared renderResultCard so "ideas ready", "clips ready" and
+// "drafts to review" all read as one result-card family.
 function renderIdeaExtractionTurn(message, sessionId) {
   const source = getStreamSources(sessionId).find((s) => s.id === message.sourceId);
   const filename = escapeHtml(source?.filename || message.filename || "your video");
@@ -2165,38 +2195,40 @@ function renderIdeaExtractionTurn(message, sessionId) {
   if (message.status === "loading") {
     return `
       <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
-        <div class="clip-extraction-card clip-extraction-card--pending">
-          <span class="clip-extraction-card__spinner" role="status" aria-label="Reading video for ideas"></span>
-          <span class="clip-extraction-card__main">
-            <span class="clip-extraction-card__title">Reading the video for ideas…</span>
-            <span class="clip-extraction-card__sub">About 15s. You can keep chatting.</span>
-          </span>
-        </div>
+        ${renderResultCard({
+          state: "pending",
+          busyLabel: "Reading video for ideas",
+          title: "Reading the video for ideas…",
+          sub: "About 15s. You can keep chatting.",
+        })}
       </div>
     `;
   }
 
-  // Ready card uses the shared .drafts-card chrome (full-card button +
-  // mermaid icon + chevron CTA) so "ideas ready", "clips ready" and
-  // "drafts to review" all read as one result-card family. Clicking opens
-  // the Ideas panel.
+  // Source removed before the user opened the ready card — degrade rather
+  // than crash on source.id.
+  if (!source) {
+    return `
+      <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
+        ${renderResultCard({
+          state: "unavailable",
+          icon: "ap-icon-file--video",
+          title: "Ideas no longer available",
+          sub: `${filename} was removed.`,
+        })}
+      </div>
+    `;
+  }
+
   return `
     <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
-      <button type="button" class="ap-card drafts-card" data-ideas-card-open="${source.id}">
-        <span class="drafts-card__icon" aria-hidden="true">
-          <i class="ap-icon-sparkles-mermaid"></i>
-        </span>
-        <span class="drafts-card__main">
-          <span class="drafts-card__title-row">
-            <span class="drafts-card__title">Ideas ready</span>
-          </span>
-          <span class="drafts-card__sub">From <span class="drafts-card__sub-quote">${filename}</span></span>
-        </span>
-        <span class="drafts-card__cta" aria-hidden="true">
-          <span class="drafts-card__cta-label">View ideas</span>
-          <i class="ap-icon-chevron-right"></i>
-        </span>
-      </button>
+      ${renderResultCard({
+        state: "ready",
+        title: "Ideas ready",
+        sub: `From <span class="drafts-card__sub-quote">${filename}</span>`,
+        cta: { label: "View ideas" },
+        dataAttr: `data-ideas-card-open="${source.id}"`,
+      })}
     </div>
   `;
 }
