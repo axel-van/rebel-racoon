@@ -931,17 +931,24 @@
 
 .rpanel-sources__head {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
   gap: var(--ref-spacing-sm);
   padding-bottom: var(--ref-spacing-xs);
   border-bottom: 1px solid var(--ref-color-grey-10);
 }
 
+/* Text block fills the row so the Attach button + close group on the right,
+   vertically centred against the title. */
 .rpanel-sources__head-text {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--app-spacing-micro);
+}
+
+.rpanel-sources__head .ap-button {
+  flex-shrink: 0;
 }
 
 .rpanel-sources__count {
