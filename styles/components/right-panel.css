@@ -960,15 +960,24 @@
   gap: var(--ref-spacing-sm);
 }
 
+/* Source card — vertical layout mirroring the idea / clip card grammar:
+   a head row (icon + filename + detach) over a list of idea links over a
+   footer actions row. Same border / radius / shadow as the other cards. */
 .rpanel-sources__row {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-card);
   box-shadow: var(--app-shadow-low);
   background: var(--ref-color-white);
+}
+
+.rpanel-sources__card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
 }
 
 .rpanel-sources__row-icon {
@@ -984,15 +993,9 @@
   font-size: var(--sys-icon-css-md);
 }
 
-.rpanel-sources__row-body {
+.rpanel-sources__row-name {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-spacing-micro);
-}
-
-.rpanel-sources__row-name {
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-100);
@@ -1001,36 +1004,75 @@
   white-space: nowrap;
 }
 
-.rpanel-sources__row-meta {
-  font-size: var(--ref-font-size-xs);
+.rpanel-sources__row-status {
+  flex-shrink: 0;
+}
+
+/* Ideas produced by this source — a quiet list of links into the Ideas tab. */
+.rpanel-sources__ideas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-spacing-micro);
+}
+
+.rpanel-sources__idea-link {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  flex-wrap: wrap;
-}
-
-/* "N ideas" clickable badge inside the meta line — quiet link treatment
-   that pops on hover to signal it's interactive. Underlines on hover
-   per DS link convention. */
-.rpanel-sources__row-ideas-btn {
-  display: inline-flex;
-  align-items: center;
-  padding: 0;
-  background: 0;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  background: var(--ref-color-grey-05);
   border: 0;
+  border-radius: var(--ref-border-radius-xs);
   font: inherit;
-  color: var(--ref-color-electric-blue-100);
+  text-align: left;
   cursor: pointer;
+  color: var(--ref-color-grey-100);
+  transition:
+    background-color var(--ref-animation-short) var(--app-ease-standard),
+    color var(--ref-animation-short) var(--app-ease-standard);
 }
 
-.rpanel-sources__row-ideas-btn:hover,
-.rpanel-sources__row-ideas-btn:focus-visible {
-  text-decoration: underline;
+.rpanel-sources__idea-link:hover,
+.rpanel-sources__idea-link:focus-visible {
+  background: var(--ref-color-electric-blue-05);
+  color: var(--ref-color-electric-blue-150);
   outline: none;
 }
 
-.rpanel-sources__row-status {
+.rpanel-sources__idea-icon {
   flex-shrink: 0;
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-electric-blue-100);
+}
+
+.rpanel-sources__idea-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--ref-font-size-sm);
+}
+
+.rpanel-sources__idea-chevron {
+  flex-shrink: 0;
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-grey-60);
+}
+
+.rpanel-sources__idea-link:hover .rpanel-sources__idea-chevron,
+.rpanel-sources__idea-link:focus-visible .rpanel-sources__idea-chevron {
+  color: var(--ref-color-electric-blue-100);
+}
+
+/* Footer actions row — mirrors the idea / clip card footer (right-aligned). */
+.rpanel-sources__card-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .rpanel-sources__row-detach {

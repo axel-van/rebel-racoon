@@ -18,7 +18,7 @@ import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=12";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=62";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=63";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -528,33 +528,24 @@ export function init() {
       removeSources([sourcesDetachBtn.dataset.rpanelSourcesDetach], sid);
       return;
     }
-    // "N ideas" button on a source row → switch the panel to Outputs
-    // (Ideas tab) and pulse the cards that came from this source so the
-    // user spots them.
-    const sourceIdeasBtn = event.target.closest("[data-rpanel-sources-show-ideas]");
-    if (sourceIdeasBtn) {
-      const sourceId = sourceIdeasBtn.dataset.rpanelSourcesShowIdeas;
+    // Idea link on a source card → switch the panel to Outputs (Ideas tab)
+    // and pulse + scroll to that specific idea card so the user lands on it.
+    const sourceIdeaLink = event.target.closest("[data-rpanel-source-idea]");
+    if (sourceIdeaLink) {
+      const ideaId = sourceIdeaLink.dataset.rpanelSourceIdea;
       outputsView = "ideas";
       state = { ...state, mode: "ideas" };
       renderPanel();
-      // Wait for the panel re-render, then pulse the source's idea cards.
+      // Wait for the panel re-render, then pulse the target idea card.
       requestAnimationFrame(() => {
         const panel = document.querySelector(".app-right-panel");
         if (!panel) return;
-        const cards = Array.from(panel.querySelectorAll("[data-idea-id]")).filter((card) => {
-          // idea-card stores sourceIds via the sources panel below the
-          // title; we don't have a data attribute for them, so we re-
-          // derive from the IDEAS seed by id.
-          const id = card.getAttribute("data-idea-id");
-          const idea = IDEAS.find((i) => i.id === id);
-          return idea && Array.isArray(idea.sourceIds) && idea.sourceIds.includes(sourceId);
-        });
-        cards.forEach((c) => {
-          c.classList.remove("is-focused");
-          void c.offsetWidth;
-          c.classList.add("is-focused");
-        });
-        if (cards[0]) cards[0].scrollIntoView({ behavior: "smooth", block: "center" });
+        const card = panel.querySelector(`[data-idea-id="${ideaId}"]`);
+        if (!card) return;
+        card.classList.remove("is-focused");
+        void card.offsetWidth;
+        card.classList.add("is-focused");
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
       });
       notify();
       return;
@@ -668,7 +659,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName } = entry;
-      import("../screens/session.js?v=178").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=179").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, clip, sourceName);
       });
       return;
@@ -705,7 +696,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=178").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=179").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -1770,13 +1761,11 @@ const SOURCE_KIND_ICON = {
 
 function renderSourceRow(src) {
   const icon = SOURCE_KIND_ICON[src.kind] || "ap-icon-file";
-  const hasIdeas = src.ideaCount > 0;
-  const ideaLabel = hasIdeas ? `${src.ideaCount} idea${src.ideaCount === 1 ? "" : "s"}` : "";
   const isProcessing = src.status !== "Processed";
   // Only surface a status pill while the source is in-flight. Once
-  // Processed, the row stays uncluttered — the filename + meta carry it.
-  // Mermaid-tinted pill mirrors source-card's processing chip so the
-  // "AI is working" cue stays consistent across surfaces.
+  // Processed, the card stays uncluttered. Mermaid-tinted pill mirrors
+  // source-card's processing chip so the "AI is working" cue stays
+  // consistent across surfaces.
   const stageLabel = isProcessing ? src.stage || "Processing" : "";
   const statusEl = isProcessing
     ? `<span class="source-card__processing-pill rpanel-sources__row-status" role="status">
@@ -1784,16 +1773,30 @@ function renderSourceRow(src) {
          <span class="source-card__processing-pill-label">${escapeText(stageLabel)}…</span>
        </span>`
     : "";
-  // Meta line: "addedAt · <clickable N ideas>". The ideas count is a
-  // button that switches the panel to Outputs (Ideas tab) so the user
-  // can review what the source produced. addedAt stays as static text.
-  const ideasButton = hasIdeas
-    ? `<button type="button" class="rpanel-sources__row-ideas-btn" data-rpanel-sources-show-ideas="${src.id}">${ideaLabel}</button>`
-    : "";
-  const metaParts = [];
-  if (src.addedAt) metaParts.push(`<span>${escapeText(src.addedAt)}</span>`);
-  if (ideasButton) metaParts.push(ideasButton);
-  const meta = metaParts.length ? metaParts.join(' <span aria-hidden="true">·</span> ') : "";
+
+  // Ideas this source produced — each title is a link into the Outputs ›
+  // Ideas tab (focuses + pulses that card). Resolved from the same IDEAS
+  // list the Ideas tab renders, so every link has a live target. Mirrors
+  // the idea/clip card grammar (card content → footer actions).
+  const sourceIdeas = IDEAS.filter((i) => Array.isArray(i.sourceIds) && i.sourceIds.includes(src.id));
+  const ideasList =
+    !isProcessing && sourceIdeas.length
+      ? `<ul class="rpanel-sources__ideas">
+          ${sourceIdeas
+            .map(
+              (i) => `
+              <li>
+                <button type="button" class="rpanel-sources__idea-link" data-rpanel-source-idea="${escapeAttr(i.id)}" title="${escapeAttr(i.title)}">
+                  <i class="ap-icon-sparkles rpanel-sources__idea-icon" aria-hidden="true"></i>
+                  <span class="rpanel-sources__idea-title">${escapeText(i.title)}</span>
+                  <i class="ap-icon-chevron-right rpanel-sources__idea-chevron" aria-hidden="true"></i>
+                </button>
+              </li>`,
+            )
+            .join("")}
+        </ul>`
+      : "";
+
   const mentionBtn = !isProcessing
     ? `<button
         type="button"
@@ -1806,24 +1809,25 @@ function renderSourceRow(src) {
         <span>Mention</span>
       </button>`
     : "";
+
   return `
     <div class="rpanel-sources__row" data-source-id="${src.id}">
-      <span class="rpanel-sources__row-icon" aria-hidden="true"><i class="${icon}"></i></span>
-      <div class="rpanel-sources__row-body">
-        <div class="rpanel-sources__row-name">${escapeText(src.filename)}</div>
-        ${meta ? `<div class="rpanel-sources__row-meta muted">${meta}</div>` : ""}
+      <div class="rpanel-sources__card-head">
+        <span class="rpanel-sources__row-icon" aria-hidden="true"><i class="${icon}"></i></span>
+        <div class="rpanel-sources__row-name" title="${escapeAttr(src.filename)}">${escapeText(src.filename)}</div>
+        ${statusEl}
+        <button
+          type="button"
+          class="ap-icon-button transparent rpanel-sources__row-detach"
+          data-rpanel-sources-detach="${src.id}"
+          aria-label="Detach ${escapeAttr(src.filename)}"
+          title="Detach"
+        >
+          <i class="ap-icon-close"></i>
+        </button>
       </div>
-      ${statusEl}
-      ${mentionBtn}
-      <button
-        type="button"
-        class="ap-icon-button transparent rpanel-sources__row-detach"
-        data-rpanel-sources-detach="${src.id}"
-        aria-label="Detach ${escapeAttr(src.filename)}"
-        title="Detach"
-      >
-        <i class="ap-icon-close"></i>
-      </button>
+      ${ideasList}
+      ${mentionBtn ? `<footer class="rpanel-sources__card-actions">${mentionBtn}</footer>` : ""}
     </div>
   `;
 }
@@ -2119,7 +2123,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=178").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=179").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
