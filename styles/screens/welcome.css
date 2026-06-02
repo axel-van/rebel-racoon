@@ -233,14 +233,6 @@
   font-weight: var(--ref-font-weight-bold);
 }
 
-/* Playbook detail hero actions — Start a chat · Edit name · Delete. */
-.recap__hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xs);
-  margin-top: var(--ref-spacing-md);
-}
-
 /* ── Brand overview ───────────────────────────────────────────────────── */
 .recap__overview {
   display: flex;
@@ -385,8 +377,8 @@
 
 .recap__stat {
   display: flex;
-  gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-md);
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--ref-border-radius-md);
@@ -411,7 +403,7 @@
 .recap__stat-body {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xxxs);
   min-width: 0;
 }
 
@@ -423,7 +415,7 @@
 }
 
 .recap__stat-caption {
-  margin: 0 0 var(--ref-spacing-xxs);
+  margin: 0;
   font-size: var(--ref-font-size-xs);
   color: var(--ref-color-grey-60);
 }
