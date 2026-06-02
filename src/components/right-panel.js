@@ -18,7 +18,7 @@ import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=12";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=70";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=71";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -145,7 +145,13 @@ function readUrlPanel() {
 // Skipped off-session — the panel is a session-scoped affordance, so a
 // stray `?panel=drafts` on /contexts shouldn't pop the panel.
 function syncFromUrl() {
-  if (!/^\/session\//.test(getPath())) return;
+  if (!/^\/session\//.test(getPath())) {
+    // The panel is a session-scoped affordance — close it when navigating
+    // off a session (Playbooks, Settings, Dashboard…). skipUrl so we don't
+    // rewrite the new route's hash.
+    if (state.mode) closePanel({ skipUrl: true });
+    return;
+  }
   const urlMode = readUrlPanel();
   if (urlMode === state.mode) return;
   if (urlMode === "drafts") openDrafts(null);
@@ -283,7 +289,7 @@ export function openSources() {
   writeUrlPanel("sources");
 }
 
-export function closePanel() {
+export function closePanel({ skipUrl = false } = {}) {
   const wasUserMode = VALID_URL_MODES.has(state.mode);
   if (state.mode === "context-brief") {
     contextBriefConfig?.onCancel?.();
@@ -299,7 +305,9 @@ export function closePanel() {
   // Only clear the `panel` URL param if we were in a user-toggleable mode.
   // context-brief isn't URL-persisted, so closing it shouldn't touch the
   // hash query (which might happen to carry an unrelated panel value).
-  if (wasUserMode) writeUrlPanel(null);
+  // `skipUrl` is used when closing as a side-effect of navigating off a
+  // session — the new route owns the URL, we mustn't rewrite it.
+  if (wasUserMode && !skipUrl) writeUrlPanel(null);
   // Return focus to the element that had it before the panel opened so
   // keyboard users don't get marooned. Modal-coordinator does this
   // automatically for modals; the right-panel is a push panel so we
@@ -725,7 +733,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName } = entry;
-      import("../screens/session.js?v=186").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=187").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, clip, sourceName);
       });
       return;
@@ -762,7 +770,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=186").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=187").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -2249,7 +2257,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=186").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=187").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
