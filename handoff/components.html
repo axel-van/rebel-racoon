@@ -6,27 +6,27 @@
     <title>Archie — Conversation thread component handoff</title>
 
     <!-- Agorapulse Design System (variables → font → icons → ui-css) -->
-    <link rel="stylesheet" href="../ds/desktop_variables.css?v=2" />
-    <link rel="stylesheet" href="../ds/css-ui/font-face.css?v=2" />
-    <link rel="stylesheet" href="../ds/ap-icons.css?v=2" />
-    <link rel="stylesheet" href="../ds/css-ui/index.css?v=2" />
+    <link rel="stylesheet" href="../ds/desktop_variables.css?v=3" />
+    <link rel="stylesheet" href="../ds/css-ui/font-face.css?v=3" />
+    <link rel="stylesheet" href="../ds/ap-icons.css?v=3" />
+    <link rel="stylesheet" href="../ds/css-ui/index.css?v=3" />
 
     <!-- App tokens + base + chat styles (so previews render exactly as in app).
          ?v=N is bumped whenever the cascade changes (e.g. source-intake v2 ship)
          so the handoff doesn't get stuck on a stale cached CSS. -->
-    <link rel="stylesheet" href="../styles/tokens.css?v=2" />
-    <link rel="stylesheet" href="../styles/base.css?v=2" />
-    <link rel="stylesheet" href="../styles/ds-patches.css?v=2" />
-    <link rel="stylesheet" href="../styles/chat.css?v=2" />
-    <link rel="stylesheet" href="../styles/screens/session.css?v=2" />
-    <link rel="stylesheet" href="../styles/components/archie-loader.css?v=2" />
+    <link rel="stylesheet" href="../styles/tokens.css?v=3" />
+    <link rel="stylesheet" href="../styles/base.css?v=3" />
+    <link rel="stylesheet" href="../styles/ds-patches.css?v=3" />
+    <link rel="stylesheet" href="../styles/chat.css?v=3" />
+    <link rel="stylesheet" href="../styles/screens/session.css?v=3" />
+    <link rel="stylesheet" href="../styles/components/archie-loader.css?v=3" />
     <!-- Card styles, so the live previews (idea / clip / post cards) render
          with their real chrome. -->
-    <link rel="stylesheet" href="../styles/components/right-panel.css?v=2" />
-    <link rel="stylesheet" href="../styles/components/clip-card.css?v=2" />
-    <link rel="stylesheet" href="../styles/screens/posts.css?v=2" />
+    <link rel="stylesheet" href="../styles/components/right-panel.css?v=3" />
+    <link rel="stylesheet" href="../styles/components/clip-card.css?v=3" />
+    <link rel="stylesheet" href="../styles/screens/posts.css?v=3" />
     <!-- Quick-picker (inline question) styles for the live picker previews. -->
-    <link rel="stylesheet" href="../styles/screens/analyse.css?v=2" />
+    <link rel="stylesheet" href="../styles/screens/analyse.css?v=3" />
 
     <style>
       /* ── Handoff page chrome ───────────────────────────────────────── */
@@ -953,32 +953,37 @@
             7. CLIP / IDEA EXTRACTION CARD
             ════════════════════════════════════════════════════════════ -->
       <section class="hd-section" id="clip-extraction">
-        <h2>7. Clip / Idea extraction card</h2>
+        <h2>7. Result card — all states</h2>
         <p class="hd-lead">
-          In-thread notice for clip / idea extraction from a source. Two transient states use
-          <code>.clip-extraction-card</code> — pending (spinner) and gone (source removed). The <strong>ready</strong>
-          state reuses the shared Drafts summary card (§6) so clips, ideas and drafts all land as the same result card.
+          Every &ldquo;result of a long AI job&rdquo; in the thread is one component: <code>.drafts-card</code> (§6),
+          rendered by <code>renderResultCard()</code>. Drafts, clips and ideas share the <strong>ready</strong> state;
+          the two transient states are modifiers on the same card — <code>.drafts-card--pending</code> (dot-grid loader
+          tile) and <code>.drafts-card--unavailable</code> (source removed). The old <code>.clip-extraction-card</code>
+          family is gone.
         </p>
 
         <article class="hd-comp">
           <header class="hd-comp__head">
             <div>
-              <p class="hd-comp__name">
-                <code>.clip-extraction-card--pending</code>
-              </p>
+              <p class="hd-comp__name"><code>.drafts-card--pending</code></p>
               <p class="hd-comp__desc">
-                In-progress state — orange spinner + &ldquo;Cutting your clips&hellip;&rdquo;.
+                In-progress state — shared dot-grid loader in a transparent tile + &ldquo;Cutting your
+                clips&hellip;&rdquo;. Non-interactive (a <code>&lt;div&gt;</code>, not a button).
               </p>
             </div>
           </header>
           <div class="hd-comp__body">
             <div class="hd-comp__preview">
               <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
-                <div class="clip-extraction-card clip-extraction-card--pending">
-                  <span class="clip-extraction-card__spinner" role="status" aria-label="Extracting clips"></span>
-                  <span class="clip-extraction-card__main">
-                    <span class="clip-extraction-card__title">Cutting your clips&hellip;</span>
-                    <span class="clip-extraction-card__sub">Up to 45s · you can keep chatting</span>
+                <div class="ap-card drafts-card drafts-card--pending">
+                  <span class="drafts-card__icon drafts-card__icon--spinner">
+                    <span class="drafts-card__spinner" role="status" aria-label="Extracting clips"></span>
+                  </span>
+                  <span class="drafts-card__main">
+                    <span class="drafts-card__title-row">
+                      <span class="drafts-card__title">Cutting your clips&hellip;</span>
+                    </span>
+                    <span class="drafts-card__sub">About 45s. You can keep chatting.</span>
                   </span>
                 </div>
               </div>
@@ -991,8 +996,7 @@
             <div>
               <p class="hd-comp__name"><code>.drafts-card</code> — ready state</p>
               <p class="hd-comp__desc">
-                Done state reuses the shared result card (§6): full-card button, mermaid tile, chevron CTA — same as
-                drafts and ideas.
+                Done state: full-card button, mermaid tile, chevron CTA — identical for clips, ideas and drafts.
               </p>
             </div>
           </header>
@@ -1024,24 +1028,24 @@
         <article class="hd-comp">
           <header class="hd-comp__head">
             <div>
-              <p class="hd-comp__name">
-                <code>.clip-extraction-card--gone</code>
-              </p>
+              <p class="hd-comp__name"><code>.drafts-card--unavailable</code></p>
               <p class="hd-comp__desc">
-                The source backing this card was removed. Card is dimmed (opacity 0.65), no CTA.
+                The source backing this card was removed. Muted file-icon tile, dimmed (opacity 0.65), no CTA.
               </p>
             </div>
           </header>
           <div class="hd-comp__body">
             <div class="hd-comp__preview">
               <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
-                <div class="clip-extraction-card clip-extraction-card--gone">
-                  <span class="clip-extraction-card__icon" aria-hidden="true">
+                <div class="ap-card drafts-card drafts-card--unavailable">
+                  <span class="drafts-card__icon drafts-card__icon--muted" aria-hidden="true">
                     <i class="ap-icon-file--video"></i>
                   </span>
-                  <span class="clip-extraction-card__main">
-                    <span class="clip-extraction-card__title">Clips no longer available</span>
-                    <span class="clip-extraction-card__sub">founder-keynote.mp4 was removed.</span>
+                  <span class="drafts-card__main">
+                    <span class="drafts-card__title-row">
+                      <span class="drafts-card__title">Clips no longer available</span>
+                    </span>
+                    <span class="drafts-card__sub">founder-keynote.mp4 was removed.</span>
                   </span>
                 </div>
               </div>
