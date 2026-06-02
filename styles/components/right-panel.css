@@ -1010,6 +1010,26 @@
   flex-shrink: 0;
 }
 
+/* Kebab dropdown — DS .ap-action-dropdown anchored under the … trigger.
+   The DS provides the surface / items / states; we only place it. */
+.rpanel-sources__more-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ap-action-dropdown.rpanel-sources__more-menu {
+  position: absolute;
+  top: calc(100% + var(--ref-spacing-xxxs));
+  right: 0;
+  min-width: 200px;
+  width: auto;
+  z-index: var(--app-z-content);
+}
+
+.ap-action-dropdown.rpanel-sources__more-menu[hidden] {
+  display: none;
+}
+
 /* Ideas produced by this source — flat links into the Ideas tab, styled
    like the composer mention picker rows: transparent at rest, electric-blue
    highlight (background + icon + text) on hover/focus. */

@@ -18,15 +18,16 @@ import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=12";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=67";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=68";
 import {
   getSources as getStreamSources,
   subscribeSources,
   updateSourceClips,
   removeSources,
-} from "../sources-stream.js?v=33";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=24";
-import { addMention as addComposerMention } from "../composer-mentions.js?v=5";
+  renameSource,
+} from "../sources-stream.js?v=35";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=25";
+import { addMention as addComposerMention } from "../composer-mentions.js?v=6";
 import { iconFor } from "../file-kinds.js?v=20";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
@@ -521,10 +522,47 @@ export function init() {
       });
       return;
     }
+    // Source card kebab (…) — toggle its dropdown, one open at a time.
+    const sourceMoreBtn = event.target.closest("[data-rpanel-source-more]");
+    if (sourceMoreBtn) {
+      const menu = document.getElementById(sourceMoreBtn.getAttribute("aria-controls"));
+      const willOpen = !!menu && menu.hidden;
+      closeAllSourceMenus(willOpen ? menu : null);
+      if (menu) {
+        menu.hidden = !willOpen;
+        sourceMoreBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+      }
+      return;
+    }
+    // Kebab → Reanalyze (prototype stub — confirms via toast).
+    const reanalyzeBtn = event.target.closest("[data-rpanel-source-reanalyze]");
+    if (reanalyzeBtn) {
+      const sid = activeSessionId();
+      closeAllSourceMenus();
+      if (!sid) return;
+      const src = getStreamSources(sid).find((s) => s.id === reanalyzeBtn.dataset.rpanelSourceReanalyze);
+      import("./toast.js?v=20").then(({ showToast }) =>
+        showToast(`Reanalyzing ${src?.filename || "source"}…`, { duration: 2600 }),
+      );
+      return;
+    }
+    // Kebab → Edit name (rename the source).
+    const renameBtn = event.target.closest("[data-rpanel-source-rename]");
+    if (renameBtn) {
+      const sid = activeSessionId();
+      closeAllSourceMenus();
+      if (!sid) return;
+      const id = renameBtn.dataset.rpanelSourceRename;
+      const src = getStreamSources(sid).find((s) => s.id === id);
+      const next = window.prompt("Rename source", src?.filename || "");
+      if (next && next.trim()) renameSource(sid, id, next.trim());
+      return;
+    }
     const sourcesDetachBtn = event.target.closest("[data-rpanel-sources-detach]");
     if (sourcesDetachBtn) {
       const sid = activeSessionId();
       if (!sid) return;
+      closeAllSourceMenus();
       removeSources([sourcesDetachBtn.dataset.rpanelSourcesDetach], sid);
       return;
     }
@@ -659,7 +697,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName } = entry;
-      import("../screens/session.js?v=183").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=184").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, clip, sourceName);
       });
       return;
@@ -696,7 +734,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=183").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=184").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -971,9 +1009,19 @@ export function init() {
     commitEdit(editingPostId);
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && state.mode) {
-      closePanel();
+    if (event.key !== "Escape") return;
+    // Escape first dismisses an open source kebab menu; only closes the
+    // panel if no menu is open.
+    if (document.querySelector(".rpanel-sources__more-menu:not([hidden])")) {
+      closeAllSourceMenus();
+      return;
     }
+    if (state.mode) closePanel();
+  });
+  // Click anywhere outside an open source kebab menu closes it.
+  document.addEventListener("click", (event) => {
+    if (event.target.closest(".rpanel-sources__more-wrap")) return;
+    closeAllSourceMenus();
   });
 
   // Lot 21 — re-render the Drafts view when the active session's posts
@@ -1759,6 +1807,17 @@ const SOURCE_KIND_ICON = {
   URL: "ap-icon-link",
 };
 
+// Close every open source-card kebab dropdown (except `except`), resetting the
+// trigger's aria-expanded. One menu open at a time.
+function closeAllSourceMenus(except) {
+  document.querySelectorAll(".rpanel-sources__more-menu:not([hidden])").forEach((menu) => {
+    if (menu === except) return;
+    menu.hidden = true;
+    const trigger = document.querySelector(`[aria-controls="${menu.id}"]`);
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
+  });
+}
+
 function renderSourceRow(src) {
   const icon = SOURCE_KIND_ICON[src.kind] || "ap-icon-file";
   const isProcessing = src.status !== "Processed";
@@ -1810,17 +1869,52 @@ function renderSourceRow(src) {
         <span>Mention</span>
       </button>`
     : "";
-  // Detach (×) sits on the head row, to the right of Mention. Always
-  // available — even while the source is still processing.
-  const detachBtn = `<button
+  // Kebab menu (…) on the head row, to the right of Mention. DS
+  // .ap-action-dropdown; one menu open at a time (see closeAllSourceMenus +
+  // the document listeners in init). Always available — even while
+  // processing.
+  const menuId = `src-more-${src.id}`;
+  const moreMenu = `
+    <div class="rpanel-sources__more-wrap">
+      <button
         type="button"
-        class="ap-icon-button transparent rpanel-sources__row-detach"
-        data-rpanel-sources-detach="${src.id}"
-        aria-label="Detach ${escapeAttr(src.filename)}"
-        title="Detach"
+        class="ap-icon-button transparent rpanel-sources__row-more"
+        data-rpanel-source-more="${src.id}"
+        aria-haspopup="menu"
+        aria-expanded="false"
+        aria-controls="${menuId}"
+        aria-label="More actions for ${escapeAttr(src.filename)}"
+        title="More actions"
       >
-        <i class="ap-icon-close"></i>
-      </button>`;
+        <i class="ap-icon-more"></i>
+      </button>
+      <div id="${menuId}" class="ap-action-dropdown rpanel-sources__more-menu" role="menu" hidden>
+        <button type="button" role="menuitem" class="ap-action-dropdown-item" data-rpanel-source-rename="${src.id}">
+          <i class="ap-icon-pen"></i>
+          <div class="ap-action-dropdown-item-text">
+            <div class="ap-action-dropdown-item-label-container">
+              <span class="ap-action-dropdown-item-label">Edit name</span>
+            </div>
+          </div>
+        </button>
+        <button type="button" role="menuitem" class="ap-action-dropdown-item" data-rpanel-source-reanalyze="${src.id}">
+          <i class="ap-icon-refresh"></i>
+          <div class="ap-action-dropdown-item-text">
+            <div class="ap-action-dropdown-item-label-container">
+              <span class="ap-action-dropdown-item-label">Reanalyze</span>
+            </div>
+          </div>
+        </button>
+        <button type="button" role="menuitem" class="ap-action-dropdown-item red-mode" data-rpanel-sources-detach="${src.id}">
+          <i class="ap-icon-trash"></i>
+          <div class="ap-action-dropdown-item-text">
+            <div class="ap-action-dropdown-item-label-container">
+              <span class="ap-action-dropdown-item-label">Delete source</span>
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>`;
 
   return `
     <div class="rpanel-sources__row" data-source-id="${src.id}">
@@ -1829,7 +1923,7 @@ function renderSourceRow(src) {
         <div class="rpanel-sources__row-name" title="${escapeAttr(src.filename)}">${escapeText(src.filename)}</div>
         ${statusEl}
         ${mentionBtn}
-        ${detachBtn}
+        ${moreMenu}
       </div>
       ${ideasList}
     </div>
@@ -2127,7 +2221,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=183").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=184").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

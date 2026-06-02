@@ -602,3 +602,17 @@ export function removeSources(ids, sessionId) {
   if (removed > 0) notifySources(sessionId);
   return removed;
 }
+
+// Rename a source (the displayed filename). No-op if the id isn't found or
+// the name is empty.
+export function renameSource(sessionId, sourceId, name) {
+  const next = String(name || "").trim();
+  if (!sessionId || !sourceId || !next) return false;
+  const list = sourcesBySession.get(sessionId);
+  if (!list) return false;
+  const src = list.find((s) => s.id === sourceId);
+  if (!src || src.filename === next) return false;
+  src.filename = next;
+  notifySources(sessionId);
+  return true;
+}

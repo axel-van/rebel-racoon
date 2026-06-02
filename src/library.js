@@ -27,7 +27,7 @@ import {
   subscribeSources,
   pushScriptedSource,
   completeScriptedSource,
-} from "./sources-stream.js?v=33";
+} from "./sources-stream.js?v=34";
 
 // --- Module state -------------------------------------------------------
 
