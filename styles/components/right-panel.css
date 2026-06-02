@@ -996,8 +996,10 @@
 .rpanel-sources__row-name {
   flex: 1;
   min-width: 0;
-  font-size: var(--ref-font-size-sm);
+  /* Match the idea / clip card title (.rpanel-ideas__card-title). */
+  font-size: var(--ref-font-size-md);
   font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-lg);
   color: var(--ref-color-grey-100);
   overflow: hidden;
   text-overflow: ellipsis;
