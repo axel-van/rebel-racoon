@@ -18,7 +18,7 @@ import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=12";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=68";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=69";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -27,6 +27,7 @@ import {
   renameSource,
 } from "../sources-stream.js?v=35";
 import { open as openAddSourceModal } from "./add-source-modal.js?v=25";
+import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { addMention as addComposerMention } from "../composer-mentions.js?v=6";
 import { iconFor } from "../file-kinds.js?v=20";
 
@@ -546,7 +547,8 @@ export function init() {
       );
       return;
     }
-    // Kebab → Edit name (rename the source).
+    // Kebab → Edit name (rename the source via the shared rename modal —
+    // the same one used to rename a chat).
     const renameBtn = event.target.closest("[data-rpanel-source-rename]");
     if (renameBtn) {
       const sid = activeSessionId();
@@ -554,8 +556,13 @@ export function init() {
       if (!sid) return;
       const id = renameBtn.dataset.rpanelSourceRename;
       const src = getStreamSources(sid).find((s) => s.id === id);
-      const next = window.prompt("Rename source", src?.filename || "");
-      if (next && next.trim()) renameSource(sid, id, next.trim());
+      openRenameModal({
+        title: "Rename source",
+        initialName: src?.filename || "",
+        placeholder: "Source name",
+        confirmLabel: "Save name",
+        onSubmit: (name) => renameSource(sid, id, name),
+      });
       return;
     }
     const sourcesDetachBtn = event.target.closest("[data-rpanel-sources-detach]");
@@ -697,7 +704,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName } = entry;
-      import("../screens/session.js?v=184").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=185").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, clip, sourceName);
       });
       return;
@@ -734,7 +741,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=184").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=185").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -2221,7 +2228,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=184").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=185").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
