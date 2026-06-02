@@ -1008,45 +1008,44 @@
   flex-shrink: 0;
 }
 
-/* Ideas produced by this source — a quiet list of links into the Ideas tab. */
+/* Ideas produced by this source — flat links into the Ideas tab, styled
+   like the composer mention picker rows: transparent at rest, electric-blue
+   highlight (background + icon + text) on hover/focus. */
 .rpanel-sources__ideas {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--app-spacing-micro);
 }
 
 .rpanel-sources__idea-link {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xs);
   width: 100%;
-  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
-  background: var(--ref-color-grey-05);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  background: transparent;
   border: 0;
-  border-radius: var(--ref-border-radius-xs);
+  border-radius: var(--ref-border-radius-sm);
   font: inherit;
   text-align: left;
   cursor: pointer;
   color: var(--ref-color-grey-100);
-  transition:
-    background-color var(--ref-animation-short) var(--app-ease-standard),
-    color var(--ref-animation-short) var(--app-ease-standard);
+  transition: background 120ms ease;
 }
 
 .rpanel-sources__idea-link:hover,
 .rpanel-sources__idea-link:focus-visible {
   background: var(--ref-color-electric-blue-05);
-  color: var(--ref-color-electric-blue-150);
+  color: var(--ref-color-electric-blue-100);
   outline: none;
 }
 
 .rpanel-sources__idea-icon {
   flex-shrink: 0;
   font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-grey-100);
 }
 
 .rpanel-sources__idea-title {
@@ -1056,6 +1055,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: var(--ref-font-size-sm);
+  color: var(--ref-color-grey-100);
 }
 
 .rpanel-sources__idea-chevron {
@@ -1064,6 +1064,12 @@
   color: var(--ref-color-grey-60);
 }
 
+/* Hover/focus → the whole row picks up the electric-blue accent, matching
+   the mention picker's row treatment. */
+.rpanel-sources__idea-link:hover .rpanel-sources__idea-icon,
+.rpanel-sources__idea-link:focus-visible .rpanel-sources__idea-icon,
+.rpanel-sources__idea-link:hover .rpanel-sources__idea-title,
+.rpanel-sources__idea-link:focus-visible .rpanel-sources__idea-title,
 .rpanel-sources__idea-link:hover .rpanel-sources__idea-chevron,
 .rpanel-sources__idea-link:focus-visible .rpanel-sources__idea-chevron {
   color: var(--ref-color-electric-blue-100);
