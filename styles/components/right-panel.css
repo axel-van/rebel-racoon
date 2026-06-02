@@ -1088,10 +1088,13 @@
   color: var(--ref-color-electric-blue-100);
 }
 
-/* Footer actions row — mirrors the idea / clip card footer (right-aligned). */
+/* Footer actions row — mirrors the idea / clip card footer. Mention sits to
+   the left of the detach (×), both right-aligned. */
 .rpanel-sources__card-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: var(--ref-spacing-xxs);
 }
 
 .rpanel-sources__row-detach {
