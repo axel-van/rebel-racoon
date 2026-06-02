@@ -18,7 +18,7 @@ import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=12";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=69";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=70";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -565,12 +565,33 @@ export function init() {
       });
       return;
     }
+    // Delete source — destructive: it also removes the ideas derived from
+    // this source, so gate it behind a confirm modal with an explicit
+    // warning before cascading the removal.
     const sourcesDetachBtn = event.target.closest("[data-rpanel-sources-detach]");
     if (sourcesDetachBtn) {
       const sid = activeSessionId();
       if (!sid) return;
       closeAllSourceMenus();
-      removeSources([sourcesDetachBtn.dataset.rpanelSourcesDetach], sid);
+      const id = sourcesDetachBtn.dataset.rpanelSourcesDetach;
+      const src = getStreamSources(sid).find((s) => s.id === id);
+      const ideaN = IDEAS.filter((i) => Array.isArray(i.sourceIds) && i.sourceIds.includes(id)).length;
+      const ideaWarning =
+        ideaN > 0 ? ` Its ${ideaN} associated idea${ideaN === 1 ? "" : "s"} will be deleted too.` : "";
+      openConfirmModal({
+        title: "Delete this source?",
+        body: `“${src?.filename || "This source"}” will be removed from this chat.${ideaWarning} This can’t be undone.`,
+        confirmLabel: "Delete source",
+        danger: true,
+        onConfirm: () => {
+          // Cascade — drop the ideas derived from this source first, then the
+          // source itself (whose removal notifies + repaints the panel).
+          for (let i = IDEAS.length - 1; i >= 0; i -= 1) {
+            if (Array.isArray(IDEAS[i].sourceIds) && IDEAS[i].sourceIds.includes(id)) IDEAS.splice(i, 1);
+          }
+          removeSources([id], sid);
+        },
+      });
       return;
     }
     // Idea link on a source card → switch the panel to Outputs (Ideas tab)
@@ -704,7 +725,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName } = entry;
-      import("../screens/session.js?v=185").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=186").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, clip, sourceName);
       });
       return;
@@ -741,7 +762,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=185").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=186").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -2228,7 +2249,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=185").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=186").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
