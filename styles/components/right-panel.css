@@ -1004,15 +1004,6 @@
   white-space: nowrap;
 }
 
-/* Source type label (pdf / video / url) — same muted treatment as the
-   composer mention-picker row kind. */
-.rpanel-sources__row-kind {
-  flex-shrink: 0;
-  font-size: 11px;
-  text-transform: lowercase;
-  color: var(--ref-color-grey-60);
-}
-
 .rpanel-sources__row-status {
   flex-shrink: 0;
 }
@@ -1067,6 +1058,15 @@
   color: var(--ref-color-grey-100);
 }
 
+/* Idea kind label (story / insight / quote…) — muted, right-aligned before
+   the chevron, mirroring the mention-picker row kind. */
+.rpanel-sources__idea-kind {
+  flex-shrink: 0;
+  font-size: 11px;
+  text-transform: lowercase;
+  color: var(--ref-color-grey-60);
+}
+
 .rpanel-sources__idea-chevron {
   flex-shrink: 0;
   font-size: var(--sys-icon-css-sm);
@@ -1079,6 +1079,8 @@
 .rpanel-sources__idea-link:focus-visible .rpanel-sources__idea-icon,
 .rpanel-sources__idea-link:hover .rpanel-sources__idea-title,
 .rpanel-sources__idea-link:focus-visible .rpanel-sources__idea-title,
+.rpanel-sources__idea-link:hover .rpanel-sources__idea-kind,
+.rpanel-sources__idea-link:focus-visible .rpanel-sources__idea-kind,
 .rpanel-sources__idea-link:hover .rpanel-sources__idea-chevron,
 .rpanel-sources__idea-link:focus-visible .rpanel-sources__idea-chevron {
   color: var(--ref-color-electric-blue-100);
