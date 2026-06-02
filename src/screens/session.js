@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=86";
+import { renderTopbar } from "../components/topbar.js?v=87";
 import { socialAccounts, chatStarters } from "../mocks.js?v=36";
 import {
   getConnectedProfiles,
@@ -47,8 +47,8 @@ import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } fro
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
 import * as inlineQuestion from "../inline-question.js?v=33";
-import * as contextBuilder from "../context-builder.js?v=70";
-import * as playbookEditor from "../playbook-editor.js?v=31";
+import * as contextBuilder from "../context-builder.js?v=71";
+import * as playbookEditor from "../playbook-editor.js?v=32";
 import { renderPicker } from "./_analyse-common.js?v=39";
 import { renderSourceCard } from "../components/source-card.js?v=30";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -82,7 +82,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=134";
+} from "../components/right-panel.js?v=135";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
@@ -1345,21 +1345,42 @@ function renderProfilesTurn(message) {
   `;
 }
 
-function renderSystemNotice(message) {
-  const variantClass = message.variant === "mermaid" ? " assistant-notice--mermaid" : "";
-  const loadingClass = message.status === "loading" ? " is-loading" : "";
-  const openAttr = message.open ? " open" : "";
-  const statusClass = message.variant === "mermaid" ? "ap-status mermaid" : "ap-status grey";
-  const hasDetail = !!message.text;
+// Shared collapsible notice scaffold — the <details>/<summary> + status pill
+// + chevron used by both the system/drafting notices and the extraction turn.
+// `bodyHtml` is the collapsed content (caller owns its wrapper). Figma 25:1413.
+function renderNotice({
+  variant = "grey",
+  label = "",
+  open = true,
+  loading = false,
+  showChevron = true,
+  bodyHtml = "",
+} = {}) {
+  const variantClass = variant === "mermaid" ? " assistant-notice--mermaid" : "";
+  const loadingClass = loading ? " is-loading" : "";
+  const openAttr = open ? " open" : "";
+  const statusClass = variant === "mermaid" ? "ap-status mermaid" : "ap-status grey";
   return `
     <details class="assistant-notice${variantClass}${loadingClass}"${openAttr}>
       <summary class="assistant-notice__toggle">
-        <span class="${statusClass}">${message.meta || "System"}</span>
-        ${hasDetail ? '<i class="ap-icon-chevron-down assistant-notice__chevron"></i>' : ""}
+        <span class="${statusClass}">${label}</span>
+        ${showChevron ? '<i class="ap-icon-chevron-down assistant-notice__chevron"></i>' : ""}
       </summary>
-      ${hasDetail ? `<div class="assistant-notice__detail">${message.text}</div>` : ""}
+      ${bodyHtml}
     </details>
   `;
+}
+
+function renderSystemNotice(message) {
+  const hasDetail = !!message.text;
+  return renderNotice({
+    variant: message.variant === "mermaid" ? "mermaid" : "grey",
+    label: message.meta || "System",
+    open: !!message.open,
+    loading: message.status === "loading",
+    showChevron: hasDetail,
+    bodyHtml: hasDetail ? `<div class="assistant-notice__detail">${message.text}</div>` : "",
+  });
 }
 
 // Inline "Extracting" notice (Figma 25:1413) — mermaid status pill + small
@@ -1467,8 +1488,6 @@ function renderSourceIntakeTurn(message, sessionId) {
 }
 
 function renderExtractionTurn(message) {
-  const loadingClass = message.status === "loading" ? " is-loading" : "";
-  const openAttr = message.open === false ? "" : " open";
   const count = message.count ?? (message.ideas ? message.ideas.length : 0);
   const cards = (message.ideas || [])
     .map((i) => {
@@ -1566,19 +1585,21 @@ function renderExtractionTurn(message) {
     .join("");
   return `
     <div class="chat-turn chat-turn--ai chat-turn--extraction">
-      <details class="assistant-notice assistant-notice--mermaid${loadingClass}"${openAttr}>
-        <summary class="assistant-notice__toggle">
-          <span class="ap-status mermaid">Extracted ${count} idea${count === 1 ? "" : "s"}</span>
-          <i class="ap-icon-chevron-down assistant-notice__chevron"></i>
-        </summary>
-        <div class="extraction-turn__detail">
-          <div class="extraction-turn__analyzed-row">
-            <strong>Analyzed</strong>
-            <span>${message.filename}</span>
+      ${renderNotice({
+        variant: "mermaid",
+        label: `Extracted ${count} idea${count === 1 ? "" : "s"}`,
+        open: message.open !== false,
+        loading: message.status === "loading",
+        bodyHtml: `
+          <div class="extraction-turn__detail">
+            <div class="extraction-turn__analyzed-row">
+              <strong>Analyzed</strong>
+              <span>${message.filename}</span>
+            </div>
+            ${cards}
           </div>
-          ${cards}
-        </div>
-      </details>
+        `,
+      })}
     </div>
   `;
 }

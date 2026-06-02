@@ -18,7 +18,7 @@ import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=12";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=61";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=62";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -668,7 +668,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName } = entry;
-      import("../screens/session.js?v=177").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=178").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, clip, sourceName);
       });
       return;
@@ -705,7 +705,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=177").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=178").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -2119,7 +2119,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=177").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=178").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
