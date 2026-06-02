@@ -1004,6 +1004,15 @@
   white-space: nowrap;
 }
 
+/* Source type label (pdf / video / url) — same muted treatment as the
+   composer mention-picker row kind. */
+.rpanel-sources__row-kind {
+  flex-shrink: 0;
+  font-size: 11px;
+  text-transform: lowercase;
+  color: var(--ref-color-grey-60);
+}
+
 .rpanel-sources__row-status {
   flex-shrink: 0;
 }

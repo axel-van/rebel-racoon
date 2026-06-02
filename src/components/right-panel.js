@@ -18,7 +18,7 @@ import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=12";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=63";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=64";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -659,7 +659,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName } = entry;
-      import("../screens/session.js?v=179").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=180").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, clip, sourceName);
       });
       return;
@@ -696,7 +696,7 @@ export function init() {
       );
       // PDF flow 06.B — ask the user for a subtitle preset. We import
       // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=179").then(({ postSubtitleQuestion }) => {
+      import("../screens/session.js?v=180").then(({ postSubtitleQuestion }) => {
         postSubtitleQuestion(
           sid,
           drafts.map((d) => d.id),
@@ -1815,6 +1815,7 @@ function renderSourceRow(src) {
       <div class="rpanel-sources__card-head">
         <span class="rpanel-sources__row-icon" aria-hidden="true"><i class="${icon}"></i></span>
         <div class="rpanel-sources__row-name" title="${escapeAttr(src.filename)}">${escapeText(src.filename)}</div>
+        ${src.kind ? `<span class="rpanel-sources__row-kind muted">${escapeText(src.kind)}</span>` : ""}
         ${statusEl}
         <button
           type="button"
@@ -2123,7 +2124,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=179").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=180").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
