@@ -19,7 +19,7 @@ import {
 } from "../connectors-store.js?v=22";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderConnectorLogo } from "../connectors-view.js?v=1";
+import { renderConnectorLogo } from "../connectors-view.js?v=2";
 
 const MODAL_ID = "addSource";
 import {

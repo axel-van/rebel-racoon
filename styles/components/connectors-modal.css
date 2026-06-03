@@ -26,7 +26,6 @@
  * .connectors-* rules; inside the dialog the dialog padding already handles
  * the gutter, so drop the doubled horizontal inset and top padding. */
 .connectors-modal__content .connectors-view__toolbar,
-.connectors-modal__content .connectors-featured,
 .connectors-modal__content .connectors-group,
 .connectors-modal__content .connectors-empty,
 .connectors-modal__content .connectors-detail {
@@ -35,17 +34,13 @@
   padding-right: 0;
 }
 
-.connectors-modal__content .connectors-view__toolbar {
-  padding-top: 0;
-}
-
+.connectors-modal__content .connectors-view__toolbar,
 .connectors-modal__content .connectors-detail {
   padding-top: 0;
 }
 
-/* First group/featured block shouldn't add extra top padding under the
- * toolbar inside the tighter modal. */
-.connectors-modal__content .connectors-featured:first-of-type,
+/* First group shouldn't add extra top padding under the toolbar in the
+   tighter modal. */
 .connectors-modal__content .connectors-group:first-of-type {
   padding-top: var(--ref-spacing-md);
 }

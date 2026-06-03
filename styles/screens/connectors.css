@@ -1,10 +1,13 @@
-/* Connectors — full-page gallery route /connectors.
+/* Connectors gallery — shared by the /connectors page and the connectors
+ * modal (connectors-view.js renders both).
  *
- * Codex-style marketplace: hero + search + category filter + Featured grid +
- * grouped catalog list, plus a detail view. Page chrome (max-width, padding
- * scale) mirrors /settings and /contexts so widths line up across routes.
- * Built on DS components (.ap-card / .ap-button / .ap-tag / .ap-status /
- * .ap-input-group) — only layout + the brand monogram tile live here.
+ * Codex-style marketplace: hero (page only) + search + category filter + one
+ * uniform card grid grouped by category, plus a detail view. Each card is a
+ * single clickable tile (logo + status, name, 2-line desc) that opens the
+ * detail — no duplicated "Featured" section, no full-width rows, so every
+ * connector appears exactly once. Page chrome (max-width, padding scale)
+ * mirrors /settings and /contexts. Built on DS components (.ap-card /
+ * .ap-button / .ap-tag / .ap-status / .ap-input-group) + DS tokens.
  */
 
 .connectors-view {
@@ -15,7 +18,6 @@
 
 .connectors-view__hero,
 .connectors-view__toolbar,
-.connectors-featured,
 .connectors-group,
 .connectors-empty,
 .connectors-detail {
@@ -85,7 +87,7 @@
 /* ── Section titles ───────────────────────────────────────────────────── */
 
 .connectors-group__title {
-  margin: 0 0 var(--ref-spacing-xs);
+  margin: 0 0 var(--ref-spacing-sm);
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
   text-transform: uppercase;
@@ -93,20 +95,21 @@
   color: var(--sys-text-color-light);
 }
 
-.connectors-group,
-.connectors-featured {
+.connectors-group {
   padding-top: var(--ref-spacing-lg);
 }
 
-/* ── Featured grid ────────────────────────────────────────────────────── */
+/* ── Card grid (one uniform tile per connector) ───────────────────────── */
 
-.connectors-featured__grid {
+.connectors-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--ref-spacing-md);
+  grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
+  gap: var(--ref-spacing-sm);
 }
 
-.connectors-featured__card {
+/* Whole card is a button → opens the detail. Reset UA button chrome and lay
+   the content out as a tile. */
+.connectors-card {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
@@ -115,27 +118,32 @@
   cursor: pointer;
   font-family: inherit;
   border: 1px solid var(--app-border);
+  background: var(--ref-color-white);
   transition:
-    border-color var(--ref-animation-short),
-    box-shadow var(--ref-animation-short);
+    border-color var(--ref-animation-short) var(--app-ease-out),
+    box-shadow var(--ref-animation-short) var(--app-ease-out);
 }
 
-.connectors-featured__card:hover {
+.connectors-card:hover {
   border-color: var(--ref-color-grey-40);
+  box-shadow: var(--app-shadow-low);
 }
 
-.connectors-featured__card:focus-visible {
+.connectors-card:focus-visible {
   outline: 2px solid var(--ref-color-electric-blue-100);
   outline-offset: 2px;
 }
 
-.connectors-featured__card-head {
+.connectors-card__top {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+  margin-bottom: var(--app-spacing-micro);
 }
 
-.connectors-featured__add {
+/* "+" affordance shown top-right on a disconnected card. */
+.connectors-card__add {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -144,106 +152,31 @@
   border-radius: var(--ref-border-radius-sm);
   background: var(--ref-color-grey-05);
   color: var(--ref-color-grey-60);
-}
-
-.connectors-featured__card-name {
-  font-size: var(--ref-font-size-md);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-}
-
-.connectors-featured__card-desc {
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-md);
-}
-
-/* ── Catalog list (one .ap-card per category) ─────────────────────────── */
-
-.connectors-list {
-  padding: 0;
-  gap: 0;
-  overflow: hidden;
-}
-
-.connectors-row {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-md);
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
-  transition: background-color var(--ref-animation-short);
-}
-
-.connectors-row + .connectors-row {
-  border-top: 1px solid var(--app-border);
-}
-
-.connectors-row:hover {
-  background-color: var(--ref-color-grey-05);
-}
-
-/* Card body is a button (opens detail) — reset UA chrome. */
-.connectors-row__main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-md);
-  background: transparent;
-  border: 0;
-  padding: 0;
-  text-align: left;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.connectors-row__main:focus-visible {
-  outline: 2px solid var(--ref-color-electric-blue-100);
-  outline-offset: 2px;
-  border-radius: var(--ref-border-radius-sm);
-}
-
-.connectors-row__body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-}
-
-.connectors-row__title-line {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  flex-wrap: wrap;
-}
-
-.connectors-row__title {
-  font-size: var(--ref-font-size-md);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-}
-
-.connectors-row__desc {
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-md);
-}
-
-.connectors-row__caps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxs);
-  margin-top: var(--ref-spacing-xxxs);
-}
-
-.connector-cap {
-  font-size: var(--ref-font-size-xs);
-}
-
-.connectors-row__action {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
   flex-shrink: 0;
+}
+
+.connectors-card:hover .connectors-card__add {
+  background: var(--ref-color-electric-blue-05);
+  color: var(--ref-color-electric-blue-150);
+}
+
+.connectors-card__name {
+  font-size: var(--ref-font-size-md);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+  line-height: var(--ref-font-line-height-md);
+}
+
+/* 2-line clamp keeps every tile the same height. */
+.connectors-card__desc {
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-md);
+  color: var(--ref-color-grey-60);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ── Monogram logo (fallback when a connector ships no SVG asset) ──────── */
@@ -396,7 +329,6 @@
 @media (max-width: 720px) {
   .connectors-view__hero,
   .connectors-view__toolbar,
-  .connectors-featured,
   .connectors-group,
   .connectors-empty,
   .connectors-detail {
@@ -406,12 +338,8 @@
   .connectors-view__search {
     flex-basis: 100%;
   }
-  .connectors-row {
-    flex-wrap: wrap;
-  }
-  .connectors-row__action {
-    flex-basis: 100%;
-    justify-content: flex-end;
+  .connectors-grid {
+    grid-template-columns: 1fr;
   }
   .connectors-detail__head {
     flex-direction: column;

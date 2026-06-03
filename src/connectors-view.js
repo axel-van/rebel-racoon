@@ -56,12 +56,6 @@ function counts(all) {
 
 // ─── Small builders ──────────────────────────────────────────────────────
 
-function capabilityChips(c) {
-  return (c.capabilities || [])
-    .map((cap) => `<span class="ap-tag grey connector-cap">${escapeHtml(cap)}</span>`)
-    .join("");
-}
-
 function renderCategoryChip(value, label, active) {
   // Shared .ap-filter-chip primitive (ds-patches.css) — same chip as the Ideas
   // panel; aria-pressed drives the selected state.
@@ -70,51 +64,42 @@ function renderCategoryChip(value, label, active) {
   )}" role="tab" aria-pressed="${active}" aria-selected="${active}"><span>${escapeHtml(label)}</span></button>`;
 }
 
-function renderFeaturedCard(c) {
+// One connector card — uniform marketplace tile. The whole card opens the
+// detail (where Connect / Try-in-chat / Disconnect live), so the grid stays
+// clean and scannable: logo + status, name, 2-line description. Mirrors the
+// Codex installed-apps card.
+export function renderConnectorCard(c) {
   const isConnected = c.status === "connected";
+  const status = isConnected
+    ? `<span class="ap-status green">Connected</span>`
+    : `<span class="connectors-card__add" aria-hidden="true"><i class="ap-icon-plus"></i></span>`;
   return `
-    <button type="button" class="ap-card connectors-featured__card" data-connector-open="${escapeHtml(c.id)}">
-      <div class="connectors-featured__card-head">
-        ${renderConnectorLogo(c, 44)}
-        ${isConnected ? `<span class="ap-status green">Connected</span>` : `<span class="connectors-featured__add"><i class="ap-icon-plus"></i></span>`}
+    <button type="button" class="ap-card connectors-card" data-connector-open="${escapeHtml(
+      c.id,
+    )}" aria-label="${escapeHtml(c.name)} — open details">
+      <div class="connectors-card__top">
+        ${renderConnectorLogo(c, 40)}
+        ${status}
       </div>
-      <div class="connectors-featured__card-name">${escapeHtml(c.name)}</div>
-      <div class="connectors-featured__card-desc muted">${escapeHtml(c.desc)}</div>
+      <div class="connectors-card__name">${escapeHtml(c.name)}</div>
+      <div class="connectors-card__desc">${escapeHtml(c.desc)}</div>
     </button>
   `;
 }
 
-export function renderConnectorRow(c) {
-  const isConnected = c.status === "connected";
-  const action = isConnected
-    ? `<button type="button" class="ap-button primary orange" data-connector-try="${escapeHtml(c.id)}">
-         <i class="ap-icon-single-chat-bubble"></i><span>Try in chat</span>
-       </button>
-       <button type="button" class="ap-button ghost grey" data-connector-disconnect="${escapeHtml(c.id)}">Disconnect</button>`
-    : `<button type="button" class="ap-button stroked blue" data-connector-connect="${escapeHtml(c.id)}">
-         <i class="ap-icon-plus"></i><span>Connect</span>
-       </button>`;
-  return `
-    <div class="connectors-row" data-connector-id="${escapeHtml(c.id)}">
-      <button type="button" class="connectors-row__main" data-connector-open="${escapeHtml(c.id)}">
-        ${renderConnectorLogo(c, 40)}
-        <div class="connectors-row__body">
-          <div class="connectors-row__title-line">
-            <span class="connectors-row__title">${escapeHtml(c.name)}</span>
-            ${isConnected ? `<span class="ap-status green">Connected</span>` : ""}
-          </div>
-          <div class="connectors-row__desc muted">${escapeHtml(c.desc)}</div>
-          <div class="connectors-row__caps">${capabilityChips(c)}</div>
-        </div>
-      </button>
-      <div class="connectors-row__action">${action}</div>
-    </div>
-  `;
+// Featured connectors float to the top of their category group.
+function byFeaturedThenName(a, b) {
+  const fa = a.featured ? 0 : 1;
+  const fb = b.featured ? 0 : 1;
+  if (fa !== fb) return fa - fb;
+  return a.name.localeCompare(b.name);
 }
 
 // ─── Gallery body ──────────────────────────────────────────────────────────
 // `view` = { query, category }. `showHero` toggles the page's title block
-// (the modal supplies its own header, so it passes showHero:false).
+// (the modal supplies its own header, so it passes showHero:false). One uniform
+// card grid grouped by category — no separate "Featured" section, so a
+// connector is never listed twice.
 export function renderGalleryBody(view, { showHero = true } = {}) {
   const all = getConnectors();
   const q = (view.query || "").trim().toLowerCase();
@@ -122,10 +107,6 @@ export function renderGalleryBody(view, { showHero = true } = {}) {
   const cnt = counts(all);
 
   const filtered = all.filter((x) => matchesQuery(x, q) && (view.category === "all" || x.category === view.category));
-
-  // Featured grid only when browsing unfiltered (no search, all categories).
-  const showFeatured = !q && view.category === "all";
-  const featured = showFeatured ? all.filter((x) => x.featured) : [];
 
   const catChips = [
     renderCategoryChip("all", "All", view.category === "all"),
@@ -135,15 +116,16 @@ export function renderGalleryBody(view, { showHero = true } = {}) {
   const groups = sortedCategories(new Set(filtered.map((x) => x.category || "Other")));
   const list = groups
     .map((cat) => {
-      const rows = filtered
+      const cards = filtered
         .filter((x) => (x.category || "Other") === cat)
-        .map(renderConnectorRow)
+        .sort(byFeaturedThenName)
+        .map(renderConnectorCard)
         .join("");
       return `
-        <div class="connectors-group">
+        <section class="connectors-group">
           <h2 class="connectors-group__title">${escapeHtml(cat)}</h2>
-          <div class="ap-card connectors-list">${rows}</div>
-        </div>`;
+          <div class="connectors-grid">${cards}</div>
+        </section>`;
     })
     .join("");
 
@@ -165,13 +147,6 @@ export function renderGalleryBody(view, { showHero = true } = {}) {
        </header>`
     : "";
 
-  const featuredBlock = featured.length
-    ? `<div class="connectors-featured">
-         <h2 class="connectors-group__title">Featured</h2>
-         <div class="connectors-featured__grid">${featured.map(renderFeaturedCard).join("")}</div>
-       </div>`
-    : "";
-
   return `
     ${hero}
     <div class="connectors-view__toolbar">
@@ -188,7 +163,6 @@ export function renderGalleryBody(view, { showHero = true } = {}) {
       </div>
       <div class="connectors-view__categories" role="tablist" aria-label="Filter by category">${catChips}</div>
     </div>
-    ${featuredBlock}
     ${list}
     ${empty}
   `;
