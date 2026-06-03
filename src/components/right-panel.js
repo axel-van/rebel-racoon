@@ -26,11 +26,12 @@ import {
   removeSources,
   renameSource,
 } from "../sources-stream.js?v=35";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=26";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=27";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=22";
 import { askConnector } from "../connector-ask.js?v=2";
-import { renderConnectorLogo } from "../screens/connectors.js?v=4";
+import { renderConnectorLogo } from "../connectors-view.js?v=1";
+import { open as openConnectorsModal } from "./connectors-modal.js?v=1";
 import { addMention as addComposerMention } from "../composer-mentions.js?v=6";
 import { iconFor } from "../file-kinds.js?v=20";
 
@@ -532,6 +533,12 @@ export function init() {
       openAddSourceModal({
         currentSessionId: sid,
       });
+      return;
+    }
+    // "Connect" in the Live connectors head — open the connectors modal scoped
+    // to this chat (Try-in-chat will ask here, no navigation).
+    if (event.target.closest("[data-rpanel-open-connectors]")) {
+      openConnectorsModal({ currentSessionId: activeSessionId() });
       return;
     }
     // Live connector "Ask" — a connected connector is a queryable live source.
@@ -1857,7 +1864,6 @@ function renderSourcesView() {
 // listed below.
 function renderLiveConnectors() {
   const connected = getConnectedConnectors();
-  if (!connected.length) return "";
   const rows = connected
     .map(
       (c) => `
@@ -1880,13 +1886,21 @@ function renderLiveConnectors() {
       </div>`,
     )
     .join("");
+  // Always rendered (even with 0 connected) so the "Connect" entry point is
+  // available right here — opens the connectors modal scoped to this chat.
+  const body = connected.length
+    ? `<div class="rpanel-sources__list rpanel-live-connectors__list">${rows}</div>`
+    : `<div class="rpanel-live-connectors__empty muted">Connect a tool to query its content live in chat.</div>`;
   return `
     <div class="rpanel-live-connectors">
       <div class="rpanel-live-connectors__head">
         <span class="rpanel-live-connectors__title">Live connectors</span>
-        <span class="ap-counter normal grey">${connected.length}</span>
+        ${connected.length ? `<span class="ap-counter normal grey">${connected.length}</span>` : ""}
+        <button type="button" class="ap-button ghost blue rpanel-live-connectors__manage" data-rpanel-open-connectors>
+          <i class="ap-icon-plus"></i><span>Connect</span>
+        </button>
       </div>
-      <div class="rpanel-sources__list rpanel-live-connectors__list">${rows}</div>
+      ${body}
     </div>`;
 }
 

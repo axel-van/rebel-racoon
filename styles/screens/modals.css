@@ -44,6 +44,7 @@ body.has-modal {
 .generate-image-modal,
 .chat-picker-modal,
 .add-source-modal,
+.connectors-modal,
 .confirm-modal,
 .rename-modal,
 .search-modal,
@@ -57,6 +58,10 @@ body.has-modal {
   max-height: calc(100vh - 48px);
   border: 1px solid var(--sys-border-color-default);
   box-shadow: var(--app-shadow-popover-lg);
+}
+
+.connectors-modal {
+  width: min(calc(100% - 32px), 920px);
 }
 
 .bug-report-modal {
@@ -252,6 +257,7 @@ body.has-modal {
 .generate-image-modal.open,
 .chat-picker-modal.open,
 .add-source-modal.open,
+.connectors-modal.open,
 .confirm-modal.open,
 .rename-modal.open,
 .search-modal.open,

@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { renderTopbar } from "../components/topbar.js?v=97";
+import { renderTopbar } from "../components/topbar.js?v=98";
 // Same compact idea card as the right-panel Ideas mode.
 import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=1";
 import { showToast } from "../components/toast.js?v=20";
@@ -11,7 +11,7 @@ import { ideas as MOCK_IDEAS } from "../mocks.js?v=37";
 const SOURCES = [];
 import { isNewUser } from "../user-mode.js?v=22";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=26";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=27";
 
 // Lot 15 — empty out in first-time mode so /ideas mirrors the dashboard's
 // own first-run UX. Returning user gets the full seed.

@@ -13,7 +13,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=146";
+} from "./right-panel.js?v=147";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=34";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=40";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=32";
@@ -72,13 +72,8 @@ export function renderTopbar(_options = {}) {
     : onSession
       ? `${renderSessionPills(rpMode, draftCount, isEmpty, ideaCount)}${renderStatusCardToggle(statusCardAvailable)}`
       : "";
-  // The connector detail view (/connectors?connector=<id>) leads with a back
-  // control to the gallery, in place of the route title — same pattern as the
-  // Playbook page.
-  const onConnectorDetail = isConnectorsRoute() && !!connectorDetailId();
-  const left = onPlaybook ? renderBack() : onConnectorDetail ? renderConnectorsBack() : renderTitle(onSession);
   el.innerHTML = html`
-    <div class="app-topbar__left">${raw(left)}</div>
+    <div class="app-topbar__left">${raw(onPlaybook ? renderBack() : renderTitle(onSession))}</div>
     <div class="app-topbar__right">${raw(rightSide)}</div>
   `;
 }
@@ -456,28 +451,6 @@ function renderBack() {
     <button type="button" class="ap-button ghost grey app-topbar__back" data-topbar-back="/contexts" title="Back to Playbooks">
       <i class="ap-icon-arrow-left" aria-hidden="true"></i>
       <span>Back to Playbooks</span>
-    </button>
-  `;
-}
-
-// Connectors gallery / detail. The detail view is the same /connectors path
-// with a ?connector=<id> query param; the topbar reads it (getPath() strips
-// the query) to swap the title for a back control.
-function isConnectorsRoute() {
-  return getPath() === "/connectors";
-}
-
-function connectorDetailId() {
-  const raw = (window.location.hash || "").split("?")[1] || "";
-  return new URLSearchParams(raw).get("connector");
-}
-
-// Back control shown on the connector detail view, in place of the title.
-function renderConnectorsBack() {
-  return `
-    <button type="button" class="ap-button ghost grey app-topbar__back" data-topbar-back="/connectors" title="Back to connectors">
-      <i class="ap-icon-arrow-left" aria-hidden="true"></i>
-      <span>All connectors</span>
     </button>
   `;
 }

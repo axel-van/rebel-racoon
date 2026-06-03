@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=97";
+import { renderTopbar } from "../components/topbar.js?v=98";
 import { socialAccounts, chatStarters } from "../mocks.js?v=37";
 import {
   getConnectedProfiles,
@@ -62,7 +62,8 @@ import {
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=24";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=12";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=31";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=26";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=27";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=1";
 import {
   classifyFile,
   startFileUpload,
@@ -83,7 +84,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=146";
+} from "../components/right-panel.js?v=147";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
@@ -444,6 +445,15 @@ function renderComposer(attachedContext, session, selectable) {
                   <div class="ap-action-dropdown-item-text">
                     <div class="ap-action-dropdown-item-label-container">
                       <span class="ap-action-dropdown-item-label">Add URL</span>
+                    </div>
+                  </div>
+                </button>
+                <div class="ap-action-dropdown-divider" role="separator"></div>
+                <button type="button" class="ap-action-dropdown-item" data-open-connectors role="menuitem">
+                  <i class="ap-icon-view-grid"></i>
+                  <div class="ap-action-dropdown-item-text">
+                    <div class="ap-action-dropdown-item-label-container">
+                      <span class="ap-action-dropdown-item-label">Connect a source</span>
                     </div>
                   </div>
                 </button>
@@ -2962,6 +2972,16 @@ function bindSession(root, session) {
         }
         setHandoff("pendingStartContextBuilder", { flow: "alt", prefilledUrl: "", returnTo: "/" });
         navigate(`/session/welcome-alt-${Date.now().toString(36)}`);
+        return;
+      }
+
+      // "Connect a source" in the paper-clip menu → open the connectors modal
+      // scoped to this chat (Try-in-chat asks here, no navigation).
+      if (event.target.closest("[data-open-connectors]")) {
+        event.preventDefault();
+        const menu = root.querySelector("[data-assistant-attach-menu]");
+        if (menu) menu.hidden = true;
+        openConnectorsModal({ currentSessionId: session.id });
         return;
       }
 

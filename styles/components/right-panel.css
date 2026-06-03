@@ -2298,3 +2298,14 @@ body.hide-playbook-colors .context-brief__hero-color {
 .rpanel-live-connector__badge {
   flex-shrink: 0;
 }
+
+/* "Connect" button pinned to the right of the group head. */
+.rpanel-live-connectors__manage {
+  margin-left: auto;
+}
+
+.rpanel-live-connectors__empty {
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-md);
+  padding: var(--ref-spacing-xxs) 0 var(--ref-spacing-xxs);
+}

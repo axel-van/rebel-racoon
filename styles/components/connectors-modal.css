@@ -1,0 +1,55 @@
+/* Connectors modal — gallery + detail as an overlay.
+ *
+ * Positioning (fixed/centered, .open show/hide, width) lives in
+ * styles/screens/modals.css alongside the other modals. This file owns only
+ * the inner layout. The body reuses the .connectors-* classes from
+ * styles/screens/connectors.css (loaded globally), so the modal and the
+ * /connectors page render identically; the page's section-level horizontal
+ * padding is neutralised here since the dialog supplies its own gutter.
+ */
+
+.connectors-modal__header {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  min-height: 32px;
+}
+
+.connectors-modal__back {
+  margin-left: calc(-1 * var(--ref-spacing-xs));
+}
+
+/* Scrollable body — the gallery list / detail can exceed the dialog height. */
+.connectors-modal__content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* The gallery/detail bodies carry the page's section padding via the
+ * .connectors-* rules; inside the dialog the dialog padding already handles
+ * the gutter, so drop the doubled horizontal inset and top padding. */
+.connectors-modal__content .connectors-view__toolbar,
+.connectors-modal__content .connectors-featured,
+.connectors-modal__content .connectors-group,
+.connectors-modal__content .connectors-empty,
+.connectors-modal__content .connectors-detail {
+  max-width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.connectors-modal__content .connectors-view__toolbar {
+  padding-top: 0;
+}
+
+.connectors-modal__content .connectors-detail {
+  padding-top: 0;
+}
+
+/* First group/featured block shouldn't add extra top padding under the
+ * toolbar inside the tighter modal. */
+.connectors-modal__content .connectors-featured:first-of-type,
+.connectors-modal__content .connectors-group:first-of-type {
+  padding-top: var(--ref-spacing-md);
+}
