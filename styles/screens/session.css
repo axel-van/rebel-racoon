@@ -1055,9 +1055,15 @@
 .ap-action-dropdown.assistant-attach__submenu {
   position: absolute;
   left: 100%;
-  top: 0;
+  /* "Connected sources" is the last menu item and the menu itself opens above
+     the composer (near the screen bottom), so grow the flyout UPWARD from the
+     trigger's bottom edge to avoid clipping below the viewport. */
+  bottom: 0;
+  top: auto;
   width: auto;
   min-width: 200px;
+  max-height: 60vh;
+  overflow-y: auto;
   display: none;
   z-index: var(--app-z-overlay);
 }
