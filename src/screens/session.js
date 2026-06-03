@@ -48,6 +48,8 @@ import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
 import * as inlineQuestion from "../inline-question.js?v=33";
 import { askConnector } from "../connector-ask.js?v=2";
+import { getConnectedConnectors } from "../connectors-store.js?v=22";
+import { renderConnectorLogo } from "../connectors-view.js?v=1";
 import * as contextBuilder from "../context-builder.js?v=80";
 import * as playbookEditor from "../playbook-editor.js?v=41";
 import { renderPicker } from "./_analyse-common.js?v=39";
@@ -376,6 +378,34 @@ function renderPlaybookControl(ctx, selectable) {
   `;
 }
 
+// Composer "Add" menu — connected connectors listed as live sources you can
+// query in chat (Codex-style installed-apps list). Connecting new ones is not
+// surfaced here; it lives behind the "Browse connectors" entry at the bottom.
+// Returns "" when nothing is connected (the bottom entry still offers it).
+function renderAttachConnectorItems() {
+  const connected = getConnectedConnectors();
+  if (!connected.length) return "";
+  const items = connected
+    .map(
+      (c) => `
+      <button type="button" class="ap-action-dropdown-item assistant-attach__connector" data-attach-connector="${escapeHtml(
+        c.id,
+      )}" role="menuitem">
+        <span class="assistant-attach__connector-logo">${renderConnectorLogo(c, 18)}</span>
+        <div class="ap-action-dropdown-item-text">
+          <div class="ap-action-dropdown-item-label-container">
+            <span class="ap-action-dropdown-item-label">${escapeHtml(c.name)}</span>
+          </div>
+        </div>
+      </button>`,
+    )
+    .join("");
+  return `
+    <div class="ap-action-dropdown-divider" role="separator"></div>
+    <div class="assistant-attach__menu-label">Connected sources</div>
+    ${items}`;
+}
+
 function renderComposer(attachedContext, session, selectable) {
   return `
     <div class="session__composer">
@@ -448,12 +478,13 @@ function renderComposer(attachedContext, session, selectable) {
                     </div>
                   </div>
                 </button>
+                ${renderAttachConnectorItems()}
                 <div class="ap-action-dropdown-divider" role="separator"></div>
                 <button type="button" class="ap-action-dropdown-item" data-open-connectors role="menuitem">
                   <i class="ap-icon-view-grid"></i>
                   <div class="ap-action-dropdown-item-text">
                     <div class="ap-action-dropdown-item-label-container">
-                      <span class="ap-action-dropdown-item-label">Connect a source</span>
+                      <span class="ap-action-dropdown-item-label">Browse connectors</span>
                     </div>
                   </div>
                 </button>
@@ -2975,8 +3006,20 @@ function bindSession(root, session) {
         return;
       }
 
-      // "Connect a source" in the paper-clip menu → open the connectors modal
-      // scoped to this chat (Try-in-chat asks here, no navigation).
+      // A connected connector in the paper-clip menu → query it live in this
+      // chat (no navigation). Same flow as the right-panel "Ask".
+      const attachConn = event.target.closest("[data-attach-connector]");
+      if (attachConn) {
+        event.preventDefault();
+        const menu = root.querySelector("[data-assistant-attach-menu]");
+        if (menu) menu.hidden = true;
+        askConnector(session.id, attachConn.dataset.attachConnector);
+        return;
+      }
+
+      // "Browse connectors" (bottom of the menu) → open the connectors gallery
+      // modal scoped to this chat. This is the only place connecting is offered
+      // from the composer.
       if (event.target.closest("[data-open-connectors]")) {
         event.preventDefault();
         const menu = root.querySelector("[data-assistant-attach-menu]");

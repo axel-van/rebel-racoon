@@ -1038,6 +1038,26 @@
   display: none;
 }
 
+/* Muted section heading above the connected-connectors list (Codex-style
+   "N installed" label). */
+.assistant-attach__menu-label {
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs) var(--app-spacing-micro);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sys-text-color-light);
+}
+
+/* A connected connector's logo sits in the dropdown item's icon slot — match
+   the DS icon size + trailing spacing (.ap-action-dropdown-item > i:first-child). */
+.assistant-attach__connector-logo {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  margin-right: var(--ref-spacing-xs);
+}
+
 /* ---------- Composer mention picker ---------------------------------- */
 
 /* Popup that floats above the composer card listing the session's
