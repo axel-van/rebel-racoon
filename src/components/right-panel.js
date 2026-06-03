@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=38";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=40";
 import { isFlagOn } from "../feature-flags.js?v=3";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=36";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=37";
 import { isNewUser } from "../user-mode.js?v=22";
 import { getPath } from "../router.js?v=30";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -26,8 +26,11 @@ import {
   removeSources,
   renameSource,
 } from "../sources-stream.js?v=35";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=25";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=26";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
+import { getConnectedConnectors } from "../connectors-store.js?v=22";
+import { askConnector } from "../connector-ask.js?v=2";
+import { renderConnectorLogo } from "../screens/connectors.js?v=1";
 import { addMention as addComposerMention } from "../composer-mentions.js?v=6";
 import { iconFor } from "../file-kinds.js?v=20";
 
@@ -529,6 +532,18 @@ export function init() {
       openAddSourceModal({
         currentSessionId: sid,
       });
+      return;
+    }
+    // Live connector "Ask" — a connected connector is a queryable live source.
+    // Launch the in-chat ask flow and close the panel so the chat is visible.
+    const askConnBtn = event.target.closest("[data-rpanel-ask-connector]");
+    if (askConnBtn) {
+      const sid = activeSessionId();
+      const id = askConnBtn.dataset.rpanelAskConnector;
+      if (sid && id) {
+        askConnector(sid, id);
+        closePanel();
+      }
       return;
     }
     // Source card kebab (…) — toggle its dropdown, one open at a time.
@@ -1807,10 +1822,12 @@ function renderSourcesView() {
       ${RPANEL_CLOSE_INLINE}
     </div>
   `;
+  const liveBlock = renderLiveConnectors();
   if (sources.length === 0) {
     return `
       <div class="rpanel-sources">
         ${head}
+        ${liveBlock}
         <div class="app-right-panel__empty rpanel-sources__empty">
           <div class="app-right-panel__empty-icon"><i class="ap-icon-file"></i></div>
           <div class="app-right-panel__empty-title">No sources yet</div>
@@ -1828,9 +1845,44 @@ function renderSourcesView() {
   return `
     <div class="rpanel-sources">
       ${head}
+      ${liveBlock}
       <div class="rpanel-sources__list">${rows}</div>
     </div>
   `;
+}
+
+// Connected connectors surface as LIVE sources at the top of the Sources view:
+// nothing is imported — clicking Ask queries the connector live in chat
+// (simulated MCP, see connector-ask.js). Distinct from the frozen file sources
+// listed below.
+function renderLiveConnectors() {
+  const connected = getConnectedConnectors();
+  if (!connected.length) return "";
+  const rows = connected
+    .map(
+      (c) => `
+      <div class="rpanel-live-connector" data-connector-id="${escapeAttr(c.id)}">
+        ${renderConnectorLogo(c, 28)}
+        <div class="rpanel-live-connector__body">
+          <div class="rpanel-live-connector__name">${escapeText(c.name)}</div>
+          <div class="rpanel-live-connector__sub muted">Live · query its content in chat</div>
+        </div>
+        <button type="button" class="ap-button ghost orange rpanel-live-connector__ask" data-rpanel-ask-connector="${escapeAttr(
+          c.id,
+        )}">
+          <i class="ap-icon-single-chat-bubble"></i><span>Ask</span>
+        </button>
+      </div>`,
+    )
+    .join("");
+  return `
+    <div class="rpanel-live-connectors">
+      <div class="rpanel-live-connectors__head">
+        <span class="rpanel-live-connectors__title">Live connectors</span>
+        <span class="ap-tag grey">${connected.length}</span>
+      </div>
+      <div class="rpanel-live-connectors__list">${rows}</div>
+    </div>`;
 }
 
 const SOURCE_KIND_ICON = {

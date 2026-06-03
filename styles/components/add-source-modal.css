@@ -519,3 +519,14 @@
   color: var(--ref-color-grey-80);
   max-width: 320px;
 }
+
+/* Connectors tab — link out to the full gallery to connect new sources. */
+.add-source__browse-connectors {
+  margin-top: var(--ref-spacing-sm);
+}
+
+.add-source__connectors-empty {
+  padding: var(--ref-spacing-md);
+  font-size: var(--ref-font-size-sm);
+  text-align: center;
+}

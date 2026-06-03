@@ -13,7 +13,7 @@ import {
   ideas as seedIdeas,
   ideasBySession as seedIdeasBySession,
   recentSessions as seedRecentSessions,
-} from "./mocks.js?v=36";
+} from "./mocks.js?v=37";
 import { isNewUser } from "./user-mode.js?v=22";
 
 // Demo session ids — the recentSessions seed (s-acme-launch / s-riverside /
@@ -21,7 +21,7 @@ import { isNewUser } from "./user-mode.js?v=22";
 // conversations (created at runtime via "+ New conversation") start empty
 // to match the user's mental model. Anything else looked-up — same path.
 const DEMO_SESSION_IDS = new Set(seedRecentSessions.map((s) => s.id));
-import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=38";
+import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=40";
 import {
   getSources as streamGetSources,
   subscribeSources,

@@ -2250,3 +2250,67 @@ body.hide-playbook-colors .context-brief__hero-color {
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxs);
 }
+
+/* ── Live connectors (Sources view) ──────────────────────────────────────
+ * Connected connectors surface as queryable LIVE sources at the top of the
+ * Sources view — clicking Ask queries them in chat (simulated MCP). Visually
+ * distinct from the frozen file sources listed below. */
+.rpanel-live-connectors {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  border-bottom: 1px solid var(--app-border);
+}
+
+.rpanel-live-connectors__head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.rpanel-live-connectors__title {
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sys-text-color-light);
+}
+
+.rpanel-live-connectors__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.rpanel-live-connector {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+}
+
+.rpanel-live-connector__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-spacing-micro);
+}
+
+.rpanel-live-connector__name {
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+}
+
+.rpanel-live-connector__sub {
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+}
+
+.rpanel-live-connector__ask {
+  flex-shrink: 0;
+}

@@ -18,8 +18,9 @@ import { isFlagOn } from "../feature-flags.js?v=3";
 import { isNewUser } from "../user-mode.js?v=22";
 import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=32";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=29";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=144";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=38";
+import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=22";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=145";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=40";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=28";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=34";
 
@@ -208,6 +209,7 @@ export function initSidebar() {
   // route change.
   subscribeContexts(() => renderSidebar());
   subscribeSessions(() => renderSidebar());
+  subscribeConnectors(() => renderSidebar());
 
   // Click outside the popmenu → close.
   document.addEventListener("click", (event) => {
@@ -461,6 +463,13 @@ const NAV = [
     label: "Playbooks",
     match: (p) => p === "/contexts",
     count: () => getContexts().length,
+  },
+  {
+    path: "/connectors",
+    icon: "ap-icon-view-grid",
+    label: "Connectors",
+    match: (p) => p === "/connectors",
+    count: () => getConnectedConnectors().length,
   },
 ];
 

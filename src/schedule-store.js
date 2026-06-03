@@ -15,7 +15,7 @@
 //   • removeFromQueue(id)       — drop a single entry (unschedule)
 //   • busyCountsByDay(start,end)— Map<dateKey, count> for calendar dots
 
-import { scheduledQueue as SEED } from "./mocks.js?v=36";
+import { scheduledQueue as SEED } from "./mocks.js?v=37";
 
 let queue = SEED.slice();
 const subs = new Set();

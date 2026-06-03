@@ -10,16 +10,18 @@
 // a toast. No working-copy, no Save button.
 
 import { html, raw, escapeHtml } from "../utils.js?v=20";
+import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=96";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=4";
 import { showToast } from "../components/toast.js?v=20";
-import { socialAccounts } from "../mocks.js?v=36";
+import { renderConnectorLogo } from "./connectors.js?v=1";
+import { socialAccounts } from "../mocks.js?v=37";
 import {
   getConnectors,
   findConnector,
   setConnectorStatus,
   subscribe as subscribeConnectors,
-} from "../connectors-store.js?v=21";
+} from "../connectors-store.js?v=22";
 // Admin section — prototype-only controls (was the floating admin chip).
 import { FLAGS } from "../ff-catalog.js?v=4";
 import { getFlags, setFlag } from "../feature-flags.js?v=3";
@@ -187,7 +189,16 @@ function renderActiveSection(activeId) {
           <h2>${escapeHtml(section.label)}</h2>
           <p>${escapeHtml(section.sub)}</p>
         </div>
-        <span class="ap-status grey no-dot">${escapeHtml(c.label)}</span>
+        <div class="settings-view__section-head-actions">
+          <span class="ap-status grey no-dot">${escapeHtml(c.label)}</span>
+          ${raw(
+            activeId === "connectors"
+              ? `<button type="button" class="ap-button stroked blue" data-connectors-browse>
+                   <i class="ap-icon-view-grid"></i><span>Browse connectors</span>
+                 </button>`
+              : "",
+          )}
+        </div>
       </header>
       <div class="ap-card settings-view__list">
         ${raw(items.map((item, i) => (i === 0 ? "" : `<div class="ap-divider"></div>`) + rowFn(item)).join(""))}
@@ -289,7 +300,7 @@ function renderConnectorRow(c) {
     : "";
   return `
     <div class="settings-row" data-row-id="${escapeHtml(c.id)}">
-      <img class="settings-row__logo" src="${escapeHtml(c.logo)}" alt="" width="32" height="32" loading="lazy" />
+      ${renderConnectorLogo(c, 32)}
       <div class="settings-row__body">
         <div class="settings-row__title">${escapeHtml(c.name)}</div>
         <div class="settings-row__sub">${escapeHtml(c.desc)}</div>
@@ -345,6 +356,12 @@ function bind(target) {
         setHashQuery("/settings", { section: id });
         paint(target);
       }
+      return;
+    }
+
+    // Browse connectors — jump to the full gallery (marketplace) page.
+    if (event.target.closest("[data-connectors-browse]")) {
+      navigate("/connectors");
       return;
     }
 

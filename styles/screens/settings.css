@@ -127,6 +127,13 @@
   min-width: 0;
 }
 
+.settings-view__section-head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  flex-shrink: 0;
+}
+
 .settings-view__section-head h2 {
   margin: 0;
 }

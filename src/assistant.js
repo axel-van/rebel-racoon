@@ -6,7 +6,8 @@
 //
 // Subscribers re-render the thread DOM on any change — no global store.
 
-import { ideas, threadsBySession as seedThreadsBySession } from "./mocks.js?v=36";
+import { ideas, threadsBySession as seedThreadsBySession, connectorDocs } from "./mocks.js?v=37";
+import { findConnector } from "./connectors-store.js?v=22";
 
 const threads = new Map(); // sessionId → messages[]
 const subscribers = new Map(); // sessionId → Set<(messages) => void>
@@ -138,6 +139,73 @@ export function sendMessage(sessionId, text, options = {}) {
       });
     }
   }, delay);
+}
+
+// Live connector query — simulates an MCP round-trip against a CONNECTED
+// connector (Notion, Slite, …). Mirrors sendMessage's three-turn shape, but
+// the reasoning notice is framed as a sequence of MCP tool calls and the
+// answer is grounded in (and cites) the connector's mock content. This is the
+// "connector = live source" model: the user never pre-imports docs — I query
+// the workspace live when asked.
+export function sendConnectorMessage(sessionId, connectorId, text) {
+  if (!text || !text.trim()) return;
+  const connector = findConnector(connectorId);
+  // Defensive fallback — a disconnected/unknown connector routes to the
+  // generic assistant rather than failing silently.
+  if (!connector || connector.status !== "connected") {
+    sendMessage(sessionId, text);
+    return;
+  }
+
+  const thread = getThread(sessionId);
+  const reasoningId = newId();
+  const replyId = newId();
+
+  thread.push({
+    id: newId(),
+    role: "user",
+    meta: "You",
+    text: text.trim(),
+    status: "ready",
+    createdAt: Date.now(),
+  });
+  thread.push({
+    id: reasoningId,
+    role: "system",
+    meta: `Querying ${connector.name} via MCP`,
+    variant: "mermaid",
+    text: `Running ${mcpCallTrace(connector)}…`,
+    open: true,
+    status: "loading",
+    createdAt: Date.now(),
+  });
+  thread.push({
+    id: replyId,
+    role: "assistant",
+    meta: "Archie",
+    text: "",
+    status: "loading",
+    hidden: true,
+    createdAt: Date.now(),
+  });
+  notify(sessionId);
+
+  setTimeout(() => {
+    const reply = mockConnectorReply(connector, text);
+    const reasoning = thread.find((m) => m.id === reasoningId);
+    if (reasoning) {
+      reasoning.text = reply.reasoning;
+      reasoning.status = "ready";
+      reasoning.open = false;
+    }
+    const replyMsg = thread.find((m) => m.id === replyId);
+    if (replyMsg) {
+      replyMsg.text = reply.text;
+      replyMsg.status = "ready";
+      replyMsg.hidden = false;
+    }
+    notify(sessionId);
+  }, 5200);
 }
 
 // Push a ready-state AI Copilot turn directly (no user turn, no Drafting
@@ -545,6 +613,55 @@ function launchBatch(lead) {
 let _lastLeadIdeaTitle = "";
 function leadIdeaTitle() {
   return _lastLeadIdeaTitle;
+}
+
+// Build a fake MCP tool-call trace from a connector's capabilities, e.g.
+// "notion.search → notion.read → notion.query". Each capability's leading verb
+// becomes a lowercase method on the connector's namespace; reads like a real
+// MCP server invocation in the reasoning chip.
+function mcpCallTrace(connector) {
+  const verb = (cap) => (cap || "").trim().split(/\s+/)[0].toLowerCase() || "call";
+  const caps = Array.isArray(connector.capabilities) ? connector.capabilities : [];
+  const tools = (caps.length ? caps : ["query"]).slice(0, 3).map((c) => `${connector.id}.${verb(c)}`);
+  return tools.join(" → ");
+}
+
+// Scripted reply for a live connector query. Grounds the answer in 1–2 items
+// from the connector's mock doc pool and cites them, so a simulated MCP query
+// reads like it actually pulled from the workspace. Voice stays first-person.
+function mockConnectorReply(connector, prompt) {
+  const pool = connectorDocs[connector.id] || [];
+  const cited = pool.slice(0, Math.min(2, pool.length));
+  const lead = cited[0];
+  const sourcesBlock = cited.length
+    ? `\n\nSources I pulled:\n${cited.map((d) => `• ${d.title} — ${d.kind}`).join("\n")}`
+    : "";
+
+  const reasoning = `Called ${connector.name} over MCP — ran ${mcpCallTrace(connector)}. Scanned the workspace and pulled the ${
+    cited.length || "most"
+  } most relevant item${cited.length === 1 ? "" : "s"} to ground the answer.`;
+
+  // No content to cite — connector is connected but its pool is empty.
+  if (!lead) {
+    return {
+      reasoning,
+      text: `I queried ${connector.name} live, but didn't find anything specific to work from yet. Try a more specific ask, or point me at a topic and I'll search again.`,
+    };
+  }
+
+  const p = prompt || "";
+  let body;
+  if (/contrarian|angle|hot take|provocative/i.test(p)) {
+    body = `Pulling from "${lead.title}", here's a contrarian angle worth posting: take the prevailing assumption it documents and argue the inverse, backed by the specifics inside. That tension is what stops the scroll.`;
+  } else if (/summar|tl;?dr|bullet|recap/i.test(p)) {
+    body = `Here's the recap from ${connector.name}, drawn mainly from "${lead.title}": the core decision, the reasoning behind it, and the one open question still worth resolving. I can turn any of those three into a post.`;
+  } else if (/post|draft|repurpose|content|idea/i.test(p)) {
+    body = `Based on "${lead.title}", the most post-worthy thread is the concrete before/after it captures. Let's lead a draft with that specific change — it's believable and it earns the claim.`;
+  } else {
+    body = `Here's what I found in ${connector.name}, grounded in "${lead.title}": the clearest, most specific point is the one I'd build on. Want me to draft a post from it, or dig into another item?`;
+  }
+
+  return { reasoning, text: body + sourcesBlock };
 }
 
 // Scripted mock replies. Ported from the old prototype (src/mock-generators.js),

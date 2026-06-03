@@ -17,7 +17,7 @@
 // The internal array is seeded once from mocks.connectors. Re-imports of
 // this module return the same store; a full page reload re-seeds.
 
-import { connectors as seed } from "./mocks.js?v=36";
+import { connectors as seed } from "./mocks.js?v=37";
 import { createNotifier } from "./store-utils.js?v=1";
 
 const connectors = seed.map((c) => ({ ...c }));
@@ -32,6 +32,12 @@ export function getConnectors() {
 
 export function findConnector(id) {
   return connectors.find((c) => c.id === id) || null;
+}
+
+// Connected connectors only — the gallery's "Try in chat" and the session's
+// live-source surface both list these as queryable live sources.
+export function getConnectedConnectors() {
+  return connectors.filter((c) => c.status === "connected").map((c) => ({ ...c }));
 }
 
 /**

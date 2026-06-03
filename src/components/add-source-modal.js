@@ -10,14 +10,16 @@
 
 import { html, raw, escapeHtml } from "../utils.js?v=20";
 import { iconFor } from "../file-kinds.js?v=20";
-import { connectorDocs } from "../mocks.js?v=36";
+import { connectorDocs } from "../mocks.js?v=37";
 import {
   getConnectors,
   findConnector,
   setConnectorStatus,
   subscribe as subscribeConnectors,
-} from "../connectors-store.js?v=21";
+} from "../connectors-store.js?v=22";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
+import { navigate } from "../router.js?v=30";
+import { renderConnectorLogo } from "../screens/connectors.js?v=1";
 
 const MODAL_ID = "addSource";
 import {
@@ -250,10 +252,19 @@ function isValidUrl(value) {
 
 function renderConnectorsTab() {
   if (state.browsingConnectorId) return renderConnectorBrowse();
+  // Only connected connectors are browseable for docs here — connecting new
+  // ones happens in the full gallery (linked below).
+  const connected = getConnectors().filter((c) => c.status === "connected");
+  const rows = connected.length
+    ? connected.map(renderConnectorRow).join("")
+    : `<li class="add-source__connectors-empty muted">No connectors connected yet — browse the gallery to add one.</li>`;
   return html`
     <ul class="add-source__connectors">
-      ${raw(getConnectors().map(renderConnectorRow).join(""))}
+      ${raw(rows)}
     </ul>
+    <button type="button" class="ap-button transparent blue add-source__browse-connectors" data-connectors-browse>
+      <i class="ap-icon-view-grid"></i><span>Browse all connectors</span>
+    </button>
   `;
 }
 
@@ -261,7 +272,7 @@ function renderConnectorRow(c) {
   const isConnected = c.status === "connected";
   return `
     <li class="ap-card add-source__connector-row" data-connector-id="${escapeHtml(c.id)}">
-      <img class="add-source__connector-logo" src="${escapeHtml(c.logo)}" alt="" width="32" height="32" loading="lazy" />
+      ${renderConnectorLogo(c, 32)}
       <div class="add-source__connector-body">
         <div class="add-source__connector-title">${escapeHtml(c.name)}</div>
         <div class="muted">${escapeHtml(c.desc)}</div>
@@ -482,6 +493,13 @@ function onClick(event) {
   // Close
   if (event.target.closest("#addSourceClose") || event.target.closest("[data-modal-close]")) {
     close();
+    return;
+  }
+
+  // Browse all connectors → close the modal and open the gallery page.
+  if (event.target.closest("[data-connectors-browse]")) {
+    close();
+    navigate("/connectors");
     return;
   }
 

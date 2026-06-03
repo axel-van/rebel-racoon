@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=96";
-import { socialAccounts, chatStarters } from "../mocks.js?v=36";
+import { socialAccounts, chatStarters } from "../mocks.js?v=37";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
@@ -26,7 +26,7 @@ import {
   finishPending,
   subscribe,
   submitAssistantChoice,
-} from "../assistant.js?v=38";
+} from "../assistant.js?v=40";
 import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=32";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=21";
 import {
@@ -47,6 +47,7 @@ import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } fro
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
 import * as inlineQuestion from "../inline-question.js?v=33";
+import { askConnector } from "../connector-ask.js?v=2";
 import * as contextBuilder from "../context-builder.js?v=80";
 import * as playbookEditor from "../playbook-editor.js?v=41";
 import { renderPicker } from "./_analyse-common.js?v=39";
@@ -61,7 +62,7 @@ import {
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=24";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=12";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=31";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=25";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=26";
 import {
   classifyFile,
   startFileUpload,
@@ -82,7 +83,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=144";
+} from "../components/right-panel.js?v=145";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
@@ -1839,6 +1840,13 @@ function wireAssistantPanel(root, session, attachedContext) {
   const pendingAsk = consumeHandoff("pendingAskSource");
   if (pendingAsk?.filename) {
     setTimeout(() => askWhatToKnow(session.id, pendingAsk.filename), 150);
+  }
+
+  // Hand-off from the Connectors gallery's (or right-panel's) "Try in chat" /
+  // "Ask" on a connected connector — launch the live-connector ask flow.
+  const pendingAskConnector = consumeHandoff("pendingAskConnector");
+  if (pendingAskConnector?.connectorId) {
+    setTimeout(() => askConnector(session.id, pendingAskConnector.connectorId), 200);
   }
 
   // Pending start flow set by the dashboard's New chat button. Only the

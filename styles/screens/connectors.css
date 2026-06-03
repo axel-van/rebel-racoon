@@ -1,0 +1,438 @@
+/* Connectors — full-page gallery route /connectors.
+ *
+ * Codex-style marketplace: hero + search + category filter + Featured grid +
+ * grouped catalog list, plus a detail view. Page chrome (max-width, padding
+ * scale) mirrors /settings and /contexts so widths line up across routes.
+ * Built on DS components (.ap-card / .ap-button / .ap-tag / .ap-status /
+ * .ap-input-group) — only layout + the brand monogram tile live here.
+ */
+
+.connectors-view {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.connectors-view__hero,
+.connectors-view__toolbar,
+.connectors-featured,
+.connectors-group,
+.connectors-empty,
+.connectors-detail {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-left: var(--ref-spacing-xl);
+  padding-right: var(--ref-spacing-xl);
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────── */
+
+.connectors-view__hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ref-spacing-md);
+  padding-top: var(--ref-spacing-lg);
+}
+
+.connectors-view__hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+}
+
+.connectors-view__hero h1 {
+  margin: 0;
+}
+
+.connectors-view__hero .ap-subtitle {
+  margin: 0;
+  color: var(--ref-color-grey-60);
+}
+
+.connectors-view__count {
+  flex-shrink: 0;
+  margin-top: var(--ref-spacing-xxs);
+}
+
+/* ── Toolbar (search + category chips) ────────────────────────────────── */
+
+.connectors-view__toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-md);
+  padding-top: var(--ref-spacing-lg);
+  padding-bottom: var(--ref-spacing-xs);
+}
+
+.connectors-view__search {
+  flex: 0 0 320px;
+  max-width: 100%;
+}
+
+.connectors-view__categories {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  flex-wrap: wrap;
+}
+
+/* .ap-tag rendered as a clickable filter chip — give it a hover + selected
+ * cue without redeclaring the DS tag chrome. */
+.connector-cat-chip {
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    border-color var(--ref-animation-short),
+    background-color var(--ref-animation-short);
+}
+
+.connector-cat-chip:hover {
+  border-color: var(--ref-color-grey-40);
+}
+
+.connector-cat-chip.selected {
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-05);
+  color: var(--ref-color-electric-blue-150);
+}
+
+/* ── Section titles ───────────────────────────────────────────────────── */
+
+.connectors-group__title {
+  margin: 0 0 var(--ref-spacing-xs);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sys-text-color-light);
+}
+
+.connectors-group,
+.connectors-featured {
+  padding-top: var(--ref-spacing-lg);
+}
+
+/* ── Featured grid ────────────────────────────────────────────────────── */
+
+.connectors-featured__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--ref-spacing-md);
+}
+
+.connectors-featured__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-md);
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  border: 1px solid var(--app-border);
+  transition:
+    border-color var(--ref-animation-short),
+    box-shadow var(--ref-animation-short);
+}
+
+.connectors-featured__card:hover {
+  border-color: var(--ref-color-grey-40);
+}
+
+.connectors-featured__card:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
+}
+
+.connectors-featured__card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.connectors-featured__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--ref-color-grey-05);
+  color: var(--ref-color-grey-60);
+}
+
+.connectors-featured__card-name {
+  font-size: var(--ref-font-size-md);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+}
+
+.connectors-featured__card-desc {
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-md);
+}
+
+/* ── Catalog list (one .ap-card per category) ─────────────────────────── */
+
+.connectors-list {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.connectors-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  transition: background-color var(--ref-animation-short);
+}
+
+.connectors-row + .connectors-row {
+  border-top: 1px solid var(--app-border);
+}
+
+.connectors-row:hover {
+  background-color: var(--ref-color-grey-05);
+}
+
+/* Card body is a button (opens detail) — reset UA chrome. */
+.connectors-row__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-md);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.connectors-row__main:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
+  border-radius: var(--ref-border-radius-sm);
+}
+
+.connectors-row__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.connectors-row__title-line {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  flex-wrap: wrap;
+}
+
+.connectors-row__title {
+  font-size: var(--ref-font-size-md);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+}
+
+.connectors-row__desc {
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-md);
+}
+
+.connectors-row__caps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+  margin-top: var(--ref-spacing-xxxs);
+}
+
+.connector-cap {
+  font-size: var(--ref-font-size-xs);
+}
+
+.connectors-row__action {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  flex-shrink: 0;
+}
+
+/* ── Monogram logo (fallback when a connector ships no SVG asset) ──────── */
+
+.connector-logo {
+  flex-shrink: 0;
+  border-radius: var(--ref-border-radius-sm);
+  object-fit: contain;
+}
+
+.connector-logo--mono {
+  /* width / height / font-size are set inline by renderConnectorLogo(size) so
+   * the tile matches each call site (28 / 32 / 40 / 44 / 64). */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--connector-accent, var(--ref-color-grey-60));
+  color: var(--ref-color-white);
+  font-weight: var(--ref-font-weight-bold);
+  line-height: 1;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────────── */
+
+.connectors-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--ref-spacing-xs);
+  padding-top: var(--ref-spacing-xl);
+  padding-bottom: var(--ref-spacing-xl);
+}
+
+.connectors-empty__icon {
+  font-size: var(--ref-font-size-xl);
+  color: var(--ref-color-grey-40);
+}
+
+.connectors-empty__title {
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+}
+
+/* ── Detail view ──────────────────────────────────────────────────────── */
+
+.connectors-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  padding-top: var(--ref-spacing-md);
+}
+
+.connectors-detail__back {
+  align-self: flex-start;
+}
+
+.connectors-detail__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ref-spacing-md);
+}
+
+.connectors-detail__head-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.connectors-detail__title-line {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  flex-wrap: wrap;
+}
+
+.connectors-detail__title-line h1 {
+  margin: 0;
+}
+
+.connectors-detail__desc {
+  margin: var(--ref-spacing-xxs) 0 0;
+  color: var(--ref-color-grey-60);
+  font-size: var(--ref-font-size-md);
+  line-height: var(--ref-font-line-height-md);
+}
+
+.connectors-detail__meta {
+  font-size: var(--ref-font-size-xs);
+}
+
+.connectors-detail__meta strong {
+  color: var(--ref-color-grey-100);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.connectors-detail__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  flex-shrink: 0;
+}
+
+.connectors-detail__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-md);
+}
+
+.connectors-detail__section-title {
+  margin: 0;
+  font-size: var(--ref-font-size-md);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+}
+
+.connectors-detail__section-sub {
+  margin: 0;
+  font-size: var(--ref-font-size-sm);
+}
+
+.connectors-detail__caps {
+  list-style: none;
+  margin: var(--ref-spacing-xs) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.connectors-detail__cap {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  font-size: var(--ref-font-size-sm);
+  color: var(--ref-color-grey-100);
+}
+
+.connectors-detail__cap > i {
+  color: var(--ref-color-electric-blue-150);
+}
+
+/* ── Mobile (≤720px) ──────────────────────────────────────────────────── */
+
+@media (max-width: 720px) {
+  .connectors-view__hero,
+  .connectors-view__toolbar,
+  .connectors-featured,
+  .connectors-group,
+  .connectors-empty,
+  .connectors-detail {
+    padding-left: var(--ref-spacing-md);
+    padding-right: var(--ref-spacing-md);
+  }
+  .connectors-view__search {
+    flex-basis: 100%;
+  }
+  .connectors-row {
+    flex-wrap: wrap;
+  }
+  .connectors-row__action {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+  .connectors-detail__head {
+    flex-direction: column;
+  }
+  .connectors-detail__actions {
+    flex-basis: 100%;
+  }
+}
