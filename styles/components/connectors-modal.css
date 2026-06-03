@@ -15,10 +15,6 @@
   min-height: 32px;
 }
 
-.connectors-modal__back {
-  margin-left: calc(-1 * var(--ref-spacing-xs));
-}
-
 /* Scrollable body — the gallery list / detail can exceed the dialog height. */
 .connectors-modal__content {
   flex: 1;

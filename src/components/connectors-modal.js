@@ -103,10 +103,7 @@ function render() {
       view.connectorId = null;
       return render();
     }
-    headerEl.innerHTML = `
-      <button type="button" class="ap-button transparent grey connectors-modal__back" data-connectors-modal-back>
-        <i class="ap-icon-arrow-left" aria-hidden="true"></i><span>All connectors</span>
-      </button>`;
+    headerEl.innerHTML = `<span class="ap-dialog-title" id="connectorsModalTitle">Connectors</span>`;
     contentEl.innerHTML = renderDetailBody(c);
   } else {
     headerEl.innerHTML = `<span class="ap-dialog-title" id="connectorsModalTitle">Connectors</span>`;
@@ -137,12 +134,6 @@ function onInput(event) {
 function onClick(event) {
   if (event.target.closest("#connectorsModalClose") || event.target.closest("[data-modal-close]")) {
     close();
-    return;
-  }
-  // Back to the gallery from a detail view.
-  if (event.target.closest("[data-connectors-modal-back]")) {
-    view.connectorId = null;
-    render();
     return;
   }
   // Category filter.
