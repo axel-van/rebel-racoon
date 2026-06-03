@@ -181,7 +181,7 @@ function renderGallery() {
           aria-label="Search connectors"
         />
       </div>
-      <div class="connectors-view__categories" role="group" aria-label="Filter by category">${raw(catChips)}</div>
+      <div class="connectors-view__categories" role="tablist" aria-label="Filter by category">${raw(catChips)}</div>
     </div>
 
     ${raw(
@@ -197,9 +197,11 @@ function renderGallery() {
 }
 
 function renderCategoryChip(value, label, active) {
-  return `<button type="button" class="ap-tag connector-cat-chip${active ? " selected" : ""}" data-connectors-category="${escapeHtml(
+  // Reuse the shared .ap-filter-chip primitive (ds-patches.css) — same chip as
+  // the Ideas panel's kind filters; aria-pressed drives the selected state.
+  return `<button type="button" class="ap-filter-chip" data-connectors-category="${escapeHtml(
     value,
-  )}" aria-pressed="${active ? "true" : "false"}">${escapeHtml(label)}</button>`;
+  )}" role="tab" aria-pressed="${active}" aria-selected="${active}"><span>${escapeHtml(label)}</span></button>`;
 }
 
 function renderFeaturedCard(c) {

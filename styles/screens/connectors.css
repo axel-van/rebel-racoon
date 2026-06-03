@@ -73,31 +73,13 @@
   max-width: 100%;
 }
 
+/* Category filters reuse the shared .ap-filter-chip primitive (ds-patches.css),
+ * matching the Ideas panel — only the row layout lives here. */
 .connectors-view__categories {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
   flex-wrap: wrap;
-}
-
-/* .ap-tag rendered as a clickable filter chip — give it a hover + selected
- * cue without redeclaring the DS tag chrome. */
-.connector-cat-chip {
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition:
-    border-color var(--ref-animation-short),
-    background-color var(--ref-animation-short);
-}
-
-.connector-cat-chip:hover {
-  border-color: var(--ref-color-grey-40);
-}
-
-.connector-cat-chip.selected {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-05);
-  color: var(--ref-color-electric-blue-150);
 }
 
 /* ── Section titles ───────────────────────────────────────────────────── */
