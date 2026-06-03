@@ -2253,13 +2253,15 @@ body.hide-playbook-colors .context-brief__hero-color {
 
 /* ── Live connectors (Sources view) ──────────────────────────────────────
  * Connected connectors surface as queryable LIVE sources at the top of the
- * Sources view — clicking Ask queries them in chat (simulated MCP). Visually
- * distinct from the frozen file sources listed below. */
+ * Sources view — clicking Ask queries them in chat (simulated MCP). Reuses the
+ * .rpanel-sources__row card grammar so they read as siblings of the file
+ * sources below, set apart only by a small "Live" badge + a divider. */
 .rpanel-live-connectors {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  padding-bottom: var(--ref-spacing-sm);
+  margin-bottom: var(--ref-spacing-xs);
   border-bottom: 1px solid var(--app-border);
 }
 
@@ -2277,40 +2279,22 @@ body.hide-playbook-colors .context-brief__hero-color {
   color: var(--sys-text-color-light);
 }
 
-.rpanel-live-connectors__list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-}
-
-.rpanel-live-connector {
+/* Brand logo sits in the row-icon slot but without the grey tile (the SVG /
+ * monogram carries its own color). */
+.rpanel-live-connector__logo {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-xs);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-card);
+  justify-content: center;
+  width: 24px;
+  height: 24px;
 }
 
-.rpanel-live-connector__body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-spacing-micro);
+.rpanel-live-connector__logo .connector-logo {
+  width: 24px;
+  height: 24px;
 }
 
-.rpanel-live-connector__name {
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-}
-
-.rpanel-live-connector__sub {
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
-}
-
-.rpanel-live-connector__ask {
+.rpanel-live-connector__badge {
   flex-shrink: 0;
 }

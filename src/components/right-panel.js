@@ -1861,17 +1861,22 @@ function renderLiveConnectors() {
   const rows = connected
     .map(
       (c) => `
-      <div class="rpanel-live-connector" data-connector-id="${escapeAttr(c.id)}">
-        ${renderConnectorLogo(c, 28)}
-        <div class="rpanel-live-connector__body">
-          <div class="rpanel-live-connector__name">${escapeText(c.name)}</div>
-          <div class="rpanel-live-connector__sub muted">Live · query its content in chat</div>
+      <div class="rpanel-sources__row rpanel-live-connector" data-connector-id="${escapeAttr(c.id)}">
+        <div class="rpanel-sources__card-head">
+          <span class="rpanel-live-connector__logo" aria-hidden="true">${renderConnectorLogo(c, 24)}</span>
+          <div class="rpanel-sources__row-name" title="${escapeAttr(c.name)}">${escapeText(c.name)}</div>
+          <span class="ap-tag blue rpanel-live-connector__badge">Live</span>
+          <button
+            type="button"
+            class="ap-button ghost blue rpanel-sources__row-mention"
+            data-rpanel-ask-connector="${escapeAttr(c.id)}"
+            aria-label="Ask ${escapeAttr(c.name)} in chat"
+            title="Ask in chat"
+          >
+            <i class="ap-icon-single-chat-bubble"></i>
+            <span>Ask</span>
+          </button>
         </div>
-        <button type="button" class="ap-button ghost orange rpanel-live-connector__ask" data-rpanel-ask-connector="${escapeAttr(
-          c.id,
-        )}">
-          <i class="ap-icon-single-chat-bubble"></i><span>Ask</span>
-        </button>
       </div>`,
     )
     .join("");
@@ -1879,9 +1884,9 @@ function renderLiveConnectors() {
     <div class="rpanel-live-connectors">
       <div class="rpanel-live-connectors__head">
         <span class="rpanel-live-connectors__title">Live connectors</span>
-        <span class="ap-tag grey">${connected.length}</span>
+        <span class="ap-counter normal grey">${connected.length}</span>
       </div>
-      <div class="rpanel-live-connectors__list">${rows}</div>
+      <div class="rpanel-sources__list rpanel-live-connectors__list">${rows}</div>
     </div>`;
 }
 
