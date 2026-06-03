@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=96";
+import { renderTopbar } from "../components/topbar.js?v=97";
 import { socialAccounts, chatStarters } from "../mocks.js?v=37";
 import {
   getConnectedProfiles,

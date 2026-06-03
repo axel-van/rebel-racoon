@@ -1,6 +1,6 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=3";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=96";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=97";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=76";
 import { init as initRightPanel } from "./components/right-panel.js?v=146";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=26";
@@ -22,7 +22,7 @@ import { renderSession } from "./screens/session.js?v=192";
 import { renderIdeas } from "./screens/ideas.js?v=57";
 import { renderContexts } from "./screens/contexts.js?v=68";
 import { renderSettings } from "./screens/settings.js?v=36";
-import { renderConnectors } from "./screens/connectors.js?v=2";
+import { renderConnectors } from "./screens/connectors.js?v=4";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=46";
 import { renderPlaybook } from "./screens/playbook.js?v=35";

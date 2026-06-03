@@ -15,7 +15,7 @@
 
 import { html, raw, escapeHtml } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=96";
+import { renderTopbar } from "../components/topbar.js?v=97";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { showToast } from "../components/toast.js?v=20";
 import { setHandoff } from "../handoff.js?v=20";
@@ -176,7 +176,7 @@ function renderGallery() {
           type="search"
           class="ap-input"
           placeholder="Search connectors…"
-          value="${escapeHtml(view.query)}"
+          value="${view.query}"
           data-connectors-search
           aria-label="Search connectors"
         />
@@ -265,19 +265,15 @@ function renderDetail(c) {
 
   return html`
     <div class="connectors-detail">
-      <button type="button" class="ap-button transparent grey connectors-detail__back" data-connector-back>
-        <i class="ap-icon-arrow-left"></i><span>All connectors</span>
-      </button>
-
       <header class="connectors-detail__head">
         ${raw(renderConnectorLogo(c, 64))}
         <div class="connectors-detail__head-text">
           <div class="connectors-detail__title-line">
-            <h1>${escapeHtml(c.name)}</h1>
-            ${isConnected ? `<span class="ap-status green">Connected</span>` : ""}
+            <h1>${c.name}</h1>
+            ${raw(isConnected ? `<span class="ap-status green">Connected</span>` : "")}
           </div>
-          <span class="ap-tag grey">${escapeHtml(c.category || "Other")}</span>
-          <p class="connectors-detail__desc">${escapeHtml(c.desc)}.</p>
+          <span class="ap-tag grey">${c.category || "Other"}</span>
+          <p class="connectors-detail__desc">${c.desc}.</p>
           ${raw(meta)}
         </div>
         <div class="connectors-detail__actions">
@@ -297,7 +293,7 @@ function renderDetail(c) {
       <div class="ap-card connectors-detail__card">
         <h2 class="connectors-detail__section-title">What I can do over MCP</h2>
         <p class="muted connectors-detail__section-sub">
-          Once connected, I query ${escapeHtml(c.name)} live — these are the tools I'll call.
+          Once connected, I query ${c.name} live — these are the tools I'll call.
         </p>
         <ul class="connectors-detail__caps">
           ${raw(caps)}
@@ -342,14 +338,10 @@ function bind(target) {
 
     const openBtn = event.target.closest("[data-connector-open]");
     if (openBtn) {
+      // The topbar renders the back control for the detail view (see
+      // topbar.js renderConnectorsBack); the router re-renders this screen on
+      // the hash change, so no manual paint is needed here.
       setHashQuery("/connectors", { connector: openBtn.dataset.connectorOpen });
-      paint(target);
-      return;
-    }
-
-    if (event.target.closest("[data-connector-back]")) {
-      setHashQuery("/connectors", {});
-      paint(target);
       return;
     }
 

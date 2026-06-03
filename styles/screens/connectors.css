@@ -297,10 +297,6 @@
   padding-top: var(--ref-spacing-md);
 }
 
-.connectors-detail__back {
-  align-self: flex-start;
-}
-
 .connectors-detail__head {
   display: flex;
   align-items: flex-start;
@@ -324,6 +320,12 @@
 
 .connectors-detail__title-line h1 {
   margin: 0;
+}
+
+/* The category tag is a flex child of a column container — keep it hugging its
+ * content instead of stretching into a full-width bar. */
+.connectors-detail__head-text > .ap-tag {
+  align-self: flex-start;
 }
 
 .connectors-detail__desc {

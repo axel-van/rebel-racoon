@@ -11,10 +11,10 @@
 
 import { html, raw, escapeHtml } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=96";
+import { renderTopbar } from "../components/topbar.js?v=97";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=4";
 import { showToast } from "../components/toast.js?v=20";
-import { renderConnectorLogo } from "./connectors.js?v=2";
+import { renderConnectorLogo } from "./connectors.js?v=4";
 import { socialAccounts } from "../mocks.js?v=37";
 import {
   getConnectors,
