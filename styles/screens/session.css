@@ -1032,10 +1032,39 @@
   min-width: 180px;
   width: auto;
   z-index: var(--app-z-overlay);
+  /* Let the "Connected sources" flyout escape — the DS .ap-action-dropdown
+     clips overflow, which would hide the nested submenu. */
+  overflow: visible;
 }
 
 .ap-action-dropdown.assistant-attach__menu[hidden] {
   display: none;
+}
+
+/* ---------- "Connected sources" nested submenu (flyout) -------------- */
+
+.assistant-attach__submenu-wrap {
+  position: relative;
+}
+
+/* The trigger's trailing chevron is pushed to the far right. */
+.assistant-attach__submenu-trigger > .ap-icon-chevron-right {
+  margin-left: auto;
+}
+
+.ap-action-dropdown.assistant-attach__submenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  width: auto;
+  min-width: 200px;
+  display: none;
+  z-index: var(--app-z-overlay);
+}
+
+.assistant-attach__submenu-wrap:hover > .assistant-attach__submenu,
+.assistant-attach__submenu-wrap:focus-within > .assistant-attach__submenu {
+  display: block;
 }
 
 /* Muted section heading above the connected-connectors list (Codex-style

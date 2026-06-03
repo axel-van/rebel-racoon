@@ -378,32 +378,59 @@ function renderPlaybookControl(ctx, selectable) {
   `;
 }
 
-// Composer "Add" menu — connected connectors listed as live sources you can
-// query in chat (Codex-style installed-apps list). Connecting new ones is not
-// surfaced here; it lives behind the "Browse connectors" entry at the bottom.
-// Returns "" when nothing is connected (the bottom entry still offers it).
-function renderAttachConnectorItems() {
+// Composer "Add" menu — "Connected sources" is a nested submenu (Codex-style
+// "Modules d'extension ▸" flyout), not a first-level list. The flyout lists the
+// connected connectors as live sources you can query in chat (logo + name →
+// ask), and the only place to connect new ones — "Browse connectors" — sits at
+// the very bottom of that flyout.
+function renderConnectorsSubmenu() {
   const connected = getConnectedConnectors();
-  if (!connected.length) return "";
-  const items = connected
-    .map(
-      (c) => `
-      <button type="button" class="ap-action-dropdown-item assistant-attach__connector" data-attach-connector="${escapeHtml(
-        c.id,
-      )}" role="menuitem">
-        <span class="assistant-attach__connector-logo">${renderConnectorLogo(c, 18)}</span>
+  const items = connected.length
+    ? connected
+        .map(
+          (c) => `
+          <button type="button" class="ap-action-dropdown-item assistant-attach__connector" data-attach-connector="${escapeHtml(
+            c.id,
+          )}" role="menuitem">
+            <span class="assistant-attach__connector-logo">${renderConnectorLogo(c, 18)}</span>
+            <div class="ap-action-dropdown-item-text">
+              <div class="ap-action-dropdown-item-label-container">
+                <span class="ap-action-dropdown-item-label">${escapeHtml(c.name)}</span>
+              </div>
+            </div>
+          </button>`,
+        )
+        .join("")
+    : `<div class="assistant-attach__menu-label">No sources connected yet</div>`;
+  return `
+    <div class="assistant-attach__submenu-wrap">
+      <button
+        type="button"
+        class="ap-action-dropdown-item assistant-attach__submenu-trigger"
+        aria-haspopup="menu"
+        role="menuitem"
+      >
+        <i class="ap-icon-stack"></i>
         <div class="ap-action-dropdown-item-text">
           <div class="ap-action-dropdown-item-label-container">
-            <span class="ap-action-dropdown-item-label">${escapeHtml(c.name)}</span>
+            <span class="ap-action-dropdown-item-label">Connected sources</span>
           </div>
         </div>
-      </button>`,
-    )
-    .join("");
-  return `
-    <div class="ap-action-dropdown-divider" role="separator"></div>
-    <div class="assistant-attach__menu-label">Connected sources</div>
-    ${items}`;
+        <i class="ap-icon-chevron-right" aria-hidden="true"></i>
+      </button>
+      <div class="ap-action-dropdown assistant-attach__submenu" role="menu">
+        ${items}
+        <div class="ap-action-dropdown-divider" role="separator"></div>
+        <button type="button" class="ap-action-dropdown-item" data-open-connectors role="menuitem">
+          <i class="ap-icon-view-grid"></i>
+          <div class="ap-action-dropdown-item-text">
+            <div class="ap-action-dropdown-item-label-container">
+              <span class="ap-action-dropdown-item-label">Browse connectors</span>
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>`;
 }
 
 function renderComposer(attachedContext, session, selectable) {
@@ -478,16 +505,8 @@ function renderComposer(attachedContext, session, selectable) {
                     </div>
                   </div>
                 </button>
-                ${renderAttachConnectorItems()}
                 <div class="ap-action-dropdown-divider" role="separator"></div>
-                <button type="button" class="ap-action-dropdown-item" data-open-connectors role="menuitem">
-                  <i class="ap-icon-view-grid"></i>
-                  <div class="ap-action-dropdown-item-text">
-                    <div class="ap-action-dropdown-item-label-container">
-                      <span class="ap-action-dropdown-item-label">Browse connectors</span>
-                    </div>
-                  </div>
-                </button>
+                ${renderConnectorsSubmenu()}
               </div>
             </div>
             <button
