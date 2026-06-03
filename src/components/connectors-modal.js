@@ -103,7 +103,10 @@ function render() {
       view.connectorId = null;
       return render();
     }
-    headerEl.innerHTML = `<span class="ap-dialog-title" id="connectorsModalTitle">Connectors</span>`;
+    // Detail view supplies its own header (logo + name + actions), so the
+    // modal title would be redundant — leave the bar empty (it just reserves
+    // the row for the floating close button).
+    headerEl.innerHTML = "";
     contentEl.innerHTML = renderDetailBody(c);
   } else {
     headerEl.innerHTML = `<span class="ap-dialog-title" id="connectorsModalTitle">Connectors</span>`;
