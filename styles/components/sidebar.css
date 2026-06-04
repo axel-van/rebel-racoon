@@ -401,36 +401,42 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
   width: auto;
 }
 
+/* Mirrors the shared empty-state language (icon tile → title → muted
+   body, cf. .session__empty), scaled down for the narrow rail. */
 .app-sidebar__empty {
-  padding: var(--ref-spacing-md) var(--ref-spacing-xs);
-  text-align: center;
-}
-
-.app-sidebar__empty-text {
-  font-size: var(--ref-font-size-xs);
-  color: var(--ref-color-grey-60);
-}
-
-/* First-run variant — adds a small hint with an upward arrow that
-   anchors the user's attention to the New conversation button just
-   above this block. */
-.app-sidebar__empty--first-run {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--ref-spacing-xs);
+  text-align: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-lg) var(--ref-spacing-sm);
 }
 
-.app-sidebar__empty-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: var(--ref-font-size-xs);
+.app-sidebar__empty-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  margin-bottom: var(--ref-spacing-xxs);
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-grey-60);
+  border-radius: var(--app-radius-lg);
+}
+
+.app-sidebar__empty-icon i {
+  font-size: var(--sys-icon-css-md);
+}
+
+.app-sidebar__empty-text {
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-100);
 }
 
-.app-sidebar__empty-hint i {
-  color: var(--ref-color-electric-blue-100);
+.app-sidebar__empty-hint {
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-sm);
+  color: var(--ref-color-grey-60);
 }
 
 /* ── Footer ─────────────────────────────────────────────────────────── */

@@ -553,11 +553,11 @@ function renderRecentLists(activeSessionId) {
     // primary CTA.
     return `
       <div class="app-sidebar__empty app-sidebar__empty--first-run">
+        <div class="app-sidebar__empty-icon">
+          <i class="ap-icon-single-chat-bubble" aria-hidden="true"></i>
+        </div>
         <span class="app-sidebar__empty-text">No chats yet</span>
-        <span class="app-sidebar__empty-hint">
-          <i class="ap-icon-arrow-up" aria-hidden="true"></i>
-          <span>Start one with the <strong>New chat</strong> button above.</span>
-        </span>
+        <span class="app-sidebar__empty-hint">Start one with the New chat button above.</span>
       </div>
     `;
   }
