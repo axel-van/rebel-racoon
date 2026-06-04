@@ -22,13 +22,11 @@ const SECTIONS = [
   {
     id: "social",
     label: "Social accounts",
-    icon: "ap-icon-multiple-users",
     sub: "Where I publish your approved posts.",
   },
   {
     id: "admin",
     label: "Admin",
-    icon: "ap-icon-cog",
     sub: "Prototype-only controls — user mode, feature flags, dev docs. Changes reload the app.",
   },
 ];
@@ -136,7 +134,6 @@ function renderNav(activeId) {
                 data-section="${s.id}"
                 ${s.id === activeId ? 'aria-current="page"' : ""}
               >
-                <i class="${s.icon}"></i>
                 <div class="ap-list-panel-item-text">
                   <div class="ap-list-panel-item-name">${escapeHtml(s.label)}</div>
                   <div class="ap-list-panel-item-subtitle">${escapeHtml(subFor(s.id))}</div>

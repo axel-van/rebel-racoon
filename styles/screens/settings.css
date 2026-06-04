@@ -93,18 +93,6 @@
   outline-offset: 2px;
 }
 
-.settings-view__nav .ap-list-panel-item > i {
-  color: var(--ref-color-grey-60);
-  font-size: var(--ref-font-size-md);
-  width: 18px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.settings-view__nav .ap-list-panel-item.selected > i {
-  color: var(--ref-color-electric-blue-150);
-}
-
 /* ── Content pane ─────────────────────────────────────────────────────── */
 
 .settings-view__content {
