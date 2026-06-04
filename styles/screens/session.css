@@ -1239,6 +1239,16 @@
   flex-shrink: 0;
 }
 
+/* Connector rows ("/" command mode) carry a brand logo instead of a DS
+   icon — constrain it to the same 18px slot so the row aligns with the
+   source/idea rows above it. */
+.composer-mention-picker__row-icon .connector-logo {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--ref-border-radius-sm);
+  object-fit: contain;
+}
+
 .composer-mention-picker__row-name {
   flex: 1;
   font-size: var(--ref-font-size-sm);

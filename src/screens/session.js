@@ -624,12 +624,19 @@ function escapeHtmlAttr(s) {
 // under the cursor. Reset to 0 every time the picker opens.
 let mentionHighlightIndex = 0;
 
-function renderMentionPickerInto(container, sessionId) {
+// The picker popup is shared between two modes:
+//   • "mention" → "@" lists the session's sources + ideas (context pills).
+//   • "command" → "/" lists CONNECTED connectors to ask via MCP.
+// Keyboard nav / highlight / positioning are mode-agnostic (they operate
+// on [data-mention-row-index] rows), so only the rendered body differs.
+let pickerMode = "mention";
+
+function renderMentionPickerInto(container, sessionId, mode = "mention") {
   if (!container) return;
-  const sources = getSources(sessionId).filter((s) => s.status !== "Processing");
-  const ideas = getIdeas(sessionId);
   let cursor = 0;
-  const renderRow = (icon, name, kindLabel, dataAttr) => {
+  // iconHtml is a pre-rendered icon slot (a DS <i> for sources/ideas, a
+  // brand logo for connectors) — keeps one row markup across both modes.
+  const renderRow = (iconHtml, name, kindLabel, dataAttr) => {
     const index = cursor++;
     return `
     <li
@@ -640,13 +647,42 @@ function renderMentionPickerInto(container, sessionId) {
       ${dataAttr}
     >
       <span class="composer-mention-picker__row-icon" aria-hidden="true">
-        <i class="${icon}"></i>
+        ${iconHtml}
       </span>
       <span class="composer-mention-picker__row-name">${escapeHtmlAttr(name)}</span>
       ${kindLabel ? `<span class="composer-mention-picker__row-kind muted">${escapeHtmlAttr(kindLabel)}</span>` : ""}
     </li>
   `;
   };
+
+  // "/" command mode — only connected connectors are live/queryable.
+  if (mode === "command") {
+    const connectors = getConnectedConnectors();
+    container.innerHTML =
+      connectors.length > 0
+        ? `
+        <div class="composer-mention-picker__section">
+          <div class="composer-mention-picker__header">Ask a connector</div>
+          <ul class="composer-mention-picker__list" role="group">
+            ${connectors
+              .map((c) =>
+                renderRow(
+                  renderConnectorLogo(c, 18),
+                  c.name,
+                  c.category || "",
+                  `data-mention-pick-connector="${escapeHtmlAttr(c.id)}"`,
+                ),
+              )
+              .join("")}
+          </ul>
+        </div>
+      `
+        : `<div class="composer-mention-picker__empty muted">No connected connectors yet.</div>`;
+    return;
+  }
+
+  const sources = getSources(sessionId).filter((s) => s.status !== "Processing");
+  const ideas = getIdeas(sessionId);
   const sourcesSection =
     sources.length > 0
       ? `
@@ -656,7 +692,7 @@ function renderMentionPickerInto(container, sessionId) {
             ${sources
               .map((s) =>
                 renderRow(
-                  iconForKind(s.kind),
+                  `<i class="${iconForKind(s.kind)}"></i>`,
                   s.filename,
                   s.kind || "",
                   `data-mention-pick-source="${escapeHtmlAttr(s.id)}"`,
@@ -676,7 +712,7 @@ function renderMentionPickerInto(container, sessionId) {
             ${ideas
               .map((i) =>
                 renderRow(
-                  "ap-icon-sparkles",
+                  `<i class="ap-icon-sparkles"></i>`,
                   i.title,
                   i.kind || "",
                   `data-mention-pick-idea="${escapeHtmlAttr(i.id)}"`,
@@ -694,11 +730,12 @@ function renderMentionPickerInto(container, sessionId) {
   container.innerHTML = body;
 }
 
-function openMentionPicker(root, sessionId) {
+function openMentionPicker(root, sessionId, mode = "mention") {
   const picker = root.querySelector("[data-composer-mention-picker]");
   const trigger = root.querySelector("[data-composer-mention-trigger]");
   if (!picker) return;
-  renderMentionPickerInto(picker, sessionId);
+  pickerMode = mode;
+  renderMentionPickerInto(picker, sessionId, mode);
   picker.hidden = false;
   mentionHighlightIndex = 0;
   syncMentionHighlight(picker);
@@ -744,6 +781,22 @@ function activateHighlightedMention(picker) {
   const rows = picker.querySelectorAll("[data-mention-row-index]");
   const row = rows[mentionHighlightIndex];
   if (row) row.click();
+}
+
+// Strip the "/" command trigger token from the textarea before attaching
+// a connector, so the leftover "/" (and anything typed after it) doesn't
+// pollute the message routed to the connector. Removes the "/" + the run
+// of non-whitespace chars immediately preceding the caret.
+function removeSlashToken(input) {
+  if (!input) return;
+  const caret = input.selectionStart ?? input.value.length;
+  const before = input.value.slice(0, caret);
+  const stripped = before.replace(/\/\S*$/, "");
+  if (stripped === before) return;
+  const after = input.value.slice(caret);
+  input.value = stripped + after;
+  const pos = stripped.length;
+  input.setSelectionRange(pos, pos);
 }
 
 // (The context pill that used to live here moved to the app header next
@@ -3010,6 +3063,21 @@ function bindSession(root, session) {
         return;
       }
 
+      // Pick a connector from the "/" command dropdown → strip the "/"
+      // trigger token, attach the connector chip (askConnector → the
+      // composer-connector subscriber paints the chip), then the next
+      // message routes via sendConnectorMessage() (the MCP round-trip).
+      const pickConnector = event.target.closest("[data-mention-pick-connector]");
+      if (pickConnector) {
+        event.preventDefault();
+        event.stopPropagation();
+        removeSlashToken(getInput());
+        askConnector(session.id, pickConnector.dataset.mentionPickConnector);
+        closeMentionPicker(root);
+        getInput()?.focus();
+        return;
+      }
+
       // Click anywhere outside the picker / trigger → close it. This
       // runs last so the picks above still fire when clicking a row.
       const picker = root.querySelector("[data-composer-mention-picker]");
@@ -3229,6 +3297,20 @@ function bindSession(root, session) {
       // behaviour Slack / Linear use. Escape closes the picker.
       if (event.key === "@") {
         openMentionPicker(root, session.id);
+        return;
+      }
+      // Typing "/" opens the connector command picker — but only when the
+      // connectors feature is on, at least one connector is connected, and
+      // the caret is at start-of-token (input empty or preceded by
+      // whitespace), so "/" inside URLs/dates is left alone. The "/" char
+      // itself is still inserted (no preventDefault).
+      if (event.key === "/" && isFlagOn("connectors") && getConnectedConnectors().length > 0) {
+        const el = event.target;
+        const caret = el.selectionStart ?? el.value.length;
+        const prevChar = caret > 0 ? el.value.charAt(caret - 1) : "";
+        if (caret === 0 || /\s/.test(prevChar)) {
+          openMentionPicker(root, session.id, "command");
+        }
         return;
       }
     },
