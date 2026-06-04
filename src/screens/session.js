@@ -26,6 +26,7 @@ import {
   finishPending,
   subscribe,
   submitAssistantChoice,
+  sendConnectorMessage,
 } from "../assistant.js?v=40";
 import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=32";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=21";
@@ -47,9 +48,14 @@ import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } fro
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
 import * as inlineQuestion from "../inline-question.js?v=33";
-import { askConnector } from "../connector-ask.js?v=2";
-import { getConnectedConnectors } from "../connectors-store.js?v=23";
+import { askConnector } from "../connector-ask.js?v=3";
+import { getConnectedConnectors, findConnector } from "../connectors-store.js?v=23";
 import { renderConnectorLogo } from "../connectors-view.js?v=4";
+import {
+  getActiveConnector,
+  clearActiveConnector,
+  subscribe as subscribeComposerConnector,
+} from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
 import * as contextBuilder from "../context-builder.js?v=81";
 import * as playbookEditor from "../playbook-editor.js?v=41";
@@ -93,6 +99,10 @@ import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
 import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=5";
 import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=7";
+
+// Default composer placeholder — restored whenever no connector is attached.
+// A connected connector swaps it for "Ask {name} anything…".
+const COMPOSER_DEFAULT_PLACEHOLDER = "Ask a follow-up, or refine a draft…";
 
 // Session screen — persistent assistant panel on the left, workspace with
 // tabs on the right.
@@ -463,6 +473,11 @@ function renderComposer(attachedContext, session, selectable) {
             hidden
           ></div>
           <div
+            class="session__composer-connector"
+            data-composer-connector
+            hidden
+          ></div>
+          <div
             class="session__composer-mentions"
             data-composer-mentions
             hidden
@@ -471,7 +486,7 @@ function renderComposer(attachedContext, session, selectable) {
             class="session__composer-input-field"
             id="assistantInput"
             aria-label="Message Archie"
-            placeholder="Ask a follow-up, or refine a draft…"
+            placeholder="${COMPOSER_DEFAULT_PLACEHOLDER}"
             rows="2"
           ></textarea>
           <div class="session__composer-toolbar">
@@ -542,6 +557,44 @@ function renderComposer(attachedContext, session, selectable) {
       </div>
     </div>
   `;
+}
+
+// ── Composer connector chip ───────────────────────────────────────────
+// When a connected connector is "asked", it's attached to the composer as a
+// chip (logo + name + ×). The next message is routed to the connector (live
+// MCP) by submitInput(). Rendering the chip also swaps the textarea placeholder
+// to "Ask {name} anything…" and (on attach) focuses the input.
+function renderComposerConnector(root, sessionId, { focus = false } = {}) {
+  const container = root.querySelector("[data-composer-connector]");
+  if (!container) return;
+  const input = root.querySelector("#assistantInput");
+  const id = getActiveConnector(sessionId);
+  const connector = id ? findConnector(id) : null;
+  if (!connector) {
+    container.innerHTML = "";
+    container.hidden = true;
+    if (input) input.placeholder = COMPOSER_DEFAULT_PLACEHOLDER;
+    return;
+  }
+  container.hidden = false;
+  container.innerHTML = `
+    <span class="composer-connector-chip" style="--connector-accent:${escapeHtmlAttr(connector.accent || "#41526b")}">
+      <span class="composer-connector-chip__logo">${renderConnectorLogo(connector, 18)}</span>
+      <span class="composer-connector-chip__label">${escapeHtmlAttr(connector.name)}</span>
+      <button
+        type="button"
+        class="composer-connector-chip__remove"
+        data-composer-connector-remove
+        aria-label="Remove ${escapeHtmlAttr(connector.name)}"
+        title="Remove connector"
+      >
+        <i class="ap-icon-close"></i>
+      </button>
+    </span>`;
+  if (input) {
+    input.placeholder = `Ask ${connector.name} anything…`;
+    if (focus) input.focus();
+  }
 }
 
 // ── Composer mention picker ───────────────────────────────────────────
@@ -1761,6 +1814,14 @@ function wireAssistantPanel(root, session, attachedContext) {
     renderComposerMentions(root.querySelector("[data-composer-mentions]"), session.id);
   });
 
+  // Composer connector chip — "Ask a connector" attaches the connector here;
+  // render once on mount, then re-render (and focus) when the active connector
+  // changes. The submit handler routes the next message to it.
+  renderComposerConnector(root, session.id);
+  const unsubConnector = subscribeComposerConnector(session.id, () => {
+    renderComposerConnector(root, session.id, { focus: true });
+  });
+
   // Subscribe to the assistant thread.
   // When a NEW draft message lands we auto-open the right panel in Drafts
   // mode pinned to that batch — matches the handoff App.jsx "if the reply
@@ -2003,6 +2064,7 @@ function wireAssistantPanel(root, session, attachedContext) {
     offComposerSources();
     offComposerUploads();
     unsubMentions();
+    unsubConnector();
     stopThinkingTimer();
   };
 }
@@ -2416,7 +2478,16 @@ function bindSession(root, session) {
     if (!input) return;
     const text = input.value.trim();
     if (!text) return;
-    sendMessage(session.id, text);
+    // A connected connector attached to the composer routes the message to the
+    // live source (simulated MCP) instead of the normal assistant thread, then
+    // detaches itself so the next message is a normal follow-up.
+    const activeConnector = getActiveConnector(session.id);
+    if (activeConnector) {
+      sendConnectorMessage(session.id, activeConnector, text);
+      clearActiveConnector(session.id);
+    } else {
+      sendMessage(session.id, text);
+    }
     input.value = "";
     // Snap the textarea back to its CSS min-height — without this it
     // keeps the autosized height from the last message.
@@ -2834,6 +2905,14 @@ function bindSession(root, session) {
 
       if (event.target.closest("[data-assistant-send]")) {
         submitInput();
+        return;
+      }
+
+      // Detach the composer connector chip (×) — the next message goes back to
+      // the normal assistant thread.
+      if (event.target.closest("[data-composer-connector-remove]")) {
+        clearActiveConnector(session.id);
+        getInput()?.focus();
         return;
       }
 

@@ -902,6 +902,63 @@
   outline: none;
 }
 
+/* ── Composer connector chip ──────────────────────────────────────────────
+   Attached when the user "asks" a connected connector. Sits above the
+   textarea; the next message is routed to the connector (live MCP). */
+.session__composer-connector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xxs) 0;
+}
+
+.session__composer-connector[hidden] {
+  display: none;
+}
+
+.composer-connector-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--ref-color-grey-05);
+}
+
+.composer-connector-chip__logo {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.composer-connector-chip__label {
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+  line-height: var(--ref-font-line-height-sm);
+}
+
+.composer-connector-chip__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ref-color-grey-60);
+  cursor: pointer;
+  transition: color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.composer-connector-chip__remove:hover {
+  color: var(--ref-color-grey-100);
+}
+
+.composer-connector-chip__remove > i {
+  font-size: var(--ref-font-size-xs);
+}
+
 /* Send button — 32×32 square in the toolbar row, pushed to the far right
    by margin-left:auto. Qualified with .ap-button to raise specificity to
    (0,2,0) so it wins against the default DS .ap-button.primary box-model.
