@@ -103,8 +103,6 @@
   color: var(--ref-color-orange-150);
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-extra-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }
 
 .welcome-hero__title {
@@ -181,8 +179,6 @@
   gap: var(--ref-spacing-xxs);
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-extra-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   color: var(--ref-color-grey-80);
 }
 
@@ -470,8 +466,6 @@
   margin: 0;
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-extra-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--ref-color-grey-60);
 }
 
@@ -586,8 +580,6 @@
 .recap__essential-label {
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-extra-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--ref-color-grey-60);
 }
 
@@ -644,8 +636,6 @@
   gap: var(--ref-spacing-xxs);
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-extra-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   color: var(--ref-color-grey-80);
 }
 
@@ -771,8 +761,6 @@
 .recap__field-label {
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-extra-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--ref-color-grey-60);
 }
 

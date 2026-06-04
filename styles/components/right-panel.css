@@ -206,8 +206,6 @@
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-extra-bold);
   color: var(--ref-color-grey-100);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .rpanel-drafts__group-head i {
@@ -1199,7 +1197,6 @@
   font-family: inherit;
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-extra-bold);
-  letter-spacing: 0.01em;
   cursor: pointer;
   opacity: 0;
   pointer-events: none;
@@ -1431,8 +1428,6 @@
   font-size: var(--ref-font-size-xs);
   line-height: var(--ref-font-line-height-xs);
   font-weight: var(--ref-font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--ref-color-grey-80);
 }
 
@@ -1670,8 +1665,6 @@
   margin: 0;
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--ref-color-grey-100);
 }
 
@@ -1955,8 +1948,6 @@ body.hide-playbook-colors .context-brief__hero-color {
   font-size: var(--ref-font-size-xs);
   line-height: var(--ref-font-line-height-xs);
   font-weight: var(--ref-font-weight-extra-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--ref-color-grey-100);
 }
 
@@ -2083,8 +2074,6 @@ body.hide-playbook-colors .context-brief__hero-color {
   font-size: var(--ref-font-size-xs);
   line-height: var(--ref-font-line-height-xs);
   font-weight: var(--ref-font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--ref-color-grey-80);
 }
 
@@ -2274,8 +2263,6 @@ body.hide-playbook-colors .context-brief__hero-color {
 .rpanel-live-connectors__title {
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--sys-text-color-light);
 }
 

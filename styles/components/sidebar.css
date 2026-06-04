@@ -85,7 +85,6 @@
   color: var(--ref-color-white);
   font-size: var(--app-text-micro-sm);
   font-weight: var(--ref-font-weight-extra-bold);
-  letter-spacing: 0.08em;
   line-height: 1.4;
   flex-shrink: 0;
 }
@@ -201,8 +200,6 @@
   font-size: var(--app-text-micro-sm);
   line-height: var(--ref-font-line-height-xs);
   font-weight: var(--ref-font-weight-extra-bold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--ref-color-grey-60);
 }
 

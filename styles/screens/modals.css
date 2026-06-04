@@ -163,8 +163,6 @@ body.has-modal {
   font-size: 10px;
   line-height: var(--ref-font-line-height-xs);
   font-weight: var(--ref-font-weight-extra-bold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--ref-color-grey-60);
 }
 
@@ -526,8 +524,6 @@ body.has-modal {
 .bug-context__label {
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   color: var(--ref-color-grey-40);
   margin-right: 2px;
 }

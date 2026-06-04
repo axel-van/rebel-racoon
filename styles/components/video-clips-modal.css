@@ -583,8 +583,6 @@
   gap: var(--ref-spacing-xxs);
   font-size: 11px;
   font-weight: var(--ref-font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   color: var(--app-vc-accent);
 }
 
@@ -688,8 +686,6 @@
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-white);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   display: inline-flex;
   align-items: center;
@@ -804,7 +800,6 @@
   font-family: inherit;
   font-size: 11px;
   font-weight: var(--ref-font-weight-bold);
-  letter-spacing: 0.06em;
   padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
   border-radius: var(--ref-border-radius-sm);
   border: 1px solid var(--app-vc-border-strong);
@@ -841,8 +836,6 @@
   gap: var(--ref-spacing-xxxs);
   font-size: 11px;
   font-weight: var(--ref-font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--app-vc-text-subtle);
 }
 
@@ -971,8 +964,6 @@
 .vc-editor__timeline-title {
   font-size: 11px;
   font-weight: var(--ref-font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--app-vc-text-subtle);
   flex: 1;
   min-width: 0;
@@ -1005,8 +996,6 @@
   font-size: 11px;
   font-weight: var(--ref-font-weight-bold);
   color: var(--app-vc-text-subtle);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
 }
 
 .vc-stepper__input {

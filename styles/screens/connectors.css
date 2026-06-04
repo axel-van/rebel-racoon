@@ -88,10 +88,10 @@
 
 .connectors-group__title {
   margin: 0 0 var(--ref-spacing-sm);
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-family: var(--sys-text-style-caption-bold-font-family);
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  line-height: var(--sys-text-style-caption-bold-line-height);
   color: var(--sys-text-color-light);
 }
 

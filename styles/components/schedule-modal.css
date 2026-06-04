@@ -158,8 +158,6 @@
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-60);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .schedule-modal__cal-grid {

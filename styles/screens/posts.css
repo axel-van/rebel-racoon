@@ -374,7 +374,6 @@
   color: var(--ref-color-white);
   font-size: 10px;
   font-weight: var(--ref-font-weight-bold);
-  letter-spacing: 0.02em;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 

@@ -250,8 +250,6 @@ button.app-topbar__title--rename:focus-visible .app-topbar__title-pen {
 .screen__placeholder-eyebrow {
   font-size: 10px;
   font-weight: var(--ref-font-weight-extra-bold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--ref-color-grey-60);
 }
 
@@ -332,7 +330,5 @@ button.app-topbar__title--rename:focus-visible .app-topbar__title-pen {
   font-size: var(--ref-font-size-xs);
   line-height: var(--ref-font-line-height-xs);
   color: var(--sys-text-color-light);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   font-weight: var(--ref-font-weight-bold);
 }

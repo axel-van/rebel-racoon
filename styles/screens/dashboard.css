@@ -32,8 +32,6 @@
   line-height: var(--ref-font-line-height-xs);
   font-weight: var(--ref-font-weight-bold);
   color: var(--sys-text-color-light);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .dashboard__form-hint {
@@ -313,7 +311,6 @@
 }
 
 .source-card__processing-pill-label {
-  letter-spacing: 0.01em;
 }
 
 @keyframes source-card-processing-pulse {
@@ -392,8 +389,6 @@
    wherever it appears. .ap-tag carries border-radius + padding ; we
    override font-size + letter-spacing for the UPPERCASE 10px treatment. */
 .idea-card__kind {
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   font-size: 10px;
   font-weight: var(--ref-font-weight-extra-bold);
 }

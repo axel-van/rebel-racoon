@@ -315,8 +315,6 @@
 .chat-bubble-fields dt {
   font-size: var(--ref-font-size-xs);
   color: var(--sys-text-color-light);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   font-weight: var(--ref-font-weight-bold);
   margin: 0;
 }
@@ -604,8 +602,6 @@ span.chat-bubble-choice-chip {
 .chat-bubble-choice-preview--bold {
   font-weight: var(--ref-font-weight-extra-bold);
   font-size: 14px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .chat-bubble-choice-preview--clean {
@@ -618,7 +614,6 @@ span.chat-bubble-choice-chip {
   font-weight: var(--ref-font-weight-regular);
   font-size: 11px;
   background: rgba(0, 0, 0, 0.65);
-  letter-spacing: 0.02em;
 }
 
 .chat-bubble-choice-preview--none,

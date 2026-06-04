@@ -1079,8 +1079,6 @@
   padding: var(--ref-spacing-xxs) var(--ref-spacing-xs) var(--app-spacing-micro);
   font-size: var(--ref-font-size-xs);
   font-weight: var(--ref-font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--sys-text-color-light);
 }
 
@@ -1132,8 +1130,6 @@
 
 .composer-mention-picker__header {
   font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--ref-color-grey-60);
   padding: var(--ref-spacing-xxs) var(--ref-spacing-xs) 2px;
 }
@@ -1534,8 +1530,6 @@ body.hide-playbook-colors .composer-context__dot {
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-100);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .session__component-section ul {
@@ -1572,8 +1566,6 @@ body.hide-playbook-colors .composer-context__dot {
 .session__component-section dl dt {
   font-size: var(--ref-font-size-xs);
   color: var(--sys-text-color-light);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   font-weight: var(--ref-font-weight-bold);
   margin: 0;
 }
