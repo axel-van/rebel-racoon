@@ -8,22 +8,18 @@
  * padding is neutralised here since the dialog supplies its own gutter.
  */
 
-/* Left-aligned title, matching every other Agorapulse dialog. The DS
-   .ap-dialog-header is flex-direction:column, so we must force row here —
-   otherwise align-items:center would center the title horizontally. */
-.connectors-modal__header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  min-height: 32px;
-}
+/* Header is the standard DS .ap-dialog-header (title + subtitle, stacked) —
+   no overrides needed. */
 
-/* Scrollable body — the gallery list / detail can exceed the dialog height. */
+/* Scrollable body — the gallery list / detail can exceed the dialog height.
+   Collapse the DS content gap (24px, meant for stacked form sections); the
+   gallery's own group padding handles vertical rhythm, so the list reads as
+   one continuous gallery instead of being pushed apart. */
 .connectors-modal__content {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  gap: 0;
 }
 
 /* The gallery/detail bodies carry the page's section padding via the

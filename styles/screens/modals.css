@@ -62,6 +62,9 @@ body.has-modal {
 
 .connectors-modal {
   width: min(calc(100% - 32px), 920px);
+  /* Cap the height so the dialog reads as a panel and the gallery scrolls
+     inside it, rather than the modal stretching to near-full-viewport. */
+  max-height: min(calc(100vh - 48px), 720px);
 }
 
 .bug-report-modal {
