@@ -177,7 +177,7 @@ function renderAdminSection(section) {
   const modeRows = ADMIN_MODE_OPTIONS.map((opt) => {
     const active = opt.value === mode;
     return `
-      <label class="ap-radio-container settings-opt-row${active ? " is-active" : ""}" data-admin-mode="${escapeHtml(opt.value)}">
+      <label class="ap-radio-card card settings-mode-card" data-admin-mode="${escapeHtml(opt.value)}">
         <input type="radio" name="settings-admin-user-mode" value="${escapeHtml(opt.value)}" ${active ? "checked" : ""} />
         <span class="settings-opt-text">
           <span class="settings-opt-label">${escapeHtml(opt.label)}</span>
@@ -214,7 +214,9 @@ function renderAdminSection(section) {
 
       <section class="ap-card settings-card">
         <h3 class="ap-card-title">User mode</h3>
-        <div class="settings-card__rows" role="radiogroup" aria-label="User mode">${raw(modeRows)}</div>
+        <div class="settings-card__rows settings-card__rows--cards" role="radiogroup" aria-label="User mode">
+          ${raw(modeRows)}
+        </div>
       </section>
 
       <section class="ap-card settings-card">

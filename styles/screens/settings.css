@@ -162,6 +162,12 @@
   border-top: 1px solid var(--sys-settings-card-border-color);
 }
 
+/* User mode: selectable .ap-radio-card cards stacked with a gap (the DS card
+ * modifier carries its own border + checked-state highlight). */
+.settings-card__rows--cards {
+  gap: var(--ref-spacing-xs);
+}
+
 /* List card (Social accounts): the card is a row list, not a content
  * stack — rows handle their own padding, dividers separate them. */
 .settings-list-card {
@@ -303,11 +309,6 @@
 
 .settings-opt-row:hover {
   background: var(--ref-color-grey-05);
-}
-
-/* Selected user-mode option — subtle blue wash. */
-.settings-opt-row.is-active {
-  background: var(--ref-color-electric-blue-05);
 }
 
 /* Flag rows push the toggle to the right of the 2-line label. */
