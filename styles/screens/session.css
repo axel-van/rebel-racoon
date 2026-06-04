@@ -871,7 +871,9 @@
 }
 
 .session__composer-input-field {
-  width: 100%;
+  /* Flex into the row beside the (optional) inline connector chip. */
+  flex: 1;
+  min-width: 0;
   resize: none;
   border: 0;
   background: transparent;
@@ -902,16 +904,24 @@
   outline: none;
 }
 
-/* ── Composer connector chip ──────────────────────────────────────────────
-   Attached when the user "asks" a connected connector. The chip itself is a
-   DS .ap-tag (see renderComposerConnector) — same chip family as the @
-   mention pills. This container just mirrors the mention-pills row so the
-   two align (same left edge, same gap). */
+/* ── Composer input row (connector chip + textarea, Codex-style) ──────────
+   The connector chip sits INLINE at the start of the input so the user types
+   to its right (like Codex's "/" command prefix). When no connector is
+   attached the chip is display:none and the textarea spans the full row. */
+.session__composer-input-row {
+  display: flex;
+  align-items: flex-start;
+}
+
+/* Connector chip — a DS .ap-tag (see renderComposerConnector), same chip
+   family as the @ mention pills. Pinned to the start of the input line and
+   aligned with the textarea's first line (matches its top/left padding). */
 .session__composer-connector {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxxs);
-  margin-bottom: var(--ref-spacing-xxxs);
+  flex-shrink: 0;
+  align-items: center;
+  padding-top: var(--ref-spacing-xxs);
+  padding-left: var(--ref-spacing-xxs);
 }
 
 .session__composer-connector[hidden] {

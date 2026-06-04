@@ -473,22 +473,24 @@ function renderComposer(attachedContext, session, selectable) {
             hidden
           ></div>
           <div
-            class="session__composer-connector"
-            data-composer-connector
-            hidden
-          ></div>
-          <div
             class="session__composer-mentions"
             data-composer-mentions
             hidden
           ></div>
-          <textarea
-            class="session__composer-input-field"
-            id="assistantInput"
-            aria-label="Message Archie"
-            placeholder="${COMPOSER_DEFAULT_PLACEHOLDER}"
-            rows="2"
-          ></textarea>
+          <div class="session__composer-input-row">
+            <div
+              class="session__composer-connector"
+              data-composer-connector
+              hidden
+            ></div>
+            <textarea
+              class="session__composer-input-field"
+              id="assistantInput"
+              aria-label="Message Archie"
+              placeholder="${COMPOSER_DEFAULT_PLACEHOLDER}"
+              rows="2"
+            ></textarea>
+          </div>
           <div class="session__composer-toolbar">
             <div class="assistant-attach">
               <button
