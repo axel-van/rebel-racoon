@@ -1,39 +1,24 @@
 // Settings — full-page route /settings.
 //
-// Two-pane shell: .ap-list-panel rail (Connectors / Social accounts) +
-// content with a single .ap-card per section containing the rows separated
-// by .ap-divider. Replaces the old right-anchored drawer (which forked
-// DS conventions because the DS doesn't ship a side-drawer primitive).
+// Two-pane shell: .ap-list-panel rail (Social accounts / Admin) + content with
+// a single .ap-card per section containing the rows separated by .ap-divider.
+// Connector management lives on the dedicated /connectors page (+ modal), so
+// Settings doesn't duplicate it.
 //
-// All toggles are instant-save — clicking Connect / Disconnect mutates the
-// store (connectors) or the imported mock array (socialAccounts) and shows
-// a toast. No working-copy, no Save button.
+// Social toggles are instant-save — clicking Connect / Disconnect mutates the
+// imported socialAccounts mock array and shows a toast. No Save button.
 
 import { html, raw, escapeHtml } from "../utils.js?v=20";
-import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=98";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=4";
 import { showToast } from "../components/toast.js?v=20";
-import { renderConnectorLogo } from "../connectors-view.js?v=2";
 import { socialAccounts } from "../mocks.js?v=37";
-import {
-  getConnectors,
-  findConnector,
-  setConnectorStatus,
-  subscribe as subscribeConnectors,
-} from "../connectors-store.js?v=22";
 // Admin section — prototype-only controls (was the floating admin chip).
 import { FLAGS } from "../ff-catalog.js?v=5";
-import { getFlags, setFlag, isFlagOn } from "../feature-flags.js?v=4";
+import { getFlags, setFlag } from "../feature-flags.js?v=4";
 import { getUserMode, setUserMode } from "../user-mode.js?v=22";
 
-const ALL_SECTIONS = [
-  {
-    id: "connectors",
-    label: "Connectors",
-    icon: "ap-icon-link",
-    sub: "Where I pull source material from when drafting posts.",
-  },
+const SECTIONS = [
   {
     id: "social",
     label: "Social accounts",
@@ -47,13 +32,6 @@ const ALL_SECTIONS = [
     sub: "Prototype-only controls — user mode, feature flags, dev docs. Changes reload the app.",
   },
 ];
-
-// The Connectors section is gated behind the connectors feature flag (default
-// OFF). When off it's dropped from the rail and the default lands on the first
-// visible section.
-function sections() {
-  return ALL_SECTIONS.filter((s) => s.id !== "connectors" || isFlagOn("connectors"));
-}
 
 // User-mode options (mirrors the former admin chip).
 const ADMIN_MODE_OPTIONS = [
@@ -86,7 +64,6 @@ function applyUserMode(target) {
   window.location.reload();
 }
 
-let unsubscribe = null;
 let boundTarget = null;
 let boundHandler = null;
 let boundChangeHandler = null;
@@ -96,18 +73,10 @@ export function renderSettings(_params, target) {
   teardown();
   paint(target);
   bind(target);
-  // Connectors mutate via the store — repaint when an external surface
-  // (add-source-modal) flips a connector's state.
-  unsubscribe = subscribeConnectors(() => paint(target));
-
   return teardown;
 }
 
 function teardown() {
-  if (unsubscribe) {
-    unsubscribe();
-    unsubscribe = null;
-  }
   if (boundTarget && boundHandler) {
     boundTarget.removeEventListener("click", boundHandler);
   }
@@ -122,10 +91,9 @@ function teardown() {
 // ─── Render ──────────────────────────────────────────────────────────────
 
 function readSection() {
-  const visible = sections();
-  const fallback = visible[0].id;
+  const fallback = SECTIONS[0].id;
   const id = parseHashParams().get("section") || fallback;
-  return visible.find((s) => s.id === id) ? id : fallback;
+  return SECTIONS.find((s) => s.id === id) ? id : fallback;
 }
 
 function paint(target) {
@@ -152,10 +120,8 @@ function counts(items) {
 }
 
 function renderNav(activeId) {
-  const connectorCounts = counts(getConnectors());
   const socialCounts = counts(socialAccounts);
   const subFor = (id) => {
-    if (id === "connectors") return connectorCounts.label;
     if (id === "social") return socialCounts.label;
     return adminModeLabel(getUserMode());
   };
@@ -163,9 +129,8 @@ function renderNav(activeId) {
     <nav class="ap-list-panel settings-view__nav" aria-label="Settings sections">
       <div class="ap-list-panel-items">
         ${raw(
-          sections()
-            .map(
-              (s) => `
+          SECTIONS.map(
+            (s) => `
               <button type="button"
                 class="ap-list-panel-item${s.id === activeId ? " selected" : ""}"
                 data-section="${s.id}"
@@ -178,8 +143,7 @@ function renderNav(activeId) {
                 </div>
               </button>
             `,
-            )
-            .join(""),
+          ).join(""),
         )}
       </div>
     </nav>
@@ -187,12 +151,11 @@ function renderNav(activeId) {
 }
 
 function renderActiveSection(activeId) {
-  const section = sections().find((s) => s.id === activeId);
+  const section = SECTIONS.find((s) => s.id === activeId);
   if (!section) return "";
   if (activeId === "admin") return renderAdminSection(section);
-  const items = activeId === "connectors" ? sortConnected(getConnectors()) : sortConnected(socialAccounts);
+  const items = sortConnected(socialAccounts);
   const c = counts(items);
-  const rowFn = activeId === "connectors" ? renderConnectorRow : renderSocialRow;
   return html`
     <main class="settings-view__content">
       <header class="settings-view__section-head">
@@ -200,19 +163,12 @@ function renderActiveSection(activeId) {
           <h2>${escapeHtml(section.label)}</h2>
           <p>${escapeHtml(section.sub)}</p>
         </div>
-        <div class="settings-view__section-head-actions">
-          <span class="ap-status grey no-dot">${escapeHtml(c.label)}</span>
-          ${raw(
-            activeId === "connectors"
-              ? `<button type="button" class="ap-button stroked blue" data-connectors-browse>
-                   <i class="ap-icon-view-grid"></i><span>Browse connectors</span>
-                 </button>`
-              : "",
-          )}
-        </div>
+        <span class="ap-status grey no-dot">${escapeHtml(c.label)}</span>
       </header>
       <div class="ap-card settings-view__list">
-        ${raw(items.map((item, i) => (i === 0 ? "" : `<div class="ap-divider"></div>`) + rowFn(item)).join(""))}
+        ${raw(
+          items.map((item, i) => (i === 0 ? "" : `<div class="ap-divider"></div>`) + renderSocialRow(item)).join(""),
+        )}
       </div>
     </main>
   `;
@@ -304,31 +260,6 @@ function sortConnected(items) {
   });
 }
 
-function renderConnectorRow(c) {
-  const isConnected = c.status === "connected";
-  const meta = isConnected
-    ? `<div class="settings-row__meta">Connected as <strong>${escapeHtml(c.account || "")}</strong> · Last sync: ${escapeHtml(c.lastSync || "—")}</div>`
-    : "";
-  return `
-    <div class="settings-row" data-row-id="${escapeHtml(c.id)}">
-      ${renderConnectorLogo(c, 32)}
-      <div class="settings-row__body">
-        <div class="settings-row__title">${escapeHtml(c.name)}</div>
-        <div class="settings-row__sub">${escapeHtml(c.desc)}</div>
-        ${meta}
-      </div>
-      <div class="settings-row__action">
-        ${
-          isConnected
-            ? `<span class="ap-status green">Connected</span>
-               <button type="button" class="ap-button ghost grey" data-connector-toggle="${escapeHtml(c.id)}">Disconnect</button>`
-            : `<button type="button" class="ap-button stroked grey" data-connector-toggle="${escapeHtml(c.id)}">Connect</button>`
-        }
-      </div>
-    </div>
-  `;
-}
-
 function renderSocialRow(a) {
   const isConnected = a.status === "connected";
   return `
@@ -367,46 +298,6 @@ function bind(target) {
         setHashQuery("/settings", { section: id });
         paint(target);
       }
-      return;
-    }
-
-    // Browse connectors — jump to the full gallery (marketplace) page.
-    if (event.target.closest("[data-connectors-browse]")) {
-      navigate("/connectors");
-      return;
-    }
-
-    // Connector toggle — goes through the store so the add-source modal
-    // (the other surface listing connectors) stays in sync.
-    const connBtn = event.target.closest("[data-connector-toggle]");
-    if (connBtn) {
-      const id = connBtn.dataset.connectorToggle;
-      const c = findConnector(id);
-      if (!c) return;
-      const wasConnected = c.status === "connected";
-      // Snapshot the pre-toggle state so the toast's Undo can restore
-      // the previous account/lastSync exactly, not just flip status back.
-      const previous = {
-        status: c.status,
-        account: c.account || null,
-        lastSync: c.lastSync || null,
-      };
-      const updated = wasConnected
-        ? setConnectorStatus(id, { status: "disconnected", account: null, lastSync: null })
-        : setConnectorStatus(id, { status: "connected", account: "matt@archie.io", lastSync: "just now" });
-      // store notification already triggers paint via subscribeConnectors,
-      // but we paint here too so the immediate UI feels instant if the
-      // notifier ever debounces.
-      paint(target);
-      showToast(`${updated.name} ${wasConnected ? "disconnected" : "connected"}`, {
-        action: {
-          label: "Undo",
-          onClick: () => {
-            setConnectorStatus(id, previous);
-            paint(target);
-          },
-        },
-      });
       return;
     }
 

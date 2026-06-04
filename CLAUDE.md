@@ -25,17 +25,17 @@ With Claude Code the dev server auto-launches via `.claude/launch.json` (server 
 
 ### Routes (declared in `src/app.js`)
 
-| Route                | Screen                 | Notes                                                                                             |
-| -------------------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
-| `/`                  | `dashboard.js`         | Redirect-only: first-time → `/welcome-alt`, returning → most-recent session or a fresh one        |
-| `/session/:id`       | `session.js`           | The main chat surface (largest file); hosts the assistant thread, composer, and per-session flows |
-| `/ideas`             | `ideas.js`             | Standalone Ideas library (grid + kind filter + search + sort)                                     |
-| `/contexts`          | `contexts.js`          | Standalone **Playbooks** library (cards + edit)                                                   |
-| `/playbook/:id`      | `playbook.js`          | Playbook detail page (topbar back → `/contexts`)                                                  |
-| `/connectors`        | `connectors.js`        | Connectors gallery (marketplace); detail opens in a modal                                         |
-| `/settings`          | `settings.js`          | Two-pane: Connectors / Social accounts / Admin (prototype controls)                               |
-| `/welcome-alt`       | `welcome-alt.js`       | First-time onboarding kickoff (thin redirect into a transient session)                            |
-| `/welcome-alt/recap` | `welcome-alt-recap.js` | Onboarding recap reveal of the built Playbook                                                     |
+| Route                | Screen                 | Notes                                                                                              |
+| -------------------- | ---------------------- | -------------------------------------------------------------------------------------------------- |
+| `/`                  | `dashboard.js`         | Redirect-only: first-time → `/welcome-alt`, returning → most-recent session or a fresh one         |
+| `/session/:id`       | `session.js`           | The main chat surface (largest file); hosts the assistant thread, composer, and per-session flows  |
+| `/ideas`             | `ideas.js`             | Standalone Ideas library (grid + kind filter + search + sort)                                      |
+| `/contexts`          | `contexts.js`          | Standalone **Playbooks** library (cards + edit)                                                    |
+| `/playbook/:id`      | `playbook.js`          | Playbook detail page (topbar back → `/contexts`)                                                   |
+| `/connectors`        | `connectors.js`        | Connectors gallery (marketplace); detail opens in a modal                                          |
+| `/settings`          | `settings.js`          | Two-pane: Social accounts / Admin (prototype controls). Connectors live on `/connectors`, not here |
+| `/welcome-alt`       | `welcome-alt.js`       | First-time onboarding kickoff (thin redirect into a transient session)                             |
+| `/welcome-alt/recap` | `welcome-alt-recap.js` | Onboarding recap reveal of the built Playbook                                                      |
 
 `setAfterRender` (in `app.js`) re-renders the sidebar + conversation-status-card after every route change and toggles the `body.onboarding` full-bleed class for the welcome-alt flow.
 
@@ -134,7 +134,7 @@ src/
 
 ### Connectors as live, MCP-queryable sources
 
-**Gated behind the `connectors` feature flag (default OFF)** — when off, every connectors surface (gallery route + sidebar nav, modal, composer Add → "Connected sources" submenu, Sources panel "Live connectors", Settings → Connectors section, Add-source modal Connectors tab) is hidden. Turn it on in Settings → Admin.
+**Gated behind the `connectors` feature flag (default OFF)** — when off, every connectors surface (gallery route + sidebar nav, modal, composer Add → "Connected sources" submenu, Sources panel "Live connectors", Add-source modal Connectors tab) is hidden. Turn it on in Settings → Admin. Connector management lives only on the `/connectors` page/modal — Settings does not duplicate it.
 
 Connectors (Notion, Slite, Google Drive, GitHub, …) are seeded in `mocks.js` (`connectors` + `connectorDocs`) with `category` / `featured` / `accent` / `capabilities`. Once **connected**, a connector becomes a **live source**: the user "asks" it in chat and `assistant.js` `sendConnectorMessage()` simulates an MCP round-trip — a "Querying … via MCP" reasoning chip listing tool calls, then a cited mock answer. Entry points: the `/connectors` gallery page (clicking a connector opens its detail in `connectors-modal.js`), the composer **Add** menu, and the right-panel **Sources** "Connect" / "Live connectors" surface. `connectors-view.js` holds the shared render helpers used by both the page and the modal; `connector-ask.js` launches the in-chat ask flow. All connect/disconnect goes through `connectors-store` so Settings, the gallery, and the modal stay in sync.
 
