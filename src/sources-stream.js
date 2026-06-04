@@ -8,7 +8,7 @@
 // The state machine timers live here (not inside the modal) so uploads
 // continue in background after the user closes the modal.
 
-import { sourcesBySession as seedByCsesssion } from "./mocks.js?v=39";
+import { sourcesBySession as seedByCsesssion } from "./mocks.js?v=40";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=1";
 

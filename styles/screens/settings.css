@@ -562,6 +562,12 @@
   flex: 0 0 auto;
 }
 
+.sp-no-results {
+  margin: var(--ref-spacing-sm) 0;
+  font-size: var(--ref-font-size-sm);
+  color: var(--ref-color-grey-60);
+}
+
 /* ── Social profiles responsive ───────────────────────────────────────── */
 @media (max-width: 1080px) {
   .sp-grid {

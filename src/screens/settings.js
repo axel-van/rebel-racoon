@@ -12,7 +12,7 @@ import { html, raw, escapeHtml } from "../utils.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=98";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=4";
 import { showToast } from "../components/toast.js?v=20";
-import { socialProfiles, socialProfilesMeta } from "../mocks.js?v=39";
+import { socialAccounts } from "../mocks.js?v=40";
 // Admin section — prototype-only controls (was the floating admin chip).
 import { FLAGS } from "../ff-catalog.js?v=5";
 import { getFlags, setFlag } from "../feature-flags.js?v=4";
@@ -65,6 +65,7 @@ function applyUserMode(target) {
 let boundTarget = null;
 let boundHandler = null;
 let boundChangeHandler = null;
+let boundInputHandler = null;
 
 export function renderSettings(_params, target) {
   renderTopbar();
@@ -81,9 +82,13 @@ function teardown() {
   if (boundTarget && boundChangeHandler) {
     boundTarget.removeEventListener("change", boundChangeHandler);
   }
+  if (boundTarget && boundInputHandler) {
+    boundTarget.removeEventListener("input", boundInputHandler);
+  }
   boundTarget = null;
   boundHandler = null;
   boundChangeHandler = null;
+  boundInputHandler = null;
 }
 
 // ─── Render ──────────────────────────────────────────────────────────────
@@ -113,7 +118,7 @@ function renderPage(activeId) {
 
 function renderNav(activeId) {
   const subFor = (id) => {
-    if (id === "social") return `${socialProfilesMeta.total} profiles`;
+    if (id === "social") return `${getConnectedProfiles().length} profiles`;
     return adminModeLabel(getUserMode());
   };
   return html`
@@ -218,83 +223,107 @@ function renderAdminSection(section) {
 
 // Network → DS metadata. `icon` resolves the full-colour branded glyph
 // (ap-icon-{icon}-official) used for both the group title and the avatar badge.
+// Keyed by the `platform` slug used in mocks.socialAccounts.
 const NETWORKS = {
   facebook: { label: "Facebook", icon: "facebook" },
-  x: { label: "X (Twitter)", icon: "x" },
-  linkedin: { label: "LinkedIn", icon: "linkedin" },
   instagram: { label: "Instagram", icon: "instagram" },
+  linkedin: { label: "LinkedIn", icon: "linkedin" },
+  x: { label: "X (Twitter)", icon: "x" },
   tiktok: { label: "TikTok", icon: "tiktok" },
+  youtube: { label: "YouTube", icon: "youtube" },
+  pinterest: { label: "Pinterest", icon: "pinterest" },
+  threads: { label: "Threads", icon: "threads" },
+  bluesky: { label: "Bluesky", icon: "bluesky" },
 };
 
-// Preserve the source order of mocks.socialProfiles for the group order.
+// Token-status filter options.
+const TOKEN_STATUSES = [
+  { value: "all", label: "All" },
+  { value: "expired", label: "Token expired" },
+  { value: "expiring", label: "Expires soon" },
+  { value: "ok", label: "Valid" },
+];
+
+// Plan context for the limit banner. The slots count is derived live from the
+// number of connected profiles; the banner only shows once they're exhausted.
+const PACKAGE_LIMIT = 12;
+const PLAN_OWNER = "Benjamin Lanciaux";
+
+// Live filter state (module-level so a repaint preserves the user's choices).
+let spFilters = { network: "all", token: "all", query: "" };
+
+function getConnectedProfiles() {
+  return socialAccounts.filter((a) => a.status === "connected");
+}
+
+function matchesFilters(p) {
+  if (spFilters.network !== "all" && p.platform !== spFilters.network) return false;
+  const token = p.token || "ok";
+  if (spFilters.token !== "all" && token !== spFilters.token) return false;
+  const q = spFilters.query.trim().toLowerCase();
+  if (q) {
+    const hay = `${p.handle || ""} ${p.platformLabel || ""} ${p.kind || ""}`.toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  return true;
+}
+
+// Group profiles by network, preserving the order they appear in the source.
 function groupByNetwork(profiles) {
   const order = [];
   const byKey = new Map();
   profiles.forEach((p) => {
-    if (!byKey.has(p.network)) {
-      byKey.set(p.network, []);
-      order.push(p.network);
+    if (!byKey.has(p.platform)) {
+      byKey.set(p.platform, []);
+      order.push(p.platform);
     }
-    byKey.get(p.network).push(p);
+    byKey.get(p.platform).push(p);
   });
   return order.map((key) => ({ key, profiles: byKey.get(key) }));
 }
 
-function initials(name) {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
-}
-
 function renderSocialSection() {
-  const meta = socialProfilesMeta;
-  const groups = groupByNetwork(socialProfiles);
+  const connected = getConnectedProfiles();
+  const total = connected.length;
+  const slotsLeft = Math.max(0, PACKAGE_LIMIT - total);
+  const groups = groupByNetwork(connected.filter(matchesFilters));
+
+  // Network filter options = "All" + every network the user actually has.
+  const netOptions = [{ value: "all", label: "All" }].concat(
+    [...new Set(connected.map((p) => p.platform))].map((key) => ({
+      value: key,
+      label: (NETWORKS[key] && NETWORKS[key].label) || key,
+    })),
+  );
+  const networkLabel = (netOptions.find((o) => o.value === spFilters.network) || netOptions[0]).label;
+  const tokenLabel = (TOKEN_STATUSES.find((o) => o.value === spFilters.token) || TOKEN_STATUSES[0]).label;
+
   return html`
     <main class="settings-view__content sp">
       <div class="sp-filters">
-        <details class="ap-select sp-filter">
-          <summary class="ap-select-trigger">
-            <span class="ap-select-inline-label">Network</span>
-            <span class="ap-select-value">All</span>
-            <i class="ap-icon-chevron-down ap-select-arrow"></i>
-          </summary>
-        </details>
-        <details class="ap-select sp-filter">
-          <summary class="ap-select-trigger">
-            <span class="ap-select-inline-label">Token status</span>
-            <span class="ap-select-value">All</span>
-            <i class="ap-icon-chevron-down ap-select-arrow"></i>
-          </summary>
-        </details>
+        ${raw(renderFilterSelect("network", "Network", networkLabel, netOptions))}
+        ${raw(renderFilterSelect("token", "Token status", tokenLabel, TOKEN_STATUSES))}
         <div class="ap-form-field sp-search">
           <div class="ap-input-group">
             <i class="ap-icon-search"></i>
-            <input type="search" placeholder="Search a social profile" aria-label="Search a social profile" />
+            <input
+              type="search"
+              placeholder="Search a social profile"
+              aria-label="Search a social profile"
+              value="${escapeHtml(spFilters.query)}"
+              data-sp-search
+            />
           </div>
         </div>
       </div>
 
-      <div class="ap-infobox feature-lock has-title sp-limit-banner">
-        <div class="ap-infobox-content">
-          <div class="ap-infobox-texts">
-            <span class="ap-infobox-title">Social profiles limit reached</span>
-            <span class="ap-infobox-message"
-              >You have reached your package limit of <strong>${meta.packageLimit}</strong> profiles. To connect more
-              social profiles, ask the owner of the organization <strong>${escapeHtml(meta.ownerName)}</strong> to add
-              more profiles slots.</span
-            >
-          </div>
-        </div>
-      </div>
+      ${slotsLeft <= 0 ? raw(renderLimitBanner()) : ""}
 
       <div class="sp-count-row">
-        <h2 class="sp-count-title">${meta.total} social profiles</h2>
+        <h2 class="sp-count-title">${total} social profiles</h2>
         <div class="sp-count-actions">
           <span class="sp-slots">
-            <span class="ap-counter normal blue no-bg">${meta.slotsLeft}</span>
+            <span class="ap-counter normal blue no-bg">${slotsLeft}</span>
             profile slots left to connect
           </span>
           <button type="button" class="ap-button secondary blue" data-sp-connect>
@@ -304,14 +333,54 @@ function renderSocialSection() {
         </div>
       </div>
 
-      ${raw(groups.map(renderNetworkGroup).join(""))}
+      ${groups.length
+        ? raw(groups.map(renderNetworkGroup).join(""))
+        : raw('<p class="sp-no-results">No profiles match your filters.</p>')}
     </main>
+  `;
+}
+
+function renderFilterSelect(kind, label, valueLabel, options) {
+  const items = options
+    .map((o) => {
+      const selected = o.value === spFilters[kind];
+      return `
+        <div class="ap-select-option${selected ? " selected" : ""}" data-sp-option="${kind}" data-sp-value="${escapeHtml(o.value)}">
+          <span class="ap-select-option-text">${escapeHtml(o.label)}</span>
+          ${selected ? '<i class="ap-icon-check ap-select-option-check"></i>' : ""}
+        </div>`;
+    })
+    .join("");
+  return `
+    <details class="ap-select sp-filter" data-sp-select="${kind}">
+      <summary class="ap-select-trigger">
+        <span class="ap-select-inline-label">${escapeHtml(label)}</span>
+        <span class="ap-select-value">${escapeHtml(valueLabel)}</span>
+        <i class="ap-icon-chevron-down ap-select-arrow"></i>
+      </summary>
+      <div class="ap-select-dropdown">
+        <div class="ap-select-options">${items}</div>
+      </div>
+    </details>
+  `;
+}
+
+function renderLimitBanner() {
+  return `
+    <div class="ap-infobox feature-lock has-title sp-limit-banner">
+      <div class="ap-infobox-content">
+        <div class="ap-infobox-texts">
+          <span class="ap-infobox-title">Social profiles limit reached</span>
+          <span class="ap-infobox-message">You have reached your package limit of <strong>${PACKAGE_LIMIT}</strong> profiles. To connect more social profiles, ask the owner of the organization <strong>${escapeHtml(PLAN_OWNER)}</strong> to add more profiles slots.</span>
+        </div>
+      </div>
+    </div>
   `;
 }
 
 function renderNetworkGroup(group) {
   const net = NETWORKS[group.key] || { label: group.key, icon: group.key };
-  const needRenew = group.profiles.filter((p) => p.token !== "ok").length;
+  const needRenew = group.profiles.filter((p) => p.token && p.token !== "ok").length;
   return `
     <section class="sp-group">
       <header class="sp-group-head">
@@ -332,18 +401,19 @@ function renderNetworkGroup(group) {
 }
 
 function renderProfileCard(p) {
-  const net = NETWORKS[p.network] || { icon: p.network };
+  const net = NETWORKS[p.platform] || { icon: p.platform };
+  const sub = p.kind || p.platformLabel || "";
   return `
     <div class="sp-card" data-sp-card="${escapeHtml(p.id)}">
       ${renderTokenBanner(p)}
       <div class="sp-card-body">
         <div class="ap-avatar size-36">
-          <span class="ap-avatar-initials">${escapeHtml(initials(p.name))}</span>
+          <img src="${escapeHtml(p.photo)}" alt="" />
           <span class="ap-avatar-network"><i class="ap-icon-${net.icon}-official"></i></span>
         </div>
         <div class="sp-card-text">
-          <div class="sp-card-name">${escapeHtml(p.name)}</div>
-          <div class="sp-card-org">${escapeHtml(p.org)}</div>
+          <div class="sp-card-name">${escapeHtml(p.handle || p.platformLabel || "")}</div>
+          <div class="sp-card-org">${escapeHtml(sub)}</div>
         </div>
         <button type="button" class="ap-icon-button transparent sp-card-more" aria-label="More options" data-sp-more="${escapeHtml(p.id)}">
           <i class="ap-icon-more"></i>
@@ -354,7 +424,7 @@ function renderProfileCard(p) {
 }
 
 function renderTokenBanner(p) {
-  if (p.token === "ok") return "";
+  if (!p.token || p.token === "ok") return "";
   const renew = `<a href="#" class="ap-link standalone small sp-renew" data-sp-renew="${escapeHtml(p.id)}">Renew <i class="ap-icon-refresh"></i></a>`;
   if (p.token === "expired") {
     return `
@@ -399,6 +469,15 @@ function bind(target) {
       return;
     }
 
+    // Social profiles — filter dropdown option pick → update state + repaint.
+    const filterOption = event.target.closest("[data-sp-option]");
+    if (filterOption) {
+      const kind = filterOption.dataset.spOption;
+      spFilters[kind] = filterOption.dataset.spValue;
+      paint(target);
+      return;
+    }
+
     // Social profiles — prototype-only affordances (no backend; surface a
     // toast so the interaction reads as live).
     const connectBtn = event.target.closest("[data-sp-connect]");
@@ -418,8 +497,8 @@ function bind(target) {
     const renewBtn = event.target.closest("[data-sp-renew]");
     if (renewBtn) {
       event.preventDefault();
-      const p = socialProfiles.find((x) => x.id === renewBtn.dataset.spRenew);
-      showToast(`Renewing ${p ? p.name : "profile"}'s token…`);
+      const p = socialAccounts.find((x) => x.id === renewBtn.dataset.spRenew);
+      showToast(`Renewing ${p ? p.handle || p.platformLabel : "profile"}'s token…`);
       return;
     }
 
@@ -437,4 +516,24 @@ function bind(target) {
     if (radio) applyUserMode(radio.value);
   };
   target.addEventListener("change", boundChangeHandler);
+
+  // Social profiles — live search filter. Repaint, then restore focus +
+  // caret so typing stays uninterrupted.
+  boundInputHandler = (event) => {
+    const search = event.target.closest("[data-sp-search]");
+    if (!search) return;
+    spFilters.query = search.value;
+    paint(target);
+    const next = target.querySelector("[data-sp-search]");
+    if (next) {
+      next.focus();
+      try {
+        const end = next.value.length;
+        next.setSelectionRange(end, end);
+      } catch {
+        /* type=search may reject setSelectionRange in some engines */
+      }
+    }
+  };
+  target.addEventListener("input", boundInputHandler);
 }

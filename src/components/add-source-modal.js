@@ -10,7 +10,7 @@
 
 import { html, raw, escapeHtml } from "../utils.js?v=20";
 import { iconFor } from "../file-kinds.js?v=20";
-import { connectorDocs } from "../mocks.js?v=39";
+import { connectorDocs } from "../mocks.js?v=40";
 import {
   getConnectors,
   findConnector,
