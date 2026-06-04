@@ -634,13 +634,14 @@ let pickerMode = "mention";
 function renderMentionPickerInto(container, sessionId, mode = "mention") {
   if (!container) return;
   let cursor = 0;
-  // One DS action-dropdown item per row. iconHtml is the leading glyph
-  // (a DS <i> for sources/ideas, a brand logo for connectors); the kind /
-  // category shows as the DS item description. Keyboard nav targets the
-  // [data-mention-row-index] buttons regardless of mode.
-  const renderItem = (iconHtml, name, descLabel, dataAttr) => {
-    const index = cursor++;
-    return `
+
+  // "/" command mode — connectors render as a classic DS action-dropdown
+  // (label + description + brand logo). Only connected connectors are
+  // live/queryable.
+  if (mode === "command") {
+    const renderItem = (iconHtml, name, descLabel, dataAttr) => {
+      const index = cursor++;
+      return `
     <button
       type="button"
       class="ap-action-dropdown-item${descLabel ? " has-description" : ""}"
@@ -659,10 +660,7 @@ function renderMentionPickerInto(container, sessionId, mode = "mention") {
       </div>
     </button>
   `;
-  };
-
-  // "/" command mode — only connected connectors are live/queryable.
-  if (mode === "command") {
+    };
     const connectors = getConnectedConnectors();
     container.innerHTML =
       connectors.length > 0
@@ -682,33 +680,70 @@ function renderMentionPickerInto(container, sessionId, mode = "mention") {
     return;
   }
 
+  // "@" mention mode — original custom picker (sources + ideas).
+  const renderRow = (icon, name, kindLabel, dataAttr) => {
+    const index = cursor++;
+    return `
+    <li
+      class="composer-mention-picker__row"
+      role="option"
+      tabindex="0"
+      data-mention-row-index="${index}"
+      ${dataAttr}
+    >
+      <span class="composer-mention-picker__row-icon" aria-hidden="true">
+        <i class="${icon}"></i>
+      </span>
+      <span class="composer-mention-picker__row-name">${escapeHtmlAttr(name)}</span>
+      ${kindLabel ? `<span class="composer-mention-picker__row-kind muted">${escapeHtmlAttr(kindLabel)}</span>` : ""}
+    </li>
+  `;
+  };
   const sources = getSources(sessionId).filter((s) => s.status !== "Processing");
   const ideas = getIdeas(sessionId);
-  const sourceItems = sources
-    .map((s) =>
-      renderItem(
-        `<i class="${iconForKind(s.kind)}"></i>`,
-        s.filename,
-        s.kind || "",
-        `data-mention-pick-source="${escapeHtmlAttr(s.id)}"`,
-      ),
-    )
-    .join("");
-  const ideaItems = ideas
-    .map((i) =>
-      renderItem(
-        `<i class="ap-icon-sparkles"></i>`,
-        i.title,
-        i.kind || "",
-        `data-mention-pick-idea="${escapeHtmlAttr(i.id)}"`,
-      ),
-    )
-    .join("");
-  // DS divider separates the sources group from the ideas group.
-  const divider = sources.length > 0 && ideas.length > 0 ? `<div class="ap-action-dropdown-divider"></div>` : "";
+  const sourcesSection =
+    sources.length > 0
+      ? `
+        <div class="composer-mention-picker__section">
+          <div class="composer-mention-picker__header">Reference a source</div>
+          <ul class="composer-mention-picker__list" role="group">
+            ${sources
+              .map((s) =>
+                renderRow(
+                  iconForKind(s.kind),
+                  s.filename,
+                  s.kind || "",
+                  `data-mention-pick-source="${escapeHtmlAttr(s.id)}"`,
+                ),
+              )
+              .join("")}
+          </ul>
+        </div>
+      `
+      : "";
+  const ideasSection =
+    ideas.length > 0
+      ? `
+        <div class="composer-mention-picker__section">
+          <div class="composer-mention-picker__header">Reference an idea</div>
+          <ul class="composer-mention-picker__list" role="group">
+            ${ideas
+              .map((i) =>
+                renderRow(
+                  "ap-icon-sparkles",
+                  i.title,
+                  i.kind || "",
+                  `data-mention-pick-idea="${escapeHtmlAttr(i.id)}"`,
+                ),
+              )
+              .join("")}
+          </ul>
+        </div>
+      `
+      : "";
   container.innerHTML =
-    sources.length > 0 || ideas.length > 0
-      ? `<div class="ap-action-dropdown" role="group">${sourceItems}${divider}${ideaItems}</div>`
+    sourcesSection || ideasSection
+      ? sourcesSection + ideasSection
       : `<div class="composer-mention-picker__empty muted">No sources or ideas yet.</div>`;
 }
 
@@ -717,6 +752,9 @@ function openMentionPicker(root, sessionId, mode = "mention") {
   const trigger = root.querySelector("[data-composer-mention-trigger]");
   if (!picker) return;
   pickerMode = mode;
+  // Command mode swaps the custom picker chrome for the DS dropdown's own
+  // surface — the modifier strips this wrapper's box so they don't double up.
+  picker.classList.toggle("composer-mention-picker--command", mode === "command");
   renderMentionPickerInto(picker, sessionId, mode);
   picker.hidden = false;
   mentionHighlightIndex = 0;
@@ -751,7 +789,10 @@ function syncMentionHighlight(picker) {
   rows.forEach((row) => {
     const idx = Number(row.dataset.mentionRowIndex);
     const active = idx === mentionHighlightIndex;
-    // .focused is the DS action-dropdown keyboard-highlight state.
+    // Mention rows use the custom .is-highlighted; the "/" command DS
+    // dropdown uses the DS .focused state. Toggle both — each surface
+    // only styles its own class, so the other is a harmless no-op.
+    row.classList.toggle("is-highlighted", active);
     row.classList.toggle("focused", active);
     row.setAttribute("aria-selected", active ? "true" : "false");
     if (active) row.scrollIntoView({ block: "nearest" });
