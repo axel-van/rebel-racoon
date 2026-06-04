@@ -119,16 +119,15 @@
   text-align: left;
   cursor: pointer;
   font-family: inherit;
-  border: 1px solid var(--app-border);
+  border: 1px solid var(--ref-color-grey-20);
   background: var(--ref-color-white);
-  transition:
-    border-color var(--ref-animation-short) var(--app-ease-out),
-    box-shadow var(--ref-animation-short) var(--app-ease-out);
+  /* Match the DS radio-card (.ap-radio-card.card): hover is a border-color
+     shift only — no shadow, no background change. */
+  transition: border-color var(--ref-animation-short) var(--app-ease-out);
 }
 
 .connectors-card:hover {
   border-color: var(--ref-color-grey-40);
-  box-shadow: var(--app-shadow-low);
 }
 
 .connectors-card:focus-visible {

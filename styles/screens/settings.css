@@ -15,6 +15,7 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  background: var(--sys-settings-content-background-color);
 }
 
 .settings-view__page {
@@ -109,7 +110,7 @@
 .settings-view__content {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-md);
+  gap: var(--sys-settings-content-vertical-spacing);
   min-width: 0;
 }
 
@@ -145,12 +146,37 @@
   line-height: var(--ref-font-line-height-md);
 }
 
-/* ── List card (single .ap-card wrapping all rows) ────────────────────── */
+/* ── Settings cards (one .ap-card per logical group) ──────────────────── */
 
-.settings-view__list {
-  /* Override .ap-card internal layout: the card is a list container, not
-   * a stack of free content. Rows handle their own padding, dividers
-   * separate them. */
+/* `.ap-card` already provides bg/border/radius/padding — these tokens make
+ * sure the values match the Settings family. Don't override `.ap-card`. */
+.settings-card {
+  background: var(--sys-settings-card-background-color);
+  border: 1px solid var(--sys-settings-card-border-color);
+  border-radius: var(--sys-settings-card-border-radius);
+  padding: var(--sys-settings-card-internal-padding);
+  gap: var(--ref-spacing-xs);
+}
+
+/* The card title (.ap-card-title) carries its own type; give it breathing
+ * room from the rows below it. */
+.settings-card > .ap-card-title {
+  margin-bottom: var(--ref-spacing-xxs);
+}
+
+.settings-card__rows {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Feature flags: hairline between each toggle row. */
+.settings-card__rows--divided > .settings-opt-row + .settings-opt-row {
+  border-top: 1px solid var(--sys-settings-card-border-color);
+}
+
+/* List card (Social accounts): the card is a row list, not a content
+ * stack — rows handle their own padding, dividers separate them. */
+.settings-list-card {
   padding: 0;
   gap: 0;
   overflow: hidden;
@@ -270,87 +296,79 @@
   }
 }
 
-/* ── Admin section (prototype controls — was the floating admin chip) ──
-   Grouped lists inside the standard settings card: user-mode radios,
-   feature-flag toggles, and a docs link. */
-.settings-admin {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-md);
-  padding: var(--ref-spacing-md);
-}
+/* ── Admin rows (user-mode radios, feature-flag toggles, docs link) ─────
+   Plain rows inside the settings cards — no per-row border (the card is
+   the container). The radio rows are selectable; the flag rows pair a
+   2-line label with a DS toggle. */
 
-.settings-admin__group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-}
-
-.settings-admin__group-title {
-  margin: 0 0 var(--ref-spacing-xxs);
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--sys-text-color-light);
-}
-
-.settings-admin__row {
+.settings-opt-row {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-card);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-xs);
+  border-radius: var(--ref-border-radius-sm);
   cursor: pointer;
   color: inherit;
   text-decoration: none;
-  transition: border-color var(--ref-animation-short) var(--app-ease-out);
+  transition: background-color var(--ref-animation-short) var(--app-ease-out);
 }
 
-.settings-admin__row + .settings-admin__row {
-  margin-top: var(--ref-spacing-xxs);
+.settings-opt-row:hover {
+  background: var(--ref-color-grey-05);
 }
 
-.settings-admin__row:hover {
-  border-color: var(--ref-color-grey-40);
-}
-
-.settings-admin__row.is-active {
-  border-color: var(--ref-color-electric-blue-100);
+/* Selected user-mode option — subtle blue wash. */
+.settings-opt-row.is-active {
   background: var(--ref-color-electric-blue-05);
 }
 
-/* Flag + docs rows put their text on the left and the control on the right. */
-.settings-admin__row--flag,
-.settings-admin__link {
+/* Flag rows push the toggle to the right of the 2-line label. */
+.settings-flag-row {
   justify-content: space-between;
+  border-radius: 0;
 }
 
-.settings-admin__row-text {
+.settings-flag-toggle {
+  flex: 0 0 auto;
+}
+
+.settings-opt-text {
   display: flex;
   flex-direction: column;
   gap: var(--app-spacing-micro);
   min-width: 0;
 }
 
-.settings-admin__row-label {
+.settings-opt-label {
   font-size: var(--ref-font-size-sm);
   font-weight: var(--ref-font-weight-bold);
   color: var(--ref-color-grey-100);
 }
 
-.settings-admin__row-hint {
+.settings-opt-hint {
   font-size: var(--ref-font-size-xs);
   line-height: var(--ref-font-line-height-xs);
   color: var(--sys-text-color-light);
 }
 
-.settings-admin__toggle {
-  flex: 0 0 auto;
+/* Docs link — text left, external-link glyph right. */
+.settings-doc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs);
+  border-radius: var(--ref-border-radius-sm);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color var(--ref-animation-short) var(--app-ease-out);
 }
 
-.settings-admin__link > i {
+.settings-doc-row:hover {
+  background: var(--ref-color-grey-05);
+}
+
+.settings-doc-row > i {
   flex: 0 0 auto;
   color: var(--sys-text-color-light);
 }

@@ -165,11 +165,11 @@ function renderActiveSection(activeId) {
         </div>
         <span class="ap-status grey no-dot">${escapeHtml(c.label)}</span>
       </header>
-      <div class="ap-card settings-view__list">
+      <section class="ap-card settings-card settings-list-card">
         ${raw(
           items.map((item, i) => (i === 0 ? "" : `<div class="ap-divider"></div>`) + renderSocialRow(item)).join(""),
         )}
-      </div>
+      </section>
     </main>
   `;
 }
@@ -180,12 +180,11 @@ function renderAdminSection(section) {
   const modeRows = ADMIN_MODE_OPTIONS.map((opt) => {
     const active = opt.value === mode;
     return `
-      <label class="ap-radio-container settings-admin__row${active ? " is-active" : ""}" data-admin-mode="${escapeHtml(opt.value)}">
+      <label class="ap-radio-container settings-opt-row${active ? " is-active" : ""}" data-admin-mode="${escapeHtml(opt.value)}">
         <input type="radio" name="settings-admin-user-mode" value="${escapeHtml(opt.value)}" ${active ? "checked" : ""} />
-        <i></i>
-        <span class="settings-admin__row-text">
-          <span class="settings-admin__row-label">${escapeHtml(opt.label)}</span>
-          <span class="settings-admin__row-hint">${escapeHtml(opt.hint)}</span>
+        <span class="settings-opt-text">
+          <span class="settings-opt-label">${escapeHtml(opt.label)}</span>
+          <span class="settings-opt-hint">${escapeHtml(opt.hint)}</span>
         </span>
       </label>
     `;
@@ -194,15 +193,14 @@ function renderAdminSection(section) {
   const flagRows = FLAGS.map((flag) => {
     const enabled = !!flags[flag.id];
     return `
-      <label class="settings-admin__row settings-admin__row--flag" data-admin-flag="${escapeHtml(flag.id)}" title="${escapeHtml(flag.hides || "")}">
-        <span class="settings-admin__row-text">
-          <span class="settings-admin__row-label">${escapeHtml(flag.label)}</span>
-          ${flag.hides ? `<span class="settings-admin__row-hint">${escapeHtml(flag.hides)}</span>` : ""}
+      <label class="settings-opt-row settings-flag-row" data-admin-flag="${escapeHtml(flag.id)}">
+        <span class="settings-opt-text">
+          <span class="settings-opt-label">${escapeHtml(flag.label)}</span>
+          ${flag.hides ? `<span class="settings-opt-hint">${escapeHtml(flag.hides)}</span>` : ""}
         </span>
-        <span class="ap-toggle-container settings-admin__toggle" aria-hidden="true">
+        <span class="ap-toggle-container settings-flag-toggle" aria-hidden="true">
           <input type="checkbox" ${enabled ? "checked" : ""} tabindex="-1" />
           <i></i>
-          <span></span>
         </span>
       </label>
     `;
@@ -217,37 +215,26 @@ function renderAdminSection(section) {
         </div>
       </header>
 
-      <div class="ap-card settings-view__list settings-admin">
-        <div class="settings-admin__group">
-          <h3 class="settings-admin__group-title">User mode</h3>
-          <div role="radiogroup" aria-label="User mode">${raw(modeRows)}</div>
-        </div>
+      <section class="ap-card settings-card">
+        <h3 class="ap-card-title">User mode</h3>
+        <div class="settings-card__rows" role="radiogroup" aria-label="User mode">${raw(modeRows)}</div>
+      </section>
 
-        <div class="ap-divider"></div>
+      <section class="ap-card settings-card">
+        <h3 class="ap-card-title">Feature flags</h3>
+        <div class="settings-card__rows settings-card__rows--divided">${raw(flagRows)}</div>
+      </section>
 
-        <div class="settings-admin__group">
-          <h3 class="settings-admin__group-title">Feature flags</h3>
-          ${raw(flagRows)}
-        </div>
-
-        <div class="ap-divider"></div>
-
-        <div class="settings-admin__group">
-          <h3 class="settings-admin__group-title">Docs</h3>
-          <a
-            class="settings-admin__row settings-admin__link"
-            href="/handoff/components.html"
-            target="_blank"
-            rel="noopener"
-          >
-            <span class="settings-admin__row-text">
-              <span class="settings-admin__row-label">Conversation thread components</span>
-              <span class="settings-admin__row-hint">Live HTML + tokens · dev handoff</span>
-            </span>
-            <i class="ap-icon-external-link" aria-hidden="true"></i>
-          </a>
-        </div>
-      </div>
+      <section class="ap-card settings-card">
+        <h3 class="ap-card-title">Docs</h3>
+        <a class="settings-doc-row" href="/handoff/components.html" target="_blank" rel="noopener">
+          <span class="settings-opt-text">
+            <span class="settings-opt-label">Conversation thread components</span>
+            <span class="settings-opt-hint">Live HTML + tokens · dev handoff</span>
+          </span>
+          <i class="ap-icon-external-link" aria-hidden="true"></i>
+        </a>
+      </section>
     </main>
   `;
 }
