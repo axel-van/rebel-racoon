@@ -18,6 +18,7 @@ import { setHandoff } from "../handoff.js?v=20";
 import { findConnector, setConnectorStatus, subscribe as subscribeConnectors } from "../connectors-store.js?v=22";
 import { renderGalleryBody } from "../connectors-view.js?v=2";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=3";
+import { isFlagOn } from "../feature-flags.js?v=4";
 
 // Local view state (search + category filter).
 let view = { query: "", category: "all" };
@@ -28,6 +29,12 @@ let boundClick = null;
 let boundInput = null;
 
 export function renderConnectors(_params, target) {
+  // Connectors are gated behind a feature flag (default OFF). When off, the
+  // route is unreachable from the UI but a stale deep link bounces home.
+  if (!isFlagOn("connectors")) {
+    navigate("/");
+    return;
+  }
   renderTopbar();
   teardown();
   paint(target);

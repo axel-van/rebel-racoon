@@ -134,6 +134,8 @@ src/
 
 ### Connectors as live, MCP-queryable sources
 
+**Gated behind the `connectors` feature flag (default OFF)** — when off, every connectors surface (gallery route + sidebar nav, modal, composer Add → "Connected sources" submenu, Sources panel "Live connectors", Settings → Connectors section, Add-source modal Connectors tab) is hidden. Turn it on in Settings → Admin.
+
 Connectors (Notion, Slite, Google Drive, GitHub, …) are seeded in `mocks.js` (`connectors` + `connectorDocs`) with `category` / `featured` / `accent` / `capabilities`. Once **connected**, a connector becomes a **live source**: the user "asks" it in chat and `assistant.js` `sendConnectorMessage()` simulates an MCP round-trip — a "Querying … via MCP" reasoning chip listing tool calls, then a cited mock answer. Entry points: the `/connectors` gallery page (clicking a connector opens its detail in `connectors-modal.js`), the composer **Add** menu, and the right-panel **Sources** "Connect" / "Live connectors" surface. `connectors-view.js` holds the shared render helpers used by both the page and the modal; `connector-ask.js` launches the in-chat ask flow. All connect/disconnect goes through `connectors-store` so Settings, the gallery, and the modal stay in sync.
 
 ### Routing & screen lifecycle
@@ -155,7 +157,7 @@ Connectors (Notion, Slite, Google Drive, GitHub, …) are seeded in `mocks.js` (
 
 ### Admin / user mode (prototype controls)
 
-`/settings` → **Admin** section is the prototype control panel (replaces the old floating chip): switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`) and are read via `isFlagOn()` (e.g. `sidebarIdeas`, `hidePlaybookColors`, `conversationalPlaybookEdit`, `draftInlineEdit`).
+`/settings` → **Admin** section is the prototype control panel (replaces the old floating chip): switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()` (e.g. `connectors` — default OFF, gates the whole connectors feature; `sidebarIdeas`, `hidePlaybookColors`, `conversationalPlaybookEdit`, `draftInlineEdit`).
 
 ### Module loading
 

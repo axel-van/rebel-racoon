@@ -14,12 +14,12 @@ import {
   togglePin as togglePinSession,
   subscribe as subscribeSessions,
 } from "../sessions-store.js?v=1";
-import { isFlagOn } from "../feature-flags.js?v=3";
+import { isFlagOn } from "../feature-flags.js?v=4";
 import { isNewUser } from "../user-mode.js?v=22";
 import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=32";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=29";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=22";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=147";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=148";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=40";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=28";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=34";
@@ -506,7 +506,11 @@ function renderNav(path) {
     </button>
   `;
 
-  const routeItems = NAV.filter((item) => item.path !== "/ideas" || isFlagOn("sidebarIdeas"))
+  const routeItems = NAV.filter((item) => {
+    if (item.path === "/ideas") return isFlagOn("sidebarIdeas");
+    if (item.path === "/connectors") return isFlagOn("connectors");
+    return true;
+  })
     .map((item) => {
       const count = item.count ? item.count() : 0;
       const counter = count > 0 ? `<span class="ap-counter normal grey">${count}</span>` : "";

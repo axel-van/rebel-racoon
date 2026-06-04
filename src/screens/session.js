@@ -50,6 +50,7 @@ import * as inlineQuestion from "../inline-question.js?v=33";
 import { askConnector } from "../connector-ask.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=22";
 import { renderConnectorLogo } from "../connectors-view.js?v=2";
+import { isFlagOn } from "../feature-flags.js?v=4";
 import * as contextBuilder from "../context-builder.js?v=80";
 import * as playbookEditor from "../playbook-editor.js?v=41";
 import { renderPicker } from "./_analyse-common.js?v=39";
@@ -64,7 +65,7 @@ import {
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=24";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=12";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=31";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=27";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=28";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=3";
 import {
   classifyFile,
@@ -86,7 +87,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=147";
+} from "../components/right-panel.js?v=148";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
@@ -384,6 +385,9 @@ function renderPlaybookControl(ctx, selectable) {
 // ask), and the only place to connect new ones — "Browse connectors" — sits at
 // the very bottom of that flyout.
 function renderConnectorsSubmenu() {
+  // Connectors are gated behind a feature flag (default OFF) — when off, the
+  // composer Add menu is just the file/URL quick-actions.
+  if (!isFlagOn("connectors")) return "";
   const connected = getConnectedConnectors();
   const items = connected.length
     ? connected
@@ -403,6 +407,7 @@ function renderConnectorsSubmenu() {
         .join("")
     : `<div class="assistant-attach__menu-label">No sources connected yet</div>`;
   return `
+    <div class="ap-action-dropdown-divider" role="separator"></div>
     <div class="assistant-attach__submenu-wrap">
       <button
         type="button"
@@ -505,7 +510,6 @@ function renderComposer(attachedContext, session, selectable) {
                     </div>
                   </div>
                 </button>
-                <div class="ap-action-dropdown-divider" role="separator"></div>
                 ${renderConnectorsSubmenu()}
               </div>
             </div>

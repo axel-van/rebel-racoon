@@ -20,6 +20,7 @@ import {
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { renderConnectorLogo } from "../connectors-view.js?v=2";
+import { isFlagOn } from "../feature-flags.js?v=4";
 
 const MODAL_ID = "addSource";
 import {
@@ -43,6 +44,11 @@ const TABS = [
   { id: "url", label: "URL" },
   { id: "connectors", label: "Connectors" },
 ];
+
+// The Connectors tab is gated behind the connectors feature flag (default OFF).
+function tabs() {
+  return TABS.filter((t) => t.id !== "connectors" || isFlagOn("connectors"));
+}
 
 const ACCEPT = ".pdf,.doc,.docx,.txt,.md,.mp4,.mov,.mp3,.wav,.m4a,.png,.jpg,.jpeg";
 
@@ -98,13 +104,15 @@ const HTML = `
 function renderTabs() {
   tabsEl.innerHTML = `
     <div class="ap-tabs-nav">
-      ${TABS.map(
-        (t) => `
+      ${tabs()
+        .map(
+          (t) => `
           <button type="button" class="ap-tabs-tab ${t.id === state.activeTab ? "active" : ""}" data-add-source-tab="${t.id}">
             ${escapeHtml(t.label)}
           </button>
         `,
-      ).join("")}
+        )
+        .join("")}
     </div>
   `;
 }
@@ -660,7 +668,7 @@ function onKeydown(event) {
 export function open(opts = {}) {
   if (!initialized) init();
   requestOpen(MODAL_ID, close);
-  state.activeTab = opts.tab && TABS.find((t) => t.id === opts.tab) ? opts.tab : "upload";
+  state.activeTab = opts.tab && tabs().find((t) => t.id === opts.tab) ? opts.tab : "upload";
   state.browsingConnectorId = null;
   state.inlineError = "";
   // Reset trip-scoped state — each open starts a fresh "what I'm uploading

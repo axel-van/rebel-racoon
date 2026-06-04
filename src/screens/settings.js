@@ -23,11 +23,11 @@ import {
   subscribe as subscribeConnectors,
 } from "../connectors-store.js?v=22";
 // Admin section — prototype-only controls (was the floating admin chip).
-import { FLAGS } from "../ff-catalog.js?v=4";
-import { getFlags, setFlag } from "../feature-flags.js?v=3";
+import { FLAGS } from "../ff-catalog.js?v=5";
+import { getFlags, setFlag, isFlagOn } from "../feature-flags.js?v=4";
 import { getUserMode, setUserMode } from "../user-mode.js?v=22";
 
-const SECTIONS = [
+const ALL_SECTIONS = [
   {
     id: "connectors",
     label: "Connectors",
@@ -47,6 +47,13 @@ const SECTIONS = [
     sub: "Prototype-only controls — user mode, feature flags, dev docs. Changes reload the app.",
   },
 ];
+
+// The Connectors section is gated behind the connectors feature flag (default
+// OFF). When off it's dropped from the rail and the default lands on the first
+// visible section.
+function sections() {
+  return ALL_SECTIONS.filter((s) => s.id !== "connectors" || isFlagOn("connectors"));
+}
 
 // User-mode options (mirrors the former admin chip).
 const ADMIN_MODE_OPTIONS = [
@@ -115,8 +122,10 @@ function teardown() {
 // ─── Render ──────────────────────────────────────────────────────────────
 
 function readSection() {
-  const id = parseHashParams().get("section") || "connectors";
-  return SECTIONS.find((s) => s.id === id) ? id : "connectors";
+  const visible = sections();
+  const fallback = visible[0].id;
+  const id = parseHashParams().get("section") || fallback;
+  return visible.find((s) => s.id === id) ? id : fallback;
 }
 
 function paint(target) {
@@ -154,8 +163,9 @@ function renderNav(activeId) {
     <nav class="ap-list-panel settings-view__nav" aria-label="Settings sections">
       <div class="ap-list-panel-items">
         ${raw(
-          SECTIONS.map(
-            (s) => `
+          sections()
+            .map(
+              (s) => `
               <button type="button"
                 class="ap-list-panel-item${s.id === activeId ? " selected" : ""}"
                 data-section="${s.id}"
@@ -168,7 +178,8 @@ function renderNav(activeId) {
                 </div>
               </button>
             `,
-          ).join(""),
+            )
+            .join(""),
         )}
       </div>
     </nav>
@@ -176,7 +187,7 @@ function renderNav(activeId) {
 }
 
 function renderActiveSection(activeId) {
-  const section = SECTIONS.find((s) => s.id === activeId);
+  const section = sections().find((s) => s.id === activeId);
   if (!section) return "";
   if (activeId === "admin") return renderAdminSection(section);
   const items = activeId === "connectors" ? sortConnected(getConnectors()) : sortConnected(socialAccounts);

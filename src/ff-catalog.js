@@ -25,6 +25,17 @@ export const FLAGS = Object.freeze([
       "in-place editing.",
   },
   {
+    id: "connectors",
+    label: "Connectors (live MCP sources)",
+    default: false,
+    hides:
+      "When OFF (default), hides everything connectors-related: the " +
+      "Connectors gallery (route /connectors + sidebar nav) and modal, the " +
+      "composer Add → 'Connected sources' submenu, the Sources panel 'Live " +
+      "connectors' group, the Settings → Connectors section, and the " +
+      "Add-source modal's Connectors tab.",
+  },
+  {
     id: "hidePlaybookColors",
     label: "Hide playbook colors",
     default: false,
