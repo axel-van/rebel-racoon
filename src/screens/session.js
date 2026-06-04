@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=98";
-import { socialAccounts, chatStarters } from "../mocks.js?v=38";
+import { socialAccounts, chatStarters } from "../mocks.js?v=39";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,

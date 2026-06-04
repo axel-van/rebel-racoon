@@ -361,3 +361,226 @@
   flex: 0 0 auto;
   color: var(--sys-text-color-light);
 }
+
+/* ── Social profiles (Figma 537-2318) ─────────────────────────────────────
+   Filter bar → limit banner → count row → network-grouped profile cards.
+   Lives inside .settings-view__content, so the page chrome/tokens are shared;
+   these rules add the page-specific layout only. */
+
+/* Filter bar: two inline-label selects + a search field. */
+.sp-filters {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.sp-filter {
+  flex: 0 0 256px;
+  max-width: 256px;
+}
+
+.sp-search {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Count row: "N social profiles" left, slots + Connect CTA right. */
+.sp-count-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-md);
+  flex-wrap: wrap;
+}
+
+.sp-count-title {
+  margin: 0;
+  font-size: var(--ref-font-size-lg);
+  font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-lg);
+  color: var(--ref-color-grey-100);
+}
+
+.sp-count-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+}
+
+.sp-slots {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  color: var(--ref-color-grey-80);
+}
+
+/* Network group: title row (logo + name + counter + renew-all) over a grid. */
+.sp-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  margin-top: var(--ref-spacing-sm);
+}
+
+.sp-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+}
+
+.sp-group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  min-width: 0;
+}
+
+.sp-group-title > i {
+  font-size: var(--sys-icon-css-sm);
+  flex: 0 0 auto;
+}
+
+.sp-group-name {
+  font-size: var(--ref-font-size-md);
+  font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-lg);
+  color: var(--ref-color-grey-100);
+}
+
+.sp-renew-all {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* 3-up responsive grid of profile cards. */
+.sp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--ref-spacing-xs);
+}
+
+.sp-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: var(--ref-border-radius-md);
+  background: var(--ref-color-white);
+  overflow: hidden;
+}
+
+/* Token status banner — red (expired) / amber (expiring soon). */
+.sp-card-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  border-bottom: 1px solid transparent;
+}
+
+.sp-card-status.expired {
+  background: var(--ref-color-red-10);
+  border-bottom-color: var(--ref-color-red-20);
+}
+
+.sp-card-status.expiring {
+  background: var(--ref-color-tag-orange-10);
+  border-bottom-color: var(--ref-color-tag-orange-20);
+}
+
+.sp-status-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  color: var(--ref-color-grey-100);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-status-label > i {
+  flex: 0 0 auto;
+  font-size: var(--sys-icon-css-sm);
+}
+
+.sp-status-label strong {
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.sp-card-status.expired .sp-status-label > i {
+  color: var(--ref-color-red-100);
+}
+
+.sp-card-status.expiring .sp-status-label > i {
+  color: var(--ref-color-tag-orange-150);
+}
+
+.sp-card-status .ap-link {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* Profile identity row. */
+.sp-card-body {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs);
+}
+
+.sp-card-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sp-card-name {
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-md);
+  color: var(--ref-color-grey-100);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-card-org {
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  color: var(--ref-color-grey-80);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-card-more {
+  flex: 0 0 auto;
+}
+
+/* ── Social profiles responsive ───────────────────────────────────────── */
+@media (max-width: 1080px) {
+  .sp-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .sp-filters {
+    flex-wrap: wrap;
+  }
+  .sp-filter {
+    flex: 1 1 160px;
+    max-width: none;
+  }
+  .sp-search {
+    flex: 1 1 100%;
+  }
+  .sp-grid {
+    grid-template-columns: 1fr;
+  }
+}

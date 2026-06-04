@@ -2325,3 +2325,43 @@ export const socialAccounts = [
     status: "disconnected",
   },
 ];
+
+// Social profiles — the Settings › Social profiles page (Figma 537-2318).
+// Richer than `socialAccounts` (which feeds the session profile pickers): each
+// entry is one connected profile grouped by network, carrying a token state
+// (ok / expiring / expired) that drives the per-card status banner.
+//
+// `socialProfilesMeta` holds the package-limit figures shown in the limitation
+// banner and the count row — reproduced verbatim from the design.
+export const socialProfilesMeta = {
+  total: 18,
+  packageLimit: 12,
+  slotsLeft: 8,
+  ownerName: "Benjamin Lanciaux",
+};
+
+export const socialProfiles = [
+  // ── Facebook (9) ──────────────────────────────────────────────────────
+  { id: "fb-1", network: "facebook", name: "Emma Johnson", org: "Dreamdunes", token: "expired" },
+  { id: "fb-2", network: "facebook", name: "Claire Kelly", org: "Dreamdunes", token: "expired" },
+  { id: "fb-3", network: "facebook", name: "Lincoln Hughes", org: "Dreamdunes", token: "expired" },
+  { id: "fb-4", network: "facebook", name: "Amara Okafor", org: "@cocacola1", token: "expiring", expiresInDays: 7 },
+  { id: "fb-5", network: "facebook", name: "Amara Okafor", org: "@cocacola1", token: "expiring", expiresInDays: 7 },
+  { id: "fb-6", network: "facebook", name: "Amara Okafor", org: "@cocacola1", token: "expiring", expiresInDays: 7 },
+  { id: "fb-7", network: "facebook", name: "Noah Williams", org: "Northwind Studio", token: "ok" },
+  { id: "fb-8", network: "facebook", name: "Olivia Brown", org: "Northwind Studio", token: "ok" },
+  { id: "fb-9", network: "facebook", name: "Liam Davis", org: "Northwind Studio", token: "ok" },
+  // ── X (Twitter) (1) ───────────────────────────────────────────────────
+  { id: "x-1", network: "x", name: "Amara Okafor", org: "Dreamdunes", token: "expired" },
+  // ── LinkedIn (3) ──────────────────────────────────────────────────────
+  { id: "li-1", network: "linkedin", name: "Amara Okafor", org: "@cocacola1", token: "expiring", expiresInDays: 7 },
+  { id: "li-2", network: "linkedin", name: "Sophia Martin", org: "Northwind Studio Co.", token: "ok" },
+  { id: "li-3", network: "linkedin", name: "James Wilson", org: "Northwind Studio Co.", token: "ok" },
+  // ── Instagram (3) ─────────────────────────────────────────────────────
+  { id: "ig-1", network: "instagram", name: "Mia Anderson", org: "@northwind.studio", token: "ok" },
+  { id: "ig-2", network: "instagram", name: "Ethan Thomas", org: "@northwind.studio", token: "ok" },
+  { id: "ig-3", network: "instagram", name: "Ava Taylor", org: "@northwind.studio", token: "ok" },
+  // ── TikTok (2) ────────────────────────────────────────────────────────
+  { id: "tt-1", network: "tiktok", name: "Lucas Moore", org: "@northwindhq", token: "ok" },
+  { id: "tt-2", network: "tiktok", name: "Isabella Jackson", org: "@northwindhq", token: "ok" },
+];

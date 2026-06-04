@@ -179,6 +179,22 @@
   background: var(--ref-color-red-05, rgba(220, 38, 38, 0.05));
 }
 
+/* Feature-lock (purple) infobox variant. The DS ships info/warning/error/
+   success only; this adds the purple "limit reached / upgrade" intent using
+   the --sys feature-lock tokens. Used by the Social profiles limit banner
+   (Settings, Figma 537-2318): a full hairline border with no left accent
+   bar, matching the design. */
+.ap-infobox.feature-lock {
+  background-color: var(--sys-color-feature-lock-light-bg);
+  border: 1px solid var(--sys-settings-card-feature-lock-border-color);
+}
+.ap-infobox.feature-lock::before {
+  display: none;
+}
+.ap-infobox.feature-lock > i {
+  color: var(--sys-color-feature-lock-text);
+}
+
 /* The DS .ap-link assumes an <a>. Buttons styled as links need their
    user-agent chrome (border / background / padding) reset so the
    link text renders without the native button box leaking through.

@@ -12,7 +12,7 @@ import { html, raw, escapeHtml } from "../utils.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=98";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=4";
 import { showToast } from "../components/toast.js?v=20";
-import { socialAccounts } from "../mocks.js?v=38";
+import { socialProfiles, socialProfilesMeta } from "../mocks.js?v=39";
 // Admin section — prototype-only controls (was the floating admin chip).
 import { FLAGS } from "../ff-catalog.js?v=5";
 import { getFlags, setFlag } from "../feature-flags.js?v=4";
@@ -21,7 +21,7 @@ import { getUserMode, setUserMode } from "../user-mode.js?v=22";
 const SECTIONS = [
   {
     id: "social",
-    label: "Social accounts",
+    label: "Social profiles",
     sub: "Where I publish your approved posts.",
   },
   {
@@ -111,16 +111,9 @@ function renderPage(activeId) {
   `;
 }
 
-function counts(items) {
-  const total = items.length;
-  const connected = items.filter((x) => x.status === "connected").length;
-  return { total, connected, label: `${connected} of ${total} connected` };
-}
-
 function renderNav(activeId) {
-  const socialCounts = counts(socialAccounts);
   const subFor = (id) => {
-    if (id === "social") return socialCounts.label;
+    if (id === "social") return `${socialProfilesMeta.total} profiles`;
     return adminModeLabel(getUserMode());
   };
   return html`
@@ -151,24 +144,7 @@ function renderActiveSection(activeId) {
   const section = SECTIONS.find((s) => s.id === activeId);
   if (!section) return "";
   if (activeId === "admin") return renderAdminSection(section);
-  const items = sortConnected(socialAccounts);
-  const c = counts(items);
-  return html`
-    <main class="settings-view__content">
-      <header class="settings-view__section-head">
-        <div>
-          <h2>${escapeHtml(section.label)}</h2>
-          <p>${escapeHtml(section.sub)}</p>
-        </div>
-        <span class="ap-status grey no-dot">${escapeHtml(c.label)}</span>
-      </header>
-      <section class="ap-card settings-card settings-list-card">
-        ${raw(
-          items.map((item, i) => (i === 0 ? "" : `<div class="ap-divider"></div>`) + renderSocialRow(item)).join(""),
-        )}
-      </section>
-    </main>
-  `;
+  return renderSocialSection();
 }
 
 function renderAdminSection(section) {
@@ -238,34 +214,160 @@ function renderAdminSection(section) {
   `;
 }
 
-function sortConnected(items) {
-  return items.slice().sort((a, b) => {
-    const aConn = a.status === "connected" ? 0 : 1;
-    const bConn = b.status === "connected" ? 0 : 1;
-    return aConn - bConn;
+// ─── Social profiles (Settings › Social profiles — Figma 537-2318) ─────────
+
+// Network → DS metadata. `icon` resolves the full-colour branded glyph
+// (ap-icon-{icon}-official) used for both the group title and the avatar badge.
+const NETWORKS = {
+  facebook: { label: "Facebook", icon: "facebook" },
+  x: { label: "X (Twitter)", icon: "x" },
+  linkedin: { label: "LinkedIn", icon: "linkedin" },
+  instagram: { label: "Instagram", icon: "instagram" },
+  tiktok: { label: "TikTok", icon: "tiktok" },
+};
+
+// Preserve the source order of mocks.socialProfiles for the group order.
+function groupByNetwork(profiles) {
+  const order = [];
+  const byKey = new Map();
+  profiles.forEach((p) => {
+    if (!byKey.has(p.network)) {
+      byKey.set(p.network, []);
+      order.push(p.network);
+    }
+    byKey.get(p.network).push(p);
   });
+  return order.map((key) => ({ key, profiles: byKey.get(key) }));
 }
 
-function renderSocialRow(a) {
-  const isConnected = a.status === "connected";
-  return `
-    <div class="settings-row" data-row-id="${escapeHtml(a.id)}">
-      <img class="settings-row__logo" src="${escapeHtml(a.logo)}" alt="" width="32" height="32" loading="lazy" />
-      <div class="settings-row__body">
-        <div class="settings-row__title-line">
-          <span class="settings-row__title">${escapeHtml(a.platformLabel)}</span>
-          ${a.kind ? `<span class="ap-tag grey">${escapeHtml(a.kind)}</span>` : ""}
+function initials(name) {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+}
+
+function renderSocialSection() {
+  const meta = socialProfilesMeta;
+  const groups = groupByNetwork(socialProfiles);
+  return html`
+    <main class="settings-view__content sp">
+      <div class="sp-filters">
+        <details class="ap-select sp-filter">
+          <summary class="ap-select-trigger">
+            <span class="ap-select-inline-label">Network</span>
+            <span class="ap-select-value">All</span>
+            <i class="ap-icon-chevron-down ap-select-arrow"></i>
+          </summary>
+        </details>
+        <details class="ap-select sp-filter">
+          <summary class="ap-select-trigger">
+            <span class="ap-select-inline-label">Token status</span>
+            <span class="ap-select-value">All</span>
+            <i class="ap-icon-chevron-down ap-select-arrow"></i>
+          </summary>
+        </details>
+        <div class="ap-form-field sp-search">
+          <div class="ap-input-group">
+            <i class="ap-icon-search"></i>
+            <input type="search" placeholder="Search a social profile" aria-label="Search a social profile" />
+          </div>
         </div>
-        <div class="settings-row__sub">${isConnected && a.handle ? escapeHtml(a.handle) : "Not connected"}</div>
       </div>
-      <div class="settings-row__action">
+
+      <div class="ap-infobox feature-lock has-title sp-limit-banner">
+        <div class="ap-infobox-content">
+          <div class="ap-infobox-texts">
+            <span class="ap-infobox-title">Social profiles limit reached</span>
+            <span class="ap-infobox-message"
+              >You have reached your package limit of <strong>${meta.packageLimit}</strong> profiles. To connect more
+              social profiles, ask the owner of the organization <strong>${escapeHtml(meta.ownerName)}</strong> to add
+              more profiles slots.</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="sp-count-row">
+        <h2 class="sp-count-title">${meta.total} social profiles</h2>
+        <div class="sp-count-actions">
+          <span class="sp-slots">
+            <span class="ap-counter normal blue no-bg">${meta.slotsLeft}</span>
+            profile slots left to connect
+          </span>
+          <button type="button" class="ap-button secondary blue" data-sp-connect>
+            <i class="ap-icon-plus"></i>
+            Connect social profile
+          </button>
+        </div>
+      </div>
+
+      ${raw(groups.map(renderNetworkGroup).join(""))}
+    </main>
+  `;
+}
+
+function renderNetworkGroup(group) {
+  const net = NETWORKS[group.key] || { label: group.key, icon: group.key };
+  const needRenew = group.profiles.filter((p) => p.token !== "ok").length;
+  return `
+    <section class="sp-group">
+      <header class="sp-group-head">
+        <div class="sp-group-title">
+          <i class="ap-icon-${net.icon}-official"></i>
+          <span class="sp-group-name">${escapeHtml(net.label)}</span>
+          <span class="ap-counter normal grey">${group.profiles.length}</span>
+        </div>
         ${
-          isConnected
-            ? `<span class="ap-status green">Connected</span>
-               <button type="button" class="ap-button ghost grey" data-social-toggle="${escapeHtml(a.id)}">Disconnect</button>`
-            : `<button type="button" class="ap-button stroked grey" data-social-toggle="${escapeHtml(a.id)}">Connect</button>`
+          needRenew >= 2
+            ? `<a href="#" class="ap-link standalone small sp-renew-all" data-sp-renew-all="${escapeHtml(group.key)}">Try renewing all <i class="ap-icon-refresh"></i></a>`
+            : ""
         }
+      </header>
+      <div class="sp-grid">${group.profiles.map(renderProfileCard).join("")}</div>
+    </section>
+  `;
+}
+
+function renderProfileCard(p) {
+  const net = NETWORKS[p.network] || { icon: p.network };
+  return `
+    <div class="sp-card" data-sp-card="${escapeHtml(p.id)}">
+      ${renderTokenBanner(p)}
+      <div class="sp-card-body">
+        <div class="ap-avatar size-36">
+          <span class="ap-avatar-initials">${escapeHtml(initials(p.name))}</span>
+          <span class="ap-avatar-network"><i class="ap-icon-${net.icon}-official"></i></span>
+        </div>
+        <div class="sp-card-text">
+          <div class="sp-card-name">${escapeHtml(p.name)}</div>
+          <div class="sp-card-org">${escapeHtml(p.org)}</div>
+        </div>
+        <button type="button" class="ap-icon-button transparent sp-card-more" aria-label="More options" data-sp-more="${escapeHtml(p.id)}">
+          <i class="ap-icon-more"></i>
+        </button>
       </div>
+    </div>
+  `;
+}
+
+function renderTokenBanner(p) {
+  if (p.token === "ok") return "";
+  const renew = `<a href="#" class="ap-link standalone small sp-renew" data-sp-renew="${escapeHtml(p.id)}">Renew <i class="ap-icon-refresh"></i></a>`;
+  if (p.token === "expired") {
+    return `
+      <div class="sp-card-status expired">
+        <span class="sp-status-label"><i class="ap-icon-error_fill"></i> Token expired</span>
+        ${renew}
+      </div>
+    `;
+  }
+  return `
+    <div class="sp-card-status expiring">
+      <span class="sp-status-label"><i class="ap-icon-warning_fill"></i> Token expires in <strong>${p.expiresInDays} days</strong></span>
+      ${renew}
     </div>
   `;
 }
@@ -297,23 +399,33 @@ function bind(target) {
       return;
     }
 
-    // Social toggle — instant-save, mutate the imported mock directly
-    // (same model the drawer used; no other surface lists social accounts).
-    const socialBtn = event.target.closest("[data-social-toggle]");
-    if (socialBtn) {
-      const id = socialBtn.dataset.socialToggle;
-      const a = socialAccounts.find((x) => x.id === id);
-      if (!a) return;
-      const wasConnected = a.status === "connected";
-      if (wasConnected) {
-        a.status = "disconnected";
-      } else {
-        a.status = "connected";
-        if (!a.handle) a.handle = "@archie";
-      }
-      paint(target);
-      const label = a.platformLabel || a.platform || "Account";
-      showToast(`${label} ${wasConnected ? "disconnected" : "connected"}`);
+    // Social profiles — prototype-only affordances (no backend; surface a
+    // toast so the interaction reads as live).
+    const connectBtn = event.target.closest("[data-sp-connect]");
+    if (connectBtn) {
+      showToast("Connecting a social profile…");
+      return;
+    }
+
+    const renewAll = event.target.closest("[data-sp-renew-all]");
+    if (renewAll) {
+      event.preventDefault();
+      const net = NETWORKS[renewAll.dataset.spRenewAll];
+      showToast(`Renewing all ${net ? net.label : ""} tokens…`.trim());
+      return;
+    }
+
+    const renewBtn = event.target.closest("[data-sp-renew]");
+    if (renewBtn) {
+      event.preventDefault();
+      const p = socialProfiles.find((x) => x.id === renewBtn.dataset.spRenew);
+      showToast(`Renewing ${p ? p.name : "profile"}'s token…`);
+      return;
+    }
+
+    const moreBtn = event.target.closest("[data-sp-more]");
+    if (moreBtn) {
+      showToast("Profile options coming soon");
       return;
     }
   };
