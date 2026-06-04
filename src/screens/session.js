@@ -72,7 +72,7 @@ import { open as openGenerateImageModal } from "../components/generate-image-mod
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=12";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=31";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=29";
-import { open as openConnectorsModal } from "../components/connectors-modal.js?v=5";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=6";
 import {
   classifyFile,
   startFileUpload,
@@ -93,7 +93,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=149";
+} from "../components/right-panel.js?v=150";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";

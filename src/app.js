@@ -2,7 +2,7 @@ import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=4";
 import { initTopbar, renderTopbar } from "./components/topbar.js?v=98";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=79";
-import { init as initRightPanel } from "./components/right-panel.js?v=149";
+import { init as initRightPanel } from "./components/right-panel.js?v=150";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=26";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=23";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
@@ -10,7 +10,7 @@ import { init as initGenerateImageModal } from "./components/generate-image-moda
 import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=12";
 import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=31";
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=29";
-import { init as initConnectorsModal } from "./components/connectors-modal.js?v=5";
+import { init as initConnectorsModal } from "./components/connectors-modal.js?v=6";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
 import { init as initRenameModal } from "./components/rename-modal.js?v=2";
 import { init as initSearchModal } from "./components/search-modal.js?v=3";
@@ -38,7 +38,7 @@ import {
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=149";
+} from "./components/right-panel.js?v=150";
 
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
