@@ -64,25 +64,25 @@ function renderCategoryChip(value, label, active) {
   )}" role="tab" aria-pressed="${active}" aria-selected="${active}"><span>${escapeHtml(label)}</span></button>`;
 }
 
-// One connector card — uniform marketplace tile. The whole card opens the
-// detail (where Connect / Try-in-chat / Disconnect live), so the grid stays
-// clean and scannable: logo + status, name, 2-line description. Mirrors the
-// Codex installed-apps card.
+// One connector — a compact marketplace ROW (Codex-style): logo + name +
+// single-line description, with a trailing affordance (green check when
+// connected, "+" when not). The whole row opens the detail (where Connect /
+// Try-in-chat / Disconnect live), so the grid stays dense and scannable.
 export function renderConnectorCard(c) {
   const isConnected = c.status === "connected";
-  const status = isConnected
-    ? `<span class="ap-status green">Connected</span>`
+  const trailing = isConnected
+    ? `<span class="connectors-card__check" aria-hidden="true"><i class="ap-icon-rounded-check"></i></span>`
     : `<span class="connectors-card__add" aria-hidden="true"><i class="ap-icon-plus"></i></span>`;
   return `
     <button type="button" class="ap-card connectors-card" data-connector-open="${escapeHtml(
       c.id,
-    )}" aria-label="${escapeHtml(c.name)} — open details">
-      <div class="connectors-card__top">
-        ${renderConnectorLogo(c, 40)}
-        ${status}
+    )}" aria-label="${escapeHtml(c.name)}${isConnected ? " (connected)" : ""} — open details">
+      ${renderConnectorLogo(c, 36)}
+      <div class="connectors-card__body">
+        <div class="connectors-card__name">${escapeHtml(c.name)}</div>
+        <div class="connectors-card__desc">${escapeHtml(c.desc)}</div>
       </div>
-      <div class="connectors-card__name">${escapeHtml(c.name)}</div>
-      <div class="connectors-card__desc">${escapeHtml(c.desc)}</div>
+      ${trailing}
     </button>
   `;
 }

@@ -49,7 +49,7 @@ import * as sidebarWizard from "../sidebar-wizard.js?v=38";
 import * as inlineQuestion from "../inline-question.js?v=33";
 import { askConnector } from "../connector-ask.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=22";
-import { renderConnectorLogo } from "../connectors-view.js?v=2";
+import { renderConnectorLogo } from "../connectors-view.js?v=3";
 import { isFlagOn } from "../feature-flags.js?v=4";
 import * as contextBuilder from "../context-builder.js?v=80";
 import * as playbookEditor from "../playbook-editor.js?v=41";
@@ -65,8 +65,8 @@ import {
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=24";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=12";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=31";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=28";
-import { open as openConnectorsModal } from "../components/connectors-modal.js?v=3";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=29";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=4";
 import {
   classifyFile,
   startFileUpload,
@@ -87,7 +87,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=148";
+} from "../components/right-panel.js?v=149";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";

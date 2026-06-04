@@ -26,12 +26,12 @@ import {
   removeSources,
   renameSource,
 } from "../sources-stream.js?v=35";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=28";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=29";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=22";
 import { askConnector } from "../connector-ask.js?v=2";
-import { renderConnectorLogo } from "../connectors-view.js?v=2";
-import { open as openConnectorsModal } from "./connectors-modal.js?v=3";
+import { renderConnectorLogo } from "../connectors-view.js?v=3";
+import { open as openConnectorsModal } from "./connectors-modal.js?v=4";
 import { addMention as addComposerMention } from "../composer-mentions.js?v=6";
 import { iconFor } from "../file-kinds.js?v=20";
 

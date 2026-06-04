@@ -1,13 +1,13 @@
 /* Connectors gallery — shared by the /connectors page and the connectors
  * modal (connectors-view.js renders both).
  *
- * Codex-style marketplace: hero (page only) + search + category filter + one
- * uniform card grid grouped by category, plus a detail view. Each card is a
- * single clickable tile (logo + status, name, 2-line desc) that opens the
- * detail — no duplicated "Featured" section, no full-width rows, so every
- * connector appears exactly once. Page chrome (max-width, padding scale)
- * mirrors /settings and /contexts. Built on DS components (.ap-card /
- * .ap-button / .ap-tag / .ap-status / .ap-input-group) + DS tokens.
+ * Codex-style marketplace: hero (page only) + search + category filter + a
+ * dense grid of compact connector ROWS grouped by category, plus a detail
+ * view. Each row (logo · name + 1-line desc · +/✓ affordance) opens the detail
+ * — no duplicated "Featured" section, so every connector appears exactly once.
+ * Page chrome (max-width, padding scale) mirrors /settings and /contexts.
+ * Built on DS components (.ap-card / .ap-tag / .ap-status / .ap-input-group)
+ * + DS tokens.
  */
 
 .connectors-view {
@@ -99,21 +99,23 @@
   padding-top: var(--ref-spacing-lg);
 }
 
-/* ── Card grid (one uniform tile per connector) ───────────────────────── */
+/* ── Card grid (one compact ROW per connector, Codex-style) ───────────── */
 
 .connectors-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
-  gap: var(--ref-spacing-sm);
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--ref-spacing-xs);
 }
 
-/* Whole card is a button → opens the detail. Reset UA button chrome and lay
-   the content out as a tile. */
+/* Whole row is a button → opens the detail. Reset UA button chrome; lay the
+   content out horizontally: logo · (name + 1-line desc) · trailing affordance. */
 .connectors-card {
   display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-md);
+  /* Override the DS .ap-card default (flex-direction: column) — this is a row. */
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   text-align: left;
   cursor: pointer;
   font-family: inherit;
@@ -134,25 +136,47 @@
   outline-offset: 2px;
 }
 
-.connectors-card__top {
+.connectors-card__body {
+  flex: 1;
+  min-width: 0;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ref-spacing-xs);
-  margin-bottom: var(--app-spacing-micro);
+  flex-direction: column;
+  gap: var(--app-spacing-micro);
 }
 
-/* "+" affordance shown top-right on a disconnected card. */
-.connectors-card__add {
+.connectors-card__name {
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+  line-height: var(--ref-font-line-height-sm);
+}
+
+/* Single line, truncated — keeps every row the same compact height. */
+.connectors-card__desc {
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-sm);
+  color: var(--ref-color-grey-60);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Trailing affordances: "+" to connect, green check when connected. */
+.connectors-card__add,
+.connectors-card__check {
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 24px;
   height: 24px;
   border-radius: var(--ref-border-radius-sm);
+  font-size: var(--sys-icon-css-sm);
+}
+
+.connectors-card__add {
   background: var(--ref-color-grey-05);
   color: var(--ref-color-grey-60);
-  flex-shrink: 0;
 }
 
 .connectors-card:hover .connectors-card__add {
@@ -160,23 +184,8 @@
   color: var(--ref-color-electric-blue-150);
 }
 
-.connectors-card__name {
-  font-size: var(--ref-font-size-md);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-  line-height: var(--ref-font-line-height-md);
-}
-
-/* 2-line clamp keeps every tile the same height. */
-.connectors-card__desc {
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-md);
-  color: var(--ref-color-grey-60);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.connectors-card__check {
+  color: var(--ref-color-green-100);
 }
 
 /* ── Monogram logo (fallback when a connector ships no SVG asset) ──────── */
