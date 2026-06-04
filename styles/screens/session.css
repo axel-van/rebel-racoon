@@ -1158,19 +1158,14 @@
   position: relative;
 }
 
+/* Positioning + scroll layer only — the visual chrome (surface, border,
+   shadow, radius, padding) comes from the DS .ap-action-dropdown rendered
+   inside (see renderMentionPickerInto). */
 .composer-mention-picker {
   position: absolute;
   left: 0;
-  right: 0;
   bottom: calc(100% + var(--ref-spacing-xs));
-  background: var(--ref-color-white);
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--ref-border-radius-md);
-  box-shadow: var(--sys-shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.08));
-  padding: var(--ref-spacing-xxs);
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
+  max-width: 100%;
   max-height: 280px;
   overflow-y: auto;
   z-index: var(--app-z-overlay);
@@ -1180,93 +1175,22 @@
   display: none;
 }
 
-.composer-mention-picker__section {
-  display: flex;
-  flex-direction: column;
-}
-
-.composer-mention-picker__header {
-  font-size: 10px;
-  color: var(--ref-color-grey-60);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs) 2px;
-}
-
-.composer-mention-picker__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.composer-mention-picker__row {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
-  border-radius: var(--ref-border-radius-sm);
-  cursor: pointer;
-  transition: background 120ms ease;
-}
-
-.composer-mention-picker__row:hover,
-.composer-mention-picker__row:focus-visible,
-.composer-mention-picker__row.is-highlighted {
-  background: var(--ref-color-electric-blue-05);
-  color: var(--ref-color-electric-blue-100);
-  outline: none;
-}
-
-.composer-mention-picker__row:hover .composer-mention-picker__row-name,
-.composer-mention-picker__row:focus-visible .composer-mention-picker__row-name,
-.composer-mention-picker__row.is-highlighted .composer-mention-picker__row-name,
-.composer-mention-picker__row:hover .composer-mention-picker__row-kind,
-.composer-mention-picker__row:focus-visible .composer-mention-picker__row-kind,
-.composer-mention-picker__row.is-highlighted .composer-mention-picker__row-kind,
-.composer-mention-picker__row:hover .composer-mention-picker__row-icon i,
-.composer-mention-picker__row:focus-visible .composer-mention-picker__row-icon i,
-.composer-mention-picker__row.is-highlighted .composer-mention-picker__row-icon i {
-  color: var(--ref-color-electric-blue-100);
-}
-
-.composer-mention-picker__row-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  color: var(--ref-color-grey-100);
-  flex-shrink: 0;
-}
-
-/* Connector rows ("/" command mode) carry a brand logo instead of a DS
-   icon — constrain it to the same 18px slot so the row aligns with the
-   source/idea rows above it. */
-.composer-mention-picker__row-icon .connector-logo {
-  width: 18px;
-  height: 18px;
+/* Connector items carry a brand logo where the DS dropdown expects its
+   leading 16px icon — size it to match. */
+.composer-mention-picker .ap-action-dropdown-item > .connector-logo {
+  width: 16px;
+  height: 16px;
   border-radius: var(--ref-border-radius-sm);
   object-fit: contain;
-}
-
-.composer-mention-picker__row-name {
-  flex: 1;
-  font-size: var(--ref-font-size-sm);
-  color: var(--ref-color-grey-100);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.composer-mention-picker__row-kind {
-  font-size: 11px;
-  text-transform: lowercase;
-  color: var(--ref-color-grey-60);
   flex-shrink: 0;
 }
 
 .composer-mention-picker__empty {
-  padding: var(--ref-spacing-xs);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  box-shadow: var(--sys-shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.08));
+  padding: var(--ref-spacing-sm);
   font-size: var(--ref-font-size-sm);
   text-align: center;
 }

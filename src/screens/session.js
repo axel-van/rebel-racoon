@@ -634,24 +634,30 @@ let pickerMode = "mention";
 function renderMentionPickerInto(container, sessionId, mode = "mention") {
   if (!container) return;
   let cursor = 0;
-  // iconHtml is a pre-rendered icon slot (a DS <i> for sources/ideas, a
-  // brand logo for connectors) — keeps one row markup across both modes.
-  const renderRow = (iconHtml, name, kindLabel, dataAttr) => {
+  // One DS action-dropdown item per row. iconHtml is the leading glyph
+  // (a DS <i> for sources/ideas, a brand logo for connectors); the kind /
+  // category shows as the DS item description. Keyboard nav targets the
+  // [data-mention-row-index] buttons regardless of mode.
+  const renderItem = (iconHtml, name, descLabel, dataAttr) => {
     const index = cursor++;
     return `
-    <li
-      class="composer-mention-picker__row"
+    <button
+      type="button"
+      class="ap-action-dropdown-item${descLabel ? " has-description" : ""}"
       role="option"
       tabindex="0"
+      aria-selected="false"
       data-mention-row-index="${index}"
       ${dataAttr}
     >
-      <span class="composer-mention-picker__row-icon" aria-hidden="true">
-        ${iconHtml}
-      </span>
-      <span class="composer-mention-picker__row-name">${escapeHtmlAttr(name)}</span>
-      ${kindLabel ? `<span class="composer-mention-picker__row-kind muted">${escapeHtmlAttr(kindLabel)}</span>` : ""}
-    </li>
+      ${iconHtml}
+      <div class="ap-action-dropdown-item-text">
+        <div class="ap-action-dropdown-item-label-container">
+          <span class="ap-action-dropdown-item-label">${escapeHtmlAttr(name)}</span>
+        </div>
+        ${descLabel ? `<span class="ap-action-dropdown-item-description">${escapeHtmlAttr(descLabel)}</span>` : ""}
+      </div>
+    </button>
   `;
   };
 
@@ -660,74 +666,50 @@ function renderMentionPickerInto(container, sessionId, mode = "mention") {
     const connectors = getConnectedConnectors();
     container.innerHTML =
       connectors.length > 0
-        ? `
-        <div class="composer-mention-picker__section">
-          <div class="composer-mention-picker__header">Ask a connector</div>
-          <ul class="composer-mention-picker__list" role="group">
+        ? `<div class="ap-action-dropdown" role="group">
             ${connectors
               .map((c) =>
-                renderRow(
-                  renderConnectorLogo(c, 18),
+                renderItem(
+                  renderConnectorLogo(c, 16),
                   c.name,
                   c.category || "",
                   `data-mention-pick-connector="${escapeHtmlAttr(c.id)}"`,
                 ),
               )
               .join("")}
-          </ul>
-        </div>
-      `
+          </div>`
         : `<div class="composer-mention-picker__empty muted">No connected connectors yet.</div>`;
     return;
   }
 
   const sources = getSources(sessionId).filter((s) => s.status !== "Processing");
   const ideas = getIdeas(sessionId);
-  const sourcesSection =
-    sources.length > 0
-      ? `
-        <div class="composer-mention-picker__section">
-          <div class="composer-mention-picker__header">Reference a source</div>
-          <ul class="composer-mention-picker__list" role="group">
-            ${sources
-              .map((s) =>
-                renderRow(
-                  `<i class="${iconForKind(s.kind)}"></i>`,
-                  s.filename,
-                  s.kind || "",
-                  `data-mention-pick-source="${escapeHtmlAttr(s.id)}"`,
-                ),
-              )
-              .join("")}
-          </ul>
-        </div>
-      `
-      : "";
-  const ideasSection =
-    ideas.length > 0
-      ? `
-        <div class="composer-mention-picker__section">
-          <div class="composer-mention-picker__header">Reference an idea</div>
-          <ul class="composer-mention-picker__list" role="group">
-            ${ideas
-              .map((i) =>
-                renderRow(
-                  `<i class="ap-icon-sparkles"></i>`,
-                  i.title,
-                  i.kind || "",
-                  `data-mention-pick-idea="${escapeHtmlAttr(i.id)}"`,
-                ),
-              )
-              .join("")}
-          </ul>
-        </div>
-      `
-      : "";
-  const body =
-    sourcesSection || ideasSection
-      ? sourcesSection + ideasSection
+  const sourceItems = sources
+    .map((s) =>
+      renderItem(
+        `<i class="${iconForKind(s.kind)}"></i>`,
+        s.filename,
+        s.kind || "",
+        `data-mention-pick-source="${escapeHtmlAttr(s.id)}"`,
+      ),
+    )
+    .join("");
+  const ideaItems = ideas
+    .map((i) =>
+      renderItem(
+        `<i class="ap-icon-sparkles"></i>`,
+        i.title,
+        i.kind || "",
+        `data-mention-pick-idea="${escapeHtmlAttr(i.id)}"`,
+      ),
+    )
+    .join("");
+  // DS divider separates the sources group from the ideas group.
+  const divider = sources.length > 0 && ideas.length > 0 ? `<div class="ap-action-dropdown-divider"></div>` : "";
+  container.innerHTML =
+    sources.length > 0 || ideas.length > 0
+      ? `<div class="ap-action-dropdown" role="group">${sourceItems}${divider}${ideaItems}</div>`
       : `<div class="composer-mention-picker__empty muted">No sources or ideas yet.</div>`;
-  container.innerHTML = body;
 }
 
 function openMentionPicker(root, sessionId, mode = "mention") {
@@ -769,7 +751,8 @@ function syncMentionHighlight(picker) {
   rows.forEach((row) => {
     const idx = Number(row.dataset.mentionRowIndex);
     const active = idx === mentionHighlightIndex;
-    row.classList.toggle("is-highlighted", active);
+    // .focused is the DS action-dropdown keyboard-highlight state.
+    row.classList.toggle("focused", active);
     row.setAttribute("aria-selected", active ? "true" : "false");
     if (active) row.scrollIntoView({ block: "nearest" });
   });
