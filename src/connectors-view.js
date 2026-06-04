@@ -168,24 +168,23 @@ export function renderGalleryBody(view, { showHero = true } = {}) {
   `;
 }
 
+// Marketing-style example prompts shown in the hero of a connected connector.
+function exampledPrompts(c) {
+  return [
+    `What's worth posting from ${c.name} right now?`,
+    `Summarize the latest in ${c.name}`,
+    `Find a contrarian angle in ${c.name}`,
+  ];
+}
+
 // ─── Detail body ─────────────────────────────────────────────────────────
-// One connector's detail — no back button (the host page/modal owns chrome).
+// One connector's detail — a polished, marketing-style layout: an accent-tinted
+// hero (logo + name + actions + example prompt chips), a capabilities card, and
+// a small info line. No back button (the host page/modal owns the chrome).
 export function renderDetailBody(c) {
   const isConnected = c.status === "connected";
-  const caps = (c.capabilities || [])
-    .map(
-      (cap) => `
-      <li class="connectors-detail__cap">
-        <i class="ap-icon-bolden" aria-hidden="true"></i>
-        <span>${escapeHtml(cap)}</span>
-      </li>`,
-    )
-    .join("");
-  const meta = isConnected
-    ? `<div class="connectors-detail__meta muted">Connected${
-        c.account ? ` as <strong>${escapeHtml(c.account)}</strong>` : ""
-      }${c.lastSync ? ` · Last sync: ${escapeHtml(c.lastSync)}` : ""}</div>`
-    : "";
+  const accent = escapeHtml(c.accent || "#41526b");
+
   const actions = isConnected
     ? `<button type="button" class="ap-button primary orange" data-connector-try="${escapeHtml(c.id)}">
          <i class="ap-icon-single-chat-bubble"></i><span>Try in chat</span>
@@ -195,29 +194,70 @@ export function renderDetailBody(c) {
          <i class="ap-icon-plus"></i><span>Connect</span>
        </button>`;
 
+  // Example prompt chips — only for connected connectors (clicking runs the
+  // in-chat ask flow, like the hero CTA).
+  const examples = isConnected
+    ? `<div class="connectors-detail__examples">
+        ${exampledPrompts(c)
+          .map(
+            (p) => `
+          <button type="button" class="connectors-detail__example" data-connector-try="${escapeHtml(c.id)}">
+            <i class="ap-icon-single-chat-bubble" aria-hidden="true"></i>
+            <span>${escapeHtml(p)}</span>
+            <i class="ap-icon-arrow-right connectors-detail__example-go" aria-hidden="true"></i>
+          </button>`,
+          )
+          .join("")}
+      </div>`
+    : "";
+
+  const caps = (c.capabilities || [])
+    .map(
+      (cap) => `
+      <li class="connectors-detail__cap">
+        <span class="connectors-detail__cap-icon" aria-hidden="true"><i class="ap-icon-rounded-check"></i></span>
+        <span>${escapeHtml(cap)}</span>
+      </li>`,
+    )
+    .join("");
+
+  const meta = isConnected
+    ? `<p class="connectors-detail__meta muted">Connected${
+        c.account ? ` as <strong>${escapeHtml(c.account)}</strong>` : ""
+      }${c.lastSync ? ` · Last sync: ${escapeHtml(c.lastSync)}` : ""}</p>`
+    : "";
+
   return `
     <div class="connectors-detail">
-      <header class="connectors-detail__head">
-        ${renderConnectorLogo(c, 64)}
-        <div class="connectors-detail__head-text">
-          <div class="connectors-detail__title-line">
-            <h1>${escapeHtml(c.name)}</h1>
-            ${isConnected ? `<span class="ap-status green">Connected</span>` : ""}
+      <div class="connectors-detail__hero" style="--connector-accent:${accent}">
+        <div class="connectors-detail__hero-main">
+          <span class="connectors-detail__hero-logo">${renderConnectorLogo(c, 48)}</span>
+          <div class="connectors-detail__hero-text">
+            <div class="connectors-detail__title-line">
+              <h1>${escapeHtml(c.name)}</h1>
+              ${isConnected ? `<span class="ap-status green">Connected</span>` : ""}
+              <span class="ap-tag grey">${escapeHtml(c.category || "Other")}</span>
+            </div>
+            <p class="connectors-detail__desc">${escapeHtml(c.desc)}.</p>
           </div>
-          <span class="ap-tag grey">${escapeHtml(c.category || "Other")}</span>
-          <p class="connectors-detail__desc">${escapeHtml(c.desc)}.</p>
-          ${meta}
+          <div class="connectors-detail__actions">${actions}</div>
         </div>
-        <div class="connectors-detail__actions">${actions}</div>
-      </header>
+        ${examples}
+      </div>
 
       <div class="ap-card connectors-detail__card">
         <h2 class="connectors-detail__section-title">What I can do over MCP</h2>
         <p class="muted connectors-detail__section-sub">
-          Once connected, I query ${escapeHtml(c.name)} live — these are the tools I'll call.
+          ${
+            isConnected
+              ? `I query ${escapeHtml(c.name)} live over MCP — these are the tools I'll call.`
+              : `Once connected, I'll query ${escapeHtml(c.name)} live over MCP — these are the tools I'll call.`
+          }
         </p>
         <ul class="connectors-detail__caps">${caps}</ul>
       </div>
+
+      ${meta}
     </div>
   `;
 }

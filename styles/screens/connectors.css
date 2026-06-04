@@ -229,22 +229,53 @@
   color: var(--ref-color-grey-100);
 }
 
-/* ── Detail view ──────────────────────────────────────────────────────── */
+/* ── Detail view (marketing-style: hero + capabilities) ───────────────── */
 
 .connectors-detail {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-md);
-  padding-top: var(--ref-spacing-md);
+  padding-top: var(--ref-spacing-xs);
 }
 
-.connectors-detail__head {
+/* Hero — accent-tinted banner. The brand accent (set inline as
+   --connector-accent) drives a soft corner glow over a light surface, so each
+   connector's detail feels branded while staying legible. */
+.connectors-detail__hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-lg);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  background:
+    radial-gradient(
+      120% 130% at 100% 0%,
+      color-mix(in srgb, var(--connector-accent, var(--ref-color-grey-60)) 16%, transparent),
+      transparent 58%
+    ),
+    var(--ref-color-grey-05);
+}
+
+.connectors-detail__hero-main {
   display: flex;
   align-items: flex-start;
   gap: var(--ref-spacing-md);
 }
 
-.connectors-detail__head-text {
+/* Logo on a white tile so brand marks read on the tinted hero. */
+.connectors-detail__hero-logo {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ref-spacing-xs);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+}
+
+.connectors-detail__hero-text {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -255,7 +286,7 @@
 .connectors-detail__title-line {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-xs);
   flex-wrap: wrap;
 }
 
@@ -263,26 +294,11 @@
   margin: 0;
 }
 
-/* The category tag is a flex child of a column container — keep it hugging its
- * content instead of stretching into a full-width bar. */
-.connectors-detail__head-text > .ap-tag {
-  align-self: flex-start;
-}
-
 .connectors-detail__desc {
-  margin: var(--ref-spacing-xxs) 0 0;
-  color: var(--ref-color-grey-60);
+  margin: 0;
+  color: var(--ref-color-grey-80);
   font-size: var(--ref-font-size-md);
   line-height: var(--ref-font-line-height-md);
-}
-
-.connectors-detail__meta {
-  font-size: var(--ref-font-size-xs);
-}
-
-.connectors-detail__meta strong {
-  color: var(--ref-color-grey-100);
-  font-weight: var(--ref-font-weight-bold);
 }
 
 .connectors-detail__actions {
@@ -292,6 +308,59 @@
   flex-shrink: 0;
 }
 
+/* Example prompt chips — marketing "try this" affordances on the hero. */
+.connectors-detail__examples {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.connectors-detail__example {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--ref-font-size-sm);
+  color: var(--ref-color-grey-100);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  transition: border-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.connectors-detail__example:hover {
+  border-color: var(--ref-color-grey-40);
+}
+
+.connectors-detail__example:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
+}
+
+.connectors-detail__example > i:first-child {
+  color: var(--ref-color-electric-blue-150);
+  flex-shrink: 0;
+}
+
+.connectors-detail__example > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.connectors-detail__example-go {
+  color: var(--ref-color-grey-40);
+  flex-shrink: 0;
+}
+
+.connectors-detail__example:hover .connectors-detail__example-go {
+  color: var(--ref-color-electric-blue-150);
+}
+
+/* Capabilities card */
 .connectors-detail__card {
   display: flex;
   flex-direction: column;
@@ -315,8 +384,8 @@
   list-style: none;
   margin: var(--ref-spacing-xs) 0 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: var(--ref-spacing-xs);
 }
 
@@ -328,8 +397,27 @@
   color: var(--ref-color-grey-100);
 }
 
-.connectors-detail__cap > i {
+.connectors-detail__cap-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--ref-color-electric-blue-05);
   color: var(--ref-color-electric-blue-150);
+  font-size: var(--sys-icon-css-sm);
+}
+
+.connectors-detail__meta {
+  margin: 0;
+  font-size: var(--ref-font-size-xs);
+}
+
+.connectors-detail__meta strong {
+  color: var(--ref-color-grey-100);
+  font-weight: var(--ref-font-weight-bold);
 }
 
 /* ── Mobile (≤720px) ──────────────────────────────────────────────────── */
@@ -349,7 +437,7 @@
   .connectors-grid {
     grid-template-columns: 1fr;
   }
-  .connectors-detail__head {
+  .connectors-detail__hero-main {
     flex-direction: column;
   }
   .connectors-detail__actions {
