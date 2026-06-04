@@ -10,7 +10,7 @@ import { init as initGenerateImageModal } from "./components/generate-image-moda
 import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=12";
 import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=31";
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=29";
-import { init as initConnectorsModal } from "./components/connectors-modal.js?v=4";
+import { init as initConnectorsModal } from "./components/connectors-modal.js?v=5";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
 import { init as initRenameModal } from "./components/rename-modal.js?v=2";
 import { init as initSearchModal } from "./components/search-modal.js?v=3";

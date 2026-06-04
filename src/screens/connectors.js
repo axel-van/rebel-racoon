@@ -17,7 +17,7 @@ import { showToast } from "../components/toast.js?v=20";
 import { setHandoff } from "../handoff.js?v=20";
 import { findConnector, setConnectorStatus, subscribe as subscribeConnectors } from "../connectors-store.js?v=23";
 import { renderGalleryBody } from "../connectors-view.js?v=4";
-import { open as openConnectorsModal } from "../components/connectors-modal.js?v=4";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=5";
 import { isFlagOn } from "../feature-flags.js?v=4";
 
 // Local view state (search + category filter).
