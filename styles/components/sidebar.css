@@ -519,11 +519,16 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
 }
 
 /* When the sidebar is collapsed the popmenu sits next to the icon rail
-   (right of it) rather than on top of the avatar tile. */
+   (right of it). The collapsed rail is narrow and the sidebar clips its
+   overflow, so — like the conversation row ⋮ menu — the popmenu is
+   position:fixed and JS sets left/bottom from the cog's rect (see
+   setMenuOpen in sidebar.js). */
 .ap-action-dropdown.app-sidebar__foot-popmenu--collapsed {
-  bottom: 0;
+  position: fixed;
+  left: auto;
   right: auto;
-  left: calc(100% + var(--ref-spacing-xxs));
+  top: auto;
+  bottom: auto;
 }
 
 .ap-action-dropdown.app-sidebar__foot-popmenu[hidden] {

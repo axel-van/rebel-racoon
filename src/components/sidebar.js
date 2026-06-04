@@ -74,6 +74,14 @@ function setMenuOpen(open) {
   const trigger = document.querySelector("[data-sidebar-foot-toggle]");
   if (popmenu) popmenu.hidden = !open;
   if (trigger) trigger.setAttribute("aria-expanded", String(open));
+  // Collapsed rail: the popmenu is position:fixed (the narrow sidebar clips
+  // overflow), so anchor it to the right of the cog, growing upward from the
+  // cog's bottom. Mirrors the conversation row ⋮ menu positioning.
+  if (open && popmenu && trigger && popmenu.classList.contains("app-sidebar__foot-popmenu--collapsed")) {
+    const rect = trigger.getBoundingClientRect();
+    popmenu.style.left = `${rect.right + 8}px`;
+    popmenu.style.bottom = `${window.innerHeight - rect.bottom}px`;
+  }
 }
 
 export function initSidebar() {
