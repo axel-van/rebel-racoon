@@ -915,12 +915,16 @@
 
 /* Connector chip — a DS .ap-tag (see renderComposerConnector), same chip
    family as the @ mention pills. Pinned to the start of the input line and
-   aligned with the textarea's first line (matches its top/left padding). */
+   vertically centered on the textarea's FIRST line: margin-top skips the
+   textarea's top padding, the box height matches one text line, and the
+   chip (taller than a line) centers on it. padding-left matches the
+   textarea's left inset so the chip lines up with where text starts. */
 .session__composer-connector {
   display: flex;
-  flex-shrink: 0;
   align-items: center;
-  padding-top: var(--ref-spacing-xxs);
+  flex-shrink: 0;
+  height: var(--ref-font-line-height-sm);
+  margin-top: var(--ref-spacing-xxs);
   padding-left: var(--ref-spacing-xxs);
 }
 
