@@ -639,12 +639,13 @@ function renderMentionPickerInto(container, sessionId, mode = "mention") {
   // (label + description + brand logo). Only connected connectors are
   // live/queryable.
   if (mode === "command") {
-    const renderItem = (iconHtml, name, descLabel, dataAttr) => {
+    // Compact single-line items (logo + name) — a classic DS dropdown.
+    const renderItem = (iconHtml, name, dataAttr) => {
       const index = cursor++;
       return `
     <button
       type="button"
-      class="ap-action-dropdown-item${descLabel ? " has-description" : ""}"
+      class="ap-action-dropdown-item"
       role="option"
       tabindex="0"
       aria-selected="false"
@@ -656,7 +657,6 @@ function renderMentionPickerInto(container, sessionId, mode = "mention") {
         <div class="ap-action-dropdown-item-label-container">
           <span class="ap-action-dropdown-item-label">${escapeHtmlAttr(name)}</span>
         </div>
-        ${descLabel ? `<span class="ap-action-dropdown-item-description">${escapeHtmlAttr(descLabel)}</span>` : ""}
       </div>
     </button>
   `;
@@ -667,12 +667,7 @@ function renderMentionPickerInto(container, sessionId, mode = "mention") {
         ? `<div class="ap-action-dropdown" role="group">
             ${connectors
               .map((c) =>
-                renderItem(
-                  renderConnectorLogo(c, 16),
-                  c.name,
-                  c.category || "",
-                  `data-mention-pick-connector="${escapeHtmlAttr(c.id)}"`,
-                ),
+                renderItem(renderConnectorLogo(c, 16), c.name, `data-mention-pick-connector="${escapeHtmlAttr(c.id)}"`),
               )
               .join("")}
           </div>`

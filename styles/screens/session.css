@@ -1194,10 +1194,12 @@
 }
 
 /* Connector items carry a brand logo where the DS dropdown expects its
-   leading 16px icon — size it to match. */
+   leading 16px icon — size it + match the DS icon's right spacing (the DS
+   only margins a leading <i>, not our <img>). */
 .composer-mention-picker .ap-action-dropdown-item > .connector-logo {
   width: 16px;
   height: 16px;
+  margin-right: var(--ref-spacing-xs);
   border-radius: var(--ref-border-radius-sm);
   object-fit: contain;
   flex-shrink: 0;
