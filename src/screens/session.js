@@ -577,13 +577,15 @@ function renderComposerConnector(root, sessionId, { focus = false } = {}) {
     return;
   }
   container.hidden = false;
+  // Same chip family as the @ mention pills: a DS .ap-tag with the
+  // connector logo as a 16px .ap-tag-avatar + an auto-styled close button.
   container.innerHTML = `
-    <span class="composer-connector-chip" style="--connector-accent:${escapeHtmlAttr(connector.accent || "#41526b")}">
-      <span class="composer-connector-chip__logo">${renderConnectorLogo(connector, 18)}</span>
-      <span class="composer-connector-chip__label">${escapeHtmlAttr(connector.name)}</span>
+    <span class="ap-tag grey composer-mention composer-connector-chip">
+      <span class="ap-tag-avatar">${renderConnectorLogo(connector, 16)}</span>
+      <span class="composer-mention__label">${escapeHtmlAttr(connector.name)}</span>
       <button
         type="button"
-        class="composer-connector-chip__remove"
+        class="composer-mention__remove"
         data-composer-connector-remove
         aria-label="Remove ${escapeHtmlAttr(connector.name)}"
         title="Remove connector"
