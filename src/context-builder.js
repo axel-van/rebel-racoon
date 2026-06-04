@@ -19,7 +19,7 @@ import * as rightPanel from "./components/right-panel.js?v=149";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=29";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=21";
 import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=41";
-import { connectors as connectorMocks } from "./mocks.js?v=37";
+import { connectors as connectorMocks } from "./mocks.js?v=38";
 import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=2";
 
 const drafts = new Map(); // sessionId → draft
@@ -242,14 +242,20 @@ function askAltDocuments(sessionId) {
     sessionId,
     "Optional: connect documents that detail your Brand (brand book, brief, etc.). Or skip.",
   );
-  const items = connectorMocks.map((c) => ({
-    value: c.id,
-    label: c.name,
-    caption: c.desc,
-    imgSrc: c.logo,
-  }));
+  // Onboarding keeps the choice tight — the four sources most people connect
+  // first. The full catalogue lives on /connectors; the subtitle points there.
+  const ONBOARDING_DOC_CONNECTORS = ["slite", "notion", "gdrive", "slack"];
+  const items = ONBOARDING_DOC_CONNECTORS.map((id) => connectorMocks.find((c) => c.id === id))
+    .filter(Boolean)
+    .map((c) => ({
+      value: c.id,
+      label: c.name,
+      caption: c.desc,
+      imgSrc: c.logo,
+    }));
   inlineQuestion.ask(sessionId, {
     title: "Connect documents (optional)",
+    subtitle: "You can connect more sources later in Settings.",
     stepLabel: "3 / 3",
     items,
     multi: true,

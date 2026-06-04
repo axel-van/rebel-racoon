@@ -13,7 +13,7 @@ import {
   ideas as seedIdeas,
   ideasBySession as seedIdeasBySession,
   recentSessions as seedRecentSessions,
-} from "./mocks.js?v=37";
+} from "./mocks.js?v=38";
 import { isNewUser } from "./user-mode.js?v=22";
 
 // Demo session ids — the recentSessions seed (s-acme-launch / s-riverside /

@@ -15,8 +15,8 @@
 // module instances are shared (ES modules are keyed by URL).
 import * as inlineQuestion from "./inline-question.js?v=33";
 import { postAssistantMessage, sendConnectorMessage } from "./assistant.js?v=40";
-import { findConnector } from "./connectors-store.js?v=22";
-import { connectorDocs } from "./mocks.js?v=37";
+import { findConnector } from "./connectors-store.js?v=23";
+import { connectorDocs } from "./mocks.js?v=38";
 
 export function askConnector(sessionId, connectorId) {
   const connector = findConnector(connectorId);

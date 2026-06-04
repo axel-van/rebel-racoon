@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=98";
-import { socialAccounts, chatStarters } from "../mocks.js?v=37";
+import { socialAccounts, chatStarters } from "../mocks.js?v=38";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
@@ -48,10 +48,10 @@ import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
 import * as inlineQuestion from "../inline-question.js?v=33";
 import { askConnector } from "../connector-ask.js?v=2";
-import { getConnectedConnectors } from "../connectors-store.js?v=22";
+import { getConnectedConnectors } from "../connectors-store.js?v=23";
 import { renderConnectorLogo } from "../connectors-view.js?v=4";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=80";
+import * as contextBuilder from "../context-builder.js?v=81";
 import * as playbookEditor from "../playbook-editor.js?v=41";
 import { renderPicker } from "./_analyse-common.js?v=39";
 import { renderSourceCard } from "../components/source-card.js?v=30";

@@ -2077,6 +2077,7 @@ export const connectors = [
   },
   {
     id: "confluence",
+    logo: "assets/logos/confluence.svg",
     name: "Confluence",
     desc: "Search spaces and read pages from Confluence",
     category: "Docs & wikis",
@@ -2086,6 +2087,7 @@ export const connectors = [
   },
   {
     id: "gdocs",
+    logo: "assets/logos/gdocs.svg",
     name: "Google Docs",
     desc: "Search and read content from your Google Docs",
     category: "Docs & wikis",
@@ -2095,6 +2097,7 @@ export const connectors = [
   },
   {
     id: "dropbox",
+    logo: "assets/logos/dropbox.svg",
     name: "Dropbox",
     desc: "Search files and read content stored in Dropbox",
     category: "Storage",
@@ -2104,6 +2107,7 @@ export const connectors = [
   },
   {
     id: "onedrive",
+    logo: "assets/logos/onedrive.svg",
     name: "OneDrive",
     desc: "Search files and read documents from OneDrive",
     category: "Storage",
@@ -2113,6 +2117,7 @@ export const connectors = [
   },
   {
     id: "box",
+    logo: "assets/logos/box.svg",
     name: "Box",
     desc: "Search files and read content stored in Box",
     category: "Storage",
@@ -2122,6 +2127,7 @@ export const connectors = [
   },
   {
     id: "github",
+    logo: "assets/logos/github.svg",
     name: "GitHub",
     desc: "Search repos and read issues, PRs and releases",
     category: "Dev & project",
@@ -2132,6 +2138,7 @@ export const connectors = [
   },
   {
     id: "linear",
+    logo: "assets/logos/linear.svg",
     name: "Linear",
     desc: "Search issues and read cycle details from Linear",
     category: "Dev & project",
@@ -2141,6 +2148,7 @@ export const connectors = [
   },
   {
     id: "jira",
+    logo: "assets/logos/jira.svg",
     name: "Jira",
     desc: "Search issues and read sprint details from Jira",
     category: "Dev & project",
@@ -2150,6 +2158,7 @@ export const connectors = [
   },
   {
     id: "trello",
+    logo: "assets/logos/trello.svg",
     name: "Trello",
     desc: "Search cards and read boards from Trello",
     category: "Dev & project",
@@ -2159,6 +2168,7 @@ export const connectors = [
   },
   {
     id: "asana",
+    logo: "assets/logos/asana.svg",
     name: "Asana",
     desc: "Search tasks and read projects from Asana",
     category: "Dev & project",
@@ -2168,6 +2178,7 @@ export const connectors = [
   },
   {
     id: "figma",
+    logo: "assets/logos/figma.svg",
     name: "Figma",
     desc: "Search files and read frame content from Figma",
     category: "Dev & project",
@@ -2177,6 +2188,7 @@ export const connectors = [
   },
   {
     id: "teams",
+    logo: "assets/logos/teams.svg",
     name: "Microsoft Teams",
     desc: "Search messages and read channel posts from Teams",
     category: "Messaging",
@@ -2186,6 +2198,7 @@ export const connectors = [
   },
   {
     id: "discord",
+    logo: "assets/logos/discord.svg",
     name: "Discord",
     desc: "Search messages and read channel history from Discord",
     category: "Messaging",
@@ -2195,6 +2208,7 @@ export const connectors = [
   },
   {
     id: "hubspot",
+    logo: "assets/logos/hubspot.svg",
     name: "HubSpot",
     desc: "Search records and read deals and contacts from HubSpot",
     category: "CRM & support",
@@ -2204,6 +2218,7 @@ export const connectors = [
   },
   {
     id: "salesforce",
+    logo: "assets/logos/salesforce.svg",
     name: "Salesforce",
     desc: "Search records and read opportunities from Salesforce",
     category: "CRM & support",
@@ -2213,6 +2228,7 @@ export const connectors = [
   },
   {
     id: "intercom",
+    logo: "assets/logos/intercom.svg",
     name: "Intercom",
     desc: "Search conversations and read help articles from Intercom",
     category: "CRM & support",
@@ -2222,6 +2238,7 @@ export const connectors = [
   },
   {
     id: "zendesk",
+    logo: "assets/logos/zendesk.svg",
     name: "Zendesk",
     desc: "Search tickets and read conversations from Zendesk",
     category: "CRM & support",
