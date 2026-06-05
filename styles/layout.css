@@ -90,6 +90,25 @@ body.onboarding .app-content {
   grid-column: 1;
 }
 
+/* ---------- Empty-chat full-bleed ----------
+   A fresh chat (the empty-state hero) drops the topbar and reclaims its row
+   so the welcome view stays as simple as possible — just the sidebar + the
+   centred hero. Reactive via :has(): the instant a turn lands, .empty-chat is
+   gone, the topbar (with its Sources / Ideas / Drafts pills) returns. The
+   sidebar stays put (unlike onboarding mode, which also hides it). */
+.app-shell:has(.empty-chat) {
+  grid-template-rows: 1fr;
+}
+
+.app-shell:has(.empty-chat) .app-topbar {
+  display: none;
+}
+
+.app-shell:has(.empty-chat) .app-sidebar,
+.app-shell:has(.empty-chat) .app-content {
+  grid-row: 1;
+}
+
 /* ---------- Top bar ---------- */
 
 .app-topbar {

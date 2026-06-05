@@ -20,16 +20,15 @@
   overflow: hidden;
 }
 
-/* New-chat empty state — paint the same soft warm + cool gradient
-   canvas the welcome-alt onboarding uses (cf. .welcome-screen__bg
-   recipe further down). Scoped via :has(.empty-chat) so it only
-   appears before the first user turn lands and the hero is on
-   screen. */
+/* New-chat empty state only — overlay a soft warm + cool gradient canvas
+   (the welcome-alt onboarding recipe) ON TOP of the same base colour the
+   conversation uses (var(--app-bg)), so the hero sits on the regular chat
+   background, just with a decorative wash. Scoped via :has(.empty-chat) so
+   the gradient is gone the moment the first turn lands. */
 .session__assistant:has(.empty-chat) {
   background:
     radial-gradient(ellipse 60% 50% at 100% 0%, var(--ref-color-orange-10) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 50% at 0% 100%, var(--ref-color-electric-blue-05) 0%, transparent 70%),
-    var(--app-surface);
+    radial-gradient(ellipse 50% 50% at 0% 100%, var(--ref-color-electric-blue-05) 0%, transparent 70%), var(--app-bg);
 }
 
 /* Chat thread + composer share a 740px max-width centered column, matching
@@ -446,8 +445,10 @@
 
 /* ── Empty-state hero ─────────────────────────────────────────────────
    Centred hero block shown inside .session__assistant-thread when the
-   conversation has no user message yet. 2x2 starter grid lets the user
-   prefill the composer with one of four handoff-spec prompts (Q14). */
+   conversation has no user message yet. A 3x2 grid of big workflow
+   "starter" cards either prefills the composer with an editable prompt or
+   launches a guided flow (clips / Playbook / connector). See chatStarters
+   in mocks.js + renderEmptyHero in screens/session.js. */
 
 .empty-chat {
   position: relative;
@@ -458,6 +459,14 @@
   align-items: center;
   text-align: center;
   gap: var(--ref-spacing-sm);
+}
+
+/* The empty-state hero breaks out of the thread's shared 740px column so the
+   starter grid can run wider than the composer (HeyGen-style). The composer
+   inside it keeps its own 740px inner cap, so it stays narrower than the
+   cards. Specificity (3 classes) beats the `…thread > *` cap rule above. */
+.session__assistant > .session__assistant-thread > .empty-chat {
+  max-width: min(1040px, 100%);
 }
 
 /* Decorative focal glow behind the empty-state hero — same recipe as
@@ -488,6 +497,7 @@
 }
 
 .empty-chat__hello {
+  margin: 0;
   font-family: var(--ref-font-family);
   font-size: var(--app-text-hero-size);
   line-height: var(--app-text-hero-line);
@@ -512,13 +522,13 @@
 /* Section header above the starter grid — matches Figma 280:1169
    (Averta Bold 12px / line-height 16px, color grey-100 #344563). */
 .empty-chat__starter-label {
-  margin-top: var(--ref-spacing-sm);
+  margin: var(--ref-spacing-sm) 0 0;
   /* Center within the empty-chat column so it sits in the same 651px
      box as the starter grid below — using `align-self: flex-start`
      anchored to the parent's left edge instead of the grid's. */
   align-self: center;
   width: 100%;
-  max-width: 651px;
+  max-width: 1040px;
   text-align: left;
   font-size: var(--ref-font-size-xs);
   line-height: var(--ref-font-line-height-xs);
@@ -526,21 +536,41 @@
   color: var(--ref-color-grey-100);
 }
 
-.starter-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--ref-spacing-xs);
-  width: 100%;
-  max-width: 651px;
+@media (max-width: 900px) {
+  .empty-chat__starter-label {
+    max-width: 651px;
+  }
 }
 
+.starter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  max-width: 1040px;
+}
+
+/* Big visual workflow cards (HeyGen-inspired): a tinted-to-surface gradient
+   panel carrying a large faded icon "watermark" in the corner, a display
+   title, a one-line subtitle, and an accent CTA row with a nudging arrow.
+   Each tone sets two custom props — --card-tint (the gradient wash) and
+   --card-accent (watermark + CTA + hover border) — so the base rules stay
+   tone-agnostic. */
 .starter-card {
+  --card-tint: var(--ref-color-orange-10);
+  --card-accent: var(--ref-color-orange-100);
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
   gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xs);
+  min-height: 158px;
+  padding: var(--ref-spacing-sm);
+  /* Cards rest on a clean white surface; the colour identity comes only from
+     the title/CTA + a faint watermark. The tinted wash blooms in on hover via
+     the ::before below (opacity is animatable, a gradient background is not). */
   background: var(--app-surface);
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-starter);
@@ -552,90 +582,130 @@
     transform var(--ref-animation-short) var(--app-ease-standard);
 }
 
+/* Tinted wash, hidden at rest and faded in on hover/focus. Sits below the
+   card content (title/subtitle/cta carry position:relative) and the watermark.
+   Token-driven: the DS tint blended halfway to the white surface. */
+.starter-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    152deg,
+    color-mix(in srgb, var(--card-tint) 55%, var(--app-surface)) 0%,
+    var(--app-surface) 60%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--ref-animation-short) var(--app-ease-standard);
+}
+
 .starter-card:hover,
 .starter-card:focus-visible {
   outline: none;
-  transform: translateY(-2px) rotate(-0.6deg);
+  transform: translateY(-3px);
+  border-color: var(--card-accent);
   box-shadow:
     0 1px 3px rgba(26, 31, 54, 0.04),
-    0 14px 28px -10px rgba(26, 31, 54, 0.18);
+    0 16px 32px -12px rgba(26, 31, 54, 0.2);
 }
 
-/* Even rows tilt the other way on hover so the grid stays balanced
-   instead of all cards leaning the same direction. */
-.starter-card:nth-child(2n):hover,
-.starter-card:nth-child(2n):focus-visible {
-  transform: translateY(-2px) rotate(0.6deg);
+.starter-card:hover::before,
+.starter-card:focus-visible::before {
+  opacity: 1;
 }
 
-.starter-card__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: var(--app-radius-button-sm);
-  background: var(--ref-color-orange-10);
-  color: var(--ref-color-orange-100);
+.starter-card:hover .starter-card__art,
+.starter-card:focus-visible .starter-card__art {
+  opacity: 0.12;
 }
 
-.starter-card__icon i {
-  font-size: var(--sys-icon-css-md);
-}
-
-/* Per-starter tone variants — colored icon tile + matching hover
-   border so each starter card carries its own visual identity:
-   mermaid (Batch) · orange (Launch) · electric-blue (Repurpose) ·
-   purple (Clips). Helps the user scan the grid by category. */
-.starter-card--mermaid .starter-card__icon {
-  background: var(--ref-color-mermaid-gradient-background);
-  color: var(--ref-color-white);
-}
-.starter-card--mermaid .starter-card__icon i {
-  color: var(--ref-color-white);
-}
-.starter-card--mermaid:hover,
-.starter-card--mermaid:focus-visible {
-  border-color: var(--ref-color-mermaid-gradient-from);
-}
-
-.starter-card--orange .starter-card__icon {
-  background: var(--ref-color-orange-10);
-  color: var(--ref-color-orange-100);
-}
-.starter-card--orange:hover,
-.starter-card--orange:focus-visible {
-  border-color: var(--ref-color-orange-100);
-}
-
-.starter-card--blue .starter-card__icon {
-  background: var(--ref-color-electric-blue-10);
-  color: var(--ref-color-electric-blue-100);
-}
-.starter-card--blue:hover,
-.starter-card--blue:focus-visible {
-  border-color: var(--ref-color-electric-blue-100);
-}
-
-.starter-card--purple .starter-card__icon {
-  background: var(--ref-color-purple-10);
-  color: var(--ref-color-purple-100);
-}
-.starter-card--purple:hover,
-.starter-card--purple:focus-visible {
-  border-color: var(--ref-color-purple-100);
+/* Decorative oversized icon, bleeding off the bottom-right corner. Reads as
+   the card's "image" without needing photography. */
+.starter-card__art {
+  position: absolute;
+  right: -12px;
+  bottom: -16px;
+  font-size: 104px;
+  line-height: 1;
+  color: var(--card-accent);
+  opacity: 0.07;
+  pointer-events: none;
+  transition: opacity var(--ref-animation-short) var(--app-ease-standard);
 }
 
 .starter-card__title {
-  font-size: 13px;
-  font-weight: var(--ref-font-weight-bold);
+  position: relative;
+  font-size: 19px;
+  line-height: 24px;
+  font-weight: var(--app-text-hero-weight);
+  letter-spacing: -0.01em;
   color: var(--ref-color-grey-100);
 }
 
-.starter-card__prompt {
+.starter-card__subtitle {
+  position: relative;
   font-size: var(--ref-font-size-xs);
   line-height: var(--ref-font-line-height-xs);
-  color: var(--ref-color-grey-80);
+  color: var(--ref-color-grey-60);
+  max-width: 22ch;
+}
+
+/* Push the CTA to the bottom of the card so every card's CTA baseline lines
+   up across the grid regardless of subtitle length. Colour + typography come
+   from the DS .ap-link (standalone small) so every starter link uses the
+   single Agorapulse link blue, not the per-card accent. */
+.starter-card__cta {
+  position: relative;
+  margin-top: auto;
+  padding-top: var(--ref-spacing-xxs);
+  align-self: flex-start;
+}
+
+.starter-card__cta i {
+  font-size: var(--sys-icon-css-sm);
+  transition: transform var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.starter-card:hover .starter-card__cta i,
+.starter-card:focus-visible .starter-card__cta i {
+  transform: translateX(3px);
+}
+
+/* Per-starter tone variants — set the gradient wash + accent. mermaid (Batch) ·
+   electric-blue (Repurpose) · orange (Launch) · purple (Clips) · green
+   (Playbook) · red (Call / Connector). Helps the user scan by category. */
+.starter-card--mermaid {
+  --card-tint: var(--ref-color-mermaid-10);
+  --card-accent: var(--ref-color-mermaid-gradient-from);
+}
+.starter-card--orange {
+  --card-tint: var(--ref-color-orange-10);
+  --card-accent: var(--ref-color-orange-100);
+}
+.starter-card--blue {
+  --card-tint: var(--ref-color-electric-blue-10);
+  --card-accent: var(--ref-color-electric-blue-100);
+}
+.starter-card--purple {
+  --card-tint: var(--ref-color-purple-10);
+  --card-accent: var(--ref-color-purple-100);
+}
+.starter-card--green {
+  --card-tint: var(--ref-color-green-10);
+  --card-accent: var(--ref-color-green-100);
+}
+.starter-card--red {
+  --card-tint: var(--ref-color-red-10);
+  --card-accent: var(--ref-color-red-100);
+}
+
+/* Collapse to two columns on narrower canvases so cards keep a comfortable
+   width instead of squeezing three across. */
+@media (max-width: 900px) {
+  .starter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 651px;
+  }
 }
 
 /* Assistant notice (Figma 25:1043 / 25:1054) — a mermaid `.ap-status` pill

@@ -850,31 +850,53 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
     (s) => (s.kind || "").toLowerCase() === "video" && s.status === "Processed" && typeof s.durationSec === "number",
   );
   const videoLabel = firstVideo ? `"${firstVideo.filename}"` : "your video";
-  const cards = chatStarters
+  // Build the starter set. When connectors are enabled AND at least one is
+  // connected, swap the last card for a live "Ask a connected source" starter
+  // so the grid surfaces the MCP query capability without changing its shape.
+  const starters = [...chatStarters];
+  if (isFlagOn("connectors")) {
+    const connected = getConnectedConnectors();
+    if (connected.length) {
+      const c = connected[0];
+      starters[starters.length - 1] = {
+        id: "starter-connector",
+        icon: "ap-icon-link",
+        tone: "red",
+        title: "Ask a connected source",
+        subtitle: `Query ${c.name} live over MCP and turn the answer into posts.`,
+        cta: `Ask ${c.name}`,
+        action: "ask-connector",
+        connectorId: c.id,
+      };
+    }
+  }
+  const cards = starters
     .map((s) => {
-      const resolvedPrompt = s.prompt
+      const resolvedPrompt = (s.prompt || "")
         .replace(/\{\{source\}\}/g, sourceLabel)
         .replace(/\{\{video-source\}\}/g, videoLabel);
       const actionAttr = s.action ? ` data-starter-action="${s.action}"` : "";
+      const connectorAttr = s.connectorId ? ` data-starter-connector="${s.connectorId}"` : "";
       const tone = s.tone || "orange";
       return `
-        <button type="button" class="starter-card starter-card--${tone}" data-starter="${s.id}"${actionAttr} data-starter-prompt="${escapeHtml(resolvedPrompt)}">
-          <span class="starter-card__icon"><i class="${s.icon}"></i></span>
+        <button type="button" class="starter-card starter-card--${tone}" data-starter="${s.id}"${actionAttr}${connectorAttr} data-starter-prompt="${escapeHtml(resolvedPrompt)}">
+          <i class="starter-card__art ${s.icon}" aria-hidden="true"></i>
           <span class="starter-card__title">${s.title}</span>
-          <span class="starter-card__prompt">${escapeHtml(resolvedPrompt)}</span>
+          <span class="starter-card__subtitle">${s.subtitle}</span>
+          <span class="starter-card__cta ap-link standalone small">${s.cta}<i class="ap-icon-arrow-right" aria-hidden="true"></i></span>
         </button>
       `;
     })
     .join("");
   return html`
     <div class="empty-chat" data-empty-chat>
-      <div class="empty-chat__hello">What are you working on?</div>
+      <h1 class="empty-chat__hello">What are you working on?</h1>
       <div class="empty-chat__sub">
         Drop a source and I'll turn it into a batch of posts you can review, edit, and schedule.
       </div>
       ${raw(composerMarkup)}
-      <div class="empty-chat__starter-label">Start with a source or pick a starter</div>
-      <div class="starter-grid">${raw(cards)}</div>
+      <h2 class="empty-chat__starter-label" id="starterGridLabel">Or jump into a workflow</h2>
+      <div class="starter-grid" role="group" aria-labelledby="starterGridLabel">${raw(cards)}</div>
     </div>
   `;
 }
@@ -2967,6 +2989,26 @@ function bindSession(root, session) {
       const starterBtn = event.target.closest("[data-starter]");
       if (starterBtn && starterBtn.dataset.starterAction === "open-video-clips") {
         startPillFromKind(root, session, "video");
+        return;
+      }
+      // "Build my Playbook" — same handoff the /contexts "New Playbook" CTA
+      // uses: run the context-builder in the app shell and return to this chat.
+      if (starterBtn && starterBtn.dataset.starterAction === "build-playbook") {
+        try {
+          window.sessionStorage.setItem("welcomeAltIntegrated", "1");
+          window.sessionStorage.setItem("welcomeAltReturnTo", "/");
+        } catch {
+          /* ignore */
+        }
+        setHandoff("pendingStartContextBuilder", { flow: "alt", prefilledUrl: "", returnTo: "/" });
+        navigate(`/session/welcome-alt-${Date.now().toString(36)}`);
+        return;
+      }
+      // "Ask a connected source" — query the live connector in this chat (same
+      // path as the paper-clip menu's connector entries). connectorId is baked
+      // into the card at render time (first connected connector).
+      if (starterBtn && starterBtn.dataset.starterAction === "ask-connector") {
+        askConnector(session.id, starterBtn.dataset.starterConnector);
         return;
       }
       if (starterBtn) {
