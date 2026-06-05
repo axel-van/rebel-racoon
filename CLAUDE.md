@@ -67,6 +67,7 @@ src/
   sources-stream.js     — GLOBAL sources + uploads + processing state machine
   schedule-store.js     — scheduled-post queue (calendar)
   composer-mentions.js  — per-session @mention pills in the composer
+  composer-connector.js — composer's "Connected sources" submenu (feature-flagged)
 
   # Conversational flow orchestrators (drive the assistant thread + pickers)
   start-flow.js         — action-picker intro for an existing-Playbook chat
@@ -230,12 +231,11 @@ Exception: the `sparklesMermaid` icon uses inline SVG for its gradient fill. Thi
 
 ## Docs
 
-- `README.md` — repo overview.
-- `docs/AGENTS.md` — agent/automation notes.
-- `AUDIT-stabilisation.md`, `AUDIT-production-readiness.md` — audit findings + prioritised lots.
-- `FLOW-CHANGELOG.md` — commit ↔ FIND-XXX status table.
-- `docs/copy-principles.md`, `docs/copy-audit.md`, `docs/copy-rewrites.md` — UX copy guidance.
-- `docs/archive/` — earlier audit reports (e.g. `FLOW-AUDIT.md`). `audit-assets/` — Mermaid sources + SVG renders for the Figma cartography.
+All docs (except this file and `README.md`) live under [`docs/`](docs/). Start from [`docs/README.md`](docs/README.md) for the full index.
+
+- [`docs/reference/`](docs/reference/) — current truth about the proto (architecture, routes, stores, design system, glossary).
+- [`docs/audits/`](docs/audits/) — current audits (PROD-VS-PROTOTYPE, PROD-CHANGES).
+- [`docs/copy/`](docs/copy/) — UX copy principles (voice, tone, glossary).
 
 ## MCP
 

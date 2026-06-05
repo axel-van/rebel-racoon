@@ -1,109 +1,49 @@
 # Archie
 
-## Origine du projet
+Interactive prototype for **Archie**, Agorapulse's AI content assistant — Sources → Ideas → Drafts → Schedule. Built on the Agorapulse V2 Design System.
 
-Ce repo est un fork autonome issu d'une branche du projet [probable-spoon](https://github.com/mbousendorfer/probable-spoon).
-Forké le 2026-04-29 à partir de la branche `audit/studio-handoff-2026-04-28`. Les deux projets ont depuis
-des trajectoires indépendantes.
+Live preview: [mbousendorfer.github.io/rebel-racoon](https://mbousendorfer.github.io/rebel-racoon/)
 
-Interactive prototype for Archie — navigable click-through of the wireframe in [Figma](https://www.figma.com/design/ulQHaMfPhTQwNLib6IDOez/Archie?node-id=0-1) built on the Agorapulse V2 Design System.
+## Origine
+
+Fork autonome issu d'une branche du projet [probable-spoon](https://github.com/mbousendorfer/probable-spoon), forké le 2026-04-29 (branche `audit/studio-handoff-2026-04-28`). Trajectoires indépendantes depuis.
 
 ## Run it
 
 ```bash
-npm install   # installs the DS and syncs ds/ via postinstall
+npm install   # installs the DS and syncs ds/ via the postinstall script
 npm start     # runs `npx serve -p 8000` — open http://localhost:8000
 ```
 
-With Claude Code, the dev server auto-launches via `.claude/launch.json`.
+With Claude Code the dev server auto-launches via `.claude/launch.json`.
 
 ## Stack
 
-- **Vanilla JS** — no framework, no bundler, ES modules loaded straight from `src/`.
-- **Hash router** — `src/router.js`, routes declared in `src/app.js`.
-- **Agorapulse V2 DS** — `@agorapulse/ui-theme` + `@agorapulse/ui-symbol`, copied to `ds/` by `scripts/sync-ds.mjs` at install time. UI is composed from `.ap-*` CSS-UI classes and DS tokens (`--ref-*`, `--sys-*`) — no raw hex or pixel values.
+- **Vanilla JS** — no framework, no bundler, ES modules served straight from `src/`.
+- **Hash router** — `src/router.js`, route table in `src/app.js`.
+- **Agorapulse V2 DS** — `@agorapulse/ui-theme` + `@agorapulse/ui-symbol`, synced into `ds/` by `scripts/sync-ds.mjs` at install. UI uses `.ap-*` classes + DS tokens (`--ref-*`, `--sys-*`) — no raw hex or pixel values.
 - **Mocks** — `src/mocks.js`. Hardcoded, no network, no persistence.
 
-## Screens
+## Routes
 
-| Screen                       | Route                                   | Notes                                                  |
-| ---------------------------- | --------------------------------------- | ------------------------------------------------------ |
-| Dashboard — Projects         | `#/?tab=projects&subtab=library`        | Recent sessions + library list (default)               |
-| Dashboard — Projects / Ideas | `#/?tab=projects&subtab=ideas`          | Recent sessions + ideas list                           |
-| Dashboard — Global contexts  | `#/?tab=contexts`                       | Create + manage reusable contexts                      |
-| Session — empty              | `#/session/new?tab=posts`               | Empty Posts tab, default landing for a new session     |
-| Session — Library            | `#/session/:id?tab=library`             | Empty state                                            |
-| Session — Ideas              | `#/session/:id?tab=ideas`               | Empty state                                            |
-| Session — Context hub        | `#/session/:id?tab=context`             | 3 Start cards (Voice / Brief / Brand)                  |
-| Session — Context populated  | `#/session/:id?tab=context&populated=1` | Merged voice profile in an accordion                   |
-| Analyse hub                  | `#/analyse`                             | Chromeless "Create new context"                        |
-| Analyse — Voice              | `#/analyse/voice?step=0..N`             | Chat-driven wizard, 7 section steps + summary          |
-| Analyse — Brief              | `#/analyse/brief?step=0..2`             | 3 section steps + summary with "use as default" toggle |
-| Analyse — Brand              | `#/analyse/brand?step=0..1`             | URL → theme preview → summary                          |
+| Route                | Screen                 |
+| -------------------- | ---------------------- |
+| `/`                  | Dashboard (redirect)   |
+| `/session/:id`       | Chat (main surface)    |
+| `/ideas`             | Ideas library          |
+| `/contexts`          | Playbooks library      |
+| `/playbook/:id`      | Playbook detail        |
+| `/connectors`        | Connectors gallery     |
+| `/settings`          | Settings + Admin       |
+| `/welcome-alt`       | Onboarding (new user)  |
+| `/welcome-alt/recap` | Onboarding recap       |
 
-## Navigation graph
+Full route + handoff documentation: [`docs/reference/ROUTES.md`](docs/reference/ROUTES.md).
 
-```
-Dashboard
-├── [Create] → Session (#/session/new)
-├── [Session card] → Session (existing)
-└── [Create context] / Global contexts → Analyse hub
-      ├── Voice  → Analyse-Voice wizard  → Dashboard
-      ├── Brief  → Analyse-Brief wizard  → Dashboard
-      └── Brand  → Analyse-Brand wizard  → Dashboard
+## Documentation
 
-Session
-├── Tab: Posts / Library / Ideas (empty states)
-└── Tab: Context
-      ├── [Start Voice] → Analyse-Voice wizard
-      ├── [Start Brief] → Analyse-Brief wizard
-      └── [Start Brand] → Analyse-Brand wizard
-```
-
-Brand / Archie home button (top bar) always returns to the Dashboard.
-
-## Code layout
-
-```
-index.html                      # shell: DS imports + #topbar + #app
-src/
-  app.js                        # route table + boot
-  router.js                     # hash router
-  mocks.js                      # all hardcoded data (sessions, sources, ideas, voice/brief/brand)
-  utils.js                      # html`` tagged template + escapeHtml
-  components/
-    topbar.js                   # persistent top bar (brand + feedback + bug + settings)
-  screens/
-    dashboard.js                # Projects / Global contexts
-    session.js                  # Posts / Library / Ideas / Context
-    analyse-hub.js              # /analyse — the 3 Start cards, chromeless
-    analyse-voice.js            # Voice wizard
-    analyse-brief.js            # Strategy brief wizard
-    analyse-brand.js            # Brand theme wizard
-    _analyse-common.js          # shared chat bubble / picker / summary helpers
-
-styles/
-  tokens.css                    # app-level aliases only (DS tokens live in ds/)
-  base.css                      # resets
-  layout.css                    # app shell + topbar + utility helpers
-  ds-patches.css                # legit place to extend .ap-* classes
-  screens/
-    dashboard.css
-    session.css
-    analyse.css
-
-ds/                             # generated by `npm install` — do not edit
-scripts/sync-ds.mjs             # copies @agorapulse/ui-theme + ui-symbol into ds/
-```
-
-## DS gaps flagged during implementation
-
-- **No semantic icon** for some canonical affordances — fell back to the closest match: `more` (kebab menu), `pen` (edit), `cog` (settings), `headset` (voice), `file--text` (document), `paper-clip` (attach), `paper-plane` (send). Worth auditing.
-- **`.ap-status`** ships `blue/green/grey/orange/red/tagOrange` — no yellow. Not used here but patched in earlier versions (see `ds-patches.css`).
-- **Accordion** in the populated-context view uses native `<details>` rather than the DS `.collapsed` modifier pattern. The DS version requires a JS toggle; `<details>` is native and good enough for a prototype. If we adopt this in production the accordion should be switched to the DS component.
-- **Brief "Use as default" toggle** uses `.ap-toggle-container` with the documented structure but the DS toggle component was not introspected in detail; visual parity is approximate.
-
-## Wireframe fidelity notes
-
-- The 4 Start Screen frames, 8 New Session frames, and the step variants in the Analyse flows are **states of the same screen** — encoded here as URL query params (`?tab=...&subtab=...&populated=1&step=...`) rather than distinct routes. This keeps the nav tree flat and shareable.
-- Wireframe colors, spacing, and typography are **not copied** — everything is driven by Agorapulse V2 tokens.
+- **Pour Claude Code et les agents** : [`CLAUDE.md`](CLAUDE.md) — vue d'ensemble, conventions, MCP.
+- **Index complet** : [`docs/README.md`](docs/README.md).
+- **Architecture du proto** : [`docs/reference/`](docs/reference/) — architecture, routes, stores, design system, glossaire.
+- **Audits courants** : [`docs/audits/`](docs/audits/) — prod-vs-proto + plan de changements prod.
+- **Copy / UX** : [`docs/copy/`](docs/copy/) — principes éditoriaux.

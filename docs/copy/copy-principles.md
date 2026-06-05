@@ -509,16 +509,12 @@ The 12 §21 arbitrations from Phase 1 are now official:
 
 ---
 
-## 10. Ready for Phase 3?
+## 10. Applying these principles
 
-Phase 3 (`copy-rewrites.md`) walks every 🔴 → 🟠 → 🟡 entry from Phase 1 and proposes a rewrite that honours every rule above.
+These principles are the canonical source for any rewrite. To apply them per-string:
 
-Suggested approach for Phase 3:
-
-- One table per surface (same order as Phase 1).
-- Three columns: **Before** / **After** / **Rationale** (1 line).
-- Alternatives column only when the call is non-trivial.
-- Ordered by severity (🔴 first).
-- Group commits by surface in Phase 4.
-
-**Awaiting your validation of Phase 2 before drafting Phase 3.**
+- Take a surface (screen, modal, panel).
+- Walk every user-facing string in order.
+- Score against §1 (voice), §3–§6 (tone, glossary, patterns).
+- Propose a rewrite + 1-line rationale (`Before` / `After` / `Why`).
+- Order by severity (🔴 first), commit by surface.
