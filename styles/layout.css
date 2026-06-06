@@ -109,6 +109,25 @@ body.onboarding .app-content {
   grid-row: 1;
 }
 
+/* ---------- Clip Studio (all stages) ----------
+   The dedicated "Extract video clips" flow is a focused full-page studio
+   (config → analyzing → clips review → profiles) with its own headers + sticky
+   action bars, so the app topbar is dropped across every studio stage. The
+   sidebar stays as the escape hatch. */
+.app-shell:has(.clip-studio) {
+  grid-template-rows: 1fr;
+}
+
+.app-shell:has(.clip-studio) .app-topbar,
+.app-shell:has(.clip-studio) #conversationStatusCard {
+  display: none;
+}
+
+.app-shell:has(.clip-studio) .app-sidebar,
+.app-shell:has(.clip-studio) .app-content {
+  grid-row: 1;
+}
+
 /* ---------- Top bar ---------- */
 
 .app-topbar {

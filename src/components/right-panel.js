@@ -1,5 +1,5 @@
 import { html, raw } from "../utils.js?v=20";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=40";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=41";
 import { isFlagOn } from "../feature-flags.js?v=4";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=40";
 import { isNewUser } from "../user-mode.js?v=22";
@@ -17,7 +17,7 @@ import { renderPostCard } from "./post-card.js?v=31";
 import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1";
-import { open as openVideoClipsModal } from "./video-clips-modal.js?v=12";
+import { open as openVideoClipsModal } from "./video-clips-modal.js?v=13";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=71";
 import {
   getSources as getStreamSources,

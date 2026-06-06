@@ -8,7 +8,7 @@ import {
   renderProfileTag,
   profileForNetwork,
 } from "../social-profiles.js?v=2";
-import { FORMATS, formatsForNetworks } from "../clip-formats.js?v=1";
+import { FORMATS, formatsForNetworks, formatsForNetwork, defaultFormatFor } from "../clip-formats.js?v=1";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=29";
 import { isNewUser } from "../user-mode.js?v=22";
@@ -27,7 +27,7 @@ import {
   subscribe,
   submitAssistantChoice,
   sendConnectorMessage,
-} from "../assistant.js?v=40";
+} from "../assistant.js?v=41";
 import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=32";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=21";
 import {
@@ -48,6 +48,7 @@ import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } fro
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
 import * as inlineQuestion from "../inline-question.js?v=33";
+import * as clipStudio from "../clip-studio.js?v=7";
 import { askConnector } from "../connector-ask.js?v=3";
 import { getConnectedConnectors, findConnector } from "../connectors-store.js?v=23";
 import { renderConnectorLogo } from "../connectors-view.js?v=4";
@@ -69,7 +70,7 @@ import {
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=24";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=24";
-import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=12";
+import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=13";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=31";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=29";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=6";
@@ -85,6 +86,7 @@ import {
   extractClipsForSource,
   setSourceIdeaCount,
 } from "../sources-stream.js?v=34";
+import { renderClipCard } from "../components/clip-card.js?v=7";
 import { showToast } from "../components/toast.js?v=20";
 import {
   openDrafts as openDraftsPanel,
@@ -195,6 +197,17 @@ export function renderSession(params, target) {
     clearSelection();
     previousSessionId = session.id;
   }
+
+  // Clip Studio — a dedicated full-page "Extract video clips" flow runs in its
+  // own `clip-studio-*` session. Start the upload stage SYNCHRONOUSLY here (on
+  // first render, before innerHTML below) so the upload box paints with zero
+  // flicker. GATE on the one-shot handoff so a re-render AFTER the flow exits
+  // (e.g. openDrafts writing a URL param → router re-runs renderSession) does
+  // NOT relaunch the studio.
+  if (session.id.startsWith("clip-studio-") && !clipStudio.isActive(session.id)) {
+    if (consumeHandoff("pendingStartClipStudio")) clipStudio.start(session.id);
+  }
+
   renderTopbar({ crumb: session.name });
 
   // Resolution priority — URL state wins over the mock seed so wizard-
@@ -255,6 +268,12 @@ function renderAssistantPanel(session, attachedContext) {
     skipGreeting: hasPendingStartFlow,
   });
 
+  // Clip Studio — dedicated full-page "Extract video clips" flow (upload →
+  // analyzing → clips). Must precede the wizard / inline-question branches so
+  // it owns the panel while active.
+  if (clipStudio.isActive(session.id)) {
+    return renderClipStudio(session, attachedContext);
+  }
   // Wizard mode — when sidebar-wizard has state for this session, replace the
   // normal thread + composer with the analyse-style wizard chrome.
   if (sidebarWizard.isActive(session.id)) {
@@ -300,6 +319,367 @@ function renderAssistantPanel(session, attachedContext) {
           : raw(renderThread(thread, session.id))}
       </div>
       ${isEmptyConversation ? "" : raw(composerMarkup)}
+    </aside>
+  `;
+}
+
+// ─── Clip Studio (dedicated "Extract video clips" flow) ────────────────────
+// Three full-page stages, all rooted on `.session__assistant` (+ a
+// `clip-studio--{stage}` modifier) so drag/drop binding and the
+// refreshAssistantAside node-swap keep working. See clip-studio.js for state.
+
+// Format a seconds count as a friendly "~2 min" / "45 sec" remaining label.
+function fmtEta(totalSec) {
+  if (totalSec >= 60) {
+    const m = Math.round(totalSec / 60);
+    return `${m} min`;
+  }
+  return `${Math.max(5, totalSec)} sec`;
+}
+
+// Config catalogs for the upload/config screen.
+const CLIP_DURATIONS = [
+  { value: "auto", label: "Auto" },
+  { value: "short", label: "Up to 30s" },
+  { value: "medium", label: "30–60s" },
+  { value: "long", label: "60–90s" },
+];
+const CLIP_OUTPUT_FORMATS = ["9:16", "16:9", "1:1"]; // keys into FORMATS
+const CLIP_CAPTION_STYLES = [
+  { value: "none", label: "None" },
+  { value: "bold", label: "Bold" },
+  { value: "clean", label: "Clean" },
+  { value: "caption", label: "Caption" },
+];
+const CLIP_CAPTION_SAMPLE = "Bring your story to life";
+const CLIP_NETWORKS = [
+  { id: "tiktok", label: "TikTok", icon: "ap-icon-tiktok-official" },
+  { id: "instagram", label: "Instagram", icon: "ap-icon-instagram-official" },
+  { id: "linkedin", label: "LinkedIn", icon: "ap-icon-linkedin-official" },
+  { id: "x", label: "X", icon: "ap-icon-x-official" },
+  { id: "facebook", label: "Facebook", icon: "ap-icon-facebook-official" },
+];
+const CLIP_NET_ICON = Object.fromEntries(CLIP_NETWORKS.map((n) => [n.id, n.icon]));
+// Output format is the real choice; the network icons are just an indication of
+// which networks each ratio suits best.
+const CLIP_FORMATS_UI = [
+  { id: "9:16", label: "Vertical", nets: ["tiktok", "instagram"] },
+  { id: "1:1", label: "Square", nets: ["linkedin", "facebook"] },
+  { id: "16:9", label: "Landscape", nets: ["x", "linkedin"] },
+  { id: "4:5", label: "Portrait", nets: ["instagram", "facebook"] },
+];
+// Clip duration — same idea: the network icons indicate which networks favour
+// that length (network = guidance, not a hard filter).
+const CLIP_DURATIONS_UI = [
+  { id: "auto", label: "Auto", sub: "Smart pick", nets: [] },
+  { id: "short", label: "≤ 30s", sub: "Shorts & Reels", nets: ["tiktok", "instagram"] },
+  { id: "medium", label: "30–60s", sub: "Feed clips", nets: ["instagram", "facebook"] },
+  { id: "long", label: "60–90s", sub: "Long-form", nets: ["linkedin", "x"] },
+];
+
+function renderClipStudio(session, attachedContext) {
+  const st = clipStudio.getState(session.id);
+  if (!st) return "";
+  if (st.stage === "profiles") return renderClipStudioProfiles(session, st);
+  if (st.stage === "clips") return renderClipStudioClips(session, st);
+  if (st.stage === "analyzing") return renderClipStudioAnalyzing(st);
+  return renderClipStudioUpload(st);
+}
+
+function renderClipStudioUpload(st) {
+  const cfg = st.config || {};
+  const uploadState = st.uploadState;
+  const name = escapeHtml(st.sourceName || "your video");
+  const durLabelFor = (d) => (d.id === "auto" ? "Auto" : `${d.label} · ${d.sub}`);
+  const curDuration = CLIP_DURATIONS_UI.find((d) => d.id === cfg.duration) || CLIP_DURATIONS_UI[0];
+  const durationItems = CLIP_DURATIONS_UI.map((d) => {
+    const isSel = cfg.duration === d.id;
+    return `<div class="ap-select-option${isSel ? " selected" : ""}" data-clip-config="duration" data-value="${d.id}" role="option" aria-selected="${isSel ? "true" : "false"}">
+      <span class="ap-select-option-text">${durLabelFor(d)}</span>
+      ${isSel ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
+    </div>`;
+  }).join("");
+
+  // Output format — single choice. Each option shows the networks it suits as
+  // an indication (the network is guidance, not a target selector).
+  const formatCards = CLIP_FORMATS_UI.map((f) => {
+    const on = cfg.format === f.id;
+    const nets = f.nets
+      .map((id) => `<i class="${CLIP_NET_ICON[id]} clip-studio__fmtcard-net" aria-hidden="true"></i>`)
+      .join("");
+    return `<button type="button" class="clip-studio__fmtcard${on ? " is-on" : ""}" data-clip-config="format" data-value="${f.id}" aria-pressed="${on}">
+      <span class="clip-studio__fmtcard-shape clip-studio__fmtcard-shape--${f.id.replace(":", "-")}"></span>
+      <span class="clip-studio__fmtcard-info">
+        <span class="clip-studio__fmtcard-ratio">${f.id}</span>
+        <span class="clip-studio__fmtcard-label">${f.label}</span>
+      </span>
+      <span class="clip-studio__fmtcard-nets">${nets}</span>
+    </button>`;
+  }).join("");
+
+  const captionCards = CLIP_CAPTION_STYLES.map((c) => {
+    const on = cfg.captionStyle === c.value;
+    const preview =
+      c.value === "none"
+        ? `<span class="clip-studio__cap-none"><i class="ap-icon-close" aria-hidden="true"></i></span>`
+        : `<span class="clip-studio__cap-sample clip-studio__cap-sample--${c.value}">${CLIP_CAPTION_SAMPLE}</span>`;
+    return `<button type="button" class="clip-studio__cap-card${on ? " is-on" : ""}" data-clip-config="captionStyle" data-value="${c.value}" aria-pressed="${on}">
+      <span class="clip-studio__cap-preview">${preview}</span>
+      <span class="clip-studio__cap-label">${c.label}</span>
+    </button>`;
+  }).join("");
+
+  // Left panel: idle dropzone, or — once a video is provided — a preview frame
+  // showing the selected caption style burned on a mid-video frame.
+  const capStyle = cfg.captionStyle;
+  const capOverlay =
+    capStyle && capStyle !== "none"
+      ? `<span class="clip-studio__cap-overlay clip-studio__cap-overlay--${capStyle}">${CLIP_CAPTION_SAMPLE}</span>`
+      : "";
+  // Faux video still (inline SVG presenter scene) so the frame reads as actual
+  // video content behind the loader/play + burned caption.
+  const frameArt = `<svg class="clip-studio__frame-art" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <rect width="320" height="180" fill="#26334d"/>
+    <rect x="24" y="22" width="56" height="42" rx="6" fill="#33425f"/>
+    <circle cx="268" cy="34" r="9" fill="#3a4a6b"/>
+    <rect x="244" y="54" width="54" height="50" rx="6" fill="#2f3e5b"/>
+    <rect x="96" y="124" width="128" height="78" rx="42" fill="#586a8c"/>
+    <ellipse cx="160" cy="76" rx="42" ry="26" fill="#3a2c24"/>
+    <circle cx="160" cy="96" r="36" fill="#cda484"/>
+  </svg>`;
+  const leftPanel = uploadState
+    ? `<div class="clip-studio__preview clip-studio__preview--${uploadState}">
+         <div class="clip-studio__frame" aria-hidden="true">
+           ${frameArt}
+           ${
+             uploadState === "processing"
+               ? `<span class="archie-loader clip-studio__frame-loader" style="--archie-loader-size: 40px"></span>
+                  <span class="clip-studio__frame-badge"><span class="clip-studio__frame-dot"></span>Analyzing</span>`
+               : `<span class="clip-studio__frame-play"><i class="ap-icon-video"></i></span>`
+           }
+           ${capOverlay}
+         </div>
+         <div class="clip-studio__preview-foot">
+           <span class="clip-studio__preview-name" title="${name}">${name} · ${uploadState === "ready" ? "Analyzed" : "Analyzing…"}</span>
+           <button type="button" class="ap-button stroked grey clip-studio__browse" data-clip-studio-browse>
+             <i class="ap-icon-refresh" aria-hidden="true"></i><span>Replace</span>
+           </button>
+         </div>
+       </div>`
+    : `<div class="clip-studio__dropzone clip-studio__dropzone--idle" data-clip-studio-dropzone tabindex="0" role="button" aria-label="Upload a video">
+         <span class="clip-studio__dropzone-icon"><i class="ap-icon-upload" aria-hidden="true"></i></span>
+         <p class="clip-studio__dropzone-primary">Drag &amp; drop a video here</p>
+         <p class="clip-studio__dropzone-sub muted">MP4, MOV or WEBM · up to 100MB</p>
+         <button type="button" class="ap-button primary blue clip-studio__browse" data-clip-studio-browse>
+           <i class="ap-icon-upload" aria-hidden="true"></i><span>Browse files</span>
+         </button>
+       </div>
+       <div class="clip-studio__or"><span>or</span></div>
+       <form class="clip-studio__url" data-clip-studio-url-form>
+         <div class="ap-input-group">
+           <i class="ap-icon-link" aria-hidden="true"></i>
+           <input type="text" data-clip-studio-url placeholder="Paste a YouTube or Google Drive URL" aria-label="Video URL" />
+         </div>
+         <button type="submit" class="ap-button stroked grey">Import</button>
+       </form>`;
+
+  return html`
+    <aside class="session__assistant clip-studio clip-studio--upload" aria-label="Extract video clips">
+      <div class="clip-studio__config">
+        <div class="clip-studio__config-left">
+          <div class="clip-studio__intro">
+            <span class="clip-studio__intro-icon"><i class="ap-icon-video" aria-hidden="true"></i></span>
+            <h1 class="clip-studio__title">Auto Clips</h1>
+            <p class="clip-studio__sub">Set your format and captions, drop a video, then hit Create clips.</p>
+          </div>
+          <input type="file" accept="video/*,.mp4,.mov,.webm" id="clipStudioFileInput" data-clip-studio-file hidden />
+          ${raw(leftPanel)}
+        </div>
+
+        <div class="clip-studio__config-right">
+          <div class="clip-studio__field">
+            <span class="clip-studio__field-label">Clip duration</span>
+            <details class="ap-select clip-studio__select">
+              <summary class="ap-select-trigger">
+                <span class="ap-select-value">${durLabelFor(curDuration)}</span>
+                <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+              </summary>
+              <div class="ap-select-dropdown" role="listbox" aria-label="Clip duration">
+                <div class="ap-select-options">${raw(durationItems)}</div>
+              </div>
+            </details>
+          </div>
+
+          <div class="clip-studio__field">
+            <span class="clip-studio__field-label">Output format</span>
+            <div class="clip-studio__fmtcards">${raw(formatCards)}</div>
+          </div>
+
+          <div class="clip-studio__field">
+            <span class="clip-studio__field-label">Caption style</span>
+            <div class="clip-studio__cap-grid">${raw(captionCards)}</div>
+          </div>
+
+          <div class="clip-studio__field">
+            <div class="clip-studio__field-row">
+              <label class="clip-studio__field-label" for="clipInstr">Additional instructions</label>
+              <button type="button" class="ap-link standalone small" data-clip-surprise>
+                <i class="ap-icon-sparkles" aria-hidden="true"></i>Surprise me
+              </button>
+            </div>
+            <div class="ap-textarea-field">
+              <textarea
+                id="clipInstr"
+                rows="2"
+                data-clip-config="instructions"
+                placeholder="e.g. 'Don't include the intro' or 'Focus on the customer story.'"
+              >
+${escapeHtml(cfg.instructions || "")}</textarea
+              >
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="ap-button primary orange clip-studio__generate"
+            data-clip-create
+            ${st.videoProvided ? "" : "disabled"}
+          >
+            <i class="ap-icon-sparkles" aria-hidden="true"></i><span>Create clips</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+  `;
+}
+
+function renderClipStudioAnalyzing(st) {
+  // The loader animates purely in CSS over --extract-ms (kept in sync with
+  // EXTRACT_TOTAL_MS in clip-studio.js) so there are NO per-tick re-renders —
+  // the shimmer + progress bar stay perfectly smooth.
+  return html`
+    <aside class="session__assistant clip-studio clip-studio--analyzing" aria-label="Analyzing video">
+      <div class="clip-studio__center" style="--extract-ms: 8s">
+        <span class="clip-studio__ai-badge"><i class="ap-icon-sparkles" aria-hidden="true"></i>AI analysis</span>
+        <h1 class="clip-studio__title">Finding the best clips…</h1>
+        <div class="clip-studio__skeleton" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <div class="source-card__progress clip-studio__progress" role="progressbar" aria-label="Cutting clips">
+          <div class="source-card__progress-fill clip-studio__progress-fill clip-studio__progress-fill--anim"></div>
+        </div>
+        <p class="clip-studio__stage clip-studio__stage-cycle" aria-live="polite">
+          <span>Transcribing audio</span><span>Finding highlights</span><span>Cutting clips</span><span>Polishing</span>
+        </p>
+        ${st.sourceName ? raw(`<p class="clip-studio__source muted">${escapeHtml(st.sourceName)}</p>`) : ""}
+      </div>
+    </aside>
+  `;
+}
+
+// Studio review card = the existing DS clip card (components/clip-card.js)
+// wrapped with a selection checkbox. Its kebab Edit/Remove + thumb open the
+// trimmer modal; the per-card footer is hidden in the studio (selection +
+// Continue replaces per-clip drafting — see clip-studio.css).
+function renderStudioClipCard(clip, st, sessionId) {
+  const selected = (st.selectedClipIds || []).includes(clip.id);
+  return `
+    <div class="clip-studio-pick${selected ? " is-selected" : ""}">
+      <label class="clip-studio-pick__check">
+        <input type="checkbox" data-clip-select="${escapeHtml(clip.id)}" ${selected ? "checked" : ""} aria-label="Select clip" />
+        <i aria-hidden="true"></i>
+      </label>
+      ${renderClipCard(clip, { sourceName: st.sourceName || "your video", sourceKind: "Video", sessionId })}
+    </div>
+  `;
+}
+
+function renderClipStudioClips(session, st) {
+  const clips = clipStudio.getClips(session.id);
+  const cards = clips.map((c) => renderStudioClipCard(c, st, session.id)).join("");
+  const selCount = (st.selectedClipIds || []).length;
+  return html`
+    <aside class="session__assistant clip-studio clip-studio--clips" aria-label="Extracted clips">
+      <div class="clip-studio__scroll">
+        <div class="clip-studio__clips-head">
+          <span class="clip-studio__ai-badge"><i class="ap-icon-sparkles" aria-hidden="true"></i>Clips ready</span>
+          <h1 class="clip-studio__title">${clips.length} clips from ${st.sourceName || "your video"}</h1>
+          <p class="clip-studio__sub muted">
+            Review and trim clips, add your own, then pick the ones to turn into posts.
+          </p>
+        </div>
+        <div class="clip-studio__grid">${raw(cards)}</div>
+      </div>
+      <div class="clip-studio__bar">
+        <button type="button" class="ap-button stroked grey" data-clip-add-studio>
+          <i class="ap-icon-plus" aria-hidden="true"></i><span>Add clip</span>
+        </button>
+        <div class="clip-studio__bar-right">
+          <span class="clip-studio__bar-count">${selCount} selected</span>
+          <button type="button" class="ap-button primary orange" data-clip-continue ${selCount ? "" : "disabled"}>
+            <span>Continue</span><i class="ap-icon-arrow-right" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+  `;
+}
+
+function renderClipStudioProfiles(session, st) {
+  const profiles = getConnectedProfiles();
+  const selectedProfiles = st.profileSelection || [];
+  const selClips = (st.selectedClipIds || []).length;
+  const rows = profiles
+    .map((p) => {
+      const on = selectedProfiles.includes(p.id);
+      const recId = defaultFormatFor(p.platform);
+      // Default each profile to the output format chosen up-front; the network's
+      // own recommended format is just marked "Recommended" (overridable).
+      const chosen = st.perNetworkFormat?.[p.platform] || st.config?.format || recId;
+      const fmts = formatsForNetwork(p.platform)
+        .map((f) => {
+          const fOn = f.id === chosen;
+          const rec = f.id === recId;
+          return `<button type="button" class="clip-studio__seg${fOn ? " is-on" : ""}" data-clip-netfmt="${escapeHtml(p.platform)}" data-value="${f.id}" aria-pressed="${fOn}">
+            <span class="clip-studio__seg-ratio">${f.tag}</span>${rec ? `<span class="clip-studio__seg-rec">Recommended</span>` : ""}
+          </button>`;
+        })
+        .join("");
+      return `
+        <div class="clip-studio__profile${on ? " is-on" : ""}">
+          <label class="clip-studio__profile-pick">
+            <input type="checkbox" data-clip-profile="${escapeHtml(p.id)}" ${on ? "checked" : ""} aria-label="Select profile" />
+            <i aria-hidden="true"></i>
+            ${renderProfileTag(p)}
+          </label>
+          ${on ? `<div class="clip-studio__profile-fmt"><span class="clip-studio__seg-group" role="group" aria-label="Format for ${escapeHtml(p.platformLabel || p.platform)}">${fmts}</span></div>` : ""}
+        </div>
+      `;
+    })
+    .join("");
+  const draftCount = selClips * selectedProfiles.length;
+  return html`
+    <aside class="session__assistant clip-studio clip-studio--profiles" aria-label="Choose profiles">
+      <div class="clip-studio__scroll">
+        <div class="clip-studio__clips-head">
+          <button type="button" class="ap-button ghost grey clip-studio__back" data-clip-back>
+            <i class="ap-icon-arrow-left" aria-hidden="true"></i><span>Back to clips</span>
+          </button>
+          <h1 class="clip-studio__title">Where should I post these?</h1>
+          <p class="clip-studio__sub muted">
+            Pick the profiles to draft on. I've set the best video format per network — change any if you like.
+          </p>
+        </div>
+        <div class="clip-studio__profiles">${raw(rows)}</div>
+      </div>
+      <div class="clip-studio__bar">
+        <button type="button" class="ap-button ghost grey" data-clip-back><span>Back</span></button>
+        <div class="clip-studio__bar-right">
+          <span class="clip-studio__bar-count">${selClips} clips · ${selectedProfiles.length} profiles</span>
+          <button type="button" class="ap-button primary orange" data-clip-finalize ${draftCount ? "" : "disabled"}>
+            <i class="ap-icon-sparkles" aria-hidden="true"></i
+            ><span>Create ${draftCount} draft${draftCount === 1 ? "" : "s"}</span>
+          </button>
+        </div>
+      </div>
     </aside>
   `;
 }
@@ -1853,6 +2233,12 @@ function bindDragAndDrop(aside, session) {
     dragDepth = 0;
     aside.classList.remove("is-drop-target");
     const files = Array.from(event.dataTransfer.files);
+    // Clip Studio upload stage — route the dropped video into the studio flow
+    // instead of the normal source intake (no "what to do with this video?").
+    if (clipStudio.isActive(session.id) && clipStudio.getState(session.id)?.stage === "upload") {
+      if (files[0]) handleClipStudioFile(session, files[0]);
+      return;
+    }
     let started = 0;
     let firstReject = null;
     for (const file of files) {
@@ -1947,9 +2333,13 @@ function wireAssistantPanel(root, session, attachedContext) {
     const wizardChat = root.querySelector("#inlineQuestionChat, .session__assistant-wizard-chat");
     if (wizardChat) wizardChat.scrollTop = wizardChat.scrollHeight;
     updateThinkingChip(session.id);
+    // In Clip Studio's clips stage the composer is already locked
+    // (selectable=false) and a full aside re-render would rebuild the clip
+    // grid + thread, fighting this subscription's in-place thread repaint.
+    // Skip the first-turn refresh there.
     if (!firstUserTurnSeen && messages.some((m) => m.role === "user")) {
       firstUserTurnSeen = true;
-      refreshAssistantAside();
+      if (!clipStudio.isActive(session.id)) refreshAssistantAside();
     }
     const latestDraft = [...messages].reverse().find((m) => m.variant === "draft");
     if (latestDraft && latestDraft.id !== lastDraftMessageId) {
@@ -2018,6 +2408,9 @@ function wireAssistantPanel(root, session, attachedContext) {
   };
   const offWizard = sidebarWizard.subscribe(session.id, refreshAssistantAside);
   const offInlineQuestion = inlineQuestion.subscribe(session.id, refreshAssistantAside);
+  // Clip Studio — every stage transition + analyzing ticker tick re-renders the
+  // whole assistant aside (mirrors the wizard subscription).
+  const offClipStudio = clipStudio.subscribe(session.id, refreshAssistantAside);
   // Initial bind in case the panel was rendered with wizard / question mode on.
   rebindWizardKeyboardIfActive();
 
@@ -2039,7 +2432,12 @@ function wireAssistantPanel(root, session, attachedContext) {
   // Intake-turn lifecycle (loading → ready) — see intake-lifecycle.js.
   const offComposerSources = startIntakeLifecycle(session.id, {
     onSourcesChange: repaintThreadFromSources,
-    onVideoReady: (sourceId, filename) => askVideoIntake(session.id, sourceId, filename),
+    // Clip Studio owns its own video source + UI — never pop the generic
+    // "what to do with this video?" intake choice for a studio session.
+    onVideoReady: (sourceId, filename) => {
+      if (clipStudio.isActive(session.id)) return;
+      askVideoIntake(session.id, sourceId, filename);
+    },
   });
 
   // Uploads → no extra wiring needed: startFileUpload already takes a
@@ -2159,11 +2557,18 @@ function wireAssistantPanel(root, session, attachedContext) {
     offPosts();
     offWizard();
     offInlineQuestion();
+    offClipStudio();
     offComposerSources();
     offComposerUploads();
     unsubMentions();
     unsubConnector();
     stopThinkingTimer();
+    // NOTE: we deliberately do NOT clipStudio.exit() here. The router re-runs
+    // this cleanup on every hashchange (including query-only changes within the
+    // same session), so exiting would wipe the flow on, e.g., a Drafts-panel URL
+    // write. State persists per session id instead; if the user truly navigates
+    // away mid-analyzing, the ticker self-completes and notifies a now-empty
+    // subscriber set (harmless no-op).
   };
 }
 
@@ -2548,6 +2953,86 @@ function startPillFromKind(_root, session, kind) {
       ideaCount,
     });
   }, 6000);
+}
+
+// Clip Studio — upload-stage entry points. Picking a file / dropping / pasting a
+// URL starts the upload + analysis in the BACKGROUND right away, but the config
+// screen stays visible/editable. The user proceeds to the clips by pressing
+// "Create clips" (see the data-clip-create handler).
+function handleClipStudioFile(session, file) {
+  const classification = classifyFile(file);
+  if (!classification.ok) {
+    showToast(classification.reason);
+    return;
+  }
+  beginClipStudioBackground(session, file.name);
+}
+
+function handleClipStudioUrl(session, url) {
+  beginClipStudioBackground(session, url.replace(/^https?:\/\//, "").replace(/\/$/, ""));
+}
+
+// Create a REAL sources-stream video source (so the trimmer modal, right-panel
+// Clips/Drafts and draft creation all share one source) and kick off the
+// background analysis. pushScriptedSource + completeScriptedSource don't fire
+// the intake-lifecycle "what to do?" choice (that only triggers via
+// startFileUpload); the onVideoReady guard in bindSession also skips it while
+// the studio is active.
+function beginClipStudioBackground(session, sourceName) {
+  const name = sourceName || "your video";
+  const sourceId = pushScriptedSource({ filename: name, kind: "Video", sessionId: session.id });
+  completeScriptedSource(sourceId, { signal: "Medium signal", signalColor: "tagOrange", ideaCount: 0 });
+  clipStudio.beginProcessing(session.id, { sourceName: name, sourceId });
+}
+
+// Open a clip in the trimmer modal (edit/recut) or add a new clip, both
+// persisting back to the studio's real source via updateSourceClips.
+function openClipStudioEditor(session, opts) {
+  const src = clipStudio.currentSource(session.id);
+  if (!src) return;
+  openVideoClipsModal(src, {
+    ...opts,
+    onSaveClips: (sourceId, clips) => {
+      updateSourceClips(sourceId, clips);
+      clipStudio.refresh(session.id);
+    },
+  });
+}
+
+// Finalize — batch-create drafts for every selected clip × selected profile,
+// then leave the studio and land on the conversational session with the
+// classic Drafts panel open.
+function finalizeClipStudio(session) {
+  const st = clipStudio.getState(session.id);
+  if (!st) return;
+  const clips = clipStudio.getClips(session.id).filter((c) => (st.selectedClipIds || []).includes(c.id));
+  const profileIds = st.profileSelection || [];
+  const accounts = getConnectedProfiles().filter((p) => profileIds.includes(p.id));
+  if (!clips.length || !accounts.length) return;
+  const sourceName = st.sourceName || "your video";
+  const captionStyle = st.config?.captionStyle === "none" ? null : st.config?.captionStyle || null;
+  const perNet = st.perNetworkFormat || {};
+  clipStudio.exit(session.id);
+  const pendingId = startPending(session.id);
+  setTimeout(() => {
+    finishPending(session.id, pendingId);
+    const drafts = [];
+    for (const clip of clips) {
+      for (const a of accounts) {
+        drafts.push(
+          addPostDraft(session.id, {
+            network: a.platform,
+            text: [clip.title, clip.summary].filter(Boolean),
+            hashtags: (clip.tags || []).map((t) => `#${t}`),
+            clipRef: { start: clip.start, end: clip.end, sourceName, hue: clip.hue },
+            format: perNet[a.platform] || st.config?.format || clip.format || "9:16",
+            subtitleStyle: captionStyle,
+          }),
+        );
+      }
+    }
+    postDraftResult(session.id, { ideaTitle: `Clips from ${sourceName}`, drafts });
+  }, 1600);
 }
 
 function bindSession(root, session) {
@@ -2980,16 +3465,112 @@ function bindSession(root, session) {
       // tweak before sending.
       //
       // Starters can opt into a direct action instead of text injection by
-      // setting `action` on the mock. The "open-video-clips" action is now
-      // a shortcut to the same path as the attach menu's "Add video" —
-      // pushes a scripted video pill which posts the "Create clips /
-      // Extract themes" choice turn. Keeps a single entry point for the
-      // video flow regardless of whether the user picks via starter,
-      // attach menu, or drag-drop.
+      // setting `action` on the mock. The "open-video-clips" action opens the
+      // dedicated Clip Studio in a fresh `clip-studio-*` session (upload →
+      // analyzing → clips), mirroring the welcome-alt dedicated-session pattern.
       const starterBtn = event.target.closest("[data-starter]");
       if (starterBtn && starterBtn.dataset.starterAction === "open-video-clips") {
-        startPillFromKind(root, session, "video");
+        setHandoff("pendingStartClipStudio", {});
+        navigate(`/session/clip-studio-${Date.now().toString(36)}`);
         return;
+      }
+
+      // --- Clip Studio (dedicated video-clips flow) ---
+      if (clipStudio.isActive(session.id)) {
+        // Upload stage: open the file picker from the dropzone or Browse button.
+        if (event.target.closest("[data-clip-studio-browse]") || event.target.closest("[data-clip-studio-dropzone]")) {
+          root.querySelector("[data-clip-studio-file]")?.click();
+          return;
+        }
+        // Config toggle controls (output-format cards + caption-style cards).
+        const cfgBtn = event.target.closest("[data-clip-config][data-value]");
+        if (cfgBtn) {
+          clipStudio.setConfig(session.id, { [cfgBtn.dataset.clipConfig]: cfgBtn.dataset.value });
+          return;
+        }
+        // "Surprise me" — prefill the instructions field with a canned hint.
+        if (event.target.closest("[data-clip-surprise]")) {
+          clipStudio.setConfig(session.id, {
+            instructions: "Lead with the strongest hook, keep clips punchy, and skip the intro.",
+          });
+          return;
+        }
+        // "Create clips" → leave config for the clips grid (or the loader if the
+        // background analysis is still running).
+        if (event.target.closest("[data-clip-create]")) {
+          clipStudio.createClips(session.id);
+          return;
+        }
+        // Reused DS clip card → "Why this clip" collapsible (in-place toggle).
+        const csWhy = event.target.closest("[data-rpanel-clip-why-toggle]");
+        if (csWhy) {
+          event.preventDefault();
+          const section = csWhy.closest(".rpanel-ideas__why");
+          if (section) {
+            const next = section.getAttribute("data-why-open") !== "true";
+            section.setAttribute("data-why-open", next ? "true" : "false");
+            csWhy.setAttribute("aria-expanded", next ? "true" : "false");
+            const body = document.getElementById(csWhy.getAttribute("aria-controls"));
+            if (body) body.hidden = !next;
+            const chev = csWhy.querySelector(".rpanel-ideas__why-chevron");
+            if (chev) {
+              chev.classList.toggle("ap-icon-chevron-down", !next);
+              chev.classList.toggle("ap-icon-chevron-up", next);
+            }
+          }
+          return;
+        }
+        // Clips review: edit/recut a clip, or add a new one (trimmer modal).
+        // Reused DS clip card → Edit (thumb + kebab) opens the trimmer modal.
+        const editClip = event.target.closest("[data-clip-edit]");
+        if (editClip) {
+          openClipStudioEditor(session, { editingClipId: editClip.dataset.clipEdit });
+          return;
+        }
+        // Reused DS clip card → Remove (kebab) deletes the clip from the source.
+        const rmClip = event.target.closest("[data-clip-remove]");
+        if (rmClip) {
+          const src = clipStudio.currentSource(session.id);
+          if (src) {
+            updateSourceClips(
+              src.id,
+              (src.clips || []).filter((c) => c.id !== rmClip.dataset.clipRemove),
+            );
+            clipStudio.refresh(session.id);
+          }
+          return;
+        }
+        if (event.target.closest("[data-clip-add-studio]")) {
+          openClipStudioEditor(session, { startAddClip: true });
+          return;
+        }
+        // Continue → seed the profiles step from the config (networks + their
+        // chosen formats), then go to it.
+        if (event.target.closest("[data-clip-continue]")) {
+          const cur = clipStudio.getState(session.id);
+          if (!cur.profileSelection) {
+            clipStudio.setProfileSelection(
+              session.id,
+              getConnectedProfiles().map((p) => p.id),
+            );
+          }
+          clipStudio.goToProfiles(session.id);
+          return;
+        }
+        // Profiles step: back, per-network format override, finalize.
+        if (event.target.closest("[data-clip-back]")) {
+          clipStudio.backToClips(session.id);
+          return;
+        }
+        const netFmt = event.target.closest("[data-clip-netfmt]");
+        if (netFmt) {
+          clipStudio.setNetworkFormat(session.id, netFmt.dataset.clipNetfmt, netFmt.dataset.value);
+          return;
+        }
+        if (event.target.closest("[data-clip-finalize]")) {
+          finalizeClipStudio(session);
+          return;
+        }
       }
       // "Build my Playbook" — same handoff the /contexts "New Playbook" CTA
       // uses: run the context-builder in the app shell and return to this chat.
@@ -3409,6 +3990,12 @@ function bindSession(root, session) {
         contentState.q = event.target.value;
         rerenderContentWorkspace(root, session);
       }
+      // Clip Studio — instructions textarea. Store silently (mutate state
+      // without notify) so typing doesn't trigger a full aside re-render.
+      if (event.target.matches('[data-clip-config="instructions"]')) {
+        const cs = clipStudio.getState(session.id);
+        if (cs) cs.config.instructions = event.target.value;
+      }
     },
     { signal },
   );
@@ -3418,6 +4005,38 @@ function bindSession(root, session) {
       if (event.target.matches("[data-content-sort]")) {
         contentState.sort = event.target.value;
         rerenderContentWorkspace(root, session);
+      }
+      // Clip Studio — a video picked via the upload-stage file input.
+      if (event.target.matches("[data-clip-studio-file]") && event.target.files?.length) {
+        handleClipStudioFile(session, event.target.files[0]);
+      }
+      // Clip Studio — clip duration select.
+      if (event.target.matches('[data-clip-config="duration"]')) {
+        clipStudio.setConfig(session.id, { duration: event.target.value });
+      }
+      // Clip Studio — clip selection checkbox (review grid).
+      const selCb = event.target.closest("[data-clip-select]");
+      if (selCb) {
+        clipStudio.toggleClip(session.id, selCb.dataset.clipSelect);
+      }
+      // Clip Studio — profile selection checkbox (profiles step).
+      const profCb = event.target.closest("[data-clip-profile]");
+      if (profCb) {
+        clipStudio.toggleProfile(session.id, profCb.dataset.clipProfile);
+      }
+    },
+    { signal },
+  );
+
+  // Clip Studio — the upload-stage "Paste a URL" form submit.
+  root.addEventListener(
+    "submit",
+    (event) => {
+      if (event.target.closest("[data-clip-studio-url-form]")) {
+        event.preventDefault();
+        const input = root.querySelector("[data-clip-studio-url]");
+        const url = (input?.value || "").trim();
+        if (url) handleClipStudioUrl(session, url);
       }
     },
     { signal },

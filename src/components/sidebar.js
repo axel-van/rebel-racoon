@@ -20,7 +20,7 @@ import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=3
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=29";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=23";
 import { closePanel as closeRightPanel } from "./right-panel.js?v=150";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=40";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=41";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=28";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=34";
 

@@ -1,0 +1,882 @@
+/* Clip Studio — dedicated "Extract video clips" flow.
+   Stages: upload (2-panel config) → analyzing (loader) → clips (review) →
+   profiles (target + per-network format). Light Agorapulse DS; MermAId gradient
+   reserved for the AI analysis surface. Root: `.session__assistant.clip-studio.clip-studio--{stage}`. */
+
+.session__assistant.clip-studio {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--ref-color-white);
+  overflow: hidden;
+}
+
+/* Faint MermAId glow on the AI analysis surface (analyzing only). */
+.session__assistant.clip-studio--analyzing {
+  background:
+    radial-gradient(ellipse 48% 42% at 50% 32%, var(--ref-color-mermaid-10) 0%, transparent 70%), var(--ref-color-white);
+}
+
+/* Analyzing: centered column. */
+.clip-studio__center {
+  margin: auto;
+  width: 100%;
+  max-width: 520px;
+  padding: var(--ref-spacing-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--ref-spacing-md);
+}
+
+.clip-studio__title {
+  margin: 0;
+  font-family: var(--ref-font-family);
+  font-size: var(--app-text-hero-size);
+  line-height: var(--app-text-hero-line);
+  font-weight: var(--app-text-hero-weight);
+  letter-spacing: -0.01em;
+  color: var(--ref-color-grey-100);
+}
+
+.clip-studio__sub {
+  margin: 0;
+  max-width: 460px;
+  font-size: var(--app-text-message-size);
+  line-height: var(--app-text-message-line);
+  color: var(--ref-color-grey-60);
+}
+
+.clip-studio__intro-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ref-spacing-xxl);
+  height: var(--ref-spacing-xxl);
+  border-radius: var(--app-radius-card);
+  background: var(--ref-color-mermaid-gradient-background);
+  color: var(--ref-color-white);
+  box-shadow: var(--app-shadow-low);
+}
+.clip-studio__intro-icon i {
+  font-size: var(--sys-icon-css-md);
+  color: var(--ref-color-white);
+}
+
+.clip-studio__ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-mermaid-gradient-background);
+  color: var(--ref-color-white);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+}
+.clip-studio__ai-badge i {
+  font-size: var(--sys-icon-css-xs);
+  color: var(--ref-color-white);
+}
+
+/* ── Upload / config (2-panel) ─────────────────────────────────────────── */
+
+.clip-studio__config {
+  width: 100%;
+  max-width: 1040px;
+  margin: auto;
+  padding: var(--ref-spacing-xl);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
+  gap: var(--ref-spacing-lg);
+  align-items: start;
+}
+
+.clip-studio__config-left,
+.clip-studio__config-right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  min-width: 0;
+}
+
+.clip-studio__config-left .clip-studio__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xs);
+}
+.clip-studio__config-left .clip-studio__title {
+  font-size: var(--ref-font-size-xxl);
+  line-height: var(--ref-font-line-height-xl);
+}
+.clip-studio__config-left .clip-studio__sub {
+  text-align: left;
+}
+
+.clip-studio__dropzone {
+  width: 100%;
+  flex: 1;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xl);
+  border: 1px dashed var(--ref-color-grey-20);
+  border-radius: var(--app-radius-card);
+  background: var(--ref-color-grey-05);
+  cursor: pointer;
+  text-align: center;
+  transition:
+    border-color var(--ref-animation-short) var(--app-ease-standard),
+    background var(--ref-animation-short) var(--app-ease-standard);
+}
+.clip-studio__dropzone:hover,
+.clip-studio__dropzone:focus-visible {
+  outline: none;
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-white);
+}
+.clip-studio__dropzone.is-provided {
+  border-style: solid;
+  border-color: var(--ref-color-electric-blue-40);
+  background: var(--ref-color-electric-blue-05);
+}
+.session__assistant.clip-studio--upload.is-drop-target .clip-studio__dropzone {
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-10);
+}
+.clip-studio__dropzone-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ref-spacing-xl);
+  height: var(--ref-spacing-xl);
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-white);
+  color: var(--ref-color-grey-60);
+  border: 1px solid var(--app-border);
+}
+.clip-studio__dropzone-icon i {
+  font-size: var(--sys-icon-css-md);
+}
+.clip-studio__dropzone-icon--ready {
+  background: var(--ref-color-green-10);
+  border-color: var(--ref-color-green-40);
+  color: var(--ref-color-green-150);
+}
+.clip-studio__dropzone-spinner {
+  margin-bottom: var(--ref-spacing-xxs);
+}
+.clip-studio__dropzone--ready {
+  border-style: solid;
+  border-color: var(--ref-color-green-40);
+  background: var(--ref-color-green-10);
+}
+.clip-studio__dropzone--processing {
+  border-color: var(--ref-color-electric-blue-40);
+  background: var(--ref-color-electric-blue-05);
+}
+.clip-studio__dropzone-primary {
+  margin: var(--ref-spacing-xxs) 0 0;
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+}
+.clip-studio__dropzone-sub {
+  margin: 0;
+  font-size: var(--ref-font-size-xs);
+}
+.clip-studio__browse {
+  margin-top: var(--ref-spacing-xs);
+}
+
+.clip-studio__or {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  width: 100%;
+  color: var(--ref-color-grey-60);
+  font-size: var(--ref-font-size-xs);
+}
+.clip-studio__or::before,
+.clip-studio__or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--app-border);
+}
+
+.clip-studio__url {
+  display: flex;
+  align-items: stretch;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+}
+.clip-studio__url .ap-input-group {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Config fields (right panel) */
+.clip-studio__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+.clip-studio__field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+}
+.clip-studio__field-label {
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+}
+/* DS select fills the field width. */
+.clip-studio__select {
+  width: 100%;
+}
+.clip-studio__select > .ap-select-trigger {
+  width: 100%;
+}
+
+/* Segmented control (output format + per-network format) */
+.clip-studio__seg-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+}
+.clip-studio__seg {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
+  color: var(--ref-color-grey-80);
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    border-color var(--ref-animation-short) var(--app-ease-standard),
+    background var(--ref-animation-short) var(--app-ease-standard);
+}
+.clip-studio__seg:hover {
+  border-color: var(--ref-color-grey-40);
+}
+.clip-studio__seg.is-on {
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-10);
+  color: var(--ref-color-electric-blue-150);
+}
+.clip-studio__seg-ratio {
+  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--ref-font-size-xs);
+}
+.clip-studio__seg-label {
+  font-size: var(--ref-font-size-xs);
+}
+.clip-studio__seg-rec {
+  font-size: 10px;
+  line-height: 12px;
+  color: var(--ref-color-electric-blue-150);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+/* Caption style cards */
+.clip-studio__cap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ref-spacing-xxs);
+}
+.clip-studio__cap-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color var(--ref-animation-short) var(--app-ease-standard);
+}
+.clip-studio__cap-card:hover {
+  border-color: var(--ref-color-grey-40);
+}
+.clip-studio__cap-card.is-on {
+  border-color: var(--ref-color-electric-blue-100);
+  box-shadow: 0 0 0 1px var(--ref-color-electric-blue-100) inset;
+}
+.clip-studio__cap-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-grey-05);
+  overflow: hidden;
+  padding: 0 var(--ref-spacing-xxs);
+}
+.clip-studio__cap-none {
+  color: var(--ref-color-grey-40);
+}
+.clip-studio__cap-none i {
+  font-size: var(--sys-icon-css-md);
+}
+.clip-studio__cap-sample {
+  font-size: var(--ref-font-size-xs);
+  line-height: 1.2;
+  text-align: center;
+  color: var(--ref-color-grey-100);
+}
+.clip-studio__cap-sample--bold {
+  font-weight: var(--ref-font-weight-black);
+  text-transform: uppercase;
+  color: var(--ref-color-grey-150);
+}
+.clip-studio__cap-sample--clean {
+  font-weight: var(--ref-font-weight-regular);
+  color: var(--ref-color-grey-80);
+}
+.clip-studio__cap-sample--caption {
+  font-weight: var(--ref-font-weight-bold);
+  text-transform: lowercase;
+}
+.clip-studio__cap-label {
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+  text-align: center;
+}
+
+.clip-studio__generate {
+  margin-top: var(--ref-spacing-xxs);
+  align-self: stretch;
+  justify-content: center;
+}
+
+/* Output format — single choice. Each card shows a ratio glyph, the ratio +
+   label, and the networks it suits (icons = indication only). */
+.clip-studio__fmtcards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ref-spacing-xxs);
+}
+.clip-studio__fmtcard {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
+  color: var(--ref-color-grey-60);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color var(--ref-animation-short) var(--app-ease-standard),
+    background var(--ref-animation-short) var(--app-ease-standard);
+}
+.clip-studio__fmtcard:hover {
+  border-color: var(--ref-color-grey-40);
+}
+.clip-studio__fmtcard.is-on {
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-05);
+  color: var(--ref-color-electric-blue-150);
+}
+/* Ratio glyph — a small outlined box shaped to the aspect ratio. */
+.clip-studio__fmtcard-shape {
+  flex: 0 0 auto;
+  height: 26px;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+}
+.clip-studio__fmtcard-shape--9-16 {
+  aspect-ratio: 9 / 16;
+}
+.clip-studio__fmtcard-shape--1-1 {
+  aspect-ratio: 1 / 1;
+}
+.clip-studio__fmtcard-shape--16-9 {
+  aspect-ratio: 16 / 9;
+}
+.clip-studio__fmtcard-shape--4-5 {
+  aspect-ratio: 4 / 5;
+}
+.clip-studio__fmtcard-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-right: auto;
+}
+.clip-studio__fmtcard-ratio {
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+}
+.clip-studio__fmtcard.is-on .clip-studio__fmtcard-ratio {
+  color: var(--ref-color-electric-blue-150);
+}
+.clip-studio__fmtcard-label {
+  font-size: var(--ref-font-size-xs);
+  color: var(--ref-color-grey-60);
+}
+.clip-studio__fmtcard-nets {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+}
+.clip-studio__fmtcard-net {
+  font-size: var(--sys-icon-css-sm);
+}
+
+/* ── Source preview frame (left panel, once a video is provided) ──────────── */
+.clip-studio__preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+.clip-studio__frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--app-radius-card);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ref-color-grey-150);
+}
+/* Faux video still behind the controls. */
+.clip-studio__frame-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.clip-studio__frame-play,
+.clip-studio__frame-loader {
+  position: relative;
+  z-index: 1;
+}
+.clip-studio__frame-badge,
+.clip-studio__cap-overlay {
+  z-index: 2;
+}
+.clip-studio__frame-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--app-radius-circle);
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--ref-color-white);
+}
+.clip-studio__frame-play i {
+  font-size: var(--sys-icon-css-md);
+}
+.clip-studio__frame-loader {
+  --archie-loader-color: var(--ref-color-white);
+}
+.clip-studio__frame-badge {
+  position: absolute;
+  top: var(--ref-spacing-xs);
+  left: var(--ref-spacing-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: 2px var(--ref-spacing-xxs);
+  border-radius: var(--app-radius-pill);
+  background: rgba(33, 46, 68, 0.6);
+  color: var(--ref-color-white);
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+}
+.clip-studio__frame-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-white);
+  animation: clip-studio-pulse 1s ease-in-out infinite;
+}
+@keyframes clip-studio-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Caption preview burned on the frame — reflects the selected caption style. */
+.clip-studio__cap-overlay {
+  position: absolute;
+  left: 50%;
+  bottom: 14%;
+  transform: translateX(-50%);
+  max-width: 84%;
+  text-align: center;
+  color: var(--ref-color-white);
+  line-height: 1.15;
+  pointer-events: none;
+}
+.clip-studio__cap-overlay--bold {
+  font-weight: var(--ref-font-weight-black);
+  text-transform: uppercase;
+  font-size: 20px;
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.55),
+    0 0 8px rgba(0, 0, 0, 0.5);
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.45);
+}
+.clip-studio__cap-overlay--clean {
+  font-weight: var(--ref-font-weight-bold);
+  font-size: 16px;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+}
+.clip-studio__cap-overlay--caption {
+  font-weight: var(--ref-font-weight-bold);
+  text-transform: lowercase;
+  font-size: 15px;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 2px var(--ref-spacing-xxs);
+  border-radius: var(--app-radius-sm);
+}
+
+/* Rotating MermAId gradient border while the video is being analyzed. */
+@property --clip-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.clip-studio__preview--processing .clip-studio__frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--clip-angle),
+    var(--ref-color-mermaid-gradient-from),
+    var(--ref-color-mermaid-gradient-to),
+    var(--ref-color-mermaid-gradient-from)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: clip-studio-spin 1.6s linear infinite;
+  pointer-events: none;
+}
+@keyframes clip-studio-spin {
+  to {
+    --clip-angle: 360deg;
+  }
+}
+
+.clip-studio__preview-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+}
+.clip-studio__preview-name {
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-80);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Analyzing ─────────────────────────────────────────────────────────── */
+
+.clip-studio__skeleton {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+}
+.clip-studio__skeleton span {
+  aspect-ratio: 9 / 10;
+  border-radius: var(--app-radius-md);
+  background: linear-gradient(
+    100deg,
+    var(--ref-color-mermaid-10) 0%,
+    var(--ref-color-mermaid-20) 50%,
+    var(--ref-color-mermaid-10) 100%
+  );
+  background-size: 200% 100%;
+  animation: clip-studio-shimmer 1.4s linear infinite;
+}
+.clip-studio__skeleton span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.clip-studio__skeleton span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.clip-studio__skeleton span:nth-child(4) {
+  animation-delay: 0.45s;
+}
+@keyframes clip-studio-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+.clip-studio__progress.source-card__progress {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 320px;
+  height: var(--ref-spacing-xxxs);
+}
+.clip-studio--analyzing .clip-studio__progress-fill {
+  background: var(--ref-color-mermaid-gradient-background);
+}
+/* CSS-driven fill over the extraction duration (no JS per-tick re-render). */
+.clip-studio__progress-fill--anim {
+  width: 0;
+  animation: clip-studio-fill var(--extract-ms, 8s) linear forwards;
+}
+@keyframes clip-studio-fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+.clip-studio__stage {
+  margin: 0;
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-80);
+}
+/* Sub-stage labels cycle via CSS (one visible per quarter of the duration). */
+.clip-studio__stage-cycle {
+  position: relative;
+  width: 100%;
+  min-height: var(--ref-font-line-height-md);
+}
+.clip-studio__stage-cycle span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  opacity: 0;
+  animation: clip-studio-stage var(--extract-ms, 8s) linear forwards;
+}
+.clip-studio__stage-cycle span:nth-child(2) {
+  animation-delay: calc(var(--extract-ms, 8s) * 0.25);
+}
+.clip-studio__stage-cycle span:nth-child(3) {
+  animation-delay: calc(var(--extract-ms, 8s) * 0.5);
+}
+.clip-studio__stage-cycle span:nth-child(4) {
+  animation-delay: calc(var(--extract-ms, 8s) * 0.75);
+}
+@keyframes clip-studio-stage {
+  0% {
+    opacity: 0;
+  }
+  3% {
+    opacity: 1;
+  }
+  22% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.clip-studio__eta,
+.clip-studio__source {
+  margin: 0;
+  font-size: var(--ref-font-size-xs);
+}
+
+/* ── Clips review + profiles (scroll + sticky bar) ─────────────────────── */
+
+.clip-studio__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--ref-spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+.clip-studio__clips-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xxs);
+}
+.clip-studio__clips-head .clip-studio__title {
+  font-size: var(--ref-font-size-xxl);
+  line-height: var(--ref-font-line-height-xl);
+}
+.clip-studio__back {
+  margin-bottom: var(--ref-spacing-xxs);
+  padding-left: 0;
+}
+
+.clip-studio__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--ref-spacing-md);
+}
+
+/* Studio review card = the existing DS clip card (.clip-card / .rpanel-ideas__*)
+   wrapped with a selection checkbox. The per-card footer + "Why this clip" are
+   hidden in the studio — selection + Continue replaces per-clip drafting. */
+.clip-studio-pick {
+  position: relative;
+  border-radius: var(--app-radius-card);
+}
+.clip-studio-pick.is-selected .clip-card {
+  border-color: var(--ref-color-electric-blue-100);
+  box-shadow: 0 0 0 1px var(--ref-color-electric-blue-100) inset;
+}
+.clip-studio__grid .rpanel-ideas__card-actions {
+  display: none;
+}
+.clip-studio-pick__check {
+  position: absolute;
+  top: var(--ref-spacing-xs);
+  left: var(--ref-spacing-xs);
+  z-index: 3;
+  display: inline-flex;
+  cursor: pointer;
+}
+.clip-studio-pick__check input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.clip-studio-pick__check i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-40);
+  box-shadow: var(--app-shadow-subtle);
+}
+.clip-studio-pick__check input:checked + i {
+  background: var(--ref-color-electric-blue-100);
+  border-color: var(--ref-color-electric-blue-100);
+}
+.clip-studio-pick__check input:checked + i::after {
+  content: "";
+  width: 6px;
+  height: 10px;
+  border: solid var(--ref-color-white);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translateY(-1px);
+}
+
+/* Sticky action bar (clips + profiles) */
+.clip-studio__bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-lg);
+  border-top: 1px solid var(--app-border);
+  background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-low);
+}
+.clip-studio__bar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+}
+.clip-studio__bar-count {
+  font-size: var(--ref-font-size-xs);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-80);
+}
+
+/* Profiles step */
+.clip-studio__profiles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+.clip-studio__profile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  flex-wrap: wrap;
+  padding: var(--ref-spacing-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+  background: var(--ref-color-white);
+}
+.clip-studio__profile.is-on {
+  border-color: var(--ref-color-electric-blue-100);
+}
+.clip-studio__profile-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  cursor: pointer;
+}
+.clip-studio__profile-pick input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.clip-studio__profile-pick > i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--app-radius-sm);
+  border: 1px solid var(--ref-color-grey-40);
+  background: var(--ref-color-white);
+}
+.clip-studio__profile-pick input:checked + i {
+  background: var(--ref-color-electric-blue-100);
+  border-color: var(--ref-color-electric-blue-100);
+}
+.clip-studio__profile-pick input:checked + i::after {
+  content: "";
+  width: 5px;
+  height: 9px;
+  border: solid var(--ref-color-white);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translateY(-1px);
+}
+.clip-studio__profile-fmt {
+  display: flex;
+  align-items: center;
+}

@@ -865,8 +865,12 @@ function saveEdit() {
   const idx = clips.findIndex((c) => c.id === draft.id);
   if (idx !== -1) {
     clips[idx] = { ...draft };
-    notifySave();
+  } else {
+    // New clip added via addClip() — wasn't in the array yet.
+    clips.push({ ...draft });
+    selected.add(draft.id);
   }
+  notifySave();
   editingId = null;
   draft = null;
   if (singleClipMode) {
@@ -874,6 +878,38 @@ function saveEdit() {
     return;
   }
   render();
+}
+
+// Add a brand-new clip: a ~30s window in the next gap after the last clip,
+// opened straight into the editor so the user trims + titles it. Persisted on
+// save via saveEdit (which pushes it because it's not yet in `clips`).
+function addClip() {
+  if (!currentSource) return;
+  const duration = currentSource.durationSec || 1458;
+  const lastEnd = clips.reduce((m, c) => Math.max(m, c.end || 0), 0);
+  let start = Math.min(lastEnd, Math.max(0, duration - MIN_CLIP));
+  let end = Math.min(start + 30, duration);
+  if (end - start < MIN_CLIP) {
+    start = Math.max(0, duration - 30);
+    end = duration;
+  }
+  const newClip = {
+    id: `clip_${currentSource.id}_new_${Date.now().toString(36)}`,
+    start,
+    end,
+    hue: (clips.length * 57) % 360,
+    title: "New clip",
+    summary: "",
+    why: "",
+    network: "instagram",
+    tags: [],
+  };
+  editingId = newClip.id;
+  draft = { ...newClip };
+  ensureDraftFormat(draft);
+  draftPlayhead = start;
+  render();
+  if (bodyEl) bodyEl.scrollTop = 0;
 }
 
 function cancelEdit() {
@@ -988,6 +1024,9 @@ export function open(source, callbacks = {}) {
       ensureDraftFormat(draft);
       draftPlayhead = target.start || 0;
     }
+  } else if (callbacks.startAddClip) {
+    // Add-a-clip entry — single-clip editor on a fresh clip (see addClip()).
+    singleClipMode = true;
   }
 
   // Head info — video badge (static icon) + title + filename. The title
@@ -995,7 +1034,8 @@ export function open(source, callbacks = {}) {
   // opened the modal); subtitle drops the multi-clip framing for a quiet
   // filename.
   const titleEl = document.getElementById("videoClipsTitle");
-  if (titleEl) titleEl.textContent = singleClipMode ? "Edit clip" : "Suggested clips";
+  if (titleEl)
+    titleEl.textContent = callbacks.startAddClip ? "Add clip" : singleClipMode ? "Edit clip" : "Suggested clips";
   const subEl = document.getElementById("videoClipsSub");
   if (subEl) {
     if (singleClipMode) {
@@ -1014,7 +1054,11 @@ export function open(source, callbacks = {}) {
   modal.setAttribute("aria-hidden", "false");
   document.body.classList.add("has-modal");
 
-  render();
+  if (callbacks.startAddClip) {
+    addClip(); // sets draft on a fresh clip + renders the editor
+  } else {
+    render();
+  }
 }
 
 function close() {

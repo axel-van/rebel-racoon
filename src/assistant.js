@@ -508,7 +508,10 @@ function seedThread(sessionId, { hasContext, skipGreeting }) {
   // its own intro too (context-builder startAlt); seed it empty regardless of
   // which read (topbar / status card / panel) triggers the seed first, so the
   // chat never opens with a stray greeting above the onboarding message.
-  if (skipGreeting || sessionId.startsWith("welcome-alt-")) {
+  // Clip Studio sessions (clip-studio-*) own their own full-page flow; the
+  // clips-stage chat should open empty (no stray greeting above the grid),
+  // same as the welcome-alt onboarding.
+  if (skipGreeting || sessionId.startsWith("welcome-alt-") || sessionId.startsWith("clip-studio-")) {
     threads.set(sessionId, []);
     return;
   }
