@@ -22,7 +22,7 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=46";
+} from "./conversation-status-card.js?v=47";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=29";

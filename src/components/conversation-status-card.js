@@ -187,6 +187,13 @@ export function render() {
     hideCard();
     return;
   }
+  // Clip Studio runs as a focused full-page flow (its own headers + sticky
+  // bars) — never reserve the status-card column there, or the studio content
+  // gets squeezed.
+  if (sid.startsWith("clip-studio-")) {
+    hideCard();
+    return;
+  }
   // User has dismissed the card via the topbar info button.
   if (!isEnabled()) {
     hideCard();

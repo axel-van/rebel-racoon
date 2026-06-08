@@ -219,6 +219,18 @@ export function backToClips(sessionId) {
   notify(sessionId);
 }
 
+// Back to the config screen (from the extraction loader or the clips review).
+// Cancels any running extraction; the uploaded source + its clips are kept, so
+// the config shows the "ready" preview and Create clips re-runs the extraction.
+export function backToConfig(sessionId) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  if (s._tickerTimer) clearTimeout(s._tickerTimer);
+  s._tickerTimer = null;
+  s.stage = "upload";
+  notify(sessionId);
+}
+
 export function setProfileSelection(sessionId, ids) {
   const s = states.get(sessionId);
   if (!s) return;

@@ -1,6 +1,6 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=98";
+import { renderTopbar } from "../components/topbar.js?v=99";
 import { socialAccounts, chatStarters } from "../mocks.js?v=40";
 import {
   getConnectedProfiles,
@@ -48,7 +48,7 @@ import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } fro
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
 import * as inlineQuestion from "../inline-question.js?v=33";
-import * as clipStudio from "../clip-studio.js?v=7";
+import * as clipStudio from "../clip-studio.js?v=8";
 import { askConnector } from "../connector-ask.js?v=3";
 import { getConnectedConnectors, findConnector } from "../connectors-store.js?v=23";
 import { renderConnectorLogo } from "../connectors-view.js?v=4";
@@ -462,9 +462,17 @@ function renderClipStudioUpload(st) {
          <div class="clip-studio__preview-foot">
            <span class="clip-studio__preview-name" title="${name}">${name} · ${uploadState === "ready" ? "Analyzed" : "Analyzing…"}</span>
            <button type="button" class="ap-button stroked grey clip-studio__browse" data-clip-studio-browse>
-             <i class="ap-icon-refresh" aria-hidden="true"></i><span>Replace</span>
+             <i class="ap-icon-upload" aria-hidden="true"></i><span>Replace file</span>
            </button>
          </div>
+         <div class="clip-studio__or"><span>or paste a different link</span></div>
+         <form class="clip-studio__url" data-clip-studio-url-form>
+           <div class="ap-input-group">
+             <i class="ap-icon-link" aria-hidden="true"></i>
+             <input type="text" data-clip-studio-url placeholder="Paste a YouTube or Google Drive URL" aria-label="Replace with a video URL" />
+           </div>
+           <button type="submit" class="ap-button stroked grey">Import</button>
+         </form>
        </div>`
     : `<div class="clip-studio__dropzone clip-studio__dropzone--idle" data-clip-studio-dropzone tabindex="0" role="button" aria-label="Upload a video">
          <span class="clip-studio__dropzone-icon"><i class="ap-icon-upload" aria-hidden="true"></i></span>
@@ -488,9 +496,11 @@ function renderClipStudioUpload(st) {
       <div class="clip-studio__config">
         <div class="clip-studio__config-left">
           <div class="clip-studio__intro">
-            <span class="clip-studio__intro-icon"><i class="ap-icon-video" aria-hidden="true"></i></span>
-            <h1 class="clip-studio__title">Auto Clips</h1>
-            <p class="clip-studio__sub">Set your format and captions, drop a video, then hit Create clips.</p>
+            <span class="clip-studio__ai-badge"><i class="ap-icon-sparkles" aria-hidden="true"></i>Auto Clips</span>
+            <h1 class="clip-studio__title">Turn a video into post-ready clips</h1>
+            <p class="clip-studio__sub">
+              Pick your format and captions, drop a video, and I'll cut the best moments for each network.
+            </p>
           </div>
           <input type="file" accept="video/*,.mp4,.mov,.webm" id="clipStudioFileInput" data-clip-studio-file hidden />
           ${raw(leftPanel)}
@@ -570,6 +580,7 @@ function renderClipStudioAnalyzing(st) {
           <span>Transcribing audio</span><span>Finding highlights</span><span>Cutting clips</span><span>Polishing</span>
         </p>
         ${st.sourceName ? raw(`<p class="clip-studio__source muted">${escapeHtml(st.sourceName)}</p>`) : ""}
+        <button type="button" class="ap-button ghost grey clip-studio__cancel" data-clip-back-config>Cancel</button>
       </div>
     </aside>
   `;
@@ -600,6 +611,9 @@ function renderClipStudioClips(session, st) {
     <aside class="session__assistant clip-studio clip-studio--clips" aria-label="Extracted clips">
       <div class="clip-studio__scroll">
         <div class="clip-studio__clips-head">
+          <button type="button" class="ap-button ghost grey clip-studio__back" data-clip-back-config>
+            <i class="ap-icon-arrow-left" aria-hidden="true"></i><span>Back to setup</span>
+          </button>
           <span class="clip-studio__ai-badge"><i class="ap-icon-sparkles" aria-hidden="true"></i>Clips ready</span>
           <h1 class="clip-studio__title">${clips.length} clips from ${st.sourceName || "your video"}</h1>
           <p class="clip-studio__sub muted">
@@ -3542,6 +3556,11 @@ function bindSession(root, session) {
         }
         if (event.target.closest("[data-clip-add-studio]")) {
           openClipStudioEditor(session, { startAddClip: true });
+          return;
+        }
+        // Back to the config screen (from the extraction loader or clips review).
+        if (event.target.closest("[data-clip-back-config]")) {
+          clipStudio.backToConfig(session.id);
           return;
         }
         // Continue → seed the profiles step from the config (networks + their
