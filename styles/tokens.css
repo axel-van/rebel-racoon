@@ -92,29 +92,14 @@
   /* Right panel widths — handoff: 460px default, 420 below 1300px, 380 below 1100px. */
   --app-right-panel-width: 460px;
 
-  /* ── Typography overrides for handoff-specific sizes ──────────────── */
-  /* Handoff message body uses 15px / line-height 1.55 — between DS body (14/18)
-     and DS subtitle (16/20). Defined here so chat surfaces share the value. */
-  --app-text-message-size: 15px;
-  --app-text-message-line: 1.55;
-
-  /* Micro labels sit below the DS scale (smallest is --ref-font-size-xs = 12px).
-     Used for the badge/counter chips and chip rows that need to fit beneath a
-     button label. Two steps so callers can pick optical weight against the
-     adjacent type size. */
-  --app-text-micro: 11px;
-  --app-text-micro-sm: 10px;
+  /* Typography is sourced exclusively from the DS text styles
+     (--sys-text-style-*: h0/h1/h2/h3/h4/subtitle/body/caption + bold).
+     No app-level font sizes/weights — see styles/screens/*, components/*. */
 
   /* Micro spacing sits below --ref-spacing-xxxs (4px). Used for tight 2px
      gaps between adjacent inline chips or icon rows that already share
      padding on either side. */
   --app-spacing-micro: 2px;
-
-  /* Handoff empty-state hero ("What are we creating today?") — 30/800.
-     DS scale tops out at marketing (24/800/36). Kept as app token. */
-  --app-text-hero-size: 30px;
-  --app-text-hero-line: 36px;
-  --app-text-hero-weight: 800;
 
   /* ── Modal scrim ──────────────────────────────────────────────────── */
   /* Brand-tinted slate (--ref-color-grey-100 base) at ~32% — matches

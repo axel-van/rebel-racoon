@@ -33,9 +33,9 @@
 .clip-studio__title {
   margin: 0;
   font-family: var(--ref-font-family);
-  font-size: var(--app-text-hero-size);
-  line-height: var(--app-text-hero-line);
-  font-weight: var(--app-text-hero-weight);
+  font-size: var(--sys-text-style-marketing-size);
+  line-height: var(--sys-text-style-marketing-line-height);
+  font-weight: var(--sys-text-style-marketing-weight);
   letter-spacing: -0.01em;
   color: var(--ref-color-grey-100);
 }
@@ -43,8 +43,9 @@
 .clip-studio__sub {
   margin: 0;
   max-width: 460px;
-  font-size: var(--app-text-message-size);
-  line-height: var(--app-text-message-line);
+  font-size: var(--sys-text-style-subtitle-size);
+  line-height: var(--sys-text-style-subtitle-line-height);
+  font-weight: var(--sys-text-style-subtitle-weight);
   color: var(--ref-color-grey-60);
 }
 
@@ -72,8 +73,9 @@
   border-radius: var(--app-radius-pill);
   background: var(--ref-color-mermaid-gradient-background);
   color: var(--ref-color-white);
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
 }
 .clip-studio__ai-badge i {
   font-size: var(--sys-icon-css-xs);
@@ -108,8 +110,8 @@
   gap: var(--ref-spacing-xs);
 }
 .clip-studio__config-left .clip-studio__title {
-  font-size: var(--ref-font-size-xxl);
-  line-height: var(--ref-font-line-height-xl);
+  font-size: var(--sys-text-style-marketing-size);
+  line-height: var(--sys-text-style-marketing-line-height);
 }
 .clip-studio__config-left .clip-studio__sub {
   text-align: left;
@@ -182,12 +184,14 @@
 }
 .clip-studio__dropzone-primary {
   margin: var(--ref-spacing-xxs) 0 0;
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-100);
 }
 .clip-studio__dropzone-sub {
   margin: 0;
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 .clip-studio__browse {
   margin-top: var(--ref-spacing-xs);
@@ -199,7 +203,9 @@
   gap: var(--ref-spacing-sm);
   width: 100%;
   color: var(--ref-color-grey-60);
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 .clip-studio__or::before,
 .clip-studio__or::after {
@@ -233,8 +239,9 @@
   gap: var(--ref-spacing-xs);
 }
 .clip-studio__field-label {
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-100);
 }
 /* DS select fills the field width. */
@@ -276,17 +283,20 @@
   color: var(--ref-color-electric-blue-150);
 }
 .clip-studio__seg-ratio {
-  font-weight: var(--ref-font-weight-bold);
-  font-size: var(--ref-font-size-xs);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
 }
 .clip-studio__seg-label {
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 .clip-studio__seg-rec {
-  font-size: 10px;
-  line-height: 12px;
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
   color: var(--ref-color-electric-blue-150);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-caption-bold-weight);
 }
 
 /* Caption style cards */
@@ -332,27 +342,29 @@
   font-size: var(--sys-icon-css-md);
 }
 .clip-studio__cap-sample {
-  font-size: var(--ref-font-size-xs);
-  line-height: 1.2;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   text-align: center;
   color: var(--ref-color-grey-100);
 }
 .clip-studio__cap-sample--bold {
-  font-weight: var(--ref-font-weight-black);
+  font-weight: var(--sys-text-style-h0-weight);
   text-transform: uppercase;
   color: var(--ref-color-grey-150);
 }
 .clip-studio__cap-sample--clean {
-  font-weight: var(--ref-font-weight-regular);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-80);
 }
 .clip-studio__cap-sample--caption {
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   text-transform: lowercase;
 }
 .clip-studio__cap-label {
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-100);
   text-align: center;
 }
@@ -420,15 +432,18 @@
   margin-right: auto;
 }
 .clip-studio__fmtcard-ratio {
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-100);
 }
 .clip-studio__fmtcard.is-on .clip-studio__fmtcard-ratio {
   color: var(--ref-color-electric-blue-150);
 }
 .clip-studio__fmtcard-label {
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
 }
 .clip-studio__fmtcard-nets {
@@ -500,8 +515,9 @@
   border-radius: var(--app-radius-pill);
   background: rgba(33, 46, 68, 0.6);
   color: var(--ref-color-white);
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
 }
 .clip-studio__frame-dot {
   width: 6px;
@@ -529,27 +545,30 @@
   max-width: 84%;
   text-align: center;
   color: var(--ref-color-white);
-  line-height: 1.15;
+  line-height: var(--sys-text-style-body-line-height);
   pointer-events: none;
 }
 .clip-studio__cap-overlay--bold {
-  font-weight: var(--ref-font-weight-black);
+  font-weight: var(--sys-text-style-h0-weight);
   text-transform: uppercase;
-  font-size: 20px;
+  font-size: var(--sys-text-style-h0-size);
+  line-height: var(--sys-text-style-h0-line-height);
   text-shadow:
     0 2px 0 rgba(0, 0, 0, 0.55),
     0 0 8px rgba(0, 0, 0, 0.5);
   -webkit-text-stroke: 1px rgba(0, 0, 0, 0.45);
 }
 .clip-studio__cap-overlay--clean {
-  font-weight: var(--ref-font-weight-bold);
-  font-size: 16px;
+  font-weight: var(--sys-text-style-h3-weight);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
   text-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
 }
 .clip-studio__cap-overlay--caption {
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   text-transform: lowercase;
-  font-size: 15px;
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
   background: rgba(0, 0, 0, 0.55);
   padding: 2px var(--ref-spacing-xxs);
   border-radius: var(--app-radius-sm);
@@ -594,8 +613,9 @@
   gap: var(--ref-spacing-xs);
 }
 .clip-studio__preview-name {
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-80);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -663,7 +683,7 @@
 }
 .clip-studio__stage {
   margin: 0;
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-80);
 }
 /* Sub-stage labels cycle via CSS (one visible per quarter of the duration). */
@@ -709,7 +729,9 @@
 .clip-studio__eta,
 .clip-studio__source {
   margin: 0;
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 
 /* ── Clips review + profiles (scroll + sticky bar) ─────────────────────── */
@@ -733,8 +755,8 @@
   gap: var(--ref-spacing-xxs);
 }
 .clip-studio__clips-head .clip-studio__title {
-  font-size: var(--ref-font-size-xxl);
-  line-height: var(--ref-font-line-height-xl);
+  font-size: var(--sys-text-style-marketing-size);
+  line-height: var(--sys-text-style-marketing-line-height);
 }
 .clip-studio__back {
   margin-bottom: var(--ref-spacing-xxs);
@@ -817,8 +839,9 @@
   gap: var(--ref-spacing-sm);
 }
 .clip-studio__bar-count {
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-80);
 }
 

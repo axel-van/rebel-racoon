@@ -132,7 +132,9 @@ body.has-modal {
   border: 0;
   background: transparent;
   font-family: inherit;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-100);
   outline: none;
   padding: var(--ref-spacing-xxxs) 0;
@@ -154,8 +156,9 @@ body.has-modal {
   background: var(--ref-color-grey-05);
   border: 1px solid var(--app-border-soft);
   font-family: inherit;
-  font-size: 10px;
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-80);
   flex-shrink: 0;
 }
@@ -163,9 +166,9 @@ body.has-modal {
 .search-modal__group-heading {
   margin: 0;
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm) var(--ref-spacing-xxxs);
-  font-size: 10px;
-  line-height: var(--ref-font-line-height-xs);
-  font-weight: var(--ref-font-weight-extra-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-60);
 }
 
@@ -201,8 +204,9 @@ body.has-modal {
 
 .search-modal__result-title {
   flex: 1 1 auto;
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -235,7 +239,9 @@ body.has-modal {
   background: var(--ref-color-white);
   border: 1px solid var(--app-border-soft);
   font-family: inherit;
-  font-size: 11px;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
 }
 
@@ -245,7 +251,9 @@ body.has-modal {
 }
 
 .search-modal__empty-text {
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-60);
 }
 
@@ -312,12 +320,14 @@ body.has-modal {
 .bug-field {
   display: grid;
   gap: var(--ref-spacing-xxs);
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--sys-text-color-light);
 }
 
 .bug-field > label {
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-100);
 }
 
@@ -348,7 +358,9 @@ body.has-modal {
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--app-radius-pill);
   background: var(--ref-color-white);
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--sys-text-color-light);
   cursor: pointer;
   font-family: inherit;
@@ -372,7 +384,7 @@ body.has-modal {
   border-color: var(--ref-color-orange-100);
   background: var(--ref-color-orange-10);
   color: var(--ref-color-orange-100);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-caption-bold-weight);
 }
 
 /* ── Bug report: native-feel input + textarea ─────────────── */
@@ -384,7 +396,9 @@ body.has-modal {
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
   padding: 8px var(--ref-spacing-xs);
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   font-family: inherit;
   color: var(--ref-color-grey-100);
   background: var(--ref-color-white);
@@ -398,7 +412,7 @@ body.has-modal {
 .feedback-modal__textarea {
   resize: vertical;
   min-height: 80px;
-  line-height: var(--ref-font-line-height-md);
+  line-height: var(--sys-text-style-body-line-height);
 }
 
 .bug-input::placeholder,
@@ -424,7 +438,9 @@ body.has-modal {
 /* Inline error text under invalid fields. */
 .form-field-error {
   margin: var(--ref-spacing-xxs) 0 0;
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-red-100);
 }
 
@@ -437,8 +453,9 @@ body.has-modal {
   text-align: center;
   cursor: pointer;
   color: var(--ref-color-grey-60);
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-md);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   transition:
     border-color var(--ref-animation-short),
     background var(--ref-animation-short),
@@ -481,7 +498,9 @@ body.has-modal {
 
 .bug-report-dropzone__hint {
   color: var(--ref-color-grey-40);
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 
 .bug-report-preview {
@@ -501,7 +520,9 @@ body.has-modal {
 
 .bug-report-preview__name {
   flex: 1;
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--sys-text-color-light);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -525,8 +546,9 @@ body.has-modal {
 }
 
 .bug-context__label {
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-40);
   margin-right: 2px;
 }
@@ -538,15 +560,18 @@ body.has-modal {
   border-radius: var(--ref-border-radius-sm);
   background: var(--ref-color-white);
   border: 1px solid var(--sys-border-color-default);
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--sys-text-color-light);
 }
 
 /* ── Feedback modal: intro + outro copy ──────────────────── */
 
 .feedback-modal__intro {
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-md);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--sys-text-color-light);
   margin: 0;
 }
@@ -557,8 +582,9 @@ body.has-modal {
 }
 
 .feedback-modal__thank-you {
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-md);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-60);
   margin: 0;
 }
@@ -622,17 +648,19 @@ body.has-modal {
 
 .bug-report-modal__success h3,
 .feedback-modal__success h3 {
-  font-size: var(--ref-font-size-md);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
   margin: 0;
 }
 
 .bug-report-modal__success p,
 .feedback-modal__success p {
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
   color: var(--sys-text-color-light);
-  line-height: var(--ref-font-line-height-md);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   margin: 0;
 }
 
@@ -663,13 +691,14 @@ body.has-modal {
 
 .gen-section-label {
   margin: 0;
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-100);
 }
 
 .gen-section-label span {
-  font-weight: var(--ref-font-weight-regular);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-60);
   margin-left: 4px;
 }
@@ -682,8 +711,9 @@ body.has-modal {
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
   padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-md);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   font-family: inherit;
   color: var(--ref-color-grey-100);
   background: var(--ref-color-white);
@@ -712,7 +742,9 @@ body.has-modal {
   background: none;
   border: 0;
   padding: 0;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   font-family: inherit;
   color: var(--ref-color-electric-blue-100);
   cursor: pointer;
@@ -732,7 +764,7 @@ body.has-modal {
 }
 
 .gen-derive-btn i {
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
 }
 
 /* Chip selectors — single-select with toggle-off. */
@@ -750,12 +782,12 @@ body.has-modal {
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--app-radius-pill);
   background: var(--ref-color-white);
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-body-bold-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-100);
   cursor: pointer;
   font-family: inherit;
-  line-height: 1.2;
+  line-height: var(--sys-text-style-body-bold-line-height);
   transition:
     border-color var(--ref-animation-short),
     background var(--ref-animation-short),
@@ -778,7 +810,7 @@ body.has-modal {
 }
 
 .gen-chip-icon {
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
   line-height: 1;
 }
 
@@ -812,7 +844,9 @@ body.has-modal {
   justify-content: center;
   gap: var(--ref-spacing-xs);
   margin: 0;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-60);
 }
 
@@ -865,7 +899,9 @@ body.has-modal {
   border-radius: var(--app-radius-pill);
   background: var(--ref-color-grey-05);
   border: 1px solid var(--ref-color-grey-10);
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
 }
 
@@ -906,7 +942,9 @@ body.has-modal {
 
 .shortcut-legend__row dd {
   margin: 0;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--sys-text-color-default);
 }
 
@@ -919,8 +957,8 @@ body.has-modal {
   border-bottom-width: 2px;
   border-radius: var(--app-radius-sm);
   font-family: inherit;
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-100);
-  line-height: 1;
+  line-height: var(--sys-text-style-caption-bold-line-height);
 }

@@ -111,13 +111,16 @@
 }
 
 .schedule-modal__slot-when-label {
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
 }
 
 .schedule-modal__slot-text {
-  font-size: var(--ref-font-size-xs);
-  line-height: 1.4;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -145,8 +148,9 @@
 }
 
 .schedule-modal__cal-title {
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
   color: var(--ref-color-grey-100);
 }
 
@@ -155,8 +159,9 @@
   grid-template-columns: repeat(7, 1fr);
   gap: var(--ref-spacing-xxxs);
   text-align: center;
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-60);
 }
 
@@ -178,7 +183,9 @@
   border: 1px solid transparent;
   border-radius: var(--ref-border-radius-sm);
   font-family: inherit;
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-100);
   cursor: pointer;
   transition: all var(--ref-animation-short) var(--app-ease-standard);
@@ -196,7 +203,7 @@
 }
 
 .schedule-modal__day.is-today {
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-electric-blue-100);
 }
 
@@ -206,7 +213,7 @@
 }
 
 .schedule-modal__day-num {
-  line-height: 1;
+  line-height: var(--sys-text-style-caption-line-height);
 }
 
 .schedule-modal__day-dot {
@@ -242,19 +249,23 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--ref-spacing-xxs);
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
   color: var(--ref-color-grey-100);
 }
 
 .schedule-modal__day-list-head .muted {
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-regular);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
 }
 
 .schedule-modal__day-list-empty {
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
   padding: var(--ref-spacing-xs);
   background: var(--ref-color-grey-10);
@@ -279,7 +290,9 @@
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--ref-border-radius-sm);
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 
 .schedule-modal__day-item.is-batch {
@@ -289,7 +302,7 @@
 
 .schedule-modal__day-time {
   font-variant-numeric: tabular-nums;
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-100);
   white-space: nowrap;
 }
@@ -315,7 +328,9 @@
    ship the disclosure text styling here — it lives in the left cluster. */
 
 .schedule-modal__foot-disclosure {
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
 }
 

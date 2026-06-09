@@ -197,7 +197,9 @@ button.app-topbar__title--rename:hover {
 
 .app-topbar__title-pen {
   opacity: 0;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-80);
   transition: opacity var(--ref-animation-short) var(--app-ease-out);
 }
@@ -227,8 +229,9 @@ button.app-topbar__title--rename:focus-visible .app-topbar__title-pen {
   padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
   border-radius: var(--app-radius-md);
   font-family: inherit;
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-electric-blue-100);
   cursor: pointer;
 }
@@ -286,8 +289,9 @@ button.app-topbar__title--rename:focus-visible .app-topbar__title-pen {
 }
 
 .screen__placeholder-eyebrow {
-  font-size: 10px;
-  font-weight: var(--ref-font-weight-extra-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-60);
 }
 
@@ -344,29 +348,29 @@ button.app-topbar__title--rename:focus-visible .app-topbar__title-pen {
 }
 
 .text-title {
-  font-size: var(--ref-font-size-xxl);
-  line-height: var(--ref-font-line-height-xl);
-  font-weight: var(--ref-font-weight-extra-bold);
+  font-size: var(--sys-text-style-marketing-size);
+  line-height: var(--sys-text-style-marketing-line-height);
+  font-weight: var(--sys-text-style-marketing-weight);
   color: var(--ref-color-grey-100);
 }
 
 .text-subtitle {
-  font-size: var(--ref-font-size-lg);
-  line-height: var(--ref-font-line-height-lg);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  font-weight: var(--sys-text-style-h2-weight);
   color: var(--ref-color-grey-100);
 }
 
 .text-section {
-  font-size: var(--ref-font-size-md);
-  line-height: var(--ref-font-line-height-md);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
 }
 
 .text-caption {
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
   color: var(--sys-text-color-light);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-caption-bold-weight);
 }

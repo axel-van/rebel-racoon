@@ -47,6 +47,8 @@
 .contexts-view__sub {
   margin: 0;
   font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-80);
 }
 
@@ -86,7 +88,9 @@
 .contexts-view__empty {
   padding: var(--ref-spacing-md);
   text-align: center;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-60);
 }
 
@@ -167,16 +171,18 @@
 }
 
 .contexts-card--ghost__title {
-  font-size: var(--ref-font-size-md);
-  font-weight: var(--ref-font-weight-extra-bold);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
 }
 
 .contexts-card--ghost__sub {
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
   max-width: 220px;
-  line-height: 1.4;
+  line-height: var(--sys-text-style-caption-line-height);
 }
 
 /* ── ContextCard ───────────────────────────────────────────────────
@@ -293,9 +299,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  font-size: var(--ref-font-size-md);
-  line-height: var(--ref-font-line-height-md);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
 }
 
@@ -304,7 +310,9 @@
   align-items: center;
   justify-content: center;
   color: var(--ref-color-yellow-100);
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
 }
 
 /* Voice headline — small italic-ish pill showing the brand's tones
@@ -319,9 +327,9 @@
   border-radius: 999px;
   background: var(--ref-color-grey-05);
   color: var(--ref-color-grey-100);
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
 }
 
 .contexts-card__voice > span {
@@ -332,13 +340,14 @@
 
 .contexts-card__voice > i {
   color: var(--ref-color-electric-blue-100);
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-icon-css-xs);
 }
 
 .contexts-card__brief {
   margin: 0;
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-100);
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -370,12 +379,14 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
 }
 
 .contexts-card__counter > i {
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-icon-css-sm);
   color: var(--ref-color-grey-60);
 }
 
@@ -399,7 +410,9 @@
 }
 
 .contexts-card__updated {
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
 }
 

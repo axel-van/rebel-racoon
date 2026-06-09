@@ -114,8 +114,9 @@
   place-items: center;
   background: var(--ref-color-green-10, var(--ref-color-electric-blue-10));
   color: var(--ref-color-green-150, var(--ref-color-electric-blue-150));
-  font-weight: var(--ref-font-weight-bold);
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
   flex-shrink: 0;
 }
 
@@ -132,14 +133,15 @@
 }
 
 .posts__card-name {
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-150);
 }
 
 .posts__card-title,
 .posts__card-meta {
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 
 .posts__card-status {
@@ -151,7 +153,7 @@
   flex-direction: column;
   gap: var(--ref-spacing-xs);
   color: var(--ref-color-grey-150);
-  line-height: var(--ref-font-line-height-md);
+  line-height: var(--sys-text-style-body-line-height);
 }
 
 .posts__card-paragraph {
@@ -164,7 +166,7 @@
   display: flex;
   gap: var(--ref-spacing-xxs);
   flex-wrap: wrap;
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 .posts__card-hashtags a {
@@ -173,7 +175,7 @@
 
 .posts__card-cta {
   margin: 0;
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-150);
 }
 
@@ -281,8 +283,9 @@
   border-radius: var(--ref-border-radius-md);
   color: var(--ref-color-grey-100);
   font-family: var(--ref-font-family);
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-regular);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   cursor: pointer;
   transition:
     background-color var(--ref-animation-short) var(--app-ease-out),
@@ -372,13 +375,14 @@
   border-radius: var(--ref-border-radius-sm);
   background: rgba(0, 0, 0, 0.55);
   color: var(--ref-color-white);
-  font-size: 10px;
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .posts__card-clip-player-source i {
-  font-size: 11px;
+  font-size: var(--sys-icon-css-xs);
 }
 
 .posts__card-clip-player-source span {
@@ -392,8 +396,9 @@
   bottom: 14px;
   right: 10px;
   z-index: 2;
-  font-size: 10px;
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   font-variant-numeric: tabular-nums;
   color: var(--ref-color-white);
   background: rgba(0, 0, 0, 0.7);
@@ -462,7 +467,9 @@
   padding: var(--ref-spacing-xxs) 0;
   border-top: 1px solid var(--app-border-soft);
   border-bottom: 1px solid var(--app-border-soft);
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 
 .posts__card-reactions {
@@ -491,7 +498,7 @@
 }
 
 .posts__card-reaction i {
-  font-size: 10px;
+  font-size: var(--sys-icon-css-xs);
   line-height: 1;
 }
 
@@ -504,7 +511,7 @@
 }
 
 .posts__card-reaction-count {
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-150);
   margin-left: var(--ref-spacing-xxs);
 }
@@ -522,7 +529,7 @@
   background: var(--ref-color-white);
   outline: none;
   cursor: text;
-  min-height: calc(var(--ref-font-line-height-md) * 3);
+  min-height: calc(var(--sys-text-style-body-line-height) * 3);
 }
 
 .posts__card-editor:focus-visible {
@@ -554,9 +561,10 @@
   background: transparent;
   border: 0;
   font-family: inherit;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
   color: var(--sys-text-color-light);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 /* Empty state inside the feed */

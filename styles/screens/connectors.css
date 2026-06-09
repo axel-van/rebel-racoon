@@ -144,16 +144,17 @@
 }
 
 .connectors-card__name {
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
   color: var(--ref-color-grey-100);
-  line-height: var(--ref-font-line-height-sm);
 }
 
 /* Single line, truncated — keeps every row the same compact height. */
 .connectors-card__desc {
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-sm);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -203,7 +204,7 @@
   justify-content: center;
   background: var(--connector-accent, var(--ref-color-grey-60));
   color: var(--ref-color-white);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   line-height: 1;
 }
 
@@ -220,12 +221,12 @@
 }
 
 .connectors-empty__icon {
-  font-size: var(--ref-font-size-xl);
+  font-size: var(--sys-icon-css-mini-sm);
   color: var(--ref-color-grey-40);
 }
 
 .connectors-empty__title {
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-100);
 }
 
@@ -297,8 +298,9 @@
 .connectors-detail__desc {
   margin: 0;
   color: var(--ref-color-grey-80);
-  font-size: var(--ref-font-size-md);
-  line-height: var(--ref-font-line-height-md);
+  font-size: var(--sys-text-style-subtitle-size);
+  line-height: var(--sys-text-style-subtitle-line-height);
+  font-weight: var(--sys-text-style-subtitle-weight);
 }
 
 .connectors-detail__actions {
@@ -324,7 +326,9 @@
   text-align: left;
   cursor: pointer;
   font-family: inherit;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-100);
   background: var(--ref-color-white);
   border: 1px solid var(--ref-color-grey-20);
@@ -370,14 +374,17 @@
 
 .connectors-detail__section-title {
   margin: 0;
-  font-size: var(--ref-font-size-md);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
 }
 
 .connectors-detail__section-sub {
   margin: 0;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
 }
 
 .connectors-detail__caps {
@@ -393,7 +400,9 @@
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-100);
 }
 
@@ -412,12 +421,14 @@
 
 .connectors-detail__meta {
   margin: 0;
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 
 .connectors-detail__meta strong {
   color: var(--ref-color-grey-100);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 /* ── Mobile (≤720px) ──────────────────────────────────────────────────── */

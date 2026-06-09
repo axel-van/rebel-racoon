@@ -130,8 +130,9 @@
 .settings-view__section-head p {
   margin: 0;
   color: var(--ref-color-grey-60);
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-md);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
 }
 
 /* ── Settings cards (one .ap-card per logical group) ──────────────────── */
@@ -217,27 +218,30 @@
 }
 
 .settings-row__title {
-  font-size: var(--ref-font-size-md);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h3-size);
+  font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
-  line-height: var(--ref-font-line-height-md);
+  line-height: var(--sys-text-style-h3-line-height);
 }
 
 .settings-row__sub {
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
   color: var(--ref-color-grey-60);
-  line-height: var(--ref-font-line-height-md);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
 }
 
 .settings-row__meta {
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
   margin-top: var(--ref-spacing-xxxs);
 }
 
 .settings-row__meta strong {
   color: var(--ref-color-grey-100);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-caption-bold-weight);
 }
 
 .settings-row__action {
@@ -329,14 +333,16 @@
 }
 
 .settings-opt-label {
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-body-bold-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  line-height: var(--sys-text-style-body-bold-line-height);
   color: var(--ref-color-grey-100);
 }
 
 .settings-opt-hint {
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--sys-text-color-light);
 }
 
@@ -395,9 +401,9 @@
 
 .sp-count-title {
   margin: 0;
-  font-size: var(--ref-font-size-lg);
-  font-weight: var(--ref-font-weight-bold);
-  line-height: var(--ref-font-line-height-lg);
+  font-size: var(--sys-text-style-h2-size);
+  font-weight: var(--sys-text-style-h2-weight);
+  line-height: var(--sys-text-style-h2-line-height);
   color: var(--ref-color-grey-100);
 }
 
@@ -411,8 +417,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-80);
 }
 
@@ -444,9 +451,9 @@
 }
 
 .sp-group-name {
-  font-size: var(--ref-font-size-md);
-  font-weight: var(--ref-font-weight-bold);
-  line-height: var(--ref-font-line-height-lg);
+  font-size: var(--sys-text-style-h3-size);
+  font-weight: var(--sys-text-style-h3-weight);
+  line-height: var(--sys-text-style-h3-line-height);
   color: var(--ref-color-grey-100);
 }
 
@@ -496,8 +503,9 @@
   align-items: center;
   gap: var(--ref-spacing-xxxs);
   min-width: 0;
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-100);
   white-space: nowrap;
   overflow: hidden;
@@ -510,7 +518,7 @@
 }
 
 .sp-status-label strong {
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-caption-bold-weight);
 }
 
 .sp-card-status.expired .sp-status-label > i {
@@ -540,9 +548,9 @@
 }
 
 .sp-card-name {
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
-  line-height: var(--ref-font-line-height-md);
+  font-size: var(--sys-text-style-h4-size);
+  font-weight: var(--sys-text-style-h4-weight);
+  line-height: var(--sys-text-style-h4-line-height);
   color: var(--ref-color-grey-100);
   white-space: nowrap;
   overflow: hidden;
@@ -550,8 +558,9 @@
 }
 
 .sp-card-org {
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
   white-space: nowrap;
   overflow: hidden;
@@ -564,7 +573,9 @@
 
 .sp-no-results {
   margin: var(--ref-spacing-sm) 0;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-60);
 }
 

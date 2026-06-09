@@ -221,9 +221,9 @@ button.ap-link {
   background: var(--ref-color-white);
   color: var(--ref-color-grey-100);
   font-family: inherit;
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-regular);
-  line-height: var(--ref-font-line-height-sm);
+  font-size: var(--sys-text-style-body-size);
+  font-weight: var(--sys-text-style-body-weight);
+  line-height: var(--sys-text-style-body-line-height);
   white-space: nowrap;
   cursor: pointer;
   transition:
@@ -257,7 +257,7 @@ button.ap-link {
   background: var(--ref-color-electric-blue-10);
   border-color: var(--ref-color-electric-blue-100);
   color: var(--ref-color-electric-blue-150);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
 }
 .ap-filter-chip[aria-pressed="true"]:hover {
   border-color: var(--ref-color-electric-blue-60);
@@ -293,8 +293,9 @@ button.ap-link {
 }
 
 .ap-filter-chip-count {
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-60);
   font-variant-numeric: tabular-nums;
 }

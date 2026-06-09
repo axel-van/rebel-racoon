@@ -95,9 +95,9 @@
 .conversation-status-card__heading {
   margin: 0;
   padding: 2px var(--ref-spacing-xxs);
-  font-size: 10px;
-  line-height: var(--ref-font-line-height-xs);
-  font-weight: var(--ref-font-weight-extra-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-60);
   display: flex;
   align-items: center;
@@ -106,7 +106,7 @@
 
 .conversation-status-card__heading-count {
   color: var(--ref-color-grey-100);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   letter-spacing: normal;
   text-transform: none;
 }
@@ -117,8 +117,9 @@
   align-items: center;
   gap: var(--ref-spacing-xs);
   padding: var(--ref-spacing-xxs);
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-100);
 }
 
@@ -142,8 +143,9 @@
   text-align: left;
   cursor: pointer;
   font-family: inherit;
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-100);
   transition: background-color var(--ref-animation-short) var(--app-ease-out);
 }
@@ -268,7 +270,9 @@
    the Drafts / Outputs rows when the count is 0. Also rendered as a
    block hint inside the Sources section when no source is attached. */
 .conversation-status-card__empty {
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
   font-style: italic;
 }
@@ -276,5 +280,5 @@
 .conversation-status-card__empty--block {
   padding: var(--ref-spacing-xs) var(--ref-spacing-xxs);
   font-style: normal;
-  line-height: var(--ref-font-line-height-sm);
+  line-height: var(--sys-text-style-body-line-height);
 }

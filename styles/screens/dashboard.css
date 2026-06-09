@@ -28,16 +28,17 @@
 }
 
 .dashboard__field-label {
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--sys-text-color-light);
 }
 
 .dashboard__form-hint {
   margin: var(--ref-spacing-xxxs) 0 0;
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 
 .dashboard__subtabs {
@@ -96,7 +97,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 
 .content-workspace__view-tabs .ap-tabs-nav {
@@ -142,8 +145,9 @@
   border-radius: var(--app-radius-sm);
   background: var(--ref-color-grey-05);
   color: var(--ref-color-grey-100);
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 
 .channel-chip i {
@@ -239,9 +243,9 @@
 
 .source-card__name {
   margin: 0;
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
-  line-height: var(--ref-font-line-height-sm);
+  font-size: var(--sys-text-style-h4-size);
+  font-weight: var(--sys-text-style-h4-weight);
+  line-height: var(--sys-text-style-h4-line-height);
   color: var(--ref-color-grey-100);
   white-space: nowrap;
   overflow: hidden;
@@ -254,8 +258,9 @@
 
 .source-card__sub {
   margin: 0;
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
   white-space: nowrap;
   overflow: hidden;
@@ -299,8 +304,9 @@
   border-radius: var(--app-radius-pill);
   background: var(--ref-color-mermaid-10);
   color: var(--ref-color-grey-100);
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-extra-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   white-space: nowrap;
   animation: source-card-processing-pulse 1.6s ease-in-out infinite;
 }
@@ -389,8 +395,9 @@
    wherever it appears. .ap-tag carries border-radius + padding ; we
    override font-size + letter-spacing for the UPPERCASE 10px treatment. */
 .idea-card__kind {
-  font-size: 10px;
-  font-weight: var(--ref-font-weight-extra-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
 }
 
 .idea-card__kind--stat {
@@ -438,16 +445,18 @@
   border-radius: var(--app-radius-pill);
   background: var(--ref-color-grey-05);
   color: var(--ref-color-grey-80);
-  font-size: 11px;
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
 }
 
 /* Extracted-at timestamp in the actions row. Pinned next to the Sources
    toggle on the left side, before the secondary actions cluster (Draft
    Post + more menu) on the right. */
 .idea-card__extracted {
-  font-size: 10px;
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-60);
   margin-right: auto;
   padding-left: var(--ref-spacing-xxs);
@@ -462,16 +471,17 @@
 
 .idea-card__title {
   margin: 0;
-  font-size: var(--ref-font-size-md);
-  line-height: var(--ref-font-line-height-lg);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
 }
 
 .idea-card__hook {
   margin: 0;
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-80);
 }
 
@@ -501,8 +511,9 @@
   border: 0;
   padding: 0;
   font-family: inherit;
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
   cursor: pointer;
   user-select: none;
@@ -552,8 +563,9 @@
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
 }
 
@@ -580,9 +592,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-electric-blue-100);
   text-decoration: none;
 }
@@ -731,7 +743,7 @@
 }
 
 .content-workspace__bulk-count {
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-electric-blue-150);
 }
 
@@ -771,7 +783,7 @@
 .confirm-modal__body {
   margin: 0;
   color: var(--ref-color-grey-100);
-  line-height: var(--ref-font-line-height-md);
+  line-height: var(--sys-text-style-body-line-height);
 }
 
 /* ---- Source-card overflow menu — DS .ap-action-dropdown anchored

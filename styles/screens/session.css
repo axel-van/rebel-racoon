@@ -154,8 +154,9 @@
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
   color: var(--ref-color-grey-150);
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
   box-shadow: var(--app-shadow-subtle);
 }
 
@@ -288,9 +289,9 @@
 }
 
 .session__assistant-wizard-bar .analyse__picker-title {
-  font-size: var(--ref-font-size-md);
-  line-height: var(--ref-font-line-height-md);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
 }
 
@@ -364,7 +365,7 @@
 }
 
 .session__assistant-wizard-bar .analyse__option-icon > i {
-  font-size: var(--ref-font-size-md);
+  font-size: var(--sys-icon-css-md);
   line-height: 1;
 }
 
@@ -381,8 +382,8 @@
   right: var(--ref-spacing-sm);
   top: 50%;
   transform: translateY(-50%);
-  font-size: var(--ref-font-size-lg);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h2-size);
+  font-weight: var(--sys-text-style-h2-weight);
   color: var(--ref-color-grey-100);
   font-family: inherit;
   line-height: 1;
@@ -398,7 +399,9 @@
 
 .session__assistant-wizard-bar .analyse__hints {
   margin-top: var(--ref-spacing-xs);
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 
 /* Lot 13 — session screen lost the workspace tabs (Content + Context) so
@@ -499,17 +502,18 @@
 .empty-chat__hello {
   margin: 0;
   font-family: var(--ref-font-family);
-  font-size: var(--app-text-hero-size);
-  line-height: var(--app-text-hero-line);
-  font-weight: var(--app-text-hero-weight);
+  font-size: var(--sys-text-style-marketing-size);
+  line-height: var(--sys-text-style-marketing-line-height);
+  font-weight: var(--sys-text-style-marketing-weight);
   letter-spacing: -0.01em;
   color: var(--ref-color-grey-100);
 }
 
 .empty-chat__sub {
   max-width: 440px;
-  font-size: var(--app-text-message-size);
-  line-height: var(--app-text-message-line);
+  font-size: var(--sys-text-style-subtitle-size);
+  line-height: var(--sys-text-style-subtitle-line-height);
+  font-weight: var(--sys-text-style-subtitle-weight);
   color: var(--ref-color-grey-60);
 }
 
@@ -530,9 +534,9 @@
   width: 100%;
   max-width: 1040px;
   text-align: left;
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-100);
 }
 
@@ -625,6 +629,7 @@
   position: absolute;
   right: -12px;
   bottom: -16px;
+  /* decorative glyph — outside DS type scale */
   font-size: 104px;
   line-height: 1;
   color: var(--card-accent);
@@ -635,17 +640,18 @@
 
 .starter-card__title {
   position: relative;
-  font-size: 19px;
-  line-height: 24px;
-  font-weight: var(--app-text-hero-weight);
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  font-weight: var(--sys-text-style-h2-weight);
   letter-spacing: -0.01em;
   color: var(--ref-color-grey-100);
 }
 
 .starter-card__subtitle {
   position: relative;
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
   max-width: 22ch;
 }
@@ -753,8 +759,9 @@
   border: 1px solid var(--ref-color-grey-10);
   border-radius: var(--app-radius-md);
   color: var(--ref-color-grey-80);
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 
 /* Soft pulse on the pill while the AI is still thinking. */
@@ -840,13 +847,14 @@
 .extraction-turn__analyzed-row {
   display: flex;
   gap: var(--ref-spacing-xxxs);
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-100);
 }
 
 .extraction-turn__analyzed-row strong {
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 /* Idea card in the conversation — reuses the right-panel card wholesale
@@ -952,8 +960,9 @@
      outside the textarea, so this padding only affects the input text). */
   padding: var(--ref-spacing-xxs);
   font-family: inherit;
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-100);
   /* Floor at 2 lines so a fresh composer always reads at the same
      height; cap at 12 so a long paste doesn't push the toolbar — or
@@ -1044,8 +1053,9 @@
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxxs);
   padding: 0 var(--ref-spacing-xxs);
-  font-size: 11px;
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
 }
 
@@ -1060,8 +1070,9 @@
   background: var(--ref-color-grey-05);
   border: 1px solid var(--app-border-soft);
   font-family: inherit;
-  font-size: 10px;
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-80);
 }
 
@@ -1072,9 +1083,9 @@
   align-items: center;
   gap: var(--ref-spacing-xxs);
   padding: var(--ref-spacing-xs) 0;
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-100);
 }
 
@@ -1092,8 +1103,9 @@
   border: 0;
   border-radius: var(--app-radius-xl);
   font-family: inherit;
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
   cursor: pointer;
   text-align: left;
@@ -1177,8 +1189,9 @@
    "N installed" label). */
 .assistant-attach__menu-label {
   padding: var(--ref-spacing-xxs) var(--ref-spacing-xs) var(--app-spacing-micro);
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--sys-text-color-light);
 }
 
@@ -1254,7 +1267,9 @@
 }
 
 .composer-mention-picker__header {
-  font-size: 10px;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
   padding: var(--ref-spacing-xxs) var(--ref-spacing-xs) 2px;
 }
@@ -1309,7 +1324,9 @@
 
 .composer-mention-picker__row-name {
   flex: 1;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-100);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1317,7 +1334,9 @@
 }
 
 .composer-mention-picker__row-kind {
-  font-size: 11px;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   text-transform: lowercase;
   color: var(--ref-color-grey-60);
   flex-shrink: 0;
@@ -1325,7 +1344,9 @@
 
 .composer-mention-picker__empty {
   padding: var(--ref-spacing-xs);
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   text-align: center;
 }
 
@@ -1603,7 +1624,7 @@ body.hide-playbook-colors .composer-context__dot {
 .session__context-option-title {
   display: block;
   color: var(--ref-color-grey-100);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 .session__context-option .muted {
@@ -1652,8 +1673,9 @@ body.hide-playbook-colors .composer-context__dot {
 
 .session__component-section h4 {
   margin: 0;
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
   color: var(--ref-color-grey-100);
 }
 
@@ -1689,16 +1711,17 @@ body.hide-playbook-colors .composer-context__dot {
 }
 
 .session__component-section dl dt {
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
   color: var(--sys-text-color-light);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   margin: 0;
 }
 
 .session__component-section dl dd {
   margin: 0;
   color: var(--ref-color-grey-100);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 .session__component-brand {

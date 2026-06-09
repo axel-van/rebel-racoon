@@ -86,7 +86,9 @@
   width: 100%;
   text-align: left;
   font-family: inherit;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   background: transparent;
   border: 0;
   border-bottom: 1px solid var(--app-border-soft);
@@ -175,15 +177,16 @@
 .analyse__picker-subtitle {
   margin: 0;
   width: 100%;
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 
 .analyse__picker-title {
   margin: 0;
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
   color: var(--ref-color-grey-100);
   flex: 1 1 auto;
   min-width: 0;
@@ -191,8 +194,9 @@
 
 .analyse__picker-step {
   flex-shrink: 0;
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -207,8 +211,9 @@
   background: var(--ref-color-grey-05);
   border: 1px solid var(--app-border-soft);
   color: var(--sys-text-color-light);
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
@@ -256,7 +261,7 @@
 }
 
 .analyse__option-label {
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-100);
 }
 
@@ -278,7 +283,7 @@
 .analyse__stepper-count {
   min-width: 2ch;
   text-align: center;
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   font-variant-numeric: tabular-nums;
   color: var(--ref-color-grey-100);
 }
@@ -315,13 +320,15 @@
   background: transparent;
   padding: 0;
   font-family: inherit;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-100);
 }
 
 .analyse__option-input::placeholder {
   color: var(--sys-text-color-light);
-  font-weight: var(--ref-font-weight-regular);
+  font-weight: var(--sys-text-style-body-weight);
 }
 
 .analyse__option-input:focus {
@@ -367,7 +374,9 @@
 
 .analyse__hints {
   margin: 0;
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   text-align: center;
 }
 
@@ -377,6 +386,8 @@
   border: 1px solid var(--app-border-soft);
   border-radius: var(--app-radius-sm);
   font-family: inherit;
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: inherit;
 }

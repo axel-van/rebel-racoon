@@ -43,8 +43,9 @@
   padding: 0;
   cursor: pointer;
   font-family: inherit;
-  font-size: var(--ref-font-size-md);
-  font-weight: var(--ref-font-weight-extra-bold);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
   transition: color var(--ref-animation-short) var(--app-ease-out);
 }
@@ -83,9 +84,9 @@
   border-radius: var(--app-radius-pill);
   background: var(--ref-color-mermaid-gradient-background);
   color: var(--ref-color-white);
-  font-size: var(--app-text-micro-sm);
-  font-weight: var(--ref-font-weight-extra-bold);
-  line-height: 1.4;
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  line-height: var(--sys-text-style-caption-line-height);
   flex-shrink: 0;
 }
 
@@ -114,8 +115,9 @@
   border: 0;
   border-radius: var(--app-radius-button-sm);
   font-family: inherit;
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-regular);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-100);
   text-align: left;
   cursor: pointer;
@@ -171,8 +173,9 @@
   background: var(--ref-color-white);
   border: 1px solid var(--app-border-soft);
   font-family: inherit;
-  font-size: var(--app-text-micro-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-80);
   opacity: 0;
   transition: opacity var(--ref-animation-short) var(--app-ease-out);
@@ -197,9 +200,9 @@
 
 .app-sidebar__section-heading {
   margin: var(--ref-spacing-xs) var(--ref-spacing-xxs) var(--ref-spacing-xxs);
-  font-size: var(--app-text-micro-sm);
-  line-height: var(--ref-font-line-height-xs);
-  font-weight: var(--ref-font-weight-extra-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-60);
 }
 
@@ -239,9 +242,9 @@
 
 .app-sidebar__row-title {
   flex: 1 1 auto;
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
-  font-weight: var(--ref-font-weight-regular);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-100);
   white-space: nowrap;
   overflow: hidden;
@@ -257,8 +260,9 @@
 }
 
 .app-sidebar__row-meta {
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
 }
 
@@ -428,14 +432,16 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
 }
 
 .app-sidebar__empty-text {
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-100);
 }
 
 .app-sidebar__empty-hint {
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-sm);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
 }
 
@@ -462,9 +468,9 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
 }
 
 .app-sidebar__user-name {
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-100);
   white-space: nowrap;
   overflow: hidden;
@@ -472,8 +478,9 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
 }
 
 .app-sidebar__user-plan {
-  font-size: var(--app-text-micro);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
   white-space: nowrap;
   overflow: hidden;
@@ -550,8 +557,9 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
   background: var(--ref-color-grey-05);
   border: 1px solid var(--app-border-soft);
   font-family: inherit;
-  font-size: var(--app-text-micro-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-80);
 }
 

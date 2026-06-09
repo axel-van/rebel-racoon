@@ -8,8 +8,9 @@ body {
   height: 100%;
   color: var(--sys-text-color-default);
   font-family: var(--ref-font-family);
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   background: var(--app-bg);
   overflow: hidden;
 }

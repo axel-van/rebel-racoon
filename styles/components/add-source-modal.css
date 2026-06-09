@@ -64,19 +64,22 @@
   border-radius: var(--ref-border-radius-md);
   background: var(--ref-color-electric-blue-10);
   color: var(--ref-color-electric-blue-100);
-  font-size: var(--ref-font-size-xl);
+  font-size: var(--sys-text-style-h0-size);
 }
 
 .add-source__dropzone-primary {
   margin: 0;
-  font-size: var(--ref-font-size-md);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
 }
 
 .add-source__dropzone-sub {
   margin: 0;
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 
 .add-source__error {
@@ -116,7 +119,7 @@
 }
 
 .add-source__file-icon > i {
-  font-size: var(--ref-font-size-md);
+  font-size: var(--sys-text-style-subtitle-size);
 }
 
 .add-source__file-body {
@@ -128,8 +131,9 @@
 }
 
 .add-source__file-name {
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
   color: var(--ref-color-grey-100);
   white-space: nowrap;
   overflow: hidden;
@@ -137,7 +141,9 @@
 }
 
 .add-source__file-meta {
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 
 .add-source__file-right {
@@ -210,7 +216,9 @@
   border-radius: var(--ref-border-radius-md);
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   font-family: inherit;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-100);
   background: var(--ref-color-white);
   box-sizing: border-box;
@@ -223,7 +231,9 @@
 }
 
 .add-source__sub {
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   margin: 0;
 }
 
@@ -234,8 +244,9 @@
 }
 
 .add-source__url-history-title {
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
   color: var(--ref-color-grey-100);
   margin: 0 0 var(--ref-spacing-xs);
 }
@@ -273,8 +284,9 @@
 }
 
 .add-source__connector-title {
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
   color: var(--ref-color-grey-100);
 }
 
@@ -288,7 +300,9 @@
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-60);
 }
 
@@ -303,7 +317,7 @@
 
 .add-source__breadcrumb-current {
   color: var(--ref-color-grey-100);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 .add-source__doc-list {
@@ -354,8 +368,9 @@
 }
 
 .add-source__doc-title {
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
   color: var(--ref-color-grey-100);
 }
 
@@ -394,7 +409,9 @@
   border: 1px solid var(--sys-color-border-color-default);
   border-radius: var(--app-radius-pill);
   font: inherit;
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
   cursor: pointer;
 }
@@ -474,8 +491,9 @@
 }
 
 .add-source-modal__library-card-name {
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
   color: var(--ref-color-grey-100);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -483,7 +501,9 @@
 }
 
 .add-source-modal__library-card-meta {
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
 }
 
@@ -504,18 +524,21 @@
 }
 
 .add-source-modal__library-empty i {
-  font-size: 32px;
+  font-size: 32px; /* decorative glyph — outside DS type scale */
   color: var(--ref-color-grey-30);
 }
 
 .add-source-modal__library-empty-title {
-  font-size: var(--ref-font-size-md);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
 }
 
 .add-source-modal__library-empty-sub {
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-80);
   max-width: 320px;
 }
@@ -527,6 +550,8 @@
 
 .add-source__connectors-empty {
   padding: var(--ref-spacing-md);
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   text-align: center;
 }

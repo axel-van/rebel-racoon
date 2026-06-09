@@ -62,8 +62,9 @@
 }
 
 .profile-tag__name {
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: inherit;
   white-space: nowrap;
   overflow: hidden;
@@ -105,16 +106,18 @@
 }
 
 .chat-turn-role {
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-100);
 }
 
 /* User + source-intake labels (Figma 25:1039 + 25:1130) — smaller caption size
    in electric-blue-100. */
 .chat-turn--user .chat-turn-role {
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-electric-blue-100);
 }
 
@@ -167,8 +170,9 @@
   border-top-right-radius: 0;
   max-width: 480px;
   min-height: 36px;
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-sm);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   transition:
     background var(--ref-animation-short) var(--app-ease-out),
     border-color var(--ref-animation-short) var(--app-ease-out);
@@ -185,7 +189,7 @@
    the renderer so the full filename is recoverable on hover / by SR. */
 .chat-bubble-source-intake__name {
   margin: 0;
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-electric-blue-150);
   white-space: nowrap;
   overflow: hidden;
@@ -213,8 +217,9 @@
   background: var(--ref-color-grey-10);
   color: var(--ref-color-grey-100);
   border-radius: var(--app-radius-pill);
-  font-size: 11px;
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   flex-shrink: 0;
 }
 
@@ -229,8 +234,9 @@
   border: 0;
   border-radius: var(--app-radius-pill);
   font: inherit;
-  font-size: 11px;
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   cursor: pointer;
   flex-shrink: 0;
   transition: background var(--ref-animation-short) var(--app-ease-out);
@@ -243,7 +249,7 @@
 }
 
 .chat-bubble-source-intake__pill i {
-  font-size: 10px;
+  font-size: var(--sys-icon-css-nano);
   transition: transform var(--ref-animation-short) var(--app-ease-out);
 }
 
@@ -266,22 +272,23 @@
 
 .chat-bubble-text {
   margin: 0;
-  line-height: var(--ref-font-line-height-md);
+  line-height: var(--sys-text-style-subtitle-line-height);
 }
 
 /* AI body uses the handoff message scale (15/1.55) — aired-out reading rhythm
    that matches Claude/ChatGPT bodies. */
 .chat-bubble--ai .chat-bubble-text {
   color: var(--ref-color-grey-100);
-  font-size: var(--app-text-message-size);
-  line-height: var(--app-text-message-line);
+  font-size: var(--sys-text-style-subtitle-size);
+  line-height: var(--sys-text-style-subtitle-line-height);
+  font-weight: var(--sys-text-style-subtitle-weight);
 }
 
 /* User bubble stays at the compact 14/20 caisse — the blue chip already
    reads well, no need to upscale. */
 .chat-bubble--user .chat-bubble-text {
   color: var(--ref-color-white);
-  line-height: var(--ref-font-line-height-md);
+  line-height: var(--sys-text-style-subtitle-line-height);
 }
 
 /* -- Content blocks rendered INSIDE an AI bubble --------------------------- */
@@ -294,8 +301,9 @@
   border: 1px solid var(--ref-color-grey-10);
   border-radius: var(--ref-border-radius-md);
   padding: var(--ref-spacing-xs);
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
 }
 
@@ -313,16 +321,17 @@
 }
 
 .chat-bubble-fields dt {
-  font-size: var(--ref-font-size-xs);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
   color: var(--sys-text-color-light);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   margin: 0;
 }
 
 .chat-bubble-fields dd {
   margin: 0;
   color: var(--ref-color-grey-100);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 /* ---------- Assistant choice (channel picker) ----------
@@ -345,11 +354,11 @@
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--app-radius-pill);
   background: var(--ref-color-white);
-  font-size: var(--ref-font-size-sm);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-body-bold-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-100);
   font-family: inherit;
-  line-height: 1.2;
+  line-height: var(--sys-text-style-body-bold-line-height);
   cursor: pointer;
   transition:
     border-color var(--ref-animation-short),
@@ -536,7 +545,7 @@ span.chat-bubble-choice-chip {
 
 .drafts-card__sub-quote {
   color: var(--sys-text-color-default);
-  font-weight: var(--ref-font-weight-bold);
+  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 /* "Review ›" label — electric blue to match the thread's clickable
@@ -600,19 +609,22 @@ span.chat-bubble-choice-chip {
 }
 
 .chat-bubble-choice-preview--bold {
-  font-weight: var(--ref-font-weight-extra-bold);
-  font-size: 14px;
+  font-weight: var(--sys-text-style-body-bold-weight);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
 }
 
 .chat-bubble-choice-preview--clean {
-  font-weight: var(--ref-font-weight-regular);
-  font-size: 13px;
+  font-weight: var(--sys-text-style-body-weight);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
   background: var(--ref-color-grey-80);
 }
 
 .chat-bubble-choice-preview--caption {
-  font-weight: var(--ref-font-weight-regular);
-  font-size: 11px;
+  font-weight: var(--sys-text-style-caption-weight);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
   background: rgba(0, 0, 0, 0.65);
 }
 
@@ -620,12 +632,14 @@ span.chat-bubble-choice-chip {
 .chat-bubble-choice-preview--default {
   background: transparent;
   color: var(--ref-color-grey-60);
-  font-size: 18px;
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  font-weight: var(--sys-text-style-h2-weight);
 }
 
 .chat-bubble-choice-label {
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-100);
 }

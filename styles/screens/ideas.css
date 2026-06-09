@@ -48,6 +48,7 @@
   margin: 0;
   font-size: var(--sys-text-style-body-size);
   line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-80);
 }
 
@@ -82,8 +83,9 @@
   border: 1px solid var(--app-border-soft);
   border-radius: var(--app-radius-pill);
   font-family: inherit;
-  font-size: var(--ref-font-size-xs);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-100);
   cursor: pointer;
   transition: all var(--ref-animation-short) var(--app-ease-out);
@@ -110,7 +112,9 @@
   border-radius: var(--app-radius-pill);
   background: var(--ref-color-grey-10);
   color: var(--ref-color-grey-100);
-  font-size: 10px;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
 }
 
 .ideas-view__filter.is-on .ideas-view__filter-count {
@@ -169,7 +173,9 @@
 .ideas-view__empty {
   padding: var(--ref-spacing-md);
   text-align: center;
-  font-size: var(--ref-font-size-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-60);
 }
 
