@@ -25,7 +25,7 @@ import {
   updateSourceClips,
   removeSources,
   renameSource,
-} from "../sources-stream.js?v=36";
+} from "../sources-stream.js?v=37";
 import { open as openAddSourceModal } from "./add-source-modal.js?v=31";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=23";
@@ -2065,7 +2065,10 @@ function renderSourceRow(src) {
     <div class="rpanel-sources__row" data-source-id="${src.id}">
       <div class="rpanel-sources__card-head">
         <span class="rpanel-sources__row-icon" aria-hidden="true"><i class="${icon}"></i></span>
-        <div class="rpanel-sources__row-name" title="${escapeAttr(src.filename)}">${escapeText(src.filename)}</div>
+        <div class="rpanel-sources__row-text">
+          <div class="rpanel-sources__row-name" title="${escapeAttr(src.filename)}">${escapeText(src.filename)}</div>
+          ${src.preview ? `<div class="rpanel-sources__row-preview" title="${escapeAttr(src.preview)}">${escapeText(src.preview)}</div>` : ""}
+        </div>
         ${statusEl}
         ${mentionBtn}
         ${moreMenu}

@@ -32,7 +32,7 @@ import {
   cancelUpload,
   getUploads,
   subscribeUploads,
-} from "../sources-stream.js?v=36";
+} from "../sources-stream.js?v=37";
 
 let backdrop, modal, tabsEl, contentEl, footerEl, fileInput;
 let initialized = false;

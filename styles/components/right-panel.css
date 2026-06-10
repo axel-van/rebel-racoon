@@ -1018,6 +1018,16 @@
   font-size: var(--sys-icon-css-sm);
 }
 
+/* Name + optional preview snippet share a column so a pasted-text source
+   shows a clean title with a muted one-line excerpt beneath it. */
+.rpanel-sources__row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .rpanel-sources__row-name {
   flex: 1;
   min-width: 0;
@@ -1026,6 +1036,20 @@
   font-weight: var(--sys-text-style-h3-weight);
   line-height: var(--sys-text-style-h3-line-height);
   color: var(--ref-color-grey-100);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Inside the text column the name hugs its line instead of stretching. */
+.rpanel-sources__row-text .rpanel-sources__row-name {
+  flex: none;
+}
+
+.rpanel-sources__row-preview {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

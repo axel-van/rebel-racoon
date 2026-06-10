@@ -85,7 +85,7 @@ import {
   updateSourceClips,
   extractClipsForSource,
   setSourceIdeaCount,
-} from "../sources-stream.js?v=36";
+} from "../sources-stream.js?v=37";
 import { renderClipCard } from "../components/clip-card.js?v=7";
 import { showToast } from "../components/toast.js?v=20";
 import {
@@ -95,7 +95,7 @@ import {
   getActiveBatchRef as getActiveDraftsBatchRef,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=152";
+} from "../components/right-panel.js?v=153";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=2";

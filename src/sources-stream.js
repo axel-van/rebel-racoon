@@ -469,18 +469,31 @@ export function startUrlImport(url, sessionId) {
 // first non-empty line so the source list reads sensibly.
 export function startTextImport(text, sessionId, title) {
   const trimmed = (text || "").trim();
-  const firstLine = trimmed.split("\n").find((l) => l.trim().length) || "";
-  const name = (title && title.trim()) || (firstLine ? truncate(firstLine.trim(), 60) : "Pasted text");
+  // One-line, whitespace-collapsed view of the blob — used for the preview
+  // snippet + word count. We never surface the full content as the title.
+  const collapsed = trimmed.replace(/\s+/g, " ").trim();
+  const firstLine = (trimmed.split("\n").find((l) => l.trim().length) || "").trim();
+  const wordCount = collapsed ? collapsed.split(" ").length : 0;
+  const looksLikeUrl = /^https?:\/\//i.test(firstLine);
+  // Clean, concise label: an explicit title wins; otherwise a short,
+  // title-like first line; otherwise the generic "Pasted text" (so a giant
+  // paragraph or a pasted URL never becomes the source name).
+  const name =
+    (title && title.trim()) || (firstLine && !looksLikeUrl && firstLine.length <= 52 ? firstLine : "Pasted text");
+  const preview = truncate(collapsed, 100);
+  const meta = `${wordCount} ${wordCount === 1 ? "word" : "words"}`;
   const upload = {
     id: newId("up"),
     name,
-    size: `${trimmed.length} characters`,
+    size: meta,
     kind: "Text",
     iconKey: "text",
     status: "processing",
     progress: 100,
     sourceId: null,
     sessionId,
+    preview,
+    wordCount,
   };
   uploads.unshift(upload);
 
@@ -496,6 +509,8 @@ export function startTextImport(text, sessionId, title) {
     signalColor: "grey",
     ideaCount: 0,
     addedAt: "just now",
+    preview,
+    wordCount,
   });
   notifySources(sessionId);
   notifyUploads();
