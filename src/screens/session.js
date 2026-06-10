@@ -921,6 +921,14 @@ function renderComposer(attachedContext, session, selectable) {
                     </div>
                   </div>
                 </button>
+                <button type="button" class="ap-action-dropdown-item" data-add-source="text" role="menuitem">
+                  <i class="ap-icon-file--text"></i>
+                  <div class="ap-action-dropdown-item-text">
+                    <div class="ap-action-dropdown-item-label-container">
+                      <span class="ap-action-dropdown-item-label">Paste text</span>
+                    </div>
+                  </div>
+                </button>
                 ${renderConnectorsSubmenu()}
               </div>
             </div>
@@ -3867,9 +3875,16 @@ function bindSession(root, session) {
       const addSrcItem = event.target.closest("[data-add-source]");
       if (addSrcItem) {
         event.preventDefault();
-        startPillFromKind(root, session, addSrcItem.dataset.addSource);
+        const kind = addSrcItem.dataset.addSource;
         const menu = root.querySelector("[data-assistant-attach-menu]");
         if (menu) menu.hidden = true;
+        // Paste text needs the textarea UI — open the modal on its tab.
+        // The scripted kinds (pdf / video / url) attach inline instead.
+        if (kind === "text") {
+          openAddSourceModal({ tab: "pasteText", currentSessionId: session.id });
+        } else {
+          startPillFromKind(root, session, kind);
+        }
         return;
       }
 
