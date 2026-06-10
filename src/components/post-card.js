@@ -87,6 +87,13 @@ export function renderPostCard(post, opts = {}) {
     editorBody = `<div class="posts__card-body">${bodyParagraphs} ${hashtags} ${cta}</div>`;
   }
 
+  // Per-network character count (alpha feedback #3 — Mari wanted an
+  // at-a-glance count). Mirrors the DS "CharacterCounts" component: a
+  // small chip with the network's full-colour logo + the remaining
+  // characters, turning red when the draft runs over the network limit.
+  // Hidden while editing / regenerating since the count is mid-flux.
+  const charCount = !editing && !regenerating ? renderCharCount(post) : "";
+
   const editActions = editing
     ? `<div class="posts__card-edit-actions">
         <button type="button" class="ap-button ghost grey" data-post-edit-cancel="${post.id}">Cancel</button>
@@ -158,7 +165,7 @@ export function renderPostCard(post, opts = {}) {
             </div>
           </header>
 
-          ${raw(editorBody)} ${raw(editActions)} ${raw(mediaBlock)} ${raw(engagement)}
+          ${raw(editorBody)} ${raw(charCount)} ${raw(editActions)} ${raw(mediaBlock)} ${raw(engagement)}
 
           <!-- Footer is a non-interactive LinkedIn-style preview of the
                engagement bar — decoration only, not real actions (see
@@ -238,6 +245,50 @@ export function renderPostCard(post, opts = {}) {
         </button>
       </div>
     </article>
+  `;
+}
+
+// Per-network character budgets + the full-colour DS logo used by the
+// count chip. `twitter` is the posts-store alias for `x`. Networks not
+// listed here render no chip (we don't know their limit).
+const NETWORK_CHAR_META = {
+  linkedin: { icon: "ap-icon-linkedin-official", limit: 3000, label: "LinkedIn" },
+  x: { icon: "ap-icon-x-official", limit: 280, label: "X" },
+  twitter: { icon: "ap-icon-x-official", limit: 280, label: "X" },
+  instagram: { icon: "ap-icon-instagram-official", limit: 2200, label: "Instagram" },
+  facebook: { icon: "ap-icon-facebook-official", limit: 63206, label: "Facebook" },
+  tiktok: { icon: "ap-icon-tiktok-official", limit: 2200, label: "TikTok" },
+  youtube: { icon: "ap-icon-youtube-official", limit: 5000, label: "YouTube" },
+};
+
+// Characters a post consumes against its network limit — body paragraphs,
+// hashtags, and the CTA, joined the way they'd publish (blank line between
+// blocks). Matches what the user sees in the rendered card.
+function usedCharacters(post) {
+  const blocks = [];
+  if (post.text?.length) blocks.push(post.text.join("\n\n"));
+  if (post.hashtags?.length) blocks.push(post.hashtags.map((h) => `#${h}`).join(" "));
+  if (post.cta) blocks.push(post.cta);
+  return blocks.join("\n\n").length;
+}
+
+// CharacterCounts chip (DS component 3185:48434). Shows the remaining
+// characters for the draft's network; goes red + negative when over.
+function renderCharCount(post) {
+  const meta = NETWORK_CHAR_META[(post.network || "").toLowerCase()];
+  if (!meta) return "";
+  const remaining = meta.limit - usedCharacters(post);
+  const over = remaining < 0;
+  const title = over
+    ? `${Math.abs(remaining)} characters over the ${meta.label} limit`
+    : `${remaining} characters left for ${meta.label}`;
+  return `
+    <div class="posts__card-count-row">
+      <span class="posts__charcount ${over ? "is-over" : ""}" title="${title}">
+        <i class="${meta.icon}" aria-hidden="true"></i>
+        <span class="posts__charcount-num">${remaining}</span>
+      </span>
+    </div>
   `;
 }
 

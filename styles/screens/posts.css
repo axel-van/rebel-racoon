@@ -586,3 +586,33 @@
   margin-top: var(--ref-spacing-xxxs);
   align-self: flex-start;
 }
+
+/* Per-network character count (DS CharacterCounts, node 3185:48434).
+   Right-aligned chip under the body: network logo + remaining chars,
+   flipping to a red pill when the draft runs over the network limit. */
+.posts__card-count-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: calc(-1 * var(--ref-spacing-xxs));
+}
+
+.posts__charcount {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  padding: 0 var(--ref-spacing-xxxs);
+  border-radius: var(--ref-border-radius-sm);
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  color: var(--ref-color-grey-80);
+}
+
+.posts__charcount i {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.posts__charcount.is-over {
+  background: var(--ref-color-red-10);
+  color: var(--ref-color-red-100);
+}
