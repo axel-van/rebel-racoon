@@ -31,7 +31,7 @@ const THINKING_MS = 400;
 const TOKEN_MS_MIN = 8;
 const TOKEN_MS_MAX = 18;
 
-export function startRewrite(sessionId, postId) {
+export function startRewrite(sessionId, postId, intent = "fresh") {
   if (!sessionId || !postId) return;
   if (inFlight.has(postId)) return;
 
@@ -45,7 +45,7 @@ export function startRewrite(sessionId, postId) {
   const controller = new AbortController();
   inFlight.set(postId, controller);
 
-  const final = fakeRewrite(post);
+  const final = fakeRewrite(post, intent);
 
   // Phase 1 — thinking. Single notify ; the card subscriber paints the
   // skeleton + Rewriting pill on its own.
@@ -80,35 +80,76 @@ export function startRewrite(sessionId, postId) {
   }, THINKING_MS);
 }
 
-// Generic transform — keeps hashtags + CTA untouched and rebuilds the
-// body around a fresh opening hook (picked per-network) and a
-// reordered tail. The new text is plausibly different from the source
-// so the streaming animation has something to show ; the underlying
-// data is preserved enough that the user recognises the same idea.
-function fakeRewrite(post) {
-  const network = (post.network || "linkedin").toLowerCase();
-  const hooks = HOOK_POOL[network] || HOOK_POOL.linkedin;
-  const hook = hooks[Math.floor(Math.random() * hooks.length)];
+function pick(list) {
+  return list[Math.floor(Math.random() * list.length)];
+}
 
-  const originalParagraphs = Array.isArray(post.text) ? post.text.filter(Boolean) : [];
-  let nextParagraphs;
-  if (originalParagraphs.length === 0) {
-    nextParagraphs = [hook];
-  } else if (originalParagraphs.length === 1) {
-    nextParagraphs = [hook, originalParagraphs[0]];
-  } else {
-    // Swap intro for the hook, push the original intro to the bottom as
-    // a closer — gives a feel of "regenerated angle on the same idea".
-    const [intro, ...rest] = originalParagraphs;
-    nextParagraphs = [hook, ...rest, intro];
+// Intent-driven transform (alpha feedback #14 — Goldie's "make it shorter /
+// longer / warmer" toggles). Keeps hashtags + CTA untouched; reshapes the
+// body per intent so the streaming animation shows a believable change:
+//   shorter  → condense to the punchiest single line
+//   longer   → keep the body, add an elaboration paragraph
+//   warmer   → prepend a warm, human opener
+//   formal   → prepend a measured, professional opener
+//   fresh    → swap the hook + reorder (the original regenerate behaviour)
+function fakeRewrite(post, intent = "fresh") {
+  const paras = Array.isArray(post.text) ? post.text.filter(Boolean) : [];
+  const base = { hashtags: post.hashtags || [], cta: post.cta || "" };
+  const network = (post.network || "linkedin").toLowerCase();
+
+  if (intent === "shorter") {
+    const joined = paras.join(" ").trim();
+    const firstSentence = (joined.match(/[^.!?]*[.!?]/)?.[0] || joined).trim();
+    return { ...base, text: [firstSentence || joined].filter(Boolean) };
+  }
+  if (intent === "longer") {
+    const addOn = pick(LONGER_ADDONS[network] || LONGER_ADDONS.linkedin);
+    return { ...base, text: [...(paras.length ? paras : [pick(HOOK_POOL[network] || HOOK_POOL.linkedin)]), addOn] };
+  }
+  if (intent === "warmer") {
+    return { ...base, text: [pick(WARMER_HOOKS), ...paras] };
+  }
+  if (intent === "formal") {
+    return { ...base, text: [pick(FORMAL_HOOKS), ...paras] };
   }
 
-  return {
-    text: nextParagraphs,
-    hashtags: post.hashtags || [],
-    cta: post.cta || "",
-  };
+  // fresh — swap intro for a new hook and push the old intro to the bottom.
+  const hook = pick(HOOK_POOL[network] || HOOK_POOL.linkedin);
+  let nextParagraphs;
+  if (paras.length === 0) nextParagraphs = [hook];
+  else if (paras.length === 1) nextParagraphs = [hook, paras[0]];
+  else {
+    const [intro, ...rest] = paras;
+    nextParagraphs = [hook, ...rest, intro];
+  }
+  return { ...base, text: nextParagraphs };
 }
+
+const WARMER_HOOKS = [
+  "Okay, real talk for a second —",
+  "I've been sitting with this one, and here's what keeps coming back to me:",
+  "Sharing this because it genuinely changed how I think:",
+  "This one's close to my heart, so bear with me:",
+];
+
+const FORMAL_HOOKS = [
+  "A considered take on what the data shows:",
+  "Here is our position, stated plainly:",
+  "A brief summary of the findings and what they mean:",
+  "For those evaluating this closely, the essentials:",
+];
+
+const LONGER_ADDONS = {
+  linkedin: [
+    "Worth adding: the second-order effect is what compounds. The first win is obvious; the durable one shows up three quarters later when the habit has set in.",
+    "One more thing I'd flag — the failure mode here is doing it halfway. Commit fully or skip it; the middle ground is where teams quietly lose months.",
+  ],
+  twitter: ["(And if you've tried this, reply with what broke — the edge cases are the interesting part.)"],
+  instagram: [
+    "Save this for the next time you're staring at a blank draft — it's the nudge that gets the first line out.",
+  ],
+  tiktok: ["Stick around to the end — the last step is the one everyone skips and it's the one that matters."],
+};
 
 const HOOK_POOL = {
   linkedin: [

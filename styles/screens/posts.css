@@ -616,3 +616,55 @@
   background: var(--ref-color-red-10);
   color: var(--ref-color-red-100);
 }
+
+/* Regenerate dropdown (#14) — the sparkles action opens a menu of rewrite
+   intents. The actions stack sits at the card's right edge, so the menu
+   opens leftwards to stay on-screen. */
+.posts__rewrite {
+  position: relative;
+}
+
+.posts__rewrite-menu {
+  position: absolute;
+  top: 0;
+  right: calc(100% + var(--ref-spacing-xxs));
+  z-index: 20;
+  min-width: 168px;
+  display: flex;
+  flex-direction: column;
+  padding: var(--ref-spacing-xxs);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  box-shadow: 0 8px 24px rgb(26 31 54 / 14%);
+}
+
+.posts__rewrite-menu[hidden] {
+  display: none;
+}
+
+.posts__rewrite-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border: 0;
+  border-radius: var(--ref-border-radius-sm);
+  background: transparent;
+  text-align: left;
+  font-family: inherit;
+  font-size: var(--sys-text-style-body-size);
+  color: var(--ref-color-grey-100);
+  cursor: pointer;
+}
+
+.posts__rewrite-item:hover {
+  background: var(--ref-color-grey-05);
+}
+
+.posts__rewrite-sep {
+  height: 1px;
+  margin: var(--ref-spacing-xxs) 0;
+  background: var(--ref-color-grey-10);
+}

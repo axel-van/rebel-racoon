@@ -207,15 +207,67 @@ export function renderPostCard(post, opts = {}) {
               </button>`
             : "",
         )}
-        <button
-          type="button"
-          class="ap-icon-button stroked ${regenerating ? "loading" : ""}"
-          aria-label="Regenerate draft"
-          data-post-rewrite="${post.id}"
-          ${regenerating ? "disabled" : ""}
-        >
-          <i class="ap-icon-sparkles"></i>
-        </button>
+        <div class="posts__rewrite">
+          <button
+            type="button"
+            class="ap-icon-button stroked ${regenerating ? "loading" : ""}"
+            aria-label="Regenerate draft"
+            aria-haspopup="true"
+            aria-expanded="false"
+            data-post-rewrite-menu="${post.id}"
+            ${regenerating ? "disabled" : ""}
+          >
+            <i class="ap-icon-sparkles"></i>
+          </button>
+          <div class="posts__rewrite-menu" data-post-rewrite-menu-for="${post.id}" role="menu" hidden>
+            <button
+              type="button"
+              class="posts__rewrite-item"
+              role="menuitem"
+              data-post-rewrite-intent="shorter"
+              data-post-id="${post.id}"
+            >
+              Shorter
+            </button>
+            <button
+              type="button"
+              class="posts__rewrite-item"
+              role="menuitem"
+              data-post-rewrite-intent="longer"
+              data-post-id="${post.id}"
+            >
+              Longer
+            </button>
+            <button
+              type="button"
+              class="posts__rewrite-item"
+              role="menuitem"
+              data-post-rewrite-intent="warmer"
+              data-post-id="${post.id}"
+            >
+              Warmer
+            </button>
+            <button
+              type="button"
+              class="posts__rewrite-item"
+              role="menuitem"
+              data-post-rewrite-intent="formal"
+              data-post-id="${post.id}"
+            >
+              More formal
+            </button>
+            <div class="posts__rewrite-sep" role="separator"></div>
+            <button
+              type="button"
+              class="posts__rewrite-item"
+              role="menuitem"
+              data-post-rewrite-intent="fresh"
+              data-post-id="${post.id}"
+            >
+              <i class="ap-icon-sparkles" aria-hidden="true"></i><span>Regenerate</span>
+            </button>
+          </div>
+        </div>
         <button
           type="button"
           class="ap-icon-button stroked"

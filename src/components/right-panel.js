@@ -13,7 +13,7 @@ import {
   updatePostContent,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=28";
-import { renderPostCard } from "./post-card.js?v=32";
+import { renderPostCard } from "./post-card.js?v=33";
 import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1";
@@ -437,6 +437,10 @@ export function init() {
       );
       if (!insideCurrent) commitEdit(editingPostId);
     }
+    // Dismiss any open regenerate dropdown (#14) on an outside click.
+    if (!event.target.closest("[data-post-rewrite-menu], .posts__rewrite-menu")) {
+      closeAllRewriteMenus();
+    }
     if (event.target.closest("[data-rpanel-close]")) {
       closePanel();
       return;
@@ -494,9 +498,24 @@ export function init() {
       cancelEdit(cancelBtn.dataset.postEditCancel);
       return;
     }
-    const rewriteBtn = event.target.closest("[data-post-rewrite]");
-    if (rewriteBtn) {
-      onPostRewrite(rewriteBtn.dataset.postRewrite);
+    // Regenerate dropdown (#14) — the sparkles button toggles a menu of
+    // rewrite intents (shorter / longer / warmer / more formal / regenerate).
+    const rewriteMenuBtn = event.target.closest("[data-post-rewrite-menu]");
+    if (rewriteMenuBtn) {
+      const id = rewriteMenuBtn.dataset.postRewriteMenu;
+      const menu = document.querySelector(`[data-post-rewrite-menu-for="${cssEscape(id)}"]`);
+      const willOpen = menu && menu.hidden;
+      closeAllRewriteMenus();
+      if (menu && willOpen) {
+        menu.hidden = false;
+        rewriteMenuBtn.setAttribute("aria-expanded", "true");
+      }
+      return;
+    }
+    const rewriteIntentBtn = event.target.closest("[data-post-rewrite-intent]");
+    if (rewriteIntentBtn) {
+      closeAllRewriteMenus();
+      onPostRewrite(rewriteIntentBtn.dataset.postId, rewriteIntentBtn.dataset.postRewriteIntent);
       return;
     }
     const scheduleBtn = event.target.closest("[data-post-schedule]");
@@ -1558,15 +1577,31 @@ function renderDraftsEmpty() {
 
 // --- Per-card action handlers ------------------------------------------
 
-function onPostRewrite(postId) {
+function onPostRewrite(postId, intent = "fresh") {
   const sid = activeSessionId();
   if (!sid) return;
   // draft-rewrite.js owns the full visual flow: ghost skeleton →
   // streaming → commit. Loaded lazily so the rewrite code is only
-  // pulled in when the user actually triggers a regen.
-  import("../draft-rewrite.js?v=2").then(({ startRewrite }) => {
-    startRewrite(sid, postId);
+  // pulled in when the user actually triggers a regen. `intent` biases
+  // the rewrite (shorter / longer / warmer / formal / fresh).
+  import("../draft-rewrite.js?v=3").then(({ startRewrite }) => {
+    startRewrite(sid, postId, intent);
   });
+}
+
+// Close every open regenerate dropdown and reset its trigger's aria state.
+function closeAllRewriteMenus() {
+  document.querySelectorAll(".posts__rewrite-menu:not([hidden])").forEach((menu) => {
+    menu.hidden = true;
+    const id = menu.getAttribute("data-post-rewrite-menu-for");
+    if (id)
+      document.querySelector(`[data-post-rewrite-menu="${cssEscape(id)}"]`)?.setAttribute("aria-expanded", "false");
+  });
+}
+
+function cssEscape(value) {
+  if (typeof CSS !== "undefined" && typeof CSS.escape === "function") return CSS.escape(value);
+  return String(value).replace(/[^a-zA-Z0-9_-]/g, "\\$&");
 }
 
 function onPostSchedule(postId) {
