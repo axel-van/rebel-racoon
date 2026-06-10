@@ -25,8 +25,8 @@ import {
   updateSourceClips,
   removeSources,
   renameSource,
-} from "../sources-stream.js?v=35";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=29";
+} from "../sources-stream.js?v=36";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=30";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=23";
 import { askConnector } from "../connector-ask.js?v=3";

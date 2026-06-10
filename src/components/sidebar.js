@@ -22,7 +22,7 @@ import { getConnectedConnectors, subscribe as subscribeConnectors } from "../con
 import { closePanel as closeRightPanel } from "./right-panel.js?v=150";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=41";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=28";
-import { clearSession as clearSourcesSession } from "../sources-stream.js?v=34";
+import { clearSession as clearSourcesSession } from "../sources-stream.js?v=36";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the

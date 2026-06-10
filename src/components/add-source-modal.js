@@ -27,11 +27,12 @@ import {
   classifyFile,
   startFileUpload,
   startUrlImport,
+  startTextImport,
   startConnectorImport,
   cancelUpload,
   getUploads,
   subscribeUploads,
-} from "../sources-stream.js?v=34";
+} from "../sources-stream.js?v=36";
 
 let backdrop, modal, tabsEl, contentEl, footerEl, fileInput;
 let initialized = false;
@@ -42,6 +43,7 @@ let inlineErrorTimeout = null;
 const TABS = [
   { id: "upload", label: "Upload" },
   { id: "url", label: "URL" },
+  { id: "pasteText", label: "Paste text" },
   { id: "connectors", label: "Connectors" },
 ];
 
@@ -55,6 +57,10 @@ const ACCEPT = ".pdf,.doc,.docx,.txt,.md,.mp4,.mov,.mp3,.wav,.m4a,.png,.jpg,.jpe
 const state = {
   activeTab: "upload",
   urlValue: "",
+  // Paste-text tab — the textarea content + a mini-history of text sources
+  // added during this modal trip.
+  pasteValue: "",
+  pasteHistory: [], // [{ uploadId }]
   inlineError: "",
   // Connector sub-state
   browsingConnectorId: null,
@@ -256,6 +262,73 @@ function isValidUrl(value) {
   return /^https?:\/\/[^\s]+$/.test(value.trim());
 }
 
+// ─── Paste text tab ──────────────────────────────────────────────────────
+//
+// Lets the user drop a raw blurb straight in (alpha feedback #4 — testers
+// hit friction having to "convert a text blurb to a PDF" first). Big
+// textarea + a visible "Paste from clipboard" button + an "Add text" CTA.
+
+function renderPasteTextTab() {
+  const hasText = state.pasteValue.trim().length > 0;
+  const count = state.pasteValue.length;
+  return html`
+    <div class="add-source__paste">
+      <div class="ap-form-field">
+        <div class="add-source__paste-label-row">
+          <label for="addSourcePasteInput">Paste your text</label>
+          <button type="button" class="ap-button transparent blue add-source__paste-clip" data-paste-clipboard>
+            <i class="ap-icon-copy"></i><span>Paste from clipboard</span>
+          </button>
+        </div>
+        <textarea
+          id="addSourcePasteInput"
+          class="add-source__paste-input"
+          data-paste-input
+          rows="10"
+          placeholder="Paste a transcript, a blog draft, notes, an email — anything Archie should read."
+        >
+${escapeHtml(state.pasteValue)}</textarea
+        >
+        <div class="add-source__paste-row">
+          <span class="add-source__sub muted"
+            >${count ? `${count} characters` : "No formatting needed — plain text is fine."}</span
+          >
+          <button type="button" class="ap-button primary orange" data-add-text ${hasText ? "" : "disabled"}>
+            <span>Add text</span>
+          </button>
+        </div>
+      </div>
+      ${raw(state.pasteHistory.length ? renderPasteHistory() : "")}
+    </div>
+  `;
+}
+
+function renderPasteHistory() {
+  const uploads = getUploads();
+  const items = state.pasteHistory.map((entry) => uploads.find((u) => u.id === entry.uploadId)).filter(Boolean);
+  if (items.length === 0) return "";
+  return `
+    <div class="add-source__url-history">
+      <h4 class="add-source__url-history-title">Added so far</h4>
+      <ul class="add-source__file-list">
+        ${items.map(renderUploadRow).join("")}
+      </ul>
+    </div>
+  `;
+}
+
+// Commit the textarea content as a Text source, then clear for the next one.
+function submitPastedText() {
+  const text = state.pasteValue;
+  if (!text.trim()) return;
+  const uploadId = startTextImport(text, state.currentSessionId);
+  state.tripUploadIds.add(uploadId);
+  state.pasteHistory.unshift({ uploadId });
+  state.pasteValue = "";
+  renderContent();
+  renderFooter();
+}
+
 // ─── Connectors tab ──────────────────────────────────────────────────────
 
 function renderConnectorsTab() {
@@ -404,6 +477,7 @@ function footerForState() {
 function renderContent() {
   if (state.activeTab === "upload") contentEl.innerHTML = renderUploadTab();
   else if (state.activeTab === "url") contentEl.innerHTML = renderUrlTab();
+  else if (state.activeTab === "pasteText") contentEl.innerHTML = renderPasteTextTab();
   else if (state.activeTab === "connectors") contentEl.innerHTML = renderConnectorsTab();
 }
 
@@ -538,6 +612,39 @@ function onClick(event) {
     return;
   }
 
+  // Paste from clipboard → fill the textarea (best-effort; clipboard read
+  // can be blocked, in which case we leave the textarea for manual paste).
+  if (event.target.closest("[data-paste-clipboard]")) {
+    if (navigator.clipboard?.readText) {
+      navigator.clipboard
+        .readText()
+        .then((text) => {
+          if (text) {
+            state.pasteValue = state.pasteValue ? `${state.pasteValue}\n${text}` : text;
+            renderContent();
+            const ta = contentEl.querySelector("[data-paste-input]");
+            if (ta) {
+              ta.focus();
+              ta.selectionStart = ta.selectionEnd = ta.value.length;
+            }
+          }
+        })
+        .catch(() => {
+          const ta = contentEl.querySelector("[data-paste-input]");
+          if (ta) ta.focus();
+        });
+    } else {
+      contentEl.querySelector("[data-paste-input]")?.focus();
+    }
+    return;
+  }
+
+  // Add pasted text as a source
+  if (event.target.closest("[data-add-text]")) {
+    submitPastedText();
+    return;
+  }
+
   // Connector connect — go through connectors-store so the settings drawer
   // stays in sync (FIND-01).
   const connectBtn = event.target.closest("[data-connector-connect]");
@@ -617,6 +724,19 @@ function onChange(event) {
 }
 
 function onInput(event) {
+  if (event.target.matches("[data-paste-input]")) {
+    state.pasteValue = event.target.value;
+    // Toggle the Add-text button without re-rendering (keeps caret/focus).
+    const btn = contentEl.querySelector("[data-add-text]");
+    if (btn) btn.toggleAttribute("disabled", state.pasteValue.trim().length === 0);
+    const meta = contentEl.querySelector(".add-source__paste-row .add-source__sub");
+    if (meta) {
+      meta.textContent = state.pasteValue.length
+        ? `${state.pasteValue.length} characters`
+        : "No formatting needed — plain text is fine.";
+    }
+    return;
+  }
   if (event.target.matches("[data-url-input]")) {
     state.urlValue = event.target.value;
     // Just enable/disable the Add URL button — re-render only the button state.
@@ -649,6 +769,12 @@ function onKeydown(event) {
     fileInput.click();
     return;
   }
+  // Submit pasted text with Cmd/Ctrl+Enter (plain Enter inserts newlines).
+  if (event.key === "Enter" && (event.metaKey || event.ctrlKey) && event.target.matches("[data-paste-input]")) {
+    event.preventDefault();
+    submitPastedText();
+    return;
+  }
   // Submit URL with Enter
   if (event.key === "Enter" && event.target.matches("[data-url-input]")) {
     event.preventDefault();
@@ -676,6 +802,8 @@ export function open(opts = {}) {
   // are visible in the dashboard Content panel, just not in the modal.
   state.tripUploadIds = new Set();
   state.urlHistory = [];
+  state.pasteValue = "";
+  state.pasteHistory = [];
   state.selections = {};
   // Active session — sources created during this modal trip land in
   // this session's per-session list in sources-stream.
@@ -691,7 +819,11 @@ export function open(opts = {}) {
   // startConnectorImport), so no separate attach callback is needed.
   if (!unsubscribeUploads) {
     unsubscribeUploads = subscribeUploads(() => {
-      if (state.activeTab === "upload" || (state.activeTab === "url" && state.urlHistory.length)) {
+      if (
+        state.activeTab === "upload" ||
+        (state.activeTab === "url" && state.urlHistory.length) ||
+        (state.activeTab === "pasteText" && state.pasteHistory.length)
+      ) {
         renderContent();
       }
       renderFooter();

@@ -31,7 +31,7 @@
 // (a single shared place for the wording).
 
 import { appendExtractedIdeas, removeIdeasForSources, removeIdeas } from "./library.js?v=32";
-import { removeSources as streamRemoveSources, getSources as streamGetSources } from "./sources-stream.js?v=34";
+import { removeSources as streamRemoveSources, getSources as streamGetSources } from "./sources-stream.js?v=36";
 import { open as openConfirmModal } from "./components/confirm-modal.js?v=22";
 import { showToast } from "./components/toast.js?v=20";
 

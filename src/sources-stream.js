@@ -463,6 +463,51 @@ export function startUrlImport(url, sessionId) {
   return upload.id;
 }
 
+// Pasted-text import (alpha feedback #4 — no more "convert your blurb to a
+// PDF first"). Skips the upload phase entirely: a raw text blob goes
+// straight into Processing as a "Text" source. A title is derived from the
+// first non-empty line so the source list reads sensibly.
+export function startTextImport(text, sessionId, title) {
+  const trimmed = (text || "").trim();
+  const firstLine = trimmed.split("\n").find((l) => l.trim().length) || "";
+  const name = (title && title.trim()) || (firstLine ? truncate(firstLine.trim(), 60) : "Pasted text");
+  const upload = {
+    id: newId("up"),
+    name,
+    size: `${trimmed.length} characters`,
+    kind: "Text",
+    iconKey: "text",
+    status: "processing",
+    progress: 100,
+    sourceId: null,
+    sessionId,
+  };
+  uploads.unshift(upload);
+
+  const sourceId = newId("src");
+  upload.sourceId = sourceId;
+  const list = getOrInitSessionSources(sessionId);
+  list.unshift({
+    id: sourceId,
+    filename: name,
+    kind: "Text",
+    status: "Processing",
+    signal: "Pending",
+    signalColor: "grey",
+    ideaCount: 0,
+    addedAt: "just now",
+  });
+  notifySources(sessionId);
+  notifyUploads();
+
+  setTimeout(() => transitionToDone(upload), randomProcessingMs());
+  return upload.id;
+}
+
+function truncate(s, max) {
+  return s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s;
+}
+
 // Connector import — same shape as URL: skip uploading, straight to processing.
 export function startConnectorImport(connector, doc, sessionId) {
   const upload = {
