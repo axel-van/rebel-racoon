@@ -72,7 +72,7 @@ import {
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=24";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=13";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=31";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=30";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=31";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=6";
 import {
   classifyFile,

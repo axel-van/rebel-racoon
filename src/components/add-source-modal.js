@@ -374,6 +374,7 @@ function renderConnectorBrowse() {
   const docs = connectorDocs[state.browsingConnectorId] || [];
   const sel = state.selections[state.browsingConnectorId] || new Set();
   const selectedCount = sel.size;
+  const allSelected = docs.length > 0 && docs.every((d) => sel.has(d.id));
   return html`
     <div class="add-source__breadcrumb">
       <button type="button" class="ap-button transparent grey add-source__breadcrumb-back" data-connector-back>
@@ -383,6 +384,17 @@ function renderConnectorBrowse() {
       <span class="add-source__breadcrumb-sep">/</span>
       <span class="add-source__breadcrumb-current">${c ? escapeHtml(c.name) : ""}</span>
     </div>
+    ${raw(
+      docs.length
+        ? `<div class="add-source__doc-bulkbar">
+            <label class="ap-checkbox-container add-source__doc-check">
+              <input type="checkbox" data-doc-select-all ${allSelected ? "checked" : ""} aria-label="Select all" />
+              <i></i>
+            </label>
+            <span class="add-source__doc-bulklabel">${selectedCount ? `${selectedCount} selected` : `Select all · ${docs.length} items`}</span>
+          </div>`
+        : "",
+    )}
     <ul class="add-source__doc-list">
       ${raw(docs.map((doc) => renderDocRow(doc, sel.has(doc.id))).join(""))}
     </ul>
@@ -390,19 +402,64 @@ function renderConnectorBrowse() {
   `;
 }
 
+// Parse "32 files" → 32; defaults to 1 when no count is present.
+function folderFileCount(doc) {
+  const m = /(\d+)\s+files?/i.exec(doc.size || "");
+  return m ? parseInt(m[1], 10) || 1 : 1;
+}
+
+function isFolderDoc(doc) {
+  return (doc.kind || "").toLowerCase() === "folder";
+}
+
+// Bulk folder ingest is capped so the proto doesn't flood the source list
+// with hundreds of rows; the cap is surfaced in the import-complete toast.
+const FOLDER_BATCH_CAP = 8;
+
+// Expand the current selection into the concrete docs to import: a selected
+// folder fans out into N synthetic file docs (capped), every other doc
+// imports 1:1. Drives both the footer count and the actual import.
+function expandSelectedDocs(connectorId) {
+  const c = findConnector(connectorId);
+  const docs = connectorDocs[connectorId] || [];
+  const sel = state.selections[connectorId] || new Set();
+  const out = [];
+  for (const doc of docs) {
+    if (!sel.has(doc.id)) continue;
+    if (isFolderDoc(doc)) {
+      const total = folderFileCount(doc);
+      const n = Math.min(total, FOLDER_BATCH_CAP);
+      const base = (doc.title || "Folder").replace(/\/$/, "");
+      for (let i = 0; i < n; i += 1) {
+        out.push({ title: `${base} / item ${i + 1}`, kind: c?.name || "File", iconKey: "file", size: c?.name || "" });
+      }
+    } else {
+      out.push(doc);
+    }
+  }
+  return out;
+}
+
+function expandedImportCount(connectorId) {
+  return expandSelectedDocs(connectorId).length;
+}
+
 function renderDocRow(doc, selected) {
+  const folder = isFolderDoc(doc);
+  const icon = folder ? "ap-icon-folder" : iconFor(doc.iconKey);
+  const meta = folder ? `Folder · imports ${folderFileCount(doc)} files` : escapeHtml(doc.size || doc.kind || "");
   return `
-    <li class="add-source__doc-row${selected ? " selected" : ""}">
+    <li class="add-source__doc-row${selected ? " selected" : ""}${folder ? " is-folder" : ""}">
       <label class="ap-checkbox-container add-source__doc-check">
         <input type="checkbox" data-doc-toggle="${escapeHtml(doc.id)}" ${selected ? "checked" : ""} />
         <i></i>
       </label>
       <span class="add-source__doc-icon" aria-hidden="true">
-        <i class="${iconFor(doc.iconKey)}"></i>
+        <i class="${icon}"></i>
       </span>
       <div class="add-source__doc-body">
         <div class="add-source__doc-title">${escapeHtml(doc.title)}</div>
-        <div class="muted">${escapeHtml(doc.size || doc.kind || "")}</div>
+        <div class="muted">${meta}</div>
       </div>
     </li>
   `;
@@ -420,13 +477,15 @@ function footerForState() {
   // Connector browse sub-screen has its own footer (Cancel + Import N).
   if (state.activeTab === "connectors" && state.browsingConnectorId) {
     const sel = state.selections[state.browsingConnectorId] || new Set();
-    const n = sel.size;
+    // Count the real import size: a selected folder expands to its (capped)
+    // file count, so the button reflects how many sources will actually land.
+    const n = expandedImportCount(state.browsingConnectorId);
     return {
       visible: true,
       html: `
         <div class="ap-dialog-footer-right">
           <button type="button" class="ap-button transparent grey" data-connector-back>Cancel</button>
-          <button type="button" class="ap-button primary orange" data-connector-import ${n === 0 ? "disabled" : ""}>
+          <button type="button" class="ap-button primary orange" data-connector-import ${sel.size === 0 ? "disabled" : ""}>
             Import ${n} ${n === 1 ? "source" : "sources"}
           </button>
         </div>
@@ -680,19 +739,18 @@ function onClick(event) {
     return;
   }
 
-  // Browse Import
+  // Browse Import — expands selected folders into their (capped) contents so
+  // a folder pick ingests in bulk, then imports every resolved doc 1:1.
   if (event.target.closest("[data-connector-import]")) {
     const cid = state.browsingConnectorId;
     if (!cid) return;
     const c = findConnector(cid);
-    const docs = connectorDocs[cid] || [];
     const sel = state.selections[cid] || new Set();
     if (sel.size === 0) return;
-    for (const doc of docs) {
-      if (sel.has(doc.id)) {
-        const id = startConnectorImport(c, doc, state.currentSessionId);
-        state.tripUploadIds.add(id);
-      }
+    const resolved = expandSelectedDocs(cid);
+    for (const doc of resolved) {
+      const id = startConnectorImport(c, doc, state.currentSessionId);
+      state.tripUploadIds.add(id);
     }
     state.selections[cid] = new Set();
     state.browsingConnectorId = null;
@@ -705,6 +763,17 @@ function onChange(event) {
   if (event.target === fileInput) {
     const files = Array.from(fileInput.files || []);
     if (files.length) ingestFiles(files);
+    return;
+  }
+  // Select-all toggle — bulk-select / clear every doc in the connector.
+  const selectAll = event.target.closest("[data-doc-select-all]");
+  if (selectAll) {
+    const cid = state.browsingConnectorId;
+    if (!cid) return;
+    const docs = connectorDocs[cid] || [];
+    state.selections[cid] = selectAll.checked ? new Set(docs.map((d) => d.id)) : new Set();
+    renderContent();
+    renderFooter();
     return;
   }
   // Doc selection toggle

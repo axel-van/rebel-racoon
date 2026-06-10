@@ -358,6 +358,22 @@
   font-weight: var(--sys-text-style-body-bold-weight);
 }
 
+/* Bulk-select bar above the doc list — select-all + live selection count. */
+.add-source__doc-bulkbar {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs) 0;
+  border-bottom: 1px solid var(--ref-color-grey-20);
+  margin-bottom: var(--ref-spacing-xxs);
+}
+
+.add-source__doc-bulklabel {
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+
 .add-source__doc-list {
   list-style: none;
   margin: 0;
