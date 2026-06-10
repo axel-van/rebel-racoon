@@ -98,7 +98,7 @@ import {
 } from "../components/right-panel.js?v=150";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=1";
+import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=2";
 import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=5";
 import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=7";
 
