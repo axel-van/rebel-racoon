@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=41";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=40";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=41";
 import { isNewUser } from "../user-mode.js?v=22";
 import { getPath } from "../router.js?v=30";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -30,7 +30,7 @@ import { open as openAddSourceModal } from "./add-source-modal.js?v=30";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=23";
 import { askConnector } from "../connector-ask.js?v=3";
-import { renderConnectorLogo } from "../connectors-view.js?v=4";
+import { renderConnectorLogo } from "../connectors-view.js?v=5";
 import { open as openConnectorsModal } from "./connectors-modal.js?v=6";
 import { addMention as addComposerMention } from "../composer-mentions.js?v=6";
 import { iconFor } from "../file-kinds.js?v=20";

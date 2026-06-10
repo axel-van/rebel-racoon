@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=99";
-import { socialAccounts, chatStarters } from "../mocks.js?v=40";
+import { socialAccounts, chatStarters } from "../mocks.js?v=41";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
@@ -51,7 +51,7 @@ import * as inlineQuestion from "../inline-question.js?v=33";
 import * as clipStudio from "../clip-studio.js?v=8";
 import { askConnector } from "../connector-ask.js?v=3";
 import { getConnectedConnectors, findConnector } from "../connectors-store.js?v=23";
-import { renderConnectorLogo } from "../connectors-view.js?v=4";
+import { renderConnectorLogo } from "../connectors-view.js?v=5";
 import {
   getActiveConnector,
   clearActiveConnector,

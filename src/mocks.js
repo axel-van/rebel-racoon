@@ -2051,6 +2051,29 @@ export const connectorDocs = {
     { id: "zd-1", title: "Tickets — last 7 days", kind: "Tickets", size: "88 tickets", iconKey: "text" },
     { id: "zd-2", title: "Knowledge base — product", kind: "Articles", size: "64 articles", iconKey: "text" },
   ],
+  airtable: [
+    { id: "at-1", title: "Content calendar", kind: "Base", size: "4 tables", iconKey: "file" },
+    { id: "at-2", title: "Client roster", kind: "Table", size: "62 records", iconKey: "file" },
+    { id: "at-3", title: "Asset library — briefs", kind: "Table", size: "138 records", iconKey: "file" },
+    { id: "at-4", title: "Campaign tracker — Q3", kind: "Table", size: "27 records", iconKey: "file" },
+  ],
+  zoom: [
+    { id: "zoom-1", title: "Discovery call — Acme.mp4", kind: "Recording", size: "42 min", iconKey: "video" },
+    { id: "zoom-2", title: "Webinar — Retention tactics", kind: "Recording", size: "58 min", iconKey: "video" },
+    { id: "zoom-3", title: "Customer QBR — transcript", kind: "Transcript", size: "11k words", iconKey: "text" },
+    { id: "zoom-4", title: "Team retro — June", kind: "Recording", size: "34 min", iconKey: "video" },
+  ],
+  fathom: [
+    { id: "fathom-1", title: "Sales call — Northwind", kind: "Summary", size: "Updated 1d ago", iconKey: "text" },
+    {
+      id: "fathom-2",
+      title: "Podcast interview — full transcript",
+      kind: "Transcript",
+      size: "9k words",
+      iconKey: "text",
+    },
+    { id: "fathom-3", title: "Strategy sync — highlights", kind: "Highlights", size: "12 clips", iconKey: "text" },
+  ],
 };
 
 // Connectors catalog. Each connector behaves like a Codex-style extension:
@@ -2283,6 +2306,33 @@ export const connectors = [
     category: "CRM & support",
     accent: "#03363D",
     capabilities: ["Search tickets", "Read conversations", "List articles"],
+    status: "disconnected",
+  },
+  {
+    id: "airtable",
+    name: "Airtable",
+    desc: "Search bases and read records across your Airtable workspace",
+    category: "Storage",
+    accent: "#2D7FF9",
+    capabilities: ["Search bases", "Read records", "List tables"],
+    status: "disconnected",
+  },
+  {
+    id: "zoom",
+    name: "Zoom",
+    desc: "Search cloud recordings and read meeting transcripts from Zoom",
+    category: "Meetings & calls",
+    accent: "#0B5CFF",
+    capabilities: ["Search recordings", "Read transcripts", "List meetings"],
+    status: "disconnected",
+  },
+  {
+    id: "fathom",
+    name: "Fathom",
+    desc: "Search calls and read AI meeting summaries from Fathom",
+    category: "Meetings & calls",
+    accent: "#5468FF",
+    capabilities: ["Search calls", "Read summaries & highlights", "List meetings"],
     status: "disconnected",
   },
 ];

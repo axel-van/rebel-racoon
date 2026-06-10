@@ -15,7 +15,14 @@ import { escapeHtml } from "./utils.js?v=20";
 import { getConnectors } from "./connectors-store.js?v=23";
 
 // Category display order — anything unlisted falls to the end alphabetically.
-export const CATEGORY_ORDER = ["Docs & wikis", "Storage", "Dev & project", "Messaging", "CRM & support"];
+export const CATEGORY_ORDER = [
+  "Docs & wikis",
+  "Storage",
+  "Meetings & calls",
+  "Dev & project",
+  "Messaging",
+  "CRM & support",
+];
 
 // ─── Logo ────────────────────────────────────────────────────────────────
 // SVG asset when one ships; otherwise an accent-colored monogram tile (width /

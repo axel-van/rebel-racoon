@@ -10,7 +10,7 @@
 
 import { html, raw, escapeHtml } from "../utils.js?v=20";
 import { iconFor } from "../file-kinds.js?v=20";
-import { connectorDocs } from "../mocks.js?v=40";
+import { connectorDocs } from "../mocks.js?v=41";
 import {
   getConnectors,
   findConnector,
@@ -19,7 +19,7 @@ import {
 } from "../connectors-store.js?v=23";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderConnectorLogo } from "../connectors-view.js?v=4";
+import { renderConnectorLogo } from "../connectors-view.js?v=5";
 import { isFlagOn } from "../feature-flags.js?v=4";
 
 const MODAL_ID = "addSource";

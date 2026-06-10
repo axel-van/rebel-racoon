@@ -6,7 +6,7 @@
 //
 // Subscribers re-render the thread DOM on any change — no global store.
 
-import { ideas, threadsBySession as seedThreadsBySession, connectorDocs } from "./mocks.js?v=40";
+import { ideas, threadsBySession as seedThreadsBySession, connectorDocs } from "./mocks.js?v=41";
 import { findConnector } from "./connectors-store.js?v=23";
 
 const threads = new Map(); // sessionId → messages[]

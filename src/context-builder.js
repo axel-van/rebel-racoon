@@ -19,7 +19,7 @@ import * as rightPanel from "./components/right-panel.js?v=150";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=29";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=21";
 import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=41";
-import { connectors as connectorMocks } from "./mocks.js?v=40";
+import { connectors as connectorMocks } from "./mocks.js?v=41";
 import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=2";
 
 const drafts = new Map(); // sessionId → draft
