@@ -566,6 +566,55 @@
   color: var(--ref-color-grey-60);
 }
 
+/* Brand-colour editor (#10) — named #hex rows inside the Visual identity
+   section's edit mode. */
+.recap__colors {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.recap__color-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.recap__color-swatch {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: var(--ref-border-radius-md);
+  border: 1px solid var(--app-border);
+}
+
+.recap__color-name,
+.recap__color-hex {
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  font-family: inherit;
+  font-size: var(--sys-text-style-body-size);
+  color: var(--ref-color-grey-100);
+  background: var(--ref-color-white);
+  box-sizing: border-box;
+}
+
+.recap__color-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.recap__color-hex {
+  width: 116px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.recap__color-add {
+  align-self: flex-start;
+}
+
 .recap__type {
   display: flex;
   align-items: center;

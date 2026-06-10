@@ -18,6 +18,8 @@
 import { escapeHtml } from "../utils.js?v=20";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 import { showToast } from "./toast.js?v=20";
+import { getSessionById } from "../sessions-store.js?v=1";
+import { getContextById, getDefaultContext } from "../contexts-store.js?v=29";
 
 const MODAL_ID = "generateImage";
 
@@ -26,6 +28,7 @@ let initialized = false;
 
 // Ephemeral state — lives until the modal closes.
 let currentPostId = null;
+let currentSessionId = null;
 let genState = "idle"; // 'idle' | 'loading' | 'result'
 let promptText = "";
 let promptLoading = false;
@@ -89,6 +92,24 @@ function buildSeed() {
   return `${currentPostId || "img"}-${styleKey || "none"}-${moodKey || "none"}-${Date.now()}`;
 }
 
+// The active Playbook's named brand colours (alpha feedback #10). Resolved
+// from the session → context; falls back to the default context's authored
+// `brandColors`, then to its scraped site palette. Empty when none apply.
+function activeBrandColors() {
+  const session = currentSessionId ? getSessionById(currentSessionId) : null;
+  const ctx = (session?.contextId && getContextById(session.contextId)) || getDefaultContext();
+  if (!ctx) return [];
+  if (Array.isArray(ctx.brandColors) && ctx.brandColors.length) {
+    return ctx.brandColors.filter((c) => c.hex);
+  }
+  const c = ctx.imageVoice?.websites?.[0]?.colors || {};
+  return [
+    { name: "Primary", hex: c.primary },
+    { name: "Accent", hex: c.accent },
+    { name: "Background", hex: c.background },
+  ].filter((s) => s.hex);
+}
+
 function buildFullPrompt() {
   const parts = [promptText.trim()];
   if (styleKey) {
@@ -98,6 +119,10 @@ function buildFullPrompt() {
   if (moodKey) {
     const m = MOOD_OPTIONS.find((o) => o.key === moodKey);
     if (m) parts.push(`${m.label.toLowerCase()} mood`);
+  }
+  const colors = activeBrandColors();
+  if (colors.length) {
+    parts.push(`using brand colours ${colors.map((c) => `${c.name || "brand"} (${c.hex})`).join(", ")}`);
   }
   return parts.filter(Boolean).join(", ");
 }
@@ -135,6 +160,25 @@ function renderChips(options, selectedKey, dataAttr) {
       return `<button type="button" class="gen-chip${selected}" ${dataAttr}="${escapeHtml(o.key)}">${icon}${escapeHtml(o.label)}</button>`;
     })
     .join("");
+}
+
+// Read-only note showing which Playbook brand colours will steer the image,
+// so the user sees their palette is being honoured (alpha feedback #10).
+function renderBrandColorsNote() {
+  const colors = activeBrandColors();
+  if (!colors.length) return "";
+  const dots = colors
+    .map(
+      (c) =>
+        `<span class="gen-brand-swatch" title="${escapeHtml(`${c.name || "Brand"} ${c.hex}`)}" style="background:${escapeHtml(c.hex)}"></span>`,
+    )
+    .join("");
+  return `
+    <div class="gen-section gen-brand-colors">
+      <p class="gen-section-label">Brand colours<span>— from your Playbook</span></p>
+      <div class="gen-brand-swatches">${dots}</div>
+    </div>
+  `;
 }
 
 function renderSummaryTags() {
@@ -200,6 +244,7 @@ function renderBody() {
           <p class="gen-section-label">Mood<span>— optional</span></p>
           <div class="gen-chips">${renderChips(MOOD_OPTIONS, moodKey, "data-gen-mood")}</div>
         </div>
+        ${renderBrandColorsNote()}
       </div>
     `;
 
@@ -390,10 +435,11 @@ export function init() {
   bindOverlayDismissal({ modal, backdrop, close });
 }
 
-export function open(postId, onUse) {
+export function open(postId, onUse, opts = {}) {
   if (!initialized) init();
   requestOpen(MODAL_ID, close);
   currentPostId = postId || null;
+  currentSessionId = opts.sessionId || null;
   onUseCallback = typeof onUse === "function" ? onUse : null;
 
   backdrop.hidden = false;

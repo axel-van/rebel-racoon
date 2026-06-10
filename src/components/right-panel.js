@@ -40,7 +40,7 @@ import { iconFor } from "../file-kinds.js?v=20";
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
 import { open as openScheduleModal } from "./schedule-modal.js?v=26";
-import { open as openGenerateImageModal } from "./generate-image-modal.js?v=24";
+import { open as openGenerateImageModal } from "./generate-image-modal.js?v=25";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
@@ -1693,9 +1693,10 @@ function onPostDelete(postId) {
 function onPostImage(postId) {
   const sid = activeSessionId();
   if (!sid) return;
-  // generate-image-modal.open(postId, onUse) — onUse re-renders the
-  // panel so the new image lands in the card immediately.
-  openGenerateImageModal(postId, () => renderPanel());
+  // generate-image-modal.open(postId, onUse, opts) — onUse re-renders the
+  // panel so the new image lands in the card immediately; sessionId lets the
+  // modal pull this Playbook's brand colours into the prompt (#10).
+  openGenerateImageModal(postId, () => renderPanel(), { sessionId: sid });
 }
 
 // --- Inline edit handlers ---------------------------------------------

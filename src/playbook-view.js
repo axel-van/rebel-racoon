@@ -193,6 +193,8 @@ export function snapshotEditable(d) {
       voiceProfile: d.voiceProfile || null,
       language: d.language || "",
       ctaLinks: d.ctaLinks || [],
+      brandColors: d.brandColors || [],
+      referenceImages: d.referenceImages || [],
     }),
   );
 }
@@ -456,37 +458,87 @@ function renderVoice(data, edit) {
   `;
 }
 
-// Visual identity is always read-only — scraped from the site, not authored.
-function renderBrandSnapshot(data) {
-  const site = brandSite(data);
-  if (!site) return "";
-  const colors = site.colors || {};
-  const accent = colors.accent || colors.primary || "var(--ref-color-orange-100)";
-  const primary = colors.primary || accent;
-  const swatches = [
-    { label: "Primary", hex: colors.primary },
-    { label: "Accent", hex: colors.accent },
-    { label: "Background", hex: colors.background },
+// Default brand colours derived from the scraped site palette, so a Playbook
+// that has never been hand-edited still shows named swatches the user can
+// then rename / extend. Used to seed `data.brandColors` on first edit.
+function deriveBrandColors(site) {
+  const c = site?.colors || {};
+  return [
+    { name: "Primary", hex: c.primary },
+    { name: "Accent", hex: c.accent },
+    { name: "Background", hex: c.background },
+    { name: "Text", hex: c.textPrimary },
+    { name: "Link", hex: c.link },
   ].filter((s) => s.hex);
-  const font = site.typography?.primaryFont || "";
-  const domain = site.domain || prettyUrl(data.websiteUrl);
+}
+
+// The authored brand palette — user-edited `brandColors` if present, else the
+// derived site palette (read-only view falls back to this).
+function visualColors(data) {
+  if (Array.isArray(data.brandColors)) return data.brandColors;
+  return deriveBrandColors(brandSite(data));
+}
+
+// Lazily promote the derived palette into an editable `brandColors` array the
+// first time the user opens the Visual-identity editor (alpha feedback #10).
+function ensureVisual(data) {
+  if (!Array.isArray(data.brandColors)) data.brandColors = deriveBrandColors(brandSite(data));
+  if (!Array.isArray(data.referenceImages)) data.referenceImages = [];
+}
+
+// Visual identity — brand palette is now author-editable (#10): the user adds
+// as many named #hex colours as they like. Typography stays read-only (scraped).
+function renderBrandSnapshot(data, edit) {
+  const site = brandSite(data);
+  const colors = visualColors(data);
+  const font = site?.typography?.primaryFont || "";
+  const domain = site?.domain || prettyUrl(data.websiteUrl);
+  const accent = colors.find((c) => /accent/i.test(c.name))?.hex || colors[0]?.hex || "var(--ref-color-orange-100)";
+  const primary = colors[0]?.hex || accent;
+
+  if (edit) {
+    const rows = colors
+      .map(
+        (c, i) => `
+        <div class="recap__color-row">
+          <span class="recap__color-swatch" data-recap-color-swatch="${i}" style="background:${esc(c.hex || "#ffffff")};"></span>
+          <input type="text" class="recap__color-name" data-recap-color-field="name" data-recap-color-index="${i}" value="${esc(c.name || "")}" placeholder="Name" aria-label="Colour name" />
+          <input type="text" class="recap__color-hex" data-recap-color-field="hex" data-recap-color-index="${i}" value="${esc(c.hex || "")}" placeholder="#1A1F36" aria-label="Hex value" spellcheck="false" />
+          <button type="button" class="ap-icon-button transparent grey" data-recap-color-remove="${i}" aria-label="Remove colour"><i class="ap-icon-close"></i></button>
+        </div>`,
+      )
+      .join("");
+    return `
+      <section class="recap__section is-editing" data-recap-editing-card>
+        ${renderSectionHead("Visual identity", "Name as many brand colours as you like.", sectionEditActions())}
+        <div class="recap__editbox">
+          <div class="recap__colors" data-recap-colors>${rows}</div>
+          <button type="button" class="ap-button transparent blue recap__color-add" data-recap-color-add>
+            <i class="ap-icon-plus"></i><span>Add colour</span>
+          </button>
+        </div>
+      </section>
+    `;
+  }
+
+  if (!site && !colors.length) return "";
   return `
     <section class="recap__section">
-      ${renderSectionHead("Visual identity", "Pulled straight from your site.")}
+      ${renderSectionHead("Visual identity", "Your brand colours and type.", sectionPen("visual"))}
       <div class="recap__brand">
         <div class="recap__brand-mark">
           <span class="recap__monogram recap__monogram--sm" style="--brand-accent:${esc(accent)}; --brand-primary:${esc(primary)};">${esc(initials(data.name))}</span>
           <span class="recap__brand-domain">${esc(domain || "")}</span>
         </div>
         ${
-          swatches.length
+          colors.length
             ? `<div class="recap__palette">
-                 ${swatches
+                 ${colors
                    .map(
                      (s) => `
                      <div class="recap__swatch">
                        <span class="recap__swatch-dot" style="background:${esc(s.hex)};"></span>
-                       <span class="recap__swatch-label">${esc(s.label)}</span>
+                       <span class="recap__swatch-label">${esc(s.name)}</span>
                      </div>
                    `,
                    )
@@ -656,7 +708,7 @@ function paint() {
     renderOverview(data, scope === "overview"),
     renderStrategy(data, scope),
     renderVoice(data, scope === "voice"),
-    renderBrandSnapshot(data),
+    renderBrandSnapshot(data, scope === "visual"),
     renderEssentials(data, scope === "essentials"),
   ]
     .filter(Boolean)
@@ -695,6 +747,9 @@ function onClick(event) {
 
   const penBtn = event.target.closest("[data-recap-edit-card]");
   if (penBtn) {
+    // Seed the editable visual arrays from the scraped palette before
+    // snapshotting, so Cancel reverts to the right baseline.
+    if (penBtn.dataset.recapEditCard === "visual") ensureVisual(data);
     snapshot = snapshotEditable(data);
     editScope = penBtn.dataset.recapEditCard;
     repaint();
@@ -759,6 +814,24 @@ function onClick(event) {
     return;
   }
 
+  // Brand colours (#10) — add / remove a named #hex swatch.
+  const colorRemove = event.target.closest("[data-recap-color-remove]");
+  if (colorRemove) {
+    const idx = Number(colorRemove.dataset.recapColorRemove);
+    if (Array.isArray(data.brandColors)) data.brandColors = data.brandColors.filter((_, i) => i !== idx);
+    repaint();
+    return;
+  }
+  if (event.target.closest("[data-recap-color-add]")) {
+    const list = Array.isArray(data.brandColors) ? data.brandColors.slice() : [];
+    list.push({ name: "", hex: "#1A1F36" });
+    data.brandColors = list;
+    repaint();
+    const inputs = mountTarget?.querySelectorAll('[data-recap-color-field="name"]');
+    inputs?.[inputs.length - 1]?.focus();
+    return;
+  }
+
   // Footer (mode-specific) — Enter Archie / Back to Playbooks.
   cfg.onFooter?.(event);
 }
@@ -782,6 +855,15 @@ function onInput(event) {
     const idx = Number(t.dataset.recapCtaIndex);
     const field = t.dataset.recapCtaField;
     if (data.ctaLinks?.[idx]) data.ctaLinks[idx][field] = t.value;
+  } else if (t.matches("[data-recap-color-field]")) {
+    const idx = Number(t.dataset.recapColorIndex);
+    const field = t.dataset.recapColorField;
+    if (data.brandColors?.[idx]) data.brandColors[idx][field] = t.value;
+    // Live-update the row's swatch as the hex is typed (no repaint, keeps focus).
+    if (field === "hex") {
+      const sw = mountTarget?.querySelector(`[data-recap-color-swatch="${idx}"]`);
+      if (sw) sw.style.background = t.value;
+    }
   }
 }
 

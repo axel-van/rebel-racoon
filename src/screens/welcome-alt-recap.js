@@ -7,7 +7,7 @@
 import { navigate } from "../router.js?v=30";
 import { escapeHtml as esc } from "../utils.js?v=20";
 import { getDraft, isAnalysisReady, save, patchDraft, restoreDraft } from "../context-builder.js?v=81";
-import { mount } from "../playbook-view.js?v=4";
+import { mount } from "../playbook-view.js?v=5";
 
 const WELCOME_ALT_KEY = "welcomeAltSessionId";
 const WELCOME_ALT_DRAFT_KEY = "welcomeAltDraft";

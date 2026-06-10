@@ -2,11 +2,11 @@ import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=4";
 import { initTopbar, renderTopbar } from "./components/topbar.js?v=99";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=79";
-import { init as initRightPanel } from "./components/right-panel.js?v=150";
+import { init as initRightPanel } from "./components/right-panel.js?v=151";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=26";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=23";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
-import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=24";
+import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=25";
 import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=13";
 import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=31";
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=31";
@@ -28,7 +28,7 @@ import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=47";
 import { renderPlaybook } from "./screens/playbook.js?v=36";
 import * as __capAddSource from "./components/add-source-modal.js?v=31";
-import * as __capGenImage from "./components/generate-image-modal.js?v=24";
+import * as __capGenImage from "./components/generate-image-modal.js?v=25";
 import * as __capBug from "./components/bug-report-modal.js?v=23";
 import * as __capFeedback from "./components/feedback-modal.js?v=26";
 import * as __capChatPicker from "./components/chat-picker-modal.js?v=31";
@@ -38,7 +38,7 @@ import {
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=150";
+} from "./components/right-panel.js?v=151";
 
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb

@@ -774,6 +774,20 @@ body.has-modal {
   gap: var(--ref-spacing-xs);
 }
 
+/* Playbook brand-colour swatches honoured by image generation (#10). */
+.gen-brand-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+}
+
+.gen-brand-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--app-radius-circle);
+  border: 1px solid var(--app-border);
+}
+
 .gen-chip {
   display: inline-flex;
   align-items: center;
