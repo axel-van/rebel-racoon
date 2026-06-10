@@ -1,6 +1,8 @@
 // Animated "Archie is thinking…" chip that lives in the session
-// composer. Polls the assistant thread once per second to:
-//   - update the elapsed-time label + credit counter
+// composer. It shows a static label (no elapsed-time / credit counter —
+// that readout cluttered the chat and trained users to ignore copy, per
+// alpha feedback #1). A background timer is kept solely to:
+//   - hide the chip when the loading turn finishes
 //   - surface a "taking longer than expected" toast once a loading
 //     turn crosses the 30s mark (FIND-D1)
 //
@@ -30,26 +32,7 @@ export function updateThinkingChip(sessionId) {
     return;
   }
   chip.hidden = false;
-  const startedAt = loadingMessages[0].createdAt || Date.now();
-  paintThinkingChip(chip, startedAt);
   startThinkingTimer(sessionId);
-}
-
-function paintThinkingChip(chip, startedAt) {
-  const seconds = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
-  const credits = Math.max(1, Math.round(seconds / 6));
-  const label = formatElapsed(seconds);
-  const text = chip.querySelector("[data-thinking-text]");
-  if (text) {
-    text.textContent = `${label} · ${credits} credit${credits === 1 ? "" : "s"}`;
-  }
-}
-
-function formatElapsed(seconds) {
-  if (seconds < 60) return `${seconds}s`;
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}m ${s.toString().padStart(2, "0")}s`;
 }
 
 function startThinkingTimer(sessionId) {
@@ -73,7 +56,6 @@ function startThinkingTimer(sessionId) {
       stopThinkingTimer();
       return;
     }
-    paintThinkingChip(chip, loading.createdAt || Date.now());
 
     // Per-message timeout — show the toast once per loading turn that
     // crosses the boundary, so successive long turns each get their own

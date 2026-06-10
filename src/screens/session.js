@@ -855,7 +855,7 @@ function renderComposer(attachedContext, session, selectable) {
           hidden
         >
           <span class="session__composer-thinking-spinner" aria-hidden="true"></span>
-          <span class="session__composer-thinking-text" data-thinking-text>0s</span>
+          <span class="session__composer-thinking-text" data-thinking-text>Archie is thinking…</span>
         </div>
         <div class="session__composer-card">
           <div
