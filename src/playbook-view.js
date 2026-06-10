@@ -487,6 +487,42 @@ function ensureVisual(data) {
 }
 
 // Visual identity — brand palette is now author-editable (#10): the user adds
+// Reference-image gallery (#11) — up to 10 visual references the brand can
+// upload to steer image generation / keep their look consistent. Thumbnails
+// in read mode; add / remove affordances in edit mode.
+const MAX_REF_IMAGES = 10;
+
+function renderRefImages(data, edit) {
+  const imgs = Array.isArray(data.referenceImages) ? data.referenceImages : [];
+  if (!edit && !imgs.length) return "";
+  const thumbs = imgs
+    .map(
+      (img, i) => `
+      <div class="recap__refimg">
+        <img src="${esc(img.url)}" alt="${esc(img.label || "Reference image")}" loading="lazy" />
+        ${
+          edit
+            ? `<button type="button" class="recap__refimg-remove" data-recap-refimg-remove="${i}" aria-label="Remove image"><i class="ap-icon-close"></i></button>`
+            : ""
+        }
+      </div>`,
+    )
+    .join("");
+  const addBtn =
+    edit && imgs.length < MAX_REF_IMAGES
+      ? `<button type="button" class="recap__refimg-add" data-recap-refimg-add aria-label="Add reference images">
+           <i class="ap-icon-plus"></i><span>Add</span>
+         </button>
+         <input type="file" accept="image/*" multiple hidden data-recap-refimg-input />`
+      : "";
+  return `
+    <div class="recap__refimgs-block">
+      <span class="recap__field-label">Reference images${edit ? ` <span class="muted">— up to ${MAX_REF_IMAGES}</span>` : ""}</span>
+      <div class="recap__refimgs">${thumbs}${addBtn}</div>
+    </div>
+  `;
+}
+
 // as many named #hex colours as they like. Typography stays read-only (scraped).
 function renderBrandSnapshot(data, edit) {
   const site = brandSite(data);
@@ -516,6 +552,7 @@ function renderBrandSnapshot(data, edit) {
           <button type="button" class="ap-button transparent blue recap__color-add" data-recap-color-add>
             <i class="ap-icon-plus"></i><span>Add colour</span>
           </button>
+          ${renderRefImages(data, true)}
         </div>
       </section>
     `;
@@ -555,6 +592,7 @@ function renderBrandSnapshot(data, edit) {
             : ""
         }
       </div>
+      ${renderRefImages(data, false)}
     </section>
   `;
 }
@@ -832,6 +870,19 @@ function onClick(event) {
     return;
   }
 
+  // Reference images (#11) — open the file picker / drop a thumbnail.
+  if (event.target.closest("[data-recap-refimg-add]")) {
+    mountTarget?.querySelector("[data-recap-refimg-input]")?.click();
+    return;
+  }
+  const refImgRemove = event.target.closest("[data-recap-refimg-remove]");
+  if (refImgRemove) {
+    const idx = Number(refImgRemove.dataset.recapRefimgRemove);
+    if (Array.isArray(data.referenceImages)) data.referenceImages = data.referenceImages.filter((_, i) => i !== idx);
+    repaint();
+    return;
+  }
+
   // Footer (mode-specific) — Enter Archie / Back to Playbooks.
   cfg.onFooter?.(event);
 }
@@ -867,12 +918,40 @@ function onInput(event) {
   }
 }
 
+let refImgCounter = 0;
+
 function onChange(event) {
   if (!editScope) return;
   const data = cfg.getData();
   if (!data) return;
   if (event.target.matches("[data-recap-language]")) {
     data.language = event.target.value;
+    return;
+  }
+  // Reference-image upload (#11) — read each picked image as a data URL and
+  // append, capped at MAX_REF_IMAGES. Async, so repaint once all have loaded.
+  if (event.target.matches("[data-recap-refimg-input]")) {
+    const picked = Array.from(event.target.files || []).filter((f) => f.type.startsWith("image/"));
+    if (!picked.length) return;
+    if (!Array.isArray(data.referenceImages)) data.referenceImages = [];
+    const room = Math.max(0, MAX_REF_IMAGES - data.referenceImages.length);
+    const take = picked.slice(0, room);
+    Promise.all(
+      take.map(
+        (f) =>
+          new Promise((res) => {
+            const reader = new FileReader();
+            refImgCounter += 1;
+            const id = `ref-${refImgCounter}`;
+            reader.onload = () => res({ id, label: f.name, url: reader.result });
+            reader.onerror = () => res(null);
+            reader.readAsDataURL(f);
+          }),
+      ),
+    ).then((loaded) => {
+      loaded.filter(Boolean).forEach((img) => data.referenceImages.push(img));
+      repaint();
+    });
   }
 }
 
