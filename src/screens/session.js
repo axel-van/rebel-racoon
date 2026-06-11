@@ -1480,7 +1480,7 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
             <i class="starter-card__art ${s.icon}" aria-hidden="true"></i>
             <span class="starter-card__title">${s.title}</span>
             <span class="starter-card__subtitle">${s.subtitle}</span>
-            <span class="starter-card__cta starter-card__cta--soon ap-tag grey mini">${s.cta}</span>
+            <span class="starter-card__cta--soon ap-badge blue">${s.cta}</span>
           </div>
         `;
       }

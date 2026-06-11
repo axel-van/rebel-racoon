@@ -76,17 +76,9 @@
    carries the same signature as the sparkles mark next to it. White
    text on the gradient background reads as "AI lives here", which is
    the truth-claim Archie is making at the brand mark. */
+/* Visuals come from the DS `.ap-badge.blue`; this only handles placement. */
 .app-sidebar__brand-beta {
-  display: inline-flex;
-  align-items: center;
   margin-left: var(--ref-spacing-xxxs);
-  padding: 1px 6px;
-  border-radius: var(--app-radius-pill);
-  background: var(--ref-color-mermaid-gradient-background);
-  color: var(--ref-color-white);
-  font-size: var(--sys-text-style-caption-size);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  line-height: var(--sys-text-style-caption-line-height);
   flex-shrink: 0;
 }
 

@@ -328,7 +328,7 @@ export function renderSidebar() {
       <button type="button" class="app-sidebar__brand" data-sidebar-home aria-label="Go to Archie home">
         <span class="app-sidebar__brand-mark"><i class="ap-icon-sparkles-mermaid"></i></span>
         <span class="app-sidebar__brand-name">Archie</span>
-        <span class="app-sidebar__brand-beta">BETA</span>
+        <span class="app-sidebar__brand-beta ap-badge blue">BETA</span>
       </button>
       <button
         type="button"
