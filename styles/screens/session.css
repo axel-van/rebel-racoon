@@ -677,9 +677,35 @@
   transform: translateX(3px);
 }
 
+/* Coming-soon teaser card — non-interactive: no hover lift, no pointer, and a
+   muted "Coming soon" tag in place of the link CTA. Kept in the grid so the
+   capability is discoverable while signalling it isn't live yet. */
+.starter-card--soon {
+  cursor: default;
+}
+.starter-card--soon:hover,
+.starter-card--soon:focus-visible {
+  transform: none;
+  border-color: var(--app-border);
+  box-shadow: none;
+}
+.starter-card--soon:hover::before,
+.starter-card--soon:focus-visible::before {
+  opacity: 0;
+}
+.starter-card--soon:hover .starter-card__art {
+  opacity: 0.07;
+}
+/* The badge replaces the .ap-link CTA, so it ignores the link's bottom-anchor
+   margin reset — re-pin it to the card's baseline like the other CTAs. */
+.starter-card__cta--soon {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
 /* Per-starter tone variants — set the gradient wash + accent. mermaid (Batch) ·
-   electric-blue (Repurpose) · orange (Launch) · purple (Clips) · green
-   (Playbook) · red (Call / Connector). Helps the user scan by category. */
+   purple (Clips) · green (Top performing posts). Helps the user scan by
+   category. The remaining tones stay available for future starters. */
 .starter-card--mermaid {
   --card-tint: var(--ref-color-mermaid-10);
   --card-accent: var(--ref-color-mermaid-gradient-from);

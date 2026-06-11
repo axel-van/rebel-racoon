@@ -206,28 +206,10 @@
   gap: var(--ref-spacing-xs);
 }
 
+/* The input sits bare inside the DS .ap-input-group, which owns the border,
+   height, padding, focus + invalid states — don't double-border it. */
 .add-source__url-row .ap-input-group {
   flex: 1;
-}
-
-.add-source__url-row input[type="url"] {
-  width: 100%;
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--ref-border-radius-md);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  font-family: inherit;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  font-weight: var(--sys-text-style-body-weight);
-  color: var(--ref-color-grey-100);
-  background: var(--ref-color-white);
-  box-sizing: border-box;
-}
-
-.add-source__url-row input[type="url"]:focus {
-  outline: none;
-  border-color: var(--ref-color-orange-100);
-  box-shadow: 0 0 0 3px var(--ref-color-orange-10);
 }
 
 .add-source__sub {
@@ -235,20 +217,6 @@
   line-height: var(--sys-text-style-caption-line-height);
   font-weight: var(--sys-text-style-caption-weight);
   margin: 0;
-}
-
-/* Inline URL format error — surfaces below the input row when the typed
-   value isn't a valid URL. Empty input keeps the slate clean. */
-.add-source__url-error {
-  margin: 0;
-}
-
-.add-source__url-history-title {
-  font-size: var(--sys-text-style-h4-size);
-  line-height: var(--sys-text-style-h4-line-height);
-  font-weight: var(--sys-text-style-h4-weight);
-  color: var(--ref-color-grey-100);
-  margin: 0 0 var(--ref-spacing-xs);
 }
 
 /* ── Paste text tab ──────────────────────────────────────────────────── */

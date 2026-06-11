@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=99";
-import { socialAccounts, chatStarters } from "../mocks.js?v=41";
+import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=43";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
@@ -49,6 +49,7 @@ import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
 import * as inlineQuestion from "../inline-question.js?v=33";
 import * as clipStudio from "../clip-studio.js?v=8";
+import * as batchStudio from "../batch-studio.js?v=3";
 import { askConnector } from "../connector-ask.js?v=3";
 import { getConnectedConnectors, findConnector } from "../connectors-store.js?v=23";
 import { renderConnectorLogo } from "../connectors-view.js?v=5";
@@ -61,7 +62,7 @@ import { isFlagOn } from "../feature-flags.js?v=4";
 import * as contextBuilder from "../context-builder.js?v=81";
 import * as playbookEditor from "../playbook-editor.js?v=41";
 import { renderPicker } from "./_analyse-common.js?v=39";
-import { renderSourceCard } from "../components/source-card.js?v=30";
+import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
 import {
   contentState,
@@ -72,11 +73,14 @@ import {
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=25";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=13";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=31";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=31";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=36";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=6";
 import {
   classifyFile,
   startFileUpload,
+  startUrlImport,
+  startConnectorImport,
+  startTextImport,
   getSources as getStreamSources,
   subscribeSources,
   subscribeUploads,
@@ -208,6 +212,14 @@ export function renderSession(params, target) {
     if (consumeHandoff("pendingStartClipStudio")) clipStudio.start(session.id);
   }
 
+  // Batch Studio — dedicated "Batch from a source" intake in its own `batch-*`
+  // session. Same one-shot-handoff gate as Clip Studio so a re-render after the
+  // user navigates away doesn't relaunch it. Pre-selects the default Playbook.
+  if (session.id.startsWith("batch-") && !batchStudio.isActive(session.id)) {
+    if (consumeHandoff("pendingStartBatch"))
+      batchStudio.start(session.id, { contextId: getDefaultContext()?.id || null });
+  }
+
   renderTopbar({ crumb: session.name });
 
   // Resolution priority — URL state wins over the mock seed so wizard-
@@ -258,6 +270,22 @@ export function renderSession(params, target) {
   };
 }
 
+// A conversation has "started" (→ show the thread + bottom composer instead of
+// the empty "What are you working on?" hero) once any of these land: a real user
+// message, the assistant-choice posted by a starter, a rich assistant variant,
+// or a source intake (Batch-from-a-source handoff or an Add-source on a fresh
+// chat). Shared by renderAssistantPanel (layout) and the offThread subscription
+// (so the empty → started transition triggers a full re-render that adds the
+// bottom composer).
+function isThreadStarted(messages) {
+  return (
+    messages.some((m) => m.role === "user") ||
+    messages.some((m) => m.role === "assistant-choice") ||
+    messages.some((m) => m.role === "assistant" && m.variant) ||
+    messages.some((m) => m.role === "source-intake")
+  );
+}
+
 function renderAssistantPanel(session, attachedContext) {
   // Skip the default greeting if a start flow is queued — its first AI bubble
   // will introduce the conversation instead. (Read-only: don't consume the
@@ -274,6 +302,11 @@ function renderAssistantPanel(session, attachedContext) {
   if (clipStudio.isActive(session.id)) {
     return renderClipStudio(session, attachedContext);
   }
+  // Batch Studio — dedicated full-page "Batch from a source" intake (upload 1+
+  // sources + pick a Playbook → new chat). Owns the panel while active.
+  if (batchStudio.isActive(session.id)) {
+    return renderBatchStudio(session);
+  }
   // Wizard mode — when sidebar-wizard has state for this session, replace the
   // normal thread + composer with the analyse-style wizard chrome.
   if (sidebarWizard.isActive(session.id)) {
@@ -285,20 +318,11 @@ function renderAssistantPanel(session, attachedContext) {
     return renderAssistantPanelQuestion(session);
   }
 
-  // Locked picker — driven purely by whether the user has actually sent
-  // a message yet. The inline "Which context?" assistant-choice posted by
-  // a starter click does NOT commit the chat: the user still hasn't typed
-  // anything, so they should remain able to swap context via the picker.
-  // Only an actual user turn freezes the choice.
-  const hasUserMessage = thread.some((m) => m.role === "user");
-  // Empty conversation = nothing has happened yet. Hides the empty hero
-  // once any rich turn lands (user msg, assistant variant, or the
-  // assistant-choice posted by the starter context question) so the
-  // in-flight work stays visible across remounts.
-  const isEmptyConversation =
-    !hasUserMessage &&
-    !thread.some((m) => m.role === "assistant-choice") &&
-    !thread.some((m) => m.role === "assistant" && m.variant);
+  // Empty conversation = nothing has happened yet. Hides the empty hero once any
+  // rich turn lands (user msg, assistant variant, the assistant-choice posted by
+  // a starter, or a source landing) so the in-flight work stays visible across
+  // remounts. See isThreadStarted.
+  const isEmptyConversation = !isThreadStarted(thread);
 
   // The composer markup is the same regardless of where it appears — bottom
   // of the panel (default) or inline inside the empty hero. We render it
@@ -376,6 +400,198 @@ const CLIP_DURATIONS_UI = [
   { id: "medium", label: "30–60s", sub: "Feed clips", nets: ["instagram", "facebook"] },
   { id: "long", label: "60–90s", sub: "Long-form", nets: ["linkedin", "x"] },
 ];
+
+// Origin sub-line for a staged batch source, shown in the source-card's meta row
+// (in place of the usual "N ideas · Processed · Added X").
+function batchSourceSub(s) {
+  if (s.origin === "url") return "Public link";
+  if (s.origin === "text") return "Pasted text";
+  if (s.origin === "connector") {
+    return s.connector?.name ? `${s.connector.name}${s.kind ? ` · ${s.kind}` : ""}` : "Connected source";
+  }
+  return s.kind ? `${s.kind} · From your computer` : "From your computer";
+}
+
+// Batch Studio — single-stage source-intake screen. The hero is one unified
+// "drop & paste" card: drag/drop or browse files, AND a smart field where you
+// paste or type a link OR text (auto-detected on add — a bare URL becomes a
+// link, anything else becomes a pasted-text source; pasting files uploads them).
+// Below it: the staged-source list + a Playbook picker, and the CTA hands the
+// staged sources off to a fresh chat (see the batch wiring in bindSession).
+//
+// The intake card lives OUTSIDE [data-batch-rest]; staging-loader ticks repaint
+// only the rest (list + commit), so the field is never clobbered mid-typing.
+function renderBatchStudio(session) {
+  const st = batchStudio.getState(session.id);
+  if (!st) return "";
+
+  // Connected connectors → a gated "Connected source" picker (only when the
+  // connectors feature flag is on AND at least one connector is connected).
+  const connectors = isFlagOn("connectors") ? getConnectedConnectors() : [];
+  const connectorMenu = connectors.length
+    ? `
+      <details class="ap-select batch-studio__connector" data-batch-connector>
+        <summary class="ap-button stroked grey batch-studio__method batch-studio__connector-trigger">
+          <i class="ap-icon-link" aria-hidden="true"></i><span>Connected source</span>
+        </summary>
+        <div class="ap-select-dropdown batch-studio__connector-dropdown" role="listbox" aria-label="Connected sources">
+          <div class="ap-select-options">
+            ${connectors
+              .map(
+                (c) => `
+              <div class="ap-select-option" data-batch-connector-pick="${escapeHtml(c.id)}" role="option">
+                <span class="ap-select-option-text">${escapeHtml(c.name)}</span>
+              </div>`,
+              )
+              .join("")}
+          </div>
+        </div>
+      </details>`
+    : "";
+
+  return html`
+    <aside class="session__assistant batch-studio batch-studio--upload" aria-label="Batch from a source">
+      <div class="batch-studio__scroll">
+        <div class="batch-studio__inner">
+          <div class="batch-studio__intro">
+            <span class="batch-studio__ai-badge"><i class="ap-icon-sparkles" aria-hidden="true"></i>Batch</span>
+            <h1 class="batch-studio__title">Turn your sources into a batch of posts</h1>
+            <p class="batch-studio__sub">
+              Drop files, paste a link, or paste any text — add as many sources as you like and I'll pull the strongest
+              ideas and draft a set of posts.
+            </p>
+          </div>
+
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx,.txt,.md,.mp4,.mov,.mp3,.wav,.m4a,.png,.jpg,.jpeg"
+            id="batchFileInput"
+            data-batch-file
+            multiple
+            hidden
+          />
+
+          <div class="batch-studio__dropzone">
+            <div
+              class="batch-studio__dropzone-main"
+              data-batch-dropzone
+              tabindex="0"
+              role="button"
+              aria-label="Add files from your computer"
+            >
+              <span class="batch-studio__dropzone-icon"><i class="ap-icon-upload" aria-hidden="true"></i></span>
+              <p class="batch-studio__dropzone-primary">
+                Drag &amp; drop files, or <span class="batch-studio__dropzone-link">browse</span>
+              </p>
+              <p class="batch-studio__dropzone-sub muted">PDF, Word, text, video, audio or images · up to 100MB each</p>
+            </div>
+            <div class="batch-studio__dropzone-extra">
+              <span class="batch-studio__dropzone-extra-label muted">or add</span>
+              <button type="button" class="ap-button stroked grey batch-studio__method" data-batch-link>
+                <i class="ap-icon-link" aria-hidden="true"></i><span>A link</span>
+              </button>
+              <button type="button" class="ap-button stroked grey batch-studio__method" data-batch-paste>
+                <i class="ap-icon-file--text" aria-hidden="true"></i><span>Pasted text</span>
+              </button>
+              ${raw(connectorMenu)}
+            </div>
+            <div class="batch-studio__dropzone-overlay" aria-hidden="true">
+              <i class="ap-icon-upload" aria-hidden="true"></i><span>Drop files to upload</span>
+            </div>
+          </div>
+
+          <div data-batch-rest>${raw(renderBatchRest(session))}</div>
+        </div>
+      </div>
+    </aside>
+  `;
+}
+
+// The repaint-on-staging-change region: staged-source list + Playbook + CTA.
+// Re-rendered wholesale on every batchStudio notify (add / remove / pick /
+// loader tick) while the intake card above stays put. Returns a trusted HTML
+// string (dynamic bits escaped by renderSourceCard / renderBatchPlaybookControl).
+function renderBatchRest(session) {
+  const st = batchStudio.getState(session.id);
+  if (!st) return "";
+  const ctx = st.contextId ? getContextById(st.contextId) : null;
+  const sources = st.sources || [];
+  const canStart = sources.length > 0;
+  const countLabel = sources.length === 1 ? "1 source" : `${sources.length} sources`;
+
+  const sourceList = sources.length
+    ? `
+      <div class="batch-studio__list" aria-label="Staged sources">
+        ${sources
+          .map((s) =>
+            renderSourceCard({ id: s.uid, filename: s.name, kind: s.kind, iconKey: s.iconKey, status: s.status }, [], {
+              staged: true,
+              removeValue: s.uid,
+              stagedSub: batchSourceSub(s),
+            }),
+          )
+          .join("")}
+      </div>`
+    : "";
+
+  return `
+    ${sourceList}
+    <div class="batch-studio__commit">
+      <span class="batch-studio__field-label">Playbook</span>
+      <div class="batch-studio__commit-row">
+        ${renderBatchPlaybookControl(ctx)}
+        <button
+          type="button"
+          class="ap-button primary orange batch-studio__start"
+          data-batch-start
+          ${canStart ? "" : "disabled"}
+        >
+          <i class="ap-icon-sparkles" aria-hidden="true"></i>
+          <span>Start drafting${canStart ? ` · ${countLabel}` : ""}</span>
+        </button>
+      </div>
+      <p class="batch-studio__field-hint muted">I'll draft every post in this playbook's voice, audience, and CTAs.</p>
+    </div>
+  `;
+}
+
+// Playbook picker for the Batch Studio commit group — same DS form-select shape
+// as the composer's renderPlaybookControl, but full-width and its picks route
+// through the `data-batch-playbook-pick` delegate (→ batchStudio.setContext)
+// instead of mutating session.contextId.
+function renderBatchPlaybookControl(ctx) {
+  const playbooks = getContexts();
+  const items = playbooks
+    .map((c) => {
+      const isSel = ctx && c.id === ctx.id;
+      return `
+        <div
+          class="ap-select-option${isSel ? " selected" : ""}"
+          data-batch-playbook-pick="${escapeHtml(c.id)}"
+          role="option"
+          aria-selected="${isSel ? "true" : "false"}"
+        >
+          <span class="composer-context__dot" style="background: ${dotColorVar(c.color || "grey")};"></span>
+          <span class="ap-select-option-text">${escapeHtml(c.name)}</span>
+          ${isSel ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
+        </div>`;
+    })
+    .join("");
+  const valueMarkup = ctx
+    ? `<span class="ap-select-value">${escapeHtml(ctx.name)}</span>`
+    : `<span class="ap-select-value ap-select-placeholder">Select a playbook</span>`;
+  return `
+    <details class="ap-select batch-studio__playbook" data-batch-playbook>
+      <summary class="ap-select-trigger" title="Choose the playbook for this chat">
+        ${valueMarkup}
+        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+      </summary>
+      <div class="ap-select-dropdown" role="listbox" aria-label="Choose a playbook">
+        <div class="ap-select-options">${items}</div>
+      </div>
+    </details>
+  `;
+}
 
 function renderClipStudio(session, attachedContext) {
   const st = clipStudio.getState(session.id);
@@ -1252,36 +1468,29 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
     (s) => (s.kind || "").toLowerCase() === "video" && s.status === "Processed" && typeof s.durationSec === "number",
   );
   const videoLabel = firstVideo ? `"${firstVideo.filename}"` : "your video";
-  // Build the starter set. When connectors are enabled AND at least one is
-  // connected, swap the last card for a live "Ask a connected source" starter
-  // so the grid surfaces the MCP query capability without changing its shape.
   const starters = [...chatStarters];
-  if (isFlagOn("connectors")) {
-    const connected = getConnectedConnectors();
-    if (connected.length) {
-      const c = connected[0];
-      starters[starters.length - 1] = {
-        id: "starter-connector",
-        icon: "ap-icon-link",
-        tone: "red",
-        title: "Ask a connected source",
-        subtitle: `Query ${c.name} live over MCP and turn the answer into posts.`,
-        cta: `Ask ${c.name}`,
-        action: "ask-connector",
-        connectorId: c.id,
-      };
-    }
-  }
   const cards = starters
     .map((s) => {
+      // `comingSoon` cards are teasers — rendered as a non-interactive panel
+      // carrying a "Coming soon" badge instead of a clickable CTA arrow.
+      if (s.comingSoon) {
+        const tone = s.tone || "orange";
+        return `
+          <div class="starter-card starter-card--${tone} starter-card--soon" data-starter="${s.id}" aria-disabled="true">
+            <i class="starter-card__art ${s.icon}" aria-hidden="true"></i>
+            <span class="starter-card__title">${s.title}</span>
+            <span class="starter-card__subtitle">${s.subtitle}</span>
+            <span class="starter-card__cta starter-card__cta--soon ap-tag grey mini">${s.cta}</span>
+          </div>
+        `;
+      }
       const resolvedPrompt = (s.prompt || "")
         .replace(/\{\{source\}\}/g, sourceLabel)
         .replace(/\{\{video-source\}\}/g, videoLabel);
       const actionAttr = s.action ? ` data-starter-action="${s.action}"` : "";
-      const connectorAttr = s.connectorId ? ` data-starter-connector="${s.connectorId}"` : "";
       const tone = s.tone || "orange";
       return `
-        <button type="button" class="starter-card starter-card--${tone}" data-starter="${s.id}"${actionAttr}${connectorAttr} data-starter-prompt="${escapeHtml(resolvedPrompt)}">
+        <button type="button" class="starter-card starter-card--${tone}" data-starter="${s.id}"${actionAttr} data-starter-prompt="${escapeHtml(resolvedPrompt)}">
           <i class="starter-card__art ${s.icon}" aria-hidden="true"></i>
           <span class="starter-card__title">${s.title}</span>
           <span class="starter-card__subtitle">${s.subtitle}</span>
@@ -2261,6 +2470,12 @@ function bindDragAndDrop(aside, session) {
       if (files[0]) handleClipStudioFile(session, files[0]);
       return;
     }
+    // Batch Studio upload screen — stage dropped files (multi) instead of the
+    // normal in-session source intake.
+    if (batchStudio.isActive(session.id)) {
+      handleBatchFiles(session, files);
+      return;
+    }
     let started = 0;
     let firstReject = null;
     for (const file of files) {
@@ -2339,10 +2554,13 @@ function wireAssistantPanel(root, session, attachedContext) {
   // as new and re-trigger openDraftsPanel → URL write → re-render → loop.
   const seededLatestDraft = [...getThread(session.id)].reverse().find((m) => m.variant === "draft");
   let lastDraftMessageId = seededLatestDraft?.id || null;
-  // Track whether we've already crossed the empty → has-user-turn boundary.
-  // The first time we cross it, the composer context picker locks in (its
-  // markup changes shape), so we re-render the whole assistant aside.
-  let firstUserTurnSeen = getThread(session.id).some((m) => m.role === "user");
+  // Track whether we've already crossed the empty → started boundary (see
+  // isThreadStarted). The first time we cross it the layout changes shape — the
+  // empty hero (with its inline composer) gives way to the thread + a bottom
+  // composer — so we must re-render the whole aside, not just repaint the thread
+  // in place (which would drop the composer). Covers a first user message AND a
+  // source landing (Batch-from-a-source / Add-source on a fresh chat).
+  let threadStartedSeen = isThreadStarted(getThread(session.id));
   const offThread = subscribe(session.id, (messages) => {
     const thread = getThreadEl();
     if (thread) {
@@ -2358,9 +2576,9 @@ function wireAssistantPanel(root, session, attachedContext) {
     // In Clip Studio's clips stage the composer is already locked
     // (selectable=false) and a full aside re-render would rebuild the clip
     // grid + thread, fighting this subscription's in-place thread repaint.
-    // Skip the first-turn refresh there.
-    if (!firstUserTurnSeen && messages.some((m) => m.role === "user")) {
-      firstUserTurnSeen = true;
+    // Skip the first-start refresh there.
+    if (!threadStartedSeen && isThreadStarted(messages)) {
+      threadStartedSeen = true;
       if (!clipStudio.isActive(session.id)) refreshAssistantAside();
     }
     const latestDraft = [...messages].reverse().find((m) => m.variant === "draft");
@@ -2433,6 +2651,14 @@ function wireAssistantPanel(root, session, attachedContext) {
   // Clip Studio — every stage transition + analyzing ticker tick re-renders the
   // whole assistant aside (mirrors the wizard subscription).
   const offClipStudio = clipStudio.subscribe(session.id, refreshAssistantAside);
+  // Batch Studio — re-render the aside on every staged-source / Playbook change.
+  // Batch Studio — staging changes repaint only the list + commit (the intake
+  // card stays put so the field isn't clobbered mid-typing). start/exit
+  // transitions (no [data-batch-rest] yet) fall back to a full aside re-render.
+  const offBatchStudio = batchStudio.subscribe(session.id, () => {
+    if (root.querySelector("[data-batch-rest]")) repaintBatchRest(root, session);
+    else refreshAssistantAside();
+  });
   // Initial bind in case the panel was rendered with wizard / question mode on.
   rebindWizardKeyboardIfActive();
 
@@ -2466,6 +2692,15 @@ function wireAssistantPanel(root, session, attachedContext) {
   // session.id, so the resulting source lands in this session's list
   // and the source subscription above handles intake + ready flips.
   const offComposerUploads = subscribeUploads(() => {});
+
+  // Batch Studio hand-off — a "Start drafting" press on the batch screen minted
+  // this chat and stashed the staged sources in batch-studio's in-memory slot.
+  // Replay them now (after the intake lifecycle's baseline is set) so each runs
+  // the classic source → idea-extraction workflow in this fresh conversation.
+  const pendingBatch = batchStudio.consumePending();
+  if (pendingBatch?.sources?.length) {
+    setTimeout(() => replayBatchSources(session.id, pendingBatch), 50);
+  }
 
   // Apply idea focus on initial render if ?focusIdea= is present.
   applyIdeaFocus(root);
@@ -2580,6 +2815,7 @@ function wireAssistantPanel(root, session, attachedContext) {
     offWizard();
     offInlineQuestion();
     offClipStudio();
+    offBatchStudio();
     offComposerSources();
     offComposerUploads();
     unsubMentions();
@@ -2992,6 +3228,68 @@ function handleClipStudioFile(session, file) {
 
 function handleClipStudioUrl(session, url) {
   beginClipStudioBackground(session, url.replace(/^https?:\/\//, "").replace(/\/$/, ""));
+}
+
+// ── Batch Studio helpers ──────────────────────────────────────────────────────
+// Stage every accepted file; toast (once) when some are rejected.
+function handleBatchFiles(session, fileList) {
+  const rejected = [];
+  for (const file of Array.from(fileList)) {
+    const classification = classifyFile(file);
+    if (!classification.ok) {
+      rejected.push(file.name);
+      continue;
+    }
+    batchStudio.addFileSource(session.id, file, classification);
+  }
+  if (rejected.length) {
+    showToast(
+      rejected.length === 1 ? `Unsupported file: ${rejected[0]}` : `${rejected.length} files skipped (unsupported)`,
+    );
+  }
+}
+
+// Targeted repaint of the staged list + Playbook + CTA, leaving the upload box
+// (and the connector popover) untouched. Used by the batchStudio subscription so
+// staging-loader ticks don't tear down the whole intake.
+function repaintBatchRest(root, session) {
+  const rest = root.querySelector("[data-batch-rest]");
+  if (rest) rest.innerHTML = renderBatchRest(session);
+}
+
+// "Start drafting" — mint a fresh chat bound to the chosen Playbook, stash the
+// staged sources for it to replay on mount (the classic source → idea workflow),
+// then leave the batch screen. Files can't ride a sessionStorage handoff, so the
+// payload travels in batch-studio's in-memory pendingBatch slot.
+function startBatchChat(session) {
+  const st = batchStudio.getState(session.id);
+  if (!st || !st.sources.length) return;
+  const contextId = st.contextId || getDefaultContext()?.id || "";
+  if (!batchStudio.stashPending(session.id)) return;
+  batchStudio.exit(session.id);
+  const newId = `new-${Date.now().toString(36)}`;
+  const path = `/session/${newId}`;
+  if (contextId) setHashQuery(path, { contextId });
+  else navigate(path);
+}
+
+// Replay batch-staged sources into the freshly mounted chat so each runs the
+// classic intake (loading → ready → ideas). Sources must be added AFTER mount —
+// the intake-lifecycle only posts intake turns for ids appearing past its
+// baseline snapshot. URLs/connectors process on their own timers; files run the
+// upload→processing pipeline.
+function replayBatchSources(sessionId, batch) {
+  for (const src of batch.sources) {
+    if (src.origin === "file" && src.file && src.classification) {
+      startFileUpload(src.file, src.classification, sessionId);
+    } else if (src.origin === "url" && src.url) {
+      startUrlImport(src.url, sessionId);
+    } else if (src.origin === "text" && src.text) {
+      startTextImport(src.text, sessionId);
+    } else if (src.origin === "connector" && src.connector && src.doc) {
+      startConnectorImport(src.connector, src.doc, sessionId);
+    }
+  }
 }
 
 // Create a REAL sources-stream video source (so the trimmer modal, right-panel
@@ -3496,6 +3794,61 @@ function bindSession(root, session) {
         navigate(`/session/clip-studio-${Date.now().toString(36)}`);
         return;
       }
+      // "Batch from a source" — open the dedicated Batch Studio intake screen in
+      // a fresh `batch-*` session (upload 1+ sources + pick a Playbook → new chat).
+      if (starterBtn && starterBtn.dataset.starterAction === "open-batch") {
+        setHandoff("pendingStartBatch", {});
+        navigate(`/session/batch-${Date.now().toString(36)}`);
+        return;
+      }
+
+      // --- Batch Studio (dedicated source-intake screen) ---
+      if (batchStudio.isActive(session.id)) {
+        // Additional features — open the add-source modal (staged) for a link or
+        // pasted text. Checked before the dropzone so a click on these buttons
+        // (which sit inside the upload box) doesn't also open the file picker.
+        if (event.target.closest("[data-batch-link]")) {
+          openAddSourceModal({ tab: "url", onStageUrl: (url) => batchStudio.addUrlSource(session.id, url) });
+          return;
+        }
+        if (event.target.closest("[data-batch-paste]")) {
+          openAddSourceModal({ tab: "pasteText", onStageText: (text) => batchStudio.addTextSource(session.id, text) });
+          return;
+        }
+        // Click the upload box (or Browse) → OS file picker.
+        if (event.target.closest("[data-batch-dropzone]")) {
+          root.querySelector("[data-batch-file]")?.click();
+          return;
+        }
+        // Remove a staged source (source-card staged-mode remove control).
+        const rmBatch = event.target.closest("[data-source-remove]");
+        if (rmBatch) {
+          batchStudio.removeSource(session.id, rmBatch.dataset.sourceRemove);
+          return;
+        }
+        // Pick the Playbook for the chat.
+        const bPlaybook = event.target.closest("[data-batch-playbook-pick]");
+        if (bPlaybook) {
+          batchStudio.setContext(session.id, bPlaybook.dataset.batchPlaybookPick);
+          root.querySelector("[data-batch-playbook]")?.removeAttribute("open");
+          return;
+        }
+        // Stage a doc from a connected source (uses the connector's first doc).
+        const bConn = event.target.closest("[data-batch-connector-pick]");
+        if (bConn) {
+          const connector = findConnector(bConn.dataset.batchConnectorPick);
+          const docs = connectorDocs[connector?.id] || [];
+          if (connector && docs[0]) batchStudio.addConnectorSource(session.id, connector, docs[0]);
+          root.querySelector("[data-batch-connector]")?.removeAttribute("open");
+          return;
+        }
+        // Start drafting → create a new chat bound to the chosen Playbook and
+        // replay the staged sources through the classic intake on mount.
+        if (event.target.closest("[data-batch-start]")) {
+          startBatchChat(session);
+          return;
+        }
+      }
 
       // --- Clip Studio (dedicated video-clips flow) ---
       if (clipStudio.isActive(session.id)) {
@@ -3599,27 +3952,9 @@ function bindSession(root, session) {
           return;
         }
       }
-      // "Build my Playbook" — same handoff the /contexts "New Playbook" CTA
-      // uses: run the context-builder in the app shell and return to this chat.
-      if (starterBtn && starterBtn.dataset.starterAction === "build-playbook") {
-        try {
-          window.sessionStorage.setItem("welcomeAltIntegrated", "1");
-          window.sessionStorage.setItem("welcomeAltReturnTo", "/");
-        } catch {
-          /* ignore */
-        }
-        setHandoff("pendingStartContextBuilder", { flow: "alt", prefilledUrl: "", returnTo: "/" });
-        navigate(`/session/welcome-alt-${Date.now().toString(36)}`);
-        return;
-      }
-      // "Ask a connected source" — query the live connector in this chat (same
-      // path as the paper-clip menu's connector entries). connectorId is baked
-      // into the card at render time (first connected connector).
-      if (starterBtn && starterBtn.dataset.starterAction === "ask-connector") {
-        askConnector(session.id, starterBtn.dataset.starterConnector);
-        return;
-      }
-      if (starterBtn) {
+      // Prompt-injection starters carry a `data-starter-prompt`. Coming-soon
+      // teasers are non-interactive (no prompt, aria-disabled) — ignore clicks.
+      if (starterBtn && starterBtn.dataset.starterPrompt != null) {
         const input = getInput();
         if (!input) return;
         input.value = starterBtn.dataset.starterPrompt;
@@ -4043,6 +4378,11 @@ function bindSession(root, session) {
       // Clip Studio — a video picked via the upload-stage file input.
       if (event.target.matches("[data-clip-studio-file]") && event.target.files?.length) {
         handleClipStudioFile(session, event.target.files[0]);
+      }
+      // Batch Studio — one or more files picked via the upload file input.
+      if (event.target.matches("[data-batch-file]") && event.target.files?.length) {
+        handleBatchFiles(session, event.target.files);
+        event.target.value = ""; // allow re-picking the same file
       }
       // Clip Studio — clip duration select.
       if (event.target.matches('[data-clip-config="duration"]')) {

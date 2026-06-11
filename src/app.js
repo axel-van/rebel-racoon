@@ -9,7 +9,7 @@ import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
 import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=25";
 import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=13";
 import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=31";
-import { init as initAddSourceModal } from "./components/add-source-modal.js?v=31";
+import { init as initAddSourceModal } from "./components/add-source-modal.js?v=36";
 import { init as initConnectorsModal } from "./components/connectors-modal.js?v=6";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
 import { init as initRenameModal } from "./components/rename-modal.js?v=2";
@@ -19,7 +19,7 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=47";
 import { renderDashboard } from "./screens/dashboard.js?v=46";
-import { renderSession } from "./screens/session.js?v=232";
+import { renderSession } from "./screens/session.js?v=248";
 import { renderIdeas } from "./screens/ideas.js?v=58";
 import { renderContexts } from "./screens/contexts.js?v=69";
 import { renderSettings } from "./screens/settings.js?v=42";
@@ -27,7 +27,7 @@ import { renderConnectors } from "./screens/connectors.js?v=8";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=47";
 import { renderPlaybook } from "./screens/playbook.js?v=36";
-import * as __capAddSource from "./components/add-source-modal.js?v=31";
+import * as __capAddSource from "./components/add-source-modal.js?v=36";
 import * as __capGenImage from "./components/generate-image-modal.js?v=25";
 import * as __capBug from "./components/bug-report-modal.js?v=23";
 import * as __capFeedback from "./components/feedback-modal.js?v=26";

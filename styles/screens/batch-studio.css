@@ -1,0 +1,250 @@
+/* Batch Studio — dedicated "Batch from a source" intake screen.
+   Single stage: a scrollable upload column (AI badge + marketing title + dashed
+   dropzone + "or" + URL/connector row + staged-source list) above a sticky bar
+   carrying the Playbook picker and the "Start drafting" CTA. Reuses the Clip
+   Studio visual language (see clip-studio.css) but is self-contained.
+   Root: `.session__assistant.batch-studio.batch-studio--upload`. */
+
+.session__assistant.batch-studio {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--app-bg);
+  overflow: hidden;
+}
+
+.batch-studio__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--ref-spacing-xl);
+}
+
+.batch-studio__inner {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+}
+
+/* ── Intro ──────────────────────────────────────────────────────────────── */
+.batch-studio__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xs);
+}
+
+.batch-studio__ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-mermaid-gradient-background);
+  color: var(--ref-color-white);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+}
+.batch-studio__ai-badge i {
+  font-size: var(--sys-icon-css-xs);
+  color: var(--ref-color-white);
+}
+
+.batch-studio__title {
+  margin: 0;
+  font-family: var(--ref-font-family);
+  font-size: var(--sys-text-style-marketing-size);
+  line-height: var(--sys-text-style-marketing-line-height);
+  font-weight: var(--sys-text-style-marketing-weight);
+  letter-spacing: -0.01em;
+  color: var(--ref-color-grey-100);
+}
+
+.batch-studio__sub {
+  margin: 0;
+  max-width: 540px;
+  font-size: var(--sys-text-style-subtitle-size);
+  line-height: var(--sys-text-style-subtitle-line-height);
+  font-weight: var(--sys-text-style-subtitle-weight);
+  color: var(--ref-color-grey-60);
+}
+
+/* ── Upload box ──────────────────────────────────────────────────────────────
+   The hero: a prominent dashed drop/browse area for files (main), with the
+   "additional features" (link / pasted text / connected source) attached in a
+   divider-separated footer. A full-box overlay confirms the drop while dragging. */
+.batch-studio__dropzone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px dashed var(--ref-color-grey-20);
+  border-radius: var(--app-radius-card);
+  background: var(--ref-color-white);
+  overflow: hidden;
+  transition: border-color var(--ref-animation-short) var(--app-ease-standard);
+}
+.session__assistant.batch-studio.is-drop-target .batch-studio__dropzone {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+/* Main file drop / click-to-browse area. */
+.batch-studio__dropzone-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xl) var(--ref-spacing-lg);
+  text-align: center;
+  cursor: pointer;
+  transition: background var(--ref-animation-short) var(--app-ease-standard);
+}
+.batch-studio__dropzone-main:hover,
+.batch-studio__dropzone-main:focus-visible {
+  outline: none;
+  background: var(--ref-color-grey-05);
+}
+.batch-studio__dropzone-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ref-spacing-xl);
+  height: var(--ref-spacing-xl);
+  margin-bottom: var(--ref-spacing-xxs);
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-white);
+  color: var(--ref-color-grey-60);
+  border: 1px solid var(--app-border);
+}
+.batch-studio__dropzone-icon i {
+  font-size: var(--sys-icon-css-md);
+}
+.batch-studio__dropzone-primary {
+  margin: 0;
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+.batch-studio__dropzone-link {
+  color: var(--ref-color-electric-blue-100);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+.batch-studio__dropzone-sub {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+}
+
+/* Additional features footer — the link / text / connector buttons. */
+.batch-studio__dropzone-extra {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
+  border-top: 1px solid var(--app-border);
+  background: var(--ref-color-grey-05);
+}
+.batch-studio__dropzone-extra-label {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  margin-right: var(--ref-spacing-xxxs);
+}
+.batch-studio__method {
+  flex: 0 0 auto;
+}
+
+/* Drop overlay — covers the whole box while a file is dragged over the panel. */
+.batch-studio__dropzone-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xs);
+  border-radius: var(--app-radius-card);
+  background: color-mix(in srgb, var(--ref-color-electric-blue-05) 92%, transparent);
+  color: var(--ref-color-electric-blue-100);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--ref-animation-short) var(--app-ease-standard);
+}
+.session__assistant.batch-studio.is-drop-target .batch-studio__dropzone-overlay {
+  opacity: 1;
+}
+
+/* Connected-source picker (gated) — a stroked button in the features footer. */
+.batch-studio__connector {
+  position: relative;
+}
+.batch-studio__connector-trigger {
+  list-style: none;
+  cursor: pointer;
+}
+.batch-studio__connector-trigger::-webkit-details-marker {
+  display: none;
+}
+.batch-studio__connector-dropdown {
+  left: 0;
+  min-width: 220px;
+}
+
+/* ── Staged-source list — shared source-card component, stacked ─────────── */
+.batch-studio__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+/* ── Commit group — Playbook field + primary CTA, inline at the foot of the
+   content column (no detached footer bar). Separated from the inputs with a
+   divider so it reads as the "now choose a playbook and go" decision point. */
+.batch-studio__commit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  margin-top: var(--ref-spacing-sm);
+  padding-top: var(--ref-spacing-lg);
+  border-top: 1px solid var(--app-border);
+}
+.batch-studio__field-label {
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+.batch-studio__field-hint {
+  margin: var(--ref-spacing-xxs) 0 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+}
+
+/* Select + CTA sit side by side, left-aligned — neither spans the column. */
+.batch-studio__commit-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  flex-wrap: wrap;
+}
+
+/* Playbook select — a comfortable fixed-ish width, not full-bleed. */
+.batch-studio__playbook {
+  flex: 0 1 300px;
+  min-width: 0;
+}
+.batch-studio__playbook > .ap-select-trigger {
+  width: 100%;
+  justify-content: space-between;
+}
+
+/* Primary action — sized to its label. */
+.batch-studio__start {
+  flex: 0 0 auto;
+}

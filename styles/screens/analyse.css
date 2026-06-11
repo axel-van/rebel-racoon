@@ -138,6 +138,39 @@
   background: var(--ref-color-electric-blue-05);
 }
 
+/* Disabled row — e.g. a social profile with no published posts, so there's
+   nothing for Archie to analyse. The leading content (number, avatar, name)
+   dims to read as unavailable, but the trailing indication stays at full
+   strength so the reason is legible. */
+.analyse__option--disabled {
+  cursor: not-allowed;
+}
+
+.analyse__option--disabled:hover {
+  background: transparent;
+}
+
+.analyse__option--disabled .analyse__option-shortcut,
+.analyse__option--disabled .analyse__option-icon,
+.analyse__option--disabled .analyse__option-text {
+  opacity: 0.5;
+}
+
+/* Trailing indication pill — sits on the right where the chevron would be,
+   explaining why a row is unavailable (e.g. "No posts to analyze"). */
+.analyse__option-note {
+  flex-shrink: 0;
+  padding: 2px var(--ref-spacing-xs);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-grey-05);
+  border: 1px solid var(--app-border-soft);
+  color: var(--sys-text-color-light);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  white-space: nowrap;
+}
+
 .analyse__options-submit {
   margin-top: var(--ref-spacing-xs);
   display: flex;

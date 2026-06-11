@@ -16,6 +16,7 @@ Documentation qui décrit l'état actuel du code. À maintenir à jour quand le 
 | [`reference/ROUTES.md`](reference/ROUTES.md)               | Route table, handoffs cross-routes, URL state hash query                        |
 | [`reference/STORES.md`](reference/STORES.md)               | Stores : pattern de base, catalogue, persistence, invariants, singleton warning |
 | [`reference/DESIGN-SYSTEM.md`](reference/DESIGN-SYSTEM.md) | Workflow DS obligatoire, tokens, composants `.ap-*`, MCP `ds-css`               |
+| [`reference/SHELL-LAYOUT.md`](reference/SHELL-LAYOUT.md)   | Règles right panel / status-card / sidebar (collapsed/expanded) + tailles panel |
 | [`reference/GLOSSARY.md`](reference/GLOSSARY.md)           | Vocabulaire produit, pipeline, ambiguïtés (Playbook ↔ Context)                  |
 
 ---

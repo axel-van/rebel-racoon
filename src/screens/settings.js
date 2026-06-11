@@ -12,7 +12,7 @@ import { html, raw, escapeHtml } from "../utils.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=99";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=4";
 import { showToast } from "../components/toast.js?v=20";
-import { socialAccounts } from "../mocks.js?v=41";
+import { socialAccounts } from "../mocks.js?v=43";
 // Admin section — prototype-only controls (was the floating admin chip).
 import { FLAGS } from "../ff-catalog.js?v=5";
 import { getFlags, setFlag } from "../feature-flags.js?v=4";

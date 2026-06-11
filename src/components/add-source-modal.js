@@ -10,7 +10,7 @@
 
 import { html, raw, escapeHtml } from "../utils.js?v=20";
 import { iconFor } from "../file-kinds.js?v=20";
-import { connectorDocs } from "../mocks.js?v=41";
+import { connectorDocs } from "../mocks.js?v=43";
 import {
   getConnectors,
   findConnector,
@@ -57,10 +57,8 @@ const ACCEPT = ".pdf,.doc,.docx,.txt,.md,.mp4,.mov,.mp3,.wav,.m4a,.png,.jpg,.jpe
 const state = {
   activeTab: "upload",
   urlValue: "",
-  // Paste-text tab — the textarea content + a mini-history of text sources
-  // added during this modal trip.
+  // Paste-text tab — the textarea content.
   pasteValue: "",
-  pasteHistory: [], // [{ uploadId }]
   inlineError: "",
   // Connector sub-state
   browsingConnectorId: null,
@@ -69,11 +67,12 @@ const state = {
   // tab list to "what I'm uploading right now", not the global history.
   // Reset on every open().
   tripUploadIds: new Set(),
-  // Mini-history of URLs added in this modal session
-  urlHistory: [], // [{ uploadId }]
   // Active session — sources created during this modal trip land in
   // this session's per-session list in sources-stream.
   currentSessionId: null,
+  // Optional staging callbacks (Batch Studio) — see open().
+  onStageText: null,
+  onStageUrl: null,
 };
 
 function clone(obj) {
@@ -200,13 +199,10 @@ function renderUploadRow(u) {
 
 function renderUrlTab() {
   const valid = isValidUrl(state.urlValue);
-  // Inline format error — shown only when the user has typed something that
-  // isn't a valid URL. While the input is empty we keep the slate clean
-  // (the `Add URL` button stays disabled and the sub-text hint covers
-  // expectations). FIND-A1: stop the silent disable that left the user
-  // wondering why the button never reacted.
-  const trimmed = state.urlValue.trim();
-  const showUrlError = trimmed.length > 0 && !valid;
+  // Format validation happens on blur (onFocusOut), not at render — typing
+  // never scolds the user mid-URL. So the tab always renders neutral (error
+  // hidden, helper shown); the Add button still reflects validity immediately.
+  const showUrlError = false;
   return html`
     <div class="add-source__url">
       <div class="ap-form-field">
@@ -216,10 +212,11 @@ function renderUrlTab() {
             <input
               id="addSourceUrlInput"
               type="url"
+              class="${showUrlError ? "invalid" : ""}"
               placeholder="https://example.com/article"
               data-url-input
               value="${state.urlValue}"
-              aria-describedby="addSourceUrlError"
+              aria-describedby="addSourceUrlMsg"
               aria-invalid="${showUrlError ? "true" : "false"}"
             />
           </div>
@@ -227,32 +224,19 @@ function renderUrlTab() {
             <span>Add URL</span>
           </button>
         </div>
-        <div
-          id="addSourceUrlError"
-          class="ap-infobox error add-source__url-error"
+        <p
+          class="ap-form-message error"
+          id="addSourceUrlMsg"
           data-url-error
           role="alert"
           ${showUrlError ? "" : "hidden"}
         >
-          <span data-url-error-text>URL must start with http:// or https://</span>
-        </div>
-        <p class="add-source__sub muted">Public web pages, blog posts, YouTube videos, podcasts.</p>
+          URL must start with http:// or https://
+        </p>
+        <p class="add-source__sub muted" data-url-hint ${showUrlError ? "hidden" : ""}>
+          Public web pages, blog posts, YouTube videos, podcasts.
+        </p>
       </div>
-      ${raw(state.urlHistory.length ? renderUrlHistory() : "")}
-    </div>
-  `;
-}
-
-function renderUrlHistory() {
-  const uploads = getUploads();
-  const items = state.urlHistory.map((entry) => uploads.find((u) => u.id === entry.uploadId)).filter(Boolean);
-  if (items.length === 0) return "";
-  return `
-    <div class="add-source__url-history">
-      <h4 class="add-source__url-history-title">Added so far</h4>
-      <ul class="add-source__file-list">
-        ${items.map(renderUploadRow).join("")}
-      </ul>
     </div>
   `;
 }
@@ -298,32 +282,25 @@ ${escapeHtml(state.pasteValue)}</textarea
           </button>
         </div>
       </div>
-      ${raw(state.pasteHistory.length ? renderPasteHistory() : "")}
-    </div>
-  `;
-}
-
-function renderPasteHistory() {
-  const uploads = getUploads();
-  const items = state.pasteHistory.map((entry) => uploads.find((u) => u.id === entry.uploadId)).filter(Boolean);
-  if (items.length === 0) return "";
-  return `
-    <div class="add-source__url-history">
-      <h4 class="add-source__url-history-title">Added so far</h4>
-      <ul class="add-source__file-list">
-        ${items.map(renderUploadRow).join("")}
-      </ul>
     </div>
   `;
 }
 
 // Commit the textarea content as a Text source, then clear for the next one.
+// In staging mode (Batch Studio), hand the raw text back to the caller and
+// close — the batch screen owns the staged source + its lifecycle.
 function submitPastedText() {
   const text = state.pasteValue;
   if (!text.trim()) return;
+  if (state.onStageText) {
+    const cb = state.onStageText;
+    state.pasteValue = "";
+    close();
+    cb(text);
+    return;
+  }
   const uploadId = startTextImport(text, state.currentSessionId);
   state.tripUploadIds.add(uploadId);
-  state.pasteHistory.unshift({ uploadId });
   state.pasteValue = "";
   renderContent();
   renderFooter();
@@ -662,9 +639,16 @@ function onClick(event) {
   if (event.target.closest("[data-add-url]")) {
     const trimmed = state.urlValue.trim();
     if (!isValidUrl(trimmed)) return;
+    // Staging mode (Batch Studio) — hand the URL back and close.
+    if (state.onStageUrl) {
+      const cb = state.onStageUrl;
+      state.urlValue = "";
+      close();
+      cb(trimmed);
+      return;
+    }
     const uploadId = startUrlImport(trimmed, state.currentSessionId);
     state.tripUploadIds.add(uploadId);
-    state.urlHistory.unshift({ uploadId });
     state.urlValue = "";
     renderContent();
     renderFooter();
@@ -808,19 +792,36 @@ function onInput(event) {
   }
   if (event.target.matches("[data-url-input]")) {
     state.urlValue = event.target.value;
-    // Just enable/disable the Add URL button — re-render only the button state.
-    const btn = contentEl.querySelector("[data-add-url]");
+    // Enable/disable the Add URL button live. We validate the FORMAT on blur
+    // (see onFocusOut) — typing never surfaces the error, so the user isn't
+    // scolded mid-URL. But once an error is showing, clear it the moment the
+    // value becomes valid so the correction feels immediate.
     const valid = isValidUrl(state.urlValue);
+    const btn = contentEl.querySelector("[data-add-url]");
     if (btn) btn.toggleAttribute("disabled", !valid);
-    // Toggle the inline format error in place so the input keeps focus +
-    // caret position. Only surface the error after the user has typed
-    // something — empty input stays neutral.
-    const trimmed = state.urlValue.trim();
-    const showError = trimmed.length > 0 && !valid;
-    const errorEl = contentEl.querySelector("[data-url-error]");
-    if (errorEl) errorEl.hidden = !showError;
-    if (event.target.setAttribute) event.target.setAttribute("aria-invalid", showError ? "true" : "false");
+    if (valid) setUrlError(false);
     return;
+  }
+}
+
+// Validate the URL format when the user leaves the field (inline-validation:
+// validate on blur, not on every keystroke). Toggles the DS error message +
+// the input's `invalid` state in place, swapping the helper out while invalid.
+function onFocusOut(event) {
+  if (!event.target.matches?.("[data-url-input]")) return;
+  const trimmed = state.urlValue.trim();
+  setUrlError(trimmed.length > 0 && !isValidUrl(trimmed));
+}
+
+function setUrlError(show) {
+  const errorEl = contentEl.querySelector("[data-url-error]");
+  if (errorEl) errorEl.hidden = !show;
+  const hintEl = contentEl.querySelector("[data-url-hint]");
+  if (hintEl) hintEl.hidden = show;
+  const input = contentEl.querySelector("[data-url-input]");
+  if (input) {
+    input.classList.toggle("invalid", show);
+    input.setAttribute("aria-invalid", show ? "true" : "false");
   }
 }
 
@@ -849,9 +850,17 @@ function onKeydown(event) {
     event.preventDefault();
     const trimmed = state.urlValue.trim();
     if (!isValidUrl(trimmed)) return;
+    // Staging mode (Batch Studio) — hand the URL back and close, same as the
+    // Add URL button.
+    if (state.onStageUrl) {
+      const cb = state.onStageUrl;
+      state.urlValue = "";
+      close();
+      cb(trimmed);
+      return;
+    }
     const uploadId = startUrlImport(trimmed, state.currentSessionId);
     state.tripUploadIds.add(uploadId);
-    state.urlHistory.unshift({ uploadId });
     state.urlValue = "";
     renderContent();
     renderFooter();
@@ -870,13 +879,16 @@ export function open(opts = {}) {
   // right now" list. Past trips' uploads still live in the global store and
   // are visible in the dashboard Content panel, just not in the modal.
   state.tripUploadIds = new Set();
-  state.urlHistory = [];
   state.pasteValue = "";
-  state.pasteHistory = [];
   state.selections = {};
   // Active session — sources created during this modal trip land in
   // this session's per-session list in sources-stream.
   state.currentSessionId = opts.currentSessionId || null;
+  // Optional staging callbacks — when set (e.g. the Batch Studio intake),
+  // pasted text / a URL is handed back to the caller to stage instead of
+  // imported straight into a session, and the modal closes after one add.
+  state.onStageText = opts.onStageText || null;
+  state.onStageUrl = opts.onStageUrl || null;
   backdrop.hidden = false;
   backdrop.classList.add("open");
   modal.classList.add("open");
@@ -888,11 +900,9 @@ export function open(opts = {}) {
   // startConnectorImport), so no separate attach callback is needed.
   if (!unsubscribeUploads) {
     unsubscribeUploads = subscribeUploads(() => {
-      if (
-        state.activeTab === "upload" ||
-        (state.activeTab === "url" && state.urlHistory.length) ||
-        (state.activeTab === "pasteText" && state.pasteHistory.length)
-      ) {
+      // Only the Upload tab lists in-flight uploads; URL / Paste text no longer
+      // show an "Added so far" history, so they don't repaint on upload changes.
+      if (state.activeTab === "upload") {
         renderContent();
       }
       renderFooter();
@@ -947,6 +957,7 @@ export function init() {
   modal.addEventListener("click", onClick);
   modal.addEventListener("change", onChange);
   modal.addEventListener("input", onInput);
+  modal.addEventListener("focusout", onFocusOut);
   modal.addEventListener("dragenter", onDragEnter);
   modal.addEventListener("dragover", onDragOver);
   modal.addEventListener("dragleave", onDragLeave);

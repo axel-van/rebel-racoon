@@ -315,3 +315,11 @@ button.ap-link {
 .divider {
   background-color: var(--ref-color-grey-10);
 }
+
+/* `.ap-form-message` sets `display: flex`, which beats the UA `[hidden] {
+ * display: none }` rule via specificity — so toggling the `hidden` attribute
+ * to show/hide a field message in place (no re-render) would never hide it.
+ * Restore the guard. */
+.ap-form-message[hidden] {
+  display: none;
+}

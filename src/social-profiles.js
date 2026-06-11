@@ -7,7 +7,7 @@
 // as the muted caption, and a DS avatar carrying the brand photo plus a
 // corner network badge.
 
-import { socialAccounts } from "./mocks.js?v=41";
+import { socialAccounts } from "./mocks.js?v=43";
 import { escapeHtml } from "./utils.js?v=20";
 
 // Map our mock's `platform` slug to the DS's official full-color network
@@ -82,6 +82,11 @@ export function getConnectedProfiles() {
 // in-session draft profile picker so the two stay identical.
 export function buildConnectedProfileItems() {
   return getConnectedProfiles().map((p) => {
+    // A profile with no published posts can't be analysed — there's no
+    // history for Archie to learn the voice and format from. Keep the usual
+    // "Platform · Kind" caption and surface the limitation as a trailing
+    // indication on the right, with the row disabled.
+    const hasNoPosts = p.postCount === 0;
     const captionParts = [];
     if (p.platformLabel) captionParts.push(p.platformLabel);
     if (p.kind) captionParts.push(p.kind);
@@ -89,6 +94,8 @@ export function buildConnectedProfileItems() {
       value: p.id,
       label: p.handle,
       caption: captionParts.join(" · "),
+      disabled: hasNoPosts,
+      endNote: hasNoPosts ? "No posts to analyze" : null,
       avatar: {
         imageUrl: p.photo,
         initials: BRAND_INITIALS,

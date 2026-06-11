@@ -35,22 +35,21 @@ export const recentSessions = [
   },
 ];
 
-// Empty-state Chat starter cards — the four handoff-spec prompts shown when a
-// conversation has no user message yet. The `{{source}}` placeholder is
-// Workflow "starters" surfaced as the big card grid under the composer in the
-// empty-chat hero (renderEmptyHero in screens/session.js). Each card maps to a
-// REAL Archie capability and is one of two kinds:
-//   • `prompt`  — clicking pre-fills the composer with an editable prompt. The
-//                 `{{source}}` / `{{video-source}}` placeholders are resolved at
-//                 render time to the first attached (video) source filename, or
-//                 the literal "your source" / "your video" for first-run users.
-//   • `action`  — clicking launches a guided flow instead of injecting text.
-//                 Handled in session.js's starter click delegation:
-//                   - "open-video-clips" → scripted video intake + clip flow
-//                   - "build-playbook"   → context-builder (Playbook creation)
-// A 7th, connector-only starter ("Ask a connected source") is swapped in over
-// the last card at render time when the `connectors` flag is on AND at least
-// one connector is connected — see renderEmptyHero.
+// Empty-state Chat starter cards — the workflow prompts shown when a
+// conversation has no user message yet. Surfaced as the big card grid under
+// the composer in the empty-chat hero (renderEmptyHero in screens/session.js).
+// Each card maps to a REAL Archie capability and is one of three kinds:
+//   • `prompt`     — clicking pre-fills the composer with an editable prompt.
+//                    The `{{source}}` / `{{video-source}}` placeholders are
+//                    resolved at render time to the first attached (video)
+//                    source filename, or the literal "your source" / "your
+//                    video" for first-run users.
+//   • `action`     — clicking launches a guided flow instead of injecting text.
+//                    Handled in session.js's starter click delegation:
+//                      - "open-batch"       → Batch Studio source-intake screen
+//                      - "open-video-clips" → scripted video intake + clip flow
+//   • `comingSoon` — a teaser card rendered non-interactive with a "Coming
+//                    soon" badge. No prompt/action fires on click.
 //
 // `subtitle` + `cta` drive the visible card copy; `prompt` is still carried on
 // the element (data-starter-prompt) so prompt-kind cards inject clean text.
@@ -62,26 +61,9 @@ export const chatStarters = [
     title: "Batch from a source",
     subtitle: "Pull the strongest ideas and draft a set of posts across your networks.",
     cta: "Start drafting",
-    prompt: "Pull the strongest ideas from {{source}} and draft 5 posts across LinkedIn, X, and Instagram.",
-  },
-  {
-    id: "starter-repurpose",
-    icon: "ap-icon-refresh",
-    tone: "blue",
-    title: "Repurpose long-form",
-    subtitle: "Turn one long source into 8 posts — different angles, same voice.",
-    cta: "Repurpose",
-    prompt:
-      "Turn {{source}} into 8 posts: 3 for LinkedIn, 3 for X, 2 for Instagram. Different angles, same brand voice.",
-  },
-  {
-    id: "starter-launch",
-    icon: "ap-icon-calendar",
-    tone: "orange",
-    title: "Plan a launch week",
-    subtitle: "A 5-day sequence, one post per day, ready to schedule.",
-    cta: "Plan the week",
-    prompt: "Plan a 5-day launch sequence using {{source}}. One post per day, mixed networks, ready to schedule.",
+    // Opens the dedicated Batch Studio intake (upload 1+ sources + pick a
+    // Playbook → new chat). See renderBatchStudio in screens/session.js.
+    action: "open-batch",
   },
   {
     id: "starter-video-clips",
@@ -97,23 +79,14 @@ export const chatStarters = [
     action: "open-video-clips",
   },
   {
-    id: "starter-playbook",
-    icon: "ap-icon-feature-library",
+    id: "starter-top-posts",
+    icon: "ap-icon-feature-analytics",
     tone: "green",
-    title: "Build my Playbook",
-    subtitle: "Set up your brand voice, audience, and CTAs in a quick chat.",
-    cta: "Build it",
-    // Launches the context-builder (same flow as /contexts → New Playbook).
-    action: "build-playbook",
-  },
-  {
-    id: "starter-call",
-    icon: "ap-icon-megaphone",
-    tone: "red",
-    title: "Turn a call into posts",
-    subtitle: "Drop a recording or transcript — I'll pull the quotes and takeaways.",
-    cta: "Turn it into posts",
-    prompt: "Turn {{source}} into 6 posts for LinkedIn and X — pull the best quotes, takeaways, and one strong hook.",
+    title: "Use top performing posts",
+    subtitle: "Draw on your best-performing posts and turn what works into fresh drafts.",
+    cta: "Coming soon",
+    // Teaser only — rendered non-interactive with a "Coming soon" badge.
+    comingSoon: true,
   },
 ];
 
@@ -2348,6 +2321,7 @@ export const socialAccounts = [
     logo: "assets/logos/social/facebook.svg",
     status: "connected",
     token: "expired",
+    postCount: 48,
   },
   {
     id: "ig",
@@ -2360,6 +2334,7 @@ export const socialAccounts = [
     status: "connected",
     token: "expiring",
     expiresInDays: 7,
+    postCount: 0,
   },
   {
     id: "li",
@@ -2371,6 +2346,7 @@ export const socialAccounts = [
     logo: "assets/logos/social/linkedin.svg",
     status: "connected",
     token: "ok",
+    postCount: 312,
   },
   {
     id: "x",
@@ -2382,6 +2358,7 @@ export const socialAccounts = [
     logo: "assets/logos/social/x.svg",
     status: "connected",
     token: "ok",
+    postCount: 0,
   },
   {
     id: "tt",

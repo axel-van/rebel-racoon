@@ -1,7 +1,7 @@
 import { html, raw } from "../utils.js?v=20";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=41";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=41";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=43";
 import { isNewUser } from "../user-mode.js?v=22";
 import { getPath } from "../router.js?v=30";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -26,7 +26,7 @@ import {
   removeSources,
   renameSource,
 } from "../sources-stream.js?v=37";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=31";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=36";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=23";
 import { askConnector } from "../connector-ask.js?v=3";

@@ -214,11 +214,23 @@ export function renderPicker(picker) {
         `;
       }
 
+      // A disabled row (e.g. a social profile with no posts to analyse) is a
+      // real <button disabled> so it swallows clicks and drops out of the tab
+      // order; the keyboard nav also skips it. An optional `endNote` renders a
+      // small trailing indication on the right (in place of the chevron)
+      // explaining why the row is unavailable.
+      const isDisabled = !!it.disabled;
+      const trailing = it.endNote
+        ? `<span class="analyse__option-note">${it.endNote}</span>`
+        : isDisabled
+          ? ""
+          : trailingIcon;
       return `
         <button
           type="button"
-          class="analyse__option${isPreset ? " is-selected" : ""}"
+          class="analyse__option${isPreset ? " is-selected" : ""}${isDisabled ? " analyse__option--disabled" : ""}"
           data-${handler}="${it.value}"
+          ${isDisabled ? `disabled aria-disabled="true"` : ""}
           ${multi ? `aria-pressed="${isPreset ? "true" : "false"}"` : ""}
         >
           <span class="analyse__option-shortcut" aria-hidden="true">${i + 1}</span>
@@ -227,7 +239,7 @@ export function renderPicker(picker) {
             <span class="analyse__option-label">${it.label}</span>
             ${it.caption ? `<span class="muted">${it.caption}</span>` : ""}
           </span>
-          ${trailingIcon}
+          ${trailing}
         </button>
       `;
     })
@@ -391,18 +403,17 @@ export function bindWizardKeyboard(
     const focusables = Array.from(target.querySelectorAll(`[data-${handler}], [data-${handler}-custom]`));
     if (!focusables.length) return;
 
-    // ArrowDown/Up cycles through option rows + the input row.
+    // ArrowDown/Up cycles through option rows + the input row, skipping any
+    // disabled rows (e.g. a profile with no posts to analyse).
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
-      const current = document.activeElement;
-      const currentIdx = focusables.indexOf(current);
-      let nextIdx;
-      if (event.key === "ArrowDown") {
-        nextIdx = currentIdx < 0 ? 0 : Math.min(currentIdx + 1, focusables.length - 1);
-      } else {
-        nextIdx = currentIdx <= 0 ? 0 : currentIdx - 1;
+      const dir = event.key === "ArrowDown" ? 1 : -1;
+      const currentIdx = focusables.indexOf(document.activeElement);
+      let nextIdx = currentIdx < 0 ? (dir === 1 ? 0 : focusables.length - 1) : currentIdx + dir;
+      while (nextIdx >= 0 && nextIdx < focusables.length && focusables[nextIdx]?.disabled) {
+        nextIdx += dir;
       }
-      focusables[nextIdx]?.focus();
+      if (nextIdx >= 0 && nextIdx < focusables.length) focusables[nextIdx]?.focus();
       return;
     }
 
@@ -433,7 +444,7 @@ export function bindWizardKeyboard(
     if (/^[1-9]$/.test(event.key) && !activeIsInput) {
       const idx = Number(event.key) - 1;
       const target = focusables[idx];
-      if (target) {
+      if (target && !target.disabled) {
         event.preventDefault();
         if (target.tagName === "INPUT") target.focus();
         else target.click();
@@ -490,9 +501,9 @@ export function bindWizardKeyboard(
   // question state, so the second submit landed on the next step's
   // picker with the stale text value as input — auto-skipping it.)
 
-  // Focus first option on render.
+  // Focus first option on render (skipping disabled rows).
   queueMicrotask(() => {
-    const first = target.querySelector(`[data-${handler}]`);
+    const first = target.querySelector(`[data-${handler}]:not([disabled])`);
     if (first) first.focus();
     // And always scroll the chat to the bottom on new step.
     const chat = target.querySelector("#analyseChat");

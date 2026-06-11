@@ -87,9 +87,17 @@ bindGlobalListeners();
 export function renderSourceCard(
   source,
   allIdeas = [],
-  { selectable = false, isSelected = false, sessionId = null } = {},
+  { selectable = false, isSelected = false, sessionId = null, staged = false, removeValue = null, stagedSub = "" } = {},
 ) {
-  const isProcessing = source.status === "Processing";
+  // `staged` mode — the source isn't in sources-stream yet (e.g. the Batch
+  // Studio intake list). Reuses the card shell + tinted kind-box, swaps the
+  // Ask/Mention/More cluster for a single remove control, and shows a caller-
+  // supplied sub-line (origin) in place of the ideas/status meta.
+  const isProcessing = !staged && source.status === "Processing";
+  // Staged "busy" — the batch-screen upload/analysis loader phases. Shows the
+  // same spinner kind-box as a real processing source, with a phase sub-line.
+  const stagedBusy = staged && (source.status === "uploading" || source.status === "analyzing");
+  const showSpinner = isProcessing || stagedBusy;
   const totalIdeas =
     typeof source.ideaCount === "number"
       ? source.ideaCount
@@ -101,11 +109,17 @@ export function renderSourceCard(
   // the static "Processing · Added <when>" when no ticker is wired (e.g.
   // mock seed entries that never went through the upload pipeline).
   const hasTicker = isProcessing && typeof source.progress === "number";
-  const subLine = isProcessing
-    ? hasTicker
-      ? `${source.stage || "Processing"} · ${formatEta(source.etaSec)} left`
-      : `Processing · Added ${source.addedAt}`
-    : `${totalIdeas} idea${totalIdeas === 1 ? "" : "s"} · ${source.status} · Added ${source.addedAt}`;
+  const subLine = staged
+    ? source.status === "uploading"
+      ? "Uploading…"
+      : source.status === "analyzing"
+        ? "Analyzing…"
+        : stagedSub
+    : isProcessing
+      ? hasTicker
+        ? `${source.stage || "Processing"} · ${formatEta(source.etaSec)} left`
+        : `Processing · Added ${source.addedAt}`
+      : `${totalIdeas} idea${totalIdeas === 1 ? "" : "s"} · ${source.status} · Added ${source.addedAt}`;
   const progressBar = hasTicker
     ? `
       <div class="source-card__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(source.progress * 100)}">
@@ -115,9 +129,11 @@ export function renderSourceCard(
     : "";
 
   // Icon content — file kind icon, or a spinning ring while processing.
-  const iconContent = isProcessing
+  // Staged sources carry an iconKey (e.g. "text"/"url"/"pdf") that maps cleanly
+  // even for connector kinds like "Doc"/"Page" that iconFor wouldn't resolve.
+  const iconContent = showSpinner
     ? `<span class="source-card__spinner" role="status" aria-label="Processing"></span>`
-    : `<i class="${iconFor(source.kind)} source-card__kind-icon" aria-hidden="true"></i>`;
+    : `<i class="${iconFor(staged ? source.iconKey || source.kind : source.kind)} source-card__kind-icon" aria-hidden="true"></i>`;
 
   // Processing pill — shown in place of actions while the source is still
   // being analysed. Mermaid-tinted gradient + sparkles icon + live stage
@@ -164,7 +180,7 @@ export function renderSourceCard(
   // gives the click delegator a stable hook regardless of which child the
   // click lands on.
   const selectCheckbox =
-    selectable && !isProcessing
+    selectable && !isProcessing && !staged
       ? `
         <label class="ap-checkbox-container source-card__check" aria-label="Select ${source.filename}">
           <input
@@ -216,10 +232,24 @@ export function renderSourceCard(
     `
     : "";
 
+  // Staged remove control — replaces the whole Ask/Mention/More cluster.
+  const removeButton = staged
+    ? `<button
+        type="button"
+        class="ap-icon-button transparent source-card__remove"
+        data-source-remove="${escapeHtml(removeValue ?? source.id)}"
+        aria-label="Remove ${escapeHtml(source.filename)}"
+      >
+        <i class="ap-icon-close"></i>
+      </button>`
+    : "";
+
+  const actions = staged ? removeButton : `${askButton}${mentionButton}${processingPill}${moreMenu}`;
+
   const selectedClass = isSelected ? " source-card--selected" : "";
 
   return `
-    <article class="ap-card source-card${isProcessing ? " source-card--processing" : ""}${selectedClass}" data-source-id="${source.id}">
+    <article class="ap-card source-card${showSpinner ? " source-card--processing" : ""}${selectedClass}" data-source-id="${source.id}">
       ${selectCheckbox}
       <div class="source-card__kind-box">${iconContent}</div>
 
@@ -229,10 +259,7 @@ export function renderSourceCard(
       </div>
 
       <div class="source-card__actions">
-        ${askButton}
-        ${mentionButton}
-        ${processingPill}
-        ${moreMenu}
+        ${actions}
       </div>
       ${progressBar}
     </article>
