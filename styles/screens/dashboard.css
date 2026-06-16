@@ -196,15 +196,16 @@
   transition: width var(--ref-animation-normal) var(--app-ease-standard);
 }
 
-/* Tinted square container for the kind icon / spinner. Orange for documents,
-   electric-blue while processing. */
+/* Tinted square container for the kind icon / spinner. Neutral grey for the
+   file-type glyph (it's an indicator, not an action), electric-blue while
+   processing. */
 .source-card__kind-box {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--ref-spacing-xxs);
-  background: var(--ref-color-orange-10);
+  background: var(--ref-color-grey-05);
   border-radius: var(--ref-border-radius-sm);
 }
 
@@ -214,7 +215,7 @@
 
 .source-card__kind-icon {
   font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-orange-100);
+  color: var(--ref-color-grey-80);
   line-height: 1;
 }
 

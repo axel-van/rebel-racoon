@@ -13,6 +13,13 @@
   overflow: hidden;
 }
 
+/* Soft electric-blue glow at the top (same family as the New Chat hero). The
+   3-class selector beats the base background above. */
+.session__assistant.batch-studio.batch-studio--upload {
+  background:
+    radial-gradient(ellipse 58% 40% at 50% 33%, var(--ref-color-electric-blue-10) 0%, transparent 70%), var(--app-bg);
+}
+
 .batch-studio__scroll {
   flex: 1;
   min-height: 0;
@@ -86,33 +93,25 @@
    (styles/components/workflow-flow.css). */
 
 /* ── Upload box ──────────────────────────────────────────────────────────────
-   The hero: a prominent dashed drop/browse area for files (main), with the
-   "additional features" (link / pasted text / connected source) attached in a
-   divider-separated footer. A full-box overlay confirms the drop while dragging. */
-/* The setup block — one big card holding the drop target (left) and the other
-   ways to add sources (right) in two columns. Border, no shadow (per DS).
-   Mirrors the Clip Studio setup card. */
+   One big card (single column): a dashed drop / browse target, then the other
+   ways to add a source below it. Border, no shadow (per DS). A full-card overlay
+   confirms the drop while dragging. */
 .batch-studio__dropzone {
   position: relative;
-  display: grid;
-  grid-template-columns: 1.6fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: var(--ref-spacing-md);
   padding: var(--ref-spacing-md);
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-card);
   background: var(--ref-color-white);
 }
-@media (max-width: 760px) {
-  .batch-studio__dropzone {
-    grid-template-columns: 1fr;
-  }
-}
 
-/* Left column — the dashed drop / click-to-browse target (grey-05 fill so it
-   reads as a drop zone within the white card). */
+/* The dashed drop / click-to-browse target (grey-05 fill so it reads as a drop
+   zone within the white card). */
 .batch-studio__dropzone-main {
   display: flex;
-  min-height: 220px;
+  min-height: 200px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -166,30 +165,22 @@
   font-weight: var(--sys-text-style-caption-weight);
 }
 
-/* Right column — the other ways to add sources, stacked full-width. */
+/* Other ways to add — an inline row below the drop target. */
 .batch-studio__dropzone-extra {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  align-items: center;
+  flex-wrap: wrap;
   gap: var(--ref-spacing-xs);
 }
 .batch-studio__dropzone-extra-label {
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-100);
-  margin-bottom: var(--ref-spacing-xxxs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--ref-color-grey-60);
+  margin-right: var(--ref-spacing-xxxs);
 }
-/* Methods stack and read as a small list; justify their content to the left. */
 .batch-studio__method {
-  justify-content: flex-start;
-}
-.batch-studio__connector {
-  display: flex;
-}
-.batch-studio__connector-trigger {
-  width: 100%;
-  justify-content: flex-start;
+  flex: 0 0 auto;
 }
 
 /* Drop overlay — covers the whole box while a file is dragged over the panel. */

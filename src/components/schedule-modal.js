@@ -101,16 +101,6 @@ const CADENCES = [
   { id: "once", label: "Once a week", weekly: true },
 ];
 
-// Time-of-day preferences (the single-draft strategy chips). Each maps a
-// network's optimal window to its earliest / middle / latest hour via
-// pickHour. Used when there's one draft (no frequency to choose) or as a
-// refinement the free-text note can also set.
-const TIMES_OF_DAY = [
-  { id: "morning", label: "Morning" },
-  { id: "afternoon", label: "Afternoon" },
-  { id: "evening", label: "Evening" },
-];
-
 const WEEKDAY_DOW = {
   sunday: 0,
   monday: 1,
@@ -213,13 +203,12 @@ export function open({ posts, onConfirm }) {
   // the coordinator just uses it as a key.
   requestOpen(ROOT_ID, close);
   const today = new Date();
-  // A single draft has no frequency to spread, so its strategy panel
-  // offers a time-of-day preference instead — seed it to "morning" so a
-  // chip reads as selected from the start. Batches default to no
-  // time-of-day bias (each network's own best hour wins).
+  // One frequency model for any batch size — a single draft recurs on
+  // the cadence just like a batch does. Time-of-day bias is read from the
+  // free-text note (each network's own best hour wins by default).
   const strategy = {
     cadence: "weekdays",
-    timeOfDay: posts.length === 1 ? "morning" : null,
+    timeOfDay: null,
     note: "",
     startFrom: defaultStartFrom(),
   };
@@ -304,20 +293,79 @@ function strategyDays(count, strategy) {
   return days;
 }
 
+// ── Recurrence horizon ────────────────────────────────────────────────
+// The scheduling strategy is a *frequency*: each draft is republished on
+// every day matching the cadence, across a ~1-month horizon from
+// `startFrom`. We cap occurrences per draft so a dense cadence ("every
+// weekday") can't flood the list. Same model whether there's one draft
+// or many — a single draft on "Twice a week" simply gets its own series.
+const RECUR_HORIZON_DAYS = 28; // ~1 month of look-ahead
+const MAX_DATES_PER_DRAFT = 8; // keeps the list usable on dense cadences
+
+// Walk the horizon and collect every day matching the cadence, skipping
+// any weekday the note excluded. Bounded by both the horizon and the
+// per-draft cap. Returns the shared series every draft recurs on.
+function cadenceDays(strategy) {
+  const start = startOfDay(strategy.startFrom || defaultStartFrom());
+  const cadence = CADENCES.find((c) => c.id === strategy.cadence) || CADENCES[0];
+  const avoid = parseAvoidDays(strategy.note);
+  const startDow = start.getDay();
+  const days = [];
+  const cursor = new Date(start);
+  for (let i = 0; i <= RECUR_HORIZON_DAYS && days.length < MAX_DATES_PER_DRAFT; i++) {
+    const dow = cursor.getDay();
+    let qualifies;
+    if (cadence.every) {
+      qualifies = i % cadence.every === 0;
+    } else if (cadence.weekly) {
+      qualifies = dow === startDow;
+    } else {
+      qualifies = cadence.days.includes(dow);
+    }
+    if (qualifies && !avoid.has(dow)) days.push(new Date(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+}
+
+// Recurrence spread: every draft lands on each cadence day, at its
+// network's optimal hour (biased by the note). When several drafts share
+// a day we stagger them an hour apart (capped at 22h) so they don't
+// collide on the exact same timestamp.
 function optimalSlots(posts, strategy = state.strategy) {
-  const days = strategyDays(posts.length, strategy);
-  // An explicit time-of-day chip wins; otherwise read it from the note.
+  const days = cadenceDays(strategy);
   const timeOfDay = strategy.timeOfDay || parseTimeOfDay(strategy.note);
-  const fallbackStart = startOfDay(strategy.startFrom || defaultStartFrom());
+  const fallback = startOfDay(strategy.startFrom || defaultStartFrom());
+  const useDays = days.length ? days : [fallback];
+
+  const slots = [];
+  posts.forEach((p, idx) => {
+    const network = (p.network || "linkedin").toLowerCase();
+    const map = PER_NETWORK_OPTIMAL[network] || FALLBACK_OPTIMAL;
+    const hour = Math.min(pickHour(map.hours, timeOfDay) + idx, 22);
+    for (const day of useDays) {
+      const slot = new Date(day);
+      slot.setHours(hour, 0, 0, 0);
+      slots.push({ post: p, when: slot.getTime() });
+    }
+  });
+  return slots;
+}
+
+// One publish per draft, spread across the cadence days in order — the
+// minimal layout "Clear all dates" collapses the recurrence back to.
+function spreadOneEach(posts, strategy = state.strategy) {
+  const days = strategyDays(posts.length, strategy);
+  const timeOfDay = strategy.timeOfDay || parseTimeOfDay(strategy.note);
+  const fallback = startOfDay(strategy.startFrom || defaultStartFrom());
 
   return posts.map((p, idx) => {
     const network = (p.network || "linkedin").toLowerCase();
     const map = PER_NETWORK_OPTIMAL[network] || FALLBACK_OPTIMAL;
     const hour = pickHour(map.hours, timeOfDay);
-    // If the cadence couldn't yield enough distinct days (huge batch,
-    // narrow once-a-week pattern…), pile the remainder onto the last day
-    // an hour apart so nothing silently drops.
-    const baseDay = days[idx] || days[days.length - 1] || fallbackStart;
+    // If the cadence couldn't yield enough distinct days, pile the
+    // remainder onto the last day an hour apart so nothing silently drops.
+    const baseDay = days[idx] || days[days.length - 1] || fallback;
     const slot = new Date(baseDay);
     const overflow = idx >= days.length ? idx - days.length + 1 : 0;
     slot.setHours(hour + overflow, 0, 0, 0);
@@ -358,6 +406,20 @@ function appendDateForPost(postId) {
   state.slots.push({ post, when: next.getTime() });
 }
 
+// "Add date to all" — append ONE shared publish date (same timestamp) to
+// every draft, so the user picks a single common slot in one action
+// rather than each draft drifting to its own next day. Defaults to one
+// day after the latest date in the whole batch (9am), then lands on every
+// draft; the user can fine-tune any individual row afterwards.
+function addSharedDateToAll() {
+  const all = state.slots.map((s) => s.when);
+  const next = all.length ? new Date(Math.max(...all)) : new Date();
+  next.setDate(next.getDate() + 1);
+  next.setHours(9, 0, 0, 0);
+  const when = next.getTime();
+  state.posts.forEach((post) => state.slots.push({ post, when }));
+}
+
 // Re-spread the whole batch under the current strategy and snap the
 // calendar to the first computed day so the result is visible at a
 // glance. Used by every strategy control (chips, note, start date) and
@@ -381,15 +443,6 @@ function onClick(event) {
   const cadenceChip = event.target.closest("[data-schedule-cadence]");
   if (cadenceChip) {
     state.strategy.cadence = cadenceChip.dataset.scheduleCadence;
-    recomputeOptimal();
-    render();
-    return;
-  }
-  // Time-of-day chip (single-draft strategy) — toggles the preferred
-  // window and re-picks the hour live.
-  const timeChip = event.target.closest("[data-schedule-time]");
-  if (timeChip) {
-    state.strategy.timeOfDay = timeChip.dataset.scheduleTime;
     recomputeOptimal();
     render();
     return;
@@ -446,16 +499,16 @@ function onClick(event) {
     render();
     return;
   }
-  // "Add date to all" — one extra slot per draft in a single click.
+  // "Add date to all" — one shared date applied to every draft at once.
   if (event.target.closest("[data-schedule-add-all]")) {
-    state.posts.forEach((p) => appendDateForPost(p.id));
+    addSharedDateToAll();
     render();
     return;
   }
-  // "Clear all dates" — collapse back to one slot per draft under the
-  // current mode (optimal spread or the custom one-per-day seed).
+  // "Clear all dates" — collapse the recurrence back to one slot per
+  // draft (optimal one-each spread, or the custom one-per-day seed).
   if (event.target.closest("[data-schedule-clear]")) {
-    state.slots = state.mode === "optimal" ? optimalSlots(state.posts) : customDefaultSlots(state.posts);
+    state.slots = state.mode === "optimal" ? spreadOneEach(state.posts) : customDefaultSlots(state.posts);
     render();
     return;
   }
@@ -596,8 +649,8 @@ function renderInner() {
       <span class="ap-dialog-title" id="${ROOT_ID}Title">Schedule ${n} ${n === 1 ? "draft" : "drafts"}</span>
       <span class="ap-dialog-subtitle">
         ${n === 1
-          ? "Pick when this post should publish — I'll suggest the best time for its network."
-          : "Pick when each post should publish. I can spread them across a posting strategy and each network's best hours."}
+          ? "Pick how often this post should publish — I'll recur it on your strategy at its network's best hours."
+          : "Pick how often each post should publish. I'll recur them on your strategy at each network's best hours."}
       </span>
     </div>
 
@@ -668,7 +721,7 @@ function renderModePicker() {
   // indicator, native role="radio" semantics via <input type="radio">,
   // and a built-in selected state that paints the border accent blue.
   const multi = state.posts.length > 1;
-  const optimalSub = multi ? "Spread across each network's best hours" : "Best time on this post's network";
+  const optimalSub = multi ? "Recur each post on your strategy" : "Recur this post on your strategy";
   const customSub = multi ? "Pick each time below" : "Pick the time below";
   return `
     <div class="schedule-modal__modes" role="radiogroup" aria-label="Scheduling mode">
@@ -715,17 +768,15 @@ function renderModePicker() {
 // the Compute button. Every recompute repaints the slot list + calendar.
 function renderStrategyPanel() {
   const s = state.strategy;
-  const multi = state.posts.length > 1;
 
-  // A batch picks a frequency (which days); a single draft picks a
-  // time-of-day (which hour). Same chip primitive, different axis.
-  let chipLabel, chipGroupLabel, chips, notePlaceholder;
-  if (multi) {
-    chipLabel = "Scheduling strategy";
-    chipGroupLabel = "Posting frequency";
-    notePlaceholder = "e.g. Tuesday and Thursday mornings, avoid Mondays…";
-    chips = CADENCES.map(
-      (c) => `
+  // One frequency model for any batch size — the cadence chips decide how
+  // often each draft recurs; the free-text note refines time-of-day and
+  // excludes weekdays.
+  const chipLabel = "Scheduling strategy";
+  const chipGroupLabel = "Posting frequency";
+  const notePlaceholder = "e.g. Tuesday and Thursday mornings, avoid Mondays…";
+  const chips = CADENCES.map(
+    (c) => `
         <button
           type="button"
           class="ap-filter-chip schedule-modal__cadence-chip"
@@ -734,23 +785,7 @@ function renderStrategyPanel() {
         >
           ${c.label}
         </button>`,
-    ).join("");
-  } else {
-    chipLabel = "Preferred time";
-    chipGroupLabel = "Time of day";
-    notePlaceholder = "e.g. Tuesday morning, after lunch, avoid Mondays…";
-    chips = TIMES_OF_DAY.map(
-      (t) => `
-        <button
-          type="button"
-          class="ap-filter-chip schedule-modal__cadence-chip"
-          data-schedule-time="${t.id}"
-          aria-pressed="${s.timeOfDay === t.id ? "true" : "false"}"
-        >
-          ${t.label}
-        </button>`,
-    ).join("");
-  }
+  ).join("");
 
   return `
     <div class="schedule-modal__strategy">
@@ -783,7 +818,7 @@ function renderStrategyPanel() {
           </div>
         </div>
         <button type="button" class="ap-button stroked blue schedule-modal__compute" data-schedule-compute>
-          <i class="ap-icon-clock" aria-hidden="true"></i><span>Compute best ${multi ? "times" : "time"}</span>
+          <i class="ap-icon-clock" aria-hidden="true"></i><span>Compute best times</span>
         </button>
       </div>
     </div>

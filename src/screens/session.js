@@ -435,10 +435,12 @@ function buildWorkflowFlow(steps) {
         .map(
           (s) => `
         <li class="workflow-flow__step workflow-flow__step--${s.tone}">
-          <span class="workflow-flow__chip workflow-flow__chip--${s.tone}">
-            <i class="${s.icon}" aria-hidden="true"></i>
+          <span class="workflow-flow__head">
+            <span class="workflow-flow__chip workflow-flow__chip--${s.tone}">
+              <i class="${s.icon}" aria-hidden="true"></i>
+            </span>
+            <span class="workflow-flow__title">${s.title}</span>
           </span>
-          <span class="workflow-flow__title">${s.title}</span>
           <span class="workflow-flow__text">${s.text}</span>
         </li>`,
         )
