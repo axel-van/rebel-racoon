@@ -226,6 +226,25 @@ function customDefaultSlots(posts) {
   });
 }
 
+// Appends one publish slot for a draft, one day after its latest current
+// time (or tomorrow 9am if it somehow has none). Pushed to the flat slots
+// array — renderSlotList groups it back under the right card.
+function appendDateForPost(postId) {
+  const post = state.posts.find((p) => p.id === postId);
+  if (!post) return;
+  const times = state.slots.filter((s) => s.post.id === postId).map((s) => s.when);
+  let next;
+  if (times.length) {
+    next = new Date(Math.max(...times));
+    next.setDate(next.getDate() + 1);
+  } else {
+    next = new Date();
+    next.setDate(next.getDate() + 1);
+    next.setHours(9, 0, 0, 0);
+  }
+  state.slots.push({ post, when: next.getTime() });
+}
+
 function onClick(event) {
   if (event.target.closest("[data-schedule-close]")) {
     close();
@@ -249,13 +268,42 @@ function onClick(event) {
   const removeBtn = event.target.closest("[data-schedule-remove]");
   if (removeBtn) {
     const idx = parseInt(removeBtn.dataset.scheduleRemove, 10);
-    state.posts = state.posts.filter((_, i) => i !== idx);
+    const removed = state.slots[idx];
+    if (!removed) return;
     state.slots = state.slots.filter((_, i) => i !== idx);
+    // Dropping a draft's last remaining date removes the draft too — no
+    // draft can sit in the batch with zero publish times.
+    const postStillHasDate = state.slots.some((s) => s.post.id === removed.post.id);
+    if (!postStillHasDate) {
+      state.posts = state.posts.filter((p) => p.id !== removed.post.id);
+    }
     if (state.posts.length === 0) {
       close();
     } else {
       render();
     }
+    return;
+  }
+  // "Add another date" (per draft) — append a slot one day after the
+  // draft's latest existing time, same hour, so each new row reads as a
+  // sensible next window rather than landing on top of an existing one.
+  const addBtn = event.target.closest("[data-schedule-add]");
+  if (addBtn) {
+    appendDateForPost(addBtn.dataset.scheduleAdd);
+    render();
+    return;
+  }
+  // "Add date to all" — one extra slot per draft in a single click.
+  if (event.target.closest("[data-schedule-add-all]")) {
+    state.posts.forEach((p) => appendDateForPost(p.id));
+    render();
+    return;
+  }
+  // "Clear all dates" — collapse back to one slot per draft under the
+  // current mode (optimal spread or the custom one-per-day seed).
+  if (event.target.closest("[data-schedule-clear]")) {
+    state.slots = state.mode === "optimal" ? optimalSlots(state.posts) : customDefaultSlots(state.posts);
+    render();
     return;
   }
   if (event.target.closest("[data-schedule-confirm]")) {
@@ -306,7 +354,7 @@ function extractFirstLine(post) {
 }
 
 function onConfirmSucceeded(slots) {
-  showToast(`${slots.length} ${slots.length === 1 ? "draft" : "drafts"} scheduled`);
+  showToast(`${slots.length} ${slots.length === 1 ? "post" : "posts"} scheduled`);
   close();
 }
 
@@ -344,12 +392,6 @@ function onInput(event) {
         const customRadio = document.querySelector('input[name="schedule-mode"][value="custom"]');
         if (customRadio) customRadio.checked = true;
       }
-      // Repaint the slot label so the "scheduled for X" tag tracks.
-      const row = document.querySelector(`[data-schedule-row="${idx}"]`);
-      if (row) {
-        const label = row.querySelector(".schedule-modal__slot-when-label");
-        if (label) label.textContent = formatSlotLabel(state.slots[idx].when);
-      }
     }
   }
 }
@@ -371,6 +413,7 @@ function render() {
 
 function renderInner() {
   const n = state.posts.length;
+  const total = state.slots.length; // publish actions — a draft may carry several dates
   return html`
     <div class="ap-dialog-header">
       <span class="ap-dialog-title" id="${ROOT_ID}Title">Schedule ${n} ${n === 1 ? "draft" : "drafts"}</span>
@@ -400,6 +443,14 @@ function renderInner() {
 
     <div class="ap-dialog-footer">
       <div class="ap-dialog-footer-left">
+        <button
+          type="button"
+          class="ap-button stroked grey schedule-modal__clear"
+          data-schedule-clear
+          ${state.slots.length <= state.posts.length || state.status === "scheduling" ? "disabled" : ""}
+        >
+          <i class="ap-icon-trash"></i><span>Clear all dates</span>
+        </button>
         <span class="schedule-modal__foot-disclosure">Posts will publish to your connected accounts.</span>
       </div>
       <div class="ap-dialog-footer-right">
@@ -420,7 +471,7 @@ function renderInner() {
           ${state.status === "scheduling"
             ? raw(`<span class="schedule-modal__spinner" aria-hidden="true"></span><span>Scheduling…</span>`)
             : raw(
-                `<i class="ap-icon-calendar"></i><span>${state.status === "error" ? "Try again" : `Schedule ${n} ${n === 1 ? "draft" : "drafts"}`}</span>`,
+                `<i class="ap-icon-calendar"></i><span>${state.status === "error" ? "Try again" : `Schedule ${total} ${total === 1 ? "post" : "posts"}`}</span>`,
               )}
         </button>
       </div>
@@ -472,44 +523,76 @@ function renderModePicker() {
   `;
 }
 
+// Slots are flat [{post, when}], but a single draft can carry several
+// publish times — so we group by post.id and render one card per draft,
+// each holding one date-row per slot plus an "Add another date" link
+// (mirrors the Figma "Add another date" affordance). The flat-array index
+// stays the key for edit/remove so the change/click handlers don't move.
+function slotsForPost(postId) {
+  return state.slots.map((s, idx) => ({ s, idx })).filter(({ s }) => s.post.id === postId);
+}
+
 function renderSlotList() {
-  const rows = state.slots
-    .map((s, i) => {
-      const network = (s.post.network || "linkedin").toLowerCase();
-      const text = extractFirstLine(s.post);
-      return `
-        <div class="schedule-modal__slot" data-schedule-row="${i}">
-          <div class="schedule-modal__slot-post">
-            <div class="schedule-modal__slot-head">
-              ${renderProfileTag(profileForNetwork(network), { network })}
-              <span class="schedule-modal__slot-when-label">${escapeText(formatSlotLabel(s.when))}</span>
-            </div>
-            <div class="schedule-modal__slot-text">${escapeText(text)}</div>
-          </div>
-          <div class="schedule-modal__slot-when">
+  const multi = state.posts.length > 1;
+  const header = `
+    <div class="schedule-modal__slots-head">
+      <span class="schedule-modal__slots-count">${state.posts.length} ${state.posts.length === 1 ? "draft" : "drafts"}</span>
+      ${
+        multi
+          ? `<button type="button" class="ap-button stroked blue schedule-modal__add-all" data-schedule-add-all>
+               <i class="ap-icon-plus"></i><span>Add date to all</span>
+             </button>`
+          : ""
+      }
+    </div>
+  `;
+  const cards = state.posts
+    .map((post) => {
+      const network = (post.network || "linkedin").toLowerCase();
+      const text = extractFirstLine(post);
+      const entries = slotsForPost(post.id);
+      const dateRows = entries
+        .map(
+          ({ s, idx }) => `
+          <div class="schedule-modal__slot-date">
             <div class="ap-input-group">
               <input
                 type="datetime-local"
                 value="${toLocalInput(s.when)}"
-                data-schedule-slot="${i}"
+                data-schedule-slot="${idx}"
                 aria-label="Scheduled time"
               />
             </div>
             <button
               type="button"
               class="ap-icon-button stroked transparent schedule-modal__slot-remove"
-              data-schedule-remove="${i}"
-              aria-label="Remove from batch"
-              title="Remove from batch"
+              data-schedule-remove="${idx}"
+              aria-label="Remove this date"
+              title="Remove this date"
             >
               <i class="ap-icon-close"></i>
             </button>
           </div>
+        `,
+        )
+        .join("");
+      return `
+        <div class="schedule-modal__slot" data-schedule-post="${escapeText(post.id)}">
+          <div class="schedule-modal__slot-post">
+            <div class="schedule-modal__slot-head">
+              ${renderProfileTag(profileForNetwork(network), { network })}
+            </div>
+            <div class="schedule-modal__slot-text">${escapeText(text)}</div>
+          </div>
+          <div class="schedule-modal__slot-dates">${dateRows}</div>
+          <button type="button" class="ap-button transparent blue schedule-modal__add-date" data-schedule-add="${escapeText(post.id)}">
+            <i class="ap-icon-plus"></i><span>Add another date</span>
+          </button>
         </div>
       `;
     })
     .join("");
-  return `<div class="schedule-modal__slots">${rows}</div>`;
+  return `<div class="schedule-modal__slots">${header}${cards}</div>`;
 }
 
 // ── Calendar (month grid) ─────────────────────────────────────────────
@@ -644,12 +727,6 @@ function parseDayKey(key) {
 
 function formatTime(ts) {
   return new Date(ts).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-}
-
-function formatSlotLabel(ts) {
-  const d = new Date(ts);
-  const date = d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-  return `· ${date} · ${formatTime(ts)}`;
 }
 
 function toLocalInput(ts) {

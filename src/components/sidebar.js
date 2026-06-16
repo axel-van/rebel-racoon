@@ -6,6 +6,7 @@ import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { open as openSearchModal } from "./search-modal.js?v=3";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
+import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=1";
 import {
   getSessions,
   getSessionById,
@@ -19,7 +20,7 @@ import { isNewUser } from "../user-mode.js?v=22";
 import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=32";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=29";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=23";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=153";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=156";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=41";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=28";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=37";
@@ -74,13 +75,19 @@ function setMenuOpen(open) {
   const trigger = document.querySelector("[data-sidebar-foot-toggle]");
   if (popmenu) popmenu.hidden = !open;
   if (trigger) trigger.setAttribute("aria-expanded", String(open));
-  // Collapsed rail: the popmenu is position:fixed (the narrow sidebar clips
-  // overflow), so anchor it to the right of the cog, growing upward from the
-  // cog's bottom. Mirrors the conversation row ⋮ menu positioning.
-  if (open && popmenu && trigger && popmenu.classList.contains("app-sidebar__foot-popmenu--collapsed")) {
+  // The popmenu is position:fixed (the sidebar clips overflow), so anchor it
+  // to the cog's rect each time it opens. Collapsed rail → to the right of the
+  // icon, growing up from the cog's bottom. Expanded → above the cog, left-
+  // aligned so the wider panel opens rightward over the content.
+  if (open && popmenu && trigger) {
     const rect = trigger.getBoundingClientRect();
-    popmenu.style.left = `${rect.right + 8}px`;
-    popmenu.style.bottom = `${window.innerHeight - rect.bottom}px`;
+    if (popmenu.classList.contains("app-sidebar__foot-popmenu--collapsed")) {
+      popmenu.style.left = `${rect.right + 8}px`;
+      popmenu.style.bottom = `${window.innerHeight - rect.bottom}px`;
+    } else {
+      popmenu.style.left = `${rect.left}px`;
+      popmenu.style.bottom = `${window.innerHeight - rect.top + 8}px`;
+    }
   }
 }
 
@@ -193,10 +200,18 @@ export function initSidebar() {
       toggleShortcutLegend();
       return;
     }
-    if (event.target.closest("[data-sidebar-settings]")) {
-      setMenuOpen(false);
-      navigate("/settings");
+    // Admin (cog popover) — feature-flag toggle. Reloads so stores re-read it.
+    const flagRow = event.target.closest("[data-admin-flag]");
+    if (flagRow) {
+      event.preventDefault();
+      toggleFlag(flagRow.dataset.adminFlag);
     }
+  });
+
+  // Admin (cog popover) — user-mode radio change applies the mode + reloads.
+  el.addEventListener("change", (event) => {
+    const radio = event.target.closest('[name="sidebar-admin-user-mode"]');
+    if (radio) applyUserMode(radio.value);
   });
 
   // Keyboard activation for the conversation row — it's a <div role="button">
@@ -434,14 +449,7 @@ function renderFootMenu({ collapsed }) {
           <kbd class="app-sidebar__foot-kbd">?</kbd>
         </button>
         <div class="ap-action-dropdown-divider" role="separator"></div>
-        <button type="button" role="menuitem" class="ap-action-dropdown-item" data-sidebar-settings>
-          <i class="ap-icon-cog"></i>
-          <div class="ap-action-dropdown-item-text">
-            <div class="ap-action-dropdown-item-label-container">
-              <span class="ap-action-dropdown-item-label">Settings</span>
-            </div>
-          </div>
-        </button>
+        ${renderAdminMenu()}
       </div>
     </div>
   `;

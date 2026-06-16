@@ -21,6 +21,7 @@ import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { renderConnectorLogo } from "../connectors-view.js?v=5";
 import { isFlagOn } from "../feature-flags.js?v=4";
+import { showToast } from "./toast.js?v=20";
 
 const MODAL_ID = "addSource";
 import {
@@ -73,6 +74,7 @@ const state = {
   // Optional staging callbacks (Batch Studio) — see open().
   onStageText: null,
   onStageUrl: null,
+  onStageFile: null,
 };
 
 function clone(obj) {
@@ -563,14 +565,27 @@ function ingestFiles(fileList) {
   // one was filtered. The detailed reasons stay machine-readable for
   // future surfacing (e.g. a per-row error list).
   const rejections = [];
+  let started = 0;
   for (const file of fileList) {
     const res = classifyFile(file);
     if (!res.ok) {
       rejections.push(res.reason);
       continue;
     }
-    const id = startFileUpload(file, res, state.currentSessionId);
-    state.tripUploadIds.add(id);
+    // Staging mode (Batch Studio) — hand the file + classification back to the
+    // caller so it lands in the staged-sources list instead of the global
+    // upload stream. The batch screen owns the source + its lifecycle.
+    if (state.onStageFile) state.onStageFile(file, res);
+    else startFileUpload(file, res, state.currentSessionId);
+    started += 1;
+  }
+  // Auto-close once an upload starts: the upload + processing already surface in
+  // the page's source list underneath, so the modal's own file list would be
+  // redundant. Any rejections ride out on a toast since the modal is closing.
+  if (started > 0) {
+    if (rejections.length > 0) showToast(formatRejectionSummary(rejections));
+    close();
+    return;
   }
   if (rejections.length > 0) {
     showInlineError(formatRejectionSummary(rejections));
@@ -889,6 +904,7 @@ export function open(opts = {}) {
   // imported straight into a session, and the modal closes after one add.
   state.onStageText = opts.onStageText || null;
   state.onStageUrl = opts.onStageUrl || null;
+  state.onStageFile = opts.onStageFile || null;
   backdrop.hidden = false;
   backdrop.classList.add("open");
   modal.classList.add("open");

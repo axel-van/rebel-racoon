@@ -512,11 +512,17 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
    override positioning + the kbd shortcut hint here ; the DS provides
    the surface, border, shadow, item layout, hover / focus states. */
 .ap-action-dropdown.app-sidebar__foot-popmenu {
-  position: absolute;
-  bottom: calc(100% + var(--ref-spacing-xxs));
-  right: 0;
-  min-width: 220px;
-  width: auto;
+  /* Fixed (not absolute) so the wider admin panel isn't clipped by the
+     sidebar's overflow — setMenuOpen anchors left/bottom from the cog's rect,
+     opening it above the cog and rightward over the content. */
+  position: fixed;
+  right: auto;
+  /* Wider + scrollable now that it hosts the Admin controls (user mode + flags
+     + docs) alongside the utility items. */
+  width: 320px;
+  max-width: calc(100vw - var(--ref-spacing-md));
+  max-height: min(72vh, 600px);
+  overflow-y: auto;
   z-index: var(--app-z-overlay);
 }
 
@@ -535,6 +541,96 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
 
 .ap-action-dropdown.app-sidebar__foot-popmenu[hidden] {
   display: none;
+}
+
+/* ── Admin controls inside the cog popover (was the /settings page) ───────── */
+.admin-menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xxs) 0;
+}
+.admin-menu__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+.admin-menu__section-title {
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-60);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.admin-menu__cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+.admin-menu__flags {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Shared label/hint stack (radio cards, flag rows, doc row). */
+.admin-menu__opt-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.admin-menu__opt-label {
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+.admin-menu__opt-hint {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--ref-color-grey-60);
+}
+
+/* Feature-flag row — label/hint left, DS toggle right. */
+.admin-menu__flag {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs) 0;
+  cursor: pointer;
+}
+.admin-menu__flag + .admin-menu__flag {
+  border-top: 1px solid var(--app-border);
+}
+.admin-menu__flag .admin-menu__opt-text {
+  flex: 1;
+}
+.admin-menu__toggle {
+  flex-shrink: 0;
+}
+
+/* Docs link row. */
+.admin-menu__doc {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+  text-decoration: none;
+  color: inherit;
+}
+.admin-menu__doc:hover {
+  border-color: var(--ref-color-electric-blue-100);
+}
+.admin-menu__doc .admin-menu__opt-text {
+  flex: 1;
+}
+.admin-menu__doc i {
+  flex-shrink: 0;
+  color: var(--ref-color-grey-60);
 }
 
 .app-sidebar__foot-kbd {

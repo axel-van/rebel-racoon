@@ -882,15 +882,10 @@
   font-weight: var(--sys-text-style-body-bold-weight);
 }
 
-/* Idea card in the conversation — reuses the right-panel card wholesale
-   (.rpanel-ideas__card: chrome, head + Source, content, Why panel, actions
-   footer), so the two surfaces are the same component. The only override:
-   drop the panel's 560px cap so the card fills the chat column. The footer
-   actions (feedback + "View idea") are the conversation's own, but use the
-   shared .rpanel-ideas__* footer + thumb classes. */
-.extraction-turn__idea-card {
-  max-width: none;
-}
+/* Idea cards in the conversation render the shared compact idea card
+   (renderCompactIdeaCard) verbatim — same component as the right-panel Ideas
+   mode + the standalone Ideas page (feedback + Mention + Draft). No overrides;
+   the component owns its own chrome, including its max-width. */
 
 /* Composer — Figma 35:764.
    Structure:

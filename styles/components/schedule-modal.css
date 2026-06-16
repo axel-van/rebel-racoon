@@ -85,12 +85,32 @@
   padding-right: var(--ref-spacing-xxs);
 }
 
-.schedule-modal__slot {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--ref-spacing-sm);
+/* Header above the slot list: draft count + the "Add date to all" action
+   (shown only for multi-draft batches). Mirrors the Figma "Selected
+   Profiles (N)" row. */
+.schedule-modal__slots-head {
+  display: flex;
   align-items: center;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  margin-top: var(--ref-spacing-xxs);
+}
+
+.schedule-modal__slots-count {
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-80);
+}
+
+/* One card per draft — profile head, then a stack of date rows, then the
+   "Add another date" link. Was a 2-col grid (one date per draft); now a
+   vertical card so a draft can carry several publish times. */
+.schedule-modal__slot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--app-radius-card);
   background: var(--app-surface);
@@ -110,13 +130,6 @@
   flex-wrap: wrap;
 }
 
-.schedule-modal__slot-when-label {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  font-weight: var(--sys-text-style-caption-weight);
-  color: var(--ref-color-grey-60);
-}
-
 .schedule-modal__slot-text {
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
@@ -128,14 +141,35 @@
   overflow: hidden;
 }
 
-.schedule-modal__slot-when {
-  display: inline-flex;
+.schedule-modal__slot-dates {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.schedule-modal__slot-date {
+  display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
 }
 
-.schedule-modal__slot-when input {
+.schedule-modal__slot-date .ap-input-group {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.schedule-modal__slot-date input {
+  width: 100%;
   min-width: 200px;
+}
+
+/* "Add another date" — text-link affordance, left-aligned under the date
+   rows. .ap-button.transparent.blue gives the DS link styling; we just
+   drop the inline padding so it reads as a link, not a button. */
+.schedule-modal__add-date {
+  align-self: flex-start;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 /* ── Calendar ───────────────────────────────────────────────────────── */

@@ -61,9 +61,10 @@ export function refresh(sessionId) {
   notify(sessionId);
 }
 
-export function start(sessionId) {
+export function start(sessionId, { contextId = null } = {}) {
   states.set(sessionId, {
     stage: "upload",
+    contextId: contextId || null, // Playbook governing the voice of the drafts
     config: { duration: "auto", format: "9:16", captionStyle: "bold", instructions: "" },
     videoProvided: false,
     uploadState: null, // null | "processing" | "ready" — background upload/analysis
@@ -88,6 +89,15 @@ export function setStage(sessionId, stage) {
   const s = states.get(sessionId);
   if (!s) return;
   s.stage = stage;
+  notify(sessionId);
+}
+
+// Playbook (Context) governing the voice/audience/CTAs of the drafts created
+// from the selected clips. Chosen up-front on the setup screen.
+export function setContext(sessionId, contextId) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  s.contextId = contextId || null;
   notify(sessionId);
 }
 
@@ -165,6 +175,21 @@ function finishExtraction(sessionId) {
   s.uploadState = "ready";
   s._tickerTimer = null;
   s.stage = "clips";
+  notify(sessionId);
+}
+
+// Re-bake the current format + caption config onto every clip. Called when the
+// user changes format/caption on the review step (the choice moved there from
+// setup) so the trimmer modal and the resulting drafts reflect their pick.
+export function applyConfigToClips(sessionId) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  const style = s.config?.captionStyle === "none" ? null : s.config?.captionStyle || null;
+  const format = s.config?.format || "9:16";
+  const apply = (clips) => clips.map((c) => ({ ...c, subtitleStyle: style, format }));
+  const src = currentSource(sessionId);
+  if (src && Array.isArray(src.clips)) updateSourceClips(s.sourceId, apply(src.clips));
+  if (Array.isArray(s.clips)) s.clips = apply(s.clips);
   notify(sessionId);
 }
 

@@ -84,15 +84,20 @@
 
 /* ── Upload / config (2-panel) ─────────────────────────────────────────── */
 
+/* Setup is a single focused column: intro → drop/preview → duration +
+   instructions → Create clips. (Output format + caption moved to the review
+   step, so the old 2-panel grid left the right column sparse and lopsided.) */
+.clip-studio--upload {
+  overflow-y: auto;
+}
 .clip-studio__config {
   width: 100%;
-  max-width: 1040px;
+  max-width: 600px;
   margin: auto;
   padding: var(--ref-spacing-xl);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
+  display: flex;
+  flex-direction: column;
   gap: var(--ref-spacing-lg);
-  align-items: start;
 }
 
 .clip-studio__config-left,
@@ -243,6 +248,11 @@
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-100);
+}
+.clip-studio__field-hint {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
 }
 /* DS select fills the field width. */
 .clip-studio__select {
@@ -484,8 +494,7 @@
   position: relative;
   z-index: 1;
 }
-.clip-studio__frame-badge,
-.clip-studio__cap-overlay {
+.clip-studio__frame-badge {
   z-index: 2;
 }
 .clip-studio__frame-play {
@@ -534,44 +543,6 @@
   50% {
     opacity: 1;
   }
-}
-
-/* Caption preview burned on the frame — reflects the selected caption style. */
-.clip-studio__cap-overlay {
-  position: absolute;
-  left: 50%;
-  bottom: 14%;
-  transform: translateX(-50%);
-  max-width: 84%;
-  text-align: center;
-  color: var(--ref-color-white);
-  line-height: var(--sys-text-style-body-line-height);
-  pointer-events: none;
-}
-.clip-studio__cap-overlay--bold {
-  font-weight: var(--sys-text-style-h0-weight);
-  text-transform: uppercase;
-  font-size: var(--sys-text-style-h0-size);
-  line-height: var(--sys-text-style-h0-line-height);
-  text-shadow:
-    0 2px 0 rgba(0, 0, 0, 0.55),
-    0 0 8px rgba(0, 0, 0, 0.5);
-  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.45);
-}
-.clip-studio__cap-overlay--clean {
-  font-weight: var(--sys-text-style-h3-weight);
-  font-size: var(--sys-text-style-h3-size);
-  line-height: var(--sys-text-style-h3-line-height);
-  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
-}
-.clip-studio__cap-overlay--caption {
-  font-weight: var(--sys-text-style-body-bold-weight);
-  text-transform: lowercase;
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  background: rgba(0, 0, 0, 0.55);
-  padding: 2px var(--ref-spacing-xxs);
-  border-radius: var(--app-radius-sm);
 }
 
 /* Rotating MermAId gradient border while the video is being analyzed. */
@@ -761,6 +732,56 @@
 .clip-studio__back {
   margin-bottom: var(--ref-spacing-xxs);
   padding-left: 0;
+}
+
+/* Format + caption pickers on the review step. These are a finishing choice
+   applied to the whole batch, so they stay a COMPACT, visually subordinate
+   band — the clips below are the hero. The two groups sit side by side, each a
+   single row of small intrinsic-width chips that wrap on narrow widths. */
+.clip-studio__review-settings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-sm) var(--ref-spacing-xl);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-grey-05);
+}
+.clip-studio__review-settings .clip-studio__field {
+  flex: 0 1 auto;
+}
+.clip-studio__review-settings .clip-studio__fmtcards,
+.clip-studio__review-settings .clip-studio__cap-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+}
+.clip-studio__review-settings .clip-studio__fmtcard,
+.clip-studio__review-settings .clip-studio__cap-card {
+  flex: 0 0 auto;
+}
+/* Format chip: ratio glyph + ratio/label only — drop the network icons here
+   to keep the chip small (the ratio + label already say enough). Width sizes
+   to content so the wider 16:9 glyph doesn't clip the "Landscape" label. */
+.clip-studio__review-settings .clip-studio__fmtcard {
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  gap: var(--ref-spacing-xxs);
+}
+.clip-studio__review-settings .clip-studio__fmtcard-nets {
+  display: none;
+}
+.clip-studio__review-settings .clip-studio__fmtcard-shape {
+  height: 20px;
+}
+.clip-studio__review-settings .clip-studio__fmtcard-label {
+  white-space: nowrap;
+}
+/* Caption chip: smaller preview so the row stays slim. */
+.clip-studio__review-settings .clip-studio__cap-card {
+  width: 104px;
+}
+.clip-studio__review-settings .clip-studio__cap-preview {
+  height: 30px;
 }
 
 .clip-studio__grid {

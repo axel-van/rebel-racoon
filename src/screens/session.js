@@ -48,7 +48,7 @@ import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } fro
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
 import * as inlineQuestion from "../inline-question.js?v=33";
-import * as clipStudio from "../clip-studio.js?v=8";
+import * as clipStudio from "../clip-studio.js?v=10";
 import * as batchStudio from "../batch-studio.js?v=3";
 import { askConnector } from "../connector-ask.js?v=3";
 import { getConnectedConnectors, findConnector } from "../connectors-store.js?v=23";
@@ -64,6 +64,7 @@ import * as playbookEditor from "../playbook-editor.js?v=41";
 import { renderPicker } from "./_analyse-common.js?v=39";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
+import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=1";
 import {
   contentState,
   renderContentWorkspace as renderSharedContentWorkspace,
@@ -73,7 +74,7 @@ import {
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=25";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=13";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=31";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=36";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=37";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=6";
 import {
   classifyFile,
@@ -96,10 +97,8 @@ import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
-  getActiveBatchRef as getActiveDraftsBatchRef,
-  getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=153";
+} from "../components/right-panel.js?v=156";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=2";
@@ -209,7 +208,8 @@ export function renderSession(params, target) {
   // (e.g. openDrafts writing a URL param → router re-runs renderSession) does
   // NOT relaunch the studio.
   if (session.id.startsWith("clip-studio-") && !clipStudio.isActive(session.id)) {
-    if (consumeHandoff("pendingStartClipStudio")) clipStudio.start(session.id);
+    if (consumeHandoff("pendingStartClipStudio"))
+      clipStudio.start(session.id, { contextId: getDefaultContext()?.id || null });
   }
 
   // Batch Studio — dedicated "Batch from a source" intake in its own `batch-*`
@@ -602,23 +602,12 @@ function renderClipStudio(session, attachedContext) {
   return renderClipStudioUpload(st);
 }
 
-function renderClipStudioUpload(st) {
-  const cfg = st.config || {};
-  const uploadState = st.uploadState;
-  const name = escapeHtml(st.sourceName || "your video");
-  const durLabelFor = (d) => (d.id === "auto" ? "Auto" : `${d.label} · ${d.sub}`);
-  const curDuration = CLIP_DURATIONS_UI.find((d) => d.id === cfg.duration) || CLIP_DURATIONS_UI[0];
-  const durationItems = CLIP_DURATIONS_UI.map((d) => {
-    const isSel = cfg.duration === d.id;
-    return `<div class="ap-select-option${isSel ? " selected" : ""}" data-clip-config="duration" data-value="${d.id}" role="option" aria-selected="${isSel ? "true" : "false"}">
-      <span class="ap-select-option-text">${durLabelFor(d)}</span>
-      ${isSel ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
-    </div>`;
-  }).join("");
-
-  // Output format — single choice. Each option shows the networks it suits as
-  // an indication (the network is guidance, not a target selector).
-  const formatCards = CLIP_FORMATS_UI.map((f) => {
+// Output-format picker — single choice. Each option shows the networks it
+// suits as an indication (the network is guidance, not a target selector).
+// Shared between the setup screen and the clips-review screen (the format +
+// caption choice now lives on review; see renderClipStudioClips).
+function buildClipFormatCards(cfg) {
+  return CLIP_FORMATS_UI.map((f) => {
     const on = cfg.format === f.id;
     const nets = f.nets
       .map((id) => `<i class="${CLIP_NET_ICON[id]} clip-studio__fmtcard-net" aria-hidden="true"></i>`)
@@ -632,8 +621,10 @@ function renderClipStudioUpload(st) {
       <span class="clip-studio__fmtcard-nets">${nets}</span>
     </button>`;
   }).join("");
+}
 
-  const captionCards = CLIP_CAPTION_STYLES.map((c) => {
+function buildClipCaptionCards(cfg) {
+  return CLIP_CAPTION_STYLES.map((c) => {
     const on = cfg.captionStyle === c.value;
     const preview =
       c.value === "none"
@@ -644,16 +635,57 @@ function renderClipStudioUpload(st) {
       <span class="clip-studio__cap-label">${c.label}</span>
     </button>`;
   }).join("");
+}
 
-  // Left panel: idle dropzone, or — once a video is provided — a preview frame
-  // showing the selected caption style burned on a mid-video frame.
-  const capStyle = cfg.captionStyle;
-  const capOverlay =
-    capStyle && capStyle !== "none"
-      ? `<span class="clip-studio__cap-overlay clip-studio__cap-overlay--${capStyle}">${CLIP_CAPTION_SAMPLE}</span>`
-      : "";
+// Playbook picker for the clip-studio setup — the chosen Playbook governs the
+// voice/audience/CTAs of the drafts created from the clips. Mirrors the batch
+// playbook control; routes through the `data-clip-playbook-pick` delegate.
+function renderClipPlaybookControl(ctx) {
+  const playbooks = getContexts();
+  const items = playbooks
+    .map((c) => {
+      const isSel = ctx && c.id === ctx.id;
+      return `
+        <div class="ap-select-option${isSel ? " selected" : ""}" data-clip-playbook-pick="${escapeHtml(c.id)}" role="option" aria-selected="${isSel ? "true" : "false"}">
+          <span class="composer-context__dot" style="background: ${dotColorVar(c.color || "grey")};"></span>
+          <span class="ap-select-option-text">${escapeHtml(c.name)}</span>
+          ${isSel ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
+        </div>`;
+    })
+    .join("");
+  const valueMarkup = ctx
+    ? `<span class="ap-select-value">${escapeHtml(ctx.name)}</span>`
+    : `<span class="ap-select-value ap-select-placeholder">Select a playbook</span>`;
+  return `
+    <details class="ap-select clip-studio__select" data-clip-playbook>
+      <summary class="ap-select-trigger" title="Choose the playbook for these posts">
+        ${valueMarkup}
+        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+      </summary>
+      <div class="ap-select-dropdown" role="listbox" aria-label="Choose a playbook">
+        <div class="ap-select-options">${items}</div>
+      </div>
+    </details>`;
+}
+
+function renderClipStudioUpload(st) {
+  const cfg = st.config || {};
+  const ctx = st.contextId ? getContextById(st.contextId) : null;
+  const uploadState = st.uploadState;
+  const name = escapeHtml(st.sourceName || "your video");
+  const durLabelFor = (d) => (d.id === "auto" ? "Auto" : `${d.label} · ${d.sub}`);
+  const curDuration = CLIP_DURATIONS_UI.find((d) => d.id === cfg.duration) || CLIP_DURATIONS_UI[0];
+  const durationItems = CLIP_DURATIONS_UI.map((d) => {
+    const isSel = cfg.duration === d.id;
+    return `<div class="ap-select-option${isSel ? " selected" : ""}" data-clip-config="duration" data-value="${d.id}" role="option" aria-selected="${isSel ? "true" : "false"}">
+      <span class="ap-select-option-text">${durLabelFor(d)}</span>
+      ${isSel ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
+    </div>`;
+  }).join("");
+
+  // Left panel: idle dropzone, or — once a video is provided — a preview frame.
   // Faux video still (inline SVG presenter scene) so the frame reads as actual
-  // video content behind the loader/play + burned caption.
+  // video content behind the loader/play.
   const frameArt = `<svg class="clip-studio__frame-art" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
     <rect width="320" height="180" fill="#26334d"/>
     <rect x="24" y="22" width="56" height="42" rx="6" fill="#33425f"/>
@@ -673,7 +705,6 @@ function renderClipStudioUpload(st) {
                   <span class="clip-studio__frame-badge"><span class="clip-studio__frame-dot"></span>Analyzing</span>`
                : `<span class="clip-studio__frame-play"><i class="ap-icon-video"></i></span>`
            }
-           ${capOverlay}
          </div>
          <div class="clip-studio__preview-foot">
            <span class="clip-studio__preview-name" title="${name}">${name} · ${uploadState === "ready" ? "Analyzed" : "Analyzing…"}</span>
@@ -715,7 +746,8 @@ function renderClipStudioUpload(st) {
             <span class="clip-studio__ai-badge"><i class="ap-icon-sparkles" aria-hidden="true"></i>Auto Clips</span>
             <h1 class="clip-studio__title">Turn a video into post-ready clips</h1>
             <p class="clip-studio__sub">
-              Pick your format and captions, drop a video, and I'll cut the best moments for each network.
+              Drop a video and set the clip length — I'll cut the best moments. You'll pick the format and captions once
+              the clips are ready.
             </p>
           </div>
           <input type="file" accept="video/*,.mp4,.mov,.webm" id="clipStudioFileInput" data-clip-studio-file hidden />
@@ -723,6 +755,14 @@ function renderClipStudioUpload(st) {
         </div>
 
         <div class="clip-studio__config-right">
+          <div class="clip-studio__field">
+            <span class="clip-studio__field-label">Playbook</span>
+            ${raw(renderClipPlaybookControl(ctx))}
+            <p class="clip-studio__field-hint muted">
+              I'll write each post in this playbook's voice, audience, and CTAs.
+            </p>
+          </div>
+
           <div class="clip-studio__field">
             <span class="clip-studio__field-label">Clip duration</span>
             <details class="ap-select clip-studio__select">
@@ -734,16 +774,6 @@ function renderClipStudioUpload(st) {
                 <div class="ap-select-options">${raw(durationItems)}</div>
               </div>
             </details>
-          </div>
-
-          <div class="clip-studio__field">
-            <span class="clip-studio__field-label">Output format</span>
-            <div class="clip-studio__fmtcards">${raw(formatCards)}</div>
-          </div>
-
-          <div class="clip-studio__field">
-            <span class="clip-studio__field-label">Caption style</span>
-            <div class="clip-studio__cap-grid">${raw(captionCards)}</div>
           </div>
 
           <div class="clip-studio__field">
@@ -820,9 +850,12 @@ function renderStudioClipCard(clip, st, sessionId) {
 }
 
 function renderClipStudioClips(session, st) {
+  const cfg = st.config || {};
   const clips = clipStudio.getClips(session.id);
   const cards = clips.map((c) => renderStudioClipCard(c, st, session.id)).join("");
   const selCount = (st.selectedClipIds || []).length;
+  const formatCards = buildClipFormatCards(cfg);
+  const captionCards = buildClipCaptionCards(cfg);
   return html`
     <aside class="session__assistant clip-studio clip-studio--clips" aria-label="Extracted clips">
       <div class="clip-studio__scroll">
@@ -833,8 +866,18 @@ function renderClipStudioClips(session, st) {
           <span class="clip-studio__ai-badge"><i class="ap-icon-sparkles" aria-hidden="true"></i>Clips ready</span>
           <h1 class="clip-studio__title">${clips.length} clips from ${st.sourceName || "your video"}</h1>
           <p class="clip-studio__sub muted">
-            Review and trim clips, add your own, then pick the ones to turn into posts.
+            Review and trim clips, pick the ones to keep, then set the format and captions.
           </p>
+        </div>
+        <div class="clip-studio__review-settings">
+          <div class="clip-studio__field">
+            <span class="clip-studio__field-label">Output format</span>
+            <div class="clip-studio__fmtcards">${raw(formatCards)}</div>
+          </div>
+          <div class="clip-studio__field">
+            <span class="clip-studio__field-label">Caption style</span>
+            <div class="clip-studio__cap-grid">${raw(captionCards)}</div>
+          </div>
         </div>
         <div class="clip-studio__grid">${raw(cards)}</div>
       </div>
@@ -2100,12 +2143,16 @@ function renderTurn(message, sessionId) {
 
   // AI extraction result — Figma 25:1053.
   if (message.role === "assistant" && message.variant === "extraction") {
-    return renderExtractionTurn(message);
+    return renderExtractionTurn(message, sessionId);
   }
 
-  // Draft result — "Drafted N posts" mermaid-pill + mini post cards.
+  // Draft result — intentionally NOT rendered inline. Drafts can finish at any
+  // time (incl. while the user is doing something else), so a card here would
+  // interleave the conversation unpredictably. The message is kept in the thread
+  // only as the batch anchor for the Drafts panel; "ready" is surfaced via a
+  // toast + the persistent topbar Drafts count (see the offThread subscription).
   if (message.role === "assistant" && message.variant === "draft") {
-    return renderDraftTurn(message);
+    return "";
   }
 
   // Clip extraction — pending spinner pill that flips to a ready card with
@@ -2314,100 +2361,28 @@ function renderSourceIntakeTurn(message, sessionId) {
   `;
 }
 
-function renderExtractionTurn(message) {
+// Per-idea interaction state for the extraction-turn cards (the shared compact
+// idea card is a pure renderer, so the consumer owns this). Toggled by the
+// data-rpanel-* handlers in bindSession, which then repaint the single card.
+const extractionVerdict = new Map(); // ideaId → 'up' | 'down'
+const extractionWhyOpen = new Set(); // ideaIds with the Why panel expanded
+
+function renderExtractionTurn(message, sessionId) {
   const count = message.count ?? (message.ideas ? message.ideas.length : 0);
+  // Render the EXACT shared idea card (renderCompactIdeaCard) used by the
+  // right-panel Ideas mode + the standalone Ideas page — feedback + Mention +
+  // Draft. The thread message only carries {id,title,body}, so resolve the full
+  // idea (kind / Source / rationale) from the library by id, like the panel does.
+  const sources = sessionId ? getStreamSources(sessionId) : [];
+  const byId = new Map((sessionId ? getIdeas(sessionId) : []).map((i) => [i.id, i]));
   const cards = (message.ideas || [])
-    .map((i) => {
-      // Mirror the right-panel idea card: kind tag + title + body +
-      // collapsible "Why this idea" (rationale + source). Reuses the
-      // panel's .rpanel-ideas__kind / .rpanel-ideas__why styling so the two
-      // surfaces stay visually identical. Keeps the conversation footer
-      // (feedback thumbs + "View idea").
-      const kind = i.kind || "insight";
-      const whyId = `conv-idea-why-${i.id || ""}`;
-      const sourceName = message.filename || "";
-      // Source now lives in the card head beside the kind tag — same as the
-      // right-panel idea card.
-      const sourceTag = sourceName
-        ? `<div class="rpanel-ideas__head-source">
-            <span class="rpanel-ideas__source-label">Source:</span>
-            <span class="rpanel-ideas__source-tag" title="${escapeHtmlAttr(sourceName)}">
-              <i class="ap-icon-file" aria-hidden="true"></i>
-              <span class="rpanel-ideas__source-tag-text">${escapeHtml(sourceName)}</span>
-            </span>
-          </div>`
-        : "";
-      const why = i.rationale
-        ? `
-          <section class="rpanel-ideas__why" data-why-open="false">
-            <button
-              type="button"
-              class="rpanel-ideas__why-head"
-              data-conv-idea-why-toggle="${i.id || ""}"
-              aria-expanded="false"
-              aria-controls="${whyId}"
-            >
-              <i class="ap-icon-info rpanel-ideas__why-info" aria-hidden="true"></i>
-              <span class="rpanel-ideas__why-title">Why this idea</span>
-              <i class="ap-icon-chevron-down rpanel-ideas__why-chevron" aria-hidden="true"></i>
-            </button>
-            <div id="${whyId}" class="rpanel-ideas__why-body" hidden>
-              <p class="rpanel-ideas__why-rationale">${escapeHtml(i.rationale)}</p>
-            </div>
-          </section>
-        `
-        : "";
-      // Reuse the right-panel idea card (.rpanel-ideas__card) so the two
-      // surfaces are the same component. Only the footer differs — the
-      // conversation offers feedback + "View idea" instead of Mention/Draft.
-      return `
-        <article class="rpanel-ideas__card extraction-turn__idea-card" data-idea-id="${i.id || ""}">
-          <div class="rpanel-ideas__card-content">
-            <div class="rpanel-ideas__card-head">
-              <span class="ap-tag rpanel-ideas__kind rpanel-ideas__kind--${kind}">${escapeHtml(kind)}</span>
-              ${sourceTag}
-            </div>
-            <h4 class="rpanel-ideas__card-title">${escapeHtml(i.title || "")}</h4>
-            <p class="rpanel-ideas__card-body">${escapeHtml(i.body || "")}</p>
-            ${why}
-          </div>
-          <footer class="rpanel-ideas__card-actions">
-            <div class="rpanel-ideas__feedback" role="group" aria-label="Rate this idea">
-              <button
-                type="button"
-                class="ap-icon-button transparent sm rpanel-ideas__thumb"
-                title="Helpful"
-                aria-label="Mark as helpful"
-                aria-pressed="false"
-                data-idea-feedback="up"
-                data-idea-id="${i.id || ""}"
-              >
-                <i class="ap-icon-thumb-up"></i>
-              </button>
-              <button
-                type="button"
-                class="ap-icon-button transparent sm rpanel-ideas__thumb"
-                title="Not helpful"
-                aria-label="Mark as not helpful"
-                aria-pressed="false"
-                data-idea-feedback="down"
-                data-idea-id="${i.id || ""}"
-              >
-                <i class="ap-icon-thumb-down"></i>
-              </button>
-            </div>
-            <button
-              type="button"
-              class="ap-link standalone small"
-              data-focus-idea="${i.id || ""}"
-              aria-label="Open this idea in Ideas"
-            >
-              <span>View idea</span>
-              <i class="ap-icon-external-link"></i>
-            </button>
-          </footer>
-        </article>
-      `;
+    .map((m) => {
+      const idea = byId.get(m.id) || m;
+      return renderCompactIdeaCard(idea, sources, {
+        verdict: extractionVerdict.get(idea.id) || null,
+        whyOpen: extractionWhyOpen.has(idea.id),
+        showMention: true,
+      });
     })
     .join("");
   return `
@@ -2429,6 +2404,36 @@ function renderExtractionTurn(message) {
       })}
     </div>
   `;
+}
+
+// Resolve an extraction-turn idea by id (library first, then any extraction
+// turn in the thread) so the card handlers can read its title / data.
+function findExtractionIdea(sessionId, ideaId) {
+  const fromLib = getIdeas(sessionId).find((i) => i.id === ideaId);
+  if (fromLib) return fromLib;
+  for (const m of getThread(sessionId)) {
+    if (m.variant === "extraction" && Array.isArray(m.ideas)) {
+      const hit = m.ideas.find((i) => i.id === ideaId);
+      if (hit) return hit;
+    }
+  }
+  return null;
+}
+
+// Re-render a single extraction-turn idea card in place (after a feedback / Why
+// toggle) so the rest of the thread + scroll position stay put.
+function repaintExtractionCard(root, session, ideaId) {
+  const idea = findExtractionIdea(session.id, ideaId);
+  const article = root.querySelector(`.extraction-turn__detail [data-idea-id="${ideaId}"]`);
+  if (!idea || !article) return;
+  const tmp = document.createElement("div");
+  tmp.innerHTML = renderCompactIdeaCard(idea, getStreamSources(session.id), {
+    verdict: extractionVerdict.get(ideaId) || null,
+    whyOpen: extractionWhyOpen.has(ideaId),
+    showMention: true,
+  });
+  const fresh = tmp.firstElementChild;
+  if (fresh) article.replaceWith(fresh);
 }
 
 // Drag-and-drop a file anywhere on the assistant panel → kicks off the
@@ -2584,7 +2589,16 @@ function wireAssistantPanel(root, session, attachedContext) {
     const latestDraft = [...messages].reverse().find((m) => m.variant === "draft");
     if (latestDraft && latestDraft.id !== lastDraftMessageId) {
       lastDraftMessageId = latestDraft.id;
-      openDraftsPanel({ sessionId: session.id, messageId: latestDraft.id });
+      // Drafts ready — notify without hijacking the conversation or forcing the
+      // panel open. A toast (auto-dismiss) + the persistent topbar Drafts count
+      // do the announcing; "Review" opens the panel pinned to this batch.
+      const n = latestDraft.count ?? (latestDraft.drafts ? latestDraft.drafts.length : 0);
+      showToast(`${n} draft${n === 1 ? "" : "s"} ready to review`, {
+        action: {
+          label: "Review",
+          onClick: () => openDraftsPanel({ sessionId: session.id, messageId: latestDraft.id }),
+        },
+      });
     }
   });
 
@@ -3009,45 +3023,6 @@ function renderResultCard({
   return `<div class="ap-card drafts-card drafts-card--${state}">${body}</div>`;
 }
 
-// In-thread Drafts summary card — the "ready" result card with a profiles
-// strip. Click anywhere → opens the right-panel Drafts surface pinned to this
-// batch (setActiveBatchRef path).
-//
-//   [ ✦ tile ]  N drafts to review                        Review ›
-//               [LI][X]
-//               From "The lead idea title"
-function renderDraftTurn(message) {
-  const drafts = message.drafts || [];
-  const count = message.count ?? drafts.length;
-  const networks = [...new Set(drafts.map((d) => d.network).filter(Boolean))];
-  // Resolve each network to the connected profile via the shared profile tag
-  // (avatar + network badge + name). `twitter` maps to the "x" account.
-  const profileChips = networks.map((n) => renderProfileTag(profileForNetwork(n), { network: n })).join("");
-  // Subtitle: prefer the lead idea title (anchors the card to the
-  // conversation context); fall back to the action hint otherwise.
-  const subText = message.ideaTitle
-    ? `From <span class="drafts-card__sub-quote">&ldquo;${escapeHtml(message.ideaTitle)}&rdquo;</span>`
-    : "Review, edit, and schedule";
-  // Active when the right panel is open in Drafts mode and pinned to THIS
-  // message — a visual anchor between the thread and the editable batch.
-  const activeRef = getRightPanelMode() === "drafts" ? getActiveDraftsBatchRef() : null;
-  const isActive = !!(activeRef && activeRef.messageId === message.id);
-
-  return `
-    <div class="chat-turn chat-turn--ai chat-turn--extraction">
-      ${renderResultCard({
-        state: "ready",
-        title: `${count} draft${count === 1 ? "" : "s"} to review`,
-        extraHtml: networks.length ? `<span class="drafts-card__profiles">${profileChips}</span>` : "",
-        sub: subText,
-        cta: { label: "Review" },
-        dataAttr: `data-drafts-card-message="${message.id || ""}"`,
-        active: isActive,
-      })}
-    </div>
-  `;
-}
-
 // Pending → ready clip-extraction card. The turn carries only the sourceId
 // and filename; the renderer reads the live source from sources-stream so
 // the same turn naturally flips state when setClipExtractionStatus fires
@@ -3438,54 +3413,39 @@ function bindSession(root, session) {
   root.addEventListener(
     "click",
     (event) => {
-      // "Why this idea" collapsible on an extraction idea card — in-place
-      // expand/collapse (mirrors the right-panel idea card's Why toggle).
-      const convWhy = event.target.closest("[data-conv-idea-why-toggle]");
-      if (convWhy) {
+      // Extraction-turn idea cards use the shared compact idea card
+      // (renderCompactIdeaCard) — wire its data-rpanel-* hooks to chat-context
+      // actions. Scoped to .extraction-turn__detail so they never collide with
+      // the right-panel's own delegation. Each toggle repaints just that card.
+      const ideaWhy = event.target.closest(".extraction-turn__detail [data-rpanel-idea-why-toggle]");
+      if (ideaWhy) {
         event.preventDefault();
-        const section = convWhy.closest(".rpanel-ideas__why");
-        if (section) {
-          const next = section.getAttribute("data-why-open") !== "true";
-          section.setAttribute("data-why-open", next ? "true" : "false");
-          convWhy.setAttribute("aria-expanded", next ? "true" : "false");
-          const body = document.getElementById(convWhy.getAttribute("aria-controls"));
-          if (body) body.hidden = !next;
-          const chev = convWhy.querySelector(".rpanel-ideas__why-chevron");
-          if (chev) {
-            chev.classList.toggle("ap-icon-chevron-down", !next);
-            chev.classList.toggle("ap-icon-chevron-up", next);
-          }
-        }
+        const id = ideaWhy.dataset.rpanelIdeaWhyToggle;
+        if (extractionWhyOpen.has(id)) extractionWhyOpen.delete(id);
+        else extractionWhyOpen.add(id);
+        repaintExtractionCard(root, session, id);
         return;
       }
-
-      // Thumb up/down feedback on an extraction idea card — exclusive toggle.
-      const thumb = event.target.closest("[data-idea-feedback]");
-      if (thumb) {
+      const ideaThumb = event.target.closest(".extraction-turn__detail [data-rpanel-ideas-feedback]");
+      if (ideaThumb) {
         event.preventDefault();
-        const card = thumb.closest(".extraction-turn__idea-card");
-        if (card) {
-          const wasActive = thumb.classList.contains("is-active");
-          // Mutually exclusive: clear both thumbs in this card first.
-          card.querySelectorAll("[data-idea-feedback]").forEach((b) => {
-            b.classList.remove("is-active");
-            b.setAttribute("aria-pressed", "false");
-            const i = b.querySelector("i");
-            if (i) {
-              const dir = b.dataset.ideaFeedback;
-              i.className = dir === "up" ? "ap-icon-thumb-up" : "ap-icon-thumb-down";
-            }
-          });
-          if (!wasActive) {
-            thumb.classList.add("is-active");
-            thumb.setAttribute("aria-pressed", "true");
-            const i = thumb.querySelector("i");
-            if (i) {
-              const dir = thumb.dataset.ideaFeedback;
-              i.className = dir === "up" ? "ap-icon-thumb-up_fill" : "ap-icon-thumb-down_fill";
-            }
-          }
-        }
+        const id = ideaThumb.dataset.rpanelIdeasFeedback;
+        const verdict = ideaThumb.dataset.verdict;
+        if (extractionVerdict.get(id) === verdict) extractionVerdict.delete(id);
+        else extractionVerdict.set(id, verdict);
+        repaintExtractionCard(root, session, id);
+        return;
+      }
+      const ideaMention = event.target.closest(".extraction-turn__detail [data-rpanel-mention-idea]");
+      if (ideaMention) {
+        const idea = findExtractionIdea(session.id, ideaMention.dataset.rpanelMentionIdea);
+        if (idea) addComposerMention(session.id, idea.title);
+        return;
+      }
+      const ideaUse = event.target.closest(".extraction-turn__detail [data-rpanel-use-idea]");
+      if (ideaUse) {
+        event.preventDefault();
+        askProfileQuestion(session.id, ideaUse.dataset.rpanelUseIdea);
         return;
       }
 
@@ -3628,16 +3588,6 @@ function bindSession(root, session) {
         return;
       }
 
-      // In-thread Drafts summary card → opens the right-panel Drafts surface
-      // pinned to this batch's assistant message. The full editable BatchCards
-      // live in the panel; the in-thread card is just the entry point.
-      const draftsCard = event.target.closest("[data-drafts-card-message]");
-      if (draftsCard) {
-        event.preventDefault();
-        const messageId = draftsCard.dataset.draftsCardMessage;
-        openDraftsPanel({ sessionId: session.id, messageId });
-        return;
-      }
       // Any other [data-go-to-posts] surface (older link patterns) — keep the
       // legacy navigation to the Posts tab until those callers are migrated
       // to the right panel.
@@ -3807,12 +3757,18 @@ function bindSession(root, session) {
         // Additional features — open the add-source modal (staged) for a link or
         // pasted text. Checked before the dropzone so a click on these buttons
         // (which sit inside the upload box) doesn't also open the file picker.
+        // Staging callbacks shared across the modal's tabs — whichever tab the
+        // user ends on (incl. switching to Upload), the source lands in the
+        // batch's staged list instead of the global upload stream.
+        const onStageFile = (file, classification) => batchStudio.addFileSource(session.id, file, classification);
+        const onStageUrl = (url) => batchStudio.addUrlSource(session.id, url);
+        const onStageText = (text) => batchStudio.addTextSource(session.id, text);
         if (event.target.closest("[data-batch-link]")) {
-          openAddSourceModal({ tab: "url", onStageUrl: (url) => batchStudio.addUrlSource(session.id, url) });
+          openAddSourceModal({ tab: "url", onStageUrl, onStageText, onStageFile });
           return;
         }
         if (event.target.closest("[data-batch-paste]")) {
-          openAddSourceModal({ tab: "pasteText", onStageText: (text) => batchStudio.addTextSource(session.id, text) });
+          openAddSourceModal({ tab: "pasteText", onStageUrl, onStageText, onStageFile });
           return;
         }
         // Click the upload box (or Browse) → OS file picker.
@@ -3857,10 +3813,23 @@ function bindSession(root, session) {
           root.querySelector("[data-clip-studio-file]")?.click();
           return;
         }
+        // Pick the Playbook governing the drafts' voice.
+        const clipPb = event.target.closest("[data-clip-playbook-pick]");
+        if (clipPb) {
+          clipStudio.setContext(session.id, clipPb.dataset.clipPlaybookPick);
+          root.querySelector("[data-clip-playbook]")?.removeAttribute("open");
+          return;
+        }
         // Config toggle controls (output-format cards + caption-style cards).
         const cfgBtn = event.target.closest("[data-clip-config][data-value]");
         if (cfgBtn) {
           clipStudio.setConfig(session.id, { [cfgBtn.dataset.clipConfig]: cfgBtn.dataset.value });
+          // On the review step the format/caption controls re-bake the clips so
+          // the trimmer + resulting drafts reflect the pick (config stays the
+          // source of truth either way — see finalizeClipStudio).
+          if (clipStudio.getState(session.id)?.stage === "clips") {
+            clipStudio.applyConfigToClips(session.id);
+          }
           return;
         }
         // "Surprise me" — prefill the instructions field with a canned hint.

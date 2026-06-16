@@ -193,6 +193,16 @@ export function renderPostCard(post, opts = {}) {
       </div>
 
       <div class="posts__row-actions" aria-label="Post actions">
+        <button
+          type="button"
+          class="ap-icon-button stroked blue"
+          aria-label="Mention in chat"
+          title="Mention"
+          data-post-mention="${post.id}"
+          ${regenerating ? "disabled" : ""}
+        >
+          <i class="ap-icon-at"></i>
+        </button>
         ${raw(
           inlineEdit
             ? `<button

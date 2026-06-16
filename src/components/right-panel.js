@@ -13,7 +13,7 @@ import {
   updatePostContent,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=28";
-import { renderPostCard } from "./post-card.js?v=33";
+import { renderPostCard } from "./post-card.js?v=35";
 import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1";
@@ -26,7 +26,7 @@ import {
   removeSources,
   renameSource,
 } from "../sources-stream.js?v=37";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=36";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=37";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=23";
 import { askConnector } from "../connector-ask.js?v=3";
@@ -39,7 +39,7 @@ import { iconFor } from "../file-kinds.js?v=20";
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
-import { open as openScheduleModal } from "./schedule-modal.js?v=26";
+import { open as openScheduleModal } from "./schedule-modal.js?v=27";
 import { open as openGenerateImageModal } from "./generate-image-modal.js?v=25";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
@@ -496,6 +496,11 @@ export function init() {
     const cancelBtn = event.target.closest("[data-post-edit-cancel]");
     if (canDraftInlineEdit() && cancelBtn) {
       cancelEdit(cancelBtn.dataset.postEditCancel);
+      return;
+    }
+    const mentionBtn = event.target.closest("[data-post-mention]");
+    if (mentionBtn) {
+      onPostMention(mentionBtn.dataset.postMention);
       return;
     }
     // Regenerate dropdown (#14) — the sparkles button toggles a menu of
@@ -1692,6 +1697,32 @@ function formatScheduledLabel(ts) {
   const day = d.toLocaleDateString(undefined, { weekday: "short" });
   const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   return `${day} · ${time}`;
+}
+
+// Drafts have no title, so the composer pill reads "<Network> — <snippet>"
+// (e.g. "LinkedIn — Boost your reach this quarter…"), derived from the
+// draft's network + the first line of its body. Mirrors the Mention action
+// on idea / clip / source cards, which feed addComposerMention a string.
+const NETWORK_PILL_LABEL = {
+  linkedin: "LinkedIn",
+  x: "X",
+  twitter: "X",
+  instagram: "Instagram",
+  facebook: "Facebook",
+  tiktok: "TikTok",
+  youtube: "YouTube",
+};
+
+function onPostMention(postId) {
+  const sid = activeSessionId();
+  if (!sid) return;
+  const post = getPosts(sid).find((p) => p.id === postId);
+  if (!post) return;
+  const network = NETWORK_PILL_LABEL[(post.network || "").toLowerCase()] || "Draft";
+  const firstLine = (Array.isArray(post.text) ? post.text[0] : post.text) || "";
+  const snippet = firstLine.trim().slice(0, 40);
+  const label = snippet ? `${network} — ${snippet}${firstLine.trim().length > 40 ? "…" : ""}` : `${network} draft`;
+  addComposerMention(sid, label);
 }
 
 function onPostDuplicate(postId) {
