@@ -2,8 +2,8 @@ import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=4";
 import { initTopbar, renderTopbar } from "./components/topbar.js?v=99";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=83";
-import { init as initRightPanel } from "./components/right-panel.js?v=156";
-import { init as initScheduleModal } from "./components/schedule-modal.js?v=27";
+import { init as initRightPanel } from "./components/right-panel.js?v=157";
+import { init as initScheduleModal } from "./components/schedule-modal.js?v=28";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=23";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
 import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=25";
@@ -39,7 +39,7 @@ import {
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=156";
+} from "./components/right-panel.js?v=157";
 
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb

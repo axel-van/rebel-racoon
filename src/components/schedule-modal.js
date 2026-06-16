@@ -585,7 +585,7 @@ function renderSlotList() {
             <div class="schedule-modal__slot-text">${escapeText(text)}</div>
           </div>
           <div class="schedule-modal__slot-dates">${dateRows}</div>
-          <button type="button" class="ap-button transparent blue schedule-modal__add-date" data-schedule-add="${escapeText(post.id)}">
+          <button type="button" class="ap-button secondary blue schedule-modal__add-date" data-schedule-add="${escapeText(post.id)}">
             <i class="ap-icon-plus"></i><span>Add another date</span>
           </button>
         </div>

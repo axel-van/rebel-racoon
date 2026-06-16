@@ -163,13 +163,10 @@
   min-width: 200px;
 }
 
-/* "Add another date" — text-link affordance, left-aligned under the date
-   rows. .ap-button.transparent.blue gives the DS link styling; we just
-   drop the inline padding so it reads as a link, not a button. */
+/* "Add another date" — DS secondary-blue button, left-aligned under the
+   date rows. */
 .schedule-modal__add-date {
   align-self: flex-start;
-  padding-left: 0;
-  padding-right: 0;
 }
 
 /* ── Calendar ───────────────────────────────────────────────────────── */
