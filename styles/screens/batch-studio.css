@@ -90,23 +90,29 @@
 .session__assistant.batch-studio.is-drop-target .batch-studio__dropzone {
   border-color: var(--ref-color-electric-blue-100);
 }
+/* Hover/focus turns the dashed border blue — mirrors the Clip Studio
+   dropzone (the border lives on this wrapper, not the inner area). */
+.batch-studio__dropzone:has(.batch-studio__dropzone-main:hover),
+.batch-studio__dropzone:has(.batch-studio__dropzone-main:focus-visible) {
+  border-color: var(--ref-color-electric-blue-100);
+}
 
-/* Main file drop / click-to-browse area. */
+/* Main file drop / click-to-browse area — matches the Clip Studio dropzone
+   (icon · primary · sub · Browse button), generous height + centering. */
 .batch-studio__dropzone-main {
   display: flex;
+  flex: 1;
+  min-height: 220px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xl) var(--ref-spacing-lg);
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xl);
   text-align: center;
   cursor: pointer;
-  transition: background var(--ref-animation-short) var(--app-ease-standard);
 }
-.batch-studio__dropzone-main:hover,
 .batch-studio__dropzone-main:focus-visible {
   outline: none;
-  background: var(--ref-color-grey-05);
 }
 .batch-studio__dropzone-icon {
   display: inline-flex;
@@ -114,7 +120,6 @@
   justify-content: center;
   width: var(--ref-spacing-xl);
   height: var(--ref-spacing-xl);
-  margin-bottom: var(--ref-spacing-xxs);
   border-radius: var(--app-radius-circle);
   background: var(--ref-color-white);
   color: var(--ref-color-grey-60);
@@ -124,13 +129,12 @@
   font-size: var(--sys-icon-css-md);
 }
 .batch-studio__dropzone-primary {
-  margin: 0;
+  margin: var(--ref-spacing-xxs) 0 0;
   font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-100);
 }
-.batch-studio__dropzone-link {
-  color: var(--ref-color-electric-blue-100);
-  font-weight: var(--sys-text-style-body-bold-weight);
+.batch-studio__browse {
+  margin-top: var(--ref-spacing-xs);
 }
 .batch-studio__dropzone-sub {
   margin: 0;

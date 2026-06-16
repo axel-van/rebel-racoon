@@ -480,10 +480,11 @@ function renderBatchStudio(session) {
               aria-label="Add files from your computer"
             >
               <span class="batch-studio__dropzone-icon"><i class="ap-icon-upload" aria-hidden="true"></i></span>
-              <p class="batch-studio__dropzone-primary">
-                Drag &amp; drop files, or <span class="batch-studio__dropzone-link">browse</span>
-              </p>
+              <p class="batch-studio__dropzone-primary">Drag &amp; drop files here</p>
               <p class="batch-studio__dropzone-sub muted">PDF, Word, text, video, audio or images · up to 100MB each</p>
+              <button type="button" class="ap-button primary blue batch-studio__browse">
+                <i class="ap-icon-upload" aria-hidden="true"></i><span>Browse files</span>
+              </button>
             </div>
             <div class="batch-studio__dropzone-extra">
               <span class="batch-studio__dropzone-extra-label muted">or add</span>
@@ -668,6 +669,41 @@ function renderClipPlaybookControl(ctx) {
     </details>`;
 }
 
+// "How it works" explainer — three compact steps that tell the user what the
+// feature does end to end. The middle (AI) step carries the MermAId gradient
+// accent so the magic reads as happening between input and output.
+const CLIP_STUDIO_STEPS = [
+  {
+    icon: "ap-icon-file--video",
+    title: "Add your video",
+    text: "Upload a file or paste a YouTube or Drive link.",
+  },
+  {
+    icon: "ap-icon-sparkles",
+    title: "I find the highlights",
+    text: "I transcribe the whole video and cut the strongest moments to length.",
+    ai: true,
+  },
+  {
+    icon: "ap-icon-closed-captions",
+    title: "Post-ready clips",
+    text: "Pick a format and captions, and I'll draft a post for each clip.",
+  },
+];
+
+function buildClipStudioSteps() {
+  return CLIP_STUDIO_STEPS.map(
+    (s) => `
+      <li class="clip-studio__step">
+        <span class="clip-studio__step-icon${s.ai ? " clip-studio__step-icon--ai" : ""}">
+          <i class="${s.icon}" aria-hidden="true"></i>
+        </span>
+        <span class="clip-studio__step-title">${s.title}</span>
+        <span class="clip-studio__step-text">${s.text}</span>
+      </li>`,
+  ).join("");
+}
+
 function renderClipStudioUpload(st) {
   const cfg = st.config || {};
   const ctx = st.contextId ? getContextById(st.contextId) : null;
@@ -741,20 +777,24 @@ function renderClipStudioUpload(st) {
   return html`
     <aside class="session__assistant clip-studio clip-studio--upload" aria-label="Extract video clips">
       <div class="clip-studio__config">
-        <div class="clip-studio__config-left">
-          <div class="clip-studio__intro">
-            <span class="clip-studio__ai-badge"><i class="ap-icon-sparkles" aria-hidden="true"></i>Auto Clips</span>
-            <h1 class="clip-studio__title">Turn a video into post-ready clips</h1>
-            <p class="clip-studio__sub">
-              Drop a video and set the clip length — I'll cut the best moments. You'll pick the format and captions once
-              the clips are ready.
-            </p>
-          </div>
-          <input type="file" accept="video/*,.mp4,.mov,.webm" id="clipStudioFileInput" data-clip-studio-file hidden />
-          ${raw(leftPanel)}
-        </div>
+        <header class="clip-studio__intro">
+          <span class="clip-studio__ai-badge"><i class="ap-icon-sparkles" aria-hidden="true"></i>Auto Clips</span>
+          <h1 class="clip-studio__title">Turn a video into post-ready clips</h1>
+          <p class="clip-studio__sub">
+            Drop in a long video and I'll find the moments worth posting — cut to length and ready to draft in your
+            playbook's voice. No editor required.
+          </p>
+        </header>
 
-        <div class="clip-studio__config-right">
+        <ol class="clip-studio__steps">
+          ${raw(buildClipStudioSteps())}
+        </ol>
+
+        <input type="file" accept="video/*,.mp4,.mov,.webm" id="clipStudioFileInput" data-clip-studio-file hidden />
+
+        <section class="clip-studio__upload-area" aria-label="Add a video">${raw(leftPanel)}</section>
+
+        <section class="clip-studio__panel" aria-label="Clip settings">
           <div class="clip-studio__field">
             <span class="clip-studio__field-label">Playbook</span>
             ${raw(renderClipPlaybookControl(ctx))}
@@ -794,7 +834,9 @@ ${escapeHtml(cfg.instructions || "")}</textarea
               >
             </div>
           </div>
+        </section>
 
+        <div class="clip-studio__cta">
           <button
             type="button"
             class="ap-button primary orange clip-studio__generate"
@@ -803,6 +845,7 @@ ${escapeHtml(cfg.instructions || "")}</textarea
           >
             <i class="ap-icon-sparkles" aria-hidden="true"></i><span>Create clips</span>
           </button>
+          ${st.videoProvided ? "" : raw(`<p class="clip-studio__cta-hint muted">Add a video above to get started.</p>`)}
         </div>
       </div>
     </aside>

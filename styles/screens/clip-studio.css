@@ -82,44 +82,136 @@
   color: var(--ref-color-white);
 }
 
-/* ── Upload / config (2-panel) ─────────────────────────────────────────── */
+/* ── Upload / config (single focused column) ───────────────────────────── */
 
-/* Setup is a single focused column: intro → drop/preview → duration +
-   instructions → Create clips. (Output format + caption moved to the review
-   step, so the old 2-panel grid left the right column sparse and lopsided.) */
+/* Setup is one narrative column: intro → how-it-works → drop/preview →
+   settings → Create clips. A faint MermAId glow at the top marks this as the
+   AI feature (same gradient family as the analysis surface). */
 .clip-studio--upload {
   overflow-y: auto;
+  background:
+    radial-gradient(ellipse 70% 36% at 50% -4%, var(--ref-color-mermaid-10) 0%, transparent 72%), var(--app-bg);
 }
 .clip-studio__config {
   width: 100%;
-  max-width: 600px;
-  margin: auto;
-  padding: var(--ref-spacing-xl);
+  max-width: 660px;
+  margin: 0 auto;
+  padding: var(--ref-spacing-xxl) var(--ref-spacing-xl);
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-lg);
 }
 
-.clip-studio__config-left,
-.clip-studio__config-right {
+/* Centered hero. */
+.clip-studio__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--ref-spacing-xs);
+}
+.clip-studio__intro .clip-studio__sub {
+  max-width: 520px;
+}
+
+/* How it works — three steps that explain the feature end to end. */
+.clip-studio__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ref-spacing-sm);
+}
+.clip-studio__step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-md);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+  background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-subtle);
+}
+/* Connecting chevron in the gap between steps (hidden on the last, and when
+   the row wraps to a single column). */
+.clip-studio__step:not(:last-child)::after {
+  content: "›";
+  position: absolute;
+  top: 50%;
+  right: calc(var(--ref-spacing-sm) * -1);
+  width: var(--ref-spacing-sm);
+  transform: translate(-2px, -55%);
+  text-align: center;
+  font-size: var(--sys-icon-css-md);
+  line-height: 1;
+  color: var(--ref-color-grey-40);
+}
+.clip-studio__step-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ref-spacing-xl);
+  height: var(--ref-spacing-xl);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-grey-05);
+  color: var(--ref-color-grey-80);
+  margin-bottom: var(--ref-spacing-xxs);
+}
+.clip-studio__step-icon i {
+  font-size: var(--sys-icon-css-md);
+}
+/* The AI step carries the MermAId gradient — the magic between in and out. */
+.clip-studio__step-icon--ai {
+  background: var(--ref-color-mermaid-gradient-background);
+  color: var(--ref-color-white);
+  box-shadow: var(--app-shadow-low);
+}
+.clip-studio__step-icon--ai i {
+  color: var(--ref-color-white);
+}
+.clip-studio__step-title {
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+.clip-studio__step-text {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--ref-color-grey-60);
+}
+
+/* Upload area + settings group as one deliberate block each. */
+.clip-studio__upload-area {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-md);
-  min-width: 0;
 }
-
-.clip-studio__config-left .clip-studio__intro {
+.clip-studio__panel {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-lg);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+  background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-subtle);
+}
+
+/* CTA block (button + helper hint when no video yet). */
+.clip-studio__cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: var(--ref-spacing-xs);
 }
-.clip-studio__config-left .clip-studio__title {
-  font-size: var(--sys-text-style-marketing-size);
-  line-height: var(--sys-text-style-marketing-line-height);
-}
-.clip-studio__config-left .clip-studio__sub {
-  text-align: left;
+.clip-studio__cta-hint {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
 }
 
 .clip-studio__dropzone {
@@ -132,13 +224,15 @@
   justify-content: center;
   gap: var(--ref-spacing-xs);
   padding: var(--ref-spacing-xl);
-  border: 1px dashed var(--ref-color-grey-20);
+  border: 1.5px dashed var(--ref-color-grey-20);
   border-radius: var(--app-radius-card);
   background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-subtle);
   cursor: pointer;
   text-align: center;
   transition:
     border-color var(--ref-animation-short) var(--app-ease-standard),
+    box-shadow var(--ref-animation-short) var(--app-ease-standard),
     background var(--ref-animation-short) var(--app-ease-standard);
 }
 .clip-studio__dropzone:hover,
@@ -146,6 +240,7 @@
   outline: none;
   border-color: var(--ref-color-electric-blue-100);
   background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-low);
 }
 .clip-studio__dropzone.is-provided {
   border-style: solid;
@@ -380,9 +475,10 @@
 }
 
 .clip-studio__generate {
-  margin-top: var(--ref-spacing-xxs);
   align-self: stretch;
   justify-content: center;
+  min-height: 44px;
+  font-size: var(--sys-text-style-button-large-size, var(--sys-text-style-body-bold-size));
 }
 
 /* Output format — single choice. Each card shows a ratio glyph, the ratio +
