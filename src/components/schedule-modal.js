@@ -43,11 +43,13 @@ let state = {
   onConfirm: null,
   status: "idle", // 'idle' | 'scheduling' | 'error'
   errorMessage: "",
+  computing: false, // "Compute best times" loading state
   calendarMonth: null, // Date pinned to the 1st of the visible month
   focusedDayKey: null, // string from dayKey()
 };
 
 let unsubscribeQueue = null;
+let computeTimer = null; // pending "Compute best times" timeout
 
 // DS branded network glyphs — the `-official` variants carry each
 // network's brand color. The generic `ap-icon-<network>` set is grey
@@ -212,7 +214,11 @@ export function open({ posts, onConfirm }) {
     note: "",
     startFrom: defaultStartFrom(),
   };
-  const slots = optimalSlots(posts, strategy);
+  // Open with a single date per draft. The frequency strategy only
+  // expands into a recurrence once the user hits "Compute best times" —
+  // so the modal doesn't dump 8 pre-filled dates on someone who just
+  // wants to schedule one post.
+  const slots = spreadOneEach(posts, strategy);
   // Open the calendar on the month of the first computed date — not
   // today's month. Otherwise an end-of-month batch (which starts
   // tomorrow, i.e. next month) would open onto an empty calendar with
@@ -240,6 +246,10 @@ export function open({ posts, onConfirm }) {
 }
 
 function close() {
+  if (computeTimer) {
+    clearTimeout(computeTimer);
+    computeTimer = null;
+  }
   state = {
     open: false,
     posts: [],
@@ -249,6 +259,7 @@ function close() {
     onConfirm: null,
     status: "idle",
     errorMessage: "",
+    computing: false,
     calendarMonth: null,
     focusedDayKey: null,
   };
@@ -394,6 +405,8 @@ function appendDateForPost(postId) {
   const post = state.posts.find((p) => p.id === postId);
   if (!post) return;
   const times = state.slots.filter((s) => s.post.id === postId).map((s) => s.when);
+  // Hard cap — a post can carry at most MAX_DATES_PER_DRAFT publish dates.
+  if (times.length >= MAX_DATES_PER_DRAFT) return;
   let next;
   if (times.length) {
     next = new Date(Math.max(...times));
@@ -417,16 +430,17 @@ function addSharedDateToAll() {
   next.setDate(next.getDate() + 1);
   next.setHours(9, 0, 0, 0);
   const when = next.getTime();
-  state.posts.forEach((post) => state.slots.push({ post, when }));
+  // Skip any draft already at the per-post cap so the shared date can't
+  // push a post past MAX_DATES_PER_DRAFT.
+  state.posts.forEach((post) => {
+    const count = state.slots.filter((s) => s.post.id === post.id).length;
+    if (count < MAX_DATES_PER_DRAFT) state.slots.push({ post, when });
+  });
 }
 
-// Re-spread the whole batch under the current strategy and snap the
-// calendar to the first computed day so the result is visible at a
-// glance. Used by every strategy control (chips, note, start date) and
-// when flipping back to Optimal mode.
-function recomputeOptimal() {
-  state.mode = "optimal";
-  state.slots = optimalSlots(state.posts, state.strategy);
+// Snap the calendar to the month of the first slot so a fresh spread is
+// in view at a glance.
+function snapCalendarToFirst() {
   const first = state.slots[0];
   if (first) {
     state.focusedDayKey = dayKey(first.when);
@@ -434,26 +448,54 @@ function recomputeOptimal() {
   }
 }
 
+// Expand the strategy into the full recurrence — the work "Compute best
+// times" commits. Strategy controls (chips, note, start date) only stage
+// their values; nothing lands in the list until this runs.
+function recomputeOptimal() {
+  state.mode = "optimal";
+  state.slots = optimalSlots(state.posts, state.strategy);
+  snapCalendarToFirst();
+}
+
+// Collapse to a single date per draft — the default on open and what
+// flipping back to Optimal mode resets to before a recurrence is computed.
+function seedOneEach() {
+  state.mode = "optimal";
+  state.slots = spreadOneEach(state.posts, state.strategy);
+  snapCalendarToFirst();
+}
+
 function onClick(event) {
   if (event.target.closest("[data-schedule-close]")) {
     close();
     return;
   }
-  // Cadence chip — single-select; picking one re-spreads the batch live.
+  // Cadence chip — single-select. Picking one only stages the choice
+  // (the chip lights up); the dates don't change until "Compute best
+  // times" is clicked. So we just record it and repaint the chips.
   const cadenceChip = event.target.closest("[data-schedule-cadence]");
   if (cadenceChip) {
+    if (state.computing) return;
     state.strategy.cadence = cadenceChip.dataset.scheduleCadence;
-    recomputeOptimal();
     render();
     return;
   }
-  // "Compute best times" — explicit re-spread, the trigger for the
-  // free-text strategy note (which only commits on this click / blur).
+  // "Compute best times" — the one action that expands the staged
+  // strategy (cadence + note + start date) into the recurrence. Runs a
+  // short loading beat so it reads as real work, then fills the list.
   if (event.target.closest("[data-schedule-compute]")) {
+    if (state.computing) return;
     const noteEl = document.getElementById("scheduleStrategyNote");
     if (noteEl) state.strategy.note = noteEl.value;
-    recomputeOptimal();
+    state.computing = true;
     render();
+    computeTimer = setTimeout(() => {
+      computeTimer = null;
+      if (!state.open) return;
+      state.computing = false;
+      recomputeOptimal();
+      render();
+    }, 1600);
     return;
   }
   const monthNav = event.target.closest("[data-schedule-month]");
@@ -573,39 +615,33 @@ function onConfirmFailed(err) {
 }
 
 function onInput(event) {
-  // Mode picker (radio cards) — flipping a radio rebuilds the slot
-  // list under the chosen strategy and triggers a full repaint so
-  // the calendar dots track the new times too.
+  // Mode picker (radio cards) — flipping to Optimal resets to one date
+  // per draft (the recurrence is only expanded on "Compute best times");
+  // flipping to Custom seeds an editable one-per-day spread.
   if (event.target.matches('input[name="schedule-mode"]')) {
     const next = event.target.value;
     if (next === state.mode) return;
     state.mode = next;
     if (next === "optimal") {
-      recomputeOptimal();
+      seedOneEach();
     } else {
       state.slots = customDefaultSlots(state.posts);
     }
     render();
     return;
   }
-  // Free-text strategy note — commits on blur/change (fires `change`),
-  // then re-spreads. We avoid recomputing on every keystroke so the
-  // textarea keeps focus while typing.
+  // Free-text strategy note — staged only; the spread reads it when the
+  // user clicks "Compute best times". We don't re-render so the textarea
+  // keeps focus while typing.
   if (event.target.matches("[data-schedule-note]")) {
     if (event.type !== "change") return;
     state.strategy.note = event.target.value;
-    recomputeOptimal();
-    render();
     return;
   }
-  // "Starting from" date — re-spread from the new day-0.
+  // "Starting from" date — staged only; applied on "Compute best times".
   if (event.target.matches("[data-schedule-start]")) {
     const ts = new Date(`${event.target.value}T00:00:00`).getTime();
-    if (!isNaN(ts)) {
-      state.strategy.startFrom = ts;
-      recomputeOptimal();
-      render();
-    }
+    if (!isNaN(ts)) state.strategy.startFrom = ts;
     return;
   }
   const slotInput = event.target.closest("[data-schedule-slot]");
@@ -817,8 +853,17 @@ function renderStrategyPanel() {
             <input type="date" id="scheduleStartFrom" value="${toDateInput(s.startFrom)}" data-schedule-start />
           </div>
         </div>
-        <button type="button" class="ap-button stroked blue schedule-modal__compute" data-schedule-compute>
-          <i class="ap-icon-clock" aria-hidden="true"></i><span>Compute best times</span>
+        <button
+          type="button"
+          class="ap-button stroked blue schedule-modal__compute"
+          data-schedule-compute
+          ${state.computing ? "disabled" : ""}
+        >
+          ${
+            state.computing
+              ? `<span class="schedule-modal__spinner" aria-hidden="true"></span><span>Computing…</span>`
+              : `<i class="ap-icon-clock" aria-hidden="true"></i><span>Compute best times</span>`
+          }
         </button>
       </div>
     </div>
@@ -836,12 +881,14 @@ function slotsForPost(postId) {
 
 function renderSlotList() {
   const multi = state.posts.length > 1;
+  // "Add date to all" is dead once every draft has hit the per-post cap.
+  const allAtCap = state.posts.every((p) => slotsForPost(p.id).length >= MAX_DATES_PER_DRAFT);
   const header = `
     <div class="schedule-modal__slots-head">
       <span class="schedule-modal__slots-count">${state.posts.length} ${state.posts.length === 1 ? "draft" : "drafts"}</span>
       ${
         multi
-          ? `<button type="button" class="ap-button stroked blue schedule-modal__add-all" data-schedule-add-all>
+          ? `<button type="button" class="ap-button stroked blue schedule-modal__add-all" data-schedule-add-all ${allAtCap ? "disabled" : ""}>
                <i class="ap-icon-plus"></i><span>Add date to all</span>
              </button>`
           : ""
@@ -887,7 +934,12 @@ function renderSlotList() {
             <div class="schedule-modal__slot-text">${escapeText(text)}</div>
           </div>
           <div class="schedule-modal__slot-dates">${dateRows}</div>
-          <button type="button" class="ap-button secondary blue schedule-modal__add-date" data-schedule-add="${escapeText(post.id)}">
+          <button
+            type="button"
+            class="ap-button secondary blue schedule-modal__add-date"
+            data-schedule-add="${escapeText(post.id)}"
+            ${entries.length >= MAX_DATES_PER_DRAFT ? `disabled title="Up to ${MAX_DATES_PER_DRAFT} dates per post"` : ""}
+          >
             <i class="ap-icon-plus"></i><span>Add another date</span>
           </button>
         </div>
