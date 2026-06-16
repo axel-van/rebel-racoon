@@ -74,6 +74,88 @@
   color: var(--ref-color-electric-blue-100);
 }
 
+/* ── Strategy panel (Optimal mode) ──────────────────────────────────── */
+/* The interactive strategy picker that replaced the bare optimal mode:
+   cadence chips + a free-text note + start date + Compute. Grouped on a
+   tinted block so it reads as one configuration surface, distinct from
+   the bordered slot cards below. */
+
+.schedule-modal__strategy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm);
+  background: var(--ref-color-grey-05);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-card);
+}
+
+.schedule-modal__strategy-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.schedule-modal__strategy-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-80);
+}
+
+/* "Or describe your own strategy" reads as an Archie / AI affordance —
+   orange sparkle per the brand convention (orange = AI / spotlight). */
+.schedule-modal__strategy-label--ai > i {
+  color: var(--ref-color-orange-100);
+  font-size: var(--sys-icon-css-sm);
+}
+
+.schedule-modal__cadence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+}
+
+/* The shared 24px filter chip reads a touch small for a primary picker —
+   nudge the hit area up to a comfortable 28px without redefining the DS
+   class's look (only padding/height, no color/border overrides). */
+.schedule-modal__cadence-chip {
+  height: 28px;
+  max-width: none;
+  padding-inline: var(--ref-spacing-xs);
+}
+
+.schedule-modal__strategy-note > textarea {
+  resize: vertical;
+}
+
+/* Foot row — start date on the left, Compute on the right. Wraps on a
+   narrow modal so neither control gets crushed. */
+.schedule-modal__strategy-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+}
+
+.schedule-modal__strategy-start {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.schedule-modal__strategy-start .ap-input-group {
+  min-width: 180px;
+}
+
+.schedule-modal__compute {
+  flex: 0 0 auto;
+}
+
 /* ── Slot rows ──────────────────────────────────────────────────────── */
 
 .schedule-modal__slots {

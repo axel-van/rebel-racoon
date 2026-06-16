@@ -36,6 +36,10 @@ let state = {
   posts: [], // [{id, network, text/preview}]
   slots: [], // [{post, when: epoch ms}]
   mode: "optimal", // 'optimal' | 'custom'
+  // Strategy that drives the optimal spread. `cadence` is one of the
+  // CADENCES ids (the visible chips), `note` is the free-text refinement
+  // ("avoid Mondays", "mornings"), `startFrom` is the day-0 epoch.
+  strategy: { cadence: "weekdays", note: "", startFrom: null },
   onConfirm: null,
   status: "idle", // 'idle' | 'scheduling' | 'error'
   errorMessage: "",
@@ -83,6 +87,80 @@ const PER_NETWORK_OPTIMAL = {
 
 const FALLBACK_OPTIMAL = { dow: [1, 2, 3, 4, 5], hours: [9, 13, 17] };
 
+// ── Posting cadences (the visible strategy chips) ─────────────────────
+// Each cadence decides WHICH days a slot can land on; the per-network
+// optimal map then decides the HOUR. `days` is a sunday-first dow set;
+// `every` spaces slots N days apart from the start; `weekly` repeats the
+// start day's weekday. These are the presets the user picks instead of a
+// hidden dropdown — selecting one re-spreads the batch live.
+const CADENCES = [
+  { id: "weekdays", label: "Every weekday", days: [1, 2, 3, 4, 5] },
+  { id: "thrice", label: "3× a week", days: [1, 3, 5] },
+  { id: "twice", label: "Twice a week", days: [2, 4] },
+  { id: "alternate", label: "Every other day", every: 2 },
+  { id: "once", label: "Once a week", weekly: true },
+];
+
+const WEEKDAY_DOW = {
+  sunday: 0,
+  monday: 1,
+  tuesday: 2,
+  wednesday: 3,
+  thursday: 4,
+  friday: 5,
+  saturday: 6,
+};
+
+function startOfDay(ts) {
+  const d = new Date(ts);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function defaultStartFrom() {
+  // Tomorrow — never schedule a batch in the past.
+  const d = startOfDay(Date.now());
+  d.setDate(d.getDate() + 1);
+  return d.getTime();
+}
+
+// Free-text refinement parsing — keeps "describe your own strategy"
+// functional rather than decorative. We read a time-of-day bias and any
+// "avoid <weekday>" exclusions out of the note so the spread visibly
+// reacts to what the user typed.
+function parseTimeOfDay(note) {
+  const t = (note || "").toLowerCase();
+  if (/\b(morning|early|am)\b/.test(t)) return "morning";
+  if (/\b(evening|night|late|pm)\b/.test(t)) return "evening";
+  if (/\b(afternoon|noon|midday|lunch)\b/.test(t)) return "afternoon";
+  return null;
+}
+
+function parseAvoidDays(note) {
+  const t = (note || "").toLowerCase();
+  const avoid = new Set();
+  for (const [name, dow] of Object.entries(WEEKDAY_DOW)) {
+    // "avoid mondays", "no fridays", "skip the weekend"…
+    if (new RegExp(`\\b(avoid|no|skip|not?|except)\\b[^.]*\\b${name}s?\\b`).test(t)) {
+      avoid.add(dow);
+    }
+  }
+  if (/\b(weekend|weekends)\b/.test(t) && /\b(avoid|no|skip|not?|except)\b/.test(t)) {
+    avoid.add(0);
+    avoid.add(6);
+  }
+  return avoid;
+}
+
+function pickHour(hours, timeOfDay) {
+  if (!hours || hours.length === 0) return 9;
+  const sorted = [...hours].sort((a, b) => a - b);
+  if (timeOfDay === "morning") return sorted[0];
+  if (timeOfDay === "evening") return sorted[sorted.length - 1];
+  if (timeOfDay === "afternoon") return sorted[Math.floor(sorted.length / 2)];
+  return sorted[0];
+}
+
 export function init() {
   let scrim = document.getElementById(`${ROOT_ID}Scrim`);
   let modal = document.getElementById(ROOT_ID);
@@ -126,11 +204,13 @@ export function open({ posts, onConfirm }) {
   requestOpen(ROOT_ID, close);
   const today = new Date();
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-  const slots = optimalSlots(posts);
+  const strategy = { cadence: "weekdays", note: "", startFrom: defaultStartFrom() };
+  const slots = optimalSlots(posts, strategy);
   state = {
     open: true,
     posts,
     mode: "optimal",
+    strategy,
     slots,
     onConfirm: typeof onConfirm === "function" ? onConfirm : null,
     status: "idle",
@@ -152,6 +232,7 @@ function close() {
     posts: [],
     slots: [],
     mode: "optimal",
+    strategy: { cadence: "weekdays", note: "", startFrom: null },
     onConfirm: null,
     status: "idle",
     errorMessage: "",
@@ -168,47 +249,54 @@ function close() {
   notifyClose(ROOT_ID);
 }
 
-// ── Optimal slot picker ───────────────────────────────────────────────
-// Walks forward day-by-day and tries each network's preferred (dow,
-// hour) cells in order. Skips a cell if the queue already has 2+ posts
-// in the same day to spread load. Falls back to the generic spread if
-// the network has no map. Bound is 60 days so a pathological mock can't
-// loop forever.
-function optimalSlots(posts) {
-  const queue = getQueue();
-  const busy = busyCountsByDay();
-  const usedSlotKeys = new Set();
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
+// ── Optimal slot picker (strategy-driven) ─────────────────────────────
+// Drives the spread off the user's chosen strategy: the cadence chip
+// decides which days qualify, the free-text note refines time-of-day and
+// excludes weekdays, and `startFrom` is day 0. We assign one draft per
+// qualifying day in order, then set each draft's hour from its network's
+// optimal window (biased by the note). Day pattern is bounded to ~1 year
+// of look-ahead so a pathological note can't loop forever.
+function strategyDays(count, strategy) {
+  const start = startOfDay(strategy.startFrom || defaultStartFrom());
+  const cadence = CADENCES.find((c) => c.id === strategy.cadence) || CADENCES[0];
+  const avoid = parseAvoidDays(strategy.note);
+  const startDow = start.getDay();
+  const days = [];
+  const cursor = new Date(start);
+  for (let guard = 0; days.length < count && guard < 400; guard++) {
+    const dow = cursor.getDay();
+    let qualifies;
+    if (cadence.every) {
+      const diff = Math.round((cursor - start) / 86400000);
+      qualifies = diff % cadence.every === 0;
+    } else if (cadence.weekly) {
+      qualifies = dow === startDow;
+    } else {
+      qualifies = cadence.days.includes(dow);
+    }
+    if (qualifies && !avoid.has(dow)) days.push(new Date(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+}
+
+function optimalSlots(posts, strategy = state.strategy) {
+  const days = strategyDays(posts.length, strategy);
+  const timeOfDay = parseTimeOfDay(strategy.note);
+  const fallbackStart = startOfDay(strategy.startFrom || defaultStartFrom());
 
   return posts.map((p, idx) => {
     const network = (p.network || "linkedin").toLowerCase();
     const map = PER_NETWORK_OPTIMAL[network] || FALLBACK_OPTIMAL;
-    const offsetStart = Math.floor(idx / map.hours.length);
-    for (let d = offsetStart; d < offsetStart + 60; d++) {
-      const day = new Date(tomorrow);
-      day.setDate(day.getDate() + d);
-      if (!map.dow.includes(day.getDay())) continue;
-      const dKey = dayKey(day.getTime());
-      const busyOnDay = busy.get(dKey) || 0;
-      if (busyOnDay >= 3) continue; // already crowded
-      for (const hour of map.hours) {
-        const slot = new Date(day);
-        slot.setHours(hour, 0, 0, 0);
-        const slotKey = `${dKey}::${network}::${hour}`;
-        if (usedSlotKeys.has(slotKey)) continue;
-        const collides = queue.some((q) => q.network === network && Math.abs(q.when - slot.getTime()) < 30 * 60 * 1000);
-        if (collides) continue;
-        usedSlotKeys.add(slotKey);
-        return { post: p, when: slot.getTime() };
-      }
-    }
-    // Pathological fallback — schedule for tomorrow 9am + idx hours.
-    const fallback = new Date(tomorrow);
-    fallback.setHours(9 + idx, 0, 0, 0);
-    return { post: p, when: fallback.getTime() };
+    const hour = pickHour(map.hours, timeOfDay);
+    // If the cadence couldn't yield enough distinct days (huge batch,
+    // narrow once-a-week pattern…), pile the remainder onto the last day
+    // an hour apart so nothing silently drops.
+    const baseDay = days[idx] || days[days.length - 1] || fallbackStart;
+    const slot = new Date(baseDay);
+    const overflow = idx >= days.length ? idx - days.length + 1 : 0;
+    slot.setHours(hour + overflow, 0, 0, 0);
+    return { post: p, when: slot.getTime() };
   });
 }
 
@@ -245,9 +333,40 @@ function appendDateForPost(postId) {
   state.slots.push({ post, when: next.getTime() });
 }
 
+// Re-spread the whole batch under the current strategy and snap the
+// calendar to the first computed day so the result is visible at a
+// glance. Used by every strategy control (chips, note, start date) and
+// when flipping back to Optimal mode.
+function recomputeOptimal() {
+  state.mode = "optimal";
+  state.slots = optimalSlots(state.posts, state.strategy);
+  const first = state.slots[0];
+  if (first) {
+    state.focusedDayKey = dayKey(first.when);
+    state.calendarMonth = new Date(new Date(first.when).getFullYear(), new Date(first.when).getMonth(), 1);
+  }
+}
+
 function onClick(event) {
   if (event.target.closest("[data-schedule-close]")) {
     close();
+    return;
+  }
+  // Cadence chip — single-select; picking one re-spreads the batch live.
+  const cadenceChip = event.target.closest("[data-schedule-cadence]");
+  if (cadenceChip) {
+    state.strategy.cadence = cadenceChip.dataset.scheduleCadence;
+    recomputeOptimal();
+    render();
+    return;
+  }
+  // "Compute best times" — explicit re-spread, the trigger for the
+  // free-text strategy note (which only commits on this click / blur).
+  if (event.target.closest("[data-schedule-compute]")) {
+    const noteEl = document.getElementById("scheduleStrategyNote");
+    if (noteEl) state.strategy.note = noteEl.value;
+    recomputeOptimal();
+    render();
     return;
   }
   const monthNav = event.target.closest("[data-schedule-month]");
@@ -374,8 +493,32 @@ function onInput(event) {
     const next = event.target.value;
     if (next === state.mode) return;
     state.mode = next;
-    state.slots = next === "optimal" ? optimalSlots(state.posts) : customDefaultSlots(state.posts);
+    if (next === "optimal") {
+      recomputeOptimal();
+    } else {
+      state.slots = customDefaultSlots(state.posts);
+    }
     render();
+    return;
+  }
+  // Free-text strategy note — commits on blur/change (fires `change`),
+  // then re-spreads. We avoid recomputing on every keystroke so the
+  // textarea keeps focus while typing.
+  if (event.target.matches("[data-schedule-note]")) {
+    if (event.type !== "change") return;
+    state.strategy.note = event.target.value;
+    recomputeOptimal();
+    render();
+    return;
+  }
+  // "Starting from" date — re-spread from the new day-0.
+  if (event.target.matches("[data-schedule-start]")) {
+    const ts = new Date(`${event.target.value}T00:00:00`).getTime();
+    if (!isNaN(ts)) {
+      state.strategy.startFrom = ts;
+      recomputeOptimal();
+      render();
+    }
     return;
   }
   const slotInput = event.target.closest("[data-schedule-slot]");
@@ -436,7 +579,8 @@ function renderInner() {
           `)
         : ""}
       <section class="schedule-modal__left" aria-label="Drafts to schedule">
-        ${raw(renderModePicker())} ${raw(renderSlotList())}
+        ${raw(renderModePicker())} ${state.mode === "optimal" ? raw(renderStrategyPanel()) : ""}
+        ${raw(renderSlotList())}
       </section>
       <aside class="schedule-modal__right" aria-label="Already scheduled">${raw(renderCalendarPanel())}</aside>
     </div>
@@ -519,6 +663,65 @@ function renderModePicker() {
           <span>Pick each time below</span>
         </div>
       </label>
+    </div>
+  `;
+}
+
+// ── Strategy panel (Optimal mode) ─────────────────────────────────────
+// The interactive replacement for a hidden "optimal time" dropdown:
+//   • cadence chips (single-select, DS .ap-filter-chip / aria-pressed)
+//   • a free-text "describe your own strategy" note (Archie reads it)
+//   • a "Starting from" day-0 date + an explicit "Compute best times"
+// Chips and the date re-spread live; the note re-spreads on blur or on
+// the Compute button. Every recompute repaints the slot list + calendar.
+function renderStrategyPanel() {
+  const s = state.strategy;
+  const chips = CADENCES.map(
+    (c) => `
+      <button
+        type="button"
+        class="ap-filter-chip schedule-modal__cadence-chip"
+        data-schedule-cadence="${c.id}"
+        aria-pressed="${s.cadence === c.id ? "true" : "false"}"
+      >
+        ${c.label}
+      </button>`,
+  ).join("");
+
+  return `
+    <div class="schedule-modal__strategy">
+      <div class="schedule-modal__strategy-block">
+        <span class="schedule-modal__strategy-label">Scheduling strategy</span>
+        <div class="schedule-modal__cadence" role="group" aria-label="Posting frequency">${chips}</div>
+      </div>
+
+      <div class="schedule-modal__strategy-block">
+        <label class="schedule-modal__strategy-label schedule-modal__strategy-label--ai" for="scheduleStrategyNote">
+          <i class="ap-icon-sparkles" aria-hidden="true"></i>
+          Or describe your own strategy
+        </label>
+        <div class="ap-textarea-field resizable">
+          <textarea
+            id="scheduleStrategyNote"
+            rows="2"
+            placeholder="e.g. Tuesday and Thursday mornings, avoid Mondays…"
+            data-schedule-note
+          >${escapeText(s.note)}</textarea>
+        </div>
+      </div>
+
+      <div class="schedule-modal__strategy-foot">
+        <div class="schedule-modal__strategy-start">
+          <label class="schedule-modal__strategy-label" for="scheduleStartFrom">Starting from</label>
+          <div class="ap-input-group">
+            <i class="ap-icon-calendar" aria-hidden="true"></i>
+            <input type="date" id="scheduleStartFrom" value="${toDateInput(s.startFrom)}" data-schedule-start />
+          </div>
+        </div>
+        <button type="button" class="ap-button stroked blue schedule-modal__compute" data-schedule-compute>
+          <i class="ap-icon-clock" aria-hidden="true"></i><span>Compute best times</span>
+        </button>
+      </div>
     </div>
   `;
 }
@@ -727,6 +930,12 @@ function parseDayKey(key) {
 
 function formatTime(ts) {
   return new Date(ts).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+function toDateInput(ts) {
+  const d = new Date(ts || defaultStartFrom());
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 function toLocalInput(ts) {
