@@ -22,19 +22,28 @@
 
 .batch-studio__inner {
   width: 100%;
-  max-width: 640px;
+  max-width: 1000px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-md);
 }
 
-/* ── Intro ──────────────────────────────────────────────────────────────── */
+/* ── Intro (centered hero, matching the Clip Studio) ──────────────────────── */
 .batch-studio__intro {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
   gap: var(--ref-spacing-xs);
+}
+.batch-studio__intro .batch-studio__sub {
+  max-width: 540px;
+}
+
+/* A little extra air around the explainer strip, on top of the column gap. */
+.batch-studio__inner .workflow-flow {
+  margin-top: var(--ref-spacing-sm);
 }
 
 .batch-studio__ai-badge {
@@ -80,42 +89,53 @@
    The hero: a prominent dashed drop/browse area for files (main), with the
    "additional features" (link / pasted text / connected source) attached in a
    divider-separated footer. A full-box overlay confirms the drop while dragging. */
+/* The setup block — one big card holding the drop target (left) and the other
+   ways to add sources (right) in two columns. Border, no shadow (per DS).
+   Mirrors the Clip Studio setup card. */
 .batch-studio__dropzone {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  border: 1px dashed var(--ref-color-grey-20);
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-md);
+  border: 1px solid var(--app-border);
   border-radius: var(--app-radius-card);
   background: var(--ref-color-white);
-  overflow: hidden;
-  transition: border-color var(--ref-animation-short) var(--app-ease-standard);
 }
-.session__assistant.batch-studio.is-drop-target .batch-studio__dropzone {
-  border-color: var(--ref-color-electric-blue-100);
-}
-/* Hover/focus turns the dashed border blue — mirrors the Clip Studio
-   dropzone (the border lives on this wrapper, not the inner area). */
-.batch-studio__dropzone:has(.batch-studio__dropzone-main:hover),
-.batch-studio__dropzone:has(.batch-studio__dropzone-main:focus-visible) {
-  border-color: var(--ref-color-electric-blue-100);
+@media (max-width: 760px) {
+  .batch-studio__dropzone {
+    grid-template-columns: 1fr;
+  }
 }
 
-/* Main file drop / click-to-browse area — matches the Clip Studio dropzone
-   (icon · primary · sub · Browse button), generous height + centering. */
+/* Left column — the dashed drop / click-to-browse target (grey-05 fill so it
+   reads as a drop zone within the white card). */
 .batch-studio__dropzone-main {
   display: flex;
-  flex: 1;
   min-height: 220px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xl);
+  padding: var(--ref-spacing-lg);
+  border: 1.5px dashed var(--ref-color-grey-20);
+  border-radius: var(--app-radius-card);
+  background: var(--ref-color-grey-05);
   text-align: center;
   cursor: pointer;
+  transition:
+    border-color var(--ref-animation-short) var(--app-ease-standard),
+    background var(--ref-animation-short) var(--app-ease-standard);
 }
+.batch-studio__dropzone-main:hover,
 .batch-studio__dropzone-main:focus-visible {
   outline: none;
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-05);
+}
+.session__assistant.batch-studio.is-drop-target .batch-studio__dropzone-main {
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-10);
 }
 .batch-studio__dropzone-icon {
   display: inline-flex;
@@ -146,24 +166,30 @@
   font-weight: var(--sys-text-style-caption-weight);
 }
 
-/* Additional features footer — the link / text / connector buttons. */
+/* Right column — the other ways to add sources, stacked full-width. */
 .batch-studio__dropzone-extra {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm);
-  border-top: 1px solid var(--app-border);
-  background: var(--ref-color-grey-05);
 }
 .batch-studio__dropzone-extra-label {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  font-weight: var(--sys-text-style-caption-weight);
-  margin-right: var(--ref-spacing-xxxs);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-100);
+  margin-bottom: var(--ref-spacing-xxxs);
 }
+/* Methods stack and read as a small list; justify their content to the left. */
 .batch-studio__method {
-  flex: 0 0 auto;
+  justify-content: flex-start;
+}
+.batch-studio__connector {
+  display: flex;
+}
+.batch-studio__connector-trigger {
+  width: 100%;
+  justify-content: flex-start;
 }
 
 /* Drop overlay — covers the whole box while a file is dragged over the panel. */
@@ -233,12 +259,17 @@
   font-weight: var(--sys-text-style-caption-weight);
 }
 
-/* Select + CTA sit side by side, left-aligned — neither spans the column. */
+/* Select + CTA sit side by side, aligned to the right (matching the Clip
+   Studio action bar). */
 .batch-studio__commit-row {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--ref-spacing-sm);
   flex-wrap: wrap;
+}
+.batch-studio__field-hint {
+  text-align: right;
 }
 
 /* Playbook select — a comfortable fixed-ish width, not full-bleed. */

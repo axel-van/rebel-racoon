@@ -10,23 +10,29 @@
   padding: 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--ref-spacing-sm);
 }
 
-/* Each step is a small card: soft tone-tinted fill + matching hairline border,
-   left-aligned content. No shadow. */
+/* Each step is a flat info column — NOT a card. No fill, no border, no
+   elevation, so it reads as explanatory copy rather than something tappable.
+   Thin rules between columns group the three into one deliberate strip without
+   making them look like interactive tiles. */
 .workflow-flow__step {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-sm);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-lg);
-  background: var(--ref-color-white);
+  padding: 0 var(--ref-spacing-md);
+  border-left: 1px solid var(--app-border);
   /* Gentle staggered entrance — the global prefers-reduced-motion guard in
      base.css collapses this to instant. */
   animation: workflow-flow-rise var(--ref-animation-long) var(--app-ease-out) both;
+}
+.workflow-flow__step:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+.workflow-flow__step:last-child {
+  padding-right: 0;
 }
 .workflow-flow__step:nth-child(1) {
   animation-delay: 40ms;
@@ -49,33 +55,13 @@
   }
 }
 
-/* The AI step gets one subtle mermaid-tinted card so the "magic" stands out;
-   the input/output cards stay neutral white — one accent, not a rainbow. */
-.workflow-flow__step--ai {
-  background: color-mix(in srgb, var(--ref-color-mermaid-10) 55%, var(--ref-color-white));
-  border-color: color-mix(in srgb, var(--ref-color-mermaid-gradient-from) 20%, transparent);
-}
-
-/* Icon chip — the visual anchor of each card. Input/output chips are neutral
-   grey; only the AI chip carries the MermAId gradient. */
+/* Icon — plain glyph, not a filled chip (filled chips read as buttons). Input
+   and output icons are quiet grey; only the AI step carries the MermAId
+   gradient sparkles icon as the single accent. */
 .workflow-flow__chip {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  margin-bottom: var(--ref-spacing-xxs);
-  border-radius: var(--app-radius-md);
-  font-size: var(--sys-icon-css-md);
-  background: var(--ref-color-grey-05);
-  color: var(--ref-color-grey-80);
-}
-.workflow-flow__chip--ai {
-  background: var(--ref-color-mermaid-gradient-background);
-  color: var(--ref-color-white);
-}
-.workflow-flow__chip--ai i {
-  color: var(--ref-color-white);
+  font-size: var(--sys-icon-css-lg);
+  color: var(--ref-color-grey-60);
 }
 
 .workflow-flow__title {
@@ -91,10 +77,14 @@
   color: var(--ref-color-grey-80);
 }
 
-/* Stack on narrow canvases. */
+/* Stack on narrow canvases — rules become horizontal between rows. */
 @media (max-width: 700px) {
   .workflow-flow {
     grid-template-columns: 1fr;
-    gap: var(--ref-spacing-xs);
+    gap: var(--ref-spacing-md);
+  }
+  .workflow-flow__step {
+    padding: 0;
+    border-left: 0;
   }
 }

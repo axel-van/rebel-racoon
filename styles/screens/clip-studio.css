@@ -97,12 +97,21 @@
    page. */
 .clip-studio__config {
   width: 100%;
-  max-width: 860px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: var(--ref-spacing-xl) var(--ref-spacing-lg);
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-md);
+}
+
+/* A little extra breathing room around the explainer strip and before the
+   action bar, on top of the base column gap. */
+.clip-studio__config .workflow-flow {
+  margin-top: var(--ref-spacing-sm);
+}
+.clip-studio__cta {
+  margin-top: var(--ref-spacing-sm);
 }
 
 /* The setup block — one big card holding the upload (left) and the clip
@@ -154,7 +163,7 @@
 .clip-studio__cta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--ref-spacing-sm);
   flex-wrap: wrap;
 }

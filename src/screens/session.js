@@ -455,7 +455,7 @@ const BATCH_STUDIO_STEPS = [
   },
   {
     tone: "ai",
-    icon: "ap-icon-sparkles",
+    icon: "ap-icon-sparkles-mermaid",
     title: "I find the strongest ideas",
     text: "I read every source and pull out the angles genuinely worth posting about.",
   },
@@ -539,7 +539,7 @@ function renderBatchStudio(session) {
               </button>
             </div>
             <div class="batch-studio__dropzone-extra">
-              <span class="batch-studio__dropzone-extra-label muted">or add</span>
+              <span class="batch-studio__dropzone-extra-label">Or add another way</span>
               <button type="button" class="ap-button stroked grey batch-studio__method" data-batch-link>
                 <i class="ap-icon-link" aria-hidden="true"></i><span>A link</span>
               </button>
@@ -732,7 +732,7 @@ const CLIP_STUDIO_STEPS = [
   },
   {
     tone: "ai",
-    icon: "ap-icon-sparkles",
+    icon: "ap-icon-sparkles-mermaid",
     title: "I find the highlights",
     text: "I watch and transcribe the whole thing, then cut the strongest moments to the length you set.",
   },
