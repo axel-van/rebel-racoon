@@ -1,0 +1,100 @@
+/* Workflow "How it works" flow — shared by the Batch and Clip studios so both
+   workflows read identically. Three small crafted cards (input → AI → output),
+   each a coloured icon chip + title + sentence on a soft tone-tinted surface.
+   Icons + text only, no illustrations, no shadows (per DS). Built by
+   buildWorkflowFlow() in screens/session.js. */
+
+.workflow-flow {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ref-spacing-sm);
+}
+
+/* Each step is a small card: soft tone-tinted fill + matching hairline border,
+   left-aligned content. No shadow. */
+.workflow-flow__step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-lg);
+  background: var(--ref-color-white);
+  /* Gentle staggered entrance — the global prefers-reduced-motion guard in
+     base.css collapses this to instant. */
+  animation: workflow-flow-rise var(--ref-animation-long) var(--app-ease-out) both;
+}
+.workflow-flow__step:nth-child(1) {
+  animation-delay: 40ms;
+}
+.workflow-flow__step:nth-child(2) {
+  animation-delay: 120ms;
+}
+.workflow-flow__step:nth-child(3) {
+  animation-delay: 200ms;
+}
+
+@keyframes workflow-flow-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* The AI step gets one subtle mermaid-tinted card so the "magic" stands out;
+   the input/output cards stay neutral white — one accent, not a rainbow. */
+.workflow-flow__step--ai {
+  background: color-mix(in srgb, var(--ref-color-mermaid-10) 55%, var(--ref-color-white));
+  border-color: color-mix(in srgb, var(--ref-color-mermaid-gradient-from) 20%, transparent);
+}
+
+/* Icon chip — the visual anchor of each card. Input/output chips are neutral
+   grey; only the AI chip carries the MermAId gradient. */
+.workflow-flow__chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: var(--ref-spacing-xxs);
+  border-radius: var(--app-radius-md);
+  font-size: var(--sys-icon-css-md);
+  background: var(--ref-color-grey-05);
+  color: var(--ref-color-grey-80);
+}
+.workflow-flow__chip--ai {
+  background: var(--ref-color-mermaid-gradient-background);
+  color: var(--ref-color-white);
+}
+.workflow-flow__chip--ai i {
+  color: var(--ref-color-white);
+}
+
+.workflow-flow__title {
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+.workflow-flow__text {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--ref-color-grey-80);
+}
+
+/* Stack on narrow canvases. */
+@media (max-width: 700px) {
+  .workflow-flow {
+    grid-template-columns: 1fr;
+    gap: var(--ref-spacing-xs);
+  }
+}

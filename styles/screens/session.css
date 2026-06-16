@@ -493,10 +493,69 @@
 }
 
 /* Lift the hero content above the orb so the orange glow reads as a
-   background flare, not an overlay on the text/cards. */
+   background flare, not an overlay on the text/cards. Each child also
+   eases in with a small upward rise, staggered top-to-bottom, so the
+   empty state assembles itself rather than snapping in. The global
+   prefers-reduced-motion guard (base.css) collapses this to instant. */
 .empty-chat > * {
   position: relative;
   z-index: 1;
+  animation: empty-rise var(--ref-animation-long) var(--app-ease-out) both;
+}
+
+.empty-chat > *:nth-child(1) {
+  animation-delay: 40ms;
+}
+.empty-chat > *:nth-child(2) {
+  animation-delay: 100ms;
+}
+.empty-chat > *:nth-child(3) {
+  animation-delay: 160ms;
+}
+.empty-chat > *:nth-child(4) {
+  animation-delay: 220ms;
+}
+.empty-chat > *:nth-child(5) {
+  animation-delay: 300ms;
+}
+.empty-chat > *:nth-child(6) {
+  animation-delay: 360ms;
+}
+.empty-chat > *:nth-child(7) {
+  animation-delay: 420ms;
+}
+
+@keyframes empty-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Brand eyebrow above the headline — a soft orange pill (orange = AI per
+   the project's brand convention) that gives the empty state a premium,
+   intentional opening. Mirrors the .welcome-hero__eyebrow recipe but uses
+   orange-10 (orange-05 is not a real DS token). */
+.empty-chat__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-orange-10);
+  color: var(--ref-color-orange-150);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  letter-spacing: 0.01em;
+}
+
+.empty-chat__eyebrow i {
+  font-size: var(--sys-icon-css-sm);
 }
 
 .empty-chat__hello {

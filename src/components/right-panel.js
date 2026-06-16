@@ -39,7 +39,7 @@ import { iconFor } from "../file-kinds.js?v=20";
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
-import { open as openScheduleModal } from "./schedule-modal.js?v=28";
+import { open as openScheduleModal } from "./schedule-modal.js?v=29";
 import { open as openGenerateImageModal } from "./generate-image-modal.js?v=25";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 

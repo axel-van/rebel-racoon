@@ -421,6 +421,56 @@ function batchSourceSub(s) {
 //
 // The intake card lives OUTSIDE [data-batch-rest]; staging-loader ticks repaint
 // only the rest (list + commit), so the field is never clobbered mid-typing.
+
+// Shared "How it works" flow block (styles/components/workflow-flow.css) — used
+// by both the Batch and Clip studios so the two workflows read identically. Each
+// step is a coloured icon chip + title + a sentence, laid on a gradient rail
+// (input → AI → output). Marketing-grade, icons + text only, no illustrations.
+// `tone` drives the chip colour: "in" (blue) · "ai" (mermaid gradient) · "out"
+// (green).
+function buildWorkflowFlow(steps) {
+  return `
+    <ol class="workflow-flow">
+      ${steps
+        .map(
+          (s) => `
+        <li class="workflow-flow__step workflow-flow__step--${s.tone}">
+          <span class="workflow-flow__chip workflow-flow__chip--${s.tone}">
+            <i class="${s.icon}" aria-hidden="true"></i>
+          </span>
+          <span class="workflow-flow__title">${s.title}</span>
+          <span class="workflow-flow__text">${s.text}</span>
+        </li>`,
+        )
+        .join("")}
+    </ol>`;
+}
+
+const BATCH_STUDIO_STEPS = [
+  {
+    tone: "in",
+    icon: "ap-icon-upload",
+    title: "Add your sources",
+    text: "Upload files, paste a link, or drop in text — add as many as you like.",
+  },
+  {
+    tone: "ai",
+    icon: "ap-icon-sparkles",
+    title: "I find the strongest ideas",
+    text: "I read every source and pull out the angles genuinely worth posting about.",
+  },
+  {
+    tone: "out",
+    icon: "ap-icon-stack",
+    title: "A batch of drafts",
+    text: "I draft a post for each idea in your playbook's voice — ready to review and schedule.",
+  },
+];
+
+function buildBatchStudioSteps() {
+  return buildWorkflowFlow(BATCH_STUDIO_STEPS);
+}
+
 function renderBatchStudio(session) {
   const st = batchStudio.getState(session.id);
   if (!st) return "";
@@ -461,6 +511,8 @@ function renderBatchStudio(session) {
               ideas and draft a set of posts.
             </p>
           </div>
+
+          ${raw(buildBatchStudioSteps())}
 
           <input
             type="file"
@@ -538,7 +590,6 @@ function renderBatchRest(session) {
   return `
     ${sourceList}
     <div class="batch-studio__commit">
-      <span class="batch-studio__field-label">Playbook</span>
       <div class="batch-studio__commit-row">
         ${renderBatchPlaybookControl(ctx)}
         <button
@@ -584,6 +635,7 @@ function renderBatchPlaybookControl(ctx) {
   return `
     <details class="ap-select batch-studio__playbook" data-batch-playbook>
       <summary class="ap-select-trigger" title="Choose the playbook for this chat">
+        <span class="ap-select-inline-label">Playbook</span>
         ${valueMarkup}
         <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
       </summary>
@@ -660,6 +712,7 @@ function renderClipPlaybookControl(ctx) {
   return `
     <details class="ap-select clip-studio__select" data-clip-playbook>
       <summary class="ap-select-trigger" title="Choose the playbook for these posts">
+        <span class="ap-select-inline-label">Playbook</span>
         ${valueMarkup}
         <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
       </summary>
@@ -669,39 +722,30 @@ function renderClipPlaybookControl(ctx) {
     </details>`;
 }
 
-// "How it works" explainer — three compact steps that tell the user what the
-// feature does end to end. The middle (AI) step carries the MermAId gradient
-// accent so the magic reads as happening between input and output.
+// Clip Studio "How it works" — same shared flow block as the Batch Studio.
 const CLIP_STUDIO_STEPS = [
   {
+    tone: "in",
     icon: "ap-icon-file--video",
     title: "Add your video",
-    text: "Upload a file or paste a YouTube or Drive link.",
+    text: "Drop in a video file or paste a YouTube or Google Drive link — even a long one.",
   },
   {
+    tone: "ai",
     icon: "ap-icon-sparkles",
     title: "I find the highlights",
-    text: "I transcribe the whole video and cut the strongest moments to length.",
-    ai: true,
+    text: "I watch and transcribe the whole thing, then cut the strongest moments to the length you set.",
   },
   {
+    tone: "out",
     icon: "ap-icon-closed-captions",
     title: "Post-ready clips",
-    text: "Pick a format and captions, and I'll draft a post for each clip.",
+    text: "Each clip comes captioned and drafted into a post in your playbook's voice — ready to schedule.",
   },
 ];
 
-function buildClipStudioSteps() {
-  return CLIP_STUDIO_STEPS.map(
-    (s) => `
-      <li class="clip-studio__step">
-        <span class="clip-studio__step-icon${s.ai ? " clip-studio__step-icon--ai" : ""}">
-          <i class="${s.icon}" aria-hidden="true"></i>
-        </span>
-        <span class="clip-studio__step-title">${s.title}</span>
-        <span class="clip-studio__step-text">${s.text}</span>
-      </li>`,
-  ).join("");
+function buildClipStudioFlow() {
+  return buildWorkflowFlow(CLIP_STUDIO_STEPS);
 }
 
 function renderClipStudioUpload(st) {
@@ -786,57 +830,50 @@ function renderClipStudioUpload(st) {
           </p>
         </header>
 
-        <ol class="clip-studio__steps">
-          ${raw(buildClipStudioSteps())}
-        </ol>
+        ${raw(buildClipStudioFlow())}
 
         <input type="file" accept="video/*,.mp4,.mov,.webm" id="clipStudioFileInput" data-clip-studio-file hidden />
 
-        <section class="clip-studio__upload-area" aria-label="Add a video">${raw(leftPanel)}</section>
+        <div class="clip-studio__setup">
+          <section class="clip-studio__upload-area" aria-label="Add a video">${raw(leftPanel)}</section>
 
-        <section class="clip-studio__panel" aria-label="Clip settings">
-          <div class="clip-studio__field">
-            <span class="clip-studio__field-label">Playbook</span>
-            ${raw(renderClipPlaybookControl(ctx))}
-            <p class="clip-studio__field-hint muted">
-              I'll write each post in this playbook's voice, audience, and CTAs.
-            </p>
-          </div>
+          <section class="clip-studio__settings" aria-label="Clip settings">
+            <div class="clip-studio__field">
+              <span class="clip-studio__field-label">Clip duration</span>
+              <details class="ap-select clip-studio__select">
+                <summary class="ap-select-trigger">
+                  <span class="ap-select-value">${durLabelFor(curDuration)}</span>
+                  <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+                </summary>
+                <div class="ap-select-dropdown" role="listbox" aria-label="Clip duration">
+                  <div class="ap-select-options">${raw(durationItems)}</div>
+                </div>
+              </details>
+            </div>
 
-          <div class="clip-studio__field">
-            <span class="clip-studio__field-label">Clip duration</span>
-            <details class="ap-select clip-studio__select">
-              <summary class="ap-select-trigger">
-                <span class="ap-select-value">${durLabelFor(curDuration)}</span>
-                <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
-              </summary>
-              <div class="ap-select-dropdown" role="listbox" aria-label="Clip duration">
-                <div class="ap-select-options">${raw(durationItems)}</div>
+            <div class="clip-studio__field">
+              <div class="clip-studio__field-row">
+                <label class="clip-studio__field-label" for="clipInstr">Additional instructions</label>
+                <button type="button" class="ap-link standalone small" data-clip-surprise>
+                  <i class="ap-icon-sparkles" aria-hidden="true"></i>Surprise me
+                </button>
               </div>
-            </details>
-          </div>
-
-          <div class="clip-studio__field">
-            <div class="clip-studio__field-row">
-              <label class="clip-studio__field-label" for="clipInstr">Additional instructions</label>
-              <button type="button" class="ap-link standalone small" data-clip-surprise>
-                <i class="ap-icon-sparkles" aria-hidden="true"></i>Surprise me
-              </button>
-            </div>
-            <div class="ap-textarea-field">
-              <textarea
-                id="clipInstr"
-                rows="2"
-                data-clip-config="instructions"
-                placeholder="e.g. 'Don't include the intro' or 'Focus on the customer story.'"
-              >
+              <div class="ap-textarea-field">
+                <textarea
+                  id="clipInstr"
+                  rows="2"
+                  data-clip-config="instructions"
+                  placeholder="e.g. 'Don't include the intro' or 'Focus on the customer story.'"
+                >
 ${escapeHtml(cfg.instructions || "")}</textarea
-              >
+                >
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
         <div class="clip-studio__cta">
+          ${raw(renderClipPlaybookControl(ctx))}
           <button
             type="button"
             class="ap-button primary orange clip-studio__generate"
@@ -845,7 +882,6 @@ ${escapeHtml(cfg.instructions || "")}</textarea
           >
             <i class="ap-icon-sparkles" aria-hidden="true"></i><span>Create clips</span>
           </button>
-          ${st.videoProvided ? "" : raw(`<p class="clip-studio__cta-hint muted">Add a video above to get started.</p>`)}
         </div>
       </div>
     </aside>
@@ -1587,9 +1623,13 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
     .join("");
   return html`
     <div class="empty-chat" data-empty-chat>
+      <span class="empty-chat__eyebrow">
+        <i class="ap-icon-sparkles" aria-hidden="true"></i>
+        Archie · AI content studio
+      </span>
       <h1 class="empty-chat__hello">What are you working on?</h1>
       <div class="empty-chat__sub">
-        Drop a source and I'll turn it into a batch of posts you can review, edit, and schedule.
+        Drop a source — I'll turn it into a batch of ready-to-schedule posts, all from one chat.
       </div>
       ${raw(composerMarkup)}
       <h2 class="empty-chat__starter-label" id="starterGridLabel">Or jump into a workflow</h2>

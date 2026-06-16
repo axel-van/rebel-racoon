@@ -92,14 +92,41 @@
   background:
     radial-gradient(ellipse 70% 36% at 50% -4%, var(--ref-color-mermaid-10) 0%, transparent 72%), var(--app-bg);
 }
+/* Compact single column: intro → steps → drop/preview → settings → action bar.
+   Kept narrow and tight so the setup reads as one focused panel, not a sparse
+   page. */
 .clip-studio__config {
   width: 100%;
-  max-width: 660px;
+  max-width: 860px;
   margin: 0 auto;
-  padding: var(--ref-spacing-xxl) var(--ref-spacing-xl);
+  padding: var(--ref-spacing-xl) var(--ref-spacing-lg);
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-lg);
+  gap: var(--ref-spacing-md);
+}
+
+/* The setup block — one big card holding the upload (left) and the clip
+   settings (right) in two columns. Border, no shadow (per DS). Collapses to a
+   single column on narrow canvases. */
+.clip-studio__setup {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-md);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+  background: var(--ref-color-white);
+}
+@media (max-width: 760px) {
+  .clip-studio__setup {
+    grid-template-columns: 1fr;
+  }
+}
+/* Right column: the clip settings, stacked (no own card — the big card frames them). */
+.clip-studio__settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
 }
 
 /* Centered hero. */
@@ -114,133 +141,59 @@
   max-width: 520px;
 }
 
-/* How it works — three steps that explain the feature end to end. */
-.clip-studio__steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--ref-spacing-sm);
-}
-.clip-studio__step {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-md);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-card);
-  background: var(--ref-color-white);
-  box-shadow: var(--app-shadow-subtle);
-}
-/* Connecting chevron in the gap between steps (hidden on the last, and when
-   the row wraps to a single column). */
-.clip-studio__step:not(:last-child)::after {
-  content: "›";
-  position: absolute;
-  top: 50%;
-  right: calc(var(--ref-spacing-sm) * -1);
-  width: var(--ref-spacing-sm);
-  transform: translate(-2px, -55%);
-  text-align: center;
-  font-size: var(--sys-icon-css-md);
-  line-height: 1;
-  color: var(--ref-color-grey-40);
-}
-.clip-studio__step-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--ref-spacing-xl);
-  height: var(--ref-spacing-xl);
-  border-radius: var(--app-radius-md);
-  background: var(--ref-color-grey-05);
-  color: var(--ref-color-grey-80);
-  margin-bottom: var(--ref-spacing-xxs);
-}
-.clip-studio__step-icon i {
-  font-size: var(--sys-icon-css-md);
-}
-/* The AI step carries the MermAId gradient — the magic between in and out. */
-.clip-studio__step-icon--ai {
-  background: var(--ref-color-mermaid-gradient-background);
-  color: var(--ref-color-white);
-  box-shadow: var(--app-shadow-low);
-}
-.clip-studio__step-icon--ai i {
-  color: var(--ref-color-white);
-}
-.clip-studio__step-title {
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-grey-100);
-}
-.clip-studio__step-text {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  font-weight: var(--sys-text-style-caption-weight);
-  color: var(--ref-color-grey-60);
-}
-
-/* Upload area + settings group as one deliberate block each. */
+/* Left column of the setup card — dropzone + URL import. */
 .clip-studio__upload-area {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-md);
 }
-.clip-studio__panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-md);
-  padding: var(--ref-spacing-lg);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-card);
-  background: var(--ref-color-white);
-  box-shadow: var(--app-shadow-subtle);
-}
 
-/* CTA block (button + helper hint when no video yet). */
+/* Action bar — the Playbook (a simple inline option) sits right beside the
+   Create clips button, so the choice that governs the posts' voice lives with
+   the action it feeds. */
 .clip-studio__cta {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--ref-spacing-xs);
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  flex-wrap: wrap;
 }
-.clip-studio__cta-hint {
-  margin: 0;
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
+/* The playbook select uses the DS inline-label pattern (label baked into the
+   trigger, same as the composer). It sizes to its content — not full width — so
+   it reads as one control in the bar rather than a stretched field. */
+.clip-studio__cta .clip-studio__select,
+.clip-studio__cta .clip-studio__select > .ap-select-trigger {
+  width: auto;
+}
+/* The Create clips button never shrinks below its label. */
+.clip-studio__cta .clip-studio__generate {
+  flex: 0 0 auto;
 }
 
 .clip-studio__dropzone {
   width: 100%;
   flex: 1;
-  min-height: 220px;
+  min-height: 168px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xl);
+  padding: var(--ref-spacing-lg);
   border: 1.5px dashed var(--ref-color-grey-20);
   border-radius: var(--app-radius-card);
-  background: var(--ref-color-white);
-  box-shadow: var(--app-shadow-subtle);
+  background: var(--ref-color-grey-05);
   cursor: pointer;
   text-align: center;
   transition:
     border-color var(--ref-animation-short) var(--app-ease-standard),
-    box-shadow var(--ref-animation-short) var(--app-ease-standard),
     background var(--ref-animation-short) var(--app-ease-standard);
 }
 .clip-studio__dropzone:hover,
 .clip-studio__dropzone:focus-visible {
   outline: none;
   border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-white);
-  box-shadow: var(--app-shadow-low);
+  background: var(--ref-color-electric-blue-05);
 }
 .clip-studio__dropzone.is-provided {
   border-style: solid;
@@ -472,13 +425,6 @@
   font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-100);
   text-align: center;
-}
-
-.clip-studio__generate {
-  align-self: stretch;
-  justify-content: center;
-  min-height: 44px;
-  font-size: var(--sys-text-style-button-large-size, var(--sys-text-style-body-bold-size));
 }
 
 /* Output format — single choice. Each card shows a ratio glyph, the ratio +

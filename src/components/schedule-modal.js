@@ -39,7 +39,7 @@ let state = {
   // Strategy that drives the optimal spread. `cadence` is one of the
   // CADENCES ids (the visible chips), `note` is the free-text refinement
   // ("avoid Mondays", "mornings"), `startFrom` is the day-0 epoch.
-  strategy: { cadence: "weekdays", note: "", startFrom: null },
+  strategy: { cadence: "weekdays", timeOfDay: null, note: "", startFrom: null },
   onConfirm: null,
   status: "idle", // 'idle' | 'scheduling' | 'error'
   errorMessage: "",
@@ -101,6 +101,16 @@ const CADENCES = [
   { id: "once", label: "Once a week", weekly: true },
 ];
 
+// Time-of-day preferences (the single-draft strategy chips). Each maps a
+// network's optimal window to its earliest / middle / latest hour via
+// pickHour. Used when there's one draft (no frequency to choose) or as a
+// refinement the free-text note can also set.
+const TIMES_OF_DAY = [
+  { id: "morning", label: "Morning" },
+  { id: "afternoon", label: "Afternoon" },
+  { id: "evening", label: "Evening" },
+];
+
 const WEEKDAY_DOW = {
   sunday: 0,
   monday: 1,
@@ -130,9 +140,9 @@ function defaultStartFrom() {
 // reacts to what the user typed.
 function parseTimeOfDay(note) {
   const t = (note || "").toLowerCase();
-  if (/\b(morning|early|am)\b/.test(t)) return "morning";
-  if (/\b(evening|night|late|pm)\b/.test(t)) return "evening";
-  if (/\b(afternoon|noon|midday|lunch)\b/.test(t)) return "afternoon";
+  if (/\b(mornings?|early|a\.?m\.?)\b/.test(t)) return "morning";
+  if (/\b(evenings?|nights?|late|p\.?m\.?)\b/.test(t)) return "evening";
+  if (/\b(afternoons?|noon|midday|lunch)\b/.test(t)) return "afternoon";
   return null;
 }
 
@@ -203,9 +213,23 @@ export function open({ posts, onConfirm }) {
   // the coordinator just uses it as a key.
   requestOpen(ROOT_ID, close);
   const today = new Date();
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-  const strategy = { cadence: "weekdays", note: "", startFrom: defaultStartFrom() };
+  // A single draft has no frequency to spread, so its strategy panel
+  // offers a time-of-day preference instead — seed it to "morning" so a
+  // chip reads as selected from the start. Batches default to no
+  // time-of-day bias (each network's own best hour wins).
+  const strategy = {
+    cadence: "weekdays",
+    timeOfDay: posts.length === 1 ? "morning" : null,
+    note: "",
+    startFrom: defaultStartFrom(),
+  };
   const slots = optimalSlots(posts, strategy);
+  // Open the calendar on the month of the first computed date — not
+  // today's month. Otherwise an end-of-month batch (which starts
+  // tomorrow, i.e. next month) would open onto an empty calendar with
+  // none of the batch in view.
+  const firstWhen = slots[0] ? slots[0].when : today.getTime();
+  const monthStart = new Date(new Date(firstWhen).getFullYear(), new Date(firstWhen).getMonth(), 1);
   state = {
     open: true,
     posts,
@@ -232,7 +256,7 @@ function close() {
     posts: [],
     slots: [],
     mode: "optimal",
-    strategy: { cadence: "weekdays", note: "", startFrom: null },
+    strategy: { cadence: "weekdays", timeOfDay: null, note: "", startFrom: null },
     onConfirm: null,
     status: "idle",
     errorMessage: "",
@@ -282,7 +306,8 @@ function strategyDays(count, strategy) {
 
 function optimalSlots(posts, strategy = state.strategy) {
   const days = strategyDays(posts.length, strategy);
-  const timeOfDay = parseTimeOfDay(strategy.note);
+  // An explicit time-of-day chip wins; otherwise read it from the note.
+  const timeOfDay = strategy.timeOfDay || parseTimeOfDay(strategy.note);
   const fallbackStart = startOfDay(strategy.startFrom || defaultStartFrom());
 
   return posts.map((p, idx) => {
@@ -356,6 +381,15 @@ function onClick(event) {
   const cadenceChip = event.target.closest("[data-schedule-cadence]");
   if (cadenceChip) {
     state.strategy.cadence = cadenceChip.dataset.scheduleCadence;
+    recomputeOptimal();
+    render();
+    return;
+  }
+  // Time-of-day chip (single-draft strategy) — toggles the preferred
+  // window and re-picks the hour live.
+  const timeChip = event.target.closest("[data-schedule-time]");
+  if (timeChip) {
+    state.strategy.timeOfDay = timeChip.dataset.scheduleTime;
     recomputeOptimal();
     render();
     return;
@@ -561,7 +595,9 @@ function renderInner() {
     <div class="ap-dialog-header">
       <span class="ap-dialog-title" id="${ROOT_ID}Title">Schedule ${n} ${n === 1 ? "draft" : "drafts"}</span>
       <span class="ap-dialog-subtitle">
-        Pick when each post should publish. I can spread them automatically across optimal times per network.
+        ${n === 1
+          ? "Pick when this post should publish — I'll suggest the best time for its network."
+          : "Pick when each post should publish. I can spread them across a posting strategy and each network's best hours."}
       </span>
     </div>
 
@@ -631,6 +667,9 @@ function renderModePicker() {
   // DS `.ap-radio-card.card` — interactive card with a leading radio
   // indicator, native role="radio" semantics via <input type="radio">,
   // and a built-in selected state that paints the border accent blue.
+  const multi = state.posts.length > 1;
+  const optimalSub = multi ? "Spread across each network's best hours" : "Best time on this post's network";
+  const customSub = multi ? "Pick each time below" : "Pick the time below";
   return `
     <div class="schedule-modal__modes" role="radiogroup" aria-label="Scheduling mode">
       <label class="ap-radio-card card schedule-modal__mode">
@@ -645,7 +684,7 @@ function renderModePicker() {
             <i class="ap-icon-sparkles" aria-hidden="true"></i>
             <span class="ap-radio-card-title">Optimal times</span>
           </div>
-          <span>Spread across each network's best hours</span>
+          <span>${optimalSub}</span>
         </div>
       </label>
       <label class="ap-radio-card card schedule-modal__mode">
@@ -660,7 +699,7 @@ function renderModePicker() {
             <i class="ap-icon-pen" aria-hidden="true"></i>
             <span class="ap-radio-card-title">Custom</span>
           </div>
-          <span>Pick each time below</span>
+          <span>${customSub}</span>
         </div>
       </label>
     </div>
@@ -676,23 +715,48 @@ function renderModePicker() {
 // the Compute button. Every recompute repaints the slot list + calendar.
 function renderStrategyPanel() {
   const s = state.strategy;
-  const chips = CADENCES.map(
-    (c) => `
-      <button
-        type="button"
-        class="ap-filter-chip schedule-modal__cadence-chip"
-        data-schedule-cadence="${c.id}"
-        aria-pressed="${s.cadence === c.id ? "true" : "false"}"
-      >
-        ${c.label}
-      </button>`,
-  ).join("");
+  const multi = state.posts.length > 1;
+
+  // A batch picks a frequency (which days); a single draft picks a
+  // time-of-day (which hour). Same chip primitive, different axis.
+  let chipLabel, chipGroupLabel, chips, notePlaceholder;
+  if (multi) {
+    chipLabel = "Scheduling strategy";
+    chipGroupLabel = "Posting frequency";
+    notePlaceholder = "e.g. Tuesday and Thursday mornings, avoid Mondays…";
+    chips = CADENCES.map(
+      (c) => `
+        <button
+          type="button"
+          class="ap-filter-chip schedule-modal__cadence-chip"
+          data-schedule-cadence="${c.id}"
+          aria-pressed="${s.cadence === c.id ? "true" : "false"}"
+        >
+          ${c.label}
+        </button>`,
+    ).join("");
+  } else {
+    chipLabel = "Preferred time";
+    chipGroupLabel = "Time of day";
+    notePlaceholder = "e.g. Tuesday morning, after lunch, avoid Mondays…";
+    chips = TIMES_OF_DAY.map(
+      (t) => `
+        <button
+          type="button"
+          class="ap-filter-chip schedule-modal__cadence-chip"
+          data-schedule-time="${t.id}"
+          aria-pressed="${s.timeOfDay === t.id ? "true" : "false"}"
+        >
+          ${t.label}
+        </button>`,
+    ).join("");
+  }
 
   return `
     <div class="schedule-modal__strategy">
       <div class="schedule-modal__strategy-block">
-        <span class="schedule-modal__strategy-label">Scheduling strategy</span>
-        <div class="schedule-modal__cadence" role="group" aria-label="Posting frequency">${chips}</div>
+        <span class="schedule-modal__strategy-label">${chipLabel}</span>
+        <div class="schedule-modal__cadence" role="group" aria-label="${chipGroupLabel}">${chips}</div>
       </div>
 
       <div class="schedule-modal__strategy-block">
@@ -704,7 +768,7 @@ function renderStrategyPanel() {
           <textarea
             id="scheduleStrategyNote"
             rows="2"
-            placeholder="e.g. Tuesday and Thursday mornings, avoid Mondays…"
+            placeholder="${notePlaceholder}"
             data-schedule-note
           >${escapeText(s.note)}</textarea>
         </div>
@@ -719,7 +783,7 @@ function renderStrategyPanel() {
           </div>
         </div>
         <button type="button" class="ap-button stroked blue schedule-modal__compute" data-schedule-compute>
-          <i class="ap-icon-clock" aria-hidden="true"></i><span>Compute best times</span>
+          <i class="ap-icon-clock" aria-hidden="true"></i><span>Compute best ${multi ? "times" : "time"}</span>
         </button>
       </div>
     </div>
@@ -825,16 +889,26 @@ function renderCalendarPanel() {
     const isFocused = k === state.focusedDayKey;
     const existing = busy.get(k) || 0;
     const queued = slotCounts.get(k) || 0;
-    const dotClass = queued > 0 ? "is-queued" : existing > 0 ? "is-existing" : "";
+    // Batch days (the posts being scheduled right now) read as a filled,
+    // accented cell so the spread the presets produce is unmistakable.
+    // Existing-queue days stay a quiet grey dot. A day can carry both —
+    // show a marker for each so neither is hidden behind the other.
+    const dots = [];
+    if (queued > 0) dots.push(`<span class="schedule-modal__day-dot is-queued"></span>`);
+    if (existing > 0) dots.push(`<span class="schedule-modal__day-dot is-existing"></span>`);
+    const aria =
+      queued > 0
+        ? `${queued} in this batch${existing > 0 ? `, ${existing} already scheduled` : ""}`
+        : `${existing} scheduled`;
     cells += `
       <button
         type="button"
-        class="schedule-modal__day ${inMonth ? "" : "is-out"} ${isToday ? "is-today" : ""} ${isFocused ? "is-focused" : ""}"
+        class="schedule-modal__day ${inMonth ? "" : "is-out"} ${isToday ? "is-today" : ""} ${isFocused ? "is-focused" : ""} ${queued > 0 ? "has-batch" : ""}"
         data-schedule-day="${k}"
-        aria-label="${d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })} — ${existing + queued} scheduled"
+        aria-label="${d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })} — ${aria}"
       >
         <span class="schedule-modal__day-num">${d.getDate()}</span>
-        ${existing + queued > 0 ? `<span class="schedule-modal__day-dot ${dotClass}"></span>` : ""}
+        ${dots.length ? `<span class="schedule-modal__day-dots">${dots.join("")}</span>` : ""}
       </button>
     `;
   }
@@ -863,6 +937,14 @@ function renderCalendarPanel() {
       <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
     </div>
     <div class="schedule-modal__cal-grid" role="grid">${cells}</div>
+    <div class="schedule-modal__cal-legend">
+      <span class="schedule-modal__cal-legend-item">
+        <span class="schedule-modal__day-dot is-queued"></span>This batch
+      </span>
+      <span class="schedule-modal__cal-legend-item">
+        <span class="schedule-modal__day-dot is-existing"></span>Already scheduled
+      </span>
+    </div>
     ${renderDayList()}
   `;
 }

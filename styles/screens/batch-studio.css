@@ -73,6 +73,9 @@
   color: var(--ref-color-grey-60);
 }
 
+/* "How it works" flow is the shared .workflow-flow component
+   (styles/components/workflow-flow.css). */
+
 /* ── Upload box ──────────────────────────────────────────────────────────────
    The hero: a prominent dashed drop/browse area for files (main), with the
    "additional features" (link / pasted text / connected source) attached in a

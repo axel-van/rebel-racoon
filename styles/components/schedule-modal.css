@@ -321,12 +321,26 @@
 }
 
 .schedule-modal__day.is-focused {
-  background: var(--ref-color-electric-blue-10);
   border-color: var(--ref-color-electric-blue-100);
+}
+
+/* Days carrying posts from the batch being scheduled read as a filled
+   cell so the spread a preset produces is visible at a glance — the
+   calendar becomes a live preview of what's about to be queued. The
+   tint + accent dot carry the signal; we keep the number neutral so the
+   grid doesn't turn into a wall of blue. */
+.schedule-modal__day.has-batch {
+  background: var(--ref-color-electric-blue-10);
 }
 
 .schedule-modal__day-num {
   line-height: var(--sys-text-style-caption-line-height);
+}
+
+.schedule-modal__day-dots {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .schedule-modal__day-dot {
@@ -345,6 +359,25 @@
 
 .schedule-modal__day-dot.is-queued {
   background: var(--ref-color-electric-blue-100);
+}
+
+/* Legend — names the two dot colors so the in-progress batch is
+   distinguishable from posts already on the calendar. */
+.schedule-modal__cal-legend {
+  display: flex;
+  justify-content: center;
+  gap: var(--ref-spacing-sm);
+  margin-top: var(--ref-spacing-xs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--ref-color-grey-60);
+}
+
+.schedule-modal__cal-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
 }
 
 /* ── Day list (right column, below calendar) ───────────────────────── */
