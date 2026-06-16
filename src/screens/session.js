@@ -48,8 +48,8 @@ import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } fro
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
 import * as inlineQuestion from "../inline-question.js?v=33";
-import * as clipStudio from "../clip-studio.js?v=10";
-import * as batchStudio from "../batch-studio.js?v=3";
+import * as clipStudio from "../clip-studio.js?v=11";
+import * as batchStudio from "../batch-studio.js?v=4";
 import { askConnector } from "../connector-ask.js?v=3";
 import { getConnectedConnectors, findConnector } from "../connectors-store.js?v=23";
 import { renderConnectorLogo } from "../connectors-view.js?v=5";
@@ -601,7 +601,7 @@ function renderBatchRest(session) {
           ${canStart ? "" : "disabled"}
         >
           <i class="ap-icon-sparkles" aria-hidden="true"></i>
-          <span>Start drafting${canStart ? ` · ${countLabel}` : ""}</span>
+          <span>Extract ideas${canStart ? ` · ${countLabel}` : ""}</span>
         </button>
       </div>
       <p class="batch-studio__field-hint muted">I'll draft every post in this playbook's voice, audience, and CTAs.</p>
@@ -2749,7 +2749,16 @@ function wireAssistantPanel(root, session, attachedContext) {
   const offInlineQuestion = inlineQuestion.subscribe(session.id, refreshAssistantAside);
   // Clip Studio — every stage transition + analyzing ticker tick re-renders the
   // whole assistant aside (mirrors the wizard subscription).
-  const offClipStudio = clipStudio.subscribe(session.id, refreshAssistantAside);
+  const offClipStudio = clipStudio.subscribe(session.id, () => {
+    // Analysis finished ("done") → hand the generated clips straight to the
+    // conversational chat: no review grid, no profiles screen. clipsToChat
+    // exits the studio, so this branch won't re-fire for the same session.
+    if (clipStudio.isActive(session.id) && clipStudio.getState(session.id)?.stage === "done") {
+      clipsToChat(session);
+      return;
+    }
+    refreshAssistantAside();
+  });
   // Batch Studio — re-render the aside on every staged-source / Playbook change.
   // Batch Studio — staging changes repaint only the list + commit (the intake
   // card stays put so the field isn't clobbered mid-typing). start/exit
@@ -3382,6 +3391,28 @@ function openClipStudioEditor(session, opts) {
 // Finalize — batch-create drafts for every selected clip × selected profile,
 // then leave the studio and land on the conversational session with the
 // classic Drafts panel open.
+// Hand the freshly generated clips off to the conversational chat. Skips the
+// full-page review grid + profiles screens entirely: the clips are already
+// cut and attached to the source, so we post a short Archie intro + the
+// standard "Clips ready" card (its "Open clips" CTA opens the right-panel
+// Clips surface) and exit the studio, dropping the user into the normal chat.
+function clipsToChat(session) {
+  const st = clipStudio.getState(session.id);
+  if (!st) return;
+  const clips = clipStudio.getClips(session.id) || [];
+  const sourceId = st.sourceId;
+  const sourceName = st.sourceName || "your video";
+  const n = clips.length;
+  postAssistantMessage(
+    session.id,
+    `I cut ${n} ${n === 1 ? "clip" : "clips"} from ${sourceName}. Open them to review and trim, then draft the ones you want to post.`,
+  );
+  postClipExtractionTurn(session.id, { sourceId, filename: sourceName });
+  // Leave the studio last — the session now renders as a normal chat with the
+  // turns above already in the thread.
+  clipStudio.exit(session.id);
+}
+
 function finalizeClipStudio(session) {
   const st = clipStudio.getState(session.id);
   if (!st) return;
@@ -4046,7 +4077,7 @@ function bindSession(root, session) {
       const openClipsBtn = event.target.closest("[data-clip-card-open]");
       if (openClipsBtn) {
         event.preventDefault();
-        openIdeasPanel();
+        openClipsPanel();
         return;
       }
 

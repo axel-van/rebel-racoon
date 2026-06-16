@@ -27,12 +27,12 @@ function nextUid() {
   return `bs-${uidSeq}`;
 }
 
-// Staging lifecycle durations. Files run a brief "uploading" phase then the
-// ~15s background "analyzing" pass; links/connectors skip straight to analyzing
-// (nothing to upload). Purely a batch-screen visual — the real sources-stream
-// processing happens later, in the chat, after "Start drafting".
+// Staging lifecycle. On this screen sources are only *uploaded*, never
+// analyzed — a file runs a brief "uploading" phase then lands "ready"
+// (staged); links / pasted text / connector docs have nothing to upload
+// so they're staged ready at once. The real analysis (idea extraction)
+// happens later, in the chat, once the user hits "Extract ideas".
 const UPLOAD_MS = 1500;
-const ANALYZE_MS = 15000;
 
 function notify(sessionId) {
   const subs = subscribers.get(sessionId);
@@ -44,24 +44,20 @@ function clearTimers(src) {
   src._timers = [];
 }
 
-// Drive a staged source uploading → analyzing → ready, notifying on each flip.
+// Drive a staged source to "ready" (uploaded). Files flash a brief
+// "uploading" phase; everything else is ready at once. No "analyzing"
+// here — that's the next screen's job.
 function scheduleLifecycle(sessionId, src) {
   src._timers = [];
   const toReady = () => {
     src.status = "ready";
     notify(sessionId);
   };
-  const toAnalyzing = () => {
-    src.status = "analyzing";
-    notify(sessionId);
-    src._timers.push(setTimeout(toReady, ANALYZE_MS));
-  };
   if (src.origin === "file") {
     src.status = "uploading";
-    src._timers.push(setTimeout(toAnalyzing, UPLOAD_MS));
+    src._timers.push(setTimeout(toReady, UPLOAD_MS));
   } else {
-    src.status = "analyzing";
-    src._timers.push(setTimeout(toReady, ANALYZE_MS));
+    src.status = "ready";
   }
 }
 
@@ -115,7 +111,7 @@ export function addUrlSource(sessionId, url) {
   const name = clean.replace(/^https?:\/\//, "").replace(/\/$/, "");
   // Skip exact duplicates so a double-submit doesn't double-stage.
   if (s.sources.some((src) => src.origin === "url" && src.url === clean)) return;
-  const src = { uid: nextUid(), name, kind: "URL", iconKey: "url", origin: "url", url: clean, status: "analyzing" };
+  const src = { uid: nextUid(), name, kind: "URL", iconKey: "url", origin: "url", url: clean, status: "ready" };
   s.sources.push(src);
   scheduleLifecycle(sessionId, src);
   notify(sessionId);
@@ -130,7 +126,7 @@ export function addConnectorSource(sessionId, connector, doc) {
     kind: doc.kind || connector.name,
     iconKey: (doc.iconKey || "file").toLowerCase(),
     origin: "connector",
-    status: "analyzing",
+    status: "ready",
     connector,
     doc,
   };
@@ -156,7 +152,7 @@ export function addTextSource(sessionId, text) {
     iconKey: "text",
     origin: "text",
     text: trimmed,
-    status: "analyzing",
+    status: "ready",
   };
   s.sources.push(src);
   scheduleLifecycle(sessionId, src);

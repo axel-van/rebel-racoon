@@ -174,7 +174,10 @@ function finishExtraction(sessionId) {
   if (s.sourceId) updateSourceClips(s.sourceId, clips);
   s.uploadState = "ready";
   s._tickerTimer = null;
-  s.stage = "clips";
+  // "done" — clips are generated and attached to the source. The studio no
+  // longer shows a review grid / profiles screen; session.js observes this
+  // stage and hands off to the conversational chat (see clipsToChat).
+  s.stage = "done";
   notify(sessionId);
 }
 

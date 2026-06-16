@@ -203,9 +203,14 @@
   opacity: 1;
 }
 
-/* Connected-source picker (gated) — a stroked button in the features footer. */
+/* Connected-source picker (gated) — sits inline as a third "add another
+   way" method next to A link / Pasted text. Size it to its trigger
+   instead of the DS .ap-select full-width default so it doesn't wrap onto
+   its own row. */
 .batch-studio__connector {
   position: relative;
+  width: auto;
+  flex: 0 0 auto;
 }
 .batch-studio__connector-trigger {
   list-style: none;
