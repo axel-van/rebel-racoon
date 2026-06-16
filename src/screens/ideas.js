@@ -11,7 +11,7 @@ import { ideas as MOCK_IDEAS } from "../mocks.js?v=43";
 const SOURCES = [];
 import { isNewUser } from "../user-mode.js?v=22";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=37";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=42";
 
 // Lot 15 — empty out in first-time mode so /ideas mirrors the dashboard's
 // own first-run UX. Returning user gets the full seed.
@@ -150,7 +150,25 @@ function renderIdeasEmpty(allIdeas, pageState) {
       icon: "ap-icon-sparkles",
       title: "No ideas yet",
       body: "Add a source and I'll pull out the key messages, facts, quotes, and stories you can turn into posts.",
-      actionHtml: `<button type="button" class="ap-button primary blue" data-ideas-add-source><i class="ap-icon-plus"></i><span>Add a source</span></button>`,
+      actionHtml: `
+        <details class="ap-select ideas-view__add-menu">
+          <summary class="ap-button primary blue ideas-view__add-trigger">
+            <i class="ap-icon-plus" aria-hidden="true"></i><span>Add a source</span>
+          </summary>
+          <div class="ap-select-dropdown" role="menu" aria-label="Add a source">
+            <div class="ap-select-options">
+              <div class="ap-select-option" data-ideas-attach-method="upload" role="menuitem">
+                <i class="ap-icon-upload" aria-hidden="true"></i><span class="ap-select-option-text">Upload a file</span>
+              </div>
+              <div class="ap-select-option" data-ideas-attach-method="url" role="menuitem">
+                <i class="ap-icon-link" aria-hidden="true"></i><span class="ap-select-option-text">Add a URL</span>
+              </div>
+              <div class="ap-select-option" data-ideas-attach-method="pasteText" role="menuitem">
+                <i class="ap-icon-pen" aria-hidden="true"></i><span class="ap-select-option-text">Paste text</span>
+              </div>
+            </div>
+          </div>
+        </details>`,
       wrapperClass: "ideas-view__empty ideas-view__empty--rich",
     });
   }
@@ -267,8 +285,10 @@ function bind(root) {
       paint(root);
       return;
     }
-    if (event.target.closest("[data-ideas-add-source]")) {
-      openAddSourceModal({ tab: "upload" });
+    const ideaAttach = event.target.closest("[data-ideas-attach-method]");
+    if (ideaAttach) {
+      ideaAttach.closest("details")?.removeAttribute("open");
+      openAddSourceModal({ tab: ideaAttach.dataset.ideasAttachMethod });
       return;
     }
     if (event.target.closest("[data-ideas-clear-filters]")) {

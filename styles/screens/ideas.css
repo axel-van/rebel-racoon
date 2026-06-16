@@ -184,3 +184,20 @@
 .ideas-view__empty--rich {
   padding: var(--ref-spacing-xl) var(--ref-spacing-md);
 }
+
+/* "Add a source" CTA is a <details> menu (Upload / URL / Paste text);
+   each item opens its own dedicated add-source modal. Keep it sized to
+   the trigger rather than the DS full-width default. */
+.ideas-view__add-menu {
+  width: auto;
+  display: inline-block;
+}
+
+.ideas-view__add-menu > summary {
+  cursor: pointer;
+}
+
+.ideas-view__add-menu .ap-select-dropdown {
+  min-width: 200px;
+  text-align: left;
+}

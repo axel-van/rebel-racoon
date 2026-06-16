@@ -1,8 +1,9 @@
-// Add source modal — opened from the dashboard's "+ Add source" button.
-// Three tabs: Upload (drop zone + file picker), URL (paste a URL), and
-// Connectors (Slite/Notion/GDrive/Slack browse). All side-effects funnel
-// through sources-stream.js so the dashboard's Content panel updates in
-// real time.
+// Add source modal — a dedicated, single-purpose dialog opened straight
+// into ONE method via open({ tab }): "upload" (drop zone + file picker),
+// "url" (paste a URL), or "pasteText" (paste raw text). There is no tab
+// switcher — callers pick the method (e.g. the right-panel "Attach
+// source" menu), and the title names it. All side-effects funnel through
+// sources-stream.js so the Content panel updates in real time.
 //
 // Same init/open/close pattern as the other modals. State module-local;
 // upload state machines live outside in sources-stream.js so they
@@ -35,7 +36,7 @@ import {
   subscribeUploads,
 } from "../sources-stream.js?v=37";
 
-let backdrop, modal, tabsEl, contentEl, footerEl, fileInput;
+let backdrop, modal, contentEl, footerEl, fileInput;
 let initialized = false;
 let unsubscribeUploads = null;
 let unsubscribeConnectors = null;
@@ -52,6 +53,16 @@ const TABS = [
 function tabs() {
   return TABS.filter((t) => t.id !== "connectors" || isFlagOn("connectors"));
 }
+
+// Each method is now its own dedicated, tab-less modal — opened straight
+// into one mode. The title names the method so the dialog reads as a
+// single-purpose surface rather than a picker.
+const TITLES = {
+  upload: "Upload a file",
+  url: "Add a URL",
+  pasteText: "Paste text",
+  connectors: "Add a source",
+};
 
 const ACCEPT = ".pdf,.doc,.docx,.txt,.md,.mp4,.mov,.mp3,.wav,.m4a,.png,.jpg,.jpeg";
 
@@ -99,30 +110,11 @@ const HTML = `
   <button class="ap-dialog-close" type="button" id="addSourceClose" aria-label="Close">
     <i class="ap-icon-close"></i>
   </button>
-  <div class="ap-tabs add-source-modal__tabs" id="addSourceTabs"></div>
   <div class="ap-dialog-content add-source-modal__content" id="addSourceContent"></div>
   <div class="ap-dialog-footer add-source-modal__footer" id="addSourceFooter" hidden></div>
   <input type="file" multiple accept="${ACCEPT}" id="addSourceFileInput" hidden />
 </aside>
 `;
-
-// ─── Tabs nav ────────────────────────────────────────────────────────────
-
-function renderTabs() {
-  tabsEl.innerHTML = `
-    <div class="ap-tabs-nav">
-      ${tabs()
-        .map(
-          (t) => `
-          <button type="button" class="ap-tabs-tab ${t.id === state.activeTab ? "active" : ""}" data-add-source-tab="${t.id}">
-            ${escapeHtml(t.label)}
-          </button>
-        `,
-        )
-        .join("")}
-    </div>
-  `;
-}
 
 // ─── Upload tab ──────────────────────────────────────────────────────────
 
@@ -200,7 +192,6 @@ function renderUploadRow(u) {
 // ─── URL tab ─────────────────────────────────────────────────────────────
 
 function renderUrlTab() {
-  const valid = isValidUrl(state.urlValue);
   // Format validation happens on blur (onFocusOut), not at render — typing
   // never scolds the user mid-URL. So the tab always renders neutral (error
   // hidden, helper shown); the Add button still reflects validity immediately.
@@ -209,22 +200,17 @@ function renderUrlTab() {
     <div class="add-source__url">
       <div class="ap-form-field">
         <label for="addSourceUrlInput">Paste a URL</label>
-        <div class="add-source__url-row">
-          <div class="ap-input-group">
-            <input
-              id="addSourceUrlInput"
-              type="url"
-              class="${showUrlError ? "invalid" : ""}"
-              placeholder="https://example.com/article"
-              data-url-input
-              value="${state.urlValue}"
-              aria-describedby="addSourceUrlMsg"
-              aria-invalid="${showUrlError ? "true" : "false"}"
-            />
-          </div>
-          <button type="button" class="ap-button primary orange" data-add-url ${valid ? "" : "disabled"}>
-            <span>Add URL</span>
-          </button>
+        <div class="ap-input-group">
+          <input
+            id="addSourceUrlInput"
+            type="url"
+            class="${showUrlError ? "invalid" : ""}"
+            placeholder="https://example.com/article"
+            data-url-input
+            value="${state.urlValue}"
+            aria-describedby="addSourceUrlMsg"
+            aria-invalid="${showUrlError ? "true" : "false"}"
+          />
         </div>
         <p
           class="ap-form-message error"
@@ -255,14 +241,13 @@ function isValidUrl(value) {
 // textarea + a visible "Paste from clipboard" button + an "Add text" CTA.
 
 function renderPasteTextTab() {
-  const hasText = state.pasteValue.trim().length > 0;
   const count = state.pasteValue.length;
   return html`
     <div class="add-source__paste">
       <div class="ap-form-field">
         <div class="add-source__paste-label-row">
           <label for="addSourcePasteInput">Paste your text</label>
-          <button type="button" class="ap-button transparent blue add-source__paste-clip" data-paste-clipboard>
+          <button type="button" class="ap-button ghost blue add-source__paste-clip" data-paste-clipboard>
             <i class="ap-icon-copy"></i><span>Paste from clipboard</span>
           </button>
         </div>
@@ -279,18 +264,16 @@ ${escapeHtml(state.pasteValue)}</textarea
           <span class="add-source__sub muted"
             >${count ? `${count} characters` : "No formatting needed — plain text is fine."}</span
           >
-          <button type="button" class="ap-button primary orange" data-add-text ${hasText ? "" : "disabled"}>
-            <span>Add text</span>
-          </button>
         </div>
       </div>
     </div>
   `;
 }
 
-// Commit the textarea content as a Text source, then clear for the next one.
-// In staging mode (Batch Studio), hand the raw text back to the caller and
-// close — the batch screen owns the staged source + its lifecycle.
+// Commit the textarea content as a Text source. This is a dedicated,
+// single-action modal: adding the text completes the task and closes —
+// no separate "Done". In staging mode (Batch Studio), hand the raw text
+// back to the caller instead and close.
 function submitPastedText() {
   const text = state.pasteValue;
   if (!text.trim()) return;
@@ -301,11 +284,10 @@ function submitPastedText() {
     cb(text);
     return;
   }
-  const uploadId = startTextImport(text, state.currentSessionId);
-  state.tripUploadIds.add(uploadId);
+  startTextImport(text, state.currentSessionId);
   state.pasteValue = "";
-  renderContent();
-  renderFooter();
+  close();
+  showToast("Text added — I'll read it now.");
 }
 
 // ─── Connectors tab ──────────────────────────────────────────────────────
@@ -322,7 +304,7 @@ function renderConnectorsTab() {
     <ul class="add-source__connectors">
       ${raw(rows)}
     </ul>
-    <button type="button" class="ap-button transparent blue add-source__browse-connectors" data-connectors-browse>
+    <button type="button" class="ap-button ghost blue add-source__browse-connectors" data-connectors-browse>
       <i class="ap-icon-view-grid"></i><span>Browse all connectors</span>
     </button>
   `;
@@ -356,7 +338,7 @@ function renderConnectorBrowse() {
   const allSelected = docs.length > 0 && docs.every((d) => sel.has(d.id));
   return html`
     <div class="add-source__breadcrumb">
-      <button type="button" class="ap-button transparent grey add-source__breadcrumb-back" data-connector-back>
+      <button type="button" class="ap-button ghost grey add-source__breadcrumb-back" data-connector-back>
         <i class="ap-icon-arrow-left"></i>
         <span>Connectors</span>
       </button>
@@ -463,7 +445,7 @@ function footerForState() {
       visible: true,
       html: `
         <div class="ap-dialog-footer-right">
-          <button type="button" class="ap-button transparent grey" data-connector-back>Cancel</button>
+          <button type="button" class="ap-button ghost grey" data-connector-back>Cancel</button>
           <button type="button" class="ap-button primary orange" data-connector-import ${sel.size === 0 ? "disabled" : ""}>
             Import ${n} ${n === 1 ? "source" : "sources"}
           </button>
@@ -499,12 +481,45 @@ function footerForState() {
     };
   }
 
-  // URL + connectors list — single Done button.
+  // URL — Cancel + the primary action in the footer (ADS modal pattern),
+  // not an inline button in the body. Add URL imports + closes.
+  if (state.activeTab === "url") {
+    const valid = isValidUrl(state.urlValue);
+    return {
+      visible: true,
+      html: `
+        <div class="ap-dialog-footer-right">
+          <button type="button" class="ap-button ghost grey" data-modal-close>Cancel</button>
+          <button type="button" class="ap-button primary orange" data-add-url ${valid ? "" : "disabled"}>
+            <span>Add URL</span>
+          </button>
+        </div>
+      `,
+    };
+  }
+
+  // Paste text — same footer pattern: Cancel + Add text.
+  if (state.activeTab === "pasteText") {
+    const hasText = state.pasteValue.trim().length > 0;
+    return {
+      visible: true,
+      html: `
+        <div class="ap-dialog-footer-right">
+          <button type="button" class="ap-button ghost grey" data-modal-close>Cancel</button>
+          <button type="button" class="ap-button primary orange" data-add-text ${hasText ? "" : "disabled"}>
+            <span>Add text</span>
+          </button>
+        </div>
+      `,
+    };
+  }
+
+  // Connectors list — single Done button to finish browsing.
   return {
     visible: true,
     html: `
       <div class="ap-dialog-footer-right">
-        <button type="button" class="ap-button transparent grey" data-modal-close>Done</button>
+        <button type="button" class="ap-button ghost grey" data-modal-close>Done</button>
       </div>
     `,
   };
@@ -520,7 +535,10 @@ function renderContent() {
 }
 
 function render() {
-  renderTabs();
+  // No tab switcher — the modal is dedicated to whatever method it was
+  // opened in. Just title it and render that one form.
+  const titleEl = document.getElementById("addSourceTitle");
+  if (titleEl) titleEl.textContent = TITLES[state.activeTab] || "Add a source";
   renderContent();
   renderFooter();
 }
@@ -613,16 +631,6 @@ function showInlineError(message) {
 // ─── Click + change handlers ─────────────────────────────────────────────
 
 function onClick(event) {
-  // Tab nav
-  const tab = event.target.closest("[data-add-source-tab]");
-  if (tab) {
-    state.activeTab = tab.dataset.addSourceTab;
-    state.browsingConnectorId = null;
-    state.inlineError = "";
-    render();
-    return;
-  }
-
   // Close
   if (event.target.closest("#addSourceClose") || event.target.closest("[data-modal-close]")) {
     close();
@@ -662,11 +670,12 @@ function onClick(event) {
       cb(trimmed);
       return;
     }
-    const uploadId = startUrlImport(trimmed, state.currentSessionId);
-    state.tripUploadIds.add(uploadId);
+    // Dedicated single-action modal — adding the URL completes the task
+    // and closes; no separate "Done" footer.
+    startUrlImport(trimmed, state.currentSessionId);
     state.urlValue = "";
-    renderContent();
-    renderFooter();
+    close();
+    showToast("Link added — I'll fetch it now.");
     return;
   }
 
@@ -794,27 +803,26 @@ function onChange(event) {
 function onInput(event) {
   if (event.target.matches("[data-paste-input]")) {
     state.pasteValue = event.target.value;
-    // Toggle the Add-text button without re-rendering (keeps caret/focus).
-    const btn = contentEl.querySelector("[data-add-text]");
-    if (btn) btn.toggleAttribute("disabled", state.pasteValue.trim().length === 0);
+    // Update the char count in place (keeps the textarea caret/focus) and
+    // re-render just the footer so the "Add text" button enables live —
+    // renderFooter() never touches the content, so focus is preserved.
     const meta = contentEl.querySelector(".add-source__paste-row .add-source__sub");
     if (meta) {
       meta.textContent = state.pasteValue.length
         ? `${state.pasteValue.length} characters`
         : "No formatting needed — plain text is fine.";
     }
+    renderFooter();
     return;
   }
   if (event.target.matches("[data-url-input]")) {
     state.urlValue = event.target.value;
-    // Enable/disable the Add URL button live. We validate the FORMAT on blur
-    // (see onFocusOut) — typing never surfaces the error, so the user isn't
-    // scolded mid-URL. But once an error is showing, clear it the moment the
+    // Re-render just the footer so the "Add URL" button enables live. We
+    // validate the FORMAT on blur (see onFocusOut) — typing never surfaces
+    // the error — but once an error is showing, clear it the moment the
     // value becomes valid so the correction feels immediate.
-    const valid = isValidUrl(state.urlValue);
-    const btn = contentEl.querySelector("[data-add-url]");
-    if (btn) btn.toggleAttribute("disabled", !valid);
-    if (valid) setUrlError(false);
+    if (isValidUrl(state.urlValue)) setUrlError(false);
+    renderFooter();
     return;
   }
 }
@@ -874,11 +882,10 @@ function onKeydown(event) {
       cb(trimmed);
       return;
     }
-    const uploadId = startUrlImport(trimmed, state.currentSessionId);
-    state.tripUploadIds.add(uploadId);
+    startUrlImport(trimmed, state.currentSessionId);
     state.urlValue = "";
-    renderContent();
-    renderFooter();
+    close();
+    showToast("Link added — I'll fetch it now.");
   }
 }
 
@@ -965,7 +972,6 @@ export function init() {
 
   backdrop = document.getElementById("addSourceBackdrop");
   modal = document.getElementById("addSourceModal");
-  tabsEl = document.getElementById("addSourceTabs");
   contentEl = document.getElementById("addSourceContent");
   footerEl = document.getElementById("addSourceFooter");
   fileInput = document.getElementById("addSourceFileInput");

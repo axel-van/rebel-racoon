@@ -26,7 +26,7 @@ import {
   removeSources,
   renameSource,
 } from "../sources-stream.js?v=37";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=37";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=42";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=23";
 import { askConnector } from "../connector-ask.js?v=3";
@@ -547,14 +547,18 @@ export function init() {
       onPostImage(imageBtn.dataset.postImage);
       return;
     }
-    // Sources mode — "+ Attach" opens the Add Source modal scoped to
-    // the active session. The modal handles upload/URL/connectors; the
-    // upload pipeline creates sources directly in this session's list,
-    // and the source-stream subscription below repaints the panel.
-    if (event.target.closest("[data-rpanel-sources-attach]")) {
+    // Sources mode — "Attach source" is a 3-method menu; each item opens
+    // its own dedicated add-source modal (upload / url / paste text)
+    // scoped to the active session. The upload pipeline creates sources
+    // directly in this session's list, and the source-stream subscription
+    // below repaints the panel.
+    const attachMethod = event.target.closest("[data-rpanel-attach-method]");
+    if (attachMethod) {
       const sid = activeSessionId();
       if (!sid) return;
+      attachMethod.closest("details")?.removeAttribute("open");
       openAddSourceModal({
+        tab: attachMethod.dataset.rpanelAttachMethod,
         currentSessionId: sid,
       });
       return;
@@ -1863,6 +1867,31 @@ function parseEditorBody(raw) {
 
 // --- Ideas mode -------------------------------------------------------
 
+// "Attach source" trigger — a DS <details> menu offering the three add
+// methods (Upload / URL / Paste text). Each item opens its own dedicated,
+// single-purpose add-source modal; there's no longer a tabbed picker.
+function renderAttachMenu(btnClass, label) {
+  return `
+    <details class="ap-select rpanel-sources__attach">
+      <summary class="ap-button ${btnClass} rpanel-sources__attach-trigger">
+        <i class="ap-icon-plus" aria-hidden="true"></i><span>${label}</span>
+      </summary>
+      <div class="ap-select-dropdown" role="menu" aria-label="Add a source">
+        <div class="ap-select-options">
+          <div class="ap-select-option" data-rpanel-attach-method="upload" role="menuitem">
+            <i class="ap-icon-upload" aria-hidden="true"></i><span class="ap-select-option-text">Upload a file</span>
+          </div>
+          <div class="ap-select-option" data-rpanel-attach-method="url" role="menuitem">
+            <i class="ap-icon-link" aria-hidden="true"></i><span class="ap-select-option-text">Add a URL</span>
+          </div>
+          <div class="ap-select-option" data-rpanel-attach-method="pasteText" role="menuitem">
+            <i class="ap-icon-pen" aria-hidden="true"></i><span class="ap-select-option-text">Paste text</span>
+          </div>
+        </div>
+      </div>
+    </details>`;
+}
+
 // Sources mode view — list of source rows for the active session + a
 // trailing "+ Attach" button. Each row carries kind icon, filename,
 // signal/idea-count meta, and per-row Open + Detach actions. The list
@@ -1889,10 +1918,7 @@ function renderSourcesView() {
         <div class="rpanel-sources__count">${sources.length} source${sources.length === 1 ? "" : "s"} in this chat</div>
         <div class="rpanel-sources__sub muted">These sources feed this chat's ideas.</div>
       </div>
-      <button type="button" class="ap-button stroked grey" data-rpanel-sources-attach>
-        <i class="ap-icon-plus"></i>
-        <span>Attach source</span>
-      </button>
+      ${renderAttachMenu("stroked grey", "Attach source")}
       ${RPANEL_CLOSE_INLINE}
     </div>
   `;
@@ -1907,10 +1933,7 @@ function renderSourcesView() {
           <div class="app-right-panel__empty-title">No sources yet</div>
           <div class="app-right-panel__empty-sub">Attach a file or pick from a connector to start.</div>
           <div class="app-right-panel__empty-action">
-            <button type="button" class="ap-button primary orange" data-rpanel-sources-attach>
-              <i class="ap-icon-plus"></i>
-              <span>Attach a source</span>
-            </button>
+            ${renderAttachMenu("primary orange", "Attach a source")}
           </div>
         </div>
       </div>

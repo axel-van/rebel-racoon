@@ -5,13 +5,6 @@
  * All visuals reuse DS tokens (--ref-*, --sys-*); no hardcoded values.
  */
 
-/* ── Tabs nav inside the modal ────────────────────────────────────────── */
-
-.add-source-modal__tabs {
-  padding: 0 var(--ref-spacing-lg);
-  border-bottom: 1px solid var(--ref-color-grey-10);
-}
-
 .add-source-modal__content {
   flex: 1;
   display: flex;
@@ -19,9 +12,8 @@
   gap: var(--ref-spacing-md);
 }
 
-.add-source-modal__footer {
-  border-top: 1px solid var(--ref-color-grey-10);
-}
+/* The footer's top separator comes from the DS .ap-dialog-footer — no
+   app-level border needed. */
 
 /* ── Drop zone ────────────────────────────────────────────────────────── */
 
@@ -198,18 +190,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-md);
-}
-
-.add-source__url-row {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-}
-
-/* The input sits bare inside the DS .ap-input-group, which owns the border,
-   height, padding, focus + invalid states — don't double-border it. */
-.add-source__url-row .ap-input-group {
-  flex: 1;
 }
 
 .add-source__sub {

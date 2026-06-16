@@ -966,6 +966,24 @@
   flex-shrink: 0;
 }
 
+/* "Attach source" is a <details> menu (ap-select). Size it to its trigger
+   instead of the DS full-width default, and anchor the dropdown to the
+   button's right edge so it stays inside the panel. */
+.rpanel-sources__attach {
+  width: auto;
+  flex-shrink: 0;
+}
+
+.rpanel-sources__attach > summary {
+  cursor: pointer;
+}
+
+.rpanel-sources__attach .ap-select-dropdown {
+  left: auto;
+  right: 0;
+  min-width: 200px;
+}
+
 .rpanel-sources__count {
   font-size: var(--sys-text-style-body-bold-size);
   line-height: var(--sys-text-style-body-bold-line-height);

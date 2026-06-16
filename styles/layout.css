@@ -110,22 +110,13 @@ body.onboarding .app-content {
 }
 
 /* ---------- Clip Studio (all stages) ----------
-   The dedicated "Extract video clips" flow is a focused full-page studio
-   (config → analyzing → clips review → profiles) with its own headers + sticky
-   action bars, so the app topbar is dropped across every studio stage. The
-   sidebar stays as the escape hatch. */
-.app-shell:has(.clip-studio) {
-  grid-template-rows: 1fr;
-}
-
-.app-shell:has(.clip-studio) .app-topbar,
+   The dedicated "Extract video clips" flow (config → analyzing → clips
+   review → profiles) keeps the app topbar (Sources / Ideas / Drafts) like
+   the Batch studio, so the two workflows read identically. Only the
+   floating in-progress status card is dropped — the studio has its own
+   headers + sticky action bars. */
 .app-shell:has(.clip-studio) #conversationStatusCard {
   display: none;
-}
-
-.app-shell:has(.clip-studio) .app-sidebar,
-.app-shell:has(.clip-studio) .app-content {
-  grid-row: 1;
 }
 
 /* ---------- Top bar ---------- */
