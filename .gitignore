@@ -3,3 +3,6 @@ ds/
 .idea/
 .DS_Store
 **/.DS_Store
+
+# Local demo footage for video-clip previews (not committed — too heavy)
+video/
