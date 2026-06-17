@@ -21,27 +21,13 @@
 
 import { escapeHtml } from "../utils.js?v=20";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { showToast } from "./toast.js?v=20";
-import { FORMATS, NETWORK_FORMATS, formatsForNetwork, defaultFormatFor } from "../clip-formats.js?v=1";
+import { FORMATS, NETWORK_FORMATS } from "../clip-formats.js?v=1";
+import { iconFor } from "../file-kinds.js?v=20";
+import { DEFAULT_PRESET, presetClass, buildCaptions, captionInnerHTML, videoForClip } from "../clip-captions.js?v=5";
 
 const MODAL_ID = "videoClips";
 const MIN_CLIP = 5;
 const MAX_CLIP = 300;
-
-// Network metadata for the editor pane's pill picker + the head badges.
-// Network ids match what posts-store expects (it maps "x" → "twitter" itself).
-const NETWORKS = [
-  { id: "facebook", label: "Facebook", logo: "facebook-official.svg" },
-  { id: "instagram", label: "Instagram", logo: "instagram-official.svg" },
-  { id: "linkedin", label: "LinkedIn", logo: "linkedin-official.svg" },
-  { id: "x", label: "X", logo: "x-official.svg" },
-  { id: "tiktok", label: "TikTok", logo: "tiktok-official.svg" },
-];
-
-const NETWORK_BY_ID = NETWORKS.reduce((acc, n) => {
-  acc[n.id] = n;
-  return acc;
-}, {});
 
 // Backfill the format on a clip draft: keep an existing valid value, else
 // fall back to the recommended format for its network.
@@ -49,6 +35,18 @@ function ensureDraftFormat(d) {
   if (!d) return;
   const allowed = NETWORK_FORMATS[d.network] || ["16:9"];
   if (!d.format || !allowed.includes(d.format)) d.format = allowed[0];
+}
+
+// Backfill caption state on a clip draft. Captions are auto-generated lazily
+// (the "auto-generated subtitles" narrative) the first time a clip is edited,
+// then persisted on the clip. Clone existing emph ranges so editing the draft
+// never mutates the committed clip in place.
+function ensureDraftCaptions(d) {
+  if (!d) return;
+  if (!Array.isArray(d.captions)) d.captions = buildCaptions(d);
+  else d.captions = d.captions.map((s) => ({ ...s, emph: (s.emph || []).map((r) => r.slice()) }));
+  if (typeof d.captionsOn !== "boolean") d.captionsOn = true;
+  if (!d.captionStyle) d.captionStyle = DEFAULT_PRESET;
 }
 
 // ── Module state ─────────────────────────────────────────────────────
@@ -75,6 +73,12 @@ let singleClipMode = false;
 // Edit-mode draft (live values while the user is editing — committed on Save).
 let draft = null;
 let draftPlayhead = 0;
+
+// Editor tab — "clip" (preview / form / trim) or "subtitles" (the embedded
+// caption editor). Tabs keep subtitle editing inside the modal instead of a
+// separate surface.
+let editorTab = "clip";
+let captionMounted = false;
 
 // Drag state for the pro trimmer (null when not dragging).
 let dragState = null;
@@ -120,7 +124,6 @@ const SHELL_HTML = `
 <aside class="ap-dialog video-clips-modal" id="videoClipsModal" role="dialog" aria-modal="true"
        aria-labelledby="videoClipsTitle" aria-hidden="true">
   <div class="ap-dialog-header video-clips-modal__head">
-    <div class="video-clips-modal__head-icon" id="videoClipsKind"><i class="ap-icon-video" aria-hidden="true"></i></div>
     <div class="video-clips-modal__head-info">
       <span class="ap-dialog-title" id="videoClipsTitle">Suggested clips</span>
       <span class="ap-dialog-subtitle" id="videoClipsSub"></span>
@@ -142,25 +145,6 @@ const SHELL_HTML = `
     <i class="ap-icon-close"></i>
   </button>
 </aside>`;
-
-// ── Faux thumbnail backgrounds ───────────────────────────────────────
-
-function thumbBackground(hue) {
-  const h = hue ?? 24;
-  const bg = `linear-gradient(135deg, oklch(0.32 0.08 ${h}) 0%, oklch(0.18 0.05 ${h}) 100%)`;
-  const blob1 = `radial-gradient(circle at 28% 38%, oklch(0.72 0.18 ${h}) 0%, transparent 42%)`;
-  const blob2 = `radial-gradient(circle at 78% 72%, oklch(0.55 0.14 ${(h + 40) % 360}) 0%, transparent 38%)`;
-  return `${blob1}, ${blob2}, ${bg}`;
-}
-
-function previewBackground(hue) {
-  const h = hue ?? 24;
-  const bg = `linear-gradient(135deg, oklch(0.28 0.08 ${h}) 0%, oklch(0.14 0.05 ${h}) 100%)`;
-  const b1 = `radial-gradient(circle at 30% 35%, oklch(0.74 0.20 ${h}) 0%, transparent 48%)`;
-  const b2 = `radial-gradient(circle at 75% 70%, oklch(0.55 0.16 ${(h + 50) % 360}) 0%, transparent 44%)`;
-  const b3 = `radial-gradient(circle at 50% 88%, oklch(0.42 0.12 ${(h + 25) % 360}) 0%, transparent 36%)`;
-  return `${b1}, ${b2}, ${b3}, ${bg}`;
-}
 
 // ── Render: strip timeline ───────────────────────────────────────────
 
@@ -253,7 +237,9 @@ function clipCardHTML(clip) {
           <i class="ap-icon-check"></i>
         </span>
       </label>
-      <div class="vc-thumb" style="background-image: ${thumbBackground(clip.hue)}">
+      <div class="vc-thumb">
+        <video class="vc-thumb__video" src="${videoForClip(clip)}#t=1" muted playsinline preload="metadata"></video>
+        ${clip.captionsOn && (clip.captions || []).length ? `<div class="vc-thumb__cc" title="Subtitles on">CC</div>` : ""}
         <div class="vc-thumb__play"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></div>
         <div class="vc-thumb__time">${fmtTime(clip.end - clip.start)}</div>
       </div>
@@ -285,16 +271,16 @@ function editorPaneHTML() {
   if (!draft) return "";
   const duration = currentSource?.durationSec || 1;
 
-  // Pro-trim thumbnails (24 hue-shifted gradient blobs).
-  const baseHue = draft.hue ?? 24;
+  // Clip-tab caption teaser — a static preview of the first subtitle segment
+  // (the editor's caption times are clip-relative, so don't track the
+  // clip-tab's absolute playhead here). Full editing lives in the Subtitles tab.
+  const caps = draft.captions || [];
+  const activeSeg = caps[0] || { text: "", emph: [] };
+
+  // Pro-trim filmstrip — flat dark frames (no gradients). The thin dividers
+  // (CSS) read as a scrubber strip; alternating tones come from CSS :nth-child.
   let thumbs = "";
-  for (let i = 0; i < 24; i += 1) {
-    const h = (baseHue + i * 17) % 360;
-    const seed = (i * 53) % 100;
-    const bg = `linear-gradient(${135 + ((i * 23) % 90)}deg, oklch(0.42 0.12 ${h}) 0%, oklch(0.22 0.07 ${h}) 100%)`;
-    const blob = `radial-gradient(circle at ${seed}% ${(seed * 1.7) % 100}%, oklch(0.7 0.18 ${h}) 0%, transparent 55%)`;
-    thumbs += `<span class="vc-protrim__thumb" style="background-image: ${blob}, ${bg}"></span>`;
-  }
+  for (let i = 0; i < 24; i += 1) thumbs += `<span class="vc-protrim__thumb"></span>`;
 
   // Ruler ticks (4–12 evenly spaced).
   const tickCount = Math.min(12, Math.max(4, Math.round(duration / 120)));
@@ -313,28 +299,6 @@ function editorPaneHTML() {
   const leftPct = (draft.start / duration) * 100;
   const widthPct = ((draft.end - draft.start) / duration) * 100;
   const playheadPct = (draftPlayhead / duration) * 100;
-
-  const netPills = NETWORKS.map(
-    (n) => `
-    <button type="button" class="vc-editor__net${n.id === draft.network ? " is-on" : ""}" data-vc-action="set-network" data-vc-network="${n.id}" title="${escapeHtml(n.label)}">
-      <img src="assets/video-clips/icons/${n.logo}" alt="" loading="lazy" />
-      <span>${escapeHtml(n.label)}</span>
-    </button>
-  `,
-  ).join("");
-
-  // Format pills — the optimized aspect ratios for the selected network.
-  // The aspect glyph mirrors the ratio so the orientation reads at a glance.
-  const fmtPills = formatsForNetwork(draft.network)
-    .map(
-      (f) => `
-    <button type="button" class="vc-editor__net vc-editor__fmt${f.id === draft.format ? " is-on" : ""}" data-vc-action="set-format" data-vc-format="${f.id}" title="${escapeHtml(f.label)} · ${f.tag}">
-      <span class="vc-editor__ratio-glyph" style="aspect-ratio: ${f.ratio}" aria-hidden="true"></span>
-      <span>${f.tag}</span>
-    </button>
-  `,
-    )
-    .join("");
 
   const cropRatio = (FORMATS[draft.format] || FORMATS["16:9"]).ratio;
 
@@ -355,8 +319,31 @@ function editorPaneHTML() {
         </button>
       `;
 
+  // Tab bar — switches the editor body between the clip (trim / preview /
+  // details) and the embedded subtitle editor.
+  const tabsBar = `
+    <div class="vc-editor__tabs" role="tablist">
+      <button type="button" class="vc-editor__tab${editorTab === "clip" ? " is-on" : ""}" data-vc-action="tab-clip" role="tab" aria-selected="${editorTab === "clip"}">
+        <i class="ap-icon-video" aria-hidden="true"></i><span>Clip</span>
+      </button>
+      <button type="button" class="vc-editor__tab${editorTab === "subtitles" ? " is-on" : ""}" data-vc-action="tab-subtitles" role="tab" aria-selected="${editorTab === "subtitles"}">
+        <i class="ap-icon-closed-captions" aria-hidden="true"></i><span>Subtitles</span>
+      </button>
+    </div>`;
+
+  // Subtitles tab — the embedded caption editor mounts into the host (see
+  // syncCaptionMount). Nothing else renders in the editor body.
+  if (editorTab === "subtitles") {
+    return `
+      <div class="vc-editor vc-editor--captions" data-vc-editor data-vc-clip="${draft.id}">
+        ${tabsBar}
+        <div class="vc-caption-host" data-vc-caption-host></div>
+      </div>`;
+  }
+
   return `
     <div class="vc-editor" data-vc-editor data-vc-clip="${draft.id}">
+      ${tabsBar}
       <header class="vc-editor__head">
         <div class="vc-editor__head-eyebrow"><span class="vc-editor__head-dot"></span>Editing clip</div>
         <div class="vc-editor__head-time" data-vc-editor-time>
@@ -371,14 +358,15 @@ function editorPaneHTML() {
 
       <div class="vc-editor__top">
         <div class="vc-editor__preview-col">
-          <div class="vc-preview" style="background-image: ${previewBackground(draft.hue)}">
+          <div class="vc-preview">
+            <video class="vc-preview__video" src="${videoForClip(draft)}" autoplay muted loop playsinline></video>
             <div class="vc-preview__crop" data-vc-crop style="aspect-ratio: ${cropRatio}"></div>
             <div class="vc-preview__hud-tr" data-vc-editor-playtime>${fmtTime(draftPlayhead)}</div>
-            <div class="vc-preview__center">
-              <div class="vc-preview__play"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></div>
-            </div>
             <div class="vc-preview__hud-bl" data-vc-editor-clipdur>${fmtTime(draft.end - draft.start)} · CLIP</div>
             <div class="vc-preview__hud-br">${escapeHtml((draft.network || "").toUpperCase())} · ${escapeHtml((FORMATS[draft.format] || FORMATS["16:9"]).tag)}</div>
+            <div class="vc-preview__cap-overlay vc-cap ${presetClass(draft.captionStyle)}" data-cap-overlay ${draft.captionsOn ? "" : "hidden"}>
+              <div class="vc-cap__line" data-cap-surface="overlay" data-cap-i="0">${captionInnerHTML(activeSeg)}</div>
+            </div>
           </div>
           <div class="vc-editor__transport">
             <button class="vc-editor__transport-btn" data-vc-action="seek-start" title="Jump to clip start">
@@ -413,14 +401,6 @@ function editorPaneHTML() {
           <div class="vc-editor__field">
             <label class="vc-editor__label"><i class="ap-icon-sparkles"></i>Why this works</label>
             <div class="vc-editor__textarea vc-editor__textarea--small vc-edit" contenteditable="true" data-vc-edit-field="why" data-placeholder="The angle that makes this clip post-worthy…">${escapeHtml(draft.why || "")}</div>
-          </div>
-          <div class="vc-editor__field">
-            <label class="vc-editor__label">Network</label>
-            <div class="vc-editor__nets">${netPills}</div>
-          </div>
-          <div class="vc-editor__field">
-            <label class="vc-editor__label">Format</label>
-            <div class="vc-editor__nets">${fmtPills}</div>
           </div>
         </div>
       </div>
@@ -470,8 +450,20 @@ function editorPaneHTML() {
 
 // ── Render: full body ────────────────────────────────────────────────
 
+function isCaptionsFocus() {
+  return !!editingId && editorTab === "subtitles";
+}
+
 function renderBody() {
   if (!bodyEl) return;
+
+  // Subtitles focus: the editor body hands over entirely to the embedded
+  // caption editor (no browse grid, no clip form). Works the same whether we
+  // got here from single-clip mode or the multi-clip floating editor.
+  if (isCaptionsFocus()) {
+    bodyEl.innerHTML = `<div class="vc-rows__cell vc-rows__cell--captions" data-vc-floating>${editorPaneHTML()}</div>`;
+    return;
+  }
 
   // Single-clip mode: render ONLY the editor pane. No browse grid, no
   // dimmed siblings — the user is editing one clip in isolation.
@@ -502,19 +494,44 @@ function renderBody() {
 }
 
 function render() {
-  // Single-clip mode strips the multi-clip surfaces: the timeline at
-  // the top. The footer stays visible but switches to the edit CTAs
-  // (Delete / Cancel / Save changes) instead of the "Draft posts from
-  // N clips" bulk action.
+  // Single-clip mode + subtitles focus strip the multi-clip strip timeline.
+  // The footer switches to the edit CTAs (Delete / Cancel / Save changes)
+  // instead of the "Draft posts from N clips" bulk action.
+  const captionsFocus = isCaptionsFocus();
   const wrapTimeline = document.getElementById("videoClipsTimeline");
-  if (wrapTimeline) wrapTimeline.hidden = singleClipMode;
+  if (wrapTimeline) wrapTimeline.hidden = singleClipMode || captionsFocus;
+  if (bodyEl) bodyEl.classList.toggle("is-captions", captionsFocus);
   if (footEl) footEl.hidden = false;
-  if (singleClipMode) renderFooterEdit();
+  if (singleClipMode || captionsFocus) renderFooterEdit();
   else {
     renderTimeline();
     renderFooter();
   }
   renderBody();
+  syncCaptionMount();
+}
+
+// Mount / unmount the embedded caption editor to match the active tab. The
+// editor edits a working copy and reports edits via onChange, which we fold
+// straight into the draft so Save (footer) persists them and Cancel discards.
+function syncCaptionMount() {
+  const want = isCaptionsFocus();
+  import("../caption-editor.js?v=14").then(({ mount, unmount }) => {
+    if (want) {
+      const hostEl = bodyEl && bodyEl.querySelector("[data-vc-caption-host]");
+      if (hostEl) {
+        mount(hostEl, draft, currentSource, {
+          onChange: (patch) => {
+            if (draft) Object.assign(draft, patch);
+          },
+        });
+        captionMounted = true;
+      }
+    } else if (captionMounted) {
+      unmount();
+      captionMounted = false;
+    }
+  });
 }
 
 // ── Event delegation ─────────────────────────────────────────────────
@@ -567,25 +584,6 @@ function onModalClick(event) {
     return;
   }
 
-  if (action === "set-network") {
-    if (!draft) return;
-    draft.network = actionEl.dataset.vcNetwork;
-    // Different networks expose different optimized formats — snap to the
-    // new network's recommended default rather than keeping an unsupported one.
-    draft.format = defaultFormatFor(draft.network);
-    // Re-render the editor pane only — the rest of the modal is unaffected.
-    // Cheap to just re-render the body; cursor isn't in an editable field.
-    renderBody();
-    return;
-  }
-
-  if (action === "set-format") {
-    if (!draft) return;
-    draft.format = actionEl.dataset.vcFormat;
-    renderBody();
-    return;
-  }
-
   if (action === "set-in") {
     if (!draft) return;
     draft.start = Math.min(draft.end - MIN_CLIP, draftPlayhead);
@@ -608,6 +606,22 @@ function onModalClick(event) {
     if (!draft) return;
     draftPlayhead = draft.end;
     syncEditorAfterDrag();
+    return;
+  }
+
+  if (action === "tab-clip") {
+    if (editorTab !== "clip") {
+      editorTab = "clip";
+      render();
+    }
+    return;
+  }
+
+  if (action === "tab-subtitles") {
+    if (editorTab !== "subtitles") {
+      editorTab = "subtitles";
+      render();
+    }
     return;
   }
 
@@ -850,7 +864,9 @@ function enterEdit(clipId) {
   editingId = clipId;
   draft = { ...clip };
   ensureDraftFormat(draft);
+  ensureDraftCaptions(draft);
   draftPlayhead = clip.start;
+  editorTab = "clip";
   render();
   // Reset the body's scroll position so the sticky editor sits at the top
   // of the visible area. NOT scrollIntoView — that bubbles up the ancestor
@@ -907,7 +923,9 @@ function addClip() {
   editingId = newClip.id;
   draft = { ...newClip };
   ensureDraftFormat(draft);
+  ensureDraftCaptions(draft);
   draftPlayhead = start;
+  editorTab = "clip";
   render();
   if (bodyEl) bodyEl.scrollTop = 0;
 }
@@ -1007,6 +1025,7 @@ export function open(source, callbacks = {}) {
   draft = null;
   draftPlayhead = 0;
   singleClipMode = false;
+  editorTab = callbacks.captionsTab ? "subtitles" : "clip";
   onUseCallback = typeof callbacks.onUseClips === "function" ? callbacks.onUseClips : null;
   onSaveCallback = typeof callbacks.onSaveClips === "function" ? callbacks.onSaveClips : null;
 
@@ -1022,6 +1041,7 @@ export function open(source, callbacks = {}) {
       editingId = target.id;
       draft = { ...target };
       ensureDraftFormat(draft);
+      ensureDraftCaptions(draft);
       draftPlayhead = target.start || 0;
     }
   } else if (callbacks.startAddClip) {
@@ -1038,12 +1058,14 @@ export function open(source, callbacks = {}) {
     titleEl.textContent = callbacks.startAddClip ? "Add clip" : singleClipMode ? "Edit clip" : "Suggested clips";
   const subEl = document.getElementById("videoClipsSub");
   if (subEl) {
+    // The source name reads as a file tag — same `.ap-tag.mini` pill the
+    // composer uses for a mentioned file, with the file-kind glyph.
+    const fileTag = `<span class="ap-tag mini blue video-clips-modal__file-tag"><i class="${iconFor(source.kind)}" aria-hidden="true"></i><span>${escapeHtml(shortName(source.filename || "video"))}</span></span>`;
     if (singleClipMode) {
-      subEl.textContent = shortName(source.filename || "video");
+      subEl.innerHTML = fileTag;
     } else {
       const total = source.durationSec || 0;
-      const file = shortName(source.filename || "video");
-      subEl.textContent = `${file} · ${clips.length} ${clips.length === 1 ? "clip" : "clips"} worth posting · ${fmtTime(total)} of footage`;
+      subEl.innerHTML = `${fileTag}<span class="video-clips-modal__sub-meta"> · ${clips.length} ${clips.length === 1 ? "clip" : "clips"} worth posting · ${fmtTime(total)} of footage</span>`;
     }
   }
 
@@ -1063,6 +1085,11 @@ export function open(source, callbacks = {}) {
 
 function close() {
   if (!initialized || !modal?.classList.contains("open")) return;
+  // Tear down the embedded caption editor if it's mounted.
+  if (captionMounted) {
+    import("../caption-editor.js?v=14").then(({ unmount }) => unmount());
+    captionMounted = false;
+  }
   modal.classList.remove("open");
   modal.classList.remove("is-single-clip");
   backdrop.classList.remove("open");
@@ -1079,6 +1106,7 @@ function close() {
   draftPlayhead = 0;
   dragState = null;
   singleClipMode = false;
+  editorTab = "clip";
   onUseCallback = null;
   onSaveCallback = null;
 

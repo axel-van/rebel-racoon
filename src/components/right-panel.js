@@ -17,7 +17,7 @@ import { renderPostCard } from "./post-card.js?v=35";
 import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1";
-import { open as openVideoClipsModal } from "./video-clips-modal.js?v=13";
+import { open as openVideoClipsModal } from "./video-clips-modal.js?v=31";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=71";
 import {
   getSources as getStreamSources,

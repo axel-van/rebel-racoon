@@ -12,26 +12,33 @@
   --app-border: var(--ref-color-grey-20);
   --app-border-soft: var(--ref-color-grey-10);
 
-  /* ── Video-clips dark editor ramp ──────────────────────────────────────
+  /* ── Video-clips dark surface ramp ─────────────────────────────────────
      The DS is light-only — its darkest grey (grey-150 #212E44) is navy and
-     not deep enough for a video-editor surface. This is the single place the
-     app defines a dark palette; it is consumed only by
-     styles/components/video-clips-modal.css. Cool-neutral and systematic:
-     one base + raised + sunken surface, two borders, three text levels, and
-     accent aliases that reuse the DS electric-blue. */
-  --app-vc-surface: #181c23; /* editor base */
-  --app-vc-surface-raised: #21262f; /* transport + timeline panels */
-  --app-vc-surface-sunken: #12151b; /* inputs, trim track, steppers */
+     not deep enough for a media-editor surface. This is the single place the
+     app defines a dark palette; it powers the WHOLE video-clips modal
+     (styles/components/video-clips-modal.css + styles/screens/caption-editor.css).
+     A disciplined elevation scale: sunken < base < raised < overlay, two
+     border weights, three text levels, plus semantic accents that reuse DS
+     hues (blue = selected/info, orange = primary/AI, red = destructive). */
+  --app-vc-surface-sunken: #12151b; /* inputs, trim track, steppers (deepest) */
+  --app-vc-surface: #181c23; /* modal base */
+  --app-vc-surface-raised: #21262f; /* header / footer / panels / cards */
+  --app-vc-surface-overlay: #272d38; /* popovers, menus, hover cards */
   --app-vc-field: #1e232b; /* text field background */
   --app-vc-border: #2c323d; /* hairline borders */
-  --app-vc-border-strong: #3a4250; /* input / stepper borders */
+  --app-vc-border-strong: #3a4250; /* input / control borders */
   --app-vc-text: #e7eaf0; /* primary text on dark */
   --app-vc-text-muted: #aab2c0; /* body / secondary text */
   --app-vc-text-subtle: #8b94a3; /* labels, meta (≥4.5:1 on surface) */
-  --app-vc-accent: var(--ref-color-electric-blue-100);
+  --app-vc-accent: var(--ref-color-electric-blue-100); /* selected / info */
   --app-vc-accent-hover: var(--ref-color-electric-blue-150);
   --app-vc-accent-soft: rgba(23, 141, 254, 0.14); /* selected / focus tint */
+  --app-vc-primary: var(--ref-color-orange-100); /* primary / AI CTA */
+  --app-vc-primary-hover: var(--ref-color-orange-150);
+  --app-vc-danger: var(--ref-color-red-100); /* destructive */
   --app-vc-hover: rgba(255, 255, 255, 0.06); /* neutral hover overlay */
+  --app-vc-scrim: rgba(8, 10, 14, 0.55); /* backdrop behind the dark modal */
+  --app-vc-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.7); /* modal elevation */
 
   /* Sidebar canvas — experimental inversion: sidebar is white, conversation
      area takes the grey canvas tone. See experiment/invert-panel-backgrounds. */

@@ -7,7 +7,7 @@ import { init as initScheduleModal } from "./components/schedule-modal.js?v=37";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=23";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
 import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=25";
-import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=13";
+import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=31";
 import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=31";
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=42";
 import { init as initConnectorsModal } from "./components/connectors-modal.js?v=6";
@@ -26,8 +26,8 @@ import { renderConnectors } from "./screens/connectors.js?v=8";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=47";
-import { renderPlaybook } from "./screens/playbook.js?v=36";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=48";
+import { renderPlaybook } from "./screens/playbook.js?v=37";
 import * as __capAddSource from "./components/add-source-modal.js?v=42";
 import * as __capGenImage from "./components/generate-image-modal.js?v=25";
 import * as __capBug from "./components/bug-report-modal.js?v=23";

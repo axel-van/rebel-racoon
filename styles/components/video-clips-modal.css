@@ -23,26 +23,38 @@
   z-index: var(--app-z-modal);
   width: min(calc(100% - 48px), 1240px);
   height: 94vh;
-  box-shadow: var(--app-shadow-modal);
-  border: 1px solid var(--sys-border-color-default);
+  /* Dark media-editor surface — overrides the DS light .ap-dialog. The whole
+     modal lives on the --app-vc-* ramp. */
+  background: var(--app-vc-surface);
+  color: var(--app-vc-text);
+  box-shadow: var(--app-vc-shadow);
+  border: 1px solid var(--app-vc-border);
+  overflow: hidden;
   /* Tabular numerics throughout — timestamps, clip counts, durations. */
   font-variant-numeric: tabular-nums;
 }
 
-/* Single-clip mode — the body holds only the editor pane (no browse
-   grid, no timeline, no toolbar, no footer), so the modal shrinks to
-   its content instead of stretching to 94vh. Max-height keeps long
-   editor forms scrollable on short screens. */
+/* Darken the backdrop scrim so the dark modal reads as elevated. */
+#videoClipsBackdrop.app-modal-backdrop {
+  background: var(--app-vc-scrim);
+}
+
+/* Single-clip mode keeps the SAME fixed height as browse mode so the modal
+   never resizes when switching the Clip ⇄ Subtitles tab (their content
+   heights differ). The body flexes to fill; each tab scrolls internally. */
 .video-clips-modal.ap-dialog.is-single-clip {
-  height: auto;
-  max-height: 94vh;
+  /* Sized to the editor's content (the Subtitles 3-pane + the trimmed-down
+     Clip preview), not the full 94vh — avoids the big empty gap. Fixed so it
+     never resizes between tabs; capped at 92vh on short screens. */
+  height: min(92vh, 760px);
 }
 
 .video-clips-modal.is-single-clip .video-clips-modal__body {
-  flex: 0 0 auto;
+  flex: 1;
+  min-height: 0;
   /* Single-clip mode hands the body over entirely to the dark editor —
      no padding, no surface bg layer behind it. The editor fills edge
-     to edge between the white modal header and the white footer. */
+     to edge between the header and the footer. */
   padding: 0;
   background: transparent;
 }
@@ -54,7 +66,9 @@
    header feels proportional. Close-button safe area on the right
    (64px) stays per DS. */
 .video-clips-modal.is-single-clip .video-clips-modal__head.ap-dialog-header {
-  padding: var(--ref-spacing-md) 64px var(--ref-spacing-sm) var(--ref-spacing-md);
+  /* Symmetric vertical padding so the title + source row sits vertically
+     centered in the header bar. */
+  padding: var(--ref-spacing-sm) 64px var(--ref-spacing-sm) var(--ref-spacing-md);
 }
 
 .video-clips-modal.is-single-clip .vc-rows__cell--floating {
@@ -85,61 +99,109 @@
   animation: app-modal-fade-in var(--ref-animation-normal) ease;
 }
 
-/* Override .ap-dialog-header — the clip browser wants a leading kind
-   badge inline with the title block, not the default flex-column. */
+/* Compact header — no leading badge, smaller title, the source name as a
+   file tag. Trimmed vertical padding so the header reads as a quiet bar. */
 .video-clips-modal__head.ap-dialog-header {
   flex-direction: row;
   align-items: center;
   gap: var(--ref-spacing-sm);
+  padding-top: var(--ref-spacing-sm);
+  padding-bottom: var(--ref-spacing-sm);
+  background: var(--app-vc-surface-raised);
+  border-bottom: 1px solid var(--app-vc-border);
   /* Right padding still reserves room for the absolute .ap-dialog-close. */
 }
 
-.video-clips-modal__head-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--app-radius-button-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--ref-color-white);
-  flex-shrink: 0;
-  background: var(--ref-color-grey-150);
+/* Knock the DS dialog title down a tier — "Edit clip" / "Suggested clips" is a
+   modal label, not a page heading. */
+.video-clips-modal__head .ap-dialog-title {
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  letter-spacing: -0.005em;
+  color: var(--app-vc-text);
 }
 
-.video-clips-modal__head-icon i {
-  font-size: var(--sys-icon-css-md);
+/* Close button — light glyph, vertically centered in the compact header
+   (the DS default top sits it too low for this short header). */
+.video-clips-modal .ap-dialog-close {
+  color: var(--app-vc-text-subtle);
+  top: 11px;
 }
 
+.video-clips-modal .ap-dialog-close:hover {
+  background: var(--app-vc-hover);
+  color: var(--app-vc-text);
+}
+
+/* Title + source tag on one row to keep the header a single tight line. */
 .video-clips-modal__head-info {
   flex: 1;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
 }
 
-/* The subtitle carries a long filename · clip count · duration string;
-   keep it on one line with ellipsis. */
+.video-clips-modal__head .ap-dialog-title {
+  flex-shrink: 0;
+}
+
+/* The subtitle hosts the file tag (+ optional meta); takes the remaining row
+   width and truncates. */
 .video-clips-modal__head-info .ap-dialog-subtitle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Source name as a file tag — mirrors the composer's `.ap-tag.mini` file
+   mention, with the file-kind glyph ahead of the name. */
+.video-clips-modal__file-tag.ap-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  max-width: 100%;
+}
+
+.video-clips-modal__file-tag i {
+  font-size: var(--sys-text-style-caption-size);
+  flex-shrink: 0;
+}
+
+.video-clips-modal__file-tag > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.video-clips-modal__sub-meta {
+  color: var(--app-vc-text-subtle);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  margin-left: var(--ref-spacing-xxs);
+  white-space: nowrap;
 }
 
 /* ── Strip timeline (top) ──────────────────────────────────────── */
 
 .video-clips-modal__timeline {
   padding: var(--ref-spacing-sm) 22px 14px;
-  background: var(--ref-color-grey-05);
-  border-bottom: 1px solid var(--sys-border-color-default);
+  background: var(--app-vc-surface-raised);
+  border-bottom: 1px solid var(--app-vc-border);
 }
 
 .vc-timeline__bar {
   position: relative;
   height: 24px;
   border-radius: var(--ref-border-radius-sm);
-  background: var(--ref-color-grey-10);
-  border: 1px solid var(--ref-color-grey-20);
+  background: var(--app-vc-surface-sunken);
+  border: 1px solid var(--app-vc-border);
   overflow: hidden;
 }
 
@@ -147,21 +209,20 @@
   position: absolute;
   top: 3px;
   bottom: 3px;
-  background: var(--ref-color-grey-60);
+  background: var(--app-vc-border-strong);
   border-radius: 2px;
   transition: background var(--ref-animation-short);
 }
 
 .vc-timeline__seg.is-on {
-  background: var(--ref-color-electric-blue-100);
-  box-shadow: 0 0 0 1px var(--ref-color-electric-blue-150) inset;
+  background: var(--app-vc-accent);
 }
 
 .vc-timeline__seg.is-editing {
-  background: var(--ref-color-electric-blue-150);
+  background: var(--app-vc-accent);
   box-shadow:
-    0 0 0 2px var(--ref-color-white),
-    0 0 0 4px var(--ref-color-electric-blue-100);
+    0 0 0 2px var(--app-vc-surface),
+    0 0 0 4px var(--app-vc-accent);
   z-index: 2;
 }
 
@@ -171,7 +232,7 @@
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   font-weight: var(--sys-text-style-caption-weight);
-  color: var(--ref-color-grey-60);
+  color: var(--app-vc-text-subtle);
   margin-top: 6px;
   padding: 0 2px;
 }
@@ -183,7 +244,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 22px;
-  border-bottom: 1px solid var(--sys-border-color-default);
+  border-bottom: 1px solid var(--app-vc-border);
 }
 
 .video-clips-modal__bulk {
@@ -205,24 +266,24 @@
   font-size: var(--sys-text-style-caption-bold-size);
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-electric-blue-100);
+  color: var(--app-vc-accent);
   cursor: pointer;
   font-family: inherit;
 }
 
 .vc-link:hover {
-  color: var(--ref-color-electric-blue-150);
+  color: var(--app-vc-accent-hover);
 }
 
 .vc-link:disabled {
-  color: var(--ref-color-grey-40);
+  color: var(--app-vc-text-subtle);
   cursor: not-allowed;
 }
 
 .video-clips-modal__sep {
   width: 1px;
   height: 14px;
-  background: var(--ref-color-grey-10);
+  background: var(--app-vc-border);
 }
 
 /* Suggest more — uses the DS .ap-button.stroked.grey. The only addition
@@ -246,7 +307,7 @@
   overflow-y: auto;
   padding: 14px 22px 18px;
   gap: 10px;
-  background: var(--app-surface-subtle);
+  background: var(--app-vc-surface);
 }
 
 .vc-rows {
@@ -269,7 +330,7 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--app-surface-subtle);
+  background: var(--app-vc-surface);
   padding-bottom: 6px;
   margin-bottom: 4px;
 }
@@ -281,7 +342,7 @@
   right: 0;
   bottom: -10px;
   height: 10px;
-  background: linear-gradient(180deg, var(--app-surface-subtle) 0%, transparent 100%);
+  background: linear-gradient(180deg, var(--app-vc-surface) 0%, transparent 100%);
   pointer-events: none;
 }
 
@@ -306,26 +367,26 @@
   gap: 14px;
   align-items: stretch;
   padding: 14px;
-  background: var(--ref-color-white);
-  border: 1.5px solid var(--sys-border-color-default);
+  background: var(--app-vc-surface-raised);
+  border: 1px solid var(--app-vc-border);
   border-radius: var(--app-radius-starter);
   transition: all var(--ref-animation-short);
   cursor: pointer;
 }
 
 .vc-row:hover {
-  border-color: var(--ref-color-grey-40);
+  border-color: var(--app-vc-border-strong);
 }
 
 .vc-row.is-on {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-05);
+  border-color: var(--app-vc-accent);
+  background: var(--app-vc-accent-soft);
 }
 
 .vc-row.is-editing {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-white);
-  box-shadow: var(--app-shadow-popover-md);
+  border-color: var(--app-vc-accent);
+  background: var(--app-vc-surface-raised);
+  box-shadow: var(--app-vc-shadow);
 }
 
 .vc-row__check-wrap {
@@ -351,8 +412,8 @@
   width: 18px;
   height: 18px;
   border-radius: var(--ref-border-radius-sm);
-  border: 1.5px solid var(--ref-color-grey-40);
-  background: var(--ref-color-white);
+  border: 1.5px solid var(--app-vc-border-strong);
+  background: var(--app-vc-surface-sunken);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -362,8 +423,8 @@
 }
 
 .vc-row.is-on .vc-row__check-box {
-  background: var(--ref-color-electric-blue-100);
-  border-color: var(--ref-color-electric-blue-100);
+  background: var(--app-vc-accent);
+  border-color: var(--app-vc-accent);
 }
 
 .vc-row__check-box i {
@@ -393,6 +454,15 @@
   justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
+}
+
+/* Real footage frame behind the play glyph + badges. */
+.vc-thumb__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .vc-thumb__play {
@@ -465,7 +535,7 @@
 .vc-row__title {
   font-size: var(--sys-text-style-h4-size);
   font-weight: var(--sys-text-style-h4-weight);
-  color: var(--ref-color-grey-100);
+  color: var(--app-vc-text);
   letter-spacing: -0.005em;
   line-height: var(--sys-text-style-h4-line-height);
 }
@@ -473,7 +543,7 @@
 .vc-row__summary {
   font-size: var(--sys-text-style-caption-size);
   font-weight: var(--sys-text-style-caption-weight);
-  color: var(--ref-color-grey-100);
+  color: var(--app-vc-text-muted);
   line-height: var(--sys-text-style-caption-line-height);
   text-wrap: pretty;
 }
@@ -484,7 +554,7 @@
   gap: 6px;
   font-size: var(--sys-text-style-caption-size);
   font-weight: var(--sys-text-style-caption-weight);
-  color: var(--ref-color-grey-80);
+  color: var(--app-vc-text-subtle);
   line-height: var(--sys-text-style-caption-line-height);
   font-style: italic;
   padding-top: 2px;
@@ -508,8 +578,8 @@
   font-size: var(--sys-text-style-caption-bold-size);
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-80);
-  background: var(--ref-color-grey-10);
+  color: var(--app-vc-text-subtle);
+  background: var(--app-vc-surface-sunken);
   padding: 2px 6px;
   border-radius: var(--ref-border-radius-sm);
 }
@@ -525,38 +595,64 @@
 
 .vc-edit:empty::before {
   content: attr(data-placeholder);
-  color: var(--ref-color-grey-40);
+  color: var(--app-vc-text-subtle);
   font-style: italic;
 }
 
 .vc-edit:focus {
-  box-shadow: inset 0 -2px 0 var(--ref-color-electric-blue-100);
+  box-shadow: inset 0 -2px 0 var(--app-vc-accent);
 }
 
 /* ── Footer ────────────────────────────────────────────────────── */
-/* Layout chrome comes from .ap-dialog-footer/-left/-right. We only add
-   the tinted background that distinguishes the clip browser's footer
-   from the rest. */
+/* Layout chrome comes from .ap-dialog-footer/-left/-right; we set the
+   raised dark surface + top hairline to seat it on the modal. */
 
 .video-clips-modal__foot.ap-dialog-footer {
-  background: var(--ref-color-grey-05);
+  background: var(--app-vc-surface-raised);
+  border-top: 1px solid var(--app-vc-border);
 }
 
 .video-clips-modal__foot-stats {
   font-size: var(--sys-text-style-body-size);
   line-height: var(--sys-text-style-body-line-height);
   font-weight: var(--sys-text-style-body-weight);
-  color: var(--ref-color-grey-100);
+  color: var(--app-vc-text);
 }
 
 .video-clips-modal__foot-stats strong {
-  color: var(--ref-color-grey-100);
+  color: var(--app-vc-text);
   font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 .video-clips-modal__foot-meta {
-  color: var(--ref-color-grey-60);
+  color: var(--app-vc-text-subtle);
   font-weight: var(--sys-text-style-body-weight);
+}
+
+/* ── DS buttons on the dark modal ──────────────────────────────────
+   The neutral grey variants (transparent / ghost / stroked) are built for
+   light surfaces — remap their text + border to the dark ramp. Orange
+   (primary) and red (ghost danger) keep their DS hue; they read on dark. */
+.video-clips-modal .ap-button.transparent.grey,
+.video-clips-modal .ap-button.ghost.grey {
+  color: var(--app-vc-text-muted);
+}
+
+.video-clips-modal .ap-button.transparent.grey:hover,
+.video-clips-modal .ap-button.ghost.grey:hover {
+  background: var(--app-vc-hover);
+  color: var(--app-vc-text);
+}
+
+.video-clips-modal .ap-button.stroked.grey {
+  color: var(--app-vc-text);
+  border-color: var(--app-vc-border-strong);
+  background: transparent;
+}
+
+.video-clips-modal .ap-button.stroked.grey:hover {
+  background: var(--app-vc-hover);
+  border-color: var(--app-vc-text-subtle);
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -577,6 +673,86 @@
   box-shadow: var(--app-shadow-popover-lg);
   border: 1px solid var(--app-vc-border);
   margin: var(--ref-spacing-xxs) 0;
+}
+
+/* ── Editor tabs (Clip / Subtitles) ──────────────────────────────── */
+
+.vc-editor__tabs {
+  display: flex;
+  gap: var(--ref-spacing-xxs);
+  border-bottom: 1px solid var(--app-vc-border);
+  margin: calc(-1 * var(--ref-spacing-sm)) calc(-1 * var(--ref-spacing-sm)) 0;
+  padding: 0 var(--ref-spacing-sm);
+}
+
+.vc-editor__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  font-family: inherit;
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-xs);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--app-vc-text-subtle);
+  cursor: pointer;
+  transition: all var(--ref-animation-short);
+}
+
+.vc-editor__tab:hover {
+  color: var(--app-vc-text);
+}
+
+.vc-editor__tab.is-on {
+  color: var(--app-vc-text);
+  border-bottom-color: var(--app-vc-accent);
+}
+
+/* Subtitles focus — the editor card sheds its chrome and fills the body so
+   the embedded caption editor gets the whole modal body. */
+.vc-editor--captions {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  gap: 0;
+  height: 100%;
+}
+
+.vc-editor--captions .vc-editor__tabs {
+  margin: 0;
+  padding: 0 var(--ref-spacing-sm);
+  background: var(--app-vc-surface-raised);
+  flex-shrink: 0;
+}
+
+.vc-caption-host {
+  flex: 1;
+  min-height: 0;
+}
+
+.video-clips-modal__body.is-captions.ap-dialog-content {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  display: flex;
+}
+
+.vc-rows__cell--captions {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+
+.vc-rows__cell--captions .vc-editor--captions {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .vc-editor__head {
@@ -653,9 +829,11 @@
 
 .vc-editor__top {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  /* Cap the preview column so the Clip-tab preview stays compact (a tall
+     16:9 box was what made the modal need ~1050px). The form takes the rest. */
+  grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
   gap: var(--ref-spacing-sm);
-  align-items: stretch;
+  align-items: start;
 }
 
 .vc-editor__preview-col {
@@ -672,6 +850,15 @@
   background-color: var(--app-vc-surface-sunken);
   overflow: hidden;
   border: 1px solid var(--app-vc-border);
+}
+
+/* Real footage fills the preview, behind the crop frame / HUD / caption. */
+.vc-preview__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Crop frame — centered viewfinder marking the selected export ratio.
@@ -1095,9 +1282,13 @@
 .vc-protrim__thumb {
   flex: 1;
   min-width: 0;
-  background-size: cover;
-  background-position: center;
-  border-right: 1px solid rgba(0, 0, 0, 0.4);
+  background: var(--app-vc-surface-raised);
+  border-right: 1px solid var(--app-vc-surface-sunken);
+}
+
+/* Alternating flat tones read as a filmstrip without any gradient. */
+.vc-protrim__thumb:nth-child(even) {
+  background: var(--app-vc-field);
 }
 
 .vc-protrim__thumb:last-child {
@@ -1269,4 +1460,158 @@
   .vc-row__body {
     grid-column: 1 / -1;
   }
+}
+
+/* ════════════════════════════════════════════════════════════════
+ *  SUBTITLES — auto-captions: show/hide, presets, transcript editor.
+ *  Caption display colors (--vc-cap-*) are content colors meant to read
+ *  over arbitrary video frames, so they're literal here (not DS tokens) —
+ *  same exception the network/social brand colors take. Editor chrome
+ *  (section, list, chips) stays on the --app-vc-* dark ramp.
+ * ════════════════════════════════════════════════════════════════ */
+
+.video-clips-modal {
+  --vc-cap-accent: #4db5ff; /* cool highlight, ≥4.5:1 over dark video */
+  --vc-cap-hl: #ffd84d; /* warm "key word" highlight */
+}
+
+/* ── Caption render styles (shared by overlay + style chips) ──────── */
+
+.vc-cap {
+  line-height: 1.25;
+}
+
+.vc-cap__line {
+  display: inline-block;
+}
+
+/* Reset the UA <mark> yellow box; each preset paints its own emphasis. */
+.vc-cap .vc-cap-emph {
+  background: transparent;
+  color: inherit;
+  font-style: normal;
+  border-radius: 0;
+}
+
+/* Clean — white semibold with a soft shadow; emphasis = accent + heavier. */
+.vc-cap--clean .vc-cap__line {
+  color: var(--ref-color-white);
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+}
+.vc-cap--clean .vc-cap-emph {
+  color: var(--vc-cap-accent);
+  font-weight: 800;
+}
+
+/* Bold — uppercase, extra-bold, slightly larger; emphasis = warm highlight. */
+.vc-cap--bold .vc-cap__line {
+  color: var(--ref-color-white);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  font-size: 1.12em;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+.vc-cap--bold .vc-cap-emph {
+  color: var(--vc-cap-hl);
+}
+
+/* Boxed — text on a solid dark plate that wraps per line. */
+.vc-cap--boxed .vc-cap__line {
+  color: var(--ref-color-white);
+  font-weight: 700;
+  background: rgba(10, 12, 16, 0.82);
+  padding: 0.18em 0.5em;
+  border-radius: 8px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.vc-cap--boxed .vc-cap-emph {
+  color: var(--vc-cap-hl);
+}
+
+/* Highlight — emphasized words get a filled warm pill (the Opus look). */
+.vc-cap--highlight .vc-cap__line {
+  color: var(--ref-color-white);
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.vc-cap--highlight .vc-cap-emph {
+  color: #0a0c10;
+  background: var(--vc-cap-hl);
+  padding: 0.05em 0.22em;
+  border-radius: 5px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* Outline — heavy stroke for legibility on busy footage, no plate. */
+.vc-cap--outline .vc-cap__line {
+  color: var(--ref-color-white);
+  font-weight: 800;
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.85);
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+}
+.vc-cap--outline .vc-cap-emph {
+  color: var(--vc-cap-hl);
+}
+
+/* Pop — emphasized words scale + go accent (manual karaoke-style accent). */
+.vc-cap--pop .vc-cap__line {
+  color: var(--ref-color-white);
+  font-weight: 700;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.6);
+}
+.vc-cap--pop .vc-cap-emph {
+  color: var(--vc-cap-accent);
+  font-weight: 800;
+  font-size: 1.12em;
+  display: inline-block;
+}
+
+/* ── Overlay on the preview ───────────────────────────────────────── */
+
+.vc-preview__cap-overlay {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 12%;
+  z-index: 4;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.vc-preview__cap-overlay[hidden] {
+  display: none;
+}
+
+.vc-preview__cap-overlay .vc-cap__line {
+  pointer-events: auto;
+  outline: none;
+  cursor: text;
+  max-width: 100%;
+  font-size: clamp(13px, 1.5vw, 22px);
+}
+
+.vc-preview__cap-overlay .vc-cap__line:focus {
+  box-shadow: 0 0 0 2px var(--vc-cap-accent);
+  border-radius: 4px;
+}
+
+/* CC badge on browse-mode thumbnails when a clip carries visible captions. */
+.vc-thumb__cc {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--ref-color-white);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: 1;
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  letter-spacing: 0.04em;
+  padding: 3px 5px;
+  border-radius: var(--ref-border-radius-sm);
 }

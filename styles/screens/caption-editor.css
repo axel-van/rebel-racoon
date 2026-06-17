@@ -1,0 +1,995 @@
+/* Full-screen caption editor (src/caption-editor.js).
+ *
+ * A dark, media-editor surface that sits above the clips modal. Chrome uses
+ * the shared --app-vc-* dark ramp (see styles/tokens.css) for consistency with
+ * the clip editor; caption DISPLAY colors are literal (they read over arbitrary
+ * video frames, not DS chrome). Quiet by design — depth from surface + spacing.
+ */
+
+/* Embedded inside the clips modal's Subtitles tab — fills the host. */
+.cap-ed {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--app-vc-surface);
+  color: var(--app-vc-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.cap-ed__left-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+}
+
+/* ── Icon button (transport play / pause) ─────────────────────────── */
+
+.cap-ed__icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--app-radius-button-sm);
+  border: 0;
+  background: transparent;
+  color: var(--app-vc-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--ref-animation-short);
+}
+
+.cap-ed__icon-btn:hover {
+  background: var(--app-vc-hover);
+  color: var(--app-vc-text);
+}
+
+.cap-ed__meta {
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--app-vc-text-subtle);
+  white-space: nowrap;
+}
+
+/* ── Body 3-pane layout ───────────────────────────────────────────── */
+
+.cap-ed__body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr) 332px;
+  min-height: 0;
+}
+
+.cap-ed__left,
+.cap-ed__right {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--app-vc-surface);
+}
+
+.cap-ed__left {
+  border-right: 1px solid var(--app-vc-border);
+  padding: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-xs);
+}
+
+.cap-ed__right {
+  border-left: 1px solid var(--app-vc-border);
+}
+
+/* ── Left: transcript ─────────────────────────────────────────────── */
+
+.cap-ed__cleanup-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  align-self: stretch;
+  font-family: inherit;
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  padding: var(--ref-spacing-xs);
+  border-radius: var(--app-radius-button-sm);
+  border: 1px solid var(--app-vc-border-strong);
+  background: transparent;
+  color: var(--app-vc-text);
+  cursor: pointer;
+  transition: all var(--ref-animation-short);
+}
+
+.cap-ed__cleanup-btn:hover {
+  background: var(--app-vc-hover);
+}
+
+.cap-ed__cleanup-btn[aria-pressed="true"] {
+  background: rgba(255, 170, 70, 0.16);
+  border-color: var(--ref-color-orange-100);
+  color: var(--ref-color-orange-100);
+}
+
+.cap-ed__cleanup-btn i {
+  color: var(--ref-color-orange-100);
+}
+
+/* Cleanup bar — sits under the Speech-cleanup button, merged with the
+   transcript editing area (no separate right-panel tab). */
+.cap-ed__cleanup-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  background: rgba(255, 170, 70, 0.1);
+  border: 1px solid rgba(255, 170, 70, 0.3);
+  border-radius: var(--app-radius-button-sm);
+}
+
+.cap-ed__cleanup-bar[hidden] {
+  display: none;
+}
+
+.cap-ed-cleanup-bar__count {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--app-vc-text-muted);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cap-ed-cleanup-bar__actions {
+  display: inline-flex;
+  gap: var(--ref-spacing-xxs);
+  flex-shrink: 0;
+}
+
+.cap-ed-cleanup-bar__btn {
+  font-family: inherit;
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  background: transparent;
+  border: 0;
+  border-radius: var(--ref-border-radius-sm);
+  color: var(--ref-color-orange-100);
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.cap-ed-cleanup-bar__btn:hover {
+  background: rgba(255, 170, 70, 0.18);
+}
+
+.cap-ed-cleanup-bar__btn--done {
+  color: var(--app-vc-text-muted);
+}
+
+.cap-ed-cleanup-bar__btn--done:hover {
+  background: var(--app-vc-hover);
+  color: var(--app-vc-text);
+}
+
+.cap-ed__cleanup-count {
+  margin-left: auto;
+  background: var(--ref-color-orange-100);
+  color: var(--ref-color-white);
+  border-radius: var(--app-radius-circle);
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.cap-ed__cleanup-count[hidden] {
+  display: none;
+}
+
+.cap-ed__hint {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--app-vc-text-subtle);
+}
+
+.cap-ed__transcript {
+  flex: 1;
+  overflow-y: auto;
+  font-size: var(--sys-text-style-body-size);
+  line-height: 1.9;
+  color: var(--app-vc-text-muted);
+}
+
+.cap-ed-tword {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 1px 2px;
+  transition:
+    background var(--ref-animation-short),
+    color var(--ref-animation-short);
+}
+
+.cap-ed-tword:hover {
+  background: var(--app-vc-hover);
+  color: var(--app-vc-text);
+}
+
+.cap-ed-tword.is-active {
+  background: #c6f432;
+  color: #14161a;
+}
+
+.cap-ed-tword.is-editing {
+  background: var(--app-vc-field);
+  color: var(--app-vc-text);
+  outline: 1px solid var(--app-vc-accent);
+}
+
+.cap-ed-tword.is-marked {
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.cap-ed-tword.is-mark-h1 {
+  box-shadow: inset 0 -0.5em 0 rgba(184, 233, 134, 0.45);
+}
+
+.cap-ed-tword.is-mark-h2 {
+  box-shadow: inset 0 -0.5em 0 rgba(245, 210, 58, 0.45);
+}
+
+.cap-ed-tword.is-mark-font {
+  color: var(--app-vc-accent);
+}
+
+.cap-ed-tword.is-filler {
+  background: rgba(255, 170, 70, 0.16);
+  color: var(--ref-color-orange-100);
+}
+
+.cap-ed-tword.is-removed {
+  text-decoration: line-through;
+  opacity: 0.45;
+}
+
+.cap-ed-pause {
+  display: inline-block;
+  background: var(--app-vc-field);
+  border: 1px solid var(--app-vc-border-strong);
+  color: var(--app-vc-text-subtle);
+  font-size: 10.5px;
+  border-radius: 5px;
+  padding: 0 5px;
+  margin: 0 4px;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.cap-ed-pause:hover {
+  color: var(--app-vc-text);
+  border-color: var(--app-vc-text-subtle);
+}
+
+.cap-ed-pause.is-proposed {
+  background: rgba(255, 170, 70, 0.16);
+  border-color: var(--ref-color-orange-100);
+  color: var(--ref-color-orange-100);
+}
+
+.cap-ed-pause.is-removed {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+/* ── Center: stage + transport ────────────────────────────────────── */
+
+.cap-ed__center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-md);
+  min-height: 0;
+}
+
+.cap-ed__stage-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.cap-ed__stage {
+  position: relative;
+  height: min(58vh, 520px);
+  aspect-ratio: 9 / 16;
+  border-radius: var(--ref-border-radius-md);
+  background-size: cover;
+  background-color: var(--app-vc-surface-sunken);
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+/* Real footage fills the stage, behind dead-zones / caption / play glyph. */
+.cap-ed__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cap-ed__playicon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+  transition: opacity var(--ref-animation-short);
+}
+
+.cap-ed__playicon.is-hidden {
+  opacity: 0;
+}
+
+.cap-ed__playicon svg {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+}
+
+/* Caption box (port of .caption-box) — draggable for free positioning. */
+.cap-ed-box {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  line-height: 1.15;
+  user-select: none;
+  cursor: grab;
+  touch-action: none;
+  border-radius: 6px;
+  outline: 1.5px dashed transparent;
+  outline-offset: 6px;
+  transition: outline-color var(--ref-animation-short);
+}
+
+.cap-ed-box:hover {
+  outline-color: rgba(255, 255, 255, 0.45);
+}
+
+.cap-ed-box.is-dragging {
+  cursor: grabbing;
+  outline-color: var(--vc-cap-accent, #4db5ff);
+}
+
+.cap-ed-box.ghost {
+  opacity: 0.45;
+}
+
+.cap-ed-box--plate .cap-ed-line {
+  background: var(--cap-plate, rgba(10, 12, 16, 0.82));
+  padding: 0.08em 0.32em;
+  border-radius: 8px;
+}
+
+.cap-ed-line {
+  display: block;
+  white-space: nowrap;
+}
+
+.cap-ed-word {
+  transition: color 60ms linear;
+  border-radius: 0.12em;
+  padding: 0 0.04em;
+}
+
+.cap-ed-word-hl {
+  color: #14161a !important;
+}
+
+/* Selection frame + resize handles — overlays the caption box. Side handles
+   resize width, top/bottom resize size (height via font), corners do both. */
+.cap-ed-frame {
+  position: absolute;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-radius: 5px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--ref-animation-short);
+  z-index: 5;
+}
+
+.cap-ed__stage:hover .cap-ed-frame,
+.cap-ed-frame.is-active {
+  opacity: 1;
+}
+
+.cap-ed-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--ref-color-white);
+  border: 1px solid #444;
+  border-radius: 50%;
+  pointer-events: auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  touch-action: none;
+}
+
+.cap-ed-handle--nw {
+  top: -6px;
+  left: -6px;
+  cursor: nwse-resize;
+}
+.cap-ed-handle--ne {
+  top: -6px;
+  right: -6px;
+  cursor: nesw-resize;
+}
+.cap-ed-handle--sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: nesw-resize;
+}
+.cap-ed-handle--se {
+  bottom: -6px;
+  right: -6px;
+  cursor: nwse-resize;
+}
+.cap-ed-handle--n {
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+.cap-ed-handle--s {
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+.cap-ed-handle--w {
+  top: 50%;
+  left: -6px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+.cap-ed-handle--e {
+  top: 50%;
+  right: -6px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+/* Dead-zone guides */
+.cap-ed__deadzones {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.cap-ed-dz {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: rgba(255, 70, 70, 0.08);
+  border: 1px dashed rgba(255, 70, 70, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cap-ed-dz--top {
+  top: 0;
+}
+
+.cap-ed-dz--bottom {
+  bottom: 0;
+}
+
+.cap-ed-dz--right {
+  left: auto;
+  right: 0;
+}
+
+.cap-ed-dz span {
+  color: rgba(255, 130, 130, 0.92);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.cap-ed__transport {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  width: min(100%, 480px);
+  flex-shrink: 0;
+}
+
+/* Play / pause is the primary control — a filled accent circle. */
+.cap-ed__transport .cap-ed__icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--app-radius-circle);
+  background: var(--app-vc-accent);
+  color: var(--ref-color-white);
+  flex-shrink: 0;
+}
+
+.cap-ed__transport .cap-ed__icon-btn:hover {
+  background: var(--app-vc-accent-hover);
+  color: var(--ref-color-white);
+}
+
+.cap-ed__time {
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  font-variant-numeric: tabular-nums;
+  color: var(--app-vc-text-muted);
+  white-space: nowrap;
+}
+
+.cap-ed__scrub {
+  flex: 1;
+  height: 5px;
+  border-radius: var(--app-radius-circle);
+  background: var(--app-vc-surface-sunken);
+  border: 1px solid var(--app-vc-border);
+  cursor: pointer;
+  position: relative;
+  transition: height var(--ref-animation-short);
+}
+
+.cap-ed__scrub:hover {
+  height: 7px;
+}
+
+.cap-ed__scrub-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: var(--app-vc-accent);
+  border-radius: var(--app-radius-circle);
+}
+
+/* Playhead knob at the fill's leading edge. */
+.cap-ed__scrub-fill::after {
+  content: "";
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 11px;
+  height: 11px;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-white);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Right: tabs + panel ──────────────────────────────────────────── */
+
+.cap-ed__tabs {
+  display: flex;
+  border-bottom: 1px solid var(--app-vc-border);
+  flex-shrink: 0;
+}
+
+.cap-ed__tab {
+  flex: 1;
+  font-family: inherit;
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  padding: var(--ref-spacing-xs) 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--app-vc-text-subtle);
+  cursor: pointer;
+  transition: all var(--ref-animation-short);
+}
+
+.cap-ed__tab:hover {
+  color: var(--app-vc-text);
+}
+
+.cap-ed__tab.is-on {
+  color: var(--app-vc-text);
+  border-bottom-color: var(--app-vc-accent);
+}
+
+.cap-ed__tabpanel {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--ref-spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Preset grid */
+.cap-ed-presets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ref-spacing-xs);
+}
+
+.cap-ed-preset {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  background: var(--app-vc-field);
+  border: 2px solid transparent;
+  border-radius: var(--app-radius-button-sm);
+  cursor: pointer;
+  transition: border-color var(--ref-animation-short);
+}
+
+.cap-ed-preset:hover {
+  border-color: var(--app-vc-border-strong);
+}
+
+.cap-ed-preset.is-on {
+  border-color: var(--ref-color-white);
+}
+
+.cap-ed-preset__frame {
+  height: 56px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #2a2f3a 0%, #14171e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 4px;
+}
+
+.cap-ed-preset__sample {
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.cap-ed-preset__sample mark {
+  background: transparent;
+  color: inherit;
+}
+
+.cap-ed-preset__none {
+  color: var(--app-vc-text-subtle);
+  font-size: 20px;
+}
+
+.cap-ed-preset__label {
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--app-vc-text-muted);
+  text-align: center;
+}
+
+.cap-ed-preset.is-on .cap-ed-preset__label {
+  color: var(--app-vc-text);
+}
+
+/* Per-preset sample looks (approximate the Opus Clip styles on the card). */
+.cap-ed-preview-karaoke {
+  font-weight: 900;
+  text-transform: uppercase;
+  -webkit-text-stroke: 0.6px #000;
+  paint-order: stroke fill;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+.cap-ed-preview-karaoke mark {
+  color: #27e36a;
+}
+
+.cap-ed-preview-deep-diver {
+  font-weight: 700;
+  color: #14161a;
+  background: #f3f4f6;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+.cap-ed-preview-deep-diver mark {
+  color: #9aa0aa;
+}
+
+.cap-ed-preview-pod-p {
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #ff3db5;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.cap-ed-preview-pod-p mark {
+  color: #ff3db5;
+}
+
+.cap-ed-preview-popline {
+  font-weight: 900;
+  text-transform: uppercase;
+  -webkit-text-stroke: 0.6px #000;
+  paint-order: stroke fill;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+.cap-ed-preview-popline mark {
+  color: #7c4dff;
+}
+
+.cap-ed-preview-seamless-bounce {
+  font-weight: 800;
+  color: #fff;
+  background: #2ecc71;
+  padding: 2px 7px;
+  border-radius: 7px;
+}
+.cap-ed-preview-seamless-bounce mark {
+  color: #fff;
+}
+
+.cap-ed-preview-beasty {
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  -webkit-text-stroke: 0.6px #000;
+  paint-order: stroke fill;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+.cap-ed-preview-beasty mark {
+  color: #ffd400;
+}
+
+.cap-ed-preview-youshaei {
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #aeb6c2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.cap-ed-preview-youshaei mark {
+  color: #2ad6c8;
+}
+
+.cap-ed-preview-mozi {
+  font-weight: 900;
+  text-transform: uppercase;
+  -webkit-text-stroke: 0.6px #000;
+  paint-order: stroke fill;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+.cap-ed-preview-mozi mark {
+  color: #27e36a;
+}
+
+.cap-ed-preview-glitch-infinite {
+  font-weight: 800;
+  color: #ff7a1a;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.cap-ed-preview-glitch-infinite mark {
+  color: #ff7a1a;
+}
+
+.cap-ed-preview-baby-earthquake {
+  font-weight: 700;
+  font-family: Georgia, serif;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.cap-ed-preview-baby-earthquake mark {
+  color: #ff7a1a;
+}
+
+/* Right-panel form (Font / Effects) — quiet labels, one control per row on a
+   regular rhythm, grouped under subtle section headers. Hierarchy comes from
+   weight + color, not bold-everything. */
+.cap-ed-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.cap-ed-group + .cap-ed-group {
+  margin-top: var(--ref-spacing-sm);
+  padding-top: var(--ref-spacing-sm);
+  border-top: 1px solid var(--app-vc-border);
+}
+
+.cap-ed-group-label {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--app-vc-text-subtle);
+  margin-bottom: var(--ref-spacing-xxxs);
+}
+
+.cap-ed-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  min-height: 30px;
+}
+
+.cap-ed-flabel {
+  flex: 1;
+  min-width: 0;
+  /* Quiet, regular-weight label — the value/control carries the emphasis. */
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--app-vc-text-muted);
+}
+
+.cap-ed-fhint {
+  display: block;
+  font-size: 11px;
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--app-vc-text-subtle);
+}
+
+.cap-ed-subfields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding-left: var(--ref-spacing-xs);
+  border-left: 1px solid var(--app-vc-border);
+}
+
+.cap-ed-divider {
+  height: 1px;
+  background: var(--app-vc-border);
+  margin: var(--ref-spacing-xxs) 0;
+}
+
+.cap-ed-select,
+.cap-ed-num {
+  font-family: inherit;
+  font-size: var(--sys-text-style-caption-size);
+  background: var(--app-vc-surface-sunken);
+  border: 1px solid var(--app-vc-border-strong);
+  border-radius: var(--ref-border-radius-sm);
+  color: var(--app-vc-text);
+  height: 30px;
+  padding: 0 var(--ref-spacing-xxs);
+  outline: none;
+}
+
+.cap-ed-select:focus,
+.cap-ed-num:focus {
+  border-color: var(--app-vc-accent);
+}
+
+.cap-ed-select {
+  min-width: 128px;
+}
+
+.cap-ed-num {
+  width: 60px;
+  text-align: center;
+}
+
+.cap-ed-suffix {
+  color: var(--app-vc-text-subtle);
+  font-size: var(--sys-text-style-caption-size);
+  margin-left: 4px;
+}
+
+.cap-ed-color {
+  width: 40px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--app-vc-border-strong);
+  border-radius: var(--ref-border-radius-sm);
+  background: transparent;
+  cursor: pointer;
+}
+
+.cap-ed-toggle.ap-toggle-container {
+  color: var(--app-vc-text-muted);
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-weight);
+}
+
+/* Segmented control — quiet container with an inset accent pill for the
+   selected option (not a heavy edge-to-edge fill). */
+.cap-ed-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--app-vc-surface-sunken);
+  border: 1px solid var(--app-vc-border);
+  border-radius: var(--app-radius-button-sm);
+}
+
+.cap-ed-seg__btn {
+  font-family: inherit;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: 1;
+  font-weight: var(--sys-text-style-caption-weight);
+  padding: 5px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--ref-border-radius-sm);
+  color: var(--app-vc-text-muted);
+  cursor: pointer;
+  transition: all var(--ref-animation-short);
+}
+
+.cap-ed-seg__btn:hover {
+  color: var(--app-vc-text);
+}
+
+.cap-ed-seg__btn.is-on {
+  background: var(--app-vc-accent);
+  color: var(--ref-color-white);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+}
+
+/* ── Word emphasis popover ────────────────────────────────────────── */
+
+.cap-ed-menu {
+  position: fixed;
+  z-index: calc(var(--app-z-modal) + 40);
+  background: var(--app-vc-surface-raised);
+  border: 1px solid var(--app-vc-border-strong);
+  border-radius: 10px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  min-width: 188px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.cap-ed-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  font-family: inherit;
+  font-size: var(--sys-text-style-caption-size);
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  text-align: left;
+  padding: 8px 10px;
+  color: var(--app-vc-text);
+  cursor: pointer;
+}
+
+.cap-ed-menu__item:hover {
+  background: var(--app-vc-hover);
+}
+
+.cap-ed-menu__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cap-ed-menu__check {
+  margin-left: auto;
+  color: var(--app-vc-accent);
+}
+
+.cap-ed-menu__sep {
+  height: 1px;
+  background: var(--app-vc-border);
+  margin: 4px 0;
+}
+
+@media (max-width: 1080px) {
+  .cap-ed__body {
+    grid-template-columns: 260px minmax(0, 1fr) 300px;
+  }
+}
