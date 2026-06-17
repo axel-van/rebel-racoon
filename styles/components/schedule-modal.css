@@ -185,14 +185,14 @@
   color: var(--ref-color-grey-80);
 }
 
-/* One card per draft — profile head, then a stack of date rows, then the
-   "Add another date" link. Was a 2-col grid (one date per draft); now a
-   vertical card so a draft can carry several publish times. */
+/* Compact draft card — one horizontal band: profile + a single-line post
+   preview on the left, the datetime input + remove on the right. */
 .schedule-modal__slot {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--app-radius-card);
   background: var(--app-surface);
@@ -201,7 +201,7 @@
 .schedule-modal__slot-post {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
+  gap: 2px;
   min-width: 0;
 }
 
@@ -209,18 +209,18 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  flex-wrap: wrap;
+  min-width: 0;
 }
 
+/* One-line preview — keeps the card to roughly the input's height. */
 .schedule-modal__slot-text {
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   font-weight: var(--sys-text-style-caption-weight);
-  color: var(--ref-color-grey-80);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  color: var(--ref-color-grey-60);
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .schedule-modal__slot-dates {
@@ -236,19 +236,48 @@
 }
 
 .schedule-modal__slot-date .ap-input-group {
-  flex: 1 1 auto;
   min-width: 0;
 }
 
 .schedule-modal__slot-date input {
-  width: 100%;
-  min-width: 200px;
+  min-width: 184px;
 }
 
-/* "Add another date" — DS secondary-blue button, left-aligned under the
-   date rows. */
-.schedule-modal__add-date {
-  align-self: flex-start;
+/* ── Drag-to-reorder (multi-draft) ──────────────────────────────────── */
+.schedule-modal__slots-hint {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+}
+
+/* A leading grip column appears only on draggable (multi-draft) cards. */
+.schedule-modal__slot--draggable {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  cursor: grab;
+}
+
+.schedule-modal__slot--draggable:active {
+  cursor: grabbing;
+}
+
+.schedule-modal__slot-grip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ref-color-grey-40);
+}
+
+.schedule-modal__slot.is-dragging {
+  opacity: 0.45;
+}
+
+/* Drop indicator — accent line on the edge the card would land against. */
+.schedule-modal__slot.is-drop-before {
+  box-shadow: inset 0 2px 0 0 var(--ref-color-electric-blue-100);
+}
+
+.schedule-modal__slot.is-drop-after {
+  box-shadow: inset 0 -2px 0 0 var(--ref-color-electric-blue-100);
 }
 
 /* ── Calendar ───────────────────────────────────────────────────────── */

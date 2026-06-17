@@ -50,6 +50,7 @@ let state = {
 
 let unsubscribeQueue = null;
 let computeTimer = null; // pending "Compute best times" timeout
+let draggingPostId = null; // draft being drag-reordered (multi-draft only)
 
 // DS branded network glyphs — the `-official` variants carry each
 // network's brand color. The generic `ap-icon-<network>` set is grey
@@ -186,6 +187,13 @@ export function init() {
   modal.addEventListener("click", onClick);
   modal.addEventListener("input", onInput);
   modal.addEventListener("change", onInput);
+  // Drag-to-reorder the draft cards (multi-draft only). Delegated on the
+  // modal root so it survives every re-render.
+  modal.addEventListener("dragstart", onDragStart);
+  modal.addEventListener("dragover", onDragOver);
+  modal.addEventListener("dragleave", onDragLeave);
+  modal.addEventListener("drop", onDrop);
+  modal.addEventListener("dragend", onDragEnd);
   // Backdrop click + Escape go through the shared coordinator. `state.open`
   // is the canonical isOpen — the modal element's `.open` class isn't set
   // here (visibility is driven by .hidden), so we pass a custom isOpen.
@@ -274,16 +282,18 @@ function close() {
 }
 
 // ── Optimal slot picker (strategy-driven) ─────────────────────────────
-// Drives the spread off the user's chosen strategy: the cadence chip
-// decides which days qualify, the free-text note refines time-of-day and
-// excludes weekdays, and `startFrom` is day 0. We assign one draft per
-// qualifying day in order, then set each draft's hour from its network's
-// optimal window (biased by the note). Day pattern is bounded to ~1 year
-// of look-ahead so a pathological note can't loop forever.
+// The cadence is a *posting rhythm* for the whole calendar, not a
+// per-draft frequency: walking from `startFrom`, we collect the next
+// `count` days that match the pattern (cadence chip), skipping weekdays
+// the note excluded AND any day that already carries a scheduled post —
+// so the new dates slot in around what's already on the calendar. One day
+// per draft (each draft always gets exactly one date). Bounded look-ahead
+// so a pathological pattern can't loop forever.
 function strategyDays(count, strategy) {
   const start = startOfDay(strategy.startFrom || defaultStartFrom());
   const cadence = CADENCES.find((c) => c.id === strategy.cadence) || CADENCES[0];
   const avoid = parseAvoidDays(strategy.note);
+  const busy = busyCountsByDay(); // dayKey → count of posts already scheduled
   const startDow = start.getDay();
   const days = [];
   const cursor = new Date(start);
@@ -298,73 +308,16 @@ function strategyDays(count, strategy) {
     } else {
       qualifies = cadence.days.includes(dow);
     }
-    if (qualifies && !avoid.has(dow)) days.push(new Date(cursor));
+    const alreadyBusy = (busy.get(dayKey(cursor.getTime())) || 0) > 0;
+    if (qualifies && !avoid.has(dow) && !alreadyBusy) days.push(new Date(cursor));
     cursor.setDate(cursor.getDate() + 1);
   }
   return days;
 }
 
-// ── Recurrence horizon ────────────────────────────────────────────────
-// The scheduling strategy is a *frequency*: each draft is republished on
-// every day matching the cadence, across a ~1-month horizon from
-// `startFrom`. We cap occurrences per draft so a dense cadence ("every
-// weekday") can't flood the list. Same model whether there's one draft
-// or many — a single draft on "Twice a week" simply gets its own series.
-const RECUR_HORIZON_DAYS = 28; // ~1 month of look-ahead
-const MAX_DATES_PER_DRAFT = 8; // keeps the list usable on dense cadences
-
-// Walk the horizon and collect every day matching the cadence, skipping
-// any weekday the note excluded. Bounded by both the horizon and the
-// per-draft cap. Returns the shared series every draft recurs on.
-function cadenceDays(strategy) {
-  const start = startOfDay(strategy.startFrom || defaultStartFrom());
-  const cadence = CADENCES.find((c) => c.id === strategy.cadence) || CADENCES[0];
-  const avoid = parseAvoidDays(strategy.note);
-  const startDow = start.getDay();
-  const days = [];
-  const cursor = new Date(start);
-  for (let i = 0; i <= RECUR_HORIZON_DAYS && days.length < MAX_DATES_PER_DRAFT; i++) {
-    const dow = cursor.getDay();
-    let qualifies;
-    if (cadence.every) {
-      qualifies = i % cadence.every === 0;
-    } else if (cadence.weekly) {
-      qualifies = dow === startDow;
-    } else {
-      qualifies = cadence.days.includes(dow);
-    }
-    if (qualifies && !avoid.has(dow)) days.push(new Date(cursor));
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return days;
-}
-
-// Recurrence spread: every draft lands on each cadence day, at its
-// network's optimal hour (biased by the note). When several drafts share
-// a day we stagger them an hour apart (capped at 22h) so they don't
-// collide on the exact same timestamp.
-function optimalSlots(posts, strategy = state.strategy) {
-  const days = cadenceDays(strategy);
-  const timeOfDay = strategy.timeOfDay || parseTimeOfDay(strategy.note);
-  const fallback = startOfDay(strategy.startFrom || defaultStartFrom());
-  const useDays = days.length ? days : [fallback];
-
-  const slots = [];
-  posts.forEach((p, idx) => {
-    const network = (p.network || "linkedin").toLowerCase();
-    const map = PER_NETWORK_OPTIMAL[network] || FALLBACK_OPTIMAL;
-    const hour = Math.min(pickHour(map.hours, timeOfDay) + idx, 22);
-    for (const day of useDays) {
-      const slot = new Date(day);
-      slot.setHours(hour, 0, 0, 0);
-      slots.push({ post: p, when: slot.getTime() });
-    }
-  });
-  return slots;
-}
-
-// One publish per draft, spread across the cadence days in order — the
-// minimal layout "Clear all dates" collapses the recurrence back to.
+// One date per draft — spread across the next pattern-matching, non-busy
+// days (strategyDays), each at its network's best hour (biased by the
+// note). This is the whole model: a draft always carries exactly one date.
 function spreadOneEach(posts, strategy = state.strategy) {
   const days = strategyDays(posts.length, strategy);
   const timeOfDay = strategy.timeOfDay || parseTimeOfDay(strategy.note);
@@ -398,46 +351,6 @@ function customDefaultSlots(posts) {
   });
 }
 
-// Appends one publish slot for a draft, one day after its latest current
-// time (or tomorrow 9am if it somehow has none). Pushed to the flat slots
-// array — renderSlotList groups it back under the right card.
-function appendDateForPost(postId) {
-  const post = state.posts.find((p) => p.id === postId);
-  if (!post) return;
-  const times = state.slots.filter((s) => s.post.id === postId).map((s) => s.when);
-  // Hard cap — a post can carry at most MAX_DATES_PER_DRAFT publish dates.
-  if (times.length >= MAX_DATES_PER_DRAFT) return;
-  let next;
-  if (times.length) {
-    next = new Date(Math.max(...times));
-    next.setDate(next.getDate() + 1);
-  } else {
-    next = new Date();
-    next.setDate(next.getDate() + 1);
-    next.setHours(9, 0, 0, 0);
-  }
-  state.slots.push({ post, when: next.getTime() });
-}
-
-// "Add date to all" — append ONE shared publish date (same timestamp) to
-// every draft, so the user picks a single common slot in one action
-// rather than each draft drifting to its own next day. Defaults to one
-// day after the latest date in the whole batch (9am), then lands on every
-// draft; the user can fine-tune any individual row afterwards.
-function addSharedDateToAll() {
-  const all = state.slots.map((s) => s.when);
-  const next = all.length ? new Date(Math.max(...all)) : new Date();
-  next.setDate(next.getDate() + 1);
-  next.setHours(9, 0, 0, 0);
-  const when = next.getTime();
-  // Skip any draft already at the per-post cap so the shared date can't
-  // push a post past MAX_DATES_PER_DRAFT.
-  state.posts.forEach((post) => {
-    const count = state.slots.filter((s) => s.post.id === post.id).length;
-    if (count < MAX_DATES_PER_DRAFT) state.slots.push({ post, when });
-  });
-}
-
 // Snap the calendar to the month of the first slot so a fresh spread is
 // in view at a glance.
 function snapCalendarToFirst() {
@@ -448,17 +361,17 @@ function snapCalendarToFirst() {
   }
 }
 
-// Expand the strategy into the full recurrence — the work "Compute best
-// times" commits. Strategy controls (chips, note, start date) only stage
-// their values; nothing lands in the list until this runs.
+// Apply the staged strategy — the work "Compute best times" commits.
+// Strategy controls (chips, note, start date) only stage their values;
+// nothing lands in the list until this runs. One date per draft, spread
+// across the cadence around what's already scheduled.
 function recomputeOptimal() {
   state.mode = "optimal";
-  state.slots = optimalSlots(state.posts, state.strategy);
+  state.slots = spreadOneEach(state.posts, state.strategy);
   snapCalendarToFirst();
 }
 
-// Collapse to a single date per draft — the default on open and what
-// flipping back to Optimal mode resets to before a recurrence is computed.
+// Same one-date-per-draft spread — used when flipping back to Optimal mode.
 function seedOneEach() {
   state.mode = "optimal";
   state.slots = spreadOneEach(state.posts, state.strategy);
@@ -530,21 +443,6 @@ function onClick(event) {
     } else {
       render();
     }
-    return;
-  }
-  // "Add another date" (per draft) — append a slot one day after the
-  // draft's latest existing time, same hour, so each new row reads as a
-  // sensible next window rather than landing on top of an existing one.
-  const addBtn = event.target.closest("[data-schedule-add]");
-  if (addBtn) {
-    appendDateForPost(addBtn.dataset.scheduleAdd);
-    render();
-    return;
-  }
-  // "Add date to all" — one shared date applied to every draft at once.
-  if (event.target.closest("[data-schedule-add-all]")) {
-    addSharedDateToAll();
-    render();
     return;
   }
   // "Clear all dates" — collapse the recurrence back to one slot per
@@ -685,8 +583,8 @@ function renderInner() {
       <span class="ap-dialog-title" id="${ROOT_ID}Title">Schedule ${n} ${n === 1 ? "draft" : "drafts"}</span>
       <span class="ap-dialog-subtitle">
         ${n === 1
-          ? "Pick how often this post should publish — I'll recur it on your strategy at its network's best hours."
-          : "Pick how often each post should publish. I'll recur them on your strategy at each network's best hours."}
+          ? "Pick a posting rhythm — I'll find the best time around what's already scheduled."
+          : "Pick a posting rhythm — I'll spread your drafts across the best times, around what's already scheduled."}
       </span>
     </div>
 
@@ -757,7 +655,7 @@ function renderModePicker() {
   // indicator, native role="radio" semantics via <input type="radio">,
   // and a built-in selected state that paints the border accent blue.
   const multi = state.posts.length > 1;
-  const optimalSub = multi ? "Recur each post on your strategy" : "Recur this post on your strategy";
+  const optimalSub = multi ? "Spread across your posting rhythm" : "Best time for this post";
   const customSub = multi ? "Pick each time below" : "Pick the time below";
   return `
     <div class="schedule-modal__modes" role="radiogroup" aria-label="Scheduling mode">
@@ -870,29 +768,20 @@ function renderStrategyPanel() {
   `;
 }
 
-// Slots are flat [{post, when}], but a single draft can carry several
-// publish times — so we group by post.id and render one card per draft,
-// each holding one date-row per slot plus an "Add another date" link
-// (mirrors the Figma "Add another date" affordance). The flat-array index
-// stays the key for edit/remove so the change/click handlers don't move.
+// Slots are flat [{post, when}]; a draft can still carry several publish
+// times, so we group by post.id and render one compact card per draft
+// holding its date-row(s). The flat-array index stays the key for
+// edit/remove so the change/click handlers don't move.
 function slotsForPost(postId) {
   return state.slots.map((s, idx) => ({ s, idx })).filter(({ s }) => s.post.id === postId);
 }
 
 function renderSlotList() {
   const multi = state.posts.length > 1;
-  // "Add date to all" is dead once every draft has hit the per-post cap.
-  const allAtCap = state.posts.every((p) => slotsForPost(p.id).length >= MAX_DATES_PER_DRAFT);
   const header = `
     <div class="schedule-modal__slots-head">
       <span class="schedule-modal__slots-count">${state.posts.length} ${state.posts.length === 1 ? "draft" : "drafts"}</span>
-      ${
-        multi
-          ? `<button type="button" class="ap-button stroked blue schedule-modal__add-all" data-schedule-add-all ${allAtCap ? "disabled" : ""}>
-               <i class="ap-icon-plus"></i><span>Add date to all</span>
-             </button>`
-          : ""
-      }
+      ${multi ? `<span class="schedule-modal__slots-hint muted">Drag to reorder — dates follow the order</span>` : ""}
     </div>
   `;
   const cards = state.posts
@@ -926,7 +815,16 @@ function renderSlotList() {
         )
         .join("");
       return `
-        <div class="schedule-modal__slot" data-schedule-post="${escapeText(post.id)}">
+        <div
+          class="schedule-modal__slot ${multi ? "schedule-modal__slot--draggable" : ""}"
+          data-schedule-post="${escapeText(post.id)}"
+          ${multi ? 'draggable="true"' : ""}
+        >
+          ${
+            multi
+              ? `<span class="schedule-modal__slot-grip" aria-hidden="true" title="Drag to reorder"><i class="ap-icon-move"></i></span>`
+              : ""
+          }
           <div class="schedule-modal__slot-post">
             <div class="schedule-modal__slot-head">
               ${renderProfileTag(profileForNetwork(network), { network })}
@@ -934,19 +832,97 @@ function renderSlotList() {
             <div class="schedule-modal__slot-text">${escapeText(text)}</div>
           </div>
           <div class="schedule-modal__slot-dates">${dateRows}</div>
-          <button
-            type="button"
-            class="ap-button secondary blue schedule-modal__add-date"
-            data-schedule-add="${escapeText(post.id)}"
-            ${entries.length >= MAX_DATES_PER_DRAFT ? `disabled title="Up to ${MAX_DATES_PER_DRAFT} dates per post"` : ""}
-          >
-            <i class="ap-icon-plus"></i><span>Add another date</span>
-          </button>
         </div>
       `;
     })
     .join("");
   return `<div class="schedule-modal__slots">${header}${cards}</div>`;
+}
+
+// ── Drag-to-reorder drafts ────────────────────────────────────────────
+// Reordering the cards re-pairs each draft with the (sorted) publish dates
+// by position: the new first draft takes the earliest date(s), and so on —
+// the dates "follow the order" without the user re-typing them.
+function onDragStart(event) {
+  const card = event.target.closest(".schedule-modal__slot--draggable");
+  if (!card) return;
+  draggingPostId = card.dataset.schedulePost;
+  card.classList.add("is-dragging");
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
+    // Firefox won't start a drag unless some data is set.
+    try {
+      event.dataTransfer.setData("text/plain", draggingPostId);
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+function onDragOver(event) {
+  if (!draggingPostId) return;
+  const card = event.target.closest(".schedule-modal__slot--draggable");
+  if (!card || card.dataset.schedulePost === draggingPostId) return;
+  event.preventDefault(); // allow the drop
+  if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+  clearDropMarkers();
+  const rect = card.getBoundingClientRect();
+  const before = event.clientY < rect.top + rect.height / 2;
+  card.classList.add(before ? "is-drop-before" : "is-drop-after");
+}
+
+function onDragLeave(event) {
+  const card = event.target.closest(".schedule-modal__slot--draggable");
+  if (card) card.classList.remove("is-drop-before", "is-drop-after");
+}
+
+function onDrop(event) {
+  if (!draggingPostId) return;
+  const card = event.target.closest(".schedule-modal__slot--draggable");
+  if (!card) return;
+  event.preventDefault();
+  const before = card.classList.contains("is-drop-before");
+  reorderPost(draggingPostId, card.dataset.schedulePost, before);
+  draggingPostId = null;
+  render();
+}
+
+function onDragEnd() {
+  draggingPostId = null;
+  clearDropMarkers();
+  document.querySelector(".schedule-modal__slot.is-dragging")?.classList.remove("is-dragging");
+}
+
+function clearDropMarkers() {
+  for (const el of document.querySelectorAll(
+    ".schedule-modal__slot.is-drop-before, .schedule-modal__slot.is-drop-after",
+  )) {
+    el.classList.remove("is-drop-before", "is-drop-after");
+  }
+}
+
+// Move `fromId` before/after `toId` in state.posts, then re-pair the
+// sorted publish dates with the new order (each draft keeps its date
+// count; the values shift so position drives chronology).
+function reorderPost(fromId, toId, before) {
+  if (fromId === toId) return;
+  const posts = state.posts;
+  const fromIdx = posts.findIndex((p) => p.id === fromId);
+  if (fromIdx < 0 || posts.findIndex((p) => p.id === toId) < 0) return;
+  const [moved] = posts.splice(fromIdx, 1);
+  const toIdx = posts.findIndex((p) => p.id === toId);
+  posts.splice(before ? toIdx : toIdx + 1, 0, moved);
+
+  const countByPost = new Map();
+  for (const s of state.slots) countByPost.set(s.post.id, (countByPost.get(s.post.id) || 0) + 1);
+  const sortedWhen = state.slots.map((s) => s.when).sort((a, b) => a - b);
+  const next = [];
+  let i = 0;
+  for (const post of posts) {
+    const k = countByPost.get(post.id) || 0;
+    for (let j = 0; j < k; j++) next.push({ post, when: sortedWhen[i++] });
+  }
+  state.slots = next;
 }
 
 // ── Calendar (month grid) ─────────────────────────────────────────────
