@@ -238,6 +238,33 @@ const GENERIC = {
 };
 
 /**
+ * Pretend to analyse a set of connected social profiles and return the same
+ * draft skeleton shape as analyzeWebsite. The content is "learned from the
+ * posts" — voice/format/style lean conversational and engagement-led.
+ * @param {string[]} profileIds
+ * @returns {{ name, businessSummary, suggestions: object }}
+ */
+export function analyzeSocialProfiles(profileIds = []) {
+  const n = Array.isArray(profileIds) ? profileIds.length : 0;
+  const result = clone(GENERIC);
+  result.businessSummary = `Built from ${n || "your"} connected social ${
+    n === 1 ? "profile" : "profiles"
+  }. Archie studied your recent posts — how you open, how you close, the formats you favour, and the tone that earns engagement — and mapped them into the sections below. Edit anything that's off.`;
+  Object.assign(result.suggestions, {
+    contentStyle: ["Conversational", "Engagement-led"],
+    objective: ["Brand awareness", "Build personal brand"],
+    contentAction: ["Reply in the comments"],
+    signatureHooks: ["Quick one for you:", "Saw this come up again this week:"],
+    closingPatterns: ["Drop a comment if this helped.", "What would you add?"],
+    formattingStyle:
+      "Short, scroll-stopping opener, then a few punchy lines with line breaks. Emoji used sparingly for rhythm. Ends on a question or a light CTA to drive replies.",
+    visualStyle: "Casual sentence case, the occasional emoji, the odd hashtag — reads like a person, not a brand.",
+    brandPersonality: "Approachable, quick, community-first — the voice that already performs on your feed.",
+  });
+  return result;
+}
+
+/**
  * Pretend to analyse a website and return a draft skeleton.
  * @param {string} url
  * @returns {{ name, businessSummary, suggestions: object }}

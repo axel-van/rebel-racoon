@@ -59,7 +59,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=81";
+import * as contextBuilder from "../context-builder.js?v=82";
 import * as playbookEditor from "../playbook-editor.js?v=41";
 import { renderPicker } from "./_analyse-common.js?v=39";
 import { renderSourceCard } from "../components/source-card.js?v=33";

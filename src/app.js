@@ -13,21 +13,22 @@ import { init as initAddSourceModal } from "./components/add-source-modal.js?v=4
 import { init as initConnectorsModal } from "./components/connectors-modal.js?v=6";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
 import { init as initRenameModal } from "./components/rename-modal.js?v=2";
+import { init as initAnalyzeProfilesModal } from "./components/analyze-profiles-modal.js?v=2";
 import { init as initSearchModal } from "./components/search-modal.js?v=3";
 import {
   init as initConversationStatusCard,
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=47";
 import { renderDashboard } from "./screens/dashboard.js?v=46";
-import { renderSession } from "./screens/session.js?v=269";
+import { renderSession } from "./screens/session.js?v=270";
 import { renderIdeas } from "./screens/ideas.js?v=59";
 import { renderContexts } from "./screens/contexts.js?v=69";
 import { renderConnectors } from "./screens/connectors.js?v=8";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=55";
-import { renderPlaybook } from "./screens/playbook.js?v=44";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=56";
+import { renderPlaybook } from "./screens/playbook.js?v=46";
 import * as __capAddSource from "./components/add-source-modal.js?v=42";
 import * as __capGenImage from "./components/generate-image-modal.js?v=25";
 import * as __capBug from "./components/bug-report-modal.js?v=23";
@@ -76,6 +77,7 @@ initAddSourceModal();
 initConnectorsModal();
 initConfirmModal();
 initRenameModal();
+initAnalyzeProfilesModal();
 initSearchModal();
 initConversationStatusCard();
 

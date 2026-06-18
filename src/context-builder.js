@@ -100,32 +100,43 @@ export function getDraft(sessionId) {
   return drafts.get(sessionId) || null;
 }
 
+// Map an analysis result onto the section fields of a Playbook/draft, WITHOUT
+// touching identity (name) or chrome. Shared by the onboarding draft fill
+// (applyAnalysisToDraft) and the saved-Playbook "Auto-fill" overwrite on the
+// detail page (screens/playbook.js). Returns a plain patch object.
+export function sectionPatchFromAnalysis(analysis) {
+  const s = (analysis && analysis.suggestions) || {};
+  return {
+    businessSummary: analysis?.businessSummary || "",
+    briefSummary: analysis?.businessSummary || "", // legacy mirror
+    audience: (s.audience || []).slice(),
+    audienceProblems: (s.audienceProblems || []).slice(),
+    tones: (s.tones || []).slice(),
+    contentStyle: (s.contentStyle || []).slice(),
+    objective: (s.objective || []).slice(),
+    contentAction: (s.contentAction || []).slice(),
+    ctaLinks: (s.ctaLinks || []).map((l) => ({ ...l })),
+    language: s.language || "English",
+    voiceProfile: s.voiceProfile ? { ...s.voiceProfile } : null,
+    imageVoice: s.imageVoice || { websites: [] },
+    signatureHooks: (s.signatureHooks || []).slice(),
+    closingPatterns: (s.closingPatterns || []).slice(),
+    formattingStyle: s.formattingStyle || "",
+    visualStyle: s.visualStyle || "",
+    brandPersonality: s.brandPersonality || "",
+    brandTypography: s.brandTypography ? { ...s.brandTypography } : null,
+    brandColors: (s.brandColors || []).map((c) => ({ ...c })),
+  };
+}
+
 // Shared draft patch — applied by the First Time User ALT flow (`startAlt`)
 // after the website analysis lands. Pre-selects every suggested value so the
 // recap reads as "Archie's best guess, edit if anything's off".
 function applyAnalysisToDraft(d, analysis) {
   d.name = d.name || analysis.name;
-  d.businessSummary = analysis.businessSummary;
   d.suggestions = analysis.suggestions;
-  d.audience = (analysis.suggestions.audience || []).slice();
-  d.audienceProblems = (analysis.suggestions.audienceProblems || []).slice();
-  d.tones = (analysis.suggestions.tones || []).slice();
-  d.contentStyle = (analysis.suggestions.contentStyle || []).slice();
-  d.objective = (analysis.suggestions.objective || []).slice();
-  d.contentAction = (analysis.suggestions.contentAction || []).slice();
-  d.ctaLinks = (analysis.suggestions.ctaLinks || []).map((l) => ({ ...l }));
-  d.language = analysis.suggestions.language || "English";
   d.color = analysis.suggestions.color || "orange";
-  d.voiceProfile = analysis.suggestions.voiceProfile ? { ...analysis.suggestions.voiceProfile } : null;
-  d.imageVoice = analysis.suggestions.imageVoice || { websites: [] };
-  // New 3-section model — voice & style + brand identity.
-  d.signatureHooks = (analysis.suggestions.signatureHooks || []).slice();
-  d.closingPatterns = (analysis.suggestions.closingPatterns || []).slice();
-  d.formattingStyle = analysis.suggestions.formattingStyle || "";
-  d.visualStyle = analysis.suggestions.visualStyle || "";
-  d.brandPersonality = analysis.suggestions.brandPersonality || "";
-  d.brandTypography = analysis.suggestions.brandTypography ? { ...analysis.suggestions.brandTypography } : null;
-  d.brandColors = (analysis.suggestions.brandColors || []).map((c) => ({ ...c }));
+  Object.assign(d, sectionPatchFromAnalysis(analysis));
 }
 
 // Patch the draft from outside the conversational flow — used by the

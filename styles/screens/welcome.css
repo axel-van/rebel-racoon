@@ -258,6 +258,28 @@
   flex-wrap: wrap;
 }
 
+/* Header dropdown menus (Auto-fill / ⋯ More) — the pop uses the DS
+   .ap-action-dropdown chrome; we only anchor it under its toggle. */
+.recap__menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.recap__menu-caret {
+  font-size: var(--sys-icon-css-sm);
+}
+
+.recap__menu-pop {
+  position: absolute;
+  top: calc(100% + var(--ref-spacing-xxs));
+  left: 0;
+}
+
+.recap__menu-pop--right {
+  left: auto;
+  right: 0;
+}
+
 /* ── Two-column layout (sticky rail + sections) ───────────────────────── */
 .recap__layout {
   display: grid;
