@@ -82,6 +82,8 @@ let editorTab = "clip";
 // or "transcript". The stage + timeline stay put; only this panel swaps.
 let optionsSubtab = "style";
 let captionMounted = false;
+// Fullscreen toggle — expands the modal to near-viewport for more real estate.
+let expanded = false;
 
 // Drag state for the pro trimmer (null when not dragging).
 let dragState = null;
@@ -131,6 +133,9 @@ const SHELL_HTML = `
       <span class="ap-dialog-title" id="videoClipsTitle">Suggested clips</span>
       <span class="ap-dialog-subtitle" id="videoClipsSub"></span>
     </div>
+    <button type="button" class="video-clips-modal__icon-btn" id="videoClipsExpand" aria-label="Expand to fullscreen" title="Expand">
+      <i class="ap-icon-maximize" aria-hidden="true"></i>
+    </button>
   </div>
 
   <div class="video-clips-modal__timeline" id="videoClipsTimeline">
@@ -307,7 +312,6 @@ function optionsHTML() {
 
   // Clip tab — title + summary.
   return `
-    <div class="vc-panel__eyebrow"><span class="vc-editor__head-dot"></span>Editing clip · <span data-vc-editor-time-dur>${fmtTime(draft.end - draft.start)}</span></div>
     <div class="vc-editor__field">
       <label class="vc-editor__label">Clip title</label>
       <div class="vc-editor__title-input vc-edit" contenteditable="true" data-vc-edit-field="title" data-placeholder="What this moment is about…">${escapeHtml(draft.title || "")}</div>
@@ -394,18 +398,17 @@ function editorPaneHTML() {
             <div class="cap-ed-frame" data-ce-frame>${handles}</div>
           </div>
         </div>
-        <div class="cap-ed__transport vc-stage__transport">
-          <button type="button" class="cap-ed__icon-btn" data-ce="playpause" aria-label="Play / pause">
-            <svg viewBox="0 0 24 24" width="16" height="16" data-ce-playglyph><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-          </button>
-          <span class="cap-ed__time"><span data-ce-cur>0:00</span> / <span data-ce-dur>0:00</span></span>
-          <div class="cap-ed__scrub" data-ce-scrub><div class="cap-ed__scrub-fill" data-ce-scrub-fill></div></div>
-        </div>
       </main>
 
       <div class="vc-editor__timeline">
         <div class="vc-editor__timeline-head">
-          <div class="vc-editor__timeline-title">Timeline · ${escapeHtml(currentSource?.filename || "")}</div>
+          <div class="cap-ed__transport vc-timeline__transport">
+            <button type="button" class="cap-ed__icon-btn" data-ce="playpause" aria-label="Play / pause">
+              <svg viewBox="0 0 24 24" width="16" height="16" data-ce-playglyph><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+            </button>
+            <span class="cap-ed__time"><span data-ce-cur>0:00</span> / <span data-ce-dur>0:00</span></span>
+            <div class="cap-ed__scrub" data-ce-scrub><div class="cap-ed__scrub-fill" data-ce-scrub-fill></div></div>
+          </div>
           <div class="vc-editor__timeline-stepper">
             <span class="vc-stepper">
               <span class="vc-stepper__label">In</span>
@@ -1020,6 +1023,7 @@ export function init() {
   footEl = document.getElementById("videoClipsFoot");
 
   document.getElementById("videoClipsClose").addEventListener("click", () => close());
+  document.getElementById("videoClipsExpand").addEventListener("click", () => toggleExpand());
   backdrop.addEventListener("click", () => {
     // Backdrop click ignored while editing — protects in-progress edits.
     if (!editingId) close();
@@ -1058,6 +1062,7 @@ export function open(source, callbacks = {}) {
   singleClipMode = false;
   editorTab = callbacks.captionsTab ? "subtitles" : "clip";
   optionsSubtab = "style";
+  expanded = false;
   onUseCallback = typeof callbacks.onUseClips === "function" ? callbacks.onUseClips : null;
   onSaveCallback = typeof callbacks.onSaveClips === "function" ? callbacks.onSaveClips : null;
 
@@ -1107,11 +1112,31 @@ export function open(source, callbacks = {}) {
   modal.classList.toggle("is-single-clip", singleClipMode);
   modal.setAttribute("aria-hidden", "false");
   document.body.classList.add("has-modal");
+  applyExpanded();
 
   if (callbacks.startAddClip) {
     addClip(); // sets draft on a fresh clip + renders the editor
   } else {
     render();
+  }
+}
+
+// Toggle the modal between its default sizing and a near-fullscreen surface.
+function toggleExpand() {
+  expanded = !expanded;
+  applyExpanded();
+}
+
+function applyExpanded() {
+  if (!modal) return;
+  modal.classList.toggle("is-expanded", expanded);
+  const btn = document.getElementById("videoClipsExpand");
+  if (btn) {
+    const icon = btn.querySelector("i");
+    if (icon) icon.className = expanded ? "ap-icon-minimize" : "ap-icon-maximize";
+    const label = expanded ? "Exit fullscreen" : "Expand to fullscreen";
+    btn.setAttribute("aria-label", label);
+    btn.title = expanded ? "Collapse" : "Expand";
   }
 }
 
@@ -1124,6 +1149,8 @@ function close() {
   }
   modal.classList.remove("open");
   modal.classList.remove("is-single-clip");
+  modal.classList.remove("is-expanded");
+  expanded = false;
   backdrop.classList.remove("open");
   backdrop.hidden = true;
   modal.setAttribute("aria-hidden", "true");
