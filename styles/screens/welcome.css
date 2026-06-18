@@ -213,13 +213,6 @@
   width: 28px;
   height: 28px;
   flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 160ms var(--app-ease-out);
-}
-
-.recap__id:hover .recap__name-edit,
-.recap__name-edit:focus-visible {
-  opacity: 1;
 }
 
 .recap__meta {
@@ -921,11 +914,14 @@
 /* ── Edit mode ────────────────────────────────────────────────────────── */
 /* Editable strategy chips — DS close button + an inline add control. */
 .recap__chips--edit {
-  align-items: center;
+  align-items: flex-start;
   gap: var(--ref-spacing-xs);
 }
 
 .recap__chip-add {
+  /* Always break to its own line so the input stays left-aligned under the
+     chips, regardless of how the chips above wrap. */
+  flex-basis: 100%;
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
@@ -983,37 +979,14 @@
   color: var(--ref-color-red-100);
 }
 
-.recap__add-link {
+/* "Add link" / "Add line" — DS button (.ap-button transparent blue),
+   left-aligned under its row, matching the "Add colour" affordance. */
+.recap__add-row {
   align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border: 1px dashed var(--app-border);
-  border-radius: var(--app-radius-lg);
-  background: var(--app-surface);
-  color: var(--ref-color-grey-80);
-  font-family: inherit;
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  cursor: pointer;
-  transition:
-    border-color 160ms var(--app-ease-out),
-    color 160ms var(--app-ease-out);
-}
-
-.recap__add-link i {
-  font-size: var(--sys-icon-css-sm);
-}
-
-.recap__add-link:hover {
-  border-color: var(--ref-color-orange-100);
-  color: var(--ref-color-orange-100);
 }
 
 /* ── Per-section edit affordance ──────────────────────────────────────── */
-/* Each panel carries a hover-reveal pencil in its head; while editing it
+/* Each panel carries an always-visible pencil in its head; while editing it
    swaps for Cancel (×) / Save (✓), and every other panel's pencil hides so
    the user finishes one edit before starting another. */
 .recap__panel-edit,
@@ -1024,13 +997,6 @@
 .recap__panel-edit {
   width: 28px;
   height: 28px;
-  opacity: 0;
-  transition: opacity 160ms var(--app-ease-out);
-}
-
-.recap__panel:hover .recap__panel-edit,
-.recap__panel:focus-within .recap__panel-edit {
-  opacity: 1;
 }
 
 .recap__panel-actions {
@@ -1049,20 +1015,10 @@
   display: none;
 }
 
-/* Panels are flat by default; the one being edited lifts with Shadow/Low so
-   it reads as the active surface (neutral grey border, not an alert state). */
+/* The panel being edited stays flat (no elevation) — a slightly stronger
+   neutral border is the only active-state cue. */
 .recap__panel.is-editing {
-  box-shadow: var(--app-shadow-low);
   border-color: var(--ref-color-grey-20);
-}
-
-/* Touch devices have no hover — keep the pencils permanently visible
-   (suppressed mid-edit by the .is-editing display:none rule above). */
-@media (hover: none) {
-  .recap__panel-edit,
-  .recap__name-edit {
-    opacity: 1;
-  }
 }
 
 /* Rail drops below the content and goes horizontal on narrow viewports. */

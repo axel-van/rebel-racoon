@@ -6,7 +6,7 @@
 
 import { navigate } from "../router.js?v=30";
 import { getDraft, isAnalysisReady, save, patchDraft, restoreDraft } from "../context-builder.js?v=81";
-import { mount } from "../playbook-view.js?v=8";
+import { mount } from "../playbook-view.js?v=11";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
 
 const WELCOME_ALT_KEY = "welcomeAltSessionId";
@@ -77,7 +77,7 @@ export function renderWelcomeAltRecap(_params, target) {
         onSubmit: (name) => patchDraft(sid, { name }),
       });
     },
-    editHint: "This Playbook is yours to shape. Hover a section and hit the pencil to edit it — then jump in.",
+    editHint: "This Playbook is yours to shape. Hit the pencil on any section to edit it — then jump in.",
     footer: () =>
       integrated
         ? `<button type="button" class="ap-button primary orange" data-welcome-done><span>Save and continue</span></button>`

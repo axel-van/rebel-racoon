@@ -236,11 +236,11 @@ export function snapshotEditable(d) {
 
 function editActionButtons() {
   return `
-    <button type="button" class="ap-icon-button transparent recap__edit-cancel" data-recap-cancel title="Cancel" aria-label="Cancel changes">
-      <i class="ap-icon-close"></i>
+    <button type="button" class="ap-button ghost grey recap__edit-cancel" data-recap-cancel>
+      <span>Cancel</span>
     </button>
-    <button type="button" class="ap-icon-button stroked green recap__edit-save" data-recap-save title="Save" aria-label="Save changes">
-      <i class="ap-icon-check"></i>
+    <button type="button" class="ap-button primary blue recap__edit-save" data-recap-save>
+      <i class="ap-icon-check"></i><span>Save changes</span>
     </button>
   `;
 }
@@ -384,7 +384,7 @@ function renderLineEditor(field, values, placeholder) {
     .join("");
   return `
     <div class="recap__line-list">${rows}</div>
-    <button type="button" class="recap__add-link" data-recap-line-add="${field}">
+    <button type="button" class="ap-button ghost blue recap__add-row" data-recap-line-add="${field}">
       <i class="ap-icon-plus"></i><span>Add line</span>
     </button>
   `;
@@ -421,7 +421,7 @@ function renderCtaEditor(data) {
     .join("");
   return `
     <div class="recap__cta-edit-list">${rows}</div>
-    <button type="button" class="recap__add-link" data-recap-cta-add>
+    <button type="button" class="ap-button ghost blue recap__add-row" data-recap-cta-add>
       <i class="ap-icon-plus"></i><span>Add link</span>
     </button>
   `;
@@ -551,7 +551,7 @@ function renderBrandPanel(data, edit) {
       renderRow(
         "Colours",
         `<div class="recap__colors" data-recap-colors>${colorRows}</div>
-         <button type="button" class="ap-button transparent blue recap__color-add" data-recap-color-add>
+         <button type="button" class="ap-button ghost blue recap__color-add" data-recap-color-add>
            <i class="ap-icon-plus"></i><span>Add colour</span>
          </button>`,
       ),

@@ -8,7 +8,7 @@ import { navigate } from "../router.js?v=30";
 import { escapeHtml as esc } from "../utils.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=99";
 import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=29";
-import { mount, snapshotEditable } from "../playbook-view.js?v=8";
+import { mount, snapshotEditable } from "../playbook-view.js?v=11";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";
 
@@ -93,7 +93,7 @@ export function renderPlaybook(params, target) {
     },
     revert: (snapshot) => updateContext(id, snapshot),
     showTop: false,
-    editHint: "Hover a section and hit the pencil to edit it — your changes save as you go.",
+    editHint: "Hit the pencil on any section to edit it — your changes save as you go.",
     // Identity-header action bar (Start a chat / Delete) + name pencil.
     headerActions: () => HEADER_ACTIONS,
     onEditName,
