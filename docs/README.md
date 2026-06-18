@@ -10,14 +10,15 @@ Point d'entrée pour la documentation du proto Archie. **Toute la doc qui reste 
 
 Documentation qui décrit l'état actuel du code. À maintenir à jour quand le code évolue.
 
-| Document                                                   | Sujet                                                                           |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| [`reference/ARCHITECTURE.md`](reference/ARCHITECTURE.md)   | Architecture du proto, lifecycle, source layout, patterns de fichiers           |
-| [`reference/ROUTES.md`](reference/ROUTES.md)               | Route table, handoffs cross-routes, URL state hash query                        |
-| [`reference/STORES.md`](reference/STORES.md)               | Stores : pattern de base, catalogue, persistence, invariants, singleton warning |
-| [`reference/DESIGN-SYSTEM.md`](reference/DESIGN-SYSTEM.md) | Workflow DS obligatoire, tokens, composants `.ap-*`, MCP `ds-css`               |
-| [`reference/SHELL-LAYOUT.md`](reference/SHELL-LAYOUT.md)   | Règles right panel / status-card / sidebar (collapsed/expanded) + tailles panel |
-| [`reference/GLOSSARY.md`](reference/GLOSSARY.md)           | Vocabulaire produit, pipeline, ambiguïtés (Playbook ↔ Context)                  |
+| Document                                                               | Sujet                                                                                   |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [`reference/ARCHITECTURE.md`](reference/ARCHITECTURE.md)               | Architecture du proto, lifecycle, source layout, patterns de fichiers                   |
+| [`reference/ROUTES.md`](reference/ROUTES.md)                           | Route table, handoffs cross-routes, URL state hash query                                |
+| [`reference/STORES.md`](reference/STORES.md)                           | Stores : pattern de base, catalogue, persistence, invariants, singleton warning         |
+| [`reference/DESIGN-SYSTEM.md`](reference/DESIGN-SYSTEM.md)             | Workflow DS obligatoire, tokens, composants `.ap-*`, MCP `ds-css`                       |
+| [`reference/PANEL-SIDEBAR-RULES.md`](reference/PANEL-SIDEBAR-RULES.md) | **Règles simples v1** sidebar + right panel (tailles & comportements), hors status-card |
+| [`reference/SHELL-LAYOUT.md`](reference/SHELL-LAYOUT.md)               | Détail technique complet : right panel / status-card / sidebar + formules de tailles    |
+| [`reference/GLOSSARY.md`](reference/GLOSSARY.md)                       | Vocabulaire produit, pipeline, ambiguïtés (Playbook ↔ Context)                          |
 
 ---
 
@@ -41,16 +42,17 @@ Documentation qui décrit l'état actuel du code. À maintenir à jour quand le 
 
 ## 🗺️ Comment naviguer
 
-| Tu cherches…                                            | Va voir                                                      |
-| ------------------------------------------------------- | ------------------------------------------------------------ |
-| Comment fonctionne le proto en général                  | [`reference/ARCHITECTURE.md`](reference/ARCHITECTURE.md)     |
-| Comment ajouter une route / un écran                    | [`reference/ROUTES.md`](reference/ROUTES.md)                 |
-| Comment ajouter / modifier un store                     | [`reference/STORES.md`](reference/STORES.md)                 |
-| Comment poser une couleur / un spacing                  | [`reference/DESIGN-SYSTEM.md`](reference/DESIGN-SYSTEM.md)   |
-| Que veut dire "Playbook" / "Context" / "Idea" / "Draft" | [`reference/GLOSSARY.md`](reference/GLOSSARY.md)             |
-| Différences entre la prod Studio et le proto            | [`audits/PROD-VS-PROTOTYPE.md`](audits/PROD-VS-PROTOTYPE.md) |
-| Quels changements appliquer côté prod                   | [`audits/PROD-CHANGES.md`](audits/PROD-CHANGES.md)           |
-| Que dire / pas dire dans les copy                       | [`copy/copy-principles.md`](copy/copy-principles.md)         |
+| Tu cherches…                                            | Va voir                                                                |
+| ------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Comment fonctionne le proto en général                  | [`reference/ARCHITECTURE.md`](reference/ARCHITECTURE.md)               |
+| Comment ajouter une route / un écran                    | [`reference/ROUTES.md`](reference/ROUTES.md)                           |
+| Comment ajouter / modifier un store                     | [`reference/STORES.md`](reference/STORES.md)                           |
+| Comment poser une couleur / un spacing                  | [`reference/DESIGN-SYSTEM.md`](reference/DESIGN-SYSTEM.md)             |
+| Comment se comportent sidebar + right panel (v1)        | [`reference/PANEL-SIDEBAR-RULES.md`](reference/PANEL-SIDEBAR-RULES.md) |
+| Que veut dire "Playbook" / "Context" / "Idea" / "Draft" | [`reference/GLOSSARY.md`](reference/GLOSSARY.md)                       |
+| Différences entre la prod Studio et le proto            | [`audits/PROD-VS-PROTOTYPE.md`](audits/PROD-VS-PROTOTYPE.md)           |
+| Quels changements appliquer côté prod                   | [`audits/PROD-CHANGES.md`](audits/PROD-CHANGES.md)                     |
+| Que dire / pas dire dans les copy                       | [`copy/copy-principles.md`](copy/copy-principles.md)                   |
 
 ---
 
