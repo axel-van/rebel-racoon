@@ -68,14 +68,21 @@
   background: var(--app-vc-surface);
 }
 
+/* VEED order: controls panel left · preview center · transcript right. */
 .cap-ed__left {
-  border-right: 1px solid var(--app-vc-border);
+  order: 3;
+  border-left: 1px solid var(--app-vc-border);
   padding: var(--ref-spacing-sm);
   gap: var(--ref-spacing-xs);
 }
 
+.cap-ed__center {
+  order: 2;
+}
+
 .cap-ed__right {
-  border-left: 1px solid var(--app-vc-border);
+  order: 1;
+  border-right: 1px solid var(--app-vc-border);
 }
 
 /* ── Left: transcript ─────────────────────────────────────────────── */

@@ -23,7 +23,7 @@ import { escapeHtml } from "../utils.js?v=20";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { FORMATS, NETWORK_FORMATS } from "../clip-formats.js?v=1";
 import { iconFor } from "../file-kinds.js?v=20";
-import { DEFAULT_PRESET, presetClass, buildCaptions, captionInnerHTML, videoForClip } from "../clip-captions.js?v=5";
+import { DEFAULT_PRESET, buildCaptions, videoForClip } from "../clip-captions.js?v=5";
 
 const MODAL_ID = "videoClips";
 const MIN_CLIP = 5;
@@ -78,6 +78,9 @@ let draftPlayhead = 0;
 // caption editor). Tabs keep subtitle editing inside the modal instead of a
 // separate surface.
 let editorTab = "clip";
+// Which sub-panel the Subtitles options show — "style" (Presets/Font/Effects)
+// or "transcript". The stage + timeline stay put; only this panel swaps.
+let optionsSubtab = "style";
 let captionMounted = false;
 
 // Drag state for the pro trimmer (null when not dragging).
@@ -267,20 +270,70 @@ function clipCardHTML(clip) {
 
 // ── Render: editor pane (full surface, replaces the card while editing) ─
 
+// Left options panel content — the ONLY part of the editor that swaps between
+// tabs. Clip → title/summary; Subtitles → Style / Transcript sub-tabs. The
+// rail, stage (preview) and bottom timeline stay mounted across the switch.
+function optionsHTML() {
+  if (!draft) return "";
+
+  if (editorTab === "subtitles") {
+    return `
+      <div class="vc-subtabs" role="tablist">
+        <button type="button" class="vc-subtab${optionsSubtab === "style" ? " is-on" : ""}" data-vc-subtab="style" role="tab" aria-selected="${optionsSubtab === "style"}">Style</button>
+        <button type="button" class="vc-subtab${optionsSubtab === "transcript" ? " is-on" : ""}" data-vc-subtab="transcript" role="tab" aria-selected="${optionsSubtab === "transcript"}">Transcript</button>
+      </div>
+      <div class="vc-subpanel vc-subpanel--style"${optionsSubtab === "style" ? "" : " hidden"}>
+        <div class="cap-ed__tabs" role="tablist">
+          <button type="button" class="cap-ed__tab" data-ce-tab="presets">Presets</button>
+          <button type="button" class="cap-ed__tab" data-ce-tab="font">Font</button>
+          <button type="button" class="cap-ed__tab" data-ce-tab="effects">Effects</button>
+        </div>
+        <div class="cap-ed__tabpanel" data-ce-tabpanel></div>
+      </div>
+      <div class="vc-subpanel vc-subpanel--transcript"${optionsSubtab === "transcript" ? "" : " hidden"}>
+        <div class="cap-ed__left-head">
+          <span class="cap-ed-group-label">Transcript</span>
+          <span class="cap-ed__meta" data-ce-reconcile></span>
+        </div>
+        <button type="button" class="cap-ed__cleanup-btn" data-ce="open-cleanup" aria-pressed="false">
+          <i class="ap-icon-sparkles"></i><span>Speech cleanup</span>
+          <span class="cap-ed__cleanup-count" data-ce-cleanup-count></span>
+        </button>
+        <div class="cap-ed__cleanup-bar" data-ce-cleanup-bar hidden></div>
+        <div class="cap-ed__hint" data-ce-hint>Click to seek · double-click to edit</div>
+        <div class="cap-ed__transcript" data-ce-transcript></div>
+      </div>`;
+  }
+
+  // Clip tab — title + summary.
+  return `
+    <div class="vc-panel__eyebrow"><span class="vc-editor__head-dot"></span>Editing clip · <span data-vc-editor-time-dur>${fmtTime(draft.end - draft.start)}</span></div>
+    <div class="vc-editor__field">
+      <label class="vc-editor__label">Clip title</label>
+      <div class="vc-editor__title-input vc-edit" contenteditable="true" data-vc-edit-field="title" data-placeholder="What this moment is about…">${escapeHtml(draft.title || "")}</div>
+    </div>
+    <div class="vc-editor__field">
+      <label class="vc-editor__label">Summary</label>
+      <div class="vc-editor__textarea vc-edit" contenteditable="true" data-vc-edit-field="summary" data-placeholder="What's in this moment — context I should remember when drafting…">${escapeHtml(draft.summary || "")}</div>
+    </div>`;
+}
+
 function editorPaneHTML() {
   if (!draft) return "";
   const duration = currentSource?.durationSec || 1;
-
-  // Clip-tab caption teaser — a static preview of the first subtitle segment
-  // (the editor's caption times are clip-relative, so don't track the
-  // clip-tab's absolute playhead here). Full editing lives in the Subtitles tab.
-  const caps = draft.captions || [];
-  const activeSeg = caps[0] || { text: "", emph: [] };
 
   // Pro-trim filmstrip — flat dark frames (no gradients). The thin dividers
   // (CSS) read as a scrubber strip; alternating tones come from CSS :nth-child.
   let thumbs = "";
   for (let i = 0; i < 24; i += 1) thumbs += `<span class="vc-protrim__thumb"></span>`;
+
+  // Faux audio waveform under the filmstrip — deterministic bar heights so the
+  // shape is stable per render (no real audio analysis in the prototype).
+  let waveBars = "";
+  for (let i = 0; i < 96; i += 1) {
+    const v = Math.abs(Math.sin(i * 0.6) * 0.5 + Math.sin(i * 0.21 + 1.3) * 0.35 + Math.sin(i * 1.7) * 0.15);
+    waveBars += `<span class="vc-wave__bar" style="height: ${Math.round(14 + v * 82)}%"></span>`;
+  }
 
   // Ruler ticks (4–12 evenly spaced).
   const tickCount = Math.min(12, Math.max(4, Math.round(duration / 120)));
@@ -302,108 +355,53 @@ function editorPaneHTML() {
 
   const cropRatio = (FORMATS[draft.format] || FORMATS["16:9"]).ratio;
 
-  // Edit-mode CTAs (Delete / Cancel / Save changes) live in the editor
-  // header in multi-clip mode (the modal footer is taken by the bulk
-  // "Draft posts from N clips" CTA). In single-clip mode the bulk
-  // footer is empty, so the CTAs render there instead — see
-  // renderFooter. Skip them here in that case to avoid duplication.
-  const headerCtas = singleClipMode
-    ? ""
-    : `
-        <button type="button" class="ap-button ghost red" data-vc-action="delete-clip" title="Delete this clip">
-          <i class="ap-icon-trash"></i><span>Delete</span>
-        </button>
-        <button type="button" class="ap-button ghost grey" data-vc-action="cancel-edit">Cancel</button>
-        <button type="button" class="ap-button primary orange" data-vc-action="save-edit">
-          <i class="ap-icon-check"></i><span>Save changes</span>
-        </button>
-      `;
-
-  // Tab bar — switches the editor body between the clip (trim / preview /
-  // details) and the embedded subtitle editor.
-  const tabsBar = `
-    <div class="vc-editor__tabs" role="tablist">
-      <button type="button" class="vc-editor__tab${editorTab === "clip" ? " is-on" : ""}" data-vc-action="tab-clip" role="tab" aria-selected="${editorTab === "clip"}">
+  // VEED-style vertical tool rail — replaces the old top tabs. Switches the
+  // editor between the Clip (trim) and Subtitles sections.
+  const railHTML = `
+    <nav class="vc-rail" role="tablist" aria-label="Editor sections">
+      <button type="button" class="vc-rail__item${editorTab === "clip" ? " is-on" : ""}" data-vc-action="tab-clip" role="tab" aria-selected="${editorTab === "clip"}">
         <i class="ap-icon-video" aria-hidden="true"></i><span>Clip</span>
       </button>
-      <button type="button" class="vc-editor__tab${editorTab === "subtitles" ? " is-on" : ""}" data-vc-action="tab-subtitles" role="tab" aria-selected="${editorTab === "subtitles"}">
+      <button type="button" class="vc-rail__item${editorTab === "subtitles" ? " is-on" : ""}" data-vc-action="tab-subtitles" role="tab" aria-selected="${editorTab === "subtitles"}">
         <i class="ap-icon-closed-captions" aria-hidden="true"></i><span>Subtitles</span>
       </button>
-    </div>`;
+    </nav>`;
 
-  // Subtitles tab — the embedded caption editor mounts into the host (see
-  // syncCaptionMount). Nothing else renders in the editor body.
-  if (editorTab === "subtitles") {
-    return `
-      <div class="vc-editor vc-editor--captions" data-vc-editor data-vc-clip="${draft.id}">
-        ${tabsBar}
-        <div class="vc-caption-host" data-vc-caption-host></div>
-      </div>`;
-  }
+  // Persistent shell — rail · options(swap) · stage(preview) · timeline. Only
+  // the [data-vc-options] panel changes between Clip and Subtitles; the rail,
+  // stage and bottom timeline stay mounted. The stage carries the caption
+  // editor's data-ce-* hooks so the embedded editor renders its caption box on
+  // this same preview (no second preview).
+  const handles = ["nw", "n", "ne", "e", "se", "s", "sw", "w"]
+    .map((d) => `<span class="cap-ed-handle cap-ed-handle--${d}" data-ce-resize="${d}"></span>`)
+    .join("");
 
   return `
-    <div class="vc-editor" data-vc-editor data-vc-clip="${draft.id}">
-      ${tabsBar}
-      <header class="vc-editor__head">
-        <div class="vc-editor__head-eyebrow"><span class="vc-editor__head-dot"></span>Editing clip</div>
-        <div class="vc-editor__head-time" data-vc-editor-time>
-          <span data-vc-editor-time-start>${fmtTime(draft.start)}</span>
-          <span>→</span>
-          <span data-vc-editor-time-end>${fmtTime(draft.end)}</span>
-          <span class="vc-editor__head-dur" data-vc-editor-time-dur>${fmtTime(draft.end - draft.start)}</span>
-        </div>
-        <span class="vc-editor__head-spacer"></span>
-        ${headerCtas}
-      </header>
+    <div class="vc-editor vc-editor--veed" data-vc-editor data-vc-clip="${draft.id}">
+      ${railHTML}
 
-      <div class="vc-editor__top">
-        <div class="vc-editor__preview-col">
-          <div class="vc-preview">
-            <video class="vc-preview__video" src="${videoForClip(draft)}" autoplay muted loop playsinline></video>
-            <div class="vc-preview__crop" data-vc-crop style="aspect-ratio: ${cropRatio}"></div>
-            <div class="vc-preview__hud-tr" data-vc-editor-playtime>${fmtTime(draftPlayhead)}</div>
-            <div class="vc-preview__hud-bl" data-vc-editor-clipdur>${fmtTime(draft.end - draft.start)} · CLIP</div>
-            <div class="vc-preview__hud-br">${escapeHtml((draft.network || "").toUpperCase())} · ${escapeHtml((FORMATS[draft.format] || FORMATS["16:9"]).tag)}</div>
-            <div class="vc-preview__cap-overlay vc-cap ${presetClass(draft.captionStyle)}" data-cap-overlay ${draft.captionsOn ? "" : "hidden"}>
-              <div class="vc-cap__line" data-cap-surface="overlay" data-cap-i="0">${captionInnerHTML(activeSeg)}</div>
+      <aside class="vc-panel vc-options" data-vc-options>${optionsHTML()}</aside>
+
+      <main class="vc-stage">
+        <div class="vc-preview">
+          <video class="vc-preview__video cap-ed__video" data-ce-video muted loop playsinline></video>
+          <div class="vc-preview__crop" data-vc-crop data-ce-stage style="aspect-ratio: ${cropRatio}">
+            <div class="cap-ed__deadzones" data-ce-deadzones></div>
+            <div class="cap-ed__playicon" data-ce-playicon>
+              <svg viewBox="0 0 24 24" width="34" height="34"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
             </div>
-          </div>
-          <div class="vc-editor__transport">
-            <button class="vc-editor__transport-btn" data-vc-action="seek-start" title="Jump to clip start">
-              <svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 6h2v12H6V6zm3.5 6l8.5 6V6l-8.5 6z" fill="currentColor"/></svg>
-            </button>
-            <button class="vc-editor__transport-btn vc-editor__transport-btn--play" title="Play preview">
-              <svg viewBox="0 0 24 24" width="14" height="14"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-            </button>
-            <button class="vc-editor__transport-btn" data-vc-action="seek-end" title="Jump to clip end">
-              <svg viewBox="0 0 24 24" width="14" height="14"><path d="M16 6h2v12h-2V6zm-2.5 6L5 6v12l8.5-6z" fill="currentColor"/></svg>
-            </button>
-            <span class="vc-editor__transport-time">
-              <span data-vc-editor-transport-time>${fmtTime(draftPlayhead)}</span>
-              <span class="vc-editor__transport-dur"> / ${fmtTime(duration)}</span>
-            </span>
-            <span class="vc-editor__transport-set">
-              <button class="vc-editor__set-btn" data-vc-action="set-in">Set IN</button>
-              <button class="vc-editor__set-btn" data-vc-action="set-out">Set OUT</button>
-            </span>
+            <div class="cap-ed-box" data-ce-box></div>
+            <div class="cap-ed-frame" data-ce-frame>${handles}</div>
           </div>
         </div>
-
-        <div class="vc-editor__form">
-          <div class="vc-editor__field">
-            <label class="vc-editor__label">Clip title</label>
-            <div class="vc-editor__title-input vc-edit" contenteditable="true" data-vc-edit-field="title" data-placeholder="What this moment is about…">${escapeHtml(draft.title || "")}</div>
-          </div>
-          <div class="vc-editor__field">
-            <label class="vc-editor__label">Summary</label>
-            <div class="vc-editor__textarea vc-edit" contenteditable="true" data-vc-edit-field="summary" data-placeholder="What's in this moment — context I should remember when drafting…">${escapeHtml(draft.summary || "")}</div>
-          </div>
-          <div class="vc-editor__field">
-            <label class="vc-editor__label"><i class="ap-icon-sparkles"></i>Why this works</label>
-            <div class="vc-editor__textarea vc-editor__textarea--small vc-edit" contenteditable="true" data-vc-edit-field="why" data-placeholder="The angle that makes this clip post-worthy…">${escapeHtml(draft.why || "")}</div>
-          </div>
+        <div class="cap-ed__transport vc-stage__transport">
+          <button type="button" class="cap-ed__icon-btn" data-ce="playpause" aria-label="Play / pause">
+            <svg viewBox="0 0 24 24" width="16" height="16" data-ce-playglyph><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+          </button>
+          <span class="cap-ed__time"><span data-ce-cur>0:00</span> / <span data-ce-dur>0:00</span></span>
+          <div class="cap-ed__scrub" data-ce-scrub><div class="cap-ed__scrub-fill" data-ce-scrub-fill></div></div>
         </div>
-      </div>
+      </main>
 
       <div class="vc-editor__timeline">
         <div class="vc-editor__timeline-head">
@@ -416,6 +414,10 @@ function editorPaneHTML() {
             <span class="vc-stepper">
               <span class="vc-stepper__label">Out</span>
               <input type="text" class="vc-stepper__input" data-vc-stepper="end" value="${fmtTime(draft.end)}" />
+            </span>
+            <span class="vc-editor__timeline-set">
+              <button type="button" class="vc-editor__set-btn" data-vc-action="set-in">Set IN</button>
+              <button type="button" class="vc-editor__set-btn" data-vc-action="set-out">Set OUT</button>
             </span>
             <span class="vc-editor__timeline-hint">Drag handles · click track to scrub</span>
           </div>
@@ -442,6 +444,11 @@ function editorPaneHTML() {
               <span class="vc-protrim__playhead-line"></span>
             </div>
           </div>
+          <div class="vc-wave" aria-hidden="true">
+            <div class="vc-wave__bars">${waveBars}</div>
+            <div class="vc-protrim__dim vc-protrim__dim--l" style="width: ${leftPct}%"></div>
+            <div class="vc-protrim__dim vc-protrim__dim--r" style="left: ${leftPct + widthPct}%; right: 0"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -450,59 +457,40 @@ function editorPaneHTML() {
 
 // ── Render: full body ────────────────────────────────────────────────
 
-function isCaptionsFocus() {
-  return !!editingId && editorTab === "subtitles";
-}
-
 function renderBody() {
   if (!bodyEl) return;
 
-  // Subtitles focus: the editor body hands over entirely to the embedded
-  // caption editor (no browse grid, no clip form). Works the same whether we
-  // got here from single-clip mode or the multi-clip floating editor.
-  if (isCaptionsFocus()) {
-    bodyEl.innerHTML = `<div class="vc-rows__cell vc-rows__cell--captions" data-vc-floating>${editorPaneHTML()}</div>`;
+  // While editing (either tab), the persistent VEED editor takes over the whole
+  // body so the rail · stage · timeline get full height. No browse grid — you
+  // edit one clip at a time. The embedded caption editor renders into this same
+  // shell (its caption box on the shared preview, controls in the left panel).
+  if (editingId) {
+    bodyEl.innerHTML = `<div class="vc-rows__cell vc-rows__cell--captions vc-rows__cell--solo is-editing" data-vc-floating>${editorPaneHTML()}</div>`;
     return;
   }
 
-  // Single-clip mode: render ONLY the editor pane. No browse grid, no
-  // dimmed siblings — the user is editing one clip in isolation.
+  // Single-clip mode with no active edit: nothing to browse.
   if (singleClipMode) {
-    bodyEl.innerHTML = editingId
-      ? `<div class="vc-rows__cell vc-rows__cell--floating is-editing vc-rows__cell--solo" data-vc-floating>${editorPaneHTML()}</div>`
-      : "";
+    bodyEl.innerHTML = "";
     return;
   }
 
-  // Editor pane (sticky, only when in edit mode).
-  const editorBlock = editingId
-    ? `<div class="vc-rows__cell vc-rows__cell--floating is-editing" data-vc-floating>${editorPaneHTML()}</div>`
-    : "";
-
-  // Grid cards. The currently-editing clip stays in the DOM but is dimmed.
-  const cards = clips
-    .map((c) => {
-      const cls = "vc-rows__cell" + (editingId === c.id ? " is-editing-shadow" : "");
-      return `<div class="${cls}" data-vc-cell="${c.id}">${clipCardHTML(c)}</div>`;
-    })
-    .join("");
-
-  bodyEl.innerHTML = `
-    ${editorBlock}
-    <div class="vc-rows">${cards}</div>
-  `;
+  // Browse grid of clip cards.
+  const cards = clips.map((c) => `<div class="vc-rows__cell" data-vc-cell="${c.id}">${clipCardHTML(c)}</div>`).join("");
+  bodyEl.innerHTML = `<div class="vc-rows">${cards}</div>`;
 }
 
 function render() {
-  // Single-clip mode + subtitles focus strip the multi-clip strip timeline.
-  // The footer switches to the edit CTAs (Delete / Cancel / Save changes)
-  // instead of the "Draft posts from N clips" bulk action.
-  const captionsFocus = isCaptionsFocus();
+  // While editing (single or multi-clip, either tab), the VEED editor carries
+  // its own bottom timeline, so the multi-clip strip timeline is hidden and the
+  // footer shows the edit CTAs (Delete / Cancel / Save) rather than the bulk
+  // action. The body flex-fills so the editor grid gets a height.
+  const editing = !!editingId;
   const wrapTimeline = document.getElementById("videoClipsTimeline");
-  if (wrapTimeline) wrapTimeline.hidden = singleClipMode || captionsFocus;
-  if (bodyEl) bodyEl.classList.toggle("is-captions", captionsFocus);
+  if (wrapTimeline) wrapTimeline.hidden = singleClipMode || editing;
+  if (bodyEl) bodyEl.classList.toggle("is-captions", editing);
   if (footEl) footEl.hidden = false;
-  if (singleClipMode || captionsFocus) renderFooterEdit();
+  if (editing) renderFooterEdit();
   else {
     renderTimeline();
     renderFooter();
@@ -511,16 +499,39 @@ function render() {
   syncCaptionMount();
 }
 
-// Mount / unmount the embedded caption editor to match the active tab. The
-// editor edits a working copy and reports edits via onChange, which we fold
-// straight into the draft so Save (footer) persists them and Cancel discards.
+// Swap ONLY the left options panel + rail highlight when changing tabs — the
+// rail, stage (preview) and bottom timeline stay mounted, so the video keeps
+// playing in place. The caption editor itself stays mounted across tabs (it
+// owns the shared preview); switching to Subtitles just (re)populates its
+// controls into the freshly-rendered panel.
+function renderOptions() {
+  if (!bodyEl) return;
+  const editor = bodyEl.querySelector("[data-vc-editor]");
+  const panel = bodyEl.querySelector("[data-vc-options]");
+  if (!editor || !panel) return;
+  panel.innerHTML = optionsHTML();
+  editor.classList.toggle("vc-editor--subtitles", editorTab === "subtitles");
+  editor.querySelectorAll(".vc-rail__item").forEach((b) => {
+    const on = b.dataset.vcAction === `tab-${editorTab}`;
+    b.classList.toggle("is-on", on);
+    b.setAttribute("aria-selected", String(on));
+  });
+  if (editorTab === "subtitles") {
+    import("../caption-editor.js?v=15").then(({ refreshControls }) => refreshControls());
+  }
+}
+
+// Mount the embedded caption editor on the persistent editor shell for the
+// whole edit session (both tabs). It renders its caption box on the shared
+// preview and, when the Subtitles options are present, its controls into them.
+// onChange folds edits into the draft so Save persists them and Cancel discards.
 function syncCaptionMount() {
-  const want = isCaptionsFocus();
-  import("../caption-editor.js?v=14").then(({ mount, unmount }) => {
+  const want = !!editingId;
+  import("../caption-editor.js?v=15").then(({ mount, unmount }) => {
     if (want) {
-      const hostEl = bodyEl && bodyEl.querySelector("[data-vc-caption-host]");
-      if (hostEl) {
-        mount(hostEl, draft, currentSource, {
+      const shell = bodyEl && bodyEl.querySelector("[data-vc-editor]");
+      if (shell) {
+        mount(shell, draft, currentSource, {
           onChange: (patch) => {
             if (draft) Object.assign(draft, patch);
           },
@@ -537,6 +548,29 @@ function syncCaptionMount() {
 // ── Event delegation ─────────────────────────────────────────────────
 
 function onModalClick(event) {
+  // Subtitles options sub-tab (Style / Transcript) — a light toggle that only
+  // shows/hides the two sub-panels, keeping the caption-editor hooks intact.
+  const subtabEl = event.target.closest("[data-vc-subtab]");
+  if (subtabEl) {
+    const v = subtabEl.dataset.vcSubtab;
+    if (optionsSubtab !== v) {
+      optionsSubtab = v;
+      const panel = bodyEl && bodyEl.querySelector("[data-vc-options]");
+      if (panel) {
+        panel.querySelectorAll(".vc-subtab").forEach((b) => {
+          const on = b.dataset.vcSubtab === v;
+          b.classList.toggle("is-on", on);
+          b.setAttribute("aria-selected", String(on));
+        });
+        const styleP = panel.querySelector(".vc-subpanel--style");
+        const transP = panel.querySelector(".vc-subpanel--transcript");
+        if (styleP) styleP.hidden = v !== "style";
+        if (transP) transP.hidden = v !== "transcript";
+      }
+    }
+    return;
+  }
+
   const actionEl = event.target.closest("[data-vc-action]");
   if (!actionEl) return;
   const action = actionEl.dataset.vcAction;
@@ -612,7 +646,7 @@ function onModalClick(event) {
   if (action === "tab-clip") {
     if (editorTab !== "clip") {
       editorTab = "clip";
-      render();
+      renderOptions();
     }
     return;
   }
@@ -620,7 +654,7 @@ function onModalClick(event) {
   if (action === "tab-subtitles") {
     if (editorTab !== "subtitles") {
       editorTab = "subtitles";
-      render();
+      renderOptions();
     }
     return;
   }
@@ -867,6 +901,7 @@ function enterEdit(clipId) {
   ensureDraftCaptions(draft);
   draftPlayhead = clip.start;
   editorTab = "clip";
+  optionsSubtab = "style";
   render();
   // Reset the body's scroll position so the sticky editor sits at the top
   // of the visible area. NOT scrollIntoView — that bubbles up the ancestor
@@ -1026,6 +1061,7 @@ export function open(source, callbacks = {}) {
   draftPlayhead = 0;
   singleClipMode = false;
   editorTab = callbacks.captionsTab ? "subtitles" : "clip";
+  optionsSubtab = "style";
   onUseCallback = typeof callbacks.onUseClips === "function" ? callbacks.onUseClips : null;
   onSaveCallback = typeof callbacks.onSaveClips === "function" ? callbacks.onSaveClips : null;
 
@@ -1087,7 +1123,7 @@ function close() {
   if (!initialized || !modal?.classList.contains("open")) return;
   // Tear down the embedded caption editor if it's mounted.
   if (captionMounted) {
-    import("../caption-editor.js?v=14").then(({ unmount }) => unmount());
+    import("../caption-editor.js?v=15").then(({ unmount }) => unmount());
     captionMounted = false;
   }
   modal.classList.remove("open");

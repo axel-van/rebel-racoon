@@ -72,7 +72,7 @@ import {
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=24";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=25";
-import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=31";
+import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=35";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=31";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=42";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=6";

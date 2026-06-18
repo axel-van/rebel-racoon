@@ -46,7 +46,7 @@
   /* Sized to the editor's content (the Subtitles 3-pane + the trimmed-down
      Clip preview), not the full 94vh — avoids the big empty gap. Fixed so it
      never resizes between tabs; capped at 92vh on short screens. */
-  height: min(92vh, 760px);
+  height: min(94vh, 840px);
 }
 
 .video-clips-modal.is-single-clip .video-clips-modal__body {
@@ -69,19 +69,6 @@
   /* Symmetric vertical padding so the title + source row sits vertically
      centered in the header bar. */
   padding: var(--ref-spacing-sm) 64px var(--ref-spacing-sm) var(--ref-spacing-md);
-}
-
-.video-clips-modal.is-single-clip .vc-rows__cell--floating {
-  /* No sticky behaviour, no bg lift, no fade trailer — there's only
-     ever this one cell in the body, nothing to scroll over. */
-  position: static;
-  background: transparent;
-  padding: 0;
-  margin: 0;
-}
-
-.video-clips-modal.is-single-clip .vc-rows__cell--floating::after {
-  display: none;
 }
 
 .video-clips-modal.is-single-clip .vc-editor {
@@ -323,34 +310,6 @@
 
 .vc-rows__cell.is-editing {
   grid-column: 1 / -1;
-}
-
-/* Floating editor cell — sticks to the top of the scrollable body. */
-.vc-rows__cell--floating {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--app-vc-surface);
-  padding-bottom: 6px;
-  margin-bottom: 4px;
-}
-
-.vc-rows__cell--floating::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -10px;
-  height: 10px;
-  background: linear-gradient(180deg, var(--app-vc-surface) 0%, transparent 100%);
-  pointer-events: none;
-}
-
-.vc-rows__cell.is-editing-shadow {
-  opacity: 0.32;
-  pointer-events: none;
-  filter: saturate(0.4);
-  transition: opacity 160ms;
 }
 
 @media (max-width: 1080px) {
@@ -664,36 +623,191 @@
 
 .vc-editor {
   background: var(--app-vc-surface);
-  border-radius: var(--app-radius-card);
-  padding: var(--ref-spacing-sm);
   color: var(--app-vc-text);
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-sm);
+  border-radius: var(--app-radius-card);
   box-shadow: var(--app-shadow-popover-lg);
   border: 1px solid var(--app-vc-border);
   margin: var(--ref-spacing-xxs) 0;
+  overflow: hidden;
 }
 
-/* ── Editor tabs (Clip / Subtitles) ──────────────────────────────── */
+/* ── VEED-style editor layout ─────────────────────────────────────
+   rail · details panel · big preview, with a full-width trim timeline
+   across the bottom. */
+.vc-editor--veed {
+  display: grid;
+  grid-template-columns: 72px minmax(220px, 288px) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "rail panel stage"
+    "rail timeline timeline";
+  height: 100%;
+  min-height: 460px;
+}
 
-.vc-editor__tabs {
+/* Tool rail */
+.vc-rail {
+  grid-area: rail;
   display: flex;
+  flex-direction: column;
   gap: var(--ref-spacing-xxs);
-  border-bottom: 1px solid var(--app-vc-border);
-  margin: calc(-1 * var(--ref-spacing-sm)) calc(-1 * var(--ref-spacing-sm)) 0;
-  padding: 0 var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-xxs);
+  background: var(--app-vc-surface-raised);
+  border-right: 1px solid var(--app-vc-border);
 }
 
-.vc-editor__tab {
+.vc-rail__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--app-vc-text-subtle);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  cursor: pointer;
+  transition: color var(--ref-animation-short);
+}
+
+/* Square icon tile — the highlight lives on the icon, label sits below. */
+.vc-rail__item i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--app-radius-button-sm);
+  font-size: var(--sys-icon-css-lg);
+  /* Subtle filled tile so each item reads as a button. */
+  background: var(--app-vc-surface-sunken);
+  border: 1px solid var(--app-vc-border);
+  transition: all var(--ref-animation-short);
+}
+
+.vc-rail__item:hover {
+  color: var(--app-vc-text);
+}
+
+.vc-rail__item:hover i {
+  background: var(--app-vc-hover);
+  border-color: var(--app-vc-border-strong);
+}
+
+.vc-rail__item.is-on {
+  color: var(--app-vc-accent);
+}
+
+/* Active = solid accent fill, white glyph — clearly legible. */
+.vc-rail__item.is-on i {
+  background: var(--app-vc-accent);
+  border-color: var(--app-vc-accent);
+  color: var(--ref-color-white);
+}
+
+/* Details panel */
+.vc-panel {
+  grid-area: panel;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm);
+  border-right: 1px solid var(--app-vc-border);
+}
+
+.vc-panel__eyebrow {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  font-family: inherit;
   font-size: var(--sys-text-style-caption-bold-size);
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-xs);
+  color: var(--app-vc-accent);
+}
+
+/* Stage (preview) */
+.vc-stage {
+  grid-area: stage;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-md);
+}
+
+.vc-stage .vc-preview {
+  width: min(100%, 760px);
+  max-height: 100%;
+}
+
+/* Full-width bottom timeline — flush bar (drop the card border/radius). */
+.vc-editor--veed > .vc-editor__timeline {
+  grid-area: timeline;
+  min-width: 0;
+  border: 0;
+  border-top: 1px solid var(--app-vc-border);
+  border-radius: 0;
+  background: var(--app-vc-surface-raised);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-md) var(--ref-spacing-sm);
+}
+
+/* Set IN/OUT moved into the timeline head, beside the In/Out steppers. */
+.vc-editor__timeline-set {
+  display: inline-flex;
+  gap: var(--ref-spacing-xxs);
+}
+
+/* ── Stage transport (shared play / scrub under the preview) ────────── */
+.vc-stage__transport {
+  width: min(100%, 760px);
+}
+
+/* The crop frame doubles as the caption editor's stage (9:16 export region).
+   It stays click-through onto the video except for the caption box + handles,
+   and reveals the selection frame on hover (the box is dragged/resized here). */
+.vc-preview__crop[data-ce-stage] {
+  pointer-events: none;
+}
+
+.vc-preview__crop[data-ce-stage] .cap-ed-box,
+.vc-preview__crop[data-ce-stage] .cap-ed-handle {
+  pointer-events: auto;
+}
+
+.vc-preview__crop[data-ce-stage]:hover .cap-ed-frame {
+  opacity: 1;
+}
+
+/* ── Left options panel — Subtitles sub-tabs (Style / Transcript) ───── */
+/* For Subtitles the panel hosts the caption controls; drop the panel padding
+   so the sub-tab bar + sub-panels fill the height and manage their own spacing. */
+.vc-editor--subtitles .vc-options {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.vc-subtabs {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--ref-spacing-xs);
+  padding: 0 var(--ref-spacing-sm);
+  border-bottom: 1px solid var(--app-vc-border);
+}
+
+.vc-subtab {
+  flex: 1;
+  font-family: inherit;
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  padding: var(--ref-spacing-xs) 0;
   background: transparent;
   border: 0;
   border-bottom: 2px solid transparent;
@@ -702,46 +816,39 @@
   transition: all var(--ref-animation-short);
 }
 
-.vc-editor__tab:hover {
+.vc-subtab:hover {
   color: var(--app-vc-text);
 }
 
-.vc-editor__tab.is-on {
+.vc-subtab.is-on {
   color: var(--app-vc-text);
   border-bottom-color: var(--app-vc-accent);
 }
 
-/* Subtitles focus — the editor card sheds its chrome and fills the body so
-   the embedded caption editor gets the whole modal body. */
-.vc-editor--captions {
-  padding: 0;
-  margin: 0;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  gap: 0;
-  height: 100%;
-}
-
-.vc-editor--captions .vc-editor__tabs {
-  margin: 0;
-  padding: 0 var(--ref-spacing-sm);
-  background: var(--app-vc-surface-raised);
-  flex-shrink: 0;
-}
-
-.vc-caption-host {
+.vc-subpanel {
   flex: 1;
   min-height: 0;
-}
-
-.video-clips-modal__body.is-captions.ap-dialog-content {
-  padding: 0;
-  gap: 0;
-  overflow: hidden;
   display: flex;
+  flex-direction: column;
 }
 
+.vc-subpanel--transcript {
+  padding: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-xs);
+}
+
+.vc-subpanel[hidden] {
+  display: none;
+}
+
+/* Single-clip body fills with the editor (so the VEED grid gets a height). */
+.video-clips-modal.is-single-clip .video-clips-modal__body,
+.video-clips-modal__body.is-captions.ap-dialog-content {
+  display: flex;
+  overflow: hidden;
+}
+
+.video-clips-modal.is-single-clip .vc-rows__cell--solo,
 .vc-rows__cell--captions {
   flex: 1;
   min-width: 0;
@@ -749,10 +856,11 @@
   display: flex;
 }
 
-.vc-rows__cell--captions .vc-editor--captions {
+.vc-rows__cell--solo .vc-editor,
+.vc-rows__cell--captions .vc-editor {
   flex: 1;
-  display: flex;
-  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
 }
 
 .vc-editor__head {
@@ -836,12 +944,6 @@
   align-items: start;
 }
 
-.vc-editor__preview-col {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-}
-
 .vc-preview {
   position: relative;
   aspect-ratio: 16 / 9;
@@ -879,124 +981,7 @@
   pointer-events: none;
 }
 
-.vc-preview__hud-tr,
-.vc-preview__hud-bl,
-.vc-preview__hud-br {
-  position: absolute;
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-white);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-}
-
-.vc-preview__hud-tr {
-  top: var(--ref-spacing-xs);
-  right: var(--ref-spacing-xs);
-  background: rgba(0, 0, 0, 0.55);
-  padding: 2px var(--ref-spacing-xxs);
-  border-radius: var(--ref-border-radius-sm);
-}
-
-.vc-preview__hud-bl {
-  bottom: var(--ref-spacing-xs);
-  left: var(--ref-spacing-xs);
-}
-
-.vc-preview__hud-br {
-  bottom: var(--ref-spacing-xs);
-  right: var(--ref-spacing-xs);
-  opacity: 0.75;
-}
-
-.vc-preview__center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.vc-preview__play {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--app-radius-circle);
-  background: var(--ref-color-white);
-  color: var(--app-vc-surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-left: 3px;
-  cursor: pointer;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
-  transition: transform var(--ref-animation-short);
-}
-
-.vc-preview__play:hover {
-  transform: scale(1.06);
-}
-
-/* ── Transport bar ─────────────────────────────────────────────── */
-
-.vc-editor__transport {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
-  background: var(--app-vc-surface-raised);
-  border: 1px solid var(--app-vc-border);
-  border-radius: var(--app-radius-button-sm);
-}
-
-.vc-editor__transport-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--app-radius-button-sm);
-  background: transparent;
-  border: 0;
-  color: var(--app-vc-text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all var(--ref-animation-short);
-}
-
-.vc-editor__transport-btn:hover {
-  background: var(--app-vc-hover);
-  color: var(--app-vc-text);
-}
-
-.vc-editor__transport-btn--play {
-  background: var(--app-vc-accent);
-  color: var(--ref-color-white);
-}
-
-.vc-editor__transport-btn--play:hover {
-  background: var(--app-vc-accent-hover);
-}
-
-.vc-editor__transport-time {
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--app-vc-text);
-  margin-left: var(--ref-spacing-xxxs);
-}
-
-.vc-editor__transport-dur {
-  color: var(--app-vc-text-subtle);
-  font-weight: var(--sys-text-style-body-weight);
-}
-
-.vc-editor__transport-set {
-  display: inline-flex;
-  gap: var(--ref-spacing-xxs);
-  margin-left: auto;
-}
+/* ── Set IN/OUT buttons (timeline head) ────────────────────────── */
 
 .vc-editor__set-btn {
   font-family: inherit;
@@ -1037,10 +1022,11 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--app-vc-text-subtle);
+  /* Quiet, regular-weight label — the field value carries the emphasis. */
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--app-vc-text-muted);
 }
 
 .vc-editor__label i {
@@ -1170,10 +1156,10 @@
 }
 
 .vc-editor__timeline-title {
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--app-vc-text-subtle);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--app-vc-text-muted);
   flex: 1;
   min-width: 0;
   white-space: nowrap;
@@ -1192,7 +1178,6 @@
   line-height: var(--sys-text-style-caption-line-height);
   font-weight: var(--sys-text-style-caption-weight);
   color: var(--app-vc-text-subtle);
-  font-style: italic;
   margin-left: var(--ref-spacing-xxs);
 }
 
@@ -1203,10 +1188,10 @@
 }
 
 .vc-stepper__label {
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--app-vc-text-subtle);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--app-vc-text-muted);
 }
 
 .vc-stepper__input {
@@ -1310,6 +1295,35 @@
 
 .vc-protrim__dim--r {
   right: 0;
+}
+
+/* ── Waveform strip (under the filmstrip, same 0..duration mapping) ── */
+
+.vc-wave {
+  position: relative;
+  height: 40px;
+  margin-top: var(--ref-spacing-xxs);
+  border-radius: var(--app-radius-button-sm);
+  background: var(--app-vc-surface-sunken);
+  border: 1px solid var(--app-vc-border);
+  overflow: hidden;
+}
+
+.vc-wave__bars {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px;
+}
+
+.vc-wave__bar {
+  flex: 1;
+  min-width: 0;
+  background: var(--app-vc-accent);
+  border-radius: 1px;
+  opacity: 0.7;
 }
 
 .vc-protrim__window {
@@ -1460,145 +1474,6 @@
   .vc-row__body {
     grid-column: 1 / -1;
   }
-}
-
-/* ════════════════════════════════════════════════════════════════
- *  SUBTITLES — auto-captions: show/hide, presets, transcript editor.
- *  Caption display colors (--vc-cap-*) are content colors meant to read
- *  over arbitrary video frames, so they're literal here (not DS tokens) —
- *  same exception the network/social brand colors take. Editor chrome
- *  (section, list, chips) stays on the --app-vc-* dark ramp.
- * ════════════════════════════════════════════════════════════════ */
-
-.video-clips-modal {
-  --vc-cap-accent: #4db5ff; /* cool highlight, ≥4.5:1 over dark video */
-  --vc-cap-hl: #ffd84d; /* warm "key word" highlight */
-}
-
-/* ── Caption render styles (shared by overlay + style chips) ──────── */
-
-.vc-cap {
-  line-height: 1.25;
-}
-
-.vc-cap__line {
-  display: inline-block;
-}
-
-/* Reset the UA <mark> yellow box; each preset paints its own emphasis. */
-.vc-cap .vc-cap-emph {
-  background: transparent;
-  color: inherit;
-  font-style: normal;
-  border-radius: 0;
-}
-
-/* Clean — white semibold with a soft shadow; emphasis = accent + heavier. */
-.vc-cap--clean .vc-cap__line {
-  color: var(--ref-color-white);
-  font-weight: 600;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
-}
-.vc-cap--clean .vc-cap-emph {
-  color: var(--vc-cap-accent);
-  font-weight: 800;
-}
-
-/* Bold — uppercase, extra-bold, slightly larger; emphasis = warm highlight. */
-.vc-cap--bold .vc-cap__line {
-  color: var(--ref-color-white);
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.01em;
-  font-size: 1.12em;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
-}
-.vc-cap--bold .vc-cap-emph {
-  color: var(--vc-cap-hl);
-}
-
-/* Boxed — text on a solid dark plate that wraps per line. */
-.vc-cap--boxed .vc-cap__line {
-  color: var(--ref-color-white);
-  font-weight: 700;
-  background: rgba(10, 12, 16, 0.82);
-  padding: 0.18em 0.5em;
-  border-radius: 8px;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-}
-.vc-cap--boxed .vc-cap-emph {
-  color: var(--vc-cap-hl);
-}
-
-/* Highlight — emphasized words get a filled warm pill (the Opus look). */
-.vc-cap--highlight .vc-cap__line {
-  color: var(--ref-color-white);
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-.vc-cap--highlight .vc-cap-emph {
-  color: #0a0c10;
-  background: var(--vc-cap-hl);
-  padding: 0.05em 0.22em;
-  border-radius: 5px;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-}
-
-/* Outline — heavy stroke for legibility on busy footage, no plate. */
-.vc-cap--outline .vc-cap__line {
-  color: var(--ref-color-white);
-  font-weight: 800;
-  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.85);
-  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
-}
-.vc-cap--outline .vc-cap-emph {
-  color: var(--vc-cap-hl);
-}
-
-/* Pop — emphasized words scale + go accent (manual karaoke-style accent). */
-.vc-cap--pop .vc-cap__line {
-  color: var(--ref-color-white);
-  font-weight: 700;
-  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.6);
-}
-.vc-cap--pop .vc-cap-emph {
-  color: var(--vc-cap-accent);
-  font-weight: 800;
-  font-size: 1.12em;
-  display: inline-block;
-}
-
-/* ── Overlay on the preview ───────────────────────────────────────── */
-
-.vc-preview__cap-overlay {
-  position: absolute;
-  left: 6%;
-  right: 6%;
-  bottom: 12%;
-  z-index: 4;
-  display: flex;
-  justify-content: center;
-  text-align: center;
-  pointer-events: none;
-}
-
-.vc-preview__cap-overlay[hidden] {
-  display: none;
-}
-
-.vc-preview__cap-overlay .vc-cap__line {
-  pointer-events: auto;
-  outline: none;
-  cursor: text;
-  max-width: 100%;
-  font-size: clamp(13px, 1.5vw, 22px);
-}
-
-.vc-preview__cap-overlay .vc-cap__line:focus {
-  box-shadow: 0 0 0 2px var(--vc-cap-accent);
-  border-radius: 4px;
 }
 
 /* CC badge on browse-mode thumbnails when a clip carries visible captions. */

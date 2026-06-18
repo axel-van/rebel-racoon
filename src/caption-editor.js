@@ -123,65 +123,24 @@ function deriveSimpleCaptions() {
   }));
 }
 
-// ── HTML shell (embedded, no fixed wrapper / topbar) ─────────────────
-
-const INNER = `
-<div class="cap-ed">
-  <div class="cap-ed__body">
-    <aside class="cap-ed__left">
-      <div class="cap-ed__left-head">
-        <span class="cap-ed-group-label">Transcript</span>
-        <span class="cap-ed__meta" data-ce-reconcile></span>
-      </div>
-      <button type="button" class="cap-ed__cleanup-btn" data-ce="open-cleanup" aria-pressed="false">
-        <i class="ap-icon-sparkles"></i><span>Speech cleanup</span>
-        <span class="cap-ed__cleanup-count" data-ce-cleanup-count></span>
-      </button>
-      <div class="cap-ed__cleanup-bar" data-ce-cleanup-bar hidden></div>
-      <div class="cap-ed__hint" data-ce-hint>Click to seek · double-click to edit</div>
-      <div class="cap-ed__transcript" data-ce-transcript></div>
-    </aside>
-
-    <main class="cap-ed__center">
-      <div class="cap-ed__stage-wrap">
-        <div class="cap-ed__stage" data-ce-stage>
-          <video class="cap-ed__video" data-ce-video muted loop playsinline></video>
-          <div class="cap-ed__deadzones" data-ce-deadzones></div>
-          <div class="cap-ed__playicon" data-ce-playicon>
-            <svg viewBox="0 0 24 24" width="34" height="34"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-          </div>
-          <div class="cap-ed-box" data-ce-box></div>
-          <div class="cap-ed-frame" data-ce-frame>
-            <span class="cap-ed-handle cap-ed-handle--nw" data-ce-resize="nw"></span>
-            <span class="cap-ed-handle cap-ed-handle--n" data-ce-resize="n"></span>
-            <span class="cap-ed-handle cap-ed-handle--ne" data-ce-resize="ne"></span>
-            <span class="cap-ed-handle cap-ed-handle--e" data-ce-resize="e"></span>
-            <span class="cap-ed-handle cap-ed-handle--se" data-ce-resize="se"></span>
-            <span class="cap-ed-handle cap-ed-handle--s" data-ce-resize="s"></span>
-            <span class="cap-ed-handle cap-ed-handle--sw" data-ce-resize="sw"></span>
-            <span class="cap-ed-handle cap-ed-handle--w" data-ce-resize="w"></span>
-          </div>
-        </div>
-      </div>
-      <div class="cap-ed__transport">
-        <button type="button" class="cap-ed__icon-btn" data-ce="playpause" aria-label="Play / pause">
-          <svg viewBox="0 0 24 24" width="16" height="16" data-ce-playglyph><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-        </button>
-        <span class="cap-ed__time"><span data-ce-cur>0:00</span> / <span data-ce-dur>0:00</span></span>
-        <div class="cap-ed__scrub" data-ce-scrub><div class="cap-ed__scrub-fill" data-ce-scrub-fill></div></div>
-      </div>
-    </main>
-
-    <aside class="cap-ed__right">
-      <div class="cap-ed__tabs" role="tablist">
-        <button type="button" class="cap-ed__tab" data-ce-tab="presets">Presets</button>
-        <button type="button" class="cap-ed__tab" data-ce-tab="font">Font</button>
-        <button type="button" class="cap-ed__tab" data-ce-tab="effects">Effects</button>
-      </div>
-      <div class="cap-ed__tabpanel" data-ce-tabpanel></div>
-    </aside>
-  </div>
-</div>`;
+// ── Rendering model ──────────────────────────────────────────────────
+//
+// The caption editor no longer owns a self-contained layout. The video-clips
+// modal renders a persistent editor shell — rail · options panel · stage ·
+// timeline — with all the data-ce-* hooks already in place (stage hooks in the
+// preview, control hooks in the left options panel). mount() takes that shell
+// as its root and renders into the existing hooks, so the preview + timeline
+// stay put while only the left options panel swaps between Clip / Subtitles.
+//
+// Hooks the shell must provide:
+//   stage  (always present): [data-ce-stage] wrapping [data-ce-video],
+//          [data-ce-deadzones], [data-ce-playicon], [data-ce-box],
+//          [data-ce-frame] (+ 8 [data-ce-resize] handles); transport bar with
+//          [data-ce="playpause"]/[data-ce-playglyph], [data-ce-cur]/[data-ce-dur],
+//          [data-ce-scrub]/[data-ce-scrub-fill].
+//   controls (Subtitles options only): [data-ce-tab]×3 + [data-ce-tabpanel];
+//          [data-ce-reconcile], [data-ce="open-cleanup"]/[data-ce-cleanup-count],
+//          [data-ce-cleanup-bar], [data-ce-transcript].
 
 // ── Caption box renderer (port of renderer.ts) ───────────────────────
 
@@ -1063,6 +1022,17 @@ function applyPreset(id) {
 
 // ── Lifecycle ────────────────────────────────────────────────────────
 
+// Re-render the left-panel controls into their hooks. The modal calls this
+// after it (re)inserts the Subtitles options panel, since those hooks only
+// exist while the Subtitles tab is active.
+export function refreshControls() {
+  if (!mounted) return;
+  renderTranscript();
+  renderTabPanel();
+  renderCleanupBar();
+  updateReconcile();
+}
+
 export function mount(hostEl, c, src, opts = {}) {
   if (!hostEl) return;
   if (mounted) unmount();
@@ -1082,8 +1052,9 @@ export function mount(hostEl, c, src, opts = {}) {
   state = c.captionState ? { ...defaultCaptionState(), ...c.captionState } : defaultCaptionState();
   words = Array.isArray(c.transcript) && c.transcript.length ? c.transcript.map((w) => ({ ...w })) : buildTranscript(c);
 
-  host.innerHTML = INNER;
-  root = host.querySelector(".cap-ed");
+  // The modal provides the full editor shell with all data-ce-* hooks — we
+  // render into it rather than injecting our own layout.
+  root = host;
   mounted = true;
 
   root.addEventListener("click", onRootClick);
@@ -1131,7 +1102,10 @@ export function unmount() {
     root.removeEventListener("change", onRootChange);
     root.removeEventListener("pointerdown", onBoxPointerDown);
   }
-  if (host) host.innerHTML = "";
+  // The modal owns the shell DOM (it tears it down on close); just clear the
+  // dynamic caption box so a stale frame can't linger if the shell is reused.
+  const box = root && root.querySelector("[data-ce-box]");
+  if (box) box.innerHTML = "";
   mounted = false;
   root = null;
   host = null;
