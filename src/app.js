@@ -26,8 +26,8 @@ import { renderConnectors } from "./screens/connectors.js?v=8";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=48";
-import { renderPlaybook } from "./screens/playbook.js?v=37";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=50";
+import { renderPlaybook } from "./screens/playbook.js?v=39";
 import * as __capAddSource from "./components/add-source-modal.js?v=42";
 import * as __capGenImage from "./components/generate-image-modal.js?v=25";
 import * as __capBug from "./components/bug-report-modal.js?v=23";

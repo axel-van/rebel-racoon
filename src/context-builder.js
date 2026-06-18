@@ -52,6 +52,16 @@ function emptyDraft(overrides = {}) {
     language: "English",
     color: "orange",
     voiceProfile: null,
+    // Voice & style — concrete patterns surfaced in the Playbook view.
+    signatureHooks: [],
+    closingPatterns: [],
+    formattingStyle: "",
+    visualStyle: "",
+    // Brand — author-editable identity (seeded from the scraped site on first edit).
+    brandPersonality: "",
+    brandTypography: null, // { headingFont, bodyFont }
+    brandColors: [], // Array<{ name, hex }>
+    referenceImages: [], // Array<{ id, label, url }>
     sourceType: null, // "website" | "documents" | "social"
     sourceUrl: "",
     sourceFile: null,
@@ -108,6 +118,14 @@ function applyAnalysisToDraft(d, analysis) {
   d.color = analysis.suggestions.color || "orange";
   d.voiceProfile = analysis.suggestions.voiceProfile ? { ...analysis.suggestions.voiceProfile } : null;
   d.imageVoice = analysis.suggestions.imageVoice || { websites: [] };
+  // New 3-section model — voice & style + brand identity.
+  d.signatureHooks = (analysis.suggestions.signatureHooks || []).slice();
+  d.closingPatterns = (analysis.suggestions.closingPatterns || []).slice();
+  d.formattingStyle = analysis.suggestions.formattingStyle || "";
+  d.visualStyle = analysis.suggestions.visualStyle || "";
+  d.brandPersonality = analysis.suggestions.brandPersonality || "";
+  d.brandTypography = analysis.suggestions.brandTypography ? { ...analysis.suggestions.brandTypography } : null;
+  d.brandColors = (analysis.suggestions.brandColors || []).map((c) => ({ ...c }));
 }
 
 // Patch the draft from outside the conversational flow — used by the
@@ -616,6 +634,15 @@ export function save(sessionId) {
     language: d.language,
     voiceProfile: d.voiceProfile || null,
     imageVoice: d.imageVoice && Array.isArray(d.imageVoice.websites) ? d.imageVoice : { websites: [] },
+    // New 3-section model fields (previously dropped on save).
+    signatureHooks: Array.isArray(d.signatureHooks) ? d.signatureHooks.filter((s) => (s || "").trim()) : [],
+    closingPatterns: Array.isArray(d.closingPatterns) ? d.closingPatterns.filter((s) => (s || "").trim()) : [],
+    formattingStyle: d.formattingStyle || "",
+    visualStyle: d.visualStyle || "",
+    brandPersonality: d.brandPersonality || "",
+    brandTypography: d.brandTypography ? { ...d.brandTypography } : null,
+    brandColors: Array.isArray(d.brandColors) ? d.brandColors.map((c) => ({ ...c })) : [],
+    referenceImages: Array.isArray(d.referenceImages) ? d.referenceImages.map((i) => ({ ...i })) : [],
     updatedAt: "just now",
   };
   const saved = d.editingId ? updateContext(d.editingId, payload) : addContext(payload);

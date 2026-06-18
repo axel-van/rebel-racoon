@@ -77,6 +77,25 @@ const AGORAPULSE = {
     contentStyle: ["Data-driven with storytelling", "Direct and actionable"],
     objective: ["Lead generation", "Brand awareness"],
     contentAction: ["Sign up for a free trial", "Book a demo"],
+    signatureHooks: [
+      "Stop juggling 8 tabs to run your social.",
+      "Here's what the data actually says:",
+      "Your team is losing hours to this:",
+    ],
+    closingPatterns: ["Start your free trial — no card required.", "Book a demo and we'll map it to your workflow."],
+    formattingStyle:
+      "Benefit-led headline, then short scannable paragraphs. Bullet lists for capabilities. Numbers and percentages for proof. Closes on a single, clear call to action.",
+    visualStyle:
+      "Minimal emoji. Direct address ('you', 'your team'). Sentence case. Metrics as digits. One primary CTA per post.",
+    brandPersonality:
+      "Confident, helpful, results-focused. Speaks with the authority of a tool that has supported thousands of social teams, and stays empathetic to the chaos of multi-platform work.",
+    brandTypography: { headingFont: "Averta", bodyFont: "Averta" },
+    brandColors: [
+      { name: "Primary", hex: "#212E44" },
+      { name: "Accent", hex: "#FF6726" },
+      { name: "Background", hex: "#FFFFFF" },
+      { name: "Text", hex: "#212E44" },
+    ],
     ctaLinks: [
       { label: "Free trial signup", url: "agorapulse.com/free-trial", checked: true, suggested: true },
       { label: "Book a demo", url: "agorapulse.com/demo", checked: true, suggested: true },
@@ -161,6 +180,20 @@ const GENERIC = {
     contentStyle: ["Direct and actionable"],
     objective: ["Brand awareness"],
     contentAction: ["Visit the website"],
+    signatureHooks: ["Here's the problem most teams hit:", "What if you could [outcome]?"],
+    closingPatterns: ["Learn more on our site.", "Get started today."],
+    formattingStyle:
+      "Clear, concise paragraphs. A short list when explaining steps. One call to action per post. Edit this to match how you actually write.",
+    visualStyle: "Minimal emoji, sentence case, plain English. Edit to capture how your brand styles its posts.",
+    brandPersonality:
+      "Trustworthy, helpful, and knowledgeable. Speaks to the reader as an equal who has done the homework. Edit to capture what makes your brand's personality distinctive.",
+    brandTypography: { headingFont: "System UI", bodyFont: "System UI" },
+    brandColors: [
+      { name: "Primary", hex: "#178DFE" },
+      { name: "Accent", hex: "#178DFE" },
+      { name: "Background", hex: "#FFFFFF" },
+      { name: "Text", hex: "#344563" },
+    ],
     ctaLinks: [{ label: "Homepage", url: "", checked: true, suggested: true }],
     language: "English",
     color: "blue",

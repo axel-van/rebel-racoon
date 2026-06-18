@@ -102,6 +102,15 @@ export function addContext(ctx = {}) {
       ctx.imageVoice && Array.isArray(ctx.imageVoice.websites)
         ? { websites: ctx.imageVoice.websites.map((w) => ({ ...w })) }
         : { websites: [] },
+    // — 3-section model: voice & style + brand identity —
+    signatureHooks: Array.isArray(ctx.signatureHooks) ? ctx.signatureHooks.slice() : [],
+    closingPatterns: Array.isArray(ctx.closingPatterns) ? ctx.closingPatterns.slice() : [],
+    formattingStyle: ctx.formattingStyle || "",
+    visualStyle: ctx.visualStyle || "",
+    brandPersonality: ctx.brandPersonality || "",
+    brandTypography: ctx.brandTypography && typeof ctx.brandTypography === "object" ? { ...ctx.brandTypography } : null,
+    brandColors: Array.isArray(ctx.brandColors) ? ctx.brandColors.map((c) => ({ ...c })) : [],
+    referenceImages: Array.isArray(ctx.referenceImages) ? ctx.referenceImages.map((i) => ({ ...i })) : [],
     // — meta —
     usedIn: typeof ctx.usedIn === "number" ? ctx.usedIn : 0,
     updatedAt: ctx.updatedAt || "just now",
@@ -156,6 +165,14 @@ export function updateContext(id, patch) {
   if (patch.contentAction !== undefined) c.contentAction = patch.contentAction;
   if (patch.ctaLinks !== undefined) c.ctaLinks = patch.ctaLinks;
   if (patch.imageVoice !== undefined) c.imageVoice = patch.imageVoice;
+  if (patch.signatureHooks !== undefined) c.signatureHooks = patch.signatureHooks;
+  if (patch.closingPatterns !== undefined) c.closingPatterns = patch.closingPatterns;
+  if (patch.formattingStyle !== undefined) c.formattingStyle = patch.formattingStyle;
+  if (patch.visualStyle !== undefined) c.visualStyle = patch.visualStyle;
+  if (patch.brandPersonality !== undefined) c.brandPersonality = patch.brandPersonality;
+  if (patch.brandTypography !== undefined) c.brandTypography = patch.brandTypography;
+  if (patch.brandColors !== undefined) c.brandColors = patch.brandColors;
+  if (patch.referenceImages !== undefined) c.referenceImages = patch.referenceImages;
   if (patch.language !== undefined) c.language = patch.language;
   if (patch.connectedSocials !== undefined) c.connectedSocials = patch.connectedSocials;
   if (patch.selectedProfileId !== undefined) c.selectedProfileId = patch.selectedProfileId;
@@ -187,6 +204,13 @@ export function duplicateContext(id) {
     doRules: (src.doRules || []).slice(),
     dontRules: (src.dontRules || []).slice(),
     cta: src.cta,
+    signatureHooks: (src.signatureHooks || []).slice(),
+    closingPatterns: (src.closingPatterns || []).slice(),
+    formattingStyle: src.formattingStyle || "",
+    visualStyle: src.visualStyle || "",
+    brandPersonality: src.brandPersonality || "",
+    brandTypography: src.brandTypography ? { ...src.brandTypography } : null,
+    brandColors: (src.brandColors || []).map((c) => ({ ...c })),
     isDefault: false,
     usedIn: 0,
     analysis: src.analysis ? { ...src.analysis } : { voice: null, brief: null, brand: null },

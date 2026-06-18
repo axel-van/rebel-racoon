@@ -140,30 +140,38 @@
    from the shared `.welcome-screen` / `.welcome-hero` chrome above. */
 
 .welcome-screen--reveal .welcome-screen__body.recap {
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-start;
-  gap: var(--ref-spacing-xxl);
-  padding: var(--ref-spacing-xl) var(--ref-spacing-lg) calc(var(--ref-spacing-xxxl) * 2);
+  gap: var(--ref-spacing-lg);
+  padding: var(--ref-spacing-lg) var(--ref-spacing-xl) calc(var(--ref-spacing-xxxl) * 1.5);
 }
 
 .recap > * {
   width: 100%;
-  max-width: 860px;
+  max-width: 1080px;
+  margin-inline: auto;
 }
 
-/* ── Hero ─────────────────────────────────────────────────────────────── */
-.recap__hero {
+/* ── Identity header ──────────────────────────────────────────────────── */
+.recap__header {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ref-spacing-md);
+  flex-wrap: wrap;
+}
+
+.recap__id {
+  display: flex;
   align-items: center;
-  text-align: center;
-  gap: var(--ref-spacing-sm);
-  padding-top: var(--ref-spacing-md);
+  gap: var(--ref-spacing-md);
+  min-width: 0;
 }
 
 .recap__monogram {
-  width: 72px;
-  height: 72px;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -171,235 +179,230 @@
   background: var(--brand-accent, var(--ref-color-orange-100));
   color: var(--ref-color-white);
   font-family: var(--sys-text-style-h2-font-family);
-  font-size: var(--sys-text-style-marketing-size);
-  line-height: var(--sys-text-style-marketing-line-height);
-  font-weight: var(--sys-text-style-marketing-weight);
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  font-weight: var(--sys-text-style-h2-weight);
   letter-spacing: -0.02em;
   box-shadow: var(--app-shadow-low);
 }
 
-.recap__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-80);
-}
-
-.recap__eyebrow i {
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-mermaid-gradient-from);
-}
-
-.recap__title {
-  margin: 0;
-  font-family: var(--sys-text-style-h1-font-family);
-  font-size: var(--sys-text-style-marketing-size);
-  line-height: var(--sys-text-style-marketing-line-height);
-  font-weight: var(--sys-text-style-marketing-weight);
-  color: var(--ref-color-grey-100);
-  letter-spacing: -0.02em;
-}
-
-.recap__voice-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  margin-top: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-md);
-  border-radius: var(--app-radius-pill);
-  background: var(--ref-color-mermaid-10);
-  border: 1px solid var(--ref-color-mermaid-20);
-  color: var(--ref-color-grey-100);
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-}
-
-.recap__voice-tag i {
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-mermaid-gradient-from);
-}
-
-.recap__lead {
-  margin: var(--ref-spacing-xxs) 0 0;
-  max-width: 560px;
-  font-size: var(--sys-text-style-subtitle-size);
-  line-height: var(--sys-text-style-subtitle-line-height);
-  font-weight: var(--sys-text-style-subtitle-weight);
-  color: var(--ref-color-grey-80);
-}
-
-.recap__lead strong {
-  color: var(--ref-color-grey-100);
-  font-weight: var(--sys-text-style-body-bold-weight);
-}
-
-/* ── Brand overview ───────────────────────────────────────────────────── */
-.recap__overview {
+.recap__id-text {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-lg);
-  background: var(--app-surface);
-  border: 1px solid var(--app-border-soft);
-  border-radius: var(--ref-border-radius-md);
+  gap: var(--app-spacing-micro);
+  min-width: 0;
 }
 
-.recap__overview-head {
+.recap__id-titlerow {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--ref-spacing-sm);
-  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
 }
 
-.recap__overview-name {
+.recap__name {
   margin: 0;
-  font-family: var(--sys-text-style-h3-font-family);
-  font-size: var(--sys-text-style-h0-size);
-  line-height: var(--sys-text-style-h0-line-height);
-  font-weight: var(--sys-text-style-h0-weight);
+  font-family: var(--sys-text-style-h1-font-family);
+  font-size: var(--sys-text-style-h1-size);
+  line-height: var(--sys-text-style-h1-line-height);
+  font-weight: var(--sys-text-style-h1-weight);
   color: var(--ref-color-grey-100);
   letter-spacing: -0.01em;
 }
 
-.recap__overview-url {
+.recap__name-edit {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 160ms var(--app-ease-out);
+}
+
+.recap__id:hover .recap__name-edit,
+.recap__name-edit:focus-visible {
+  opacity: 1;
+}
+
+.recap__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.recap__meta-item {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  font-weight: var(--sys-text-style-body-weight);
-  color: var(--ref-color-grey-60);
-  text-decoration: none;
-}
-
-.recap__overview-url:hover {
-  color: var(--ref-color-orange-100);
-}
-
-.recap__overview-url i {
-  font-size: var(--sys-icon-css-sm);
-}
-
-.recap__overview-summary {
-  margin: 0;
-  font-size: var(--sys-text-style-subtitle-size);
-  line-height: var(--sys-text-style-subtitle-line-height);
-  font-weight: var(--sys-text-style-subtitle-weight);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
 }
 
-/* ── Section scaffolding ──────────────────────────────────────────────── */
-.recap__section {
+.recap__meta-item i {
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-grey-40);
+}
+
+.recap__meta-dim {
+  color: var(--ref-color-grey-60);
+}
+
+.recap__meta-default {
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.recap__meta-default i {
+  color: var(--ref-color-yellow-100);
+}
+
+.recap__header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+/* ── Two-column layout (sticky rail + sections) ───────────────────────── */
+.recap__layout {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  gap: var(--ref-spacing-xl);
+  align-items: start;
+}
+
+.recap__rail {
+  position: sticky;
+  top: 0;
+  align-self: start;
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-md);
+  gap: var(--ref-spacing-lg);
 }
 
-.recap__section-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--ref-spacing-sm);
-}
-
-.recap__section-heading {
+.recap__nav {
   display: flex;
   flex-direction: column;
   gap: var(--app-spacing-micro);
 }
 
-.recap__section-title {
-  margin: 0;
-  font-family: var(--sys-text-style-h4-font-family);
-  font-size: var(--sys-text-style-h2-size);
-  line-height: var(--sys-text-style-h2-line-height);
-  font-weight: var(--sys-text-style-h2-weight);
-  color: var(--ref-color-grey-100);
-  letter-spacing: -0.01em;
-}
-
-.recap__section-hint {
-  margin: 0;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  font-weight: var(--sys-text-style-body-weight);
-  color: var(--ref-color-grey-60);
-}
-
-.recap__refine {
-  flex-shrink: 0;
-  display: inline-flex;
+.recap__nav-link {
+  display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
-  border: 1px solid var(--app-border-soft);
-  border-radius: var(--app-radius-pill);
-  background: var(--app-surface);
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border: 0;
+  border-radius: var(--app-radius-lg);
+  background: transparent;
   color: var(--ref-color-grey-80);
   font-family: inherit;
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  text-align: left;
   cursor: pointer;
   transition:
     background 160ms var(--app-ease-out),
-    color 160ms var(--app-ease-out),
-    border-color 160ms var(--app-ease-out),
-    opacity 160ms var(--app-ease-out);
+    color 160ms var(--app-ease-out);
 }
 
-.recap__refine i {
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-mermaid-gradient-from);
+.recap__nav-link i {
+  font-size: var(--sys-icon-css-md);
+  color: var(--ref-color-grey-40);
+  transition: color 160ms var(--app-ease-out);
 }
 
-.recap__refine:hover {
-  border-color: var(--ref-color-mermaid-20);
-  background: var(--ref-color-mermaid-10);
+.recap__nav-link:hover {
+  background: var(--app-surface-subtle);
   color: var(--ref-color-grey-100);
 }
 
-/* Hover-reveal the refine pill on pointer devices; always visible to
-   keyboard users via focus, and on touch (no hover) devices. */
-@media (hover: hover) {
-  .recap__refine {
-    opacity: 0;
-  }
-  .recap__section:hover .recap__refine,
-  .recap__refine:focus-visible {
-    opacity: 1;
-  }
+.recap__nav-link.is-active {
+  background: var(--app-surface);
+  color: var(--ref-color-grey-100);
+  box-shadow: inset 0 0 0 1px var(--app-border-soft);
 }
 
-/* ── Grids (strategy + voice traits) ──────────────────────────────────── */
-.recap__grid {
-  display: grid;
-  gap: var(--ref-spacing-md);
+.recap__nav-link.is-active i {
+  color: var(--ref-color-mermaid-gradient-from);
 }
 
-.recap__grid--strategy,
-.recap__grid--voice {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.recap__stat {
+.recap__facts {
+  margin: 0;
   display: flex;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm);
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-md);
   background: var(--app-surface);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--ref-border-radius-md);
 }
 
-.recap__stat-icon {
+.recap__fact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-spacing-micro);
+}
+
+.recap__fact dt {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+.recap__fact dd {
+  margin: 0;
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.recap__fact-dots {
+  display: inline-flex;
+  gap: var(--ref-spacing-xxs);
+  margin-top: var(--app-spacing-micro);
+}
+
+.recap__fact-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--app-radius-circle);
+  border: 1px solid var(--app-border);
+}
+
+.recap__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-lg);
+  min-width: 0;
+}
+
+/* ── Section panels ───────────────────────────────────────────────────── */
+.recap__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--ref-border-radius-md);
+  scroll-margin-top: var(--ref-spacing-md);
+}
+
+.recap__panel-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-md) var(--ref-spacing-lg);
+  border-bottom: 1px solid var(--app-border-soft);
+}
+
+.recap__panel-icon {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -408,31 +411,65 @@
   color: var(--ref-color-grey-100);
 }
 
-.recap__stat-icon i {
+.recap__panel-icon i {
   font-size: var(--sys-icon-css-md);
 }
 
-.recap__stat-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-  min-width: 0;
-}
-
-.recap__stat-label {
+.recap__panel-title {
   margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-family: var(--sys-text-style-h4-font-family);
   font-size: var(--sys-text-style-h3-size);
   line-height: var(--sys-text-style-h3-line-height);
   font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
 }
 
-.recap__stat-caption {
-  margin: 0;
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  font-weight: var(--sys-text-style-caption-weight);
+.recap__panel-body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Definition rows (label → value) ──────────────────────────────────── */
+.recap__row {
+  display: grid;
+  grid-template-columns: 156px minmax(0, 1fr);
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-md) var(--ref-spacing-lg);
+}
+
+.recap__row + .recap__row {
+  border-top: 1px solid var(--app-border-soft);
+}
+
+.recap__row-label {
+  padding-top: 2px;
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-60);
+}
+
+.recap__row-value {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.recap__row-text {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-100);
+}
+
+.recap__row-empty {
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-style: italic;
+  color: var(--ref-color-grey-40);
 }
 
 .recap__chips {
@@ -441,129 +478,75 @@
   gap: var(--ref-spacing-xxs);
 }
 
-.recap__chip-empty {
+/* ── Voice & style — quoted snippet lines ─────────────────────────────── */
+.recap__quotes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.recap__quote {
+  display: flex;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  background: var(--app-surface-subtle);
+  border-radius: var(--app-radius-lg);
   font-size: var(--sys-text-style-body-size);
   line-height: var(--sys-text-style-body-line-height);
-  font-weight: var(--sys-text-style-body-weight);
-  font-style: italic;
-  color: var(--ref-color-grey-40);
+  color: var(--ref-color-grey-100);
 }
 
-/* ── Voice ────────────────────────────────────────────────────────────── */
-.recap__voice-lead {
-  margin: 0;
-  display: flex;
-  gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-lg);
-  background: var(--ref-color-mermaid-10);
-  border: 1px solid var(--ref-color-mermaid-20);
-  border-radius: var(--ref-border-radius-md);
-}
-
-.recap__voice-lead i {
+.recap__quote i {
   flex-shrink: 0;
-  font-size: var(--sys-icon-css-lg);
+  margin-top: 2px;
+  font-size: var(--sys-icon-css-sm);
   color: var(--ref-color-mermaid-gradient-from);
 }
 
-.recap__voice-lead p {
-  margin: 0;
-  font-size: var(--sys-text-style-subtitle-size);
-  line-height: var(--sys-text-style-subtitle-line-height);
-  font-weight: var(--sys-text-style-subtitle-weight);
-  color: var(--ref-color-grey-100);
-}
-
-.recap__trait {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-md);
-  background: var(--app-surface);
-  border: 1px solid var(--app-border-soft);
-  border-radius: var(--ref-border-radius-md);
-}
-
-.recap__trait-label {
-  margin: 0;
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-60);
-}
-
-.recap__trait-text {
-  margin: 0;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  font-weight: var(--sys-text-style-body-weight);
-  color: var(--ref-color-grey-80);
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* ── Visual identity (condensed brand snapshot) ───────────────────────── */
-.recap__brand {
+/* ── Brand — colour swatches ──────────────────────────────────────────── */
+.recap__swatches {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: var(--ref-spacing-xl);
-  padding: var(--ref-spacing-lg);
-  background: var(--app-surface);
-  border: 1px solid var(--app-border-soft);
-  border-radius: var(--ref-border-radius-md);
-}
-
-.recap__brand-mark {
-  display: flex;
-  align-items: center;
   gap: var(--ref-spacing-sm);
-}
-
-.recap__monogram--sm {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--app-radius-lg);
-  font-size: var(--sys-text-style-h3-size);
-  line-height: var(--sys-text-style-h3-line-height);
-  font-weight: var(--sys-text-style-h3-weight);
-}
-
-.recap__brand-domain {
-  font-size: var(--sys-text-style-h3-size);
-  line-height: var(--sys-text-style-h3-line-height);
-  font-weight: var(--sys-text-style-h3-weight);
-  color: var(--ref-color-grey-100);
-}
-
-.recap__palette {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-md);
 }
 
 .recap__swatch {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm) var(--ref-spacing-xxs) var(--ref-spacing-xxs);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-pill);
 }
 
-.recap__swatch-dot {
-  width: 32px;
-  height: 32px;
+.recap__swatch-chip {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
   border-radius: var(--app-radius-circle);
   border: 1px solid var(--app-border);
 }
 
-.recap__swatch-label {
+.recap__swatch-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.recap__swatch-name {
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.recap__swatch-hex {
   font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-60);
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
 }
 
 /* Brand-colour editor (#10) — named #hex rows inside the Visual identity
@@ -684,55 +667,85 @@
   color: var(--ref-color-orange-100);
 }
 
-.recap__type {
+.recap__type-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-lg);
+}
+
+.recap__type-cell {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-sm);
-  margin-left: auto;
 }
 
 .recap__type-specimen {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--app-radius-lg);
   background: var(--app-surface-subtle);
   color: var(--ref-color-grey-100);
-  font-size: var(--sys-text-style-h0-size);
-  line-height: var(--sys-text-style-h0-line-height);
-  font-weight: var(--sys-text-style-h0-weight);
+  font-size: var(--sys-text-style-h2-size);
+  line-height: 1;
+  font-weight: var(--sys-text-style-h2-weight);
+}
+
+.recap__type-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.recap__type-role {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
 }
 
 .recap__type-name {
-  font-size: var(--sys-text-style-h4-size);
-  line-height: var(--sys-text-style-h4-line-height);
-  font-weight: var(--sys-text-style-h4-weight);
-  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
 }
 
-/* ── Essentials ───────────────────────────────────────────────────────── */
-.recap__essentials {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: var(--ref-spacing-xl);
-}
-
-.recap__essential {
+/* Voice & style + brand editors — line list + typography inputs */
+.recap__line-list {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
 }
 
-.recap__essential-label {
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-60);
+.recap__line-edit {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
 }
 
+.recap__line-edit-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.recap__typo-edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-sm);
+}
+
+.recap__typo-edit .ap-input-group {
+  flex: 1;
+  min-width: 160px;
+}
+
+.recap__lang-select {
+  max-width: 240px;
+}
+
+/* ── CTA links (read) ─────────────────────────────────────────────────── */
 .recap__cta-list {
   list-style: none;
   margin: 0;
@@ -906,23 +919,6 @@
 }
 
 /* ── Edit mode ────────────────────────────────────────────────────────── */
-.recap__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-}
-
-.recap__field-label {
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-60);
-}
-
-.recap__overview--edit {
-  gap: var(--ref-spacing-md);
-}
-
 /* Editable strategy chips — DS close button + an inline add control. */
 .recap__chips--edit {
   align-items: center;
@@ -948,16 +944,6 @@
 }
 
 /* CTA editor */
-.recap__essentials--edit {
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--ref-spacing-lg);
-}
-
-.recap__field--ctas {
-  gap: var(--ref-spacing-sm);
-}
-
 .recap__cta-edit-list {
   display: flex;
   flex-direction: column;
@@ -1026,130 +1012,95 @@
   color: var(--ref-color-orange-100);
 }
 
-/* ── Per-card edit affordance ─────────────────────────────────────────── */
-/* Each editable card carries a hover-reveal pencil, mirroring the
-   /contexts Playbook cards. Anchored to the card via position:relative. */
-.recap__overview,
-.recap__stat {
-  position: relative;
+/* ── Per-section edit affordance ──────────────────────────────────────── */
+/* Each panel carries a hover-reveal pencil in its head; while editing it
+   swaps for Cancel (×) / Save (✓), and every other panel's pencil hides so
+   the user finishes one edit before starting another. */
+.recap__panel-edit,
+.recap__name-edit {
+  flex-shrink: 0;
 }
 
-/* Reserve room so the hover pencil never collides with the URL link. */
-.recap__overview-head {
-  padding-right: var(--ref-spacing-xxl);
-}
-
-.recap__card-actions {
-  position: absolute;
-  top: var(--ref-spacing-sm);
-  right: var(--ref-spacing-sm);
-  display: flex;
-  padding: var(--app-spacing-micro);
-  border-radius: var(--app-radius-button-sm);
-  background: var(--app-surface);
-  border: 1px solid var(--app-border-soft);
-  box-shadow: var(--app-shadow-low);
+.recap__panel-edit {
+  width: 28px;
+  height: 28px;
   opacity: 0;
-  pointer-events: none;
   transition: opacity 160ms var(--app-ease-out);
 }
 
-.recap__overview:hover .recap__card-actions,
-.recap__overview:focus-within .recap__card-actions,
-.recap__stat:hover .recap__card-actions,
-.recap__stat:focus-within .recap__card-actions {
+.recap__panel:hover .recap__panel-edit,
+.recap__panel:focus-within .recap__panel-edit {
   opacity: 1;
-  pointer-events: auto;
 }
 
-.recap__card-actions .ap-icon-button,
-.recap__edit-actions .ap-icon-button,
-.recap__section-actions .ap-icon-button,
-.recap__section-edit {
+.recap__panel-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: var(--ref-spacing-xxs);
+}
+
+.recap__panel-actions .ap-icon-button {
   width: 28px;
   height: 28px;
 }
 
-/* Per-card Cancel (×) / Save (✓) controls — replace the pencil while a
-   card is in edit, in the same top-right slot. Always visible (not
-   hover-gated) and a distinct class so the .is-editing hide rule (which
-   targets read affordances) leaves them alone. */
-.recap__edit-actions {
-  position: absolute;
-  top: var(--ref-spacing-sm);
-  right: var(--ref-spacing-sm);
-  z-index: 1;
-  display: flex;
-  gap: var(--ref-spacing-xxs);
-}
-
-.recap__section-actions {
-  flex-shrink: 0;
-  display: flex;
-  gap: var(--ref-spacing-xxs);
-}
-
-/* Section-level pencil (Voice, Essentials) lives in the section head. */
-.recap__section-edit {
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 160ms var(--app-ease-out);
-}
-
-.recap__section:hover .recap__section-edit,
-.recap__section:focus-within .recap__section-edit {
-  opacity: 1;
-}
-
-/* While a card is being edited, suppress every other pencil so the user
-   finishes one edit before starting another. */
-.welcome-screen--reveal.is-editing .recap__card-actions,
-.welcome-screen--reveal.is-editing .recap__section-edit {
+.welcome-screen--reveal.is-editing .recap__panel-edit,
+.welcome-screen--reveal.is-editing .recap__name-edit {
   display: none;
 }
 
-/* Cards are flat by default (DS .ap-card has no shadow). Only the card
-   being edited lifts with Shadow/Low so it reads as the active surface —
-   still a neutral grey border (not an error/alert state). */
-.recap__stat.is-editing,
-.recap__overview--edit {
+/* Panels are flat by default; the one being edited lifts with Shadow/Low so
+   it reads as the active surface (neutral grey border, not an alert state). */
+.recap__panel.is-editing {
   box-shadow: var(--app-shadow-low);
+  border-color: var(--ref-color-grey-20);
 }
 
-.recap__editbox {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-md);
-  padding: var(--ref-spacing-lg);
-  border-radius: var(--ref-border-radius-md);
-  background: var(--app-surface);
-  border: 1px solid var(--app-border-soft);
-  box-shadow: var(--app-shadow-low);
-}
-
-/* Touch devices have no hover — keep the pencils permanently visible so
-   the edit affordance stays discoverable (suppressed mid-edit by the
-   .is-editing display:none rule above). */
+/* Touch devices have no hover — keep the pencils permanently visible
+   (suppressed mid-edit by the .is-editing display:none rule above). */
 @media (hover: none) {
-  .recap__card-actions,
-  .recap__section-edit {
+  .recap__panel-edit,
+  .recap__name-edit {
     opacity: 1;
-    pointer-events: auto;
   }
 }
 
-@media (max-width: 720px) {
-  .recap__grid--strategy,
-  .recap__grid--voice {
+/* Rail drops below the content and goes horizontal on narrow viewports. */
+@media (max-width: 920px) {
+  .recap__layout {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .recap__title {
-    font-size: var(--sys-text-style-marketing-size);
+  .recap__rail {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--ref-spacing-md);
   }
 
-  .recap__type {
-    margin-left: 0;
+  .recap__nav {
+    flex: 1 1 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .recap__facts {
+    flex: 1 1 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--ref-spacing-lg);
+  }
+}
+
+@media (max-width: 640px) {
+  .recap__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ref-spacing-xxs);
+  }
+
+  .recap__header-actions {
+    width: 100%;
   }
 
   .recap__cta-edit {

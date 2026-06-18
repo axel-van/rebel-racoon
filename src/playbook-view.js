@@ -1,11 +1,13 @@
-// Shared Playbook view + per-card editor. Renders the curated reveal
-// (hero · overview · strategy · voice · visual identity · essentials) and
-// the inline per-card edit machine. Driven by a `cfg` adapter so the same
-// surface powers two contexts:
+// Shared Playbook view + per-section editor. Renders a product-grade detail
+// surface — a compact identity header, a sticky section-nav rail with quick
+// facts, and three section panels (Audience & goals · Voice & style · Brand) —
+// plus the inline per-section edit machine. Driven by a `cfg` adapter so the
+// same surface powers two contexts:
 //   • onboarding (welcome-alt-recap) — a context-builder DRAFT, with a
-//     staged loader and an "Enter Archie" finish.
+//     staged loader and a "Save and start" finish.
 //   • library (/playbook/:id)        — a saved Context, in the app shell,
-//     editing straight into the store with a "Back to Playbooks" exit.
+//     editing straight into the store, with header actions (Start chat /
+//     Edit name / Delete).
 //
 // The renderers operate on a plain `data` object (draft or Context — both
 // expose the same field names). Persistence + chrome + copy are injected
@@ -20,53 +22,36 @@ import { html, raw, escapeHtml as esc } from "./utils.js?v=20";
 // generation ships.
 const LANGUAGE_OPTIONS = ["English"];
 
-const STRATEGY_FIELDS = [
-  {
-    key: "audience",
-    icon: "ap-icon-multiple-users",
-    label: "Audience",
-    caption: "Who we write for",
-    placeholder: "Add an audience…",
-  },
-  {
-    key: "contentStyle",
-    icon: "ap-icon-pen",
-    label: "Content style",
-    caption: "How posts read",
-    placeholder: "Add a style…",
-  },
-  {
-    key: "objective",
-    icon: "ap-icon-target",
-    label: "Objective",
-    caption: "What we optimise for",
-    placeholder: "Add an objective…",
-  },
-  {
-    key: "contentAction",
-    icon: "ap-icon-megaphone",
-    label: "Drives action",
-    caption: "What posts push toward",
-    placeholder: "Add an action…",
-  },
+// Audience & goals — chip fields (multi-value), in display order.
+const GOAL_FIELDS = [
+  { key: "audience", label: "Primary audience", placeholder: "Add an audience…" },
+  { key: "contentStyle", label: "Content style", placeholder: "Add a style…" },
+  { key: "objective", label: "Primary goal", placeholder: "Add a goal…" },
+  { key: "contentAction", label: "Content action", placeholder: "Add an action…" },
 ];
 
-const VOICE_TRAITS = [
-  { key: "vocabulary", label: "Vocabulary" },
-  { key: "sentenceStructure", label: "Sentence structure" },
-  { key: "personality", label: "Personality" },
-  { key: "uniqueTraits", label: "Unique traits" },
+// Voice & style — line-list fields (quoted snippets).
+const LINE_FIELDS = [
+  { key: "signatureHooks", label: "Signature hooks", placeholder: "A line that often opens a post…" },
+  { key: "closingPatterns", label: "Closing patterns", placeholder: "A line that often ends a post…" },
+];
+
+const SECTIONS = [
+  { id: "pbk-sec-goals", scope: "goals", icon: "ap-icon-target", title: "Audience & goals" },
+  { id: "pbk-sec-voice", scope: "voice", icon: "ap-icon-quote", title: "Voice & style" },
+  { id: "pbk-sec-brand", scope: "brand", icon: "ap-icon-image", title: "Brand" },
 ];
 
 const STAGE_MS = 2400;
 
 let mountTarget = null;
 let cfg = null;
-let editScope = null; // null (read) | "overview" | strategy key | "voice" | "essentials"
+let editScope = null; // null (read) | "goals" | "voice" | "brand"
 let snapshot = null; // deep copy of editable fields, for Cancel
 let loadingTimer = null;
 let loadingStage = 0;
 let phase = "ready"; // "loading" | "ready"
+let scrollSpy = null; // IntersectionObserver for the section-nav active state
 
 // ── Public API ───────────────────────────────────────────────────────────
 
@@ -81,10 +66,11 @@ let phase = "ready"; // "loading" | "ready"
 //   skipLoader: boolean,               // force straight to ready
 //   onIntroDone(): void,               // loader finished
 //   showTop: boolean,                  // render the Archie/BETA top strip
-//   hero: { eyebrow, title, lead },    // hero copy (lead may be raw html)
+//   headerActions(): string | null,    // html for the header action bar (library)
+//   onEditName(): void,                // header name pencil (rename)
 //   editHint: string | null,           // infobox message (null hides it)
-//   footer(): string,                  // footer button(s) html
-//   onFooter(event): boolean,          // handle footer clicks (return true if handled)
+//   footer(): string,                  // footer button(s) html (onboarding)
+//   onFooter(event): boolean,          // handle footer/header-action clicks
 // }
 export function mount(target, config) {
   cfg = config;
@@ -113,6 +99,7 @@ export function mount(target, config) {
 
   return () => {
     stopLoading();
+    detachScrollSpy();
     target.removeEventListener("click", onClickH);
     target.removeEventListener("input", onInputH);
     target.removeEventListener("change", onChangeH);
@@ -130,6 +117,10 @@ function repaint() {
 
 function isReady() {
   return cfg.isReady ? cfg.isReady() : true;
+}
+
+function reducedMotion() {
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
 // ── Loader ─────────────────────────────────────────────────────────────
@@ -175,9 +166,46 @@ function prettyUrl(url) {
   return (url || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
 }
 
-function ensureVoice(data) {
-  if (!data.voiceProfile || typeof data.voiceProfile !== "object") data.voiceProfile = {};
-  return data.voiceProfile;
+// Default brand colours derived from the scraped site palette, so a Playbook
+// that has never been hand-edited still shows named swatches the user can
+// then rename / extend. Used to seed `data.brandColors` on first edit.
+function deriveBrandColors(site) {
+  const c = site?.colors || {};
+  return [
+    { name: "Primary", hex: c.primary },
+    { name: "Accent", hex: c.accent },
+    { name: "Background", hex: c.background },
+    { name: "Text", hex: c.textPrimary },
+    { name: "Link", hex: c.link },
+  ].filter((s) => s.hex);
+}
+
+// The authored brand palette — user-edited `brandColors` if present, else the
+// derived site palette (read-only view falls back to this).
+function visualColors(data) {
+  if (Array.isArray(data.brandColors) && data.brandColors.length) return data.brandColors;
+  return deriveBrandColors(brandSite(data));
+}
+
+function brandFonts(data) {
+  const site = brandSite(data);
+  const t = data.brandTypography || {};
+  return {
+    headingFont: t.headingFont || site?.typography?.headingFont || site?.typography?.primaryFont || "",
+    bodyFont: t.bodyFont || site?.typography?.primaryFont || "",
+  };
+}
+
+// Lazily promote the derived palette / scraped fonts into editable fields the
+// first time the user opens the Brand editor (alpha feedback #10).
+function ensureBrand(data) {
+  if (!Array.isArray(data.brandColors) || !data.brandColors.length) {
+    data.brandColors = deriveBrandColors(brandSite(data));
+  }
+  if (!data.brandTypography || typeof data.brandTypography !== "object") {
+    data.brandTypography = brandFonts(data);
+  }
+  if (!Array.isArray(data.referenceImages)) data.referenceImages = [];
 }
 
 // Snapshot only the user-editable fields so Cancel can restore them.
@@ -190,9 +218,14 @@ export function snapshotEditable(d) {
       contentStyle: d.contentStyle || [],
       objective: d.objective || [],
       contentAction: d.contentAction || [],
-      voiceProfile: d.voiceProfile || null,
-      language: d.language || "",
       ctaLinks: d.ctaLinks || [],
+      language: d.language || "",
+      signatureHooks: d.signatureHooks || [],
+      closingPatterns: d.closingPatterns || [],
+      formattingStyle: d.formattingStyle || "",
+      visualStyle: d.visualStyle || "",
+      brandPersonality: d.brandPersonality || "",
+      brandTypography: d.brandTypography || null,
       brandColors: d.brandColors || [],
       referenceImages: d.referenceImages || [],
     }),
@@ -200,16 +233,6 @@ export function snapshotEditable(d) {
 }
 
 // ── Shared bits ──────────────────────────────────────────────────────────
-
-function cardPen(scope) {
-  return `
-    <div class="recap__card-actions">
-      <button type="button" class="ap-icon-button transparent recap__card-edit" data-recap-edit-card="${scope}" title="Edit" aria-label="Edit">
-        <i class="ap-icon-pen"></i>
-      </button>
-    </div>
-  `;
-}
 
 function editActionButtons() {
   return `
@@ -222,37 +245,98 @@ function editActionButtons() {
   `;
 }
 
-function cardEditActions() {
-  return `<div class="recap__edit-actions">${editActionButtons()}</div>`;
+function panelPen(scope) {
+  return `<button type="button" class="ap-icon-button transparent recap__panel-edit" data-recap-edit-card="${scope}" title="Edit" aria-label="Edit section"><i class="ap-icon-pen"></i></button>`;
 }
 
-function sectionPen(scope) {
-  return `<button type="button" class="ap-icon-button transparent recap__section-edit" data-recap-edit-card="${scope}" title="Edit" aria-label="Edit"><i class="ap-icon-pen"></i></button>`;
+function panelEditActions() {
+  return `<div class="recap__panel-actions">${editActionButtons()}</div>`;
 }
 
-function sectionEditActions() {
-  return `<div class="recap__section-actions">${editActionButtons()}</div>`;
-}
-
-function renderSectionHead(title, hint, actions = "") {
+function renderPanelHead(section, edit) {
   return `
-    <div class="recap__section-head">
-      <div class="recap__section-heading">
-        <h2 class="recap__section-title">${esc(title)}</h2>
-        ${hint ? `<p class="recap__section-hint">${esc(hint)}</p>` : ""}
-      </div>
-      ${actions}
+    <header class="recap__panel-head">
+      <span class="recap__panel-icon"><i class="${section.icon}" aria-hidden="true"></i></span>
+      <h2 class="recap__panel-title">${esc(section.title)}</h2>
+      ${edit ? panelEditActions() : panelPen(section.scope)}
+    </header>
+  `;
+}
+
+function renderRow(label, valueHtml) {
+  return `
+    <div class="recap__row">
+      <span class="recap__row-label">${esc(label)}</span>
+      <div class="recap__row-value">${valueHtml}</div>
     </div>
   `;
 }
 
+function renderText(text) {
+  return text ? `<p class="recap__row-text">${esc(text)}</p>` : `<span class="recap__row-empty">Not set yet</span>`;
+}
+
 function renderChips(values) {
   const list = Array.isArray(values) ? values.filter(Boolean) : [];
-  if (!list.length) return `<span class="recap__chip-empty">Not set yet</span>`;
+  if (!list.length) return `<span class="recap__row-empty">Not set yet</span>`;
   return `<div class="recap__chips">${list
     .map((v) => `<span class="ap-tag blue recap__chip">${esc(v)}</span>`)
     .join("")}</div>`;
 }
+
+function renderQuotes(values) {
+  const list = Array.isArray(values) ? values.filter((v) => (v || "").trim()) : [];
+  if (!list.length) return `<span class="recap__row-empty">Not set yet</span>`;
+  return `<ul class="recap__quotes">${list
+    .map((v) => `<li class="recap__quote"><i class="ap-icon-quote" aria-hidden="true"></i><span>${esc(v)}</span></li>`)
+    .join("")}</ul>`;
+}
+
+function renderCtaList(data) {
+  const ctas = (Array.isArray(data.ctaLinks) ? data.ctaLinks : []).filter((l) => l.checked);
+  if (!ctas.length) return `<span class="recap__row-empty">No links yet</span>`;
+  return `<ul class="recap__cta-list">${ctas
+    .map(
+      (c) => `
+      <li class="recap__cta">
+        <i class="ap-icon-link" aria-hidden="true"></i>
+        <span class="recap__cta-text">${esc(c.label || prettyUrl(c.url))}</span>
+      </li>`,
+    )
+    .join("")}</ul>`;
+}
+
+function renderSwatches(colors) {
+  if (!colors.length) return `<span class="recap__row-empty">Not set yet</span>`;
+  return `<div class="recap__swatches">${colors
+    .map(
+      (c) => `
+      <div class="recap__swatch">
+        <span class="recap__swatch-chip" style="background:${esc(c.hex || "#ffffff")};"></span>
+        <span class="recap__swatch-meta">
+          <span class="recap__swatch-name">${esc(c.name || "Colour")}</span>
+          <span class="recap__swatch-hex">${esc((c.hex || "").toUpperCase())}</span>
+        </span>
+      </div>`,
+    )
+    .join("")}</div>`;
+}
+
+function renderTypeSpecimen(data) {
+  const { headingFont, bodyFont } = brandFonts(data);
+  if (!headingFont && !bodyFont) return `<span class="recap__row-empty">Not set yet</span>`;
+  const cell = (role, font) => `
+    <div class="recap__type-cell">
+      <span class="recap__type-specimen" style="font-family:'${esc(font)}', var(--sys-text-style-body-font-family);">Ag</span>
+      <span class="recap__type-meta">
+        <span class="recap__type-role">${esc(role)}</span>
+        <span class="recap__type-name">${esc(font || "—")}</span>
+      </span>
+    </div>`;
+  return `<div class="recap__type-grid">${cell("Headings", headingFont)}${cell("Body", bodyFont)}</div>`;
+}
+
+// ── Edit-mode field renderers ──────────────────────────────────────────
 
 function renderEditChips(field, values, placeholder) {
   const list = Array.isArray(values) ? values : [];
@@ -283,218 +367,72 @@ function renderEditChips(field, values, placeholder) {
   `;
 }
 
-// ── Section renderers ────────────────────────────────────────────────────
-
-function renderHero(data) {
-  const site = brandSite(data);
-  const colors = site?.colors || {};
-  const accent = colors.accent || colors.primary || "var(--ref-color-orange-100)";
-  const primary = colors.primary || accent;
-  const voiceHeadline = data.voiceProfile?.headline || "";
-  const h = cfg.hero || {};
+function renderLineEditor(field, values, placeholder) {
+  const list = Array.isArray(values) ? values : [];
+  const rows = list
+    .map(
+      (v, i) => `
+      <div class="recap__line-edit">
+        <div class="ap-input-group recap__line-edit-field">
+          <input type="text" data-recap-line-field data-recap-line-list="${field}" data-recap-line-index="${i}" value="${esc(v)}" placeholder="${esc(placeholder)}" aria-label="${esc(placeholder)}" />
+        </div>
+        <button type="button" class="recap__cta-remove" data-recap-line-remove data-recap-line-list="${field}" data-recap-line-index="${i}" aria-label="Remove line">
+          <i class="ap-icon-close"></i>
+        </button>
+      </div>`,
+    )
+    .join("");
   return `
-    <header class="recap__hero">
-      <span class="recap__monogram" style="--brand-accent:${esc(accent)}; --brand-primary:${esc(primary)};">${esc(initials(data.name))}</span>
-      <span class="recap__eyebrow"><i class="ap-icon-sparkles-mermaid" aria-hidden="true"></i> ${esc(h.eyebrow || "Your Playbook")}</span>
-      <h1 class="recap__title">${esc(typeof h.title === "function" ? h.title(data) : h.title || "Here's your Playbook.")}</h1>
-      ${
-        voiceHeadline
-          ? `<span class="recap__voice-tag"><i class="ap-icon-quote" aria-hidden="true"></i>${esc(voiceHeadline)}</span>`
-          : ""
-      }
-      ${h.lead ? `<p class="recap__lead">${typeof h.lead === "function" ? h.lead(data) : h.lead}</p>` : ""}
-    </header>
+    <div class="recap__line-list">${rows}</div>
+    <button type="button" class="recap__add-link" data-recap-line-add="${field}">
+      <i class="ap-icon-plus"></i><span>Add line</span>
+    </button>
   `;
 }
 
-function renderEditHint() {
-  if (!cfg.editHint) return "";
+function renderTextarea(field, value, placeholder) {
   return `
-    <div class="ap-infobox info recap__edit-hint">
-      <i class="ap-icon-info_fill" aria-hidden="true"></i>
-      <div class="ap-infobox-content">
-        <div class="ap-infobox-texts">
-          <span class="ap-infobox-message">${esc(cfg.editHint)}</span>
-        </div>
-      </div>
+    <div class="ap-textarea-field resizable">
+      <textarea data-recap-text="${field}" rows="3" placeholder="${esc(placeholder)}">${esc(value || "")}</textarea>
     </div>
   `;
 }
 
-function renderOverview(data, edit) {
-  const url = prettyUrl(data.websiteUrl);
-  const summary = data.businessSummary || "";
-
-  if (edit) {
-    return `
-      <article class="recap__overview recap__overview--edit is-editing" data-recap-editing-card>
-        ${cardEditActions()}
-        <div class="recap__field">
-          <label class="recap__field-label" for="recap-name">Brand name</label>
-          <div class="ap-input-group">
-            <input id="recap-name" type="text" data-recap-name value="${esc(data.name || "")}" placeholder="Your brand name" />
-          </div>
+function renderCtaEditor(data) {
+  const allCtas = Array.isArray(data.ctaLinks) ? data.ctaLinks : [];
+  const rows = allCtas
+    .map((c, i) => ({ ...c, _i: i }))
+    .filter((c) => c.checked || c.suggested === false)
+    .map(
+      (c) => `
+      <div class="recap__cta-edit">
+        <div class="ap-input-group recap__cta-edit-label">
+          <input type="text" data-recap-cta-field="label" data-recap-cta-index="${c._i}" value="${esc(c.label || "")}" placeholder="Label" aria-label="CTA label" />
         </div>
-        ${url ? `<p class="recap__overview-url"><i class="ap-icon-web" aria-hidden="true"></i> ${esc(url)}</p>` : ""}
-        <div class="recap__field">
-          <label class="recap__field-label" for="recap-summary">Business summary</label>
-          <div class="ap-textarea-field resizable">
-            <textarea id="recap-summary" data-recap-summary rows="5" placeholder="Describe your business in a few sentences…">${esc(summary)}</textarea>
-          </div>
+        <div class="ap-input-group recap__cta-edit-url">
+          <input type="text" data-recap-cta-field="url" data-recap-cta-index="${c._i}" value="${esc(c.url || "")}" placeholder="https://…" aria-label="CTA URL" />
         </div>
-      </article>
-    `;
-  }
-
-  if (!data.name && !summary) return "";
-  return `
-    <article class="recap__overview">
-      ${cardPen("overview")}
-      <div class="recap__overview-head">
-        <h2 class="recap__overview-name">${esc(data.name || "Your brand")}</h2>
-        ${
-          url
-            ? `<a class="recap__overview-url" href="https://${esc(url)}" target="_blank" rel="noreferrer noopener"><i class="ap-icon-web" aria-hidden="true"></i> ${esc(url)}</a>`
-            : ""
-        }
+        <button type="button" class="recap__cta-remove" data-recap-cta-remove="${c._i}" aria-label="Remove link">
+          <i class="ap-icon-close"></i>
+        </button>
       </div>
-      ${summary ? `<p class="recap__overview-summary">${esc(summary)}</p>` : ""}
-    </article>
-  `;
-}
-
-function renderStrategy(data, scope) {
+    `,
+    )
+    .join("");
   return `
-    <section class="recap__section">
-      ${renderSectionHead("What Archie will create", "The strategy behind every post.")}
-      <div class="recap__grid recap__grid--strategy">
-        ${STRATEGY_FIELDS.map((c) => {
-          const edit = scope === c.key;
-          return `
-            <article class="recap__stat ${edit ? "is-editing" : ""}" ${edit ? "data-recap-editing-card" : ""}>
-              ${edit ? cardEditActions() : cardPen(c.key)}
-              <span class="recap__stat-icon"><i class="${c.icon}" aria-hidden="true"></i></span>
-              <div class="recap__stat-body">
-                <h3 class="recap__stat-label">${esc(c.label)}</h3>
-                <p class="recap__stat-caption">${esc(c.caption)}</p>
-                ${edit ? renderEditChips(c.key, data[c.key], c.placeholder) : renderChips(data[c.key])}
-              </div>
-            </article>
-          `;
-        }).join("")}
-      </div>
-    </section>
+    <div class="recap__cta-edit-list">${rows}</div>
+    <button type="button" class="recap__add-link" data-recap-cta-add>
+      <i class="ap-icon-plus"></i><span>Add link</span>
+    </button>
   `;
 }
 
-function renderVoice(data, edit) {
-  const vp = data.voiceProfile || {};
-
-  if (edit) {
-    return `
-      <section class="recap__section is-editing" data-recap-editing-card>
-        ${renderSectionHead("How you sound", "The voice Archie writes in.", sectionEditActions())}
-        <div class="recap__editbox">
-          <div class="recap__field">
-            <label class="recap__field-label">Voice in three words</label>
-            <div class="ap-input-group">
-              <input type="text" data-recap-headline value="${esc(vp.headline || "")}" placeholder="e.g. Professional · data-driven · approachable" />
-            </div>
-          </div>
-          <div class="recap__field">
-            <label class="recap__field-label">Writing style</label>
-            <div class="ap-textarea-field resizable">
-              <textarea data-recap-voice="writingStyle" rows="3" placeholder="How the writing reads…">${esc(vp.writingStyle || "")}</textarea>
-            </div>
-          </div>
-          <div class="recap__grid recap__grid--voice">
-            ${VOICE_TRAITS.map(
-              (t) => `
-                <div class="recap__field">
-                  <label class="recap__field-label">${esc(t.label)}</label>
-                  <div class="ap-textarea-field resizable">
-                    <textarea data-recap-voice="${t.key}" rows="3">${esc(vp[t.key] || "")}</textarea>
-                  </div>
-                </div>
-              `,
-            ).join("")}
-          </div>
-        </div>
-      </section>
-    `;
-  }
-
-  const lead = vp.writingStyle || "";
-  const traits = VOICE_TRAITS.map((t) => ({ label: t.label, text: vp[t.key] })).filter((t) => t.text);
-  if (!lead && !traits.length) return "";
-  return `
-    <section class="recap__section">
-      ${renderSectionHead("How you sound", "The voice Archie writes in.", sectionPen("voice"))}
-      ${
-        lead
-          ? `<blockquote class="recap__voice-lead">
-               <i class="ap-icon-quote" aria-hidden="true"></i>
-               <p>${esc(lead)}</p>
-             </blockquote>`
-          : ""
-      }
-      ${
-        traits.length
-          ? `<div class="recap__grid recap__grid--voice">
-               ${traits
-                 .map(
-                   (t) => `
-                   <article class="recap__trait">
-                     <h3 class="recap__trait-label">${esc(t.label)}</h3>
-                     <p class="recap__trait-text">${esc(t.text)}</p>
-                   </article>
-                 `,
-                 )
-                 .join("")}
-             </div>`
-          : ""
-      }
-    </section>
-  `;
-}
-
-// Default brand colours derived from the scraped site palette, so a Playbook
-// that has never been hand-edited still shows named swatches the user can
-// then rename / extend. Used to seed `data.brandColors` on first edit.
-function deriveBrandColors(site) {
-  const c = site?.colors || {};
-  return [
-    { name: "Primary", hex: c.primary },
-    { name: "Accent", hex: c.accent },
-    { name: "Background", hex: c.background },
-    { name: "Text", hex: c.textPrimary },
-    { name: "Link", hex: c.link },
-  ].filter((s) => s.hex);
-}
-
-// The authored brand palette — user-edited `brandColors` if present, else the
-// derived site palette (read-only view falls back to this).
-function visualColors(data) {
-  if (Array.isArray(data.brandColors)) return data.brandColors;
-  return deriveBrandColors(brandSite(data));
-}
-
-// Lazily promote the derived palette into an editable `brandColors` array the
-// first time the user opens the Visual-identity editor (alpha feedback #10).
-function ensureVisual(data) {
-  if (!Array.isArray(data.brandColors)) data.brandColors = deriveBrandColors(brandSite(data));
-  if (!Array.isArray(data.referenceImages)) data.referenceImages = [];
-}
-
-// Visual identity — brand palette is now author-editable (#10): the user adds
-// Reference-image gallery (#11) — up to 10 visual references the brand can
-// upload to steer image generation / keep their look consistent. Thumbnails
-// in read mode; add / remove affordances in edit mode.
+// Reference-image gallery (#11) — up to 10 visual references.
 const MAX_REF_IMAGES = 10;
 
 function renderRefImages(data, edit) {
   const imgs = Array.isArray(data.referenceImages) ? data.referenceImages : [];
-  if (!edit && !imgs.length) return "";
+  if (!edit && !imgs.length) return `<span class="recap__row-empty">None yet</span>`;
   const thumbs = imgs
     .map(
       (img, i) => `
@@ -515,25 +453,90 @@ function renderRefImages(data, edit) {
          </button>
          <input type="file" accept="image/*" multiple hidden data-recap-refimg-input />`
       : "";
+  return `<div class="recap__refimgs">${thumbs}${addBtn}</div>`;
+}
+
+// ── Section panels ─────────────────────────────────────────────────────
+
+function renderGoalsPanel(data, edit) {
+  const section = SECTIONS[0];
+  const language = data.language || "English";
+  let body;
+  if (edit) {
+    const selected = language;
+    body = [
+      renderRow(
+        "Language",
+        `<select class="ap-native-select recap__lang-select" data-recap-language aria-label="Language">
+          ${LANGUAGE_OPTIONS.map((o) => `<option value="${esc(o)}" ${o === selected ? "selected" : ""}>${esc(o)}</option>`).join("")}
+        </select>`,
+      ),
+      renderRow(
+        "Business",
+        `<div class="ap-textarea-field resizable">
+           <textarea data-recap-summary rows="4" placeholder="Describe your business in a few sentences…">${esc(data.businessSummary || "")}</textarea>
+         </div>`,
+      ),
+      ...GOAL_FIELDS.map((f) => renderRow(f.label, renderEditChips(f.key, data[f.key], f.placeholder))),
+      renderRow("CTA links", renderCtaEditor(data)),
+    ].join("");
+  } else {
+    body = [
+      renderRow("Business", renderText(data.businessSummary)),
+      ...GOAL_FIELDS.map((f) => renderRow(f.label, renderChips(data[f.key]))),
+      renderRow("CTA links", renderCtaList(data)),
+    ].join("");
+  }
   return `
-    <div class="recap__refimgs-block">
-      <span class="recap__field-label">Reference images${edit ? ` <span class="muted">— up to ${MAX_REF_IMAGES}</span>` : ""}</span>
-      <div class="recap__refimgs">${thumbs}${addBtn}</div>
-    </div>
+    <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" ${edit ? "data-recap-editing-card" : ""}>
+      ${renderPanelHead(section, edit)}
+      <div class="recap__panel-body">${body}</div>
+    </section>
   `;
 }
 
-// as many named #hex colours as they like. Typography stays read-only (scraped).
-function renderBrandSnapshot(data, edit) {
-  const site = brandSite(data);
-  const colors = visualColors(data);
-  const font = site?.typography?.primaryFont || "";
-  const domain = site?.domain || prettyUrl(data.websiteUrl);
-  const accent = colors.find((c) => /accent/i.test(c.name))?.hex || colors[0]?.hex || "var(--ref-color-orange-100)";
-  const primary = colors[0]?.hex || accent;
-
+function renderVoicePanel(data, edit) {
+  const section = SECTIONS[1];
+  let body;
   if (edit) {
-    const rows = colors
+    body = [
+      ...LINE_FIELDS.map((f) => renderRow(f.label, renderLineEditor(f.key, data[f.key], f.placeholder))),
+      renderRow(
+        "Formatting",
+        renderTextarea(
+          "formattingStyle",
+          data.formattingStyle,
+          "How posts are structured — line breaks, lists, rhythm…",
+        ),
+      ),
+      renderRow(
+        "Visual style",
+        renderTextarea("visualStyle", data.visualStyle, "Emoji use, capitalisation, hashtags, links…"),
+      ),
+    ].join("");
+  } else {
+    body = [
+      renderRow("Signature hooks", renderQuotes(data.signatureHooks)),
+      renderRow("Closing patterns", renderQuotes(data.closingPatterns)),
+      renderRow("Formatting", renderText(data.formattingStyle)),
+      renderRow("Visual style", renderText(data.visualStyle)),
+    ].join("");
+  }
+  return `
+    <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" ${edit ? "data-recap-editing-card" : ""}>
+      ${renderPanelHead(section, edit)}
+      <div class="recap__panel-body">${body}</div>
+    </section>
+  `;
+}
+
+function renderBrandPanel(data, edit) {
+  const section = SECTIONS[2];
+  const colors = visualColors(data);
+  let body;
+  if (edit) {
+    const fonts = data.brandTypography || brandFonts(data);
+    const colorRows = (Array.isArray(data.brandColors) ? data.brandColors : [])
       .map(
         (c, i) => `
         <div class="recap__color-row">
@@ -544,143 +547,147 @@ function renderBrandSnapshot(data, edit) {
         </div>`,
       )
       .join("");
-    return `
-      <section class="recap__section is-editing" data-recap-editing-card>
-        ${renderSectionHead("Visual identity", "Name as many brand colours as you like.", sectionEditActions())}
-        <div class="recap__editbox">
-          <div class="recap__colors" data-recap-colors>${rows}</div>
-          <button type="button" class="ap-button transparent blue recap__color-add" data-recap-color-add>
-            <i class="ap-icon-plus"></i><span>Add colour</span>
-          </button>
-          ${renderRefImages(data, true)}
-        </div>
-      </section>
-    `;
+    body = [
+      renderRow(
+        "Colours",
+        `<div class="recap__colors" data-recap-colors>${colorRows}</div>
+         <button type="button" class="ap-button transparent blue recap__color-add" data-recap-color-add>
+           <i class="ap-icon-plus"></i><span>Add colour</span>
+         </button>`,
+      ),
+      renderRow(
+        "Typography",
+        `<div class="recap__typo-edit">
+           <div class="ap-input-group">
+             <input type="text" data-recap-typo="headingFont" value="${esc(fonts.headingFont || "")}" placeholder="Headings font" aria-label="Headings font" />
+           </div>
+           <div class="ap-input-group">
+             <input type="text" data-recap-typo="bodyFont" value="${esc(fonts.bodyFont || "")}" placeholder="Body font" aria-label="Body font" />
+           </div>
+         </div>`,
+      ),
+      renderRow(
+        "Personality",
+        renderTextarea(
+          "brandPersonality",
+          data.brandPersonality,
+          "How the brand comes across — its character in a few sentences…",
+        ),
+      ),
+      renderRow("References", renderRefImages(data, true)),
+    ].join("");
+  } else {
+    body = [
+      renderRow("Colours", renderSwatches(colors)),
+      renderRow("Typography", renderTypeSpecimen(data)),
+      renderRow("Personality", renderText(data.brandPersonality)),
+      ...(Array.isArray(data.referenceImages) && data.referenceImages.length
+        ? [renderRow("References", renderRefImages(data, false))]
+        : []),
+    ].join("");
   }
-
-  if (!site && !colors.length) return "";
   return `
-    <section class="recap__section">
-      ${renderSectionHead("Visual identity", "Your brand colours and type.", sectionPen("visual"))}
-      <div class="recap__brand">
-        <div class="recap__brand-mark">
-          <span class="recap__monogram recap__monogram--sm" style="--brand-accent:${esc(accent)}; --brand-primary:${esc(primary)};">${esc(initials(data.name))}</span>
-          <span class="recap__brand-domain">${esc(domain || "")}</span>
-        </div>
-        ${
-          colors.length
-            ? `<div class="recap__palette">
-                 ${colors
-                   .map(
-                     (s) => `
-                     <div class="recap__swatch">
-                       <span class="recap__swatch-dot" style="background:${esc(s.hex)};"></span>
-                       <span class="recap__swatch-label">${esc(s.name)}</span>
-                     </div>
-                   `,
-                   )
-                   .join("")}
-               </div>`
-            : ""
-        }
-        ${
-          font
-            ? `<div class="recap__type">
-                 <span class="recap__type-specimen" style="font-family:'${esc(font)}', var(--sys-text-style-body-font-family);">Aa</span>
-                 <span class="recap__type-name">${esc(font)}</span>
-               </div>`
-            : ""
-        }
-      </div>
-      ${renderRefImages(data, false)}
+    <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" ${edit ? "data-recap-editing-card" : ""}>
+      ${renderPanelHead(section, edit)}
+      <div class="recap__panel-body">${body}</div>
     </section>
   `;
 }
 
-function renderEssentials(data, edit) {
-  const language = data.language || "";
-  const allCtas = Array.isArray(data.ctaLinks) ? data.ctaLinks : [];
+// ── Header + rail ──────────────────────────────────────────────────────
 
-  if (edit) {
-    const selected = language || "English";
-    const ctaRows = allCtas
-      .map((c, i) => ({ ...c, _i: i }))
-      .filter((c) => c.checked)
-      .map(
-        (c) => `
-        <div class="recap__cta-edit">
-          <div class="ap-input-group recap__cta-edit-label">
-            <input type="text" data-recap-cta-field="label" data-recap-cta-index="${c._i}" value="${esc(c.label || "")}" placeholder="Label" aria-label="CTA label" />
-          </div>
-          <div class="ap-input-group recap__cta-edit-url">
-            <input type="text" data-recap-cta-field="url" data-recap-cta-index="${c._i}" value="${esc(c.url || "")}" placeholder="https://…" aria-label="CTA URL" />
-          </div>
-          <button type="button" class="recap__cta-remove" data-recap-cta-remove="${c._i}" aria-label="Remove link">
-            <i class="ap-icon-close"></i>
-          </button>
-        </div>
-      `,
-      )
-      .join("");
-    return `
-      <section class="recap__section recap__section--essentials is-editing" data-recap-editing-card>
-        ${renderSectionHead("Essentials", null, sectionEditActions())}
-        <div class="recap__editbox">
-          <div class="recap__field recap__field--language">
-            <label class="recap__field-label">Language</label>
-            <select class="ap-native-select" data-recap-language aria-label="Language">
-              ${LANGUAGE_OPTIONS.map((o) => `<option value="${esc(o)}" ${o === selected ? "selected" : ""}>${esc(o)}</option>`).join("")}
-            </select>
-          </div>
-          <div class="recap__field recap__field--ctas">
-            <label class="recap__field-label">CTA links</label>
-            <div class="recap__cta-edit-list">${ctaRows}</div>
-            <button type="button" class="recap__add-link" data-recap-cta-add>
-              <i class="ap-icon-plus"></i><span>Add link</span>
-            </button>
-          </div>
-        </div>
-      </section>
-    `;
-  }
+function renderHeader(data) {
+  const colors = visualColors(data);
+  const accent = colors.find((c) => /accent/i.test(c.name))?.hex || colors[0]?.hex || "var(--ref-color-orange-100)";
+  const primary = colors[0]?.hex || accent;
+  const site = brandSite(data);
+  const domain = site?.domain || prettyUrl(data.websiteUrl);
+  const usedIn = typeof data.usedIn === "number" ? data.usedIn : null;
 
-  const ctas = allCtas.filter((l) => l.checked);
-  if (!language && !ctas.length) return "";
+  const meta = [
+    `<span class="recap__meta-item"><i class="ap-icon-web" aria-hidden="true"></i>${esc(data.language || "English")}</span>`,
+    domain ? `<span class="recap__meta-item recap__meta-dim">${esc(domain)}</span>` : "",
+    usedIn !== null ? `<span class="recap__meta-item">Used in ${usedIn} ${usedIn === 1 ? "chat" : "chats"}</span>` : "",
+    data.isDefault
+      ? `<span class="recap__meta-item recap__meta-default"><i class="ap-icon-star" aria-hidden="true"></i>Default</span>`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
   return `
-    <section class="recap__section recap__section--essentials">
-      ${renderSectionHead("Essentials", null, sectionPen("essentials"))}
-      <div class="recap__essentials">
-        ${
-          language
-            ? `<div class="recap__essential">
-                 <span class="recap__essential-label">Language</span>
-                 <span class="ap-tag grey recap__chip">${esc(language)}</span>
-               </div>`
-            : ""
-        }
-        ${
-          ctas.length
-            ? `<div class="recap__essential recap__essential--ctas">
-                 <span class="recap__essential-label">CTA links</span>
-                 <ul class="recap__cta-list">
-                   ${ctas
-                     .map(
-                       (c) => `
-                       <li class="recap__cta">
-                         <i class="ap-icon-link" aria-hidden="true"></i>
-                         <span class="recap__cta-text">${esc(c.label || prettyUrl(c.url))}</span>
-                       </li>
-                     `,
-                     )
-                     .join("")}
-                 </ul>
-               </div>`
-            : ""
-        }
+    <header class="recap__header">
+      <div class="recap__id">
+        <span class="recap__monogram" style="--brand-accent:${esc(accent)}; --brand-primary:${esc(primary)};">${esc(initials(data.name))}</span>
+        <div class="recap__id-text">
+          <div class="recap__id-titlerow">
+            <h1 class="recap__name">${esc(data.name || "Untitled Playbook")}</h1>
+            ${
+              cfg.onEditName
+                ? `<button type="button" class="ap-icon-button transparent recap__name-edit" data-recap-edit-name title="Rename" aria-label="Rename Playbook"><i class="ap-icon-pen"></i></button>`
+                : ""
+            }
+          </div>
+          <div class="recap__meta">${meta}</div>
+        </div>
       </div>
-    </section>
+      ${cfg.headerActions ? `<div class="recap__header-actions">${cfg.headerActions()}</div>` : ""}
+    </header>
   `;
 }
+
+function renderRail(data) {
+  const nav = SECTIONS.map(
+    (s, i) => `
+    <button type="button" class="recap__nav-link ${i === 0 ? "is-active" : ""}" data-recap-nav="${s.id}">
+      <i class="${s.icon}" aria-hidden="true"></i><span>${esc(s.title)}</span>
+    </button>`,
+  ).join("");
+
+  const colors = visualColors(data).slice(0, 6);
+  const usedIn = typeof data.usedIn === "number" ? data.usedIn : null;
+  const site = brandSite(data);
+  const domain = site?.domain || prettyUrl(data.websiteUrl);
+
+  const facts = [
+    `<div class="recap__fact"><dt>Language</dt><dd>${esc(data.language || "English")}</dd></div>`,
+    usedIn !== null
+      ? `<div class="recap__fact"><dt>Used in</dt><dd>${usedIn} ${usedIn === 1 ? "chat" : "chats"}</dd></div>`
+      : "",
+    data.updatedAt ? `<div class="recap__fact"><dt>Updated</dt><dd>${esc(data.updatedAt)}</dd></div>` : "",
+    domain ? `<div class="recap__fact"><dt>Source</dt><dd>${esc(domain)}</dd></div>` : "",
+    colors.length
+      ? `<div class="recap__fact"><dt>Colours</dt><dd><span class="recap__fact-dots">${colors
+          .map((c) => `<span class="recap__fact-dot" style="background:${esc(c.hex)};"></span>`)
+          .join("")}</span></dd></div>`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
+  return `
+    <aside class="recap__rail">
+      <nav class="recap__nav" aria-label="Playbook sections">${nav}</nav>
+      <dl class="recap__facts">${facts}</dl>
+    </aside>
+  `;
+}
+
+function renderEditHint() {
+  if (!cfg.editHint) return "";
+  return `
+    <div class="ap-infobox info recap__edit-hint">
+      <i class="ap-icon-info_fill" aria-hidden="true"></i>
+      <div class="ap-infobox-content">
+        <div class="ap-infobox-texts">
+          <span class="ap-infobox-message">${esc(cfg.editHint)}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── Loader + top strip ─────────────────────────────────────────────────
 
 function renderLoading(stageIdx) {
   const stages = cfg.loader || [];
@@ -728,6 +735,7 @@ function paint() {
   const modeClass = cfg.mode === "library" ? "welcome-screen--library" : "";
 
   if (phase === "loading") {
+    detachScrollSpy();
     mountTarget.innerHTML = html`
       <section class="welcome-screen welcome-screen--reveal welcome-screen--loading ${modeClass}">
         <div class="welcome-screen__bg" aria-hidden="true"></div>
@@ -740,17 +748,18 @@ function paint() {
 
   const data = cfg.getData();
   const scope = editScope;
-  const body = [
-    renderHero(data),
-    scope ? "" : renderEditHint(),
-    renderOverview(data, scope === "overview"),
-    renderStrategy(data, scope),
-    renderVoice(data, scope === "voice"),
-    renderBrandSnapshot(data, scope === "visual"),
-    renderEssentials(data, scope === "essentials"),
-  ]
-    .filter(Boolean)
-    .join("");
+  const body = `
+    ${renderHeader(data)}
+    ${scope ? "" : renderEditHint()}
+    <div class="recap__layout">
+      ${renderRail(data)}
+      <div class="recap__main">
+        ${renderGoalsPanel(data, scope === "goals")}
+        ${renderVoicePanel(data, scope === "voice")}
+        ${renderBrandPanel(data, scope === "brand")}
+      </div>
+    </div>
+  `;
 
   const footerHtml = cfg.footer ? `<footer class="recap__footer">${cfg.footer()}</footer>` : "";
 
@@ -762,6 +771,40 @@ function paint() {
       ${raw(footerHtml)}
     </section>
   `;
+
+  attachScrollSpy();
+}
+
+// ── Section-nav scroll-spy ─────────────────────────────────────────────
+
+function setActiveNav(id) {
+  mountTarget?.querySelectorAll("[data-recap-nav]").forEach((el) => {
+    el.classList.toggle("is-active", el.dataset.recapNav === id);
+  });
+}
+
+function detachScrollSpy() {
+  if (scrollSpy) {
+    scrollSpy.disconnect();
+    scrollSpy = null;
+  }
+}
+
+function attachScrollSpy() {
+  detachScrollSpy();
+  if (!mountTarget) return;
+  const root = mountTarget.querySelector(".welcome-screen");
+  const sections = [...mountTarget.querySelectorAll(".recap__panel[id]")];
+  if (!root || !sections.length || !("IntersectionObserver" in window)) return;
+  scrollSpy = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) setActiveNav(e.target.id);
+      });
+    },
+    { root, rootMargin: "-15% 0px -70% 0px", threshold: 0 },
+  );
+  sections.forEach((s) => scrollSpy.observe(s));
 }
 
 // ── Edit-mode mutations ──────────────────────────────────────────────────
@@ -779,15 +822,40 @@ function addChip(field) {
   mountTarget.querySelector(`[data-recap-chip-input="${field}"]`)?.focus();
 }
 
+function addLine(field) {
+  const data = cfg.getData();
+  if (!data) return;
+  const list = Array.isArray(data[field]) ? data[field].slice() : [];
+  list.push("");
+  data[field] = list;
+  repaint();
+  const inputs = mountTarget?.querySelectorAll(`[data-recap-line-list="${field}"]`);
+  inputs?.[inputs.length - 1]?.focus();
+}
+
 function onClick(event) {
+  // Section-nav — scroll the panel into view (buttons, not anchors, so the
+  // hash router is never triggered).
+  const nav = event.target.closest("[data-recap-nav]");
+  if (nav) {
+    const el = mountTarget?.querySelector(`#${nav.dataset.recapNav}`);
+    el?.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "start" });
+    setActiveNav(nav.dataset.recapNav);
+    return;
+  }
+
+  // Header name pencil → rename (mode-specific handler).
+  if (event.target.closest("[data-recap-edit-name]")) {
+    cfg.onEditName?.();
+    return;
+  }
+
   const data = cfg.getData();
   if (!data) return;
 
   const penBtn = event.target.closest("[data-recap-edit-card]");
   if (penBtn) {
-    // Seed the editable visual arrays from the scraped palette before
-    // snapshotting, so Cancel reverts to the right baseline.
-    if (penBtn.dataset.recapEditCard === "visual") ensureVisual(data);
+    if (penBtn.dataset.recapEditCard === "brand") ensureBrand(data);
     snapshot = snapshotEditable(data);
     editScope = penBtn.dataset.recapEditCard;
     repaint();
@@ -812,6 +880,9 @@ function onClick(event) {
     if (Array.isArray(data.ctaLinks)) {
       data.ctaLinks = data.ctaLinks.filter((c) => (c.label || "").trim() || (c.url || "").trim() || c.suggested);
     }
+    ["signatureHooks", "closingPatterns"].forEach((f) => {
+      if (Array.isArray(data[f])) data[f] = data[f].filter((s) => (s || "").trim());
+    });
     cfg.commit?.();
     snapshot = null;
     editScope = null;
@@ -834,6 +905,21 @@ function onClick(event) {
     return;
   }
 
+  // Line-list editor (signature hooks / closing patterns).
+  const lineRemove = event.target.closest("[data-recap-line-remove]");
+  if (lineRemove) {
+    const field = lineRemove.dataset.recapLineList;
+    const idx = Number(lineRemove.dataset.recapLineIndex);
+    if (Array.isArray(data[field])) data[field] = data[field].filter((_, i) => i !== idx);
+    repaint();
+    return;
+  }
+  const lineAdd = event.target.closest("[data-recap-line-add]");
+  if (lineAdd) {
+    addLine(lineAdd.dataset.recapLineAdd);
+    return;
+  }
+
   const ctaRemove = event.target.closest("[data-recap-cta-remove]");
   if (ctaRemove) {
     const idx = Number(ctaRemove.dataset.recapCtaRemove);
@@ -852,7 +938,7 @@ function onClick(event) {
     return;
   }
 
-  // Brand colours (#10) — add / remove a named #hex swatch.
+  // Brand colours — add / remove a named #hex swatch.
   const colorRemove = event.target.closest("[data-recap-color-remove]");
   if (colorRemove) {
     const idx = Number(colorRemove.dataset.recapColorRemove);
@@ -870,7 +956,7 @@ function onClick(event) {
     return;
   }
 
-  // Reference images (#11) — open the file picker / drop a thumbnail.
+  // Reference images — open the file picker / remove a thumbnail.
   if (event.target.closest("[data-recap-refimg-add]")) {
     mountTarget?.querySelector("[data-recap-refimg-input]")?.click();
     return;
@@ -883,7 +969,7 @@ function onClick(event) {
     return;
   }
 
-  // Footer (mode-specific) — Enter Archie / Back to Playbooks.
+  // Footer / header actions (mode-specific) — Save and start / Start chat / etc.
   cfg.onFooter?.(event);
 }
 
@@ -894,14 +980,17 @@ function onInput(event) {
   const data = cfg.getData();
   if (!data) return;
   const t = event.target;
-  if (t.matches("[data-recap-name]")) {
-    data.name = t.value;
-  } else if (t.matches("[data-recap-summary]")) {
+  if (t.matches("[data-recap-summary]")) {
     data.businessSummary = t.value;
-  } else if (t.matches("[data-recap-headline]")) {
-    ensureVoice(data).headline = t.value;
-  } else if (t.matches("[data-recap-voice]")) {
-    ensureVoice(data)[t.dataset.recapVoice] = t.value;
+  } else if (t.matches("[data-recap-text]")) {
+    data[t.dataset.recapText] = t.value;
+  } else if (t.matches("[data-recap-typo]")) {
+    if (!data.brandTypography || typeof data.brandTypography !== "object") data.brandTypography = brandFonts(data);
+    data.brandTypography[t.dataset.recapTypo] = t.value;
+  } else if (t.matches("[data-recap-line-field]")) {
+    const list = t.dataset.recapLineList;
+    const idx = Number(t.dataset.recapLineIndex);
+    if (Array.isArray(data[list]) && data[list][idx] !== undefined) data[list][idx] = t.value;
   } else if (t.matches("[data-recap-cta-field]")) {
     const idx = Number(t.dataset.recapCtaIndex);
     const field = t.dataset.recapCtaField;
@@ -910,7 +999,6 @@ function onInput(event) {
     const idx = Number(t.dataset.recapColorIndex);
     const field = t.dataset.recapColorField;
     if (data.brandColors?.[idx]) data.brandColors[idx][field] = t.value;
-    // Live-update the row's swatch as the hex is typed (no repaint, keeps focus).
     if (field === "hex") {
       const sw = mountTarget?.querySelector(`[data-recap-color-swatch="${idx}"]`);
       if (sw) sw.style.background = t.value;
@@ -929,7 +1017,7 @@ function onChange(event) {
     return;
   }
   // Reference-image upload (#11) — read each picked image as a data URL and
-  // append, capped at MAX_REF_IMAGES. Async, so repaint once all have loaded.
+  // append, capped at MAX_REF_IMAGES.
   if (event.target.matches("[data-recap-refimg-input]")) {
     const picked = Array.from(event.target.files || []).filter((f) => f.type.startsWith("image/"));
     if (!picked.length) return;
@@ -960,5 +1048,8 @@ function onKeydown(event) {
   if (event.target.matches("[data-recap-chip-input]") && event.key === "Enter") {
     event.preventDefault();
     addChip(event.target.dataset.recapChipInput);
+  } else if (event.target.matches("[data-recap-line-field]") && event.key === "Enter") {
+    event.preventDefault();
+    addLine(event.target.dataset.recapLineList);
   }
 }

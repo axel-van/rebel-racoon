@@ -8,20 +8,16 @@ import { navigate } from "../router.js?v=30";
 import { escapeHtml as esc } from "../utils.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=99";
 import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=29";
-import { mount, snapshotEditable } from "../playbook-view.js?v=6";
+import { mount, snapshotEditable } from "../playbook-view.js?v=8";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";
 
-// Footer action bar buttons — Start a chat (AI spotlight) · Edit name · Delete.
-// Rendered in the sticky footer bar (not in the page body).
-const FOOTER_ACTIONS = `
+// Header action bar — Start a chat (AI spotlight) · Delete. The Playbook name
+// is renamed via the pencil next to the title (cfg.onEditName).
+const HEADER_ACTIONS = `
   <button type="button" class="ap-button primary orange" data-playbook-start>
     <i class="ap-icon-sparkles"></i>
-    <span>Start a chat with this Playbook</span>
-  </button>
-  <button type="button" class="ap-button stroked grey" data-playbook-edit>
-    <i class="ap-icon-pen"></i>
-    <span>Edit name</span>
+    <span>Start a chat</span>
   </button>
   <button type="button" class="ap-button ghost red" data-playbook-delete>
     <i class="ap-icon-trash"></i>
@@ -44,21 +40,22 @@ export function renderPlaybook(params, target) {
 
   // Footer action handlers — invoked by the playbook-view engine's onFooter
   // hook (the footer bar lives in the engine's sticky footer, not the body).
+  // Header name pencil → rename the Playbook.
+  const onEditName = () => {
+    const ctx = getContextById(id);
+    openRenameModal({
+      title: "Rename Playbook",
+      initialName: ctx?.name || "",
+      placeholder: "Playbook name",
+      confirmLabel: "Save name",
+      onSubmit: (name) => updateContext(id, { name, updatedAt: "just now" }),
+    });
+  };
+
   const onFooter = (event) => {
     if (event.target.closest("[data-playbook-start]")) {
       // New chat pre-bound to this Playbook via ?contextId (session.js reads it).
       navigate(`/session/new-${Date.now().toString(36)}?contextId=${id}`);
-      return true;
-    }
-    if (event.target.closest("[data-playbook-edit]")) {
-      const ctx = getContextById(id);
-      openRenameModal({
-        title: "Rename Playbook",
-        initialName: ctx?.name || "",
-        placeholder: "Playbook name",
-        confirmLabel: "Save name",
-        onSubmit: (name) => updateContext(id, { name, updatedAt: "just now" }),
-      });
       return true;
     }
     if (event.target.closest("[data-playbook-delete]")) {
@@ -96,14 +93,10 @@ export function renderPlaybook(params, target) {
     },
     revert: (snapshot) => updateContext(id, snapshot),
     showTop: false,
-    hero: {
-      eyebrow: "Playbook",
-      title: (d) => d.name || "Playbook",
-      lead: (d) => `Everything below is what Archie uses to write for <strong>${esc(d.name || "your brand")}</strong>.`,
-    },
-    editHint: "Hover any card and hit the pencil to edit it — your changes save as you go.",
-    // Sticky footer action bar (engine renders it outside the scroll body).
-    footer: () => FOOTER_ACTIONS,
+    editHint: "Hover a section and hit the pencil to edit it — your changes save as you go.",
+    // Identity-header action bar (Start a chat / Delete) + name pencil.
+    headerActions: () => HEADER_ACTIONS,
+    onEditName,
     onFooter,
   });
 }

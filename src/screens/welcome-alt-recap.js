@@ -5,9 +5,9 @@
 // actual rendering + per-card edit machine lives in ../playbook-view.js.
 
 import { navigate } from "../router.js?v=30";
-import { escapeHtml as esc } from "../utils.js?v=20";
 import { getDraft, isAnalysisReady, save, patchDraft, restoreDraft } from "../context-builder.js?v=81";
-import { mount } from "../playbook-view.js?v=6";
+import { mount } from "../playbook-view.js?v=8";
+import { open as openRenameModal } from "../components/rename-modal.js?v=2";
 
 const WELCOME_ALT_KEY = "welcomeAltSessionId";
 const WELCOME_ALT_DRAFT_KEY = "welcomeAltDraft";
@@ -52,8 +52,6 @@ export function renderWelcomeAltRecap(_params, target) {
   const skipLoader = restored || (introDoneSid === sid && isAnalysisReady(sid));
   if (skipLoader) introDoneSid = sid;
 
-  const prettyUrl = (url) => (url || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
-
   return mount(target, {
     mode: "onboarding",
     getData: () => getDraft(sid),
@@ -69,16 +67,17 @@ export function renderWelcomeAltRecap(_params, target) {
       introDoneSid = sid;
     },
     showTop: !integrated,
-    hero: {
-      eyebrow: "Your Playbook",
-      title: "Here's your Playbook.",
-      lead: (d) => {
-        const url = prettyUrl(d.websiteUrl);
-        const from = url ? `<strong>${esc(url)}</strong>` : "your site";
-        return `Built from ${from} and our chat. Everything below is what I'll use to keep posts in your voice.`;
-      },
+    onEditName: () => {
+      const d = getDraft(sid);
+      openRenameModal({
+        title: "Rename Playbook",
+        initialName: d?.name || "",
+        placeholder: "Playbook name",
+        confirmLabel: "Save name",
+        onSubmit: (name) => patchDraft(sid, { name }),
+      });
     },
-    editHint: "This Playbook is yours to shape. Hover any card and hit the pencil to edit it — then jump in.",
+    editHint: "This Playbook is yours to shape. Hover a section and hit the pencil to edit it — then jump in.",
     footer: () =>
       integrated
         ? `<button type="button" class="ap-button primary orange" data-welcome-done><span>Save and continue</span></button>`

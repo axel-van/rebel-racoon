@@ -882,6 +882,26 @@ export const contexts = [
     contentStyle: ["Direct and actionable", "Data-driven with storytelling"],
     objective: ["Brand awareness", "Lead generation"],
     contentAction: ["Sign up for a free trial", "Book a demo"],
+    signatureHooks: [
+      "Most teams get this backwards:",
+      "Here's what actually moved the needle:",
+      "We cut [task] from days to minutes —",
+    ],
+    closingPatterns: ["Try it free for 30 days — link in the comments.", "What's your take? Reply and tell me."],
+    formattingStyle:
+      "Short paragraphs, one idea each. Opens on a hook line, then 2–3 lines of context. A tight three-item list when points are parallel, prose otherwise. Generous line breaks — no walls of text. Most posts top out around 90 words.",
+    visualStyle:
+      "No emoji. Sentence case throughout — no ALL-CAPS shouting. Numbers as digits ('3x', '40%'). One link, dropped in the first comment, never mid-sentence.",
+    brandPersonality:
+      "Confident without bragging, helpful without performing. Speaks the way operators talk to each other — direct, specific, occasionally dry. Never hypey.",
+    brandTypography: { headingFont: "Inter", bodyFont: "Inter" },
+    brandColors: [
+      { name: "Primary", hex: "#1A1F36" },
+      { name: "Secondary", hex: "#3B4A6B" },
+      { name: "Accent", hex: "#FF6726" },
+      { name: "Background", hex: "#FFFFFF" },
+      { name: "Text", hex: "#1A1F36" },
+    ],
     ctaLinks: [
       { label: "30-day free trial", url: "acme.example.com/trial", checked: true, suggested: false },
       { label: "Book a demo", url: "acme.example.com/demo", checked: true, suggested: false },
@@ -976,6 +996,28 @@ export const contexts = [
     contentStyle: ["Direct and actionable"],
     objective: ["Build personal brand", "Brand awareness"],
     contentAction: ["Read more on the blog"],
+    signatureHooks: [
+      "Unpopular opinion:",
+      "I used to believe [X]. I was wrong.",
+      "Nobody tells you this when you start:",
+    ],
+    closingPatterns: [
+      "Curious if it's just me — or you've seen it too.",
+      "Still figuring this out. Tell me where I'm wrong.",
+    ],
+    formattingStyle:
+      "Very short. Often a single line that lands. The occasional longer sentence to explain a counter-intuitive idea. Heavy line breaks for rhythm. No lists, no headers — reads like a thought, not a doc.",
+    visualStyle:
+      "No emoji, no hashtags. A lowercase opening is fine when it suits the cadence. First person always ('I', 'we'). Zero links or product mentions.",
+    brandPersonality:
+      "Opinionated, generous with credit, willing to be wrong out loud. Speaks from scar tissue, not theory. The human is the brand — readers follow the person, not a logo.",
+    brandTypography: { headingFont: "System UI", bodyFont: "System UI" },
+    brandColors: [
+      { name: "Primary", hex: "#178DFE" },
+      { name: "Accent", hex: "#178DFE" },
+      { name: "Background", hex: "#FFFFFF" },
+      { name: "Text", hex: "#1A1F36" },
+    ],
     ctaLinks: [],
     language: "English",
     imageVoice: {
@@ -1065,6 +1107,21 @@ export const contexts = [
     contentStyle: ["Data-driven with storytelling"],
     objective: ["Brand awareness", "Lead generation"],
     contentAction: ["Read the full customer story", "Book a demo"],
+    signatureHooks: ["When [Team] started, they were [problem].", "Here's what changed for [Customer]:"],
+    closingPatterns: ["See how teams like yours use Acme →", "Their words, not ours."],
+    formattingStyle:
+      "Story-shaped: a short hook line, 2–3 sentences of context, a pulled quote on its own line, then a closing line that names the result. Medium-length sentences. The quote is always set apart.",
+    visualStyle:
+      "No emoji. Names the customer and their role in full. Metrics as digits ('cut response time 60%'). One quote per post, verbatim — never paraphrased.",
+    brandPersonality:
+      "Trustworthy, attentive, occasionally surprised on the customer's behalf. Lets the customer be the hero and the numbers carry the emotion.",
+    brandTypography: { headingFont: "Inter", bodyFont: "Inter" },
+    brandColors: [
+      { name: "Primary", hex: "#1A6E3F" },
+      { name: "Accent", hex: "#34A65F" },
+      { name: "Background", hex: "#FFFFFF" },
+      { name: "Text", hex: "#1A1F36" },
+    ],
     ctaLinks: [
       {
         label: "See how teams like yours use Acme",
