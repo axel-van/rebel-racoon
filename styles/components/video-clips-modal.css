@@ -251,67 +251,6 @@
   padding: 0 2px;
 }
 
-/* ── Toolbar ───────────────────────────────────────────────────── */
-
-.video-clips-modal__toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 22px;
-  border-bottom: 1px solid var(--app-vc-border);
-}
-
-.video-clips-modal__bulk {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-}
-
-.video-clips-modal__toolbar-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-}
-
-.vc-link {
-  background: transparent;
-  border: 0;
-  padding: 4px 0;
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--app-vc-accent);
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.vc-link:hover {
-  color: var(--app-vc-accent-hover);
-}
-
-.vc-link:disabled {
-  color: var(--app-vc-text-subtle);
-  cursor: not-allowed;
-}
-
-.video-clips-modal__sep {
-  width: 1px;
-  height: 14px;
-  background: var(--app-vc-border);
-}
-
-/* Suggest more — uses the DS .ap-button.stroked.grey. The only addition
-   is the spinner animation on the refresh icon when re-mining. */
-.video-clips-modal__regen.is-loading i {
-  animation: vc-spin 0.9s linear infinite;
-}
-
-@keyframes vc-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* ── Body / grid ───────────────────────────────────────────────── */
 
 /* Body — override .ap-dialog-content (which ships gap:24px / padding 24
@@ -663,7 +602,7 @@
    across the bottom. */
 .vc-editor--veed {
   display: grid;
-  grid-template-columns: 80px minmax(248px, 328px) minmax(0, 1fr);
+  grid-template-columns: 80px minmax(280px, 372px) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-areas:
     "rail panel stage"
@@ -755,6 +694,13 @@
   max-height: 100%;
 }
 
+/* Fullscreen exists to review the cut on a bigger canvas — let the preview
+   actually grow instead of pouring the new space into empty panel. The stage's
+   `max-height: 100%` still keeps it inside the taller stage area. */
+.video-clips-modal.is-expanded .vc-stage .vc-preview {
+  width: min(100%, 1180px);
+}
+
 /* Full-width bottom timeline — flush bar (drop the card border/radius). */
 .vc-editor--veed > .vc-editor__timeline {
   grid-area: timeline;
@@ -764,6 +710,13 @@
   border-radius: 0;
   background: var(--app-vc-surface-raised);
   padding: var(--ref-spacing-xxs) var(--ref-spacing-md) var(--ref-spacing-xs);
+}
+
+/* Trim mode hangs the duration pill below the trim window; reserve bottom
+   clearance so the editor's overflow:hidden (needed for the flush shell)
+   doesn't clip it. Scoped to trim so the default scrub view stays compact. */
+.vc-editor--veed.is-trimming > .vc-editor__timeline {
+  padding-bottom: var(--ref-spacing-lg);
 }
 
 /* Set IN/OUT moved into the timeline head, beside the In/Out steppers. */
@@ -851,11 +804,15 @@
   display: none;
 }
 
-/* Single-clip body fills with the editor (so the VEED grid gets a height). */
+/* Single-clip body fills with the editor (so the VEED grid gets a height).
+   Edit-from-browse (is-captions) gets the SAME edge-to-edge treatment as
+   single-clip mode: zero the body gutter so the dark editor sits flush with
+   the modal sides + footer (no surface gap framing the editor). */
 .video-clips-modal.is-single-clip .video-clips-modal__body,
 .video-clips-modal__body.is-captions.ap-dialog-content {
   display: flex;
   overflow: hidden;
+  padding: 0;
 }
 
 .video-clips-modal.is-single-clip .vc-rows__cell--solo,
@@ -871,80 +828,12 @@
   flex: 1;
   min-width: 0;
   min-height: 0;
-}
-
-.vc-editor__head {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  padding-bottom: var(--ref-spacing-xs);
-  border-bottom: 1px solid var(--app-vc-border);
-}
-
-.vc-editor__head-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--app-vc-accent);
-}
-
-.vc-editor__head-time {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--app-vc-text);
-}
-
-/* Start/end timestamps + arrow — muted on the dark editor head.
-   :not() excludes the duration pill below so its own white-on-blue
-   colors keep specificity over this rule. */
-.vc-editor__head-time > span:not(.vc-editor__head-dur) {
-  color: var(--app-vc-text-subtle);
-}
-
-.vc-editor__head-dur {
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  background: var(--app-vc-accent);
-  color: var(--ref-color-white);
-  padding: 2px var(--ref-spacing-xxs);
-  border-radius: var(--ref-border-radius-sm);
-  margin-left: var(--ref-spacing-xxxs);
-}
-
-.vc-editor__head-spacer {
-  flex: 1;
-}
-
-/* Editor-header buttons (Delete / Cancel / Save) — Delete and Cancel use
- * .ap-button.ghost.{red,grey} which were designed for light surfaces;
- * remap the grey text to the dark-surface muted token. The red ghost
- * variant already has enough contrast at default colors. */
-.vc-editor__head .ap-button.ghost.grey {
-  color: var(--app-vc-text-muted);
-}
-
-.vc-editor__head .ap-button.ghost.grey:hover {
-  background: var(--app-vc-hover);
-  color: var(--app-vc-text);
-}
-
-/* ── Editor top: preview (left) + form (right) ─────────────────── */
-
-.vc-editor__top {
-  display: grid;
-  /* Cap the preview column so the Clip-tab preview stays compact (a tall
-     16:9 box was what made the modal need ~1050px). The form takes the rest. */
-  grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
-  gap: var(--ref-spacing-sm);
-  align-items: start;
+  /* Drop the floating-card chrome (margin / border / radius / shadow) so the
+     editor is flush with the modal — matches the single-clip treatment. */
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .vc-preview {
@@ -1006,14 +895,7 @@
   color: var(--ref-color-white);
 }
 
-/* ── Form (right side of preview) ──────────────────────────────── */
-
-.vc-editor__form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  min-width: 0;
-}
+/* ── Editor fields (title / summary / rationale) ───────────────── */
 
 .vc-editor__field {
   display: flex;
@@ -1035,6 +917,33 @@
 .vc-editor__label i {
   font-size: var(--sys-text-style-caption-size);
   opacity: 0.8;
+}
+
+/* AI rationale label — orange per the app convention (orange = AI/spotlight).
+   The sparkles glyph keeps full opacity here so the accent reads. */
+.vc-editor__label--ai {
+  color: var(--app-vc-primary);
+}
+
+.vc-editor__label--ai i {
+  opacity: 1;
+}
+
+/* "Why I picked this" body — quiet italic, mirrors the browse card's rationale. */
+.vc-editor__why {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  font-style: italic;
+  color: var(--app-vc-text-subtle);
+  text-wrap: pretty;
+}
+
+.vc-editor__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .vc-editor__title-input {
@@ -1320,18 +1229,25 @@
   padding: 0 6px 3px;
 }
 
+/* Quiet neutral bars — a backdrop that helps you read speech vs silence
+   without competing with the trim window. The selected window (accent border
+   + accent-soft fill) overlays these and supplies the only emphasis. */
 .vc-wave__bar {
   flex: 1;
   min-width: 0;
-  background: var(--app-vc-accent);
+  background: var(--app-vc-text-subtle);
   border-radius: 1px;
-  opacity: 0.7;
+  opacity: 0.32;
 }
 
 .vc-protrim__window {
   position: absolute;
   top: -3px;
   bottom: -3px;
+  /* Floor the rendered width so the move-whole-clip body stays grabbable even
+     when the clip is a sliver of a long video. The handles flank it and are
+     positioned against its edges, so they ride this floor and never overlap. */
+  min-width: 10px;
   border: 2px solid var(--app-vc-accent);
   border-radius: var(--app-radius-button-sm);
   background: var(--app-vc-accent-soft);
@@ -1357,16 +1273,30 @@
   pointer-events: none;
 }
 
+/* Endpoint (start/end) labels sit just outside the window edges and only
+   appear while that edge is being dragged — otherwise on a sliver-width clip
+   they'd overlap each other and the center pill. The In/Out steppers carry
+   the resting values, so nothing is lost. */
 .vc-protrim__win-label--l {
-  left: 0;
-  transform: translateX(-50%);
+  right: 100%;
+  margin-right: 4px;
+  opacity: 0;
+  transition: opacity var(--ref-animation-short);
 }
 
 .vc-protrim__win-label--r {
-  right: 0;
-  transform: translateX(50%);
+  left: 100%;
+  margin-left: 4px;
+  opacity: 0;
+  transition: opacity var(--ref-animation-short);
 }
 
+.vc-protrim.is-dragging--start .vc-protrim__win-label--l,
+.vc-protrim.is-dragging--end .vc-protrim__win-label--r {
+  opacity: 1;
+}
+
+/* Center duration is the headline readout — always visible. */
 .vc-protrim__win-label--c {
   left: 50%;
   top: auto;
@@ -1392,12 +1322,17 @@
     transform var(--ref-animation-short);
 }
 
+/* Handles are anchored to the window's own edges and point outward, so they
+   stay separated by the full window width + their own widths — they can never
+   overlap, however short the clip. */
 .vc-protrim__handle--l {
+  left: 0;
   transform: translateX(-100%);
   border-radius: var(--ref-border-radius-sm) 0 0 var(--ref-border-radius-sm);
 }
 
 .vc-protrim__handle--r {
+  left: 100%;
   transform: translateX(0%);
   border-radius: 0 var(--ref-border-radius-sm) var(--ref-border-radius-sm) 0;
 }
@@ -1548,4 +1483,29 @@
   background: var(--app-vc-accent-pill);
   border-color: var(--app-vc-accent);
   color: var(--app-vc-accent);
+}
+
+/* ── Keyboard focus rings ───────────────────────────────────────────
+   The DS .ap-button variants ship their own focus ring, but these custom
+   controls (rail, sub-tabs, Set IN/OUT, Trim, transport, presets, caption
+   tabs/segments) had none. One consistent accent ring for keyboard users,
+   :focus-visible so it never shows on pointer interaction. */
+.video-clips-modal .vc-rail__item:focus-visible,
+.video-clips-modal .vc-subtab:focus-visible,
+.video-clips-modal .vc-editor__set-btn:focus-visible,
+.video-clips-modal .vc-trim-toggle:focus-visible,
+.video-clips-modal .cap-ed__tab:focus-visible,
+.video-clips-modal .cap-ed__icon-btn:focus-visible,
+.video-clips-modal .cap-ed__cleanup-btn:focus-visible,
+.video-clips-modal .cap-ed-preset:focus-visible,
+.video-clips-modal .cap-ed-seg__btn:focus-visible {
+  outline: 2px solid var(--app-vc-accent);
+  outline-offset: 2px;
+}
+
+/* Browse-card selection — the real checkbox is visually hidden, so mirror its
+   keyboard focus onto the faux check box. */
+.vc-row__check:focus-visible + .vc-row__check-box {
+  outline: 2px solid var(--app-vc-accent);
+  outline-offset: 2px;
 }

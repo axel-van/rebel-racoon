@@ -516,7 +516,7 @@
 .cap-ed__transport {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-xs);
   width: min(100%, 480px);
   flex-shrink: 0;
 }
@@ -534,6 +534,19 @@
 .cap-ed__transport .cap-ed__icon-btn:hover {
   background: var(--app-vc-accent-hover);
   color: var(--ref-color-white);
+}
+
+/* Skip back / forward — quiet ghost buttons flanking the primary play. */
+.cap-ed__transport .cap-ed__icon-btn--ghost {
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  color: var(--app-vc-text-muted);
+}
+
+.cap-ed__transport .cap-ed__icon-btn--ghost:hover {
+  background: var(--app-vc-hover);
+  color: var(--app-vc-text);
 }
 
 .cap-ed__time {

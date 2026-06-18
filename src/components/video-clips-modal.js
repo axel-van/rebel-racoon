@@ -82,6 +82,9 @@ let editorTab = "clip";
 // or "transcript". The stage + timeline stay put; only this panel swaps.
 let optionsSubtab = "style";
 let captionMounted = false;
+// The mounted caption-editor module (for playback seek/fraction queries from
+// the timeline scrubber). Set in syncCaptionMount.
+let capMod = null;
 // Fullscreen toggle — expands the modal to near-viewport for more real estate.
 let expanded = false;
 // Trim mode — the In/Out handles + steppers are hidden until the user opts in
@@ -313,7 +316,9 @@ function optionsHTML() {
       </div>`;
   }
 
-  // Clip tab — title + summary.
+  // Clip tab — title + summary, then the AI rationale + tags so the panel
+  // carries real signal (the live time range stays in the timeline below).
+  const tags = (draft.tags || []).map((t) => `<span class="vc-row__tag">#${escapeHtml(t)}</span>`).join("");
   return `
     <div class="vc-editor__field">
       <label class="vc-editor__label">Clip title</label>
@@ -322,7 +327,23 @@ function optionsHTML() {
     <div class="vc-editor__field">
       <label class="vc-editor__label">Summary</label>
       <div class="vc-editor__textarea vc-edit" contenteditable="true" data-vc-edit-field="summary" data-placeholder="What's in this moment — context I should remember when drafting…">${escapeHtml(draft.summary || "")}</div>
-    </div>`;
+    </div>
+    ${
+      draft.why
+        ? `<div class="vc-editor__field">
+      <label class="vc-editor__label vc-editor__label--ai"><i class="ap-icon-sparkles" aria-hidden="true"></i> Why I picked this</label>
+      <p class="vc-editor__why">${escapeHtml(draft.why)}</p>
+    </div>`
+        : ""
+    }
+    ${
+      tags
+        ? `<div class="vc-editor__field">
+      <label class="vc-editor__label">Tags</label>
+      <div class="vc-editor__tags">${tags}</div>
+    </div>`
+        : ""
+    }`;
 }
 
 function editorPaneHTML() {
@@ -406,8 +427,14 @@ function editorPaneHTML() {
       <div class="vc-editor__timeline">
         <div class="vc-editor__timeline-head">
           <div class="cap-ed__transport vc-timeline__transport">
+            <button type="button" class="cap-ed__icon-btn cap-ed__icon-btn--ghost" data-ce="back" aria-label="Back 5 seconds" title="Back 5s">
+              <svg viewBox="0 0 24 24" width="18" height="18"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z" fill="currentColor"/></svg>
+            </button>
             <button type="button" class="cap-ed__icon-btn" data-ce="playpause" aria-label="Play / pause">
               <svg viewBox="0 0 24 24" width="16" height="16" data-ce-playglyph><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+            </button>
+            <button type="button" class="cap-ed__icon-btn cap-ed__icon-btn--ghost" data-ce="fwd" aria-label="Forward 5 seconds" title="Forward 5s">
+              <svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z" fill="currentColor"/></svg>
             </button>
             <span class="cap-ed__time"><span data-ce-cur>0:00</span> / <span data-ce-dur>0:00</span></span>
             <div class="cap-ed__scrub" data-ce-scrub><div class="cap-ed__scrub-fill" data-ce-scrub-fill></div></div>
@@ -439,15 +466,15 @@ function editorPaneHTML() {
             <div class="vc-protrim__dim vc-protrim__dim--l" data-vc-protrim-dim-l style="width: ${leftPct}%"></div>
             <div class="vc-protrim__dim vc-protrim__dim--r" data-vc-protrim-dim-r style="left: ${leftPct + widthPct}%; right: 0"></div>
             <div class="vc-protrim__window" data-vc-protrim-window data-vc-drag="window" style="left: ${leftPct}%; width: ${widthPct}%">
+              <div class="vc-protrim__handle vc-protrim__handle--l" data-vc-drag="start">
+                <span class="vc-protrim__grip"></span>
+              </div>
+              <div class="vc-protrim__handle vc-protrim__handle--r" data-vc-drag="end">
+                <span class="vc-protrim__grip"></span>
+              </div>
               <span class="vc-protrim__win-label vc-protrim__win-label--l" data-vc-protrim-label-l>${fmtTime(draft.start)}</span>
               <span class="vc-protrim__win-label vc-protrim__win-label--c" data-vc-protrim-label-c>${fmtTime(draft.end - draft.start)}</span>
               <span class="vc-protrim__win-label vc-protrim__win-label--r" data-vc-protrim-label-r>${fmtTime(draft.end)}</span>
-            </div>
-            <div class="vc-protrim__handle vc-protrim__handle--l" data-vc-drag="start" style="left: ${leftPct}%">
-              <span class="vc-protrim__grip"></span>
-            </div>
-            <div class="vc-protrim__handle vc-protrim__handle--r" data-vc-drag="end" style="left: ${leftPct + widthPct}%">
-              <span class="vc-protrim__grip"></span>
             </div>
             <div class="vc-protrim__playhead" data-vc-drag="playhead" data-vc-protrim-playhead style="left: ${playheadPct}%">
               <span class="vc-protrim__playhead-knob"></span>
@@ -522,7 +549,7 @@ function renderOptions() {
     b.setAttribute("aria-selected", String(on));
   });
   if (editorTab === "subtitles") {
-    import("../caption-editor.js?v=15").then(({ refreshControls }) => refreshControls());
+    import("../caption-editor.js?v=17").then(({ refreshControls }) => refreshControls());
   }
 }
 
@@ -532,11 +559,12 @@ function renderOptions() {
 // onChange folds edits into the draft so Save persists them and Cancel discards.
 function syncCaptionMount() {
   const want = !!editingId;
-  import("../caption-editor.js?v=15").then(({ mount, unmount }) => {
+  import("../caption-editor.js?v=17").then((mod) => {
+    capMod = mod;
     if (want) {
       const shell = bodyEl && bodyEl.querySelector("[data-vc-editor]");
       if (shell) {
-        mount(shell, draft, currentSource, {
+        mod.mount(shell, draft, currentSource, {
           onChange: (patch) => {
             if (draft) Object.assign(draft, patch);
           },
@@ -544,7 +572,7 @@ function syncCaptionMount() {
         captionMounted = true;
       }
     } else if (captionMounted) {
-      unmount();
+      mod.unmount();
       captionMounted = false;
     }
   });
@@ -633,12 +661,15 @@ function onModalClick(event) {
 
   if (action === "set-in") {
     if (!draft) return;
+    // Use the live playhead (it advances during playback).
+    if (capMod) draftPlayhead = capMod.getFraction() * (currentSource?.durationSec || 0);
     draft.start = Math.min(draft.end - MIN_CLIP, draftPlayhead);
     syncEditorAfterDrag();
     return;
   }
   if (action === "set-out") {
     if (!draft) return;
+    if (capMod) draftPlayhead = capMod.getFraction() * (currentSource?.durationSec || 0);
     draft.end = Math.max(draft.start + MIN_CLIP, draftPlayhead);
     syncEditorAfterDrag();
     return;
@@ -794,9 +825,11 @@ function onProtrimTrackClick(event) {
   if (event.target.closest("[data-vc-protrim-window]")) return;
   const track = event.currentTarget;
   const rect = track.getBoundingClientRect();
-  const ratio = (event.clientX - rect.left) / rect.width;
+  const ratio = clamp((event.clientX - rect.left) / rect.width, 0, 1);
   const duration = currentSource?.durationSec || 0;
-  draftPlayhead = clamp(ratio * duration, 0, duration);
+  draftPlayhead = ratio * duration;
+  // Drive playback so the transport scrub + preview follow the timeline.
+  if (capMod) capMod.seekFraction(ratio);
   syncEditorAfterDrag();
 }
 
@@ -825,6 +858,7 @@ function onProtrimMousemove(event) {
     draft.end = s + len;
   } else if (dragState.kind === "playhead") {
     draftPlayhead = clamp(dragState.anchorPlayhead + dt, 0, duration);
+    if (capMod && duration) capMod.seekFraction(draftPlayhead / duration);
   }
 
   syncEditorAfterDrag();
@@ -857,15 +891,13 @@ function syncEditorAfterDrag() {
   const widthPct = ((draft.end - draft.start) / duration) * 100;
   const playheadPct = (draftPlayhead / duration) * 100;
 
+  // The window carries the handles (CSS-anchored to its edges), so positioning
+  // it positions them too — no per-handle left update needed.
   const win = document.querySelector("[data-vc-protrim-window]");
   if (win) {
     win.style.left = `${leftPct}%`;
     win.style.width = `${widthPct}%`;
   }
-  const handleL = document.querySelector('[data-vc-drag="start"]');
-  if (handleL) handleL.style.left = `${leftPct}%`;
-  const handleR = document.querySelector('[data-vc-drag="end"]');
-  if (handleR) handleR.style.left = `${leftPct + widthPct}%`;
   const dimL = document.querySelector("[data-vc-protrim-dim-l]");
   if (dimL) dimL.style.width = `${leftPct}%`;
   const dimR = document.querySelector("[data-vc-protrim-dim-r]");
@@ -879,20 +911,6 @@ function syncEditorAfterDrag() {
   if (labelR) labelR.textContent = fmtTime(draft.end);
   const labelC = document.querySelector("[data-vc-protrim-label-c]");
   if (labelC) labelC.textContent = fmtTime(draft.end - draft.start);
-
-  const headStart = document.querySelector("[data-vc-editor-time-start]");
-  if (headStart) headStart.textContent = fmtTime(draft.start);
-  const headEnd = document.querySelector("[data-vc-editor-time-end]");
-  if (headEnd) headEnd.textContent = fmtTime(draft.end);
-  const headDur = document.querySelector("[data-vc-editor-time-dur]");
-  if (headDur) headDur.textContent = fmtTime(draft.end - draft.start);
-
-  const playTime = document.querySelector("[data-vc-editor-playtime]");
-  if (playTime) playTime.textContent = fmtTime(draftPlayhead);
-  const transTime = document.querySelector("[data-vc-editor-transport-time]");
-  if (transTime) transTime.textContent = fmtTime(draftPlayhead);
-  const clipDur = document.querySelector("[data-vc-editor-clipdur]");
-  if (clipDur) clipDur.textContent = `${fmtTime(draft.end - draft.start)} · CLIP`;
 
   const stepStart = document.querySelector('[data-vc-stepper="start"]');
   if (stepStart && document.activeElement !== stepStart) stepStart.value = fmtTime(draft.start);
@@ -1160,7 +1178,7 @@ function close() {
   if (!initialized || !modal?.classList.contains("open")) return;
   // Tear down the embedded caption editor if it's mounted.
   if (captionMounted) {
-    import("../caption-editor.js?v=15").then(({ unmount }) => unmount());
+    import("../caption-editor.js?v=17").then(({ unmount }) => unmount());
     captionMounted = false;
   }
   modal.classList.remove("open");

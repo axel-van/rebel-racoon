@@ -606,8 +606,13 @@ function retimeToVideo(vDur) {
 function syncTime() {
   const cur = $("[data-ce-cur]");
   if (cur) cur.textContent = fmt(currentTime);
+  const frac = duration ? currentTime / duration : 0;
   const fill = $("[data-ce-scrub-fill]");
-  if (fill) fill.style.width = `${(currentTime / duration) * 100}%`;
+  if (fill) fill.style.width = `${frac * 100}%`;
+  // Keep the timeline's playhead in lock-step with the transport scrub — both
+  // visualize the same playback position.
+  const ph = $("[data-vc-protrim-playhead]");
+  if (ph) ph.style.left = `${frac * 100}%`;
   renderCaptionFrame();
   updateActiveWord();
 }
@@ -737,6 +742,13 @@ function onRootClick(e) {
   const t = e.target;
 
   if (t.closest('[data-ce="playpause"]')) return setPlaying(!playing);
+  if (t.closest('[data-ce="back"]')) return seek(currentTime - 5);
+  if (t.closest('[data-ce="fwd"]')) return seek(currentTime + 5);
+
+  // Click the preview (anywhere but the caption box / frame) toggles playback.
+  if (t.closest("[data-ce-stage]") && !t.closest("[data-ce-box]") && !t.closest("[data-ce-frame]")) {
+    return setPlaying(!playing);
+  }
 
   const tabBtn = t.closest("[data-ce-tab]");
   if (tabBtn) {
@@ -1003,9 +1015,17 @@ function onKeydown(e) {
     closeMenu();
     return;
   }
-  if (e.key === " " && !e.target.closest("[contenteditable=true], input, select, textarea")) {
+  const inField = e.target.closest("[contenteditable=true], input, select, textarea");
+  if (inField) return;
+  if (e.key === " ") {
     e.preventDefault();
     setPlaying(!playing);
+  } else if (e.key === "ArrowLeft") {
+    e.preventDefault();
+    seek(currentTime - 5);
+  } else if (e.key === "ArrowRight") {
+    e.preventDefault();
+    seek(currentTime + 5);
   }
 }
 
@@ -1031,6 +1051,17 @@ export function refreshControls() {
   renderTabPanel();
   renderCleanupBar();
   updateReconcile();
+}
+
+// External playback sync — the modal's timeline playhead/track drives these so
+// the two scrubbers stay in lock-step. frac is 0..1 of the clip.
+export function seekFraction(frac) {
+  if (!mounted) return;
+  seek(Math.max(0, Math.min(1, frac)) * duration);
+}
+
+export function getFraction() {
+  return duration ? currentTime / duration : 0;
 }
 
 export function mount(hostEl, c, src, opts = {}) {
