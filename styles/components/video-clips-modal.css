@@ -32,6 +32,17 @@
   overflow: hidden;
   /* Tabular numerics throughout — timestamps, clip counts, durations. */
   font-variant-numeric: tabular-nums;
+  /* Smooth the expand ⇄ collapse resize. Centered via transform, so width/
+     height animate symmetrically from the middle. */
+  transition:
+    width var(--ref-animation-normal) ease,
+    height var(--ref-animation-normal) ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video-clips-modal.ap-dialog {
+    transition: none;
+  }
 }
 
 /* Darken the backdrop scrim so the dark modal reads as elevated. */
