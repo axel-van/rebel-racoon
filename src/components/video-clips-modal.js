@@ -84,6 +84,9 @@ let optionsSubtab = "style";
 let captionMounted = false;
 // Fullscreen toggle — expands the modal to near-viewport for more real estate.
 let expanded = false;
+// Trim mode — the In/Out handles + steppers are hidden until the user opts in
+// via the Trim button; the timeline reads as a clean scrub track by default.
+let trimMode = false;
 
 // Drag state for the pro trimmer (null when not dragging).
 let dragState = null;
@@ -133,9 +136,6 @@ const SHELL_HTML = `
       <span class="ap-dialog-title" id="videoClipsTitle">Suggested clips</span>
       <span class="ap-dialog-subtitle" id="videoClipsSub"></span>
     </div>
-    <button type="button" class="video-clips-modal__icon-btn" id="videoClipsExpand" aria-label="Expand to fullscreen" title="Expand">
-      <i class="ap-icon-maximize" aria-hidden="true"></i>
-    </button>
   </div>
 
   <div class="video-clips-modal__timeline" id="videoClipsTimeline">
@@ -149,6 +149,9 @@ const SHELL_HTML = `
 
   <div class="ap-dialog-footer video-clips-modal__foot" id="videoClipsFoot"></div>
 
+  <button type="button" class="ap-dialog-close video-clips-modal__expand" id="videoClipsExpand" aria-label="Expand to fullscreen" title="Expand">
+    <i class="ap-icon-maximize"></i>
+  </button>
   <button type="button" class="ap-dialog-close" id="videoClipsClose" aria-label="Close">
     <i class="ap-icon-close"></i>
   </button>
@@ -381,7 +384,7 @@ function editorPaneHTML() {
     .join("");
 
   return `
-    <div class="vc-editor vc-editor--veed" data-vc-editor data-vc-clip="${draft.id}">
+    <div class="vc-editor vc-editor--veed${trimMode ? " is-trimming" : ""}" data-vc-editor data-vc-clip="${draft.id}">
       ${railHTML}
 
       <aside class="vc-panel vc-options" data-vc-options>${optionsHTML()}</aside>
@@ -422,8 +425,11 @@ function editorPaneHTML() {
               <button type="button" class="vc-editor__set-btn" data-vc-action="set-in">Set IN</button>
               <button type="button" class="vc-editor__set-btn" data-vc-action="set-out">Set OUT</button>
             </span>
-            <span class="vc-editor__timeline-hint">Drag handles · click track to scrub</span>
+            <span class="vc-editor__timeline-hint">Drag handles to trim</span>
           </div>
+          <button type="button" class="vc-trim-toggle" data-vc-action="toggle-trim" aria-pressed="${trimMode}" title="Trim clip">
+            <i class="ap-icon-cropper" aria-hidden="true"></i><span>Trim</span>
+          </button>
         </div>
         <div class="vc-protrim" data-vc-protrim>
           <div class="vc-protrim__ruler">${ticks}</div>
@@ -614,6 +620,14 @@ function onModalClick(event) {
         onConfirm: () => deleteClip(id),
       });
     });
+    return;
+  }
+
+  if (action === "toggle-trim") {
+    trimMode = !trimMode;
+    const ed = bodyEl && bodyEl.querySelector("[data-vc-editor]");
+    if (ed) ed.classList.toggle("is-trimming", trimMode);
+    actionEl.setAttribute("aria-pressed", String(trimMode));
     return;
   }
 
@@ -901,6 +915,7 @@ function enterEdit(clipId) {
   draftPlayhead = clip.start;
   editorTab = "clip";
   optionsSubtab = "style";
+  trimMode = false;
   render();
   // Reset the body's scroll position so the sticky editor sits at the top
   // of the visible area. NOT scrollIntoView — that bubbles up the ancestor
@@ -1063,6 +1078,7 @@ export function open(source, callbacks = {}) {
   editorTab = callbacks.captionsTab ? "subtitles" : "clip";
   optionsSubtab = "style";
   expanded = false;
+  trimMode = false;
   onUseCallback = typeof callbacks.onUseClips === "function" ? callbacks.onUseClips : null;
   onSaveCallback = typeof callbacks.onSaveClips === "function" ? callbacks.onSaveClips : null;
 

@@ -88,7 +88,7 @@
 .video-clips-modal.is-single-clip .video-clips-modal__head.ap-dialog-header {
   /* Symmetric vertical padding so the title + source row sits vertically
      centered in the header bar. */
-  padding: var(--ref-spacing-sm) 64px var(--ref-spacing-sm) var(--ref-spacing-md);
+  padding: var(--ref-spacing-sm) 96px var(--ref-spacing-sm) var(--ref-spacing-md);
 }
 
 .video-clips-modal.is-single-clip .vc-editor {
@@ -116,9 +116,8 @@
   padding-bottom: var(--ref-spacing-sm);
   background: var(--app-vc-surface-raised);
   border-bottom: 1px solid var(--app-vc-border);
-  /* Reserve room on the right for the absolute .ap-dialog-close (+ the expand
-     button, which sits just left of it via the head-info flex spacer). */
-  padding-right: 64px;
+  /* Reserve room on the right for the two absolute actions (expand + close). */
+  padding-right: 96px;
 }
 
 /* Knock the DS dialog title down a tier — "Edit clip" / "Suggested clips" is a
@@ -143,26 +142,10 @@
   color: var(--app-vc-text);
 }
 
-/* Header icon action (expand / collapse) — sits just left of the close. */
-.video-clips-modal__icon-btn {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: 0;
-  background: transparent;
-  border-radius: var(--app-radius-button-sm);
-  color: var(--app-vc-text-subtle);
-  font-size: var(--sys-icon-css-sm);
-  cursor: pointer;
-  transition: all var(--ref-animation-short);
-}
-
-.video-clips-modal__icon-btn:hover {
-  background: var(--app-vc-hover);
-  color: var(--app-vc-text);
+/* Expand / collapse — reuses .ap-dialog-close for identical size, glyph size,
+   position (top: 11px) and hover, just offset to sit left of the close. */
+.video-clips-modal .ap-dialog-close.video-clips-modal__expand {
+  right: 58px;
 }
 
 /* Title + source tag on one row to keep the header a single tight line. */
@@ -1508,4 +1491,61 @@
   letter-spacing: 0.04em;
   padding: 3px 5px;
   border-radius: var(--ref-border-radius-sm);
+}
+
+/* ── Trim mode — the In/Out window, handles, dim + steppers stay hidden
+   until the user clicks the Trim button; the timeline reads as a clean
+   scrub track by default. (Placed last so the display overrides win.) ── */
+.vc-protrim__window,
+.vc-protrim__handle,
+.vc-protrim__dim,
+.vc-editor__timeline-stepper {
+  display: none;
+}
+
+.vc-editor.is-trimming .vc-protrim__window,
+.vc-editor.is-trimming .vc-protrim__dim {
+  display: block;
+}
+
+.vc-editor.is-trimming .vc-protrim__handle {
+  display: flex;
+}
+
+.vc-editor.is-trimming .vc-editor__timeline-stepper {
+  display: inline-flex;
+}
+
+/* Trim toggle — bordered pill in the timeline head; accent fill when active. */
+.vc-trim-toggle {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  font-family: inherit;
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
+  border-radius: var(--ref-border-radius-sm);
+  border: 1px solid var(--app-vc-border-strong);
+  background: transparent;
+  color: var(--app-vc-text-muted);
+  cursor: pointer;
+  transition: all var(--ref-animation-short);
+}
+
+.vc-trim-toggle i {
+  font-size: var(--sys-icon-css-sm);
+}
+
+.vc-trim-toggle:hover {
+  background: var(--app-vc-hover);
+  color: var(--app-vc-text);
+}
+
+.vc-trim-toggle[aria-pressed="true"] {
+  background: var(--app-vc-accent-pill);
+  border-color: var(--app-vc-accent);
+  color: var(--app-vc-accent);
 }
