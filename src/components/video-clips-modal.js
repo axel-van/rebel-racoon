@@ -426,6 +426,7 @@ function editorPaneHTML() {
           <div class="vc-protrim__ruler">${ticks}</div>
           <div class="vc-protrim__track" data-vc-protrim-track>
             <div class="vc-protrim__thumbs">${thumbs}</div>
+            <div class="vc-protrim__wave" aria-hidden="true"><div class="vc-wave__bars">${waveBars}</div></div>
             <div class="vc-protrim__dim vc-protrim__dim--l" data-vc-protrim-dim-l style="width: ${leftPct}%"></div>
             <div class="vc-protrim__dim vc-protrim__dim--r" data-vc-protrim-dim-r style="left: ${leftPct + widthPct}%; right: 0"></div>
             <div class="vc-protrim__window" data-vc-protrim-window data-vc-drag="window" style="left: ${leftPct}%; width: ${widthPct}%">
@@ -443,11 +444,6 @@ function editorPaneHTML() {
               <span class="vc-protrim__playhead-knob"></span>
               <span class="vc-protrim__playhead-line"></span>
             </div>
-          </div>
-          <div class="vc-wave" aria-hidden="true">
-            <div class="vc-wave__bars">${waveBars}</div>
-            <div class="vc-protrim__dim vc-protrim__dim--l" style="width: ${leftPct}%"></div>
-            <div class="vc-protrim__dim vc-protrim__dim--r" style="left: ${leftPct + widthPct}%; right: 0"></div>
           </div>
         </div>
       </div>

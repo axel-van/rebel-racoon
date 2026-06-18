@@ -33,6 +33,7 @@
   --app-vc-accent: var(--ref-color-electric-blue-100); /* selected / info */
   --app-vc-accent-hover: var(--ref-color-electric-blue-150);
   --app-vc-accent-soft: rgba(23, 141, 254, 0.14); /* selected / focus tint */
+  --app-vc-accent-pill: rgba(14, 114, 214, 0.25); /* nav-rail active indicator (ADS SidebarIcon) */
   --app-vc-primary: var(--ref-color-orange-100); /* primary / AI CTA */
   --app-vc-primary-hover: var(--ref-color-orange-150);
   --app-vc-danger: var(--ref-color-red-100); /* destructive */

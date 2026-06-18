@@ -21,7 +21,7 @@
   transform: translate(-50%, -50%);
   display: none;
   z-index: var(--app-z-modal);
-  width: min(calc(100% - 48px), 1240px);
+  width: min(calc(100% - 48px), 1364px);
   height: 94vh;
   /* Dark media-editor surface — overrides the DS light .ap-dialog. The whole
      modal lives on the --app-vc-* ramp. */
@@ -46,7 +46,7 @@
   /* Sized to the editor's content (the Subtitles 3-pane + the trimmed-down
      Clip preview), not the full 94vh — avoids the big empty gap. Fixed so it
      never resizes between tabs; capped at 92vh on short screens. */
-  height: min(94vh, 840px);
+  height: min(94vh, 924px);
 }
 
 .video-clips-modal.is-single-clip .video-clips-modal__body {
@@ -636,7 +636,7 @@
    across the bottom. */
 .vc-editor--veed {
   display: grid;
-  grid-template-columns: 72px minmax(220px, 288px) minmax(0, 1fr);
+  grid-template-columns: 72px minmax(248px, 328px) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-areas:
     "rail panel stage"
@@ -645,13 +645,15 @@
   min-height: 460px;
 }
 
-/* Tool rail */
+/* Tool rail — matches the ADS "SidebarIcon" component (Figma 782:2040):
+   a vertical stack of full-width rounded items; the active item carries the
+   tonal accent background behind BOTH the icon and the label. */
 .vc-rail {
   grid-area: rail;
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxs);
   background: var(--app-vc-surface-raised);
   border-right: 1px solid var(--app-vc-border);
 }
@@ -660,51 +662,38 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 0;
+  gap: var(--ref-spacing-xxxs);
+  width: 100%;
+  padding: var(--ref-spacing-xxxs);
   border: 0;
+  border-radius: var(--ref-border-radius-md);
   background: transparent;
-  color: var(--app-vc-text-subtle);
+  color: var(--ref-color-grey-20);
   font-family: inherit;
-  font-size: 10px;
-  font-weight: var(--sys-text-style-caption-bold-weight);
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  font-weight: var(--ref-font-weight-regular);
   cursor: pointer;
-  transition: color var(--ref-animation-short);
+  overflow: hidden;
+  transition:
+    background var(--ref-animation-short),
+    color var(--ref-animation-short);
 }
 
-/* Square icon tile — the highlight lives on the icon, label sits below. */
+/* The icon is a plain glyph that inherits the item's color (no chrome). */
 .vc-rail__item i {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: var(--app-radius-button-sm);
-  font-size: var(--sys-icon-css-lg);
-  /* Subtle filled tile so each item reads as a button. */
-  background: var(--app-vc-surface-sunken);
-  border: 1px solid var(--app-vc-border);
-  transition: all var(--ref-animation-short);
+  font-size: var(--sys-icon-css-md);
+  line-height: 1;
 }
 
 .vc-rail__item:hover {
-  color: var(--app-vc-text);
-}
-
-.vc-rail__item:hover i {
   background: var(--app-vc-hover);
-  border-color: var(--app-vc-border-strong);
 }
 
+/* Active = tonal accent fill behind the whole item; icon + label go accent. */
 .vc-rail__item.is-on {
-  color: var(--app-vc-accent);
-}
-
-/* Active = solid accent fill, white glyph — clearly legible. */
-.vc-rail__item.is-on i {
-  background: var(--app-vc-accent);
-  border-color: var(--app-vc-accent);
-  color: var(--ref-color-white);
+  background: var(--app-vc-accent-pill);
+  color: var(--ref-color-electric-blue-60);
 }
 
 /* Details panel */
@@ -755,7 +744,7 @@
   border-top: 1px solid var(--app-vc-border);
   border-radius: 0;
   background: var(--app-vc-surface-raised);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-md) var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-md) var(--ref-spacing-xs);
 }
 
 /* Set IN/OUT moved into the timeline head, beside the In/Out steppers. */
@@ -794,24 +783,30 @@
   overflow: hidden;
 }
 
+/* Segmented control (same primitive as .cap-ed-seg in the Effects tab):
+   quiet sunken container, inset accent pill for the active half. */
 .vc-subtabs {
   display: flex;
   flex-shrink: 0;
-  gap: var(--ref-spacing-xs);
-  padding: 0 var(--ref-spacing-sm);
-  border-bottom: 1px solid var(--app-vc-border);
+  gap: 2px;
+  margin: var(--ref-spacing-sm) var(--ref-spacing-sm) var(--ref-spacing-xs);
+  padding: 2px;
+  background: var(--app-vc-surface-sunken);
+  border: 1px solid var(--app-vc-border);
+  border-radius: var(--app-radius-button-sm);
 }
 
 .vc-subtab {
   flex: 1;
   font-family: inherit;
-  font-size: var(--sys-text-style-caption-bold-size);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  padding: var(--ref-spacing-xs) 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: 1;
+  font-weight: var(--sys-text-style-caption-weight);
+  padding: 6px 0;
   background: transparent;
   border: 0;
-  border-bottom: 2px solid transparent;
-  color: var(--app-vc-text-subtle);
+  border-radius: var(--ref-border-radius-sm);
+  color: var(--app-vc-text-muted);
   cursor: pointer;
   transition: all var(--ref-animation-short);
 }
@@ -821,8 +816,9 @@
 }
 
 .vc-subtab.is-on {
-  color: var(--app-vc-text);
-  border-bottom-color: var(--app-vc-accent);
+  background: var(--app-vc-accent);
+  color: var(--ref-color-white);
+  font-weight: var(--sys-text-style-caption-bold-weight);
 }
 
 .vc-subpanel {
@@ -1152,7 +1148,6 @@
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  padding-bottom: var(--ref-spacing-xxs);
 }
 
 .vc-editor__timeline-title {
@@ -1217,7 +1212,7 @@
 /* Pro trim track */
 .vc-protrim__ruler {
   position: relative;
-  height: 18px;
+  height: 13px;
   user-select: none;
 }
 
@@ -1233,21 +1228,21 @@
 
 .vc-protrim__ruler-mark {
   width: 1px;
-  height: 6px;
+  height: 4px;
   background: var(--app-vc-border-strong);
 }
 
 .vc-protrim__ruler-label {
   font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
+  line-height: 1;
   font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--app-vc-text-subtle);
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .vc-protrim__track {
   position: relative;
-  height: 70px;
+  height: 64px;
   border-radius: var(--app-radius-button-sm);
   background: var(--app-vc-surface-sunken);
   border: 1px solid var(--app-vc-border);
@@ -1297,25 +1292,29 @@
   right: 0;
 }
 
-/* ── Waveform strip (under the filmstrip, same 0..duration mapping) ── */
+/* ── Waveform lane (folded into the filmstrip track, same 0..duration
+   mapping) — an audio lane along the bottom of the frames, so the trim
+   window / handles / dim overlay both frames + waveform as one track. ── */
 
-.vc-wave {
-  position: relative;
-  height: 40px;
-  margin-top: var(--ref-spacing-xxs);
-  border-radius: var(--app-radius-button-sm);
-  background: var(--app-vc-surface-sunken);
-  border: 1px solid var(--app-vc-border);
+.vc-protrim__wave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 46%;
   overflow: hidden;
+  border-radius: 0 0 var(--app-radius-button-sm) var(--app-radius-button-sm);
+  background: rgba(0, 0, 0, 0.22);
+  pointer-events: none;
 }
 
 .vc-wave__bars {
   position: absolute;
   inset: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 2px;
-  padding: 0 6px;
+  padding: 0 6px 3px;
 }
 
 .vc-wave__bar {
