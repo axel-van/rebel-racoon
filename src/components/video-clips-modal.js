@@ -62,6 +62,7 @@ let currentSource = null;
 let clips = []; // [{ id, start, end, title, summary, why, network, tags, hue }, …]
 let selected = new Set(); // clip ids
 let editingId = null; // clip id currently in edit mode, or null
+let addingNewClip = false; // editing a brand-new, not-yet-saved clip (drives the "Add clip" head title)
 
 // When the modal is opened with a specific `editingClipId`, we run in
 // single-clip mode: the body shows only that clip's editor pane (no
@@ -200,6 +201,10 @@ function renderFooter() {
   const ctaLabel = n === 1 ? "Draft post from 1 clip" : `Draft posts from ${n} clips`;
   footEl.innerHTML = `
     <div class="ap-dialog-footer-left">
+      <button type="button" class="ap-button stroked grey video-clips-modal__add-clip" data-vc-action="add-clip">
+        <i class="ap-icon-plus"></i>
+        <span>Add clip</span>
+      </button>
       <div class="video-clips-modal__foot-stats">
         <strong>${n}</strong> clip${n === 1 ? "" : "s"} selected${n > 0 ? `<span class="video-clips-modal__foot-meta"> · ${fmtTime(total)} of video</span>` : ""}
       </div>
@@ -512,6 +517,27 @@ function renderBody() {
   bodyEl.innerHTML = `<div class="vc-rows">${cards}</div>`;
 }
 
+// Head title + subtitle. Recomputed on every render so the clip count stays
+// live as the user adds / deletes clips. The title flips to "Add clip" /
+// "Edit clip" in single-clip mode; the subtitle carries the file tag plus the
+// "N clips worth posting · M of footage" meta in browse mode.
+function renderHeadInfo() {
+  if (!currentSource) return;
+  const titleEl = document.getElementById("videoClipsTitle");
+  if (titleEl) titleEl.textContent = addingNewClip ? "Add clip" : singleClipMode ? "Edit clip" : "Suggested clips";
+  const subEl = document.getElementById("videoClipsSub");
+  if (!subEl) return;
+  // The source name reads as a file tag — same `.ap-tag.mini` pill the composer
+  // uses for a mentioned file, with the file-kind glyph.
+  const fileTag = `<span class="ap-tag mini blue video-clips-modal__file-tag"><i class="${iconFor(currentSource.kind)}" aria-hidden="true"></i><span>${escapeHtml(shortName(currentSource.filename || "video"))}</span></span>`;
+  if (singleClipMode) {
+    subEl.innerHTML = fileTag;
+  } else {
+    const total = currentSource.durationSec || 0;
+    subEl.innerHTML = `${fileTag}<span class="video-clips-modal__sub-meta"> · ${clips.length} ${clips.length === 1 ? "clip" : "clips"} worth posting · ${fmtTime(total)} of footage</span>`;
+  }
+}
+
 function render() {
   // While editing (single or multi-clip, either tab), the VEED editor carries
   // its own bottom timeline, so the multi-clip strip timeline is hidden and the
@@ -528,6 +554,7 @@ function render() {
     renderFooter();
   }
   renderBody();
+  renderHeadInfo();
   syncCaptionMount();
 }
 
@@ -620,6 +647,11 @@ function onModalClick(event) {
 
   if (action === "edit") {
     enterEdit(clipId);
+    return;
+  }
+
+  if (action === "add-clip") {
+    addClip();
     return;
   }
 
@@ -926,6 +958,7 @@ function syncEditorAfterDrag() {
 function enterEdit(clipId) {
   const clip = clips.find((c) => c.id === clipId);
   if (!clip) return;
+  addingNewClip = false;
   editingId = clipId;
   draft = { ...clip };
   ensureDraftFormat(draft);
@@ -956,6 +989,7 @@ function saveEdit() {
   notifySave();
   editingId = null;
   draft = null;
+  addingNewClip = false;
   if (singleClipMode) {
     close();
     return;
@@ -987,6 +1021,7 @@ function addClip() {
     network: "instagram",
     tags: [],
   };
+  addingNewClip = true;
   editingId = newClip.id;
   draft = { ...newClip };
   ensureDraftFormat(draft);
@@ -1000,6 +1035,7 @@ function addClip() {
 function cancelEdit() {
   editingId = null;
   draft = null;
+  addingNewClip = false;
   if (singleClipMode) {
     close();
     return;
@@ -1012,6 +1048,7 @@ function deleteClip(clipId) {
   selected.delete(clipId);
   editingId = null;
   draft = null;
+  addingNewClip = false;
   notifySave();
   if (singleClipMode) {
     close();
@@ -1125,25 +1162,8 @@ export function open(source, callbacks = {}) {
     singleClipMode = true;
   }
 
-  // Head info — video badge (static icon) + title + filename. The title
-  // flips to "Edit clip" in single-clip mode (matches the action that
-  // opened the modal); subtitle drops the multi-clip framing for a quiet
-  // filename.
-  const titleEl = document.getElementById("videoClipsTitle");
-  if (titleEl)
-    titleEl.textContent = callbacks.startAddClip ? "Add clip" : singleClipMode ? "Edit clip" : "Suggested clips";
-  const subEl = document.getElementById("videoClipsSub");
-  if (subEl) {
-    // The source name reads as a file tag — same `.ap-tag.mini` pill the
-    // composer uses for a mentioned file, with the file-kind glyph.
-    const fileTag = `<span class="ap-tag mini blue video-clips-modal__file-tag"><i class="${iconFor(source.kind)}" aria-hidden="true"></i><span>${escapeHtml(shortName(source.filename || "video"))}</span></span>`;
-    if (singleClipMode) {
-      subEl.innerHTML = fileTag;
-    } else {
-      const total = source.durationSec || 0;
-      subEl.innerHTML = `${fileTag}<span class="video-clips-modal__sub-meta"> · ${clips.length} ${clips.length === 1 ? "clip" : "clips"} worth posting · ${fmtTime(total)} of footage</span>`;
-    }
-  }
+  addingNewClip = !!callbacks.startAddClip;
+  renderHeadInfo();
 
   backdrop.hidden = false;
   backdrop.classList.add("open");
@@ -1204,6 +1224,7 @@ function close() {
   draftPlayhead = 0;
   dragState = null;
   singleClipMode = false;
+  addingNewClip = false;
   editorTab = "clip";
   onUseCallback = null;
   onSaveCallback = null;

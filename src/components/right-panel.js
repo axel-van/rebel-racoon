@@ -17,7 +17,7 @@ import { renderPostCard } from "./post-card.js?v=36";
 import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1";
-import { open as openVideoClipsModal } from "./video-clips-modal.js?v=45";
+import { open as openVideoClipsModal } from "./video-clips-modal.js?v=47";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=71";
 import {
   getSources as getStreamSources,
@@ -625,6 +625,30 @@ export function init() {
         menu.hidden = !willOpen;
         sourceMoreBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
       }
+      return;
+    }
+    // Kebab → View clips — open the Video Clips modal in browse mode for this
+    // source: every clip cut from the video + "Add clip" to create one
+    // manually. Saving persists to the source; "Draft posts" hands the picked
+    // clips to the conversational draft flow (ratio → subtitles → profiles).
+    const sourceClipsBtn = event.target.closest("[data-rpanel-source-clips]");
+    if (sourceClipsBtn) {
+      const sid = activeSessionId();
+      closeAllSourceMenus();
+      if (!sid) return;
+      const src = getStreamSources(sid).find((s) => s.id === sourceClipsBtn.dataset.rpanelSourceClips);
+      if (!src) return;
+      openVideoClipsModal(src, {
+        onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
+        onUseClips: (selectedClips, source) => {
+          import("../screens/session.js?v=269").then(({ startClipDraftFlow }) => {
+            startClipDraftFlow(
+              sid,
+              selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
+            );
+          });
+        },
+      });
       return;
     }
     // Kebab → Reanalyze (prototype stub — confirms via toast).
@@ -2085,6 +2109,21 @@ function renderSourceRow(src) {
   // the document listeners in init). Always available — even while
   // processing.
   const menuId = `src-more-${src.id}`;
+  // Video sources expose a "View clips" entry that opens the Video Clips modal
+  // (browse mode) — every clip cut from this video, plus the "Add clip" CTA to
+  // create one manually. Count surfaced when clips already exist.
+  const isVideo = src.kind === "Video";
+  const clipCount = Array.isArray(src.clips) ? src.clips.length : 0;
+  const viewClipsItem = isVideo
+    ? `<button type="button" role="menuitem" class="ap-action-dropdown-item" data-rpanel-source-clips="${src.id}">
+          <i class="ap-icon-video"></i>
+          <div class="ap-action-dropdown-item-text">
+            <div class="ap-action-dropdown-item-label-container">
+              <span class="ap-action-dropdown-item-label">View clips${clipCount ? ` (${clipCount})` : ""}</span>
+            </div>
+          </div>
+        </button>`
+    : "";
   const moreMenu = `
     <div class="rpanel-sources__more-wrap">
       <button
@@ -2100,6 +2139,7 @@ function renderSourceRow(src) {
         <i class="ap-icon-more"></i>
       </button>
       <div id="${menuId}" class="ap-action-dropdown rpanel-sources__more-menu" role="menu" hidden>
+        ${viewClipsItem}
         <button type="button" role="menuitem" class="ap-action-dropdown-item" data-rpanel-source-rename="${src.id}">
           <i class="ap-icon-pen"></i>
           <div class="ap-action-dropdown-item-text">
