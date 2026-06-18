@@ -209,10 +209,17 @@
   letter-spacing: -0.01em;
 }
 
-.recap__name-edit {
+.recap__name-edit,
+.recap__name-default {
   width: 28px;
   height: 28px;
   flex-shrink: 0;
+}
+
+/* Default-toggle star — outline by default, gold when this Playbook is the
+   default. */
+.recap__name-default.is-on i {
+  color: var(--ref-color-yellow-100);
 }
 
 .recap__meta {

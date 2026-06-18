@@ -7,8 +7,9 @@
 //   • Auto-fill ▾           — re-run an analysis to refill every section from
 //                             the website / a document / selected social
 //                             profiles (overwrite, with confirmation)
-//   • ⋯ More                — Set as default · Delete (with confirmation)
+//   • Delete                — remove the Playbook (with confirmation)
 //   • Edit                  — inline per-section pencils + title rename
+//   • ★ (next to the name)  — toggle this Playbook as the default
 //
 // The auto-fill flow reuses the engine's staged loader: we re-mount with a
 // `loader` cfg, run the (mock) analysis on a timer, then `updateContext` with
@@ -18,7 +19,7 @@ import { navigate } from "../router.js?v=30";
 import { escapeHtml as esc } from "../utils.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=99";
 import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=29";
-import { mount, snapshotEditable } from "../playbook-view.js?v=12";
+import { mount, snapshotEditable } from "../playbook-view.js?v=13";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";
 import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=2";
@@ -66,7 +67,6 @@ function menuItem(attr, icon, label, { danger = false } = {}) {
 
 function buildHeaderActions(ctx) {
   const hasSite = Boolean((ctx && ctx.websiteUrl) || "");
-  const isDefault = Boolean(ctx && ctx.isDefault);
 
   const fillItems = [
     hasSite ? menuItem("data-fill-website", "ap-icon-web", "Re-analyze website") : "",
@@ -74,14 +74,8 @@ function buildHeaderActions(ctx) {
     menuItem("data-fill-social", "ap-icon-multiple-users", "Analyze social profiles…"),
   ].join("");
 
-  const moreItems = [
-    isDefault ? "" : menuItem("data-set-default", "ap-icon-star", "Set as default"),
-    isDefault ? "" : `<div class="ap-action-dropdown-divider" role="separator"></div>`,
-    menuItem("data-playbook-delete", "ap-icon-trash", "Delete", { danger: true }),
-  ].join("");
-
   return `
-    <button type="button" class="ap-button primary orange" data-playbook-start>
+    <button type="button" class="ap-button primary blue" data-playbook-start>
       <i class="ap-icon-sparkles"></i>
       <span>Start a chat</span>
     </button>
@@ -93,12 +87,9 @@ function buildHeaderActions(ctx) {
       </button>
       <div class="ap-action-dropdown recap__menu-pop" role="menu" data-menu-pop="fill" hidden>${fillItems}</div>
     </div>
-    <div class="recap__menu">
-      <button type="button" class="ap-icon-button stroked grey recap__menu-toggle" data-menu-toggle="more" aria-haspopup="menu" aria-expanded="false" aria-label="More actions">
-        <i class="ap-icon-more"></i>
-      </button>
-      <div class="ap-action-dropdown recap__menu-pop recap__menu-pop--right" role="menu" data-menu-pop="more" hidden>${moreItems}</div>
-    </div>
+    <button type="button" class="ap-icon-button stroked grey" data-playbook-delete title="Delete" aria-label="Delete Playbook">
+      <i class="ap-icon-trash"></i>
+    </button>
   `;
 }
 
@@ -142,6 +133,7 @@ export function renderPlaybook(params, target) {
       showTop: false,
       headerActions: () => buildHeaderActions(getContextById(id)),
       onEditName,
+      onToggleDefault: toggleDefault,
       onFooter,
     };
   }
@@ -164,12 +156,19 @@ export function renderPlaybook(params, target) {
     }, AUTOFILL_MS);
   }
 
-  function setDefault() {
-    const prev = getContexts().find((c) => c.isDefault);
-    if (prev && prev.id !== id) updateContext(prev.id, { isDefault: false });
-    updateContext(id, { isDefault: true, updatedAt: "just now" });
+  // Header star → toggle this Playbook as the default. Setting it unsets the
+  // previous default; unsetting just clears the flag (getDefaultContext then
+  // falls back to the first Playbook).
+  function toggleDefault() {
+    const ctx = getContextById(id);
+    const makeDefault = !ctx?.isDefault;
+    if (makeDefault) {
+      const prev = getContexts().find((c) => c.isDefault);
+      if (prev && prev.id !== id) updateContext(prev.id, { isDefault: false });
+    }
+    updateContext(id, { isDefault: makeDefault, updatedAt: "just now" });
     remount();
-    toast("Set as default Playbook.");
+    toast(makeDefault ? "Set as default Playbook." : "No longer the default Playbook.");
   }
 
   function confirmDelete() {
@@ -273,12 +272,6 @@ export function renderPlaybook(params, target) {
       openAnalyzeProfilesModal({
         onConfirm: (ids) => runAutofill(STAGES.social, () => analyzeSocialProfiles(ids)),
       });
-      return true;
-    }
-
-    if (event.target.closest("[data-set-default]")) {
-      closeMenus();
-      setDefault();
       return true;
     }
 

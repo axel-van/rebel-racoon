@@ -68,6 +68,7 @@ let scrollSpy = null; // IntersectionObserver for the section-nav active state
 //   showTop: boolean,                  // render the Archie/BETA top strip
 //   headerActions(): string | null,    // html for the header action bar (library)
 //   onEditName(): void,                // header name pencil (rename)
+//   onToggleDefault(): void,           // header star → toggle default (library)
 //   footer(): string,                  // footer button(s) html (onboarding)
 //   onFooter(event): boolean,          // handle footer/header-action clicks
 // }
@@ -607,12 +608,14 @@ function renderHeader(data) {
     `<span class="recap__meta-item"><i class="ap-icon-web" aria-hidden="true"></i>${esc(data.language || "English")}</span>`,
     domain ? `<span class="recap__meta-item recap__meta-dim">${esc(domain)}</span>` : "",
     usedIn !== null ? `<span class="recap__meta-item">Used in ${usedIn} ${usedIn === 1 ? "chat" : "chats"}</span>` : "",
-    data.isDefault
-      ? `<span class="recap__meta-item recap__meta-default"><i class="ap-icon-star" aria-hidden="true"></i>Default</span>`
-      : "",
   ]
     .filter(Boolean)
     .join("");
+
+  const isDefault = Boolean(data.isDefault);
+  const defaultStar = cfg.onToggleDefault
+    ? `<button type="button" class="ap-icon-button transparent recap__name-default ${isDefault ? "is-on" : ""}" data-recap-toggle-default aria-pressed="${isDefault}" title="${isDefault ? "Default Playbook — click to unset" : "Set as default"}" aria-label="${isDefault ? "Default Playbook — click to unset" : "Set as default"}"><i class="${isDefault ? "ap-icon-star_fill" : "ap-icon-star"}"></i></button>`
+    : "";
 
   return `
     <header class="recap__header">
@@ -626,6 +629,7 @@ function renderHeader(data) {
                 ? `<button type="button" class="ap-icon-button transparent recap__name-edit" data-recap-edit-name title="Rename" aria-label="Rename Playbook"><i class="ap-icon-pen"></i></button>`
                 : ""
             }
+            ${defaultStar}
           </div>
           <div class="recap__meta">${meta}</div>
         </div>
@@ -831,6 +835,12 @@ function onClick(event) {
   // Header name pencil → rename (mode-specific handler).
   if (event.target.closest("[data-recap-edit-name]")) {
     cfg.onEditName?.();
+    return;
+  }
+
+  // Header star → toggle default (library mode).
+  if (event.target.closest("[data-recap-toggle-default]")) {
+    cfg.onToggleDefault?.();
     return;
   }
 
