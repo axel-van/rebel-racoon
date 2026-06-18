@@ -68,7 +68,6 @@ let scrollSpy = null; // IntersectionObserver for the section-nav active state
 //   showTop: boolean,                  // render the Archie/BETA top strip
 //   headerActions(): string | null,    // html for the header action bar (library)
 //   onEditName(): void,                // header name pencil (rename)
-//   editHint: string | null,           // infobox message (null hides it)
 //   footer(): string,                  // footer button(s) html (onboarding)
 //   onFooter(event): boolean,          // handle footer/header-action clicks
 // }
@@ -673,20 +672,6 @@ function renderRail(data) {
   `;
 }
 
-function renderEditHint() {
-  if (!cfg.editHint) return "";
-  return `
-    <div class="ap-infobox info recap__edit-hint">
-      <i class="ap-icon-info_fill" aria-hidden="true"></i>
-      <div class="ap-infobox-content">
-        <div class="ap-infobox-texts">
-          <span class="ap-infobox-message">${esc(cfg.editHint)}</span>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
 // ── Loader + top strip ─────────────────────────────────────────────────
 
 function renderLoading(stageIdx) {
@@ -750,7 +735,6 @@ function paint() {
   const scope = editScope;
   const body = `
     ${renderHeader(data)}
-    ${scope ? "" : renderEditHint()}
     <div class="recap__layout">
       ${renderRail(data)}
       <div class="recap__main">
