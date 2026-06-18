@@ -8,7 +8,7 @@ import {
   renderProfileTag,
   profileForNetwork,
 } from "../social-profiles.js?v=2";
-import { FORMATS, formatsForNetworks, formatsForNetwork, defaultFormatFor } from "../clip-formats.js?v=1";
+import { FORMATS, formatsForNetwork, defaultFormatFor } from "../clip-formats.js?v=1";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=29";
 import { isNewUser } from "../user-mode.js?v=22";
@@ -43,7 +43,7 @@ import {
   attachImageToDraft,
   setSubtitleStyle,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=28";
+} from "../posts-store.js?v=29";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=33";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
@@ -72,7 +72,7 @@ import {
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=24";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=25";
-import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=44";
+import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=45";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=31";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=42";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=6";
@@ -882,7 +882,7 @@ ${escapeHtml(cfg.instructions || "")}</textarea
             data-clip-create
             ${st.videoProvided ? "" : "disabled"}
           >
-            <i class="ap-icon-sparkles" aria-hidden="true"></i><span>Create clips</span>
+            <i class="ap-icon-sparkles" aria-hidden="true"></i><span>Find clip ideas</span>
           </button>
         </div>
       </div>
@@ -2036,13 +2036,17 @@ export function askDraftCountQuestion(sessionId, ideaId, { angle = null, onBack 
   });
 }
 
-// ── Draft from a clip — 3-step quick picker (accounts → ratio → subtitle) ──
+// ── Draft from clips — quick picker (ratio → subtitles → accounts) ──
 //
-// Triggered by the right-panel clip card "Draft" button. Each step is the
-// inline-question picker and every pick is echoed as a user turn (mirrors the
-// idea-draft flow). Ends by generating one post draft per selected account —
-// each carrying the chosen export ratio + subtitle style — then posts a
+// Triggered by a clip-card "Draft" button (a single clip) or the Clips-panel
+// footer CTA (several selected clips). Each step is the inline-question picker
+// and every pick is echoed as a user turn. The flow asks once for an export
+// ratio, then a subtitle style, then the target account(s), and finally
+// generates one post draft per (clip × account) — each carrying the chosen
+// ratio + subtitle style + a back-reference to its source clip — then posts a
 // "N drafts to review" result card.
+//
+// `entries` is [{ clip, sourceName, sourceId }] — one per selected clip.
 
 const CLIP_SUBTITLE_ITEMS = [
   { value: "bold", label: "Bold", caption: "Heavy, high-contrast captions — great for fast cuts." },
@@ -2051,13 +2055,48 @@ const CLIP_SUBTITLE_ITEMS = [
   { value: "none", label: "No subtitles", caption: "Skip burned-in captions." },
 ];
 
-export function startClipDraftFlow(sessionId, clip, sourceName) {
-  if (!clip) return;
-  askClipAccounts(sessionId, clip, sourceName);
+export function startClipDraftFlow(sessionId, entries) {
+  const list = Array.isArray(entries) ? entries : entries ? [entries] : [];
+  if (!list.length) return;
+  askClipFormat(sessionId, list);
 }
 
-// Step 1 — which account(s)? Multi-select, the clip's own network preselected.
-function askClipAccounts(sessionId, clip, sourceName) {
+// Step 1 — which aspect ratio? All export formats are offered (the target
+// accounts aren't picked yet, so we don't filter by network).
+function askClipFormat(sessionId, entries) {
+  const formats = Object.values(FORMATS);
+  postAssistantMessage(sessionId, "What aspect ratio would you like for the clips?");
+  inlineQuestion.ask(sessionId, {
+    title: "Pick an export format",
+    stepLabel: "Ratio",
+    skipLabel: "Cancel",
+    items: formats.map((f) => ({ value: f.id, label: `${f.tag} · ${f.label}` })),
+    onPick: (formatId) => {
+      const fmt = FORMATS[formatId];
+      postUserTurn(sessionId, fmt ? fmt.tag : formatId);
+      askClipSubtitle(sessionId, entries, formatId);
+    },
+    onSkip: () => {},
+  });
+}
+
+// Step 2 — which subtitle style? (AI-generated, burned into the video.)
+function askClipSubtitle(sessionId, entries, format) {
+  postAssistantMessage(sessionId, "Choose a subtitle style — I'll generate and burn them into the video.");
+  inlineQuestion.ask(sessionId, {
+    title: "Subtitle style",
+    stepLabel: "Subtitles",
+    items: CLIP_SUBTITLE_ITEMS,
+    onPick: (style) => {
+      postUserTurn(sessionId, style === "none" ? "No subtitles" : `${SUBTITLE_PICK_LABEL[style] || style} subtitles`);
+      askClipAccounts(sessionId, entries, format, style);
+    },
+    onBack: () => askClipFormat(sessionId, entries),
+  });
+}
+
+// Step 3 — which account(s)? Multi-select, the clips' own networks preselected.
+function askClipAccounts(sessionId, entries, format, style) {
   const connected = getConnectedProfiles();
   if (connected.length === 0) {
     postAssistantMessage(
@@ -2067,7 +2106,8 @@ function askClipAccounts(sessionId, clip, sourceName) {
     return;
   }
   postAssistantMessage(sessionId, "Which account(s) should I draft for?");
-  const preset = connected.filter((a) => a.platform === clip.network).map((a) => a.id);
+  const clipNets = new Set(entries.map((e) => e.clip.network));
+  const preset = connected.filter((a) => clipNets.has(a.platform)).map((a) => a.id);
   inlineQuestion.ask(sessionId, {
     title: "Pick one or more connected accounts",
     stepLabel: "Accounts",
@@ -2081,66 +2121,40 @@ function askClipAccounts(sessionId, clip, sourceName) {
         .map((id) => connected.find((a) => a.id === id))
         .filter(Boolean);
       if (accounts.length === 0) return;
-      // Echo the picked profiles visually — avatar + network badge + handle,
-      // not the bare network names.
       // Echo the picked profiles via the canonical renderProfileTag — pass
       // the raw socialAccounts entries straight through.
       postUserProfilesTurn(sessionId, accounts);
-      askClipFormat(sessionId, clip, sourceName, accounts);
+      generateClipDrafts(sessionId, entries, accounts, format, style);
     },
+    onBack: () => askClipSubtitle(sessionId, entries, format),
     onSkip: () => {},
   });
 }
 
-// Step 2 — which aspect ratio? Options = union of the selected networks' formats.
-function askClipFormat(sessionId, clip, sourceName, accounts) {
-  const networks = [...new Set(accounts.map((a) => a.platform))];
-  const formats = formatsForNetworks(networks);
-  postAssistantMessage(sessionId, "What aspect ratio would you like for the clips?");
-  inlineQuestion.ask(sessionId, {
-    title: "Pick an export format",
-    stepLabel: "Ratio",
-    items: formats.map((f) => ({ value: f.id, label: `${f.tag} · ${f.label}` })),
-    onPick: (formatId) => {
-      const fmt = FORMATS[formatId];
-      postUserTurn(sessionId, fmt ? fmt.tag : formatId);
-      askClipSubtitle(sessionId, clip, sourceName, accounts, formatId);
-    },
-    onBack: () => askClipAccounts(sessionId, clip, sourceName),
-  });
-}
-
-// Step 3 — which subtitle style? (AI-generated, burned into the video.)
-function askClipSubtitle(sessionId, clip, sourceName, accounts, format) {
-  postAssistantMessage(sessionId, "Choose a subtitle style — I'll generate and burn them into the video.");
-  inlineQuestion.ask(sessionId, {
-    title: "Subtitle style",
-    stepLabel: "Subtitles",
-    items: CLIP_SUBTITLE_ITEMS,
-    onPick: (style) => {
-      postUserTurn(sessionId, style === "none" ? "No subtitles" : `${SUBTITLE_PICK_LABEL[style] || style} subtitles`);
-      generateClipDrafts(sessionId, clip, sourceName, accounts, format, style);
-    },
-    onBack: () => askClipFormat(sessionId, clip, sourceName, accounts),
-  });
-}
-
-// Generate one post draft per selected account, then post the result card.
-function generateClipDrafts(sessionId, clip, sourceName, accounts, format, style) {
+// Generate one post draft per (clip × account), then post the result card.
+// Each draft's clipRef carries sourceId + clipId so the post can later open
+// the source clip back in the Video Clips modal for editing.
+function generateClipDrafts(sessionId, entries, accounts, format, style) {
   const pendingId = startPending(sessionId);
   setTimeout(() => {
     finishPending(sessionId, pendingId);
-    const drafts = accounts.map((a) =>
-      addPostDraft(sessionId, {
-        network: a.platform,
-        text: [clip.title, clip.summary].filter(Boolean),
-        hashtags: (clip.tags || []).map((t) => `#${t}`),
-        clipRef: { start: clip.start, end: clip.end, sourceName, hue: clip.hue },
-        format,
-        subtitleStyle: style === "none" ? null : style,
-      }),
-    );
-    postDraftResult(sessionId, { ideaTitle: clip.title, drafts });
+    const drafts = [];
+    for (const { clip, sourceName, sourceId } of entries) {
+      for (const a of accounts) {
+        drafts.push(
+          addPostDraft(sessionId, {
+            network: a.platform,
+            text: [clip.title, clip.summary].filter(Boolean),
+            hashtags: (clip.tags || []).map((t) => `#${t}`),
+            clipRef: { start: clip.start, end: clip.end, sourceName, hue: clip.hue, sourceId, clipId: clip.id },
+            format,
+            subtitleStyle: style === "none" ? null : style,
+          }),
+        );
+      }
+    }
+    const title = entries.length === 1 ? entries[0].clip.title : `${entries.length} clips`;
+    postDraftResult(sessionId, { ideaTitle: title, drafts });
   }, 1600);
 }
 

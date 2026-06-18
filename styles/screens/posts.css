@@ -431,6 +431,42 @@
   transform: translate(-50%, -50%) scale(1.06);
 }
 
+/* "Edit clip" affordance — reopens the source clip in the Video Clips editor
+ * (subtitles tab). Bottom-left so it clears the source bezel (top-left), the
+ * play overlay (center) and the duration chip (bottom-right) even on narrow
+ * portrait players. Same glassy chrome as the duration chip. */
+.posts__card-clip-edit {
+  position: absolute;
+  bottom: 14px;
+  left: 10px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-white);
+  background: rgba(0, 0, 0, 0.7);
+  opacity: 0.85;
+  transition:
+    opacity var(--ref-animation-short) var(--app-ease-out),
+    background var(--ref-animation-short) var(--app-ease-out);
+}
+
+.posts__card-clip-edit:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.posts__card-clip-edit i {
+  font-size: 13px;
+}
+
 /* Bottom scrubber — fake-progress so the surface reads as a paused
  * player instead of a static thumbnail. */
 .posts__card-clip-player-scrubber {

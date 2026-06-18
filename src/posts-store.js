@@ -69,6 +69,10 @@ export function addPostDraft(
           end: clipRef.end,
           sourceName: clipRef.sourceName,
           hue: typeof clipRef.hue === "number" ? clipRef.hue : 24,
+          // Back-references to the source clip so the post card can reopen it
+          // in the Video Clips modal for editing. Null for legacy/manual refs.
+          sourceId: clipRef.sourceId || null,
+          clipId: clipRef.clipId || null,
         }
       : null,
     // Subtitle preset chosen by the user after the "Add subtitles?" turn.
@@ -103,6 +107,21 @@ export function setSubtitleStyle(sessionId, postIds, style) {
     }
   }
   if (touched) notify(sessionId);
+}
+
+// Re-sync a draft's denormalized clip fields after the user edits the
+// underlying clip in the Video Clips modal (trim window, export format,
+// subtitle style). Leaves text / hashtags untouched — only the video-PIP
+// metadata changes. `subtitleStyle` accepts a caption-preset id or "none".
+export function updatePostClip(sessionId, postId, { start, end, format, subtitleStyle } = {}) {
+  const posts = getPosts(sessionId);
+  const post = posts.find((p) => p.id === postId);
+  if (!post || !post.clipRef) return;
+  if (typeof start === "number") post.clipRef.start = start;
+  if (typeof end === "number") post.clipRef.end = end;
+  if (format !== undefined) post.format = format || null;
+  if (subtitleStyle !== undefined) post.subtitleStyle = subtitleStyle === "none" ? null : subtitleStyle || null;
+  notify(sessionId);
 }
 
 // Update a post's image (called from the generate-image modal callback).

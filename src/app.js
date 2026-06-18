@@ -7,7 +7,7 @@ import { init as initScheduleModal } from "./components/schedule-modal.js?v=37";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=23";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
 import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=25";
-import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=44";
+import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=45";
 import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=31";
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=42";
 import { init as initConnectorsModal } from "./components/connectors-modal.js?v=6";
@@ -19,7 +19,7 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=47";
 import { renderDashboard } from "./screens/dashboard.js?v=46";
-import { renderSession } from "./screens/session.js?v=268";
+import { renderSession } from "./screens/session.js?v=269";
 import { renderIdeas } from "./screens/ideas.js?v=59";
 import { renderContexts } from "./screens/contexts.js?v=69";
 import { renderConnectors } from "./screens/connectors.js?v=8";

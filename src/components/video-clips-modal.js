@@ -1113,6 +1113,11 @@ export function open(source, callbacks = {}) {
       draft = { ...target };
       ensureDraftFormat(draft);
       ensureDraftCaptions(draft);
+      // When opened from a post, seed the crop ratio from the post's chosen
+      // export format (passed via clipOverrides) so the preview + deadzones
+      // match what that post will actually publish — not the clip's default.
+      const ovFormat = callbacks.clipOverrides && callbacks.clipOverrides.format;
+      if (ovFormat && FORMATS[ovFormat]) draft.format = ovFormat;
       draftPlayhead = target.start || 0;
     }
   } else if (callbacks.startAddClip) {

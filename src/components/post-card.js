@@ -21,6 +21,7 @@
 
 import { html, raw } from "../utils.js?v=20";
 import { isPortraitFormat } from "../clip-formats.js?v=1";
+import { presetById } from "../clip-captions.js?v=5";
 
 export function renderPostCard(post, opts = {}) {
   const inlineEdit = opts.inlineEdit === true;
@@ -129,10 +130,10 @@ export function renderPostCard(post, opts = {}) {
   // a portrait aspect ratio so the preview matches what the post would
   // actually look like in feed. Otherwise the existing image / generate
   // placeholder path is preserved.
-  const subtitleBadge =
-    post.clipRef && post.subtitleStyle && post.subtitleStyle !== "none"
-      ? `<span class="ap-status grey no-dot posts__card-subtitle-pill">Subtitles · ${SUBTITLE_LABEL[post.subtitleStyle] || post.subtitleStyle}</span>`
-      : "";
+  const subtitleLabel = post.clipRef ? subtitleLabelFor(post.subtitleStyle) : null;
+  const subtitleBadge = subtitleLabel
+    ? `<span class="ap-status grey no-dot posts__card-subtitle-pill">Subtitles · ${subtitleLabel}</span>`
+    : "";
 
   const mediaBlock = post.clipRef
     ? `${renderClipPlayer(post)}${subtitleBadge}`
@@ -411,6 +412,17 @@ const SUBTITLE_LABEL = {
   caption: "Caption",
 };
 
+// Resolve a subtitle style id to a human label. The conversational draft flow
+// uses the light bold/clean/caption set; editing a clip in the Video Clips
+// modal can set any caption preset id (karaoke, …) — fall back to the preset
+// catalog's label so the badge stays accurate after an edit.
+function subtitleLabelFor(style) {
+  if (!style || style === "none") return null;
+  if (SUBTITLE_LABEL[style]) return SUBTITLE_LABEL[style];
+  const preset = presetById(style);
+  return preset ? preset.label : style;
+}
+
 function renderClipPlayer(post) {
   const clip = post.clipRef;
   const duration = Math.max(1, Math.round(clip.end - clip.start));
@@ -424,6 +436,15 @@ function renderClipPlayer(post) {
   const blob3 = `radial-gradient(circle at 50% 88%, oklch(0.42 0.12 ${(h + 25) % 360}) 0%, transparent 36%)`;
   const aspectClass = portrait ? "posts__card-clip-player--portrait" : "posts__card-clip-player--landscape";
   const source = clip.sourceName || "";
+  // The "Edit clip" affordance only works when the draft carries a back-ref to
+  // its source clip (sourceId + clipId). Legacy / manual clipRefs omit them.
+  const editBtn =
+    clip.sourceId && clip.clipId
+      ? `<button type="button" class="posts__card-clip-edit" data-post-clip-edit="${post.id}" aria-label="Edit clip" title="Edit clip">
+        <i class="ap-icon-pen" aria-hidden="true"></i>
+        <span>Edit clip</span>
+      </button>`
+      : "";
   return `
     <div
       class="posts__card-clip-player ${aspectClass}"
@@ -436,6 +457,7 @@ function renderClipPlayer(post) {
         <span>${escapePlayerText(source)}</span>
       </span>
       <span class="posts__card-clip-player-dur">${formatPlayerTime(duration)}</span>
+      ${editBtn}
       <button type="button" class="posts__card-clip-player-play" aria-label="Play preview" tabindex="-1">
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
           <path d="M8 5v14l11-7z" fill="currentColor" />

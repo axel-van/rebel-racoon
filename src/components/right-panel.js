@@ -12,12 +12,12 @@ import {
   insertPost,
   updatePostContent,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=28";
-import { renderPostCard } from "./post-card.js?v=35";
+} from "../posts-store.js?v=29";
+import { renderPostCard } from "./post-card.js?v=36";
 import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1";
-import { open as openVideoClipsModal } from "./video-clips-modal.js?v=44";
+import { open as openVideoClipsModal } from "./video-clips-modal.js?v=45";
 import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=71";
 import {
   getSources as getStreamSources,
@@ -547,6 +547,40 @@ export function init() {
       onPostImage(imageBtn.dataset.postImage);
       return;
     }
+    // "Edit clip" on a draft generated from a video clip — reopen the source
+    // clip in the Video Clips modal (single-clip, subtitles tab). Saving
+    // persists to the source AND re-syncs this draft's PIP (trim / format /
+    // subtitle style) so the card reflects the edit.
+    const postClipEditBtn = event.target.closest("[data-post-clip-edit]");
+    if (postClipEditBtn) {
+      const pid = postClipEditBtn.dataset.postClipEdit;
+      const sid = activeSessionId();
+      if (!sid) return;
+      const post = getPosts(sid).find((p) => p.id === pid);
+      const ref = post && post.clipRef;
+      if (!ref || !ref.sourceId || !ref.clipId) return;
+      const source = getStreamSources(sid).find((s) => s.id === ref.sourceId);
+      if (!source) return;
+      openVideoClipsModal(source, {
+        editingClipId: ref.clipId,
+        captionsTab: true,
+        clipOverrides: { format: post.format },
+        onSaveClips: (srcId, nextClips) => {
+          updateSourceClips(srcId, nextClips);
+          const edited = (nextClips || []).find((c) => c.id === ref.clipId);
+          if (!edited) return;
+          import("../posts-store.js?v=29").then(({ updatePostClip }) => {
+            updatePostClip(sid, pid, {
+              start: edited.start,
+              end: edited.end,
+              format: edited.format || null,
+              subtitleStyle: edited.captionsOn ? edited.captionStyle : "none",
+            });
+          });
+        },
+      });
+      return;
+    }
     // Sources mode — "Attach source" is a 3-method menu; each item opens
     // its own dedicated add-source modal (upload / url / paste text)
     // scoped to the active session. The upload pipeline creates sources
@@ -782,49 +816,27 @@ export function init() {
       const entry = collectAllClips().find(({ clip }) => clip.id === cid);
       const sid = activeSessionId();
       if (!sid || !entry) return;
-      const { clip, sourceName } = entry;
-      import("../screens/session.js?v=194").then(({ startClipDraftFlow }) => {
-        startClipDraftFlow(sid, clip, sourceName);
+      const { clip, sourceName, sourceId } = entry;
+      import("../screens/session.js?v=269").then(({ startClipDraftFlow }) => {
+        startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
     }
-    // Footer CTA — draft posts from the selected clips into the active
-    // session. Mirrors the onUseClips logic that used to live behind the
-    // video-clips-modal CTA: one draft per clip, clipRef carries trim +
-    // source name + hue so post-card can render its video PIP. After
-    // drafts land, fires the PDF-flow 06.B subtitle preset question into
-    // the assistant thread.
+    // Footer CTA — draft posts from the selected clips. Hands the selection to
+    // the conversational clip-draft flow (ratio → subtitles → accounts), the
+    // same flow the per-card "Draft" button uses, so multi-clip drafting goes
+    // through one canonical path that asks the export options once.
     if (event.target.closest("[data-rpanel-clips-draft]")) {
       const sid = activeSessionId();
       if (!sid) return;
-      const all = collectAllClips();
-      const picked = all.filter(({ clip }) => clipSelection.has(clip.id));
+      const picked = collectAllClips()
+        .filter(({ clip }) => clipSelection.has(clip.id))
+        .map(({ clip, sourceName, sourceId }) => ({ clip, sourceName, sourceId }));
       if (picked.length === 0) return;
-      const drafts = picked.map(({ clip, sourceName }) =>
-        addPostDraft(sid, {
-          network: clip.network,
-          text: [clip.title, clip.summary].filter(Boolean),
-          hashtags: (clip.tags || []).map((t) => `#${t}`),
-          clipRef: {
-            start: clip.start,
-            end: clip.end,
-            sourceName,
-            hue: clip.hue,
-          },
-        }),
-      );
       clipSelection = new Set();
       renderPanel();
-      import("./toast.js").then(({ showToast }) =>
-        showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from clips`, { duration: 3200 }),
-      );
-      // PDF flow 06.B — ask the user for a subtitle preset. We import
-      // lazily to keep this module decoupled from the session screen.
-      import("../screens/session.js?v=194").then(({ postSubtitleQuestion }) => {
-        postSubtitleQuestion(
-          sid,
-          drafts.map((d) => d.id),
-        );
+      import("../screens/session.js?v=269").then(({ startClipDraftFlow }) => {
+        startClipDraftFlow(sid, picked);
       });
       return;
     }
@@ -2423,7 +2435,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=194").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=269").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

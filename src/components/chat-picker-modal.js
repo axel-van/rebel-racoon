@@ -15,7 +15,7 @@
 import { recentSessions } from "../mocks.js?v=43";
 import { getSources } from "../sources-stream.js?v=37";
 import { getIdeas } from "../library.js?v=32";
-import { getPosts } from "../posts-store.js?v=28";
+import { getPosts } from "../posts-store.js?v=29";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 
 const MODAL_ID = "chatPicker";
