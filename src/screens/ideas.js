@@ -53,15 +53,29 @@ function renderIdeaGridCard(i) {
   });
 }
 
+// Delegated listeners live on `target` (the persistent #app element), so they
+// are bound ONCE per screen entry — not on every paint() — and torn down via
+// the cleanup the router invokes on navigation. Re-binding inside paint() used
+// to stack a fresh set of handlers on each filter/sort/clear repaint.
+let onClick = null;
+let onInput = null;
+let onChange = null;
+
 export function renderIdeas(_params, target) {
   renderTopbar();
   pageState = { kind: "all", query: "", sort: "recent" };
   paint(target);
+  bind(target);
+  return () => {
+    if (onClick) target.removeEventListener("click", onClick);
+    if (onInput) target.removeEventListener("input", onInput);
+    if (onChange) target.removeEventListener("change", onChange);
+    onClick = onInput = onChange = null;
+  };
 }
 
 function paint(target) {
   target.innerHTML = html`<section class="screen ideas-view">${raw(renderPage())}</section>`;
-  bind(target);
 }
 
 function renderPage() {
@@ -223,7 +237,7 @@ function filterAndSort(list, { kind, query, sort }) {
 }
 
 function bind(root) {
-  root.addEventListener("click", (event) => {
+  onClick = (event) => {
     // --- Compact idea card interactions ---
     // Thumbs feedback — exclusive toggle, in place (no repaint).
     const feedbackBtn = event.target.closest("[data-rpanel-ideas-feedback]");
@@ -300,9 +314,10 @@ function bind(root) {
     if (event.target.closest("[data-ideas-new]") || event.target.closest("[data-ideas-remine]")) {
       // Not wired yet — silently no-op until a real handler lands.
     }
-  });
+  };
+  root.addEventListener("click", onClick);
 
-  root.addEventListener("input", (event) => {
+  onInput = (event) => {
     if (event.target.matches("[data-ideas-search]")) {
       pageState.query = event.target.value || "";
       // Repaint the body in place — covers both the grid -> empty and
@@ -317,14 +332,16 @@ function bind(root) {
             : `<div class="ideas-view__grid">${visible.map((i) => renderIdeaGridCard(i)).join("")}</div>`;
       }
     }
-  });
+  };
+  root.addEventListener("input", onInput);
 
-  root.addEventListener("change", (event) => {
+  onChange = (event) => {
     if (event.target.matches("[data-ideas-sort]")) {
       pageState.sort = event.target.value;
       paint(root);
     }
-  });
+  };
+  root.addEventListener("change", onChange);
 }
 
 function escapeAttr(str) {

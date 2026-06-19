@@ -23,7 +23,7 @@ import {
 } from "./components/conversation-status-card.js?v=47";
 import { renderDashboard } from "./screens/dashboard.js?v=46";
 import { renderSession } from "./screens/session.js?v=271";
-import { renderIdeas } from "./screens/ideas.js?v=59";
+import { renderIdeas } from "./screens/ideas.js?v=60";
 import { renderContexts } from "./screens/contexts.js?v=69";
 import { renderConnectors } from "./screens/connectors.js?v=8";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
