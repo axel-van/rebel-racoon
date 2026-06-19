@@ -43,6 +43,18 @@ const drafts = new Map(); // sessionId → { contextId, draft, dirty, onComplete
 // creation flow; the editor's incremental tweaks should feel snappier).
 const ANALYSIS_DELAY_MS = 1200;
 
+// Flash a mermaid "Analyzing…" pill, then after the simulated delay run the
+// analysis callback (passed the notice id so it can flip the pill to
+// "Analyzed…" once its patch lands). Bails silently if the user left the
+// editor mid-analysis. Shared by the document + website analysis flows.
+function withAnalysisPill(sessionId, { meta, text }, run) {
+  const noticeId = postSystemNotice(sessionId, { meta, text, variant: "mermaid" });
+  window.setTimeout(() => {
+    if (!drafts.has(sessionId)) return; // user bailed mid-analysis
+    run(noticeId);
+  }, ANALYSIS_DELAY_MS);
+}
+
 // ---------- Public API ----------
 
 export function start(sessionId, contextId, { onComplete, onCancel, targetField } = {}) {
@@ -323,13 +335,7 @@ function askVoiceDocument(sessionId, ctx) {
 // the simulated delay. Same chrome as the creation flow's "Extracting
 // guidelines" notice (mermaid variant).
 function runDocumentAnalysis(sessionId, file, filename) {
-  const noticeId = postSystemNotice(sessionId, {
-    meta: "Analyzing your document",
-    text: filename,
-    variant: "mermaid",
-  });
-  window.setTimeout(() => {
-    if (!drafts.has(sessionId)) return; // user bailed mid-analysis
+  withAnalysisPill(sessionId, { meta: "Analyzing your document", text: filename }, (noticeId) => {
     const result = analyzeDocument(file);
     const patch = {};
     if (Array.isArray(result?.tones)) patch.tones = result.tones;
@@ -344,7 +350,7 @@ function runDocumentAnalysis(sessionId, file, filename) {
       `Voice refreshed from **${filename}** — tones: ${(patch.tones || []).join(" + ") || "—"}.`,
     );
     showChipMenu(sessionId);
-  }, ANALYSIS_DELAY_MS);
+  });
 }
 
 function askVoiceTones(sessionId, ctx) {
@@ -454,13 +460,7 @@ function askBrandingWebsite(sessionId, ctx) {
 // path (flips from "Analyzing the website — {url}" to "Analyzed the
 // website — {url}" after the simulated delay).
 function runWebsiteAnalysis(sessionId, url) {
-  const noticeId = postSystemNotice(sessionId, {
-    meta: "Analyzing the website",
-    text: url,
-    variant: "mermaid",
-  });
-  window.setTimeout(() => {
-    if (!drafts.has(sessionId)) return;
+  withAnalysisPill(sessionId, { meta: "Analyzing the website", text: url }, (noticeId) => {
     const result = analyzeWebsite(url);
     const imageVoice = result?.suggestions?.imageVoice;
     if (imageVoice) {
@@ -472,7 +472,7 @@ function runWebsiteAnalysis(sessionId, url) {
     });
     postAssistantMessage(sessionId, `Brand visual identity refreshed from **${url}**.`);
     showChipMenu(sessionId);
-  }, ANALYSIS_DELAY_MS);
+  });
 }
 
 const BRANDING_FIELD_LABELS = {
