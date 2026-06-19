@@ -104,7 +104,7 @@ import {
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=2";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=5";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=7";
 import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=7";
 
 // Default composer placeholder — restored whenever no connector is attached.
