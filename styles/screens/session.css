@@ -546,7 +546,7 @@
   gap: var(--ref-spacing-xxs);
   padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
   border-radius: var(--app-radius-pill);
-  background: var(--ref-color-orange-10);
+  background: var(--app-butter);
   color: var(--ref-color-orange-150);
   font-size: var(--sys-text-style-caption-bold-size);
   line-height: var(--sys-text-style-caption-bold-line-height);
