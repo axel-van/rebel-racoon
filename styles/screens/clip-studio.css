@@ -14,7 +14,7 @@
 /* Faint MermAId glow on the AI analysis surface (analyzing only). */
 .session__assistant.clip-studio--analyzing {
   background:
-    radial-gradient(ellipse 48% 42% at 50% 32%, var(--ref-color-mermaid-10) 0%, transparent 70%), var(--app-bg);
+    radial-gradient(ellipse 48% 42% at 50% 32%, var(--ref-color-orange-10) 0%, transparent 70%), var(--app-bg);
 }
 
 /* Analyzing: centered column. */
@@ -91,7 +91,7 @@
 .session__assistant.clip-studio.clip-studio--upload {
   overflow-y: auto;
   background:
-    radial-gradient(ellipse 58% 40% at 50% 33%, var(--ref-color-electric-blue-10) 0%, transparent 70%), var(--app-bg);
+    radial-gradient(ellipse 58% 40% at 50% 33%, var(--ref-color-orange-10) 0%, transparent 70%), var(--app-bg);
 }
 /* Compact single column: intro → steps → drop/preview → settings → action bar.
    Kept narrow and tight so the setup reads as one focused panel, not a sparse

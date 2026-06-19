@@ -17,7 +17,7 @@
    3-class selector beats the base background above. */
 .session__assistant.batch-studio.batch-studio--upload {
   background:
-    radial-gradient(ellipse 58% 40% at 50% 33%, var(--ref-color-electric-blue-10) 0%, transparent 70%), var(--app-bg);
+    radial-gradient(ellipse 58% 40% at 50% 33%, var(--ref-color-orange-10) 0%, transparent 70%), var(--app-bg);
 }
 
 .batch-studio__scroll {
