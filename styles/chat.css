@@ -371,16 +371,38 @@
   gap: var(--ref-spacing-xs);
 }
 
-/* Resolved state — one-line "connected, importing now" confirmation. */
-.connect-prompt__done {
+/* Resolved state — a standalone success status (green wash + filled check),
+   the companion to .connect-card once the service is connected. */
+.connect-status {
+  align-self: flex-start;
+  width: 100%;
+  max-width: 460px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  background: var(--ref-color-green-10);
+  border: 1px solid var(--ref-color-green-20);
+  border-radius: var(--app-radius-md);
 }
 
-.connect-prompt__done i {
-  color: var(--ref-color-green-100);
+.connect-status__icon {
+  color: var(--ref-color-green-150);
+  font-size: var(--sys-icon-css-md);
   flex-shrink: 0;
+}
+
+.connect-status__text {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.connect-status__text strong {
+  font-weight: var(--sys-text-style-caption-bold-weight);
 }
 
 /* -- Content blocks rendered INSIDE an AI bubble --------------------------- */

@@ -2369,18 +2369,19 @@ function renderSystemNotice(message) {
 // turn then collapses to a one-line confirmation.
 function renderConnectPromptTurn(message) {
   if (message.status === "dismissed") return "";
-  const aiHeader = `<i class="ap-icon-sparkles-mermaid chat-turn-avatar" aria-hidden="true"></i>`;
 
+  // Resolved — a standalone success status (green wash + filled check), not an
+  // AI chat reply. Mirrors the connect-card so the request → success reads as
+  // one coherent block.
   if (message.status === "connected") {
     return `
-      <div class="chat-turn chat-turn--ai">
-        ${aiHeader}
-        <div class="chat-bubble chat-bubble--ai">
-          <p class="chat-bubble-text connect-prompt__done">
-            <i class="ap-icon-check" aria-hidden="true"></i>
-            <span>${escapeHtml(message.connectorName)} connected — importing your ${escapeHtml(message.noun)} now.</span>
-          </p>
-        </div>
+      <div class="connect-status" role="status">
+        <i class="ap-icon-rounded-check_fill connect-status__icon" aria-hidden="true"></i>
+        <p class="connect-status__text">
+          <strong>${escapeHtml(message.connectorName)} connected</strong> — importing your ${escapeHtml(
+            message.noun,
+          )} now.
+        </p>
       </div>
     `;
   }
