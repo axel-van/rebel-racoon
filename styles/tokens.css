@@ -12,6 +12,13 @@
   --app-border: var(--ref-color-grey-20);
   --app-border-soft: var(--ref-color-grey-10);
 
+  /* ── Archie "butter" — brand accent for in-conversation status pills
+     ("Extracting" / "Extracted N ideas" / "Drafting" / "Analyzing"). Replaces
+     the former light-purple (mermaid-10 #F5F1FF) tint. The accent is a darker
+     olive of the same hue, used for the 8px status dot. ─────────────────── */
+  --app-butter: #f7ffc5; /* light butter — status pill background */
+  --app-butter-accent: #8a9b2e; /* darker butter (olive) — status dot */
+
   /* ── Video-clips dark surface ramp ─────────────────────────────────────
      The DS is light-only — its darkest grey (grey-150 #212E44) is navy and
      not deep enough for a media-editor surface. This is the single place the

@@ -11,17 +11,18 @@
   z-index: var(--app-z-modal-backdrop);
 }
 
-/* .ap-status ships blue/green/grey/orange/red/tagOrange — no mermaid variant
-   even though the DS defines the mermaid token family. Archie's Drafting +
-   Extracted-N-ideas pills (Figma 25:1113, 25:1107) need a mermaid-tinted
-   status with a purple dot. */
+/* .ap-status ships blue/green/grey/orange/red/tagOrange — no mermaid variant.
+   Archie's in-conversation status pills (Drafting / Extracted-N-ideas /
+   Extracting / Analyzing — Figma 25:1113, 25:1107) use this variant. Tinted
+   with the Archie "butter" brand colour (was light-purple mermaid-10), with a
+   darker-butter olive dot. */
 .ap-status.mermaid {
-  background: var(--ref-color-mermaid-10);
+  background: var(--app-butter);
   color: var(--ref-color-grey-100);
 }
 
 .ap-status.mermaid::before {
-  background: var(--ref-color-mermaid-gradient-from);
+  background: var(--app-butter-accent);
 }
 
 /* The DS ships --comp-status-card-* tokens and an Angular <ap-status-card>
