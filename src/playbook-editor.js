@@ -24,12 +24,12 @@
 
 import { getContextById, updateContext } from "./contexts-store.js?v=29";
 import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=42";
-import * as inlineQuestion from "./inline-question.js?v=33";
+import * as inlineQuestion from "./inline-question.js?v=34";
 import {
   openContextBriefPanel,
   refreshContextBriefPanel,
   closePanel as closeRightPanel,
-} from "./components/right-panel.js?v=167";
+} from "./components/right-panel.js?v=169";
 import { open as openConfirmModal } from "./components/confirm-modal.js?v=22";
 import { setHandoff } from "./handoff.js?v=20";
 import { navigate } from "./router.js?v=30";

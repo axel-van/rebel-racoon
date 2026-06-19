@@ -424,3 +424,16 @@
   font-weight: var(--sys-text-style-caption-weight);
   color: inherit;
 }
+
+/* Picker loading state — centered brand loader shown in place of the option
+   rows while items are being "found" (e.g. draft angles), then swapped out. */
+.analyse__picker-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ref-spacing-xl) 0;
+}
+
+.analyse__picker-loading .archie-loader {
+  --archie-loader-size: 44px;
+}

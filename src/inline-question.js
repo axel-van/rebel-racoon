@@ -48,7 +48,7 @@
 //   onSkip()          fn      — called when Skip / Esc; if omitted, no skip btn
 //   onBack()          fn      — called when ← Back is clicked; if omitted, no back btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=39";
+import { chatTurn } from "./screens/_analyse-common.js?v=40";
 
 const states = new Map(); // sessionId → opts
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -201,6 +201,9 @@ export function renderChrome(sessionId) {
   const picker = {
     items: s.items || [],
     handler: "inline-question",
+    // Loading state — show a loader inside the picker card (e.g. while Archie
+    // "finds the angles") before the real options are swapped in.
+    loading: s.loading === true,
     title: s.title || null,
     subtitle: s.subtitle || null,
     stepIndicator: s.stepLabel || null,

@@ -131,6 +131,9 @@ export function renderPicker(picker) {
     stepTotal = 0,
     stepMin = 1,
     stepMax = 20,
+    // Loading state — render a brand loader in place of the option rows
+    // (e.g. while Archie "finds the angles") until the real items arrive.
+    loading = false,
   } = picker;
   const preset = new Set(defaultSelected);
 
@@ -325,6 +328,12 @@ export function renderPicker(picker) {
         </header>
       `
       : "";
+
+  // Loading state — header + a centered brand loader, no rows/footer. The
+  // global archie-loader injector animates the `.archie-loader` element.
+  if (loading) {
+    return `<div class="analyse__options analyse__options--loading">${header}<div class="analyse__picker-loading"><span class="archie-loader" aria-label="Loading"></span></div></div>`;
+  }
 
   // Footer — Skip + (multi-only) Submit. Single-select pickers without a
   // skipLabel render no footer at all.

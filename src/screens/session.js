@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=100";
+import { renderTopbar } from "../components/topbar.js?v=101";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=43";
 import {
   getConnectedProfiles,
@@ -48,7 +48,7 @@ import {
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=33";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=25";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
-import * as inlineQuestion from "../inline-question.js?v=33";
+import * as inlineQuestion from "../inline-question.js?v=34";
 import * as clipStudio from "../clip-studio.js?v=11";
 import * as batchStudio from "../batch-studio.js?v=4";
 import { askConnector } from "../connector-ask.js?v=3";
@@ -60,9 +60,9 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=82";
-import * as playbookEditor from "../playbook-editor.js?v=41";
-import { renderPicker } from "./_analyse-common.js?v=39";
+import * as contextBuilder from "../context-builder.js?v=83";
+import * as playbookEditor from "../playbook-editor.js?v=42";
+import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
 import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=2";
@@ -100,7 +100,7 @@ import {
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=168";
+} from "../components/right-panel.js?v=169";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=2";
@@ -1945,45 +1945,58 @@ export function askAngleQuestion(sessionId, ideaId) {
     return;
   }
   postAssistantMessage(sessionId, "Let's draft from these angles.");
+  // The quick picker shows a brand loader (~4s) while Archie "finds the
+  // angles", then swaps in the real angle stepper. Cancelling during the
+  // loader aborts the reveal.
   inlineQuestion.ask(sessionId, {
+    loading: true,
     title: "Suggested angles",
-    subtitle: "Set how many drafts I'll write for each angle — leave one at 0 to skip it.",
-    stepLabel: "Drafts per angle",
+    subtitle: "Finding the strongest angles for this idea…",
     skipLabel: "Cancel",
-    // Stepper mode — each angle row carries its own drafts counter (0 to
-    // skip an angle). "Generate N drafts" sums every angle and advances
-    // straight to the profile step, where the whole batch is produced.
-    stepper: true,
-    defaultCount: 1,
-    countMin: 0,
-    countMax: 20,
-    submitCountLabel: (total) => `Generate ${total} draft${total === 1 ? "" : "s"}`,
-    items: angles.map((a) => ({
-      value: a.id,
-      label: a.title,
-      caption: a.description,
-    })),
-    onPick: ({ picks }) => {
-      // Map each picked angle id → its angle object + count.
-      const anglePicks = picks
-        .map((p) => ({ angle: angles.find((a) => a.id === p.value) || null, count: p.count }))
-        .filter((p) => p.angle && p.count > 0);
-      const total = anglePicks.reduce((sum, p) => sum + p.count, 0);
-      // Echo the batch as a user turn so it stays visible once the picker
-      // unmounts — e.g. "3 drafts · 2 angles".
-      postUserTurn(
-        sessionId,
-        `${total} draft${total === 1 ? "" : "s"} · ${anglePicks.length} angle${anglePicks.length === 1 ? "" : "s"}`,
-      );
-      askProfileQuestion(sessionId, ideaId, {
-        anglePicks,
-        // ← Back returns to the angle picker so the user can re-choose.
-        onBack: () => askAngleQuestion(sessionId, ideaId),
-      });
-    },
-    // First step of the flow — no earlier question, so it's Cancel (not Back).
     onSkip: () => {},
   });
+  window.setTimeout(() => {
+    if (!inlineQuestion.isActive(sessionId)) return;
+    inlineQuestion.ask(sessionId, {
+      title: "Suggested angles",
+      subtitle: "Set how many drafts I'll write for each angle — leave one at 0 to skip it.",
+      stepLabel: "Drafts per angle",
+      skipLabel: "Cancel",
+      // Stepper mode — each angle row carries its own drafts counter (0 to
+      // skip an angle). "Generate N drafts" sums every angle and advances
+      // straight to the profile step, where the whole batch is produced.
+      stepper: true,
+      defaultCount: 1,
+      countMin: 0,
+      countMax: 20,
+      submitCountLabel: (total) => `Generate ${total} draft${total === 1 ? "" : "s"}`,
+      items: angles.map((a) => ({
+        value: a.id,
+        label: a.title,
+        caption: a.description,
+      })),
+      onPick: ({ picks }) => {
+        // Map each picked angle id → its angle object + count.
+        const anglePicks = picks
+          .map((p) => ({ angle: angles.find((a) => a.id === p.value) || null, count: p.count }))
+          .filter((p) => p.angle && p.count > 0);
+        const total = anglePicks.reduce((sum, p) => sum + p.count, 0);
+        // Echo the batch as a user turn so it stays visible once the picker
+        // unmounts — e.g. "3 drafts · 2 angles".
+        postUserTurn(
+          sessionId,
+          `${total} draft${total === 1 ? "" : "s"} · ${anglePicks.length} angle${anglePicks.length === 1 ? "" : "s"}`,
+        );
+        askProfileQuestion(sessionId, ideaId, {
+          anglePicks,
+          // ← Back returns to the angle picker so the user can re-choose.
+          onBack: () => askAngleQuestion(sessionId, ideaId),
+        });
+      },
+      // First step of the flow — no earlier question, so it's Cancel (not Back).
+      onSkip: () => {},
+    });
+  }, 4000);
 }
 
 // Step 2: how many drafts. Threads the chosen `angle` through to the
