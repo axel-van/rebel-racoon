@@ -99,11 +99,12 @@
   margin-top: var(--app-spacing-micro);
 }
 
-/* AI sparkles icon is a mask-based glyph (see ds/ap-icons.css) — its visible
-   color is whatever we put in `background`. Paint it with the DS mermaid
-   gradient so the icon itself becomes the purple→pink AI accent. */
+/* AI avatar is a mask-based glyph remapped to the Archie logo (see
+   ds-patches .ap-icon-sparkles*) — its visible colour is whatever we put in
+   `background`. Paint it the brand orange so the avatar reads as the Archie
+   mark, not the old mermaid gradient. */
 .chat-turn--ai .chat-turn-avatar {
-  background: var(--ref-color-mermaid-gradient-background);
+  background: var(--app-archie-mark);
 }
 
 .chat-turn-role {
