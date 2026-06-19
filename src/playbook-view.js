@@ -284,7 +284,7 @@ function editActionButtons() {
     <button type="button" class="ap-button ghost grey recap__edit-cancel" data-recap-cancel>
       <span>Cancel</span>
     </button>
-    <button type="button" class="ap-button primary blue recap__edit-save" data-recap-save>
+    <button type="button" class="ap-button primary orange recap__edit-save" data-recap-save>
       <i class="ap-icon-check"></i><span>Save changes</span>
     </button>
   `;
