@@ -23,6 +23,17 @@
      "A" logotype (mono orange) across the app. See ds-patches .ap-icon-sparkles*. */
   --app-archie-mark: #ff3c00;
 
+  /* ── Conversation navy — Archie tertiary brand #0A1B33 replaces the chat
+     thread's electric-blue accents (user bubble, "You" label, Ideas pill,
+     source-intake chips, card hover halos). Light tints are pale navy so the
+     soft fills/borders stay light and legible. Maps the electric-blue ramp:
+     100→navy, 150→deep, 05/10/20→pale tints. ──────────────────────────────── */
+  --app-convo-navy: #0a1b33; /* main accent (was electric-blue-100) */
+  --app-convo-navy-deep: #06101f; /* hover / dark text (was electric-blue-150) */
+  --app-convo-navy-05: #eef0f3; /* soft wash (was electric-blue-05) */
+  --app-convo-navy-10: #e2e6ec; /* lit-state fill (was electric-blue-10) */
+  --app-convo-navy-20: #ccd3de; /* hairline border (was electric-blue-20) */
+
   /* ── Video-clips dark surface ramp ─────────────────────────────────────
      The DS is light-only — its darkest grey (grey-150 #212E44) is navy and
      not deep enough for a media-editor surface. This is the single place the

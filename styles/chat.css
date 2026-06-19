@@ -43,10 +43,10 @@
    and schedule modal; only this chat-context pill chrome is local. */
 .chat-profiles .profile-tag {
   padding: 3px var(--ref-spacing-xs) 3px 3px;
-  background: var(--ref-color-electric-blue-05);
-  border: 1px solid var(--ref-color-electric-blue-20);
+  background: var(--app-convo-navy-05);
+  border: 1px solid var(--app-convo-navy-20);
   border-radius: var(--app-radius-pill);
-  color: var(--ref-color-electric-blue-150);
+  color: var(--app-convo-navy-deep);
 }
 
 /* Shared profile tag — the canonical "show a profile" UI: DS avatar
@@ -114,12 +114,12 @@
 }
 
 /* User + source-intake labels (Figma 25:1039 + 25:1130) — smaller caption size
-   in electric-blue-100. */
+   in navy-100. */
 .chat-turn--user .chat-turn-role {
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   font-weight: var(--sys-text-style-caption-weight);
-  color: var(--ref-color-electric-blue-100);
+  color: var(--app-convo-navy);
 }
 
 .chat-bubble {
@@ -141,10 +141,10 @@
   border-radius: 0;
 }
 
-/* User bubble (Figma 25:1040) — solid electric-blue.
+/* User bubble (Figma 25:1040) — solid navy.
    Corners 12 / 0 / 12 / 12 — sharp top-right corner points at the user avatar. */
 .chat-bubble--user {
-  background: var(--ref-color-electric-blue-100);
+  background: var(--app-convo-navy);
   color: var(--ref-color-white);
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   border: 0;
@@ -164,9 +164,9 @@
   align-items: center;
   gap: var(--ref-spacing-xs);
   padding: 6px 8px 6px var(--ref-spacing-xs);
-  background: var(--ref-color-electric-blue-05);
-  color: var(--ref-color-electric-blue-150);
-  border: 1px solid var(--ref-color-electric-blue-20);
+  background: var(--app-convo-navy-05);
+  color: var(--app-convo-navy-deep);
+  border: 1px solid var(--app-convo-navy-20);
   border-radius: var(--app-radius-xl);
   border-top-right-radius: 0;
   max-width: 480px;
@@ -181,7 +181,7 @@
 
 /* File-kind icon (pdf / video / url / etc.) — sits at the leading edge. */
 .chat-bubble-source-intake__kind {
-  color: var(--ref-color-electric-blue-100);
+  color: var(--app-convo-navy);
   font-size: var(--sys-icon-css-sm);
   flex-shrink: 0;
 }
@@ -191,7 +191,7 @@
 .chat-bubble-source-intake__name {
   margin: 0;
   font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-electric-blue-150);
+  color: var(--app-convo-navy-deep);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -201,7 +201,7 @@
 
 /* Trailing slot — three states slot in here:
    1. Loading: __loading pill (grey muted with inline dot)
-   2. Ready + ideas: __pill (electric-blue, clickable, chevron nudges)
+   2. Ready + ideas: __pill (navy, clickable, chevron nudges)
    3. Ready, no ideas: __check (bare green check icon)
 */
 
@@ -224,13 +224,13 @@
   flex-shrink: 0;
 }
 
-/* (2) Ideas pill — solid electric-blue, hover deepens + chevron nudges 2px */
+/* (2) Ideas pill — solid navy, hover deepens + chevron nudges 2px */
 .chat-bubble-source-intake__pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 3px 8px 3px 10px;
-  background: var(--ref-color-electric-blue-100);
+  background: var(--app-convo-navy);
   color: var(--ref-color-white);
   border: 0;
   border-radius: var(--app-radius-pill);
@@ -245,7 +245,7 @@
 
 .chat-bubble-source-intake__pill:hover,
 .chat-bubble-source-intake__pill:focus-visible {
-  background: var(--ref-color-electric-blue-150);
+  background: var(--app-convo-navy-deep);
   outline: none;
 }
 
@@ -417,14 +417,14 @@ button.chat-bubble-choice-chip:hover {
 
 button.chat-bubble-choice-chip:active {
   background: var(--ref-color-grey-05);
-  border-color: var(--ref-color-electric-blue-100);
+  border-color: var(--app-convo-navy);
 }
 
 button.chat-bubble-choice-chip.is-selected,
 span.chat-bubble-choice-chip.is-selected {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-10);
-  color: var(--ref-color-electric-blue-100);
+  border-color: var(--app-convo-navy);
+  background: var(--app-convo-navy-10);
+  color: var(--app-convo-navy);
 }
 
 /* When the choice has been answered, chips render as <span> (non-interactive). */
@@ -450,7 +450,7 @@ span.chat-bubble-choice-chip {
    At rest it wears the same quiet grey-05 / grey-10 surface as the
    "Extracted N ideas" idea cards so this AI-produced batch sits in the
    same visual family as the rest of the thread — the mermaid icon tile
-   carries the AI signal, and the card only lights up electric blue on
+   carries the AI signal, and the card only lights up navy on
    interaction (matching the choice chips + source-intake pill). */
 .drafts-card {
   /* .ap-card defaults to flex-direction: column with --ref-spacing-sm gap;
@@ -474,15 +474,15 @@ span.chat-bubble-choice-chip {
 
 .drafts-card:hover,
 .drafts-card:focus-visible {
-  /* Interactive lift: the border picks up the thread's electric-blue
+  /* Interactive lift: the border picks up the thread's navy
      clickable accent on hover/focus, same gesture as the choice chips. */
-  border-color: var(--ref-color-electric-blue-100);
+  border-color: var(--app-convo-navy);
   outline: none;
 }
 
 .drafts-card.is-active {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-10);
+  border-color: var(--app-convo-navy);
+  background: var(--app-convo-navy-10);
 }
 
 /* Non-interactive result-card states (folded in from the old
@@ -593,7 +593,7 @@ span.chat-bubble-choice-chip {
   font-weight: var(--sys-text-style-body-bold-weight);
 }
 
-/* "Review ›" label — electric blue to match the thread's clickable
+/* "Review ›" label — navy to match the thread's clickable
    affordances (source-intake "View ideas" pill, the "View idea" links
    inside the extraction turn). Reads as a quiet link beside the title
    while the whole card stays clickable; the chevron nudges right on
@@ -605,7 +605,7 @@ span.chat-bubble-choice-chip {
   flex-shrink: 0;
   font: var(--sys-text-style-body-bold-weight) var(--sys-text-style-body-bold-size) /
     var(--sys-text-style-body-bold-line-height) var(--sys-text-style-body-bold-font-family);
-  color: var(--ref-color-electric-blue-100);
+  color: var(--app-convo-navy);
 }
 
 .drafts-card__cta > i {
