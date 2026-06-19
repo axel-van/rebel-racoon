@@ -15,64 +15,7 @@
 /* The footer's top separator comes from the DS .ap-dialog-footer — no
    app-level border needed. */
 
-/* ── Drop zone ────────────────────────────────────────────────────────── */
-
-.add-source__dropzone {
-  border: 1.5px dashed var(--ref-color-grey-20);
-  border-radius: var(--ref-border-radius-md);
-  padding: var(--ref-spacing-xl) var(--ref-spacing-md);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  cursor: pointer;
-  transition:
-    border-color var(--ref-animation-short),
-    background var(--ref-animation-short),
-    transform var(--ref-animation-short) var(--app-ease-out),
-    box-shadow var(--ref-animation-short) var(--app-ease-out);
-  background: var(--ref-color-white);
-}
-
-.add-source__dropzone:hover,
-.add-source__dropzone:focus-visible {
-  outline: none;
-  border-color: var(--ref-color-grey-60);
-  background: var(--ref-color-grey-05);
-}
-
-.add-source__dropzone.drag-over {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-05);
-  transform: scale(1.01);
-  box-shadow: var(--app-shadow-popover-md);
-}
-
-.add-source__dropzone-icon {
-  width: 48px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  border-radius: var(--ref-border-radius-md);
-  background: var(--ref-color-electric-blue-10);
-  color: var(--ref-color-electric-blue-100);
-  font-size: var(--sys-text-style-h0-size);
-}
-
-.add-source__dropzone-primary {
-  margin: 0;
-  font-size: var(--sys-text-style-h3-size);
-  line-height: var(--sys-text-style-h3-line-height);
-  font-weight: var(--sys-text-style-h3-weight);
-  color: var(--ref-color-grey-100);
-}
-
-.add-source__dropzone-sub {
-  margin: 0;
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  font-weight: var(--sys-text-style-caption-weight);
-}
+/* The drop zone is now the shared `.ap-dropzone` (ds-patches.css). */
 
 .add-source__error {
   margin: 0;

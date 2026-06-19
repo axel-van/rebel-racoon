@@ -23,6 +23,7 @@ import { navigate } from "../router.js?v=30";
 import { renderConnectorLogo } from "../connectors-view.js?v=5";
 import { isFlagOn } from "../feature-flags.js?v=4";
 import { showToast } from "./toast.js?v=20";
+import { dropzoneHTML } from "./dropzone.js?v=1";
 
 const MODAL_ID = "addSource";
 import {
@@ -125,11 +126,16 @@ function tripUploads() {
 function renderUploadTab() {
   const uploads = tripUploads();
   return html`
-    <div class="add-source__dropzone" id="addSourceDropzone" tabindex="0" role="button" aria-label="Upload files">
-      <div class="add-source__dropzone-icon"><i class="ap-icon-upload"></i></div>
-      <p class="add-source__dropzone-primary">Drop files here or click to browse</p>
-      <p class="add-source__dropzone-sub muted">PDF, Word, text, video, audio, images · Up to 100MB per file</p>
-    </div>
+    ${raw(
+      dropzoneHTML({
+        id: "addSourceDropzone",
+        lead: "Drop files here, or",
+        sub: "PDF, Word, text, video, audio, images · Up to 100MB per file",
+        // The hidden <input> stays at the modal root (stable across the
+        // content re-renders); drag/drop is wired by delegation below.
+        withInput: false,
+      }),
+    )}
     ${raw(
       state.inlineError
         ? `<div class="ap-infobox error add-source__error"><span>${escapeHtml(state.inlineError)}</span></div>`
@@ -551,7 +557,7 @@ function onDragEnter(event) {
   event.preventDefault();
   dragDepth += 1;
   if (event.dataTransfer?.types?.includes("Files")) {
-    document.getElementById("addSourceDropzone")?.classList.add("drag-over");
+    document.getElementById("addSourceDropzone")?.classList.add("is-dragover");
   }
 }
 
@@ -561,13 +567,13 @@ function onDragOver(event) {
 
 function onDragLeave() {
   dragDepth = Math.max(0, dragDepth - 1);
-  if (dragDepth === 0) document.getElementById("addSourceDropzone")?.classList.remove("drag-over");
+  if (dragDepth === 0) document.getElementById("addSourceDropzone")?.classList.remove("is-dragover");
 }
 
 function onDrop(event) {
   event.preventDefault();
   dragDepth = 0;
-  document.getElementById("addSourceDropzone")?.classList.remove("drag-over");
+  document.getElementById("addSourceDropzone")?.classList.remove("is-dragover");
   const files = Array.from(event.dataTransfer?.files || []);
   if (files.length === 0) return;
   // Auto-switch to Upload tab on drop.

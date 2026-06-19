@@ -13,6 +13,7 @@
 //     overwrite. Cancel / Esc / backdrop / close-X dismiss without firing.
 
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
+import { dropzoneHTML, bindDropzone } from "./dropzone.js?v=1";
 
 const MODAL_ID = "fill-document";
 const ACCEPT = ".pdf,.doc,.docx,.txt,.md,.rtf,.pptx,.csv";
@@ -42,14 +43,13 @@ const HTML = `
     <p class="fill-document-modal__lead">
       Upload a brand doc or paste a link — Archie reads it and rebuilds every section.
     </p>
-    <button type="button" class="fill-document-modal__drop" id="fillDocDrop">
-      <i class="ap-icon-upload" aria-hidden="true"></i>
-      <span class="fill-document-modal__drop-text">
-        <span class="fill-document-modal__drop-title">Drag a file here, or <span class="fill-document-modal__browse">browse</span></span>
-        <span class="fill-document-modal__drop-sub">PDF, Word, text, slides, CSV</span>
-      </span>
-      <input type="file" accept="${ACCEPT}" hidden id="fillDocFile" />
-    </button>
+    ${dropzoneHTML({
+      id: "fillDocDrop",
+      lead: "Drag a file here, or",
+      sub: "PDF, Word, text, slides, CSV",
+      accept: ACCEPT,
+      inputId: "fillDocFile",
+    })}
     <div class="fill-document-modal__file" id="fillDocFileChip" hidden>
       <i class="ap-icon-file--text" aria-hidden="true"></i>
       <span class="fill-document-modal__file-name" id="fillDocFileName"></span>
@@ -121,26 +121,11 @@ function injectOnce() {
   backdrop.addEventListener("click", close);
   confirmBtn.addEventListener("click", submit);
 
-  dropEl.addEventListener("click", () => fileInput.click());
-  fileInput.addEventListener("change", () => setFile(fileInput.files && fileInput.files[0]));
+  // Click / keyboard / drag-drop on the shared dropzone.
+  bindDropzone(modal, { onFiles: (files) => setFile(files[0]) });
   document.getElementById("fillDocFileRemove").addEventListener("click", (e) => {
     e.stopPropagation();
     setFile(null);
-  });
-
-  // Drag & drop onto the dropzone.
-  ["dragenter", "dragover"].forEach((ev) =>
-    dropEl.addEventListener(ev, (e) => {
-      e.preventDefault();
-      dropEl.classList.add("is-drag");
-    }),
-  );
-  ["dragleave", "dragend"].forEach((ev) => dropEl.addEventListener(ev, () => dropEl.classList.remove("is-drag")));
-  dropEl.addEventListener("drop", (e) => {
-    e.preventDefault();
-    dropEl.classList.remove("is-drag");
-    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if (file) setFile(file);
   });
 
   urlInput.addEventListener("input", syncConfirm);

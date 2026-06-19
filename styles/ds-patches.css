@@ -323,3 +323,110 @@ button.ap-link {
 .ap-form-message[hidden] {
   display: none;
 }
+
+/* `.ap-dropzone` — the shared "drop a file / browse" box. The DS has no
+ * dropzone primitive, so this lives here (the home for primitives the DS
+ * forgot, like .ap-filter-chip). It replaces the per-modal *__dropzone /
+ * *__drop styles that add-source, fill-document and bug-report each used
+ * to ship. Markup comes from components/dropzone.js. */
+.ap-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: var(--ref-spacing-xl) var(--ref-spacing-md);
+  border: 1.5px dashed var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  background: var(--ref-color-white);
+  cursor: pointer;
+  text-align: center;
+  transition:
+    border-color var(--ref-animation-short),
+    background var(--ref-animation-short),
+    transform var(--ref-animation-short) var(--app-ease-out),
+    box-shadow var(--ref-animation-short) var(--app-ease-out);
+}
+.ap-dropzone:hover,
+.ap-dropzone:focus-visible {
+  outline: none;
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-05);
+}
+.ap-dropzone.is-dragover {
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-10);
+  transform: scale(1.01);
+  box-shadow: var(--app-shadow-popover-md);
+}
+/* `display: flex` beats the UA `[hidden] { display: none }` — restore it
+ * so callers can toggle the dropzone hidden (e.g. swapping to a file chip). */
+.ap-dropzone[hidden] {
+  display: none;
+}
+/* Icon sits in a soft blue tile (the most prominent of the old dropzones,
+ * promoted here as the shared treatment). */
+.ap-dropzone__icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--ref-border-radius-md);
+  background: var(--ref-color-electric-blue-10);
+  color: var(--ref-color-electric-blue-100);
+}
+.ap-dropzone__icon > i {
+  font-size: var(--sys-text-style-h0-size);
+}
+.ap-dropzone__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+.ap-dropzone__title {
+  font-size: var(--sys-text-style-body-bold-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+.ap-dropzone__browse {
+  color: var(--ref-color-electric-blue-100);
+}
+.ap-dropzone__sub {
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--ref-color-grey-60);
+}
+/* Compact — tight spaces, e.g. the bug-report box beside the screenshot. */
+.ap-dropzone--compact {
+  padding: var(--ref-spacing-md);
+  gap: var(--ref-spacing-xxs);
+}
+.ap-dropzone--compact .ap-dropzone__icon {
+  width: 32px;
+  height: 32px;
+}
+.ap-dropzone--compact .ap-dropzone__icon > i {
+  font-size: var(--sys-icon-css-md);
+}
+.ap-dropzone--compact .ap-dropzone__title {
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-weight);
+}
+
+/* Large — the full-bleed studio upload surfaces (Clip Studio, Batch
+ * Studio). Fills its column and reserves vertical room. */
+.ap-dropzone--lg {
+  flex: 1;
+  min-height: 200px;
+  justify-content: center;
+  padding: var(--ref-spacing-xl) var(--ref-spacing-lg);
+}
+/* The explicit Browse button sits just under the copy. */
+.ap-dropzone__action {
+  margin-top: var(--ref-spacing-sm);
+}
+/* The studios drag-highlight by toggling `is-drop-target` on the assistant
+ * container (drop anywhere in the surface), not on the box itself. */
+.session__assistant.is-drop-target .ap-dropzone {
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-10);
+}

@@ -18,7 +18,7 @@ import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=1";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=47";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=71";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=84";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -26,7 +26,7 @@ import {
   removeSources,
   renameSource,
 } from "../sources-stream.js?v=37";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=42";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=43";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=23";
 import { askConnector } from "../connector-ask.js?v=3";
@@ -641,7 +641,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=269").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=271").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -841,7 +841,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=269").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=271").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -859,7 +859,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=269").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=271").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -2475,7 +2475,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=269").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=271").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

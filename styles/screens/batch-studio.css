@@ -107,63 +107,8 @@
   background: var(--ref-color-white);
 }
 
-/* The dashed drop / click-to-browse target (grey-05 fill so it reads as a drop
-   zone within the white card). */
-.batch-studio__dropzone-main {
-  display: flex;
-  min-height: 200px;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-lg);
-  border: 1.5px dashed var(--ref-color-grey-20);
-  border-radius: var(--app-radius-card);
-  background: var(--ref-color-grey-05);
-  text-align: center;
-  cursor: pointer;
-  transition:
-    border-color var(--ref-animation-short) var(--app-ease-standard),
-    background var(--ref-animation-short) var(--app-ease-standard);
-}
-.batch-studio__dropzone-main:hover,
-.batch-studio__dropzone-main:focus-visible {
-  outline: none;
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-05);
-}
-.session__assistant.batch-studio.is-drop-target .batch-studio__dropzone-main {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-10);
-}
-.batch-studio__dropzone-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--ref-spacing-xl);
-  height: var(--ref-spacing-xl);
-  border-radius: var(--app-radius-circle);
-  background: var(--ref-color-white);
-  color: var(--ref-color-grey-60);
-  border: 1px solid var(--app-border);
-}
-.batch-studio__dropzone-icon i {
-  font-size: var(--sys-icon-css-md);
-}
-.batch-studio__dropzone-primary {
-  margin: var(--ref-spacing-xxs) 0 0;
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-grey-100);
-}
-.batch-studio__browse {
-  margin-top: var(--ref-spacing-xs);
-}
-.batch-studio__dropzone-sub {
-  margin: 0;
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  font-weight: var(--sys-text-style-caption-weight);
-}
+/* The dashed drop / browse target is now the shared `.ap-dropzone--lg`
+ * (ds-patches.css); its drag-highlight hook lives there too. */
 
 /* Other ways to add — an inline row below the drop target. */
 .batch-studio__dropzone-extra {

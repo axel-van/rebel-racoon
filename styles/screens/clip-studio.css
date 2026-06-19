@@ -180,85 +180,8 @@
   flex: 0 0 auto;
 }
 
-.clip-studio__dropzone {
-  width: 100%;
-  flex: 1;
-  min-height: 168px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-lg);
-  border: 1.5px dashed var(--ref-color-grey-20);
-  border-radius: var(--app-radius-card);
-  background: var(--ref-color-grey-05);
-  cursor: pointer;
-  text-align: center;
-  transition:
-    border-color var(--ref-animation-short) var(--app-ease-standard),
-    background var(--ref-animation-short) var(--app-ease-standard);
-}
-.clip-studio__dropzone:hover,
-.clip-studio__dropzone:focus-visible {
-  outline: none;
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-05);
-}
-.clip-studio__dropzone.is-provided {
-  border-style: solid;
-  border-color: var(--ref-color-electric-blue-40);
-  background: var(--ref-color-electric-blue-05);
-}
-.session__assistant.clip-studio--upload.is-drop-target .clip-studio__dropzone {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-10);
-}
-.clip-studio__dropzone-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--ref-spacing-xl);
-  height: var(--ref-spacing-xl);
-  border-radius: var(--app-radius-circle);
-  background: var(--ref-color-white);
-  color: var(--ref-color-grey-60);
-  border: 1px solid var(--app-border);
-}
-.clip-studio__dropzone-icon i {
-  font-size: var(--sys-icon-css-md);
-}
-.clip-studio__dropzone-icon--ready {
-  background: var(--ref-color-green-10);
-  border-color: var(--ref-color-green-40);
-  color: var(--ref-color-green-150);
-}
-.clip-studio__dropzone-spinner {
-  margin-bottom: var(--ref-spacing-xxs);
-}
-.clip-studio__dropzone--ready {
-  border-style: solid;
-  border-color: var(--ref-color-green-40);
-  background: var(--ref-color-green-10);
-}
-.clip-studio__dropzone--processing {
-  border-color: var(--ref-color-electric-blue-40);
-  background: var(--ref-color-electric-blue-05);
-}
-.clip-studio__dropzone-primary {
-  margin: var(--ref-spacing-xxs) 0 0;
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-grey-100);
-}
-.clip-studio__dropzone-sub {
-  margin: 0;
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  font-weight: var(--sys-text-style-caption-weight);
-}
-.clip-studio__browse {
-  margin-top: var(--ref-spacing-xs);
-}
+/* The video upload box is now the shared `.ap-dropzone--lg` (ds-patches.css);
+ * its drag-highlight hook lives there too. */
 
 .clip-studio__or {
   display: flex;

@@ -187,57 +187,10 @@ body.has-modal {
   color: var(--ref-color-grey-80);
 }
 
-.fill-document-modal__drop {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-sm);
-  width: 100%;
-  padding: var(--ref-spacing-lg);
-  border: 1px dashed var(--ref-color-grey-20);
-  border-radius: var(--ref-border-radius-md);
-  background: var(--app-surface-subtle);
-  cursor: pointer;
-  text-align: left;
-  transition:
-    border-color 160ms var(--app-ease-out),
-    background 160ms var(--app-ease-out);
-}
-
-.fill-document-modal__drop:hover,
-.fill-document-modal__drop.is-drag {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-10);
-}
-
-/* Flex display overrides the [hidden] attribute — restore it. */
-.fill-document-modal__drop[hidden],
+/* The dropzone itself is now the shared `.ap-dropzone` (ds-patches.css).
+ * Only the selected-file chip styling stays modal-specific. */
 .fill-document-modal__file[hidden] {
   display: none;
-}
-
-.fill-document-modal__drop > i {
-  font-size: var(--sys-icon-css-lg);
-  color: var(--ref-color-grey-60);
-}
-
-.fill-document-modal__drop-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.fill-document-modal__drop-title {
-  font-size: var(--sys-text-style-body-bold-size);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-grey-100);
-}
-
-.fill-document-modal__browse {
-  color: var(--ref-color-electric-blue-100);
-}
-
-.fill-document-modal__drop-sub {
-  font-size: var(--sys-text-style-caption-size);
-  color: var(--ref-color-grey-60);
 }
 
 .fill-document-modal__file {
@@ -663,36 +616,20 @@ body.has-modal {
   color: var(--ref-color-red-100);
 }
 
-/* ── Bug report: dropzone + preview ──────────────────────── */
-
+/* ── Bug report: screenshot preview box ──────────────────────
+ * The dropzone itself is now the shared `.ap-dropzone` (ds-patches.css).
+ * This box only styles the captured-screenshot preview (the element
+ * carries `.has-file`); it keeps the dashed→solid bordered look. */
 .bug-report-dropzone {
   border: 1.5px dashed var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
   padding: var(--ref-spacing-md);
   text-align: center;
-  cursor: pointer;
   color: var(--ref-color-grey-60);
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   font-weight: var(--sys-text-style-caption-weight);
-  transition:
-    border-color var(--ref-animation-short),
-    background var(--ref-animation-short),
-    transform var(--ref-animation-short) var(--app-ease-out),
-    box-shadow var(--ref-animation-short) var(--app-ease-out);
   user-select: none;
-}
-
-.bug-report-dropzone:hover {
-  border-color: var(--ref-color-grey-40);
-  background: var(--ref-color-grey-05);
-}
-
-.bug-report-dropzone.drag-over {
-  border-color: var(--ref-color-orange-100);
-  background: var(--ref-color-orange-10);
-  transform: scale(1.01);
-  box-shadow: var(--app-shadow-popover-md);
 }
 
 .bug-report-dropzone.has-file {
@@ -700,26 +637,6 @@ body.has-modal {
   text-align: left;
   cursor: default;
   border-style: solid;
-}
-
-.bug-report-dropzone.has-file:hover {
-  background: transparent;
-  border-color: var(--ref-color-grey-20);
-}
-
-.bug-report-dropzone__primary {
-  margin-bottom: 4px;
-}
-
-.bug-report-dropzone__browse {
-  color: var(--ref-color-orange-100);
-}
-
-.bug-report-dropzone__hint {
-  color: var(--ref-color-grey-40);
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  font-weight: var(--sys-text-style-caption-weight);
 }
 
 .bug-report-preview {

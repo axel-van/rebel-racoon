@@ -74,8 +74,9 @@ import {
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=25";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=47";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=31";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=42";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=43";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=6";
+import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
   classifyFile,
   startFileUpload,
@@ -526,20 +527,17 @@ function renderBatchStudio(session) {
           />
 
           <div class="batch-studio__dropzone">
-            <div
-              class="batch-studio__dropzone-main"
-              data-batch-dropzone
-              tabindex="0"
-              role="button"
-              aria-label="Add files from your computer"
-            >
-              <span class="batch-studio__dropzone-icon"><i class="ap-icon-upload" aria-hidden="true"></i></span>
-              <p class="batch-studio__dropzone-primary">Drag &amp; drop files here</p>
-              <p class="batch-studio__dropzone-sub muted">PDF, Word, text, video, audio or images · up to 100MB each</p>
-              <button type="button" class="ap-button primary blue batch-studio__browse">
-                <i class="ap-icon-upload" aria-hidden="true"></i><span>Browse files</span>
-              </button>
-            </div>
+            ${raw(
+              dropzoneHTML({
+                lead: "Drag & drop files here",
+                sub: "PDF, Word, text, video, audio or images · up to 100MB each",
+                large: true,
+                withInput: false,
+                rootAttrs: "data-batch-dropzone",
+                ariaLabel: "Add files from your computer",
+                action: { label: "Browse files" },
+              }),
+            )}
             <div class="batch-studio__dropzone-extra">
               <span class="batch-studio__dropzone-extra-label">Or add another way</span>
               <button type="button" class="ap-button stroked grey batch-studio__method" data-batch-link>
@@ -790,7 +788,7 @@ function renderClipStudioUpload(st) {
          </div>
          <div class="clip-studio__preview-foot">
            <span class="clip-studio__preview-name" title="${name}">${name} · ${uploadState === "ready" ? "Analyzed" : "Analyzing…"}</span>
-           <button type="button" class="ap-button stroked grey clip-studio__browse" data-clip-studio-browse>
+           <button type="button" class="ap-button stroked grey" data-clip-studio-browse>
              <i class="ap-icon-upload" aria-hidden="true"></i><span>Replace file</span>
            </button>
          </div>
@@ -803,14 +801,15 @@ function renderClipStudioUpload(st) {
            <button type="submit" class="ap-button stroked grey">Import</button>
          </form>
        </div>`
-    : `<div class="clip-studio__dropzone clip-studio__dropzone--idle" data-clip-studio-dropzone tabindex="0" role="button" aria-label="Upload a video">
-         <span class="clip-studio__dropzone-icon"><i class="ap-icon-upload" aria-hidden="true"></i></span>
-         <p class="clip-studio__dropzone-primary">Drag &amp; drop a video here</p>
-         <p class="clip-studio__dropzone-sub muted">MP4, MOV or WEBM · up to 100MB</p>
-         <button type="button" class="ap-button primary blue clip-studio__browse" data-clip-studio-browse>
-           <i class="ap-icon-upload" aria-hidden="true"></i><span>Browse files</span>
-         </button>
-       </div>
+    : `${dropzoneHTML({
+        lead: "Drag & drop a video here",
+        sub: "MP4, MOV or WEBM · up to 100MB",
+        large: true,
+        withInput: false,
+        rootAttrs: "data-clip-studio-dropzone",
+        ariaLabel: "Upload a video",
+        action: { label: "Browse files", attrs: "data-clip-studio-browse" },
+      })}
        <div class="clip-studio__or"><span>or</span></div>
        <form class="clip-studio__url" data-clip-studio-url-form>
          <div class="ap-input-group">

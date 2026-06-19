@@ -16,6 +16,7 @@
 
 import { escapeHtml } from "../utils.js?v=20";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
+import { dropzoneHTML, bindDropzone } from "./dropzone.js?v=1";
 
 const MODAL_ID = "bugReport";
 
@@ -94,11 +95,14 @@ const HTML = `
           </div>
         </div>
         <div id="bugDropzoneFallback">
-          <div class="bug-report-dropzone" id="bugDropzone" role="button" tabindex="0" aria-label="Upload screenshot">
-            <div class="bug-report-dropzone__primary">Drop an image here or <strong class="bug-report-dropzone__browse">browse</strong></div>
-            <div class="bug-report-dropzone__hint">PNG, JPG, GIF — max 10 MB</div>
-          </div>
-          <input type="file" id="bugFileInput" accept="image/png,image/jpeg,image/gif" hidden />
+          ${dropzoneHTML({
+            id: "bugDropzone",
+            lead: "Drop an image here, or",
+            sub: "PNG, JPG, GIF — max 10 MB",
+            accept: "image/png,image/jpeg,image/gif",
+            inputId: "bugFileInput",
+            compact: true,
+          })}
         </div>
       </div>
 
@@ -329,35 +333,16 @@ export function init() {
     }
   });
 
-  // Drop-zone / file upload.
-  dropzone.addEventListener("click", () => fileInput.click());
-  dropzone.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      fileInput.click();
-    }
-  });
-  dropzone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    dropzone.classList.add("drag-over");
-  });
-  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("drag-over"));
-  dropzone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    dropzone.classList.remove("drag-over");
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("image/")) {
+  // Drop-zone / file upload — shared dropzone behaviour (click / keyboard
+  // / drag-drop). Only the first dropped image becomes the screenshot.
+  bindDropzone(modal, {
+    onFiles: (files) => {
+      const file = files[0];
+      if (!file || !file.type.startsWith("image/")) return;
       const reader = new FileReader();
       reader.onload = (ev) => setScreenshot(ev.target.result);
       reader.readAsDataURL(file);
-    }
-  });
-  fileInput.addEventListener("change", () => {
-    const file = fileInput.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setScreenshot(ev.target.result);
-    reader.readAsDataURL(file);
+    },
   });
   document.getElementById("bugRemoveFileBtn").addEventListener("click", (e) => {
     e.stopPropagation();
