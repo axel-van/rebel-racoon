@@ -30,24 +30,6 @@ export function defaultFormatFor(net) {
   return (NETWORK_FORMATS[net] || ["16:9"])[0];
 }
 
-// Union of the formats supported by a set of networks, de-duped and
-// order-preserving (first network's order wins, later networks append any
-// new ones). Used when a clip is drafted for several accounts at once and
-// the user picks one shared ratio.
-export function formatsForNetworks(netIds) {
-  const seen = new Set();
-  const out = [];
-  for (const net of netIds || []) {
-    for (const id of NETWORK_FORMATS[net] || ["16:9"]) {
-      if (!seen.has(id) && FORMATS[id]) {
-        seen.add(id);
-        out.push(FORMATS[id]);
-      }
-    }
-  }
-  return out.length ? out : [FORMATS["16:9"]];
-}
-
 // True for vertical-ish ratios (portrait video frame), false for square /
 // landscape. Lets consumers pick a portrait vs landscape preview frame.
 export function isPortraitFormat(id) {

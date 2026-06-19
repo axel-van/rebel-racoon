@@ -3297,27 +3297,6 @@ const SUBTITLE_PICK_LABEL = {
   caption: "Caption",
 };
 
-// Post the "Add subtitles?" question into the assistant thread after the
-// user has drafted ≥1 post from clips. Renders 4 visual preset chips
-// (preview text styled per preset) plus a "No subtitles" option. The
-// handler resolves to setSubtitleStyle(sessionId, draftIds, pick).
-export function postSubtitleQuestion(sessionId, draftIds) {
-  if (!Array.isArray(draftIds) || draftIds.length === 0) return;
-  postAssistantChoice(sessionId, {
-    text: "Add subtitles to your clips?",
-    choices: [
-      { value: "bold", label: "Bold", previewKind: "bold", preview: "POST" },
-      { value: "clean", label: "Clean", previewKind: "clean", preview: "Post" },
-      { value: "caption", label: "Caption", previewKind: "caption", preview: "post" },
-      { value: "none", label: "No subtitles", previewKind: "none", preview: "—" },
-    ],
-    multi: false,
-    instant: true,
-    handler: "subtitle-style-pick",
-    context: { draftIds },
-  });
-}
-
 const SCRIPTED_KINDS = {
   pdf: { kindLabel: "PDF", filename: "Roadmap Q3.pdf" },
   video: { kindLabel: "Video", filename: "Demo replay.mp4" },

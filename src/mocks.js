@@ -1951,17 +1951,6 @@ export function getContextById(id) {
   return contexts.find((c) => c.id === id) || null;
 }
 
-// Which component keys a context actually has — used for the dashboard row
-// subtitle and the session Context tab.
-export function contextComponentsFor(context) {
-  if (!context) return [];
-  const out = [];
-  if (context.voice) out.push("Voice");
-  if (context.brief) out.push("Brief");
-  if (context.brand) out.push("Brand");
-  return out;
-}
-
 // ── Settings drawer mocks ─────────────────────────────────────────────────
 // All settings sections are mocked in-memory. Connect/disconnect, save, etc.
 // flip these objects locally — no persistence.
