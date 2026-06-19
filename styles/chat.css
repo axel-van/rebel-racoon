@@ -76,8 +76,7 @@
    of the turn (no header wrapper), lay out horizontally: avatar | bubble.
    The Analyse wizards still emit a header wrapper (icon + role label), so
    they keep the default column layout. */
-.chat-turn--ai:has(> .chat-turn-avatar),
-.chat-turn--ai:has(> .connect-prompt__avatar) {
+.chat-turn--ai:has(> .chat-turn-avatar) {
   flex-direction: row;
 }
 
@@ -293,36 +292,83 @@
   line-height: var(--sys-text-style-subtitle-line-height);
 }
 
-/* "Connect this service first" prompt — an AI bubble with a Connect / Close
-   action row, posted when a pasted link's connector isn't connected. */
-.connect-prompt__actions {
+/* Connection / authorization request card — a standalone block (NOT a chat
+   bubble) posted when Archie needs a service connected or a permission granted
+   before it can act. Reusable for any connector: logo tile + name + state pill
+   header, one supporting line, primary Connect + ghost Cancel. */
+.connect-card {
+  align-self: flex-start;
+  width: 100%;
+  max-width: 460px;
+  box-sizing: border-box;
   display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  margin-top: var(--ref-spacing-sm);
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-md);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--app-radius-card);
+  box-shadow: var(--app-shadow-card);
 }
 
-/* Connector logo as this turn's avatar — a white circular tile with a subtle
-   border so the brand mark (often a single-colour glyph) always reads on a
-   light surface, the way logos render everywhere else in the app. */
-.connect-prompt__avatar {
-  width: 28px;
-  height: 28px;
+.connect-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xs);
+}
+
+/* White rounded tile so a single-colour brand mark always reads on light. */
+.connect-card__logo {
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--app-radius-circle);
+  border-radius: var(--app-radius-md);
   background: var(--ref-color-white);
   border: 1px solid var(--ref-color-grey-10);
-  margin-top: var(--app-spacing-micro);
 }
 
-.connect-prompt__avatar img {
+.connect-card__logo img,
+.connect-card__logo i {
   display: block;
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
+  font-size: 22px;
+}
+
+.connect-card__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-spacing-micro);
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.connect-card__title {
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.connect-card__sub {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--ref-color-grey-80);
+}
+
+.connect-card__state {
+  flex-shrink: 0;
+}
+
+.connect-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
 }
 
 /* Resolved state — one-line "connected, importing now" confirmation. */

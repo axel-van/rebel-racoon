@@ -2385,38 +2385,34 @@ function renderConnectPromptTurn(message) {
     `;
   }
 
-  // The connector logo becomes this turn's avatar — a white circular tile so
-  // the brand mark (often a single-colour glyph) always reads, instead of
-  // fighting the filled-blue button. Falls back to the Archie sparkle when a
-  // logo is missing.
-  const avatar = message.logo
-    ? `<span class="connect-prompt__avatar" aria-hidden="true"><img src="${escapeHtml(message.logo)}" alt="" /></span>`
-    : aiHeader;
+  // Standalone connection card (not a chat bubble) — reused for any "connect a
+  // service" or "grant an authorization" request. Header = connector logo tile
+  // + name + a state pill; one supporting line; primary Connect + ghost Cancel.
+  // The connector logo sits in a white rounded tile so a single-colour brand
+  // mark always reads on a light surface. Falls back to the Archie sparkle.
+  const name = escapeHtml(message.connectorName);
+  const logo = message.logo
+    ? `<img src="${escapeHtml(message.logo)}" alt="" />`
+    : `<i class="ap-icon-sparkles-mermaid" aria-hidden="true"></i>`;
   return `
-    <div class="chat-turn chat-turn--ai">
-      ${avatar}
-      <div class="chat-bubble chat-bubble--ai connect-prompt">
-        <p class="chat-bubble-text">
-          I can't import this ${escapeHtml(message.noun)} yet — <strong>${escapeHtml(
-            message.connectorName,
-          )}</strong> isn't connected to your knowledge base. Connect it below and I'll retry the import.
-        </p>
-        <div class="connect-prompt__actions">
-          <button
-            type="button"
-            class="ap-button primary blue"
-            data-connect-prompt-connect="${escapeHtml(message.id)}"
-          >
-            Connect ${escapeHtml(message.connectorName)}
-          </button>
-          <button
-            type="button"
-            class="ap-button ghost grey"
-            data-connect-prompt-dismiss="${escapeHtml(message.id)}"
-          >
-            Cancel
-          </button>
+    <div class="connect-card" role="group" aria-label="Connect ${name}">
+      <div class="connect-card__head">
+        <span class="connect-card__logo" aria-hidden="true">${logo}</span>
+        <div class="connect-card__heading">
+          <span class="connect-card__title">${name}</span>
+          <span class="connect-card__sub">Connect to import this ${escapeHtml(
+            message.noun,
+          )} — I'll retry automatically.</span>
         </div>
+        <span class="ap-status grey no-dot connect-card__state">Not connected</span>
+      </div>
+      <div class="connect-card__actions">
+        <button type="button" class="ap-button primary blue" data-connect-prompt-connect="${escapeHtml(message.id)}">
+          Connect ${name}
+        </button>
+        <button type="button" class="ap-button ghost grey" data-connect-prompt-dismiss="${escapeHtml(message.id)}">
+          Cancel
+        </button>
       </div>
     </div>
   `;
