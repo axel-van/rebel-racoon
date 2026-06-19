@@ -8,9 +8,10 @@
 
 import { ideas, threadsBySession as seedThreadsBySession, connectorDocs } from "./mocks.js?v=43";
 import { findConnector } from "./connectors-store.js?v=23";
+import { createSessionNotifier } from "./store-utils.js?v=2";
 
 const threads = new Map(); // sessionId → messages[]
-const subscribers = new Map(); // sessionId → Set<(messages) => void>
+const notifier = createSessionNotifier("assistant");
 
 let idCounter = 0;
 function newId() {
@@ -27,29 +28,14 @@ export function getThread(sessionId, { hasContext = false, skipGreeting = false 
   return threads.get(sessionId);
 }
 
-export function subscribe(sessionId, fn) {
-  if (!subscribers.has(sessionId)) subscribers.set(sessionId, new Set());
-  subscribers.get(sessionId).add(fn);
-  return () => {
-    const set = subscribers.get(sessionId);
-    if (set) set.delete(fn);
-  };
-}
+export const subscribe = notifier.subscribe;
 
 // Drop all state for a session — used by the conversation-delete flow in
 // the sidebar. Subscribers are flushed too; any DOM still mounted will
 // get one last empty-thread notify so it can clean up gracefully.
 export function clearSession(sessionId) {
   threads.delete(sessionId);
-  const subs = subscribers.get(sessionId);
-  if (subs) {
-    for (const fn of subs) {
-      try {
-        fn([]);
-      } catch {}
-    }
-    subscribers.delete(sessionId);
-  }
+  notifier.clear(sessionId, []);
 }
 
 export function sendMessage(sessionId, text, options = {}) {
@@ -530,11 +516,8 @@ export function postDraftResult(sessionId, { ideaTitle, drafts }) {
 // --- Internals ------------------------------------------------------------
 
 function notify(sessionId) {
-  const set = subscribers.get(sessionId);
-  if (!set) return;
   // Expose a shallow copy so subscribers can't mutate the thread by accident.
-  const snapshot = threads.get(sessionId).slice();
-  set.forEach((fn) => fn(snapshot));
+  notifier.notify(sessionId, (threads.get(sessionId) || []).slice());
 }
 
 function seedThread(sessionId, { hasContext, skipGreeting }) {

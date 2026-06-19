@@ -10,7 +10,7 @@
 
 import { sourcesBySession as seedByCsesssion } from "./mocks.js?v=43";
 import { isNewUser } from "./user-mode.js?v=22";
-import { createNotifier } from "./store-utils.js?v=1";
+import { createNotifier } from "./store-utils.js?v=2";
 
 // Canned extraction output attached to every Processed Video source.
 // Generic enough to plausibly come from any keynote / talk / demo video.

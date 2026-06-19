@@ -18,8 +18,10 @@
 //   clearActiveConnector(sessionId)
 //   subscribe(sessionId, fn)        → unsubscribe
 
+import { createSessionNotifier } from "./store-utils.js?v=2";
+
 const bySession = new Map(); // sessionId → connectorId
-const subscribers = new Map(); // sessionId → Set<fn>
+const notifier = createSessionNotifier("composer-connector");
 
 export function getActiveConnector(sessionId) {
   return bySession.get(sessionId) || null;
@@ -37,22 +39,8 @@ export function clearActiveConnector(sessionId) {
   notify(sessionId);
 }
 
-export function subscribe(sessionId, fn) {
-  if (!subscribers.has(sessionId)) subscribers.set(sessionId, new Set());
-  const set = subscribers.get(sessionId);
-  set.add(fn);
-  return () => set.delete(fn);
-}
+export const subscribe = notifier.subscribe;
 
 function notify(sessionId) {
-  const set = subscribers.get(sessionId);
-  if (!set) return;
-  const id = getActiveConnector(sessionId);
-  set.forEach((fn) => {
-    try {
-      fn(id);
-    } catch {
-      /* subscriber threw — ignore */
-    }
-  });
+  notifier.notify(sessionId, getActiveConnector(sessionId));
 }

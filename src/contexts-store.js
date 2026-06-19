@@ -19,7 +19,7 @@
 
 import { contexts as seed } from "./mocks.js?v=43";
 import { isNewUser } from "./user-mode.js?v=22";
-import { createNotifier } from "./store-utils.js?v=1";
+import { createNotifier } from "./store-utils.js?v=2";
 
 // Lot 15 — first-time user mode starts empty so the standalone /contexts
 // page renders its empty state. Returning user keeps the mock seed.

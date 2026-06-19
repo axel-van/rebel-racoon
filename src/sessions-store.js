@@ -17,7 +17,7 @@
 
 import { recentSessions as seed } from "./mocks.js?v=43";
 import { isNewUser } from "./user-mode.js?v=22";
-import { createNotifier } from "./store-utils.js?v=1";
+import { createNotifier } from "./store-utils.js?v=2";
 
 // First-time user starts with an empty session list (matches every other
 // store's first-run mode); returning users get the seeded conversations.

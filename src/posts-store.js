@@ -9,6 +9,7 @@
 
 import { postsBySession as seedPostsBySession, recentSessions as seedRecentSessions } from "./mocks.js?v=43";
 import { isNewUser } from "./user-mode.js?v=22";
+import { createSessionNotifier } from "./store-utils.js?v=2";
 
 // Demo session ids — only these get the seeded posts mock. Brand-new
 // conversations start empty (cf. library.js for the same rationale).
@@ -17,7 +18,7 @@ const DEMO_SESSION_IDS = new Set(seedRecentSessions.map((s) => s.id));
 // --- Module state -------------------------------------------------------
 
 const store = new Map(); // sessionId → Post[]
-const subs = new Map(); // sessionId → Set<fn>
+const notifier = createSessionNotifier("posts-store");
 
 let idCounter = 0;
 function newId() {
@@ -173,28 +174,14 @@ export function insertPost(sessionId, post, index = 0) {
   notify(sessionId);
 }
 
-export function subscribe(sessionId, fn) {
-  if (!subs.has(sessionId)) subs.set(sessionId, new Set());
-  subs.get(sessionId).add(fn);
-  return () => {
-    const set = subs.get(sessionId);
-    if (set) set.delete(fn);
-  };
-}
+export const subscribe = notifier.subscribe;
 
 // Drop all posts + subscribers for a session — used by the
-// conversation-delete flow in the sidebar.
+// conversation-delete flow in the sidebar. Subscribers get one final empty
+// snapshot so mounted DOM can tear down before they're forgotten.
 export function clearSession(sessionId) {
   store.delete(sessionId);
-  const set = subs.get(sessionId);
-  if (set) {
-    for (const fn of set) {
-      try {
-        fn([]);
-      } catch {}
-    }
-    subs.delete(sessionId);
-  }
+  notifier.clear(sessionId, []);
 }
 
 // --- Internals ----------------------------------------------------------
@@ -217,8 +204,5 @@ function seed(sessionId) {
 }
 
 function notify(sessionId) {
-  const set = subs.get(sessionId);
-  if (!set) return;
-  const snapshot = store.get(sessionId).slice();
-  set.forEach((fn) => fn(snapshot));
+  notifier.notify(sessionId, (store.get(sessionId) || []).slice());
 }

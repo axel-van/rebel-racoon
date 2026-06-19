@@ -43,3 +43,41 @@ export function createNotifier(label) {
     },
   };
 }
+
+// Per-session fan-out for the chat-scoped stores (assistant, posts,
+// composer-mentions, composer-connector, …) that each hand-rolled the same
+// Map(sessionId → Set<fn>) boilerplate. subscribe/notify are keyed by session;
+// the caller passes the snapshot (each store computes its own). clear() flushes
+// a session's subscribers with one final snapshot — e.g. [] on conversation
+// delete so still-mounted DOM can tear down — then forgets them.
+export function createSessionNotifier(label) {
+  const subscribers = new Map();
+  function flush(sessionId, snapshot) {
+    const set = subscribers.get(sessionId);
+    if (!set) return;
+    for (const fn of set) {
+      try {
+        fn(snapshot);
+      } catch (err) {
+        console.warn(`[${label}] subscriber threw`, err);
+      }
+    }
+  }
+  return {
+    subscribe(sessionId, fn) {
+      if (!subscribers.has(sessionId)) subscribers.set(sessionId, new Set());
+      subscribers.get(sessionId).add(fn);
+      return () => {
+        const set = subscribers.get(sessionId);
+        if (set) set.delete(fn);
+      };
+    },
+    notify(sessionId, snapshot) {
+      flush(sessionId, snapshot);
+    },
+    clear(sessionId, finalSnapshot) {
+      flush(sessionId, finalSnapshot);
+      subscribers.delete(sessionId);
+    },
+  };
+}

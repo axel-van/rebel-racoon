@@ -17,6 +17,7 @@
 
 import { getIdeas } from "./library.js?v=32";
 import { escapeHtml, escapeAttr } from "./utils.js?v=21";
+import { createSessionNotifier } from "./store-utils.js?v=2";
 
 // Idea kind → DS .ap-tag color variant. Mirrors the per-kind palette the
 // right-panel idea cards use (rpanel-ideas__kind--*), so a mentioned idea's
@@ -38,7 +39,7 @@ function tagColorForName(sessionId, name) {
 }
 
 const mentionsBySession = new Map();
-const subscribers = new Map();
+const notifier = createSessionNotifier("composer-mentions");
 
 function ensure(sessionId) {
   if (!mentionsBySession.has(sessionId)) mentionsBySession.set(sessionId, []);
@@ -72,22 +73,10 @@ export function clearSession(sessionId) {
   notify(sessionId);
 }
 
-export function subscribe(sessionId, fn) {
-  if (!subscribers.has(sessionId)) subscribers.set(sessionId, new Set());
-  const set = subscribers.get(sessionId);
-  set.add(fn);
-  return () => set.delete(fn);
-}
+export const subscribe = notifier.subscribe;
 
 function notify(sessionId) {
-  const set = subscribers.get(sessionId);
-  if (!set) return;
-  const snap = getMentions(sessionId);
-  set.forEach((fn) => {
-    try {
-      fn(snap);
-    } catch {}
-  });
+  notifier.notify(sessionId, getMentions(sessionId));
 }
 
 // Fill the given container with pills for each mention in the session.
