@@ -14,7 +14,7 @@
 //   - Cancel / Esc / backdrop / close-X dismiss without firing.
 
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { escapeHtml as esc } from "../utils.js?v=20";
+import { escapeHtml as esc } from "../utils.js?v=21";
 import { getConnectedProfiles, NETWORK_ICON_BY_PLATFORM, BRAND_INITIALS } from "../social-profiles.js?v=20";
 
 const MODAL_ID = "analyze-profiles";

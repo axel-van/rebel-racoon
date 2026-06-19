@@ -23,6 +23,7 @@
 // own clip-specific bits (thumbnail, timeframe overlay).
 
 import { iconFor } from "../file-kinds.js?v=20";
+import { escapeText, escapeAttr } from "../utils.js?v=21";
 
 function fmtTime(s) {
   if (!Number.isFinite(s) || s < 0) return "0:00";
@@ -37,16 +38,6 @@ function thumbBackground(hue) {
   const blob1 = `radial-gradient(circle at 28% 38%, oklch(0.72 0.18 ${h}) 0%, transparent 42%)`;
   const blob2 = `radial-gradient(circle at 78% 72%, oklch(0.55 0.14 ${(h + 40) % 360}) 0%, transparent 38%)`;
   return `${blob1}, ${blob2}, ${bg}`;
-}
-
-function escapeText(s) {
-  return String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-}
-
-function escapeAttr(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;");
 }
 
 // One-at-a-time kebab menu — closes any other open card menu when the

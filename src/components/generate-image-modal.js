@@ -15,7 +15,7 @@
 // close. If a caller passes an `onUse` callback to open(), it fires with
 // the picked image URL when the user confirms. No store, no persistence.
 
-import { escapeHtml } from "../utils.js?v=20";
+import { escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 import { showToast } from "./toast.js?v=20";
 import { getSessionById } from "../sessions-store.js?v=1";

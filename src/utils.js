@@ -11,6 +11,17 @@ export function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+// Escape for HTML *text content* — the minimal & < > set. Use when the value
+// lands between tags (not inside an attribute). null/undefined → "".
+export function escapeText(value) {
+  if (value == null) return "";
+  return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Escape for an HTML *attribute value* — the full set, including quotes. This
+// is the same coverage as escapeHtml, exported under an intent-revealing name.
+export const escapeAttr = escapeHtml;
+
 export function html(strings, ...values) {
   // Tiny tagged-template helper: interpolates values, escaping by default.
   // To skip escaping (for nested HTML fragments), wrap the value in raw(...).

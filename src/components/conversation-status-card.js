@@ -16,7 +16,7 @@
 // the underlying stores mutate (assistant thread, sources-stream, library,
 // right-panel mode, sessions).
 
-import { html, raw } from "../utils.js?v=20";
+import { html, raw, escapeHtml, escapeAttr } from "../utils.js?v=21";
 import { getPath } from "../router.js?v=30";
 import {
   openDrafts as openDraftsPanel,
@@ -451,17 +451,4 @@ function humanizePendingMessage(m) {
 function currentSessionId() {
   const m = /^\/session\/([^/?]+)/.exec(getPath());
   return m ? m[1] : null;
-}
-
-function escapeHtml(s) {
-  return String(s || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-function escapeAttr(s) {
-  return String(s || "")
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;");
 }

@@ -14,7 +14,7 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=20";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=21";
 
 // Archie's UI and AI generation are English-only today. Other languages
 // were removed (audit B8) to keep the Playbook field honest — re-add them

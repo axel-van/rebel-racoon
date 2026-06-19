@@ -16,7 +16,7 @@
 // the section patch — the loader flips to ready and paints the fresh data.
 
 import { navigate } from "../router.js?v=30";
-import { escapeHtml as esc } from "../utils.js?v=20";
+import { escapeHtml as esc } from "../utils.js?v=21";
 import { renderTopbar } from "../components/topbar.js?v=99";
 import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=29";
 import { mount, snapshotEditable } from "../playbook-view.js?v=21";

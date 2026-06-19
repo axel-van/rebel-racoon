@@ -10,7 +10,7 @@
 // connectors-modal.js) rather than an in-page view, so the same focused
 // surface is reachable from chat contexts too.
 
-import { html, raw } from "../utils.js?v=20";
+import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=99";
 import { showToast } from "../components/toast.js?v=20";

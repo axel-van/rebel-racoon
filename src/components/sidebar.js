@@ -1,4 +1,4 @@
-import { html, raw } from "../utils.js?v=20";
+import { html, raw, escapeHtml } from "../utils.js?v=21";
 import { navigate, getPath } from "../router.js?v=30";
 import { open as openBugReportModal } from "./bug-report-modal.js?v=24";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=26";
@@ -652,17 +652,6 @@ function renderSessionRow(session, activeSessionId) {
       </details>
     </div>
   `;
-}
-
-function escapeHtml(s) {
-  return String(s || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-function escapeAttr(s) {
-  return String(s || "").replace(/"/g, "&quot;");
 }
 
 // Toggle the pinned flag on a session via the sessions-store, then

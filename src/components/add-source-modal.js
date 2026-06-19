@@ -9,7 +9,7 @@
 // upload state machines live outside in sources-stream.js so they
 // continue running even after the modal closes.
 
-import { html, raw, escapeHtml } from "../utils.js?v=20";
+import { html, raw, escapeHtml } from "../utils.js?v=21";
 import { iconFor } from "../file-kinds.js?v=20";
 import { connectorDocs } from "../mocks.js?v=43";
 import {

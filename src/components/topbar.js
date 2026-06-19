@@ -1,4 +1,4 @@
-import { html, raw } from "../utils.js?v=20";
+import { html, raw } from "../utils.js?v=21";
 import { getPath, navigate } from "../router.js?v=30";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 // Lot 19 — topbar no longer carries its own sidebar-toggle button. The
@@ -381,10 +381,6 @@ function renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) {
       ${draftBadge}
     </button>
   `;
-}
-
-function escapeText(str) {
-  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 // Resolve the count of sources attached to the active session. Drives

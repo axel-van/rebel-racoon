@@ -1,4 +1,4 @@
-import { html, raw } from "../utils.js?v=20";
+import { html, raw, escapeText } from "../utils.js?v=21";
 import { showToast } from "./toast.js?v=20";
 import {
   getQueue,
@@ -1087,11 +1087,4 @@ function toLocalInput(ts) {
   const d = new Date(ts);
   const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function escapeText(str) {
-  return String(str || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 }

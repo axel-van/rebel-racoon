@@ -1,4 +1,4 @@
-import { html, raw } from "../utils.js?v=20";
+import { html, raw } from "../utils.js?v=21";
 import { renderTopbar } from "../components/topbar.js?v=99";
 // Same compact idea card as the right-panel Ideas mode.
 import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=1";

@@ -19,7 +19,7 @@
 // id used to apply the focus pulse animation when navigating in via
 // `?focusPost=<id>`.
 
-import { html, raw } from "../utils.js?v=20";
+import { html, raw } from "../utils.js?v=21";
 import { isPortraitFormat } from "../clip-formats.js?v=1";
 import { presetById } from "../clip-captions.js?v=5";
 

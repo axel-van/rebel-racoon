@@ -19,7 +19,7 @@
 //             the grid, source card dimmed.
 //   - Add   : a new 30s clip is inserted in the next gap and opened in edit.
 
-import { escapeHtml } from "../utils.js?v=20";
+import { escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { FORMATS, NETWORK_FORMATS } from "../clip-formats.js?v=1";
 import { iconFor } from "../file-kinds.js?v=20";

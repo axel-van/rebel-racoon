@@ -1,4 +1,4 @@
-import { html, raw } from "../utils.js?v=20";
+import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=99";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=43";

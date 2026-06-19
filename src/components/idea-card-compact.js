@@ -18,20 +18,7 @@
 //                   is no composer, e.g. the standalone Ideas page)
 
 import { iconFor } from "../file-kinds.js?v=20";
-
-function escapeText(str) {
-  return String(str || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-function escapeAttr(str) {
-  return String(str || "")
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+import { escapeText, escapeAttr } from "../utils.js?v=21";
 
 export function renderCompactIdeaCard(
   idea,

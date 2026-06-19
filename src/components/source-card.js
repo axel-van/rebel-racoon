@@ -23,7 +23,7 @@
 // Source shape: { id, filename, kind, status, ideaCount, addedAt, ... }
 
 import { iconFor } from "../file-kinds.js?v=20";
-import { escapeHtml } from "../utils.js?v=20";
+import { escapeHtml } from "../utils.js?v=21";
 
 // ── Overflow menu — one open at a time ─────────────────────────────────
 //

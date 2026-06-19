@@ -1,4 +1,4 @@
-import { html, raw } from "../utils.js?v=20";
+import { html, raw } from "../utils.js?v=21";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=42";
 import { isFlagOn } from "../feature-flags.js?v=4";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=43";

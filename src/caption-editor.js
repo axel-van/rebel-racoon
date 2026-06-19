@@ -21,7 +21,7 @@
 // are pure DOM/CSS. Karaoke word-sweep is intentionally omitted; emphasis is
 // per-word marks + an optional static "phrase" highlight under the playhead.
 
-import { escapeHtml } from "./utils.js?v=20";
+import { escapeHtml } from "./utils.js?v=21";
 import {
   PRESETS,
   presetById,

@@ -10,16 +10,12 @@
  *   showToast("Failed to import", { variant: "error" });
  */
 
+import { escapeHtml } from "../utils.js?v=21";
+
 const REGION_ID = "toastRegion";
 const MAX_VISIBLE = 3;
 const DEFAULT_DURATION = 3200;
 const ANIMATION_OUT_MS = 300;
-
-function escapeHtml(str) {
-  return String(str ?? "").replace(/[&<>"']/g, (c) => {
-    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
-  });
-}
 
 function getRegion() {
   return document.getElementById(REGION_ID);
