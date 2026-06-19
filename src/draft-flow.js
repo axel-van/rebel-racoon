@@ -20,6 +20,42 @@ import { ideas as GLOBAL_IDEAS, anglesByIdea } from "./mocks.js?v=43";
 import { addPostDraft } from "./posts-store.js?v=29";
 import { showToast } from "./components/toast.js?v=20";
 
+// Simulated "generating drafts" delay shared by every draft flow.
+const DRAFT_DELAY_MS = 6000;
+
+// Shared lifecycle for the draft flows: show the thinking chip, wait out the
+// simulated generation delay, clear the chip, then run `work`. When `onError`
+// is given, `work` runs inside a try/catch so a downstream failure (posts-store
+// throws, assistant push errors) still clears the chip and surfaces a retry
+// toast instead of leaving the chip ticking forever (FIND-D2).
+function withPendingChip(sessionId, work, onError) {
+  const pendingId = startPending(sessionId);
+  setTimeout(() => {
+    finishPending(sessionId, pendingId);
+    if (!onError) {
+      work();
+      return;
+    }
+    try {
+      work();
+    } catch (err) {
+      onError(err);
+    }
+  }, DRAFT_DELAY_MS);
+}
+
+// Shared failure handler for the draft generators: log + an error toast whose
+// Retry re-enters the same generation (idempotent — same arguments).
+function draftError(err, retry) {
+  // eslint-disable-next-line no-console
+  console.error("draft-flow: draft generation failed", err);
+  showToast("Couldn't create those drafts. Try again?", {
+    variant: "error",
+    duration: 6000,
+    action: { label: "Retry", onClick: retry },
+  });
+}
+
 // Per-session ideas live in library.js while the right-panel browses a
 // flat global list (mocks.ideas). Some entry points only have a global
 // id, so fall back to the mock list when the per-session store doesn't
@@ -89,11 +125,7 @@ export function startDraftFlow(sessionId, ideaId, count = 1, channelOverride = n
   // turn by the pickers in session.js, so we no longer post a composite
   // "Draft N posts: …" echo here — that would duplicate the per-step
   // responses. Go straight to the thinking chip.
-  const pendingId = startPending(sessionId);
-
-  setTimeout(() => {
-    finishPending(sessionId, pendingId);
-
+  withPendingChip(sessionId, () => {
     // The caller picked a profile explicitly — honour it and skip the
     // channel picker. Used by the right-panel count+profile flow where
     // the user has already chosen which network to draft for.
@@ -129,7 +161,7 @@ export function startDraftFlow(sessionId, ideaId, count = 1, channelOverride = n
       context: { ideaId: idea.id, angle },
       submitLabel: "Draft them",
     });
-  }, 6000);
+  });
 }
 
 export function executeDraft(sessionId, ideaId, selectedChannels, count = 1, angle = null) {
@@ -140,17 +172,9 @@ export function executeDraft(sessionId, ideaId, selectedChannels, count = 1, ang
   // picker, and the rare multi-channel fallback keeps its choice chips
   // visible in place — so no channel echo is posted here. Straight to
   // the thinking chip while "generating" the drafts.
-  const pendingId = startPending(sessionId);
-
-  setTimeout(() => {
-    // FIND-D2: wrap the draft creation + result post in a try/catch so
-    // a downstream failure (posts-store throws, assistant push errors)
-    // doesn't leave the thinking chip ticking forever. The chip itself
-    // is cleared by finishPending so the user always gets back to a
-    // stable state, and an error toast surfaces the failure with a
-    // hook-able Retry action (idempotent — runs the same channels).
-    finishPending(sessionId, pendingId);
-    try {
+  withPendingChip(
+    sessionId,
+    () => {
       // Total drafts = max(count, channels). When count > channels.length
       // we cycle channels round-robin so a "5 drafts on linkedin" request
       // produces 5 linkedin posts and a multi-channel "1 draft per
@@ -170,22 +194,9 @@ export function executeDraft(sessionId, ideaId, selectedChannels, count = 1, ang
         ideaTitle: idea.title,
         drafts,
       });
-    } catch (err) {
-      // Surface the failure + offer a Retry that re-enters executeDraft
-      // with the same arguments. Keep the toast duration generous so
-      // the user has time to react before it auto-dismisses.
-      // eslint-disable-next-line no-console
-      console.error("draft-flow: executeDraft failed", err);
-      showToast("Couldn't create those drafts. Try again?", {
-        variant: "error",
-        duration: 6000,
-        action: {
-          label: "Retry",
-          onClick: () => executeDraft(sessionId, ideaId, selectedChannels, count, angle),
-        },
-      });
-    }
-  }, 6000);
+    },
+    (err) => draftError(err, () => executeDraft(sessionId, ideaId, selectedChannels, count, angle)),
+  );
 }
 
 // Multi-angle batch — produces each angle's count of drafts in a single run,
@@ -198,10 +209,9 @@ export function executeDraftBatch(sessionId, ideaId, selectedChannels, anglePick
   const channels = Array.isArray(selectedChannels) && selectedChannels.length ? selectedChannels : ["linkedin"];
   if (!idea || !Array.isArray(anglePicks) || anglePicks.length === 0) return;
 
-  const pendingId = startPending(sessionId);
-  setTimeout(() => {
-    finishPending(sessionId, pendingId);
-    try {
+  withPendingChip(
+    sessionId,
+    () => {
       const drafts = [];
       let ch = 0;
       for (const { angle, count } of anglePicks) {
@@ -218,17 +228,7 @@ export function executeDraftBatch(sessionId, ideaId, selectedChannels, anglePick
         }
       }
       postDraftResult(sessionId, { ideaTitle: idea.title, drafts });
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error("draft-flow: executeDraftBatch failed", err);
-      showToast("Couldn't create those drafts. Try again?", {
-        variant: "error",
-        duration: 6000,
-        action: {
-          label: "Retry",
-          onClick: () => executeDraftBatch(sessionId, ideaId, selectedChannels, anglePicks),
-        },
-      });
-    }
-  }, 6000);
+    },
+    (err) => draftError(err, () => executeDraftBatch(sessionId, ideaId, selectedChannels, anglePicks)),
+  );
 }
