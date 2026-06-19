@@ -149,6 +149,8 @@
   transform: translateY(-1px);
 }
 
+/* Rest: butter tile with the Archie logo in brand orange (the logo mask paints
+   in currentColor, so `color` drives it). */
 .contexts-card--ghost__glyph {
   display: inline-flex;
   align-items: center;
@@ -156,25 +158,22 @@
   width: 48px;
   height: 48px;
   border-radius: var(--app-radius-circle);
-  background: var(--ref-color-mermaid-10);
-  color: var(--ref-color-white);
-  transition: background-color var(--ref-animation-short) var(--app-ease-out);
+  background: var(--app-butter);
+  color: var(--app-archie-mark);
+  transition:
+    background-color var(--ref-animation-short) var(--app-ease-out),
+    color var(--ref-animation-short) var(--app-ease-out);
 }
 
 .contexts-card--ghost__glyph i {
   font-size: var(--sys-icon-css-md);
 }
 
+/* Hover: tile turns brand orange, logo flips to white (via currentColor). */
 .contexts-card--ghost:hover .contexts-card--ghost__glyph,
 .contexts-card--ghost:focus-visible .contexts-card--ghost__glyph {
   background: var(--app-archie-mark);
-}
-
-/* On hover the glyph tile turns brand orange, so the Archie logo mark inside
-   flips to white. Beats the global .ap-icon-sparkles* orange !important. */
-.contexts-card--ghost:hover .contexts-card--ghost__glyph i,
-.contexts-card--ghost:focus-visible .contexts-card--ghost__glyph i {
-  background: var(--ref-color-white) !important;
+  color: var(--ref-color-white);
 }
 
 .contexts-card--ghost__title {

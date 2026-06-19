@@ -59,15 +59,15 @@
   gap: var(--ref-spacing-xxxs);
   padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
   border-radius: var(--app-radius-pill);
-  background: var(--ref-color-mermaid-gradient-background);
-  color: var(--ref-color-white);
+  background: var(--app-butter);
+  color: var(--ref-color-grey-100);
   font-size: var(--sys-text-style-caption-bold-size);
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
 }
 .batch-studio__ai-badge i {
   font-size: var(--sys-icon-css-xs);
-  color: var(--ref-color-white);
+  color: var(--app-archie-mark);
 }
 
 .batch-studio__title {
