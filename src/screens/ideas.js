@@ -1,4 +1,4 @@
-import { html, raw } from "../utils.js?v=21";
+import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
 import { renderTopbar } from "../components/topbar.js?v=99";
 // Same compact idea card as the right-panel Ideas mode.
 import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=1";
@@ -205,13 +205,6 @@ function renderIdeasEmpty(allIdeas, pageState) {
   });
 }
 
-function escapeText(str) {
-  return String(str || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
 function countByKind() {
   const counts = { all: IDEAS.length };
   for (const i of IDEAS) {
@@ -342,8 +335,4 @@ function bind(root) {
     }
   };
   root.addEventListener("change", onChange);
-}
-
-function escapeAttr(str) {
-  return String(str).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }

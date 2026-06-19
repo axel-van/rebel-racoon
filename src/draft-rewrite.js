@@ -19,6 +19,7 @@
 // — when it disappears the stream aborts cleanly.
 
 import { getPosts, updatePostContent } from "./posts-store.js?v=29";
+import { escapeText } from "./utils.js?v=21";
 
 const inFlight = new Map(); // postId → AbortController
 
@@ -242,13 +243,6 @@ function appendWord(paragraphEl, text) {
   span.className = "posts__card-word";
   span.textContent = text;
   paragraphEl.appendChild(span);
-}
-
-function escapeText(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 }
 
 function cssEscape(value) {

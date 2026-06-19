@@ -1,4 +1,4 @@
-import { html, raw } from "../utils.js?v=21";
+import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=99";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=43";
@@ -1356,13 +1356,6 @@ function renderComposerConnector(root, sessionId, { focus = false } = {}) {
 //   • Picking an item
 //   • Clicking outside the picker / trigger
 //   • Pressing Escape
-function escapeHtmlAttr(s) {
-  return String(s || "")
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
 
 // Module-local index of the currently-highlighted row in the @mention
 // picker — mirrors the search-modal pattern (search-modal.js). Arrow
@@ -1638,17 +1631,6 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
       <div class="starter-grid" role="group" aria-labelledby="starterGridLabel">${raw(cards)}</div>
     </div>
   `;
-}
-
-// Minimal HTML attribute escaper — starter prompts contain quotes that would
-// otherwise break the data-starter-prompt attribute.
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 }
 
 // Wizard chrome — replaces the normal thread + suggestions + composer when
