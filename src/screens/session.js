@@ -100,7 +100,7 @@ import {
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=167";
+} from "../components/right-panel.js?v=168";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=2";
@@ -1183,6 +1183,10 @@ function renderConnectorsSubmenu() {
 }
 
 function renderComposer(attachedContext, session, selectable) {
+  // Nothing to @mention until the session has at least one ready source or
+  // extracted idea — disable the trigger so it doesn't open an empty picker.
+  const hasMentionable =
+    getSources(session.id).some((s) => s.status !== "Processing") || getIdeas(session.id).length > 0;
   return `
     <div class="session__composer">
       <div class="session__composer-inner">
@@ -1280,6 +1284,7 @@ function renderComposer(attachedContext, session, selectable) {
               aria-expanded="false"
               aria-controls="composerMentionPicker"
               data-composer-mention-trigger
+              ${hasMentionable ? "" : 'disabled title="Add a source or extract an idea first"'}
             >
               <i class="ap-icon-at"></i>
               <span>Mention</span>
