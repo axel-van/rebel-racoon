@@ -42,6 +42,48 @@ const SECTIONS = [
   { id: "pbk-sec-brand", scope: "brand", icon: "ap-icon-image", title: "Brand" },
 ];
 
+// Edit-mode guidance. Surfaced only while a section is being edited (one at a
+// time), so the read view stays clean. Audience & goals gets a per-field hint
+// (q = prompt, a = what Archie does with it); Voice & style and Brand each get
+// a single "captured by Archie" banner.
+const FIELD_HINTS = {
+  businessSummary: {
+    q: "Does this describe your business correctly?",
+    a: "Archie analysed your website and wrote this summary.",
+  },
+  audience: {
+    q: "Who is your primary audience?",
+    a: "Archie will tailor post topics and framing to speak directly to them.",
+  },
+  contentStyle: {
+    q: "What content style fits your brand?",
+    a: "This guides the structure and format of every post Archie writes.",
+  },
+  objective: {
+    q: "What's your primary social media objective?",
+    a: "Archie will prioritise content angles that serve this goal.",
+  },
+  contentAction: {
+    q: "What action should your content drive?",
+    a: "Archie will include relevant CTAs aligned with this action.",
+  },
+  ctaLinks: {
+    q: "Call to action",
+    a: "Archie surfaces these links when posts call for an action.",
+  },
+};
+
+const SECTION_HINTS = {
+  voice: {
+    q: "Voice profile",
+    a: "Archie captured this voice from your connected profile's recent posts.",
+  },
+  brand: {
+    q: "Visual identity",
+    a: "Archie picked these up from your site so visuals stay on-brand.",
+  },
+};
+
 const STAGE_MS = 2400;
 
 let mountTarget = null;
@@ -69,6 +111,7 @@ let scrollSpy = null; // IntersectionObserver for the section-nav active state
 //   headerActions(): string | null,    // html for the header action bar (library)
 //   onEditName(): void,                // header name pencil (rename)
 //   onToggleDefault(): void,           // header star → toggle default (library)
+//   onAnalyzeVoice(): void,            // Voice & style → analyze social profiles
 //   footer(): string,                  // footer button(s) html (onboarding)
 //   onFooter(event): boolean,          // handle footer/header-action clicks
 // }
@@ -224,6 +267,8 @@ export function snapshotEditable(d) {
       closingPatterns: d.closingPatterns || [],
       formattingStyle: d.formattingStyle || "",
       visualStyle: d.visualStyle || "",
+      voiceMode: d.voiceMode || "guided",
+      voiceManual: d.voiceManual || "",
       brandPersonality: d.brandPersonality || "",
       brandTypography: d.brandTypography || null,
       brandColors: d.brandColors || [],
@@ -253,12 +298,12 @@ function panelEditActions() {
   return `<div class="recap__panel-actions">${editActionButtons()}</div>`;
 }
 
-function renderPanelHead(section, edit) {
+function renderPanelHead(section, edit, extraAction = "") {
   return `
     <header class="recap__panel-head">
       <span class="recap__panel-icon"><i class="${section.icon}" aria-hidden="true"></i></span>
       <h2 class="recap__panel-title">${esc(section.title)}</h2>
-      ${edit ? panelEditActions() : panelPen(section.scope)}
+      ${edit ? panelEditActions() : `${extraAction}${panelPen(section.scope)}`}
     </header>
   `;
 }
@@ -359,7 +404,7 @@ function renderEditChips(field, values, placeholder) {
         <div class="ap-input-group recap__chip-add-field">
           <input type="text" data-recap-chip-input="${field}" placeholder="${esc(placeholder)}" aria-label="${esc(placeholder)}" />
         </div>
-        <button type="button" class="ap-icon-button transparent recap__chip-add-btn" data-recap-chip-add="${field}" aria-label="Add">
+        <button type="button" class="ap-icon-button stroked grey recap__chip-add-btn" data-recap-chip-add="${field}" aria-label="Add">
           <i class="ap-icon-plus"></i>
         </button>
       </span>
@@ -384,7 +429,7 @@ function renderLineEditor(field, values, placeholder) {
     .join("");
   return `
     <div class="recap__line-list">${rows}</div>
-    <button type="button" class="ap-button ghost blue recap__add-row" data-recap-line-add="${field}">
+    <button type="button" class="ap-button secondary blue recap__add-row" data-recap-line-add="${field}">
       <i class="ap-icon-plus"></i><span>Add line</span>
     </button>
   `;
@@ -421,7 +466,7 @@ function renderCtaEditor(data) {
     .join("");
   return `
     <div class="recap__cta-edit-list">${rows}</div>
-    <button type="button" class="ap-button ghost blue recap__add-row" data-recap-cta-add>
+    <button type="button" class="ap-button secondary blue recap__add-row" data-recap-cta-add>
       <i class="ap-icon-plus"></i><span>Add link</span>
     </button>
   `;
@@ -456,6 +501,37 @@ function renderRefImages(data, edit) {
   return `<div class="recap__refimgs">${thumbs}${addBtn}</div>`;
 }
 
+// Per-field edit hint (Audience & goals) — prompt + what Archie does with it.
+function renderFieldHint(hint) {
+  if (!hint) return "";
+  return `<div class="recap__field-hint"><span class="recap__field-hint-q">${esc(hint.q)}</span><span class="recap__field-hint-a">${esc(hint.a)}</span></div>`;
+}
+
+// Section-level edit banner (Voice & style, Brand) — where Archie sourced it.
+// The sparkle is an inline SVG so it can carry the Mermaid gradient (the icon
+// font glyph is monochrome). Only one banner is in the DOM at a time (one
+// section edits at once), so the gradient id is safe to reuse.
+function renderSectionHint(hint) {
+  if (!hint) return "";
+  return `
+    <div class="recap__panel-hint">
+      <svg class="recap__panel-hint-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="recapMermaidGrad" x1="2" y1="3" x2="22" y2="21" gradientUnits="userSpaceOnUse">
+            <stop stop-color="var(--ref-color-mermaid-gradient-from)" />
+            <stop offset="1" stop-color="var(--ref-color-mermaid-gradient-to)" />
+          </linearGradient>
+        </defs>
+        <path d="M10 6 12 11 17 13 12 15 10 20 8 15 3 13 8 11Z" fill="url(#recapMermaidGrad)" />
+        <path d="M18 3.5 18.8 6.2 21.5 7 18.8 7.8 18 10.5 17.2 7.8 14.5 7 17.2 6.2Z" fill="url(#recapMermaidGrad)" />
+      </svg>
+      <div class="recap__panel-hint-text">
+        <span class="recap__panel-hint-q">${esc(hint.q)}</span>
+        <span class="recap__panel-hint-a">${esc(hint.a)}</span>
+      </div>
+    </div>`;
+}
+
 // ── Section panels ─────────────────────────────────────────────────────
 
 function renderGoalsPanel(data, edit) {
@@ -473,12 +549,15 @@ function renderGoalsPanel(data, edit) {
       ),
       renderRow(
         "Business",
-        `<div class="ap-textarea-field resizable">
+        renderFieldHint(FIELD_HINTS.businessSummary) +
+          `<div class="ap-textarea-field resizable">
            <textarea data-recap-summary rows="4" placeholder="Describe your business in a few sentences…">${esc(data.businessSummary || "")}</textarea>
          </div>`,
       ),
-      ...GOAL_FIELDS.map((f) => renderRow(f.label, renderEditChips(f.key, data[f.key], f.placeholder))),
-      renderRow("CTA links", renderCtaEditor(data)),
+      ...GOAL_FIELDS.map((f) =>
+        renderRow(f.label, renderFieldHint(FIELD_HINTS[f.key]) + renderEditChips(f.key, data[f.key], f.placeholder)),
+      ),
+      renderRow("CTA links", renderFieldHint(FIELD_HINTS.ctaLinks) + renderCtaEditor(data)),
     ].join("");
   } else {
     body = [
@@ -495,25 +574,45 @@ function renderGoalsPanel(data, edit) {
   `;
 }
 
+// Guided ⇄ Free-form switch for the Voice & style section (edit mode).
+function renderVoiceModeToggle(mode) {
+  const manual = mode === "manual";
+  return `
+    <div class="recap__voice-mode" role="group" aria-label="Voice format">
+      <button type="button" class="ap-filter-chip" aria-pressed="${!manual}" data-recap-voice-mode="guided">Guided</button>
+      <button type="button" class="ap-filter-chip" aria-pressed="${manual}" data-recap-voice-mode="manual">Write it yourself</button>
+    </div>`;
+}
+
 function renderVoicePanel(data, edit) {
   const section = SECTIONS[1];
+  const manual = data.voiceMode === "manual";
   let body;
   if (edit) {
-    body = [
-      ...LINE_FIELDS.map((f) => renderRow(f.label, renderLineEditor(f.key, data[f.key], f.placeholder))),
-      renderRow(
-        "Formatting",
-        renderTextarea(
-          "formattingStyle",
-          data.formattingStyle,
-          "How posts are structured — line breaks, lists, rhythm…",
-        ),
-      ),
-      renderRow(
-        "Visual style",
-        renderTextarea("visualStyle", data.visualStyle, "Emoji use, capitalisation, hashtags, links…"),
-      ),
-    ].join("");
+    const fields = manual
+      ? `<div class="recap__manual">
+           <div class="ap-textarea-field resizable">
+             <textarea data-recap-text="voiceManual" rows="10" placeholder="Write your voice in your own words — how you open, your tone, the way you format posts, and anything to avoid…">${esc(data.voiceManual || "")}</textarea>
+           </div>
+         </div>`
+      : [
+          ...LINE_FIELDS.map((f) => renderRow(f.label, renderLineEditor(f.key, data[f.key], f.placeholder))),
+          renderRow(
+            "Formatting",
+            renderTextarea(
+              "formattingStyle",
+              data.formattingStyle,
+              "How posts are structured — line breaks, lists, rhythm…",
+            ),
+          ),
+          renderRow(
+            "Visual style",
+            renderTextarea("visualStyle", data.visualStyle, "Emoji use, capitalisation, hashtags, links…"),
+          ),
+        ].join("");
+    body = renderSectionHint(SECTION_HINTS.voice) + renderVoiceModeToggle(data.voiceMode) + fields;
+  } else if (manual) {
+    body = renderRow("In your words", renderText(data.voiceManual));
   } else {
     body = [
       renderRow("Signature hooks", renderQuotes(data.signatureHooks)),
@@ -522,9 +621,13 @@ function renderVoicePanel(data, edit) {
       renderRow("Visual style", renderText(data.visualStyle)),
     ].join("");
   }
+  const analyzeBtn =
+    !edit && cfg.onAnalyzeVoice
+      ? `<button type="button" class="ap-button ghost grey recap__panel-action" data-recap-analyze-voice><i class="ap-icon-double-chat-bubbles"></i><span>Learn from my posts</span></button>`
+      : "";
   return `
     <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" ${edit ? "data-recap-editing-card" : ""}>
-      ${renderPanelHead(section, edit)}
+      ${renderPanelHead(section, edit, analyzeBtn)}
       <div class="recap__panel-body">${body}</div>
     </section>
   `;
@@ -548,10 +651,11 @@ function renderBrandPanel(data, edit) {
       )
       .join("");
     body = [
+      renderSectionHint(SECTION_HINTS.brand),
       renderRow(
         "Colours",
         `<div class="recap__colors" data-recap-colors>${colorRows}</div>
-         <button type="button" class="ap-button ghost blue recap__color-add" data-recap-color-add>
+         <button type="button" class="ap-button secondary blue recap__color-add" data-recap-color-add>
            <i class="ap-icon-plus"></i><span>Add colour</span>
          </button>`,
       ),
@@ -844,6 +948,12 @@ function onClick(event) {
     return;
   }
 
+  // Voice & style section → analyze social profiles (library mode).
+  if (event.target.closest("[data-recap-analyze-voice]")) {
+    cfg.onAnalyzeVoice?.();
+    return;
+  }
+
   const data = cfg.getData();
   if (!data) return;
 
@@ -881,6 +991,15 @@ function onClick(event) {
     snapshot = null;
     editScope = null;
     repaint();
+    return;
+  }
+
+  // Voice & style: switch between the guided fields and a free-form textarea.
+  const voiceMode = event.target.closest("[data-recap-voice-mode]");
+  if (voiceMode) {
+    data.voiceMode = voiceMode.dataset.recapVoiceMode;
+    repaint();
+    mountTarget?.querySelector("[data-recap-text='voiceManual']")?.focus();
     return;
   }
 

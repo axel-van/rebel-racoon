@@ -57,6 +57,8 @@ function emptyDraft(overrides = {}) {
     closingPatterns: [],
     formattingStyle: "",
     visualStyle: "",
+    voiceMode: "guided", // "guided" (structured fields) | "manual" (free-form)
+    voiceManual: "",
     // Brand — author-editable identity (seeded from the scraped site on first edit).
     brandPersonality: "",
     brandTypography: null, // { headingFont, bodyFont }
@@ -123,6 +125,9 @@ export function sectionPatchFromAnalysis(analysis) {
     closingPatterns: (s.closingPatterns || []).slice(),
     formattingStyle: s.formattingStyle || "",
     visualStyle: s.visualStyle || "",
+    // A fresh analysis always produces structured voice — reset to guided.
+    voiceMode: "guided",
+    voiceManual: "",
     brandPersonality: s.brandPersonality || "",
     brandTypography: s.brandTypography ? { ...s.brandTypography } : null,
     brandColors: (s.brandColors || []).map((c) => ({ ...c })),

@@ -107,6 +107,8 @@ export function addContext(ctx = {}) {
     closingPatterns: Array.isArray(ctx.closingPatterns) ? ctx.closingPatterns.slice() : [],
     formattingStyle: ctx.formattingStyle || "",
     visualStyle: ctx.visualStyle || "",
+    voiceMode: ctx.voiceMode === "manual" ? "manual" : "guided",
+    voiceManual: ctx.voiceManual || "",
     brandPersonality: ctx.brandPersonality || "",
     brandTypography: ctx.brandTypography && typeof ctx.brandTypography === "object" ? { ...ctx.brandTypography } : null,
     brandColors: Array.isArray(ctx.brandColors) ? ctx.brandColors.map((c) => ({ ...c })) : [],
@@ -169,6 +171,8 @@ export function updateContext(id, patch) {
   if (patch.closingPatterns !== undefined) c.closingPatterns = patch.closingPatterns;
   if (patch.formattingStyle !== undefined) c.formattingStyle = patch.formattingStyle;
   if (patch.visualStyle !== undefined) c.visualStyle = patch.visualStyle;
+  if (patch.voiceMode !== undefined) c.voiceMode = patch.voiceMode;
+  if (patch.voiceManual !== undefined) c.voiceManual = patch.voiceManual;
   if (patch.brandPersonality !== undefined) c.brandPersonality = patch.brandPersonality;
   if (patch.brandTypography !== undefined) c.brandTypography = patch.brandTypography;
   if (patch.brandColors !== undefined) c.brandColors = patch.brandColors;

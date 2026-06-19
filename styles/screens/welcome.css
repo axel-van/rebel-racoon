@@ -448,6 +448,15 @@
   color: var(--ref-color-grey-100);
 }
 
+/* Section-level action in the panel head (e.g. Voice & style → Analyze
+   profiles) — compact so it sits comfortably next to the edit pencil. */
+.recap__panel-action {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 var(--ref-spacing-sm);
+  gap: var(--ref-spacing-xxs);
+}
+
 .recap__panel-body {
   display: flex;
   flex-direction: column;
@@ -492,6 +501,80 @@
   line-height: var(--sys-text-style-body-line-height);
   font-style: italic;
   color: var(--ref-color-grey-40);
+}
+
+/* ── Edit-mode guidance ───────────────────────────────────────────────── */
+/* Per-field hint (Audience & goals) — sits above the editor in the value
+   cell while the section is being edited. */
+.recap__field-hint {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-spacing-micro);
+}
+
+.recap__field-hint-q {
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.recap__field-hint-a {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+/* Section-level hint banner (Voice & style, Brand) — a subtle "captured by
+   Archie" note at the top of the section's edit body. */
+.recap__panel-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-lg);
+  border-bottom: 1px solid var(--app-border-soft);
+  background: var(--ref-color-mermaid-10);
+}
+
+.recap__panel-hint-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.recap__panel-hint-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-spacing-micro);
+}
+
+.recap__panel-hint-q {
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.recap__panel-hint-a {
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-80);
+}
+
+/* Voice & style: Guided ⇄ Free-form segmented toggle + the free-form editor. */
+.recap__voice-mode {
+  display: flex;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-lg);
+  border-bottom: 1px solid var(--app-border-soft);
+}
+
+.recap__manual {
+  padding: var(--ref-spacing-md) var(--ref-spacing-lg);
+}
+
+.recap__manual .ap-textarea-field {
+  width: 100%;
 }
 
 .recap__chips {
@@ -1040,8 +1123,16 @@
 }
 
 .welcome-screen--reveal.is-editing .recap__panel-edit,
-.welcome-screen--reveal.is-editing .recap__name-edit {
+.welcome-screen--reveal.is-editing .recap__name-edit,
+.welcome-screen--reveal.is-editing .recap__name-default {
   display: none;
+}
+
+/* While a section is being edited, the global top actions (Start a chat /
+   Auto-fill / Delete) are disabled so the user finishes the current edit. */
+.welcome-screen--reveal.is-editing .recap__header-actions {
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 /* The panel being edited stays flat (no elevation) — a slightly stronger

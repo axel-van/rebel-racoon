@@ -19,14 +19,14 @@ import { navigate } from "../router.js?v=30";
 import { escapeHtml as esc } from "../utils.js?v=20";
 import { renderTopbar } from "../components/topbar.js?v=99";
 import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=29";
-import { mount, snapshotEditable } from "../playbook-view.js?v=13";
+import { mount, snapshotEditable } from "../playbook-view.js?v=21";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";
-import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=2";
+import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=7";
+import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=1";
 import { analyzeWebsite, analyzeDocument, analyzeSocialProfiles } from "../context-mock-analysis.js?v=22";
 import { sectionPatchFromAnalysis } from "../context-builder.js?v=82";
 
-const DOC_ACCEPT = ".pdf,.doc,.docx,.txt,.md,.rtf,.pptx,.csv";
 const AUTOFILL_MS = 1500;
 
 const STAGES = {
@@ -71,7 +71,6 @@ function buildHeaderActions(ctx) {
   const fillItems = [
     hasSite ? menuItem("data-fill-website", "ap-icon-web", "Re-analyze website") : "",
     menuItem("data-fill-documents", "ap-icon-file--text", "Fill from documents…"),
-    menuItem("data-fill-social", "ap-icon-multiple-users", "Analyze social profiles…"),
   ].join("");
 
   return `
@@ -134,6 +133,7 @@ export function renderPlaybook(params, target) {
       headerActions: () => buildHeaderActions(getContextById(id)),
       onEditName,
       onToggleDefault: toggleDefault,
+      onAnalyzeVoice,
       onFooter,
     };
   }
@@ -143,17 +143,37 @@ export function renderPlaybook(params, target) {
   }
 
   // ── Auto-fill (overwrite + loader) ──────────────────────────────────
-  function runAutofill(stages, analysisFn) {
+  // patchFn() returns the field patch to apply once the (mock) analysis lands.
+  function runAutofill(stages, patchFn, message = "Playbook sections updated.") {
     analyzing = true;
     analysisReady = false;
     analysisLoader = stages;
     remount(); // shows the staged loader
     window.setTimeout(() => {
-      const analysis = analysisFn();
-      updateContext(id, { ...sectionPatchFromAnalysis(analysis), updatedAt: "just now" });
+      updateContext(id, { ...patchFn(), updatedAt: "just now" });
       analysisReady = true; // loader flips to ready and paints the fresh data
-      toast("Playbook sections updated.");
+      toast(message);
     }, AUTOFILL_MS);
+  }
+
+  // "Analyze social profiles" only rewrites Voice & style (the guided fields),
+  // so it lives on that section — not the whole-Playbook Auto-fill menu.
+  function voicePatchFromAnalysis(analysis) {
+    const p = sectionPatchFromAnalysis(analysis);
+    return {
+      signatureHooks: p.signatureHooks,
+      closingPatterns: p.closingPatterns,
+      formattingStyle: p.formattingStyle,
+      visualStyle: p.visualStyle,
+      voiceMode: "guided",
+      voiceManual: "",
+    };
+  }
+  function onAnalyzeVoice() {
+    openAnalyzeProfilesModal({
+      onConfirm: (ids) =>
+        runAutofill(STAGES.social, () => voicePatchFromAnalysis(analyzeSocialProfiles(ids)), "Voice & style updated."),
+    });
   }
 
   // Header star → toggle this Playbook as the default. Setting it unsets the
@@ -192,24 +212,25 @@ export function renderPlaybook(params, target) {
     });
   }
 
-  // Hidden file input for "Fill from documents…".
-  const fileInput = document.createElement("input");
-  fileInput.type = "file";
-  fileInput.accept = DOC_ACCEPT;
-  fileInput.hidden = true;
-  fileInput.addEventListener("change", () => {
-    const file = fileInput.files && fileInput.files[0];
-    fileInput.value = "";
-    if (!file) return;
-    openConfirmModal({
-      title: "Fill from document?",
-      body: `Every section will be rebuilt from “${esc(file.name)}”, replacing the current content.`,
-      confirmLabel: "Fill from document",
-      cancelLabel: "Cancel",
-      onConfirm: () => runAutofill(STAGES.documents, () => analyzeDocument(file)),
+  // "Fill from documents…" — a modal with a file dropzone + a document link
+  // (Google Docs / Drive). Either source rebuilds every section.
+  function docNameFromUrl(url) {
+    if (/docs\.google/.test(url)) return "Google Doc";
+    if (/drive\.google/.test(url)) return "Drive file";
+    try {
+      return new URL(url).hostname.replace(/^www\./, "") || "Linked document";
+    } catch {
+      return "Linked document";
+    }
+  }
+  function fillFromDocument() {
+    openFillDocumentModal({
+      onConfirm: ({ file, url }) => {
+        const fileLike = file || { name: docNameFromUrl(url) };
+        runAutofill(STAGES.documents, () => sectionPatchFromAnalysis(analyzeDocument(fileLike)));
+      },
     });
-  });
-  document.body.appendChild(fileInput);
+  }
 
   // Header name pencil → rename the Playbook.
   const onEditName = () => {
@@ -256,22 +277,21 @@ export function renderPlaybook(params, target) {
         body: `Every section will be rebuilt from ${esc(domain)}, replacing the current content.`,
         confirmLabel: "Re-analyze",
         cancelLabel: "Cancel",
-        onConfirm: () => runAutofill(STAGES.website, () => analyzeWebsite(getContextById(id)?.websiteUrl)),
+        onConfirm: () =>
+          runAutofill(STAGES.website, () => sectionPatchFromAnalysis(analyzeWebsite(getContextById(id)?.websiteUrl))),
       });
       return true;
     }
 
     if (event.target.closest("[data-fill-documents]")) {
       closeMenus();
-      fileInput.click();
+      fillFromDocument();
       return true;
     }
 
-    if (event.target.closest("[data-fill-social]")) {
-      closeMenus();
-      openAnalyzeProfilesModal({
-        onConfirm: (ids) => runAutofill(STAGES.social, () => analyzeSocialProfiles(ids)),
-      });
+    // Voice & style section action.
+    if (event.target.closest("[data-recap-analyze-voice]")) {
+      onAnalyzeVoice();
       return true;
     }
 
@@ -296,7 +316,6 @@ export function renderPlaybook(params, target) {
 
   return () => {
     document.removeEventListener("click", onDocClick);
-    fileInput.remove();
     cleanup?.();
   };
 }

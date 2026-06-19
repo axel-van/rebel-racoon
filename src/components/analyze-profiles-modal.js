@@ -41,14 +41,14 @@ const HTML = `
   </button>
   <div class="ap-dialog-content">
     <p class="analyze-profiles-modal__lead">
-      Pick the profiles to learn from — Archie reads their recent posts and fills every section.
+      Pick the profiles to learn from — Archie reads their recent posts and rebuilds your Voice &amp; style.
     </p>
     <div class="analyze-profiles-modal__list" id="analyzeProfilesList" role="group" aria-label="Connected profiles"></div>
     <div class="ap-infobox warning analyze-profiles-modal__warn">
       <i class="ap-icon-info_fill" aria-hidden="true"></i>
       <div class="ap-infobox-content">
         <div class="ap-infobox-texts">
-          <span class="ap-infobox-message">This replaces all current sections of the Playbook.</span>
+          <span class="ap-infobox-message">This replaces your Voice &amp; style section.</span>
         </div>
       </div>
     </div>
@@ -56,7 +56,7 @@ const HTML = `
   <div class="ap-dialog-footer">
     <div class="ap-dialog-footer-right">
       <button type="button" class="ap-button transparent grey" id="analyzeProfilesCancel">Cancel</button>
-      <button type="button" class="ap-button primary blue" id="analyzeProfilesConfirm" disabled>
+      <button type="button" class="ap-button primary orange" id="analyzeProfilesConfirm" disabled>
         <i class="ap-icon-sparkles-mermaid"></i><span>Analyze &amp; fill</span>
       </button>
     </div>
@@ -76,11 +76,12 @@ function renderList() {
       const caption = [p.platformLabel, p.kind].filter(Boolean).join(" · ");
       const icon = NETWORK_ICON_BY_PLATFORM[p.platform] || "";
       return `
-      <label class="analyze-profiles-modal__row ${noPosts ? "is-disabled" : ""}">
-        <input type="checkbox" class="analyze-profiles-modal__check" value="${esc(p.id)}" data-profile-check ${noPosts ? "disabled" : ""} />
-        <span class="analyze-profiles-modal__avatar">
-          ${p.photo ? `<img src="${esc(p.photo)}" alt="" />` : `<span class="analyze-profiles-modal__avatar-fallback">${esc(BRAND_INITIALS)}</span>`}
-          ${icon ? `<i class="${esc(icon)} analyze-profiles-modal__net" aria-hidden="true"></i>` : ""}
+      <label class="ap-checkbox-container analyze-profiles-modal__row ${noPosts ? "is-disabled" : ""}">
+        <input type="checkbox" value="${esc(p.id)}" data-profile-check ${noPosts ? "disabled" : ""} />
+        <i></i>
+        <span class="ap-avatar size-36" aria-hidden="true">
+          ${p.photo ? `<img src="${esc(p.photo)}" alt="" />` : `<span class="ap-avatar-initials">${esc(BRAND_INITIALS)}</span>`}
+          ${icon ? `<span class="ap-avatar-network"><i class="${esc(icon)}"></i></span>` : ""}
         </span>
         <span class="analyze-profiles-modal__meta">
           <span class="analyze-profiles-modal__handle">${esc(p.handle || "Profile")}</span>

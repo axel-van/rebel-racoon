@@ -48,6 +48,7 @@ body.has-modal {
 .confirm-modal,
 .rename-modal,
 .analyze-profiles-modal,
+.fill-document-modal,
 .search-modal,
 .shortcut-legend {
   position: fixed;
@@ -107,76 +108,41 @@ body.has-modal {
   gap: var(--ref-spacing-xxs);
 }
 
+/* Rows are selectable cards: the control is the DS checkbox
+   (.ap-checkbox-container draws the box + hides the input); the card chrome
+   (border, selected blue border) mirrors the DS card tokens. */
 .analyze-profiles-modal__row {
-  display: flex;
   align-items: center;
   gap: var(--ref-spacing-sm);
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border: 1px solid var(--app-border-soft);
+  border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
-  cursor: pointer;
-  transition:
-    border-color 160ms var(--app-ease-out),
-    background 160ms var(--app-ease-out);
+  background: var(--ref-color-white);
+  transition: border-color 0.2s ease-in-out;
 }
 
-.analyze-profiles-modal__row:hover {
-  border-color: var(--ref-color-electric-blue-40);
-  background: var(--app-surface-subtle);
+.analyze-profiles-modal__row:hover:not(.is-disabled) {
+  border-color: var(--ref-color-grey-40);
+}
+
+.analyze-profiles-modal__row:has(input:checked) {
+  border-color: var(--ref-color-electric-blue-100);
 }
 
 .analyze-profiles-modal__row.is-disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
+  cursor: default;
+  opacity: 0.6;
 }
 
-.analyze-profiles-modal__row.is-disabled:hover {
-  border-color: var(--app-border-soft);
-  background: transparent;
-}
-
-.analyze-profiles-modal__check {
+.analyze-profiles-modal__row > .ap-avatar {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  accent-color: var(--ref-color-electric-blue-100);
 }
 
-.analyze-profiles-modal__avatar {
-  position: relative;
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-}
-
-.analyze-profiles-modal__avatar img,
-.analyze-profiles-modal__avatar-fallback {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--app-radius-circle);
-  object-fit: cover;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--app-surface-subtle);
-  color: var(--ref-color-grey-80);
-  font-size: var(--sys-text-style-caption-bold-size);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-}
-
-.analyze-profiles-modal__net {
-  position: absolute;
-  right: -2px;
-  bottom: -2px;
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-grey-100);
-  background: var(--ref-color-white);
-  border-radius: var(--app-radius-circle);
-}
-
-.analyze-profiles-modal__meta {
+.analyze-profiles-modal__row > .analyze-profiles-modal__meta {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
   min-width: 0;
   flex: 1;
 }
@@ -205,6 +171,136 @@ body.has-modal {
 }
 
 .analyze-profiles-modal__warn {
+  margin-top: var(--ref-spacing-xs);
+}
+
+/* ── Fill from document modal ──────────────────────────────── */
+.fill-document-modal {
+  width: min(calc(100% - 32px), 480px);
+  flex-direction: column;
+}
+
+.fill-document-modal__lead {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-80);
+}
+
+.fill-document-modal__drop {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  width: 100%;
+  padding: var(--ref-spacing-lg);
+  border: 1px dashed var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  background: var(--app-surface-subtle);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 160ms var(--app-ease-out),
+    background 160ms var(--app-ease-out);
+}
+
+.fill-document-modal__drop:hover,
+.fill-document-modal__drop.is-drag {
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-10);
+}
+
+/* Flex display overrides the [hidden] attribute — restore it. */
+.fill-document-modal__drop[hidden],
+.fill-document-modal__file[hidden] {
+  display: none;
+}
+
+.fill-document-modal__drop > i {
+  font-size: var(--sys-icon-css-lg);
+  color: var(--ref-color-grey-60);
+}
+
+.fill-document-modal__drop-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.fill-document-modal__drop-title {
+  font-size: var(--sys-text-style-body-bold-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.fill-document-modal__browse {
+  color: var(--ref-color-electric-blue-100);
+}
+
+.fill-document-modal__drop-sub {
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--ref-color-grey-60);
+}
+
+.fill-document-modal__file {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--ref-border-radius-md);
+}
+
+.fill-document-modal__file > i {
+  font-size: var(--sys-icon-css-md);
+  color: var(--ref-color-grey-60);
+}
+
+.fill-document-modal__file-name {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--sys-text-style-body-bold-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fill-document-modal__file-remove {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--app-radius-lg);
+  background: transparent;
+  color: var(--ref-color-grey-60);
+  cursor: pointer;
+}
+
+.fill-document-modal__file-remove:hover {
+  background: var(--app-surface-subtle);
+  color: var(--ref-color-grey-100);
+}
+
+.fill-document-modal__or {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--ref-color-grey-40);
+}
+
+.fill-document-modal__or::before,
+.fill-document-modal__or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--app-border-soft);
+}
+
+.fill-document-modal__warn {
   margin-top: var(--ref-spacing-xs);
 }
 
@@ -391,6 +487,7 @@ body.has-modal {
 .confirm-modal.open,
 .rename-modal.open,
 .analyze-profiles-modal.open,
+.fill-document-modal.open,
 .search-modal.open,
 .shortcut-legend.open {
   display: flex;
