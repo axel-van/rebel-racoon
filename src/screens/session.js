@@ -2414,7 +2414,7 @@ function renderConnectPromptTurn(message) {
             class="ap-button ghost grey"
             data-connect-prompt-dismiss="${escapeHtml(message.id)}"
           >
-            Close
+            Cancel
           </button>
         </div>
       </div>
