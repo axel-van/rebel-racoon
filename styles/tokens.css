@@ -19,6 +19,10 @@
   --app-butter: #f7ffc5; /* light butter — status pill background */
   --app-butter-accent: #8a9b2e; /* darker butter (olive) — status dot */
 
+  /* Archie logo mark colour — the sparkles icons are remapped to the Archie
+     "A" logotype (mono orange) across the app. See ds-patches .ap-icon-sparkles*. */
+  --app-archie-mark: #ff3c00;
+
   /* ── Video-clips dark surface ramp ─────────────────────────────────────
      The DS is light-only — its darkest grey (grey-150 #212E44) is navy and
      not deep enough for a media-editor surface. This is the single place the
