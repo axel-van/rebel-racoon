@@ -228,7 +228,7 @@ export function renderPostCard(post, opts = {}) {
             data-post-rewrite-menu="${post.id}"
             ${regenerating ? "disabled" : ""}
           >
-            <i class="ap-icon-sparkles"></i>
+            <i class="ap-icon-sparkles keep-sparkle"></i>
           </button>
           <div class="posts__rewrite-menu" data-post-rewrite-menu-for="${post.id}" role="menu" hidden>
             <button

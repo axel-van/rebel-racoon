@@ -13,7 +13,7 @@ import {
   updatePostContent,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=29";
-import { renderPostCard } from "./post-card.js?v=36";
+import { renderPostCard } from "./post-card.js?v=37";
 import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
