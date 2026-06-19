@@ -143,8 +143,8 @@
 .contexts-card--ghost:hover,
 .contexts-card--ghost:focus-visible {
   outline: none;
-  border-color: var(--ref-color-mermaid-gradient-from);
-  background: var(--ref-color-mermaid-10);
+  border-color: var(--app-archie-mark);
+  background: var(--app-butter);
   color: var(--ref-color-grey-100);
   transform: translateY(-1px);
 }
@@ -167,7 +167,14 @@
 
 .contexts-card--ghost:hover .contexts-card--ghost__glyph,
 .contexts-card--ghost:focus-visible .contexts-card--ghost__glyph {
-  background: var(--ref-color-mermaid-gradient-background);
+  background: var(--app-archie-mark);
+}
+
+/* On hover the glyph tile turns brand orange, so the Archie logo mark inside
+   flips to white. Beats the global .ap-icon-sparkles* orange !important. */
+.contexts-card--ghost:hover .contexts-card--ghost__glyph i,
+.contexts-card--ghost:focus-visible .contexts-card--ghost__glyph i {
+  background: var(--ref-color-white) !important;
 }
 
 .contexts-card--ghost__title {

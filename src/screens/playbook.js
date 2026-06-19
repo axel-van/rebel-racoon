@@ -17,7 +17,7 @@
 
 import { navigate } from "../router.js?v=30";
 import { escapeHtml as esc } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=99";
+import { renderTopbar } from "../components/topbar.js?v=100";
 import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=29";
 import { mount, snapshotEditable } from "../playbook-view.js?v=21";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
@@ -75,7 +75,7 @@ function buildHeaderActions(ctx) {
 
   return `
     <button type="button" class="ap-button primary blue" data-playbook-start>
-      <i class="ap-icon-sparkles"></i>
+      <i class="ap-icon-double-chat-bubbles"></i>
       <span>Start a chat</span>
     </button>
     <div class="recap__menu">

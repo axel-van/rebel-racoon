@@ -20,7 +20,7 @@ import { isNewUser } from "../user-mode.js?v=22";
 import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=32";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=29";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=23";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=166";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=167";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=42";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=29";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=37";
@@ -472,7 +472,7 @@ function renderFootMenu({ collapsed }) {
 const NAV = [
   {
     path: "/ideas",
-    icon: "ap-icon-sparkles",
+    icon: "ap-icon-sparkles keep-sparkle",
     label: "Ideas",
     match: (p) => p === "/ideas",
     count: () => getSessions().reduce((n, s) => n + getIdeas(s.id).length, 0),

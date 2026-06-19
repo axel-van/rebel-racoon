@@ -1,7 +1,7 @@
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=99";
+import { renderTopbar } from "../components/topbar.js?v=100";
 // Same compact idea card as the right-panel Ideas mode.
-import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=1";
+import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=2";
 import { showToast } from "../components/toast.js?v=20";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=43";
 
@@ -161,7 +161,7 @@ function renderIdeasEmpty(allIdeas, pageState) {
   const hasFilter = pageState.kind !== "all" || (pageState.query || "").trim().length > 0;
   if (allIdeas.length === 0) {
     return renderEmptyState({
-      icon: "ap-icon-sparkles",
+      icon: "ap-icon-sparkles keep-sparkle",
       title: "No ideas yet",
       body: "Add a source and I'll pull out the key messages, facts, quotes, and stories you can turn into posts.",
       actionHtml: `
@@ -198,7 +198,7 @@ function renderIdeasEmpty(allIdeas, pageState) {
     });
   }
   return renderEmptyState({
-    icon: "ap-icon-sparkles",
+    icon: "ap-icon-sparkles keep-sparkle",
     title: "No ideas to show",
     body: "Ideas will appear here once I finish analyzing your sources.",
     wrapperClass: "ideas-view__empty ideas-view__empty--rich",

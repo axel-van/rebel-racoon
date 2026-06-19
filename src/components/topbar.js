@@ -13,7 +13,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=166";
+} from "./right-panel.js?v=167";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=37";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=42";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=32";
@@ -364,7 +364,7 @@ function renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) {
       aria-pressed="${rpMode === "ideas"}"
       title="${ideasDisabled ? "No ideas yet — attach a source or send a message" : "Toggle Ideas panel"}"
     >
-      <i class="ap-icon-sparkles"></i>
+      <i class="ap-icon-sparkles keep-sparkle"></i>
       <span>Ideas</span>
       ${ideasBadge}
     </button>

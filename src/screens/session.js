@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=99";
+import { renderTopbar } from "../components/topbar.js?v=100";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=43";
 import {
   getConnectedProfiles,
@@ -46,7 +46,7 @@ import {
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=29";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=33";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=24";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=25";
 import * as sidebarWizard from "../sidebar-wizard.js?v=38";
 import * as inlineQuestion from "../inline-question.js?v=33";
 import * as clipStudio from "../clip-studio.js?v=11";
@@ -65,13 +65,13 @@ import * as playbookEditor from "../playbook-editor.js?v=41";
 import { renderPicker } from "./_analyse-common.js?v=39";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
-import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=1";
+import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=2";
 import {
   contentState,
   renderContentWorkspace as renderSharedContentWorkspace,
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
-} from "../components/content-workspace.js?v=24";
+} from "../components/content-workspace.js?v=25";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=25";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=47";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=31";
@@ -100,7 +100,7 @@ import {
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=166";
+} from "../components/right-panel.js?v=167";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=2";
