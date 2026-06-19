@@ -7,7 +7,7 @@ import {
   buildConnectedProfileItems,
   renderProfileTag,
   profileForNetwork,
-} from "../social-profiles.js?v=2";
+} from "../social-profiles.js?v=20";
 import { FORMATS, formatsForNetwork, defaultFormatFor } from "../clip-formats.js?v=1";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
 import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=29";
@@ -100,7 +100,7 @@ import {
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=165";
+} from "../components/right-panel.js?v=166";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=2";

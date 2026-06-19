@@ -29,11 +29,11 @@ import {
   openContextBriefPanel,
   refreshContextBriefPanel,
   closePanel as closeRightPanel,
-} from "./components/right-panel.js?v=165";
+} from "./components/right-panel.js?v=166";
 import { open as openConfirmModal } from "./components/confirm-modal.js?v=22";
 import { setHandoff } from "./handoff.js?v=20";
 import { navigate } from "./router.js?v=30";
-import { analyzeWebsite, analyzeDocument } from "./context-mock-analysis.js?v=21";
+import { analyzeWebsite, analyzeDocument } from "./context-mock-analysis.js?v=22";
 
 const drafts = new Map(); // sessionId → { contextId, draft, dirty, onComplete, onCancel }
 
