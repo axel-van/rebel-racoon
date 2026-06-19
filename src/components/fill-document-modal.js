@@ -19,7 +19,7 @@ import { detectUrlService } from "../url-services.js?v=1";
 const MODAL_ID = "fill-document";
 const ACCEPT = ".pdf,.doc,.docx,.txt,.md,.rtf,.pptx,.csv";
 
-let backdrop, modal, dropEl, fileInput, fileChip, fileNameEl, urlInput, urlPrefix, confirmBtn, cancelBtn, closeBtn;
+let backdrop, modal, dropEl, fileInput, fileChip, fileNameEl, urlInput, urlGroup, confirmBtn, cancelBtn, closeBtn;
 let initialized = false;
 let pendingOnConfirm = null;
 let selectedFile = null;
@@ -63,8 +63,8 @@ const HTML = `
       </button>
     </div>
     <div class="fill-document-modal__or"><span>or</span></div>
-    <div class="ap-input-group fill-document-modal__url">
-      <span class="ap-input-group-prefix" id="fillDocUrlPrefix"><i class="ap-icon-link" aria-hidden="true"></i></span>
+    <div class="ap-input-group fill-document-modal__url" id="fillDocUrlGroup">
+      <i class="ap-icon-link" aria-hidden="true"></i>
       <input type="text" id="fillDocUrl" placeholder="Paste a Google Docs or Drive link…" aria-label="Document link" />
     </div>
     <div class="ap-infobox warning fill-document-modal__warn">
@@ -91,12 +91,15 @@ function syncConfirm() {
 }
 
 // Same recognition as the Add-URL modal: when the pasted link matches a known
-// source (Google Docs, Drive, Notion, …) swap the generic link icon in the
-// field's prefix for that service's logo. Falls back to the link icon.
+// source (Google Docs, Drive, Notion, …) swap the leading link icon for that
+// service's logo. The prefix is the input group's first child (the DS
+// `.ap-input-group > i` icon), swapped in place; falls back to the link icon.
 function updateUrlPrefix() {
-  if (!urlPrefix) return;
+  if (!urlGroup) return;
+  const prefix = urlGroup.firstElementChild;
+  if (!prefix) return;
   const svc = detectUrlService(urlInput.value);
-  urlPrefix.innerHTML = svc
+  prefix.outerHTML = svc
     ? `<img class="fill-document-modal__url-logo" src="${svc.logo}" alt="${svc.name}" width="18" height="18" loading="lazy" />`
     : `<i class="ap-icon-link" aria-hidden="true"></i>`;
 }
@@ -128,7 +131,7 @@ function injectOnce() {
   fileChip = document.getElementById("fillDocFileChip");
   fileNameEl = document.getElementById("fillDocFileName");
   urlInput = document.getElementById("fillDocUrl");
-  urlPrefix = document.getElementById("fillDocUrlPrefix");
+  urlGroup = document.getElementById("fillDocUrlGroup");
   confirmBtn = document.getElementById("fillDocConfirm");
   cancelBtn = document.getElementById("fillDocCancel");
   closeBtn = document.getElementById("fillDocClose");
