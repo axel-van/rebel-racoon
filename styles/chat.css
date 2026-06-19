@@ -186,6 +186,14 @@
   flex-shrink: 0;
 }
 
+/* URL sources show their service logo (YouTube, Drive, …) instead of the
+   generic link glyph — sized to match the kind icon. */
+.chat-bubble-source-intake__kind--logo {
+  width: var(--sys-icon-css-sm);
+  height: var(--sys-icon-css-sm);
+  object-fit: contain;
+}
+
 /* Filename — single-line, ellipsis truncation. Carries a title attr in
    the renderer so the full filename is recoverable on hover / by SR. */
 .chat-bubble-source-intake__name {

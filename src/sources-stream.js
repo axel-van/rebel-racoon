@@ -11,6 +11,7 @@
 import { sourcesBySession as seedByCsesssion } from "./mocks.js?v=43";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
+import { detectUrlService } from "./url-services.js?v=1";
 
 // Canned extraction output attached to every Processed Video source.
 // Generic enough to plausibly come from any keynote / talk / demo video.
@@ -430,6 +431,9 @@ function formatExtractionSummary(ideaCount, clipCount) {
 // URL import skips the upload phase — straight into Processing.
 export function startUrlImport(url, sessionId) {
   const filename = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  // Recognised links (YouTube, Drive, Notion, …) carry their service logo so
+  // the source reflects its nature instead of a generic link glyph.
+  const serviceLogo = detectUrlService(url)?.logo || null;
   const upload = {
     id: newId("up"),
     name: filename,
@@ -450,6 +454,7 @@ export function startUrlImport(url, sessionId) {
     id: sourceId,
     filename,
     kind: "URL",
+    serviceLogo,
     status: "Processing",
     signal: "Pending",
     signalColor: "grey",

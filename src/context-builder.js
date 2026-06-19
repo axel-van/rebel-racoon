@@ -15,7 +15,7 @@
 
 import * as inlineQuestion from "./inline-question.js?v=34";
 import { postAssistantMessage, postUserTurn } from "./assistant.js?v=42";
-import * as rightPanel from "./components/right-panel.js?v=169";
+import * as rightPanel from "./components/right-panel.js?v=170";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=29";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=22";
 import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=42";

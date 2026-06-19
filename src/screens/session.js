@@ -92,7 +92,7 @@ import {
   updateSourceClips,
   extractClipsForSource,
   setSourceIdeaCount,
-} from "../sources-stream.js?v=37";
+} from "../sources-stream.js?v=38";
 import { renderClipCard } from "../components/clip-card.js?v=7";
 import { showToast } from "../components/toast.js?v=20";
 import {
@@ -100,7 +100,7 @@ import {
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=169";
+} from "../components/right-panel.js?v=170";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=2";
@@ -2452,6 +2452,16 @@ function renderSourceIntakeTurn(message, sessionId) {
   const icon = iconByKind[kindKey] || "ap-icon-file";
   const isLoading = message.status === "loading";
 
+  // Resolve the backing source so a URL reflects its service: a recognised
+  // link (YouTube, Drive, Notion, …) shows the service logo instead of the
+  // generic link glyph. Falls back to the kind icon for plain links.
+  const src = message.sourceId ? getStreamSources(sessionId).find((s) => s.id === message.sourceId) : null;
+  const kindIcon = src?.serviceLogo
+    ? `<img class="chat-bubble-source-intake__kind chat-bubble-source-intake__kind--logo" src="${escapeHtmlAttr(
+        src.serviceLogo,
+      )}" alt="" aria-hidden="true" />`
+    : `<i class="${icon} chat-bubble-source-intake__kind" aria-hidden="true"></i>`;
+
   // v2 single-line layout (see styles/chat.css and handoff §2). The
   // sub-line is gone — state lives in a trailing slot with these
   // variants driven by (isLoading, ideaCount > 0, clips > 0):
@@ -2468,7 +2478,6 @@ function renderSourceIntakeTurn(message, sessionId) {
       </span>
     `;
   } else if (message.sourceId) {
-    const src = getStreamSources(sessionId).find((s) => s.id === message.sourceId);
     const ideas = src?.ideaCount || 0;
     const clips = Array.isArray(src?.clips) ? src.clips.length : 0;
     const pills = [];
@@ -2515,7 +2524,7 @@ function renderSourceIntakeTurn(message, sessionId) {
     <div class="chat-turn chat-turn--user">
       <span class="chat-turn-role">${message.meta || "Source intake"}</span>
       <div class="chat-bubble chat-bubble--source-intake" data-intake-status="${message.status || "ready"}">
-        <i class="${icon} chat-bubble-source-intake__kind" aria-hidden="true"></i>
+        ${kindIcon}
         <span class="chat-bubble-source-intake__name" title="${filename}">${filename}</span>
         ${trailing}
       </div>

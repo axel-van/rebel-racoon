@@ -20,10 +20,10 @@ import { isNewUser } from "../user-mode.js?v=22";
 import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=32";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=29";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=23";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=169";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=170";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=42";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=29";
-import { clearSession as clearSourcesSession } from "../sources-stream.js?v=37";
+import { clearSession as clearSourcesSession } from "../sources-stream.js?v=38";
 
 // Full Archie logo (mark + "archie" wordmark) — the official horizontal
 // lockup. Paths carry no fill, so they inherit `fill: currentColor` from

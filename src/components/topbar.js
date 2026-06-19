@@ -13,8 +13,8 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=169";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=37";
+} from "./right-panel.js?v=170";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=38";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=42";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=32";
 import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=29";

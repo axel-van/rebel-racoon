@@ -1036,6 +1036,14 @@
   font-size: var(--sys-icon-css-sm);
 }
 
+/* Service logo (YouTube, Drive, …) for a recognised URL source — sized to sit
+   inside the icon tile in place of the generic link glyph. */
+.rpanel-sources__row-logo {
+  width: var(--sys-icon-css-sm);
+  height: var(--sys-icon-css-sm);
+  object-fit: contain;
+}
+
 /* Name + optional preview snippet share a column so a pasted-text source
    shows a clean title with a muted one-line excerpt beneath it. */
 .rpanel-sources__row-text {

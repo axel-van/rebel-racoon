@@ -25,7 +25,7 @@ import {
   updateSourceClips,
   removeSources,
   renameSource,
-} from "../sources-stream.js?v=37";
+} from "../sources-stream.js?v=38";
 import { open as openAddSourceModal } from "./add-source-modal.js?v=44";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=23";
@@ -641,7 +641,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=281").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=282").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -841,7 +841,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=281").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=282").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -859,7 +859,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=281").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=282").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -2170,7 +2170,11 @@ function renderSourceRow(src) {
   return `
     <div class="rpanel-sources__row" data-source-id="${src.id}">
       <div class="rpanel-sources__card-head">
-        <span class="rpanel-sources__row-icon" aria-hidden="true"><i class="${icon}"></i></span>
+        <span class="rpanel-sources__row-icon" aria-hidden="true">${
+          src.serviceLogo
+            ? `<img class="rpanel-sources__row-logo" src="${escapeAttr(src.serviceLogo)}" alt="" />`
+            : `<i class="${icon}"></i>`
+        }</span>
         <div class="rpanel-sources__row-text">
           <div class="rpanel-sources__row-name" title="${escapeAttr(src.filename)}">${escapeText(src.filename)}</div>
           ${src.preview ? `<div class="rpanel-sources__row-preview" title="${escapeAttr(src.preview)}">${escapeText(src.preview)}</div>` : ""}
@@ -2475,7 +2479,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=281").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=282").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
