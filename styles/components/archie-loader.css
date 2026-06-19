@@ -2,23 +2,27 @@
  * Shared loader for the whole prototype.
  *
  * Every spinner in Archie — the DS `.ap-loader`, the per-component
- * `*-spinner` classes scattered across screens and modals — collapses
- * to the same 12-dot grid that fades dots in/out in waves.
+ * `*-spinner` classes scattered across screens and modals, the
+ * `.archie-loader` brand loaders — hosts the same animated
+ * "network-assemble" mark: an Agorapulse glyph revealed through a wave
+ * of rounded squares that scale in along a path.
  *
- * Implementation: the dot at (col 2, row 2) is the `::before` element
- * itself (a `d × d` square painted with `--archie-loader-color`).
- * The other 11 dots are duplicates of that square drawn via
- * `box-shadow`, each offset by a multiple of `d` so the whole grid
- * lands on a 5d × 4d footprint. This is the canonical l29 pattern —
- * sharp-edged squares, no rounded corners.
+ * The mark itself is an animated SVG injected into each loader element
+ * by src/archie-loader.js (SVG/SMIL animation only runs for inline
+ * <svg>, not for a CSS background/mask image — hence the JS injector).
+ * This file owns the *box*: it sizes the element from
+ * `--archie-loader-size`, lets the SVG fill it at the source viewBox
+ * aspect ratio (227.15 × 170.03), and sets the paint colour via the
+ * element's `color` (the SVG paints with `currentColor`).
  *
- * Sizing is driven by `--archie-loader-size` (the bounding-box width).
- * The dot grid is 5 dot-widths wide × 4 tall, so dot diameter = size / 5
- * and height = size * 0.8.
+ * Colour: brand orange by default, overridable per context via
+ * `--archie-loader-color` (e.g. white on filled CTA buttons, white on
+ * the dark clip-studio thumbnails). Size: the bounding-box width, driven
+ * by `--archie-loader-size`.
  *
- * Default colour is the Agorapulse brand orange
- * (`--ref-color-orange-100`). Override via `--archie-loader-color`
- * (e.g. white CTA buttons set `currentColor`).
+ * These loader selectors are also (historically) given rotating-border
+ * styling in their own screen/modal CSS; this file loads last, so the
+ * rules below win and those older definitions stay overridden.
  */
 
 .archie-loader,
@@ -37,10 +41,13 @@
 .gen-image-spinner,
 .schedule-modal__spinner,
 .add-source__file-spinner {
-  display: inline-block;
-  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: var(--archie-loader-size, 20px);
-  height: calc(var(--archie-loader-size, 20px) * 0.8);
+  /* Match the source SVG viewBox so the glyph never distorts. */
+  aspect-ratio: 227.15 / 170.03;
+  height: auto;
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -48,221 +55,64 @@
   flex-shrink: 0;
   line-height: 0;
   vertical-align: middle;
-}
-
-/* `.ap-loader` ships with an inline <svg> from the DS — hide it so only
-   our dot grid paints. */
-.ap-loader > svg {
-  display: none;
-}
-
-.archie-loader::before,
-.ap-loader::before,
-.chat-bubble-source-intake__spinner::before,
-.extracting-notice__spinner::before,
-.drafts-card__spinner::before,
-.session__composer-thinking-spinner::before,
-.source-card__spinner::before,
-.bug-report-modal__submit-spinner::before,
-.feedback-modal__submit-spinner::before,
-.gen-image-spinner::before,
-.schedule-modal__spinner::before,
-.add-source__file-spinner::before {
-  --d: calc(var(--archie-loader-size, 20px) / 5);
-  content: "";
-  position: absolute;
-  top: var(--d);
-  left: calc(var(--d) * 2);
-  width: var(--d);
-  height: var(--d);
-  background: var(--archie-loader-color, var(--ref-color-orange-100));
   color: var(--archie-loader-color, var(--ref-color-orange-100));
-  box-shadow:
-    calc(var(--d) * -2) calc(var(--d) * -1),
-    0 calc(var(--d) * -1),
-    calc(var(--d) * 2) calc(var(--d) * -1),
-    calc(var(--d) * -2) 0,
-    calc(var(--d) * 2) 0,
-    calc(var(--d) * -2) var(--d),
-    0 var(--d),
-    calc(var(--d) * 2) var(--d),
-    calc(var(--d) * -2) calc(var(--d) * 2),
-    0 calc(var(--d) * 2),
-    calc(var(--d) * 2) calc(var(--d) * 2);
-  animation: archie-loader-l29 2s infinite;
 }
 
-/* Per-class size targets (driven by --archie-loader-size). */
+/* The injected animated SVG fills its host box. */
+.archie-loader > svg,
+.ap-loader > svg,
+.chat-bubble-source-intake__spinner > svg,
+.extracting-notice__spinner > svg,
+.drafts-card__spinner > svg,
+.session__composer-thinking-spinner > svg,
+.source-card__spinner > svg,
+.bug-report-modal__submit-spinner > svg,
+.feedback-modal__submit-spinner > svg,
+.gen-image-spinner > svg,
+.schedule-modal__spinner > svg,
+.add-source__file-spinner > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Per-class size targets (the bounding-box width, via --archie-loader-size). */
 .add-source__file-spinner {
-  --archie-loader-size: 12px;
+  --archie-loader-size: 16px;
 }
 .bug-report-modal__submit-spinner,
 .chat-bubble-source-intake__spinner,
 .feedback-modal__submit-spinner,
 .session__composer-thinking-spinner {
-  --archie-loader-size: 14px;
+  --archie-loader-size: 18px;
 }
 .gen-image-spinner,
 .schedule-modal__spinner {
-  --archie-loader-size: 16px;
+  --archie-loader-size: 20px;
 }
 .extracting-notice__spinner,
 .source-card__spinner,
 .ap-loader.size-16 {
-  --archie-loader-size: 18px;
+  --archie-loader-size: 22px;
 }
 .drafts-card__spinner {
-  --archie-loader-size: 18px;
+  --archie-loader-size: 22px;
 }
 .ap-loader.size-24 {
-  --archie-loader-size: 24px;
+  --archie-loader-size: 26px;
 }
 .ap-loader.size-30 {
-  --archie-loader-size: 30px;
+  --archie-loader-size: 32px;
 }
 .ap-loader.size-48 {
-  --archie-loader-size: 48px;
+  --archie-loader-size: 50px;
 }
 
-/* These three sit on coloured CTA buttons (orange / coloured surfaces)
-   where the mermaid blue would clash with the button paint. Repaint
-   with the button's text colour instead (white on filled CTAs). */
+/* These sit on filled CTA buttons (orange / coloured surfaces) where the
+   brand orange would clash with the button paint. `currentColor` here
+   resolves to the button's text colour (white on filled CTAs). */
 .bug-report-modal__submit-spinner,
 .feedback-modal__submit-spinner,
 .schedule-modal__spinner {
   --archie-loader-color: currentColor;
-}
-
-/*
- * Animation: each keyframe redefines `box-shadow`, replacing certain
- * dots with `#0000` (transparent) to produce the l29 fade-wave. The
- * element-as-dot (col 2 row 2) stays visible throughout.
- */
-@keyframes archie-loader-l29 {
-  10% {
-    box-shadow:
-      calc(var(--d) * -2) calc(var(--d) * -1),
-      0 calc(var(--d) * -1),
-      calc(var(--d) * 2) calc(var(--d) * -1),
-      calc(var(--d) * -2) 0,
-      calc(var(--d) * 2) 0,
-      calc(var(--d) * -2) var(--d) #0000,
-      0 var(--d),
-      calc(var(--d) * 2) var(--d) #0000,
-      calc(var(--d) * -2) calc(var(--d) * 2),
-      0 calc(var(--d) * 2),
-      calc(var(--d) * 2) calc(var(--d) * 2);
-  }
-  20% {
-    box-shadow:
-      calc(var(--d) * -2) calc(var(--d) * -1),
-      0 calc(var(--d) * -1),
-      calc(var(--d) * 2) calc(var(--d) * -1),
-      calc(var(--d) * -2) 0,
-      calc(var(--d) * 2) 0,
-      calc(var(--d) * -2) var(--d),
-      0 var(--d),
-      calc(var(--d) * 2) var(--d) #0000,
-      calc(var(--d) * -2) calc(var(--d) * 2) #0000,
-      0 calc(var(--d) * 2),
-      calc(var(--d) * 2) calc(var(--d) * 2);
-  }
-  30% {
-    box-shadow:
-      calc(var(--d) * -2) calc(var(--d) * -1),
-      0 calc(var(--d) * -1) #0000,
-      calc(var(--d) * 2) calc(var(--d) * -1),
-      calc(var(--d) * -2) 0 #0000,
-      calc(var(--d) * 2) 0,
-      calc(var(--d) * -2) var(--d),
-      0 var(--d) #0000,
-      calc(var(--d) * 2) var(--d),
-      calc(var(--d) * -2) calc(var(--d) * 2) #0000,
-      0 calc(var(--d) * 2),
-      calc(var(--d) * 2) calc(var(--d) * 2) #0000;
-  }
-  40% {
-    box-shadow:
-      calc(var(--d) * -2) calc(var(--d) * -1),
-      0 calc(var(--d) * -1),
-      calc(var(--d) * 2) calc(var(--d) * -1),
-      calc(var(--d) * -2) 0 #0000,
-      calc(var(--d) * 2) 0 #0000,
-      calc(var(--d) * -2) var(--d),
-      0 var(--d),
-      calc(var(--d) * 2) var(--d),
-      calc(var(--d) * -2) calc(var(--d) * 2),
-      0 calc(var(--d) * 2),
-      calc(var(--d) * 2) calc(var(--d) * 2);
-  }
-  50% {
-    box-shadow:
-      calc(var(--d) * -2) calc(var(--d) * -1),
-      0 calc(var(--d) * -1),
-      calc(var(--d) * 2) calc(var(--d) * -1),
-      calc(var(--d) * -2) 0,
-      calc(var(--d) * 2) 0 #0000,
-      calc(var(--d) * -2) var(--d) #0000,
-      0 var(--d),
-      calc(var(--d) * 2) var(--d),
-      calc(var(--d) * -2) calc(var(--d) * 2),
-      0 calc(var(--d) * 2),
-      calc(var(--d) * 2) calc(var(--d) * 2);
-  }
-  60% {
-    box-shadow:
-      calc(var(--d) * -2) calc(var(--d) * -1),
-      0 calc(var(--d) * -1) #0000,
-      calc(var(--d) * 2) calc(var(--d) * -1),
-      calc(var(--d) * -2) 0,
-      calc(var(--d) * 2) 0,
-      calc(var(--d) * -2) var(--d) #0000,
-      0 var(--d),
-      calc(var(--d) * 2) var(--d),
-      calc(var(--d) * -2) calc(var(--d) * 2) #0000,
-      0 calc(var(--d) * 2),
-      calc(var(--d) * 2) calc(var(--d) * 2);
-  }
-  70% {
-    box-shadow:
-      calc(var(--d) * -2) calc(var(--d) * -1),
-      0 calc(var(--d) * -1) #0000,
-      calc(var(--d) * 2) calc(var(--d) * -1) #0000,
-      calc(var(--d) * -2) 0,
-      calc(var(--d) * 2) 0,
-      calc(var(--d) * -2) var(--d),
-      0 var(--d),
-      calc(var(--d) * 2) var(--d),
-      calc(var(--d) * -2) calc(var(--d) * 2) #0000,
-      0 calc(var(--d) * 2),
-      calc(var(--d) * 2) calc(var(--d) * 2);
-  }
-  80% {
-    box-shadow:
-      calc(var(--d) * -2) calc(var(--d) * -1) #0000,
-      0 calc(var(--d) * -1),
-      calc(var(--d) * 2) calc(var(--d) * -1),
-      calc(var(--d) * -2) 0,
-      calc(var(--d) * 2) 0,
-      calc(var(--d) * -2) var(--d),
-      0 var(--d),
-      calc(var(--d) * 2) var(--d),
-      calc(var(--d) * -2) calc(var(--d) * 2),
-      0 calc(var(--d) * 2),
-      calc(var(--d) * 2) calc(var(--d) * 2) #0000;
-  }
-  90% {
-    box-shadow:
-      calc(var(--d) * -2) calc(var(--d) * -1) #0000,
-      0 calc(var(--d) * -1),
-      calc(var(--d) * 2) calc(var(--d) * -1),
-      calc(var(--d) * -2) 0,
-      calc(var(--d) * 2) 0,
-      calc(var(--d) * -2) var(--d),
-      0 var(--d) #0000,
-      calc(var(--d) * 2) var(--d),
-      calc(var(--d) * -2) calc(var(--d) * 2),
-      0 calc(var(--d) * 2),
-      calc(var(--d) * 2) calc(var(--d) * 2) #0000;
-  }
 }

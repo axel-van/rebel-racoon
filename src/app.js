@@ -1,5 +1,6 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=4";
+import { initArchieLoader } from "./archie-loader.js?v=1";
 import { initTopbar, renderTopbar } from "./components/topbar.js?v=99";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=83";
 import { init as initRightPanel } from "./components/right-panel.js?v=166";
@@ -61,6 +62,9 @@ route("/welcome-alt", renderWelcomeAlt);
 route("/welcome-alt/recap", renderWelcomeAltRecap);
 
 // Boot.
+// Swap every spinner in the app for the animated network-assemble mark
+// (sweeps the DOM now + watches for loaders added by later renders).
+initArchieLoader();
 initTopbar();
 renderTopbar();
 initSidebar();
