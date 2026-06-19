@@ -24,63 +24,16 @@
 
 import { iconFor } from "../file-kinds.js?v=20";
 import { escapeHtml } from "../utils.js?v=21";
+import { installMoreMenu } from "./more-menu.js?v=1";
 
-// ── Overflow menu — one open at a time ─────────────────────────────────
-//
-// Document-level listeners; ES modules execute once per page so this
-// installs exactly once even though the card is rendered many times.
-
-function closeAllSourceMoreMenus(exceptMenu) {
-  document.querySelectorAll(".source-card__more-menu:not([hidden])").forEach((menu) => {
-    if (menu === exceptMenu) return;
-    menu.hidden = true;
-    const controllingBtn = document.querySelector(`[aria-controls="${menu.id}"]`);
-    if (controllingBtn) controllingBtn.setAttribute("aria-expanded", "false");
-  });
-}
-
-function toggleSourceMoreMenu(triggerBtn) {
-  const menuId = triggerBtn.getAttribute("aria-controls");
-  const menu = menuId ? document.getElementById(menuId) : null;
-  if (!menu) return;
-  const willOpen = menu.hidden;
-  closeAllSourceMoreMenus(willOpen ? menu : null);
-  menu.hidden = !willOpen;
-  triggerBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
-}
-
-// FIND-E: idempotent guard so the document delegate is attached at most
-// once, even if the module is re-evaluated.
-let globalListenersBound = false;
-function bindGlobalListeners() {
-  if (globalListenersBound) return;
-  globalListenersBound = true;
-  document.addEventListener("click", (event) => {
-    // Open / close the more menu
-    const moreBtn = event.target.closest("[data-source-more]");
-    if (moreBtn) {
-      event.preventDefault();
-      toggleSourceMoreMenu(moreBtn);
-      return;
-    }
-    // Per-row Extract / Delete — close the menu after click; the actual
-    // action is handled by screen-level delegators on the same data-* hooks.
-    if (event.target.closest("[data-source-extract-one]") || event.target.closest("[data-source-delete-one]")) {
-      closeAllSourceMoreMenus();
-      // Don't preventDefault — let the screen handler run.
-      return;
-    }
-    // Clicks inside an open menu shouldn't bubble-close it
-    if (event.target.closest(".source-card__more-menu")) return;
-    // Anywhere else — close every open menu
-    closeAllSourceMoreMenus();
-  });
-
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeAllSourceMoreMenus();
-  });
-}
-bindGlobalListeners();
+// ── Overflow menu — one open at a time (shared behaviour) ──────────────
+// Per-row Extract / Delete close the menu after firing; the actions run via
+// the screen-level delegators on the same data-* hooks.
+installMoreMenu({
+  menuSelector: ".source-card__more-menu",
+  triggerSelector: "[data-source-more]",
+  closeAfterSelectors: ["[data-source-extract-one]", "[data-source-delete-one]"],
+});
 
 // ── Card renderer ──────────────────────────────────────────────────────
 

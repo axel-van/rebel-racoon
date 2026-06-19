@@ -24,6 +24,7 @@
 
 import { iconFor } from "../file-kinds.js?v=20";
 import { escapeText, escapeAttr } from "../utils.js?v=21";
+import { installMoreMenu } from "./more-menu.js?v=1";
 
 function fmtTime(s) {
   if (!Number.isFinite(s) || s < 0) return "0:00";
@@ -40,46 +41,12 @@ function thumbBackground(hue) {
   return `${blob1}, ${blob2}, ${bg}`;
 }
 
-// One-at-a-time kebab menu — closes any other open card menu when the
-// user opens a new one, and closes everything on click outside / Escape.
-function closeAllClipMoreMenus(exceptMenu) {
-  document.querySelectorAll(".clip-card__more-menu:not([hidden])").forEach((menu) => {
-    if (menu === exceptMenu) return;
-    menu.hidden = true;
-    const trigger = document.querySelector(`[aria-controls="${menu.id}"]`);
-    if (trigger) trigger.setAttribute("aria-expanded", "false");
-  });
-}
-
-function toggleClipMoreMenu(triggerBtn) {
-  const menuId = triggerBtn.getAttribute("aria-controls");
-  const menu = menuId ? document.getElementById(menuId) : null;
-  if (!menu) return;
-  const willOpen = menu.hidden;
-  closeAllClipMoreMenus(willOpen ? menu : null);
-  menu.hidden = !willOpen;
-  triggerBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
-}
-
-let globalListenersBound = false;
-function bindGlobalListeners() {
-  if (globalListenersBound) return;
-  globalListenersBound = true;
-  document.addEventListener("click", (event) => {
-    const moreBtn = event.target.closest("[data-clip-more]");
-    if (moreBtn) {
-      event.preventDefault();
-      toggleClipMoreMenu(moreBtn);
-      return;
-    }
-    if (event.target.closest(".clip-card__more-menu")) return;
-    closeAllClipMoreMenus();
-  });
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeAllClipMoreMenus();
-  });
-}
-bindGlobalListeners();
+// One-at-a-time kebab menu (shared behaviour) — closes any other open card
+// menu when a new one opens, and closes everything on click outside / Escape.
+installMoreMenu({
+  menuSelector: ".clip-card__more-menu",
+  triggerSelector: "[data-clip-more]",
+});
 
 export function renderClipCard(
   clip,
