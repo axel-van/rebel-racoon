@@ -62,13 +62,12 @@
   gap: var(--ref-spacing-xxs);
 }
 
-/* Icon — plain glyph, not a filled chip (filled chips read as buttons). Input
-   and output icons take the brand blue; only the AI step carries the MermAId
-   gradient sparkles icon. */
+/* Icon — plain glyph, not a filled chip (filled chips read as buttons). All
+   step icons (input / AI / output) take the Archie brand orange. */
 .workflow-flow__chip {
   display: inline-flex;
   font-size: var(--sys-icon-css-md);
-  color: var(--ref-color-electric-blue-100);
+  color: var(--app-archie-mark);
 }
 
 .workflow-flow__title {
