@@ -18,6 +18,8 @@ import {
   setConnectorStatus,
   subscribe as subscribeConnectors,
 } from "../connectors-store.js?v=23";
+import { postConnectPrompt } from "../assistant.js?v=42";
+import { URL_SERVICES, detectUrlService } from "../url-services.js?v=1";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { renderConnectorLogo } from "../connectors-view.js?v=5";
@@ -66,6 +68,18 @@ const TITLES = {
 };
 
 const ACCEPT = ".pdf,.doc,.docx,.txt,.md,.mp4,.mov,.mp3,.wav,.m4a,.png,.jpg,.jpeg";
+
+// The subset surfaced as logo chips under the field (upfront "you can paste
+// these" cue). Keep it short — the doc/note tools the user asked about first.
+// URL_SERVICES + detectUrlService now live in the shared url-services module
+// so the Fill-from-document modal recognises the same links.
+const URL_SERVICE_HINTS = ["Google Docs", "Notion", "Google Drive", "YouTube", "Figma"];
+
+function urlLogoImg(svc, size = 20) {
+  return `<img class="add-source__url-logo-img" src="${escapeHtml(svc.logo)}" alt="${escapeHtml(
+    svc.name,
+  )}" width="${size}" height="${size}" loading="lazy" />`;
+}
 
 const state = {
   activeTab: "upload",
@@ -202,11 +216,24 @@ function renderUrlTab() {
   // never scolds the user mid-URL. So the tab always renders neutral (error
   // hidden, helper shown); the Add button still reflects validity immediately.
   const showUrlError = false;
+  const svc = detectUrlService(state.urlValue);
+  // Upfront logo chips — show users they can paste doc/note links, not just
+  // web articles. Driven by URL_SERVICE_HINTS → URL_SERVICES.
+  const hintLogos = URL_SERVICE_HINTS.map((name) => URL_SERVICES.find((s) => s.name === name))
+    .filter(Boolean)
+    .map(
+      (s) =>
+        `<img src="${escapeHtml(s.logo)}" alt="" title="${escapeHtml(s.name)}" width="18" height="18" loading="lazy" />`,
+    )
+    .join("");
   return html`
     <div class="add-source__url">
       <div class="ap-form-field">
         <label for="addSourceUrlInput">Paste a URL</label>
         <div class="ap-input-group">
+          <span class="add-source__url-logo" data-url-logo ${svc ? "" : "hidden"}>
+            ${raw(svc ? urlLogoImg(svc) : "")}
+          </span>
           <input
             id="addSourceUrlInput"
             type="url"
@@ -228,8 +255,16 @@ function renderUrlTab() {
           URL must start with http:// or https://
         </p>
         <p class="add-source__sub muted" data-url-hint ${showUrlError ? "hidden" : ""}>
-          Public web pages, blog posts, YouTube videos, podcasts.
+          ${raw(
+            svc
+              ? `I recognised a <strong>${escapeHtml(svc.name)}</strong> link — I'll import it.`
+              : "Public web pages, blog posts, YouTube videos, podcasts.",
+          )}
         </p>
+        <div class="add-source__url-services" aria-hidden="true">
+          <span class="add-source__url-services-label muted">Also works with</span>
+          <span class="add-source__url-services-logos">${raw(hintLogos)}</span>
+        </div>
       </div>
     </div>
   `;
@@ -238,6 +273,55 @@ function renderUrlTab() {
 function isValidUrl(value) {
   if (!value) return false;
   return /^https?:\/\/[^\s]+$/.test(value.trim());
+}
+
+// Single entry point for "Add URL" (the footer button + Enter). Routes the
+// validated URL one of three ways: staged back to Batch Studio, parked behind
+// a connect-first prompt when the link's service isn't connected, or imported
+// straight away.
+function submitUrl() {
+  const trimmed = state.urlValue.trim();
+  if (!isValidUrl(trimmed)) return;
+  // Staging mode (Batch Studio) — hand the URL back to the caller and close.
+  if (state.onStageUrl) {
+    const cb = state.onStageUrl;
+    state.urlValue = "";
+    close();
+    cb(trimmed);
+    return;
+  }
+  // Connector-backed link to a service we're not connected to → propose
+  // connecting first; the import is retried from the in-chat prompt.
+  if (maybeProposeConnect(trimmed)) {
+    state.urlValue = "";
+    return;
+  }
+  startUrlImport(trimmed, state.currentSessionId);
+  state.urlValue = "";
+  close();
+  showToast("Link added — I'll fetch it now.");
+}
+
+// If the URL belongs to a connector-backed service (Slite, Notion, Google
+// Docs, …) that isn't connected yet, drop a "connect it, then I'll retry the
+// import" prompt into the active conversation and return true so the caller
+// skips the direct import. Returns false for public links (YouTube, plain web)
+// or when already connected. Needs a live session to host the prompt.
+function maybeProposeConnect(url) {
+  if (!state.currentSessionId) return false;
+  const svc = detectUrlService(url);
+  if (!svc || !svc.connectorId) return false;
+  const conn = findConnector(svc.connectorId);
+  if (!conn || conn.status === "connected") return false;
+  postConnectPrompt(state.currentSessionId, {
+    connectorId: svc.connectorId,
+    connectorName: svc.name,
+    logo: svc.logo,
+    url,
+    noun: svc.noun || "document",
+  });
+  close();
+  return true;
 }
 
 // ─── Paste text tab ──────────────────────────────────────────────────────
@@ -666,22 +750,7 @@ function onClick(event) {
 
   // URL submit
   if (event.target.closest("[data-add-url]")) {
-    const trimmed = state.urlValue.trim();
-    if (!isValidUrl(trimmed)) return;
-    // Staging mode (Batch Studio) — hand the URL back and close.
-    if (state.onStageUrl) {
-      const cb = state.onStageUrl;
-      state.urlValue = "";
-      close();
-      cb(trimmed);
-      return;
-    }
-    // Dedicated single-action modal — adding the URL completes the task
-    // and closes; no separate "Done" footer.
-    startUrlImport(trimmed, state.currentSessionId);
-    state.urlValue = "";
-    close();
-    showToast("Link added — I'll fetch it now.");
+    submitUrl();
     return;
   }
 
@@ -823,6 +892,10 @@ function onInput(event) {
   }
   if (event.target.matches("[data-url-input]")) {
     state.urlValue = event.target.value;
+    // Swap the leading affix + helper in place (renderContent would steal the
+    // caret) when the pasted URL matches a known source like Google Docs or
+    // Notion — live recognition feedback as the user types.
+    updateUrlServiceAffix();
     // Re-render just the footer so the "Add URL" button enables live. We
     // validate the FORMAT on blur (see onFocusOut) — typing never surfaces
     // the error — but once an error is showing, clear it the moment the
@@ -840,6 +913,24 @@ function onFocusOut(event) {
   if (!event.target.matches?.("[data-url-input]")) return;
   const trimmed = state.urlValue.trim();
   setUrlError(trimmed.length > 0 && !isValidUrl(trimmed));
+}
+
+// Reflect the detected service (or none) into the field's leading logo affix
+// and helper line, in place — called on every keystroke so it can't disturb
+// the caret. Leaves the error/hint visibility to setUrlError.
+function updateUrlServiceAffix() {
+  const svc = detectUrlService(state.urlValue);
+  const logoEl = contentEl.querySelector("[data-url-logo]");
+  if (logoEl) {
+    logoEl.innerHTML = svc ? urlLogoImg(svc) : "";
+    logoEl.hidden = !svc;
+  }
+  const hintEl = contentEl.querySelector("[data-url-hint]");
+  if (hintEl) {
+    hintEl.innerHTML = svc
+      ? `I recognised a <strong>${escapeHtml(svc.name)}</strong> link — I'll import it.`
+      : "Public web pages, blog posts, YouTube videos, podcasts.";
+  }
 }
 
 function setUrlError(show) {
@@ -877,21 +968,7 @@ function onKeydown(event) {
   // Submit URL with Enter
   if (event.key === "Enter" && event.target.matches("[data-url-input]")) {
     event.preventDefault();
-    const trimmed = state.urlValue.trim();
-    if (!isValidUrl(trimmed)) return;
-    // Staging mode (Batch Studio) — hand the URL back and close, same as the
-    // Add URL button.
-    if (state.onStageUrl) {
-      const cb = state.onStageUrl;
-      state.urlValue = "";
-      close();
-      cb(trimmed);
-      return;
-    }
-    startUrlImport(trimmed, state.currentSessionId);
-    state.urlValue = "";
-    close();
-    showToast("Link added — I'll fetch it now.");
+    submitUrl();
   }
 }
 

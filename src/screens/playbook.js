@@ -23,7 +23,7 @@ import { mount, snapshotEditable } from "../playbook-view.js?v=21";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";
 import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=7";
-import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=2";
+import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=4";
 import { analyzeWebsite, analyzeDocument, analyzeSocialProfiles } from "../context-mock-analysis.js?v=22";
 import { sectionPatchFromAnalysis } from "../context-builder.js?v=82";
 

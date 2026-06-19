@@ -257,6 +257,13 @@ body.has-modal {
   margin-top: var(--ref-spacing-xs);
 }
 
+/* Detected-service logo that replaces the generic link icon in the URL field's
+   prefix (same recognition as the Add-URL modal). */
+.fill-document-modal__url-logo {
+  display: block;
+  border-radius: var(--ref-border-radius-sm);
+}
+
 /* ── Search modal ────────────────────────────────────────────
    Raycast / Linear / Spotlight command-palette density. Single-line
    rows (~32px), narrow modal (560px), tight grouping. Row only shows

@@ -14,14 +14,18 @@
 
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { dropzoneHTML, bindDropzone } from "./dropzone.js?v=1";
+import { detectUrlService } from "../url-services.js?v=1";
 
 const MODAL_ID = "fill-document";
 const ACCEPT = ".pdf,.doc,.docx,.txt,.md,.rtf,.pptx,.csv";
 
-let backdrop, modal, dropEl, fileInput, fileChip, fileNameEl, urlInput, confirmBtn, cancelBtn, closeBtn;
+let backdrop, modal, dropEl, fileInput, fileChip, fileNameEl, urlInput, urlPrefix, confirmBtn, cancelBtn, closeBtn;
 let initialized = false;
 let pendingOnConfirm = null;
 let selectedFile = null;
+// Element focused before the dialog opened — focus returns here on close so
+// keyboard users land back where they were (escape-routes / focus-management).
+let lastFocused = null;
 
 const HTML = `
 <div class="app-modal-backdrop fill-document-modal__backdrop" id="fillDocBackdrop" hidden></div>
@@ -41,7 +45,7 @@ const HTML = `
   </button>
   <div class="ap-dialog-content">
     <p class="fill-document-modal__lead">
-      Upload a brand doc or paste a link — Archie reads it and rebuilds every section.
+      Drop a brand doc or paste a link — I'll read it and rebuild every section of this Playbook.
     </p>
     ${dropzoneHTML({
       id: "fillDocDrop",
@@ -49,6 +53,7 @@ const HTML = `
       sub: "PDF, Word, text, slides, CSV",
       accept: ACCEPT,
       inputId: "fillDocFile",
+      compact: true,
     })}
     <div class="fill-document-modal__file" id="fillDocFileChip" hidden>
       <i class="ap-icon-file--text" aria-hidden="true"></i>
@@ -59,7 +64,7 @@ const HTML = `
     </div>
     <div class="fill-document-modal__or"><span>or</span></div>
     <div class="ap-input-group fill-document-modal__url">
-      <span class="ap-input-group-prefix"><i class="ap-icon-link" aria-hidden="true"></i></span>
+      <span class="ap-input-group-prefix" id="fillDocUrlPrefix"><i class="ap-icon-link" aria-hidden="true"></i></span>
       <input type="text" id="fillDocUrl" placeholder="Paste a Google Docs or Drive link…" aria-label="Document link" />
     </div>
     <div class="ap-infobox warning fill-document-modal__warn">
@@ -83,6 +88,17 @@ const HTML = `
 
 function syncConfirm() {
   confirmBtn.disabled = !(selectedFile || urlInput.value.trim());
+}
+
+// Same recognition as the Add-URL modal: when the pasted link matches a known
+// source (Google Docs, Drive, Notion, …) swap the generic link icon in the
+// field's prefix for that service's logo. Falls back to the link icon.
+function updateUrlPrefix() {
+  if (!urlPrefix) return;
+  const svc = detectUrlService(urlInput.value);
+  urlPrefix.innerHTML = svc
+    ? `<img class="fill-document-modal__url-logo" src="${svc.logo}" alt="${svc.name}" width="18" height="18" loading="lazy" />`
+    : `<i class="ap-icon-link" aria-hidden="true"></i>`;
 }
 
 function setFile(file) {
@@ -112,6 +128,7 @@ function injectOnce() {
   fileChip = document.getElementById("fillDocFileChip");
   fileNameEl = document.getElementById("fillDocFileName");
   urlInput = document.getElementById("fillDocUrl");
+  urlPrefix = document.getElementById("fillDocUrlPrefix");
   confirmBtn = document.getElementById("fillDocConfirm");
   cancelBtn = document.getElementById("fillDocCancel");
   closeBtn = document.getElementById("fillDocClose");
@@ -128,12 +145,21 @@ function injectOnce() {
     setFile(null);
   });
 
-  urlInput.addEventListener("input", syncConfirm);
+  urlInput.addEventListener("input", () => {
+    syncConfirm();
+    updateUrlPrefix();
+  });
   urlInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       submit();
-    } else if (e.key === "Escape") {
+    }
+  });
+
+  // Esc closes from anywhere in the dialog (not just the URL field). Guarded
+  // by the open state so it's inert when the modal is closed.
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("open")) {
       e.preventDefault();
       close();
     }
@@ -164,12 +190,16 @@ export function open({ onConfirm = null } = {}) {
   setFile(null);
   urlInput.value = "";
   syncConfirm();
+  updateUrlPrefix();
 
+  lastFocused = document.activeElement;
   backdrop.hidden = false;
   backdrop.classList.add("open");
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
   document.body.classList.add("has-modal");
+  // Move focus into the dialog so keyboard/AT users start inside it.
+  requestAnimationFrame(() => dropEl?.focus());
 }
 
 function close() {
@@ -182,4 +212,7 @@ function close() {
   pendingOnConfirm = null;
   selectedFile = null;
   notifyClose(MODAL_ID);
+  // Return focus to the trigger.
+  if (lastFocused && typeof lastFocused.focus === "function") lastFocused.focus();
+  lastFocused = null;
 }

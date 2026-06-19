@@ -14,7 +14,7 @@
 // suggestions, editingId, onComplete }.
 
 import * as inlineQuestion from "./inline-question.js?v=33";
-import { postAssistantMessage, postUserTurn } from "./assistant.js?v=41";
+import { postAssistantMessage, postUserTurn } from "./assistant.js?v=42";
 import * as rightPanel from "./components/right-panel.js?v=165";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=29";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=21";

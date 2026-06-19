@@ -142,6 +142,49 @@
   margin: 0;
 }
 
+/* Leading service-logo affix inside the URL input group — appears when the
+   pasted link matches a known source (Google Docs, Notion, …). It's a flex
+   child of .ap-input-group, so the input naturally shrinks beside it. */
+.add-source__url-logo {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.add-source__url-logo[hidden] {
+  display: none;
+}
+
+.add-source__url-logo-img {
+  display: block;
+  border-radius: var(--ref-border-radius-sm);
+}
+
+/* "Also works with" row — upfront cue that doc/note links are accepted. */
+.add-source__url-services {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  margin-top: var(--ref-spacing-xs);
+}
+
+.add-source__url-services-label {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
+.add-source__url-services-logos {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.add-source__url-services-logos img {
+  display: block;
+  opacity: 0.85;
+}
+
 /* ── Paste text tab ──────────────────────────────────────────────────── */
 
 .add-source__paste-label-row {

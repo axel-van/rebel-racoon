@@ -76,7 +76,8 @@
    of the turn (no header wrapper), lay out horizontally: avatar | bubble.
    The Analyse wizards still emit a header wrapper (icon + role label), so
    they keep the default column layout. */
-.chat-turn--ai:has(> .chat-turn-avatar) {
+.chat-turn--ai:has(> .chat-turn-avatar),
+.chat-turn--ai:has(> .connect-prompt__avatar) {
   flex-direction: row;
 }
 
@@ -214,8 +215,8 @@
   align-items: center;
   gap: 6px;
   padding: 3px 10px;
-  background: var(--ref-color-grey-10);
-  color: var(--ref-color-grey-100);
+  background: var(--ref-color-grey-150);
+  color: var(--ref-color-white);
   border-radius: var(--app-radius-pill);
   font-size: var(--sys-text-style-caption-bold-size);
   line-height: var(--sys-text-style-caption-bold-line-height);
@@ -289,6 +290,50 @@
 .chat-bubble--user .chat-bubble-text {
   color: var(--ref-color-white);
   line-height: var(--sys-text-style-subtitle-line-height);
+}
+
+/* "Connect this service first" prompt — an AI bubble with a Connect / Close
+   action row, posted when a pasted link's connector isn't connected. */
+.connect-prompt__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  margin-top: var(--ref-spacing-sm);
+}
+
+/* Connector logo as this turn's avatar — a white circular tile with a subtle
+   border so the brand mark (often a single-colour glyph) always reads on a
+   light surface, the way logos render everywhere else in the app. */
+.connect-prompt__avatar {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-10);
+  margin-top: var(--app-spacing-micro);
+}
+
+.connect-prompt__avatar img {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+/* Resolved state — one-line "connected, importing now" confirmation. */
+.connect-prompt__done {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.connect-prompt__done i {
+  color: var(--ref-color-green-100);
+  flex-shrink: 0;
 }
 
 /* -- Content blocks rendered INSIDE an AI bubble --------------------------- */

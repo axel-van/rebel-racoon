@@ -27,7 +27,8 @@ import {
   subscribe,
   submitAssistantChoice,
   sendConnectorMessage,
-} from "../assistant.js?v=41";
+  markConnectPromptResolved,
+} from "../assistant.js?v=42";
 import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=32";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=21";
 import {
@@ -51,7 +52,7 @@ import * as inlineQuestion from "../inline-question.js?v=33";
 import * as clipStudio from "../clip-studio.js?v=11";
 import * as batchStudio from "../batch-studio.js?v=4";
 import { askConnector } from "../connector-ask.js?v=3";
-import { getConnectedConnectors, findConnector } from "../connectors-store.js?v=23";
+import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=23";
 import { renderConnectorLogo } from "../connectors-view.js?v=5";
 import {
   getActiveConnector,
@@ -74,7 +75,7 @@ import {
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=25";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=47";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=31";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=43";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=44";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=6";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
@@ -2282,6 +2283,12 @@ function renderTurn(message, sessionId) {
     return renderSystemNotice(message);
   }
 
+  // "Connect this service first" prompt — shown when a pasted link points to a
+  // connector-backed service that isn't connected yet.
+  if (message.role === "connect-prompt") {
+    return renderConnectPromptTurn(message);
+  }
+
   const isAi = message.role === "assistant";
   const bubbleClass = isAi ? "chat-bubble--ai" : "chat-bubble--user";
   const turnClass = isAi ? "chat-turn--ai" : "chat-turn--user";
@@ -2353,6 +2360,66 @@ function renderSystemNotice(message) {
     showChevron: hasDetail,
     bodyHtml: hasDetail ? `<div class="assistant-notice__detail">${message.text}</div>` : "",
   });
+}
+
+// "Connect this service first" prompt — Archie can't import a pasted link
+// because its backing connector (Slite, Notion, …) isn't connected. Renders an
+// AI turn with the explanation + a Connect (logo-branded) / Close action row.
+// The Connect click delegate connects the service and retries the import; the
+// turn then collapses to a one-line confirmation.
+function renderConnectPromptTurn(message) {
+  if (message.status === "dismissed") return "";
+  const aiHeader = `<i class="ap-icon-sparkles-mermaid chat-turn-avatar" aria-hidden="true"></i>`;
+
+  if (message.status === "connected") {
+    return `
+      <div class="chat-turn chat-turn--ai">
+        ${aiHeader}
+        <div class="chat-bubble chat-bubble--ai">
+          <p class="chat-bubble-text connect-prompt__done">
+            <i class="ap-icon-check" aria-hidden="true"></i>
+            <span>${escapeHtml(message.connectorName)} connected — importing your ${escapeHtml(message.noun)} now.</span>
+          </p>
+        </div>
+      </div>
+    `;
+  }
+
+  // The connector logo becomes this turn's avatar — a white circular tile so
+  // the brand mark (often a single-colour glyph) always reads, instead of
+  // fighting the filled-blue button. Falls back to the Archie sparkle when a
+  // logo is missing.
+  const avatar = message.logo
+    ? `<span class="connect-prompt__avatar" aria-hidden="true"><img src="${escapeHtml(message.logo)}" alt="" /></span>`
+    : aiHeader;
+  return `
+    <div class="chat-turn chat-turn--ai">
+      ${avatar}
+      <div class="chat-bubble chat-bubble--ai connect-prompt">
+        <p class="chat-bubble-text">
+          I can't import this ${escapeHtml(message.noun)} yet — <strong>${escapeHtml(
+            message.connectorName,
+          )}</strong> isn't connected to your knowledge base. Connect it below and I'll retry the import.
+        </p>
+        <div class="connect-prompt__actions">
+          <button
+            type="button"
+            class="ap-button primary blue"
+            data-connect-prompt-connect="${escapeHtml(message.id)}"
+          >
+            Connect ${escapeHtml(message.connectorName)}
+          </button>
+          <button
+            type="button"
+            class="ap-button ghost grey"
+            data-connect-prompt-dismiss="${escapeHtml(message.id)}"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 // Inline "Extracting" notice (Figma 25:1413) — mermaid status pill + small
@@ -3717,6 +3784,37 @@ function bindSession(root, session) {
         return;
       }
 
+      // Connect-prompt "Connect <service>" — connect the service through the
+      // store (so every connectors surface stays in sync), then retry the
+      // import that triggered the prompt. The turn collapses to a confirmation.
+      const connectPromptBtn = event.target.closest("[data-connect-prompt-connect]");
+      if (connectPromptBtn) {
+        event.preventDefault();
+        const msgId = connectPromptBtn.dataset.connectPromptConnect;
+        const msg = getThread(session.id).find((m) => m.id === msgId);
+        if (!msg) return;
+        const conn = findConnector(msg.connectorId);
+        if (conn) {
+          setConnectorStatus(msg.connectorId, {
+            status: "connected",
+            account: conn.account || "matt@archie.io",
+            lastSync: "just now",
+          });
+        }
+        markConnectPromptResolved(session.id, msgId, "connected");
+        startUrlImport(msg.url, session.id);
+        showToast(`${msg.connectorName} connected — importing your ${msg.noun} now.`);
+        return;
+      }
+
+      // Connect-prompt "Close" — dismiss without connecting (turn is hidden).
+      const connectPromptDismiss = event.target.closest("[data-connect-prompt-dismiss]");
+      if (connectPromptDismiss) {
+        event.preventDefault();
+        markConnectPromptResolved(session.id, connectPromptDismiss.dataset.connectPromptDismiss, "dismissed");
+        return;
+      }
+
       // Any other [data-go-to-posts] surface (older link patterns) — keep the
       // legacy navigation to the Posts tab until those callers are migrated
       // to the right panel.
@@ -4311,10 +4409,15 @@ function bindSession(root, session) {
         const kind = addSrcItem.dataset.addSource;
         const menu = root.querySelector("[data-assistant-attach-menu]");
         if (menu) menu.hidden = true;
-        // Paste text needs the textarea UI — open the modal on its tab.
-        // The scripted kinds (pdf / video / url) attach inline instead.
+        // URL + Paste text need the modal UI (a URL field / textarea) — open
+        // the modal on the matching tab. The URL modal is where link-service
+        // detection + the "connect this service first" prompt live, so adding
+        // a link from the composer routes through it too. The scripted kinds
+        // (pdf / video) still attach a demo source inline.
         if (kind === "text") {
           openAddSourceModal({ tab: "pasteText", currentSessionId: session.id });
+        } else if (kind === "url") {
+          openAddSourceModal({ tab: "url", currentSessionId: session.id });
         } else {
           startPillFromKind(root, session, kind);
         }

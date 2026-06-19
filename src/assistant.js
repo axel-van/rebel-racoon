@@ -256,6 +256,41 @@ export function markSystemNoticeReady(sessionId, id, patch = {}) {
   notify(sessionId);
 }
 
+// "Connect a service first" prompt — posted when the user pastes a link to a
+// connector-backed service (Slite, Notion, Google Docs, …) that isn't
+// connected. Renders a card with the service logo, an explanation, and
+// Connect / Close actions (see renderConnectPromptTurn in session.js). The
+// click delegate connects the connector then retries startUrlImport(url).
+// `status`: "pending" → "connected" (resolved) or "dismissed" (hidden).
+export function postConnectPrompt(sessionId, { connectorId, connectorName, logo, url, noun = "document" }) {
+  const thread = getThread(sessionId);
+  const id = newId();
+  thread.push({
+    id,
+    role: "connect-prompt",
+    meta: "Archie",
+    connectorId,
+    connectorName,
+    logo,
+    url,
+    noun,
+    status: "pending",
+    createdAt: Date.now(),
+  });
+  notify(sessionId);
+  return id;
+}
+
+// Resolve a connect-prompt turn — "connected" swaps the card for a compact
+// confirmation, "dismissed" removes it from the thread render.
+export function markConnectPromptResolved(sessionId, id, status = "connected") {
+  const thread = getThread(sessionId);
+  const msg = thread.find((m) => m.id === id);
+  if (!msg) return;
+  msg.status = status;
+  notify(sessionId);
+}
+
 // Right-aligned "Source intake" turn — renders like a user turn but with
 // a light electric-blue bubble containing a file icon + filename · size.
 // Figma 25:1127/25:1131.
