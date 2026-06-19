@@ -857,7 +857,7 @@ function renderClipStudioUpload(st) {
               <div class="clip-studio__field-row">
                 <label class="clip-studio__field-label" for="clipInstr">Additional instructions</label>
                 <button type="button" class="ap-link standalone small" data-clip-surprise>
-                  <i class="ap-icon-sparkles" aria-hidden="true"></i>Surprise me
+                  <i class="ap-icon-sparkles keep-sparkle" aria-hidden="true"></i>Surprise me
                 </button>
               </div>
               <div class="ap-textarea-field">
