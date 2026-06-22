@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=104";
+import { renderTopbar } from "../components/topbar.js?v=106";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -46,8 +46,8 @@ import {
 } from "../posts-store.js?v=31";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=35";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=27";
-import * as topPostsFlow from "../top-posts-flow.js?v=5";
-import { renderTopPostsBoard } from "../components/top-post-card.js?v=2";
+import * as topPostsFlow from "../top-posts-flow.js?v=6";
+import { renderTopPostsBoard } from "../components/top-post-card.js?v=3";
 import * as sidebarWizard from "../sidebar-wizard.js?v=40";
 import * as inlineQuestion from "../inline-question.js?v=34";
 import * as clipStudio from "../clip-studio.js?v=13";
@@ -61,8 +61,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=86";
-import * as playbookEditor from "../playbook-editor.js?v=45";
+import * as contextBuilder from "../context-builder.js?v=88";
+import * as playbookEditor from "../playbook-editor.js?v=47";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -100,8 +100,9 @@ import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
+  openTopPost as openTopPostPanel,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=173";
+} from "../components/right-panel.js?v=175";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=4";
@@ -4010,10 +4011,16 @@ function bindSession(root, session) {
         topPostsFlow.setSort(session.id, topPostSort.dataset.topPostSort);
         return;
       }
-      // Winner-board card click → advance to the reuse-mode picker.
-      const topPostPick = event.target.closest("[data-top-post-pick]");
-      if (topPostPick) {
-        topPostsFlow.pickWinner(session.id, topPostPick.dataset.topPostPick);
+      // Winner-board card click → open the post in the preview panel to
+      // inspect stats + the exact post before committing. "Build on this"
+      // inside the panel hands back via onBuild → the reuse-mode picker.
+      const topPostOpen = event.target.closest("[data-top-post-open]");
+      if (topPostOpen) {
+        const id = topPostOpen.dataset.topPostOpen;
+        const post = topPostsFlow.getPickerState(session.id)?.posts.find((p) => p.id === id);
+        if (post) {
+          openTopPostPanel(post, { onBuild: () => topPostsFlow.pickWinner(session.id, id) });
+        }
         return;
       }
 

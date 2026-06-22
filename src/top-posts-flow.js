@@ -307,9 +307,19 @@ export function setSort(sessionId, sort) {
   notifyPicker(sessionId);
 }
 
-export function startTopPostsFlow(sessionId) {
+// (Re)open the board grid for the current winners. Silent — no intro turn —
+// so it doubles as the "← Back" target from the reuse-mode picker without
+// duplicating Archie's opener. Preserves nothing else; the sort resets to the
+// default, which is fine for a re-entry.
+function openBoard(sessionId) {
   const posts = getTopPosts();
-  if (!posts.length) {
+  if (!posts.length) return;
+  pickerStates.set(sessionId, { posts, sort: "performance" });
+  notifyPicker(sessionId);
+}
+
+export function startTopPostsFlow(sessionId) {
+  if (!getTopPosts().length) {
     // New-alt users have no published history yet.
     postAssistantMessage(
       sessionId,
@@ -317,13 +327,11 @@ export function startTopPostsFlow(sessionId) {
     );
     return;
   }
-
   postAssistantMessage(
     sessionId,
     "Let's build on what already works. Here are your top-performing posts — pick the one you want to milk for more.",
   );
-  pickerStates.set(sessionId, { posts, sort: "performance" });
-  notifyPicker(sessionId);
+  openBoard(sessionId);
 }
 
 // ---- Step 2: explain the why, pick a reuse mode -----------------------
@@ -371,7 +379,8 @@ function chooseMode(sessionId, postId) {
       if (mode === "refresh") return generateRefresh(sessionId, post);
       return generateExtract(sessionId, post);
     },
-    onBack: () => startTopPostsFlow(sessionId),
+    // ← Back returns to the winner board (silent re-open, no duplicate intro).
+    onBack: () => openBoard(sessionId),
   });
 }
 

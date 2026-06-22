@@ -5,14 +5,13 @@
    the relative-performance bar, and interactive states. */
 
 /* Board screen container — top-anchored (override .analyse__chat-inner's
-   bottom-anchoring) and full-width: the board is a comparison grid, so it
-   should use the whole panel rather than the narrow conversation column. The
-   chat bubbles inside keep their own max-width, so the intro stays readable.
-   Paired with distinct container classes in session.js that opt the board out
-   of the chat scroll-to-bottom pin. */
+   bottom-anchoring) and a touch wider than the 720px conversation column so 3
+   compact cards sit side by side. Centred, leaving room on the right for the
+   post-preview panel to slide in. Paired with distinct container classes in
+   session.js that opt the board out of the chat scroll-to-bottom pin. */
 .session__assistant-board-inner {
-  margin: 0;
-  max-width: none;
+  margin: 0 auto;
+  max-width: 980px;
 }
 
 .top-posts-board {
@@ -48,6 +47,9 @@
 }
 
 /* ── Grid ───────────────────────────────────────────────────────── */
+/* Auto-fill at a ~300px track → 3 compact columns at the 980px container,
+   gracefully reflowing to 2 / 1 as the panel narrows (e.g. when the preview
+   panel opens and the content column shrinks). */
 .top-posts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -208,4 +210,172 @@
 .top-post-card:focus-visible .top-post-card__cta i {
   transform: translateX(2px);
   transition: transform 0.15s ease;
+}
+
+/* ── Preview panel (right-panel "top-post" mode) ─────────────────── */
+.tp-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-lg) var(--ref-spacing-md) var(--ref-spacing-md);
+}
+
+.tp-preview__head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  flex-wrap: wrap;
+  /* clear the corner-pinned close button */
+  padding-right: var(--ref-spacing-xl);
+}
+
+.tp-preview__net {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-150);
+}
+
+.tp-preview__net i {
+  font-size: 20px;
+}
+
+.tp-preview__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.tp-preview__title {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: var(--sys-text-color-light);
+}
+
+/* Stats grid — hero spans the full width, the rest flow 3-up. */
+.tp-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--ref-spacing-xs);
+}
+
+.tp-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--ref-spacing-xs);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--ref-border-radius-sm);
+}
+
+.tp-stat__value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ref-color-grey-150);
+  line-height: 1.15;
+}
+
+.tp-stat__label {
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+}
+
+.tp-stat--hero {
+  grid-column: 1 / -1;
+  background: var(--ref-color-green-10);
+  border-color: var(--ref-color-green-40);
+}
+
+.tp-stat--hero .tp-stat__value {
+  font-size: 2rem;
+  color: var(--ref-color-green-100);
+}
+
+/* Faithful network-style preview of the published post. */
+.tp-post {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card, 12px);
+  background: var(--ref-color-white);
+}
+
+.tp-post__head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.tp-post__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--ref-color-grey-20);
+  flex-shrink: 0;
+}
+
+.tp-post__avatar i {
+  font-size: 20px;
+}
+
+.tp-post__byline {
+  display: flex;
+  flex-direction: column;
+}
+
+.tp-post__author {
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-150);
+}
+
+.tp-post__meta {
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+}
+
+.tp-post__body {
+  margin: 0;
+  color: var(--ref-color-grey-150);
+  line-height: var(--sys-text-style-body-line-height);
+  white-space: pre-wrap;
+}
+
+.tp-post__hashtags {
+  margin: 0;
+  color: var(--ref-color-electric-blue-100);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.tp-post__engagement {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-sm);
+  padding-top: var(--ref-spacing-xs);
+  border-top: 1px solid var(--app-border-soft);
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+}
+
+.tp-post__engagement i {
+  color: var(--ref-color-electric-blue-100);
+}
+
+.tp-preview__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.tp-preview__actions .ap-button {
+  width: 100%;
+  justify-content: center;
 }

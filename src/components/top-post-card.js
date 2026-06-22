@@ -66,7 +66,7 @@ function renderTopPostCard(post, { maxVsAvg }) {
   // in the current set, so the grid reads as a ranking at a glance.
   const pct = maxVsAvg > 0 ? Math.max(8, Math.round((post.vsAvg / maxVsAvg) * 100)) : 0;
   return html`
-    <button type="button" class="ap-card top-post-card" data-top-post-pick="${post.id}">
+    <button type="button" class="ap-card top-post-card" data-top-post-open="${post.id}">
       <span class="top-post-card__head">
         <span class="top-post-card__net">
           <i class="${iconFor(post.network)}" aria-hidden="true"></i>
@@ -107,8 +107,106 @@ function renderTopPostCard(post, { maxVsAvg }) {
         </span>
       </span>
 
-      <span class="top-post-card__cta"> Build on this <i class="ap-icon-arrow-right" aria-hidden="true"></i> </span>
+      <span class="top-post-card__cta"> View details <i class="ap-icon-arrow-right" aria-hidden="true"></i> </span>
     </button>
+  `;
+}
+
+// ── Preview panel ────────────────────────────────────────────────────
+// Rendered into the right-panel "top-post" mode (right-panel.js → openTopPost).
+// Three blocks: a detailed stats grid, a faithful network-style preview of the
+// published post, and the actions (Build on this + open the real post).
+
+// Plausible per-network permalink. The prototype has no real post ids, so this
+// is cosmetic — it demonstrates the "go see it on the network" affordance.
+const NET_HOME = {
+  linkedin: "https://www.linkedin.com/feed/",
+  x: "https://x.com/",
+  twitter: "https://x.com/",
+  instagram: "https://www.instagram.com/",
+  facebook: "https://www.facebook.com/",
+  tiktok: "https://www.tiktok.com/",
+  youtube: "https://www.youtube.com/",
+};
+
+function postUrl(post) {
+  return NET_HOME[(post.network || "").toLowerCase()] || "#";
+}
+
+function statTile(value, label, hero = false) {
+  return `<div class="tp-stat${hero ? " tp-stat--hero" : ""}">
+    <span class="tp-stat__value">${value}</span>
+    <span class="tp-stat__label">${label}</span>
+  </div>`;
+}
+
+export function renderTopPostPreview(post) {
+  if (!post) return "";
+  const net = labelFor(post.network);
+  const shareTile =
+    post.saves != null
+      ? statTile(post.saves.toLocaleString(), "saves")
+      : statTile((post.shares ?? 0).toLocaleString(), "shares");
+
+  const stats = [
+    statTile(`${post.vsAvg}×`, "vs your average", true),
+    statTile(`${post.engagementRate}%`, "engagement rate"),
+    statTile(formatCompact(post.impressions), "reach"),
+    statTile((post.reactions ?? 0).toLocaleString(), "reactions"),
+    statTile((post.comments ?? 0).toLocaleString(), "comments"),
+    shareTile,
+  ].join("");
+
+  const hashtags = (post.hashtags || []).length
+    ? `<p class="tp-post__hashtags">${post.hashtags.map((h) => `#${h}`).join(" ")}</p>`
+    : "";
+
+  return html`
+    <div class="tp-preview">
+      <div class="tp-preview__head">
+        <span class="tp-preview__net">
+          <i class="${iconFor(post.network)}" aria-hidden="true"></i>
+          ${net}
+        </span>
+        <span class="ap-status green no-dot">${post.perfBadge} on ${net}</span>
+      </div>
+
+      <section class="tp-preview__section">
+        <h3 class="tp-preview__title">How it performed</h3>
+        <div class="tp-stats">${raw(stats)}</div>
+      </section>
+
+      <section class="tp-preview__section">
+        <h3 class="tp-preview__title">Exact post</h3>
+        <article class="tp-post">
+          <header class="tp-post__head">
+            <span class="tp-post__avatar" aria-hidden="true"><i class="${iconFor(post.network)}"></i></span>
+            <span class="tp-post__byline">
+              <span class="tp-post__author">Your brand</span>
+              <span class="tp-post__meta">${post.publishedAt} · ${net}</span>
+            </span>
+          </header>
+          <p class="tp-post__body">${post.excerpt}</p>
+          ${raw(hashtags)}
+          <div class="tp-post__engagement">
+            <span
+              ><i class="ap-icon-thumb-up_fill" aria-hidden="true"></i> ${(post.reactions ?? 0).toLocaleString()}</span
+            >
+            <span>${(post.comments ?? 0).toLocaleString()} comments</span>
+            <span>${(post.saves ?? post.shares ?? 0).toLocaleString()} ${post.saves != null ? "saves" : "shares"}</span>
+          </div>
+        </article>
+      </section>
+
+      <div class="tp-preview__actions">
+        <button type="button" class="ap-button primary orange" data-top-post-build="${post.id}">
+          <i class="ap-icon-sparkles" aria-hidden="true"></i> Build on this
+        </button>
+        <a class="ap-button stroked" href="${postUrl(post)}" target="_blank" rel="noopener noreferrer">
+          View on ${net} <i class="ap-icon-external-link" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
   `;
 }
 

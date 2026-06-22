@@ -14,11 +14,12 @@ import {
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=31";
 import { renderPostCard } from "./post-card.js?v=38";
+import { renderTopPostPreview } from "./top-post-card.js?v=3";
 import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=47";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=89";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=91";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -293,6 +294,21 @@ export function openSources() {
   writeUrlPanel("sources");
 }
 
+// Top-post preview — the milker's winner inspector. Opened from a board card
+// (session.js). Not URL-persisted. `onBuild` is the callback fired by the
+// panel's "Build on this" CTA (session.js wires it to topPostsFlow.pickWinner)
+// so the panel stays decoupled from the flow.
+export function openTopPost(post, { onBuild } = {}) {
+  if (!post) return;
+  const prev = state.mode;
+  if (prev === null) resetPanelWidthOverride();
+  snapshotFocusOnOpen(prev);
+  state = { ...state, mode: "top-post", topPost: post, topPostOnBuild: typeof onBuild === "function" ? onBuild : null };
+  maybeCollapseSidebarOnOpen(prev);
+  renderPanel();
+  notify();
+}
+
 export function closePanel({ skipUrl = false } = {}) {
   const wasUserMode = VALID_URL_MODES.has(state.mode);
   if (state.mode === "context-brief") {
@@ -443,6 +459,14 @@ export function init() {
     }
     if (event.target.closest("[data-rpanel-close]")) {
       closePanel();
+      return;
+    }
+    // Top-post preview "Build on this" → close the panel and hand back to the
+    // milker flow via the onBuild callback set in openTopPost.
+    if (event.target.closest("[data-top-post-build]")) {
+      const cb = state.topPostOnBuild;
+      closePanel();
+      cb?.();
       return;
     }
     const tab = event.target.closest("[data-rpanel-tab]");
@@ -641,7 +665,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=289").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=291").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -841,7 +865,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=289").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=291").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -859,7 +883,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=289").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=291").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -1251,6 +1275,8 @@ function renderPanel() {
     titleText = "Drafts";
   } else if (state.mode === "sources") {
     titleText = "Sources";
+  } else if (state.mode === "top-post") {
+    titleText = "Top post";
   } else if (state.mode === "context-brief") {
     if (contextBriefConfig?.mode === "read") {
       const ctx = contextBriefConfig.getCtx?.();
@@ -1271,7 +1297,9 @@ function renderPanel() {
             ? renderDraftsView()
             : state.mode === "sources"
               ? renderSourcesView()
-              : renderIdeasView()
+              : state.mode === "top-post"
+                ? renderTopPostPreview(state.topPost)
+                : renderIdeasView()
         }</div>`;
 
   // Preserve the body's scrollTop across re-renders so flipping a filter
@@ -1300,14 +1328,14 @@ function renderPanel() {
       // it shares the row's flex baseline with the tabs / select). The
       // context-brief has no such row + its content is centred, so it gets
       // the corner-pinned close instead.
-      state.mode === "context-brief"
-        ? `<button
+      state.mode === "context-brief" || state.mode === "top-post"
+        ? raw(`<button
              type="button"
              class="ap-icon-button transparent app-right-panel__close"
              data-rpanel-close
              aria-label="Close panel"
              title="Close panel (Esc)"
-           ><i class="ap-icon-close"></i></button>`
+           ><i class="ap-icon-close"></i></button>`)
         : ""
     }
     ${raw(bodyHtml)}
@@ -2479,7 +2507,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=289").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=291").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
