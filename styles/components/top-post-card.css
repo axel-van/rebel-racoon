@@ -112,18 +112,16 @@
   text-align: left;
   cursor: pointer;
   border: 1px solid var(--app-border);
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.15s ease;
+  transition: border-color 0.15s ease;
 }
 
+/* Standard blue hover border, consistent with the app's other clickable cards
+   (.starter-card) — green is never used for hover edges, and these cards take
+   no elevation / lift on hover. */
 .top-post-card:hover,
 .top-post-card:focus-visible {
-  border-color: var(--ref-color-green-100);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
   outline: none;
+  border-color: var(--ref-color-electric-blue-100);
 }
 
 .top-post-card__head {
