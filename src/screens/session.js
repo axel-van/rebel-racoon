@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=108";
+import { renderTopbar } from "../components/topbar.js?v=109";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -19,6 +19,7 @@ import {
   postAssistantMessage,
   postUserTurn,
   postUserProfilesTurn,
+  postSelectionEcho,
   postDraftResult,
   postExtractionResult,
   postClipExtractionTurn,
@@ -28,15 +29,16 @@ import {
   submitAssistantChoice,
   sendConnectorMessage,
   markConnectPromptResolved,
-} from "../assistant.js?v=45";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=35";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=24";
+} from "../assistant.js?v=46";
+import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=36";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=25";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=9";
+} from "../composer-mentions.js?v=10";
 import {
   getPosts,
   addPostDraft,
@@ -44,9 +46,9 @@ import {
   setSubtitleStyle,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=31";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=36";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=28";
-import * as topPostsFlow from "../top-posts-flow.js?v=7";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=37";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=29";
+import * as topPostsFlow from "../top-posts-flow.js?v=8";
 import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=4";
 import * as sidebarWizard from "../sidebar-wizard.js?v=40";
 import * as inlineQuestion from "../inline-question.js?v=34";
@@ -61,8 +63,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=90";
-import * as playbookEditor from "../playbook-editor.js?v=49";
+import * as contextBuilder from "../context-builder.js?v=91";
+import * as playbookEditor from "../playbook-editor.js?v=50";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -75,8 +77,8 @@ import {
 } from "../components/content-workspace.js?v=25";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=27";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=47";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=34";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=47";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=35";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=48";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=8";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
@@ -102,11 +104,11 @@ import {
   openClips as openClipsPanel,
   openTopPost as openTopPostPanel,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=177";
+} from "../components/right-panel.js?v=178";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=5";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=10";
+import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=6";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=11";
 import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=9";
 
 // Default composer placeholder — restored whenever no connector is attached.
@@ -1781,7 +1783,14 @@ function renderAssistantPanelQuestion(session) {
 // Build + show the "What would you like to know about this source?" inline
 // question. Triggered after the user clicks "Ask" on a source card and
 // picks the chat to ask in. Suggested prompts + a free-text custom row.
-function askWhatToKnow(sessionId, filename) {
+function askWhatToKnow(sessionId, filename, sourceId = null) {
+  // Echo the chosen source as a selection card so the pick stays visible.
+  const src = sourceId ? getStreamSources(sessionId).find((s) => s.id === sourceId) : null;
+  postSelectionEcho(sessionId, {
+    icon: fileIconForKind(src?.kind),
+    title: filename || "this source",
+    meta: src?.kind ? `${src.kind} source` : "Source",
+  });
   postAssistantMessage(sessionId, `What would you like to know about **${filename}**?`);
   inlineQuestion.ask(sessionId, {
     title: filename || "About this source",
@@ -1855,7 +1864,7 @@ function startAskFlowFromSession(sessionId, sourceId, filename) {
   const handoff = (choice) => {
     if (choice.kind === "existing" && choice.session.id === sessionId) {
       // Already in the picked chat — skip the navigation and ask now.
-      askWhatToKnow(sessionId, filename);
+      askWhatToKnow(sessionId, filename, sourceId);
       return;
     }
     setHandoff("pendingAskSource", { sourceId, filename });
@@ -1924,6 +1933,25 @@ function defaultChatNameLocal() {
 // becomes the draft's network so the user gets posts on the surface they
 // actually want to publish to. `count` is threaded through from the count
 // picker; `onBack` lets the second-step picker return to the first.
+// External entry to the draft-from-idea flow — echoes the chosen idea as a
+// selection card (so the pick stays visible) then opens the profile step.
+// Internal steps (count / angle / Back) call askProfileQuestion directly, so
+// the idea echo is posted exactly once, at selection time.
+function startIdeaDraft(sessionId, ideaId) {
+  const idea = getIdeas(sessionId).find((i) => i.id === ideaId);
+  if (idea) {
+    const srcName = (idea.sourceIds || []).length
+      ? getStreamSources(sessionId).find((s) => s.id === idea.sourceIds[0])?.filename
+      : "";
+    postSelectionEcho(sessionId, {
+      icon: "ap-icon-sparkles",
+      title: idea.title,
+      meta: srcName ? `Idea · from ${srcName}` : "Idea",
+    });
+  }
+  askProfileQuestion(sessionId, ideaId);
+}
+
 function askProfileQuestion(sessionId, ideaId, { count = 1, angle = null, anglePicks = null, onBack = null } = {}) {
   // Connected profiles + their picker presentation come from the shared
   // social-profiles helper, so this picker proposes the exact same
@@ -2090,6 +2118,13 @@ const CLIP_SUBTITLE_ITEMS = [
 export function startClipDraftFlow(sessionId, entries) {
   const list = Array.isArray(entries) ? entries : entries ? [entries] : [];
   if (!list.length) return;
+  // Echo the picked clip(s) as a selection card before the format question.
+  const first = list[0];
+  postSelectionEcho(sessionId, {
+    icon: "ap-icon-file--video",
+    title: list.length === 1 ? first.clip?.title || "Clip" : `${list.length} clips`,
+    meta: first.sourceName ? `Clip · ${first.sourceName}` : "Video clip",
+  });
   askClipFormat(sessionId, list);
 }
 
@@ -2314,6 +2349,10 @@ function renderTurn(message, sessionId) {
     `;
   }
 
+  if (message.role === "user" && message.variant === "selection-echo") {
+    return renderSelectionEchoTurn(message.echo);
+  }
+
   // Channel-picker choice turn — chip row + "Draft them" button.
   if (message.role === "assistant-choice") {
     return renderChoiceTurn(message);
@@ -2361,6 +2400,25 @@ function renderProfilesTurn(message) {
     <div class="chat-turn chat-turn--user">
       <span class="chat-turn-role">You</span>
       <div class="chat-profiles">${chips}</div>
+    </div>
+  `;
+}
+
+// Generic "you picked this object" echo — icon + title + meta chip. Posted via
+// assistant.postSelectionEcho when the user selects a source / idea / clip / …
+// so the pick stays visible in the thread.
+function renderSelectionEchoTurn(echo) {
+  if (!echo) return "";
+  return `
+    <div class="chat-turn chat-turn--user">
+      <span class="chat-turn-role">You</span>
+      <div class="selection-echo">
+        <span class="selection-echo__icon"><i class="${escapeHtml(echo.icon || "ap-icon-file")}" aria-hidden="true"></i></span>
+        <span class="selection-echo__body">
+          <span class="selection-echo__title">${escapeHtml(echo.title || "")}</span>
+          ${echo.meta ? `<span class="selection-echo__meta">${escapeHtml(echo.meta)}</span>` : ""}
+        </span>
+      </div>
     </div>
   `;
 }
@@ -2945,7 +3003,7 @@ function wireAssistantPanel(root, session, attachedContext) {
   // conversational flow after subscriptions are active so thread updates show.
   const pendingIdeaId = consumeHandoff("pendingDraftIdeaId");
   if (pendingIdeaId) {
-    setTimeout(() => askProfileQuestion(session.id, pendingIdeaId), 100);
+    setTimeout(() => startIdeaDraft(session.id, pendingIdeaId), 100);
   }
 
   // Hand-off from a source card's "Ask" button on the dashboard or another
@@ -2953,7 +3011,7 @@ function wireAssistantPanel(root, session, attachedContext) {
   // chat.
   const pendingAsk = consumeHandoff("pendingAskSource");
   if (pendingAsk?.filename) {
-    setTimeout(() => askWhatToKnow(session.id, pendingAsk.filename), 150);
+    setTimeout(() => askWhatToKnow(session.id, pendingAsk.filename, pendingAsk.sourceId), 150);
   }
 
   // Hand-off from the Connectors gallery's (or right-panel's) "Try in chat" /
@@ -3669,7 +3727,7 @@ function bindSession(root, session) {
       const ideaUse = event.target.closest(".extraction-turn__detail [data-rpanel-use-idea]");
       if (ideaUse) {
         event.preventDefault();
-        askProfileQuestion(session.id, ideaUse.dataset.rpanelUseIdea);
+        startIdeaDraft(session.id, ideaUse.dataset.rpanelUseIdea);
         return;
       }
 
@@ -3926,7 +3984,7 @@ function bindSession(root, session) {
         if (ideaId) {
           btn.disabled = true;
           btn.classList.add("is-pending");
-          askProfileQuestion(session.id, ideaId);
+          startIdeaDraft(session.id, ideaId);
         }
         return;
       }

@@ -23,11 +23,11 @@ import {
   postDraftResult,
   postExtractionResult,
   postTopPostPickTurn,
-} from "./assistant.js?v=45";
+} from "./assistant.js?v=46";
 import * as inlineQuestion from "./inline-question.js?v=34";
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=2";
 import { addPostDraft } from "./posts-store.js?v=31";
-import { injectIdeasForSource } from "./library.js?v=35";
+import { injectIdeasForSource } from "./library.js?v=36";
 import { open as openScheduleModal } from "./components/schedule-modal.js?v=39";
 import { showToast } from "./components/toast.js?v=20";
 

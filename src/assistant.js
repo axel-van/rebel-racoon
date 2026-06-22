@@ -419,6 +419,25 @@ export function postTopPostPickTurn(sessionId, post) {
   notify(sessionId);
 }
 
+// Generic "you picked this object" echo — a compact icon + title + meta chip in
+// the thread, used whenever the user selects a dynamic object (source, idea,
+// clip, …) so the pick stays visible like the post / profile echoes do.
+// `echo` = { icon, title, meta }. Rendered by renderSelectionEcho in session.js.
+export function postSelectionEcho(sessionId, echo) {
+  if (!echo || !echo.title) return;
+  const thread = getThread(sessionId);
+  thread.push({
+    id: newId(),
+    role: "user",
+    variant: "selection-echo",
+    meta: "You",
+    echo: { icon: echo.icon || "ap-icon-file", title: echo.title, meta: echo.meta || "" },
+    status: "ready",
+    createdAt: Date.now(),
+  });
+  notify(sessionId);
+}
+
 // Push an "assistant-choice" turn that renders a set of toggle chips plus a
 // submit button. Keeps the module generic — the handler string identifies
 // what the click delegate in session.js should do on submit.

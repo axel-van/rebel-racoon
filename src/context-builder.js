@@ -14,11 +14,11 @@
 // suggestions, editingId, onComplete }.
 
 import * as inlineQuestion from "./inline-question.js?v=34";
-import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=45";
-import * as rightPanel from "./components/right-panel.js?v=177";
+import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=46";
+import * as rightPanel from "./components/right-panel.js?v=178";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=31";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=22";
-import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=49";
+import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=50";
 import { connectors as connectorMocks } from "./mocks.js?v=45";
 import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=22";
 

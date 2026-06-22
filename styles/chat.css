@@ -27,6 +27,56 @@
   gap: var(--ref-spacing-xxxs);
 }
 
+/* Generic object-selection echo — icon + title + meta chip shown when the user
+   picks a dynamic object (source / idea / clip / …). Right-aligned like the
+   other user-turn echoes (renderSelectionEchoTurn in screens/session.js). */
+.selection-echo {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  align-self: flex-end;
+  max-width: 420px;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border: 1px solid var(--app-convo-navy-20);
+  border-radius: var(--app-radius-card, 12px);
+  background: var(--app-convo-navy-05);
+}
+
+.selection-echo__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-white);
+}
+
+.selection-echo__icon i {
+  font-size: 16px;
+  color: var(--app-convo-navy-deep);
+}
+
+.selection-echo__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.selection-echo__title {
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--app-convo-navy-deep);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.selection-echo__meta {
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--app-convo-navy-70, var(--sys-text-color-light));
+}
+
 /* Visual profiles echo — right-aligned wrap of avatar + handle chips, used
    when the user answers "which account(s)?" so the thread shows the chosen
    profiles (with their network badge) rather than bare network names. */
