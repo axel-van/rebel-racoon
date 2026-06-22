@@ -411,6 +411,58 @@
   letter-spacing: 0;
 }
 
+/* ── Expanding card (top-post-expand.js) ────────────────────────── */
+/* The clicked board card morphs (FLIP) into this centered, enlarged panel that
+   floats above the grid — no scrim; the layer is transparent and only catches
+   outside clicks. */
+.tp-expand-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--app-z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ref-spacing-lg);
+}
+
+.tp-expand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 480px);
+  max-height: min(100%, 760px);
+  overflow: hidden;
+  background: var(--ref-color-white);
+  border: 1px solid var(--app-border);
+  border-radius: var(--ref-border-radius-md);
+  box-shadow: var(--app-shadow-popover-lg);
+  will-change: transform;
+}
+
+.tp-expand__close {
+  position: absolute;
+  top: var(--ref-spacing-xs);
+  right: var(--ref-spacing-xs);
+  z-index: 2;
+}
+
+.tp-expand__scroll {
+  min-height: 0;
+  overflow-y: auto;
+  /* Content cross-fades in as the card morphs open (and out as it collapses). */
+  transition: opacity 0.2s ease;
+}
+
+.tp-expand.is-collapsed .tp-expand__scroll {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-expand__scroll {
+    transition: none;
+  }
+}
+
 /* Why-it-worked — Archie's read on the performance, grouped with the metrics
    in a quiet callout (the insight that explains the numbers above it). */
 .tp-why {

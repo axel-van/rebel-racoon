@@ -1,9 +1,9 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=4";
 import { initArchieLoader } from "./archie-loader.js?v=2";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=114";
-import { initSidebar, renderSidebar } from "./components/sidebar.js?v=99";
-import { init as initRightPanel } from "./components/right-panel.js?v=183";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=115";
+import { initSidebar, renderSidebar } from "./components/sidebar.js?v=100";
+import { init as initRightPanel } from "./components/right-panel.js?v=184";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=39";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=24";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
@@ -17,21 +17,20 @@ import { init as initRenameModal } from "./components/rename-modal.js?v=2";
 import { init as initAnalyzeProfilesModal } from "./components/analyze-profiles-modal.js?v=9";
 import { init as initFillDocumentModal } from "./components/fill-document-modal.js?v=5";
 import { init as initSearchModal } from "./components/search-modal.js?v=5";
-import { init as initTopPostModal } from "./components/top-post-modal.js?v=1";
 import {
   init as initConversationStatusCard,
   render as renderConversationStatusCard,
-} from "./components/conversation-status-card.js?v=61";
+} from "./components/conversation-status-card.js?v=62";
 import { renderDashboard } from "./screens/dashboard.js?v=48";
-import { renderSession } from "./screens/session.js?v=299";
-import { renderIdeas } from "./screens/ideas.js?v=74";
-import { renderContexts } from "./screens/contexts.js?v=83";
-import { renderConnectors } from "./screens/connectors.js?v=22";
+import { renderSession } from "./screens/session.js?v=300";
+import { renderIdeas } from "./screens/ideas.js?v=75";
+import { renderContexts } from "./screens/contexts.js?v=84";
+import { renderConnectors } from "./screens/connectors.js?v=23";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=78";
-import { renderPlaybook } from "./screens/playbook.js?v=79";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=79";
+import { renderPlaybook } from "./screens/playbook.js?v=80";
 import * as __capAddSource from "./components/add-source-modal.js?v=48";
 import * as __capGenImage from "./components/generate-image-modal.js?v=27";
 import * as __capBug from "./components/bug-report-modal.js?v=24";
@@ -43,7 +42,7 @@ import {
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=183";
+} from "./components/right-panel.js?v=184";
 
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
@@ -86,7 +85,6 @@ initRenameModal();
 initAnalyzeProfilesModal();
 initFillDocumentModal();
 initSearchModal();
-initTopPostModal();
 initConversationStatusCard();
 
 // Re-render the sidebar on every route change so the active conversation row
