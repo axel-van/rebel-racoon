@@ -104,11 +104,14 @@
 }
 
 /* ── Card ───────────────────────────────────────────────────────── */
+/* Three grouped blocks (identity → performance → insight) + CTA. Between-group
+   gap (md) > within-group gaps, so the card reads as ordered sections rather
+   than a flat stack. */
 .top-post-card {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-md);
   text-align: left;
   cursor: pointer;
   border: 1px solid var(--app-border);
@@ -122,6 +125,13 @@
 .top-post-card:focus-visible {
   outline: none;
   border-color: var(--ref-color-electric-blue-100);
+}
+
+/* ── Group 1 · identity ─────────────────────────────────────────── */
+.top-post-card__id {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
 }
 
 .top-post-card__head {
@@ -143,17 +153,6 @@
   font-size: 18px;
 }
 
-.top-post-card__head-right {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-}
-
-.top-post-card__age {
-  color: var(--sys-text-color-light);
-  font-size: var(--sys-text-style-caption-size);
-}
-
 .top-post-card__excerpt {
   color: var(--ref-color-grey-150);
   font-weight: var(--sys-text-style-body-bold-weight);
@@ -165,17 +164,28 @@
   overflow: hidden;
 }
 
-/* ── Stat block ─────────────────────────────────────────────────── */
+.top-post-card__meta {
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+}
+
+/* ── Group 2 · performance ──────────────────────────────────────── */
+.top-post-card__perf {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
 .top-post-card__stats {
   display: flex;
   align-items: flex-end;
-  gap: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-md);
 }
 
 .top-post-stat {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 .top-post-stat__value {
@@ -185,23 +195,25 @@
   line-height: 1.1;
 }
 
+/* Labels de-emphasised (uppercase-small) so the values carry the weight. */
 .top-post-stat__label {
-  color: var(--sys-text-color-light);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
 }
 
-/* The ×-vs-average is the decision metric — bigger and green so the eye lands
-   on it first (hierarchy via size + color, not color alone — the label spells
-   it out). */
+/* The ×-vs-average is the decision metric — the single accent: bigger + green
+   so the eye lands on it first (size + color, with a spelled-out label). */
 .top-post-stat--hero .top-post-stat__value {
   font-size: 1.75rem;
   color: var(--ref-color-green-100);
 }
 
-/* ── Relative performance bar ───────────────────────────────────── */
+/* Relative performance bar — thin, reinforces the hero metric's ranking. */
 .top-post-card__bar {
   display: block;
-  height: 6px;
+  height: 4px;
   border-radius: var(--app-radius-pill, 999px);
   background: var(--ref-color-green-20);
   overflow: hidden;
@@ -214,31 +226,32 @@
   background: var(--ref-color-green-100);
 }
 
-/* ── Foot: topic chip + why-it-worked ───────────────────────────── */
-.top-post-card__foot {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  padding-top: var(--ref-spacing-xs);
-  border-top: 1px solid var(--app-border-soft);
-}
-
-.top-post-card__topic {
-  align-self: flex-start;
-}
-
+/* ── Group 3 · insight ──────────────────────────────────────────── */
 .top-post-card__why {
   display: flex;
-  align-items: flex-start;
-  gap: var(--ref-spacing-xxs);
-  color: var(--sys-text-color-light);
-  font-size: var(--sys-text-style-caption-size);
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
 }
 
-.top-post-card__why i {
-  color: var(--ref-color-green-100);
-  margin-top: 2px;
-  flex-shrink: 0;
+.top-post-card__why-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--sys-text-color-light);
+}
+
+.top-post-card__why-label i {
+  font-size: 13px;
+}
+
+.top-post-card__why-text {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-100);
 }
 
 /* ── CTA ────────────────────────────────────────────────────────── */

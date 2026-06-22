@@ -67,44 +67,43 @@ function renderTopPostCard(post, { maxVsAvg }) {
   const pct = maxVsAvg > 0 ? Math.max(8, Math.round((post.vsAvg / maxVsAvg) * 100)) : 0;
   return html`
     <button type="button" class="ap-card top-post-card" data-top-post-open="${post.id}">
-      <span class="top-post-card__head">
-        <span class="top-post-card__net">
-          <i class="${iconFor(post.network)}" aria-hidden="true"></i>
-          ${labelFor(post.network)}
-        </span>
-        <span class="top-post-card__head-right">
-          <span class="top-post-card__age">${post.publishedAt}</span>
+      <span class="top-post-card__id">
+        <span class="top-post-card__head">
+          <span class="top-post-card__net">
+            <i class="${iconFor(post.network)}" aria-hidden="true"></i>
+            ${labelFor(post.network)}
+          </span>
           <span class="ap-status green no-dot top-post-card__badge">${post.perfBadge}</span>
         </span>
+        <span class="top-post-card__excerpt">${post.excerpt}</span>
+        <span class="top-post-card__meta">${post.publishedAt} · ${post.topic}</span>
       </span>
 
-      <span class="top-post-card__excerpt">${post.excerpt}</span>
-
-      <span class="top-post-card__stats">
-        <span class="top-post-stat top-post-stat--hero">
-          <span class="top-post-stat__value">${post.vsAvg}×</span>
-          <span class="top-post-stat__label">vs your avg</span>
+      <span class="top-post-card__perf">
+        <span class="top-post-card__stats">
+          <span class="top-post-stat top-post-stat--hero">
+            <span class="top-post-stat__value">${post.vsAvg}×</span>
+            <span class="top-post-stat__label">vs avg</span>
+          </span>
+          <span class="top-post-stat">
+            <span class="top-post-stat__value">${post.engagementRate}%</span>
+            <span class="top-post-stat__label">engagement</span>
+          </span>
+          <span class="top-post-stat">
+            <span class="top-post-stat__value">${formatCompact(post.impressions)}</span>
+            <span class="top-post-stat__label">reach</span>
+          </span>
         </span>
-        <span class="top-post-stat">
-          <span class="top-post-stat__value">${post.engagementRate}%</span>
-          <span class="top-post-stat__label">engagement</span>
-        </span>
-        <span class="top-post-stat">
-          <span class="top-post-stat__value">${formatCompact(post.impressions)}</span>
-          <span class="top-post-stat__label">reach</span>
+        <span class="top-post-card__bar" aria-hidden="true">
+          <span class="top-post-card__bar-fill" style="width: ${pct}%"></span>
         </span>
       </span>
 
-      <span class="top-post-card__bar" aria-hidden="true">
-        <span class="top-post-card__bar-fill" style="width: ${pct}%"></span>
-      </span>
-
-      <span class="top-post-card__foot">
-        <span class="ap-tag grey mini top-post-card__topic">${post.topic}</span>
-        <span class="top-post-card__why">
-          <i class="ap-icon-sparkles keep-sparkle" aria-hidden="true"></i>
-          <span><b>Why it worked:</b> ${post.whyItWorked}</span>
+      <span class="top-post-card__why">
+        <span class="top-post-card__why-label">
+          <i class="ap-icon-sparkles" aria-hidden="true"></i> Why it worked
         </span>
+        <span class="top-post-card__why-text">${post.whyItWorked}</span>
       </span>
 
       <span class="top-post-card__cta"> View details <i class="ap-icon-arrow-right" aria-hidden="true"></i> </span>
