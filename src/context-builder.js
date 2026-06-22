@@ -15,10 +15,10 @@
 
 import * as inlineQuestion from "./inline-question.js?v=34";
 import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=48";
-import * as rightPanel from "./components/right-panel.js?v=197";
+import * as rightPanel from "./components/right-panel.js?v=198";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=31";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=22";
-import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=69";
+import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=70";
 import { connectors as connectorMocks } from "./mocks.js?v=45";
 import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=22";
 

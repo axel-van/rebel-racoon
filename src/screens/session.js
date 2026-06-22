@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=128";
+import { renderTopbar } from "../components/topbar.js?v=129";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -63,8 +63,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=110";
-import * as playbookEditor from "../playbook-editor.js?v=69";
+import * as contextBuilder from "../context-builder.js?v=111";
+import * as playbookEditor from "../playbook-editor.js?v=70";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -105,11 +105,11 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=197";
+} from "../components/right-panel.js?v=198";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=9";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=13";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=14";
 import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=9";
 
 // Default composer placeholder — restored whenever no connector is attached.
@@ -3273,6 +3273,16 @@ function wireAssistantPanel(root, session, attachedContext) {
     onVideoReady: (sourceId, filename) => {
       if (clipStudio.isActive(session.id)) return;
       askVideoIntake(session.id, sourceId, filename);
+    },
+    // A non-video source extracts its ideas during processing — surface the
+    // persistent green "N ideas ready" bar (in addition to the source's
+    // completion snackbar), same as the flow-based extractions.
+    onSourceReady: (sourceId, src) => {
+      const n = src.ideaCount || 0;
+      if (n > 0 && getRightPanelMode() !== "ideas") {
+        ideaBanners.set(session.id, { count: n, at: Date.now() });
+        syncComposerStatus();
+      }
     },
   });
 

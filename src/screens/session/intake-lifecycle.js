@@ -20,7 +20,7 @@
 import { subscribeSources, getSources as getStreamSources } from "../../sources-stream.js?v=40";
 import { getThread, postSourceIntake, markSourceIntakeReady } from "../../assistant.js?v=48";
 
-export function startIntakeLifecycle(sessionId, { onSourcesChange, onVideoReady } = {}) {
+export function startIntakeLifecycle(sessionId, { onSourcesChange, onVideoReady, onSourceReady } = {}) {
   // seenSourceIds is a snapshot baseline of the session's sources at
   // mount time. Any sourceId that appears AFTER this baseline counts
   // as a "new upload" — we post a loading intake turn for it. When the
@@ -70,6 +70,10 @@ export function startIntakeLifecycle(sessionId, { onSourcesChange, onVideoReady 
         if (src.kind === "Video" && !askedVideoChoiceForSourceIds.has(src.id)) {
           askedVideoChoiceForSourceIds.add(src.id);
           onVideoReady?.(src.id, src.filename);
+        } else if (src.kind !== "Video") {
+          // Non-video sources extract their ideas during processing — surface
+          // the "N ideas ready" composer bar now that they've landed.
+          onSourceReady?.(src.id, src);
         }
       }
     }
