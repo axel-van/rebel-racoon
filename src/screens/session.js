@@ -1237,7 +1237,7 @@ function renderComposer(attachedContext, session, selectable) {
                 aria-label="Add a source"
                 data-assistant-attach-toggle
               >
-                <i class="ap-icon-paper-clip"></i>
+                <i class="ap-icon-plus"></i>
                 <span>Add</span>
               </button>
               <div class="ap-action-dropdown assistant-attach__menu" data-assistant-attach-menu hidden role="menu">
