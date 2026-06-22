@@ -5,12 +5,14 @@
    the relative-performance bar, and interactive states. */
 
 /* Board screen container — top-anchored (override .analyse__chat-inner's
-   bottom-anchoring) and wider than the 720px conversation column so the 2-col
-   grid breathes. Paired with distinct container classes in session.js that opt
-   the board out of the chat scroll-to-bottom pin. */
+   bottom-anchoring) and full-width: the board is a comparison grid, so it
+   should use the whole panel rather than the narrow conversation column. The
+   chat bubbles inside keep their own max-width, so the intro stays readable.
+   Paired with distinct container classes in session.js that opt the board out
+   of the chat scroll-to-bottom pin. */
 .session__assistant-board-inner {
-  margin: 0 auto;
-  max-width: 960px;
+  margin: 0;
+  max-width: none;
 }
 
 .top-posts-board {
