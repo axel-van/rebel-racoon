@@ -212,6 +212,54 @@
   transition: transform 0.15s ease;
 }
 
+/* ── Conversation echo (picked-post preview in the thread) ───────── */
+.top-post-echo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  align-self: flex-end;
+  max-width: 420px;
+  padding: var(--ref-spacing-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card, 12px);
+  background: var(--ref-color-white);
+}
+
+.top-post-echo__head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  color: var(--ref-color-grey-150);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.top-post-echo__head i {
+  font-size: 18px;
+}
+
+.top-post-echo__net {
+  margin-right: auto;
+}
+
+.top-post-echo__excerpt {
+  color: var(--ref-color-grey-150);
+  line-height: var(--sys-text-style-body-line-height);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.top-post-echo__stats {
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+  font-variant-numeric: tabular-nums;
+}
+
+.top-post-echo__stats b {
+  color: var(--ref-color-green-100);
+}
+
 /* ── Preview panel (right-panel "top-post" mode) ─────────────────── */
 .tp-preview {
   display: flex;

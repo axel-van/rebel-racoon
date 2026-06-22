@@ -401,6 +401,24 @@ export function postUserProfilesTurn(sessionId, profiles) {
   notify(sessionId);
 }
 
+// Push a user turn that echoes the top post the user chose to build on — a
+// compact preview card (network + excerpt + key stats) instead of a truncated
+// text bubble. Rendered by renderTopPostPickTurn in session.js. `post` is a
+// trimmed copy of the winner (see top-posts-flow.chooseMode).
+export function postTopPostPickTurn(sessionId, post) {
+  const thread = getThread(sessionId);
+  thread.push({
+    id: newId(),
+    role: "user",
+    variant: "top-post-pick",
+    meta: "You",
+    post: post || null,
+    status: "ready",
+    createdAt: Date.now(),
+  });
+  notify(sessionId);
+}
+
 // Push an "assistant-choice" turn that renders a set of toggle chips plus a
 // submit button. Keeps the module generic — the handler string identifies
 // what the click delegate in session.js should do on submit.

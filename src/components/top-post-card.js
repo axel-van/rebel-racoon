@@ -112,6 +112,27 @@ function renderTopPostCard(post, { maxVsAvg }) {
   `;
 }
 
+// ── Conversation echo ────────────────────────────────────────────────
+// Compact card shown in the thread when the user picks a winner to build on
+// (assistant.postTopPostPickTurn → renderTopPostPickTurn in session.js), so the
+// chosen post stays visible as a real preview rather than a truncated text echo.
+export function renderTopPostEcho(post) {
+  if (!post) return "";
+  return html`
+    <div class="top-post-echo">
+      <span class="top-post-echo__head">
+        <i class="${iconFor(post.network)}" aria-hidden="true"></i>
+        <span class="top-post-echo__net">${labelFor(post.network)}</span>
+        <span class="ap-status green no-dot">${post.perfBadge}</span>
+      </span>
+      <span class="top-post-echo__excerpt">${post.excerpt}</span>
+      <span class="top-post-echo__stats">
+        <b>${post.vsAvg}×</b> vs avg · ${post.engagementRate}% eng · ${formatCompact(post.impressions)} reach
+      </span>
+    </div>
+  `;
+}
+
 // ── Preview panel ────────────────────────────────────────────────────
 // Rendered into the right-panel "top-post" mode (right-panel.js → openTopPost).
 // Three blocks: a detailed stats grid, a faithful network-style preview of the

@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=106";
+import { renderTopbar } from "../components/topbar.js?v=107";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -28,15 +28,15 @@ import {
   submitAssistantChoice,
   sendConnectorMessage,
   markConnectPromptResolved,
-} from "../assistant.js?v=44";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=34";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=23";
+} from "../assistant.js?v=45";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=35";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=24";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=8";
+} from "../composer-mentions.js?v=9";
 import {
   getPosts,
   addPostDraft,
@@ -44,10 +44,10 @@ import {
   setSubtitleStyle,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=31";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=35";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=27";
-import * as topPostsFlow from "../top-posts-flow.js?v=6";
-import { renderTopPostsBoard } from "../components/top-post-card.js?v=3";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=36";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=28";
+import * as topPostsFlow from "../top-posts-flow.js?v=7";
+import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=4";
 import * as sidebarWizard from "../sidebar-wizard.js?v=40";
 import * as inlineQuestion from "../inline-question.js?v=34";
 import * as clipStudio from "../clip-studio.js?v=13";
@@ -61,8 +61,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=88";
-import * as playbookEditor from "../playbook-editor.js?v=47";
+import * as contextBuilder from "../context-builder.js?v=89";
+import * as playbookEditor from "../playbook-editor.js?v=48";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -75,8 +75,8 @@ import {
 } from "../components/content-workspace.js?v=25";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=27";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=47";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=33";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=46";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=34";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=47";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=8";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
@@ -102,11 +102,11 @@ import {
   openClips as openClipsPanel,
   openTopPost as openTopPostPanel,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=175";
+} from "../components/right-panel.js?v=176";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=4";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=9";
+import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=5";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=10";
 import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=9";
 
 // Default composer placeholder — restored whenever no connector is attached.
@@ -2303,6 +2303,15 @@ function renderTurn(message, sessionId) {
   // used when the user picks which account(s) to draft a clip for.
   if (message.role === "user" && message.variant === "profiles") {
     return renderProfilesTurn(message);
+  }
+
+  if (message.role === "user" && message.variant === "top-post-pick") {
+    return `
+      <div class="chat-turn chat-turn--user">
+        <span class="chat-turn-role">You</span>
+        ${renderTopPostEcho(message.post)}
+      </div>
+    `;
   }
 
   // Channel-picker choice turn — chip row + "Draft them" button.

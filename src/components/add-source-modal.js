@@ -18,7 +18,7 @@ import {
   setConnectorStatus,
   subscribe as subscribeConnectors,
 } from "../connectors-store.js?v=25";
-import { postConnectPrompt } from "../assistant.js?v=44";
+import { postConnectPrompt } from "../assistant.js?v=45";
 import { URL_SERVICES, detectUrlService } from "../url-services.js?v=1";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { navigate } from "../router.js?v=30";

@@ -22,11 +22,12 @@ import {
   finishPending,
   postDraftResult,
   postExtractionResult,
-} from "./assistant.js?v=44";
+  postTopPostPickTurn,
+} from "./assistant.js?v=45";
 import * as inlineQuestion from "./inline-question.js?v=34";
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=2";
 import { addPostDraft } from "./posts-store.js?v=31";
-import { injectIdeasForSource } from "./library.js?v=34";
+import { injectIdeasForSource } from "./library.js?v=35";
 import { open as openScheduleModal } from "./components/schedule-modal.js?v=39";
 import { showToast } from "./components/toast.js?v=20";
 
@@ -54,12 +55,6 @@ function labelFor(network) {
 
 function iconFor(network) {
   return CHANNEL_META[(network || "").toLowerCase()]?.icon || "ap-icon-share";
-}
-
-// Trim an excerpt for a one-line label / echo without cutting mid-word.
-function truncate(text, max = 70) {
-  if (!text || text.length <= max) return text || "";
-  return `${text.slice(0, max).replace(/\s+\S*$/, "")}…`;
 }
 
 // Shared chip lifecycle (mirrors draft-flow.withPendingChip): show the thinking
@@ -339,7 +334,16 @@ export function startTopPostsFlow(sessionId) {
 function chooseMode(sessionId, postId) {
   const post = getTopPost(postId);
   if (!post) return;
-  postUserTurn(sessionId, `Build on my ${labelFor(post.network)} post: "${truncate(post.excerpt, 60)}"`);
+  // Echo the chosen post as a compact preview card (not a truncated text
+  // bubble) so it stays visible in the conversation.
+  postTopPostPickTurn(sessionId, {
+    network: post.network,
+    excerpt: post.excerpt,
+    perfBadge: post.perfBadge,
+    vsAvg: post.vsAvg,
+    engagementRate: post.engagementRate,
+    impressions: post.impressions,
+  });
   postAssistantMessage(
     sessionId,
     `Great pick. This one worked because of ${post.whyItWorked}. How do you want to reuse it?`,
