@@ -23,11 +23,11 @@ import {
   postDraftResult,
   postExtractionResult,
   postTopPostPickTurn,
-} from "./assistant.js?v=46";
+} from "./assistant.js?v=47";
 import * as inlineQuestion from "./inline-question.js?v=34";
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=2";
 import { addPostDraft } from "./posts-store.js?v=31";
-import { injectIdeasForSource } from "./library.js?v=36";
+import { injectIdeasForSource } from "./library.js?v=37";
 import { open as openScheduleModal } from "./components/schedule-modal.js?v=39";
 import { showToast } from "./components/toast.js?v=20";
 
@@ -60,8 +60,8 @@ function iconFor(network) {
 // Shared chip lifecycle (mirrors draft-flow.withPendingChip): show the thinking
 // chip, wait out the simulated delay, clear it, run `work` inside try/catch so a
 // downstream failure still clears the chip and offers a Retry.
-function withPendingChip(sessionId, work, onError) {
-  const pendingId = startPending(sessionId);
+function withPendingChip(sessionId, work, onError, meta = "Generating drafts") {
+  const pendingId = startPending(sessionId, meta);
   setTimeout(() => {
     finishPending(sessionId, pendingId);
     try {
@@ -565,5 +565,6 @@ function generateExtract(sessionId, post) {
       });
     },
     (err) => genError(err, () => generateExtract(sessionId, post)),
+    "Extracting ideas",
   );
 }

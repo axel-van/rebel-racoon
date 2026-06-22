@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=119";
+import { renderTopbar } from "../components/topbar.js?v=126";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -29,16 +29,16 @@ import {
   submitAssistantChoice,
   sendConnectorMessage,
   markConnectPromptResolved,
-} from "../assistant.js?v=46";
+} from "../assistant.js?v=47";
 import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=36";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=25";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=37";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=26";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=10";
+} from "../composer-mentions.js?v=11";
 import {
   getPosts,
   addPostDraft,
@@ -46,9 +46,9 @@ import {
   setSubtitleStyle,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=31";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=37";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=29";
-import * as topPostsFlow from "../top-posts-flow.js?v=9";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=38";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=30";
+import * as topPostsFlow from "../top-posts-flow.js?v=11";
 import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=11";
 import * as sidebarWizard from "../sidebar-wizard.js?v=40";
 import * as inlineQuestion from "../inline-question.js?v=34";
@@ -63,8 +63,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=101";
-import * as playbookEditor from "../playbook-editor.js?v=60";
+import * as contextBuilder from "../context-builder.js?v=108";
+import * as playbookEditor from "../playbook-editor.js?v=67";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -77,8 +77,8 @@ import {
 } from "../components/content-workspace.js?v=25";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=27";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=47";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=35";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=48";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=36";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=49";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=8";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
@@ -103,12 +103,13 @@ import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
+  getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=188";
+} from "../components/right-panel.js?v=195";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=6";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=11";
+import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=8";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=12";
 import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=9";
 
 // Default composer placeholder — restored whenever no connector is attached.
@@ -1191,6 +1192,153 @@ function renderConnectorsSubmenu() {
     </div>`;
 }
 
+// Draft-ready status bar (DS .ap-status-card) glued to the top of the composer,
+// shown in addition to the transient snackbar when a draft batch lands. Keyed
+// per-session in module scope so it survives aside re-renders and screen
+// re-mounts; cleared when the Drafts panel opens (lifecycle: "until reviewed").
+// sessionId → { batchId, count }.
+const draftBanners = new Map();
+
+function draftBannerFlowInner(count) {
+  return `<span>${count} draft${count === 1 ? "" : "s"} ready</span> to review`;
+}
+
+function withEllipsis(s) {
+  return /…$/.test(s) ? s : `${s}…`;
+}
+
+// In-progress label for a loading thread message (adapted from the rule in
+// conversation-status-card.js; duplicated to keep the version cascade small).
+// Returns null for messages that aren't a distinct user-facing task. source-
+// intake is handled by the sources signal in computeComposerStatus (skipped
+// there) to avoid a double-count.
+function humanizeLoadingMessage(m) {
+  // The hidden assistant answer placeholder is the same operation as its
+  // reasoning pill — count the pill, not the empty answer slot, so a single
+  // reply reads "Thinking…" rather than "2 tasks running…".
+  if (m.hidden) return null;
+  if (m.role === "idea-extraction") return `Extracting ideas from ${m.filename || "source"}…`;
+  if (m.role === "clip-extraction") return `Extracting clips from ${m.filename || "source"}…`;
+  if (m.role === "assistant") return withEllipsis(m.meta && m.meta !== "Archie" ? m.meta : "Thinking");
+  if (m.role === "system" || m.role === "system-notice") {
+    return withEllipsis(m.meta && m.meta !== "System" ? m.meta : m.text || "Working");
+  }
+  // Generic busy marker (startPending) — drafts/ideas flows pass a meta label
+  // ("Extracting ideas", "Generating drafts"); fall back to "Working".
+  if (m.role === "pending") return withEllipsis(m.meta || "Working");
+  return "Working…";
+}
+
+// One unified descriptor for the composer status slot:
+//   { variant:"grey", labels, label, key } — background work in progress
+//   { variant:"green", count, key }         — drafts ready (until reviewed)
+//   null                                    — idle
+// Grey wins over green, so a draft batch landing while other work is still
+// running keeps the bar grey until everything settles, then flips to green.
+function computeComposerStatus(sessionId) {
+  const labels = [];
+  // Sources analysing — the canonical background action and the source of
+  // truth (the matching source-intake thread turns are skipped below).
+  for (const s of getSources(sessionId)) {
+    if (s.status === "Processing") labels.push(`Analyzing ${s.filename || "source"}…`);
+  }
+  // Video clip extraction (when a normal composer is present).
+  const clip = clipStudio.getState(sessionId);
+  if (clip && clip.stage === "analyzing") {
+    labels.push(clip._stageLabel ? `${clip._stageLabel}…` : "Analyzing video…");
+  }
+  // Other loading thread turns: idea/clip extraction, draft generation, replies.
+  for (const m of getThread(sessionId)) {
+    if (m.status !== "loading") continue;
+    if (m.role === "source-intake") continue; // counted via getSources above
+    const label = humanizeLoadingMessage(m);
+    if (label) labels.push(label);
+  }
+  if (labels.length > 0) {
+    const label = labels.length === 1 ? labels[0] : `${labels.length} tasks running…`;
+    return { variant: "grey", labels, label, key: `grey|${label}` };
+  }
+  const draft = draftBanners.get(sessionId);
+  if (draft) return { variant: "green", count: draft.count, key: `green|${draft.count}` };
+  return null;
+}
+
+function renderComposerStatus(sessionId) {
+  const status = computeComposerStatus(sessionId);
+  if (!status) return "";
+  if (status.variant === "green") {
+    return html`
+      <div class="ap-status-card green session__composer-status" data-status-key="${status.key}" role="status">
+        <div class="upper">
+          <i class="ap-icon-file" aria-hidden="true"></i>
+          <div class="flow">${raw(draftBannerFlowInner(status.count))}</div>
+          <button type="button" class="ap-link small standalone" data-draft-banner-review>Review</button>
+        </div>
+      </div>
+    `;
+  }
+  // Grey in-progress. The .ap-loader's branded SVG is auto-injected by
+  // archie-loader.js's observer on insert; ds-patches.css recolours it grey for
+  // this bar (the default would be orange).
+  return html`
+    <div
+      class="ap-status-card grey session__composer-status"
+      data-status-key="${status.key}"
+      role="status"
+      aria-live="polite"
+    >
+      <div class="upper">
+        <span class="ap-loader grey size-16" aria-hidden="true"
+          ><svg>
+            <circle></circle>
+            <circle></circle></svg
+        ></span>
+        <div class="flow" data-status-label>${status.label}</div>
+      </div>
+    </div>
+  `;
+}
+
+// Enter animation for a freshly-inserted banner: collapse-reveal synced to the
+// element's real height (--status-h kills the max-height "dead time"), plus fade
+// + a short rise. Measured + class added in the same tick (before paint) so
+// there's no full-height flash. The reduced-motion guard in base.css collapses
+// it to instant. The class is self-removing so a later full-aside rebuild (which
+// re-renders the banner statically) doesn't replay the entrance.
+function animateBannerIn(el) {
+  if (!el) return;
+  el.style.setProperty("--status-h", `${el.offsetHeight}px`);
+  el.classList.add("is-entering");
+  const clear = () => el.classList.remove("is-entering");
+  el.addEventListener("animationend", clear, { once: true });
+  setTimeout(clear, 500);
+}
+
+// Exit animation: reverse the reveal (faster, accelerating), THEN remove the
+// node and run `done`. Callers that open the Drafts panel pass the open as
+// `done` so the panel opens only after the banner has left — opening writes the
+// URL hash, which can re-render the route and would otherwise cut the animation.
+function animateBannerOut(el, done) {
+  if (!el) {
+    if (done) done();
+    return;
+  }
+  if (el.classList.contains("is-leaving")) return;
+  el.style.setProperty("--status-h", `${el.offsetHeight}px`);
+  el.classList.remove("is-entering");
+  void el.offsetHeight; // reflow so an interrupted enter restarts cleanly
+  el.classList.add("is-leaving");
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    el.remove();
+    if (done) done();
+  };
+  el.addEventListener("animationend", finish, { once: true });
+  setTimeout(finish, 500);
+}
+
 function renderComposer(attachedContext, session, selectable) {
   // Nothing to @mention until the session has at least one ready source or
   // extracted idea — disable the trigger so it doesn't open an empty picker.
@@ -1199,17 +1347,7 @@ function renderComposer(attachedContext, session, selectable) {
   return `
     <div class="session__composer">
       <div class="session__composer-inner">
-        <div
-          class="session__composer-thinking"
-          data-assistant-thinking
-          role="status"
-          aria-live="polite"
-          aria-label="Archie is thinking"
-          hidden
-        >
-          <span class="session__composer-thinking-spinner" aria-hidden="true"></span>
-          <span class="session__composer-thinking-text" data-thinking-text>Archie is thinking…</span>
-        </div>
+        ${renderComposerStatus(session.id)}
         <div class="session__composer-card">
           <div
             class="composer-mention-picker"
@@ -2233,7 +2371,7 @@ function askClipAccounts(sessionId, entries, format, style) {
 // Each draft's clipRef carries sourceId + clipId so the post can later open
 // the source clip back in the Video Clips modal for editing.
 function generateClipDrafts(sessionId, entries, accounts, format, style) {
-  const pendingId = startPending(sessionId);
+  const pendingId = startPending(sessionId, "Generating drafts");
   setTimeout(() => {
     finishPending(sessionId, pendingId);
     const drafts = [];
@@ -2300,7 +2438,7 @@ function askVideoIntake(sessionId, sourceId, filename) {
 // "Analyze for ideas" — brief thinking chip, inject the canned video ideas,
 // surface the source-intake "N ideas" pill, then post the rich extraction turn.
 function runVideoIdeasChoice(sessionId, sourceId, filename) {
-  const pendingId = startPending(sessionId);
+  const pendingId = startPending(sessionId, "Extracting ideas");
   setTimeout(() => {
     finishPending(sessionId, pendingId);
     const ideas = extractVideoIdeas(sessionId, sourceId);
@@ -2828,9 +2966,11 @@ function wireAssistantPanel(root, session, attachedContext) {
     }
   }
 
-  // Initial chip sync (in case the thread already has a loading message
-  // carried over from a prior render, e.g. after a tab switch).
-  updateThinkingChip(session.id);
+  // Arm the "taking longer than expected" watchdog for any loading turn carried
+  // over from a prior render. The composer status bar itself is painted
+  // declaratively by renderComposerStatus on each render, so no imperative sync
+  // is needed here.
+  updateLoadingWatchdog(session.id);
 
   // Composer mentions — the floating status card pushes source mentions
   // here via the composer-mentions store. Render once on mount, then
@@ -2867,6 +3007,50 @@ function wireAssistantPanel(root, session, attachedContext) {
   // in place (which would drop the composer). Covers a first user message AND a
   // source landing (Batch-from-a-source / Add-source on a fresh chat).
   let threadStartedSeen = isThreadStarted(getThread(session.id));
+  // Reconcile the single composer status slot (grey in-progress / green ready /
+  // none) against the live state, reusing the enter/exit animations. The
+  // data-status-key makes per-tick updates cheap and jank-free: same key → no-op
+  // (source/clip tickers advance without re-animating); same variant, changed
+  // text → in-place update; variant swap (grey↔green) → in-place markup swap, no
+  // re-collapse; appear/disappear → animate in/out.
+  const syncComposerStatus = () => {
+    const inner = root.querySelector(".session__composer-inner");
+    if (!inner) return;
+    const existing = inner.querySelector(".session__composer-status");
+    const status = computeComposerStatus(session.id);
+    if (!status) {
+      // Re-sync once the exit completes: if a new state became desired while the
+      // bar was leaving (e.g. drafts land just as "Thinking…" clears), this
+      // re-inserts it — covering the grey→green handoff across two notifies.
+      if (existing && !existing.classList.contains("is-leaving")) {
+        animateBannerOut(existing, () => syncComposerStatus());
+      }
+      return;
+    }
+    if (existing && !existing.classList.contains("is-leaving")) {
+      if (existing.dataset.statusKey === status.key) return; // unchanged → no-op
+      if (existing.classList.contains(status.variant)) {
+        // Same variant, new text — update in place, no re-entrance.
+        if (status.variant === "green") {
+          const flow = existing.querySelector(".flow");
+          if (flow) flow.innerHTML = draftBannerFlowInner(status.count);
+        } else {
+          const label = existing.querySelector("[data-status-label]");
+          if (label) label.textContent = status.label;
+        }
+        existing.dataset.statusKey = status.key;
+        return;
+      }
+      // Variant swap (grey↔green): replace markup in place, stay visible.
+      existing.outerHTML = renderComposerStatus(session.id);
+      return;
+    }
+    if (existing) return; // mid-exit; let it finish (a later tick re-inserts)
+    const card = inner.querySelector(".session__composer-card");
+    if (!card) return;
+    card.insertAdjacentHTML("beforebegin", renderComposerStatus(session.id));
+    animateBannerIn(inner.querySelector(".session__composer-status"));
+  };
   const offThread = subscribe(session.id, (messages) => {
     const thread = getThreadEl();
     if (thread) {
@@ -2878,7 +3062,7 @@ function wireAssistantPanel(root, session, attachedContext) {
     // explicitly so newly posted turns stay pinned to the bottom.
     const wizardChat = root.querySelector("#inlineQuestionChat, .session__assistant-wizard-chat");
     if (wizardChat) wizardChat.scrollTop = wizardChat.scrollHeight;
-    updateThinkingChip(session.id);
+    updateLoadingWatchdog(session.id);
     // In Clip Studio's clips stage the composer is already locked
     // (selectable=false) and a full aside re-render would rebuild the clip
     // grid + thread, fighting this subscription's in-place thread repaint.
@@ -2900,7 +3084,17 @@ function wireAssistantPanel(root, session, attachedContext) {
           onClick: () => openDraftsPanel({ sessionId: session.id, messageId: latestDraft.id }),
         },
       });
+      // Second, persistent surface (until reviewed): the green DS status bar.
+      // Skip it if the user is already in the Drafts panel. The actual bar
+      // reconcile happens once below — after draftBanners is set — so a grey
+      // in-progress bar swaps straight to green (no flicker).
+      if (getRightPanelMode() !== "drafts") {
+        draftBanners.set(session.id, { batchId: latestDraft.id, count: n });
+      }
     }
+    // Reconcile the composer status bar against the new thread state (grey
+    // in-progress / green ready / none) — once per thread change.
+    syncComposerStatus();
   });
 
   // Subscribe to the right-panel state — when the active batch flips or the
@@ -2912,6 +3106,14 @@ function wireAssistantPanel(root, session, attachedContext) {
     if (!thread) return;
     const messages = getThread(session.id);
     thread.innerHTML = renderThread(messages, session.id);
+    // Drafts panel opened some other way (e.g. topbar pill) while the green bar
+    // is up → the batch is being reviewed; drop it and reconcile (the bar exits,
+    // or flips to grey if background work is still running). The bar's own Review
+    // deletes the entry first, so this is a no-op for that path.
+    if (getRightPanelMode() === "drafts" && draftBanners.has(session.id)) {
+      draftBanners.delete(session.id);
+      syncComposerStatus();
+    }
   });
 
   // The library subscription used to re-render the in-session Content tab.
@@ -3004,7 +3206,12 @@ function wireAssistantPanel(root, session, attachedContext) {
 
   // Intake-turn lifecycle (loading → ready) — see intake-lifecycle.js.
   const offComposerSources = startIntakeLifecycle(session.id, {
-    onSourcesChange: repaintThreadFromSources,
+    onSourcesChange: () => {
+      repaintThreadFromSources();
+      // Drive the grey "Analyzing …" composer bar as sources enter/leave the
+      // Processing state (keyed reconcile → no churn on per-tick progress).
+      syncComposerStatus();
+    },
     // Clip Studio owns its own video source + UI — never pop the generic
     // "what to do with this video?" intake choice for a studio session.
     onVideoReady: (sourceId, filename) => {
@@ -3621,7 +3828,7 @@ function finalizeClipStudio(session) {
   const captionStyle = st.config?.captionStyle === "none" ? null : st.config?.captionStyle || null;
   const perNet = st.perNetworkFormat || {};
   clipStudio.exit(session.id);
-  const pendingId = startPending(session.id);
+  const pendingId = startPending(session.id, "Generating drafts");
   setTimeout(() => {
     finishPending(session.id, pendingId);
     const drafts = [];
@@ -4311,6 +4518,17 @@ function bindSession(root, session) {
 
       if (event.target.closest("[data-assistant-send]")) {
         submitInput();
+        return;
+      }
+
+      // Draft-ready status bar "Review" → animate the bar out, THEN open the
+      // Drafts panel pinned to the batch (opening writes the URL hash, which can
+      // re-render the route — so we defer it until the exit animation finishes).
+      if (event.target.closest("[data-draft-banner-review]")) {
+        const ref = draftBanners.get(session.id)?.batchId;
+        draftBanners.delete(session.id);
+        const open = () => openDraftsPanel({ sessionId: session.id, messageId: ref });
+        animateBannerOut(root.querySelector(".session__composer-status"), open);
         return;
       }
 

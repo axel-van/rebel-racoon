@@ -14,8 +14,8 @@
 //   3. Creates one draft post per channel via posts-store.js.
 //   4. Posts a structured "Drafted N posts" result turn.
 
-import { postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=46";
-import { getIdeas } from "./library.js?v=36";
+import { postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=47";
+import { getIdeas } from "./library.js?v=37";
 import { ideas as GLOBAL_IDEAS, anglesByIdea } from "./mocks.js?v=45";
 import { addPostDraft } from "./posts-store.js?v=31";
 import { showToast } from "./components/toast.js?v=20";
@@ -29,7 +29,7 @@ const DRAFT_DELAY_MS = 6000;
 // throws, assistant push errors) still clears the chip and surfaces a retry
 // toast instead of leaving the chip ticking forever (FIND-D2).
 function withPendingChip(sessionId, work, onError) {
-  const pendingId = startPending(sessionId);
+  const pendingId = startPending(sessionId, "Generating drafts");
   setTimeout(() => {
     finishPending(sessionId, pendingId);
     if (!onError) {

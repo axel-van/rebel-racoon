@@ -30,11 +30,11 @@
 // underlying state stays in one place. The user-facing toast is fired here
 // (a single shared place for the wording).
 
-import { appendExtractedIdeas, removeIdeasForSources, removeIdeas, getIdeas } from "./library.js?v=36";
+import { appendExtractedIdeas, removeIdeasForSources, removeIdeas, getIdeas } from "./library.js?v=37";
 import { removeSources as streamRemoveSources, getSources as streamGetSources } from "./sources-stream.js?v=40";
 import { open as openConfirmModal } from "./components/confirm-modal.js?v=22";
 import { showToast } from "./components/toast.js?v=20";
-import { addMention } from "./composer-mentions.js?v=10";
+import { addMention } from "./composer-mentions.js?v=11";
 
 // ── Bulk-bar HTML renderers ──────────────────────────────────────────────
 
@@ -127,9 +127,10 @@ export function wireLibraryActions(root, options) {
         const id = extractOne.dataset.sourceExtractOne;
         const target = getSources().find((s) => s.id === id && s.status !== "Processing");
         if (target) {
-          appendExtractedIdeas(sessionId, [target]);
-          showToast(`Extracted 1 more idea from ${target.filename}`);
-          onRerender?.();
+          appendExtractedIdeas(sessionId, [target], () => {
+            showToast(`Extracted 1 more idea from ${target.filename}`);
+            onRerender?.();
+          });
         }
         return;
       }

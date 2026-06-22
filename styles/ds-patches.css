@@ -154,6 +154,13 @@
 .ap-status-card.grey .upper > i {
   color: var(--comp-status-card-grey-icon-color);
 }
+/* The branded .ap-loader (archie-loader.css) paints its mark with
+   --archie-loader-color (default orange), not the DS --_color — so a plain
+   .ap-loader.grey still renders orange. Recolour it to the grey status-card
+   icon tone when it's the leading glyph of a grey status card. */
+.ap-status-card.grey .ap-loader {
+  --archie-loader-color: var(--comp-status-card-grey-icon-color);
+}
 
 .ap-status-card.red {
   background-color: var(--comp-status-card-red-background-color);

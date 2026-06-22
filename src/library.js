@@ -21,7 +21,7 @@ import { isNewUser } from "./user-mode.js?v=22";
 // conversations (created at runtime via "+ New conversation") start empty
 // to match the user's mental model. Anything else looked-up — same path.
 const DEMO_SESSION_IDS = new Set(seedRecentSessions.map((s) => s.id));
-import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=46";
+import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=47";
 import {
   getSources as streamGetSources,
   subscribeSources,
@@ -109,48 +109,48 @@ export function clearSession(sessionId) {
 // posts a single extraction turn into the assistant thread summarising the
 // outcome. The narrative is "give me more angles from these files" — never
 // destructive, always additive.
-export function appendExtractedIdeas(sessionId, sources) {
-  if (!Array.isArray(sources) || sources.length === 0) return [];
+export function appendExtractedIdeas(sessionId, sources, onDone) {
+  if (!Array.isArray(sources) || sources.length === 0) return;
   // Make sure ideas are seeded before we prepend to them.
   getIdeas(sessionId);
 
-  const pendingId = startPending(sessionId);
+  // Run as a short background task so the composer status bar reads
+  // "Extracting ideas…" (consistent with source analysis / drafting) rather
+  // than completing in the same tick. onDone fires after the work lands so the
+  // caller's confirmation toast doesn't contradict the in-progress bar.
+  const pendingId = startPending(sessionId, "Extracting ideas");
+  setTimeout(() => {
+    const created = [];
+    sources.forEach((source, idx) => {
+      const template = EXTRA_IDEA_TEMPLATES[(idx + created.length) % EXTRA_IDEA_TEMPLATES.length];
+      created.push({
+        id: newId("idea"),
+        title: template.title.replace("{filename}", source.filename),
+        body: template.body.replace("{filename}", source.filename),
+        rationale: template.rationale,
+        relevance: template.relevance,
+        relevanceColor: template.relevanceColor,
+        confidence: template.confidence,
+        channels: template.channels,
+        state: "New",
+        pinned: false,
+        sourceIds: [source.id],
+        extractedAt: "just now",
+      });
+    });
 
-  // Synthesise the new ideas synchronously (no extraction delay for bulk
-  // "extract more" — the user already sat through the original processing
-  // pass when each source was first added). We still go through the
-  // pending → extraction-turn dance so the chat looks consistent.
-  const created = [];
-  sources.forEach((source, idx) => {
-    const template = EXTRA_IDEA_TEMPLATES[(idx + created.length) % EXTRA_IDEA_TEMPLATES.length];
-    const idea = {
-      id: newId("idea"),
-      title: template.title.replace("{filename}", source.filename),
-      body: template.body.replace("{filename}", source.filename),
-      rationale: template.rationale,
-      relevance: template.relevance,
-      relevanceColor: template.relevanceColor,
-      confidence: template.confidence,
-      channels: template.channels,
-      state: "New",
-      pinned: false,
-      sourceIds: [source.id],
-      extractedAt: "just now",
-    };
-    created.push(idea);
-  });
+    ideasMap.get(sessionId).unshift(...created);
 
-  ideasMap.get(sessionId).unshift(...created);
+    // Single extraction-turn summarising all of them. If only one source was
+    // selected we use its filename; otherwise show "N sources".
+    const filename =
+      sources.length === 1 ? sources[0].filename : `${sources.length} source${sources.length === 1 ? "" : "s"}`;
+    postExtractionResult(sessionId, { filename, ideas: created });
 
-  // Single extraction-turn summarising all of them. If only one source was
-  // selected we use its filename; otherwise show "N sources".
-  const filename =
-    sources.length === 1 ? sources[0].filename : `${sources.length} source${sources.length === 1 ? "" : "s"}`;
-  postExtractionResult(sessionId, { filename, ideas: created });
-
-  finishPending(sessionId, pendingId);
-  notify(sessionId);
-  return created;
+    finishPending(sessionId, pendingId);
+    notify(sessionId);
+    onDone?.(created);
+  }, 1600);
 }
 
 // Silently inject a set of ideas associated with one source. Used by flows
@@ -277,8 +277,8 @@ export function addSource(sessionId, kind) {
   // hits Processed. The legacy call here would have double-posted.
 
   // 2b. Flip the composer into "thinking" mode for the duration of the
-  // extraction. Hidden pending marker — never rendered as a turn.
-  const pendingId = startPending(sessionId);
+  // extraction — the composer status bar reads "Extracting ideas…".
+  const pendingId = startPending(sessionId, "Extracting ideas");
 
   // 3. Simulate extraction — standardized 6s reasoning delay across the
   // prototype so every "Archie is thinking" moment feels predictable.

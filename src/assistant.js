@@ -343,16 +343,19 @@ export function postExtractionResult(sessionId, { filename, ideas }) {
 
 // Push a "pending" marker to indicate the session is busy (e.g. while a source
 // is being extracted). Renders as an inline "Extracting" notice in the thread
-// (Figma 25:1413) and also drives the composer thinking chip via its
-// status === "loading" tag. Returns an id so the caller can clear the marker
-// when work finishes.
-export function startPending(sessionId) {
+// (Figma 25:1413) and also drives the composer status bar via its
+// status === "loading" tag. `meta` is the human label shown on the composer
+// status bar (e.g. "Extracting ideas", "Generating drafts"); it defaults to a
+// generic "Working". Returns an id so the caller can clear the marker when work
+// finishes.
+export function startPending(sessionId, meta = null) {
   const thread = getThread(sessionId);
   const id = newId();
   thread.push({
     id,
     role: "pending",
     status: "loading",
+    meta: meta || null,
     createdAt: Date.now(),
   });
   notify(sessionId);

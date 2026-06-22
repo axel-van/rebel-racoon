@@ -1027,6 +1027,63 @@
   border-color: var(--ref-color-electric-blue-100);
 }
 
+/* Draft-ready status bar (DS .ap-status-card) glued onto the composer card:
+   the bar rounds its top corners to match the card, and the card it precedes
+   drops its top radius + top border so the two read as one panel (the bar's
+   green bottom border is the seam). */
+.session__composer-status {
+  border-top-left-radius: var(--ref-border-radius-md);
+  border-top-right-radius: var(--ref-border-radius-md);
+}
+.session__composer-status + .session__composer-card {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top: 0;
+}
+
+/* Enter / exit motion for the status bar. The height portion animates to the
+   element's measured natural height (--status-h, set in JS) so the collapse-
+   reveal stays in sync with the fade + rise — no max-height "dead time". Enter
+   eases out over the normal duration; exit accelerates and is shorter
+   (exit-faster-than-enter). overflow:hidden clips the card seam during the
+   collapse. The global prefers-reduced-motion guard (base.css) drops both to
+   ~instant. */
+.session__composer-status.is-entering {
+  overflow: hidden;
+  animation: composer-status-in var(--ref-animation-normal) var(--app-ease-out) both;
+}
+.session__composer-status.is-leaving {
+  overflow: hidden;
+  pointer-events: none;
+  animation: composer-status-out var(--ref-animation-short) var(--app-ease-standard) both;
+}
+
+@keyframes composer-status-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: var(--status-h, 64px);
+  }
+}
+
+@keyframes composer-status-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: var(--status-h, 64px);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+    max-height: 0;
+  }
+}
+
 .session__composer-input-field {
   /* Flex into the row beside the (optional) inline connector chip. */
   flex: 1;
@@ -1153,23 +1210,6 @@
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-80);
-}
-
-/* Thinking counter (Figma 25:1181) — 12px loader + bold xs caption.
-   Lives on the same surface as the composer; no background of its own. */
-.session__composer-thinking {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xs) 0;
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-100);
-}
-
-.session__composer-thinking[hidden] {
-  display: none;
 }
 
 /* Session chip inside the composer card. */
