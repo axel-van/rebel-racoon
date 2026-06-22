@@ -22,8 +22,8 @@
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { escapeHtml } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
-import { getContextById } from "../contexts-store.js?v=29";
+import { getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=2";
+import { getContextById } from "../contexts-store.js?v=30";
 
 const MODAL_ID = "search";
 

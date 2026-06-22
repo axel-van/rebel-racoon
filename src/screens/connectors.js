@@ -12,12 +12,12 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=101";
+import { renderTopbar } from "../components/topbar.js?v=102";
 import { showToast } from "../components/toast.js?v=20";
 import { setHandoff } from "../handoff.js?v=20";
-import { findConnector, setConnectorStatus, subscribe as subscribeConnectors } from "../connectors-store.js?v=23";
-import { renderGalleryBody } from "../connectors-view.js?v=5";
-import { open as openConnectorsModal } from "../components/connectors-modal.js?v=6";
+import { findConnector, setConnectorStatus, subscribe as subscribeConnectors } from "../connectors-store.js?v=24";
+import { renderGalleryBody } from "../connectors-view.js?v=6";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=7";
 import { isFlagOn } from "../feature-flags.js?v=4";
 
 // Local view state (search + category filter).

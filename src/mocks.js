@@ -84,9 +84,57 @@ export const chatStarters = [
     tone: "green",
     title: "Use top performing posts",
     subtitle: "Draw on your best-performing posts and turn what works into fresh drafts.",
-    cta: "Coming soon",
-    // Teaser only — rendered non-interactive with a "Coming soon" badge.
-    comingSoon: true,
+    cta: "Reuse a winner",
+    // Launches the in-chat "milk a top post" flow (top-posts-flow.js) via the
+    // starter click delegation in session.js — same direct-action pattern as
+    // "open-batch" / "open-video-clips". No prompt injection.
+    action: "open-top-posts",
+  },
+];
+
+// Top-performing published posts — the seed for the "Use top performing posts"
+// flow (top-posts-store.js / top-posts-flow.js). These are POSTS the user
+// already shipped, not drafts: each carries the network it ran on, an excerpt,
+// the headline performance metrics, a human "perf badge" (e.g. "Top 3%"), and a
+// `whyItWorked` line Archie verbalises so the user understands the winning
+// pattern before milking it. Account-level (not per session) — loaded into the
+// global top-posts-store. Empty in new-alt mode (no published history yet).
+export const topPosts = [
+  {
+    id: "top-1",
+    network: "linkedin",
+    publishedAt: "12 days ago",
+    excerpt:
+      "We deleted our entire onboarding checklist. Activation went up 18%. Here's the counterintuitive reason fewer steps converted more people.",
+    perfBadge: "Top 3%",
+    metricLine: "3.4× your average engagement · 1,240 reactions · 86 comments",
+    metrics: { engagementRate: 7.2, impressions: 41800, reactions: 1240, comments: 86, reposts: 51 },
+    whyItWorked: "a contrarian hook backed by one concrete number, then a promise to explain the why",
+    hashtags: ["SaaS", "Onboarding"],
+  },
+  {
+    id: "top-2",
+    network: "x",
+    publishedAt: "20 days ago",
+    excerpt:
+      "Most “AI content tools” just autocomplete. The ones that win do the boring part: they remember your brand voice across every post. That's the whole game.",
+    perfBadge: "Top 5%",
+    metricLine: "2.8× your average engagement · 940 likes · 210 reposts",
+    metrics: { engagementRate: 5.1, impressions: 33200, reactions: 940, comments: 47, reposts: 210 },
+    whyItWorked: "a sharp category take that names the real problem, ending on a quotable one-liner",
+    hashtags: ["AI", "ContentMarketing"],
+  },
+  {
+    id: "top-3",
+    network: "instagram",
+    publishedAt: "1 month ago",
+    excerpt:
+      "Behind the scenes: how our 4-person team ships a week of social content in one afternoon. Swipe for the exact workflow →",
+    perfBadge: "Top 8%",
+    metricLine: "2.1× your average engagement · 2,030 likes · 312 saves",
+    metrics: { engagementRate: 6.4, impressions: 28900, reactions: 2030, comments: 64, saves: 312 },
+    whyItWorked: "a behind-the-scenes promise plus a save-worthy, step-by-step payoff",
+    hashtags: ["BehindTheScenes", "Workflow"],
   },
 ];
 

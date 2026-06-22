@@ -18,8 +18,8 @@
 import { escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 import { showToast } from "./toast.js?v=20";
-import { getSessionById } from "../sessions-store.js?v=1";
-import { getContextById, getDefaultContext } from "../contexts-store.js?v=29";
+import { getSessionById } from "../sessions-store.js?v=2";
+import { getContextById, getDefaultContext } from "../contexts-store.js?v=30";
 
 const MODAL_ID = "generateImage";
 

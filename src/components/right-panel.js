@@ -1,7 +1,7 @@
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=42";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=43";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=43";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=44";
 import { isNewUser } from "../user-mode.js?v=22";
 import { getPath } from "../router.js?v=30";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -12,35 +12,35 @@ import {
   insertPost,
   updatePostContent,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=29";
+} from "../posts-store.js?v=30";
 import { renderPostCard } from "./post-card.js?v=37";
 import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=47";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=86";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=87";
 import {
   getSources as getStreamSources,
   subscribeSources,
   updateSourceClips,
   removeSources,
   renameSource,
-} from "../sources-stream.js?v=38";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=44";
+} from "../sources-stream.js?v=39";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=45";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { getConnectedConnectors } from "../connectors-store.js?v=23";
-import { askConnector } from "../connector-ask.js?v=3";
-import { renderConnectorLogo } from "../connectors-view.js?v=5";
-import { open as openConnectorsModal } from "./connectors-modal.js?v=6";
-import { addMention as addComposerMention } from "../composer-mentions.js?v=6";
+import { getConnectedConnectors } from "../connectors-store.js?v=24";
+import { askConnector } from "../connector-ask.js?v=4";
+import { renderConnectorLogo } from "../connectors-view.js?v=6";
+import { open as openConnectorsModal } from "./connectors-modal.js?v=7";
+import { addMention as addComposerMention } from "../composer-mentions.js?v=7";
 import { iconFor } from "../file-kinds.js?v=20";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
-import { open as openScheduleModal } from "./schedule-modal.js?v=37";
-import { open as openGenerateImageModal } from "./generate-image-modal.js?v=25";
+import { open as openScheduleModal } from "./schedule-modal.js?v=38";
+import { open as openGenerateImageModal } from "./generate-image-modal.js?v=26";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
@@ -569,7 +569,7 @@ export function init() {
           updateSourceClips(srcId, nextClips);
           const edited = (nextClips || []).find((c) => c.id === ref.clipId);
           if (!edited) return;
-          import("../posts-store.js?v=29").then(({ updatePostClip }) => {
+          import("../posts-store.js?v=30").then(({ updatePostClip }) => {
             updatePostClip(sid, pid, {
               start: edited.start,
               end: edited.end,
@@ -641,7 +641,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=283").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=284").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -841,7 +841,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=283").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=284").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -859,7 +859,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=283").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=284").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -1629,7 +1629,7 @@ function onPostRewrite(postId, intent = "fresh") {
   // streaming → commit. Loaded lazily so the rewrite code is only
   // pulled in when the user actually triggers a regen. `intent` biases
   // the rewrite (shorter / longer / warmer / formal / fresh).
-  import("../draft-rewrite.js?v=3").then(({ startRewrite }) => {
+  import("../draft-rewrite.js?v=4").then(({ startRewrite }) => {
     startRewrite(sid, postId, intent);
   });
 }
@@ -2479,7 +2479,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=283").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=284").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

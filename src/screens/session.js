@@ -1,16 +1,16 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=101";
-import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=43";
+import { renderTopbar } from "../components/topbar.js?v=102";
+import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=44";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
   renderProfileTag,
   profileForNetwork,
-} from "../social-profiles.js?v=20";
+} from "../social-profiles.js?v=21";
 import { FORMATS, formatsForNetwork, defaultFormatFor } from "../clip-formats.js?v=1";
-import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=1";
-import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=29";
+import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=2";
+import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=30";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
   getThread,
@@ -28,39 +28,40 @@ import {
   submitAssistantChoice,
   sendConnectorMessage,
   markConnectPromptResolved,
-} from "../assistant.js?v=42";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=32";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=21";
+} from "../assistant.js?v=43";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=33";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=22";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=6";
+} from "../composer-mentions.js?v=7";
 import {
   getPosts,
   addPostDraft,
   attachImageToDraft,
   setSubtitleStyle,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=29";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=33";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=25";
-import * as sidebarWizard from "../sidebar-wizard.js?v=38";
+} from "../posts-store.js?v=30";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=34";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=26";
+import { startTopPostsFlow } from "../top-posts-flow.js?v=1";
+import * as sidebarWizard from "../sidebar-wizard.js?v=39";
 import * as inlineQuestion from "../inline-question.js?v=34";
-import * as clipStudio from "../clip-studio.js?v=11";
+import * as clipStudio from "../clip-studio.js?v=12";
 import * as batchStudio from "../batch-studio.js?v=4";
-import { askConnector } from "../connector-ask.js?v=3";
-import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=23";
-import { renderConnectorLogo } from "../connectors-view.js?v=5";
+import { askConnector } from "../connector-ask.js?v=4";
+import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=24";
+import { renderConnectorLogo } from "../connectors-view.js?v=6";
 import {
   getActiveConnector,
   clearActiveConnector,
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=83";
-import * as playbookEditor from "../playbook-editor.js?v=42";
+import * as contextBuilder from "../context-builder.js?v=84";
+import * as playbookEditor from "../playbook-editor.js?v=43";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -71,11 +72,11 @@ import {
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=25";
-import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=25";
+import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=26";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=47";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=31";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=44";
-import { open as openConnectorsModal } from "../components/connectors-modal.js?v=6";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=32";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=45";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=7";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
   classifyFile,
@@ -91,7 +92,7 @@ import {
   updateSourceClips,
   extractClipsForSource,
   setSourceIdeaCount,
-} from "../sources-stream.js?v=38";
+} from "../sources-stream.js?v=39";
 import { renderClipCard } from "../components/clip-card.js?v=7";
 import { showToast } from "../components/toast.js?v=20";
 import {
@@ -99,12 +100,12 @@ import {
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=170";
+} from "../components/right-panel.js?v=171";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=2";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=7";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=7";
+import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=3";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=8";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=8";
 
 // Default composer placeholder — restored whenever no connector is attached.
 // A connected connector swaps it for "Ask {name} anything…".
@@ -3960,6 +3961,13 @@ function bindSession(root, session) {
       if (starterBtn && starterBtn.dataset.starterAction === "open-batch") {
         setHandoff("pendingStartBatch", {});
         navigate(`/session/batch-${Date.now().toString(36)}`);
+        return;
+      }
+      // "Use top performing posts" — launch the milker flow inline in this
+      // session (surfaces winners → pick a reuse mode → drafts). Switches the
+      // assistant panel to the inline-question chrome via startTopPostsFlow.
+      if (starterBtn && starterBtn.dataset.starterAction === "open-top-posts") {
+        startTopPostsFlow(session.id);
         return;
       }
 
