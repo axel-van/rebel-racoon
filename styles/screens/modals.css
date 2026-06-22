@@ -50,6 +50,7 @@ body.has-modal {
 .analyze-profiles-modal,
 .fill-document-modal,
 .search-modal,
+.top-post-modal,
 .shortcut-legend {
   position: fixed;
   top: 50vh;
@@ -60,6 +61,18 @@ body.has-modal {
   max-height: calc(100vh - 48px);
   border: 1px solid var(--sys-border-color-default);
   box-shadow: var(--app-shadow-popover-lg);
+}
+
+/* Top-post preview — a focused dialog; the body scrolls inside a capped height
+   so the modal reads as a card, not a full-viewport sheet. */
+.top-post-modal {
+  width: min(calc(100% - 32px), 480px);
+  max-height: min(calc(100vh - 48px), 760px);
+}
+
+.top-post-modal__scroll {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .connectors-modal {
@@ -449,6 +462,7 @@ body.has-modal {
 .analyze-profiles-modal.open,
 .fill-document-modal.open,
 .search-modal.open,
+.top-post-modal.open,
 .shortcut-legend.open {
   display: flex;
   animation: app-modal-fade-in var(--ref-animation-normal) ease;
