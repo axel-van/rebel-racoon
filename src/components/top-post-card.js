@@ -163,18 +163,13 @@ function statTile(value, label, hero = false) {
 export function renderTopPostPreview(post) {
   if (!post) return "";
   const net = labelFor(post.network);
-  const shareTile =
-    post.saves != null
-      ? statTile(post.saves.toLocaleString(), "saves")
-      : statTile((post.shares ?? 0).toLocaleString(), "shares");
-
+  // The three analytical metrics that drive the decision. The raw engagement
+  // counts (reactions / comments / shares) live in the Exact-post card below,
+  // so they're not duplicated here.
   const stats = [
     statTile(`${post.vsAvg}×`, "vs your average", true),
     statTile(`${post.engagementRate}%`, "engagement rate"),
     statTile(formatCompact(post.impressions), "reach"),
-    statTile((post.reactions ?? 0).toLocaleString(), "reactions"),
-    statTile((post.comments ?? 0).toLocaleString(), "comments"),
-    shareTile,
   ].join("");
 
   const hashtags = (post.hashtags || []).length
@@ -188,7 +183,7 @@ export function renderTopPostPreview(post) {
           <i class="${iconFor(post.network)}" aria-hidden="true"></i>
           ${net}
         </span>
-        <span class="ap-status green no-dot">${post.perfBadge} on ${net}</span>
+        <span class="ap-status green no-dot">${post.perfBadge}</span>
       </div>
 
       <section class="tp-preview__section">

@@ -363,19 +363,19 @@
 }
 
 /* Stats grid — hero spans the full width, the rest flow 3-up. */
+/* Hero (×-vs-avg) spans the row as the one boxed, emphasised metric; the two
+   supporting stats sit plain below it (no boxing) — only the headline is a
+   tile, so the section reads as "one big number + context". */
 .tp-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--ref-spacing-xs);
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--ref-spacing-sm);
 }
 
 .tp-stat {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  padding: var(--ref-spacing-xs);
-  border: 1px solid var(--app-border-soft);
-  border-radius: var(--ref-border-radius-sm);
+  gap: 2px;
 }
 
 .tp-stat__value {
@@ -386,19 +386,29 @@
 }
 
 .tp-stat__label {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   font-size: var(--sys-text-style-caption-size);
   color: var(--sys-text-color-light);
 }
 
 .tp-stat--hero {
   grid-column: 1 / -1;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-sm);
+  border: 1px solid var(--ref-color-green-40);
+  border-radius: var(--ref-border-radius-sm);
   background: var(--ref-color-green-10);
-  border-color: var(--ref-color-green-40);
 }
 
 .tp-stat--hero .tp-stat__value {
   font-size: 2rem;
   color: var(--ref-color-green-100);
+}
+
+.tp-stat--hero .tp-stat__label {
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 /* Faithful network-style preview of the published post. */
