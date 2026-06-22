@@ -50,7 +50,7 @@ export function renderPostCard(post, opts = {}) {
   const originBadge =
     post.origin && !post.isRegenerating
       ? `<div class="posts__card-origin-row">
-          <span class="ap-status grey no-dot posts__card-origin">
+          <span class="ap-status no-dot posts__card-origin">
             <i class="${post.origin.icon}" aria-hidden="true"></i> ${post.origin.label}
           </span>
         </div>`

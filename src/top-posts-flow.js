@@ -322,10 +322,8 @@ export function startTopPostsFlow(sessionId) {
     );
     return;
   }
-  postAssistantMessage(
-    sessionId,
-    "Let's build on what already works. Here are your top-performing posts — pick the one you want to milk for more.",
-  );
+  // No intro chat bubble — the board screen renders its own studio-style
+  // header (renderTopPostsPickerScreen in session.js).
   openBoard(sessionId);
 }
 

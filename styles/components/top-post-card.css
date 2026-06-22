@@ -14,11 +14,58 @@
   max-width: 980px;
 }
 
+/* Studio-style intro header — mirrors .batch-studio__intro / .clip-studio__intro
+   so the milker reads as a first-class workflow. */
+.top-posts-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.top-posts-intro__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
+  border-radius: var(--app-radius-pill);
+  background: var(--app-butter);
+  color: var(--ref-color-grey-100);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+}
+
+.top-posts-intro__badge i {
+  font-size: var(--sys-icon-css-xs);
+  color: var(--app-archie-mark);
+}
+
+.top-posts-intro__title {
+  margin: 0;
+  font-family: var(--ref-font-family);
+  font-size: var(--sys-text-style-marketing-size);
+  line-height: var(--sys-text-style-marketing-line-height);
+  font-weight: var(--sys-text-style-marketing-weight);
+  letter-spacing: -0.01em;
+  color: var(--ref-color-grey-100);
+}
+
+.top-posts-intro__sub {
+  margin: 0;
+  max-width: 540px;
+  font-size: var(--sys-text-style-subtitle-size);
+  line-height: var(--sys-text-style-subtitle-line-height);
+  font-weight: var(--sys-text-style-subtitle-weight);
+  color: var(--ref-color-grey-60);
+}
+
 .top-posts-board {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-sm);
-  margin-top: var(--ref-spacing-sm);
+  margin-top: var(--ref-spacing-lg);
 }
 
 /* ── Sort toolbar ───────────────────────────────────────────────── */

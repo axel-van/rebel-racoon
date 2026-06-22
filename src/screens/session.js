@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=109";
+import { renderTopbar } from "../components/topbar.js?v=110";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -48,7 +48,7 @@ import {
 } from "../posts-store.js?v=31";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=37";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=29";
-import * as topPostsFlow from "../top-posts-flow.js?v=8";
+import * as topPostsFlow from "../top-posts-flow.js?v=9";
 import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=4";
 import * as sidebarWizard from "../sidebar-wizard.js?v=40";
 import * as inlineQuestion from "../inline-question.js?v=34";
@@ -63,8 +63,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=91";
-import * as playbookEditor from "../playbook-editor.js?v=50";
+import * as contextBuilder from "../context-builder.js?v=92";
+import * as playbookEditor from "../playbook-editor.js?v=51";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -104,7 +104,7 @@ import {
   openClips as openClipsPanel,
   openTopPost as openTopPostPanel,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=178";
+} from "../components/right-panel.js?v=179";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=6";
@@ -1676,19 +1676,50 @@ function renderAssistantPanelWizard(session) {
 // thread subscriber + scroll-pin + drag rebind in wireAssistantPanel keep
 // working; the grid sits in the scrollable chat area (no sticky picker bar —
 // clicking a card advances straight to the reuse-mode step).
+// Workflow header steps — mirrors the Batch / Clip studio intros so the
+// milker reads as a first-class workflow, not a bare grid.
+const TOP_POSTS_STEPS = [
+  {
+    tone: "in",
+    icon: "ap-icon-feature-analytics",
+    title: "Pick a winner",
+    text: "Choose one of your top-performing posts — sorted by performance, reach, or recency.",
+  },
+  {
+    tone: "ai",
+    icon: "ap-icon-sparkles-mermaid",
+    title: "Choose how to reuse it",
+    text: "Repurpose to other channels, spin variations, refresh & repost, or save the angle.",
+  },
+  {
+    tone: "out",
+    icon: "ap-icon-stack",
+    title: "Fresh drafts",
+    text: "I draft new posts in your playbook's voice — ready to review and schedule.",
+  },
+];
+
 function renderTopPostsPickerScreen(session) {
   const state = topPostsFlow.getPickerState(session.id);
   if (!state) return "";
-  const thread = getThread(session.id);
-  // Distinct container classes (not #inlineQuestionChat / wizard-chat) so the
-  // chat scroll-pin in wireAssistantPanel does NOT yank this board to the
-  // bottom — a selection screen must open at the top (toolbar + #1 winner).
-  // session__assistant-board-inner top-anchors + widens the column.
+  // A studio-style screen (like Batch / Clip): a centered intro header +
+  // workflow-flow steps, then the sortable winner board. Distinct container
+  // classes (not #inlineQuestionChat / wizard-chat) so the chat scroll-pin in
+  // wireAssistantPanel doesn't yank it to the bottom — it opens at the top.
   return html`
     <aside class="session__assistant session__assistant--wizard session__assistant--board" aria-label="Assistant panel">
       <div class="analyse__chat session__assistant-board-chat">
         <div class="analyse__chat-inner session__assistant-board-inner">
-          <div data-assistant-thread>${raw(renderThread(thread, session.id))}</div>
+          <div class="top-posts-intro">
+            <span class="top-posts-intro__badge"
+              ><i class="ap-icon-feature-analytics" aria-hidden="true"></i>Top posts</span
+            >
+            <h1 class="top-posts-intro__title">Build on what already works</h1>
+            <p class="top-posts-intro__sub">
+              Pick one of your best-performing posts and I'll repurpose, remix, or refresh it into new drafts.
+            </p>
+          </div>
+          ${raw(buildWorkflowFlow(TOP_POSTS_STEPS))}
           ${raw(renderTopPostsBoard({ posts: state.posts, sort: state.sort }))}
         </div>
       </div>
