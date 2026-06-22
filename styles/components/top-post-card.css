@@ -113,18 +113,7 @@
   align-items: stretch;
   gap: var(--ref-spacing-md);
   text-align: left;
-  cursor: pointer;
   border: 1px solid var(--app-border);
-  transition: border-color 0.15s ease;
-}
-
-/* Standard blue hover border, consistent with the app's other clickable cards
-   (.starter-card) — green is never used for hover edges, and these cards take
-   no elevation / lift on hover. */
-.top-post-card:hover,
-.top-post-card:focus-visible {
-  outline: none;
-  border-color: var(--ref-color-electric-blue-100);
 }
 
 /* ── Group 1 · identity ─────────────────────────────────────────── */
@@ -254,20 +243,17 @@
   color: var(--ref-color-grey-100);
 }
 
-/* ── CTA ────────────────────────────────────────────────────────── */
-.top-post-card__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
+/* ── Actions (Details + Repurpose) ──────────────────────────────── */
+.top-post-card__actions {
+  display: flex;
+  gap: var(--ref-spacing-xs);
   margin-top: auto;
-  color: var(--ref-color-orange-100);
-  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
-.top-post-card:hover .top-post-card__cta i,
-.top-post-card:focus-visible .top-post-card__cta i {
-  transform: translateX(2px);
-  transition: transform 0.15s ease;
+/* Repurpose is the primary action — give it the room; Details stays compact. */
+.top-post-card__actions [data-top-post-repurpose] {
+  flex: 1;
+  justify-content: center;
 }
 
 /* ── Conversation echo (picked-post preview in the thread) ───────── */
@@ -442,58 +428,6 @@
 .tp-stat--hero .tp-stat__label {
   text-transform: none;
   letter-spacing: 0;
-}
-
-/* ── Expanding card (top-post-expand.js) ────────────────────────── */
-/* The clicked board card morphs (FLIP) into this centered, enlarged panel that
-   floats above the grid — no scrim; the layer is transparent and only catches
-   outside clicks. */
-.tp-expand-layer {
-  position: fixed;
-  inset: 0;
-  z-index: var(--app-z-modal);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--ref-spacing-lg);
-}
-
-.tp-expand {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  width: min(100%, 820px);
-  max-height: min(100%, 760px);
-  overflow: hidden;
-  background: var(--ref-color-white);
-  border: 1px solid var(--app-border);
-  border-radius: var(--ref-border-radius-md);
-  box-shadow: var(--app-shadow-popover-lg);
-  will-change: transform;
-}
-
-.tp-expand__close {
-  position: absolute;
-  top: var(--ref-spacing-xs);
-  right: var(--ref-spacing-xs);
-  z-index: 2;
-}
-
-.tp-expand__scroll {
-  min-height: 0;
-  overflow-y: auto;
-  /* Content cross-fades in as the card morphs open (and out as it collapses). */
-  transition: opacity 0.2s ease;
-}
-
-.tp-expand.is-collapsed .tp-expand__scroll {
-  opacity: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tp-expand__scroll {
-    transition: none;
-  }
 }
 
 /* Why-it-worked — Archie's read on the performance, grouped with the metrics

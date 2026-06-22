@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=116";
+import { renderTopbar } from "../components/topbar.js?v=117";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -49,7 +49,7 @@ import {
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=37";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=29";
 import * as topPostsFlow from "../top-posts-flow.js?v=9";
-import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=8";
+import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=9";
 import * as sidebarWizard from "../sidebar-wizard.js?v=40";
 import * as inlineQuestion from "../inline-question.js?v=34";
 import * as clipStudio from "../clip-studio.js?v=13";
@@ -63,8 +63,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=98";
-import * as playbookEditor from "../playbook-editor.js?v=57";
+import * as contextBuilder from "../context-builder.js?v=99";
+import * as playbookEditor from "../playbook-editor.js?v=58";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -98,13 +98,13 @@ import {
 } from "../sources-stream.js?v=40";
 import { renderClipCard } from "../components/clip-card.js?v=7";
 import { showToast } from "../components/toast.js?v=20";
-import { open as openTopPostExpand } from "../components/top-post-expand.js?v=2";
+import { open as openTopPostModal } from "../components/top-post-modal.js?v=2";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=185";
+} from "../components/right-panel.js?v=186";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=6";
@@ -4109,17 +4109,22 @@ function bindSession(root, session) {
         topPostsFlow.setSort(session.id, topPostSort.dataset.topPostSort);
         return;
       }
-      // Winner-board card click → open the post in the preview panel to
-      // inspect stats + the exact post before committing. The card morphs
-      // (FLIP) into the expanded preview; "Build on this" hands back via
+      // Winner-board card "Details" → open the post in the preview modal to
+      // inspect stats + the exact post; its in-modal "Repurpose" hands back via
       // onBuild → the reuse-mode picker.
-      const topPostOpen = event.target.closest("[data-top-post-open]");
-      if (topPostOpen) {
-        const id = topPostOpen.dataset.topPostOpen;
+      const topPostDetails = event.target.closest("[data-top-post-details]");
+      if (topPostDetails) {
+        const id = topPostDetails.dataset.topPostDetails;
         const post = topPostsFlow.getPickerState(session.id)?.posts.find((p) => p.id === id);
         if (post) {
-          openTopPostExpand(topPostOpen, post, { onBuild: () => topPostsFlow.pickWinner(session.id, id) });
+          openTopPostModal(post, { onBuild: () => topPostsFlow.pickWinner(session.id, id) });
         }
+        return;
+      }
+      // "Repurpose" → straight into the reuse-mode picker for that winner.
+      const topPostRepurpose = event.target.closest("[data-top-post-repurpose]");
+      if (topPostRepurpose) {
+        topPostsFlow.pickWinner(session.id, topPostRepurpose.dataset.topPostRepurpose);
         return;
       }
 

@@ -66,7 +66,7 @@ function renderTopPostCard(post, { maxVsAvg }) {
   // in the current set, so the grid reads as a ranking at a glance.
   const pct = maxVsAvg > 0 ? Math.max(8, Math.round((post.vsAvg / maxVsAvg) * 100)) : 0;
   return html`
-    <button type="button" class="ap-card top-post-card" data-top-post-open="${post.id}">
+    <article class="ap-card top-post-card">
       <span class="top-post-card__id">
         <span class="top-post-card__head">
           <span class="top-post-card__net">
@@ -106,8 +106,13 @@ function renderTopPostCard(post, { maxVsAvg }) {
         <span class="top-post-card__why-text">${post.whyItWorked}</span>
       </span>
 
-      <span class="top-post-card__cta"> View details <i class="ap-icon-arrow-right" aria-hidden="true"></i> </span>
-    </button>
+      <div class="top-post-card__actions">
+        <button type="button" class="ap-button stroked grey" data-top-post-details="${post.id}">Details</button>
+        <button type="button" class="ap-button primary orange" data-top-post-repurpose="${post.id}">
+          <i class="ap-icon-sparkles" aria-hidden="true"></i> Repurpose
+        </button>
+      </div>
+    </article>
   `;
 }
 
@@ -227,7 +232,7 @@ export function renderTopPostPreview(post) {
 
       <div class="tp-preview__actions">
         <button type="button" class="ap-button primary orange" data-top-post-build="${post.id}">
-          <i class="ap-icon-sparkles" aria-hidden="true"></i> Build on this
+          <i class="ap-icon-sparkles" aria-hidden="true"></i> Repurpose
         </button>
         <a class="ap-button stroked" href="${postUrl(post)}" target="_blank" rel="noopener noreferrer">
           View on ${net} <i class="ap-icon-external-link" aria-hidden="true"></i>
