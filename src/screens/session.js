@@ -37,7 +37,6 @@ import {
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
 } from "../composer-mentions.js?v=6";
-import { iconFor as iconForKind } from "../file-kinds.js?v=20";
 import {
   getPosts,
   addPostDraft,
@@ -1449,7 +1448,7 @@ function renderMentionPickerInto(container, sessionId, mode = "mention") {
             ${sources
               .map((s) =>
                 renderRow(
-                  iconForKind(s.kind),
+                  "ap-icon-sparkles",
                   s.filename,
                   s.kind || "",
                   `data-mention-pick-source="${escapeHtmlAttr(s.id)}"`,
