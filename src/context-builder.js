@@ -14,11 +14,11 @@
 // suggestions, editingId, onComplete }.
 
 import * as inlineQuestion from "./inline-question.js?v=34";
-import { postAssistantMessage, postUserTurn } from "./assistant.js?v=45";
-import * as rightPanel from "./components/right-panel.js?v=176";
+import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=45";
+import * as rightPanel from "./components/right-panel.js?v=177";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=31";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=22";
-import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=48";
+import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=49";
 import { connectors as connectorMocks } from "./mocks.js?v=45";
 import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=22";
 
@@ -256,7 +256,7 @@ function askAltProfile(sessionId) {
       if (profile) {
         d.selectedProfileId = profile.id;
         d.connectedSocials = [profile.platform];
-        postUserTurn(sessionId, `${profile.platformLabel} · ${profile.handle || profile.kind || ""}`);
+        postUserProfilesTurn(sessionId, [profile]);
       }
       inlineQuestion.exit(sessionId);
       notify(sessionId);

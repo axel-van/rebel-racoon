@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=107";
+import { renderTopbar } from "../components/topbar.js?v=108";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -61,8 +61,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=89";
-import * as playbookEditor from "../playbook-editor.js?v=48";
+import * as contextBuilder from "../context-builder.js?v=90";
+import * as playbookEditor from "../playbook-editor.js?v=49";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -102,7 +102,7 @@ import {
   openClips as openClipsPanel,
   openTopPost as openTopPostPanel,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=176";
+} from "../components/right-panel.js?v=177";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=5";
@@ -1944,10 +1944,10 @@ function askProfileQuestion(sessionId, ideaId, { count = 1, angle = null, angleP
     items: buildConnectedProfileItems(),
     onPick: (accountId) => {
       const account = connected.find((a) => a.id === accountId);
-      // Echo the pick as a user turn so the chosen profile stays visible
-      // in the thread after the picker unmounts. Same "Platform · handle"
-      // format the onboarding profile step uses.
-      if (account) postUserTurn(sessionId, `${account.platformLabel} · ${account.handle || account.kind || ""}`);
+      // Echo the pick as a visual profile chip (avatar + handle) so selecting a
+      // profile gives the same object-preview feedback as picking a post — not
+      // a plain text bubble. Mirrors the multi-account batch path below.
+      if (account) postUserProfilesTurn(sessionId, [account]);
       const channels = account?.platform ? [account.platform] : null;
       // Multi-angle batch (from the angle stepper) → one draft run that
       // produces each angle's count. Otherwise the legacy single-angle path.

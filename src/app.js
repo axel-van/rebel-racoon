@@ -1,9 +1,9 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=4";
 import { initArchieLoader } from "./archie-loader.js?v=2";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=107";
-import { initSidebar, renderSidebar } from "./components/sidebar.js?v=92";
-import { init as initRightPanel } from "./components/right-panel.js?v=176";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=108";
+import { initSidebar, renderSidebar } from "./components/sidebar.js?v=93";
+import { init as initRightPanel } from "./components/right-panel.js?v=177";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=39";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=24";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
@@ -20,17 +20,17 @@ import { init as initSearchModal } from "./components/search-modal.js?v=5";
 import {
   init as initConversationStatusCard,
   render as renderConversationStatusCard,
-} from "./components/conversation-status-card.js?v=54";
+} from "./components/conversation-status-card.js?v=55";
 import { renderDashboard } from "./screens/dashboard.js?v=48";
-import { renderSession } from "./screens/session.js?v=292";
-import { renderIdeas } from "./screens/ideas.js?v=67";
-import { renderContexts } from "./screens/contexts.js?v=76";
-import { renderConnectors } from "./screens/connectors.js?v=15";
+import { renderSession } from "./screens/session.js?v=293";
+import { renderIdeas } from "./screens/ideas.js?v=68";
+import { renderContexts } from "./screens/contexts.js?v=77";
+import { renderConnectors } from "./screens/connectors.js?v=16";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=71";
-import { renderPlaybook } from "./screens/playbook.js?v=72";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=72";
+import { renderPlaybook } from "./screens/playbook.js?v=73";
 import * as __capAddSource from "./components/add-source-modal.js?v=47";
 import * as __capGenImage from "./components/generate-image-modal.js?v=27";
 import * as __capBug from "./components/bug-report-modal.js?v=24";
@@ -42,7 +42,7 @@ import {
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=176";
+} from "./components/right-panel.js?v=177";
 
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
