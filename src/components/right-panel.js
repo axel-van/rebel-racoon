@@ -1,5 +1,5 @@
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=47";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=48";
 import { isFlagOn } from "../feature-flags.js?v=4";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=45";
 import { isNewUser } from "../user-mode.js?v=22";
@@ -18,7 +18,7 @@ import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=47";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=111";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=112";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -26,13 +26,13 @@ import {
   removeSources,
   renameSource,
 } from "../sources-stream.js?v=40";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=49";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=50";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=25";
 import { askConnector } from "../connector-ask.js?v=5";
 import { renderConnectorLogo } from "../connectors-view.js?v=7";
 import { open as openConnectorsModal } from "./connectors-modal.js?v=8";
-import { addMention as addComposerMention } from "../composer-mentions.js?v=11";
+import { addMention as addComposerMention } from "../composer-mentions.js?v=12";
 import { iconFor } from "../file-kinds.js?v=20";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
@@ -641,7 +641,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=311").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=312").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -841,7 +841,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=311").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=312").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -859,7 +859,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=311").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=312").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -2479,7 +2479,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=311").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=312").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

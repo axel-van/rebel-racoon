@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=126";
+import { renderTopbar } from "../components/topbar.js?v=127";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -29,16 +29,16 @@ import {
   submitAssistantChoice,
   sendConnectorMessage,
   markConnectPromptResolved,
-} from "../assistant.js?v=47";
+} from "../assistant.js?v=48";
 import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=37";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=26";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=38";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=27";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=11";
+} from "../composer-mentions.js?v=12";
 import {
   getPosts,
   addPostDraft,
@@ -46,9 +46,9 @@ import {
   setSubtitleStyle,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=31";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=38";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=30";
-import * as topPostsFlow from "../top-posts-flow.js?v=11";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=39";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=31";
+import * as topPostsFlow from "../top-posts-flow.js?v=12";
 import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=11";
 import * as sidebarWizard from "../sidebar-wizard.js?v=40";
 import * as inlineQuestion from "../inline-question.js?v=34";
@@ -63,8 +63,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=108";
-import * as playbookEditor from "../playbook-editor.js?v=67";
+import * as contextBuilder from "../context-builder.js?v=109";
+import * as playbookEditor from "../playbook-editor.js?v=68";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -77,8 +77,8 @@ import {
 } from "../components/content-workspace.js?v=25";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=27";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=47";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=36";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=49";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=37";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=50";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=8";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
@@ -105,11 +105,11 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=195";
+} from "../components/right-panel.js?v=196";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=8";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=12";
+import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=9";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=13";
 import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=9";
 
 // Default composer placeholder — restored whenever no connector is attached.
