@@ -46,7 +46,7 @@ import {
 } from "../posts-store.js?v=30";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=34";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=26";
-import { startTopPostsFlow } from "../top-posts-flow.js?v=1";
+import { startTopPostsFlow } from "../top-posts-flow.js?v=2";
 import * as sidebarWizard from "../sidebar-wizard.js?v=39";
 import * as inlineQuestion from "../inline-question.js?v=34";
 import * as clipStudio from "../clip-studio.js?v=12";

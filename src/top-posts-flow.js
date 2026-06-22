@@ -10,16 +10,24 @@
 //   2. chooseMode         — explain WHY it worked, then pick a reuse mode.
 //   3a. Repurpose         — pick target channels → one adapted draft per channel.
 //   3b. Variations        — pick how many drafts per winning angle (stepper).
-//   4. generate*          — thinking chip → create drafts via posts-store →
-//                           post a "Drafted N posts" result turn.
-//
-// Phase 1 ships the Repurpose + Variations modes. Refresh & repost and
-// Extract-the-angle (idea / Playbook) are planned follow-ups.
+//   3c. Refresh & repost  — one freshened draft → offer to schedule it.
+//   3d. Save the angle    — distil the winning pattern into a reusable idea.
+//   4. generate*          — thinking chip → create drafts/ideas → post a result
+//                           turn (drafts via posts-store, ideas via library).
 
-import { postUserTurn, postAssistantMessage, startPending, finishPending, postDraftResult } from "./assistant.js?v=43";
+import {
+  postUserTurn,
+  postAssistantMessage,
+  startPending,
+  finishPending,
+  postDraftResult,
+  postExtractionResult,
+} from "./assistant.js?v=43";
 import * as inlineQuestion from "./inline-question.js?v=34";
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=1";
 import { addPostDraft } from "./posts-store.js?v=30";
+import { injectIdeasForSource } from "./library.js?v=33";
+import { open as openScheduleModal } from "./components/schedule-modal.js?v=38";
 import { showToast } from "./components/toast.js?v=20";
 
 // Simulated "generating" delay — matches draft-flow's chip duration so the
@@ -163,8 +171,25 @@ function chooseMode(sessionId, postId) {
         caption: "Fresh posts on the same winning angle",
         icon: "ap-icon-shuffle",
       },
+      {
+        value: "refresh",
+        label: "Refresh & repost",
+        caption: "Freshen it up and schedule it to run again",
+        icon: "ap-icon-refresh",
+      },
+      {
+        value: "extract",
+        label: "Save the winning angle",
+        caption: "Turn what worked into a reusable idea",
+        icon: "ap-icon-star",
+      },
     ],
-    onPick: (mode) => (mode === "repurpose" ? askChannels(sessionId, post) : askVariations(sessionId, post)),
+    onPick: (mode) => {
+      if (mode === "repurpose") return askChannels(sessionId, post);
+      if (mode === "variations") return askVariations(sessionId, post);
+      if (mode === "refresh") return generateRefresh(sessionId, post);
+      return generateExtract(sessionId, post);
+    },
     onBack: () => startTopPostsFlow(sessionId),
   });
 }
@@ -256,5 +281,97 @@ function generateVariations(sessionId, post, angles, picks) {
       });
     },
     (err) => genError(err, () => generateVariations(sessionId, post, angles, picks)),
+  );
+}
+
+// ---- Step 3c: Refresh & repost ----------------------------------------
+
+// One freshened draft on the post's own network, then an offer to schedule it
+// straight into the queue (reusing the schedule modal). No extra picker before
+// generating — "refresh" is a single, opinionated action.
+function generateRefresh(sessionId, post) {
+  postUserTurn(sessionId, "Refresh & repost");
+  withPendingChip(
+    sessionId,
+    () => {
+      const draft = addPostDraft(sessionId, {
+        network: post.network,
+        text: ["Reposting this with fresh proof — it still holds up:", post.excerpt],
+        hashtags: post.hashtags || [],
+      });
+      postDraftResult(sessionId, {
+        ideaTitle: `Refreshed your top ${labelFor(post.network)} post`,
+        drafts: [draft],
+      });
+      offerSchedule(sessionId, draft);
+    },
+    (err) => genError(err, () => generateRefresh(sessionId, post)),
+  );
+}
+
+// After a refresh, ask whether to schedule the draft now. "Schedule it" opens
+// the standard schedule modal seeded with the single draft; "Keep as draft"
+// just confirms it's in Drafts.
+function offerSchedule(sessionId, draft) {
+  postAssistantMessage(sessionId, "Here's the refreshed version. Want me to schedule it to run again?");
+  inlineQuestion.ask(sessionId, {
+    stepLabel: "Repost",
+    title: "Schedule this repost?",
+    items: [
+      {
+        value: "schedule",
+        label: "Schedule it",
+        caption: "Pick a time and add it to your queue",
+        icon: "ap-icon-calendar",
+      },
+      {
+        value: "keep",
+        label: "Keep as a draft",
+        caption: "I'll leave it in Drafts for now",
+        icon: "ap-icon-feature-library",
+      },
+    ],
+    onPick: (choice) => {
+      if (choice === "schedule") {
+        postUserTurn(sessionId, "Schedule it");
+        openScheduleModal({
+          posts: [draft],
+          onConfirm: () =>
+            postAssistantMessage(sessionId, "Done — it's queued to run again. You'll find it on your calendar."),
+        });
+        return;
+      }
+      postUserTurn(sessionId, "Keep as a draft");
+      postAssistantMessage(sessionId, "Got it — it's waiting in your Drafts whenever you're ready.");
+    },
+  });
+}
+
+// ---- Step 3d: Save the winning angle as a reusable idea ---------------
+
+// Distil the winning pattern (its `whyItWorked`) into one reusable idea so the
+// user can build on the formula later. Lands in the Ideas library via
+// injectIdeasForSource (dual-write so it shows in the Ideas panel) and posts an
+// inline extraction-result turn.
+function generateExtract(sessionId, post) {
+  postUserTurn(sessionId, "Save the winning angle");
+  withPendingChip(
+    sessionId,
+    () => {
+      const idea = {
+        title: `The winning formula behind your top ${labelFor(post.network)} post`,
+        body: `What made it land: ${post.whyItWorked}. Reuse this formula on your next ${labelFor(post.network)} post.`,
+        kind: "insight",
+        tags: post.hashtags || [],
+        rationale: `Distilled from a ${post.perfBadge} post (${post.metricLine}).`,
+        channels: [post.network],
+      };
+      const created = injectIdeasForSource(sessionId, post.id, [idea]);
+      postExtractionResult(sessionId, {
+        filename: `your top ${labelFor(post.network)} post`,
+        ideas: created,
+      });
+    },
+    (err) => genError(err, () => generateExtract(sessionId, post)),
   );
 }
