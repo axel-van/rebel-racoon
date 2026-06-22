@@ -1,0 +1,100 @@
+/* Top-post selection grid — the milker's first screen (renderTopPostsPickerScreen
+   in screens/session.js). A responsive grid of winner cards the user picks from
+   instead of a numbered quick-picker. Card chrome (border/radius/padding/bg)
+   comes from the DS .ap-card; this file only owns layout + the interactive
+   states + the inner text hierarchy. */
+
+.top-posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--ref-spacing-sm);
+  margin-top: var(--ref-spacing-sm);
+}
+
+.top-post-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ref-spacing-xs);
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--app-border);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.top-post-card:hover,
+.top-post-card:focus-visible {
+  border-color: var(--ref-color-green-100);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.top-post-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+}
+
+.top-post-card__net {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--sys-text-color-light);
+}
+
+.top-post-card__net i {
+  font-size: 18px;
+}
+
+.top-post-card__excerpt {
+  color: var(--ref-color-grey-150);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  line-height: var(--sys-text-style-body-line-height);
+  /* Clamp the excerpt so every card in the grid keeps a consistent height. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.top-post-card__metrics {
+  color: var(--sys-text-color-light);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+.top-post-card__why {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xxs);
+  padding-top: var(--ref-spacing-xs);
+  border-top: 1px solid var(--app-border-soft);
+  color: var(--sys-text-color-light);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+.top-post-card__why i {
+  color: var(--ref-color-green-100);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.top-post-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  margin-top: auto;
+  color: var(--ref-color-orange-100);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.top-post-card:hover .top-post-card__cta i,
+.top-post-card:focus-visible .top-post-card__cta i {
+  transform: translateX(2px);
+  transition: transform 0.15s ease;
+}

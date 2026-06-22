@@ -46,7 +46,8 @@ import {
 } from "../posts-store.js?v=30";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=34";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=26";
-import { startTopPostsFlow } from "../top-posts-flow.js?v=3";
+import * as topPostsFlow from "../top-posts-flow.js?v=4";
+import { renderTopPostsGrid } from "../components/top-post-card.js?v=1";
 import * as sidebarWizard from "../sidebar-wizard.js?v=39";
 import * as inlineQuestion from "../inline-question.js?v=34";
 import * as clipStudio from "../clip-studio.js?v=12";
@@ -313,6 +314,11 @@ function renderAssistantPanel(session, attachedContext) {
   // normal thread + composer with the analyse-style wizard chrome.
   if (sidebarWizard.isActive(session.id)) {
     return renderAssistantPanelWizard(session);
+  }
+  // Top-posts milker — the winner-selection grid takes over the panel (like
+  // Batch / Clip Studio) before any inline-question step kicks in.
+  if (topPostsFlow.isPickerActive(session.id)) {
+    return renderTopPostsPickerScreen(session);
   }
   // Inline single-question mode — same chrome as the wizard but for one-shot
   // pickers (e.g. "Which profile to draft for?").
@@ -1662,6 +1668,27 @@ function renderAssistantPanelWizard(session) {
   `;
 }
 
+// Top-posts winner-selection screen — Archie's intro turn above a visual grid
+// of top-post cards (renderTopPostsGrid). Reuses the wizard chat shell so the
+// thread subscriber + scroll-pin + drag rebind in wireAssistantPanel keep
+// working; the grid sits in the scrollable chat area (no sticky picker bar —
+// clicking a card advances straight to the reuse-mode step).
+function renderTopPostsPickerScreen(session) {
+  const state = topPostsFlow.getPickerState(session.id);
+  if (!state) return "";
+  const thread = getThread(session.id);
+  return html`
+    <aside class="session__assistant session__assistant--wizard" aria-label="Assistant panel">
+      <div class="session__assistant-wizard-chat analyse__chat" id="inlineQuestionChat">
+        <div class="analyse__chat-inner">
+          <div data-assistant-thread>${raw(renderThread(thread, session.id))}</div>
+          ${raw(renderTopPostsGrid(state.posts))}
+        </div>
+      </div>
+    </aside>
+  `;
+}
+
 // Inline question chrome — same shell as the wizard but for one-shot pickers.
 function renderAssistantPanelQuestion(session) {
   const chrome = inlineQuestion.renderChrome(session.id);
@@ -2833,6 +2860,7 @@ function wireAssistantPanel(root, session, attachedContext) {
   };
   const offWizard = sidebarWizard.subscribe(session.id, refreshAssistantAside);
   const offInlineQuestion = inlineQuestion.subscribe(session.id, refreshAssistantAside);
+  const offTopPosts = topPostsFlow.subscribePicker(session.id, refreshAssistantAside);
   // Clip Studio — every stage transition + analyzing ticker tick re-renders the
   // whole assistant aside (mirrors the wizard subscription).
   const offClipStudio = clipStudio.subscribe(session.id, () => {
@@ -3008,6 +3036,7 @@ function wireAssistantPanel(root, session, attachedContext) {
     offPosts();
     offWizard();
     offInlineQuestion();
+    offTopPosts();
     offClipStudio();
     offBatchStudio();
     offComposerSources();
@@ -3964,10 +3993,16 @@ function bindSession(root, session) {
         return;
       }
       // "Use top performing posts" — launch the milker flow inline in this
-      // session (surfaces winners → pick a reuse mode → drafts). Switches the
-      // assistant panel to the inline-question chrome via startTopPostsFlow.
+      // session (winner grid → pick a reuse mode → drafts). startTopPostsFlow
+      // opens the grid screen (renderTopPostsPickerScreen below).
       if (starterBtn && starterBtn.dataset.starterAction === "open-top-posts") {
-        startTopPostsFlow(session.id);
+        topPostsFlow.startTopPostsFlow(session.id);
+        return;
+      }
+      // Winner-grid card click → advance to the reuse-mode picker.
+      const topPostPick = event.target.closest("[data-top-post-pick]");
+      if (topPostPick) {
+        topPostsFlow.pickWinner(session.id, topPostPick.dataset.topPostPick);
         return;
       }
 

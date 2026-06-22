@@ -22,7 +22,7 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=50";
 import { renderDashboard } from "./screens/dashboard.js?v=47";
-import { renderSession } from "./screens/session.js?v=286";
+import { renderSession } from "./screens/session.js?v=287";
 import { renderIdeas } from "./screens/ideas.js?v=63";
 import { renderContexts } from "./screens/contexts.js?v=72";
 import { renderConnectors } from "./screens/connectors.js?v=11";

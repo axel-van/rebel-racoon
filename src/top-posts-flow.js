@@ -255,7 +255,49 @@ function originFor(post, mode) {
   return map[mode] || null;
 }
 
-// ---- Step 1: surface the winners --------------------------------------
+// ---- Step 1: the winner-selection grid screen -------------------------
+//
+// Step 1 is a visual grid of post cards (a "screen"), not a numbered
+// quick-picker — it takes over the assistant panel the same way Batch / Clip
+// Studio do. session.js checks isPickerActive() in renderAssistantPanel, paints
+// the grid via renderTopPostsPickerScreen, and routes a card click back here
+// through pickWinner(). Steps 2+ stay as inline-question pickers.
+const pickerStates = new Map(); // sessionId → { posts }
+const pickerSubs = new Map(); // sessionId → Set<fn>
+
+function notifyPicker(sessionId) {
+  const subs = pickerSubs.get(sessionId);
+  if (subs) for (const fn of subs) fn();
+}
+
+export function isPickerActive(sessionId) {
+  return pickerStates.has(sessionId);
+}
+
+export function getPickerState(sessionId) {
+  return pickerStates.get(sessionId) || null;
+}
+
+export function subscribePicker(sessionId, fn) {
+  if (!pickerSubs.has(sessionId)) pickerSubs.set(sessionId, new Set());
+  pickerSubs.get(sessionId).add(fn);
+  return () => pickerSubs.get(sessionId)?.delete(fn);
+}
+
+// A card click — clear the grid, then drop into the mode picker for that winner.
+export function pickWinner(sessionId, postId) {
+  if (!pickerStates.has(sessionId)) return;
+  pickerStates.delete(sessionId);
+  notifyPicker(sessionId);
+  chooseMode(sessionId, postId);
+}
+
+// Leave the grid without picking (Esc / route change cleanup).
+export function exitPicker(sessionId) {
+  if (!pickerStates.has(sessionId)) return;
+  pickerStates.delete(sessionId);
+  notifyPicker(sessionId);
+}
 
 export function startTopPostsFlow(sessionId) {
   const posts = getTopPosts();
@@ -272,17 +314,8 @@ export function startTopPostsFlow(sessionId) {
     sessionId,
     "Let's build on what already works. Here are your top-performing posts — pick the one you want to milk for more.",
   );
-  inlineQuestion.ask(sessionId, {
-    stepLabel: "Top posts",
-    title: "Which winner should I build on?",
-    items: posts.map((p) => ({
-      value: p.id,
-      label: truncate(p.excerpt, 90),
-      caption: `${labelFor(p.network)} · ${p.perfBadge} · ${p.metricLine}`,
-      icon: iconFor(p.network),
-    })),
-    onPick: (postId) => chooseMode(sessionId, postId),
-  });
+  pickerStates.set(sessionId, { posts });
+  notifyPicker(sessionId);
 }
 
 // ---- Step 2: explain the why, pick a reuse mode -----------------------
