@@ -194,7 +194,7 @@ export function renderDetailBody(c) {
 
   const actions = isConnected
     ? `<button type="button" class="ap-button primary orange" data-connector-try="${escapeHtml(c.id)}">
-         <i class="ap-icon-single-chat-bubble"></i><span>Try in chat</span>
+         <i class="ap-icon-single-chat-bubble"></i><span>Start a chat</span>
        </button>
        <button type="button" class="ap-button ghost grey" data-connector-disconnect="${escapeHtml(c.id)}">Disconnect</button>`
     : `<button type="button" class="ap-button primary blue" data-connector-connect="${escapeHtml(c.id)}">

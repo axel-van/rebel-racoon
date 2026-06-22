@@ -2004,11 +2004,11 @@ function renderLiveConnectors() {
             type="button"
             class="ap-button ghost blue rpanel-sources__row-mention"
             data-rpanel-ask-connector="${escapeAttr(c.id)}"
-            aria-label="Ask ${escapeAttr(c.name)} in chat"
-            title="Ask in chat"
+            aria-label="Start a chat with ${escapeAttr(c.name)}"
+            title="Start a chat"
           >
             <i class="ap-icon-single-chat-bubble"></i>
-            <span>Ask</span>
+            <span>Start a chat</span>
           </button>
         </div>
       </div>`,
