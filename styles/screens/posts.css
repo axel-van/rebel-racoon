@@ -638,7 +638,6 @@
   gap: var(--ref-spacing-xxs);
   background: var(--ref-color-orange-10);
   color: var(--ref-color-orange-100);
-  font-weight: var(--sys-text-style-caption-bold-weight);
 }
 
 .posts__card-origin i {
