@@ -250,8 +250,9 @@
   margin-top: auto;
 }
 
-/* Repurpose is the primary action — give it the room; Details stays compact. */
-.top-post-card__actions [data-top-post-repurpose] {
+/* Both actions fill the row (no hug) — equal halves, the primary carries the
+   colour weight. */
+.top-post-card__actions .ap-button {
   flex: 1;
   justify-content: center;
 }

@@ -108,7 +108,7 @@ function renderTopPostCard(post, { maxVsAvg }) {
 
       <div class="top-post-card__actions">
         <button type="button" class="ap-button stroked grey" data-top-post-details="${post.id}">Details</button>
-        <button type="button" class="ap-button primary orange" data-top-post-repurpose="${post.id}">
+        <button type="button" class="ap-button primary blue" data-top-post-repurpose="${post.id}">
           <i class="ap-icon-sparkles" aria-hidden="true"></i> Repurpose
         </button>
       </div>
@@ -231,7 +231,7 @@ export function renderTopPostPreview(post) {
       </div>
 
       <div class="tp-preview__actions">
-        <button type="button" class="ap-button primary orange" data-top-post-build="${post.id}">
+        <button type="button" class="ap-button primary blue" data-top-post-build="${post.id}">
           <i class="ap-icon-sparkles" aria-hidden="true"></i> Repurpose
         </button>
         <a class="ap-button stroked" href="${postUrl(post)}" target="_blank" rel="noopener noreferrer">

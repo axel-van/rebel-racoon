@@ -10,7 +10,7 @@
 //                              reuse-mode picker).
 
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { renderTopPostPreview } from "./top-post-card.js?v=9";
+import { renderTopPostPreview } from "./top-post-card.js?v=10";
 
 const MODAL_ID = "topPost";
 
