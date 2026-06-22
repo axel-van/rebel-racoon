@@ -631,18 +631,18 @@
   margin-bottom: var(--ref-spacing-xs);
 }
 
-/* Solid orange (= AI / milker provenance) so the "where this draft came from"
-   chip is unmissable, not a quiet grey pill. */
+/* Light orange (= AI / milker provenance) — visible but not loud: a soft tint
+   with orange text, a step up from the old quiet grey without shouting. */
 .posts__card-origin {
   align-self: flex-start;
   gap: var(--ref-spacing-xxs);
-  background: var(--ref-color-orange-100);
-  color: var(--ref-color-white);
+  background: var(--ref-color-orange-10);
+  color: var(--ref-color-orange-100);
   font-weight: var(--sys-text-style-caption-bold-weight);
 }
 
 .posts__card-origin i {
-  color: var(--ref-color-white);
+  color: var(--ref-color-orange-100);
 }
 
 /* Per-network character count (DS CharacterCounts, node 3185:48434).
