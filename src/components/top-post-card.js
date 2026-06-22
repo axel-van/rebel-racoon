@@ -177,45 +177,53 @@ export function renderTopPostPreview(post) {
     : "";
 
   return html`
-    <div class="tp-preview">
-      <div class="tp-preview__head">
-        <span class="tp-preview__net">
-          <i class="${iconFor(post.network)}" aria-hidden="true"></i>
-          ${net}
-        </span>
-        <span class="ap-status green no-dot">${post.perfBadge}</span>
+    <div class="tp-preview tp-preview--split">
+      <div class="tp-preview__col">
+        <div class="tp-preview__head">
+          <span class="tp-preview__net">
+            <i class="${iconFor(post.network)}" aria-hidden="true"></i>
+            ${net}
+          </span>
+          <span class="ap-status green no-dot">${post.perfBadge}</span>
+        </div>
+
+        <section class="tp-preview__section">
+          <h3 class="tp-preview__title">How it performed</h3>
+          <div class="tp-stats">${raw(stats)}</div>
+          <div class="tp-why">
+            <span class="tp-why__label"><i class="ap-icon-sparkles" aria-hidden="true"></i> Why it worked</span>
+            <span class="tp-why__text">${post.whyItWorked}</span>
+          </div>
+        </section>
       </div>
 
-      <section class="tp-preview__section">
-        <h3 class="tp-preview__title">How it performed</h3>
-        <div class="tp-stats">${raw(stats)}</div>
-        <div class="tp-why">
-          <span class="tp-why__label"><i class="ap-icon-sparkles" aria-hidden="true"></i> Why it worked</span>
-          <span class="tp-why__text">${post.whyItWorked}</span>
-        </div>
-      </section>
-
-      <section class="tp-preview__section">
-        <h3 class="tp-preview__title">Exact post</h3>
-        <article class="tp-post">
-          <header class="tp-post__head">
-            <span class="tp-post__avatar" aria-hidden="true"><i class="${iconFor(post.network)}"></i></span>
-            <span class="tp-post__byline">
-              <span class="tp-post__author">Your brand</span>
-              <span class="tp-post__meta">${post.publishedAt} · ${net}</span>
-            </span>
-          </header>
-          <p class="tp-post__body">${post.excerpt}</p>
-          ${raw(hashtags)}
-          <div class="tp-post__engagement">
-            <span
-              ><i class="ap-icon-thumb-up_fill" aria-hidden="true"></i> ${(post.reactions ?? 0).toLocaleString()}</span
-            >
-            <span>${(post.comments ?? 0).toLocaleString()} comments</span>
-            <span>${(post.saves ?? post.shares ?? 0).toLocaleString()} ${post.saves != null ? "saves" : "shares"}</span>
-          </div>
-        </article>
-      </section>
+      <div class="tp-preview__col">
+        <section class="tp-preview__section">
+          <h3 class="tp-preview__title">Exact post</h3>
+          <article class="tp-post">
+            <header class="tp-post__head">
+              <span class="tp-post__avatar" aria-hidden="true"><i class="${iconFor(post.network)}"></i></span>
+              <span class="tp-post__byline">
+                <span class="tp-post__author">Your brand</span>
+                <span class="tp-post__meta">${post.publishedAt} · ${net}</span>
+              </span>
+            </header>
+            <p class="tp-post__body">${post.excerpt}</p>
+            ${raw(hashtags)}
+            <div class="tp-post__engagement">
+              <span
+                ><i class="ap-icon-thumb-up_fill" aria-hidden="true"></i> ${(
+                  post.reactions ?? 0
+                ).toLocaleString()}</span
+              >
+              <span>${(post.comments ?? 0).toLocaleString()} comments</span>
+              <span
+                >${(post.saves ?? post.shares ?? 0).toLocaleString()} ${post.saves != null ? "saves" : "shares"}</span
+              >
+            </div>
+          </article>
+        </section>
+      </div>
 
       <div class="tp-preview__actions">
         <button type="button" class="ap-button primary orange" data-top-post-build="${post.id}">

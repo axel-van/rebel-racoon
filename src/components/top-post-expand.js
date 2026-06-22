@@ -11,7 +11,7 @@
 // card. "Build on this" closes then calls onBuild (the reuse flow).
 
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { renderTopPostPreview } from "./top-post-card.js?v=7";
+import { renderTopPostPreview } from "./top-post-card.js?v=8";
 
 const MODAL_ID = "topPost";
 const DURATION = 300; // ms — enter; exit runs ~70% of this (exit-faster-than-enter)
