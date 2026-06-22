@@ -411,6 +411,38 @@
   letter-spacing: 0;
 }
 
+/* Why-it-worked — Archie's read on the performance, grouped with the metrics
+   in a quiet callout (the insight that explains the numbers above it). */
+.tp-why {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-sm);
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--ref-color-grey-10);
+}
+
+.tp-why__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--sys-text-color-light);
+}
+
+.tp-why__label i {
+  font-size: 13px;
+}
+
+.tp-why__text {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-150);
+}
+
 /* Faithful network-style preview of the published post. */
 .tp-post {
   display: flex;

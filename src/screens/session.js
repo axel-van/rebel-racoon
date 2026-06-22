@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=112";
+import { renderTopbar } from "../components/topbar.js?v=113";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -49,7 +49,7 @@ import {
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=37";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=29";
 import * as topPostsFlow from "../top-posts-flow.js?v=9";
-import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=6";
+import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=7";
 import * as sidebarWizard from "../sidebar-wizard.js?v=40";
 import * as inlineQuestion from "../inline-question.js?v=34";
 import * as clipStudio from "../clip-studio.js?v=13";
@@ -63,8 +63,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=94";
-import * as playbookEditor from "../playbook-editor.js?v=53";
+import * as contextBuilder from "../context-builder.js?v=95";
+import * as playbookEditor from "../playbook-editor.js?v=54";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -104,7 +104,7 @@ import {
   openClips as openClipsPanel,
   openTopPost as openTopPostPanel,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=181";
+} from "../components/right-panel.js?v=182";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=6";

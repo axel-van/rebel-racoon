@@ -189,6 +189,10 @@ export function renderTopPostPreview(post) {
       <section class="tp-preview__section">
         <h3 class="tp-preview__title">How it performed</h3>
         <div class="tp-stats">${raw(stats)}</div>
+        <div class="tp-why">
+          <span class="tp-why__label"><i class="ap-icon-sparkles" aria-hidden="true"></i> Why it worked</span>
+          <span class="tp-why__text">${post.whyItWorked}</span>
+        </div>
       </section>
 
       <section class="tp-preview__section">
