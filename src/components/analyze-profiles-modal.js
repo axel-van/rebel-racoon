@@ -15,7 +15,7 @@
 
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { escapeHtml as esc } from "../utils.js?v=21";
-import { getConnectedProfiles, NETWORK_ICON_BY_PLATFORM, BRAND_INITIALS } from "../social-profiles.js?v=21";
+import { getConnectedProfiles, NETWORK_ICON_BY_PLATFORM, BRAND_INITIALS } from "../social-profiles.js?v=22";
 
 const MODAL_ID = "analyze-profiles";
 

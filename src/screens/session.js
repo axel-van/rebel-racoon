@@ -1,16 +1,16 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=103";
-import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=44";
+import { renderTopbar } from "../components/topbar.js?v=104";
+import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
   renderProfileTag,
   profileForNetwork,
-} from "../social-profiles.js?v=21";
+} from "../social-profiles.js?v=22";
 import { FORMATS, formatsForNetwork, defaultFormatFor } from "../clip-formats.js?v=1";
-import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=2";
-import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=30";
+import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=3";
+import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=31";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
   getThread,
@@ -28,41 +28,41 @@ import {
   submitAssistantChoice,
   sendConnectorMessage,
   markConnectPromptResolved,
-} from "../assistant.js?v=43";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=33";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=22";
+} from "../assistant.js?v=44";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=34";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=23";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=7";
+} from "../composer-mentions.js?v=8";
 import {
   getPosts,
   addPostDraft,
   attachImageToDraft,
   setSubtitleStyle,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=30";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=34";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=26";
-import * as topPostsFlow from "../top-posts-flow.js?v=4";
-import { renderTopPostsGrid } from "../components/top-post-card.js?v=1";
-import * as sidebarWizard from "../sidebar-wizard.js?v=39";
+} from "../posts-store.js?v=31";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=35";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=27";
+import * as topPostsFlow from "../top-posts-flow.js?v=5";
+import { renderTopPostsBoard } from "../components/top-post-card.js?v=2";
+import * as sidebarWizard from "../sidebar-wizard.js?v=40";
 import * as inlineQuestion from "../inline-question.js?v=34";
-import * as clipStudio from "../clip-studio.js?v=12";
+import * as clipStudio from "../clip-studio.js?v=13";
 import * as batchStudio from "../batch-studio.js?v=4";
-import { askConnector } from "../connector-ask.js?v=4";
-import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=24";
-import { renderConnectorLogo } from "../connectors-view.js?v=6";
+import { askConnector } from "../connector-ask.js?v=5";
+import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=25";
+import { renderConnectorLogo } from "../connectors-view.js?v=7";
 import {
   getActiveConnector,
   clearActiveConnector,
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=85";
-import * as playbookEditor from "../playbook-editor.js?v=44";
+import * as contextBuilder from "../context-builder.js?v=86";
+import * as playbookEditor from "../playbook-editor.js?v=45";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -73,11 +73,11 @@ import {
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=25";
-import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=26";
+import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=27";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=47";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=32";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=45";
-import { open as openConnectorsModal } from "../components/connectors-modal.js?v=7";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=33";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=46";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=8";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
   classifyFile,
@@ -93,7 +93,7 @@ import {
   updateSourceClips,
   extractClipsForSource,
   setSourceIdeaCount,
-} from "../sources-stream.js?v=39";
+} from "../sources-stream.js?v=40";
 import { renderClipCard } from "../components/clip-card.js?v=7";
 import { showToast } from "../components/toast.js?v=20";
 import {
@@ -101,12 +101,12 @@ import {
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=172";
+} from "../components/right-panel.js?v=173";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=3";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=8";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=8";
+import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=4";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=9";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=9";
 
 // Default composer placeholder — restored whenever no connector is attached.
 // A connected connector swaps it for "Ask {name} anything…".
@@ -1677,12 +1677,16 @@ function renderTopPostsPickerScreen(session) {
   const state = topPostsFlow.getPickerState(session.id);
   if (!state) return "";
   const thread = getThread(session.id);
+  // Distinct container classes (not #inlineQuestionChat / wizard-chat) so the
+  // chat scroll-pin in wireAssistantPanel does NOT yank this board to the
+  // bottom — a selection screen must open at the top (toolbar + #1 winner).
+  // session__assistant-board-inner top-anchors + widens the column.
   return html`
-    <aside class="session__assistant session__assistant--wizard" aria-label="Assistant panel">
-      <div class="session__assistant-wizard-chat analyse__chat" id="inlineQuestionChat">
-        <div class="analyse__chat-inner">
+    <aside class="session__assistant session__assistant--wizard session__assistant--board" aria-label="Assistant panel">
+      <div class="analyse__chat session__assistant-board-chat">
+        <div class="analyse__chat-inner session__assistant-board-inner">
           <div data-assistant-thread>${raw(renderThread(thread, session.id))}</div>
-          ${raw(renderTopPostsGrid(state.posts))}
+          ${raw(renderTopPostsBoard({ posts: state.posts, sort: state.sort }))}
         </div>
       </div>
     </aside>
@@ -3999,7 +4003,14 @@ function bindSession(root, session) {
         topPostsFlow.startTopPostsFlow(session.id);
         return;
       }
-      // Winner-grid card click → advance to the reuse-mode picker.
+      // Winner-board sort chip → re-sort the grid (checked before the card
+      // pick since chips sit outside the cards).
+      const topPostSort = event.target.closest("[data-top-post-sort]");
+      if (topPostSort) {
+        topPostsFlow.setSort(session.id, topPostSort.dataset.topPostSort);
+        return;
+      }
+      // Winner-board card click → advance to the reuse-mode picker.
       const topPostPick = event.target.closest("[data-top-post-pick]");
       if (topPostPick) {
         topPostsFlow.pickWinner(session.id, topPostPick.dataset.topPostPick);

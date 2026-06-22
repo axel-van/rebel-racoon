@@ -1,16 +1,58 @@
-/* Top-post selection grid — the milker's first screen (renderTopPostsPickerScreen
-   in screens/session.js). A responsive grid of winner cards the user picks from
-   instead of a numbered quick-picker. Card chrome (border/radius/padding/bg)
-   comes from the DS .ap-card; this file only owns layout + the interactive
-   states + the inner text hierarchy. */
+/* Top-posts winner-selection board — the milker's most important screen
+   (renderTopPostsBoard in components/top-post-card.js). A sortable, comparison-
+   driven grid of winner cards. Card chrome (border/radius/padding/bg) comes
+   from the DS .ap-card; this file owns the toolbar, layout, the stat block,
+   the relative-performance bar, and interactive states. */
 
-.top-posts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+/* Board screen container — top-anchored (override .analyse__chat-inner's
+   bottom-anchoring) and wider than the 720px conversation column so the 2-col
+   grid breathes. Paired with distinct container classes in session.js that opt
+   the board out of the chat scroll-to-bottom pin. */
+.session__assistant-board-inner {
+  margin: 0 auto;
+  max-width: 960px;
+}
+
+.top-posts-board {
+  display: flex;
+  flex-direction: column;
   gap: var(--ref-spacing-sm);
   margin-top: var(--ref-spacing-sm);
 }
 
+/* ── Sort toolbar ───────────────────────────────────────────────── */
+.top-posts-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xs);
+}
+
+.top-posts-toolbar__count {
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-150);
+}
+
+.top-posts-sort {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  flex-wrap: wrap;
+}
+
+.top-posts-sort__label {
+  margin-right: var(--ref-spacing-xxxs);
+}
+
+/* ── Grid ───────────────────────────────────────────────────────── */
+.top-posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--ref-spacing-sm);
+}
+
+/* ── Card ───────────────────────────────────────────────────────── */
 .top-post-card {
   display: flex;
   flex-direction: column;
@@ -45,35 +87,101 @@
   align-items: center;
   gap: var(--ref-spacing-xxs);
   font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--sys-text-color-light);
+  color: var(--ref-color-grey-150);
 }
 
 .top-post-card__net i {
   font-size: 18px;
 }
 
+.top-post-card__head-right {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.top-post-card__age {
+  color: var(--sys-text-color-light);
+  font-size: var(--sys-text-style-caption-size);
+}
+
 .top-post-card__excerpt {
   color: var(--ref-color-grey-150);
   font-weight: var(--sys-text-style-body-bold-weight);
   line-height: var(--sys-text-style-body-line-height);
-  /* Clamp the excerpt so every card in the grid keeps a consistent height. */
+  /* Two-line clamp keeps the stat block aligned across every card. */
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.top-post-card__metrics {
+/* ── Stat block ─────────────────────────────────────────────────── */
+.top-post-card__stats {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--ref-spacing-sm);
+}
+
+.top-post-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.top-post-stat__value {
+  font-weight: 700;
+  color: var(--ref-color-grey-150);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.top-post-stat__label {
   color: var(--sys-text-color-light);
   font-size: var(--sys-text-style-caption-size);
+}
+
+/* The ×-vs-average is the decision metric — bigger and green so the eye lands
+   on it first (hierarchy via size + color, not color alone — the label spells
+   it out). */
+.top-post-stat--hero .top-post-stat__value {
+  font-size: 1.75rem;
+  color: var(--ref-color-green-100);
+}
+
+/* ── Relative performance bar ───────────────────────────────────── */
+.top-post-card__bar {
+  display: block;
+  height: 6px;
+  border-radius: var(--app-radius-pill, 999px);
+  background: var(--ref-color-green-20);
+  overflow: hidden;
+}
+
+.top-post-card__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ref-color-green-100);
+}
+
+/* ── Foot: topic chip + why-it-worked ───────────────────────────── */
+.top-post-card__foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding-top: var(--ref-spacing-xs);
+  border-top: 1px solid var(--app-border-soft);
+}
+
+.top-post-card__topic {
+  align-self: flex-start;
 }
 
 .top-post-card__why {
   display: flex;
   align-items: flex-start;
   gap: var(--ref-spacing-xxs);
-  padding-top: var(--ref-spacing-xs);
-  border-top: 1px solid var(--app-border-soft);
   color: var(--sys-text-color-light);
   font-size: var(--sys-text-style-caption-size);
 }
@@ -84,6 +192,7 @@
   flex-shrink: 0;
 }
 
+/* ── CTA ────────────────────────────────────────────────────────── */
 .top-post-card__cta {
   display: inline-flex;
   align-items: center;

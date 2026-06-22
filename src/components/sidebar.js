@@ -4,7 +4,7 @@ import { open as openBugReportModal } from "./bug-report-modal.js?v=24";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=26";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { open as openSearchModal } from "./search-modal.js?v=4";
+import { open as openSearchModal } from "./search-modal.js?v=5";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=1";
 import {
@@ -14,16 +14,16 @@ import {
   deleteSession,
   togglePin as togglePinSession,
   subscribe as subscribeSessions,
-} from "../sessions-store.js?v=2";
+} from "../sessions-store.js?v=3";
 import { isFlagOn } from "../feature-flags.js?v=4";
 import { isNewUser } from "../user-mode.js?v=22";
-import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=33";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=30";
-import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=24";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=172";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=43";
-import { clearSession as clearPostsSession } from "../posts-store.js?v=30";
-import { clearSession as clearSourcesSession } from "../sources-stream.js?v=39";
+import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=34";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=31";
+import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=25";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=173";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=44";
+import { clearSession as clearPostsSession } from "../posts-store.js?v=31";
+import { clearSession as clearSourcesSession } from "../sources-stream.js?v=40";
 
 // Full Archie logo (mark + "archie" wordmark) — the official horizontal
 // lockup. Paths carry no fill, so they inherit `fill: currentColor` from

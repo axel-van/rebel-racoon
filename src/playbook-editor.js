@@ -22,14 +22,14 @@
 // document) flash a mermaid "Analyzing…" pill via postSystemNotice +
 // markSystemNoticeReady, mirroring the context-builder creation flow.
 
-import { getContextById, updateContext } from "./contexts-store.js?v=30";
-import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=43";
+import { getContextById, updateContext } from "./contexts-store.js?v=31";
+import { postAssistantMessage, postUserTurn, postSystemNotice, markSystemNoticeReady } from "./assistant.js?v=44";
 import * as inlineQuestion from "./inline-question.js?v=34";
 import {
   openContextBriefPanel,
   refreshContextBriefPanel,
   closePanel as closeRightPanel,
-} from "./components/right-panel.js?v=172";
+} from "./components/right-panel.js?v=173";
 import { open as openConfirmModal } from "./components/confirm-modal.js?v=22";
 import { setHandoff } from "./handoff.js?v=20";
 import { navigate } from "./router.js?v=30";

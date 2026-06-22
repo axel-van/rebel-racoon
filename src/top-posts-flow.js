@@ -22,12 +22,12 @@ import {
   finishPending,
   postDraftResult,
   postExtractionResult,
-} from "./assistant.js?v=43";
+} from "./assistant.js?v=44";
 import * as inlineQuestion from "./inline-question.js?v=34";
-import { getTopPosts, getTopPost } from "./top-posts-store.js?v=1";
-import { addPostDraft } from "./posts-store.js?v=30";
-import { injectIdeasForSource } from "./library.js?v=33";
-import { open as openScheduleModal } from "./components/schedule-modal.js?v=38";
+import { getTopPosts, getTopPost } from "./top-posts-store.js?v=2";
+import { addPostDraft } from "./posts-store.js?v=31";
+import { injectIdeasForSource } from "./library.js?v=34";
+import { open as openScheduleModal } from "./components/schedule-modal.js?v=39";
 import { showToast } from "./components/toast.js?v=20";
 
 // Simulated "generating" delay — matches draft-flow's chip duration so the
@@ -299,6 +299,14 @@ export function exitPicker(sessionId) {
   notifyPicker(sessionId);
 }
 
+// Change the active sort (toolbar chip click). Re-renders the board.
+export function setSort(sessionId, sort) {
+  const s = pickerStates.get(sessionId);
+  if (!s || s.sort === sort) return;
+  s.sort = sort;
+  notifyPicker(sessionId);
+}
+
 export function startTopPostsFlow(sessionId) {
   const posts = getTopPosts();
   if (!posts.length) {
@@ -314,7 +322,7 @@ export function startTopPostsFlow(sessionId) {
     sessionId,
     "Let's build on what already works. Here are your top-performing posts — pick the one you want to milk for more.",
   );
-  pickerStates.set(sessionId, { posts });
+  pickerStates.set(sessionId, { posts, sort: "performance" });
   notifyPicker(sessionId);
 }
 

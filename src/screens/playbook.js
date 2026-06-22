@@ -17,15 +17,15 @@
 
 import { navigate } from "../router.js?v=30";
 import { escapeHtml as esc } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=103";
-import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=30";
+import { renderTopbar } from "../components/topbar.js?v=104";
+import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=31";
 import { mount, snapshotEditable } from "../playbook-view.js?v=21";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";
-import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=8";
+import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=9";
 import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=5";
 import { analyzeWebsite, analyzeDocument, analyzeSocialProfiles } from "../context-mock-analysis.js?v=22";
-import { sectionPatchFromAnalysis } from "../context-builder.js?v=85";
+import { sectionPatchFromAnalysis } from "../context-builder.js?v=86";
 
 const AUTOFILL_MS = 1500;
 
