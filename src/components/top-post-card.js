@@ -181,62 +181,74 @@ export function renderTopPostPreview(post) {
     ? `<p class="tp-post__hashtags">${post.hashtags.map((h) => `#${h}`).join(" ")}</p>`
     : "";
 
+  // Rendered as the inner of the DS .ap-dialog (top-post-modal.js): header
+  // (post identity) + content (2-col analytics / exact post) + footer (actions,
+  // hug + right-aligned per the DS dialog footer).
   return html`
-    <div class="tp-preview tp-preview--split">
-      <div class="tp-preview__col">
-        <div class="tp-preview__head">
-          <span class="tp-preview__net">
-            <i class="${iconFor(post.network)}" aria-hidden="true"></i>
-            ${net}
-          </span>
-          <span class="ap-status green no-dot">${post.perfBadge}</span>
+    <button class="ap-dialog-close" type="button" data-tpm-close aria-label="Close">
+      <i class="ap-icon-close"></i>
+    </button>
+    <div class="ap-dialog-header">
+      <span class="tp-preview__head">
+        <span class="tp-preview__net">
+          <i class="${iconFor(post.network)}" aria-hidden="true"></i>
+          ${net}
+        </span>
+        <span class="ap-status green no-dot">${post.perfBadge}</span>
+      </span>
+    </div>
+
+    <div class="ap-dialog-content">
+      <div class="tp-preview tp-preview--split">
+        <div class="tp-preview__col">
+          <section class="tp-preview__section">
+            <h3 class="tp-preview__title">How it performed</h3>
+            <div class="tp-stats">${raw(stats)}</div>
+            <div class="tp-why">
+              <span class="tp-why__label"><i class="ap-icon-sparkles" aria-hidden="true"></i> Why it worked</span>
+              <span class="tp-why__text">${post.whyItWorked}</span>
+            </div>
+          </section>
         </div>
 
-        <section class="tp-preview__section">
-          <h3 class="tp-preview__title">How it performed</h3>
-          <div class="tp-stats">${raw(stats)}</div>
-          <div class="tp-why">
-            <span class="tp-why__label"><i class="ap-icon-sparkles" aria-hidden="true"></i> Why it worked</span>
-            <span class="tp-why__text">${post.whyItWorked}</span>
-          </div>
-        </section>
+        <div class="tp-preview__col">
+          <section class="tp-preview__section">
+            <h3 class="tp-preview__title">Exact post</h3>
+            <article class="tp-post">
+              <header class="tp-post__head">
+                <span class="tp-post__avatar" aria-hidden="true"><i class="${iconFor(post.network)}"></i></span>
+                <span class="tp-post__byline">
+                  <span class="tp-post__author">Your brand</span>
+                  <span class="tp-post__meta">${post.publishedAt} · ${net}</span>
+                </span>
+              </header>
+              <p class="tp-post__body">${post.excerpt}</p>
+              ${raw(hashtags)}
+              <div class="tp-post__engagement">
+                <span
+                  ><i class="ap-icon-thumb-up_fill" aria-hidden="true"></i> ${(
+                    post.reactions ?? 0
+                  ).toLocaleString()}</span
+                >
+                <span>${(post.comments ?? 0).toLocaleString()} comments</span>
+                <span
+                  >${(post.saves ?? post.shares ?? 0).toLocaleString()} ${post.saves != null ? "saves" : "shares"}</span
+                >
+              </div>
+            </article>
+          </section>
+        </div>
       </div>
+    </div>
 
-      <div class="tp-preview__col">
-        <section class="tp-preview__section">
-          <h3 class="tp-preview__title">Exact post</h3>
-          <article class="tp-post">
-            <header class="tp-post__head">
-              <span class="tp-post__avatar" aria-hidden="true"><i class="${iconFor(post.network)}"></i></span>
-              <span class="tp-post__byline">
-                <span class="tp-post__author">Your brand</span>
-                <span class="tp-post__meta">${post.publishedAt} · ${net}</span>
-              </span>
-            </header>
-            <p class="tp-post__body">${post.excerpt}</p>
-            ${raw(hashtags)}
-            <div class="tp-post__engagement">
-              <span
-                ><i class="ap-icon-thumb-up_fill" aria-hidden="true"></i> ${(
-                  post.reactions ?? 0
-                ).toLocaleString()}</span
-              >
-              <span>${(post.comments ?? 0).toLocaleString()} comments</span>
-              <span
-                >${(post.saves ?? post.shares ?? 0).toLocaleString()} ${post.saves != null ? "saves" : "shares"}</span
-              >
-            </div>
-          </article>
-        </section>
-      </div>
-
-      <div class="tp-preview__actions">
-        <button type="button" class="ap-button primary blue" data-top-post-build="${post.id}">
-          <i class="ap-icon-sparkles" aria-hidden="true"></i> Repurpose
-        </button>
+    <div class="ap-dialog-footer">
+      <div class="ap-dialog-footer-right">
         <a class="ap-button stroked" href="${postUrl(post)}" target="_blank" rel="noopener noreferrer">
           View on ${net} <i class="ap-icon-external-link" aria-hidden="true"></i>
         </a>
+        <button type="button" class="ap-button primary blue" data-top-post-build="${post.id}">
+          <i class="ap-icon-sparkles" aria-hidden="true"></i> Repurpose
+        </button>
       </div>
     </div>
   `;

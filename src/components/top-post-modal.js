@@ -1,20 +1,19 @@
-// Top-post preview modal — a classic centered dialog opened by the board
-// card's "Details" action. Shows the winner's full preview (renderTopPostPreview,
-// 2-column). Standard init/open/close + modal-coordinator pattern (see
-// rename-modal.js).
+// Top-post preview modal — a classic DS dialog (.ap-dialog: header / content /
+// footer) opened by the board card's "Details" action. The per-post inner
+// (header + 2-column body + footer actions) is rendered by renderTopPostPreview.
+// Standard init/open/close + modal-coordinator pattern (see rename-modal.js).
 //
 // Public API:
-//   init()                  — inject markup + bind once on app boot
-//   open(post, { onBuild })  — render the preview for `post`; the in-modal
-//                              primary CTA closes then calls onBuild (→ the
-//                              reuse-mode picker).
+//   init()                  — inject the dialog shell + bind once on app boot
+//   open(post, { onBuild })  — fill the dialog for `post`; the footer "Repurpose"
+//                              closes then calls onBuild (→ the reuse-mode picker).
 
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { renderTopPostPreview } from "./top-post-card.js?v=10";
+import { renderTopPostPreview } from "./top-post-card.js?v=11";
 
 const MODAL_ID = "topPost";
 
-let backdrop, modal, contentEl, closeBtn;
+let backdrop, modal;
 let initialized = false;
 let pendingOnBuild = null;
 
@@ -27,12 +26,7 @@ const HTML = `
   aria-modal="true"
   aria-label="Top post preview"
   aria-hidden="true"
->
-  <button class="ap-icon-button transparent top-post-modal__close" type="button" id="topPostClose" aria-label="Close">
-    <i class="ap-icon-close"></i>
-  </button>
-  <div class="top-post-modal__scroll" id="topPostContent"></div>
-</aside>`;
+></aside>`;
 
 function injectOnce() {
   if (initialized) return;
@@ -42,13 +36,16 @@ function injectOnce() {
 
   backdrop = document.getElementById("topPostBackdrop");
   modal = document.getElementById("topPostModal");
-  contentEl = document.getElementById("topPostContent");
-  closeBtn = document.getElementById("topPostClose");
 
-  closeBtn.addEventListener("click", close);
   backdrop.addEventListener("click", close);
 
-  contentEl.addEventListener("click", (event) => {
+  // Delegate inside the dialog — its inner (header / content / footer) is
+  // re-rendered per open by renderTopPostPreview.
+  modal.addEventListener("click", (event) => {
+    if (event.target.closest("[data-tpm-close]")) {
+      close();
+      return;
+    }
     if (event.target.closest("[data-top-post-build]")) {
       const fn = pendingOnBuild;
       close();
@@ -75,8 +72,7 @@ export function open(post, { onBuild } = {}) {
   injectOnce();
   requestOpen(MODAL_ID, close);
 
-  contentEl.innerHTML = renderTopPostPreview(post);
-  contentEl.scrollTop = 0;
+  modal.innerHTML = renderTopPostPreview(post);
   pendingOnBuild = typeof onBuild === "function" ? onBuild : null;
 
   backdrop.hidden = false;

@@ -306,16 +306,15 @@
 }
 
 /* ── Preview panel (right-panel "top-post" mode) ─────────────────── */
+/* The preview is the inner of the DS .ap-dialog-content, which owns the
+   padding — so no padding here. */
 .tp-preview {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-md);
-  padding: var(--ref-spacing-lg) var(--ref-spacing-md) var(--ref-spacing-md);
 }
 
-/* Split (2-column) layout for the expanded preview: analytics on the left,
-   the exact post on the right, actions spanning the full width below.
-   Collapses to a single column on narrow panels. */
+/* Split (2-column) layout: analytics on the left, the exact post on the right.
+   Collapses to a single column on narrow dialogs. */
 .tp-preview--split {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -330,15 +329,6 @@
   min-width: 0;
 }
 
-.tp-preview--split .tp-preview__head {
-  /* Head sits in the left column, clear of the corner-pinned close. */
-  padding-right: 0;
-}
-
-.tp-preview--split .tp-preview__actions {
-  grid-column: 1 / -1;
-}
-
 @media (max-width: 680px) {
   .tp-preview--split {
     grid-template-columns: 1fr;
@@ -346,13 +336,12 @@
   }
 }
 
+/* Post identity in the dialog header (network + perf badge). */
 .tp-preview__head {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
   flex-wrap: wrap;
-  /* clear the corner-pinned close button */
-  padding-right: var(--ref-spacing-xl);
 }
 
 .tp-preview__net {
@@ -535,15 +524,4 @@
 
 .tp-post__engagement i {
   color: var(--ref-color-electric-blue-100);
-}
-
-.tp-preview__actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-}
-
-.tp-preview__actions .ap-button {
-  width: 100%;
-  justify-content: center;
 }
