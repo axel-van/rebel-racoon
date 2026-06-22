@@ -623,6 +623,19 @@
   align-self: flex-start;
 }
 
+/* Provenance pill — where a generated draft came from (e.g. the top-posts
+   milker). Sits just under the author header, above the body. Quiet metadata
+   (.ap-status grey no-dot) with the source-network/action glyph. */
+.posts__card-origin-row {
+  display: flex;
+  margin-bottom: var(--ref-spacing-xs);
+}
+
+.posts__card-origin {
+  align-self: flex-start;
+  gap: var(--ref-spacing-xxxs);
+}
+
 /* Per-network character count (DS CharacterCounts, node 3185:48434).
    Right-aligned chip under the body: network logo + remaining chars,
    flipping to a red pill when the draft runs over the network limit. */

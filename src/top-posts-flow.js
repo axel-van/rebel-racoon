@@ -87,32 +87,172 @@ function genError(err, retry) {
   });
 }
 
-// Four fixed reframings of a winning post, seeded off its excerpt so the
-// "variations" output reads as tailored without any randomness. Mirrors
-// draft-flow.generateAngles but anchored on the post rather than an idea.
+// The four angle reframings offered in the variations stepper. `title` /
+// `caption` drive the picker row; `key` keys into ANGLE_COPY for the actual
+// post body.
+const ANGLE_DEFS = [
+  {
+    key: "contrarian",
+    title: "Push the contrarian angle",
+    caption: "A bolder version of the take that already landed",
+  },
+  { key: "howto", title: "Turn it into a how-to", caption: "The same idea as a step-by-step readers can act on" },
+  { key: "story", title: "Tell the story behind it", caption: "The real moment and the lesson that made it resonate" },
+  { key: "data", title: "Lead with the proof", caption: "Anchor it to the number that makes it undeniable" },
+];
+
+// Handcrafted, ready-to-post copy for each seeded winner × angle. This is what
+// makes the variations read like real posts rather than rephrased prompts. A
+// post id missing here falls back to genericAngleCopy() below, so the flow
+// still works for any future / user-added winner.
+const ANGLE_COPY = {
+  "top-1": {
+    contrarian: [
+      "Unpopular opinion: your onboarding checklist is *why* people churn.",
+      "We deleted ours. Activation went up 18%.",
+      "Every step you add is one more place to drop off. The fix was never a better checklist — it was fewer decisions between signup and the first win.",
+    ],
+    howto: [
+      "How we lifted activation 18% by removing onboarding steps, not adding them:",
+      "1. Map every click between signup and first value.",
+      "2. Delete everything that isn't the first win.",
+      "3. Make that first win impossible to miss.",
+      "Fewer steps. More activated users.",
+    ],
+    story: [
+      "Six months ago our onboarding had 11 steps. We were proud of it.",
+      "Then we watched a new user rage-quit on step 7.",
+      "So we deleted the whole checklist and kept exactly one thing: the first win.",
+      "Activation went up 18%. Sometimes the best feature is the one you remove.",
+    ],
+    data: [
+      "18%.",
+      "That's how much activation rose after we *deleted* our onboarding checklist — not optimised it, deleted it.",
+      "Every extra step was quietly costing us conversions.",
+    ],
+  },
+  "top-2": {
+    contrarian: [
+      "Hot take: most “AI content tools” are just expensive autocomplete.",
+      "The ones that win do the boring thing — they remember your brand voice across every post.",
+      "That's the whole game. Everything else is a demo.",
+    ],
+    howto: [
+      "How to tell a real AI content tool from autocomplete in 30 seconds:",
+      "Ask it to write 5 posts. If they sound like 5 different brands, it doesn't know your voice.",
+      "Voice memory beats clever phrasing. Every time.",
+    ],
+    story: [
+      "We tried 6 AI writing tools last quarter.",
+      "Five produced text. One produced *us*.",
+      "The difference wasn't the model — it was whether it held our voice between posts. That was the only feature that mattered.",
+    ],
+    data: [
+      "6 tools tested. 1 kept.",
+      "The keeper wasn't the smartest writer — it was the only one that held our brand voice across every post.",
+      "Consistency beat cleverness, and it wasn't close.",
+    ],
+  },
+  "top-3": {
+    contrarian: [
+      "You don't need a big team to ship great content.",
+      "Our 4-person crew ships a full week of posts in one afternoon.",
+      "The secret isn't more people — it's one repeatable workflow. Swipe for it →",
+    ],
+    howto: [
+      "How a 4-person team ships a week of content in one afternoon:",
+      "1. Batch every idea first, write second.",
+      "2. Turn one source into many posts.",
+      "3. Template the boring parts.",
+      "Save this for your next content day 📌",
+    ],
+    story: [
+      "A year ago, content took us all week — and we still missed posts.",
+      "Now? One afternoon, a week's worth, done.",
+      "Here's the exact workflow that got us there →",
+    ],
+    data: [
+      "1 afternoon = 1 week of content. With 4 people.",
+      "We used to spread this across 5 days. Same output, a fraction of the time.",
+      "The workflow behind it →",
+    ],
+  },
+};
+
+// Generic fallback when a winner has no handcrafted copy — still produces a
+// believable post shaped by the chosen angle, anchored on the post's excerpt.
+function genericAngleCopy(post, key) {
+  const core = firstSentence(post.excerpt);
+  switch (key) {
+    case "contrarian":
+      return [`Unpopular opinion: ${lowerFirst(core)}`, post.excerpt];
+    case "howto":
+      return ["Here's how it actually works, step by step:", post.excerpt];
+    case "story":
+      return ["Here's the story behind one of our best-performing posts:", post.excerpt];
+    case "data":
+    default:
+      return ["The proof that changed our mind:", post.excerpt];
+  }
+}
+
+// Resolve the four angle options for a post, each with its ready-to-post body.
 function anglesForPost(post) {
-  return [
-    {
-      id: `${post.id}-angle-contrarian`,
-      title: "Push the contrarian angle harder",
-      description: "Lead with an even bolder version of the take that already landed.",
-    },
-    {
-      id: `${post.id}-angle-howto`,
-      title: "Turn it into a how-to",
-      description: "Repackage the winning idea as a step-by-step readers can act on today.",
-    },
-    {
-      id: `${post.id}-angle-story`,
-      title: "Tell the story behind it",
-      description: "Share the real moment and the lesson that made this resonate.",
-    },
-    {
-      id: `${post.id}-angle-data`,
-      title: "Back it with fresh proof",
-      description: "Anchor the same point to a new number or customer result.",
-    },
-  ];
+  const copy = ANGLE_COPY[post.id] || {};
+  return ANGLE_DEFS.map((def) => ({
+    id: `${post.id}-angle-${def.key}`,
+    title: def.title,
+    description: def.caption,
+    text: copy[def.key] || genericAngleCopy(post, def.key),
+  }));
+}
+
+// First sentence of a blob, used by the generic fallbacks + the X adapter.
+function firstSentence(text) {
+  const m = (text || "").match(/[^.!?]*[.!?]/);
+  return (m ? m[0] : text || "").trim();
+}
+
+function lowerFirst(s) {
+  return s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
+}
+
+// Channel adaptation for Repurpose — the same proven core, reframed in each
+// network's native format: X stays punchy and single-idea, LinkedIn invites
+// discussion, Instagram is save-worthy, Facebook is conversational, TikTok
+// opens on a hook. Returns { text[], hashtags[], cta }.
+function composeForChannel(post, channel) {
+  const net = (channel || "").toLowerCase();
+  const tags = post.hashtags || [];
+  if (net === "x" || net === "twitter") {
+    // One sharp idea; trim to the lead so it reads native to X.
+    const lead = firstSentence(post.excerpt);
+    return { text: [lead.length > 12 ? lead : post.excerpt], hashtags: tags.slice(0, 2), cta: "" };
+  }
+  if (net === "instagram") {
+    return { text: [post.excerpt, "Save this for later 📌"], hashtags: tags, cta: "" };
+  }
+  if (net === "facebook") {
+    return { text: ["Sharing this one again — it still holds up:", post.excerpt], hashtags: tags.slice(0, 2), cta: "" };
+  }
+  if (net === "tiktok") {
+    return { text: ["POV: the one post that actually worked 👇", post.excerpt], hashtags: tags.slice(0, 3), cta: "" };
+  }
+  // linkedin + default — keep it full, end on a discussion prompt.
+  return { text: [post.excerpt, "What would you add? 👇"], hashtags: tags.slice(0, 3), cta: "" };
+}
+
+// Provenance stamped onto every generated draft so the Drafts panel always
+// shows where a post came from (the milker's core promise: capitalise on
+// what worked). Rendered as a pill by post-card.js.
+function originFor(post, mode) {
+  const net = labelFor(post.network);
+  const map = {
+    repurpose: { icon: "ap-icon-share", label: `Repurposed from your top ${net} post · ${post.perfBadge}` },
+    variations: { icon: "ap-icon-shuffle", label: `New angle on your top ${net} post · ${post.perfBadge}` },
+    refresh: { icon: "ap-icon-refresh", label: `Refreshed from your top ${net} post · ${post.perfBadge}` },
+  };
+  return map[mode] || null;
 }
 
 // ---- Step 1: surface the winners --------------------------------------
@@ -218,13 +358,12 @@ function generateRepurpose(sessionId, post, channels) {
   withPendingChip(
     sessionId,
     () => {
-      const drafts = picked.map((c) =>
-        addPostDraft(sessionId, {
-          network: c,
-          text: [post.excerpt],
-          hashtags: post.hashtags || [],
-        }),
-      );
+      const drafts = picked.map((c) => {
+        const copy = composeForChannel(post, c);
+        const draft = addPostDraft(sessionId, { network: c, text: copy.text, hashtags: copy.hashtags });
+        draft.origin = originFor(post, "repurpose");
+        return draft;
+      });
       postDraftResult(sessionId, {
         ideaTitle: `Repurposed from your top ${labelFor(post.network)} post`,
         drafts,
@@ -266,13 +405,13 @@ function generateVariations(sessionId, post, angles, picks) {
       for (const { value, count } of valid) {
         const angle = angles.find((a) => a.id === value);
         for (let i = 0; i < count; i += 1) {
-          drafts.push(
-            addPostDraft(sessionId, {
-              network: post.network,
-              text: [angle ? angle.description : post.excerpt],
-              hashtags: post.hashtags || [],
-            }),
-          );
+          const draft = addPostDraft(sessionId, {
+            network: post.network,
+            text: angle ? angle.text : [post.excerpt],
+            hashtags: post.hashtags || [],
+          });
+          draft.origin = originFor(post, "variations");
+          drafts.push(draft);
         }
       }
       postDraftResult(sessionId, {
@@ -299,6 +438,7 @@ function generateRefresh(sessionId, post) {
         text: ["Reposting this with fresh proof — it still holds up:", post.excerpt],
         hashtags: post.hashtags || [],
       });
+      draft.origin = originFor(post, "refresh");
       postDraftResult(sessionId, {
         ideaTitle: `Refreshed your top ${labelFor(post.network)} post`,
         drafts: [draft],

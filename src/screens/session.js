@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=102";
+import { renderTopbar } from "../components/topbar.js?v=103";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=44";
 import {
   getConnectedProfiles,
@@ -46,7 +46,7 @@ import {
 } from "../posts-store.js?v=30";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=34";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=26";
-import { startTopPostsFlow } from "../top-posts-flow.js?v=2";
+import { startTopPostsFlow } from "../top-posts-flow.js?v=3";
 import * as sidebarWizard from "../sidebar-wizard.js?v=39";
 import * as inlineQuestion from "../inline-question.js?v=34";
 import * as clipStudio from "../clip-studio.js?v=12";
@@ -60,8 +60,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=84";
-import * as playbookEditor from "../playbook-editor.js?v=43";
+import * as contextBuilder from "../context-builder.js?v=85";
+import * as playbookEditor from "../playbook-editor.js?v=44";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -100,7 +100,7 @@ import {
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=171";
+} from "../components/right-panel.js?v=172";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateThinkingChip, stopThinkingTimer } from "./session/thinking-chip.js?v=3";

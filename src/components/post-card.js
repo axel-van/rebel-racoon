@@ -43,6 +43,19 @@ export function renderPostCard(post, opts = {}) {
       : ""
   }</div>`;
 
+  // Provenance pill — set by flows that generate a draft from an existing
+  // asset (e.g. the top-posts milker stamps `post.origin`). Surfaces where the
+  // draft came from right in the Drafts panel, where the originating
+  // conversation context is otherwise lost. Hidden while editing / regenerating.
+  const originBadge =
+    post.origin && !post.isRegenerating
+      ? `<div class="posts__card-origin-row">
+          <span class="ap-status grey no-dot posts__card-origin">
+            <i class="${post.origin.icon}" aria-hidden="true"></i> ${post.origin.label}
+          </span>
+        </div>`
+      : "";
+
   const bodyParagraphs = post.text.map((p) => `<p class="posts__card-paragraph">${p}</p>`).join("");
 
   const hashtags = post.hashtags.length
@@ -166,7 +179,8 @@ export function renderPostCard(post, opts = {}) {
             </div>
           </header>
 
-          ${raw(editorBody)} ${raw(charCount)} ${raw(editActions)} ${raw(mediaBlock)} ${raw(engagement)}
+          ${raw(originBadge)} ${raw(editorBody)} ${raw(charCount)} ${raw(editActions)} ${raw(mediaBlock)}
+          ${raw(engagement)}
 
           <!-- Footer is a non-interactive LinkedIn-style preview of the
                engagement bar — decoration only, not real actions (see
