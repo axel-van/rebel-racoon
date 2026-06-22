@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=127";
+import { renderTopbar } from "../components/topbar.js?v=128";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -63,8 +63,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=109";
-import * as playbookEditor from "../playbook-editor.js?v=68";
+import * as contextBuilder from "../context-builder.js?v=110";
+import * as playbookEditor from "../playbook-editor.js?v=69";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -105,7 +105,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=196";
+} from "../components/right-panel.js?v=197";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=9";
@@ -1192,15 +1192,22 @@ function renderConnectorsSubmenu() {
     </div>`;
 }
 
-// Draft-ready status bar (DS .ap-status-card) glued to the top of the composer,
-// shown in addition to the transient snackbar when a draft batch lands. Keyed
-// per-session in module scope so it survives aside re-renders and screen
-// re-mounts; cleared when the Drafts panel opens (lifecycle: "until reviewed").
-// sessionId → { batchId, count }.
+// "Ready" status bars (DS .ap-status-card) glued to the top of the composer,
+// shown in addition to the transient snackbar when a batch lands. Keyed per-
+// session in module scope so they survive aside re-renders and screen re-mounts;
+// each is cleared when its panel opens (lifecycle: "until reviewed"). When both
+// are pending the most recent (by `at`) wins the single slot.
+//   draftBanners: sessionId → { batchId, count, at }  — cleared on Drafts panel
+//   ideaBanners:  sessionId → { count, at }            — cleared on Ideas panel
 const draftBanners = new Map();
+const ideaBanners = new Map();
 
 function draftBannerFlowInner(count) {
   return `<span>${count} draft${count === 1 ? "" : "s"} ready</span> to review`;
+}
+
+function ideaBannerFlowInner(count) {
+  return `<span>${count} idea${count === 1 ? "" : "s"} ready</span>`;
 }
 
 function withEllipsis(s) {
@@ -1229,12 +1236,15 @@ function humanizeLoadingMessage(m) {
   return "Working…";
 }
 
-// One unified descriptor for the composer status slot:
-//   { variant:"grey", labels, label, key } — background work in progress
-//   { variant:"green", count, key }         — drafts ready (until reviewed)
-//   null                                    — idle
-// Grey wins over green, so a draft batch landing while other work is still
-// running keeps the bar grey until everything settles, then flips to green.
+// One unified descriptor for the composer status slot. `shape` drives the
+// reconcile (same shape → in-place text update; different → markup swap):
+//   { shape:"grey",   variant:"grey",  label, key }  — background work running
+//   { shape:"drafts", variant:"green", count, key }  — drafts ready
+//   { shape:"ideas",  variant:"green", count, key }  — ideas ready
+//   null                                             — idle
+// Grey (in-progress) wins over the green "ready" bars; among the two ready bars
+// the most recent (by `at`) wins the single slot, then yields to the other when
+// its panel is opened.
 function computeComposerStatus(sessionId) {
   const labels = [];
   // Sources analysing — the canonical background action and the source of
@@ -1256,23 +1266,47 @@ function computeComposerStatus(sessionId) {
   }
   if (labels.length > 0) {
     const label = labels.length === 1 ? labels[0] : `${labels.length} tasks running…`;
-    return { variant: "grey", labels, label, key: `grey|${label}` };
+    return { shape: "grey", variant: "grey", labels, label, key: `grey|${label}` };
   }
   const draft = draftBanners.get(sessionId);
-  if (draft) return { variant: "green", count: draft.count, key: `green|${draft.count}` };
-  return null;
+  const idea = ideaBanners.get(sessionId);
+  const draftDesc = draft && { shape: "drafts", variant: "green", count: draft.count, key: `drafts|${draft.count}` };
+  const ideaDesc = idea && { shape: "ideas", variant: "green", count: idea.count, key: `ideas|${idea.count}` };
+  if (draft && idea) return idea.at > draft.at ? ideaDesc : draftDesc;
+  return draftDesc || ideaDesc || null;
 }
 
 function renderComposerStatus(sessionId) {
   const status = computeComposerStatus(sessionId);
   if (!status) return "";
-  if (status.variant === "green") {
+  if (status.shape === "drafts") {
     return html`
-      <div class="ap-status-card green session__composer-status" data-status-key="${status.key}" role="status">
+      <div
+        class="ap-status-card green session__composer-status"
+        data-status-key="${status.key}"
+        data-status-shape="drafts"
+        role="status"
+      >
         <div class="upper">
           <i class="ap-icon-file" aria-hidden="true"></i>
           <div class="flow">${raw(draftBannerFlowInner(status.count))}</div>
           <button type="button" class="ap-link small standalone" data-draft-banner-review>Review</button>
+        </div>
+      </div>
+    `;
+  }
+  if (status.shape === "ideas") {
+    return html`
+      <div
+        class="ap-status-card green session__composer-status"
+        data-status-key="${status.key}"
+        data-status-shape="ideas"
+        role="status"
+      >
+        <div class="upper">
+          <i class="ap-icon-sparkles" aria-hidden="true"></i>
+          <div class="flow">${raw(ideaBannerFlowInner(status.count))}</div>
+          <button type="button" class="ap-link small standalone" data-idea-banner-view>View ideas</button>
         </div>
       </div>
     `;
@@ -1284,6 +1318,7 @@ function renderComposerStatus(sessionId) {
     <div
       class="ap-status-card grey session__composer-status"
       data-status-key="${status.key}"
+      data-status-shape="grey"
       role="status"
       aria-live="polite"
     >
@@ -3000,6 +3035,8 @@ function wireAssistantPanel(root, session, attachedContext) {
   // as new and re-trigger openDraftsPanel → URL write → re-render → loop.
   const seededLatestDraft = [...getThread(session.id)].reverse().find((m) => m.variant === "draft");
   let lastDraftMessageId = seededLatestDraft?.id || null;
+  const seededLatestExtraction = [...getThread(session.id)].reverse().find((m) => m.variant === "extraction");
+  let lastExtractionMessageId = seededLatestExtraction?.id || null;
   // Track whether we've already crossed the empty → started boundary (see
   // isThreadStarted). The first time we cross it the layout changes shape — the
   // empty hero (with its inline composer) gives way to the thread + a bottom
@@ -3029,11 +3066,14 @@ function wireAssistantPanel(root, session, attachedContext) {
     }
     if (existing && !existing.classList.contains("is-leaving")) {
       if (existing.dataset.statusKey === status.key) return; // unchanged → no-op
-      if (existing.classList.contains(status.variant)) {
-        // Same variant, new text — update in place, no re-entrance.
-        if (status.variant === "green") {
+      if (existing.dataset.statusShape === status.shape) {
+        // Same shape, new text — update in place, no re-entrance.
+        if (status.shape === "drafts") {
           const flow = existing.querySelector(".flow");
           if (flow) flow.innerHTML = draftBannerFlowInner(status.count);
+        } else if (status.shape === "ideas") {
+          const flow = existing.querySelector(".flow");
+          if (flow) flow.innerHTML = ideaBannerFlowInner(status.count);
         } else {
           const label = existing.querySelector("[data-status-label]");
           if (label) label.textContent = status.label;
@@ -3041,7 +3081,7 @@ function wireAssistantPanel(root, session, attachedContext) {
         existing.dataset.statusKey = status.key;
         return;
       }
-      // Variant swap (grey↔green): replace markup in place, stay visible.
+      // Shape swap (grey↔drafts↔ideas): replace markup in place, stay visible.
       existing.outerHTML = renderComposerStatus(session.id);
       return;
     }
@@ -3089,7 +3129,18 @@ function wireAssistantPanel(root, session, attachedContext) {
       // reconcile happens once below — after draftBanners is set — so a grey
       // in-progress bar swaps straight to green (no flicker).
       if (getRightPanelMode() !== "drafts") {
-        draftBanners.set(session.id, { batchId: latestDraft.id, count: n });
+        draftBanners.set(session.id, { batchId: latestDraft.id, count: n, at: Date.now() });
+      }
+    }
+    // Ideas extracted — mirror the drafts bar: a persistent green "N ideas
+    // ready" bar (until the Ideas panel is opened), in addition to the
+    // "N ideas ready" snackbar fired centrally by postExtractionResult.
+    const latestExtraction = [...messages].reverse().find((m) => m.variant === "extraction");
+    if (latestExtraction && latestExtraction.id !== lastExtractionMessageId) {
+      lastExtractionMessageId = latestExtraction.id;
+      const n = latestExtraction.count ?? (latestExtraction.ideas ? latestExtraction.ideas.length : 0);
+      if (getRightPanelMode() !== "ideas") {
+        ideaBanners.set(session.id, { count: n, at: Date.now() });
       }
     }
     // Reconcile the composer status bar against the new thread state (grey
@@ -3112,6 +3163,11 @@ function wireAssistantPanel(root, session, attachedContext) {
     // deletes the entry first, so this is a no-op for that path.
     if (getRightPanelMode() === "drafts" && draftBanners.has(session.id)) {
       draftBanners.delete(session.id);
+      syncComposerStatus();
+    }
+    // Same lifecycle for the ideas bar — opening the Ideas panel clears it.
+    if (getRightPanelMode() === "ideas" && ideaBanners.has(session.id)) {
+      ideaBanners.delete(session.id);
       syncComposerStatus();
     }
   });
@@ -4529,6 +4585,13 @@ function bindSession(root, session) {
         draftBanners.delete(session.id);
         const open = () => openDraftsPanel({ sessionId: session.id, messageId: ref });
         animateBannerOut(root.querySelector(".session__composer-status"), open);
+        return;
+      }
+
+      // Ideas-ready bar "View ideas" → animate out, then open the Ideas panel.
+      if (event.target.closest("[data-idea-banner-view]")) {
+        ideaBanners.delete(session.id);
+        animateBannerOut(root.querySelector(".session__composer-status"), () => openIdeasPanel());
         return;
       }
 
