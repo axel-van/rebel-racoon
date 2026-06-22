@@ -2097,11 +2097,11 @@ function renderSourceRow(src) {
         type="button"
         class="ap-button ghost blue rpanel-sources__row-mention"
         data-rpanel-mention-source="${src.id}"
-        aria-label="Mention ${escapeAttr(src.filename)} in composer"
-        title="Mention"
+        aria-label="Reference ${escapeAttr(src.filename)} in composer"
+        title="Reference"
       >
         <i class="ap-icon-at"></i>
-        <span>Mention</span>
+        <span>Reference</span>
       </button>`
     : "";
   // Kebab menu (…) on the head row, to the right of Mention. DS

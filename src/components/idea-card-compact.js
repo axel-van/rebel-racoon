@@ -104,7 +104,7 @@ export function renderCompactIdeaCard(
   const mentionBtn = showMention
     ? `<button type="button" class="ap-button ghost blue rpanel-ideas__mention" data-rpanel-mention-idea="${escapeAttr(idea.id)}">
         <i class="ap-icon-at"></i>
-        <span>Mention</span>
+        <span>Reference</span>
       </button>`
     : "";
 

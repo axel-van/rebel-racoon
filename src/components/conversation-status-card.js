@@ -311,7 +311,7 @@ function renderSourcesSection(sources) {
         type="button"
         class="conversation-status-card__row conversation-status-card__source"
         data-status-source-mention="${escapeAttr(name)}"
-        title="Click to mention in the composer"
+        title="Click to reference in the composer"
       >
         <span class="conversation-status-card__row-icons" aria-hidden="true">
           <i class="ap-icon-file conversation-status-card__row-icon-rest"></i>

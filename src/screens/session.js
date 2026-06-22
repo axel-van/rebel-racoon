@@ -1279,7 +1279,7 @@ function renderComposer(attachedContext, session, selectable) {
             <button
               type="button"
               class="ap-button stroked grey composer-mention-trigger"
-              aria-label="Mention a source or idea"
+              aria-label="Reference a source or idea"
               aria-haspopup="listbox"
               aria-expanded="false"
               aria-controls="composerMentionPicker"
@@ -1287,7 +1287,7 @@ function renderComposer(attachedContext, session, selectable) {
               ${hasMentionable ? "" : 'disabled title="Add a source or extract an idea first"'}
             >
               <i class="ap-icon-at"></i>
-              <span>Mention</span>
+              <span>Reference</span>
             </button>
             ${renderPlaybookControl(attachedContext, selectable)}
             <button

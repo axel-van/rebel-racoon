@@ -30,10 +30,11 @@
 // underlying state stays in one place. The user-facing toast is fired here
 // (a single shared place for the wording).
 
-import { appendExtractedIdeas, removeIdeasForSources, removeIdeas } from "./library.js?v=32";
+import { appendExtractedIdeas, removeIdeasForSources, removeIdeas, getIdeas } from "./library.js?v=32";
 import { removeSources as streamRemoveSources, getSources as streamGetSources } from "./sources-stream.js?v=38";
 import { open as openConfirmModal } from "./components/confirm-modal.js?v=22";
 import { showToast } from "./components/toast.js?v=20";
+import { addMention } from "./composer-mentions.js?v=6";
 
 // ── Bulk-bar HTML renderers ──────────────────────────────────────────────
 
@@ -82,6 +83,24 @@ export function wireLibraryActions(root, options) {
   root.addEventListener(
     "click",
     (event) => {
+      // Per-row "Reference" — source card pushes its filename into the composer.
+      // (The right-panel Sources surface wires its own copy; this covers the
+      // Library/Content view, whose buttons were previously decorative.)
+      const sourceMention = event.target.closest("[data-source-mention]");
+      if (sourceMention) {
+        const src = getSources().find((s) => s.id === sourceMention.dataset.sourceMention);
+        if (sessionId && src) addMention(sessionId, src.filename);
+        return;
+      }
+
+      // Per-row "Reference" — idea card pushes its title into the composer.
+      const ideaMention = event.target.closest("[data-idea-mention]");
+      if (ideaMention) {
+        const idea = (getIdeas(sessionId) || []).find((i) => i.id === ideaMention.dataset.ideaMention);
+        if (sessionId && idea) addMention(sessionId, idea.title);
+        return;
+      }
+
       // Source per-row checkbox toggle
       const sourceBox = event.target.closest("[data-source-select]");
       if (sourceBox) {

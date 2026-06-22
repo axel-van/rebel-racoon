@@ -207,7 +207,7 @@ export function renderIdeaCard(
                 data-idea-mention="${idea.id}"
               >
                 <i class="ap-icon-at"></i>
-                <span>Mention</span>
+                <span>Reference</span>
               </button>`
                 : ""
             }

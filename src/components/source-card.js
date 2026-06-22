@@ -122,7 +122,7 @@ export function renderSourceCard(
           data-source-mention="${source.id}"
         >
           <i class="ap-icon-at"></i>
-          <span>Mention</span>
+          <span>Reference</span>
         </button>`
       : "";
 

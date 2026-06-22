@@ -105,8 +105,8 @@ export function renderInto(container, sessionId) {
         type="button"
         class="composer-mention__remove"
         data-composer-mention-remove="${escapeAttr(name)}"
-        aria-label="Remove ${escapeAttr(name)} mention"
-        title="Remove mention"
+        aria-label="Remove ${escapeAttr(name)} reference"
+        title="Remove reference"
       >
         <i class="ap-icon-close"></i>
       </button>

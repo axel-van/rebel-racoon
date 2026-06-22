@@ -197,8 +197,8 @@ export function renderPostCard(post, opts = {}) {
         <button
           type="button"
           class="ap-icon-button stroked blue"
-          aria-label="Mention in chat"
-          title="Mention"
+          aria-label="Reference in chat"
+          title="Reference"
           data-post-mention="${post.id}"
           ${regenerating ? "disabled" : ""}
         >

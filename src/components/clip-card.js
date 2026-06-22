@@ -114,7 +114,7 @@ export function renderClipCard(
         data-clip-mention="${escapeAttr(clip.id)}"
       >
         <i class="ap-icon-at"></i>
-        <span>Mention</span>
+        <span>Reference</span>
       </button>
     `
     : "";
