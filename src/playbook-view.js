@@ -649,7 +649,11 @@ function renderGoalsPanel(data, edit) {
   } else {
     body = [
       renderRow("Business", renderText(data.businessSummary)),
-      ...GOAL_FIELDS.map((f) => renderRow(f.label, renderChips(data[f.key]))),
+      // Primary audience is single-select, so show it as plain text rather than
+      // a one-chip row; the other goal fields stay multi-value chips.
+      ...GOAL_FIELDS.map((f) =>
+        renderRow(f.label, f.key === "audience" ? renderText((data.audience || [])[0]) : renderChips(data[f.key])),
+      ),
       renderRow("CTA links", renderCtaList(data)),
     ].join("");
   }
