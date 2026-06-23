@@ -19,7 +19,7 @@
 
 import { navigate } from "../router.js?v=30";
 import { escapeHtml as esc } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=134";
+import { renderTopbar } from "../components/topbar.js?v=135";
 import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=31";
 import { mount, snapshotEditable } from "../playbook-view.js?v=29";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
@@ -27,7 +27,8 @@ import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";
 import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=9";
 import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=5";
 import { analyzeWebsite, analyzeDocument, analyzeSocialProfiles } from "../context-mock-analysis.js?v=23";
-import { sectionPatchFromAnalysis } from "../context-builder.js?v=116";
+import { sectionPatchFromAnalysis } from "../context-builder.js?v=117";
+import { isFlagOn } from "../feature-flags.js?v=7";
 
 const AUTOFILL_MS = 1500;
 
@@ -114,7 +115,9 @@ export function renderPlaybook(params, target) {
       showTop: false,
       headerActions: () => buildHeaderActions(),
       onEditName,
-      onToggleDefault: toggleDefault,
+      // Gated behind the playbookDefault flag (default OFF): without the
+      // callback, playbook-view renders no "set as default" star.
+      onToggleDefault: isFlagOn("playbookDefault") ? toggleDefault : undefined,
       onAnalyzeVoice,
       onFooter,
     };

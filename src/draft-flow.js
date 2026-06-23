@@ -14,8 +14,8 @@
 //   3. Creates one draft post per channel via posts-store.js.
 //   4. Posts a structured "Drafted N posts" result turn.
 
-import { postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=50";
-import { getIdeas } from "./library.js?v=40";
+import { postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=51";
+import { getIdeas } from "./library.js?v=41";
 import { ideas as GLOBAL_IDEAS, anglesByIdea } from "./mocks.js?v=45";
 import { addPostDraft } from "./posts-store.js?v=31";
 import { showToast } from "./components/toast.js?v=20";

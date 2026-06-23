@@ -15,6 +15,15 @@ export const FLAGS = Object.freeze([
     hides: "Ideas entry in the left sidebar navigation.",
   },
   {
+    id: "playbookDefault",
+    label: "Default Playbook toggle",
+    default: false,
+    hides:
+      "When OFF (default), hides the star button next to the Playbook name on " +
+      "the /playbook detail page that sets/unsets it as the default Playbook. " +
+      "The default-selection logic still works internally.",
+  },
+  {
     id: "conversationalPlaybookEdit",
     label: "Conversational edit from /contexts",
     default: false,
