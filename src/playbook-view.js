@@ -91,6 +91,7 @@ let mountTarget = null;
 let cfg = null;
 let editScope = null; // null (read) | "goals" | "voice" | "brand"
 let snapshot = null; // deep copy of editable fields, for Cancel
+let audienceCustom = false; // "Other…" picked in the Primary audience dropdown
 let loadingTimer = null;
 let loadingStage = 0;
 let phase = "ready"; // "loading" | "ready"
@@ -121,6 +122,7 @@ export function mount(target, config) {
   mountTarget = target;
   editScope = null;
   snapshot = null;
+  audienceCustom = false;
 
   if (cfg.loader && !cfg.skipLoader) {
     phase = "loading";
@@ -442,31 +444,38 @@ function audienceOptionPool(data) {
   return pool;
 }
 
-// Single-select audience picker: Archie's analysed audiences render as
-// aria-pressed option chips (the shared .ap-filter-chip primitive), picking
-// one replaces the value. A free-text input stays available so the field is
-// never a dead-end when no analysis is on hand. Options are addressed by
-// index — the pool is recomputed deterministically on click.
+// Single-select audience picker: Archie's analysed audiences are the options
+// of a native dropdown (one choice only), with a trailing "Other…" entry that
+// reveals a free-text input to define a custom audience. Options are addressed
+// by index — the pool is recomputed deterministically on change. `audienceCustom`
+// (module-local, reset whenever the edit scope changes) tracks the "Other…" state.
 function renderAudiencePicker(data) {
   const pool = audienceOptionPool(data);
   const selected = Array.isArray(data.audience) && data.audience.length ? data.audience[0] : "";
   const options = pool
     .map((v, i) => {
-      const on = v.toLowerCase() === selected.toLowerCase();
-      return `<button type="button" class="ap-filter-chip recap__audience-option" data-recap-audience-index="${i}" aria-pressed="${on}">${esc(v)}</button>`;
+      const on = !audienceCustom && v.toLowerCase() === selected.toLowerCase();
+      return `<option value="${i}" ${on ? "selected" : ""}>${esc(v)}</option>`;
     })
     .join("");
   return `
     <div class="recap__audience-picker">
-      <div class="recap__audience-options" role="group" aria-label="Primary audience">${options}</div>
-      <span class="recap__chip-add recap__audience-add">
+      <select class="ap-native-select recap__audience-select" data-recap-audience-select aria-label="Primary audience">
+        ${options}
+        <option value="other" ${audienceCustom ? "selected" : ""}>Other — define your own…</option>
+      </select>
+      ${
+        audienceCustom
+          ? `<span class="recap__chip-add recap__audience-add">
         <div class="ap-input-group recap__chip-add-field">
-          <input type="text" data-recap-audience-input placeholder="Add a different audience…" aria-label="Add a different audience" />
+          <input type="text" data-recap-audience-input placeholder="Define your audience…" aria-label="Define your audience" />
         </div>
         <button type="button" class="ap-icon-button stroked grey recap__chip-add-btn" data-recap-audience-add aria-label="Add audience">
           <i class="ap-icon-plus"></i>
         </button>
-      </span>
+      </span>`
+          : ``
+      }
     </div>
   `;
 }
@@ -993,6 +1002,7 @@ function addAudienceCustom() {
   const input = mountTarget.querySelector("[data-recap-audience-input]");
   const val = (input?.value || "").trim();
   if (!val) return;
+  audienceCustom = false;
   setAudience(val);
 }
 
@@ -1044,6 +1054,7 @@ function onClick(event) {
     if (penBtn.dataset.recapEditCard === "brand") ensureBrand(data);
     snapshot = snapshotEditable(data);
     editScope = penBtn.dataset.recapEditCard;
+    audienceCustom = false;
     repaint();
     mountTarget
       ?.querySelector(
@@ -1057,6 +1068,7 @@ function onClick(event) {
     if (snapshot) cfg.revert?.(snapshot);
     snapshot = null;
     editScope = null;
+    audienceCustom = false;
     repaint();
     return;
   }
@@ -1072,6 +1084,7 @@ function onClick(event) {
     cfg.commit?.();
     snapshot = null;
     editScope = null;
+    audienceCustom = false;
     repaint();
     return;
   }
@@ -1085,14 +1098,7 @@ function onClick(event) {
     return;
   }
 
-  // Primary audience — single-select option chip (addressed by pool index).
-  const audiencePick = event.target.closest("[data-recap-audience-index]");
-  if (audiencePick) {
-    const pool = audienceOptionPool(data);
-    const idx = Number(audiencePick.dataset.recapAudienceIndex);
-    if (pool[idx] != null) setAudience(pool[idx]);
-    return;
-  }
+  // Primary audience — confirm a custom value typed under the "Other…" option.
   if (event.target.closest("[data-recap-audience-add]")) {
     addAudienceCustom();
     return;
@@ -1222,6 +1228,23 @@ function onChange(event) {
   if (!data) return;
   if (event.target.matches("[data-recap-language]")) {
     data.language = event.target.value;
+    return;
+  }
+  // Primary audience dropdown — pick an analysed option (by pool index) or
+  // switch to "Other…", which reveals the free-text input below.
+  if (event.target.matches("[data-recap-audience-select]")) {
+    const val = event.target.value;
+    if (val === "other") {
+      audienceCustom = true;
+      repaint();
+      mountTarget?.querySelector("[data-recap-audience-input]")?.focus();
+    } else {
+      audienceCustom = false;
+      const pool = audienceOptionPool(data);
+      const idx = Number(val);
+      if (pool[idx] != null) setAudience(pool[idx]);
+      else repaint();
+    }
     return;
   }
   // Reference-image upload (#11) — read each picked image as a data URL and
