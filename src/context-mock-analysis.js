@@ -150,7 +150,12 @@ const GENERIC = {
   businessSummary:
     "This brand sells a product or service that solves a specific problem for a clearly defined audience. The website highlights the value proposition, key features, and credibility markers (case studies, testimonials, results). Edit this summary to match your business — Archie will use it to ground every post.",
   suggestions: {
-    audience: ["Decision-makers", "End users"],
+    audience: [
+      "Operations and marketing leads at growing B2B teams",
+      "Founders and decision-makers evaluating the product",
+      "Hands-on end users who run the day-to-day",
+      "Agencies and consultants serving similar clients",
+    ],
     audienceProblems: [
       "Saving time on repetitive tasks",
       "Making better decisions with less data",

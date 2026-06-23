@@ -1051,6 +1051,35 @@
   height: 28px;
 }
 
+/* Primary audience — single-select option list above an inline add control.
+   Archie's analysed audiences are full sentences, so the options are a
+   vertical stack of wrapping rows (not the fixed-height .ap-filter-chip pill):
+   we keep the .ap-filter-chip colours + pressed state but override its
+   single-line sizing. */
+.recap__audience-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+}
+
+.recap__audience-options {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ref-spacing-xs);
+}
+
+.recap__audience-option.ap-filter-chip {
+  height: auto;
+  max-width: none;
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  white-space: normal;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border-radius: var(--app-radius-card);
+}
+
 /* CTA editor */
 .recap__cta-edit-list {
   display: flex;

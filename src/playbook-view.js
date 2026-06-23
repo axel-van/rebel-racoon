@@ -15,6 +15,7 @@
 // is safe because only one route renders at a time.
 
 import { html, raw, escapeHtml as esc } from "./utils.js?v=21";
+import { analyzeWebsite } from "./context-mock-analysis.js?v=23";
 
 // Archie's UI and AI generation are English-only today. Other languages
 // were removed (audit B8) to keep the Playbook field honest — re-add them
@@ -412,6 +413,64 @@ function renderEditChips(field, values, placeholder) {
   `;
 }
 
+// Primary audience is single-select. Build the option pool from Archie's
+// analysed audiences (the onboarding draft carries them in
+// `suggestions.audience`; a saved Playbook with a website re-derives them
+// live), unioned with whatever's currently selected so nothing is ever lost.
+function audienceOptionPool(data) {
+  const current = Array.isArray(data.audience) ? data.audience : [];
+  let analysed = data.suggestions && Array.isArray(data.suggestions.audience) ? data.suggestions.audience : [];
+  if (!analysed.length && data.websiteUrl) {
+    try {
+      analysed = analyzeWebsite(data.websiteUrl)?.suggestions?.audience || [];
+    } catch {
+      analysed = [];
+    }
+  }
+  const pool = [];
+  const seen = new Set();
+  const add = (v) => {
+    const t = (v || "").trim();
+    if (!t) return;
+    const k = t.toLowerCase();
+    if (seen.has(k)) return;
+    seen.add(k);
+    pool.push(t);
+  };
+  analysed.forEach(add);
+  current.forEach(add);
+  return pool;
+}
+
+// Single-select audience picker: Archie's analysed audiences render as
+// aria-pressed option chips (the shared .ap-filter-chip primitive), picking
+// one replaces the value. A free-text input stays available so the field is
+// never a dead-end when no analysis is on hand. Options are addressed by
+// index — the pool is recomputed deterministically on click.
+function renderAudiencePicker(data) {
+  const pool = audienceOptionPool(data);
+  const selected = Array.isArray(data.audience) && data.audience.length ? data.audience[0] : "";
+  const options = pool
+    .map((v, i) => {
+      const on = v.toLowerCase() === selected.toLowerCase();
+      return `<button type="button" class="ap-filter-chip recap__audience-option" data-recap-audience-index="${i}" aria-pressed="${on}">${esc(v)}</button>`;
+    })
+    .join("");
+  return `
+    <div class="recap__audience-picker">
+      <div class="recap__audience-options" role="group" aria-label="Primary audience">${options}</div>
+      <span class="recap__chip-add recap__audience-add">
+        <div class="ap-input-group recap__chip-add-field">
+          <input type="text" data-recap-audience-input placeholder="Add a different audience…" aria-label="Add a different audience" />
+        </div>
+        <button type="button" class="ap-icon-button stroked grey recap__chip-add-btn" data-recap-audience-add aria-label="Add audience">
+          <i class="ap-icon-plus"></i>
+        </button>
+      </span>
+    </div>
+  `;
+}
+
 function renderLineEditor(field, values, placeholder) {
   const list = Array.isArray(values) ? values : [];
   const rows = list
@@ -555,7 +614,11 @@ function renderGoalsPanel(data, edit) {
          </div>`,
       ),
       ...GOAL_FIELDS.map((f) =>
-        renderRow(f.label, renderFieldHint(FIELD_HINTS[f.key]) + renderEditChips(f.key, data[f.key], f.placeholder)),
+        renderRow(
+          f.label,
+          renderFieldHint(FIELD_HINTS[f.key]) +
+            (f.key === "audience" ? renderAudiencePicker(data) : renderEditChips(f.key, data[f.key], f.placeholder)),
+        ),
       ),
       renderRow("CTA links", renderFieldHint(FIELD_HINTS.ctaLinks) + renderCtaEditor(data)),
     ].join("");
@@ -914,6 +977,25 @@ function addChip(field) {
   mountTarget.querySelector(`[data-recap-chip-input="${field}"]`)?.focus();
 }
 
+// Single-select: replace the audience with exactly the picked value.
+function setAudience(value) {
+  const data = cfg.getData();
+  if (!data) return;
+  const t = (value || "").trim();
+  if (!t) return;
+  data.audience = [t];
+  repaint();
+}
+
+function addAudienceCustom() {
+  const data = cfg.getData();
+  if (!data || !mountTarget) return;
+  const input = mountTarget.querySelector("[data-recap-audience-input]");
+  const val = (input?.value || "").trim();
+  if (!val) return;
+  setAudience(val);
+}
+
 function addLine(field) {
   const data = cfg.getData();
   if (!data) return;
@@ -1000,6 +1082,19 @@ function onClick(event) {
     data.voiceMode = voiceMode.dataset.recapVoiceMode;
     repaint();
     mountTarget?.querySelector("[data-recap-text='voiceManual']")?.focus();
+    return;
+  }
+
+  // Primary audience — single-select option chip (addressed by pool index).
+  const audiencePick = event.target.closest("[data-recap-audience-index]");
+  if (audiencePick) {
+    const pool = audienceOptionPool(data);
+    const idx = Number(audiencePick.dataset.recapAudienceIndex);
+    if (pool[idx] != null) setAudience(pool[idx]);
+    return;
+  }
+  if (event.target.closest("[data-recap-audience-add]")) {
+    addAudienceCustom();
     return;
   }
 
@@ -1158,7 +1253,10 @@ function onChange(event) {
 
 function onKeydown(event) {
   if (!editScope) return;
-  if (event.target.matches("[data-recap-chip-input]") && event.key === "Enter") {
+  if (event.target.matches("[data-recap-audience-input]") && event.key === "Enter") {
+    event.preventDefault();
+    addAudienceCustom();
+  } else if (event.target.matches("[data-recap-chip-input]") && event.key === "Enter") {
     event.preventDefault();
     addChip(event.target.dataset.recapChipInput);
   } else if (event.target.matches("[data-recap-line-field]") && event.key === "Enter") {

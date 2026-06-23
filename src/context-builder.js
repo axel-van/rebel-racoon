@@ -15,10 +15,10 @@
 
 import * as inlineQuestion from "./inline-question.js?v=34";
 import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=50";
-import * as rightPanel from "./components/right-panel.js?v=200";
+import * as rightPanel from "./components/right-panel.js?v=201";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=31";
-import { analyzeWebsite } from "./context-mock-analysis.js?v=22";
-import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=72";
+import { analyzeWebsite } from "./context-mock-analysis.js?v=23";
+import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=73";
 import { connectors as connectorMocks } from "./mocks.js?v=45";
 import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=22";
 
@@ -111,7 +111,10 @@ export function sectionPatchFromAnalysis(analysis) {
   return {
     businessSummary: analysis?.businessSummary || "",
     briefSummary: analysis?.businessSummary || "", // legacy mirror
-    audience: (s.audience || []).slice(),
+    // Primary audience is single-select (the user picks one from Archie's
+    // analysed list in the recap), so pre-select only the top suggestion —
+    // the full list stays available via `suggestions.audience` for the picker.
+    audience: (s.audience || []).slice(0, 1),
     audienceProblems: (s.audienceProblems || []).slice(),
     tones: (s.tones || []).slice(),
     contentStyle: (s.contentStyle || []).slice(),
