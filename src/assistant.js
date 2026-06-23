@@ -10,6 +10,7 @@ import { ideas, threadsBySession as seedThreadsBySession, connectorDocs } from "
 import { findConnector } from "./connectors-store.js?v=25";
 import { createSessionNotifier } from "./store-utils.js?v=2";
 import { showToast } from "./components/toast.js?v=20";
+import { isFlagOn } from "./feature-flags.js?v=5";
 
 const threads = new Map(); // sessionId → messages[]
 const notifier = createSessionNotifier("assistant");
@@ -345,7 +346,7 @@ export function postExtractionResult(sessionId, { filename, ideas }) {
   // "N drafts ready". No action button: the extracted ideas already render
   // inline in the thread as an idea card.
   const n = ideas.length;
-  showToast(`${n} idea${n === 1 ? "" : "s"} ready`);
+  if (isFlagOn("statusActionSnackbars")) showToast(`${n} idea${n === 1 ? "" : "s"} ready`);
 }
 
 // Push a "pending" marker to indicate the session is busy (e.g. while a source

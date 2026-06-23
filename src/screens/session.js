@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=129";
+import { renderTopbar } from "../components/topbar.js?v=130";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -29,16 +29,16 @@ import {
   submitAssistantChoice,
   sendConnectorMessage,
   markConnectPromptResolved,
-} from "../assistant.js?v=48";
+} from "../assistant.js?v=49";
 import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=38";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=27";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=39";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=28";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=12";
+} from "../composer-mentions.js?v=13";
 import {
   getPosts,
   addPostDraft,
@@ -46,13 +46,13 @@ import {
   setSubtitleStyle,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=31";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=39";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=31";
-import * as topPostsFlow from "../top-posts-flow.js?v=12";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=40";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=32";
+import * as topPostsFlow from "../top-posts-flow.js?v=13";
 import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=11";
 import * as sidebarWizard from "../sidebar-wizard.js?v=40";
 import * as inlineQuestion from "../inline-question.js?v=34";
-import * as clipStudio from "../clip-studio.js?v=13";
+import * as clipStudio from "../clip-studio.js?v=14";
 import * as batchStudio from "../batch-studio.js?v=4";
 import { askConnector } from "../connector-ask.js?v=5";
 import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=25";
@@ -62,9 +62,9 @@ import {
   clearActiveConnector,
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
-import { isFlagOn } from "../feature-flags.js?v=4";
-import * as contextBuilder from "../context-builder.js?v=111";
-import * as playbookEditor from "../playbook-editor.js?v=70";
+import { isFlagOn } from "../feature-flags.js?v=5";
+import * as contextBuilder from "../context-builder.js?v=112";
+import * as playbookEditor from "../playbook-editor.js?v=71";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -77,8 +77,8 @@ import {
 } from "../components/content-workspace.js?v=25";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=27";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=47";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=37";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=50";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=38";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=51";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=8";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
@@ -95,7 +95,7 @@ import {
   updateSourceClips,
   extractClipsForSource,
   setSourceIdeaCount,
-} from "../sources-stream.js?v=40";
+} from "../sources-stream.js?v=41";
 import { renderClipCard } from "../components/clip-card.js?v=7";
 import { showToast } from "../components/toast.js?v=20";
 import { open as openTopPostModal } from "../components/top-post-modal.js?v=4";
@@ -105,11 +105,11 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=198";
+} from "../components/right-panel.js?v=199";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=9";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=14";
+import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=10";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=15";
 import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=9";
 
 // Default composer placeholder — restored whenever no connector is attached.
@@ -2112,9 +2112,11 @@ function openVideoClipsModalForSession(source, session) {
         ideaTitle: `From ${src.filename}`,
         drafts,
       });
-      showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from ${src.filename}`, {
-        duration: 3200,
-      });
+      if (isFlagOn("statusActionSnackbars")) {
+        showToast(`Drafted ${drafts.length} post${drafts.length === 1 ? "" : "s"} from ${src.filename}`, {
+          duration: 3200,
+        });
+      }
     },
   });
 }
@@ -3118,12 +3120,14 @@ function wireAssistantPanel(root, session, attachedContext) {
       // panel open. A toast (auto-dismiss) + the persistent topbar Drafts count
       // do the announcing; "Review" opens the panel pinned to this batch.
       const n = latestDraft.count ?? (latestDraft.drafts ? latestDraft.drafts.length : 0);
-      showToast(`${n} draft${n === 1 ? "" : "s"} ready to review`, {
-        action: {
-          label: "Review",
-          onClick: () => openDraftsPanel({ sessionId: session.id, messageId: latestDraft.id }),
-        },
-      });
+      if (isFlagOn("statusActionSnackbars")) {
+        showToast(`${n} draft${n === 1 ? "" : "s"} ready to review`, {
+          action: {
+            label: "Review",
+            onClick: () => openDraftsPanel({ sessionId: session.id, messageId: latestDraft.id }),
+          },
+        });
+      }
       // Second, persistent surface (until reviewed): the green DS status bar.
       // Skip it if the user is already in the Drafts panel. The actual bar
       // reconcile happens once below — after draftBanners is set — so a grey

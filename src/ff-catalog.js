@@ -36,6 +36,17 @@ export const FLAGS = Object.freeze([
       "Add-source modal's Connectors tab.",
   },
   {
+    id: "statusActionSnackbars",
+    label: "Action success snackbars",
+    default: true,
+    hides:
+      "When OFF, suppress the success snackbars that now duplicate the " +
+      "persistent composer status bar: 'N drafts ready to review', " +
+      "'Drafted N posts from <source>', 'N ideas ready', and the non-video " +
+      "source-ready toast ('<source> ready · N ideas'). The composer status " +
+      "bar (and the in-progress / video-ready toasts) stay regardless.",
+  },
+  {
     id: "hidePlaybookColors",
     label: "Hide playbook colors",
     default: false,

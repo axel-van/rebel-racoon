@@ -12,6 +12,7 @@ import { sourcesBySession as seedByCsesssion } from "./mocks.js?v=45";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import { detectUrlService } from "./url-services.js?v=1";
+import { isFlagOn } from "./feature-flags.js?v=5";
 
 // Canned extraction output attached to every Processed Video source.
 // Generic enough to plausibly come from any keynote / talk / demo video.
@@ -379,11 +380,17 @@ function transitionToDone(upload) {
   notifyUploads();
 
   const isVideo = !!(src && src.kind === "Video");
-  import("./components/toast.js").then(({ showToast }) => {
-    showToast(
-      isVideo ? `${upload.name} ready` : `${upload.name} ready · ${formatExtractionSummary(ideaCount, clipCount)}`,
-    );
-  });
+  // The non-video toast duplicates the green "N ideas ready" composer status
+  // bar (onSourceReady), so it's gated behind statusActionSnackbars. The video
+  // "ready" ping has no status-bar equivalent (extraction defers to the
+  // analyze choice), so it always fires.
+  if (isVideo || isFlagOn("statusActionSnackbars")) {
+    import("./components/toast.js").then(({ showToast }) => {
+      showToast(
+        isVideo ? `${upload.name} ready` : `${upload.name} ready · ${formatExtractionSummary(ideaCount, clipCount)}`,
+      );
+    });
+  }
 }
 
 // Hydrate a freshly-Processed Video source with the canned clip set so
@@ -602,12 +609,15 @@ export function completeScriptedSource(sourceId, { signal, signalColor, ideaCoun
 
   // Symmetric toast with transitionToDone — the chat is no longer
   // blocked during analysis, so the user may be mid-typing when the
-  // source completes and miss the inline bubble flip.
-  import("./components/toast.js").then(({ showToast }) => {
-    showToast(
-      isVideo ? `${src.filename} ready` : `${src.filename} ready · ${formatExtractionSummary(ideaCount, clipCount)}`,
-    );
-  });
+  // source completes and miss the inline bubble flip. The non-video toast
+  // duplicates the composer status bar, so it's gated; the video ping stays.
+  if (isVideo || isFlagOn("statusActionSnackbars")) {
+    import("./components/toast.js").then(({ showToast }) => {
+      showToast(
+        isVideo ? `${src.filename} ready` : `${src.filename} ready · ${formatExtractionSummary(ideaCount, clipCount)}`,
+      );
+    });
+  }
 }
 
 // Cancel an in-flight upload. After Done it's a no-op.

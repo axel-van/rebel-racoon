@@ -6,7 +6,7 @@ import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { open as openSearchModal } from "./search-modal.js?v=5";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=1";
+import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=2";
 import {
   getSessions,
   getSessionById,
@@ -15,15 +15,15 @@ import {
   togglePin as togglePinSession,
   subscribe as subscribeSessions,
 } from "../sessions-store.js?v=3";
-import { isFlagOn } from "../feature-flags.js?v=4";
+import { isFlagOn } from "../feature-flags.js?v=5";
 import { isNewUser } from "../user-mode.js?v=22";
-import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=38";
+import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=39";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=31";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=25";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=198";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=48";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=199";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=49";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=31";
-import { clearSession as clearSourcesSession } from "../sources-stream.js?v=40";
+import { clearSession as clearSourcesSession } from "../sources-stream.js?v=41";
 
 // Full Archie logo (mark + "archie" wordmark) — the official horizontal
 // lockup. Paths carry no fill, so they inherit `fill: currentColor` from
