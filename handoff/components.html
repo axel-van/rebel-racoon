@@ -419,6 +419,7 @@
           <li><a href="#clip-extraction">7. Clip / Idea extraction card</a></li>
           <li><a href="#notices">8. Notices (mermaid, grey, extracting)</a></li>
           <li><a href="#quick-picker">9. Quick picker (inline question)</a></li>
+          <li><a href="#switch-skeleton">10. Chat-switch skeleton</a></li>
         </ol>
       </nav>
 
@@ -1236,6 +1237,50 @@
             <div class="hd-comp__preview">
               <div class="analyse__sticky-bar session__assistant-wizard-bar">
                 <div class="analyse__sticky-bar-inner" data-live="picker-file"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            10. CHAT-SWITCH SKELETON
+            ════════════════════════════════════════════════════════════ -->
+      <section class="hd-section" id="switch-skeleton">
+        <h2>10. Chat-switch skeleton</h2>
+        <p class="hd-lead">
+          Shown for ~340ms inside <code>.session__assistant-thread</code> when switching to a different chat, then
+          swapped for the real thread (a synchronous innerHTML swap, so the real content never flashes first). Only a
+          started conversation is covered — the empty hero, wizard, and Clip Studio layouts are skipped. Driven by
+          <code>showSwitchSkeleton</code> in <code>src/screens/session.js</code>; respects
+          <code>prefers-reduced-motion</code> (no shimmer).
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.thread-skeleton</code></p>
+              <p class="hd-comp__desc">
+                Alternating assistant (grey, left) / user (electric-blue, right) bubble placeholders with a staggered
+                shimmer. Bubble widths vary to read as natural copy.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="thread-skeleton" aria-hidden="true">
+                <div class="thread-skeleton__row thread-skeleton__row--in">
+                  <span class="thread-skeleton__bubble" style="width: 62%"></span>
+                </div>
+                <div class="thread-skeleton__row thread-skeleton__row--out">
+                  <span class="thread-skeleton__bubble" style="width: 48%"></span>
+                </div>
+                <div class="thread-skeleton__row thread-skeleton__row--in">
+                  <span class="thread-skeleton__bubble" style="width: 74%"></span>
+                </div>
+                <div class="thread-skeleton__row thread-skeleton__row--in">
+                  <span class="thread-skeleton__bubble" style="width: 40%"></span>
+                </div>
               </div>
             </div>
           </div>
