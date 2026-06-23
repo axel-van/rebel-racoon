@@ -547,11 +547,49 @@ button.chat-bubble-choice-chip:active {
   border-color: var(--app-convo-navy);
 }
 
+/* Keyboard focus — same electric-blue ring used app-wide (the chips kept no
+   focus style before, which was an accessibility gap). */
+button.chat-bubble-choice-chip:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
+}
+
+/* Disabled chip — reads as unavailable, drops out of interaction. */
+button.chat-bubble-choice-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.chat-bubble-choice-chip:disabled:hover {
+  border-color: var(--ref-color-grey-20);
+}
+
 button.chat-bubble-choice-chip.is-selected,
 span.chat-bubble-choice-chip.is-selected {
   border-color: var(--app-convo-navy);
   background: var(--app-convo-navy-10);
   color: var(--app-convo-navy);
+}
+
+/* Selected check — the SAME filled blue disc + white tick as the picker rows,
+   so the selection glyph is shared across both surfaces (the chip keeps its
+   navy tint from the in-thread family). Always present, reveals on .is-selected
+   — selection is a pure DOM toggle so it can't be rendered conditionally. */
+.chat-bubble-choice-check {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-white);
+  font-size: var(--sys-icon-css-xs);
+  visibility: hidden;
+}
+
+.chat-bubble-choice-chip.is-selected .chat-bubble-choice-check {
+  visibility: visible;
 }
 
 /* When the choice has been answered, chips render as <span> (non-interactive). */
@@ -561,6 +599,8 @@ span.chat-bubble-choice-chip {
 
 .chat-bubble-choices-footer {
   margin-top: var(--ref-spacing-sm);
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* ---------- In-thread Drafts summary card ----------
@@ -760,6 +800,7 @@ span.chat-bubble-choice-chip {
 .chat-bubble-choice-chip--clean,
 .chat-bubble-choice-chip--caption,
 .chat-bubble-choice-chip--none {
+  position: relative;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -767,6 +808,18 @@ span.chat-bubble-choice-chip {
   min-width: 86px;
   min-height: 78px;
   padding: var(--ref-spacing-xs);
+}
+
+/* On the tall preview chips the check floats in the top-right corner rather
+   than adding a third row to the centred column. */
+.chat-bubble-choice-chip--preview .chat-bubble-choice-check,
+.chat-bubble-choice-chip--bold .chat-bubble-choice-check,
+.chat-bubble-choice-chip--clean .chat-bubble-choice-check,
+.chat-bubble-choice-chip--caption .chat-bubble-choice-check,
+.chat-bubble-choice-chip--none .chat-bubble-choice-check {
+  position: absolute;
+  top: var(--ref-spacing-xxs);
+  right: var(--ref-spacing-xxs);
 }
 
 .chat-bubble-choice-preview {

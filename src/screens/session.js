@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=139";
+import { renderTopbar } from "../components/topbar.js?v=141";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -48,10 +48,10 @@ import {
 } from "../posts-store.js?v=31";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=42";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=34";
-import * as topPostsFlow from "../top-posts-flow.js?v=19";
+import * as topPostsFlow from "../top-posts-flow.js?v=20";
 import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=11";
-import * as sidebarWizard from "../sidebar-wizard.js?v=44";
-import * as inlineQuestion from "../inline-question.js?v=38";
+import * as sidebarWizard from "../sidebar-wizard.js?v=45";
+import * as inlineQuestion from "../inline-question.js?v=39";
 import * as clipStudio from "../clip-studio.js?v=16";
 import * as batchStudio from "../batch-studio.js?v=4";
 import { askConnector } from "../connector-ask.js?v=5";
@@ -63,8 +63,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=7";
-import * as contextBuilder from "../context-builder.js?v=121";
-import { renderPicker } from "./_analyse-common.js?v=44";
+import * as contextBuilder from "../context-builder.js?v=123";
+import { renderPicker } from "./_analyse-common.js?v=45";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
 import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=2";
@@ -76,7 +76,7 @@ import {
 } from "../components/content-workspace.js?v=25";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=27";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=47";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=43";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=44";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=53";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=8";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
@@ -104,12 +104,12 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=208";
+} from "../components/right-panel.js?v=210";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=12";
 import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=17";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=12";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=13";
 
 // Default composer placeholder — restored whenever no connector is attached.
 // A connected connector swaps it for "Ask {name} anything…".
@@ -3492,11 +3492,15 @@ function renderChoiceTurn(message) {
       const isSelected = (message.selected || []).includes(c.value);
       const selectedClass = isSelected ? " is-selected" : "";
       const previewClass = c.preview ? ` chat-bubble-choice-chip--${c.previewKind || "preview"}` : "";
+      // Selected affordance — the same filled blue check badge as the picker
+      // rows. Always in the markup, CSS-hidden until the chip is .is-selected
+      // (selection is a pure DOM toggle, so it can't be rendered conditionally).
+      const checkBadge = `<span class="chat-bubble-choice-check" aria-hidden="true"><i class="ap-icon-check"></i></span>`;
       const inner = c.preview
         ? `<span class="chat-bubble-choice-preview chat-bubble-choice-preview--${c.previewKind || "default"}">${c.preview}</span>
-           <span class="chat-bubble-choice-label">${c.label}</span>`
+           <span class="chat-bubble-choice-label">${c.label}</span>${checkBadge}`
         : `<i class="${c.icon}" aria-hidden="true"></i>
-           <span>${c.label}</span>`;
+           <span>${c.label}</span>${checkBadge}`;
       if (isAnswered) {
         return `<span class="chat-bubble-choice-chip${selectedClass}${previewClass}">
           ${inner}
@@ -3524,8 +3528,9 @@ function renderChoiceTurn(message) {
       : `<div class="chat-bubble-choices-footer">
         <button
           type="button"
-          class="ap-button primary orange"
+          class="ap-button primary blue"
           data-assistant-choice-submit="${message.id}"
+          ${(message.selected || []).length === 0 ? "disabled" : ""}
         >
           <span>${submitLabel}</span>
         </button>
@@ -4173,6 +4178,10 @@ function bindSession(root, session) {
           const wasSelected = choiceChip.classList.contains("is-selected");
           choiceChip.classList.toggle("is-selected", !wasSelected);
           choiceChip.setAttribute("aria-pressed", !wasSelected ? "true" : "false");
+          // Keep the Submit disabled until at least one chip is selected.
+          const bubble = choiceChip.closest(".chat-bubble");
+          const submit = bubble?.querySelector("[data-assistant-choice-submit]");
+          if (submit) submit.disabled = !bubble.querySelector("button.chat-bubble-choice-chip.is-selected");
         }
         return;
       }

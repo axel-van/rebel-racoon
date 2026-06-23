@@ -346,17 +346,18 @@ export function renderPicker(picker) {
   const skipBtn = skipLabel
     ? `<button type="button" class="ap-button stroked grey" data-${handler}-skip><span>${skipLabel}</span></button>`
     : "";
-  // Primary — one orange button whose label + handler depend on the mode:
+  // Primary — one blue button whose label + handler depend on the mode:
   //   multi   → Continue   (data-{handler}-submit; gathers the selected rows;
   //                         disabled until at least one row is selected)
   //   stepper → Generate N (data-{handler}-generate; sums per-row counts,
   //                         disabled while the total is 0)
-  // Both disable themselves when there's nothing to submit — session.js keeps
-  // the multi button's disabled state in sync as rows toggle.
+  // Blue (not the app's orange AI CTA) so the primary matches the picker's
+  // electric-blue selection/focus language. Both disable themselves when
+  // there's nothing to submit — session.js keeps the multi button in sync.
   const primaryBtn = multi
-    ? `<button type="button" class="ap-button primary orange" data-${handler}-submit ${preset.size === 0 ? "disabled" : ""}><span>${submitLabel}</span></button>`
+    ? `<button type="button" class="ap-button primary blue" data-${handler}-submit ${preset.size === 0 ? "disabled" : ""}><span>${submitLabel}</span></button>`
     : stepper
-      ? `<button type="button" class="ap-button primary orange" data-${handler}-generate ${stepTotal <= 0 ? "disabled" : ""}><span>${submitLabel}</span></button>`
+      ? `<button type="button" class="ap-button primary blue" data-${handler}-generate ${stepTotal <= 0 ? "disabled" : ""}><span>${submitLabel}</span></button>`
       : "";
   const rightCluster = `${skipBtn}${primaryBtn}${footerSlot}`;
   const footer =
