@@ -19,7 +19,7 @@ import { navigate } from "../router.js?v=30";
 import { escapeHtml as esc } from "../utils.js?v=21";
 import { renderTopbar } from "../components/topbar.js?v=132";
 import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=31";
-import { mount, snapshotEditable } from "../playbook-view.js?v=24";
+import { mount, snapshotEditable } from "../playbook-view.js?v=25";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";
 import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=9";
@@ -68,10 +68,10 @@ function menuItem(attr, icon, label, { danger = false } = {}) {
 function buildHeaderActions(ctx) {
   const hasSite = Boolean((ctx && ctx.websiteUrl) || "");
 
-  const fillItems = [
-    hasSite ? menuItem("data-fill-website", "ap-icon-web", "Re-analyze website") : "",
-    menuItem("data-fill-documents", "ap-icon-file--text", "Fill from documents…"),
-  ].join("");
+  // "Fill from documents" moved to the Voice & style "Learn from…" dropdown
+  // (it's a voice-scoped source now), so the whole-Playbook Auto-fill menu only
+  // re-runs the website analysis.
+  const fillItems = [hasSite ? menuItem("data-fill-website", "ap-icon-web", "Re-analyze website") : ""].join("");
 
   return `
     <button type="button" class="ap-button primary blue" data-playbook-start>
@@ -212,8 +212,9 @@ export function renderPlaybook(params, target) {
     });
   }
 
-  // "Fill from documents…" — a modal with a file dropzone + a document link
-  // (Google Docs / Drive). Either source rebuilds every section.
+  // "Learn from → Documents…" — a modal with a file dropzone + a document link
+  // (Google Docs / Drive). Scoped to Voice & style (same as "My posts"), so it
+  // only rewrites the guided voice fields, never the whole Playbook.
   function docNameFromUrl(url) {
     if (/docs\.google/.test(url)) return "Google Doc";
     if (/drive\.google/.test(url)) return "Drive file";
@@ -223,11 +224,15 @@ export function renderPlaybook(params, target) {
       return "Linked document";
     }
   }
-  function fillFromDocument() {
+  function learnVoiceFromDocument() {
     openFillDocumentModal({
       onConfirm: ({ file, url }) => {
         const fileLike = file || { name: docNameFromUrl(url) };
-        runAutofill(STAGES.documents, () => sectionPatchFromAnalysis(analyzeDocument(fileLike)));
+        runAutofill(
+          STAGES.documents,
+          () => voicePatchFromAnalysis(analyzeDocument(fileLike)),
+          "Voice & style updated.",
+        );
       },
     });
   }
@@ -283,15 +288,12 @@ export function renderPlaybook(params, target) {
       return true;
     }
 
-    if (event.target.closest("[data-fill-documents]")) {
-      closeMenus();
-      fillFromDocument();
-      return true;
-    }
-
-    // Voice & style section action.
-    if (event.target.closest("[data-recap-analyze-voice]")) {
-      onAnalyzeVoice();
+    // Voice & style "Learn from…" dropdown — both sources are voice-scoped.
+    const learn = event.target.closest("[data-recap-learn]");
+    if (learn) {
+      learn.closest("details")?.removeAttribute("open");
+      if (learn.dataset.recapLearn === "posts") onAnalyzeVoice();
+      else if (learn.dataset.recapLearn === "documents") learnVoiceFromDocument();
       return true;
     }
 
@@ -301,8 +303,13 @@ export function renderPlaybook(params, target) {
       return true;
     }
 
-    // Any other click inside the content closes open menus.
+    // Any other click inside the content closes open menus + any open
+    // <details> dropdown the click landed outside of (audience picker /
+    // "Learn from…" menu — both drive their own native open state).
     closeMenus();
+    target.querySelectorAll("[data-recap-audience-details][open], [data-recap-learn-menu][open]").forEach((d) => {
+      if (!d.contains(event.target)) d.removeAttribute("open");
+    });
     return false;
   };
 

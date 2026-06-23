@@ -1051,18 +1051,51 @@
   height: 28px;
 }
 
-/* Primary audience — a native single-select dropdown of Archie's analysed
-   audiences (one choice only), with an "Other…" entry that reveals the
-   free-text add control below. */
+/* Primary audience — the DS .ap-select dropdown of Archie's analysed audiences
+   (one choice only), with an "Other…" entry that reveals the free-text add
+   control below. */
 .recap__audience-picker {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-sm);
+  align-items: flex-start;
 }
 
 .recap__audience-select {
   width: 100%;
-  max-width: 420px;
+  max-width: 480px;
+}
+
+/* Analysed audiences are full sentences — let the options (and the dropdown)
+   wrap instead of truncating. The trigger value keeps the DS ellipsis. */
+.recap__audience-select .ap-select-option {
+  align-items: flex-start;
+}
+.recap__audience-select .ap-select-option-text {
+  white-space: normal;
+}
+
+/* Section-head "Learn from…" dropdown — a DS .ap-action-dropdown menu opened by
+   a ghost-button <summary> (native open state, like the other .ap-select menus). */
+.recap__panel-menu {
+  position: relative;
+}
+.recap__panel-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.recap__panel-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.recap__panel-menu-pop {
+  position: absolute;
+  top: calc(100% + var(--ref-spacing-xxxs));
+  right: 0;
+  z-index: 1000;
+  min-width: 220px;
+}
+.recap__panel-menu[open] .recap__menu-caret {
+  transform: rotate(180deg);
 }
 
 /* CTA editor */

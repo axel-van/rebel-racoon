@@ -446,8 +446,10 @@ function audienceOptionPool(data) {
 
 // Single-select audience picker: Archie's analysed audiences are the options
 // of a native dropdown (one choice only), with a trailing "Other…" entry that
-// reveals a free-text input to define a custom audience. Options are addressed
-// by index — the pool is recomputed deterministically on change. `audienceCustom`
+// reveals a free-text input to define a custom audience. Built on the DS
+// `.ap-select` dropdown (the same component as the Batch Studio playbook picker)
+// so the single-choice nature reads as a proper dropdown. Options are addressed
+// by index — the pool is recomputed deterministically on pick. `audienceCustom`
 // (module-local, reset whenever the edit scope changes) tracks the "Other…" state.
 function renderAudiencePicker(data) {
   const pool = audienceOptionPool(data);
@@ -455,15 +457,28 @@ function renderAudiencePicker(data) {
   const options = pool
     .map((v, i) => {
       const on = !audienceCustom && v.toLowerCase() === selected.toLowerCase();
-      return `<option value="${i}" ${on ? "selected" : ""}>${esc(v)}</option>`;
+      return `<div class="ap-select-option${on ? " selected" : ""}" data-recap-audience-pick="${i}" role="option" aria-selected="${on}">
+          <span class="ap-select-option-text">${esc(v)}</span>
+          ${on ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
+        </div>`;
     })
     .join("");
+  const otherOption = `<div class="ap-select-option${audienceCustom ? " selected" : ""}" data-recap-audience-pick="other" role="option" aria-selected="${audienceCustom}">
+      <i class="ap-icon-plus ap-select-option-icon" aria-hidden="true"></i>
+      <span class="ap-select-option-text">Other — define your own…</span>
+    </div>`;
+  const triggerLabel = audienceCustom ? "Other — define your own…" : selected;
   return `
     <div class="recap__audience-picker">
-      <select class="ap-native-select recap__audience-select" data-recap-audience-select aria-label="Primary audience">
-        ${options}
-        <option value="other" ${audienceCustom ? "selected" : ""}>Other — define your own…</option>
-      </select>
+      <details class="ap-select recap__audience-select" data-recap-audience-details>
+        <summary class="ap-select-trigger">
+          <span class="ap-select-value${triggerLabel ? "" : " ap-select-placeholder"}">${esc(triggerLabel || "Choose an audience")}</span>
+          <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+        </summary>
+        <div class="ap-select-dropdown" role="listbox" aria-label="Primary audience">
+          <div class="ap-select-options">${options}${otherOption}</div>
+        </div>
+      </details>
       ${
         audienceCustom
           ? `<span class="recap__chip-add recap__audience-add">
@@ -693,9 +708,27 @@ function renderVoicePanel(data, edit) {
       renderRow("Visual style", renderText(data.visualStyle)),
     ].join("");
   }
+  // "Learn from…" — a single DS dropdown that merges the old "Learn from my
+  // posts" (social profiles) and document analysis, both scoped to Voice & style.
   const analyzeBtn =
     !edit && cfg.onAnalyzeVoice
-      ? `<button type="button" class="ap-button ghost grey recap__panel-action" data-recap-analyze-voice><i class="ap-icon-double-chat-bubbles"></i><span>Learn from my posts</span></button>`
+      ? `<details class="recap__panel-menu" data-recap-learn-menu>
+          <summary class="ap-button ghost grey recap__panel-action recap__panel-menu-toggle">
+            <i class="ap-icon-double-chat-bubbles" aria-hidden="true"></i>
+            <span>Learn from…</span>
+            <i class="ap-icon-chevron-down recap__menu-caret" aria-hidden="true"></i>
+          </summary>
+          <div class="ap-action-dropdown recap__panel-menu-pop" role="menu" aria-label="Learn voice from">
+            <button type="button" class="ap-action-dropdown-item" data-recap-learn="posts" role="menuitem">
+              <i class="ap-icon-double-chat-bubbles"></i>
+              <div class="ap-action-dropdown-item-text"><div class="ap-action-dropdown-item-label-container"><span class="ap-action-dropdown-item-label">My posts</span></div></div>
+            </button>
+            <button type="button" class="ap-action-dropdown-item" data-recap-learn="documents" role="menuitem">
+              <i class="ap-icon-file--text"></i>
+              <div class="ap-action-dropdown-item-text"><div class="ap-action-dropdown-item-label-container"><span class="ap-action-dropdown-item-label">Documents…</span></div></div>
+            </button>
+          </div>
+        </details>`
       : "";
   return `
     <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" ${edit ? "data-recap-editing-card" : ""}>
@@ -1040,12 +1073,6 @@ function onClick(event) {
     return;
   }
 
-  // Voice & style section → analyze social profiles (library mode).
-  if (event.target.closest("[data-recap-analyze-voice]")) {
-    cfg.onAnalyzeVoice?.();
-    return;
-  }
-
   const data = cfg.getData();
   if (!data) return;
 
@@ -1098,7 +1125,27 @@ function onClick(event) {
     return;
   }
 
-  // Primary audience — confirm a custom value typed under the "Other…" option.
+  // Primary audience dropdown — pick an analysed option (by pool index) or
+  // switch to "Other…", which reveals the free-text input. Picking closes the
+  // DS .ap-select <details>.
+  const audPick = event.target.closest("[data-recap-audience-pick]");
+  if (audPick) {
+    audPick.closest("details")?.removeAttribute("open");
+    const val = audPick.dataset.recapAudiencePick;
+    if (val === "other") {
+      audienceCustom = true;
+      repaint();
+      mountTarget?.querySelector("[data-recap-audience-input]")?.focus();
+    } else {
+      audienceCustom = false;
+      const pool = audienceOptionPool(data);
+      const idx = Number(val);
+      if (pool[idx] != null) setAudience(pool[idx]);
+      else repaint();
+    }
+    return;
+  }
+  // Confirm a custom value typed under the "Other…" option.
   if (event.target.closest("[data-recap-audience-add]")) {
     addAudienceCustom();
     return;
@@ -1228,23 +1275,6 @@ function onChange(event) {
   if (!data) return;
   if (event.target.matches("[data-recap-language]")) {
     data.language = event.target.value;
-    return;
-  }
-  // Primary audience dropdown — pick an analysed option (by pool index) or
-  // switch to "Other…", which reveals the free-text input below.
-  if (event.target.matches("[data-recap-audience-select]")) {
-    const val = event.target.value;
-    if (val === "other") {
-      audienceCustom = true;
-      repaint();
-      mountTarget?.querySelector("[data-recap-audience-input]")?.focus();
-    } else {
-      audienceCustom = false;
-      const pool = audienceOptionPool(data);
-      const idx = Number(val);
-      if (pool[idx] != null) setAudience(pool[idx]);
-      else repaint();
-    }
     return;
   }
   // Reference-image upload (#11) — read each picked image as a data URL and
