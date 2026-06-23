@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=132";
+import { renderTopbar } from "../components/topbar.js?v=133";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -48,7 +48,7 @@ import {
 } from "../posts-store.js?v=31";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=41";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=33";
-import * as topPostsFlow from "../top-posts-flow.js?v=14";
+import * as topPostsFlow from "../top-posts-flow.js?v=15";
 import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=11";
 import * as sidebarWizard from "../sidebar-wizard.js?v=40";
 import * as inlineQuestion from "../inline-question.js?v=34";
@@ -63,8 +63,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=6";
-import * as contextBuilder from "../context-builder.js?v=114";
-import * as playbookEditor from "../playbook-editor.js?v=73";
+import * as contextBuilder from "../context-builder.js?v=115";
+import * as playbookEditor from "../playbook-editor.js?v=74";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -105,7 +105,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=201";
+} from "../components/right-panel.js?v=202";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=11";

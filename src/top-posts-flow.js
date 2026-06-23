@@ -9,7 +9,7 @@
 //   1. startTopPostsFlow  — surface the user's winners; pick one to build on.
 //   2. chooseMode         — explain WHY it worked, then pick a reuse mode.
 //   3a. Repurpose         — pick target channels → one adapted draft per channel.
-//   3b. Variations        — pick how many drafts per winning angle (stepper).
+//   3b. Variations        — generate fresh rewrites of the winning post (no picker).
 //   3c. Refresh & repost  — one freshened draft → offer to schedule it.
 //   3d. Save the angle    — distil the winning pattern into a reusable idea.
 //   4. generate*          — thinking chip → create drafts/ideas → post a result
@@ -82,19 +82,10 @@ function genError(err, retry) {
   });
 }
 
-// The four angle reframings offered in the variations stepper. `title` /
-// `caption` drive the picker row; `key` keys into ANGLE_COPY for the actual
-// post body.
-const ANGLE_DEFS = [
-  {
-    key: "contrarian",
-    title: "Push the contrarian angle",
-    caption: "A bolder version of the take that already landed",
-  },
-  { key: "howto", title: "Turn it into a how-to", caption: "The same idea as a step-by-step readers can act on" },
-  { key: "story", title: "Tell the story behind it", caption: "The real moment and the lesson that made it resonate" },
-  { key: "data", title: "Lead with the proof", caption: "Anchor it to the number that makes it undeniable" },
-];
+// The reframings used to build the variation set. Each keys into ANGLE_COPY for
+// the actual post body. No longer user-pickable — "Spin up variations" emits one
+// draft per key — so only the key matters now.
+const ANGLE_KEYS = ["contrarian", "howto", "story", "data"];
 
 // Handcrafted, ready-to-post copy for each seeded winner × angle. This is what
 // makes the variations read like real posts rather than rephrased prompts. A
@@ -191,14 +182,12 @@ function genericAngleCopy(post, key) {
   }
 }
 
-// Resolve the four angle options for a post, each with its ready-to-post body.
-function anglesForPost(post) {
+// Resolve the variation set for a post — one ready-to-post body per reframing,
+// each a variation of the post's own copy (handcrafted, or generic fallback).
+function variationsForPost(post) {
   const copy = ANGLE_COPY[post.id] || {};
-  return ANGLE_DEFS.map((def) => ({
-    id: `${post.id}-angle-${def.key}`,
-    title: def.title,
-    description: def.caption,
-    text: copy[def.key] || genericAngleCopy(post, def.key),
+  return ANGLE_KEYS.map((key) => ({
+    text: copy[key] || genericAngleCopy(post, key),
   }));
 }
 
@@ -359,7 +348,7 @@ function chooseMode(sessionId, postId) {
       {
         value: "variations",
         label: "Spin up variations",
-        caption: "Fresh posts on the same winning angle",
+        caption: "Fresh rewrites of the same post",
         icon: "ap-icon-shuffle",
       },
       {
@@ -377,7 +366,7 @@ function chooseMode(sessionId, postId) {
     ],
     onPick: (mode) => {
       if (mode === "repurpose") return askChannels(sessionId, post);
-      if (mode === "variations") return askVariations(sessionId, post);
+      if (mode === "variations") return generateVariations(sessionId, post);
       if (mode === "refresh") return generateRefresh(sessionId, post);
       return generateExtract(sessionId, post);
     },
@@ -425,53 +414,33 @@ function generateRepurpose(sessionId, post, channels) {
   );
 }
 
-// ---- Step 3b: Variations on the winning angle -------------------------
+// ---- Step 3b: Variations of the winning post --------------------------
 
-function askVariations(sessionId, post) {
+// "Spin up variations" generates several drafts straight away — no picker. Each
+// draft is a variation of the selected post's own copy (the per-winner
+// handcrafted reframings double as the variation set; a winner with no
+// handcrafted copy falls back to genericAngleCopy() off its excerpt).
+function generateVariations(sessionId, post) {
   postUserTurn(sessionId, "Spin up variations");
-  const angles = anglesForPost(post);
-  inlineQuestion.ask(sessionId, {
-    stepLabel: "Variations",
-    title: "How many drafts per angle?",
-    subtitle: "Each angle reframes the same winning idea. Set a count, or 0 to skip.",
-    stepper: true,
-    defaultCount: 1,
-    countMin: 0,
-    countMax: 10,
-    submitCountLabel: (n) => (n === 1 ? "Generate 1 draft" : `Generate ${n} drafts`),
-    items: angles.map((a) => ({ value: a.id, label: a.title, caption: a.description })),
-    onPick: ({ picks }) => generateVariations(sessionId, post, angles, picks),
-    onBack: () => chooseMode(sessionId, post.id),
-  });
-}
-
-function generateVariations(sessionId, post, angles, picks) {
-  const valid = (picks || []).filter((p) => p.count > 0);
-  if (!valid.length) return;
-  const total = valid.reduce((sum, p) => sum + p.count, 0);
-  postUserTurn(sessionId, total === 1 ? "Generate 1 variation" : `Generate ${total} variations`);
   withPendingChip(
     sessionId,
     () => {
-      const drafts = [];
-      for (const { value, count } of valid) {
-        const angle = angles.find((a) => a.id === value);
-        for (let i = 0; i < count; i += 1) {
-          const draft = addPostDraft(sessionId, {
-            network: post.network,
-            text: angle ? angle.text : [post.excerpt],
-            hashtags: post.hashtags || [],
-          });
-          draft.origin = originFor(post, "variations");
-          drafts.push(draft);
-        }
-      }
+      const variations = variationsForPost(post);
+      const drafts = variations.map((v) => {
+        const draft = addPostDraft(sessionId, {
+          network: post.network,
+          text: v.text,
+          hashtags: post.hashtags || [],
+        });
+        draft.origin = originFor(post, "variations");
+        return draft;
+      });
       postDraftResult(sessionId, {
         ideaTitle: `New takes on your top ${labelFor(post.network)} post`,
         drafts,
       });
     },
-    (err) => genError(err, () => generateVariations(sessionId, post, angles, picks)),
+    (err) => genError(err, () => generateVariations(sessionId, post)),
   );
 }
 
