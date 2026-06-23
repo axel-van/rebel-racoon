@@ -653,7 +653,7 @@ function renderBrandPanel(data, edit) {
     body = [
       renderSectionHint(SECTION_HINTS.brand),
       renderRow(
-        "Colours",
+        "Brand color",
         `<div class="recap__colors" data-recap-colors>${colorRows}</div>
          <button type="button" class="ap-button secondary blue recap__color-add" data-recap-color-add>
            <i class="ap-icon-plus"></i><span>Add colour</span>
@@ -682,7 +682,7 @@ function renderBrandPanel(data, edit) {
     ].join("");
   } else {
     body = [
-      renderRow("Colours", renderSwatches(colors)),
+      renderRow("Brand color", renderSwatches(colors)),
       renderRow("Typography", renderTypeSpecimen(data)),
       renderRow("Personality", renderText(data.brandPersonality)),
       ...(Array.isArray(data.referenceImages) && data.referenceImages.length
@@ -764,7 +764,7 @@ function renderRail(data) {
     data.updatedAt ? `<div class="recap__fact"><dt>Updated</dt><dd>${esc(data.updatedAt)}</dd></div>` : "",
     domain ? `<div class="recap__fact"><dt>Source</dt><dd>${esc(domain)}</dd></div>` : "",
     colors.length
-      ? `<div class="recap__fact"><dt>Colours</dt><dd><span class="recap__fact-dots">${colors
+      ? `<div class="recap__fact"><dt>Brand color</dt><dd><span class="recap__fact-dots">${colors
           .map((c) => `<span class="recap__fact-dot" style="background:${esc(c.hex)};"></span>`)
           .join("")}</span></dd></div>`
       : "",
