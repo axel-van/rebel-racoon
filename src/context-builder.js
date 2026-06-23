@@ -15,10 +15,9 @@
 
 import * as inlineQuestion from "./inline-question.js?v=34";
 import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=51";
-import * as rightPanel from "./components/right-panel.js?v=204";
+import * as rightPanel from "./components/right-panel.js?v=205";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=31";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=23";
-import { launch as launchPlaybookEditor, refineField as refinePlaybookField } from "./playbook-editor.js?v=76";
 import { connectors as connectorMocks } from "./mocks.js?v=45";
 import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=22";
 
@@ -346,15 +345,11 @@ function maybeOpenAltBrief(sessionId) {
 // inside readBriefFromCtx in right-panel.js.
 export function openRead(contextId) {
   // The Edit button (panel footer) flips the same panel into edit mode in
-  // place via `openEdit` — no transient session, no confirm modal. The
-  // per-section hover-reveal Refine button still routes to the
-  // conversational playbook-editor sub-flow (`refinePlaybookField`) so
-  // section-targeted Archie refinement remains available from read mode.
+  // place via `openEdit` — no transient session, no confirm modal.
   rightPanel.openContextBriefPanel({
     mode: "read",
     getCtx: () => getContextById(contextId),
     onEnterEdit: () => openEdit(contextId),
-    onRefineField: (fieldKey) => refinePlaybookField(contextId, fieldKey, "/contexts"),
   });
 }
 

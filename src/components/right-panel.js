@@ -18,7 +18,7 @@ import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=47";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=120";
+import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=121";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -641,7 +641,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=320").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=321").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -841,7 +841,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=320").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=321").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -859,7 +859,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=320").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=321").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -1020,14 +1020,6 @@ export function init() {
     }
     if (event.target.closest("[data-brief-edit-mode]")) {
       contextBriefConfig?.onEnterEdit?.();
-      return;
-    }
-    const refineBtn = event.target.closest("[data-brief-refine-field]");
-    if (refineBtn) {
-      // Hover-reveal Refine button on each read-mode section card.
-      // Routes to a field-targeted playbook-editor flow via the host
-      // (see `context-builder.openRead` → `playbookEditor.refineField`).
-      contextBriefConfig?.onRefineField?.(refineBtn.dataset.briefRefineField);
       return;
     }
   });
@@ -2479,30 +2471,9 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=320").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=321").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
-}
-
-// Inject a hover-reveal "Refine with Archie" button into the opening
-// `<section class="context-brief__section…">` tag of a card. Used in
-// read mode only — see `canRefine` in `renderContextBriefSections`.
-// The click is delegated through the panel's main click handler which
-// routes the `data-brief-refine-field` value to `contextBriefConfig.
-// onRefineField` (wired by callers like `context-builder.openRead`).
-function withRefine(sectionHtml, fieldKey, canRefine) {
-  if (!canRefine || !sectionHtml) return sectionHtml;
-  const button = `<button type="button" class="context-brief__refine" data-brief-refine-field="${escapeAttr(fieldKey)}" title="Refine with Archie" aria-label="Refine with Archie"><i class="ap-icon-sparkles-mermaid"></i><span>Refine</span></button>`;
-  // Inject right after the opening section tag (matches the section
-  // with any compound class string — voice profile uses extra classes
-  // alongside `context-brief__section`, and the new editorial zones
-  // (`__hero`, `__personality`, `__voice-feature`, `__essentials`,
-  // `__showcase`) open with their own root class instead of the
-  // legacy card chrome).
-  return sectionHtml.replace(
-    /<section class="context-brief__(?:section|hero|personality|voice-feature|essentials|showcase)[^"]*">/,
-    (match) => match + button,
-  );
 }
 
 // --- V1 Brief panel ---------------------------------------------------
@@ -2528,27 +2499,27 @@ const ACTION_FALLBACKS = ["Visit the website", "Download a resource", "Join the 
 // (or a persisted Context normalized by readBriefFromCtx) plus a tiny
 // options bag. Does NOT include the panel header, footer, or scroll
 // container — pure section HTML.
-export function renderBriefSections(d, { isRead = true, canRefine = false } = {}) {
+export function renderBriefSections(d, { isRead = true } = {}) {
   if (!d) return "";
   const chipProps = (cfg) => ({ ...cfg, isRead });
   // Persisted contexts may not have the suggestion arrays the chip
   // helpers expect — normalize via readBriefFromCtx when the shape
   // looks like a saved Context (no `suggestions` field).
   const draft = d.suggestions ? d : readBriefFromCtx(d) || d;
-  return _renderBriefSectionsInner(draft, isRead, canRefine, chipProps);
+  return _renderBriefSectionsInner(draft, isRead, chipProps);
 }
 
 // Internal: composes the five editorial zones (Hero / Personality grid /
 // Voice feature / Essentials bar / Branding showcase) and joins them.
 // Pulled out of `renderContextBriefView` so the public
 // `renderBriefSections` can call the same code path.
-function _renderBriefSectionsInner(d, isRead, canRefine, chipProps) {
+function _renderBriefSectionsInner(d, isRead, chipProps) {
   return [
-    withRefine(renderBriefHero(d, isRead), "brief", canRefine),
-    withRefine(renderBriefPersonalityGrid(d, isRead, chipProps), "brief", canRefine),
-    withRefine(renderBriefVoiceFeature(d, isRead), "voice", canRefine),
-    withRefine(renderBriefEssentialsBar(d, isRead), "cta", canRefine),
-    withRefine(renderBriefBrandingShowcase(d, isRead), "branding", canRefine),
+    renderBriefHero(d, isRead),
+    renderBriefPersonalityGrid(d, isRead, chipProps),
+    renderBriefVoiceFeature(d, isRead),
+    renderBriefEssentialsBar(d, isRead),
+    renderBriefBrandingShowcase(d, isRead),
   ]
     .filter(Boolean)
     .join("");
@@ -2557,10 +2528,9 @@ function _renderBriefSectionsInner(d, isRead, canRefine, chipProps) {
 // ── Editorial zone renderers ─────────────────────────────────────────
 //
 // Each zone owns a slice of the playbook data and emits a single
-// `<section class="context-brief__<zone>">` so the `withRefine` helper
-// can anchor the hover-reveal "Refine with Archie" pill to it. Empty
-// zones return "" so the body collapses gracefully when context data
-// is partial (legacy seeds, freshly-created drafts).
+// `<section class="context-brief__<zone>">`. Empty zones return "" so
+// the body collapses gracefully when context data is partial (legacy
+// seeds, freshly-created drafts).
 
 // Hero — identity strip (color dot + name + business summary as an
 // editorial paragraph). Replaces the legacy intro + name + business
@@ -2828,13 +2798,7 @@ function renderContextBriefView() {
   // the rest of the panel relies on. Hero owns name + color in both modes.
   const nonGroupedTop = [isRead ? "" : renderBriefIntro()].filter(Boolean);
 
-  // Per-zone "Refine with Archie" button — read mode only (edit mode is
-  // already an editable form). Each zone declares its target sub-flow in
-  // the playbook-editor (brief / voice / branding / cta) so clicking
-  // Refine jumps the user straight there. See `playbookEditor.refineField`
-  // + `withRefine`.
-  const canRefine = isRead && !!contextBriefConfig?.onRefineField;
-  const sections = [...nonGroupedTop, _renderBriefSectionsInner(d, isRead, canRefine, chipProps)].filter(Boolean);
+  const sections = [...nonGroupedTop, _renderBriefSectionsInner(d, isRead, chipProps)].filter(Boolean);
   // Callers can opt out of the read-mode footer (Close + Edit) via
   // `hideFooter: true` on the config — used by the playbook editor,
   // which has its own Cancel + Save controls and shouldn't show
@@ -3394,9 +3358,8 @@ function renderBriefImageVoice(d) {
 // (chevron + megaphone + h3), a sparkle-prefixed headline pill, and a
 // stack of white sub-cards (one per subsection). Each sub-card carries:
 //   - a small DS icon + UPPERCASE label on the left
-//   - a per-card affordance on the right — "Edit" in read mode (routes
-//     to playbookEditor.refineField via data-brief-refine-field) or
-//     "Add" when the field is empty
+//   - a per-card "Show more / less" toggle on the right when the body
+//     text is long enough to truncate
 //   - the body text below, truncated to ~140 chars with a per-card
 //     "Show more" toggle (or the full text when expanded). In edit
 //     mode each card's body becomes a textarea.
@@ -3428,12 +3391,6 @@ function renderBriefVoiceProfile(d, isRead) {
 
   const tones = Array.isArray(d?.tones) ? d.tones.filter(Boolean) : [];
   const headline = vp.headline || (tones.length ? tones.join(" · ").toLowerCase() : "");
-
-  // Per-card refine routes through the same handler as the hover-Refine
-  // pill on other zones — playbookEditor reads the field id and opens
-  // the targeted refine flow. Only surface the affordance when a host
-  // has wired `onRefineField`.
-  const canRefine = isRead && !!contextBriefConfig?.onRefineField;
 
   const headlinePill = headline
     ? `
@@ -3477,30 +3434,15 @@ function renderBriefVoiceProfile(d, isRead) {
     }
 
     // Right-side affordance: "Show more / less" when the snippet
-    // truncates; "Edit" when the host wires a refine handler; "Add"
-    // when the field is empty + refine wired. Edit mode shows no link
-    // — the textarea itself is the affordance.
+    // truncates. Edit mode shows no link — the textarea itself is the
+    // affordance.
     let actionLink = "";
-    if (isRead) {
-      if (isTruncated) {
-        actionLink = `
-          <button type="button" class="context-brief__vp-toggle" data-brief-voice-toggle="${escapeAttr(s.id)}">
-            ${isExpanded ? "Show less" : "Show more"}
-          </button>
-        `;
-      } else if (value && canRefine) {
-        actionLink = `
-          <button type="button" class="context-brief__vp-action" data-brief-refine-field="voice-${escapeAttr(s.id)}">
-            <i class="ap-icon-pen"></i><span>Edit</span>
-          </button>
-        `;
-      } else if (!value && canRefine) {
-        actionLink = `
-          <button type="button" class="context-brief__vp-action" data-brief-refine-field="voice-${escapeAttr(s.id)}">
-            <i class="ap-icon-plus"></i><span>Add</span>
-          </button>
-        `;
-      }
+    if (isRead && isTruncated) {
+      actionLink = `
+        <button type="button" class="context-brief__vp-toggle" data-brief-voice-toggle="${escapeAttr(s.id)}">
+          ${isExpanded ? "Show less" : "Show more"}
+        </button>
+      `;
     }
 
     return `

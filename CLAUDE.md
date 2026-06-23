@@ -74,7 +74,6 @@ src/
   draft-flow.js         — "Draft post from idea" turn sequence (channel pick → execute → result)
   draft-rewrite.js      — regenerate-a-draft (thinking → streaming → commit)
   context-builder.js    — Playbook creation/edit conversation (drives welcome-alt + edits)
-  playbook-editor.js    — per-field Playbook edit mini-conversation (from /contexts)
   playbook-view.js      — shared Playbook render engine (recap + detail)
   context-mock-analysis.js — deterministic mock "website analysis" for onboarding
   sidebar-wizard.js     — multi-stage numbered-option wizard inside the assistant panel
@@ -154,11 +153,10 @@ Connectors (Notion, Slite, Google Drive, GitHub, …) are seeded in `mocks.js` (
 | `pendingAskSource`           | source card "Ask"                        | `askWhatToKnow`                   |
 | `pendingAskConnector`        | connectors gallery/modal "Try in chat"   | `askConnector`                    |
 | `pendingStartContextBuilder` | `/contexts` "New Playbook" + welcome-alt | `context-builder` (create)        |
-| `pendingStartPlaybookEditor` | `/contexts` card edit                    | `playbook-editor`                 |
 
 ### Admin / user mode (prototype controls)
 
-`/settings` → **Admin** section is the prototype control panel (replaces the old floating chip): switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()` (e.g. `connectors` — default OFF, gates the whole connectors feature; `sidebarIdeas`, `hidePlaybookColors`, `conversationalPlaybookEdit`, `draftInlineEdit`).
+`/settings` → **Admin** section is the prototype control panel (replaces the old floating chip): switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()` (e.g. `connectors` — default OFF, gates the whole connectors feature; `sidebarIdeas`, `hidePlaybookColors`, `draftInlineEdit`).
 
 ### Module loading
 
@@ -206,7 +204,7 @@ styles/
   ds-patches.css    — the only legitimate place to touch .ap-* selectors
   chat.css          — composer + thread chrome
   screens/          — dashboard, session, ideas, contexts, connectors, settings,
-                      posts, analyse, playbook-editor, modals, sources, welcome
+                      posts, analyse, modals, sources, welcome
   components/       — sidebar, right-panel, conversation-status-card,
                       add-source-modal, connectors-modal, schedule-modal,
                       video-clips-modal, clip-card, archie-loader

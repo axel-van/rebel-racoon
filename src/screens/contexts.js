@@ -1,5 +1,5 @@
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=135";
+import { renderTopbar } from "../components/topbar.js?v=136";
 import {
   getContexts,
   subscribe as subscribeContexts,
@@ -236,13 +236,9 @@ function filter(list, { query }) {
 
 function bind(root) {
   root.addEventListener("click", (event) => {
-    // Edit (pen icon) — default behavior opens the brief panel directly
-    // for fast in-place edits (rename, toggle chips, change brand color,
-    // etc.). The legacy conversational Playbook editor is gated behind
-    // the `conversationalPlaybookEdit` feature flag (admin chip) so we
-    // can A/B the two surfaces. Either way, "Fine-tune mon Playbook" on
-    // the welcome recap and the Refine buttons inside the brief
-    // sections keep the conversational flow accessible on demand.
+    // Edit (pen icon) — opens the Playbook detail page, where the brief
+    // panel handles in-place edits (rename, toggle chips, change brand
+    // color, etc.).
     const editBtn = event.target.closest("[data-contexts-edit]");
     if (editBtn) {
       event.stopPropagation();

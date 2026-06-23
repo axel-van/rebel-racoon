@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=135";
+import { renderTopbar } from "../components/topbar.js?v=136";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -63,8 +63,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=7";
-import * as contextBuilder from "../context-builder.js?v=117";
-import * as playbookEditor from "../playbook-editor.js?v=76";
+import * as contextBuilder from "../context-builder.js?v=118";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -105,7 +104,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=204";
+} from "../components/right-panel.js?v=205";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=12";
@@ -194,7 +193,7 @@ export function renderSession(params, target) {
     // shows a real selection (and the first send uses it instead of
     // auto-launching the create-a-playbook wizard). The user can swap it via
     // the composer pill before sending. Creation flows (welcome-alt-*,
-    // new-ctx-*, playbook-edit-*) never hit this "new" branch.
+    // new-ctx-*) never hit this "new" branch.
     // A chat always needs a Playbook — pre-bind the default one whenever
     // we land on a fresh `/session/new` or `/session/new-<id>`. The
     // user can still swap it via the composer pill before the first send.
@@ -3419,34 +3418,6 @@ function wireAssistantPanel(root, session, attachedContext) {
     }, 50);
   }
 
-  // Same mechanism for the Playbook editor — `/contexts` mints a
-  // `/session/playbook-edit-{id}-{ts}` route + arms this handoff; we
-  // launch the conversational editor on mount. The session id pattern
-  // also drives the conditional Save/Cancel chrome in the composer
-  // (cf. renderPlaybookEditorBar).
-  const pendingPlaybookEditor = consumeHandoff("pendingStartPlaybookEditor");
-  if (pendingPlaybookEditor && session.id.startsWith("playbook-edit-")) {
-    const { contextId, returnTo, targetField } = pendingPlaybookEditor;
-    setTimeout(() => {
-      playbookEditor.start(session.id, contextId, {
-        // `targetField` is set by `refineField` when the user enters the
-        // editor from a section card's Refine button — playbook-editor
-        // skips the chip menu and jumps straight to the matching flow.
-        targetField,
-        onComplete: () => {
-          if (returnTo) navigate(returnTo);
-        },
-        onCancel: () => {
-          if (returnTo) navigate(returnTo);
-        },
-      });
-    }, 50);
-  } else if (session.id.startsWith("playbook-edit-") && !playbookEditor.isActive(session.id)) {
-    // Defensive: direct link to /session/playbook-edit-* without handoff.
-    // Bounce back to /contexts (no playbook to edit).
-    navigate("/contexts");
-  }
-
   bindDragAndDrop(root.querySelector(".session__assistant"), session);
 
   currentUnsubscribe = () => {
@@ -4775,53 +4746,6 @@ function bindSession(root, session) {
         if (!insidePicker && !onTrigger) {
           closeMentionPicker(root);
         }
-      }
-
-      // Playbook editor — Save changes (in the picker footer). Both Save
-      // and Cancel surface a confirmation modal so the user has a
-      // deliberate commit/discard step — no accidental clicks.
-      if (event.target.closest("[data-playbook-editor-save]")) {
-        event.preventDefault();
-        event.stopPropagation();
-        const dirty = playbookEditor.isDirty(session.id);
-        import("../components/confirm-modal.js?v=22").then(({ open }) => {
-          open({
-            title: "Save changes?",
-            body: dirty
-              ? "Apply your edits to the Playbook. This overwrites the current version."
-              : "No edits staged — closing the editor returns you to Playbooks.",
-            confirmLabel: dirty ? "Save changes" : "Close editor",
-            cancelLabel: "Keep editing",
-            onConfirm: () => {
-              const ctxId = playbookEditor.save(session.id);
-              if (ctxId && dirty) {
-                import("../components/toast.js?v=20").then(({ showToast }) => showToast("Playbook updated"));
-              }
-            },
-          });
-        });
-        return;
-      }
-
-      // Playbook editor — Cancel. Always prompt before dropping the
-      // session, with a stronger warning copy when the draft is dirty.
-      if (event.target.closest("[data-playbook-editor-cancel]")) {
-        event.preventDefault();
-        event.stopPropagation();
-        const dirty = playbookEditor.isDirty(session.id);
-        import("../components/confirm-modal.js?v=22").then(({ open }) => {
-          open({
-            title: dirty ? "Discard changes?" : "Close editor?",
-            body: dirty
-              ? "Your edits to this Playbook will be lost."
-              : "You can re-open the editor anytime from Playbooks.",
-            confirmLabel: dirty ? "Discard" : "Close",
-            cancelLabel: "Keep editing",
-            danger: dirty,
-            onConfirm: () => playbookEditor.discard(session.id),
-          });
-        });
-        return;
       }
 
       // Paper-clip in the composer — toggle the dropdown menu open/closed.

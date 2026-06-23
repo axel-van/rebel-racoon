@@ -1252,66 +1252,6 @@
   width: 100%;
 }
 
-/* Hover-reveal "Refine with Archie" pill anchored to each section's
-   top-right corner. Hidden by default so the read panel reads clean;
-   surfaces on hover (and stays visible on keyboard focus) so the
-   affordance is discoverable without cluttering the resting state. */
-.context-brief__refine {
-  position: absolute;
-  top: var(--ref-spacing-xs);
-  right: var(--ref-spacing-xs);
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
-  border: 1px solid transparent;
-  border-radius: var(--app-radius-pill);
-  background: var(--ref-color-mermaid-10);
-  color: var(--ref-color-grey-100);
-  font-family: inherit;
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    opacity var(--ref-animation-short) var(--app-ease-out),
-    transform var(--ref-animation-short) var(--app-ease-out),
-    background-color var(--ref-animation-short) var(--app-ease-out);
-}
-
-.context-brief__refine i {
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-mermaid-gradient-from);
-  transition: color var(--ref-animation-short) var(--app-ease-out);
-}
-
-.context-brief__section:hover .context-brief__refine,
-.context-brief__section:focus-within .context-brief__refine,
-.context-brief__hero:hover .context-brief__refine,
-.context-brief__hero:focus-within .context-brief__refine,
-.context-brief__personality:hover .context-brief__refine,
-.context-brief__personality:focus-within .context-brief__refine,
-.context-brief__essentials:hover .context-brief__refine,
-.context-brief__essentials:focus-within .context-brief__refine,
-.context-brief__showcase:hover .context-brief__refine,
-.context-brief__showcase:focus-within .context-brief__refine,
-.context-brief__refine:focus-visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.context-brief__refine:hover {
-  background: var(--ref-color-mermaid-gradient-background);
-  color: var(--ref-color-white);
-  transform: translateY(-1px);
-}
-
-.context-brief__refine:hover i {
-  color: var(--ref-color-white);
-}
-
 /* Card chrome already separates sections — hide the divider noise. */
 .context-brief__body > hr.ap-divider {
   display: none;
@@ -2041,10 +1981,8 @@ body.hide-playbook-colors .context-brief__hero-color {
   color: var(--ref-color-grey-100);
 }
 
-/* Per-card action link — "Edit" / "Add" / "Show more". Visually a small
-   text link with an optional leading icon. Always on the right of the
-   card header via margin-left: auto. */
-.context-brief__vp-action,
+/* Per-card "Show more / less" toggle. Visually a small text link.
+   Always on the right of the card header via margin-left: auto. */
 .context-brief__vp-toggle {
   margin-left: auto;
   display: inline-flex;
@@ -2061,14 +1999,9 @@ body.hide-playbook-colors .context-brief__hero-color {
   flex-shrink: 0;
 }
 
-.context-brief__vp-action:hover,
 .context-brief__vp-toggle:hover {
   color: var(--ref-color-grey-100);
   text-decoration: underline;
-}
-
-.context-brief__vp-action > i {
-  font-size: var(--sys-text-style-caption-size);
 }
 
 .context-brief__vp-body {
