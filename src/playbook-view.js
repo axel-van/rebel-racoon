@@ -590,24 +590,17 @@ function renderFieldHint(hint) {
   return `<div class="recap__field-hint"><span class="recap__field-hint-q">${esc(hint.q)}</span><span class="recap__field-hint-a">${esc(hint.a)}</span></div>`;
 }
 
+// Static Archie brand mark (same glyph as the loader, sans the SMIL pop
+// animation). Paints with currentColor so the banner can tint it brand orange.
+const ARCHIE_MARK_SVG = `<svg class="recap__panel-hint-icon" viewBox="0 0 227.15 170.03" aria-hidden="true"><path fill="currentColor" d="M227.15,81.98v29.37c0,4.69-3.81,8.5-8.5,8.5h-29.37c-4.69,0-8.5-3.81-8.5-8.5v-27.11c0-4.69-3.78-8.5-8.47-8.5h-27.45c-4.69,0-8.5,3.81-8.5,8.5v26.91c0,4.69-3.78,8.47-8.47,8.47h-28.92c-4.69,0-8.5,3.81-8.5,8.5v33.89c0,4.69-3.78,8.47-8.47,8.47h-32.67c-4.69,0-8.47-3.78-8.47-8.47v-34.03c0-4.69-3.81-8.47-8.5-8.47H8.47c-4.69,0-8.47-3.81-8.47-8.5v-23.86c0-4.69,3.78-8.47,8.47-8.47h23.89c4.69,0,8.5-3.81,8.5-8.5v-14.18c0-4.69,3.78-8.5,8.47-8.5h16.07c4.69,0,8.47-3.78,8.47-8.44V8.5C73.87,3.81,77.66,0,82.34,0h32.64C119.67,0,123.46,3.81,123.46,8.5v32.11c0,4.69-3.78,8.47-8.47,8.47h-32.64c-4.69,0-8.47,3.81-8.47,8.5v14.46c0,4.69-3.81,8.5-8.5,8.5h-16.04c-4.69,0-8.47,3.78-8.47,8.47v20.05c0,4.69,3.78,8.5,8.47,8.5h32.67c4.69,0,8.47-3.81,8.47-8.5v-26.83c0-4.72,3.81-8.5,8.5-8.5h30.38c3.87,0,7-3.13,7-7v-26.94c0-4.69,3.81-8.5,8.5-8.5h27.45c4.69,0,8.47,3.81,8.47,8.5v25.22c0,4.69,3.81,8.47,8.5,8.47h29.37c4.69,0,8.5,3.81,8.5,8.5Z"/></svg>`;
+
 // Section-level edit banner (Voice & style, Brand) — where Archie sourced it.
-// The sparkle is an inline SVG so it can carry the Mermaid gradient (the icon
-// font glyph is monochrome). Only one banner is in the DOM at a time (one
-// section edits at once), so the gradient id is safe to reuse.
+// Butter background + the Archie mark in brand orange ("captured by Archie").
 function renderSectionHint(hint) {
   if (!hint) return "";
   return `
     <div class="recap__panel-hint">
-      <svg class="recap__panel-hint-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="recapMermaidGrad" x1="2" y1="3" x2="22" y2="21" gradientUnits="userSpaceOnUse">
-            <stop stop-color="var(--ref-color-mermaid-gradient-from)" />
-            <stop offset="1" stop-color="var(--ref-color-mermaid-gradient-to)" />
-          </linearGradient>
-        </defs>
-        <path d="M10 6 12 11 17 13 12 15 10 20 8 15 3 13 8 11Z" fill="url(#recapMermaidGrad)" />
-        <path d="M18 3.5 18.8 6.2 21.5 7 18.8 7.8 18 10.5 17.2 7.8 14.5 7 17.2 6.2Z" fill="url(#recapMermaidGrad)" />
-      </svg>
+      ${ARCHIE_MARK_SVG}
       <div class="recap__panel-hint-text">
         <span class="recap__panel-hint-q">${esc(hint.q)}</span>
         <span class="recap__panel-hint-a">${esc(hint.a)}</span>
