@@ -4,8 +4,8 @@
 // which language, which tone, etc.
 //
 // Sibling of sidebar-wizard.js but for one-shot questions (no multi-stage
-// flow). Both share the wizardChrome + renderPicker rendering primitives,
-// keyboard nav, and the "session__assistant--wizard" chrome in session.js.
+// flow). Both share the renderPicker rendering primitive, keyboard nav, and
+// the "session__assistant--wizard" chrome in session.js.
 //
 // Public API:
 //   ask(sessionId, opts)     → show the question; opts described below
@@ -48,7 +48,7 @@
 //   onSkip()          fn      — called when Skip / Esc; if omitted, no skip btn
 //   onBack()          fn      — called when ← Back is clicked; if omitted, no back btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=45";
+import { chatTurn } from "./screens/_analyse-common.js?v=46";
 
 const states = new Map(); // sessionId → opts
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -230,9 +230,6 @@ export function renderChrome(sessionId) {
         ? s.submitCountLabel(stepTotal)
         : `Generate ${stepTotal}`
       : s.submitLabel || "Continue",
-    // Pass-through for callers that want to inject custom buttons in
-    // the picker footer (used by the playbook editor for Cancel + Save).
-    footerSlot: s.footerSlot || "",
   };
   return { body, picker };
 }

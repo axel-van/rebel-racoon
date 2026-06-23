@@ -1,40 +1,6 @@
-import { html, raw } from "../utils.js?v=21";
-
-// Shared pieces for all three Analyse wizards.
-//
-// Visual model: conversational flow — AI Copilot + You bubbles in a
-// scrollable chat area, with a sticky picker bar at the bottom of the screen.
-// The sticky bar holds option rows and an always-visible "Something else"
-// text input so the user can type a custom answer at any time.
-//
-// A step renderer returns:
-//   {
-//     body:          HTML string (chat turns + any content inside the AI bubble)
-//     picker?:       { items, handler, customPlaceholder?, customHandler? } | null
-//     stickyFooter?: raw HTML to render inside the sticky bar INSTEAD of a
-//                    picker (used by Brand preview step for Start over / Apply)
-//   }
-
-// -- Wizard shell (conversational layout) -----------------------------------
-
-export function wizardChrome({ body, picker = null, stickyFooter = null }) {
-  return html`
-    <section class="screen analyse analyse--wizard">
-      <div class="analyse__chat" id="analyseChat">
-        <div class="analyse__chat-inner">${raw(body)}</div>
-      </div>
-      <div class="analyse__sticky-bar" role="group" aria-label="Answer">
-        <div class="analyse__sticky-bar-inner">
-          ${raw(stickyFooter != null ? stickyFooter : renderPicker(picker))}
-          <p class="analyse__hints muted">
-            <kbd>↑</kbd><kbd>↓</kbd> navigate · <kbd>1</kbd>–<kbd>9</kbd> pick · <kbd>Enter</kbd> submit ·
-            <kbd>Esc</kbd> exit
-          </p>
-        </div>
-      </div>
-    </section>
-  `;
-}
+// Shared rendering pieces for the in-chat picker (renderPicker) plus the chat
+// turns and content blocks it sits alongside. Used by the session assistant
+// panel (inline-question + sidebar-wizard) and the chat-picker modal.
 
 // -- Chat turns -------------------------------------------------------------
 
@@ -115,10 +81,6 @@ export function renderPicker(picker) {
     // When the wizard supports going back to a previous step, the
     // header renders a small ← back button on the left.
     showBack = false,
-    // Raw HTML appended to the footer row — used by the playbook editor
-    // to render its Cancel + Save buttons inside the picker card
-    // instead of a separate top bar.
-    footerSlot = "",
     // Multi-select only: list of `value`s to render pre-checked. Used
     // by the First Time User ALT flow where the visual profile picker
     // pre-seeds the platform in connectedSocials before askSocial runs.
@@ -327,16 +289,16 @@ export function renderPicker(picker) {
   }
 
   // ---- Footer: one action bar with fixed zones --------------------------
-  //   [ ← Back ] ……spacer…… [ Skip ] [ Primary ] [ footerSlot ]
+  //   [ ← Back ] ……spacer…… [ Skip ] [ Primary ]
   //
   // Back sits in the footer-left for EVERY mode now (it used to live in the
   // header for non-stepper pickers and in the footer for stepper pickers).
-  // The right cluster always keeps the order skip → primary → footerSlot so
-  // the primary action lands in the same spot regardless of mode. A growing
-  // spacer locks the two zones apart. Single-select pickers with none of
-  // these render no footer at all (clicking a row advances).
+  // The right cluster always keeps the order skip → primary so the primary
+  // action lands in the same spot regardless of mode. A growing spacer locks
+  // the two zones apart. Single-select pickers with none of these render no
+  // footer at all (clicking a row advances).
   // Secondary actions (Back, Skip) share ONE variant — `stroked grey` — so
-  // they read as a consistent tier below the filled-orange primary. Back is
+  // they read as a consistent tier below the filled-blue primary. Back is
   // the left zone; Skip joins the right cluster.
   const backBtn = showBack
     ? `<button type="button" class="ap-button stroked grey analyse__footer-back" data-${handler}-back>
@@ -359,7 +321,7 @@ export function renderPicker(picker) {
     : stepper
       ? `<button type="button" class="ap-button primary blue" data-${handler}-generate ${stepTotal <= 0 ? "disabled" : ""}><span>${submitLabel}</span></button>`
       : "";
-  const rightCluster = `${skipBtn}${primaryBtn}${footerSlot}`;
+  const rightCluster = `${skipBtn}${primaryBtn}`;
   const footer =
     backBtn || rightCluster
       ? `<div class="analyse__options-submit">${backBtn}<span class="analyse__footer-spacer" aria-hidden="true"></span>${rightCluster}</div>`
