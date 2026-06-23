@@ -305,22 +305,13 @@ export function renderPicker(picker) {
   // Header — shown when the picker carries a title or a step indicator.
   // Mirrors the AI question text so the user has the full prompt in view
   // while scanning options. The step indicator (e.g. "3 of 7") sits on the
-  // right and helps with multi-step wizards.
-  // Back affordance. Most pickers anchor it top-left in the header. Stepper
-  // pickers move it to the footer (far left, opposite the primary Generate
-  // button) so the title can sit flush-left without an indent.
-  const headerBackBtn =
-    showBack && !stepper
-      ? `<button type="button" class="analyse__picker-back ap-icon-button transparent" data-${handler}-back aria-label="Back">
-           <i class="ap-icon-arrow-left"></i>
-         </button>`
-      : "";
+  // right and helps with multi-step wizards. The Back affordance no longer
+  // lives here — it sits in the footer-left for every mode (see below).
   const header =
-    title || stepIndicator || (showBack && !stepper) || subtitle
+    title || stepIndicator || subtitle
       ? `
         <header class="analyse__picker-header">
           <div class="analyse__picker-header-row">
-            ${headerBackBtn}
             ${title ? `<h3 class="analyse__picker-title">${title}</h3>` : ""}
             ${stepIndicator ? `<span class="analyse__picker-step muted">${stepIndicator}</span>` : ""}
           </div>
@@ -335,30 +326,36 @@ export function renderPicker(picker) {
     return `<div class="analyse__options analyse__options--loading">${header}<div class="analyse__picker-loading"><span class="archie-loader" aria-label="Loading"></span></div></div>`;
   }
 
-  // Footer — Skip + (multi-only) Submit. Single-select pickers without a
-  // skipLabel render no footer at all.
+  // ---- Footer: one action bar with fixed zones --------------------------
+  //   [ ← Back ] ……spacer…… [ Skip ] [ Primary ] [ footerSlot ]
+  //
+  // Back sits in the footer-left for EVERY mode now (it used to live in the
+  // header for non-stepper pickers and in the footer for stepper pickers).
+  // The right cluster always keeps the order skip → primary → footerSlot so
+  // the primary action lands in the same spot regardless of mode. A growing
+  // spacer locks the two zones apart. Single-select pickers with none of
+  // these render no footer at all (clicking a row advances).
+  const backBtn = showBack
+    ? `<button type="button" class="ap-button ghost grey analyse__footer-back" data-${handler}-back>
+         <i class="ap-icon-arrow-left"></i><span>Back</span>
+       </button>`
+    : "";
   const skipBtn = skipLabel
     ? `<button type="button" class="ap-button stroked grey" data-${handler}-skip><span>${skipLabel}</span></button>`
     : "";
-  const submitBtn = multi
+  // Primary — one orange button whose label + handler depend on the mode:
+  //   multi   → Continue   (data-{handler}-submit; gathers the selected rows)
+  //   stepper → Generate N (data-{handler}-generate; sums per-row counts,
+  //                         disabled while the total is 0)
+  const primaryBtn = multi
     ? `<button type="button" class="ap-button primary orange" data-${handler}-submit><span>${submitLabel}</span></button>`
-    : "";
-  // Stepper mode submits via a dedicated "Generate N drafts" button whose
-  // label reflects the selected row's count.
-  const generateBtn = stepper
-    ? `<button type="button" class="ap-button primary orange" data-${handler}-generate ${stepTotal <= 0 ? "disabled" : ""}><span>${submitLabel}</span></button>`
-    : "";
-  // Stepper back lives in the footer, pushed to the far left (margin-right
-  // auto) so the primary Generate button stays on the right.
-  const footerBackBtn =
-    showBack && stepper
-      ? `<button type="button" class="ap-button stroked grey analyse__footer-back" data-${handler}-back>
-           <i class="ap-icon-arrow-left"></i><span>Back</span>
-         </button>`
+    : stepper
+      ? `<button type="button" class="ap-button primary orange" data-${handler}-generate ${stepTotal <= 0 ? "disabled" : ""}><span>${submitLabel}</span></button>`
       : "";
+  const rightCluster = `${skipBtn}${primaryBtn}${footerSlot}`;
   const footer =
-    footerBackBtn || skipBtn || submitBtn || generateBtn || footerSlot
-      ? `<div class="analyse__options-submit">${footerBackBtn}${skipBtn}${submitBtn}${generateBtn}${footerSlot}</div>`
+    backBtn || rightCluster
+      ? `<div class="analyse__options-submit">${backBtn}<span class="analyse__footer-spacer" aria-hidden="true"></span>${rightCluster}</div>`
       : "";
 
   return `<div class="analyse__options${multi ? " analyse__options--multi" : ""}${stepper ? " analyse__options--stepper" : ""}" ${multi ? "data-multi" : ""}${stepper ? " data-stepper" : ""}>${header}${rows}${customRow}${fileRow}${footer}</div>`;

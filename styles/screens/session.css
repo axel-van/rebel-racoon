@@ -284,10 +284,6 @@
   gap: var(--app-spacing-micro);
 }
 
-.session__assistant-wizard-bar .analyse__picker-back {
-  margin-left: calc(var(--ref-spacing-sm) * -1 + var(--ref-spacing-xxs));
-}
-
 .session__assistant-wizard-bar .analyse__picker-title {
   font-size: var(--sys-text-style-h3-size);
   line-height: var(--sys-text-style-h3-line-height);

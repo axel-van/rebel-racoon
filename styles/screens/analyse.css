@@ -174,15 +174,20 @@
 .analyse__options-submit {
   margin-top: var(--ref-spacing-xs);
   display: flex;
-  justify-content: flex-end;
-  gap: var(--ref-spacing-xs);
   align-items: center;
+  gap: var(--ref-spacing-xs);
 }
 
-/* Footer back button (stepper picker) — pinned to the far left so the
-   primary action stays on the right. */
+/* The spacer locks the two footer zones apart: Back hugs the left edge, the
+   right cluster (Skip / Primary / footerSlot) hugs the right edge — so the
+   primary action is always in the same spot whatever the picker mode. */
+.analyse__footer-spacer {
+  flex: 1 1 auto;
+}
+
+/* Footer back button — footer-left for every picker mode now. */
 .analyse__footer-back {
-  margin-right: auto;
+  flex: 0 0 auto;
 }
 
 /* Picker header — a title row (full question left, step indicator pinned
