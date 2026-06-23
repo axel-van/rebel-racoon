@@ -334,6 +334,20 @@
   background: var(--ref-color-electric-blue-10);
 }
 
+/* Selected (multi) — must read at least as strong as hover, so it matches
+   the blue-10 tint rather than the lighter blue-05 base. The persistent
+   check icon + blue number badge (from analyse.css) mark it as a sticky
+   selection, distinct from a transient hover. */
+.session__assistant-wizard-bar .analyse__option.is-selected {
+  background: var(--ref-color-electric-blue-10);
+}
+
+/* Disabled rows never pick up the interactive blue tint, even under the
+   pointer — they read as unavailable in every state. */
+.session__assistant-wizard-bar .analyse__option--disabled:hover {
+  background: transparent;
+}
+
 /* Align the number badge and the icon container — both are 28×28 squares
    with the same radius so they read as a paired leading-glyph unit. The
    badge keeps its border (it's the focus anchor); the icon container

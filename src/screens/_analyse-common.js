@@ -141,7 +141,7 @@ export function renderPicker(picker) {
   // when the option is selected via .is-selected) so the user understands
   // the row is a toggle, not an immediate jump.
   const trailingIcon = multi
-    ? `<i class="ap-icon-rounded-check analyse__option-check" aria-hidden="true"></i>`
+    ? `<span class="analyse__option-check" aria-hidden="true"><i class="ap-icon-check"></i></span>`
     : `<i class="ap-icon-chevron-right analyse__option-chevron" aria-hidden="true"></i>`;
 
   const rows = items
@@ -335,8 +335,11 @@ export function renderPicker(picker) {
   // the primary action lands in the same spot regardless of mode. A growing
   // spacer locks the two zones apart. Single-select pickers with none of
   // these render no footer at all (clicking a row advances).
+  // Secondary actions (Back, Skip) share ONE variant — `stroked grey` — so
+  // they read as a consistent tier below the filled-orange primary. Back is
+  // the left zone; Skip joins the right cluster.
   const backBtn = showBack
-    ? `<button type="button" class="ap-button ghost grey analyse__footer-back" data-${handler}-back>
+    ? `<button type="button" class="ap-button stroked grey analyse__footer-back" data-${handler}-back>
          <i class="ap-icon-arrow-left"></i><span>Back</span>
        </button>`
     : "";
@@ -344,11 +347,14 @@ export function renderPicker(picker) {
     ? `<button type="button" class="ap-button stroked grey" data-${handler}-skip><span>${skipLabel}</span></button>`
     : "";
   // Primary — one orange button whose label + handler depend on the mode:
-  //   multi   → Continue   (data-{handler}-submit; gathers the selected rows)
+  //   multi   → Continue   (data-{handler}-submit; gathers the selected rows;
+  //                         disabled until at least one row is selected)
   //   stepper → Generate N (data-{handler}-generate; sums per-row counts,
   //                         disabled while the total is 0)
+  // Both disable themselves when there's nothing to submit — session.js keeps
+  // the multi button's disabled state in sync as rows toggle.
   const primaryBtn = multi
-    ? `<button type="button" class="ap-button primary orange" data-${handler}-submit><span>${submitLabel}</span></button>`
+    ? `<button type="button" class="ap-button primary orange" data-${handler}-submit ${preset.size === 0 ? "disabled" : ""}><span>${submitLabel}</span></button>`
     : stepper
       ? `<button type="button" class="ap-button primary orange" data-${handler}-generate ${stepTotal <= 0 ? "disabled" : ""}><span>${submitLabel}</span></button>`
       : "";

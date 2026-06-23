@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=137";
+import { renderTopbar } from "../components/topbar.js?v=139";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -48,10 +48,10 @@ import {
 } from "../posts-store.js?v=31";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=42";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=34";
-import * as topPostsFlow from "../top-posts-flow.js?v=17";
+import * as topPostsFlow from "../top-posts-flow.js?v=19";
 import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=11";
-import * as sidebarWizard from "../sidebar-wizard.js?v=42";
-import * as inlineQuestion from "../inline-question.js?v=36";
+import * as sidebarWizard from "../sidebar-wizard.js?v=44";
+import * as inlineQuestion from "../inline-question.js?v=38";
 import * as clipStudio from "../clip-studio.js?v=16";
 import * as batchStudio from "../batch-studio.js?v=4";
 import { askConnector } from "../connector-ask.js?v=5";
@@ -63,8 +63,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=7";
-import * as contextBuilder from "../context-builder.js?v=119";
-import { renderPicker } from "./_analyse-common.js?v=42";
+import * as contextBuilder from "../context-builder.js?v=121";
+import { renderPicker } from "./_analyse-common.js?v=44";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
 import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=2";
@@ -76,7 +76,7 @@ import {
 } from "../components/content-workspace.js?v=25";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=27";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=47";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=41";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=43";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=53";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=8";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
@@ -104,12 +104,12 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=206";
+} from "../components/right-panel.js?v=208";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=12";
 import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=17";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=10";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=12";
 
 // Default composer placeholder — restored whenever no connector is attached.
 // A connected connector swaps it for "Ask {name} anything…".
@@ -4060,6 +4060,9 @@ function bindSession(root, session) {
           const wasSelected = wizardOption.classList.contains("is-selected");
           wizardOption.classList.toggle("is-selected", !wasSelected);
           wizardOption.setAttribute("aria-pressed", !wasSelected ? "true" : "false");
+          // Keep the primary disabled until at least one row is selected.
+          const submit = opts.querySelector("[data-wizard-answer-submit]");
+          if (submit) submit.disabled = !opts.querySelector("[data-wizard-answer].is-selected");
         } else {
           sidebarWizard.answer(session.id, wizardOption.dataset.wizardAnswer);
         }
@@ -4111,6 +4114,9 @@ function bindSession(root, session) {
           const wasSelected = inlineQuestionBtn.classList.contains("is-selected");
           inlineQuestionBtn.classList.toggle("is-selected", !wasSelected);
           inlineQuestionBtn.setAttribute("aria-pressed", !wasSelected ? "true" : "false");
+          // Keep the primary disabled until at least one row is selected.
+          const submit = opts.querySelector("[data-inline-question-submit]");
+          if (submit) submit.disabled = !opts.querySelector("[data-inline-question].is-selected");
         } else if (opts?.dataset.stepper !== undefined) {
           // Stepper mode — clicking a row selects it (the count drives the
           // generate button); it doesn't pick-and-advance.

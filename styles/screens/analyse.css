@@ -67,7 +67,22 @@
 /* Chat turn + bubble styles live in styles/chat.css (shared with the
    session assistant panel). */
 
-/* ---------- Sticky picker: options + custom input ---------- */
+/* ---------- Sticky picker: options + custom input ----------
+
+   Option-row state model (one canonical set, shared by every row variant —
+   simple / multi / stepper / custom-input / file-dropzone):
+
+     default   transparent, grey separators
+     hover     surface tint (base) / electric-blue-10 (session bar)
+     focus     keyboard ring (base) / electric-blue-10 + ↵ glyph (session bar)
+     selected  electric-blue tint + check icon + blue number badge (multi only;
+               session bar lifts the tint to blue-10 so it's ≥ hover)
+     disabled  cursor not-allowed, 0.5 opacity on content, no hover tint,
+               drops out of tab order + keyboard nav (<button disabled>)
+     loading   option rows replaced by a centred brand loader (.analyse__picker-loading)
+
+   Footer buttons: primary = .ap-button.primary.orange (disabled when there's
+   nothing to submit); secondary (Back / Skip) = .ap-button.stroked.grey. */
 
 .analyse__options {
   display: flex;
@@ -119,8 +134,15 @@
    check icon is hidden by default and revealed via .is-selected (paired with
    an electric-blue background tint matching the focus state). */
 .analyse__option .analyse__option-check {
-  color: var(--ref-color-electric-blue-100);
-  font-size: var(--sys-icon-css-sm);
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-white);
+  font-size: var(--sys-icon-css-xs);
   visibility: hidden;
 }
 
