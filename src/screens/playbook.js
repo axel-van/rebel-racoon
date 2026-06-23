@@ -4,14 +4,17 @@
 //
 // Header actions:
 //   • Start a chat          — primary, opens a new chat bound to this Playbook
-//   • Auto-fill ▾           — re-run an analysis to refill every section from
-//                             the website / a document / selected social
-//                             profiles (overwrite, with confirmation)
 //   • Delete                — remove the Playbook (with confirmation)
 //   • Edit                  — inline per-section pencils + title rename
 //   • ★ (next to the name)  — toggle this Playbook as the default
 //
-// The auto-fill flow reuses the engine's staged loader: we re-mount with a
+// Re-analysis sources:
+//   • Re-analyze website    — refresh icon next to the site address in the rail;
+//                             rebuilds every section from the site (confirmation)
+//   • Learn from…           — Voice & style section dropdown (my posts / docs),
+//                             scoped to the voice fields only
+//
+// Each re-analysis reuses the engine's staged loader: we re-mount with a
 // `loader` cfg, run the (mock) analysis on a timer, then `updateContext` with
 // the section patch — the loader flips to ready and paints the fresh data.
 
@@ -19,7 +22,7 @@ import { navigate } from "../router.js?v=30";
 import { escapeHtml as esc } from "../utils.js?v=21";
 import { renderTopbar } from "../components/topbar.js?v=132";
 import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=31";
-import { mount, snapshotEditable } from "../playbook-view.js?v=25";
+import { mount, snapshotEditable } from "../playbook-view.js?v=26";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";
 import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=9";
@@ -52,40 +55,16 @@ function prettyUrl(url) {
   return (url || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
 }
 
-// One dropdown menu item, matching the DS .ap-action-dropdown markup.
-function menuItem(attr, icon, label, { danger = false } = {}) {
-  return `
-    <button type="button" role="menuitem" class="ap-action-dropdown-item ${danger ? "red-mode" : ""}" ${attr}>
-      <i class="${icon}"></i>
-      <div class="ap-action-dropdown-item-text">
-        <div class="ap-action-dropdown-item-label-container">
-          <span class="ap-action-dropdown-item-label">${esc(label)}</span>
-        </div>
-      </div>
-    </button>`;
-}
-
-function buildHeaderActions(ctx) {
-  const hasSite = Boolean((ctx && ctx.websiteUrl) || "");
-
-  // "Fill from documents" moved to the Voice & style "Learn from…" dropdown
-  // (it's a voice-scoped source now), so the whole-Playbook Auto-fill menu only
-  // re-runs the website analysis.
-  const fillItems = [hasSite ? menuItem("data-fill-website", "ap-icon-web", "Re-analyze website") : ""].join("");
-
+// Re-analyzing the website (the only whole-Playbook source) now lives next to
+// the site address in the rail (data-fill-website), so the header carries just
+// the primary "Start a chat" + Delete. Voice sources live in the section's
+// "Learn from…" dropdown.
+function buildHeaderActions() {
   return `
     <button type="button" class="ap-button primary blue" data-playbook-start>
       <i class="ap-icon-double-chat-bubbles"></i>
       <span>Start a chat</span>
     </button>
-    <div class="recap__menu">
-      <button type="button" class="ap-button stroked blue recap__menu-toggle" data-menu-toggle="fill" aria-haspopup="menu" aria-expanded="false">
-        <i class="ap-icon-refresh"></i>
-        <span>Auto-fill</span>
-        <i class="ap-icon-chevron-down recap__menu-caret" aria-hidden="true"></i>
-      </button>
-      <div class="ap-action-dropdown recap__menu-pop" role="menu" data-menu-pop="fill" hidden>${fillItems}</div>
-    </div>
     <button type="button" class="ap-icon-button stroked grey" data-playbook-delete title="Delete" aria-label="Delete Playbook">
       <i class="ap-icon-trash"></i>
     </button>
@@ -130,7 +109,7 @@ export function renderPlaybook(params, target) {
       },
       revert: (snapshot) => updateContext(id, snapshot),
       showTop: false,
-      headerActions: () => buildHeaderActions(getContextById(id)),
+      headerActions: () => buildHeaderActions(),
       onEditName,
       onToggleDefault: toggleDefault,
       onAnalyzeVoice,
