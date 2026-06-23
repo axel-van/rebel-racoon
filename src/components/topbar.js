@@ -13,19 +13,20 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=199";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=41";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=49";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=39";
+} from "./right-panel.js?v=200";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=42";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=50";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=40";
 import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=31";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=77";
+} from "./conversation-status-card.js?v=78";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=3";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=31";
+import { isFlagOn } from "../feature-flags.js?v=6";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static
@@ -66,7 +67,10 @@ export function renderTopbar(_options = {}) {
   // The info toggle only appears once the chat has something to summarise —
   // on a brand-new/empty chat the status card would be all "None yet", so we
   // hide the control entirely (matches conversation-status-card.render).
-  const statusCardAvailable = onSession && (sessionSourceCount() > 0 || ideaCount > 0 || draftCount > 0);
+  // Gated behind the conversationStatusCard flag: when OFF, the whole card —
+  // and this topbar toggle — disappears (matches conversation-status-card.render).
+  const statusCardAvailable =
+    onSession && isFlagOn("conversationStatusCard") && (sessionSourceCount() > 0 || ideaCount > 0 || draftCount > 0);
   const rightSide = onWelcomeAlt
     ? renderWelcomeAltExit()
     : onSession

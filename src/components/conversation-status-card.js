@@ -25,13 +25,14 @@ import {
   openSources as openSourcesPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=199";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=49";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=41";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=39";
+} from "./right-panel.js?v=200";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=50";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=42";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=40";
 import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=31";
 import { subscribe as subscribeSessions } from "../sessions-store.js?v=3";
-import { addMention } from "../composer-mentions.js?v=13";
+import { addMention } from "../composer-mentions.js?v=14";
+import { isFlagOn } from "../feature-flags.js?v=6";
 
 // Two-level structure:
 //   .conversation-status-column   — fills grid column 3 with white bg
@@ -174,6 +175,12 @@ function syncSessionSubscriptions() {
 
 export function render() {
   if (!initialized) return;
+  // Feature-switched off entirely — never reserve the column or render the
+  // card (the topbar toggle is hidden in lockstep, cf. topbar.js).
+  if (!isFlagOn("conversationStatusCard")) {
+    hideCard();
+    return;
+  }
   const sid = currentSessionId();
   if (!sid) {
     hideCard();

@@ -36,6 +36,15 @@ export const FLAGS = Object.freeze([
       "Add-source modal's Connectors tab.",
   },
   {
+    id: "conversationStatusCard",
+    label: "Conversation status card",
+    default: true,
+    hides:
+      "When OFF, hides the floating conversation status card (sources / " +
+      "ideas / clips / drafts summary) entirely, including its 'i' toggle " +
+      "button in the session topbar.",
+  },
+  {
     id: "statusActionSnackbars",
     label: "Action success snackbars",
     default: true,
