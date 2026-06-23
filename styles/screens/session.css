@@ -1874,3 +1874,74 @@ body.hide-playbook-colors .composer-context__dot {
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxs);
 }
+
+/* ── Chat-switch skeleton ──────────────────────────────────────────────────
+   Shown briefly in the conversation area when switching between chats, then
+   swapped for the real thread (see showSwitchSkeleton in session.js). */
+.session__assistant-thread.is-switching {
+  overflow: hidden;
+}
+
+.thread-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-lg) 0;
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.thread-skeleton__row {
+  display: flex;
+}
+.thread-skeleton__row--out {
+  justify-content: flex-end;
+}
+
+.thread-skeleton__bubble {
+  display: block;
+  height: 56px;
+  border-radius: var(--app-radius-card);
+  background: linear-gradient(
+    100deg,
+    var(--ref-color-grey-10) 0%,
+    var(--ref-color-grey-20) 50%,
+    var(--ref-color-grey-10) 100%
+  );
+  background-size: 200% 100%;
+  animation: thread-skeleton-shimmer 1.4s linear infinite;
+}
+.thread-skeleton__row--out .thread-skeleton__bubble {
+  background: linear-gradient(
+    100deg,
+    var(--ref-color-electric-blue-10) 0%,
+    var(--ref-color-electric-blue-20, var(--ref-color-electric-blue-10)) 50%,
+    var(--ref-color-electric-blue-10) 100%
+  );
+  background-size: 200% 100%;
+}
+.thread-skeleton__row:nth-child(2) .thread-skeleton__bubble {
+  animation-delay: 0.12s;
+}
+.thread-skeleton__row:nth-child(3) .thread-skeleton__bubble {
+  animation-delay: 0.24s;
+}
+.thread-skeleton__row:nth-child(4) .thread-skeleton__bubble {
+  animation-delay: 0.36s;
+}
+
+@keyframes thread-skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thread-skeleton__bubble {
+    animation: none;
+  }
+}

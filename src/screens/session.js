@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=133";
+import { renderTopbar } from "../components/topbar.js?v=134";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -63,8 +63,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=6";
-import * as contextBuilder from "../context-builder.js?v=115";
-import * as playbookEditor from "../playbook-editor.js?v=74";
+import * as contextBuilder from "../context-builder.js?v=116";
+import * as playbookEditor from "../playbook-editor.js?v=75";
 import { renderPicker } from "./_analyse-common.js?v=40";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -105,7 +105,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=202";
+} from "../components/right-panel.js?v=203";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=11";
@@ -203,7 +203,8 @@ export function renderSession(params, target) {
   };
   // Reset selection when switching to a different chat. Tab + URL-param
   // changes within the same session keep the selection intact.
-  if (previousSessionId !== session.id) {
+  const isSessionSwitch = previousSessionId !== session.id;
+  if (isSessionSwitch) {
     clearSelection();
     previousSessionId = session.id;
   }
@@ -261,6 +262,12 @@ export function renderSession(params, target) {
   bindSession(target, session);
   wireAssistantPanel(target, session, attachedContext);
 
+  // Switching to a different chat: briefly show skeleton bubbles where the
+  // conversation will land, so the swap reads as "loading this chat" rather
+  // than an instant content pop. Only for a started conversation in the normal
+  // layout (the helper self-skips the empty hero / wizard / clip-studio).
+  if (isSessionSwitch) showSwitchSkeleton(target);
+
   // FIND-B: return a cleanup so the router tears down per-screen state on
   // route change (and not only on the next session mount). Without this,
   // navigating from /session/:id to /ideas left the assistant subscribers
@@ -291,6 +298,39 @@ function isThreadStarted(messages) {
     messages.some((m) => m.role === "assistant" && m.variant) ||
     messages.some((m) => m.role === "source-intake")
   );
+}
+
+// Skeleton bubbles shown for a short beat when switching chats. Alternating
+// assistant (left) / user (right) placeholders with a shimmer, so the
+// conversation area reads as "loading" before the real thread swaps in.
+const SWITCH_SKELETON_HTML = `
+  <div class="thread-skeleton" aria-hidden="true">
+    <div class="thread-skeleton__row thread-skeleton__row--in"><span class="thread-skeleton__bubble" style="width:62%"></span></div>
+    <div class="thread-skeleton__row thread-skeleton__row--out"><span class="thread-skeleton__bubble" style="width:48%"></span></div>
+    <div class="thread-skeleton__row thread-skeleton__row--in"><span class="thread-skeleton__bubble" style="width:74%"></span></div>
+    <div class="thread-skeleton__row thread-skeleton__row--in"><span class="thread-skeleton__bubble" style="width:40%"></span></div>
+  </div>
+`;
+
+// Render the skeleton into the thread, then restore the real content after a
+// short delay. Synchronous innerHTML swap (before the browser paints) means the
+// real thread never flashes first. Self-skips when there's no started thread to
+// cover (empty hero, wizard, clip-studio — those layouts have no
+// `.session__assistant-thread`, or carry the hero instead of a thread).
+function showSwitchSkeleton(root) {
+  const threadEl = root.querySelector(".session__assistant-thread[data-assistant-thread]");
+  if (!threadEl) return;
+  if (threadEl.querySelector("[data-empty-chat]")) return; // empty conversation — nothing to load
+  const real = threadEl.innerHTML;
+  threadEl.innerHTML = SWITCH_SKELETON_HTML;
+  threadEl.classList.add("is-switching");
+  window.setTimeout(() => {
+    // Bail if the user switched again (this node was replaced/detached).
+    if (!document.contains(threadEl)) return;
+    threadEl.classList.remove("is-switching");
+    threadEl.innerHTML = real;
+    threadEl.scrollTop = threadEl.scrollHeight;
+  }, 340);
 }
 
 function renderAssistantPanel(session, attachedContext) {
