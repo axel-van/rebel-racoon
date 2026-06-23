@@ -867,16 +867,7 @@ function renderRail(data) {
       ? `<div class="recap__fact"><dt>Used in</dt><dd>${usedIn} ${usedIn === 1 ? "chat" : "chats"}</dd></div>`
       : "",
     data.updatedAt ? `<div class="recap__fact"><dt>Updated</dt><dd>${esc(data.updatedAt)}</dd></div>` : "",
-    domain
-      ? `<div class="recap__fact"><dt>Source</dt><dd class="recap__fact-source">
-          <span class="recap__fact-source-url">${esc(domain)}</span>
-          ${
-            cfg.mode === "library"
-              ? `<button type="button" class="ap-icon-button transparent blue recap__reanalyze" data-fill-website title="Re-analyze website" aria-label="Re-analyze website"><i class="ap-icon-refresh"></i></button>`
-              : ""
-          }
-        </dd></div>`
-      : "",
+    domain ? `<div class="recap__fact"><dt>Source</dt><dd>${esc(domain)}</dd></div>` : "",
     colors.length
       ? `<div class="recap__fact"><dt>Brand color</dt><dd><span class="recap__fact-dots">${colors
           .map((c) => `<span class="recap__fact-dot" style="background:${esc(c.hex)};"></span>`)

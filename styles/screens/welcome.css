@@ -382,24 +382,6 @@
   color: var(--ref-color-grey-100);
 }
 
-/* Source row — the site address with an inline "Re-analyze website" action
-   (replaces the header Auto-fill dropdown, which now had a single item). */
-.recap__fact-source {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-}
-.recap__fact-source-url {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.recap__reanalyze {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-}
-
 .recap__fact-dots {
   display: inline-flex;
   gap: var(--ref-spacing-xxs);

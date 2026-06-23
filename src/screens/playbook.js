@@ -4,13 +4,12 @@
 //
 // Header actions:
 //   • Start a chat          — primary, opens a new chat bound to this Playbook
+//   • Re-analyze website    — rebuilds every section from the site (confirmation)
 //   • Delete                — remove the Playbook (with confirmation)
 //   • Edit                  — inline per-section pencils + title rename
 //   • ★ (next to the name)  — toggle this Playbook as the default
 //
-// Re-analysis sources:
-//   • Re-analyze website    — refresh icon next to the site address in the rail;
-//                             rebuilds every section from the site (confirmation)
+// Voice-only re-analysis:
 //   • Learn from…           — Voice & style section dropdown (my posts / docs),
 //                             scoped to the voice fields only
 //
@@ -22,7 +21,7 @@ import { navigate } from "../router.js?v=30";
 import { escapeHtml as esc } from "../utils.js?v=21";
 import { renderTopbar } from "../components/topbar.js?v=132";
 import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=31";
-import { mount, snapshotEditable } from "../playbook-view.js?v=26";
+import { mount, snapshotEditable } from "../playbook-view.js?v=27";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";
 import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=9";
@@ -55,15 +54,19 @@ function prettyUrl(url) {
   return (url || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
 }
 
-// Re-analyzing the website (the only whole-Playbook source) now lives next to
-// the site address in the rail (data-fill-website), so the header carries just
-// the primary "Start a chat" + Delete. Voice sources live in the section's
-// "Learn from…" dropdown.
+// "Re-analyze website" rebuilds every section from the site, so it's a
+// Playbook-wide action and lives in the header (a labelled stroked button — no
+// dropdown now that it's the only whole-Playbook source). Voice sources live in
+// the Voice & style "Learn from…" dropdown.
 function buildHeaderActions() {
   return `
     <button type="button" class="ap-button primary blue" data-playbook-start>
       <i class="ap-icon-double-chat-bubbles"></i>
       <span>Start a chat</span>
+    </button>
+    <button type="button" class="ap-button stroked blue" data-fill-website>
+      <i class="ap-icon-refresh"></i>
+      <span>Re-analyze website</span>
     </button>
     <button type="button" class="ap-icon-button stroked grey" data-playbook-delete title="Delete" aria-label="Delete Playbook">
       <i class="ap-icon-trash"></i>
