@@ -786,11 +786,12 @@
             8. NOTICES
             ════════════════════════════════════════════════════════════ -->
       <section class="hd-section" id="notices">
-        <h2>8. Notices (mermaid, grey, extracting)</h2>
+        <h2>8. Notices (mermaid, extracting)</h2>
         <p class="hd-lead">
-          Lightweight status pills posted into the thread by the assistant. <strong>Mermaid</strong> = AI work (drafting
-          / extracting). <strong>Grey</strong> = system note. <strong>Extracting</strong> = inline pill + spinner for
-          non-blocking work.
+          Lightweight status pills posted into the thread by the assistant. <strong>Mermaid</strong> = AI work (the
+          &ldquo;Thinking&rdquo; / &ldquo;Drafting&rdquo; reasoning chip). <strong>Extracting</strong> = inline pill +
+          spinner for non-blocking work. (A neutral grey variant exists in the scaffold but the app never posts one —
+          every live notice is mermaid.)
         </p>
 
         <article class="hd-comp">
@@ -814,18 +815,6 @@
                 <div data-live="notice-mermaid-done"></div>
               </div>
             </div>
-          </div>
-        </article>
-
-        <article class="hd-comp">
-          <header class="hd-comp__head">
-            <div>
-              <p class="hd-comp__name"><code>.assistant-notice</code> (grey)</p>
-              <p class="hd-comp__desc">Same foldable pattern, neutral grey pill — for system-level messages.</p>
-            </div>
-          </header>
-          <div class="hd-comp__body">
-            <div class="hd-comp__preview" data-live="notice-grey"></div>
           </div>
         </article>
 
@@ -1261,13 +1250,6 @@
             meta: "Drafted 5 posts",
             open: false,
             text: "Drafts ready in the right panel — open Drafts to review and edit.",
-          });
-        },
-        "notice-grey": (slot) => {
-          slot.innerHTML = renderSystemNotice({
-            meta: "Playbook switched",
-            open: true,
-            text: "Now using <strong>Customer stories</strong> for this thread.",
           });
         },
         "notice-extracting": (slot) => {
