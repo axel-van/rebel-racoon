@@ -24,7 +24,7 @@ import {
   postExtractionResult,
   postTopPostPickTurn,
 } from "./assistant.js?v=52";
-import * as inlineQuestion from "./inline-question.js?v=40";
+import * as inlineQuestion from "./inline-question.js?v=41";
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=2";
 import { addPostDraft } from "./posts-store.js?v=31";
 import { injectIdeasForSource } from "./library.js?v=42";

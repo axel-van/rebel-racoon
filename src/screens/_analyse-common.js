@@ -297,16 +297,17 @@ export function renderPicker(picker) {
   // action lands in the same spot regardless of mode. A growing spacer locks
   // the two zones apart. Single-select pickers with none of these render no
   // footer at all (clicking a row advances).
-  // Secondary actions (Back, Skip) share ONE variant — `stroked grey` — so
-  // they read as a consistent tier below the filled-blue primary. Back is
-  // the left zone; Skip joins the right cluster.
+  // Secondary actions sit below the filled-blue primary in two tiers:
+  // Back is `stroked grey` (a bordered navigation affordance in the left
+  // zone); Skip is always the lighter `ghost grey` — a low-emphasis
+  // dismissal that joins the right cluster.
   const backBtn = showBack
     ? `<button type="button" class="ap-button stroked grey analyse__footer-back" data-${handler}-back>
          <i class="ap-icon-arrow-left"></i><span>Back</span>
        </button>`
     : "";
   const skipBtn = skipLabel
-    ? `<button type="button" class="ap-button stroked grey" data-${handler}-skip><span>${skipLabel}</span></button>`
+    ? `<button type="button" class="ap-button ghost grey" data-${handler}-skip><span>${skipLabel}</span></button>`
     : "";
   // Primary — one blue button whose label + handler depend on the mode:
   //   multi   → Continue   (data-{handler}-submit; gathers the selected rows;

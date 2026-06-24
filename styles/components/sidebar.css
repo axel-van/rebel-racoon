@@ -65,7 +65,7 @@
    `currentColor`, so it goes blue on hover with the rest of the button. */
 .app-sidebar__brand-logo-svg {
   display: block;
-  height: 22px;
+  height: 16px;
   width: auto;
   fill: currentColor;
 }
