@@ -344,7 +344,7 @@ function renderOutputsRow(ideaCount) {
     return `
       <section class="conversation-status-card__section">
         <div class="conversation-status-card__row conversation-status-card__row--static">
-          <i class="ap-icon-sparkles" aria-hidden="true"></i>
+          <i class="ap-icon-archie-official" aria-hidden="true"></i>
           <span class="conversation-status-card__row-label">Ideas</span>
           <span class="conversation-status-card__empty">None yet</span>
         </div>
@@ -354,7 +354,7 @@ function renderOutputsRow(ideaCount) {
   return `
     <section class="conversation-status-card__section">
       <button type="button" class="conversation-status-card__row" data-status-ideas title="Open Ideas panel">
-        <i class="ap-icon-sparkles" aria-hidden="true"></i>
+        <i class="ap-icon-archie-official" aria-hidden="true"></i>
         <span class="conversation-status-card__row-label">Ideas</span>
         <span class="ap-counter normal blue">${ideaCount}</span>
       </button>

@@ -130,7 +130,7 @@ function renderContextsEmpty(allContexts, pageState) {
 function renderGhostCard() {
   return `
     <button type="button" class="contexts-card contexts-card--ghost" data-contexts-new aria-label="Create a new Playbook">
-      <span class="contexts-card--ghost__glyph"><i class="ap-icon-sparkles-mermaid"></i></span>
+      <span class="contexts-card--ghost__glyph"><i class="ap-icon-archie-official"></i></span>
       <span class="contexts-card--ghost__title">Create a Playbook</span>
       <span class="contexts-card--ghost__sub">One brand, one voice, one goal — I'll keep every draft aligned.</span>
     </button>
@@ -188,7 +188,7 @@ function renderContextCard(ctx) {
       ${
         voiceHeadline
           ? `<div class="contexts-card__voice">
-              <i class="ap-icon-sparkles"></i>
+              <i class="ap-icon-archie-official"></i>
               <span>${escapeText(voiceHeadline)}</span>
             </div>`
           : ""

@@ -143,15 +143,14 @@
 }
 
 /* When the avatar is a direct child (inline AI turn), nudge it down slightly
-   so the 16px sparkle aligns with the first line of the 15/1.55 body text. */
+   so the 16px mark aligns with the first line of the 15/1.55 body text. */
 .chat-turn--ai > .chat-turn-avatar {
   margin-top: var(--app-spacing-micro);
 }
 
-/* AI avatar is a mask-based glyph remapped to the Archie logo (see
-   ds-patches .ap-icon-sparkles*) — its visible colour is whatever we put in
-   `background`. Paint it the brand orange so the avatar reads as the Archie
-   mark, not the old mermaid gradient. */
+/* AI avatar is the .ap-icon-archie-official mask glyph (see ds-patches) — its
+   visible colour is whatever we put in `background`. Paint it the brand orange
+   so the avatar reads as the Archie mark. */
 .chat-turn--ai .chat-turn-avatar {
   background: var(--app-archie-mark);
 }

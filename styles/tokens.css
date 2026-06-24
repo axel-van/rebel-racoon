@@ -19,8 +19,8 @@
   --app-butter: #f7ffc5; /* light butter — status pill background */
   --app-butter-accent: #8a9b2e; /* darker butter (olive) — status dot */
 
-  /* Archie logo mark colour — the sparkles icons are remapped to the Archie
-     "A" logotype (mono orange) across the app. See ds-patches .ap-icon-sparkles*. */
+  /* Archie logo mark colour — the .ap-icon-archie-official glyph paints the
+     Archie "A" logotype (mono orange) across the app. See ds-patches. */
   --app-archie-mark: #ff3c00;
 
   /* ── Conversation navy — Archie tertiary brand #0A1B33 replaces the chat

@@ -95,7 +95,7 @@ export function renderSourceCard(
   const stageLabel = isProcessing ? source.stage || "Processing" : "";
   const processingPill = isProcessing
     ? `<span class="source-card__processing-pill" role="status" aria-live="polite">
-         <i class="ap-icon-sparkles-mermaid"></i>
+         <i class="ap-icon-archie-official"></i>
          <span class="source-card__processing-pill-label">${escapeHtml(stageLabel)}…</span>
        </span>`
     : "";
@@ -165,7 +165,7 @@ export function renderSourceCard(
         </button>
         <div class="ap-action-dropdown source-card__more-menu" id="${menuId}" role="menu" hidden>
           <button type="button" role="menuitem" class="ap-action-dropdown-item" data-source-extract-one="${source.id}">
-            <i class="ap-icon-sparkles"></i>
+            <i class="ap-icon-archie-official"></i>
             <div class="ap-action-dropdown-item-text">
               <div class="ap-action-dropdown-item-label-container">
                 <span class="ap-action-dropdown-item-label">Extract more ideas</span>

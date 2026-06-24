@@ -124,7 +124,7 @@ export function renderCompactIdeaCard(
         <div class="rpanel-ideas__primary">
           ${mentionBtn}
           <button type="button" class="ap-button secondary blue rpanel-ideas__use" data-rpanel-use-idea="${escapeAttr(idea.id)}">
-            <i class="ap-icon-sparkles keep-sparkle"></i>
+            <i class="ap-icon-sparkles"></i>
             <span>Draft</span>
           </button>
         </div>

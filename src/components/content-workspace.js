@@ -85,7 +85,7 @@ function renderBySourceBody(sources, allIdeas, search, selection = null, session
 function renderAllIdeasBody(ideas, allSources, search, selection = null, sessionId = null) {
   if (ideas.length === 0) {
     return renderEmptyState({
-      icon: "ap-icon-sparkles keep-sparkle",
+      icon: "ap-icon-sparkles",
       title: "No ideas match",
       body: search ? `No idea matches "${search}". Try a different term.` : "No ideas yet.",
     });
@@ -133,7 +133,7 @@ function renderContentToolbar(view, sourcesCount, ideasCount) {
           <span class="ap-counter normal ${view === "sources" ? "blue" : "grey"}">${sourcesCount}</span>
         </button>
         <button type="button" class="ap-tabs-tab ${view === "ideas" ? "active" : ""}" data-content-view="ideas">
-          <i class="ap-icon-sparkles keep-sparkle"></i>
+          <i class="ap-icon-sparkles"></i>
           <span>All ideas</span>
           <span class="ap-counter normal ${view === "ideas" ? "blue" : "grey"}">${ideasCount}</span>
         </button>

@@ -22,8 +22,8 @@ export function startActionPickerFlow(sessionId, { contextName = "Your playbook"
     choices: [
       { value: "add-source", label: "Add a source", icon: "ap-icon-plus" },
       { value: "browse", label: "Browse sources", icon: "ap-icon-feature-library" },
-      { value: "compare", label: "Compare ideas", icon: "ap-icon-sparkles keep-sparkle" },
-      { value: "draft", label: "Draft a post", icon: "ap-icon-sparkles-mermaid" },
+      { value: "compare", label: "Compare ideas", icon: "ap-icon-sparkles" },
+      { value: "draft", label: "Draft a post", icon: "ap-icon-archie-official" },
     ],
     multi: false,
     handler: "start-action",

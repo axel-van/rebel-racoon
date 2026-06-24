@@ -80,7 +80,7 @@ const HTML = `
     <div class="ap-dialog-footer-right">
       <button type="button" class="ap-button transparent grey" id="fillDocCancel">Cancel</button>
       <button type="button" class="ap-button primary blue" id="fillDocConfirm" disabled>
-        <i class="ap-icon-sparkles-mermaid"></i><span>Fill from document</span>
+        <i class="ap-icon-archie-official"></i><span>Fill from document</span>
       </button>
     </div>
   </div>

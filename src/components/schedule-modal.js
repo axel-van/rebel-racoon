@@ -668,7 +668,7 @@ function renderModePicker() {
         />
         <div>
           <div class="ap-radio-card-header">
-            <i class="ap-icon-sparkles" aria-hidden="true"></i>
+            <i class="ap-icon-archie-official" aria-hidden="true"></i>
             <span class="ap-radio-card-title">Optimal times</span>
           </div>
           <span>${optimalSub}</span>
@@ -730,7 +730,7 @@ function renderStrategyPanel() {
 
       <div class="schedule-modal__strategy-block">
         <label class="schedule-modal__strategy-label schedule-modal__strategy-label--ai" for="scheduleStrategyNote">
-          <i class="ap-icon-sparkles" aria-hidden="true"></i>
+          <i class="ap-icon-archie-official" aria-hidden="true"></i>
           Or describe your own strategy
         </label>
         <div class="ap-textarea-field resizable">

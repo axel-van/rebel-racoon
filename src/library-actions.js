@@ -45,7 +45,7 @@ export function renderSourcesBulkBar(count) {
       <span class="content-workspace__bulk-count">${count} ${noun} selected</span>
       <div class="content-workspace__bulk-actions">
         <button type="button" class="ap-button stroked blue" data-bulk-extract>
-          <i class="ap-icon-sparkles"></i>
+          <i class="ap-icon-archie-official"></i>
           <span>Extract more ideas</span>
         </button>
         <button type="button" class="ap-button stroked danger" data-bulk-delete>

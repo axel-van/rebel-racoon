@@ -896,7 +896,7 @@ function renderLoading(stageIdx) {
   return `
     <div class="recap-loading">
       <span class="recap-loading__spinner archie-loader" aria-hidden="true"></span>
-      <span class="recap-loading__eyebrow"><i class="ap-icon-sparkles-mermaid" aria-hidden="true"></i> Crafting your Playbook</span>
+      <span class="recap-loading__eyebrow"><i class="ap-icon-archie-official" aria-hidden="true"></i> Crafting your Playbook</span>
       <h1 class="recap-loading__title">${esc(stage.title)}</h1>
       <p class="recap-loading__sub">${esc(stage.sub)}</p>
       <div
@@ -916,7 +916,7 @@ function renderTop() {
   return `
     <header class="welcome-screen__top">
       <span class="welcome-screen__brand">
-        <i class="ap-icon-sparkles-mermaid"></i>
+        <i class="ap-icon-archie-official"></i>
         Archie
       </span>
       <span class="welcome-screen__chip">BETA</span>

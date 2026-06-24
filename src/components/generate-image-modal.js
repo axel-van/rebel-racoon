@@ -201,7 +201,7 @@ function renderBody() {
   if (genState === "idle") {
     const deriveLabel = promptLoading
       ? `<span class="gen-image-spinner"></span>Deriving from post content…`
-      : `<i class="ap-icon-sparkles"></i><span>Re-derive from post content</span>`;
+      : `<i class="ap-icon-archie-official"></i><span>Re-derive from post content</span>`;
 
     // Surface the previous-run error (if any) above the form so the
     // user has context for the retry. Cleared when they click Generate
@@ -254,7 +254,7 @@ function renderBody() {
       <div class="ap-dialog-footer-right">
         <button type="button" class="ap-button transparent grey" id="genImageCancel">Cancel</button>
         <button type="button" class="ap-button primary orange" id="genImageGenerate"${promptValid ? "" : " disabled"}>
-          <i class="ap-icon-sparkles"></i>
+          <i class="ap-icon-archie-official"></i>
           <span>Generate image</span>
         </button>
       </div>

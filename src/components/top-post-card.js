@@ -101,7 +101,7 @@ function renderTopPostCard(post, { maxVsAvg }) {
 
       <span class="top-post-card__why">
         <span class="top-post-card__why-label">
-          <i class="ap-icon-sparkles" aria-hidden="true"></i> Why it worked
+          <i class="ap-icon-archie-official" aria-hidden="true"></i> Why it worked
         </span>
         <span class="top-post-card__why-text">${post.whyItWorked}</span>
       </span>
@@ -109,7 +109,7 @@ function renderTopPostCard(post, { maxVsAvg }) {
       <div class="top-post-card__actions">
         <button type="button" class="ap-button stroked grey" data-top-post-details="${post.id}">Details</button>
         <button type="button" class="ap-button primary blue" data-top-post-repurpose="${post.id}">
-          <i class="ap-icon-sparkles" aria-hidden="true"></i> Repurpose
+          <i class="ap-icon-archie-official" aria-hidden="true"></i> Repurpose
         </button>
       </div>
     </article>
@@ -205,7 +205,9 @@ export function renderTopPostPreview(post) {
             <h3 class="tp-preview__title">How it performed</h3>
             <div class="tp-stats">${raw(stats)}</div>
             <div class="tp-why">
-              <span class="tp-why__label"><i class="ap-icon-sparkles" aria-hidden="true"></i> Why it worked</span>
+              <span class="tp-why__label"
+                ><i class="ap-icon-archie-official" aria-hidden="true"></i> Why it worked</span
+              >
               <span class="tp-why__text">${post.whyItWorked}</span>
             </div>
           </section>
@@ -247,7 +249,7 @@ export function renderTopPostPreview(post) {
           View on ${net} <i class="ap-icon-external-link" aria-hidden="true"></i>
         </a>
         <button type="button" class="ap-button primary blue" data-top-post-build="${post.id}">
-          <i class="ap-icon-sparkles" aria-hidden="true"></i> Repurpose
+          <i class="ap-icon-archie-official" aria-hidden="true"></i> Repurpose
         </button>
       </div>
     </div>

@@ -368,7 +368,7 @@ function renderSessionPills(rpMode, draftCount, isEmpty, ideaCount) {
       aria-pressed="${rpMode === "ideas"}"
       title="${ideasDisabled ? "No ideas yet — attach a source or send a message" : "Toggle Ideas panel"}"
     >
-      <i class="ap-icon-sparkles keep-sparkle"></i>
+      <i class="ap-icon-sparkles"></i>
       <span>Ideas</span>
       ${ideasBadge}
     </button>

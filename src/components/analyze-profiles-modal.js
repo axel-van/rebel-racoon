@@ -57,7 +57,7 @@ const HTML = `
     <div class="ap-dialog-footer-right">
       <button type="button" class="ap-button transparent grey" id="analyzeProfilesCancel">Cancel</button>
       <button type="button" class="ap-button primary orange" id="analyzeProfilesConfirm" disabled>
-        <i class="ap-icon-sparkles-mermaid"></i><span>Analyze &amp; fill</span>
+        <i class="ap-icon-archie-official"></i><span>Analyze &amp; fill</span>
       </button>
     </div>
   </div>

@@ -508,7 +508,7 @@ const BATCH_STUDIO_STEPS = [
   },
   {
     tone: "ai",
-    icon: "ap-icon-sparkles-mermaid",
+    icon: "ap-icon-archie-official",
     title: "I find the strongest ideas",
     text: "I read every source and pull out the angles genuinely worth posting about.",
   },
@@ -557,7 +557,7 @@ function renderBatchStudio(session) {
       <div class="batch-studio__scroll">
         <div class="batch-studio__inner">
           <div class="batch-studio__intro">
-            <span class="batch-studio__ai-badge"><i class="ap-icon-sparkles" aria-hidden="true"></i>Batch</span>
+            <span class="batch-studio__ai-badge"><i class="ap-icon-archie-official" aria-hidden="true"></i>Batch</span>
             <h1 class="batch-studio__title">Turn your sources into a batch of posts</h1>
             <p class="batch-studio__sub">
               Drop files, paste a link, or paste any text — add as many sources as you like and I'll pull the strongest
@@ -648,7 +648,7 @@ function renderBatchRest(session) {
           data-batch-start
           ${canStart ? "" : "disabled"}
         >
-          <i class="ap-icon-sparkles" aria-hidden="true"></i>
+          <i class="ap-icon-archie-official" aria-hidden="true"></i>
           <span>Extract ideas${canStart ? ` · ${countLabel}` : ""}</span>
         </button>
       </div>
@@ -782,7 +782,7 @@ const CLIP_STUDIO_STEPS = [
   },
   {
     tone: "ai",
-    icon: "ap-icon-sparkles-mermaid",
+    icon: "ap-icon-archie-official",
     title: "I find the highlights",
     text: "I watch and transcribe the whole thing, then cut the strongest moments to the length you set.",
   },
@@ -873,7 +873,9 @@ function renderClipStudioUpload(st) {
     <aside class="session__assistant clip-studio clip-studio--upload" aria-label="Extract video clips">
       <div class="clip-studio__config">
         <header class="clip-studio__intro">
-          <span class="clip-studio__ai-badge"><i class="ap-icon-sparkles" aria-hidden="true"></i>Auto Clips</span>
+          <span class="clip-studio__ai-badge"
+            ><i class="ap-icon-archie-official" aria-hidden="true"></i>Auto Clips</span
+          >
           <h1 class="clip-studio__title">Turn a video into post-ready clips</h1>
           <p class="clip-studio__sub">
             Drop in a long video and I'll find the moments worth posting — cut to length and ready to draft in your
@@ -906,7 +908,7 @@ function renderClipStudioUpload(st) {
               <div class="clip-studio__field-row">
                 <label class="clip-studio__field-label" for="clipInstr">Additional instructions</label>
                 <button type="button" class="ap-link standalone small" data-clip-surprise>
-                  <i class="ap-icon-sparkles keep-sparkle" aria-hidden="true"></i>Surprise me
+                  <i class="ap-icon-sparkles" aria-hidden="true"></i>Surprise me
                 </button>
               </div>
               <div class="ap-textarea-field">
@@ -931,7 +933,7 @@ ${escapeHtml(cfg.instructions || "")}</textarea
             data-clip-create
             ${st.videoProvided ? "" : "disabled"}
           >
-            <i class="ap-icon-sparkles" aria-hidden="true"></i><span>Find clip ideas</span>
+            <i class="ap-icon-archie-official" aria-hidden="true"></i><span>Find clip ideas</span>
           </button>
         </div>
       </div>
@@ -946,7 +948,7 @@ function renderClipStudioAnalyzing(st) {
   return html`
     <aside class="session__assistant clip-studio clip-studio--analyzing" aria-label="Analyzing video">
       <div class="clip-studio__center" style="--extract-ms: 8s">
-        <span class="clip-studio__ai-badge"><i class="ap-icon-sparkles" aria-hidden="true"></i>AI analysis</span>
+        <span class="clip-studio__ai-badge"><i class="ap-icon-archie-official" aria-hidden="true"></i>AI analysis</span>
         <h1 class="clip-studio__title">Finding the best clips…</h1>
         <div class="clip-studio__skeleton" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
         <div class="source-card__progress clip-studio__progress" role="progressbar" aria-label="Cutting clips">
@@ -993,7 +995,9 @@ function renderClipStudioClips(session, st) {
           <button type="button" class="ap-button ghost grey clip-studio__back" data-clip-back-config>
             <i class="ap-icon-arrow-left" aria-hidden="true"></i><span>Back to setup</span>
           </button>
-          <span class="clip-studio__ai-badge"><i class="ap-icon-sparkles" aria-hidden="true"></i>Clips ready</span>
+          <span class="clip-studio__ai-badge"
+            ><i class="ap-icon-archie-official" aria-hidden="true"></i>Clips ready</span
+          >
           <h1 class="clip-studio__title">${clips.length} clips from ${st.sourceName || "your video"}</h1>
           <p class="clip-studio__sub muted">
             Review and trim clips, pick the ones to keep, then set the format and captions.
@@ -1078,7 +1082,7 @@ function renderClipStudioProfiles(session, st) {
         <div class="clip-studio__bar-right">
           <span class="clip-studio__bar-count">${selClips} clips · ${selectedProfiles.length} profiles</span>
           <button type="button" class="ap-button primary orange" data-clip-finalize ${draftCount ? "" : "disabled"}>
-            <i class="ap-icon-sparkles" aria-hidden="true"></i
+            <i class="ap-icon-archie-official" aria-hidden="true"></i
             ><span>Create ${draftCount} draft${draftCount === 1 ? "" : "s"}</span>
           </button>
         </div>
@@ -1343,7 +1347,7 @@ function renderComposerStatus(sessionId) {
         role="status"
       >
         <div class="upper">
-          <i class="ap-icon-sparkles" aria-hidden="true"></i>
+          <i class="ap-icon-archie-official" aria-hidden="true"></i>
           <div class="flow">${raw(ideaBannerFlowInner(status.count))}</div>
           <button type="button" class="ap-link small standalone" data-idea-banner-view>View ideas</button>
         </div>
@@ -1670,7 +1674,7 @@ function renderMentionPickerInto(container, sessionId, mode = "mention") {
             ${sources
               .map((s) =>
                 renderRow(
-                  "ap-icon-sparkles",
+                  "ap-icon-archie-official",
                   s.filename,
                   s.kind || "",
                   `data-mention-pick-source="${escapeHtmlAttr(s.id)}"`,
@@ -1690,7 +1694,7 @@ function renderMentionPickerInto(container, sessionId, mode = "mention") {
             ${ideas
               .map((i) =>
                 renderRow(
-                  "ap-icon-sparkles",
+                  "ap-icon-archie-official",
                   i.title,
                   i.kind || "",
                   `data-mention-pick-idea="${escapeHtmlAttr(i.id)}"`,
@@ -1845,7 +1849,7 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
   return html`
     <div class="empty-chat" data-empty-chat>
       <span class="empty-chat__eyebrow">
-        <i class="ap-icon-sparkles" aria-hidden="true"></i>
+        <i class="ap-icon-archie-official" aria-hidden="true"></i>
         Archie · AI content studio
       </span>
       <h1 class="empty-chat__hello">What are you working on?</h1>
@@ -1899,7 +1903,7 @@ const TOP_POSTS_STEPS = [
   },
   {
     tone: "ai",
-    icon: "ap-icon-sparkles-mermaid",
+    icon: "ap-icon-archie-official",
     title: "Choose how to reuse it",
     text: "Repurpose to other channels, spin variations, refresh & repost, or save the angle.",
   },
@@ -1975,7 +1979,7 @@ function renderAssistantPanelQuestion(session) {
           <span class="welcome-alt-hero__orb" aria-hidden="true"></span>
           <div class="welcome-hero welcome-hero--alt">
             <span class="welcome-hero__eyebrow">
-              <i class="ap-icon-sparkles" aria-hidden="true"></i>
+              <i class="ap-icon-archie-official" aria-hidden="true"></i>
               Welcome
             </span>
             <h1 class="welcome-hero__title">Let's understand<br />your brand.</h1>
@@ -2039,7 +2043,7 @@ function askWhatToKnow(sessionId, filename, sourceId = null) {
     title: filename || "About this source",
     stepLabel: "Source",
     items: [
-      { value: "What's the main takeaway?", label: "What's the main takeaway?", icon: "ap-icon-sparkles" },
+      { value: "What's the main takeaway?", label: "What's the main takeaway?", icon: "ap-icon-archie-official" },
       { value: "Summarize this in 3 bullet points.", label: "Summarize in 3 bullets", icon: "ap-icon-numbered-list" },
       { value: "Find a contrarian angle worth posting.", label: "Find a contrarian angle", icon: "ap-icon-bolden" },
     ],
@@ -2189,7 +2193,7 @@ function startIdeaDraft(sessionId, ideaId) {
       ? getStreamSources(sessionId).find((s) => s.id === idea.sourceIds[0])?.filename
       : "";
     postSelectionEcho(sessionId, {
-      icon: "ap-icon-sparkles",
+      icon: "ap-icon-archie-official",
       title: idea.title,
       meta: srcName ? `Idea · from ${srcName}` : "Idea",
     });
@@ -2485,7 +2489,7 @@ function askVideoIntake(sessionId, sourceId, filename) {
         value: "ideas",
         label: "Analyze for ideas",
         caption: "Pull the key themes and talking points into your Ideas to draft posts from.",
-        icon: "ap-icon-sparkles",
+        icon: "ap-icon-archie-official",
       },
       {
         value: "clips",
@@ -2619,7 +2623,7 @@ function renderTurn(message, sessionId) {
   const turnClass = isAi ? "chat-turn--ai" : "chat-turn--user";
   const loadingClass = message.status === "loading" ? " is-loading" : "";
   const header = isAi
-    ? `<i class="ap-icon-sparkles-mermaid chat-turn-avatar" aria-hidden="true"></i>`
+    ? `<i class="ap-icon-archie-official chat-turn-avatar" aria-hidden="true"></i>`
     : `<span class="chat-turn-role">You</span>`;
   return `
     <div class="chat-turn ${turnClass}">
@@ -2738,7 +2742,7 @@ function renderConnectPromptTurn(message) {
   const name = escapeHtml(message.connectorName);
   const logo = message.logo
     ? `<img src="${escapeHtml(message.logo)}" alt="" />`
-    : `<i class="ap-icon-sparkles-mermaid" aria-hidden="true"></i>`;
+    : `<i class="ap-icon-archie-official" aria-hidden="true"></i>`;
   return `
     <div class="connect-card" role="group" aria-label="Connect ${name}">
       <div class="connect-card__head">
@@ -3538,7 +3542,7 @@ function renderChoiceTurn(message) {
 
   return `
     <div class="chat-turn chat-turn--ai">
-      <i class="ap-icon-sparkles-mermaid chat-turn-avatar" aria-hidden="true"></i>
+      <i class="ap-icon-archie-official chat-turn-avatar" aria-hidden="true"></i>
       <div class="chat-bubble chat-bubble--ai">
         <p class="chat-bubble-text">${message.text}</p>
         <div class="chat-bubble-choices-card">
@@ -3592,7 +3596,7 @@ function renderResultCard({
   title = "",
   sub = "",
   extraHtml = "",
-  icon = "ap-icon-sparkles-mermaid",
+  icon = "ap-icon-archie-official",
   cta = null,
   dataAttr = "",
   active = false,

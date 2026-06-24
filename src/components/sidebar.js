@@ -472,7 +472,7 @@ function renderFootMenu({ collapsed }) {
 const NAV = [
   {
     path: "/ideas",
-    icon: "ap-icon-sparkles keep-sparkle",
+    icon: "ap-icon-sparkles",
     label: "Ideas",
     match: (p) => p === "/ideas",
     count: () => getSessions().reduce((n, s) => n + getIdeas(s.id).length, 0),

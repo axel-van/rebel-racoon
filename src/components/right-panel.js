@@ -2055,7 +2055,7 @@ function renderSourceRow(src) {
   const stageLabel = isProcessing ? src.stage || "Processing" : "";
   const statusEl = isProcessing
     ? `<span class="source-card__processing-pill rpanel-sources__row-status" role="status">
-         <i class="ap-icon-sparkles-mermaid"></i>
+         <i class="ap-icon-archie-official"></i>
          <span class="source-card__processing-pill-label">${escapeText(stageLabel)}…</span>
        </span>`
     : "";
@@ -2073,7 +2073,7 @@ function renderSourceRow(src) {
               (i) => `
               <li>
                 <button type="button" class="rpanel-sources__idea-link" data-rpanel-source-idea="${escapeAttr(i.id)}" title="${escapeAttr(i.title)}">
-                  <i class="ap-icon-sparkles rpanel-sources__idea-icon" aria-hidden="true"></i>
+                  <i class="ap-icon-archie-official rpanel-sources__idea-icon" aria-hidden="true"></i>
                   <span class="rpanel-sources__idea-title">${escapeText(i.title)}</span>
                   ${i.kind ? `<span class="rpanel-sources__idea-kind muted">${escapeText(i.kind)}</span>` : ""}
                   <i class="ap-icon-chevron-right rpanel-sources__idea-chevron" aria-hidden="true"></i>
@@ -2316,7 +2316,7 @@ function renderClipsList(entries) {
       ? `
         <div class="rpanel-outputs__footer">
           <button type="button" class="ap-button mermaid" data-rpanel-clips-draft>
-            <i class="ap-icon-sparkles"></i>
+            <i class="ap-icon-archie-official"></i>
             <span>Draft posts from ${selectedCount} clip${selectedCount > 1 ? "s" : ""}</span>
           </button>
         </div>
@@ -2336,7 +2336,7 @@ function renderIdeasList() {
   if (sorted.length === 0) {
     return html`
       <div class="app-right-panel__empty rpanel-ideas__no-match">
-        <div class="app-right-panel__empty-icon"><i class="ap-icon-sparkles"></i></div>
+        <div class="app-right-panel__empty-icon"><i class="ap-icon-archie-official"></i></div>
         <div class="app-right-panel__empty-title">No ideas match</div>
         <div class="app-right-panel__empty-sub">Switch to a different kind, or pick All to broaden the list.</div>
         <div class="app-right-panel__empty-action">
@@ -3373,7 +3373,7 @@ const VOICE_PROFILE_SECTIONS = [
   { id: "vocabulary", label: "Vocabulary", icon: "ap-icon-note" },
   { id: "sentenceStructure", label: "Sentence structure", icon: "ap-icon-numbered-list" },
   { id: "formality", label: "Formality", icon: "ap-icon-target" },
-  { id: "personality", label: "Personality", icon: "ap-icon-sparkles" },
+  { id: "personality", label: "Personality", icon: "ap-icon-archie-official" },
   { id: "rhetoricalDevices", label: "Rhetorical devices", icon: "ap-icon-megaphone" },
   { id: "emotionalTone", label: "Emotional tone", icon: "ap-icon-heart" },
   { id: "contentPatterns", label: "Content patterns", icon: "ap-icon-view-grid" },
@@ -3395,13 +3395,13 @@ function renderBriefVoiceProfile(d, isRead) {
   const headlinePill = headline
     ? `
         <div class="context-brief__voice-headline">
-          <i class="ap-icon-sparkles"></i>
+          <i class="ap-icon-archie-official"></i>
           <span>${escapeText(headline)}</span>
         </div>
       `
     : `
         <div class="context-brief__voice-headline is-empty">
-          <i class="ap-icon-sparkles"></i>
+          <i class="ap-icon-archie-official"></i>
           <span>No voice headline yet</span>
         </div>
       `;

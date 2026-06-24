@@ -153,7 +153,7 @@ export function renderPostCard(post, opts = {}) {
     : post.imageUrl
       ? `<img class="posts__card-image" src="${post.imageUrl}" alt="Generated image for this post" loading="lazy" />`
       : `<button type="button" class="posts__card-image-placeholder" data-post-image="${post.id}">
-          <i class="ap-icon-sparkles-mermaid"></i>
+          <i class="ap-icon-archie-official"></i>
           <span>Generate an image</span>
         </button>`;
 
@@ -242,7 +242,7 @@ export function renderPostCard(post, opts = {}) {
             data-post-rewrite-menu="${post.id}"
             ${regenerating ? "disabled" : ""}
           >
-            <i class="ap-icon-sparkles keep-sparkle"></i>
+            <i class="ap-icon-sparkles"></i>
           </button>
           <div class="posts__rewrite-menu" data-post-rewrite-menu-for="${post.id}" role="menu" hidden>
             <button
@@ -289,7 +289,7 @@ export function renderPostCard(post, opts = {}) {
               data-post-rewrite-intent="fresh"
               data-post-id="${post.id}"
             >
-              <i class="ap-icon-sparkles" aria-hidden="true"></i><span>Regenerate</span>
+              <i class="ap-icon-archie-official" aria-hidden="true"></i><span>Regenerate</span>
             </button>
           </div>
         </div>

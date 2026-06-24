@@ -12,7 +12,7 @@ export function chatTurn({ role, text, contentHtml = "" }) {
   //   User → [You label] stacked over a blue bubble, right-aligned
   const isAi = role === "ai";
   const header = isAi
-    ? `<i class="ap-icon-sparkles-mermaid chat-turn-avatar" aria-hidden="true"></i>`
+    ? `<i class="ap-icon-archie-official chat-turn-avatar" aria-hidden="true"></i>`
     : `<span class="chat-turn-role">You</span>`;
 
   return `

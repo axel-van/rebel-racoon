@@ -212,7 +212,7 @@ function renderFooter() {
     <div class="ap-dialog-footer-right">
       <button type="button" class="ap-button transparent grey" data-vc-action="cancel">Cancel</button>
       <button type="button" class="ap-button primary orange" data-vc-action="use-clips" ${n === 0 || editingId ? "disabled" : ""} title="${editingId ? "Finish editing the clip first" : ""}">
-        <i class="ap-icon-sparkles"></i>
+        <i class="ap-icon-archie-official"></i>
         <span>${ctaLabel}</span>
       </button>
     </div>
@@ -275,7 +275,7 @@ function clipCardHTML(clip) {
         </div>
         <div class="vc-row__summary">${escapeHtml(clip.summary || "")}</div>
         <div class="vc-row__why">
-          <i class="ap-icon-sparkles"></i>
+          <i class="ap-icon-archie-official"></i>
           <span>${escapeHtml(clip.why || "")}</span>
         </div>
         <div class="vc-row__tags">${tags}</div>
@@ -312,7 +312,7 @@ function optionsHTML() {
           <span class="cap-ed__meta" data-ce-reconcile></span>
         </div>
         <button type="button" class="cap-ed__cleanup-btn" data-ce="open-cleanup" aria-pressed="false">
-          <i class="ap-icon-sparkles"></i><span>Speech cleanup</span>
+          <i class="ap-icon-archie-official"></i><span>Speech cleanup</span>
           <span class="cap-ed__cleanup-count" data-ce-cleanup-count></span>
         </button>
         <div class="cap-ed__cleanup-bar" data-ce-cleanup-bar hidden></div>
@@ -336,7 +336,7 @@ function optionsHTML() {
     ${
       draft.why
         ? `<div class="vc-editor__field">
-      <label class="vc-editor__label vc-editor__label--ai"><i class="ap-icon-sparkles" aria-hidden="true"></i> Why I picked this</label>
+      <label class="vc-editor__label vc-editor__label--ai"><i class="ap-icon-archie-official" aria-hidden="true"></i> Why I picked this</label>
       <p class="vc-editor__why">${escapeHtml(draft.why)}</p>
     </div>`
         : ""

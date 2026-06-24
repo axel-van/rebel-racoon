@@ -56,7 +56,7 @@ export const recentSessions = [
 export const chatStarters = [
   {
     id: "starter-batch",
-    icon: "ap-icon-sparkles-mermaid",
+    icon: "ap-icon-archie-official",
     tone: "mermaid",
     title: "Batch from a source",
     subtitle: "Pull the strongest ideas and draft a set of posts across your networks.",

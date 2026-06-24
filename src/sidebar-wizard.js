@@ -328,7 +328,7 @@ const VOICE_SOURCE = {
       caption: "LinkedIn, X, Threads…",
     },
     { value: "document", label: "Upload a document", icon: "ap-icon-file--text", caption: "PDF, DOCX, Markdown" },
-    { value: "done", label: "Use the sources already attached", icon: "ap-icon-sparkles" },
+    { value: "done", label: "Use the sources already attached", icon: "ap-icon-archie-official" },
   ],
   handler: "wizard-answer",
   customPlaceholder: "Something else — type your answer…",

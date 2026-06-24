@@ -216,7 +216,7 @@ export function renderIdeaCard(
               class="ap-button mermaid"
               data-idea-generate="${idea.id}"
             >
-              <i class="ap-icon-sparkles"></i>
+              <i class="ap-icon-archie-official"></i>
               <span>Draft post</span>
             </button>
 

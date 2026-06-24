@@ -217,7 +217,7 @@ export function renderClipCard(
             class="ap-button secondary blue rpanel-ideas__use"
             data-clip-draft="${escapeAttr(clip.id)}"
           >
-            <i class="ap-icon-sparkles"></i>
+            <i class="ap-icon-archie-official"></i>
             <span>Draft</span>
           </button>
         </div>
