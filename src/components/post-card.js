@@ -244,52 +244,53 @@ export function renderPostCard(post, opts = {}) {
           >
             <i class="ap-icon-sparkles"></i>
           </button>
-          <div class="posts__rewrite-menu" data-post-rewrite-menu-for="${post.id}" role="menu" hidden>
+          <div
+            class="ap-action-dropdown posts__rewrite-menu"
+            data-post-rewrite-menu-for="${post.id}"
+            role="menu"
+            hidden
+          >
+            ${raw(
+              [
+                { intent: "shorter", label: "Shorter", icon: "ap-icon-shorten" },
+                { intent: "longer", label: "Longer", icon: "ap-icon-lenghten" },
+                { intent: "warmer", label: "Warmer", icon: "ap-icon-heart" },
+                { intent: "formal", label: "More formal", icon: "ap-icon-user-graduate" },
+              ]
+                .map(
+                  ({ intent, label, icon }) => html`
+                    <button
+                      type="button"
+                      class="ap-action-dropdown-item"
+                      role="menuitem"
+                      data-post-rewrite-intent="${intent}"
+                      data-post-id="${post.id}"
+                    >
+                      <i class="${icon}" aria-hidden="true"></i>
+                      <div class="ap-action-dropdown-item-text">
+                        <div class="ap-action-dropdown-item-label-container">
+                          <span class="ap-action-dropdown-item-label">${label}</span>
+                        </div>
+                      </div>
+                    </button>
+                  `,
+                )
+                .join(""),
+            )}
+            <div class="ap-action-dropdown-divider" role="separator"></div>
             <button
               type="button"
-              class="posts__rewrite-item"
-              role="menuitem"
-              data-post-rewrite-intent="shorter"
-              data-post-id="${post.id}"
-            >
-              Shorter
-            </button>
-            <button
-              type="button"
-              class="posts__rewrite-item"
-              role="menuitem"
-              data-post-rewrite-intent="longer"
-              data-post-id="${post.id}"
-            >
-              Longer
-            </button>
-            <button
-              type="button"
-              class="posts__rewrite-item"
-              role="menuitem"
-              data-post-rewrite-intent="warmer"
-              data-post-id="${post.id}"
-            >
-              Warmer
-            </button>
-            <button
-              type="button"
-              class="posts__rewrite-item"
-              role="menuitem"
-              data-post-rewrite-intent="formal"
-              data-post-id="${post.id}"
-            >
-              More formal
-            </button>
-            <div class="posts__rewrite-sep" role="separator"></div>
-            <button
-              type="button"
-              class="posts__rewrite-item"
+              class="ap-action-dropdown-item"
               role="menuitem"
               data-post-rewrite-intent="fresh"
               data-post-id="${post.id}"
             >
-              <i class="ap-icon-archie-official" aria-hidden="true"></i><span>Regenerate</span>
+              <i class="ap-icon-sparkles" aria-hidden="true"></i>
+              <div class="ap-action-dropdown-item-text">
+                <div class="ap-action-dropdown-item-label-container">
+                  <span class="ap-action-dropdown-item-label">Regenerate</span>
+                </div>
+              </div>
             </button>
           </div>
         </div>
