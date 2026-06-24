@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=143";
+import { renderTopbar } from "../components/topbar.js?v=144";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -29,16 +29,16 @@ import {
   submitAssistantChoice,
   sendConnectorMessage,
   markConnectPromptResolved,
-} from "../assistant.js?v=51";
+} from "../assistant.js?v=52";
 import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=41";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=30";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=42";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=31";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=15";
+} from "../composer-mentions.js?v=16";
 import {
   getPosts,
   addPostDraft,
@@ -46,13 +46,13 @@ import {
   setSubtitleStyle,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=31";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=42";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=34";
-import * as topPostsFlow from "../top-posts-flow.js?v=21";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=43";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=35";
+import * as topPostsFlow from "../top-posts-flow.js?v=22";
 import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=11";
 import * as sidebarWizard from "../sidebar-wizard.js?v=46";
 import * as inlineQuestion from "../inline-question.js?v=40";
-import * as clipStudio from "../clip-studio.js?v=16";
+import * as clipStudio from "../clip-studio.js?v=17";
 import * as batchStudio from "../batch-studio.js?v=4";
 import { askConnector } from "../connector-ask.js?v=5";
 import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=25";
@@ -62,8 +62,8 @@ import {
   clearActiveConnector,
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
-import { isFlagOn } from "../feature-flags.js?v=7";
-import * as contextBuilder from "../context-builder.js?v=125";
+import { isFlagOn } from "../feature-flags.js?v=8";
+import * as contextBuilder from "../context-builder.js?v=126";
 import { renderPicker } from "./_analyse-common.js?v=46";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -76,8 +76,8 @@ import {
 } from "../components/content-workspace.js?v=25";
 import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=27";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=47";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=45";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=53";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=46";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=54";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=8";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
@@ -94,7 +94,7 @@ import {
   updateSourceClips,
   extractClipsForSource,
   setSourceIdeaCount,
-} from "../sources-stream.js?v=43";
+} from "../sources-stream.js?v=44";
 import { renderClipCard } from "../components/clip-card.js?v=7";
 import { showToast } from "../components/toast.js?v=20";
 import { open as openTopPostModal } from "../components/top-post-modal.js?v=4";
@@ -104,12 +104,24 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=212";
+} from "../components/right-panel.js?v=213";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=12";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=17";
+import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=13";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=18";
 import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=14";
+// Pure thread-turn renderers — shared with the component handoff gallery so
+// the previews there never drift from the app (handoff/components.html).
+import {
+  SWITCH_SKELETON_HTML,
+  renderMessageBubble,
+  renderSourceIntakeTurn,
+  renderChoiceTurn,
+  renderNotice,
+  renderSystemNotice,
+  renderExtractingNotice,
+  renderResultCard,
+} from "./session/thread-turns.js?v=1";
 
 // Default composer placeholder — restored whenever no connector is attached.
 // A connected connector swaps it for "Ask {name} anything…".
@@ -302,15 +314,6 @@ function isThreadStarted(messages) {
 // Skeleton bubbles shown for a short beat when switching chats. Alternating
 // assistant (left) / user (right) placeholders with a shimmer, so the
 // conversation area reads as "loading" before the real thread swaps in.
-const SWITCH_SKELETON_HTML = `
-  <div class="thread-skeleton" aria-hidden="true">
-    <div class="thread-skeleton__row thread-skeleton__row--in"><span class="thread-skeleton__bubble" style="width:62%"></span></div>
-    <div class="thread-skeleton__row thread-skeleton__row--out"><span class="thread-skeleton__bubble" style="width:48%"></span></div>
-    <div class="thread-skeleton__row thread-skeleton__row--in"><span class="thread-skeleton__bubble" style="width:74%"></span></div>
-    <div class="thread-skeleton__row thread-skeleton__row--in"><span class="thread-skeleton__bubble" style="width:40%"></span></div>
-  </div>
-`;
-
 // Render the skeleton into the thread, then restore the real content after a
 // short delay. Synchronous innerHTML swap (before the browser paints) means the
 // real thread never flashes first. Self-skips when there's no started thread to
@@ -2553,7 +2556,8 @@ function renderTurn(message, sessionId) {
 
   // Right-aligned "Source intake" turn — Figma 25:1127 / 25:1131.
   if (message.role === "source-intake") {
-    return renderSourceIntakeTurn(message, sessionId);
+    const source = message.sourceId ? getStreamSources(sessionId).find((s) => s.id === message.sourceId) : null;
+    return renderSourceIntakeTurn(message, source);
   }
 
   // AI extraction result — Figma 25:1053.
@@ -2618,21 +2622,7 @@ function renderTurn(message, sessionId) {
     return renderConnectPromptTurn(message);
   }
 
-  const isAi = message.role === "assistant";
-  const bubbleClass = isAi ? "chat-bubble--ai" : "chat-bubble--user";
-  const turnClass = isAi ? "chat-turn--ai" : "chat-turn--user";
-  const loadingClass = message.status === "loading" ? " is-loading" : "";
-  const header = isAi
-    ? `<i class="ap-icon-archie-official chat-turn-avatar" aria-hidden="true"></i>`
-    : `<span class="chat-turn-role">You</span>`;
-  return `
-    <div class="chat-turn ${turnClass}">
-      ${header}
-      <div class="chat-bubble ${bubbleClass}${loadingClass}">
-        <p class="chat-bubble-text">${message.text}</p>
-      </div>
-    </div>
-  `;
+  return renderMessageBubble(message);
 }
 
 // Visual echo of the selected profiles — a right-aligned wrap of chips.
@@ -2670,44 +2660,6 @@ function renderSelectionEchoTurn(echo) {
       </div>
     </div>
   `;
-}
-
-// Shared collapsible notice scaffold — the <details>/<summary> + status pill
-// + chevron used by both the system/drafting notices and the extraction turn.
-// `bodyHtml` is the collapsed content (caller owns its wrapper). Figma 25:1413.
-function renderNotice({
-  variant = "grey",
-  label = "",
-  open = true,
-  loading = false,
-  showChevron = true,
-  bodyHtml = "",
-} = {}) {
-  const variantClass = variant === "mermaid" ? " assistant-notice--mermaid" : "";
-  const loadingClass = loading ? " is-loading" : "";
-  const openAttr = open ? " open" : "";
-  const statusClass = variant === "mermaid" ? "ap-status mermaid" : "ap-status grey";
-  return `
-    <details class="assistant-notice${variantClass}${loadingClass}"${openAttr}>
-      <summary class="assistant-notice__toggle">
-        <span class="${statusClass}">${label}</span>
-        ${showChevron ? '<i class="ap-icon-chevron-down assistant-notice__chevron"></i>' : ""}
-      </summary>
-      ${bodyHtml}
-    </details>
-  `;
-}
-
-function renderSystemNotice(message) {
-  const hasDetail = !!message.text;
-  return renderNotice({
-    variant: message.variant === "mermaid" ? "mermaid" : "grey",
-    label: message.meta || "System",
-    open: !!message.open,
-    loading: message.status === "loading",
-    showChevron: hasDetail,
-    bodyHtml: hasDetail ? `<div class="assistant-notice__detail">${message.text}</div>` : "",
-  });
 }
 
 // "Connect this service first" prompt — Archie can't import a pasted link
@@ -2772,114 +2724,6 @@ function renderConnectPromptTurn(message) {
 // Wrapped in role=status + aria-label so screen readers announce that
 // extraction is running (the bare "Extracting" pill is meaningless out
 // of context).
-function renderExtractingNotice() {
-  return `
-    <div class="chat-turn chat-turn--ai chat-turn--extracting">
-      <div class="extracting-notice" role="status" aria-label="Extracting ideas from this source">
-        <span class="ap-status mermaid">Extracting</span>
-        <span class="extracting-notice__spinner" aria-hidden="true"></span>
-      </div>
-    </div>
-  `;
-}
-
-function renderSourceIntakeTurn(message, sessionId) {
-  // Kind icon — map the raw kind label (from sources-stream) to the DS
-  // icon name. Lowercased so "PDF" / "Video" / "URL" / "Word" / "Image"
-  // / "Audio" all resolve.
-  const iconByKind = {
-    pdf: "ap-icon-file--pdf",
-    video: "ap-icon-file--video",
-    url: "ap-icon-link",
-    word: "ap-icon-file--text",
-    text: "ap-icon-file--text",
-    image: "ap-icon-file--image",
-    audio: "ap-icon-file",
-  };
-  const kindKey = (message.kind || "").toLowerCase();
-  const icon = iconByKind[kindKey] || "ap-icon-file";
-  const isLoading = message.status === "loading";
-
-  // Resolve the backing source so a URL reflects its service: a recognised
-  // link (YouTube, Drive, Notion, …) shows the service logo instead of the
-  // generic link glyph. Falls back to the kind icon for plain links.
-  const src = message.sourceId ? getStreamSources(sessionId).find((s) => s.id === message.sourceId) : null;
-  const kindIcon = src?.serviceLogo
-    ? `<img class="chat-bubble-source-intake__kind chat-bubble-source-intake__kind--logo" src="${escapeHtmlAttr(
-        src.serviceLogo,
-      )}" alt="" aria-hidden="true" />`
-    : `<i class="${icon} chat-bubble-source-intake__kind" aria-hidden="true"></i>`;
-
-  // v2 single-line layout (see styles/chat.css and handoff §2). The
-  // sub-line is gone — state lives in a trailing slot with these
-  // variants driven by (isLoading, ideaCount > 0, clips > 0):
-  //   loading        → muted grey pill with inline dot + "Uploading"
-  //   ready + ideas  → solid electric-blue pill "N ideas ›" → Ideas panel
-  //   ready + clips  → second pill "M clips ›" → Clips panel (Video only)
-  //   ready, none    → bare green check icon
-  let trailing;
-  if (isLoading) {
-    trailing = `
-      <span class="chat-bubble-source-intake__loading" role="status" aria-label="Uploading">
-        <span class="chat-bubble-source-intake__spinner" aria-hidden="true"></span>
-        <span>Uploading</span>
-      </span>
-    `;
-  } else if (message.sourceId) {
-    const ideas = src?.ideaCount || 0;
-    const clips = Array.isArray(src?.clips) ? src.clips.length : 0;
-    const pills = [];
-    if (ideas > 0) {
-      const ideasLabel = `${ideas} idea${ideas === 1 ? "" : "s"}`;
-      pills.push(`
-        <button
-          type="button"
-          class="chat-bubble-source-intake__pill"
-          data-source-intake-open-ideas
-          aria-label="Open ${ideasLabel} in Ideas panel"
-        >
-          <span>${ideasLabel}</span>
-          <i class="ap-icon-chevron-right" aria-hidden="true"></i>
-        </button>
-      `);
-    }
-    if (clips > 0) {
-      const clipsLabel = `${clips} clip${clips === 1 ? "" : "s"}`;
-      pills.push(`
-        <button
-          type="button"
-          class="chat-bubble-source-intake__pill"
-          data-source-intake-open-clips
-          aria-label="Open ${clipsLabel} in Clips panel"
-        >
-          <span>${clipsLabel}</span>
-          <i class="ap-icon-chevron-right" aria-hidden="true"></i>
-        </button>
-      `);
-    }
-    if (pills.length > 0) {
-      trailing = pills.join("");
-    } else {
-      trailing = `<i class="ap-icon-rounded-check_fill chat-bubble-source-intake__check" aria-hidden="true"></i>`;
-    }
-  } else {
-    // Ready but no sourceId resolved yet — degrade to a bare check.
-    trailing = `<i class="ap-icon-rounded-check_fill chat-bubble-source-intake__check" aria-hidden="true"></i>`;
-  }
-
-  const filename = message.filename || "";
-  return `
-    <div class="chat-turn chat-turn--user">
-      <span class="chat-turn-role">${message.meta || "Source intake"}</span>
-      <div class="chat-bubble chat-bubble--source-intake" data-intake-status="${message.status || "ready"}">
-        ${kindIcon}
-        <span class="chat-bubble-source-intake__name" title="${filename}">${filename}</span>
-        ${trailing}
-      </div>
-    </div>
-  `;
-}
-
 // Per-idea interaction state for the extraction-turn cards (the shared compact
 // idea card is a pure renderer, so the consumer owns this). Toggled by the
 // data-rpanel-* handlers in bindSession, which then repaint the single card.
@@ -3484,76 +3328,6 @@ function rerenderContentWorkspace(root, session) {
 }
 
 // Channel-picker choice turn — chips toggle on click, "Draft them" submits.
-function renderChoiceTurn(message) {
-  const isAnswered = message.status === "answered";
-  // Preview-rich chips (e.g. subtitle style picker) carry a `preview`
-  // string per choice that's rendered above the label as a styled
-  // sample. The chip is taller and the icon slot is dropped — the
-  // sample text *is* the icon visually.
-  const hasPreviews = (message.choices || []).some((c) => typeof c.preview === "string" && c.preview.length > 0);
-  const chips = (message.choices || [])
-    .map((c) => {
-      const isSelected = (message.selected || []).includes(c.value);
-      const selectedClass = isSelected ? " is-selected" : "";
-      const previewClass = c.preview ? ` chat-bubble-choice-chip--${c.previewKind || "preview"}` : "";
-      // Selected affordance — the same filled blue check badge as the picker
-      // rows. Always in the markup, CSS-hidden until the chip is .is-selected
-      // (selection is a pure DOM toggle, so it can't be rendered conditionally).
-      const checkBadge = `<span class="chat-bubble-choice-check" aria-hidden="true"><i class="ap-icon-check"></i></span>`;
-      const inner = c.preview
-        ? `<span class="chat-bubble-choice-preview chat-bubble-choice-preview--${c.previewKind || "default"}">${c.preview}</span>
-           <span class="chat-bubble-choice-label">${c.label}</span>${checkBadge}`
-        : `<i class="${c.icon}" aria-hidden="true"></i>
-           <span>${c.label}</span>${checkBadge}`;
-      if (isAnswered) {
-        return `<span class="chat-bubble-choice-chip${selectedClass}${previewClass}">
-          ${inner}
-        </span>`;
-      }
-      return `<button
-        type="button"
-        class="chat-bubble-choice-chip${selectedClass}${previewClass}"
-        data-assistant-choice="${c.value}"
-        data-assistant-choice-msg="${message.id}"
-        aria-pressed="${isSelected ? "true" : "false"}"
-      >
-        ${inner}
-      </button>`;
-    })
-    .join("");
-  const choicesRowClass = hasPreviews ? "chat-bubble-choices chat-bubble-choices--visual" : "chat-bubble-choices";
-
-  const submitLabel = message.submitLabel || "Submit";
-  // Instant pickers (single click = submit) skip the Submit button — the
-  // chip-click handler fires the handler directly.
-  const footer =
-    isAnswered || message.instant
-      ? ""
-      : `<div class="chat-bubble-choices-footer">
-        <button
-          type="button"
-          class="ap-button primary blue"
-          data-assistant-choice-submit="${message.id}"
-          ${(message.selected || []).length === 0 ? "disabled" : ""}
-        >
-          <span>${submitLabel}</span>
-        </button>
-      </div>`;
-
-  return `
-    <div class="chat-turn chat-turn--ai">
-      <i class="ap-icon-archie-official chat-turn-avatar" aria-hidden="true"></i>
-      <div class="chat-bubble chat-bubble--ai">
-        <p class="chat-bubble-text">${message.text}</p>
-        <div class="chat-bubble-choices-card">
-          <div class="${choicesRowClass}">${chips}</div>
-          ${footer}
-        </div>
-      </div>
-    </div>
-  `;
-}
-
 // Network → icon mapping — used both in the Drafts summary card network row
 // and (later) by the Drafts work-surface in Lot 4. Keep the slug list aligned
 // with mocks.socialAccounts so the visual surfaces never miss a network.
@@ -3571,67 +3345,6 @@ function networkLabel(network) {
   if (network === "twitter") return "X";
   if (!network) return "";
   return network.charAt(0).toUpperCase() + network.slice(1);
-}
-
-// ─── Shared in-thread result card ──────────────────────────────────────────
-//
-// One renderer for every "result of a long AI job" card in the thread: the
-// drafts batch, the clips-ready card, the ideas-ready card, plus the pending
-// ("…cutting your clips") and unavailable ("clips no longer available")
-// states. Composes .ap-card + .drafts-card so all of them read as one family
-// (the user's brief: "globalement la même chose: le résultat d'un long
-// travail").
-//
-//   state="ready"        → full-width <button>, mermaid tile + chevron CTA
-//   state="pending"      → non-interactive, ring spinner in the tile, no CTA
-//   state="unavailable"  → non-interactive, muted file-icon tile, no CTA
-//
-// opts:
-//   state, title, sub (HTML), extraHtml (inserted between title + sub),
-//   icon (glyph class for ready/unavailable tiles; ready defaults to the
-//   mermaid sparkles), cta { label }, dataAttr (root <button> data-* hook),
-//   active (drafts is-active anchor), busyLabel (pending spinner a11y label).
-function renderResultCard({
-  state = "ready",
-  title = "",
-  sub = "",
-  extraHtml = "",
-  icon = "ap-icon-archie-official",
-  cta = null,
-  dataAttr = "",
-  active = false,
-  busyLabel = "Working",
-} = {}) {
-  const tile =
-    state === "pending"
-      ? `<span class="drafts-card__icon drafts-card__icon--spinner">
-           <span class="drafts-card__spinner" role="status" aria-label="${escapeHtmlAttr(busyLabel)}"></span>
-         </span>`
-      : `<span class="drafts-card__icon${state === "unavailable" ? " drafts-card__icon--muted" : ""}" aria-hidden="true">
-           <i class="${icon}"></i>
-         </span>`;
-  const ctaHtml =
-    state === "ready" && cta
-      ? `<span class="drafts-card__cta" aria-hidden="true">
-           <span class="drafts-card__cta-label">${escapeHtml(cta.label)}</span>
-           <i class="ap-icon-chevron-right"></i>
-         </span>`
-      : "";
-  const body = `
-    ${tile}
-    <span class="drafts-card__main">
-      <span class="drafts-card__title-row">
-        <span class="drafts-card__title">${escapeHtml(title)}</span>
-      </span>
-      ${extraHtml}
-      ${sub ? `<span class="drafts-card__sub">${sub}</span>` : ""}
-    </span>
-    ${ctaHtml}
-  `;
-  if (state === "ready") {
-    return `<button type="button" class="ap-card drafts-card${active ? " is-active" : ""}" ${dataAttr}>${body}</button>`;
-  }
-  return `<div class="ap-card drafts-card drafts-card--${state}">${body}</div>`;
 }
 
 // Pending → ready clip-extraction card. The turn carries only the sourceId

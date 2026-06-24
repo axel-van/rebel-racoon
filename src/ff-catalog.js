@@ -57,7 +57,7 @@ export const FLAGS = Object.freeze([
   {
     id: "hidePlaybookColors",
     label: "Hide playbook colors",
-    default: false,
+    default: true,
     hides:
       "When ON, hides the playbook color visuals everywhere: the top " +
       "stripe + palette dots on /contexts cards, the color dot on " +

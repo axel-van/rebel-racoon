@@ -213,10 +213,10 @@
   text-align: right;
 }
 
-/* Playbook select — a comfortable fixed-ish width, not full-bleed. */
+/* Playbook select — always a fixed 256px, never grows or shrinks. */
 .batch-studio__playbook {
-  flex: 0 1 300px;
-  min-width: 0;
+  flex: 0 0 256px;
+  width: 256px;
 }
 .batch-studio__playbook > .ap-select-trigger {
   width: 100%;

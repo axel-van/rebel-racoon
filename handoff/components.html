@@ -385,9 +385,12 @@
         <h1>Conversation thread — component handoff</h1>
         <p>
           A visual gallery of the components that render inside the
-          <code>.session__assistant-thread</code> on <code>/session/:id</code>. Each entry shows a live preview, its
-          name, and its main CSS class. Inspect a preview in dev tools for the full markup — styles cascade from the
-          live <code>styles/</code> directory, so this page always reflects the current tokens.
+          <code>.session__assistant-thread</code> on <code>/session/:id</code>. Every preview is rendered
+          <strong>live</strong> by importing the app&rsquo;s own renderers — the shared pure functions in
+          <code>src/screens/session/thread-turns.js</code> and <code>src/screens/_analyse-common.js</code> (the same
+          ones <code>session.js</code> uses). Markup and styles both cascade from <code>src/</code> +
+          <code>styles/</code>, so this page can never drift from the app. Inspect a preview in dev tools for the full
+          markup.
         </p>
         <div class="hd-meta">
           <span>
@@ -415,7 +418,7 @@
           <li><a href="#bubble-content">3. Bubble content blocks</a></li>
           <li><a href="#choices">4. Choice chips</a></li>
           <li><a href="#extraction">5. Extraction turn (Idea cards)</a></li>
-          <li><a href="#drafts">6. Drafts summary card</a></li>
+          <li><a href="#drafts">6. Drafts result (not inline)</a></li>
           <li><a href="#clip-extraction">7. Clip / Idea extraction card</a></li>
           <li><a href="#notices">8. Notices (mermaid, grey, extracting)</a></li>
           <li><a href="#quick-picker">9. Quick picker (inline question)</a></li>
@@ -444,17 +447,7 @@
             </div>
           </header>
           <div class="hd-comp__body">
-            <div class="hd-comp__preview">
-              <div class="chat-turn chat-turn--ai">
-                <i class="ap-icon-archie-official chat-turn-avatar" aria-hidden="true"></i>
-                <div class="chat-bubble chat-bubble--ai">
-                  <p class="chat-bubble-text">
-                    I&rsquo;ll help you pick sources, sharpen angles, and draft posts. Attach a playbook (Voice, Brief,
-                    Brand) any time to make my suggestions sharper.
-                  </p>
-                </div>
-              </div>
-            </div>
+            <div class="hd-comp__preview" data-live="turn-ai"></div>
           </div>
         </article>
 
@@ -468,14 +461,7 @@
             </div>
           </header>
           <div class="hd-comp__body">
-            <div class="hd-comp__preview">
-              <div class="chat-turn chat-turn--user">
-                <span class="chat-turn-role">You</span>
-                <div class="chat-bubble chat-bubble--user">
-                  <p class="chat-bubble-text">Pull the strongest moments from the customer call and draft a post.</p>
-                </div>
-              </div>
-            </div>
+            <div class="hd-comp__preview" data-live="turn-user"></div>
           </div>
         </article>
 
@@ -493,27 +479,7 @@
             </div>
           </header>
           <div class="hd-comp__body">
-            <div class="hd-comp__preview">
-              <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
-                <button type="button" class="ap-card drafts-card">
-                  <span class="drafts-card__icon" aria-hidden="true">
-                    <i class="ap-icon-archie-official"></i>
-                  </span>
-                  <span class="drafts-card__main">
-                    <span class="drafts-card__title-row">
-                      <span class="drafts-card__title">5 clips to review</span>
-                    </span>
-                    <span class="drafts-card__sub"
-                      >From <span class="drafts-card__sub-quote">founder-keynote.mp4</span></span
-                    >
-                  </span>
-                  <span class="drafts-card__cta" aria-hidden="true">
-                    <span class="drafts-card__cta-label">Open clips</span>
-                    <i class="ap-icon-chevron-right"></i>
-                  </span>
-                </button>
-              </div>
-            </div>
+            <div class="hd-comp__preview" data-live="turn-clip"></div>
           </div>
         </article>
 
@@ -547,16 +513,7 @@
             </div>
           </header>
           <div class="hd-comp__body">
-            <div class="hd-comp__preview">
-              <div class="chat-turn chat-turn--ai">
-                <i class="ap-icon-archie-official chat-turn-avatar" aria-hidden="true"></i>
-                <div class="chat-bubble chat-bubble--ai">
-                  <p class="chat-bubble-text">
-                    Sounds good. I have the call. Want me to extract themes or jump straight to drafts?
-                  </p>
-                </div>
-              </div>
-            </div>
+            <div class="hd-comp__preview" data-live="bubble-ai"></div>
           </div>
         </article>
 
@@ -568,20 +525,7 @@
             </div>
           </header>
           <div class="hd-comp__body">
-            <div class="hd-comp__preview">
-              <div class="chat-turn chat-turn--user">
-                <span class="chat-turn-role">You</span>
-                <div class="chat-bubble chat-bubble--user">
-                  <p class="chat-bubble-text">Plan a 5-day launch sequence using the offsite notes.</p>
-                </div>
-              </div>
-              <div class="chat-turn chat-turn--user">
-                <span class="chat-turn-role">You</span>
-                <div class="chat-bubble chat-bubble--user is-loading">
-                  <p class="chat-bubble-text">Pending message (is-loading)…</p>
-                </div>
-              </div>
-            </div>
+            <div class="hd-comp__preview" data-live="bubble-user"></div>
           </div>
         </article>
 
@@ -602,78 +546,22 @@
             <div class="hd-comp__preview">
               <div class="hd-preview-row">
                 <span class="hd-preview-row__label">Loading</span>
-                <div class="chat-turn chat-turn--user">
-                  <span class="chat-turn-role">Source intake</span>
-                  <div class="chat-bubble chat-bubble--source-intake" data-intake-status="loading">
-                    <i class="ap-icon-file--pdf chat-bubble-source-intake__kind" aria-hidden="true"></i>
-                    <span class="chat-bubble-source-intake__name" title="riverside-discovery-call.pdf">
-                      riverside-discovery-call.pdf
-                    </span>
-                    <span class="chat-bubble-source-intake__loading" role="status" aria-label="Uploading">
-                      <span class="chat-bubble-source-intake__spinner" aria-hidden="true"></span>
-                      <span>Uploading</span>
-                    </span>
-                  </div>
-                </div>
+                <div data-live="intake-loading"></div>
               </div>
 
               <div class="hd-preview-row">
                 <span class="hd-preview-row__label">Ready &middot; with N ideas</span>
-                <div class="chat-turn chat-turn--user">
-                  <span class="chat-turn-role">Source intake</span>
-                  <div class="chat-bubble chat-bubble--source-intake" data-intake-status="ready">
-                    <i class="ap-icon-file--pdf chat-bubble-source-intake__kind" aria-hidden="true"></i>
-                    <span class="chat-bubble-source-intake__name" title="riverside-discovery-call.pdf">
-                      riverside-discovery-call.pdf
-                    </span>
-                    <button
-                      type="button"
-                      class="chat-bubble-source-intake__pill"
-                      aria-label="Open 3 ideas in Ideas panel"
-                    >
-                      <span>3 ideas</span>
-                      <i class="ap-icon-chevron-right" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </div>
+                <div data-live="intake-ideas"></div>
               </div>
 
               <div class="hd-preview-row">
                 <span class="hd-preview-row__label">Ready &middot; no ideas yet</span>
-                <div class="chat-turn chat-turn--user">
-                  <span class="chat-turn-role">Source intake</span>
-                  <div class="chat-bubble chat-bubble--source-intake" data-intake-status="ready">
-                    <i class="ap-icon-file--video chat-bubble-source-intake__kind" aria-hidden="true"></i>
-                    <span class="chat-bubble-source-intake__name" title="founder-keynote-2026.mp4">
-                      founder-keynote-2026.mp4
-                    </span>
-                    <i class="ap-icon-rounded-check_fill chat-bubble-source-intake__check" aria-hidden="true"></i>
-                  </div>
-                </div>
+                <div data-live="intake-noideas"></div>
               </div>
 
               <div class="hd-preview-row">
                 <span class="hd-preview-row__label">Long filename &mdash; ellipsis</span>
-                <div class="chat-turn chat-turn--user">
-                  <span class="chat-turn-role">Source intake</span>
-                  <div class="chat-bubble chat-bubble--source-intake" data-intake-status="ready">
-                    <i class="ap-icon-file--text chat-bubble-source-intake__kind" aria-hidden="true"></i>
-                    <span
-                      class="chat-bubble-source-intake__name"
-                      title="2026-Q1-customer-discovery-interview-transcripts-full-set.docx"
-                    >
-                      2026-Q1-customer-discovery-interview-transcripts-full-set.docx
-                    </span>
-                    <button
-                      type="button"
-                      class="chat-bubble-source-intake__pill"
-                      aria-label="Open 12 ideas in Ideas panel"
-                    >
-                      <span>12 ideas</span>
-                      <i class="ap-icon-chevron-right" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </div>
+                <div data-live="intake-long"></div>
               </div>
             </div>
           </div>
@@ -703,12 +591,7 @@
                 <i class="ap-icon-archie-official chat-turn-avatar" aria-hidden="true"></i>
                 <div class="chat-bubble chat-bubble--ai">
                   <p class="chat-bubble-text">Three angles surfaced from the call:</p>
-                  <div class="chat-bubble-card">
-                    Time-to-value collapses with playbook templates — Riverside cut onboarding by 38%.
-                  </div>
-                  <div class="chat-bubble-card">
-                    Cross-team alignment is the unlock — PMs and marketers stopped duplicating effort.
-                  </div>
+                  <div data-live="bubble-card"></div>
                 </div>
               </div>
             </div>
@@ -730,20 +613,7 @@
                 <i class="ap-icon-archie-official chat-turn-avatar" aria-hidden="true"></i>
                 <div class="chat-bubble chat-bubble--ai">
                   <p class="chat-bubble-text">Ready to draft. Here&rsquo;s what I&rsquo;ll do:</p>
-                  <dl class="chat-bubble-fields">
-                    <div>
-                      <dt>Networks</dt>
-                      <dd>LinkedIn, X, Instagram</dd>
-                    </div>
-                    <div>
-                      <dt>Count</dt>
-                      <dd>5 drafts</dd>
-                    </div>
-                    <div>
-                      <dt>Source</dt>
-                      <dd>riverside-discovery-call.pdf</dd>
-                    </div>
-                  </dl>
+                  <div data-live="bubble-fields"></div>
                 </div>
               </div>
             </div>
@@ -771,37 +641,7 @@
             </div>
           </header>
           <div class="hd-comp__body">
-            <div class="hd-comp__preview">
-              <div class="chat-turn chat-turn--ai">
-                <i class="ap-icon-archie-official chat-turn-avatar" aria-hidden="true"></i>
-                <div class="chat-bubble chat-bubble--ai">
-                  <p class="chat-bubble-text">Which channels should I draft for?</p>
-                  <div class="chat-bubble-choices">
-                    <button type="button" class="chat-bubble-choice-chip is-selected">
-                      <i class="ap-icon-linkedin" aria-hidden="true"></i>
-                      <span>LinkedIn</span>
-                    </button>
-                    <button type="button" class="chat-bubble-choice-chip">
-                      <i class="ap-icon-twitter-official" aria-hidden="true"></i>
-                      <span>X</span>
-                    </button>
-                    <button type="button" class="chat-bubble-choice-chip">
-                      <i class="ap-icon-instagram" aria-hidden="true"></i>
-                      <span>Instagram</span>
-                    </button>
-                    <button type="button" class="chat-bubble-choice-chip">
-                      <i class="ap-icon-tiktok-official" aria-hidden="true"></i>
-                      <span>TikTok</span>
-                    </button>
-                  </div>
-                  <div class="chat-bubble-choices-footer">
-                    <button type="button" class="ap-button primary orange">
-                      <span>Draft them</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <div class="hd-comp__preview" data-live="choices-text"></div>
           </div>
         </article>
 
@@ -816,24 +656,7 @@
             </div>
           </header>
           <div class="hd-comp__body">
-            <div class="hd-comp__preview">
-              <div class="chat-turn chat-turn--ai">
-                <i class="ap-icon-archie-official chat-turn-avatar" aria-hidden="true"></i>
-                <div class="chat-bubble chat-bubble--ai">
-                  <p class="chat-bubble-text">Pick a subtitle style for the clips:</p>
-                  <div class="chat-bubble-choices chat-bubble-choices--visual">
-                    <button type="button" class="chat-bubble-choice-chip chat-bubble-choice-chip--bold">
-                      <span class="chat-bubble-choice-preview chat-bubble-choice-preview--bold">POST</span>
-                      <span class="chat-bubble-choice-label">Bold</span>
-                    </button>
-                    <button type="button" class="chat-bubble-choice-chip chat-bubble-choice-chip--minimal">
-                      <span class="chat-bubble-choice-preview chat-bubble-choice-preview--minimal">POST</span>
-                      <span class="chat-bubble-choice-label">Minimal</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <div class="hd-comp__preview" data-live="choices-visual"></div>
           </div>
         </article>
       </section>
@@ -885,69 +708,21 @@
             6. DRAFTS CARD
             ════════════════════════════════════════════════════════════ -->
       <section class="hd-section" id="drafts">
-        <h2>6. Drafts summary card</h2>
+        <h2>6. Drafts result — not rendered inline</h2>
         <p class="hd-lead">
-          Horizontal in-thread card surfacing the AI&rsquo;s draft batch. Click anywhere opens the Drafts right-panel
-          pinned to this batch.
+          Draft batches are intentionally <strong>not</strong> surfaced as an inline thread card anymore. Drafts can
+          finish while the user is doing something else, so a card here would interleave the conversation unpredictably.
+          The batch message stays in the thread only as the anchor for the Drafts panel; &ldquo;ready&rdquo; is surfaced
+          via a toast + the persistent topbar Drafts count.
         </p>
 
-        <article class="hd-comp">
-          <header class="hd-comp__head">
-            <div>
-              <p class="hd-comp__name"><code>.drafts-card</code></p>
-              <p class="hd-comp__desc">
-                Pen icon · &ldquo;N drafts ready&rdquo; title · network glyphs + descriptor · chevron.
-              </p>
-            </div>
-          </header>
-          <div class="hd-comp__body">
-            <div class="hd-comp__preview">
-              <div class="hd-preview-row">
-                <span class="hd-preview-row__label">Default</span>
-                <div class="chat-turn chat-turn--ai chat-turn--extraction">
-                  <button type="button" class="ap-card drafts-card">
-                    <span class="drafts-card__icon" aria-hidden="true">
-                      <i class="ap-icon-pen"></i>
-                    </span>
-                    <span class="drafts-card__main">
-                      <span class="drafts-card__title">5 drafts ready</span>
-                      <span class="drafts-card__sub">
-                        <span class="ap-tag-list drafts-card__nets">
-                          <i class="ap-icon-linkedin"></i>
-                          <i class="ap-icon-twitter-official"></i>
-                          <i class="ap-icon-instagram"></i>
-                        </span>
-                        <span class="drafts-card__sub-text">Across 3 networks · review, edit, and schedule</span>
-                      </span>
-                    </span>
-                    <i class="ap-icon-chevron-right drafts-card__chevron" aria-hidden="true"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="hd-preview-row">
-                <span class="hd-preview-row__label">Active (panel pinned to this batch)</span>
-                <div class="chat-turn chat-turn--ai chat-turn--extraction">
-                  <button type="button" class="ap-card drafts-card is-active">
-                    <span class="drafts-card__icon" aria-hidden="true">
-                      <i class="ap-icon-pen"></i>
-                    </span>
-                    <span class="drafts-card__main">
-                      <span class="drafts-card__title">3 drafts ready</span>
-                      <span class="drafts-card__sub">
-                        <span class="ap-tag-list drafts-card__nets">
-                          <i class="ap-icon-linkedin"></i>
-                          <i class="ap-icon-twitter-official"></i>
-                        </span>
-                        <span class="drafts-card__sub-text">Across 2 networks · review, edit, and schedule</span>
-                      </span>
-                    </span>
-                    <i class="ap-icon-chevron-right drafts-card__chevron" aria-hidden="true"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </article>
+        <div class="hd-note">
+          <strong>Removed component.</strong> The old <code>.drafts-card</code> summary (pen icon · network glyphs ·
+          <code>.drafts-card__nets</code> / <code>.drafts-card__chevron</code>) is gone — those classes no longer exist
+          in <code>styles/</code> or <code>src/</code>. <code>renderTurn()</code> returns an empty string for
+          <code>variant: "draft"</code>. The live, current result-card family (clips / ideas ready, pending,
+          unavailable) lives in <strong>§7</strong> below, rendered by the shared <code>renderResultCard()</code>.
+        </div>
       </section>
 
       <!-- ════════════════════════════════════════════════════════════════
@@ -974,21 +749,7 @@
             </div>
           </header>
           <div class="hd-comp__body">
-            <div class="hd-comp__preview">
-              <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
-                <div class="ap-card drafts-card drafts-card--pending">
-                  <span class="drafts-card__icon drafts-card__icon--spinner">
-                    <span class="drafts-card__spinner" role="status" aria-label="Extracting clips"></span>
-                  </span>
-                  <span class="drafts-card__main">
-                    <span class="drafts-card__title-row">
-                      <span class="drafts-card__title">Cutting your clips&hellip;</span>
-                    </span>
-                    <span class="drafts-card__sub">About 45s. You can keep chatting.</span>
-                  </span>
-                </div>
-              </div>
-            </div>
+            <div class="hd-comp__preview" data-live="result-pending"></div>
           </div>
         </article>
 
@@ -1002,27 +763,7 @@
             </div>
           </header>
           <div class="hd-comp__body">
-            <div class="hd-comp__preview">
-              <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
-                <button type="button" class="ap-card drafts-card">
-                  <span class="drafts-card__icon" aria-hidden="true">
-                    <i class="ap-icon-archie-official"></i>
-                  </span>
-                  <span class="drafts-card__main">
-                    <span class="drafts-card__title-row">
-                      <span class="drafts-card__title">5 clips to review</span>
-                    </span>
-                    <span class="drafts-card__sub"
-                      >From <span class="drafts-card__sub-quote">founder-keynote.mp4</span></span
-                    >
-                  </span>
-                  <span class="drafts-card__cta" aria-hidden="true">
-                    <span class="drafts-card__cta-label">Open clips</span>
-                    <i class="ap-icon-chevron-right"></i>
-                  </span>
-                </button>
-              </div>
-            </div>
+            <div class="hd-comp__preview" data-live="result-ready"></div>
           </div>
         </article>
 
@@ -1036,21 +777,7 @@
             </div>
           </header>
           <div class="hd-comp__body">
-            <div class="hd-comp__preview">
-              <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
-                <div class="ap-card drafts-card drafts-card--unavailable">
-                  <span class="drafts-card__icon drafts-card__icon--muted" aria-hidden="true">
-                    <i class="ap-icon-file--video"></i>
-                  </span>
-                  <span class="drafts-card__main">
-                    <span class="drafts-card__title-row">
-                      <span class="drafts-card__title">Clips no longer available</span>
-                    </span>
-                    <span class="drafts-card__sub">founder-keynote.mp4 was removed.</span>
-                  </span>
-                </div>
-              </div>
-            </div>
+            <div class="hd-comp__preview" data-live="result-unavailable"></div>
           </div>
         </article>
       </section>
@@ -1080,25 +807,11 @@
             <div class="hd-comp__preview">
               <div class="hd-preview-row">
                 <span class="hd-preview-row__label">Loading</span>
-                <details class="assistant-notice assistant-notice--mermaid is-loading" open>
-                  <summary class="assistant-notice__toggle">
-                    <span class="ap-status mermaid">Drafting</span>
-                    <i class="ap-icon-chevron-down assistant-notice__chevron" aria-hidden="true"></i>
-                  </summary>
-                  <div class="assistant-notice__detail">Thinking through the best next move&hellip;</div>
-                </details>
+                <div data-live="notice-mermaid-loading"></div>
               </div>
               <div class="hd-preview-row">
                 <span class="hd-preview-row__label">Done (closed)</span>
-                <details class="assistant-notice assistant-notice--mermaid">
-                  <summary class="assistant-notice__toggle">
-                    <span class="ap-status mermaid">Drafted 5 posts</span>
-                    <i class="ap-icon-chevron-down assistant-notice__chevron" aria-hidden="true"></i>
-                  </summary>
-                  <div class="assistant-notice__detail">
-                    Drafts ready in the right panel — open Drafts to review and edit.
-                  </div>
-                </details>
+                <div data-live="notice-mermaid-done"></div>
               </div>
             </div>
           </div>
@@ -1112,15 +825,7 @@
             </div>
           </header>
           <div class="hd-comp__body">
-            <div class="hd-comp__preview">
-              <details class="assistant-notice" open>
-                <summary class="assistant-notice__toggle">
-                  <span class="ap-status grey">Playbook switched</span>
-                  <i class="ap-icon-chevron-down assistant-notice__chevron" aria-hidden="true"></i>
-                </summary>
-                <div class="assistant-notice__detail">Now using <strong>Customer stories</strong> for this thread.</div>
-              </details>
-            </div>
+            <div class="hd-comp__preview" data-live="notice-grey"></div>
           </div>
         </article>
 
@@ -1135,14 +840,7 @@
             </div>
           </header>
           <div class="hd-comp__body">
-            <div class="hd-comp__preview">
-              <div class="chat-turn chat-turn--ai chat-turn--extracting">
-                <div class="extracting-notice">
-                  <span class="ap-status mermaid">Extracting</span>
-                  <span class="extracting-notice__spinner" aria-hidden="true"></span>
-                </div>
-              </div>
-            </div>
+            <div class="hd-comp__preview" data-live="notice-extracting"></div>
           </div>
         </article>
       </section>
@@ -1267,22 +965,7 @@
             </div>
           </header>
           <div class="hd-comp__body">
-            <div class="hd-comp__preview">
-              <div class="thread-skeleton" aria-hidden="true">
-                <div class="thread-skeleton__row thread-skeleton__row--in">
-                  <span class="thread-skeleton__bubble" style="width: 62%"></span>
-                </div>
-                <div class="thread-skeleton__row thread-skeleton__row--out">
-                  <span class="thread-skeleton__bubble" style="width: 48%"></span>
-                </div>
-                <div class="thread-skeleton__row thread-skeleton__row--in">
-                  <span class="thread-skeleton__bubble" style="width: 74%"></span>
-                </div>
-                <div class="thread-skeleton__row thread-skeleton__row--in">
-                  <span class="thread-skeleton__bubble" style="width: 40%"></span>
-                </div>
-              </div>
-            </div>
+            <div class="hd-comp__preview" data-live="skeleton"></div>
           </div>
         </article>
       </section>
@@ -1310,7 +993,20 @@
          a case here to make any other component preview live. -->
     <script type="module">
       import { renderCompactIdeaCard } from "../src/components/idea-card-compact.js";
-      import { renderPicker } from "../src/screens/_analyse-common.js";
+      import { renderPicker, bulletsBlock, fieldsBlock } from "../src/screens/_analyse-common.js";
+      // Shared, dependency-free thread-turn renderers — the SAME functions
+      // session.js renders the live thread with. Importing them here is what
+      // keeps §1–§8 + §10 from ever drifting.
+      import {
+        renderMessageBubble,
+        renderSourceIntakeTurn,
+        renderChoiceTurn,
+        renderNotice,
+        renderSystemNotice,
+        renderExtractingNotice,
+        renderResultCard,
+        SWITCH_SKELETON_HTML,
+      } from "../src/screens/session/thread-turns.js";
 
       // Mock data — shaped like the real store objects the renderers expect.
       const SOURCES = [{ id: "s1", filename: "riverside-discovery-call.pdf", kind: "Document" }];
@@ -1395,11 +1091,192 @@
         },
       };
 
+      // Result cards (§7) and the clip-extraction wrapper (§1) live inside a
+      // `.chat-turn--clip-extraction` in the real thread — wrap the card so the
+      // preview matches the app's turn chrome.
+      const clipTurn = (cardHtml) =>
+        `<div class="chat-turn chat-turn--ai chat-turn--clip-extraction">${cardHtml}</div>`;
+
       const FILLERS = {
+        // §1 — Turn wrappers
+        "turn-ai": (slot) => {
+          slot.innerHTML = renderMessageBubble({
+            role: "assistant",
+            text: "I'll help you pick sources, sharpen angles, and draft posts. Attach a playbook (Voice, Brief, Brand) any time to make my suggestions sharper.",
+          });
+        },
+        "turn-user": (slot) => {
+          slot.innerHTML = renderMessageBubble({
+            role: "user",
+            text: "Pull the strongest moments from the customer call and draft a post.",
+          });
+        },
+        "turn-clip": (slot) => {
+          slot.innerHTML = clipTurn(
+            renderResultCard({
+              state: "ready",
+              title: "5 clips to review",
+              sub: 'From <span class="drafts-card__sub-quote">founder-keynote.mp4</span>',
+              cta: { label: "Open clips" },
+            }),
+          );
+        },
+
+        // §2 — Bubbles
+        "bubble-ai": (slot) => {
+          slot.innerHTML = renderMessageBubble({
+            role: "assistant",
+            text: "Sounds good. I have the call. Want me to extract themes or jump straight to drafts?",
+          });
+        },
+        "bubble-user": (slot) => {
+          slot.innerHTML =
+            renderMessageBubble({ role: "user", text: "Plan a 5-day launch sequence using the offsite notes." }) +
+            renderMessageBubble({ role: "user", status: "loading", text: "Pending message (is-loading)…" });
+        },
+        "intake-loading": (slot) => {
+          slot.innerHTML = renderSourceIntakeTurn(
+            { role: "source-intake", kind: "pdf", filename: "riverside-discovery-call.pdf", status: "loading" },
+            null,
+          );
+        },
+        "intake-ideas": (slot) => {
+          slot.innerHTML = renderSourceIntakeTurn(
+            { kind: "pdf", filename: "riverside-discovery-call.pdf", status: "ready", sourceId: "s1" },
+            { ideaCount: 3 },
+          );
+        },
+        "intake-noideas": (slot) => {
+          slot.innerHTML = renderSourceIntakeTurn(
+            { kind: "video", filename: "founder-keynote-2026.mp4", status: "ready", sourceId: "s2" },
+            { ideaCount: 0, clips: [] },
+          );
+        },
+        "intake-long": (slot) => {
+          slot.innerHTML = renderSourceIntakeTurn(
+            {
+              kind: "word",
+              filename: "2026-Q1-customer-discovery-interview-transcripts-full-set.docx",
+              status: "ready",
+              sourceId: "s3",
+            },
+            { ideaCount: 12 },
+          );
+        },
+
+        // §3 — Bubble content blocks
+        "bubble-card": (slot) => {
+          slot.innerHTML = bulletsBlock([
+            "Time-to-value collapses with playbook templates — Riverside cut onboarding by 38%.",
+            "Cross-team alignment is the unlock — PMs and marketers stopped duplicating effort.",
+          ]);
+        },
+        "bubble-fields": (slot) => {
+          slot.innerHTML = fieldsBlock([
+            { label: "Networks", value: "LinkedIn, X, Instagram" },
+            { label: "Count", value: "5 drafts" },
+            { label: "Source", value: "riverside-discovery-call.pdf" },
+          ]);
+        },
+
+        // §4 — Choice chips
+        "choices-text": (slot) => {
+          slot.innerHTML = renderChoiceTurn({
+            id: "demo-choice",
+            text: "Which channels should I draft for?",
+            submitLabel: "Draft them",
+            selected: ["linkedin"],
+            choices: [
+              { value: "linkedin", label: "LinkedIn", icon: "ap-icon-linkedin" },
+              { value: "x", label: "X", icon: "ap-icon-twitter-official" },
+              { value: "instagram", label: "Instagram", icon: "ap-icon-instagram" },
+              { value: "tiktok", label: "TikTok", icon: "ap-icon-tiktok-official" },
+            ],
+          });
+        },
+        "choices-visual": (slot) => {
+          slot.innerHTML = renderChoiceTurn({
+            id: "demo-visual",
+            text: "Pick a subtitle style for the clips:",
+            instant: true,
+            choices: [
+              { value: "bold", label: "Bold", preview: "POST", previewKind: "bold" },
+              { value: "minimal", label: "Minimal", preview: "POST", previewKind: "minimal" },
+            ],
+          });
+        },
+
+        // §5 — Idea cards (already live)
         "idea-cards": (slot) => {
           slot.innerHTML = IDEAS.map((idea) =>
             renderCompactIdeaCard(idea, SOURCES, { whyOpen: idea.id === "demo-1", showMention: false }),
           ).join("");
+        },
+
+        // §7 — Result card states
+        "result-pending": (slot) => {
+          slot.innerHTML = clipTurn(
+            renderResultCard({
+              state: "pending",
+              busyLabel: "Extracting clips",
+              title: "Cutting your clips…",
+              sub: "About 45s. You can keep chatting.",
+            }),
+          );
+        },
+        "result-ready": (slot) => {
+          slot.innerHTML = clipTurn(
+            renderResultCard({
+              state: "ready",
+              title: "5 clips to review",
+              sub: 'From <span class="drafts-card__sub-quote">founder-keynote.mp4</span>',
+              cta: { label: "Open clips" },
+            }),
+          );
+        },
+        "result-unavailable": (slot) => {
+          slot.innerHTML = clipTurn(
+            renderResultCard({
+              state: "unavailable",
+              icon: "ap-icon-file--video",
+              title: "Clips no longer available",
+              sub: "founder-keynote.mp4 was removed.",
+            }),
+          );
+        },
+
+        // §8 — Notices
+        "notice-mermaid-loading": (slot) => {
+          slot.innerHTML = renderSystemNotice({
+            variant: "mermaid",
+            meta: "Drafting",
+            open: true,
+            status: "loading",
+            text: "Thinking through the best next move…",
+          });
+        },
+        "notice-mermaid-done": (slot) => {
+          slot.innerHTML = renderSystemNotice({
+            variant: "mermaid",
+            meta: "Drafted 5 posts",
+            open: false,
+            text: "Drafts ready in the right panel — open Drafts to review and edit.",
+          });
+        },
+        "notice-grey": (slot) => {
+          slot.innerHTML = renderSystemNotice({
+            meta: "Playbook switched",
+            open: true,
+            text: "Now using <strong>Customer stories</strong> for this thread.",
+          });
+        },
+        "notice-extracting": (slot) => {
+          slot.innerHTML = renderExtractingNotice();
+        },
+
+        // §10 — Chat-switch skeleton
+        skeleton: (slot) => {
+          slot.innerHTML = SWITCH_SKELETON_HTML;
         },
       };
       for (const [key, cfg] of Object.entries(PICKERS)) {

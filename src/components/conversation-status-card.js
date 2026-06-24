@@ -25,14 +25,14 @@ import {
   openSources as openSourcesPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=212";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=51";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=43";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=41";
+} from "./right-panel.js?v=213";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=52";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=44";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=42";
 import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=31";
 import { subscribe as subscribeSessions } from "../sessions-store.js?v=3";
-import { addMention } from "../composer-mentions.js?v=15";
-import { isFlagOn } from "../feature-flags.js?v=7";
+import { addMention } from "../composer-mentions.js?v=16";
+import { isFlagOn } from "../feature-flags.js?v=8";
 
 // Two-level structure:
 //   .conversation-status-column   — fills grid column 3 with white bg

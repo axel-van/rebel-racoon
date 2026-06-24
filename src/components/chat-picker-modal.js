@@ -13,8 +13,8 @@
 //   });
 
 import { recentSessions } from "../mocks.js?v=45";
-import { getSources } from "../sources-stream.js?v=43";
-import { getIdeas } from "../library.js?v=41";
+import { getSources } from "../sources-stream.js?v=44";
+import { getIdeas } from "../library.js?v=42";
 import { getPosts } from "../posts-store.js?v=31";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 
