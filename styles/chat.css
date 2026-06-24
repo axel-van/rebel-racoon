@@ -511,11 +511,21 @@
    Copies the .gen-chip pill treatment from modals.css so no shared class
    is needed across two unrelated DOM trees. */
 
+/* Choice chips live inside a DS surface card — same border / radius / surface
+   as the sticky picker's .analyse__options — so the in-thread picker reads as
+   a proper card, not bare pills floating on the (transparent) AI bubble. */
+.chat-bubble-choices-card {
+  margin-top: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-md);
+  background: var(--app-surface);
+}
+
 .chat-bubble-choices {
   display: flex;
   flex-wrap: wrap;
   gap: var(--ref-spacing-xs);
-  margin-top: var(--ref-spacing-sm);
 }
 
 .chat-bubble-choice-chip {

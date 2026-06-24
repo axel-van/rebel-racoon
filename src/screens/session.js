@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=142";
+import { renderTopbar } from "../components/topbar.js?v=143";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -63,7 +63,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=7";
-import * as contextBuilder from "../context-builder.js?v=124";
+import * as contextBuilder from "../context-builder.js?v=125";
 import { renderPicker } from "./_analyse-common.js?v=46";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -104,7 +104,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=211";
+} from "../components/right-panel.js?v=212";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=12";
@@ -3541,8 +3541,10 @@ function renderChoiceTurn(message) {
       <i class="ap-icon-sparkles-mermaid chat-turn-avatar" aria-hidden="true"></i>
       <div class="chat-bubble chat-bubble--ai">
         <p class="chat-bubble-text">${message.text}</p>
-        <div class="${choicesRowClass}">${chips}</div>
-        ${footer}
+        <div class="chat-bubble-choices-card">
+          <div class="${choicesRowClass}">${chips}</div>
+          ${footer}
+        </div>
       </div>
     </div>
   `;
