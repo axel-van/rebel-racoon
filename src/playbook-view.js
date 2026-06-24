@@ -114,8 +114,7 @@ let scrollSpy = null; // IntersectionObserver for the section-nav active state
 //   onEditName(): void,                // header name pencil (rename)
 //   onToggleDefault(): void,           // header star → toggle default (library)
 //   onAnalyzeVoice(): void,            // Voice & style → analyze social profiles
-//   footer(): string,                  // footer button(s) html (onboarding)
-//   onFooter(event): boolean,          // handle footer/header-action clicks
+//   onFooter(event): boolean,          // catch-all click handler (header actions)
 // }
 export function mount(target, config) {
   cfg = config;
@@ -955,14 +954,11 @@ function paint() {
     </div>
   `;
 
-  const footerHtml = cfg.footer ? `<footer class="recap__footer">${cfg.footer()}</footer>` : "";
-
   mountTarget.innerHTML = html`
     <section class="welcome-screen welcome-screen--reveal ${modeClass} ${scope ? "is-editing" : ""}">
       <div class="welcome-screen__bg" aria-hidden="true"></div>
       ${raw(renderTop())}
       <div class="welcome-screen__body recap">${raw(body)}</div>
-      ${raw(footerHtml)}
     </section>
   `;
 

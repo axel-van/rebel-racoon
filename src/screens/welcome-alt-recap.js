@@ -6,7 +6,7 @@
 
 import { navigate } from "../router.js?v=30";
 import { getDraft, isAnalysisReady, save, patchDraft, restoreDraft } from "../context-builder.js?v=125";
-import { mount } from "../playbook-view.js?v=29";
+import { mount } from "../playbook-view.js?v=30";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
 
 const WELCOME_ALT_KEY = "welcomeAltSessionId";
@@ -77,7 +77,10 @@ export function renderWelcomeAltRecap(_params, target) {
         onSubmit: (name) => patchDraft(sid, { name }),
       });
     },
-    footer: () =>
+    // The finish CTA lives in the header action bar (top-right) — the same
+    // slot the library detail uses for its edit actions, so future edit
+    // buttons on this page sit alongside it.
+    headerActions: () =>
       integrated
         ? `<button type="button" class="ap-button primary orange" data-welcome-done><span>Save and continue</span></button>`
         : `<button type="button" class="ap-button primary orange" data-welcome-done>

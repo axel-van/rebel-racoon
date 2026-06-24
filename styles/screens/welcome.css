@@ -992,38 +992,6 @@
   }
 }
 
-/* ── Floating footer ──────────────────────────────────────────────────── */
-/* A floating action bar like the Drafts bulk bar — detached from the
-   bottom edge, centered, card chrome. Scoped with the screen modifier so
-   `position: sticky` beats the `.welcome-screen > *` chrome rule (which
-   forces position: relative). */
-.welcome-screen--reveal .recap__footer {
-  position: sticky;
-  bottom: var(--ref-spacing-lg);
-  z-index: 2;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--ref-spacing-sm);
-  width: fit-content;
-  max-width: calc(100% - var(--ref-spacing-xxl));
-  margin: var(--ref-spacing-lg) auto 0;
-  padding: var(--ref-spacing-xxs);
-  background: var(--app-surface);
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--app-radius-card);
-  box-shadow: var(--app-shadow-low);
-}
-
-/* Onboarding recap CTA gets the larger fixed treatment. The library
-   (playbook detail) footer keeps default DS button sizing — hug content. */
-.welcome-screen:not(.welcome-screen--library) .recap__footer .ap-button {
-  height: 44px;
-  padding: 0 var(--ref-spacing-lg);
-  gap: var(--ref-spacing-xxs);
-}
-
 /* ── Edit mode ────────────────────────────────────────────────────────── */
 /* Editable strategy chips — DS close button + an inline add control. */
 .recap__chips--edit {
