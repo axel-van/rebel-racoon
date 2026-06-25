@@ -194,24 +194,46 @@ export function subscribe(fn) {
   return () => subs.delete(fn);
 }
 
-// Auto-collapse the sidebar whenever a right-panel opens — clawing
-// back the ~204px (260 − 56) so the chat + panel breathe regardless
-// of viewport. We deliberately don't auto-restore on close (the user
-// re-expands manually) and we don't run on mode swaps inside an
-// already-open panel — only on the closed → open transition.
+// Minimum comfortable width for the chat column. Only when opening the
+// panel alongside an expanded sidebar would squeeze the conversation below
+// this floor do we auto-collapse the sidebar to claw back room. On a wide
+// viewport there's plenty of space, so the sidebar stays put.
+const CHAT_MIN_WIDTH_PX = 560;
+// Floor of the panel-width formula in layout.css (max(610px, …)). Mirrored
+// here so the predicted chat width matches the rendered grid.
+const PANEL_FORMULA_FLOOR_PX = 610;
+
+// Predict the chat column's width *if the sidebar were to stay expanded*
+// while the panel is open, mirroring the layout.css grid formula:
+//   chat = viewport − sidebar(expanded) − panel
+// where panel = the user's drag override if set, else
+//   max(PANEL_FORMULA_FLOOR, (viewport − sidebar) / 3).
+// Computed (not measured) so it's immune to the grid-template-columns
+// transition still being mid-flight when we're called on open.
+function predictedChatWidthWithSidebarExpanded() {
+  const shell = document.getElementById("appShell");
+  const vw = window.innerWidth;
+  const css = getComputedStyle(document.documentElement);
+  const sidebar = parseFloat(css.getPropertyValue("--app-sidebar-width")) || 260;
+  const override = shell?.style.getPropertyValue("--app-right-panel-width-runtime");
+  const panel = override ? parseFloat(override) : Math.max(PANEL_FORMULA_FLOOR_PX, (vw - sidebar) / 3);
+  return vw - sidebar - panel;
+}
+
+// Auto-collapse the sidebar only when the chat column would otherwise dip
+// below CHAT_MIN_WIDTH_PX. We deliberately don't auto-restore on close (the
+// user re-expands manually) and we don't run on mode swaps inside an
+// already-open panel — only on the closed → open transition (and on resize).
 function maybeCollapseSidebar() {
   if (!state.mode) return;
   if (isSidebarCollapsed()) return;
+  if (predictedChatWidthWithSidebarExpanded() >= CHAT_MIN_WIDTH_PX) return;
   setSidebarCollapsed(true);
 }
 
 function maybeCollapseSidebarOnOpen(prevMode) {
   if (prevMode !== null) return; // mode swap, not an open
-  // Defer until after the renderPanel() call that follows in the open*
-  // helper completes. Until the panel's `hidden` flag flips and the grid
-  // column resolves, panel.offsetWidth would still read 0 and our chat-
-  // width math would think there's plenty of room.
-  requestAnimationFrame(maybeCollapseSidebar);
+  maybeCollapseSidebar();
 }
 
 // Track the element that had focus when the panel opened so we can
