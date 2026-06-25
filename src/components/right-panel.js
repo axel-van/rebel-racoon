@@ -18,7 +18,7 @@ import { renderClipCard } from "./clip-card.js?v=7";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=47";
-import { isSidebarCollapsed, setSidebarCollapsed } from "./sidebar.js?v=130";
+import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=131";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -221,14 +221,29 @@ function predictedChatWidthWithSidebarExpanded() {
 }
 
 // Auto-collapse the sidebar only when the chat column would otherwise dip
-// below CHAT_MIN_WIDTH_PX. We deliberately don't auto-restore on close (the
-// user re-expands manually) and we don't run on mode swaps inside an
-// already-open panel — only on the closed → open transition (and on resize).
+// below CHAT_MIN_WIDTH_PX. Marked `auto` so a later widen can undo it (see
+// syncSidebarToWidth). We don't run on mode swaps inside an already-open
+// panel — only on the closed → open transition (and on resize).
 function maybeCollapseSidebar() {
   if (!state.mode) return;
   if (isSidebarCollapsed()) return;
   if (predictedChatWidthWithSidebarExpanded() >= CHAT_MIN_WIDTH_PX) return;
-  setSidebarCollapsed(true);
+  setSidebarCollapsed(true, { auto: true });
+}
+
+// Keep the sidebar in step with the viewport while a panel is open: collapse
+// when the chat would get cramped, and re-expand when there's room again —
+// but only if *we* collapsed it (isAutoCollapsed). A sidebar the user closed
+// by hand stays closed. Closing the panel deliberately doesn't restore here
+// (the user re-opens manually), so this is a no-op without an open panel.
+function syncSidebarToWidth() {
+  if (!state.mode) return;
+  const roomy = predictedChatWidthWithSidebarExpanded() >= CHAT_MIN_WIDTH_PX;
+  if (!roomy) {
+    maybeCollapseSidebar();
+  } else if (isAutoCollapsed()) {
+    setSidebarCollapsed(false, { auto: true });
+  }
 }
 
 function maybeCollapseSidebarOnOpen(prevMode) {
@@ -1205,15 +1220,16 @@ export function init() {
   rebindSourcesSubscription();
   window.addEventListener("hashchange", rebindSourcesSubscription);
 
-  // Auto-collapse the sidebar when the viewport shrinks enough that the
-  // chat column would dip below CHAT_MIN_WIDTH_PX. rAF-debounced so
-  // continuous drag-resize doesn't thrash setSidebarCollapsed.
+  // Keep the sidebar in step with the viewport: collapse when the chat column
+  // would dip below CHAT_MIN_WIDTH_PX, re-expand when it widens back (if we
+  // were the ones who collapsed it). rAF-debounced so a continuous drag
+  // doesn't thrash setSidebarCollapsed.
   let resizeRaf = 0;
   window.addEventListener("resize", () => {
     if (resizeRaf) return;
     resizeRaf = requestAnimationFrame(() => {
       resizeRaf = 0;
-      maybeCollapseSidebar();
+      syncSidebarToWidth();
     });
   });
 

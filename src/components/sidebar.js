@@ -20,7 +20,7 @@ import { isNewUser } from "../user-mode.js?v=22";
 import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=42";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=31";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=25";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=215";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=218";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=52";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=31";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=44";
@@ -59,9 +59,22 @@ export function isSidebarCollapsed() {
   return localStorage.getItem(COLLAPSED_KEY) === "1";
 }
 
-export function setSidebarCollapsed(collapsed) {
+// Was the current collapsed state forced by the width-reactive logic
+// (panel open on a narrow viewport) rather than chosen by the user? Only an
+// auto-collapse may be auto-undone when the viewport grows back — a manual
+// collapse stays until the user re-opens it. Cleared on any manual toggle.
+let autoCollapsed = false;
+export function isAutoCollapsed() {
+  return autoCollapsed && isSidebarCollapsed();
+}
+
+// `auto: true` marks the change as width-driven (see isAutoCollapsed). A
+// manual call (default) hands control back to the user, so the auto flag is
+// dropped and the viewport logic won't fight their choice.
+export function setSidebarCollapsed(collapsed, { auto = false } = {}) {
   const shell = document.getElementById("appShell");
   if (!shell) return;
+  autoCollapsed = auto && collapsed;
   shell.classList.toggle("is-sidebar-collapsed", collapsed);
   if (collapsed) localStorage.setItem(COLLAPSED_KEY, "1");
   else localStorage.removeItem(COLLAPSED_KEY);

@@ -2,8 +2,8 @@ import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=8";
 import { initArchieLoader } from "./archie-loader.js?v=2";
 import { initTopbar, renderTopbar } from "./components/topbar.js?v=145";
-import { initSidebar, renderSidebar } from "./components/sidebar.js?v=130";
-import { init as initRightPanel } from "./components/right-panel.js?v=215";
+import { initSidebar, renderSidebar } from "./components/sidebar.js?v=131";
+import { init as initRightPanel } from "./components/right-panel.js?v=218";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=39";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=24";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
@@ -43,7 +43,7 @@ import {
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=215";
+} from "./components/right-panel.js?v=218";
 
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
