@@ -91,21 +91,35 @@ Piloté par `.is-sidebar-collapsed` sur `#appShell`, persisté dans
 - **Toggle** : bouton head (chevron ↔ view-list), ou **⌘B / Ctrl+B** — sauf quand
   le focus est dans un input/textarea/contenteditable (laisse le raccourci
   plateforme gagner).
-- `setSidebarCollapsed()` bascule la classe, écrit le localStorage et
-  **re-render** la sidebar (markup différent : rail icônes-only vs complet).
+- `setSidebarCollapsed(collapsed, { auto })` bascule la classe, écrit le
+  localStorage et **re-render** la sidebar (markup différent : rail icônes-only
+  vs complet). Le flag `auto` distingue un collapse **piloté par la largeur**
+  (`auto: true`) d'un choix **manuel** (défaut) ; un appel manuel **efface** le
+  flag (l'utilisateur reprend la main). `isAutoCollapsed()` = vrai uniquement
+  quand c'est la règle de largeur qui a rétracté la sidebar.
 - Au boot, l'état persisté est appliqué **avant** le premier render pour éviter
   le flash de layout.
 
-**Auto-collapse piloté par le right-panel** (le couplage des 3) :
+**Auto-collapse / re-expand piloté par le right-panel** (le couplage des 3) :
 
+- **Seuil de largeur** : `CHAT_MIN_WIDTH_PX = 560`. `predictedChatWidthWithSidebarExpanded()`
+  reproduit la formule de grille (`viewport − sidebar(260) − panel`, panel =
+  override de drag ou `max(610, (viewport − 260)/3)`) pour **prédire** la
+  largeur du chat si la sidebar restait étendue. La largeur est **calculée**,
+  pas mesurée (`offsetWidth`) — donc immune à la transition CSS
+  `grid-template-columns` en cours, plus besoin du `requestAnimationFrame` à
+  l'ouverture.
 - À chaque **ouverture fraîche** d'un panel (transition `null → mode`),
-  `maybeCollapseSidebarOnOpen(prev)` collapse la sidebar — uniquement si
-  `prev === null` (pas sur un swap de mode Ideas↔Drafts) et si elle n'est pas
-  déjà collapsed. Déféré en `requestAnimationFrame` pour que la colonne du panel
-  soit résolue avant le calcul de largeur.
+  `maybeCollapseSidebarOnOpen(prev)` → `maybeCollapseSidebar()` collapse la
+  sidebar (`{ auto: true }`) — uniquement si `prev === null` (pas sur un swap de
+  mode Ideas↔Drafts), si elle n'est pas déjà collapsed, **et** si le chat
+  prédit passerait sous 560px. Sur grand écran : pas de collapse.
 - **Pas d'auto-restore** à la fermeture — l'utilisateur ré-étend manuellement.
-- Sur `window.resize` (rAF-debounced), `maybeCollapseSidebar()` re-collapse si un
-  panel est ouvert et que la sidebar est étendue.
+- Sur `window.resize` (rAF-debounced), `syncSidebarToWidth()` est
+  **bidirectionnel** quand un panel est ouvert : si le chat prédit `< 560px` →
+  collapse (`maybeCollapseSidebar`) ; sinon, si `isAutoCollapsed()` → ré-étend
+  (`setSidebarCollapsed(false, { auto: true })`). Une sidebar **rétractée à la
+  main** (`auto` effacé) n'est **jamais** ré-étendue automatiquement.
 
 ---
 
@@ -167,9 +181,12 @@ sidebar / 1fr / 296px (carte) / max(380px, (100vw − sidebar) / 2)
 
 ## TL;DR — couplage des 3 surfaces
 
-Ouvrir un right-panel : (1) **auto-collapse** la sidebar (one-shot, sans restore)
-et (2) **masque la status-card** en lui cédant la colonne 3. Carte et panel ne
-s'affichent jamais ensemble (sauf `context-brief`, grille à 4 colonnes). La
-sidebar reste ensuite indépendante (⌘B + re-collapse au resize). Taille du
+Ouvrir un right-panel : (1) **auto-collapse** la sidebar — mais **seulement si**
+le chat passerait sous **560px** (sur grand écran elle reste étendue), one-shot,
+sans restore à la fermeture — et (2) **masque la status-card** en lui cédant la
+colonne 3. Carte et panel ne s'affichent jamais ensemble (sauf `context-brief`,
+grille à 4 colonnes). Au **resize**, la sidebar suit la largeur de façon
+**bidirectionnelle** (collapse sous le seuil, ré-étend au-dessus) tant que
+c'est un collapse `auto` — un collapse **manuel** (⌘B) est respecté. Taille du
 panel = formule de grille `max(610px, (100vw − sidebar) / 3)`, surchargeable
 transitoirement par le drag entre **380px** et **`100vw − 400px`**.

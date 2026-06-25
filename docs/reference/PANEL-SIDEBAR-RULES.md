@@ -41,13 +41,18 @@ overlays : `sidebar | contenu | right panel`.
 
 ## Couplage sidebar ↔ panel
 
-8. **Ouvrir le panel rétracte la sidebar** automatiquement — une seule fois, à
-   l'ouverture (pas à chaque changement de mode), et seulement si elle était
-   étendue.
-9. **Pas de ré-extension auto** : à la fermeture du panel, l'utilisateur
-   ré-étend la sidebar lui-même.
-10. **Au redimensionnement de la fenêtre**, si un panel est ouvert et la sidebar
-    étendue, elle se rétracte à nouveau (pour garder de la place au contenu).
+8. **Ouvrir le panel rétracte la sidebar — seulement si nécessaire.** À
+   l'ouverture (une seule fois, pas à chaque changement de mode), la sidebar
+   se rétracte **uniquement** si la garder étendue rendrait la colonne de chat
+   trop étroite (en dessous d'un **plancher de 560px**). Sur un grand écran il
+   y a de la place : la sidebar **reste étendue**.
+9. **Pas de ré-extension auto à la fermeture** : quand on ferme le panel,
+   l'utilisateur ré-étend la sidebar lui-même.
+10. **La sidebar suit la largeur de la fenêtre** (panel ouvert) : au
+    redimensionnement, elle se rétracte quand le chat passe sous le plancher et
+    **se ré-étend** quand la fenêtre laisse à nouveau de la place — mais
+    uniquement si c'est elle (la règle de largeur) qui l'avait rétractée. Une
+    sidebar **rétractée à la main** (chevron / ⌘B) reste rétractée.
 
 ---
 
