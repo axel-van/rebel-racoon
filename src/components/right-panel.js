@@ -530,24 +530,20 @@ export function init() {
       renderPanel();
       return;
     }
-    if (event.target.closest("[data-rpanel-drafts-bulk-clear]")) {
-      selectedDraftIds.clear();
-      renderPanel();
+    // Per-network section bulk actions (live in each section header).
+    const sectionSaveBtn = event.target.closest("[data-rpanel-section-save]");
+    if (sectionSaveBtn) {
+      onSectionSave(sectionSaveBtn.dataset.rpanelSectionSave);
       return;
     }
-    if (event.target.closest("[data-rpanel-drafts-bulk-delete]")) {
-      onBulkDelete();
+    const sectionScheduleBtn = event.target.closest("[data-rpanel-section-schedule]");
+    if (sectionScheduleBtn) {
+      onSectionSchedule(sectionScheduleBtn.dataset.rpanelSectionSchedule);
       return;
     }
-    if (event.target.closest("[data-rpanel-drafts-bulk-save]")) {
-      onSaveAsDraft();
-      return;
-    }
-    const bulkScheduleBtn = event.target.closest("[data-rpanel-drafts-bulk-schedule]");
-    if (bulkScheduleBtn) {
-      // Disabled = mixed-network selection; ignore the click (the hint
-      // below the bar explains why scheduling is unavailable).
-      if (!bulkScheduleBtn.hasAttribute("disabled")) onBulkSchedule();
+    const sectionDeleteBtn = event.target.closest("[data-rpanel-section-delete]");
+    if (sectionDeleteBtn) {
+      onSectionDelete(sectionDeleteBtn.dataset.rpanelSectionDelete);
       return;
     }
     // Per-card actions on a single draft (Lot 21 rich PostCard).
@@ -1602,12 +1598,20 @@ function renderDraftsView() {
     ...[...new Set(filtered.map((p) => p.network))].filter((n) => !NETWORK_ORDER.includes(n)),
   ];
 
+  // Each network section is self-contained: the band is the section
+  // header AND its bulk-action surface. With no selection it shows the
+  // network + draft count; once 1+ of its drafts are selected it swaps to
+  // a "N selected" label plus the per-network actions (Save as draft /
+  // Schedule / Delete). Because every action is scoped to one network,
+  // scheduling is always valid — no cross-network "disabled" state. The
+  // header is sticky so its actions stay reachable while scrolling.
   const renderGroup = (network) => {
     const meta = networkMetaFor(network);
     const groupPosts = filtered.filter((p) => p.network === network);
     const groupSelected = groupPosts.filter((p) => selectedDraftIds.has(p.id)).length;
     const allGroupSelected = groupPosts.length > 0 && groupSelected === groupPosts.length;
     const indeterminate = groupSelected > 0 && !allGroupSelected;
+    const selecting = groupSelected > 0;
     const cards = groupPosts
       .map((p) =>
         renderPostCard(p, {
@@ -1619,8 +1623,31 @@ function renderDraftsView() {
       )
       .join("");
     const draftWord = groupPosts.length === 1 ? "draft" : "drafts";
+
+    const bandInner = selecting
+      ? `
+          <i class="${meta.icon} rpanel-drafts__group-icon" aria-hidden="true"></i>
+          <span class="rpanel-drafts__group-selected">${groupSelected} selected</span>
+          <div class="rpanel-drafts__group-actions">
+            <button type="button" class="ap-button stroked grey sm" data-rpanel-section-save="${network}">
+              <i class="ap-icon-bookmark" aria-hidden="true"></i> Save as draft
+            </button>
+            <button type="button" class="ap-button primary blue sm rpanel-drafts__group-schedule" data-rpanel-section-schedule="${network}">
+              <i class="ap-icon-calendar" aria-hidden="true"></i> Schedule ${groupSelected}
+            </button>
+            <button type="button" class="ap-icon-button stroked red sm" data-rpanel-section-delete="${network}" aria-label="Delete ${groupSelected} selected ${meta.label} ${groupSelected === 1 ? "draft" : "drafts"}">
+              <i class="ap-icon-trash" aria-hidden="true"></i>
+            </button>
+          </div>
+        `
+      : `
+          <i class="${meta.icon} rpanel-drafts__group-icon" aria-hidden="true"></i>
+          <span class="rpanel-drafts__group-label">${meta.label}</span>
+          <span class="rpanel-drafts__group-count">${groupPosts.length} ${draftWord}</span>
+        `;
+
     return `
-      <div class="rpanel-drafts__group-header">
+      <div class="rpanel-drafts__group-header${selecting ? " is-selecting" : ""}">
         <span class="rpanel-drafts__group-check">
           <label class="ap-checkbox-container ${indeterminate ? "indeterminate" : ""}" aria-label="Select all ${meta.label} drafts">
             <input type="checkbox" data-rpanel-drafts-select-network="${network}" ${allGroupSelected ? "checked" : ""} />
@@ -1628,9 +1655,7 @@ function renderDraftsView() {
           </label>
         </span>
         <div class="rpanel-drafts__group-band" style="--rp-net: ${meta.accent}">
-          <i class="${meta.icon} rpanel-drafts__group-icon" aria-hidden="true"></i>
-          <span class="rpanel-drafts__group-label">${meta.label}</span>
-          <span class="rpanel-drafts__group-count">${groupPosts.length} ${draftWord}</span>
+          ${bandInner}
         </div>
       </div>
       ${cards}
@@ -1648,56 +1673,13 @@ function renderDraftsView() {
          </div>
        </div>`;
 
-  // Sticky bulk-action bar — anchored at the bottom of the feed when 1+
-  // draft is selected. Save as draft works on any selection (cross-network);
-  // Schedule is gated to a single-network selection because scheduling is
-  // per-network. Delete is cross-network. A hint explains a disabled CTA.
-  const selected = allPosts.filter((p) => selectedDraftIds.has(p.id));
-  const selectedNetworks = new Set(selected.map((p) => p.network));
-  const canSchedule = selectedNetworks.size === 1;
-  const draftWord = selectedCount === 1 ? "draft" : "drafts";
-  const bulkNetwork = selectedNetworks.size === 1 ? networkMetaFor([...selectedNetworks][0]) : null;
-  const bulkLabel = bulkNetwork
-    ? `${selectedCount} selected · <i class="${bulkNetwork.icon} rpanel-drafts__bulkbar-net" aria-hidden="true"></i> ${bulkNetwork.label}`
-    : `${selectedCount} selected · Multiple networks`;
-  const bulkBar = selectedCount
-    ? `
-      <div class="rpanel-drafts__bulkbar" role="region" aria-label="Bulk actions">
-        <div class="rpanel-drafts__bulkbar-label">${bulkLabel}</div>
-        <div class="rpanel-drafts__bulkbar-actions">
-          <button type="button" class="ap-button ghost grey" data-rpanel-drafts-bulk-clear>
-            Clear
-          </button>
-          <button type="button" class="ap-button stroked grey" data-rpanel-drafts-bulk-save>
-            <i class="ap-icon-bookmark" aria-hidden="true"></i>
-            Save as draft
-          </button>
-          <button type="button" class="ap-button primary orange" data-rpanel-drafts-bulk-schedule ${canSchedule ? "" : "disabled"}>
-            <i class="ap-icon-calendar" aria-hidden="true"></i>
-            Schedule ${selectedCount} ${draftWord}
-          </button>
-          <button type="button" class="ap-icon-button stroked red" data-rpanel-drafts-bulk-delete aria-label="Delete ${selectedCount} ${draftWord}">
-            <i class="ap-icon-trash" aria-hidden="true"></i>
-          </button>
-        </div>
-        ${
-          canSchedule
-            ? ""
-            : `<div class="rpanel-drafts__bulkbar-hint">Select drafts from a single network to schedule them.</div>`
-        }
-      </div>
-    `
-    : "";
-
-  // Layout: fixed filter header, scrolling feed, fixed bulk-action footer.
-  // The bulk bar sits OUTSIDE the scrolling feed (a direct child of
-  // .rpanel-drafts) so it pins to the panel bottom regardless of how
-  // short the list is — no trailing whitespace under a sticky footer.
+  // Layout: fixed filter header, then the scrolling feed. Bulk actions
+  // live inside each network's (sticky) section header, so there is no
+  // separate footer bar.
   return html`
     <div class="rpanel-drafts ${selectedCount ? "has-selection" : ""}">
       ${raw(filtersBar)}
       <div class="posts__feed rpanel-drafts__feed">${raw(feed)}</div>
-      ${raw(bulkBar)}
     </div>
   `;
 }
@@ -1760,15 +1742,20 @@ function onPostSchedule(postId) {
   });
 }
 
-// Bulk delete — confirm-modal gate (destructive, so no silent removal),
-// then drop every selected draft. Snapshots each post with its original
-// index so the toast Undo can restore the whole batch in place.
-function onBulkDelete() {
+// Snapshot the selected drafts of one network with their original feed
+// index (so a toast Undo can restore them in place).
+function sectionSelectionSnapshot(sid, network) {
+  return getPosts(sid)
+    .map((post, idx) => ({ post, idx }))
+    .filter(({ post }) => post.network === network && selectedDraftIds.has(post.id));
+}
+
+// Per-network bulk delete — confirm-modal gate (destructive), then drop
+// the selected drafts of that network with an Undo toast.
+function onSectionDelete(network) {
   const sid = activeSessionId();
   if (!sid) return;
-  const snapshot = getPosts(sid)
-    .map((post, idx) => ({ post, idx }))
-    .filter(({ post }) => selectedDraftIds.has(post.id));
+  const snapshot = sectionSelectionSnapshot(sid, network);
   if (snapshot.length === 0) return;
   const count = snapshot.length;
   const draftWord = count === 1 ? "draft" : "drafts";
@@ -1778,8 +1765,10 @@ function onBulkDelete() {
     confirmLabel: `Delete ${count} ${draftWord}`,
     danger: true,
     onConfirm: () => {
-      for (const { post } of snapshot) removePost(sid, post.id);
-      selectedDraftIds.clear();
+      for (const { post } of snapshot) {
+        removePost(sid, post.id);
+        selectedDraftIds.delete(post.id);
+      }
       renderPanel();
       import("./toast.js?v=20").then(({ showToast }) => {
         showToast(`${count} ${draftWord} deleted`, {
@@ -1797,21 +1786,18 @@ function onBulkDelete() {
   });
 }
 
-// Bulk schedule — opens the modal seeded with every selected draft.
-// Scheduling is per-network, so a mixed-network selection is rejected
-// (the bulk CTA is also disabled in that case). On confirm the posts move
-// onto the calendar queue and out of the workspace.
-function onBulkSchedule() {
+// Per-network schedule — opens the modal seeded with the network's
+// selected drafts. Single-network by construction, so always valid.
+function onSectionSchedule(network) {
   const sid = activeSessionId();
   if (!sid) return;
-  const selected = getPosts(sid).filter((p) => selectedDraftIds.has(p.id) && p.status !== "scheduled");
+  const selected = getPosts(sid).filter((p) => p.network === network && selectedDraftIds.has(p.id));
   if (selected.length === 0) return;
-  if (new Set(selected.map((p) => p.network)).size !== 1) return;
   openScheduleModal({
     posts: selected,
     onConfirm: () => {
       commitScheduled(sid, selected);
-      selectedDraftIds.clear();
+      for (const p of selected) selectedDraftIds.delete(p.id);
       renderPanel();
     },
   });
@@ -1824,20 +1810,20 @@ function commitScheduled(sid, posts) {
   for (const p of posts) removePost(sid, p.id);
 }
 
-// Bulk "Save as draft" — saves every selected draft (any network) into the
-// draft queue and clears them from the workspace. Non-destructive, so no
-// confirm gate; a toast offers Undo that restores the batch in place.
-function onSaveAsDraft() {
+// Per-network "Save as draft" — saves the network's selected drafts into
+// the draft queue and clears them from the workspace. Non-destructive, so
+// no confirm gate; a toast offers Undo that restores the batch in place.
+function onSectionSave(network) {
   const sid = activeSessionId();
   if (!sid) return;
-  const snapshot = getPosts(sid)
-    .map((post, idx) => ({ post, idx }))
-    .filter(({ post }) => selectedDraftIds.has(post.id));
+  const snapshot = sectionSelectionSnapshot(sid, network);
   if (snapshot.length === 0) return;
   const count = snapshot.length;
   const draftWord = count === 1 ? "draft" : "drafts";
-  for (const { post } of snapshot) removePost(sid, post.id);
-  selectedDraftIds.clear();
+  for (const { post } of snapshot) {
+    removePost(sid, post.id);
+    selectedDraftIds.delete(post.id);
+  }
   renderPanel();
   import("./toast.js?v=20").then(({ showToast }) => {
     showToast(`${count} ${draftWord} saved as draft`, {

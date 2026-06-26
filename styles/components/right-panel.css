@@ -798,11 +798,19 @@
    while the band itself aligns with the card column. */
 /* Left-aligned (not centered) and full feed width so the leading checkbox
    gutter lands at the same x as the cards on any panel width. The `gap`
-   matches `.posts__row` so the band starts exactly above the card body. */
+   matches `.posts__row` so the band starts exactly above the card body.
+   Sticky so the band's per-network bulk actions stay reachable while that
+   network's drafts scroll; the opaque background hides cards passing
+   beneath it. */
 .rpanel-drafts__group-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
+  padding-block: var(--ref-spacing-xxs);
+  background: var(--app-surface);
 }
 
 /* Leading gutter mirrors `.posts__row-check` (16px, fixed) so the
@@ -816,18 +824,27 @@
 /* The visible band. Tinted with the network's brand colour (via the
    inline --rp-net custom property) so each section reads as that network
    at a glance, distinct from the white draft cards. Width matches the
-   500px card column so it lines up with the cards below. */
+   500px card column so it lines up with the cards below; a stable
+   min-height keeps it from jumping when it swaps to action mode. */
 .rpanel-drafts__group-band {
   flex: 0 0 500px;
   max-width: 500px;
   min-width: 0;
+  min-height: 2.5rem;
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-sm);
   background: color-mix(in srgb, var(--rp-net, var(--ref-color-grey-40)) 10%, var(--ref-color-white));
   border: 1px solid color-mix(in srgb, var(--rp-net, var(--ref-color-grey-40)) 22%, var(--ref-color-white));
   border-radius: var(--app-radius-sm);
+}
+
+/* When the section has a selection, lift the tint a notch so the active
+   network stands out from its idle siblings. */
+.rpanel-drafts__group-header.is-selecting .rpanel-drafts__group-band {
+  background: color-mix(in srgb, var(--rp-net, var(--ref-color-grey-40)) 16%, var(--ref-color-white));
+  border-color: color-mix(in srgb, var(--rp-net, var(--ref-color-grey-40)) 34%, var(--ref-color-white));
 }
 
 .rpanel-drafts__group-icon {
@@ -835,12 +852,14 @@
   font-size: var(--sys-icon-css-md);
 }
 
-/* Network name in its brand colour for a cohesive, branded header. */
-.rpanel-drafts__group-label {
+/* Network name / "N selected" label in the brand colour for cohesion. */
+.rpanel-drafts__group-label,
+.rpanel-drafts__group-selected {
   font-size: var(--sys-text-style-caption-bold-size);
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--rp-net, var(--ref-color-grey-100));
+  white-space: nowrap;
 }
 
 /* Draft count — muted, pinned to the trailing edge of the band. */
@@ -851,59 +870,13 @@
   color: var(--ref-color-grey-80);
 }
 
-/* ── Bulk-action footer ──────────────────────────────────────────────
-   Pinned at the bottom of the panel (a non-scrolling flex item, sibling
-   of the feed) whenever 1+ draft is selected, so it never leaves a
-   whitespace gap under a short list. Card-style chrome (radius + shadow
-   + top hairline) so it reads as a floating action surface. */
-.rpanel-drafts__bulkbar {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  width: 100%;
-  max-width: 580px;
-  margin: 0 auto;
-  padding: var(--ref-spacing-sm);
-  border-top: 1px solid var(--ref-color-grey-20);
-  background: var(--app-surface);
-}
-
-.rpanel-drafts__bulkbar-label {
+/* Per-network bulk-action cluster, pinned to the trailing edge. */
+.rpanel-drafts__group-actions {
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-grey-100);
-}
-
-/* Network icon in the bulk label stays brand-neutral grey (the official
-   glyph), not the accent tint. */
-.rpanel-drafts__bulkbar-net {
-  color: var(--ref-color-grey-80);
-  font-size: var(--sys-icon-css-sm);
-}
-
-.rpanel-drafts__bulkbar-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-}
-
-/* Clear is a tertiary escape — push it to the far left so the commit
-   actions (Save as draft / Schedule / Delete) group on the right. */
-.rpanel-drafts__bulkbar-actions [data-rpanel-drafts-bulk-clear] {
-  margin-right: auto;
-}
-
-/* Helper line under the actions when the selection spans >1 network and
-   scheduling is therefore disabled. */
-.rpanel-drafts__bulkbar-hint {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-80);
+  white-space: nowrap;
 }
 
 /* ── Narrow container — actions below the card ──────────────────────
