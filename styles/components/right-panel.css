@@ -790,30 +790,19 @@
 }
 
 /* ── Per-network group separator ─────────────────────────────────────
-   Splits the drafts feed by network. Each header carries a "Select all"
-   for that network (the unit you schedule in bulk), the network logo,
-   name and draft count. Laid out on the same column as the cards, with
-   a leading 16px checkbox gutter that matches `.posts__row-check` so the
-   "Select all" lines up exactly with the per-card checkboxes below.
-   A hairline above each section provides clean separation. */
+   Splits the drafts feed by network. The header is a filled band — a
+   clear, scannable section marker — carrying the brand logo, network
+   name and draft count, with the count pinned to the trailing edge. A
+   leading 16px checkbox gutter (matching `.posts__row-check`) keeps the
+   per-network "Select all" lined up with the per-card checkboxes below,
+   while the band itself aligns with the card column. */
 .rpanel-drafts__group-header {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xs); /* match .posts__row gap */
+  gap: var(--ref-spacing-xs); /* match .posts__row gap so the band aligns with the cards */
   width: 100%;
   max-width: 580px;
   margin: 0 auto;
-  /* No horizontal padding — the header's left edge meets the row's left
-     edge so the checkbox gutter aligns with the cards. */
-  padding-top: var(--ref-spacing-sm);
-  padding-bottom: var(--ref-spacing-xxs);
-  border-top: 1px solid var(--ref-color-grey-20);
-}
-
-/* First group sits flush — no divider line above the top-most network. */
-.rpanel-drafts__feed > .rpanel-drafts__group-header:first-child {
-  border-top: 0;
-  padding-top: 0;
 }
 
 /* Leading gutter mirrors `.posts__row-check` (16px, fixed) so the
@@ -824,9 +813,22 @@
   align-items: center;
 }
 
+/* The visible band. Subtle grey fill + pill radius reads as a clean
+   section header that's clearly distinct from the white draft cards. */
+.rpanel-drafts__group-band {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  background: var(--ref-color-grey-10);
+  border-radius: var(--app-radius-sm);
+}
+
 .rpanel-drafts__group-icon {
+  flex-shrink: 0;
   font-size: var(--sys-icon-css-md);
-  color: var(--ref-color-grey-80);
 }
 
 .rpanel-drafts__group-label {
@@ -836,11 +838,12 @@
   color: var(--ref-color-grey-100);
 }
 
-/* Draft count — muted, regular weight, sits just after the network name. */
+/* Draft count — muted, pinned to the trailing edge of the band. */
 .rpanel-drafts__group-count {
+  margin-left: auto;
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-60);
+  color: var(--ref-color-grey-80);
 }
 
 /* ── Bulk-action footer ──────────────────────────────────────────────

@@ -1624,9 +1624,11 @@ function renderDraftsView() {
             <i></i>
           </label>
         </span>
-        <i class="${meta.icon} rpanel-drafts__group-icon" aria-hidden="true"></i>
-        <span class="rpanel-drafts__group-label">${meta.label}</span>
-        <span class="rpanel-drafts__group-count">${groupPosts.length} ${draftWord}</span>
+        <div class="rpanel-drafts__group-band">
+          <i class="${meta.icon} rpanel-drafts__group-icon" aria-hidden="true"></i>
+          <span class="rpanel-drafts__group-label">${meta.label}</span>
+          <span class="rpanel-drafts__group-count">${groupPosts.length} ${draftWord}</span>
+        </div>
       </div>
       ${cards}
     `;
