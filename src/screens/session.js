@@ -64,7 +64,7 @@ import {
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=8";
 import * as contextBuilder from "../context-builder.js?v=127";
-import { renderPicker } from "./_analyse-common.js?v=47";
+import { renderPicker } from "./_analyse-common.js?v=48";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
 import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=2";

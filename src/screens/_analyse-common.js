@@ -210,10 +210,14 @@ export function renderPicker(picker) {
     })
     .join("");
 
+  // When the input is the ONLY row (no option rows above it), the leading
+  // shortcut badge has nothing to disambiguate against — drop it so a lone
+  // URL/name field reads as a field, not a numbered list item.
+  const hasRows = items.length > 0;
   const customRow = customPlaceholder
     ? `
       <label class="analyse__option analyse__option--input" data-custom-row>
-        <span class="analyse__option-shortcut" aria-hidden="true">${items.length + 1}</span>
+        ${hasRows ? `<span class="analyse__option-shortcut" aria-hidden="true">${items.length + 1}</span>` : ""}
         <span class="analyse__option-icon">
           <i class="ap-icon-pen"></i>
         </span>
@@ -231,6 +235,7 @@ export function renderPicker(picker) {
           data-${customHandler || handler}-custom-submit
           aria-label="Submit typed answer"
           tabindex="-1"
+          ${customValue.trim() ? "" : "disabled"}
         >
           <i class="ap-icon-paper-plane"></i>
         </button>
@@ -244,7 +249,7 @@ export function renderPicker(picker) {
   const fileRow = customFile
     ? `
       <label class="analyse__option analyse__option--file" data-custom-file-row>
-        <span class="analyse__option-shortcut" aria-hidden="true">${items.length + 1}</span>
+        ${hasRows ? `<span class="analyse__option-shortcut" aria-hidden="true">${items.length + 1}</span>` : ""}
         <span class="analyse__option-icon">
           <i class="${customFileIcon}"></i>
         </span>
@@ -259,7 +264,6 @@ export function renderPicker(picker) {
           data-${customHandler || handler}-custom-file
           aria-label="${customFileLabel}"
         />
-        <i class="ap-icon-chevron-right analyse__option-chevron" aria-hidden="true"></i>
       </label>
     `
     : "";
@@ -345,6 +349,20 @@ export function renderPicker(picker) {
 // always see where they are.
 
 let currentKeyListener = null;
+
+// Keep the input row's send button disabled until there's something to submit.
+// A picker only re-renders on its host's notify(), not on keystrokes, so this
+// one global delegate syncs the button live as the user types. It's host-
+// agnostic (matches the shared .analyse__option-* classes used by every picker
+// host — inline-question, sidebar-wizard, AND context-builder, which doesn't
+// route through bindWizardKeyboard) and self-scoped (no-op unless the event
+// comes from a picker input). Registered once at module load.
+document.addEventListener("input", (event) => {
+  const input = event.target;
+  if (!input.matches?.(".analyse__option-input")) return;
+  const send = input.closest(".analyse__option")?.querySelector(".analyse__option-send");
+  if (send) send.disabled = !input.value.trim();
+});
 
 export function bindWizardKeyboard(
   target,

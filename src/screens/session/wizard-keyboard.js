@@ -13,7 +13,7 @@
 
 import * as sidebarWizard from "../../sidebar-wizard.js?v=47";
 import * as inlineQuestion from "../../inline-question.js?v=41";
-import { bindWizardKeyboard, unbindWizardKeyboard } from "../_analyse-common.js?v=47";
+import { bindWizardKeyboard, unbindWizardKeyboard } from "../_analyse-common.js?v=48";
 
 export function rebindWizardKeyboard(aside, sessionId) {
   if (!aside) return;
