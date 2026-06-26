@@ -826,14 +826,12 @@
   align-items: center;
 }
 
-/* The visible band. Tinted with the network's brand colour (via the
-   inline --rp-net custom property) so each section reads as that network
-   at a glance, distinct from the white draft cards. Width matches the
-   500px card column so it lines up with the cards below; a stable
-   min-height keeps it from jumping when it swaps to action mode. */
+/* The visible band — a full-width tinted bar (brand colour via the inline
+   --rp-net custom property) so each network section reads at a glance and
+   the bulk actions span the whole column. Left edge aligns with the card
+   body; it stretches to the panel's right edge. */
 .rpanel-drafts__group-band {
-  flex: 0 0 500px;
-  max-width: 500px;
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 2.5rem;
   display: flex;
@@ -843,13 +841,6 @@
   background: color-mix(in srgb, var(--rp-net, var(--ref-color-grey-40)) 10%, var(--ref-color-white));
   border: 1px solid color-mix(in srgb, var(--rp-net, var(--ref-color-grey-40)) 22%, var(--ref-color-white));
   border-radius: var(--app-radius-sm);
-}
-
-/* When selecting, the band widens to the full column so the network
-   identity stays on the left while the actions get room on the right. */
-.rpanel-drafts__group-header.is-selecting .rpanel-drafts__group-band {
-  flex: 1 1 auto;
-  max-width: none;
 }
 
 /* When the section has a selection, lift the tint a notch so the active
@@ -873,26 +864,18 @@
   white-space: nowrap;
 }
 
-/* "N selected" — muted, sits right after the network name with a dot
-   separator so the identity and the selection state read as one phrase. */
-.rpanel-drafts__group-selected {
+/* Count / "N selected" — muted, sits right after the network name with a
+   dot separator so identity + state read as one phrase. */
+.rpanel-drafts__group-count {
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   color: var(--ref-color-grey-80);
   white-space: nowrap;
 }
-.rpanel-drafts__group-selected::before {
+.rpanel-drafts__group-count::before {
   content: "·";
   margin-right: var(--ref-spacing-xs);
   color: var(--ref-color-grey-40);
-}
-
-/* Draft count — muted, pinned to the trailing edge of the band. */
-.rpanel-drafts__group-count {
-  margin-left: auto;
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-80);
 }
 
 /* Per-network bulk-action cluster, pinned to the trailing edge. */

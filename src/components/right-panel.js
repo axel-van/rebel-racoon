@@ -1624,26 +1624,13 @@ function renderDraftsView() {
       .join("");
     const draftWord = groupPosts.length === 1 ? "draft" : "drafts";
 
-    // The network identity (logo + name) is ALWAYS shown so the section
-    // never loses context. Idle: a muted draft count. Selecting: a
-    // "N selected" label + the per-network actions; the band widens to
-    // make room (see CSS).
-    const tail = selecting
-      ? `
-          <span class="rpanel-drafts__group-selected">${groupSelected} selected</span>
-          <div class="rpanel-drafts__group-actions">
-            <button type="button" class="ap-button stroked grey sm" data-rpanel-section-save="${network}">
-              <i class="ap-icon-bookmark" aria-hidden="true"></i> Save as draft
-            </button>
-            <button type="button" class="ap-button primary blue sm rpanel-drafts__group-schedule" data-rpanel-section-schedule="${network}">
-              <i class="ap-icon-calendar" aria-hidden="true"></i> Schedule ${groupSelected}
-            </button>
-            <button type="button" class="ap-icon-button stroked red sm" data-rpanel-section-delete="${network}" aria-label="Delete ${groupSelected} selected ${meta.label} ${groupSelected === 1 ? "draft" : "drafts"}">
-              <i class="ap-icon-trash" aria-hidden="true"></i>
-            </button>
-          </div>
-        `
-      : `<span class="rpanel-drafts__group-count">${groupPosts.length} ${draftWord}</span>`;
+    // The bulk actions are ALWAYS shown in the section header. They act on
+    // the section's selected drafts, or — when nothing is checked — on all
+    // of that network's drafts. The count label and "Schedule N" reflect
+    // that effective target so the buttons are always meaningful.
+    const effective = selecting ? groupSelected : groupPosts.length;
+    const countLabel = selecting ? `${groupSelected} selected` : `${groupPosts.length} ${draftWord}`;
+    const targetWord = effective === 1 ? "draft" : "drafts";
 
     return `
       <div class="rpanel-drafts__group-header${selecting ? " is-selecting" : ""}">
@@ -1656,7 +1643,18 @@ function renderDraftsView() {
         <div class="rpanel-drafts__group-band" style="--rp-net: ${meta.accent}">
           <i class="${meta.icon} rpanel-drafts__group-icon" aria-hidden="true"></i>
           <span class="rpanel-drafts__group-label">${meta.label}</span>
-          ${tail}
+          <span class="rpanel-drafts__group-count">${countLabel}</span>
+          <div class="rpanel-drafts__group-actions">
+            <button type="button" class="ap-button stroked grey sm" data-rpanel-section-save="${network}">
+              <i class="ap-icon-bookmark" aria-hidden="true"></i> Save as draft
+            </button>
+            <button type="button" class="ap-button primary blue sm rpanel-drafts__group-schedule" data-rpanel-section-schedule="${network}">
+              <i class="ap-icon-calendar" aria-hidden="true"></i> Schedule ${effective}
+            </button>
+            <button type="button" class="ap-icon-button stroked red sm" data-rpanel-section-delete="${network}" aria-label="Delete ${effective} ${meta.label} ${targetWord}">
+              <i class="ap-icon-trash" aria-hidden="true"></i>
+            </button>
+          </div>
         </div>
       </div>
       ${cards}
@@ -1743,12 +1741,23 @@ function onPostSchedule(postId) {
   });
 }
 
-// Snapshot the selected drafts of one network with their original feed
-// index (so a toast Undo can restore them in place).
-function sectionSelectionSnapshot(sid, network) {
-  return getPosts(sid)
+// The effective target for a section's bulk action: the network's
+// selected drafts, or — when nothing is checked — all of the network's
+// VISIBLE drafts. Mirrors the feed's own filter (no scheduled posts; the
+// "Needs fixes" tab narrows to error drafts) so the action count always
+// matches what the section shows. Snapshotted with the original feed
+// index so a toast Undo can restore them in place.
+function sectionTargetSnapshot(sid, network) {
+  const visible = getPosts(sid)
     .map((post, idx) => ({ post, idx }))
-    .filter(({ post }) => post.network === network && selectedDraftIds.has(post.id));
+    .filter(
+      ({ post }) =>
+        post.network === network &&
+        post.status !== "scheduled" &&
+        !(draftsFilter === "needs_fixes" && post.status !== "needs_fixes"),
+    );
+  const selected = visible.filter(({ post }) => selectedDraftIds.has(post.id));
+  return selected.length ? selected : visible;
 }
 
 // Per-network bulk delete — confirm-modal gate (destructive), then drop
@@ -1756,7 +1765,7 @@ function sectionSelectionSnapshot(sid, network) {
 function onSectionDelete(network) {
   const sid = activeSessionId();
   if (!sid) return;
-  const snapshot = sectionSelectionSnapshot(sid, network);
+  const snapshot = sectionTargetSnapshot(sid, network);
   if (snapshot.length === 0) return;
   const count = snapshot.length;
   const draftWord = count === 1 ? "draft" : "drafts";
@@ -1787,18 +1796,19 @@ function onSectionDelete(network) {
   });
 }
 
-// Per-network schedule — opens the modal seeded with the network's
-// selected drafts. Single-network by construction, so always valid.
+// Per-network schedule — opens the modal seeded with the section's target
+// drafts (selection, or all of the network when nothing is checked).
+// Single-network by construction, so always valid.
 function onSectionSchedule(network) {
   const sid = activeSessionId();
   if (!sid) return;
-  const selected = getPosts(sid).filter((p) => p.network === network && selectedDraftIds.has(p.id));
-  if (selected.length === 0) return;
+  const target = sectionTargetSnapshot(sid, network).map(({ post }) => post);
+  if (target.length === 0) return;
   openScheduleModal({
-    posts: selected,
+    posts: target,
     onConfirm: () => {
-      commitScheduled(sid, selected);
-      for (const p of selected) selectedDraftIds.delete(p.id);
+      commitScheduled(sid, target);
+      for (const p of target) selectedDraftIds.delete(p.id);
       renderPanel();
     },
   });
@@ -1811,13 +1821,14 @@ function commitScheduled(sid, posts) {
   for (const p of posts) removePost(sid, p.id);
 }
 
-// Per-network "Save as draft" — saves the network's selected drafts into
-// the draft queue and clears them from the workspace. Non-destructive, so
-// no confirm gate; a toast offers Undo that restores the batch in place.
+// Per-network "Save as draft" — saves the section's target drafts
+// (selection, or all of the network when nothing is checked) into the
+// draft queue and clears them from the workspace. Non-destructive, so no
+// confirm gate; a toast offers Undo that restores the batch in place.
 function onSectionSave(network) {
   const sid = activeSessionId();
   if (!sid) return;
-  const snapshot = sectionSelectionSnapshot(sid, network);
+  const snapshot = sectionTargetSnapshot(sid, network);
   if (snapshot.length === 0) return;
   const count = snapshot.length;
   const draftWord = count === 1 ? "draft" : "drafts";
