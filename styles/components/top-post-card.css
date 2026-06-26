@@ -68,6 +68,43 @@
   margin-top: var(--ref-spacing-lg);
 }
 
+/* ── Profile selector (primary lens) ────────────────────────────────
+   A row of profile chips — explore the winners one profile at a time. Built on
+   the shared .ap-filter-chip (pressed state + count primitive, like the
+   Ideas-panel filters), so it reads as the board's primary lens above the
+   secondary "Sort by" row. Wraps as the column narrows. */
+.top-posts-profiles {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xs);
+}
+
+/* Profile chips carry a 24px avatar + corner network badge, so they need more
+   room than the plain 24px text chip: let the chip grow to the avatar (the DS
+   `height: 24px` is fixed and would crop it), give it breathing room top/bottom,
+   and tuck the avatar near the leading edge. */
+.top-posts-profiles .top-posts-profile-chip {
+  height: auto;
+  min-height: 32px;
+  gap: var(--ref-spacing-xxs);
+  padding-block: var(--ref-spacing-xxxs);
+  padding-left: var(--ref-spacing-xxxs);
+  padding-right: var(--ref-spacing-xs);
+}
+
+/* The "All profiles" chip has no avatar — its 16px analytics icon needs the
+   chip's normal leading padding back so it isn't jammed against the edge. */
+.top-posts-profiles .top-posts-profile-chip--all {
+  padding-left: var(--ref-spacing-xs);
+}
+
+/* Hold the avatar at a firm 24px circle (don't let flex squeeze it). Its corner
+   network badge keeps its own brand colour. */
+.top-posts-profiles .top-posts-profile-chip__avatar {
+  flex: 0 0 auto;
+}
+
 /* ── Sort toolbar ───────────────────────────────────────────────── */
 .top-posts-toolbar {
   display: flex;
@@ -213,34 +250,6 @@
   height: 100%;
   border-radius: inherit;
   background: var(--ref-color-green-100);
-}
-
-/* ── Group 3 · insight ──────────────────────────────────────────── */
-.top-post-card__why {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-}
-
-.top-post-card__why-label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: var(--sys-text-style-caption-size);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--sys-text-color-light);
-}
-
-.top-post-card__why-label i {
-  font-size: 13px;
-}
-
-.top-post-card__why-text {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--ref-color-grey-100);
 }
 
 /* ── Actions (Details + Repurpose) ──────────────────────────────── */
@@ -418,38 +427,6 @@
 .tp-stat--hero .tp-stat__label {
   text-transform: none;
   letter-spacing: 0;
-}
-
-/* Why-it-worked — Archie's read on the performance, grouped with the metrics
-   in a quiet callout (the insight that explains the numbers above it). */
-.tp-why {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-  padding: var(--ref-spacing-sm);
-  border-radius: var(--ref-border-radius-sm);
-  background: var(--ref-color-grey-10);
-}
-
-.tp-why__label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: var(--sys-text-style-caption-size);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--sys-text-color-light);
-}
-
-.tp-why__label i {
-  font-size: 13px;
-}
-
-.tp-why__text {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--ref-color-grey-150);
 }
 
 /* Faithful network-style preview of the published post. */

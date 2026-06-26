@@ -10,8 +10,8 @@
 // + hashtags + CTA, image (or "Generate an image" placeholder),
 // engagement stats, and a decorative LinkedIn-style action footer
 // (Like / Comment / Repost / Send). To the right of the card sits an
-// action stack — sparkles (rewrite) / calendar (schedule) / copy
-// (duplicate) / trash (delete). Each carries a `data-post-*`
+// action stack — sparkles (rewrite) / bookmark (save as draft) /
+// calendar (schedule) / trash (delete). Each carries a `data-post-*`
 // attribute ; the consumer wires the actions via event delegation.
 //
 // Render is pure ; no module-local state. Caller passes the post
@@ -174,7 +174,7 @@ export function renderPostCard(post, opts = {}) {
     >
       ${raw(checkbox)}
       <div class="posts__card-wrap">
-        ${raw(renderPostErrors(post))} ${raw(renderPostScheduled(post))}
+        ${raw(renderPostErrors(post))}
         <article class="ap-card posts__card ${editing ? "is-editing" : ""}">
           <header class="posts__card-header">
             <div class="posts__card-avatar" aria-hidden="true">${post.author.initials}</div>
@@ -307,20 +307,20 @@ export function renderPostCard(post, opts = {}) {
         <button
           type="button"
           class="ap-icon-button stroked"
+          aria-label="Save as draft"
+          data-post-save-draft="${post.id}"
+          ${regenerating ? "disabled" : ""}
+        >
+          <i class="ap-icon-bookmark"></i>
+        </button>
+        <button
+          type="button"
+          class="ap-icon-button stroked"
           aria-label="Schedule post"
           data-post-schedule="${post.id}"
           ${regenerating ? "disabled" : ""}
         >
           <i class="ap-icon-calendar"></i>
-        </button>
-        <button
-          type="button"
-          class="ap-icon-button stroked"
-          aria-label="Duplicate post"
-          data-post-duplicate="${post.id}"
-          ${regenerating ? "disabled" : ""}
-        >
-          <i class="ap-icon-copy"></i>
         </button>
         <button
           type="button"
@@ -511,31 +511,4 @@ function escapePlayerText(s) {
 
 function escapePlayerAttr(s) {
   return escapePlayerText(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-}
-
-// "scheduled" notice — sits flush above the card (visually glued via
-// posts.css). The DS `.ap-status-card .upper` is flex with
-// space-between, so a trailing .ap-link drops into the right edge
-// naturally. Clicking it re-opens the schedule modal for this post
-// via the same data-post-schedule hook the per-card calendar button
-// uses, so the wiring is reused 1:1.
-function renderPostScheduled(post) {
-  if (post.status !== "scheduled") return "";
-  const when = post.scheduledForLabel || "later";
-  return `
-    <div class="ap-status-card orange">
-      <div class="upper">
-        <i class="ap-icon-calendar" aria-hidden="true"></i>
-        <div class="flow"><span>Scheduled</span> ${when}</div>
-        <button
-          type="button"
-          class="ap-link small standalone"
-          data-post-schedule="${post.id}"
-          aria-label="Edit scheduled time"
-        >
-          Edit
-        </button>
-      </div>
-    </div>
-  `;
 }

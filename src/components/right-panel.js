@@ -7,13 +7,12 @@ import { getPath } from "../router.js?v=30";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import {
   getPosts,
-  addPostDraft,
   removePost,
   insertPost,
   updatePostContent,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=31";
-import { renderPostCard } from "./post-card.js?v=40";
+import { renderPostCard } from "./post-card.js?v=42";
 import { renderClipCard } from "./clip-card.js?v=8";
 import { onFeedbackClick } from "./feedback-control.js?v=1";
 // Shared compact idea card — same component the standalone Ideas page uses.
@@ -107,6 +106,23 @@ let clipSelection = new Set();
 // open/close cycles so the user keeps their filter when they re-open.
 let draftsFilter = "all";
 let draftsNetwork = "all";
+
+// Network display metadata for the Drafts list — drives the per-network
+// separators, their headers, and the network filter dropdown. `twitter`
+// is the posts-store alias for `x`. NETWORK_ORDER gives a stable grouping
+// order; only networks actually present in the feed render a section.
+const NETWORK_META = {
+  linkedin: { icon: "ap-icon-linkedin-official", label: "LinkedIn" },
+  twitter: { icon: "ap-icon-twitter-official", label: "X" },
+  instagram: { icon: "ap-icon-instagram-official", label: "Instagram" },
+  facebook: { icon: "ap-icon-facebook-official", label: "Facebook" },
+  tiktok: { icon: "ap-icon-tiktok-official", label: "TikTok" },
+  youtube: { icon: "ap-icon-youtube-official", label: "YouTube" },
+};
+const NETWORK_ORDER = ["linkedin", "twitter", "instagram", "facebook", "tiktok", "youtube"];
+function networkMetaFor(network) {
+  return NETWORK_META[network] || { icon: "ap-icon-web", label: network || "Other" };
+}
 
 // Multi-select state for bulk scheduling. Lives across renders inside the
 // panel; cleared when a session change or a bulk-schedule confirm fires.
@@ -520,8 +536,15 @@ export function init() {
       onBulkDelete();
       return;
     }
-    if (event.target.closest("[data-rpanel-drafts-bulk-schedule]")) {
-      onBulkSchedule();
+    if (event.target.closest("[data-rpanel-drafts-bulk-save]")) {
+      onSaveAsDraft();
+      return;
+    }
+    const bulkScheduleBtn = event.target.closest("[data-rpanel-drafts-bulk-schedule]");
+    if (bulkScheduleBtn) {
+      // Disabled = mixed-network selection; ignore the click (the hint
+      // below the bar explains why scheduling is unavailable).
+      if (!bulkScheduleBtn.hasAttribute("disabled")) onBulkSchedule();
       return;
     }
     // Per-card actions on a single draft (Lot 21 rich PostCard).
@@ -565,6 +588,11 @@ export function init() {
       onPostRewrite(rewriteIntentBtn.dataset.postId, rewriteIntentBtn.dataset.postRewriteIntent);
       return;
     }
+    const saveDraftBtn = event.target.closest("[data-post-save-draft]");
+    if (saveDraftBtn) {
+      onPostSaveAsDraft(saveDraftBtn.dataset.postSaveDraft);
+      return;
+    }
     const scheduleBtn = event.target.closest("[data-post-schedule]");
     if (scheduleBtn) {
       // The Edit affordance on the scheduled status-card renders as an
@@ -572,11 +600,6 @@ export function init() {
       // hash doesn't get dirtied when it's clicked.
       if (scheduleBtn.tagName === "A") event.preventDefault();
       onPostSchedule(scheduleBtn.dataset.postSchedule);
-      return;
-    }
-    const dupBtn = event.target.closest("[data-post-duplicate]");
-    if (dupBtn) {
-      onPostDuplicate(dupBtn.dataset.postDuplicate);
       return;
     }
     const delBtn = event.target.closest("[data-post-delete]");
@@ -1064,13 +1087,16 @@ export function init() {
       renderPanel();
       return;
     }
-    // "Select all visible" pill — flips every schedulable draft in the
-    // current filter on or off depending on the new checked state.
-    if (event.target.matches("[data-rpanel-drafts-select-all]")) {
+    // Per-network "Select all" in a group header — flips every visible
+    // draft of that network on or off depending on the new checked state.
+    const selectNetworkBox = event.target.matches("[data-rpanel-drafts-select-network]") ? event.target : null;
+    if (selectNetworkBox) {
       const sid = activeSessionId();
       if (!sid) return;
+      const network = selectNetworkBox.dataset.rpanelDraftsSelectNetwork;
       const visible = getPosts(sid).filter((p) => {
         if (p.status === "scheduled") return false;
+        if (p.network !== network) return false;
         if (draftsFilter === "needs_fixes" && p.status !== "needs_fixes") return false;
         if (draftsNetwork !== "all" && p.network !== draftsNetwork) return false;
         return true;
@@ -1171,7 +1197,7 @@ export function init() {
   });
 
   // Lot 21 — re-render the Drafts view when the active session's posts
-  // store mutates (per-card duplicate / delete / image attach). The
+  // store mutates (per-card save as draft / delete / image attach). The
   // store's subscribe is per-session, so we re-bind whenever the active
   // session changes via `rebindPostsStore()`.
   rebindPostsStore();
@@ -1299,12 +1325,16 @@ function renderPanel() {
               : renderIdeasView()
         }</div>`;
 
-  // Preserve the body's scrollTop across re-renders so flipping a filter
-  // chip or selecting a draft doesn't yank the user back to the top of
-  // a long list. Keyed by mode so each tab gets its own remembered
-  // position; switching modes intentionally restarts at the top.
+  // Preserve scrollTop across re-renders so flipping a filter chip or
+  // selecting a draft doesn't yank the user back to the top of a long
+  // list. The actual scroll container differs by mode: the Drafts view
+  // owns its own `.rpanel-drafts` scroller (overflow-y on the root),
+  // while the others scroll on the `.app-right-panel__body` wrapper —
+  // capture from whichever is actually scrolled. Keyed by mode so each
+  // tab keeps its own position; switching modes restarts at the top.
   const previousBody = el.querySelector(".app-right-panel__body");
-  const previousScroll = previousBody?.scrollTop || 0;
+  const previousScroller = previousBody?.querySelector(".rpanel-drafts") || previousBody;
+  const previousScroll = previousScroller?.scrollTop || 0;
   const previousMode = el.dataset.rpanelLastMode;
 
   el.dataset.rpanelLastMode = state.mode;
@@ -1340,9 +1370,10 @@ function renderPanel() {
 
   if (previousMode === state.mode && previousScroll > 0) {
     const nextBody = el.querySelector(".app-right-panel__body");
-    if (nextBody) {
+    const nextScroller = nextBody?.querySelector(".rpanel-drafts") || nextBody;
+    if (nextScroller) {
       requestAnimationFrame(() => {
-        nextBody.scrollTop = previousScroll;
+        nextScroller.scrollTop = previousScroll;
       });
     }
   }
@@ -1415,7 +1446,7 @@ function endResizeDrag() {
 // the durable per-session `posts-store`. Every post the user has ever
 // drafted in a session lives there ; the panel reads + filters that list
 // and renders rich PostCards (cf. `post-card.js`). Per-card actions
-// (rewrite / schedule / duplicate / delete / generate image) wire
+// (rewrite / save as draft / schedule / delete / generate image) wire
 // directly to posts-store mutations + the relevant modals.
 
 // Resolve the active session's id from the URL — the right-panel always
@@ -1454,26 +1485,27 @@ function renderDraftsView() {
     editingPostId = null;
     editingOriginal = null;
   }
+  // Scheduling and "Save as draft" both move a post out of this workspace,
+  // so the panel only ever shows live drafts — there is no "scheduled" tab
+  // anymore. Filter scheduled posts out defensively (covers any seeded
+  // `status: "scheduled"` posts too).
   const sid = activeSessionId();
-  const allPosts = sid ? getPosts(sid) : [];
+  const allPosts = sid ? getPosts(sid).filter((p) => p.status !== "scheduled") : [];
   if (!allPosts.length) return renderDraftsEmpty();
 
-  // Counts per status / per network — drive the filter rail badges.
+  // The "scheduled" status filter no longer exists — normalise any stale
+  // state left over from an earlier render so the tabs stay in sync.
+  if (draftsFilter === "scheduled") draftsFilter = "all";
+
+  // Counts per status — drive the filter rail badges.
   const filterCounts = {
     all: allPosts.length,
     needs_fixes: allPosts.filter((p) => p.status === "needs_fixes").length,
-    scheduled: allPosts.filter((p) => p.status === "scheduled").length,
-  };
-  const networkCounts = {
-    all: allPosts.length,
-    linkedin: allPosts.filter((p) => p.network === "linkedin").length,
-    twitter: allPosts.filter((p) => p.network === "twitter").length,
   };
 
   // Apply both filter axes.
   const filtered = allPosts.filter((p) => {
     if (draftsFilter === "needs_fixes" && p.status !== "needs_fixes") return false;
-    if (draftsFilter === "scheduled" && p.status !== "scheduled") return false;
     if (draftsNetwork !== "all" && p.network !== draftsNetwork) return false;
     return true;
   });
@@ -1500,20 +1532,23 @@ function renderDraftsView() {
     `;
   };
 
-  const networkMeta = {
-    all: { icon: "ap-icon-web", label: "All networks", count: networkCounts.all },
-    linkedin: { icon: "ap-icon-linkedin-official", label: "LinkedIn", count: networkCounts.linkedin },
-    twitter: { icon: "ap-icon-twitter-official", label: "X", count: networkCounts.twitter },
-  };
-  const currentNetwork = networkMeta[draftsNetwork] || networkMeta.all;
+  // Network dropdown options are dynamic — only networks actually present
+  // in the current drafts, ordered by NETWORK_ORDER.
+  const presentNetworks = [
+    ...NETWORK_ORDER.filter((n) => allPosts.some((p) => p.network === n)),
+    ...[...new Set(allPosts.map((p) => p.network))].filter((n) => !NETWORK_ORDER.includes(n)),
+  ];
+  const currentNetwork =
+    draftsNetwork === "all" ? { icon: "ap-icon-web", label: "All networks" } : networkMetaFor(draftsNetwork);
 
   const networkOption = (id) => {
-    const meta = networkMeta[id];
+    const meta = id === "all" ? { icon: "ap-icon-web", label: "All networks" } : networkMetaFor(id);
+    const count = id === "all" ? allPosts.length : allPosts.filter((p) => p.network === id).length;
     const selected = draftsNetwork === id;
     return `
       <div class="ap-select-option ${selected ? "selected" : ""}" data-rpanel-drafts-network="${id}">
         <i class="${meta.icon} ap-select-option-icon"></i>
-        <span class="ap-select-option-text">${meta.label} (${meta.count})</span>
+        <span class="ap-select-option-text">${meta.label} (${count})</span>
         ${selected ? `<i class="ap-icon-check ap-select-option-check"></i>` : ""}
       </div>
     `;
@@ -1525,7 +1560,6 @@ function renderDraftsView() {
         <div class="ap-tabs-nav" role="tablist" aria-label="Filter drafts by status">
           ${statusTab("all", "All drafts", filterCounts.all)}
           ${statusTab("needs_fixes", "Needs fixes", filterCounts.needs_fixes)}
-          ${statusTab("scheduled", "Scheduled", filterCounts.scheduled)}
         </div>
       </div>
       <details class="ap-select rpanel-drafts__network">
@@ -1538,8 +1572,7 @@ function renderDraftsView() {
         <div class="ap-select-dropdown">
           <div class="ap-select-options">
             ${networkOption("all")}
-            ${networkOption("linkedin")}
-            ${networkOption("twitter")}
+            ${presentNetworks.map((n) => networkOption(n)).join("")}
           </div>
         </div>
       </details>
@@ -1547,33 +1580,56 @@ function renderDraftsView() {
     </div>
   `;
 
-  // FIND-B5: align the no-match state with the rich `No drafts yet`
-  // pattern just below — icon + title + sub + Clear filters CTA. The
-  // CTA resets both filter axes through data-rpanel-drafts-clear so the
-  // rail buttons and state mutation stay in lockstep.
-  // Multi-select — surface schedulable drafts only (not already-
-  // scheduled). Keep the selection set in sync with what's actually
-  // visible so a hidden draft can't ghost-affect the bulk CTA.
-  const schedulableIds = new Set(allPosts.filter((p) => p.status !== "scheduled").map((p) => p.id));
+  // Multi-select — every draft is selectable. Keep the selection set in
+  // sync with what actually exists so a removed draft can't ghost-affect
+  // the bulk bar.
+  const allIds = new Set(allPosts.map((p) => p.id));
   for (const id of Array.from(selectedDraftIds)) {
-    if (!schedulableIds.has(id)) selectedDraftIds.delete(id);
+    if (!allIds.has(id)) selectedDraftIds.delete(id);
   }
-  const visibleSchedulable = filtered.filter((p) => p.status !== "scheduled");
-  const allVisibleSelected =
-    visibleSchedulable.length > 0 && visibleSchedulable.every((p) => selectedDraftIds.has(p.id));
   const selectedCount = selectedDraftIds.size;
 
+  // Feed grouped by network with a separator header per group. Each header
+  // carries a per-network "Select all" so a bulk selection naturally stays
+  // within one network (the gate for scheduling). Groups follow
+  // NETWORK_ORDER; any unknown network falls in after the known ones.
+  const feedGroups = [
+    ...NETWORK_ORDER.filter((n) => filtered.some((p) => p.network === n)),
+    ...[...new Set(filtered.map((p) => p.network))].filter((n) => !NETWORK_ORDER.includes(n)),
+  ];
+
+  const renderGroup = (network) => {
+    const meta = networkMetaFor(network);
+    const groupPosts = filtered.filter((p) => p.network === network);
+    const groupSelected = groupPosts.filter((p) => selectedDraftIds.has(p.id)).length;
+    const allGroupSelected = groupPosts.length > 0 && groupSelected === groupPosts.length;
+    const indeterminate = groupSelected > 0 && !allGroupSelected;
+    const cards = groupPosts
+      .map((p) =>
+        renderPostCard(p, {
+          editing: p.id === editingPostId,
+          inlineEdit,
+          selectable: true,
+          selected: selectedDraftIds.has(p.id),
+        }),
+      )
+      .join("");
+    return `
+      <div class="rpanel-drafts__group-header">
+        <label class="ap-checkbox-container ${indeterminate ? "indeterminate" : ""}" aria-label="Select all ${meta.label} drafts">
+          <input type="checkbox" data-rpanel-drafts-select-network="${network}" ${allGroupSelected ? "checked" : ""} />
+          <i></i>
+        </label>
+        <i class="${meta.icon} rpanel-drafts__group-icon" aria-hidden="true"></i>
+        <span class="rpanel-drafts__group-label">${meta.label}</span>
+        <span class="ap-counter normal grey">${groupPosts.length}</span>
+      </div>
+      ${cards}
+    `;
+  };
+
   const feed = filtered.length
-    ? filtered
-        .map((p) =>
-          renderPostCard(p, {
-            editing: p.id === editingPostId,
-            inlineEdit,
-            selectable: p.status !== "scheduled",
-            selected: selectedDraftIds.has(p.id),
-          }),
-        )
-        .join("")
+    ? feedGroups.map((n) => renderGroup(n)).join("")
     : `<div class="app-right-panel__empty">
          <div class="app-right-panel__empty-icon"><i class="ap-icon-search"></i></div>
          <div class="app-right-panel__empty-title">No drafts match this filter</div>
@@ -1583,37 +1639,31 @@ function renderDraftsView() {
          </div>
        </div>`;
 
-  // "Select all" pill — sits above the feed, only visible when there are
-  // schedulable drafts in the current filter. Uses an indeterminate
-  // checkbox visual when some-but-not-all of the visible drafts are
-  // selected, matching the DS .ap-checkbox-container.indeterminate state.
-  const someVisibleSelected = visibleSchedulable.some((p) => selectedDraftIds.has(p.id));
-  const selectAllIndeterminate = someVisibleSelected && !allVisibleSelected;
-  const selectAllBar = visibleSchedulable.length
-    ? `
-      <div class="rpanel-drafts__selectbar">
-        <label class="ap-checkbox-container ${selectAllIndeterminate ? "indeterminate" : ""}" aria-label="Select all visible drafts">
-          <input type="checkbox" data-rpanel-drafts-select-all ${allVisibleSelected ? "checked" : ""} />
-          <i></i>
-          <span>${allVisibleSelected ? "Deselect all" : "Select all"}</span>
-        </label>
-        <span class="rpanel-drafts__selectbar-meta">${selectedCount} of ${schedulableIds.size} selected</span>
-      </div>
-    `
-    : "";
-
   // Sticky bulk-action bar — anchored at the bottom of the feed when 1+
-  // draft is selected. Clear selection · Delete (confirmed) · Schedule CTA.
+  // draft is selected. Save as draft works on any selection (cross-network);
+  // Schedule is gated to a single-network selection because scheduling is
+  // per-network. Delete is cross-network. A hint explains a disabled CTA.
+  const selected = allPosts.filter((p) => selectedDraftIds.has(p.id));
+  const selectedNetworks = new Set(selected.map((p) => p.network));
+  const canSchedule = selectedNetworks.size === 1;
   const draftWord = selectedCount === 1 ? "draft" : "drafts";
+  const bulkNetwork = selectedNetworks.size === 1 ? networkMetaFor([...selectedNetworks][0]) : null;
+  const bulkLabel = bulkNetwork
+    ? `${selectedCount} selected · <i class="${bulkNetwork.icon} rpanel-drafts__bulkbar-net" aria-hidden="true"></i> ${bulkNetwork.label}`
+    : `${selectedCount} selected · Multiple networks`;
   const bulkBar = selectedCount
     ? `
       <div class="rpanel-drafts__bulkbar" role="region" aria-label="Bulk actions">
-        <div class="rpanel-drafts__bulkbar-label">${selectedCount} selected</div>
+        <div class="rpanel-drafts__bulkbar-label">${bulkLabel}</div>
         <div class="rpanel-drafts__bulkbar-actions">
           <button type="button" class="ap-button ghost grey" data-rpanel-drafts-bulk-clear>
             Clear
           </button>
-          <button type="button" class="ap-button primary orange" data-rpanel-drafts-bulk-schedule>
+          <button type="button" class="ap-button stroked grey" data-rpanel-drafts-bulk-save>
+            <i class="ap-icon-bookmark" aria-hidden="true"></i>
+            Save as draft
+          </button>
+          <button type="button" class="ap-button primary orange" data-rpanel-drafts-bulk-schedule ${canSchedule ? "" : "disabled"}>
             <i class="ap-icon-calendar" aria-hidden="true"></i>
             Schedule ${selectedCount} ${draftWord}
           </button>
@@ -1621,6 +1671,11 @@ function renderDraftsView() {
             <i class="ap-icon-trash" aria-hidden="true"></i>
           </button>
         </div>
+        ${
+          canSchedule
+            ? ""
+            : `<div class="rpanel-drafts__bulkbar-hint">Select drafts from a single network to schedule them.</div>`
+        }
       </div>
     `
     : "";
@@ -1628,7 +1683,7 @@ function renderDraftsView() {
   return html`
     <div class="rpanel-drafts ${selectedCount ? "has-selection" : ""}">
       ${raw(filtersBar)}
-      <div class="posts__feed rpanel-drafts__feed">${raw(selectAllBar)} ${raw(feed)} ${raw(bulkBar)}</div>
+      <div class="posts__feed rpanel-drafts__feed">${raw(feed)} ${raw(bulkBar)}</div>
     </div>
   `;
 }
@@ -1681,13 +1736,11 @@ function onPostSchedule(postId) {
   if (!post) return;
   openScheduleModal({
     posts: [post],
-    onConfirm: (slots) => {
-      // Mark the post scheduled in-place — the store doesn't have a
-      // dedicated mutator yet, so we mutate the object directly. Future
-      // refactor: posts-store.markScheduled(sid, postId, label).
-      const slot = slots && slots[0];
-      post.status = "scheduled";
-      post.scheduledForLabel = slot ? formatScheduledLabel(slot.when) : post.scheduledForLabel || "later";
+    onConfirm: () => {
+      // The modal queues the post on confirm; here we just drop it from
+      // the Drafts workspace.
+      commitScheduled(sid, [post]);
+      selectedDraftIds.delete(post.id);
       renderPanel();
     },
   });
@@ -1730,38 +1783,82 @@ function onBulkDelete() {
   });
 }
 
-// Bulk schedule — opens the modal seeded with every selected draft. On
-// confirm, each post is marked scheduled with its per-slot label and
-// the selection is cleared so the bar disappears.
+// Bulk schedule — opens the modal seeded with every selected draft.
+// Scheduling is per-network, so a mixed-network selection is rejected
+// (the bulk CTA is also disabled in that case). On confirm the posts move
+// onto the calendar queue and out of the workspace.
 function onBulkSchedule() {
   const sid = activeSessionId();
   if (!sid) return;
-  const sessionPosts = getPosts(sid);
-  const selected = sessionPosts.filter((p) => selectedDraftIds.has(p.id) && p.status !== "scheduled");
+  const selected = getPosts(sid).filter((p) => selectedDraftIds.has(p.id) && p.status !== "scheduled");
   if (selected.length === 0) return;
+  if (new Set(selected.map((p) => p.network)).size !== 1) return;
   openScheduleModal({
     posts: selected,
-    onConfirm: (slots) => {
-      const byPostId = new Map((slots || []).map((s) => [s.postId, s.when]));
-      for (const p of selected) {
-        const when = byPostId.get(p.id);
-        p.status = "scheduled";
-        p.scheduledForLabel = when ? formatScheduledLabel(when) : p.scheduledForLabel || "later";
-      }
+    onConfirm: () => {
+      commitScheduled(sid, selected);
       selectedDraftIds.clear();
       renderPanel();
     },
   });
 }
 
-// Compact label shown above the card when a post is scheduled. Same
-// shape as the seeded labels ("Thu · 9:00") so the in-feed scheduled
-// notice keeps a consistent visual weight regardless of the source.
-function formatScheduledLabel(ts) {
-  const d = new Date(ts);
-  const day = d.toLocaleDateString(undefined, { weekday: "short" });
-  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-  return `${day} · ${time}`;
+// Remove a freshly-scheduled batch from the Drafts workspace. The schedule
+// modal already pushes the posts onto the calendar queue (schedule-store)
+// on confirm, so here we only drop them from the list.
+function commitScheduled(sid, posts) {
+  for (const p of posts) removePost(sid, p.id);
+}
+
+// Bulk "Save as draft" — saves every selected draft (any network) into the
+// draft queue and clears them from the workspace. Non-destructive, so no
+// confirm gate; a toast offers Undo that restores the batch in place.
+function onSaveAsDraft() {
+  const sid = activeSessionId();
+  if (!sid) return;
+  const snapshot = getPosts(sid)
+    .map((post, idx) => ({ post, idx }))
+    .filter(({ post }) => selectedDraftIds.has(post.id));
+  if (snapshot.length === 0) return;
+  const count = snapshot.length;
+  const draftWord = count === 1 ? "draft" : "drafts";
+  for (const { post } of snapshot) removePost(sid, post.id);
+  selectedDraftIds.clear();
+  renderPanel();
+  import("./toast.js?v=20").then(({ showToast }) => {
+    showToast(`${count} ${draftWord} saved as draft`, {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          for (const { post, idx } of snapshot) insertPost(sid, post, idx);
+          renderPanel();
+        },
+      },
+    });
+  });
+}
+
+// Per-card "Save as draft" — single-post counterpart of onSaveAsDraft.
+function onPostSaveAsDraft(postId) {
+  const sid = activeSessionId();
+  if (!sid) return;
+  const idx = getPosts(sid).findIndex((p) => p.id === postId);
+  if (idx < 0) return;
+  const post = getPosts(sid)[idx];
+  removePost(sid, postId);
+  selectedDraftIds.delete(postId);
+  renderPanel();
+  import("./toast.js?v=20").then(({ showToast }) => {
+    showToast("Saved as draft", {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          insertPost(sid, post, idx);
+          renderPanel();
+        },
+      },
+    });
+  });
 }
 
 // Drafts have no title, so the composer pill reads "<Network> — <snippet>"
@@ -1788,19 +1885,6 @@ function onPostMention(postId) {
   const snippet = firstLine.trim().slice(0, 40);
   const label = snippet ? `${network} — ${snippet}${firstLine.trim().length > 40 ? "…" : ""}` : `${network} draft`;
   addComposerMention(sid, label);
-}
-
-function onPostDuplicate(postId) {
-  const sid = activeSessionId();
-  if (!sid) return;
-  const post = getPosts(sid).find((p) => p.id === postId);
-  if (!post) return;
-  addPostDraft(sid, {
-    network: post.network,
-    text: [...(post.text || [])],
-    hashtags: [...(post.hashtags || [])],
-  });
-  import("./toast.js?v=20").then(({ showToast }) => showToast("Draft duplicated"));
 }
 
 function onPostDelete(postId) {

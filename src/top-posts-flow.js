@@ -2,33 +2,27 @@
 //
 // Launched from the "Use top performing posts" new-chat starter card
 // (session.js starter click delegation → startTopPostsFlow). Runs inline in
-// the current session's assistant panel using the same inline-question picker
-// chrome as the draft / clip flows, so it reads as one continuous conversation.
+// the current session's assistant panel so it reads as one continuous
+// conversation.
 //
 // Arc:
 //   1. startTopPostsFlow  — surface the user's winners; pick one to build on.
-//   2. chooseMode         — explain WHY it worked, then pick a reuse mode.
-//   3a. Repurpose         — pick target channels → one adapted draft per channel.
-//   3b. Variations        — generate fresh rewrites of the winning post (no picker).
-//   3c. Refresh & repost  — one freshened draft → offer to schedule it.
-//   3d. Save the angle    — distil the winning pattern into a reusable idea.
-//   4. generate*          — thinking chip → create drafts/ideas → post a result
-//                           turn (drafts via posts-store, ideas via library).
+//   2. buildVariations    — echo the pick, explain WHY it worked, then go
+//                           straight to spinning up fresh variations of it.
+//                           Variations is the only reuse mode, so there's no
+//                           reuse-mode picker between the pick and the result.
+//   3. generateVariations — thinking chip → create the variation drafts → post
+//                           a result turn (drafts via posts-store).
 
 import {
-  postUserTurn,
   postAssistantMessage,
   startPending,
   finishPending,
   postDraftResult,
-  postExtractionResult,
   postTopPostPickTurn,
 } from "./assistant.js?v=52";
-import * as inlineQuestion from "./inline-question.js?v=41";
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=2";
 import { addPostDraft } from "./posts-store.js?v=31";
-import { injectIdeasForSource } from "./library.js?v=42";
-import { open as openScheduleModal } from "./components/schedule-modal.js?v=39";
 import { showToast } from "./components/toast.js?v=20";
 
 // Simulated "generating" delay — matches draft-flow's chip duration so the
@@ -45,16 +39,8 @@ const CHANNEL_META = {
   youtube: { icon: "ap-icon-youtube-official", label: "YouTube" },
 };
 
-// Channels we offer as repurpose targets, in display order. The source post's
-// own network is filtered out at render time (no point repurposing onto itself).
-const REPURPOSE_TARGETS = ["linkedin", "x", "instagram", "facebook", "tiktok"];
-
 function labelFor(network) {
   return CHANNEL_META[(network || "").toLowerCase()]?.label || network;
-}
-
-function iconFor(network) {
-  return CHANNEL_META[(network || "").toLowerCase()]?.icon || "ap-icon-share";
 }
 
 // Shared chip lifecycle (mirrors draft-flow.withPendingChip): show the thinking
@@ -201,42 +187,11 @@ function lowerFirst(s) {
   return s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
 }
 
-// Channel adaptation for Repurpose — the same proven core, reframed in each
-// network's native format: X stays punchy and single-idea, LinkedIn invites
-// discussion, Instagram is save-worthy, Facebook is conversational, TikTok
-// opens on a hook. Returns { text[], hashtags[], cta }.
-function composeForChannel(post, channel) {
-  const net = (channel || "").toLowerCase();
-  const tags = post.hashtags || [];
-  if (net === "x" || net === "twitter") {
-    // One sharp idea; trim to the lead so it reads native to X.
-    const lead = firstSentence(post.excerpt);
-    return { text: [lead.length > 12 ? lead : post.excerpt], hashtags: tags.slice(0, 2), cta: "" };
-  }
-  if (net === "instagram") {
-    return { text: [post.excerpt, "Save this for later 📌"], hashtags: tags, cta: "" };
-  }
-  if (net === "facebook") {
-    return { text: ["Sharing this one again — it still holds up:", post.excerpt], hashtags: tags.slice(0, 2), cta: "" };
-  }
-  if (net === "tiktok") {
-    return { text: ["POV: the one post that actually worked 👇", post.excerpt], hashtags: tags.slice(0, 3), cta: "" };
-  }
-  // linkedin + default — keep it full, end on a discussion prompt.
-  return { text: [post.excerpt, "What would you add? 👇"], hashtags: tags.slice(0, 3), cta: "" };
-}
-
 // Provenance stamped onto every generated draft so the Drafts panel always
-// shows where a post came from (the milker's core promise: capitalise on
-// what worked). Rendered as a pill by post-card.js.
-function originFor(post, mode) {
-  const net = labelFor(post.network);
-  const map = {
-    repurpose: { icon: "ap-icon-share", label: `Repurposed from your top ${net} post · ${post.perfBadge}` },
-    variations: { icon: "ap-icon-shuffle", label: `New angle on your top ${net} post · ${post.perfBadge}` },
-    refresh: { icon: "ap-icon-refresh", label: `Refreshed from your top ${net} post · ${post.perfBadge}` },
-  };
-  return map[mode] || null;
+// shows where a post came from (the flow's core promise: capitalise on what
+// worked). Rendered as a pill by post-card.js.
+function variationOrigin(post) {
+  return { icon: "ap-icon-shuffle", label: `New angle on your top ${labelFor(post.network)} post · ${post.perfBadge}` };
 }
 
 // ---- Step 1: the winner-selection grid screen -------------------------
@@ -245,7 +200,7 @@ function originFor(post, mode) {
 // quick-picker — it takes over the assistant panel the same way Batch / Clip
 // Studio do. session.js checks isPickerActive() in renderAssistantPanel, paints
 // the grid via renderTopPostsPickerScreen, and routes a card click back here
-// through pickWinner(). Steps 2+ stay as inline-question pickers.
+// through pickWinner(), which goes straight to spinning up variations.
 const pickerStates = new Map(); // sessionId → { posts }
 const pickerSubs = new Map(); // sessionId → Set<fn>
 
@@ -268,12 +223,12 @@ export function subscribePicker(sessionId, fn) {
   return () => pickerSubs.get(sessionId)?.delete(fn);
 }
 
-// A card click — clear the grid, then drop into the mode picker for that winner.
+// A card click — clear the grid, then spin up variations for that winner.
 export function pickWinner(sessionId, postId) {
   if (!pickerStates.has(sessionId)) return;
   pickerStates.delete(sessionId);
   notifyPicker(sessionId);
-  chooseMode(sessionId, postId);
+  buildVariations(sessionId, postId);
 }
 
 // Leave the grid without picking (Esc / route change cleanup).
@@ -291,6 +246,15 @@ export function setSort(sessionId, sort) {
   notifyPicker(sessionId);
 }
 
+// Change the active profile lens (profile chip click). "all" or a network slug.
+// Re-renders the board, filtered to that profile's winners.
+export function setProfile(sessionId, profile) {
+  const s = pickerStates.get(sessionId);
+  if (!s || s.profile === profile) return;
+  s.profile = profile;
+  notifyPicker(sessionId);
+}
+
 // (Re)open the board grid for the current winners. Silent — no intro turn —
 // so it doubles as the "← Back" target from the reuse-mode picker without
 // duplicating Archie's opener. Preserves nothing else; the sort resets to the
@@ -298,7 +262,7 @@ export function setSort(sessionId, sort) {
 function openBoard(sessionId) {
   const posts = getTopPosts();
   if (!posts.length) return;
-  pickerStates.set(sessionId, { posts, sort: "performance" });
+  pickerStates.set(sessionId, { posts, sort: "performance", profile: "all" });
   notifyPicker(sessionId);
 }
 
@@ -316,9 +280,11 @@ export function startTopPostsFlow(sessionId) {
   openBoard(sessionId);
 }
 
-// ---- Step 2: explain the why, pick a reuse mode -----------------------
-
-function chooseMode(sessionId, postId) {
+// ---- Step 2: echo the pick, explain the why, spin up variations -------
+//
+// Variations is the only reuse mode, so picking a winner goes straight to
+// generating fresh takes — no reuse-mode picker in between.
+function buildVariations(sessionId, postId) {
   const post = getTopPost(postId);
   if (!post) return;
   // Echo the chosen post as a compact preview card (not a truncated text
@@ -331,97 +297,17 @@ function chooseMode(sessionId, postId) {
     engagementRate: post.engagementRate,
     impressions: post.impressions,
   });
-  postAssistantMessage(
-    sessionId,
-    `Great pick. This one worked because of ${post.whyItWorked}. How do you want to reuse it?`,
-  );
-  inlineQuestion.ask(sessionId, {
-    stepLabel: "Reuse",
-    title: "How should I reuse this post?",
-    items: [
-      {
-        value: "repurpose",
-        label: "Repurpose to other channels",
-        caption: "Adapt the same idea for your other networks",
-        icon: "ap-icon-share",
-      },
-      {
-        value: "variations",
-        label: "Spin up variations",
-        caption: "Fresh rewrites of the same post",
-        icon: "ap-icon-shuffle",
-      },
-      {
-        value: "refresh",
-        label: "Refresh & repost",
-        caption: "Freshen it up and schedule it to run again",
-        icon: "ap-icon-refresh",
-      },
-      {
-        value: "extract",
-        label: "Save the winning angle",
-        caption: "Turn what worked into a reusable idea",
-        icon: "ap-icon-star",
-      },
-    ],
-    onPick: (mode) => {
-      if (mode === "repurpose") return askChannels(sessionId, post);
-      if (mode === "variations") return generateVariations(sessionId, post);
-      if (mode === "refresh") return generateRefresh(sessionId, post);
-      return generateExtract(sessionId, post);
-    },
-    // ← Back returns to the winner board (silent re-open, no duplicate intro).
-    onBack: () => openBoard(sessionId),
-  });
+  postAssistantMessage(sessionId, `Great pick. Here are a few fresh takes on it:`);
+  generateVariations(sessionId, post);
 }
 
-// ---- Step 3a: Repurpose to other channels -----------------------------
+// ---- Step 3: Variations of the winning post ---------------------------
 
-function askChannels(sessionId, post) {
-  postUserTurn(sessionId, "Repurpose it to other channels");
-  const targets = REPURPOSE_TARGETS.filter((c) => c !== (post.network || "").toLowerCase());
-  inlineQuestion.ask(sessionId, {
-    stepLabel: "Channels",
-    title: "Which channels should I adapt it for?",
-    multi: true,
-    defaultSelected: targets.slice(0, 1),
-    submitLabel: "Adapt it",
-    items: targets.map((c) => ({ value: c, label: labelFor(c), icon: iconFor(c) })),
-    onPick: (channels) => generateRepurpose(sessionId, post, channels),
-    onBack: () => chooseMode(sessionId, post.id),
-  });
-}
-
-function generateRepurpose(sessionId, post, channels) {
-  const picked = (channels || []).filter((c) => CHANNEL_META[c]);
-  if (!picked.length) return;
-  postUserTurn(sessionId, picked.map(labelFor).join(", "));
-  withPendingChip(
-    sessionId,
-    () => {
-      const drafts = picked.map((c) => {
-        const copy = composeForChannel(post, c);
-        const draft = addPostDraft(sessionId, { network: c, text: copy.text, hashtags: copy.hashtags });
-        draft.origin = originFor(post, "repurpose");
-        return draft;
-      });
-      postDraftResult(sessionId, {
-        ideaTitle: `Repurposed from your top ${labelFor(post.network)} post`,
-        drafts,
-      });
-    },
-    (err) => genError(err, () => generateRepurpose(sessionId, post, picked)),
-  );
-}
-
-// ---- Step 3b: Variations of the winning post --------------------------
-
-// "Spin up variations" generates several drafts straight away — no picker. Each
-// draft is a variation of the selected post's own copy (the per-winner
-// handcrafted reframings double as the variation set; a winner with no
-// handcrafted copy falls back to genericAngleCopy() off its excerpt).
+// Generate several drafts straight away. Each draft is a variation of the
+// selected post's own copy (the per-winner handcrafted reframings double as the
+// variation set; a winner with no handcrafted copy falls back to
+// genericAngleCopy() off its excerpt).
 function generateVariations(sessionId, post) {
-  postUserTurn(sessionId, "Spin up variations");
   withPendingChip(
     sessionId,
     () => {
@@ -432,7 +318,7 @@ function generateVariations(sessionId, post) {
           text: v.text,
           hashtags: post.hashtags || [],
         });
-        draft.origin = originFor(post, "variations");
+        draft.origin = variationOrigin(post);
         return draft;
       });
       postDraftResult(sessionId, {
@@ -441,99 +327,5 @@ function generateVariations(sessionId, post) {
       });
     },
     (err) => genError(err, () => generateVariations(sessionId, post)),
-  );
-}
-
-// ---- Step 3c: Refresh & repost ----------------------------------------
-
-// One freshened draft on the post's own network, then an offer to schedule it
-// straight into the queue (reusing the schedule modal). No extra picker before
-// generating — "refresh" is a single, opinionated action.
-function generateRefresh(sessionId, post) {
-  postUserTurn(sessionId, "Refresh & repost");
-  withPendingChip(
-    sessionId,
-    () => {
-      const draft = addPostDraft(sessionId, {
-        network: post.network,
-        text: ["Reposting this with fresh proof — it still holds up:", post.excerpt],
-        hashtags: post.hashtags || [],
-      });
-      draft.origin = originFor(post, "refresh");
-      postDraftResult(sessionId, {
-        ideaTitle: `Refreshed your top ${labelFor(post.network)} post`,
-        drafts: [draft],
-      });
-      offerSchedule(sessionId, draft);
-    },
-    (err) => genError(err, () => generateRefresh(sessionId, post)),
-  );
-}
-
-// After a refresh, ask whether to schedule the draft now. "Schedule it" opens
-// the standard schedule modal seeded with the single draft; "Keep as draft"
-// just confirms it's in Drafts.
-function offerSchedule(sessionId, draft) {
-  postAssistantMessage(sessionId, "Here's the refreshed version. Want me to schedule it to run again?");
-  inlineQuestion.ask(sessionId, {
-    stepLabel: "Repost",
-    title: "Schedule this repost?",
-    items: [
-      {
-        value: "schedule",
-        label: "Schedule it",
-        caption: "Pick a time and add it to your queue",
-        icon: "ap-icon-calendar",
-      },
-      {
-        value: "keep",
-        label: "Keep as a draft",
-        caption: "I'll leave it in Drafts for now",
-        icon: "ap-icon-feature-library",
-      },
-    ],
-    onPick: (choice) => {
-      if (choice === "schedule") {
-        postUserTurn(sessionId, "Schedule it");
-        openScheduleModal({
-          posts: [draft],
-          onConfirm: () =>
-            postAssistantMessage(sessionId, "Done — it's queued to run again. You'll find it on your calendar."),
-        });
-        return;
-      }
-      postUserTurn(sessionId, "Keep as a draft");
-      postAssistantMessage(sessionId, "Got it — it's waiting in your Drafts whenever you're ready.");
-    },
-  });
-}
-
-// ---- Step 3d: Save the winning angle as a reusable idea ---------------
-
-// Distil the winning pattern (its `whyItWorked`) into one reusable idea so the
-// user can build on the formula later. Lands in the Ideas library via
-// injectIdeasForSource (dual-write so it shows in the Ideas panel) and posts an
-// inline extraction-result turn.
-function generateExtract(sessionId, post) {
-  postUserTurn(sessionId, "Save the winning angle");
-  withPendingChip(
-    sessionId,
-    () => {
-      const idea = {
-        title: `The winning formula behind your top ${labelFor(post.network)} post`,
-        body: `What made it land: ${post.whyItWorked}. Reuse this formula on your next ${labelFor(post.network)} post.`,
-        kind: "insight",
-        tags: post.hashtags || [],
-        rationale: `Distilled from a ${post.perfBadge} post (${post.metricLine}).`,
-        channels: [post.network],
-      };
-      const created = injectIdeasForSource(sessionId, post.id, [idea]);
-      postExtractionResult(sessionId, {
-        filename: `your top ${labelFor(post.network)} post`,
-        ideas: created,
-      });
-    },
-    (err) => genError(err, () => generateExtract(sessionId, post)),
-    "Extracting ideas",
   );
 }

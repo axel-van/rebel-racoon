@@ -105,7 +105,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=218";
+} from "../components/right-panel.js?v=223";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=13";
@@ -1940,7 +1940,7 @@ function renderTopPostsPickerScreen(session) {
             </p>
           </div>
           ${raw(buildWorkflowFlow(TOP_POSTS_STEPS))}
-          ${raw(renderTopPostsBoard({ posts: state.posts, sort: state.sort }))}
+          ${raw(renderTopPostsBoard({ posts: state.posts, sort: state.sort, profile: state.profile }))}
         </div>
       </div>
     </aside>
@@ -4127,6 +4127,14 @@ function bindSession(root, session) {
       // opens the grid screen (renderTopPostsPickerScreen below).
       if (starterBtn && starterBtn.dataset.starterAction === "open-top-posts") {
         topPostsFlow.startTopPostsFlow(session.id);
+        return;
+      }
+      // Winner-board profile chip → switch the profile lens (filters the grid
+      // to that profile's winners). Checked before the card pick since the
+      // selector sits outside the cards.
+      const topPostProfile = event.target.closest("[data-top-post-profile]");
+      if (topPostProfile) {
+        topPostsFlow.setProfile(session.id, topPostProfile.dataset.topPostProfile);
         return;
       }
       // Winner-board sort chip → re-sort the grid (checked before the card

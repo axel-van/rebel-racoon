@@ -780,27 +780,38 @@
   box-shadow: 0 0 0 1px var(--ref-color-electric-blue-100);
 }
 
-/* ── Select-all pill ─────────────────────────────────────────────────
-   Sits flush above the first post card. Same horizontal centering as
-   the cards so the affordance reads as part of the feed, not a header. */
-.rpanel-drafts__selectbar {
+/* ── Per-network group separator ─────────────────────────────────────
+   Splits the drafts feed by network. Each header carries a "Select all"
+   for that network (the unit you schedule in bulk), the network icon,
+   label and a count. Centered on the same 580px column as the cards so
+   the divider reads as part of the feed. */
+.rpanel-drafts__group-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-xs);
   width: 100%;
   max-width: 580px;
-  margin: 0 auto;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  background: var(--ref-color-grey-10);
-  border-radius: var(--app-radius-card);
+  margin: var(--ref-spacing-xs) auto 0;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-xxs) var(--ref-spacing-xxs);
+  border-top: 1px solid var(--ref-color-grey-20);
 }
 
-.rpanel-drafts__selectbar-meta {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  font-weight: var(--sys-text-style-caption-weight);
+/* First group sits flush — no divider line above the top-most network. */
+.rpanel-drafts__feed > .rpanel-drafts__group-header:first-child {
+  border-top: 0;
+  margin-top: 0;
+}
+
+.rpanel-drafts__group-icon {
+  font-size: var(--sys-icon-css-sm);
   color: var(--ref-color-grey-80);
+}
+
+.rpanel-drafts__group-label {
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-100);
 }
 
 /* ── Sticky bulk-action bar ──────────────────────────────────────────
@@ -812,9 +823,8 @@
   bottom: var(--ref-spacing-sm);
   z-index: 2;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ref-spacing-sm);
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
   width: 100%;
   max-width: 580px;
   margin: var(--ref-spacing-sm) auto 0;
@@ -826,7 +836,7 @@
 }
 
 .rpanel-drafts__bulkbar-label {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
   font-size: var(--sys-text-style-body-bold-size);
@@ -835,14 +845,31 @@
   color: var(--ref-color-grey-100);
 }
 
-.rpanel-drafts__bulkbar-label i {
-  color: var(--ref-color-electric-blue-100);
+/* Network icon in the bulk label stays brand-neutral grey (the official
+   glyph), not the accent tint. */
+.rpanel-drafts__bulkbar-net {
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-icon-css-sm);
 }
 
 .rpanel-drafts__bulkbar-actions {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
+}
+
+/* Clear is a tertiary escape — push it to the far left so the commit
+   actions (Save as draft / Schedule / Delete) group on the right. */
+.rpanel-drafts__bulkbar-actions [data-rpanel-drafts-bulk-clear] {
+  margin-right: auto;
+}
+
+/* Helper line under the actions when the selection spans >1 network and
+   scheduling is therefore disabled. */
+.rpanel-drafts__bulkbar-hint {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-80);
 }
 
 /* Pad the bottom of the feed so the last card isn't tucked behind the
