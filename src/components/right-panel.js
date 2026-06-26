@@ -1624,13 +1624,15 @@ function renderDraftsView() {
       .join("");
     const draftWord = groupPosts.length === 1 ? "draft" : "drafts";
 
-    // The bulk actions are ALWAYS shown in the section header. They act on
-    // the section's selected drafts, or — when nothing is checked — on all
-    // of that network's drafts. The count label and "Schedule N" reflect
-    // that effective target so the buttons are always meaningful.
-    const effective = selecting ? groupSelected : groupPosts.length;
+    // The bulk actions are ALWAYS shown in the section header, but stay
+    // disabled until 1+ of the network's drafts are checked — then they
+    // act on that selection. The count label reflects the selection state.
+    const dis = selecting ? "" : "disabled";
     const countLabel = selecting ? `${groupSelected} selected` : `${groupPosts.length} ${draftWord}`;
-    const targetWord = effective === 1 ? "draft" : "drafts";
+    const scheduleLabel = selecting ? `Schedule ${groupSelected}` : "Schedule";
+    const delAria = selecting
+      ? `Delete ${groupSelected} selected ${meta.label} ${groupSelected === 1 ? "draft" : "drafts"}`
+      : `Delete selected ${meta.label} drafts`;
 
     return `
       <div class="rpanel-drafts__group-header${selecting ? " is-selecting" : ""}">
@@ -1645,13 +1647,13 @@ function renderDraftsView() {
           <span class="rpanel-drafts__group-label">${meta.label}</span>
           <span class="rpanel-drafts__group-count">${countLabel}</span>
           <div class="rpanel-drafts__group-actions">
-            <button type="button" class="ap-button stroked grey sm" data-rpanel-section-save="${network}">
+            <button type="button" class="ap-button stroked grey sm" data-rpanel-section-save="${network}" ${dis}>
               <i class="ap-icon-bookmark" aria-hidden="true"></i> Save as draft
             </button>
-            <button type="button" class="ap-button primary blue sm rpanel-drafts__group-schedule" data-rpanel-section-schedule="${network}">
-              <i class="ap-icon-calendar" aria-hidden="true"></i> Schedule ${effective}
+            <button type="button" class="ap-button primary blue sm rpanel-drafts__group-schedule" data-rpanel-section-schedule="${network}" ${dis}>
+              <i class="ap-icon-calendar" aria-hidden="true"></i> ${scheduleLabel}
             </button>
-            <button type="button" class="ap-icon-button stroked red sm" data-rpanel-section-delete="${network}" aria-label="Delete ${effective} ${meta.label} ${targetWord}">
+            <button type="button" class="ap-icon-button stroked red sm" data-rpanel-section-delete="${network}" aria-label="${delAria}" ${dis}>
               <i class="ap-icon-trash" aria-hidden="true"></i>
             </button>
           </div>
@@ -1741,23 +1743,14 @@ function onPostSchedule(postId) {
   });
 }
 
-// The effective target for a section's bulk action: the network's
-// selected drafts, or — when nothing is checked — all of the network's
-// VISIBLE drafts. Mirrors the feed's own filter (no scheduled posts; the
-// "Needs fixes" tab narrows to error drafts) so the action count always
-// matches what the section shows. Snapshotted with the original feed
-// index so a toast Undo can restore them in place.
+// The target for a section's bulk action: the network's selected drafts.
+// Snapshotted with the original feed index so a toast Undo can restore
+// them in place. (Buttons are disabled when nothing is selected, so this
+// is only ever called with a non-empty selection.)
 function sectionTargetSnapshot(sid, network) {
-  const visible = getPosts(sid)
+  return getPosts(sid)
     .map((post, idx) => ({ post, idx }))
-    .filter(
-      ({ post }) =>
-        post.network === network &&
-        post.status !== "scheduled" &&
-        !(draftsFilter === "needs_fixes" && post.status !== "needs_fixes"),
-    );
-  const selected = visible.filter(({ post }) => selectedDraftIds.has(post.id));
-  return selected.length ? selected : visible;
+    .filter(({ post }) => post.network === network && selectedDraftIds.has(post.id));
 }
 
 // Per-network bulk delete — confirm-modal gate (destructive), then drop
