@@ -796,13 +796,13 @@
    leading 16px checkbox gutter (matching `.posts__row-check`) keeps the
    per-network "Select all" lined up with the per-card checkboxes below,
    while the band itself aligns with the card column. */
+/* Left-aligned (not centered) and full feed width so the leading checkbox
+   gutter lands at the same x as the cards on any panel width. The `gap`
+   matches `.posts__row` so the band starts exactly above the card body. */
 .rpanel-drafts__group-header {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xs); /* match .posts__row gap so the band aligns with the cards */
-  width: 100%;
-  max-width: 580px;
-  margin: 0 auto;
+  gap: var(--ref-spacing-xs);
 }
 
 /* Leading gutter mirrors `.posts__row-check` (16px, fixed) so the
@@ -813,16 +813,20 @@
   align-items: center;
 }
 
-/* The visible band. Subtle grey fill + pill radius reads as a clean
-   section header that's clearly distinct from the white draft cards. */
+/* The visible band. Tinted with the network's brand colour (via the
+   inline --rp-net custom property) so each section reads as that network
+   at a glance, distinct from the white draft cards. Width matches the
+   500px card column so it lines up with the cards below. */
 .rpanel-drafts__group-band {
-  flex: 1 1 auto;
+  flex: 0 0 500px;
+  max-width: 500px;
   min-width: 0;
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
   padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
-  background: var(--ref-color-grey-10);
+  background: color-mix(in srgb, var(--rp-net, var(--ref-color-grey-40)) 10%, var(--ref-color-white));
+  border: 1px solid color-mix(in srgb, var(--rp-net, var(--ref-color-grey-40)) 22%, var(--ref-color-white));
   border-radius: var(--app-radius-sm);
 }
 
@@ -831,11 +835,12 @@
   font-size: var(--sys-icon-css-md);
 }
 
+/* Network name in its brand colour for a cohesive, branded header. */
 .rpanel-drafts__group-label {
   font-size: var(--sys-text-style-caption-bold-size);
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-100);
+  color: var(--rp-net, var(--ref-color-grey-100));
 }
 
 /* Draft count — muted, pinned to the trailing edge of the band. */

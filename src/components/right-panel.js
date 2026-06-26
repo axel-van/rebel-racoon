@@ -111,17 +111,20 @@ let draftsNetwork = "all";
 // separators, their headers, and the network filter dropdown. `twitter`
 // is the posts-store alias for `x`. NETWORK_ORDER gives a stable grouping
 // order; only networks actually present in the feed render a section.
+// `accent` is the network's brand colour (data, not a DS token — per the
+// project's "third-party brand colours live in JS" rule). It drives the
+// section band's tint + label colour via a --rp-net custom property.
 const NETWORK_META = {
-  linkedin: { icon: "ap-icon-linkedin-official", label: "LinkedIn" },
-  twitter: { icon: "ap-icon-twitter-official", label: "X" },
-  instagram: { icon: "ap-icon-instagram-official", label: "Instagram" },
-  facebook: { icon: "ap-icon-facebook-official", label: "Facebook" },
-  tiktok: { icon: "ap-icon-tiktok-official", label: "TikTok" },
-  youtube: { icon: "ap-icon-youtube-official", label: "YouTube" },
+  linkedin: { icon: "ap-icon-linkedin-official", label: "LinkedIn", accent: "#0A66C2" },
+  twitter: { icon: "ap-icon-twitter-official", label: "X", accent: "#0F1419" },
+  instagram: { icon: "ap-icon-instagram-official", label: "Instagram", accent: "#E1306C" },
+  facebook: { icon: "ap-icon-facebook-official", label: "Facebook", accent: "#1877F2" },
+  tiktok: { icon: "ap-icon-tiktok-official", label: "TikTok", accent: "#FE2C55" },
+  youtube: { icon: "ap-icon-youtube-official", label: "YouTube", accent: "#FF0000" },
 };
 const NETWORK_ORDER = ["linkedin", "twitter", "instagram", "facebook", "tiktok", "youtube"];
 function networkMetaFor(network) {
-  return NETWORK_META[network] || { icon: "ap-icon-web", label: network || "Other" };
+  return NETWORK_META[network] || { icon: "ap-icon-web", label: network || "Other", accent: "#6B7280" };
 }
 
 // Multi-select state for bulk scheduling. Lives across renders inside the
@@ -1624,7 +1627,7 @@ function renderDraftsView() {
             <i></i>
           </label>
         </span>
-        <div class="rpanel-drafts__group-band">
+        <div class="rpanel-drafts__group-band" style="--rp-net: ${meta.accent}">
           <i class="${meta.icon} rpanel-drafts__group-icon" aria-hidden="true"></i>
           <span class="rpanel-drafts__group-label">${meta.label}</span>
           <span class="rpanel-drafts__group-count">${groupPosts.length} ${draftWord}</span>
