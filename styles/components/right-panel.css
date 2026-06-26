@@ -707,7 +707,10 @@
      extra inset that made Drafts look heavier than Ideas. */
   height: 100%;
   min-height: 0;
-  overflow-y: auto;
+  /* The container itself doesn't scroll: the filter header stays pinned
+     at the top and the bulk-action footer at the bottom, while only the
+     `.rpanel-drafts__feed` between them scrolls. */
+  overflow: hidden;
 }
 
 /* Filter header — status tabs (primary axis) sit on the left at their
@@ -760,6 +763,11 @@
      card lists (--ref-spacing-sm). */
   min-width: 0;
   gap: var(--ref-spacing-sm);
+  /* The feed is the only scrolling region — header above and bulk-action
+     footer below stay pinned. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   /* Gutter now lives on the feed (the container dropped its padding) so the
      header can sit flush — mirrors the Ideas body padding. */
   padding: var(--ref-spacing-md);
@@ -814,25 +822,22 @@
   color: var(--ref-color-grey-100);
 }
 
-/* ── Sticky bulk-action bar ──────────────────────────────────────────
-   Sticks to the bottom of the scrolling rpanel-drafts container when
-   1+ draft is selected. Card-style chrome (radius + shadow) so it
-   reads as a floating action surface, not a footer. */
+/* ── Bulk-action footer ──────────────────────────────────────────────
+   Pinned at the bottom of the panel (a non-scrolling flex item, sibling
+   of the feed) whenever 1+ draft is selected, so it never leaves a
+   whitespace gap under a short list. Card-style chrome (radius + shadow
+   + top hairline) so it reads as a floating action surface. */
 .rpanel-drafts__bulkbar {
-  position: sticky;
-  bottom: var(--ref-spacing-sm);
-  z-index: 2;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xxs);
   width: 100%;
   max-width: 580px;
-  margin: var(--ref-spacing-sm) auto 0;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  margin: 0 auto;
+  padding: var(--ref-spacing-sm);
+  border-top: 1px solid var(--ref-color-grey-20);
   background: var(--app-surface);
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--app-radius-card);
-  box-shadow: var(--app-shadow-low);
 }
 
 .rpanel-drafts__bulkbar-label {
@@ -870,13 +875,6 @@
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   color: var(--ref-color-grey-80);
-}
-
-/* Pad the bottom of the feed so the last card isn't tucked behind the
-   sticky bar when it's visible. The selector targets the parent with
-   the .has-selection flag set by the panel render. */
-.rpanel-drafts.has-selection .rpanel-drafts__feed {
-  padding-bottom: var(--ref-spacing-xl);
 }
 
 /* ── Narrow container — actions below the card ──────────────────────

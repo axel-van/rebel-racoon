@@ -1328,12 +1328,13 @@ function renderPanel() {
   // Preserve scrollTop across re-renders so flipping a filter chip or
   // selecting a draft doesn't yank the user back to the top of a long
   // list. The actual scroll container differs by mode: the Drafts view
-  // owns its own `.rpanel-drafts` scroller (overflow-y on the root),
-  // while the others scroll on the `.app-right-panel__body` wrapper —
-  // capture from whichever is actually scrolled. Keyed by mode so each
-  // tab keeps its own position; switching modes restarts at the top.
+  // scrolls on its inner `.rpanel-drafts__feed` (the root keeps a fixed
+  // header + footer), while the others scroll on the
+  // `.app-right-panel__body` wrapper — capture from whichever is
+  // actually scrolled. Keyed by mode so each tab keeps its own position;
+  // switching modes restarts at the top.
   const previousBody = el.querySelector(".app-right-panel__body");
-  const previousScroller = previousBody?.querySelector(".rpanel-drafts") || previousBody;
+  const previousScroller = previousBody?.querySelector(".rpanel-drafts__feed") || previousBody;
   const previousScroll = previousScroller?.scrollTop || 0;
   const previousMode = el.dataset.rpanelLastMode;
 
@@ -1370,7 +1371,7 @@ function renderPanel() {
 
   if (previousMode === state.mode && previousScroll > 0) {
     const nextBody = el.querySelector(".app-right-panel__body");
-    const nextScroller = nextBody?.querySelector(".rpanel-drafts") || nextBody;
+    const nextScroller = nextBody?.querySelector(".rpanel-drafts__feed") || nextBody;
     if (nextScroller) {
       requestAnimationFrame(() => {
         nextScroller.scrollTop = previousScroll;
@@ -1680,10 +1681,15 @@ function renderDraftsView() {
     `
     : "";
 
+  // Layout: fixed filter header, scrolling feed, fixed bulk-action footer.
+  // The bulk bar sits OUTSIDE the scrolling feed (a direct child of
+  // .rpanel-drafts) so it pins to the panel bottom regardless of how
+  // short the list is — no trailing whitespace under a sticky footer.
   return html`
     <div class="rpanel-drafts ${selectedCount ? "has-selection" : ""}">
       ${raw(filtersBar)}
-      <div class="posts__feed rpanel-drafts__feed">${raw(feed)} ${raw(bulkBar)}</div>
+      <div class="posts__feed rpanel-drafts__feed">${raw(feed)}</div>
+      ${raw(bulkBar)}
     </div>
   `;
 }
