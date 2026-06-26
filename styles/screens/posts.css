@@ -58,9 +58,18 @@
 .posts__card-wrap {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
+  /* Tight gap so the "How's this draft?" footer hugs its own card and
+     clearly belongs to it — the next draft sits a full feed gap (16px)
+     below, so the feedback never reads as equidistant between two. */
+  gap: var(--ref-spacing-xxs);
   width: 500px;
   flex-shrink: 0;
+}
+
+/* The strip's own top padding would re-add the space we just tightened —
+   drop it in the card context so the feedback sits snug under the card. */
+.posts__card-wrap > .fb--strip {
+  padding-top: 0;
 }
 
 /* Scheduled status card sits flush above the post card — they read as
