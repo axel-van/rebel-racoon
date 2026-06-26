@@ -1624,9 +1624,12 @@ function renderDraftsView() {
       .join("");
     const draftWord = groupPosts.length === 1 ? "draft" : "drafts";
 
-    const bandInner = selecting
+    // The network identity (logo + name) is ALWAYS shown so the section
+    // never loses context. Idle: a muted draft count. Selecting: a
+    // "N selected" label + the per-network actions; the band widens to
+    // make room (see CSS).
+    const tail = selecting
       ? `
-          <i class="${meta.icon} rpanel-drafts__group-icon" aria-hidden="true"></i>
           <span class="rpanel-drafts__group-selected">${groupSelected} selected</span>
           <div class="rpanel-drafts__group-actions">
             <button type="button" class="ap-button stroked grey sm" data-rpanel-section-save="${network}">
@@ -1640,11 +1643,7 @@ function renderDraftsView() {
             </button>
           </div>
         `
-      : `
-          <i class="${meta.icon} rpanel-drafts__group-icon" aria-hidden="true"></i>
-          <span class="rpanel-drafts__group-label">${meta.label}</span>
-          <span class="rpanel-drafts__group-count">${groupPosts.length} ${draftWord}</span>
-        `;
+      : `<span class="rpanel-drafts__group-count">${groupPosts.length} ${draftWord}</span>`;
 
     return `
       <div class="rpanel-drafts__group-header${selecting ? " is-selecting" : ""}">
@@ -1655,7 +1654,9 @@ function renderDraftsView() {
           </label>
         </span>
         <div class="rpanel-drafts__group-band" style="--rp-net: ${meta.accent}">
-          ${bandInner}
+          <i class="${meta.icon} rpanel-drafts__group-icon" aria-hidden="true"></i>
+          <span class="rpanel-drafts__group-label">${meta.label}</span>
+          ${tail}
         </div>
       </div>
       ${cards}

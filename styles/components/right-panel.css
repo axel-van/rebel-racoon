@@ -768,9 +768,10 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  /* Gutter now lives on the feed (the container dropped its padding) so the
-     header can sit flush — mirrors the Ideas body padding. */
-  padding: var(--ref-spacing-md);
+  /* No top padding: the sticky section header must pin flush to the
+     scrollport top, otherwise cards peek through the padding strip above
+     it. Horizontal + bottom gutters mirror the Ideas body padding. */
+  padding: 0 var(--ref-spacing-md) var(--ref-spacing-md);
 }
 
 /* Inside the right-panel feed, .posts__row lays out as a flex row
@@ -805,12 +806,16 @@
 .rpanel-drafts__group-header {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 3;
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  padding-block: var(--ref-spacing-xxs);
+  padding-block: var(--ref-spacing-xs);
+  /* Full-width opaque surface so that, when pinned, scrolling cards pass
+     cleanly beneath it (no peek-through) and a soft downward shadow
+     separates it from the content below. */
   background: var(--app-surface);
+  box-shadow: 0 4px 6px -3px rgba(33, 46, 68, 0.12);
 }
 
 /* Leading gutter mirrors `.posts__row-check` (16px, fixed) so the
@@ -840,6 +845,13 @@
   border-radius: var(--app-radius-sm);
 }
 
+/* When selecting, the band widens to the full column so the network
+   identity stays on the left while the actions get room on the right. */
+.rpanel-drafts__group-header.is-selecting .rpanel-drafts__group-band {
+  flex: 1 1 auto;
+  max-width: none;
+}
+
 /* When the section has a selection, lift the tint a notch so the active
    network stands out from its idle siblings. */
 .rpanel-drafts__group-header.is-selecting .rpanel-drafts__group-band {
@@ -852,14 +864,27 @@
   font-size: var(--sys-icon-css-md);
 }
 
-/* Network name / "N selected" label in the brand colour for cohesion. */
-.rpanel-drafts__group-label,
-.rpanel-drafts__group-selected {
+/* Network name — in the brand colour for cohesion. */
+.rpanel-drafts__group-label {
   font-size: var(--sys-text-style-caption-bold-size);
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--rp-net, var(--ref-color-grey-100));
   white-space: nowrap;
+}
+
+/* "N selected" — muted, sits right after the network name with a dot
+   separator so the identity and the selection state read as one phrase. */
+.rpanel-drafts__group-selected {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-80);
+  white-space: nowrap;
+}
+.rpanel-drafts__group-selected::before {
+  content: "·";
+  margin-right: var(--ref-spacing-xs);
+  color: var(--ref-color-grey-40);
 }
 
 /* Draft count — muted, pinned to the trailing edge of the band. */
