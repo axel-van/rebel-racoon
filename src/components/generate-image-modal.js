@@ -18,6 +18,7 @@
 import { escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 import { showToast } from "./toast.js?v=20";
+import { renderFeedbackControl, onFeedbackClick } from "./feedback-control.js?v=1";
 import { getSessionById } from "../sessions-store.js?v=3";
 import { getContextById, getDefaultContext } from "../contexts-store.js?v=31";
 
@@ -35,6 +36,9 @@ let promptLoading = false;
 let styleKey = null;
 let moodKey = null;
 let imageUrl = null;
+// Seed of the currently-shown image — used to key its feedback target so
+// each Regenerate produces a fresh, independently-rated image.
+let imageSeed = null;
 let onUseCallback = null;
 // Last-generation error message — surfaced as an infobox above the
 // idle-state form when a previous run failed (FIND-A2). Clears the
@@ -296,6 +300,10 @@ function renderBody() {
         <div class="gen-image-result">
           <img class="gen-image-preview" src="${escapeHtml(imageUrl)}" alt="Generated image" />
           ${renderSummaryTags()}
+          ${renderFeedbackControl(`image:${currentPostId || "img"}:${imageSeed || "0"}`, {
+            kind: "image",
+            label: "How's this image?",
+          })}
           <div class="gen-image-result-actions">
             <button type="button" class="ap-button transparent grey" id="genImageRegenerate">
               <i class="ap-icon-refresh"></i>
@@ -353,7 +361,8 @@ async function runGeneration() {
   genState = "loading";
   renderBody();
   try {
-    imageUrl = await generateImage(buildFullPrompt(), buildSeed());
+    imageSeed = buildSeed();
+    imageUrl = await generateImage(buildFullPrompt(), imageSeed);
     genState = "result";
   } catch {
     // FIND-A2: surface the failure inline next to the form instead of
@@ -369,6 +378,10 @@ async function runGeneration() {
 // ── Event delegation ──────────────────────────────────────────────────
 
 function onModalClick(event) {
+  // Shared "how's this?" feedback on the generated image (result state).
+  // Handled first; never blocks the Use / Regenerate / Edit actions below.
+  if (onFeedbackClick(event)) return;
+
   const styleBtn = event.target.closest("[data-gen-style]");
   if (styleBtn && genState === "idle") {
     const key = styleBtn.dataset.genStyle;
@@ -470,6 +483,7 @@ function close() {
   styleKey = null;
   moodKey = null;
   imageUrl = null;
+  imageSeed = null;
   currentPostId = null;
   onUseCallback = null;
   notifyClose(MODAL_ID);

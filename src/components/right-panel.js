@@ -13,8 +13,9 @@ import {
   updatePostContent,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=31";
-import { renderPostCard } from "./post-card.js?v=39";
-import { renderClipCard } from "./clip-card.js?v=7";
+import { renderPostCard } from "./post-card.js?v=40";
+import { renderClipCard } from "./clip-card.js?v=8";
+import { onFeedbackClick } from "./feedback-control.js?v=1";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=47";
@@ -478,6 +479,10 @@ export function init() {
     if (!event.target.closest("[data-post-rewrite-menu], .posts__rewrite-menu")) {
       closeAllRewriteMenus();
     }
+    // Shared "how's this?" feedback control (drafts + clip thumbs/reasons).
+    // Handled first so the thumb/chip/Send clicks update in place and bail
+    // before the per-card action handlers below.
+    if (onFeedbackClick(event)) return;
     if (event.target.closest("[data-rpanel-close]")) {
       closePanel();
       return;
@@ -838,17 +843,7 @@ export function init() {
       }
       return;
     }
-    // Thumbs-up / thumbs-down feedback on a clip card. Mirrors the idea
-    // feedback handler — clicking the same side twice clears the verdict.
-    // In-place DOM update so the scroll position of the clips list is
-    // preserved (full re-render would reset it).
-    const clipFeedbackBtn = event.target.closest("[data-rpanel-clip-feedback]");
-    if (clipFeedbackBtn) {
-      const cid = clipFeedbackBtn.dataset.rpanelClipFeedback;
-      const verdict = clipFeedbackBtn.dataset.verdict;
-      toggleClipFeedbackInPlace(cid, verdict, clipFeedbackBtn);
-      return;
-    }
+    // (Clip thumbs/reasons feedback is handled by onFeedbackClick above.)
     // "Why this clip" panel — collapse / expand. Toggle the section in
     // place so the user's scroll position survives.
     const clipWhyBtn = event.target.closest("[data-rpanel-clip-why-toggle]");
@@ -2342,7 +2337,6 @@ function renderClipsList(entries) {
         sourceName,
         sourceKind,
         sessionId: sid,
-        feedback: getClipFeedback(clip.id),
         whyOpen: isClipWhyOpen(clip.id),
       }),
     )
@@ -2428,43 +2422,17 @@ function toggleWhyOpen(ideaId) {
   renderIdeasBodyOnly();
 }
 
-// Per-clip feedback + Why-open state — mirrors the Idea card pattern.
-// Both states are module-local mocks (no persistence). State Maps
-// survive re-renders so a future full repaint reflects the user's
-// choices; the in-place toggle helpers below mutate the DOM directly
-// to keep the clips list's scroll position when the user is reacting
-// in the middle of a long list.
-const clipFeedback = new Map(); // clipId → 'up' | 'down'
+// Per-clip Why-open state — module-local mock (no persistence). The Map
+// survives re-renders so a future full repaint reflects the user's choice;
+// the in-place toggle helper below mutates the DOM directly to keep the
+// clips list's scroll position when the user expands a card mid-list.
+// (Clip thumbs/reasons feedback now lives in the shared feedback-store via
+// the feedback-control, so there is no clipFeedback Map here anymore.)
 const clipWhyOpen = new Map(); // clipId → boolean
-
-function getClipFeedback(clipId) {
-  return clipFeedback.get(clipId) || null;
-}
 
 function isClipWhyOpen(clipId) {
   const stored = clipWhyOpen.get(clipId);
   return stored === undefined ? false : stored;
-}
-
-// In-place feedback toggle — flips state Map AND updates both thumb
-// buttons on the same card without re-rendering. Avoids the scroll
-// jump a full panel re-render would cause.
-function toggleClipFeedbackInPlace(clipId, verdict, clickedBtn) {
-  if (verdict !== "up" && verdict !== "down") return;
-  const current = clipFeedback.get(clipId);
-  const nextVerdict = current === verdict ? null : verdict;
-  if (nextVerdict === null) clipFeedback.delete(clipId);
-  else clipFeedback.set(clipId, nextVerdict);
-
-  const card = clickedBtn.closest(".clip-card");
-  if (!card) return;
-  const buttons = card.querySelectorAll("[data-rpanel-clip-feedback]");
-  for (const btn of buttons) {
-    const side = btn.dataset.verdict;
-    const isActive = nextVerdict === side;
-    btn.classList.toggle("is-active", isActive);
-    btn.setAttribute("aria-pressed", String(isActive));
-  }
 }
 
 // In-place "Why this clip" toggle — flips state Map AND mutates the

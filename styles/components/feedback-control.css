@@ -1,0 +1,107 @@
+/* feedback-control — the shared "how's this?" control on Archie-generated
+   elements (drafts, images, clips). Thumbs reuse the DS .ap-icon-button +
+   .rpanel-ideas__thumb active flip (defined in right-panel.css); this file
+   owns the strip/label, the collapsible reason panel, and its comment box.
+   Reason chips reuse .ap-filter-chip (ds-patches.css). */
+
+/* ── Strip variant (drafts card footer, image modal) ──────────────────── */
+.fb--strip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  padding-top: var(--ref-spacing-xxs);
+}
+
+.fb__row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.fb__label {
+  font-size: var(--sys-text-style-body-size);
+  color: var(--ref-color-grey-80);
+}
+
+.fb__thumbs {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+}
+
+/* The DS transparent icon-button renders its glyph in a light grey that's
+   easy to miss on a busy card — darken the idle thumbs so the affordance
+   reads, and lift to full ink on hover. Active stays electric-blue (the
+   shared .rpanel-ideas__thumb.is-active rule in right-panel.css). */
+.fb__thumb i {
+  color: var(--ref-color-grey-80);
+}
+.fb__thumb:hover i {
+  color: var(--ref-color-grey-100);
+}
+
+/* ── Reason panel (revealed on a thumbs-down) ─────────────────────────── */
+/* `display: flex` would override the UA [hidden] rule, so the panel must
+   re-assert display:none while hidden — otherwise it shows on first paint
+   before any thumbs-down. */
+.fb__panel[hidden] {
+  display: none;
+}
+
+.fb__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs);
+  background: var(--ref-color-grey-05);
+  border-radius: var(--app-radius-sm);
+}
+
+.fb__panel-label {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.fb__reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+}
+
+.fb__comment {
+  width: 100%;
+  resize: vertical;
+  padding: var(--ref-spacing-xxs);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-white);
+  color: var(--ref-color-grey-100);
+  font-family: inherit;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+}
+
+.fb__comment:focus-visible {
+  outline: none;
+  border-color: var(--ref-color-electric-blue-100);
+  box-shadow: 0 0 0 1px var(--ref-color-electric-blue-100);
+}
+
+.fb__panel-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Inline variant (clip card): panel breaks out full-width below the
+   footer row, padded to align with the card content. ─────────────────── */
+.clip-card .fb__panel {
+  margin: 0 var(--ref-spacing-xs) var(--ref-spacing-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fb__comment {
+    transition: none;
+  }
+}

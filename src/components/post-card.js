@@ -22,6 +22,7 @@
 import { html, raw } from "../utils.js?v=21";
 import { isPortraitFormat } from "../clip-formats.js?v=1";
 import { presetById } from "../clip-captions.js?v=5";
+import { renderFeedbackControl } from "./feedback-control.js?v=1";
 
 export function renderPostCard(post, opts = {}) {
   const inlineEdit = opts.inlineEdit === true;
@@ -115,6 +116,14 @@ export function renderPostCard(post, opts = {}) {
       </div>`
     : "";
 
+  // "How's this draft?" feedback strip — sits below the LinkedIn-preview
+  // card (not inside it, so it reads as product feedback rather than a faux
+  // LinkedIn reaction). Suppressed while the body is mid-flux.
+  const feedbackStrip =
+    !editing && !regenerating
+      ? renderFeedbackControl(`draft:${post.id}`, { kind: "draft", label: "How's this draft?" })
+      : "";
+
   const stats = post.stats || {};
   const engagement =
     stats.likes || stats.comments || stats.reposts
@@ -205,6 +214,7 @@ export function renderPostCard(post, opts = {}) {
             </span>
           </footer>
         </article>
+        ${raw(feedbackStrip)}
       </div>
 
       <div class="posts__row-actions" aria-label="Post actions">

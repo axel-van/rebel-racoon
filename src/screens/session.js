@@ -95,7 +95,8 @@ import {
   extractClipsForSource,
   setSourceIdeaCount,
 } from "../sources-stream.js?v=44";
-import { renderClipCard } from "../components/clip-card.js?v=7";
+import { renderClipCard } from "../components/clip-card.js?v=8";
+import { onFeedbackClick } from "../components/feedback-control.js?v=1";
 import { showToast } from "../components/toast.js?v=20";
 import { open as openTopPostModal } from "../components/top-post-modal.js?v=4";
 import {
@@ -3738,6 +3739,10 @@ function bindSession(root, session) {
   root.addEventListener(
     "click",
     (event) => {
+      // Shared "how's this?" feedback control — wires the clip thumbs/reasons
+      // rendered in the Clip Studio review grid (renderClipCard). Handled first
+      // so the in-place thumb/chip/Send updates bail before other handlers.
+      if (onFeedbackClick(event)) return;
       // Extraction-turn idea cards use the shared compact idea card
       // (renderCompactIdeaCard) — wire its data-rpanel-* hooks to chat-context
       // actions. Scoped to .extraction-turn__detail so they never collide with

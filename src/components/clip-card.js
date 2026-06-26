@@ -25,6 +25,7 @@
 import { iconFor } from "../file-kinds.js?v=20";
 import { escapeText, escapeAttr } from "../utils.js?v=21";
 import { installMoreMenu } from "./more-menu.js?v=1";
+import { renderFeedbackThumbs, renderFeedbackPanel } from "./feedback-control.js?v=1";
 
 function fmtTime(s) {
   if (!Number.isFinite(s) || s < 0) return "0:00";
@@ -50,7 +51,7 @@ installMoreMenu({
 
 export function renderClipCard(
   clip,
-  { sourceName = "", sourceKind = "Video", sessionId = null, feedback = null, whyOpen = false } = {},
+  { sourceName = "", sourceKind = "Video", sessionId = null, whyOpen = false } = {},
 ) {
   const duration = fmtTime((clip.end || 0) - (clip.start || 0));
   const safeTitle = escapeText(clip.title || "Untitled clip");
@@ -83,26 +84,6 @@ export function renderClipCard(
       </section>
     `
     : "";
-
-  const thumbBtn = (side) => {
-    const isUp = side === "up";
-    const isActive = feedback === side;
-    const icon = isUp ? "ap-icon-thumb-up" : "ap-icon-thumb-down";
-    const label = isUp ? "Mark clip as useful" : "Mark clip as not useful";
-    return `
-      <button
-        type="button"
-        class="ap-icon-button transparent sm rpanel-ideas__thumb${isActive ? " is-active" : ""}"
-        data-rpanel-clip-feedback="${escapeAttr(clip.id)}"
-        data-verdict="${side}"
-        aria-pressed="${isActive}"
-        aria-label="${label}"
-        title="${label}"
-      >
-        <i class="${icon}"></i>
-      </button>
-    `;
-  };
 
   // Mention button — sessionId-gated so the dashboard's All Clips view
   // (if it ever lands) renders without the affordance.
@@ -207,8 +188,7 @@ export function renderClipCard(
 
       <footer class="rpanel-ideas__card-actions">
         <div class="rpanel-ideas__feedback">
-          ${thumbBtn("up")}
-          ${thumbBtn("down")}
+          ${renderFeedbackThumbs(`clip:${clip.id}`, { kind: "clip" })}
         </div>
         <div class="rpanel-ideas__primary">
           ${mentionBtn}
@@ -222,6 +202,7 @@ export function renderClipCard(
           </button>
         </div>
       </footer>
+      ${renderFeedbackPanel(`clip:${clip.id}`, { kind: "clip" })}
     </article>
   `;
 }
