@@ -1615,15 +1615,18 @@ function renderDraftsView() {
         }),
       )
       .join("");
+    const draftWord = groupPosts.length === 1 ? "draft" : "drafts";
     return `
       <div class="rpanel-drafts__group-header">
-        <label class="ap-checkbox-container ${indeterminate ? "indeterminate" : ""}" aria-label="Select all ${meta.label} drafts">
-          <input type="checkbox" data-rpanel-drafts-select-network="${network}" ${allGroupSelected ? "checked" : ""} />
-          <i></i>
-        </label>
+        <span class="rpanel-drafts__group-check">
+          <label class="ap-checkbox-container ${indeterminate ? "indeterminate" : ""}" aria-label="Select all ${meta.label} drafts">
+            <input type="checkbox" data-rpanel-drafts-select-network="${network}" ${allGroupSelected ? "checked" : ""} />
+            <i></i>
+          </label>
+        </span>
         <i class="${meta.icon} rpanel-drafts__group-icon" aria-hidden="true"></i>
         <span class="rpanel-drafts__group-label">${meta.label}</span>
-        <span class="ap-counter normal grey">${groupPosts.length}</span>
+        <span class="rpanel-drafts__group-count">${groupPosts.length} ${draftWord}</span>
       </div>
       ${cards}
     `;

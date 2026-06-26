@@ -775,12 +775,13 @@
 
 /* Inside the right-panel feed, .posts__row lays out as a flex row
    (checkbox · card · action stack). The card-wrap keeps its fixed
-   500px width (posts.css) so previews always render at the same size;
-   center the row so any extra room sits evenly on both sides rather
-   than dangling off the right. Selected rows get a subtle orange tint
-   on the card to mirror the bulk-bar accent. */
+   500px width (posts.css) so previews always render at the same size.
+   Rows are left-aligned (not centered) so every per-card checkbox forms
+   one clean vertical column that lines up with the per-network
+   "Select all" in the group separators. Selected rows get a subtle
+   blue ring on the card to mirror the selection accent. */
 .rpanel-drafts__feed .posts__row {
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .rpanel-drafts__feed .posts__row.is-selected .posts__card {
@@ -790,28 +791,41 @@
 
 /* ── Per-network group separator ─────────────────────────────────────
    Splits the drafts feed by network. Each header carries a "Select all"
-   for that network (the unit you schedule in bulk), the network icon,
-   label and a count. Centered on the same 580px column as the cards so
-   the divider reads as part of the feed. */
+   for that network (the unit you schedule in bulk), the network logo,
+   name and draft count. Laid out on the same column as the cards, with
+   a leading 16px checkbox gutter that matches `.posts__row-check` so the
+   "Select all" lines up exactly with the per-card checkboxes below.
+   A hairline above each section provides clean separation. */
 .rpanel-drafts__group-header {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-xs); /* match .posts__row gap */
   width: 100%;
   max-width: 580px;
-  margin: var(--ref-spacing-xs) auto 0;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-xxs) var(--ref-spacing-xxs);
+  margin: 0 auto;
+  /* No horizontal padding — the header's left edge meets the row's left
+     edge so the checkbox gutter aligns with the cards. */
+  padding-top: var(--ref-spacing-sm);
+  padding-bottom: var(--ref-spacing-xxs);
   border-top: 1px solid var(--ref-color-grey-20);
 }
 
 /* First group sits flush — no divider line above the top-most network. */
 .rpanel-drafts__feed > .rpanel-drafts__group-header:first-child {
   border-top: 0;
-  margin-top: 0;
+  padding-top: 0;
+}
+
+/* Leading gutter mirrors `.posts__row-check` (16px, fixed) so the
+   "Select all" checkbox sits directly above the card checkboxes. */
+.rpanel-drafts__group-check {
+  flex: 0 0 16px;
+  display: flex;
+  align-items: center;
 }
 
 .rpanel-drafts__group-icon {
-  font-size: var(--sys-icon-css-sm);
+  font-size: var(--sys-icon-css-md);
   color: var(--ref-color-grey-80);
 }
 
@@ -820,6 +834,13 @@
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-100);
+}
+
+/* Draft count — muted, regular weight, sits just after the network name. */
+.rpanel-drafts__group-count {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
 }
 
 /* ── Bulk-action footer ──────────────────────────────────────────────
