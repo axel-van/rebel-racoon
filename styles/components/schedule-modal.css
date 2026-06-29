@@ -290,6 +290,10 @@
   color: var(--ref-color-grey-40);
   cursor: grab;
   touch-action: none;
+  transition: color 120ms var(--app-ease-standard, ease);
+}
+.schedule-modal__slot-grip:hover {
+  color: var(--ref-color-electric-blue-100);
 }
 .schedule-modal__slot-grip:active {
   cursor: grabbing;
