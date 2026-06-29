@@ -330,23 +330,23 @@
 
 .chat-bubble-text {
   margin: 0;
-  line-height: var(--sys-text-style-subtitle-line-height);
+  line-height: var(--sys-text-style-body-line-height);
 }
 
-/* AI body uses the handoff message scale (15/1.55) — aired-out reading rhythm
-   that matches Claude/ChatGPT bodies. */
+/* Conversation copy — Archie and the user both speak in DS Body - Regular
+   (14/18/400), the design-system reading style. */
 .chat-bubble--ai .chat-bubble-text {
   color: var(--ref-color-grey-100);
-  font-size: var(--sys-text-style-subtitle-size);
-  line-height: var(--sys-text-style-subtitle-line-height);
-  font-weight: var(--sys-text-style-subtitle-weight);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
 }
 
-/* User bubble stays at the compact 14/20 caisse — the blue chip already
-   reads well, no need to upscale. */
 .chat-bubble--user .chat-bubble-text {
   color: var(--ref-color-white);
-  line-height: var(--sys-text-style-subtitle-line-height);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
 }
 
 /* Connection / authorization request card — a standalone block (NOT a chat
