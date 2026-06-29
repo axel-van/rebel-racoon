@@ -2565,6 +2565,16 @@ export const connectors = [
   },
 ];
 
+// Draft folders — Agorapulse content folders the user can file saved drafts
+// into. Seed examples so the "Save in an existing folder" picker has options.
+export const draftFolders = [
+  { id: "folder-evergreen", name: "Evergreen", count: 21 },
+  { id: "folder-launches", name: "Product Launches", count: 12 },
+  { id: "folder-thought-leadership", name: "Thought Leadership", count: 8 },
+  { id: "folder-customer-stories", name: "Customer Stories", count: 5 },
+  { id: "folder-events", name: "Holidays & Events", count: 7 },
+];
+
 export const socialAccounts = [
   {
     id: "fb-page",

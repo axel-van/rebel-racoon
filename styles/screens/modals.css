@@ -47,6 +47,7 @@ body.has-modal {
 .connectors-modal,
 .confirm-modal,
 .rename-modal,
+.save-folder-modal,
 .analyze-profiles-modal,
 .fill-document-modal,
 .search-modal,
@@ -459,6 +460,7 @@ body.has-modal {
 .connectors-modal.open,
 .confirm-modal.open,
 .rename-modal.open,
+.save-folder-modal.open,
 .analyze-profiles-modal.open,
 .fill-document-modal.open,
 .search-modal.open,
@@ -1132,4 +1134,81 @@ body.has-modal {
   font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-100);
   line-height: var(--sys-text-style-caption-bold-line-height);
+}
+
+/* ── Save-drafts modal ─────────────────────────────────────────────────
+   Two radio choices (separate drafts / save to a folder). The folder choice
+   reveals the DS Selection Dropdown (.ap-selection-dropdown) — search +
+   folder list + a "create new" footer — embedded inline in the dialog. */
+.save-folder-modal {
+  width: 440px;
+  max-width: calc(100vw - 2 * var(--ref-spacing-lg));
+  /* Let the folder dropdown's popover escape the dialog (.ap-dialog clips by
+     default); the modal content is short so nothing else needs clipping. */
+  overflow: visible;
+}
+
+.save-folder-modal__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+/* The folder picker sits full-width just under the "Save to a folder" card. */
+.save-folder-modal__field {
+  margin-top: calc(-1 * var(--ref-spacing-xxs));
+}
+.save-folder-modal__field[hidden] {
+  display: none;
+}
+
+/* The folder picker is a real dropdown: a .ap-select trigger (collapsed
+   field) that opens the DS Selection Dropdown as a popover below it. The
+   dialog body must not clip the popover. */
+.save-folder-modal .ap-dialog-content {
+  overflow: visible;
+}
+.save-folder-modal__combo {
+  width: 100%;
+}
+
+/* The DS Selection Dropdown panel, positioned as the .ap-select popover
+   (fills the trigger width, keeps its DS shadow, scrolls internally). */
+.save-folder-modal__dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  width: auto;
+  margin-top: var(--ref-spacing-xxxs);
+  max-height: 320px;
+}
+
+/* The DS footer sets display:flex, which would beat the [hidden] attribute —
+   restore hide-when-hidden for the conditional "create" footer. */
+.save-folder-modal__dropdown .ap-selection-dropdown-footer[hidden] {
+  display: none;
+}
+
+/* Folder row mirrors the DS item: leading checkbox + name (no icon), with
+   the draft count trailing. The DS item rule flexes every span — pin the
+   checkbox + count and let the name take the room. */
+.save-folder-modal__dropdown .ap-selection-dropdown-item {
+  cursor: pointer;
+}
+.save-folder-modal__dropdown .ap-selection-dropdown-item > .ap-checkbox-container {
+  flex: 0 0 auto;
+}
+.save-folder-modal__folder-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.save-folder-modal__count {
+  flex: 0 0 auto;
+  color: var(--ref-color-grey-60);
+  font-size: var(--sys-text-style-caption-size);
 }

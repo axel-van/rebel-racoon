@@ -1841,10 +1841,12 @@ function commitScheduled(sid, posts) {
   for (const p of posts) removePost(sid, p.id);
 }
 
-// Per-network "Save as draft" — saves the section's target drafts
-// (selection, or all of the network when nothing is checked) into the
-// draft queue and clears them from the workspace. Non-destructive, so no
-// confirm gate; a toast offers Undo that restores the batch in place.
+// Per-network "Save as drafts" — opens the save modal for the section's
+// target drafts (selection, or all of the network when nothing is checked).
+// The modal offers three choices: keep them as separate drafts, file them
+// into a new Agorapulse folder, or into an existing one. Whatever the user
+// picks, the drafts leave the workspace with an Undo toast that restores the
+// batch in place (and reverses the folder count for the folder choices).
 function onSectionSave(network) {
   const sid = activeSessionId();
   if (!sid) return;
@@ -1852,22 +1854,37 @@ function onSectionSave(network) {
   if (snapshot.length === 0) return;
   const count = snapshot.length;
   const draftWord = count === 1 ? "draft" : "drafts";
-  for (const { post } of snapshot) {
-    removePost(sid, post.id);
-    selectedDraftIds.delete(post.id);
-  }
-  renderPanel();
-  import("./toast.js?v=20").then(({ showToast }) => {
-    showToast(`${count} ${draftWord} saved as draft`, {
-      action: {
-        label: "Undo",
-        onClick: () => {
-          for (const { post, idx } of snapshot) insertPost(sid, post, idx);
+  Promise.all([import("./save-folder-modal.js?v=6"), import("../folders-store.js?v=1")]).then(
+    ([{ open: openSaveModal }, { addDraftsToFolder }]) => {
+      openSaveModal({
+        count,
+        // folder === null → save as separate drafts; otherwise file into it.
+        onConfirm: (folder) => {
+          for (const { post } of snapshot) {
+            removePost(sid, post.id);
+            selectedDraftIds.delete(post.id);
+          }
+          if (folder) addDraftsToFolder(folder.id, count);
           renderPanel();
+          const message = folder
+            ? `${count} ${draftWord} saved to “${folder.name}”`
+            : `${count} ${draftWord} saved as draft`;
+          import("./toast.js?v=20").then(({ showToast }) => {
+            showToast(message, {
+              action: {
+                label: "Undo",
+                onClick: () => {
+                  for (const { post, idx } of snapshot) insertPost(sid, post, idx);
+                  if (folder) addDraftsToFolder(folder.id, -count);
+                  renderPanel();
+                },
+              },
+            });
+          });
         },
-      },
-    });
-  });
+      });
+    },
+  );
 }
 
 // Per-card "Save as draft" — single-post counterpart of onSaveAsDraft.
