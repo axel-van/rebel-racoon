@@ -202,43 +202,6 @@
   gap: var(--ref-spacing-xs);
 }
 
-.rpanel-drafts__group-head {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-100);
-}
-
-.rpanel-drafts__group-head i {
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-grey-80);
-}
-
-.rpanel-drafts__group-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 6px;
-  border-radius: var(--app-radius-pill);
-  background: var(--ref-color-grey-10);
-  color: var(--ref-color-grey-100);
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  letter-spacing: 0;
-}
-
-.rpanel-drafts__group-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-}
-
 /* ── BatchCard ────────────────────────────────────────────────────── */
 
 .rpanel-batch-card {
@@ -790,92 +753,86 @@
   box-shadow: 0 0 0 1px var(--ref-color-electric-blue-100);
 }
 
-/* ── Per-network group separator ─────────────────────────────────────
-   Splits the drafts feed by network. The header is a filled band — a
-   clear, scannable section marker — carrying the brand logo, network
-   name and draft count, with the count pinned to the trailing edge. A
-   leading 16px checkbox gutter (matching `.posts__row-check`) keeps the
-   per-network "Select all" lined up with the per-card checkboxes below,
-   while the band itself aligns with the card column. */
-/* Left-aligned (not centered) and full feed width so the leading checkbox
-   gutter lands at the same x as the cards on any panel width. The `gap`
-   matches `.posts__row` so the band starts exactly above the card body.
-   Sticky so the band's per-network bulk actions stay reachable while that
-   network's drafts scroll; the opaque background hides cards passing
-   beneath it. */
+/* ── Per-network group separator + integrated bulk bar ───────────────
+   The band IS the bar: it holds the select-all checkbox, the network
+   identity (logo · name · count) and — only while a selection exists —
+   the bulk actions. Three states, all the same height (no jump):
+   • Idle      — flat/white, calm.
+   • Hover     — soft accent wash invites the click-to-select.
+   • Selecting — accent wash + accent border + the action cluster.
+   Sticky so the bar stays reachable while that network's cards scroll. */
 .rpanel-drafts__group-header {
   position: sticky;
   top: 0;
   z-index: 3;
+}
+
+/* Full-width bar. Fixed height (button height + vertical padding) so idle
+   and selected stay identical regardless of the action buttons. */
+.rpanel-drafts__group-band {
+  /* Full-bleed across the feed's side padding so the tint spans the whole
+     width, then re-inset by the same amount: the select-all checkbox lines
+     up with the per-card checkboxes (x = feed gutter), the actions reach the
+     row's right edge, and the tint reads as padding on both sides. */
+  margin-inline: calc(-1 * var(--ref-spacing-md));
+  padding-inline: var(--ref-spacing-md);
+  height: calc(var(--comp-button-height) + 2 * var(--ref-spacing-xxs));
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  padding-block: var(--ref-spacing-xs);
-  /* Full-width opaque surface so that, when pinned, scrolling cards pass
-     cleanly beneath it (no peek-through) and a soft downward shadow
-     separates it from the content below. */
+  /* Full-width hairline so the section header reads as separate from the
+     cards below; full-bleed band needs no corner radius. */
+  border-bottom: 1px solid var(--app-border-soft);
   background: var(--app-surface);
-  box-shadow: 0 4px 6px -3px rgba(33, 46, 68, 0.12);
+  cursor: pointer;
+  transition: background 120ms ease;
 }
 
-/* Leading gutter mirrors `.posts__row-check` (16px, fixed) so the
-   "Select all" checkbox sits directly above the card checkboxes. */
-.rpanel-drafts__group-check {
-  flex: 0 0 16px;
-  display: flex;
-  align-items: center;
-}
-
-/* The visible band — a full-width tinted bar (brand colour via the inline
-   --rp-net custom property) so each network section reads at a glance and
-   the bulk actions span the whole column. Left edge aligns with the card
-   body; it stretches to the panel's right edge. */
-.rpanel-drafts__group-band {
+/* Identity (logo · name · count) starts where the card body begins; it
+   grows so the actions hug the band's right edge. Internal gap stays the
+   Figma 8px while the checkbox→identity gap follows the 12px row grid. */
+.rpanel-drafts__group-identity {
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 2.5rem;
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xxxs) var(--ref-spacing-sm);
-  background: color-mix(in srgb, var(--rp-net, var(--ref-color-grey-40)) 10%, var(--ref-color-white));
-  border: 1px solid color-mix(in srgb, var(--rp-net, var(--ref-color-grey-40)) 22%, var(--ref-color-white));
-  border-radius: var(--app-radius-sm);
+  gap: var(--ref-spacing-xxs);
+  overflow: hidden;
 }
 
-/* When the section has a selection, lift the tint a notch so the active
-   network stands out from its idle siblings. */
+/* Idle hover — soft accent wash (no border). */
+.rpanel-drafts__group-header:not(.is-selecting) .rpanel-drafts__group-band:hover {
+  background: var(--ref-color-electric-blue-05);
+}
+
+/* Selecting — accent wash, no border. */
 .rpanel-drafts__group-header.is-selecting .rpanel-drafts__group-band {
-  background: color-mix(in srgb, var(--rp-net, var(--ref-color-grey-40)) 16%, var(--ref-color-white));
-  border-color: color-mix(in srgb, var(--rp-net, var(--ref-color-grey-40)) 34%, var(--ref-color-white));
+  cursor: default;
+  background: var(--ref-color-electric-blue-05);
 }
 
+/* Network brand logo — 16px to match the Figma Social Logo. */
 .rpanel-drafts__group-icon {
   flex-shrink: 0;
-  font-size: var(--sys-icon-css-md);
+  font-size: var(--sys-icon-css-sm);
 }
 
-/* Network name — in the brand colour for cohesion. */
+/* Network name — Body Bold, default text colour. */
 .rpanel-drafts__group-label {
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--rp-net, var(--ref-color-grey-100));
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
   white-space: nowrap;
 }
 
-/* Count / "N selected" — muted, sits right after the network name with a
-   dot separator so identity + state read as one phrase. */
+/* Count / "· N selected" — muted caption. The dot is part of the text
+   (matches the Figma text node) so the spacing reads tight. */
 .rpanel-drafts__group-count {
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-80);
+  color: var(--ref-color-grey-60);
   white-space: nowrap;
-}
-.rpanel-drafts__group-count::before {
-  content: "·";
-  margin-right: var(--ref-spacing-xs);
-  color: var(--ref-color-grey-40);
 }
 
 /* Per-network bulk-action cluster, pinned to the trailing edge. */

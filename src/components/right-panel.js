@@ -112,8 +112,9 @@ let draftsNetwork = "all";
 // is the posts-store alias for `x`. NETWORK_ORDER gives a stable grouping
 // order; only networks actually present in the feed render a section.
 // `accent` is the network's brand colour (data, not a DS token — per the
-// project's "third-party brand colours live in JS" rule). It drives the
-// section band's tint + label colour via a --rp-net custom property.
+// project's "third-party brand colours live in JS" rule). The drafts band
+// no longer tints per-network (it uses the accent-blue selection wash), but
+// the colour stays available for other per-network surfaces.
 const NETWORK_META = {
   linkedin: { icon: "ap-icon-linkedin-official", label: "LinkedIn", accent: "#0A66C2" },
   twitter: { icon: "ap-icon-twitter-official", label: "X", accent: "#0F1419" },
@@ -544,6 +545,17 @@ export function init() {
     const sectionDeleteBtn = event.target.closest("[data-rpanel-section-delete]");
     if (sectionDeleteBtn) {
       onSectionDelete(sectionDeleteBtn.dataset.rpanelSectionDelete);
+      return;
+    }
+    // Click anywhere on a section band (the separator) toggles select-all
+    // for that network — except on the checkbox itself (its native change
+    // event owns that) or on a bulk-action button.
+    const sectionBand = event.target.closest("[data-rpanel-drafts-band]");
+    if (sectionBand && !event.target.closest(".ap-checkbox-container") && !event.target.closest("button")) {
+      const network = sectionBand.dataset.rpanelDraftsBand;
+      const visible = visibleNetworkPosts(network);
+      const allSelected = visible.length > 0 && visible.every((p) => selectedDraftIds.has(p.id));
+      setNetworkSelection(network, !allSelected);
       return;
     }
     // Per-card actions on a single draft (Lot 21 rich PostCard).
@@ -1090,22 +1102,7 @@ export function init() {
     // draft of that network on or off depending on the new checked state.
     const selectNetworkBox = event.target.matches("[data-rpanel-drafts-select-network]") ? event.target : null;
     if (selectNetworkBox) {
-      const sid = activeSessionId();
-      if (!sid) return;
-      const network = selectNetworkBox.dataset.rpanelDraftsSelectNetwork;
-      const visible = getPosts(sid).filter((p) => {
-        if (p.status === "scheduled") return false;
-        if (p.network !== network) return false;
-        if (draftsFilter === "needs_fixes" && p.status !== "needs_fixes") return false;
-        if (draftsNetwork !== "all" && p.network !== draftsNetwork) return false;
-        return true;
-      });
-      if (event.target.checked) {
-        for (const p of visible) selectedDraftIds.add(p.id);
-      } else {
-        for (const p of visible) selectedDraftIds.delete(p.id);
-      }
-      renderPanel();
+      setNetworkSelection(selectNetworkBox.dataset.rpanelDraftsSelectNetwork, event.target.checked);
       return;
     }
   });
@@ -1598,13 +1595,16 @@ function renderDraftsView() {
     ...[...new Set(filtered.map((p) => p.network))].filter((n) => !NETWORK_ORDER.includes(n)),
   ];
 
-  // Each network section is self-contained: the band is the section
-  // header AND its bulk-action surface. With no selection it shows the
-  // network + draft count; once 1+ of its drafts are selected it swaps to
-  // a "N selected" label plus the per-network actions (Save as draft /
-  // Schedule / Delete). Because every action is scoped to one network,
-  // scheduling is always valid — no cross-network "disabled" state. The
-  // header is sticky so its actions stay reachable while scrolling.
+  // Each network section is self-contained: the separator IS the section
+  // header AND its bulk-action surface, in two states that share one row
+  // (so there's no layout jump on selection):
+  //   • Idle      — a calm divider: brand chip + draft count on a hairline,
+  //                 no controls. The whole band is click-to-select-all.
+  //   • Selecting — the divider fills into a solid contextual toolbar with
+  //                 the network's bulk actions. Because every action is
+  //                 scoped to one network, scheduling is always valid — so
+  //                 there are never dead/disabled buttons sitting idle.
+  // The header is sticky so the toolbar stays reachable while scrolling.
   const renderGroup = (network) => {
     const meta = networkMetaFor(network);
     const groupPosts = filtered.filter((p) => p.network === network);
@@ -1624,39 +1624,42 @@ function renderDraftsView() {
       .join("");
     const draftWord = groupPosts.length === 1 ? "draft" : "drafts";
 
-    // The bulk actions are ALWAYS shown in the section header, but stay
-    // disabled until 1+ of the network's drafts are checked — then they
-    // act on that selection. The count label reflects the selection state.
-    const dis = selecting ? "" : "disabled";
-    const countLabel = selecting ? `${groupSelected} selected` : `${groupPosts.length} ${draftWord}`;
-    const scheduleLabel = selecting ? `Schedule ${groupSelected}` : "Schedule";
-    const delAria = selecting
-      ? `Delete ${groupSelected} selected ${meta.label} ${groupSelected === 1 ? "draft" : "drafts"}`
-      : `Delete selected ${meta.label} drafts`;
+    const countLabel = selecting ? `· ${groupSelected} selected` : `· ${groupPosts.length} ${draftWord}`;
+    const delAria = `Delete ${groupSelected} selected ${meta.label} ${groupSelected === 1 ? "draft" : "drafts"}`;
 
+    // Bulk actions live in the band and only render while a selection
+    // exists (per Figma 1007:3335): Save = ghost-blue link, Schedule =
+    // stroked-blue with calendar, Delete = grey icon button. No idle
+    // controls — no hairline, no "Select all" hint.
+    const actions = selecting
+      ? `
+          <div class="rpanel-drafts__group-actions">
+            <button type="button" class="ap-button ghost blue" data-rpanel-section-save="${network}">Save as drafts</button>
+            <button type="button" class="ap-button stroked blue" data-rpanel-section-schedule="${network}">
+              <i class="ap-icon-calendar" aria-hidden="true"></i> Schedule
+            </button>
+            <button type="button" class="ap-icon-button" data-rpanel-section-delete="${network}" aria-label="${delAria}">
+              <i class="ap-icon-trash" aria-hidden="true"></i>
+            </button>
+          </div>`
+      : "";
+
+    // The band IS the bar: the select-all checkbox sits inside it (left),
+    // then the network identity, then (when selecting) the action cluster.
+    // Idle is flat/white; hover and selecting tint with the accent wash.
     return `
       <div class="rpanel-drafts__group-header${selecting ? " is-selecting" : ""}">
-        <span class="rpanel-drafts__group-check">
+        <div class="rpanel-drafts__group-band" data-rpanel-drafts-band="${network}">
           <label class="ap-checkbox-container ${indeterminate ? "indeterminate" : ""}" aria-label="Select all ${meta.label} drafts">
             <input type="checkbox" data-rpanel-drafts-select-network="${network}" ${allGroupSelected ? "checked" : ""} />
             <i></i>
           </label>
-        </span>
-        <div class="rpanel-drafts__group-band" style="--rp-net: ${meta.accent}">
-          <i class="${meta.icon} rpanel-drafts__group-icon" aria-hidden="true"></i>
-          <span class="rpanel-drafts__group-label">${meta.label}</span>
-          <span class="rpanel-drafts__group-count">${countLabel}</span>
-          <div class="rpanel-drafts__group-actions">
-            <button type="button" class="ap-button stroked grey sm" data-rpanel-section-save="${network}" ${dis}>
-              <i class="ap-icon-bookmark" aria-hidden="true"></i> Save as draft
-            </button>
-            <button type="button" class="ap-button primary blue sm rpanel-drafts__group-schedule" data-rpanel-section-schedule="${network}" ${dis}>
-              <i class="ap-icon-calendar" aria-hidden="true"></i> ${scheduleLabel}
-            </button>
-            <button type="button" class="ap-icon-button stroked red sm" data-rpanel-section-delete="${network}" aria-label="${delAria}" ${dis}>
-              <i class="ap-icon-trash" aria-hidden="true"></i>
-            </button>
+          <div class="rpanel-drafts__group-identity">
+            <i class="${meta.icon} rpanel-drafts__group-icon" aria-hidden="true"></i>
+            <span class="rpanel-drafts__group-label">${meta.label}</span>
+            <span class="rpanel-drafts__group-count">${countLabel}</span>
           </div>
+          ${actions}
         </div>
       </div>
       ${cards}
@@ -1741,6 +1744,30 @@ function onPostSchedule(postId) {
       renderPanel();
     },
   });
+}
+
+// The drafts of one network currently visible under the active filters —
+// the scope a section's "Select all" (checkbox or band click) acts on.
+function visibleNetworkPosts(network) {
+  const sid = activeSessionId();
+  if (!sid) return [];
+  return getPosts(sid).filter((p) => {
+    if (p.status === "scheduled") return false;
+    if (p.network !== network) return false;
+    if (draftsFilter === "needs_fixes" && p.status !== "needs_fixes") return false;
+    if (draftsNetwork !== "all" && p.network !== draftsNetwork) return false;
+    return true;
+  });
+}
+
+// Select or clear every visible draft of one network, then repaint.
+function setNetworkSelection(network, shouldSelect) {
+  const visible = visibleNetworkPosts(network);
+  for (const p of visible) {
+    if (shouldSelect) selectedDraftIds.add(p.id);
+    else selectedDraftIds.delete(p.id);
+  }
+  renderPanel();
 }
 
 // The target for a section's bulk action: the network's selected drafts.
