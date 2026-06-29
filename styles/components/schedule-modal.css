@@ -329,7 +329,7 @@
   z-index: 5;
   cursor: grabbing;
   box-shadow: var(--app-shadow-popover-lg, 0 12px 28px -6px rgba(33, 46, 68, 0.28));
-  border-color: var(--ref-color-electric-blue-40);
+  border-color: var(--ref-color-electric-blue-100);
 }
 
 /* ── Calendar ───────────────────────────────────────────────────────── */
