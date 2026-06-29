@@ -44,13 +44,19 @@ let state = {
   status: "idle", // 'idle' | 'scheduling' | 'error'
   errorMessage: "",
   computing: false, // "Compute best times" loading state
+  // Optimal isn't "chosen" until the user computes the spread — gates the
+  // Schedule button. Custom is chosen via the per-draft pickers (always ok).
+  computed: false,
+  // Optimal-mode disclosure: the per-draft date list is collapsed by default
+  // (the strategy panel is the focus) and expands on demand / after Compute.
+  slotsExpanded: false,
   calendarMonth: null, // Date pinned to the 1st of the visible month
   focusedDayKey: null, // string from dayKey()
 };
 
 let unsubscribeQueue = null;
 let computeTimer = null; // pending "Compute best times" timeout
-let draggingPostId = null; // draft being drag-reordered (multi-draft only)
+let drag = null; // active pointer drag-reorder session (multi-draft only)
 
 // DS branded network glyphs — the `-official` variants carry each
 // network's brand color. The generic `ap-icon-<network>` set is grey
@@ -189,11 +195,10 @@ export function init() {
   modal.addEventListener("change", onInput);
   // Drag-to-reorder the draft cards (multi-draft only). Delegated on the
   // modal root so it survives every re-render.
-  modal.addEventListener("dragstart", onDragStart);
-  modal.addEventListener("dragover", onDragOver);
-  modal.addEventListener("dragleave", onDragLeave);
-  modal.addEventListener("drop", onDrop);
-  modal.addEventListener("dragend", onDragEnd);
+  modal.addEventListener("pointerdown", onPointerDown);
+  modal.addEventListener("pointermove", onPointerMove);
+  modal.addEventListener("pointerup", onPointerUp);
+  modal.addEventListener("pointercancel", onPointerCancel);
   // Backdrop click + Escape go through the shared coordinator. `state.open`
   // is the canonical isOpen — the modal element's `.open` class isn't set
   // here (visibility is driven by .hidden), so we pass a custom isOpen.
@@ -242,6 +247,8 @@ export function open({ posts, onConfirm }) {
     onConfirm: typeof onConfirm === "function" ? onConfirm : null,
     status: "idle",
     errorMessage: "",
+    computed: false,
+    slotsExpanded: false,
     calendarMonth: monthStart,
     focusedDayKey: slots[0] ? dayKey(slots[0].when) : dayKey(today.getTime()),
   };
@@ -268,6 +275,8 @@ function close() {
     status: "idle",
     errorMessage: "",
     computing: false,
+    computed: false,
+    slotsExpanded: false,
     calendarMonth: null,
     focusedDayKey: null,
   };
@@ -386,6 +395,12 @@ function onClick(event) {
   // Cadence chip — single-select. Picking one only stages the choice
   // (the chip lights up); the dates don't change until "Compute best
   // times" is clicked. So we just record it and repaint the chips.
+  // "Review dates" disclosure (Optimal) — toggle the per-draft date list.
+  if (event.target.closest("[data-schedule-slots-toggle]")) {
+    state.slotsExpanded = !state.slotsExpanded;
+    render();
+    return;
+  }
   const cadenceChip = event.target.closest("[data-schedule-cadence]");
   if (cadenceChip) {
     if (state.computing) return;
@@ -407,6 +422,9 @@ function onClick(event) {
       if (!state.open) return;
       state.computing = false;
       recomputeOptimal();
+      state.computed = true; // dates are now chosen → enable Schedule
+      // Reveal the freshly-computed dates so the result is visible.
+      state.slotsExpanded = true;
       render();
     }, 1600);
     return;
@@ -454,6 +472,8 @@ function onClick(event) {
   }
   if (event.target.closest("[data-schedule-confirm]")) {
     if (state.status === "scheduling") return;
+    // Optimal must compute a spread before it counts as chosen.
+    if (state.mode === "optimal" && !state.computed) return;
     confirmSchedule();
   }
 }
@@ -522,6 +542,10 @@ function onInput(event) {
     state.mode = next;
     if (next === "optimal") {
       seedOneEach();
+      // Optimal leads with the strategy panel — collapse the date list and
+      // require a fresh Compute before the spread counts as "chosen".
+      state.slotsExpanded = false;
+      state.computed = false;
     } else {
       state.slots = customDefaultSlots(state.posts);
     }
@@ -548,13 +572,15 @@ function onInput(event) {
     const ts = new Date(slotInput.value).getTime();
     if (!isNaN(ts)) {
       state.slots[idx] = { ...state.slots[idx], when: ts };
-      // A manual edit implies Custom mode — flip the radio checked
-      // state without a full re-render so we don't steal focus from
-      // the datetime input the user is mid-edit on.
+      // A manual edit implies Custom mode. Flip the radio checked state
+      // without a full re-render so we don't steal focus mid-edit; then on
+      // commit (change) re-render once so the left column reconciles to the
+      // Custom layout (strategy panel + review toggle drop away).
       if (state.mode !== "custom") {
         state.mode = "custom";
         const customRadio = document.querySelector('input[name="schedule-mode"][value="custom"]');
         if (customRadio) customRadio.checked = true;
+        if (event.type === "change") render();
       }
     }
   }
@@ -603,7 +629,7 @@ function renderInner() {
         : ""}
       <section class="schedule-modal__left" aria-label="Drafts to schedule">
         ${raw(renderModePicker())} ${state.mode === "optimal" ? raw(renderStrategyPanel()) : ""}
-        ${raw(renderSlotList())}
+        ${raw(renderSlotSection())}
       </section>
       <aside class="schedule-modal__right" aria-label="Already scheduled">${raw(renderCalendarPanel())}</aside>
     </div>
@@ -633,7 +659,7 @@ function renderInner() {
           type="button"
           class="ap-button primary orange"
           data-schedule-confirm
-          ${state.status === "scheduling" ? "disabled" : ""}
+          ${state.status === "scheduling" || (state.mode === "optimal" && !state.computed) ? "disabled" : ""}
         >
           ${state.status === "scheduling"
             ? raw(`<span class="schedule-modal__spinner" aria-hidden="true"></span><span>Scheduling…</span>`)
@@ -753,7 +779,7 @@ function renderStrategyPanel() {
         </div>
         <button
           type="button"
-          class="ap-button stroked blue schedule-modal__compute"
+          class="ap-button secondary blue schedule-modal__compute"
           data-schedule-compute
           ${state.computing ? "disabled" : ""}
         >
@@ -776,14 +802,37 @@ function slotsForPost(postId) {
   return state.slots.map((s, idx) => ({ s, idx })).filter(({ s }) => s.post.id === postId);
 }
 
-function renderSlotList() {
+// The per-draft date list. In Custom it's the primary surface (expanded with
+// its own count header); in Optimal it's tucked inside a "Review dates"
+// disclosure that already carries the count, so the inner header is dropped.
+function renderSlotSection() {
+  if (state.mode !== "optimal") return renderSlotList();
+  return `
+    <div class="schedule-modal__review">
+      <button
+        type="button"
+        class="ap-button ghost blue schedule-modal__slots-toggle"
+        data-schedule-slots-toggle
+        aria-expanded="${state.slotsExpanded ? "true" : "false"}"
+      >
+        <i class="ap-icon-chevron-down schedule-modal__slots-toggle-arrow" aria-hidden="true"></i>
+        <span>${state.slotsExpanded ? "Hide dates" : "Review dates"}</span>
+      </button>
+      ${state.slotsExpanded ? renderSlotList({ header: false }) : ""}
+    </div>
+  `;
+}
+
+function renderSlotList({ header = true } = {}) {
   const multi = state.posts.length > 1;
-  const header = `
+  const headerHtml = header
+    ? `
     <div class="schedule-modal__slots-head">
       <span class="schedule-modal__slots-count">${state.posts.length} ${state.posts.length === 1 ? "draft" : "drafts"}</span>
       ${multi ? `<span class="schedule-modal__slots-hint muted">Drag to reorder — dates follow the order</span>` : ""}
     </div>
-  `;
+  `
+    : "";
   const cards = state.posts
     .map((post) => {
       const network = (post.network || "linkedin").toLowerCase();
@@ -818,7 +867,6 @@ function renderSlotList() {
         <div
           class="schedule-modal__slot ${multi ? "schedule-modal__slot--draggable" : ""}"
           data-schedule-post="${escapeText(post.id)}"
-          ${multi ? 'draggable="true"' : ""}
         >
           ${
             multi
@@ -836,82 +884,113 @@ function renderSlotList() {
       `;
     })
     .join("");
-  return `<div class="schedule-modal__slots">${header}${cards}</div>`;
+  return `<div class="schedule-modal__slots">${headerHtml}${cards}</div>`;
 }
 
 // ── Drag-to-reorder drafts ────────────────────────────────────────────
 // Reordering the cards re-pairs each draft with the (sorted) publish dates
 // by position: the new first draft takes the earliest date(s), and so on —
 // the dates "follow the order" without the user re-typing them.
-function onDragStart(event) {
-  const card = event.target.closest(".schedule-modal__slot--draggable");
+// Pointer-based reorder (grip handle). The grabbed card lifts and tracks the
+// pointer 1:1 (no transition) while the other cards slide — with a transition
+// — to open a gap at the target index. On release the card settles into the
+// gap, then we commit the new order and re-pair the dates.
+function onPointerDown(event) {
+  if (event.button) return; // primary button / touch only
+  const grip = event.target.closest(".schedule-modal__slot-grip");
+  if (!grip) return;
+  const card = grip.closest(".schedule-modal__slot--draggable");
   if (!card) return;
-  draggingPostId = card.dataset.schedulePost;
-  card.classList.add("is-dragging");
-  if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = "move";
-    // Firefox won't start a drag unless some data is set.
-    try {
-      event.dataTransfer.setData("text/plain", draggingPostId);
-    } catch {
-      /* ignore */
-    }
-  }
-}
-
-function onDragOver(event) {
-  if (!draggingPostId) return;
-  const card = event.target.closest(".schedule-modal__slot--draggable");
-  if (!card || card.dataset.schedulePost === draggingPostId) return;
-  event.preventDefault(); // allow the drop
-  if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-  clearDropMarkers();
-  const rect = card.getBoundingClientRect();
-  const before = event.clientY < rect.top + rect.height / 2;
-  card.classList.add(before ? "is-drop-before" : "is-drop-after");
-}
-
-function onDragLeave(event) {
-  const card = event.target.closest(".schedule-modal__slot--draggable");
-  if (card) card.classList.remove("is-drop-before", "is-drop-after");
-}
-
-function onDrop(event) {
-  if (!draggingPostId) return;
-  const card = event.target.closest(".schedule-modal__slot--draggable");
-  if (!card) return;
+  const list = card.parentElement;
+  const items = Array.from(list.querySelectorAll(".schedule-modal__slot--draggable"));
+  if (items.length < 2) return;
   event.preventDefault();
-  const before = card.classList.contains("is-drop-before");
-  reorderPost(draggingPostId, card.dataset.schedulePost, before);
-  draggingPostId = null;
-  render();
-}
 
-function onDragEnd() {
-  draggingPostId = null;
-  clearDropMarkers();
-  document.querySelector(".schedule-modal__slot.is-dragging")?.classList.remove("is-dragging");
-}
+  const rect = card.getBoundingClientRect();
+  const gap = parseFloat(getComputedStyle(list).rowGap) || 0;
+  const fromIndex = items.indexOf(card);
+  drag = {
+    card,
+    list,
+    items,
+    fromIndex,
+    toIndex: fromIndex,
+    startY: event.clientY,
+    step: rect.height + gap,
+    pointerId: event.pointerId,
+    done: false,
+  };
 
-function clearDropMarkers() {
-  for (const el of document.querySelectorAll(
-    ".schedule-modal__slot.is-drop-before, .schedule-modal__slot.is-drop-after",
-  )) {
-    el.classList.remove("is-drop-before", "is-drop-after");
+  try {
+    card.setPointerCapture(event.pointerId);
+  } catch {
+    /* ignore */
   }
+  list.classList.add("is-reordering");
+  card.classList.add("is-dragging");
+  card.style.transition = "none";
+  card.style.transform = "translateY(0) scale(1.02)";
 }
 
-// Move `fromId` before/after `toId` in state.posts, then re-pair the
-// sorted publish dates with the new order (each draft keeps its date
-// count; the values shift so position drives chronology).
-function reorderPost(fromId, toId, before) {
-  if (fromId === toId) return;
+function onPointerMove(event) {
+  if (!drag || event.pointerId !== drag.pointerId) return;
+  const dy = event.clientY - drag.startY;
+  drag.card.style.transform = `translateY(${dy}px) scale(1.02)`;
+
+  const toIndex = Math.max(0, Math.min(drag.items.length - 1, drag.fromIndex + Math.round(dy / drag.step)));
+  if (toIndex === drag.toIndex) return;
+  drag.toIndex = toIndex;
+
+  // Slide each non-grabbed card to open the gap at toIndex.
+  drag.items.forEach((el, i) => {
+    if (i === drag.fromIndex) return;
+    let shift = 0;
+    if (drag.fromIndex < toIndex && i > drag.fromIndex && i <= toIndex) shift = -drag.step;
+    else if (drag.fromIndex > toIndex && i >= toIndex && i < drag.fromIndex) shift = drag.step;
+    el.style.transform = shift ? `translateY(${shift}px)` : "";
+  });
+}
+
+function onPointerUp(event) {
+  if (!drag || event.pointerId !== drag.pointerId) return;
+  const d = drag;
+  drag = null;
+  try {
+    d.card.releasePointerCapture(event.pointerId);
+  } catch {
+    /* ignore */
+  }
+
+  // Settle the grabbed card into the gap, then commit + re-render once.
+  const rest = (d.toIndex - d.fromIndex) * d.step;
+  d.card.style.transition = "transform 160ms var(--app-ease-standard, ease)";
+  d.card.style.transform = `translateY(${rest}px) scale(1)`;
+
+  const commit = () => {
+    if (d.done) return;
+    d.done = true;
+    d.card.removeEventListener("transitionend", commit);
+    if (d.fromIndex !== d.toIndex) reorderByIndex(d.fromIndex, d.toIndex);
+    render(); // rebuilds in the committed order (inline transforms cleared)
+  };
+  d.card.addEventListener("transitionend", commit);
+  setTimeout(commit, 220); // fallback if transitionend doesn't fire
+}
+
+function onPointerCancel(event) {
+  if (!drag || event.pointerId !== drag.pointerId) return;
+  drag = null;
+  render(); // discard transforms, restore the original order
+}
+
+// Move state.posts[from] to index `to`, then re-pair the sorted publish
+// dates with the new order (each draft keeps its date count; values shift so
+// position drives chronology).
+function reorderByIndex(from, to) {
   const posts = state.posts;
-  const fromIdx = posts.findIndex((p) => p.id === fromId);
-  if (fromIdx < 0 || posts.findIndex((p) => p.id === toId) < 0) return;
-  const [moved] = posts.splice(fromIdx, 1);
-  const toIdx = posts.findIndex((p) => p.id === toId);
-  posts.splice(before ? toIdx : toIdx + 1, 0, moved);
+  if (from === to || from < 0 || to < 0 || from >= posts.length || to >= posts.length) return;
+  const [moved] = posts.splice(from, 1);
+  posts.splice(to, 0, moved);
 
   const countByPost = new Map();
   for (const s of state.slots) countByPost.set(s.post.id, (countByPost.get(s.post.id) || 0) + 1);
@@ -1002,7 +1081,7 @@ function renderCalendarPanel() {
     <div class="schedule-modal__cal-grid" role="grid">${cells}</div>
     <div class="schedule-modal__cal-legend">
       <span class="schedule-modal__cal-legend-item">
-        <span class="schedule-modal__day-dot is-queued"></span>This batch
+        <span class="schedule-modal__legend-swatch"></span>This batch
       </span>
       <span class="schedule-modal__cal-legend-item">
         <span class="schedule-modal__day-dot is-existing"></span>Already scheduled

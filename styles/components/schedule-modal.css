@@ -38,6 +38,9 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: var(--ref-spacing-md);
+  /* Grey canvas so the white card surfaces (mode picker, strategy, calendar)
+     read as elevated — clear figure/ground. Header + footer stay white. */
+  background: var(--ref-color-grey-05);
 }
 
 .schedule-modal__left,
@@ -53,8 +56,10 @@
 }
 
 .schedule-modal__right {
-  border-left: 1px solid var(--app-border-soft);
-  padding-left: var(--ref-spacing-md);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--app-radius-card);
+  padding: var(--ref-spacing-md);
   overflow-y: auto;
 }
 
@@ -75,18 +80,17 @@
 }
 
 /* ── Strategy panel (Optimal mode) ──────────────────────────────────── */
-/* The interactive strategy picker that replaced the bare optimal mode:
-   cadence chips + a free-text note + start date + Compute. Grouped on a
-   tinted block so it reads as one configuration surface, distinct from
-   the bordered slot cards below. */
+/* The interactive strategy picker: cadence chips + a free-text note + start
+   date + Compute. A white card on the grey canvas so it reads as one
+   elevated configuration surface (matches the mode cards + calendar). */
 
 .schedule-modal__strategy {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-sm);
   padding: var(--ref-spacing-sm);
-  background: var(--ref-color-grey-05);
-  border: 1px solid var(--app-border-soft);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--app-radius-card);
 }
 
@@ -157,6 +161,28 @@
 }
 
 /* ── Slot rows ──────────────────────────────────────────────────────── */
+
+/* ── "Review dates" disclosure (Optimal mode) ───────────────────────────
+   Optimal leads with the strategy panel, so the per-draft date list is
+   collapsed behind this toggle and revealed on demand / after Compute. */
+.schedule-modal__review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  min-height: 0;
+}
+
+/* A plain ghost-blue button reads as the clickable disclosure; it sits
+   left-aligned (the .ap-button DS look handles the rest). */
+.schedule-modal__slots-toggle {
+  align-self: flex-start;
+}
+.schedule-modal__slots-toggle-arrow {
+  transition: transform 120ms ease;
+}
+.schedule-modal__slots-toggle[aria-expanded="true"] .schedule-modal__slots-toggle-arrow {
+  transform: rotate(180deg);
+}
 
 .schedule-modal__slots {
   display: flex;
@@ -253,31 +279,46 @@
 /* A leading grip column appears only on draggable (multi-draft) cards. */
 .schedule-modal__slot--draggable {
   grid-template-columns: auto minmax(0, 1fr) auto;
-  cursor: grab;
 }
 
-.schedule-modal__slot--draggable:active {
-  cursor: grabbing;
-}
-
+/* Only the grip is the drag handle (keeps the date input / remove clickable);
+   touch-action:none lets a touch-drag reorder instead of scrolling. */
 .schedule-modal__slot-grip {
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--ref-color-grey-40);
+  cursor: grab;
+  touch-action: none;
+}
+.schedule-modal__slot-grip:active {
+  cursor: grabbing;
 }
 
+/* While a reorder is active, the non-grabbed cards slide smoothly to open the
+   gap. The grabbed card tracks the pointer 1:1 (its transition is killed
+   inline) and only animates on release. */
+.schedule-modal__slots.is-reordering .schedule-modal__slot--draggable {
+  transition: transform 160ms var(--app-ease-standard, ease);
+  will-change: transform;
+}
+
+/* During the drag, let the lifted card + its shadow escape the scroll
+   containers — otherwise the card's sides and drop shadow get clipped. */
+.schedule-modal__slots.is-reordering {
+  overflow: visible;
+}
+.schedule-modal__left:has(.schedule-modal__slots.is-reordering) {
+  overflow: visible;
+}
+
+/* The grabbed card lifts above the others with a shadow + grab cursor. */
 .schedule-modal__slot.is-dragging {
-  opacity: 0.45;
-}
-
-/* Drop indicator — accent line on the edge the card would land against. */
-.schedule-modal__slot.is-drop-before {
-  box-shadow: inset 0 2px 0 0 var(--ref-color-electric-blue-100);
-}
-
-.schedule-modal__slot.is-drop-after {
-  box-shadow: inset 0 -2px 0 0 var(--ref-color-electric-blue-100);
+  position: relative;
+  z-index: 5;
+  cursor: grabbing;
+  box-shadow: var(--app-shadow-popover-lg, 0 12px 28px -6px rgba(33, 46, 68, 0.28));
+  border-color: var(--ref-color-grey-20);
 }
 
 /* ── Calendar ───────────────────────────────────────────────────────── */
@@ -353,13 +394,23 @@
   border-color: var(--ref-color-electric-blue-100);
 }
 
-/* Days carrying posts from the batch being scheduled read as a filled
-   cell so the spread a preset produces is visible at a glance — the
-   calendar becomes a live preview of what's about to be queued. The
-   tint + accent dot carry the signal; we keep the number neutral so the
-   grid doesn't turn into a wall of blue. */
+/* Days carrying posts from THIS batch read as a light-blue filled cell with
+   a bold number — the calendar previews where the posts will publish, clearly
+   but softly. Existing-queue days stay a quiet grey dot, so the batch still
+   stands out from what's already scheduled. */
 .schedule-modal__day.has-batch {
-  background: var(--ref-color-electric-blue-10);
+  background: var(--ref-color-electric-blue-20);
+  color: var(--ref-color-grey-100);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+.schedule-modal__day.has-batch:hover,
+.schedule-modal__day.has-batch:focus-visible {
+  background: var(--ref-color-electric-blue-20);
+  border-color: var(--ref-color-electric-blue-40);
+}
+/* The fill is the signal — drop the dot row on batch cells. */
+.schedule-modal__day.has-batch .schedule-modal__day-dots {
+  display: none;
 }
 
 .schedule-modal__day-num {
@@ -407,6 +458,16 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
+}
+
+/* "This batch" legend swatch — a light-blue chip mirroring the batch cells
+   (not a dot, which is reserved for existing-queue days). */
+.schedule-modal__legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--ref-color-electric-blue-20);
+  border: 1px solid var(--ref-color-electric-blue-40);
 }
 
 /* ── Day list (right column, below calendar) ───────────────────────── */
