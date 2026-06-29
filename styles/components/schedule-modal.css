@@ -282,10 +282,10 @@
   transition: border-color 120ms var(--app-ease-standard, ease);
 }
 
-/* Hovering the grip previews the grab: the card border highlights to accent
-   blue (matching the icon's hover colour). */
+/* Hovering the grip previews the grab: the card border highlights to a soft
+   accent blue. */
 .schedule-modal__slot:has(.schedule-modal__slot-grip:hover) {
-  border-color: var(--ref-color-electric-blue-100);
+  border-color: var(--ref-color-electric-blue-40);
 }
 
 /* Only the grip is the drag handle (keeps the date input / remove clickable);
