@@ -55,11 +55,10 @@
   overflow: hidden;
 }
 
+/* The calendar is a read-only preview, not the primary interaction surface
+   (the left column is) — so it sits flat on the grey canvas with no card
+   chrome, keeping the focus on the editable left side. */
 .schedule-modal__right {
-  background: var(--ref-color-white);
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--app-radius-card);
-  padding: var(--ref-spacing-md);
   overflow-y: auto;
 }
 
