@@ -64,4 +64,13 @@ export const FLAGS = Object.freeze([
       "sidebar conversation rows, and the color swatch picker in the " +
       "brief panel. Used to evaluate the UI without color coding.",
   },
+  {
+    id: "leftNavAltMode",
+    label: "left-nav alt mode",
+    default: false,
+    hides:
+      "When ON, the left nav no longer auto-collapses when the right panel " +
+      "opens (or on resize). The sidebar stays expanded and the chat column " +
+      "narrows instead; the user can still collapse it manually.",
+  },
 ]);

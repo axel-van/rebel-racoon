@@ -39,7 +39,7 @@ import { iconFor } from "../file-kinds.js?v=20";
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
-import { open as openScheduleModal } from "./schedule-modal.js?v=39";
+import { open as openScheduleModal } from "./schedule-modal.js?v=46";
 import { open as openGenerateImageModal } from "./generate-image-modal.js?v=27";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
@@ -246,6 +246,7 @@ function predictedChatWidthWithSidebarExpanded() {
 // syncSidebarToWidth). We don't run on mode swaps inside an already-open
 // panel — only on the closed → open transition (and on resize).
 function maybeCollapseSidebar() {
+  if (isFlagOn("leftNavAltMode")) return; // alt mode: never auto-collapse
   if (!state.mode) return;
   if (isSidebarCollapsed()) return;
   if (predictedChatWidthWithSidebarExpanded() >= CHAT_MIN_WIDTH_PX) return;
