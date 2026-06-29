@@ -779,7 +779,7 @@ function renderStrategyPanel() {
         </div>
         <button
           type="button"
-          class="ap-button secondary blue schedule-modal__compute"
+          class="ap-button ${state.computed ? "secondary" : "primary"} blue schedule-modal__compute"
           data-schedule-compute
           ${state.computing ? "disabled" : ""}
         >
