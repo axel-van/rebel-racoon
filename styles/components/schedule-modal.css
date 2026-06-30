@@ -452,12 +452,20 @@
 }
 
 /* Legend — names the two dot colors so the in-progress batch is
-   distinguishable from posts already on the calendar. */
+   distinguishable from posts already on the calendar. Lifted into a centred
+   white "key" pill so it reads as a deliberate legend on the grey canvas
+   rather than a faint floating caption. */
 .schedule-modal__cal-legend {
-  display: flex;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
   gap: var(--ref-spacing-sm);
   margin-top: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-pill, 999px);
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   font-weight: var(--sys-text-style-caption-weight);
@@ -468,6 +476,13 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
+}
+
+/* The user's own batch is the indication that matters — give it stronger
+   contrast + weight; "Already scheduled" stays muted as context. */
+.schedule-modal__cal-legend-item--batch {
+  color: var(--ref-color-grey-100);
+  font-weight: var(--sys-text-style-caption-bold-weight);
 }
 
 /* "This batch" legend swatch — a light-blue chip mirroring the batch cells

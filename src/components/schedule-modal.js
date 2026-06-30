@@ -694,7 +694,7 @@ function renderModePicker() {
         />
         <div>
           <div class="ap-radio-card-header">
-            <i class="ap-icon-archie-official" aria-hidden="true"></i>
+            <i class="ap-icon-sparkles" aria-hidden="true"></i>
             <span class="ap-radio-card-title">Optimal times</span>
           </div>
           <span>${optimalSub}</span>
@@ -1083,7 +1083,7 @@ function renderCalendarPanel() {
     </div>
     <div class="schedule-modal__cal-grid" role="grid">${cells}</div>
     <div class="schedule-modal__cal-legend">
-      <span class="schedule-modal__cal-legend-item">
+      <span class="schedule-modal__cal-legend-item schedule-modal__cal-legend-item--batch">
         <span class="schedule-modal__legend-swatch"></span>This batch
       </span>
       <span class="schedule-modal__cal-legend-item">
