@@ -1,20 +1,21 @@
-// "Generate an image" dialog — opened from the placeholder button on a
-// post card. Same module-level pattern as bug-report-modal / feedback-modal:
-// init() injects the DOM once, then open(postId, onUse?) and close() toggle
-// visibility.
+// "Generate an image" dialog — opened from the placeholder button on a post
+// card (and the right-panel drafts surface). Same module-level pattern as the
+// other modals: init() injects the DOM once, then open(postId, onUse?, opts?)
+// and close() toggle visibility.
 //
-// Two-pane layout — the options (prompt + style + mood + brand colours) stay
-// editable on the left at all times, alongside a preview pane on the right
-// that reflects the current stage:
-//   - idle:    a quiet "preview appears here" placeholder; footer = Generate.
-//   - loading: a pulsing skeleton + centred Archie loader; footer = Generating…
-//   - result:  the generated image + "How's this image?" feedback; footer =
-//              Regenerate + Use this image. Editing any option while a result
-//              is shown marks it "dirty" and the footer prompts a regenerate.
+// Two-pane studio on a grey canvas with white control cards (figure/ground,
+// like the schedule modal): a control rail on the left (prompt, visual style,
+// mood) stays editable at all times, beside a preview pane on the right
+// (format selector + the generated image). Each run produces ONE image, shown
+// large in the stage:
+//   - idle:    a quiet "preview appears here" placeholder at the chosen ratio.
+//   - loading: a pulsing skeleton at the chosen ratio.
+//   - result:  the generated image + "How's this image?" feedback. Editing any
+//              option marks it "dirty" and the footer prompts a regenerate.
 //
-// The component is self-contained — reset() wipes the ephemeral state on
-// close. If a caller passes an `onUse` callback to open(), it fires with
-// the picked image URL when the user confirms. No store, no persistence.
+// The component is self-contained — close() wipes the ephemeral state. If a
+// caller passes an `onUse` callback to open(), it fires with the image URL when
+// the user confirms. No store, no persistence.
 
 import { escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
@@ -25,7 +26,7 @@ import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from ".
 
 const MODAL_ID = "generateImage";
 
-let backdrop, modal, body, footer;
+let backdrop, modal, body, footer, styleUpload;
 let initialized = false;
 
 // Ephemeral state — lives until the modal closes.
@@ -36,22 +37,21 @@ let promptText = "";
 let promptLoading = false;
 let styleKey = null;
 let moodKey = null;
+// Object URL of a user-uploaded style reference (the "Your style" card).
+let customStyleUrl = null;
 // Output format (aspect ratio) — drives the preview frame AND the generated
 // image dimensions. Resolved from the post's network on open.
 let formatId = null;
 let currentNetwork = null;
+// The generated image + its seed (keys its feedback target).
 let imageUrl = null;
-// Seed of the currently-shown image — used to key its feedback target so
-// each Regenerate produces a fresh, independently-rated image.
 let imageSeed = null;
 let onUseCallback = null;
-// Last-generation error message — surfaced as an infobox above the
-// idle-state form when a previous run failed (FIND-A2). Clears the
-// next time the user clicks Generate so the error doesn't outlive
-// the retry attempt.
+// Last-generation error message — surfaced as an infobox above the form when a
+// run failed. Clears the next time the user generates.
 let lastError = null;
-// Snapshot of the inputs that produced the currently-previewed image, so we
-// can tell the user when their edits no longer match the preview ("dirty").
+// Snapshot of the inputs that produced the current image, so we can tell the
+// user when their edits no longer match the preview ("dirty").
 let generatedSnapshot = null;
 
 const STYLE_OPTIONS = [
@@ -88,6 +88,7 @@ const HTML = `
   </button>
   <div class="ap-dialog-content" id="generateImageBody"></div>
   <div class="ap-dialog-footer" id="generateImageFooter"></div>
+  <input type="file" id="genStyleUpload" accept="image/*" hidden />
 </aside>`;
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -105,7 +106,7 @@ function buildSeed() {
 }
 
 // Pixel dimensions to request per format, so the mock image comes back at the
-// chosen ratio and fills the preview frame exactly (no letterboxing).
+// chosen ratio and fills the frame exactly (no letterboxing).
 const FORMAT_DIMS = {
   "9:16": [720, 1280],
   "4:5": [864, 1080],
@@ -125,10 +126,11 @@ function activeRatio() {
   return FORMATS[formatId]?.ratio || FORMATS["16:9"].ratio;
 }
 
-// The active Playbook's named brand colours (alpha feedback #10). Resolved
 function buildFullPrompt() {
   const parts = [promptText.trim()];
-  if (styleKey) {
+  if (styleKey === "custom") {
+    parts.push("matching the uploaded style reference");
+  } else if (styleKey) {
     const s = STYLE_OPTIONS.find((o) => o.key === styleKey);
     if (s) parts.push(`${s.label} style`);
   }
@@ -137,6 +139,30 @@ function buildFullPrompt() {
     if (m) parts.push(`${m.label.toLowerCase()} mood`);
   }
   return parts.filter(Boolean).join(", ");
+}
+
+// True when the user has edited the prompt / style / mood / format since the
+// currently-previewed image was generated — so the preview is stale.
+function isDirty() {
+  if (genState !== "result" || !generatedSnapshot) return false;
+  return (
+    generatedSnapshot.prompt !== promptText.trim() ||
+    generatedSnapshot.style !== styleKey ||
+    generatedSnapshot.mood !== moodKey ||
+    generatedSnapshot.format !== formatId
+  );
+}
+
+function networkLabel(net) {
+  const labels = {
+    linkedin: "LinkedIn",
+    instagram: "Instagram",
+    facebook: "Facebook",
+    x: "X",
+    twitter: "X",
+    tiktok: "TikTok",
+  };
+  return labels[net] || net;
 }
 
 // ── Mock async stand-ins for real endpoints ──────────────────────────
@@ -156,8 +182,8 @@ async function derivePromptFromPost(postId) {
 
 async function generateImage(prompt, seed) {
   // Pretend to call an image generation API; the seed keeps Picsum stable per
-  // set of inputs so the "Regenerate" flow shows a different image each time.
-  // Request at the chosen format's dimensions so the result fills the frame.
+  // set of inputs so each Regenerate shows a distinct image. Request at the
+  // chosen format's dimensions so the result fills the frame.
   void prompt;
   const [w, h] = FORMAT_DIMS[formatId] || FORMAT_DIMS["16:9"];
   await new Promise((r) => setTimeout(r, 6000));
@@ -166,34 +192,184 @@ async function generateImage(prompt, seed) {
 
 // ── Render ────────────────────────────────────────────────────────────
 
+// Style / mood chips reuse the shared .ap-filter-chip primitive (driven by
+// aria-pressed). Single-select, with a click on the active chip clearing it.
 function renderChips(options, selectedKey, dataAttr) {
   return options
     .map((o) => {
-      const selected = selectedKey === o.key ? " selected" : "";
-      const icon = o.icon ? `<span class="gen-chip-icon">${escapeHtml(o.icon)}</span>` : "";
-      return `<button type="button" class="gen-chip${selected}" ${dataAttr}="${escapeHtml(o.key)}">${icon}${escapeHtml(o.label)}</button>`;
+      const pressed = selectedKey === o.key;
+      return `<button type="button" class="ap-filter-chip" ${dataAttr}="${escapeHtml(o.key)}" aria-pressed="${pressed}">${escapeHtml(o.label)}</button>`;
     })
     .join("");
 }
 
-// Read-only note showing which Playbook brand colours will steer the image,
-// so the user sees their palette is being honoured (alpha feedback #10).
-// True when the user has edited the prompt / style / mood since the
-// currently-previewed image was generated — so the preview is stale and a
-// "regenerate to apply" hint is warranted.
-function isDirty() {
-  if (genState !== "result" || !generatedSnapshot) return false;
-  return (
-    generatedSnapshot.prompt !== promptText.trim() ||
-    generatedSnapshot.style !== styleKey ||
-    generatedSnapshot.mood !== moodKey ||
-    generatedSnapshot.format !== formatId
-  );
+// Visual style as a grid of preview thumbnails (Canva / Gamma pattern) — you
+// SEE the style rather than reading a label. Single-select with toggle-off;
+// the selected card takes the blue border + check. Each thumbnail is a stable
+// mock sample (a real build would show a curated style exemplar).
+function renderStyleCards(selectedKey) {
+  const builtins = STYLE_OPTIONS.map((o) => {
+    const sel = selectedKey === o.key;
+    return `
+      <button
+        type="button"
+        class="gen-style-card${sel ? " is-selected" : ""}"
+        data-gen-style="${escapeHtml(o.key)}"
+        aria-pressed="${sel}"
+        title="${escapeHtml(o.label)}"
+      >
+        <span class="gen-style-thumb">
+          <img src="https://picsum.photos/seed/archie-style-${escapeHtml(o.key)}/220/170" alt="" loading="lazy" />
+          ${sel ? `<span class="gen-style-check" aria-hidden="true"><i class="ap-icon-check"></i></span>` : ""}
+        </span>
+        <span class="gen-style-name">${escapeHtml(o.label)}</span>
+      </button>`;
+  }).join("");
+
+  // "Your style" — upload your own image as a style reference. Clicking opens
+  // the file picker (upload or replace); a picked image is auto-selected.
+  const customSel = selectedKey === "custom";
+  const customThumb = customStyleUrl
+    ? `<img src="${escapeHtml(customStyleUrl)}" alt="Your uploaded style" />
+       ${customSel ? `<span class="gen-style-check" aria-hidden="true"><i class="ap-icon-check"></i></span>` : ""}`
+    : `<span class="gen-style-upload-ph"><i class="ap-icon-plus" aria-hidden="true"></i></span>`;
+  const customCard = `
+    <button
+      type="button"
+      class="gen-style-card gen-style-card--upload${customSel ? " is-selected" : ""}${customStyleUrl ? " has-image" : ""}"
+      data-gen-style-upload
+      aria-pressed="${customSel}"
+      title="Upload your own style"
+    >
+      <span class="gen-style-thumb">${customThumb}</span>
+      <span class="gen-style-name">${customStyleUrl ? "Your style" : "Upload yours"}</span>
+    </button>`;
+
+  return builtins + customCard;
 }
 
-// Two-pane layout: the options (left) stay editable at all times alongside
-// the live preview (right), so tweaking style/mood/prompt no longer hides the
-// image. The footer holds the stage-appropriate actions in every state.
+function renderControls() {
+  const deriveLabel = promptLoading
+    ? `<span class="gen-spinner"></span><span>Suggesting from this post…</span>`
+    : `<i class="ap-icon-archie-official" aria-hidden="true"></i><span>Suggest from this post</span>`;
+  const fmtHint = currentNetwork ? `Best for ${networkLabel(currentNetwork)}` : "Aspect ratio";
+  // Each control group is a white card on the grey canvas, so the surfaces read
+  // as distinct figure-on-ground zones (matches the schedule modal).
+  return `
+    <div class="gen-card">
+      <label class="gen-card-label" for="genImagePrompt">Describe your image</label>
+      <div class="gen-prompt-wrap">
+        <textarea
+          class="gen-prompt-area"
+          id="genImagePrompt"
+          rows="3"
+          placeholder="e.g. A product team celebrating a launch milestone in a bright, modern office…"
+        >${escapeHtml(promptText)}</textarea>
+        <button type="button" class="gen-derive-btn" id="genDeriveBtn"${promptLoading ? " disabled" : ""}>
+          ${deriveLabel}
+        </button>
+      </div>
+    </div>
+
+    <div class="gen-card">
+      <div class="gen-subfield">
+        <p class="gen-card-label">Visual style <span class="gen-field-opt">Optional</span></p>
+        <div class="gen-style-grid">${renderStyleCards(styleKey)}</div>
+      </div>
+      <div class="gen-subfield">
+        <p class="gen-card-label">Mood <span class="gen-field-opt">Optional</span></p>
+        <div class="gen-chips">${renderChips(MOOD_OPTIONS, moodKey, "data-gen-mood")}</div>
+      </div>
+    </div>
+
+    <div class="gen-card">
+      <p class="gen-card-label">Format <span class="gen-field-opt">${escapeHtml(fmtHint)}</span></p>
+      <div class="gen-format-chips">${renderFormatChips()}</div>
+    </div>
+  `;
+}
+
+// Format chips carry an aspect-ratio glyph + tag + descriptive label so the
+// shape is legible at a glance. Single-select (a format is always required).
+function renderFormatChips() {
+  return formatChoices()
+    .map((f) => {
+      const selected = formatId === f.id ? " is-selected" : "";
+      return `
+        <button type="button" class="gen-format-chip${selected}" data-gen-format="${escapeHtml(f.id)}" aria-pressed="${formatId === f.id}">
+          <span class="gen-format-glyph" style="aspect-ratio:${f.ratio}" aria-hidden="true"></span>
+          <span class="gen-format-meta">
+            <span class="gen-format-tag">${escapeHtml(f.tag)}</span>
+            <span class="gen-format-name">${escapeHtml(f.label)}</span>
+          </span>
+        </button>`;
+    })
+    .join("");
+}
+
+function renderPreviewStage() {
+  if (genState === "loading") {
+    // The skeleton hosts the animated Archie mark (archie-loader.js injects the
+    // SVG into the .gen-image-spinner element) + a label.
+    return `
+      <div class="gen-single gen-single--loading" style="aspect-ratio:${activeRatio()}" role="status" aria-label="Generating image">
+        <div class="gen-loading-inner">
+          <span class="gen-image-spinner gen-loading-mark"></span>
+          <p class="gen-loading-label">Generating…</p>
+        </div>
+      </div>`;
+  }
+  if (genState === "result") {
+    // Regenerate lives ON the image, not in the footer. When the user edits an
+    // option after generating, the shown image is stale: dim it and present a
+    // prominent, centred "regenerate to apply" button. Otherwise a quiet
+    // top-right Regenerate pill keeps the reroll available.
+    const stale = isDirty();
+    const overlay = stale
+      ? `<div class="gen-single-overlay">
+           <span class="gen-stale-msg">Options changed</span>
+           <button type="button" class="ap-button stroked grey" id="genImageRegenerate">
+             <i class="ap-icon-refresh"></i><span>Regenerate to apply</span>
+           </button>
+         </div>`
+      : `<div class="gen-single-actions">
+           <button type="button" class="ap-button stroked grey" id="genImageRegenerate">
+             <i class="ap-icon-refresh"></i><span>Regenerate</span>
+           </button>
+         </div>`;
+    return `
+      <div class="gen-single${stale ? " is-stale" : ""}" style="aspect-ratio:${activeRatio()}">
+        <img class="gen-single-img" src="${escapeHtml(imageUrl)}" alt="Generated image" />
+        ${overlay}
+      </div>`;
+  }
+  // Idle — a single inviting placeholder at the chosen ratio.
+  return `
+    <div class="gen-empty" style="aspect-ratio:${activeRatio()}">
+      <i class="ap-icon-image" aria-hidden="true"></i>
+      <p class="gen-empty-title">Your image appears here</p>
+      <span class="gen-empty-sub">Set your options, then generate.</span>
+    </div>`;
+}
+
+function renderPreviewPane() {
+  const feedback =
+    genState === "result" && imageUrl
+      ? renderFeedbackControl(`image:${currentPostId || "img"}:${imageSeed || "0"}`, {
+          kind: "image",
+          label: "How's this image?",
+        })
+      : "";
+  // The right pane is a pure preview — all options (incl. Format) live in the
+  // left rail. The stage sits flat on the grey canvas; the image is the figure.
+  return `
+    <div class="gen-stage-wrap" style="--gen-ratio:${activeRatio()}">
+      ${renderPreviewStage()}
+    </div>
+    ${feedback}
+  `;
+}
+
 function renderBody() {
   const errorBlock = lastError
     ? `<div class="ap-infobox error" role="alert">
@@ -209,8 +385,8 @@ function renderBody() {
   body.innerHTML = `
     ${errorBlock}
     <div class="gen-image-layout">
-      <div class="gen-image-controls">${renderControls()}</div>
-      <div class="gen-image-preview-pane">${renderPreviewPane()}</div>
+      <section class="gen-image-controls" aria-label="Image options">${renderControls()}</section>
+      <section class="gen-image-preview-pane" aria-label="Preview">${renderPreviewPane()}</section>
     </div>
   `;
 
@@ -228,119 +404,6 @@ function renderBody() {
   }
 }
 
-function renderControls() {
-  const deriveLabel = promptLoading
-    ? `<span class="gen-image-spinner"></span>Deriving from post content…`
-    : `<i class="ap-icon-archie-official"></i><span>Re-derive from post content</span>`;
-  return `
-    <div class="gen-section">
-      <p class="gen-section-label">Describe your image<span>— edit or write your own</span></p>
-      <textarea
-        class="gen-prompt-area"
-        id="genImagePrompt"
-        rows="3"
-        placeholder="e.g. A professional team celebrating a milestone in a modern office…"
-      >${escapeHtml(promptText)}</textarea>
-      <button type="button" class="gen-derive-btn" id="genDeriveBtn"${promptLoading ? " disabled" : ""}>
-        ${deriveLabel}
-      </button>
-    </div>
-
-    <div class="gen-section">
-      <p class="gen-section-label">Visual style<span>— optional</span></p>
-      <div class="gen-chips">${renderChips(STYLE_OPTIONS, styleKey, "data-gen-style")}</div>
-    </div>
-
-    <div class="gen-section">
-      <p class="gen-section-label">Mood<span>— optional</span></p>
-      <div class="gen-chips">${renderChips(MOOD_OPTIONS, moodKey, "data-gen-mood")}</div>
-    </div>
-  `;
-}
-
-function renderFormatSection() {
-  return `
-    <div class="gen-section">
-      <p class="gen-section-label">Format<span>${currentNetwork ? `— best for ${networkLabel(currentNetwork)}` : "— aspect ratio"}</span></p>
-      <div class="gen-chips">${renderFormatChips()}</div>
-    </div>
-  `;
-}
-
-function networkLabel(net) {
-  const labels = {
-    linkedin: "LinkedIn",
-    instagram: "Instagram",
-    facebook: "Facebook",
-    x: "X",
-    twitter: "X",
-    tiktok: "TikTok",
-  };
-  return labels[net] || net;
-}
-
-// Format chips carry an aspect-ratio glyph + tag + descriptive label, so the
-// shape is legible at a glance. Single-select (a format is always required).
-function renderFormatChips() {
-  return formatChoices()
-    .map((f) => {
-      const selected = formatId === f.id ? " selected" : "";
-      return `
-        <button type="button" class="gen-chip gen-format-chip${selected}" data-gen-format="${escapeHtml(f.id)}">
-          <span class="gen-format-glyph" style="aspect-ratio:${f.ratio}" aria-hidden="true"></span>
-          <span class="gen-format-tag">${escapeHtml(f.tag)}</span>
-          <span class="gen-format-name">${escapeHtml(f.label)}</span>
-        </button>`;
-    })
-    .join("");
-}
-
-function renderPreviewPane() {
-  // The image lives inside a framed "stage" — a neutral letterbox canvas that
-  // contains the image (object-fit: contain) so ANY network ratio (square,
-  // portrait, wide) shows in full without cropping or stretching. The frame
-  // keeps a constant footprint across idle / loading / result.
-  // The stage adopts the selected format's aspect ratio, so the frame IS the
-  // output shape — no generic letterbox, no wasted canvas.
-  const ratioStyle = `--gen-ratio:${activeRatio()}`;
-  let stageInner;
-  let stageMod = "";
-  let feedback = "";
-  if (genState === "loading") {
-    stageMod = " gen-image-stage--loading";
-    stageInner = `
-      <div class="gen-image-loading" role="status">
-        <span class="gen-image-spinner gen-image-spinner--xl"></span>
-        <p class="gen-image-loading-label">Generating image…</p>
-      </div>`;
-  } else if (genState === "result") {
-    stageInner = `<img class="gen-image-preview" src="${escapeHtml(imageUrl)}" alt="Generated image" />`;
-    feedback = renderFeedbackControl(`image:${currentPostId || "img"}:${imageSeed || "0"}`, {
-      kind: "image",
-      label: "How's this image?",
-    });
-  } else {
-    // Idle — no image yet. A quiet placeholder so the framed zone reads as
-    // "the preview lands here" rather than empty space.
-    stageMod = " gen-image-stage--empty";
-    stageInner = `
-      <div class="gen-image-empty">
-        <i class="ap-icon-image"></i>
-        <p>Your preview appears here</p>
-        <span>Set your options, then generate.</span>
-      </div>`;
-  }
-  // Format sits directly above the image — it shapes the frame, so it reads as
-  // a preview control rather than a generation option buried on the left.
-  return `
-    ${renderFormatSection()}
-    <div class="gen-image-viewport">
-      <div class="gen-image-stage${stageMod}" style="${ratioStyle}">${stageInner}</div>
-    </div>
-    ${feedback}
-  `;
-}
-
 function renderFooter() {
   footer.hidden = false;
   let right;
@@ -352,12 +415,9 @@ function renderFooter() {
         <span>Generating…</span>
       </button>`;
   } else if (genState === "result") {
+    // Regenerate lives on the image overlay, not here.
     right = `
       <button type="button" class="ap-button transparent grey" id="genImageCancel">Cancel</button>
-      <button type="button" class="ap-button stroked grey" id="genImageRegenerate">
-        <i class="ap-icon-refresh"></i>
-        <span>Regenerate</span>
-      </button>
       <button type="button" class="ap-button primary orange" id="genImageUse">Use this image</button>`;
   } else {
     const promptValid = promptText.trim().length > 0;
@@ -365,16 +425,12 @@ function renderFooter() {
       <button type="button" class="ap-button transparent grey" id="genImageCancel">Cancel</button>
       <button type="button" class="ap-button primary orange" id="genImageGenerate"${promptValid ? "" : " disabled"}>
         <i class="ap-icon-archie-official"></i>
-        <span>Generate image</span>
+        <span>Generate</span>
       </button>`;
   }
 
-  const hint = isDirty()
-    ? `<span class="gen-footer-hint"><i class="ap-icon-refresh" aria-hidden="true"></i>Options changed — regenerate to apply</span>`
-    : "";
-
   footer.innerHTML = `
-    <div class="ap-dialog-footer-left">${hint}</div>
+    <div class="ap-dialog-footer-left"></div>
     <div class="ap-dialog-footer-right">${right}</div>
   `;
 }
@@ -388,17 +444,14 @@ async function runDerive() {
   try {
     promptText = await derivePromptFromPost(currentPostId);
   } catch {
-    // FIND-D5: the previous catch was silent — the spinner just stopped
-    // and the textarea stayed empty, leaving the user wondering whether
-    // the click registered. Surface a discreet toast so the failure is
-    // visible without blocking the flow (the user can still type a
-    // prompt manually).
+    // Surface a discreet toast so the failure is visible without blocking the
+    // flow (the user can still type a prompt manually).
     derivedFailed = true;
   }
   promptLoading = false;
   renderBody();
   if (derivedFailed) {
-    showToast("Couldn't auto-derive a prompt. Type one in or try again.", {
+    showToast("Couldn't suggest a prompt. Type one in or try again.", {
       variant: "error",
       duration: 4000,
     });
@@ -411,8 +464,7 @@ async function runDerive() {
 }
 
 async function runGeneration() {
-  // Clear any stale error from a previous run so the in-flight generation
-  // doesn't show a contradictory message.
+  // Clear any stale error from a previous run.
   lastError = null;
   genState = "loading";
   renderBody();
@@ -423,11 +475,11 @@ async function runGeneration() {
     // Record the inputs behind this image so later edits read as "dirty".
     generatedSnapshot = { prompt: promptText.trim(), style: styleKey, mood: moodKey, format: formatId };
   } catch {
-    // FIND-A2: surface the failure inline next to the form instead of
-    // silently rolling back to idle. The user can then tweak the prompt
-    // and retry, or close the modal — but at least they know the click
-    // registered and the system reached the API.
+    // Surface the failure inline next to the form instead of silently rolling
+    // back. The user can tweak the prompt and retry, or close the modal.
     genState = "idle";
+    imageUrl = null;
+    imageSeed = null;
     lastError = "Image generation failed. Tweak the prompt or try again.";
   }
   renderBody();
@@ -439,6 +491,12 @@ function onModalClick(event) {
   // Shared "how's this?" feedback on the generated image (result state).
   // Handled first; never blocks the Use / Regenerate / Edit actions below.
   if (onFeedbackClick(event)) return;
+
+  // "Your style" card — open the file picker to upload / replace a reference.
+  if (event.target.closest("[data-gen-style-upload]")) {
+    styleUpload.click();
+    return;
+  }
 
   // Options stay editable in every state (incl. while a result is previewed);
   // changing one marks the preview dirty so the footer prompts a regenerate.
@@ -483,7 +541,7 @@ function onModalClick(event) {
   }
 
   if (event.target.closest("#genImageUse")) {
-    if (typeof onUseCallback === "function") onUseCallback(imageUrl);
+    if (imageUrl && typeof onUseCallback === "function") onUseCallback(imageUrl);
     close();
     return;
   }
@@ -506,9 +564,23 @@ export function init() {
   body = document.getElementById("generateImageBody");
   footer = document.getElementById("generateImageFooter");
 
+  styleUpload = document.getElementById("genStyleUpload");
+  styleUpload.addEventListener("change", onStyleUpload);
+
   document.getElementById("closeGenerateImageBtn").addEventListener("click", close);
   modal.addEventListener("click", onModalClick);
   bindOverlayDismissal({ modal, backdrop, close });
+}
+
+// A picked style reference becomes the active style (key "custom").
+function onStyleUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  event.target.value = ""; // allow re-picking the same file
+  if (!file) return;
+  if (customStyleUrl) URL.revokeObjectURL(customStyleUrl);
+  customStyleUrl = URL.createObjectURL(file);
+  styleKey = "custom";
+  renderBody();
 }
 
 export function open(postId, onUse, opts = {}) {
@@ -533,7 +605,7 @@ export function open(postId, onUse, opts = {}) {
 
   renderBody();
 
-  // Auto-derive the first time the modal opens with an empty prompt.
+  // Auto-suggest the first time the modal opens with an empty prompt.
   if (!promptText && !promptLoading) runDerive();
 }
 
@@ -552,6 +624,10 @@ function close() {
   promptLoading = false;
   styleKey = null;
   moodKey = null;
+  if (customStyleUrl) {
+    URL.revokeObjectURL(customStyleUrl);
+    customStyleUrl = null;
+  }
   formatId = null;
   currentNetwork = null;
   imageUrl = null;

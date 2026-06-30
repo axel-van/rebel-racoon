@@ -826,7 +826,7 @@ body.has-modal {
 /* ── Generate Image modal ────────────────────────────────── */
 
 .generate-image-modal {
-  width: min(calc(100% - 32px), 880px);
+  width: min(calc(100% - 32px), 1040px);
 }
 
 .generate-image-modal .ap-dialog-content {
@@ -835,104 +835,96 @@ body.has-modal {
   gap: var(--ref-spacing-md);
 }
 
-/* Two-pane layout: editable options (left) beside the live preview (right). */
+/* Two-pane studio: a fixed control rail (left) beside a wider preview stage
+   (right) that holds the format selector + the variations grid. */
 .gen-image-layout {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: var(--ref-spacing-lg);
+  align-items: stretch;
 }
 
 .gen-image-controls,
 .gen-image-preview-pane {
-  flex: 1 1 0;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-sm);
-}
-
-/* Stack on narrow widths so neither pane gets cramped. */
-@media (max-width: 720px) {
-  .gen-image-layout {
-    flex-direction: column;
-  }
-}
-
-/* Idle placeholder content — centred inside the (dashed) preview stage. */
-.gen-image-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--ref-spacing-xxs);
-  color: var(--ref-color-grey-60);
-  text-align: center;
-  padding: var(--ref-spacing-md);
-}
-
-.gen-image-empty > i {
-  font-size: 32px;
-  color: var(--ref-color-grey-40);
-}
-
-.gen-image-empty > p {
-  margin: 0;
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-grey-80);
-}
-
-.gen-image-empty > span {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-}
-
-/* "Options changed — regenerate to apply" hint in the footer-left. */
-.gen-footer-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-orange-100);
-}
-
-/* Sections — Describe / Visual style / Mood share the same layout. */
-.gen-image-body {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-md);
 }
 
-.gen-section {
+/* The preview is a single tinted stage — the one surface that earns its keep,
+   making the generated image pop. Children stretch to a definite width (so the
+   frame's width math resolves); the frame + feedback centre themselves. */
+.gen-image-preview-pane {
+  padding: var(--ref-spacing-lg);
+  background: var(--ref-color-grey-05);
+  border-radius: var(--app-radius-card);
+}
+
+/* The "How's this image?" rating belongs to the image — centre it under the
+   stage. */
+.gen-image-preview-pane .fb__row {
+  justify-content: center;
+}
+
+/* Stack on narrow widths so neither pane gets cramped. */
+@media (max-width: 760px) {
+  .gen-image-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Control sections (flat — the inputs themselves carry the surface) ─ */
+.gen-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+}
+
+/* A card holding two stacked sub-groups (Visual style + Mood). */
+.gen-subfield {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
 }
 
-.gen-section-label {
+.gen-card-label {
   margin: 0;
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-grey-100);
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-80);
 }
 
-.gen-section-label span {
+/* "Optional" / hint tag — a quiet pill so it reads as metadata, not a label. */
+.gen-field-opt {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: 1;
   font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-60);
-  margin-left: 4px;
+  padding: 3px var(--ref-spacing-xxs);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-grey-05);
 }
 
-/* Prompt textarea — orange focus ring to line up with the Generate CTA. */
+/* ── Prompt ──────────────────────────────────────────────── */
+.gen-prompt-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
 .gen-prompt-area {
   width: 100%;
-  min-height: 84px;
+  min-height: 80px;
   resize: vertical;
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   font-size: var(--sys-text-style-body-size);
   line-height: var(--sys-text-style-body-line-height);
   font-weight: var(--sys-text-style-body-weight);
@@ -949,151 +941,288 @@ body.has-modal {
   color: var(--ref-color-grey-40);
 }
 
+/* Orange focus ring — AI accent, lines up with the Generate CTA. */
 .gen-prompt-area:focus {
   border-color: var(--ref-color-orange-100);
   outline: none;
   box-shadow: 0 0 0 3px var(--ref-color-orange-10);
 }
 
-/* "Re-derive from post content" quiet link-button. */
+/* "Suggest from this post" — a quiet AI-tinted pill (orange = Archie). */
 .gen-derive-btn {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  background: none;
-  border: 0;
-  padding: 0;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  font-weight: var(--sys-text-style-body-weight);
+  gap: var(--ref-spacing-xxs);
+  padding: 5px var(--ref-spacing-xs);
+  border: 1px solid var(--ref-color-orange-20);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-orange-10);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: 1;
+  font-weight: var(--sys-text-style-body-bold-weight);
   font-family: inherit;
-  color: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-orange-150);
   cursor: pointer;
+  transition:
+    background var(--ref-animation-short),
+    border-color var(--ref-animation-short);
 }
 
 .gen-derive-btn:hover:not(:disabled),
 .gen-derive-btn:focus-visible {
-  color: var(--ref-color-electric-blue-150);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  background: var(--ref-color-orange-20);
+  border-color: var(--ref-color-orange-60);
   outline: none;
 }
 
 .gen-derive-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: default;
 }
 
 .gen-derive-btn i {
-  font-size: var(--sys-text-style-body-size);
+  font-size: 13px;
+  width: 13px;
+  height: 13px;
 }
 
-/* Chip selectors — single-select with toggle-off. */
+/* ── Style / mood chips (shared .ap-filter-chip primitive) ─ */
 .gen-chips {
   display: flex;
   flex-wrap: wrap;
   gap: var(--ref-spacing-xs);
 }
 
-/* Playbook brand-colour swatches honoured by image generation (#10). */
-.gen-brand-swatches {
+/* ── Visual style cards (preview thumbnails, Canva/Gamma) ── */
+.gen-style-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ref-spacing-xs);
+}
+
+.gen-style-card {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxs);
-}
-
-.gen-brand-swatch {
-  width: 22px;
-  height: 22px;
-  border-radius: var(--app-radius-circle);
-  border: 1px solid var(--app-border);
-}
-
-.gen-chip {
-  display: inline-flex;
-  align-items: center;
+  flex-direction: column;
   gap: var(--ref-spacing-xxxs);
-  padding: 6px 14px;
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--app-radius-pill);
-  background: var(--ref-color-white);
-  font-size: var(--sys-text-style-body-bold-size);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-grey-100);
+  padding: 0;
+  border: 0;
+  background: none;
   cursor: pointer;
   font-family: inherit;
-  line-height: var(--sys-text-style-body-bold-line-height);
-  transition:
-    border-color var(--ref-animation-short),
-    background var(--ref-animation-short),
-    color var(--ref-animation-short);
 }
 
-.gen-chip:hover {
-  border-color: var(--ref-color-grey-60);
+.gen-style-thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--ref-border-radius-md);
+  overflow: hidden;
+  border: 2px solid var(--ref-color-grey-20);
+  background: var(--ref-color-grey-10);
+  transition: border-color var(--ref-animation-short) var(--app-ease-out);
 }
 
-.gen-chip:active {
+.gen-style-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gen-style-card:hover .gen-style-thumb {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.gen-style-card:focus-visible {
+  outline: none;
+}
+
+.gen-style-card:focus-visible .gen-style-thumb {
+  border-color: var(--ref-color-electric-blue-100);
+  box-shadow: 0 0 0 3px var(--ref-color-electric-blue-10);
+}
+
+.gen-style-card.is-selected .gen-style-thumb {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.gen-style-check {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-white);
+  font-size: 11px;
+}
+
+.gen-style-name {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-80);
+  text-align: center;
+}
+
+.gen-style-card.is-selected .gen-style-name {
+  color: var(--ref-color-electric-blue-150);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+/* "Your style" upload card — dashed placeholder until an image is picked. */
+.gen-style-card--upload:not(.has-image) .gen-style-thumb {
+  border-style: dashed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--ref-color-grey-05);
-  border-color: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-grey-40);
 }
 
-.gen-chip.selected {
+.gen-style-card--upload:not(.has-image):hover .gen-style-thumb {
   border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-10);
   color: var(--ref-color-electric-blue-100);
 }
 
-.gen-chip-icon {
-  font-size: var(--sys-text-style-body-size);
-  line-height: 1;
+.gen-style-upload-ph {
+  display: inline-flex;
 }
 
-/* Preview viewport — a fixed-height region so the modal height never changes
-   when the format (and thus the frame shape) changes. The stage is centred in
-   it; shorter ratios simply leave symmetric space, taller ones fill it. */
-.gen-image-viewport {
-  --gen-stage-h: min(440px, 56vh);
-  height: var(--gen-stage-h);
+.gen-style-upload-ph i {
+  font-size: 28px;
+}
+
+/* ── Format selector (a card in the options rail) ────────── */
+/* Three equal aspect-ratio cards (Canva pattern) — glyph + tag + name stacked
+   and centred so they fit the narrow rail. */
+.gen-format-chips {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ref-spacing-xs);
+}
+
+.gen-format-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-xxs);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  background: var(--ref-color-white);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    border-color var(--ref-animation-short) var(--app-ease-out),
+    background var(--ref-animation-short) var(--app-ease-out);
+}
+
+.gen-format-chip:hover {
+  border-color: var(--ref-color-grey-40);
+}
+
+.gen-format-chip:focus-visible {
+  outline: none;
+  border-color: var(--ref-color-electric-blue-100);
+  box-shadow: 0 0 0 3px var(--ref-color-electric-blue-10);
+}
+
+.gen-format-chip.is-selected {
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-10);
+}
+
+.gen-format-glyph {
+  height: 20px;
+  width: auto;
+  flex-shrink: 0;
+  display: inline-block;
+  border: 1.5px solid var(--ref-color-grey-60);
+  border-radius: 2px;
+}
+
+.gen-format-chip.is-selected .gen-format-glyph {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.gen-format-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+
+.gen-format-tag {
+  font-size: var(--sys-text-style-body-bold-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+  font-variant-numeric: tabular-nums;
+}
+
+.gen-format-name {
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-body-weight);
+  color: var(--ref-color-grey-60);
+}
+
+.gen-format-chip.is-selected .gen-format-tag {
+  color: var(--ref-color-electric-blue-150);
+}
+
+.gen-format-chip.is-selected .gen-format-name {
+  color: var(--ref-color-electric-blue-100);
+}
+
+/* ── Preview stage ───────────────────────────────────────── */
+/* The wrap carries --gen-ratio (format width/height) + the height budget the
+   image must fit within, and centres the framed image on the grey canvas. */
+.gen-stage-wrap {
+  --gen-ratio: 1.7778;
+  --gen-stage-h: min(440px, 52vh);
+  /* Fill the pane's vertical space and centre the image; the feedback stays
+     pinned at the bottom of the pane as the last child. */
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Preview stage — adopts the selected format's aspect ratio (--gen-ratio,
-   width/height) so the frame IS the output shape: the image fills it (below)
-   with no wasted canvas. width = min(full width, viewport-height × ratio) so
-   the box always fits inside the fixed viewport for every ratio; height then
-   follows from the ratio. */
-.gen-image-stage {
-  --gen-ratio: 1.7778;
+/* The generated image — a framed surface that lifts off the grey canvas. Its
+   width is derived from the height budget so it always fits, whatever the
+   format (tall 9:16 stays narrow, wide 16:9 fills the pane). */
+.gen-single {
+  position: relative;
   aspect-ratio: var(--gen-ratio);
-  max-height: 100%;
   width: min(100%, calc(var(--gen-stage-h) * var(--gen-ratio)));
-  display: grid;
-  place-items: center;
-  overflow: hidden;
+  max-height: var(--gen-stage-h);
+  margin-inline: auto;
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
-  /* A soft checkerboard reads as "transparent canvas" — only ever visible
-     behind a stale/dirty image; a freshly generated one fills the frame. */
-  background-color: var(--ref-color-grey-05);
-  background-image:
-    linear-gradient(45deg, var(--ref-color-grey-10) 25%, transparent 25%),
-    linear-gradient(-45deg, var(--ref-color-grey-10) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, var(--ref-color-grey-10) 75%),
-    linear-gradient(-45deg, transparent 75%, var(--ref-color-grey-10) 75%);
-  background-size: 16px 16px;
-  background-position:
-    0 0,
-    0 8px,
-    8px -8px,
-    -8px 0;
+  background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-popover-lg);
+  overflow: hidden;
+  animation: gen-single-in var(--ref-animation-normal) var(--app-ease-out) both;
 }
 
-/* Loading — swap the canvas for the shimmer pulse. */
-.gen-image-stage--loading {
+.gen-single-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Skeleton while generating — shimmer canvas hosting a centred Archie loader.
+   Keeps the same footprint as the result frame (sized by .gen-single); the
+   loader is centred via an absolutely-positioned inner so the frame doesn't
+   collapse to the loader's content size. */
+.gen-single--loading {
+  border-color: var(--ref-color-grey-10);
+  box-shadow: none;
   background-image: linear-gradient(
     90deg,
     var(--ref-color-grey-10) 25%,
@@ -1101,25 +1230,33 @@ body.has-modal {
     var(--ref-color-grey-10) 75%
   );
   background-size: 200% 100%;
-  background-position: 0 0;
-  animation: gen-image-pulse 1.2s linear infinite;
+  animation: gen-shimmer 1.2s linear infinite;
 }
 
-/* Idle — a quiet dashed placeholder, no checkerboard. */
-.gen-image-stage--empty {
-  background-image: none;
-  background-color: var(--ref-color-grey-05);
-  border-style: dashed;
-}
-
-.gen-image-loading {
+.gen-loading-inner {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: var(--ref-spacing-sm);
 }
 
-@keyframes gen-image-pulse {
+/* Beats the DS `.gen-image-spinner { --archie-loader-size: 20px }` default. */
+.gen-image-spinner.gen-loading-mark {
+  --archie-loader-size: 88px;
+}
+
+.gen-loading-label {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-60);
+}
+
+@keyframes gen-shimmer {
   0% {
     background-position: 200% 0;
   }
@@ -1128,79 +1265,117 @@ body.has-modal {
   }
 }
 
-.gen-image-loading-label {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--ref-spacing-xs);
-  margin: 0;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  font-weight: var(--sys-text-style-body-weight);
-  color: var(--ref-color-grey-60);
+@keyframes gen-single-in {
+  from {
+    opacity: 0;
+    transform: scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-.gen-image-spinner {
+@media (prefers-reduced-motion: reduce) {
+  .gen-single,
+  .gen-single--loading {
+    animation: none;
+  }
+}
+
+.gen-empty {
+  width: min(100%, calc(var(--gen-stage-h) * var(--gen-ratio)));
+  max-height: var(--gen-stage-h);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-md);
+  border: 1px dashed var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  background: var(--ref-color-white);
+  color: var(--ref-color-grey-60);
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.gen-empty > i {
+  font-size: 36px;
+  color: var(--ref-color-grey-40);
+}
+
+.gen-empty-title {
+  margin: 0;
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-80);
+}
+
+.gen-empty-sub {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
+/* ── Regenerate on the image (not the footer) ────────────── */
+/* Fresh result — a quiet top-right pill keeps the reroll at hand. */
+.gen-single-actions {
+  position: absolute;
+  top: var(--ref-spacing-xs);
+  right: var(--ref-spacing-xs);
+}
+
+/* Stale result — the edited options no longer match the shown image: dim it
+   and centre a prominent "regenerate to apply" button right where the change
+   reads. */
+.gen-single.is-stale .gen-single-img {
+  opacity: 0.45;
+}
+
+.gen-single-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm);
+}
+
+/* Status line sits above the button (part of the message lives outside it). */
+.gen-stale-msg {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-popover-lg);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-80);
+}
+
+/* DS .ap-button is used as-is; we only lift it off the imagery with a shadow
+   (contextual overlay need, not a restyle of the component). */
+.gen-single-actions .ap-button,
+.gen-single-overlay .ap-button {
+  box-shadow: var(--app-shadow-popover-lg);
+}
+
+/* Inline spinner for the "Suggesting…" derive state. */
+.gen-spinner {
   display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 1.5px solid var(--ref-color-grey-20);
-  border-top-color: var(--ref-color-grey-100);
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--ref-color-orange-20);
+  border-top-color: var(--ref-color-orange-100);
   border-radius: var(--app-radius-circle);
   animation: app-spin 0.7s linear infinite;
   flex-shrink: 0;
-}
-
-/* Large variant — the Archie mark centred in the image zone while generating.
-   (The archie-loader injector swaps the CSS spinner for the animated mark; its
-   box is driven by --archie-loader-size in archie-loader.css, so only bump
-   that here — don't touch width/height or the SVG falls back to intrinsic px.) */
-.gen-image-spinner.gen-image-spinner--xl {
-  border: 0;
-  animation: none;
-  --archie-loader-size: 64px;
-}
-
-/* The generated image — pinned to the stage box and contained, so it never
-   crops or stretches whatever the source/network ratio (portrait, square,
-   wide all letterbox cleanly inside the frame). */
-.gen-image-preview {
-  width: 100%;
-  height: 100%;
-  /* The image is requested at the format ratio, so cover fills the frame
-     edge-to-edge; if a stale (dirty) image of another ratio is shown, cover
-     crops gracefully rather than letterboxing. */
-  object-fit: cover;
-  display: block;
-}
-
-/* Format chips — an aspect-ratio glyph + tag + name, so the shape reads at a
-   glance. Builds on .gen-chip; only the inner layout + glyph are added. */
-.gen-format-chip {
-  gap: var(--ref-spacing-xxs);
-}
-
-.gen-format-glyph {
-  height: 15px;
-  width: auto;
-  flex-shrink: 0;
-  display: inline-block;
-  border: 1.5px solid currentColor;
-  border-radius: 2px;
-  opacity: 0.7;
-}
-
-.gen-format-tag {
-  font-variant-numeric: tabular-nums;
-}
-
-.gen-format-name {
-  font-weight: var(--sys-text-style-body-weight);
-  color: var(--ref-color-grey-60);
-}
-
-.gen-format-chip.selected .gen-format-name {
-  color: var(--ref-color-electric-blue-100);
 }
 
 /* ── Shortcut legend ────────────────────────────────────── */
