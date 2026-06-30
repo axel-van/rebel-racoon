@@ -1050,21 +1050,27 @@ body.has-modal {
   line-height: 1;
 }
 
-/* Preview viewport — centres the framed stage horizontally; it hugs the
-   stage's height (no fixed height) so short ratios don't reserve dead space. */
+/* Preview viewport — a fixed-height region so the modal height never changes
+   when the format (and thus the frame shape) changes. The stage is centred in
+   it; shorter ratios simply leave symmetric space, taller ones fill it. */
 .gen-image-viewport {
+  --gen-stage-h: min(440px, 56vh);
+  height: var(--gen-stage-h);
   display: flex;
+  align-items: center;
   justify-content: center;
 }
 
 /* Preview stage — adopts the selected format's aspect ratio (--gen-ratio,
    width/height) so the frame IS the output shape: the image fills it (below)
-   with no wasted canvas. width = min(full width, cap-height × ratio); the
-   height then follows from the ratio, capped so tall formats stay in view. */
+   with no wasted canvas. width = min(full width, viewport-height × ratio) so
+   the box always fits inside the fixed viewport for every ratio; height then
+   follows from the ratio. */
 .gen-image-stage {
   --gen-ratio: 1.7778;
   aspect-ratio: var(--gen-ratio);
-  width: min(100%, calc(min(420px, 52vh) * var(--gen-ratio)));
+  max-height: 100%;
+  width: min(100%, calc(var(--gen-stage-h) * var(--gen-ratio)));
   display: grid;
   place-items: center;
   overflow: hidden;
