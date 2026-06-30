@@ -22,6 +22,8 @@ import { showToast } from "./toast.js?v=20";
 import { renderFeedbackControl, onFeedbackClick } from "./feedback-control.js?v=1";
 import { getSessionById } from "../sessions-store.js?v=3";
 import { getContextById, getDefaultContext } from "../contexts-store.js?v=31";
+import { getPosts } from "../posts-store.js?v=31";
+import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "../clip-formats.js?v=1";
 
 const MODAL_ID = "generateImage";
 
@@ -36,6 +38,10 @@ let promptText = "";
 let promptLoading = false;
 let styleKey = null;
 let moodKey = null;
+// Output format (aspect ratio) — drives the preview frame AND the generated
+// image dimensions. Resolved from the post's network on open.
+let formatId = null;
+let currentNetwork = null;
 let imageUrl = null;
 // Seed of the currently-shown image — used to key its feedback target so
 // each Regenerate produces a fresh, independently-rated image.
@@ -97,7 +103,28 @@ function focusSafe(el) {
 }
 
 function buildSeed() {
-  return `${currentPostId || "img"}-${styleKey || "none"}-${moodKey || "none"}-${Date.now()}`;
+  return `${currentPostId || "img"}-${styleKey || "none"}-${moodKey || "none"}-${formatId || "none"}-${Date.now()}`;
+}
+
+// Pixel dimensions to request per format, so the mock image comes back at the
+// chosen ratio and fills the preview frame exactly (no letterboxing).
+const FORMAT_DIMS = {
+  "9:16": [720, 1280],
+  "4:5": [864, 1080],
+  "1:1": [1080, 1080],
+  "16:9": [1280, 720],
+};
+
+// The format options to offer — the post network's recommended set when known,
+// otherwise the full catalogue.
+function formatChoices() {
+  if (currentNetwork && NETWORK_FORMATS[currentNetwork]) return formatsForNetwork(currentNetwork);
+  return Object.values(FORMATS);
+}
+
+// width/height (decimal) of the active format, for the preview frame ratio.
+function activeRatio() {
+  return FORMATS[formatId]?.ratio || FORMATS["16:9"].ratio;
 }
 
 // The active Playbook's named brand colours (alpha feedback #10). Resolved
@@ -153,9 +180,11 @@ async function derivePromptFromPost(postId) {
 async function generateImage(prompt, seed) {
   // Pretend to call an image generation API; the seed keeps Picsum stable per
   // set of inputs so the "Regenerate" flow shows a different image each time.
+  // Request at the chosen format's dimensions so the result fills the frame.
   void prompt;
+  const [w, h] = FORMAT_DIMS[formatId] || FORMAT_DIMS["16:9"];
   await new Promise((r) => setTimeout(r, 6000));
-  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/800/600`;
+  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/${w}/${h}`;
 }
 
 // ── Render ────────────────────────────────────────────────────────────
@@ -197,7 +226,8 @@ function isDirty() {
   return (
     generatedSnapshot.prompt !== promptText.trim() ||
     generatedSnapshot.style !== styleKey ||
-    generatedSnapshot.mood !== moodKey
+    generatedSnapshot.mood !== moodKey ||
+    generatedSnapshot.format !== formatId
   );
 }
 
@@ -265,8 +295,41 @@ function renderControls() {
       <p class="gen-section-label">Mood<span>— optional</span></p>
       <div class="gen-chips">${renderChips(MOOD_OPTIONS, moodKey, "data-gen-mood")}</div>
     </div>
+
+    <div class="gen-section">
+      <p class="gen-section-label">Format<span>${currentNetwork ? `— best for ${networkLabel(currentNetwork)}` : "— aspect ratio"}</span></p>
+      <div class="gen-chips">${renderFormatChips()}</div>
+    </div>
     ${renderBrandColorsNote()}
   `;
+}
+
+function networkLabel(net) {
+  const labels = {
+    linkedin: "LinkedIn",
+    instagram: "Instagram",
+    facebook: "Facebook",
+    x: "X",
+    twitter: "X",
+    tiktok: "TikTok",
+  };
+  return labels[net] || net;
+}
+
+// Format chips carry an aspect-ratio glyph + tag + descriptive label, so the
+// shape is legible at a glance. Single-select (a format is always required).
+function renderFormatChips() {
+  return formatChoices()
+    .map((f) => {
+      const selected = formatId === f.id ? " selected" : "";
+      return `
+        <button type="button" class="gen-chip gen-format-chip${selected}" data-gen-format="${escapeHtml(f.id)}">
+          <span class="gen-format-glyph" style="aspect-ratio:${f.ratio}" aria-hidden="true"></span>
+          <span class="gen-format-tag">${escapeHtml(f.tag)}</span>
+          <span class="gen-format-name">${escapeHtml(f.label)}</span>
+        </button>`;
+    })
+    .join("");
 }
 
 function renderPreviewPane() {
@@ -274,21 +337,21 @@ function renderPreviewPane() {
   // contains the image (object-fit: contain) so ANY network ratio (square,
   // portrait, wide) shows in full without cropping or stretching. The frame
   // keeps a constant footprint across idle / loading / result.
-  let stage;
+  // The stage adopts the selected format's aspect ratio, so the frame IS the
+  // output shape — no generic letterbox, no wasted canvas.
+  const ratioStyle = `--gen-ratio:${activeRatio()}`;
+  let stageInner;
+  let stageMod = "";
   let feedback = "";
   if (genState === "loading") {
-    stage = `
-      <div class="gen-image-stage gen-image-stage--loading" role="status">
-        <div class="gen-image-loading">
-          <span class="gen-image-spinner gen-image-spinner--xl"></span>
-          <p class="gen-image-loading-label">Generating image…</p>
-        </div>
+    stageMod = " gen-image-stage--loading";
+    stageInner = `
+      <div class="gen-image-loading" role="status">
+        <span class="gen-image-spinner gen-image-spinner--xl"></span>
+        <p class="gen-image-loading-label">Generating image…</p>
       </div>`;
   } else if (genState === "result") {
-    stage = `
-      <div class="gen-image-stage">
-        <img class="gen-image-preview" src="${escapeHtml(imageUrl)}" alt="Generated image" />
-      </div>`;
+    stageInner = `<img class="gen-image-preview" src="${escapeHtml(imageUrl)}" alt="Generated image" />`;
     feedback = renderFeedbackControl(`image:${currentPostId || "img"}:${imageSeed || "0"}`, {
       kind: "image",
       label: "How's this image?",
@@ -296,18 +359,20 @@ function renderPreviewPane() {
   } else {
     // Idle — no image yet. A quiet placeholder so the framed zone reads as
     // "the preview lands here" rather than empty space.
-    stage = `
-      <div class="gen-image-stage gen-image-stage--empty" aria-hidden="true">
-        <div class="gen-image-empty">
-          <i class="ap-icon-image"></i>
-          <p>Your preview appears here</p>
-          <span>Set your options, then generate.</span>
-        </div>
+    stageMod = " gen-image-stage--empty";
+    stageInner = `
+      <div class="gen-image-empty">
+        <i class="ap-icon-image"></i>
+        <p>Your preview appears here</p>
+        <span>Set your options, then generate.</span>
       </div>`;
   }
+  const fmt = FORMATS[formatId];
   return `
-    <p class="gen-section-label">Preview<span>— fits any network ratio</span></p>
-    ${stage}
+    <p class="gen-section-label">Preview<span>${fmt ? `— ${fmt.label} · ${fmt.tag}` : ""}</span></p>
+    <div class="gen-image-viewport">
+      <div class="gen-image-stage${stageMod}" style="${ratioStyle}">${stageInner}</div>
+    </div>
     ${feedback}
   `;
 }
@@ -392,7 +457,7 @@ async function runGeneration() {
     imageUrl = await generateImage(buildFullPrompt(), imageSeed);
     genState = "result";
     // Record the inputs behind this image so later edits read as "dirty".
-    generatedSnapshot = { prompt: promptText.trim(), style: styleKey, mood: moodKey };
+    generatedSnapshot = { prompt: promptText.trim(), style: styleKey, mood: moodKey, format: formatId };
   } catch {
     // FIND-A2: surface the failure inline next to the form instead of
     // silently rolling back to idle. The user can then tweak the prompt
@@ -425,6 +490,15 @@ function onModalClick(event) {
   if (moodBtn) {
     const key = moodBtn.dataset.genMood;
     moodKey = moodKey === key ? null : key;
+    renderBody();
+    return;
+  }
+
+  // Format is single-select (always one active) — changing it re-shapes the
+  // preview frame immediately and marks a shown result dirty.
+  const fmtBtn = event.target.closest("[data-gen-format]");
+  if (fmtBtn) {
+    formatId = fmtBtn.dataset.genFormat;
     renderBody();
     return;
   }
@@ -480,6 +554,13 @@ export function open(postId, onUse, opts = {}) {
   currentSessionId = opts.sessionId || null;
   onUseCallback = typeof onUse === "function" ? onUse : null;
 
+  // Resolve the post's network so the format options + default match where the
+  // image will publish (e.g. a LinkedIn draft defaults to LinkedIn's ratio).
+  const post = currentSessionId ? getPosts(currentSessionId).find((p) => p.id === currentPostId) : null;
+  // posts-store stores X as "twitter"; the format catalogue keys on "x".
+  currentNetwork = (post?.network === "twitter" ? "x" : post?.network) || null;
+  formatId = post?.format || (currentNetwork ? defaultFormatFor(currentNetwork) : "1:1");
+
   backdrop.hidden = false;
   backdrop.classList.add("open");
   modal.classList.add("open");
@@ -507,6 +588,8 @@ function close() {
   promptLoading = false;
   styleKey = null;
   moodKey = null;
+  formatId = null;
+  currentNetwork = null;
   imageUrl = null;
   imageSeed = null;
   generatedSnapshot = null;

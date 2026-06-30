@@ -1050,25 +1050,31 @@ body.has-modal {
   line-height: 1;
 }
 
-/* Preview stage — a framed, neutral letterbox canvas that materialises the
-   preview zone and keeps a constant footprint across idle / loading / result.
-   The image is contained inside it (below), so any network ratio shows in
-   full without cropping or stretching. */
+/* Preview viewport — a fixed-height stage region the framed preview is centred
+   in, so the modal height stays stable while the frame re-shapes per format. */
+.gen-image-viewport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: min(460px, 56vh);
+}
+
+/* Preview stage — adopts the selected format's aspect ratio (--gen-ratio,
+   width/height) so the frame IS the output shape: the image fills it (below)
+   with no wasted canvas. width = min(full width, cap-height × ratio) keeps the
+   box inside both the pane width and the viewport height for every ratio. */
 .gen-image-stage {
-  width: 100%;
-  aspect-ratio: 4 / 3;
+  --gen-ratio: 1.7778;
+  aspect-ratio: var(--gen-ratio);
+  height: 100%;
+  width: min(100%, calc(min(460px, 56vh) * var(--gen-ratio)));
   display: grid;
-  /* minmax(0,1fr) pins the cell to a fraction of the aspect-defined box so a
-     tall (portrait) image can't grow the stage past its frame — the image is
-     constrained to the cell and letterboxes instead. */
-  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   place-items: center;
   overflow: hidden;
-  padding: var(--ref-spacing-xs);
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
-  /* A soft checkerboard reads as "transparent canvas" so letterboxed images
-     of any ratio sit on a neutral, intentional backdrop. */
+  /* A soft checkerboard reads as "transparent canvas" — only ever visible
+     behind a stale/dirty image; a freshly generated one fills the frame. */
   background-color: var(--ref-color-grey-05);
   background-image:
     linear-gradient(45deg, var(--ref-color-grey-10) 25%, transparent 25%),
@@ -1156,11 +1162,42 @@ body.has-modal {
    crops or stretches whatever the source/network ratio (portrait, square,
    wide all letterbox cleanly inside the frame). */
 .gen-image-preview {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  /* The image is requested at the format ratio, so cover fills the frame
+     edge-to-edge; if a stale (dirty) image of another ratio is shown, cover
+     crops gracefully rather than letterboxing. */
+  object-fit: cover;
   display: block;
-  border-radius: var(--ref-border-radius-sm);
+}
+
+/* Format chips — an aspect-ratio glyph + tag + name, so the shape reads at a
+   glance. Builds on .gen-chip; only the inner layout + glyph are added. */
+.gen-format-chip {
+  gap: var(--ref-spacing-xxs);
+}
+
+.gen-format-glyph {
+  height: 15px;
+  width: auto;
+  flex-shrink: 0;
+  display: inline-block;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
+.gen-format-tag {
+  font-variant-numeric: tabular-nums;
+}
+
+.gen-format-name {
+  font-weight: var(--sys-text-style-body-weight);
+  color: var(--ref-color-grey-60);
+}
+
+.gen-format-chip.selected .gen-format-name {
+  color: var(--ref-color-electric-blue-100);
 }
 
 /* ── Shortcut legend ────────────────────────────────────── */
