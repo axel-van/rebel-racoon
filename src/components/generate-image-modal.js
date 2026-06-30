@@ -270,33 +270,45 @@ function renderControls() {
 }
 
 function renderPreviewPane() {
+  // The image lives inside a framed "stage" — a neutral letterbox canvas that
+  // contains the image (object-fit: contain) so ANY network ratio (square,
+  // portrait, wide) shows in full without cropping or stretching. The frame
+  // keeps a constant footprint across idle / loading / result.
+  let stage;
+  let feedback = "";
   if (genState === "loading") {
-    return `
-      <div class="gen-image-skeleton gen-image-skeleton--loading">
-        <div class="gen-image-loading" role="status">
+    stage = `
+      <div class="gen-image-stage gen-image-stage--loading" role="status">
+        <div class="gen-image-loading">
           <span class="gen-image-spinner gen-image-spinner--xl"></span>
           <p class="gen-image-loading-label">Generating image…</p>
         </div>
-      </div>
-    `;
+      </div>`;
+  } else if (genState === "result") {
+    stage = `
+      <div class="gen-image-stage">
+        <img class="gen-image-preview" src="${escapeHtml(imageUrl)}" alt="Generated image" />
+      </div>`;
+    feedback = renderFeedbackControl(`image:${currentPostId || "img"}:${imageSeed || "0"}`, {
+      kind: "image",
+      label: "How's this image?",
+    });
+  } else {
+    // Idle — no image yet. A quiet placeholder so the framed zone reads as
+    // "the preview lands here" rather than empty space.
+    stage = `
+      <div class="gen-image-stage gen-image-stage--empty" aria-hidden="true">
+        <div class="gen-image-empty">
+          <i class="ap-icon-image"></i>
+          <p>Your preview appears here</p>
+          <span>Set your options, then generate.</span>
+        </div>
+      </div>`;
   }
-  if (genState === "result") {
-    return `
-      <img class="gen-image-preview" src="${escapeHtml(imageUrl)}" alt="Generated image" />
-      ${renderFeedbackControl(`image:${currentPostId || "img"}:${imageSeed || "0"}`, {
-        kind: "image",
-        label: "How's this image?",
-      })}
-    `;
-  }
-  // Idle — no image yet. A quiet placeholder so the pane reads as "the
-  // preview lands here" rather than empty space.
   return `
-    <div class="gen-image-empty" aria-hidden="true">
-      <i class="ap-icon-image"></i>
-      <p>Your preview appears here</p>
-      <span>Set your options, then generate.</span>
-    </div>
+    <p class="gen-section-label">Preview<span>— fits any network ratio</span></p>
+    ${stage}
+    ${feedback}
   `;
 }
 

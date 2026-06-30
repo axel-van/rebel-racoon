@@ -858,18 +858,13 @@ body.has-modal {
   }
 }
 
-/* Idle preview placeholder — reads as "the image lands here". */
+/* Idle placeholder content — centred inside the (dashed) preview stage. */
 .gen-image-empty {
-  width: 100%;
-  aspect-ratio: 4 / 3;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: var(--ref-spacing-xxs);
-  border: 1px dashed var(--ref-color-grey-20);
-  border-radius: var(--ref-border-radius-md);
-  background: var(--ref-color-grey-05);
   color: var(--ref-color-grey-60);
   text-align: center;
   padding: var(--ref-spacing-md);
@@ -1055,26 +1050,57 @@ body.has-modal {
   line-height: 1;
 }
 
-/* Loading state — pulsing skeleton + tiny spinner. */
-.gen-image-skeleton {
+/* Preview stage — a framed, neutral letterbox canvas that materialises the
+   preview zone and keeps a constant footprint across idle / loading / result.
+   The image is contained inside it (below), so any network ratio shows in
+   full without cropping or stretching. */
+.gen-image-stage {
   width: 100%;
   aspect-ratio: 4 / 3;
+  display: grid;
+  /* minmax(0,1fr) pins the cell to a fraction of the aspect-defined box so a
+     tall (portrait) image can't grow the stage past its frame — the image is
+     constrained to the cell and letterboxes instead. */
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: center;
+  overflow: hidden;
+  padding: var(--ref-spacing-xs);
+  border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
-  background: linear-gradient(
+  /* A soft checkerboard reads as "transparent canvas" so letterboxed images
+     of any ratio sit on a neutral, intentional backdrop. */
+  background-color: var(--ref-color-grey-05);
+  background-image:
+    linear-gradient(45deg, var(--ref-color-grey-10) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--ref-color-grey-10) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--ref-color-grey-10) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--ref-color-grey-10) 75%);
+  background-size: 16px 16px;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+}
+
+/* Loading — swap the canvas for the shimmer pulse. */
+.gen-image-stage--loading {
+  background-image: linear-gradient(
     90deg,
     var(--ref-color-grey-10) 25%,
     var(--ref-color-grey-05) 50%,
     var(--ref-color-grey-10) 75%
   );
   background-size: 200% 100%;
+  background-position: 0 0;
   animation: gen-image-pulse 1.2s linear infinite;
 }
 
-/* While generating, the loader + label sit centred ON the image zone (the
-   skeleton) so it's obvious that's where the image will land. */
-.gen-image-skeleton--loading {
-  display: grid;
-  place-items: center;
+/* Idle — a quiet dashed placeholder, no checkerboard. */
+.gen-image-stage--empty {
+  background-image: none;
+  background-color: var(--ref-color-grey-05);
+  border-style: dashed;
 }
 
 .gen-image-loading {
@@ -1126,48 +1152,15 @@ body.has-modal {
   --archie-loader-size: 64px;
 }
 
-/* Result state — preview + Regenerate / Edit options / Use-this-image. */
-.gen-image-result {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-sm);
-}
-
+/* The generated image — pinned to the stage box and contained, so it never
+   crops or stretches whatever the source/network ratio (portrait, square,
+   wide all letterbox cleanly inside the frame). */
 .gen-image-preview {
-  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
   display: block;
-  border: 1px solid var(--ref-color-grey-10);
-  border-radius: var(--ref-border-radius-md);
-}
-
-.gen-image-result-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--ref-spacing-xs);
-  flex-wrap: wrap;
-}
-
-/* Summary tags — shown while loading and on the result view. */
-.gen-summary-bar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxs);
-}
-
-.gen-summary-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  padding: 2px var(--ref-spacing-xs);
-  border-radius: var(--app-radius-pill);
-  background: var(--ref-color-grey-05);
-  border: 1px solid var(--ref-color-grey-10);
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  font-weight: var(--sys-text-style-caption-weight);
-  color: var(--ref-color-grey-80);
+  border-radius: var(--ref-border-radius-sm);
 }
 
 /* ── Shortcut legend ────────────────────────────────────── */
