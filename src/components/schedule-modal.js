@@ -463,10 +463,17 @@ function onClick(event) {
     }
     return;
   }
-  // "Clear all dates" — collapse the recurrence back to one slot per
-  // draft (optimal one-each spread, or the custom one-per-day seed).
+  // "Clear all dates" — wipe the chosen dates. In Optimal this returns to the
+  // pre-compute state (Schedule disables, Compute goes primary, dates collapse);
+  // in Custom it reseeds the one-per-day defaults.
   if (event.target.closest("[data-schedule-clear]")) {
-    state.slots = state.mode === "optimal" ? spreadOneEach(state.posts) : customDefaultSlots(state.posts);
+    if (state.mode === "optimal") {
+      state.slots = spreadOneEach(state.posts);
+      state.computed = false;
+      state.slotsExpanded = false;
+    } else {
+      state.slots = customDefaultSlots(state.posts);
+    }
     render();
     return;
   }
@@ -640,7 +647,7 @@ function renderInner() {
           type="button"
           class="ap-button stroked grey schedule-modal__clear"
           data-schedule-clear
-          ${state.slots.length <= state.posts.length || state.status === "scheduling" ? "disabled" : ""}
+          ${state.status === "scheduling" || (state.mode === "optimal" && !state.computed) ? "disabled" : ""}
         >
           <i class="ap-icon-trash"></i><span>Clear all dates</span>
         </button>
