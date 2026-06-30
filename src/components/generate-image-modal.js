@@ -3,13 +3,14 @@
 // init() injects the DOM once, then open(postId, onUse?) and close() toggle
 // visibility.
 //
-// Three visual states ("idle" → "loading" → "result"):
-//   - idle:    textarea with an AI-derived prompt, "Re-derive from post
-//              content" link, Visual-style + Mood chip selectors, Cancel +
-//              Generate footer buttons.
-//   - loading: a pulsing skeleton tile + summary tags + spinner label.
-//   - result:  the generated image preview + Regenerate / Edit options /
-//              Use-this-image actions (footer hidden).
+// Two-pane layout — the options (prompt + style + mood + brand colours) stay
+// editable on the left at all times, alongside a preview pane on the right
+// that reflects the current stage:
+//   - idle:    a quiet "preview appears here" placeholder; footer = Generate.
+//   - loading: a pulsing skeleton + centred Archie loader; footer = Generating…
+//   - result:  the generated image + "How's this image?" feedback; footer =
+//              Regenerate + Use this image. Editing any option while a result
+//              is shown marks it "dirty" and the footer prompts a regenerate.
 //
 // The component is self-contained — reset() wipes the ephemeral state on
 // close. If a caller passes an `onUse` callback to open(), it fires with
@@ -45,6 +46,9 @@ let onUseCallback = null;
 // next time the user clicks Generate so the error doesn't outlive
 // the retry attempt.
 let lastError = null;
+// Snapshot of the inputs that produced the currently-previewed image, so we
+// can tell the user when their edits no longer match the preview ("dirty").
+let generatedSnapshot = null;
 
 const STYLE_OPTIONS = [
   { key: "photorealistic", label: "Photorealistic" },
@@ -185,146 +189,153 @@ function renderBrandColorsNote() {
   `;
 }
 
-function renderSummaryTags() {
-  const tags = [];
-  if (styleKey) {
-    const s = STYLE_OPTIONS.find((o) => o.key === styleKey);
-    if (s) tags.push(`${s.icon} ${s.label}`);
-  }
-  if (moodKey) {
-    const m = MOOD_OPTIONS.find((o) => o.key === moodKey);
-    if (m) tags.push(m.label);
-  }
-  if (!tags.length) return "";
-  return `<div class="gen-summary-bar">${tags
-    .map((t) => `<span class="gen-summary-tag">${escapeHtml(t)}</span>`)
-    .join("")}</div>`;
+// True when the user has edited the prompt / style / mood since the
+// currently-previewed image was generated — so the preview is stale and a
+// "regenerate to apply" hint is warranted.
+function isDirty() {
+  if (genState !== "result" || !generatedSnapshot) return false;
+  return (
+    generatedSnapshot.prompt !== promptText.trim() ||
+    generatedSnapshot.style !== styleKey ||
+    generatedSnapshot.mood !== moodKey
+  );
 }
 
+// Two-pane layout: the options (left) stay editable at all times alongside
+// the live preview (right), so tweaking style/mood/prompt no longer hides the
+// image. The footer holds the stage-appropriate actions in every state.
 function renderBody() {
-  if (genState === "idle") {
-    const deriveLabel = promptLoading
-      ? `<span class="gen-image-spinner"></span>Deriving from post content…`
-      : `<i class="ap-icon-archie-official"></i><span>Re-derive from post content</span>`;
-
-    // Surface the previous-run error (if any) above the form so the
-    // user has context for the retry. Cleared when they click Generate
-    // again (cf. runGeneration). FIND-A2: until now the catch path
-    // silently rolled back to idle, leaving the user unsure whether
-    // the click registered.
-    const errorBlock = lastError
-      ? `<div class="ap-infobox error" role="alert">
-           <i class="ap-icon-error_fill" aria-hidden="true"></i>
-           <div class="ap-infobox-content">
-             <div class="ap-infobox-texts">
-               <span class="ap-infobox-message">${escapeHtml(lastError)}</span>
-             </div>
+  const errorBlock = lastError
+    ? `<div class="ap-infobox error" role="alert">
+         <i class="ap-icon-error_fill" aria-hidden="true"></i>
+         <div class="ap-infobox-content">
+           <div class="ap-infobox-texts">
+             <span class="ap-infobox-message">${escapeHtml(lastError)}</span>
            </div>
-         </div>`
-      : "";
+         </div>
+       </div>`
+    : "";
 
-    body.innerHTML = `
-      ${errorBlock}
-      <div class="gen-image-body">
-        <div class="gen-section">
-          <p class="gen-section-label">Describe your image<span>— edit or write your own</span></p>
-          <textarea
-            class="gen-prompt-area"
-            id="genImagePrompt"
-            rows="3"
-            placeholder="e.g. A professional team celebrating a milestone in a modern office…"
-          >${escapeHtml(promptText)}</textarea>
-          <button type="button" class="gen-derive-btn" id="genDeriveBtn"${promptLoading ? " disabled" : ""}>
-            ${deriveLabel}
-          </button>
-        </div>
+  body.innerHTML = `
+    ${errorBlock}
+    <div class="gen-image-layout">
+      <div class="gen-image-controls">${renderControls()}</div>
+      <div class="gen-image-preview-pane">${renderPreviewPane()}</div>
+    </div>
+  `;
 
-        <div class="gen-section">
-          <p class="gen-section-label">Visual style<span>— optional</span></p>
-          <div class="gen-chips">${renderChips(STYLE_OPTIONS, styleKey, "data-gen-style")}</div>
-        </div>
+  renderFooter();
 
-        <div class="gen-section">
-          <p class="gen-section-label">Mood<span>— optional</span></p>
-          <div class="gen-chips">${renderChips(MOOD_OPTIONS, moodKey, "data-gen-mood")}</div>
-        </div>
-        ${renderBrandColorsNote()}
-      </div>
-    `;
-
-    footer.hidden = false;
-    const promptValid = promptText.trim().length > 0;
-    footer.innerHTML = `
-      <div class="ap-dialog-footer-right">
-        <button type="button" class="ap-button transparent grey" id="genImageCancel">Cancel</button>
-        <button type="button" class="ap-button primary orange" id="genImageGenerate"${promptValid ? "" : " disabled"}>
-          <i class="ap-icon-archie-official"></i>
-          <span>Generate image</span>
-        </button>
-      </div>
-    `;
-
-    // Keep the textarea synced to module state as the user types — and
-    // gate the Generate button on a non-empty prompt so the user can
-    // see the affordance for "you need to write something" without
-    // having to click and see nothing happen.
-    const ta = body.querySelector("#genImagePrompt");
-    const generateBtn = footer.querySelector("#genImageGenerate");
-    if (ta && generateBtn) {
-      ta.addEventListener("input", () => {
-        promptText = ta.value;
-        generateBtn.toggleAttribute("disabled", promptText.trim().length === 0);
-      });
-    }
-  } else if (genState === "loading") {
-    body.innerHTML = `
-      <div class="gen-image-body">
-        <div class="gen-image-skeleton gen-image-skeleton--loading">
-          <div class="gen-image-loading" role="status">
-            <span class="gen-image-spinner gen-image-spinner--xl"></span>
-            <p class="gen-image-loading-label">Generating image…</p>
-          </div>
-        </div>
-        ${renderSummaryTags()}
-      </div>
-    `;
-    footer.hidden = false;
-    footer.innerHTML = `
-      <div class="ap-dialog-footer-right">
-        <button type="button" class="ap-button transparent grey" id="genImageCancel">Cancel</button>
-        <button type="button" class="ap-button primary orange loading" disabled>
-          <span class="ap-loading-bar"></span>
-          <span>Generating…</span>
-        </button>
-      </div>
-    `;
-  } else if (genState === "result") {
-    body.innerHTML = `
-      <div class="gen-image-body">
-        <div class="gen-image-result">
-          <img class="gen-image-preview" src="${escapeHtml(imageUrl)}" alt="Generated image" />
-          ${renderSummaryTags()}
-          ${renderFeedbackControl(`image:${currentPostId || "img"}:${imageSeed || "0"}`, {
-            kind: "image",
-            label: "How's this image?",
-          })}
-          <div class="gen-image-result-actions">
-            <button type="button" class="ap-button transparent grey" id="genImageRegenerate">
-              <i class="ap-icon-refresh"></i>
-              <span>Regenerate</span>
-            </button>
-            <button type="button" class="ap-button transparent grey" id="genImageEdit">
-              <i class="ap-icon-pen"></i>
-              <span>Edit options</span>
-            </button>
-            <button type="button" class="ap-button primary orange" id="genImageUse">Use this image</button>
-          </div>
-        </div>
-      </div>
-    `;
-    footer.hidden = true;
-    footer.innerHTML = "";
+  // Keep the textarea synced to module state as the user types, and refresh
+  // the footer (Generate enabled-state + the "options changed" hint) without
+  // re-rendering the body so the textarea keeps focus.
+  const ta = body.querySelector("#genImagePrompt");
+  if (ta) {
+    ta.addEventListener("input", () => {
+      promptText = ta.value;
+      renderFooter();
+    });
   }
+}
+
+function renderControls() {
+  const deriveLabel = promptLoading
+    ? `<span class="gen-image-spinner"></span>Deriving from post content…`
+    : `<i class="ap-icon-archie-official"></i><span>Re-derive from post content</span>`;
+  return `
+    <div class="gen-section">
+      <p class="gen-section-label">Describe your image<span>— edit or write your own</span></p>
+      <textarea
+        class="gen-prompt-area"
+        id="genImagePrompt"
+        rows="3"
+        placeholder="e.g. A professional team celebrating a milestone in a modern office…"
+      >${escapeHtml(promptText)}</textarea>
+      <button type="button" class="gen-derive-btn" id="genDeriveBtn"${promptLoading ? " disabled" : ""}>
+        ${deriveLabel}
+      </button>
+    </div>
+
+    <div class="gen-section">
+      <p class="gen-section-label">Visual style<span>— optional</span></p>
+      <div class="gen-chips">${renderChips(STYLE_OPTIONS, styleKey, "data-gen-style")}</div>
+    </div>
+
+    <div class="gen-section">
+      <p class="gen-section-label">Mood<span>— optional</span></p>
+      <div class="gen-chips">${renderChips(MOOD_OPTIONS, moodKey, "data-gen-mood")}</div>
+    </div>
+    ${renderBrandColorsNote()}
+  `;
+}
+
+function renderPreviewPane() {
+  if (genState === "loading") {
+    return `
+      <div class="gen-image-skeleton gen-image-skeleton--loading">
+        <div class="gen-image-loading" role="status">
+          <span class="gen-image-spinner gen-image-spinner--xl"></span>
+          <p class="gen-image-loading-label">Generating image…</p>
+        </div>
+      </div>
+    `;
+  }
+  if (genState === "result") {
+    return `
+      <img class="gen-image-preview" src="${escapeHtml(imageUrl)}" alt="Generated image" />
+      ${renderFeedbackControl(`image:${currentPostId || "img"}:${imageSeed || "0"}`, {
+        kind: "image",
+        label: "How's this image?",
+      })}
+    `;
+  }
+  // Idle — no image yet. A quiet placeholder so the pane reads as "the
+  // preview lands here" rather than empty space.
+  return `
+    <div class="gen-image-empty" aria-hidden="true">
+      <i class="ap-icon-image"></i>
+      <p>Your preview appears here</p>
+      <span>Set your options, then generate.</span>
+    </div>
+  `;
+}
+
+function renderFooter() {
+  footer.hidden = false;
+  let right;
+  if (genState === "loading") {
+    right = `
+      <button type="button" class="ap-button transparent grey" id="genImageCancel">Cancel</button>
+      <button type="button" class="ap-button primary orange loading" disabled>
+        <span class="ap-loading-bar"></span>
+        <span>Generating…</span>
+      </button>`;
+  } else if (genState === "result") {
+    right = `
+      <button type="button" class="ap-button transparent grey" id="genImageCancel">Cancel</button>
+      <button type="button" class="ap-button stroked grey" id="genImageRegenerate">
+        <i class="ap-icon-refresh"></i>
+        <span>Regenerate</span>
+      </button>
+      <button type="button" class="ap-button primary orange" id="genImageUse">Use this image</button>`;
+  } else {
+    const promptValid = promptText.trim().length > 0;
+    right = `
+      <button type="button" class="ap-button transparent grey" id="genImageCancel">Cancel</button>
+      <button type="button" class="ap-button primary orange" id="genImageGenerate"${promptValid ? "" : " disabled"}>
+        <i class="ap-icon-archie-official"></i>
+        <span>Generate image</span>
+      </button>`;
+  }
+
+  const hint = isDirty()
+    ? `<span class="gen-footer-hint"><i class="ap-icon-refresh" aria-hidden="true"></i>Options changed — regenerate to apply</span>`
+    : "";
+
+  footer.innerHTML = `
+    <div class="ap-dialog-footer-left">${hint}</div>
+    <div class="ap-dialog-footer-right">${right}</div>
+  `;
 }
 
 // ── Flow ──────────────────────────────────────────────────────────────
@@ -368,6 +379,8 @@ async function runGeneration() {
     imageSeed = buildSeed();
     imageUrl = await generateImage(buildFullPrompt(), imageSeed);
     genState = "result";
+    // Record the inputs behind this image so later edits read as "dirty".
+    generatedSnapshot = { prompt: promptText.trim(), style: styleKey, mood: moodKey };
   } catch {
     // FIND-A2: surface the failure inline next to the form instead of
     // silently rolling back to idle. The user can then tweak the prompt
@@ -386,8 +399,10 @@ function onModalClick(event) {
   // Handled first; never blocks the Use / Regenerate / Edit actions below.
   if (onFeedbackClick(event)) return;
 
+  // Options stay editable in every state (incl. while a result is previewed);
+  // changing one marks the preview dirty so the footer prompts a regenerate.
   const styleBtn = event.target.closest("[data-gen-style]");
-  if (styleBtn && genState === "idle") {
+  if (styleBtn) {
     const key = styleBtn.dataset.genStyle;
     styleKey = styleKey === key ? null : key;
     renderBody();
@@ -395,7 +410,7 @@ function onModalClick(event) {
   }
 
   const moodBtn = event.target.closest("[data-gen-mood]");
-  if (moodBtn && genState === "idle") {
+  if (moodBtn) {
     const key = moodBtn.dataset.genMood;
     moodKey = moodKey === key ? null : key;
     renderBody();
@@ -414,12 +429,6 @@ function onModalClick(event) {
 
   if (event.target.closest("#genImageRegenerate")) {
     runGeneration();
-    return;
-  }
-
-  if (event.target.closest("#genImageEdit")) {
-    genState = "idle";
-    renderBody();
     return;
   }
 
@@ -488,6 +497,7 @@ function close() {
   moodKey = null;
   imageUrl = null;
   imageSeed = null;
+  generatedSnapshot = null;
   currentPostId = null;
   onUseCallback = null;
   notifyClose(MODAL_ID);

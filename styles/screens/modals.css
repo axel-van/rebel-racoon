@@ -826,13 +826,81 @@ body.has-modal {
 /* ── Generate Image modal ────────────────────────────────── */
 
 .generate-image-modal {
-  width: min(calc(100% - 32px), 560px);
+  width: min(calc(100% - 32px), 880px);
 }
 
 .generate-image-modal .ap-dialog-content {
   flex: 1;
   overflow-y: auto;
   gap: var(--ref-spacing-md);
+}
+
+/* Two-pane layout: editable options (left) beside the live preview (right). */
+.gen-image-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ref-spacing-lg);
+}
+
+.gen-image-controls,
+.gen-image-preview-pane {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+}
+
+/* Stack on narrow widths so neither pane gets cramped. */
+@media (max-width: 720px) {
+  .gen-image-layout {
+    flex-direction: column;
+  }
+}
+
+/* Idle preview placeholder — reads as "the image lands here". */
+.gen-image-empty {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xxs);
+  border: 1px dashed var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  background: var(--ref-color-grey-05);
+  color: var(--ref-color-grey-60);
+  text-align: center;
+  padding: var(--ref-spacing-md);
+}
+
+.gen-image-empty > i {
+  font-size: 32px;
+  color: var(--ref-color-grey-40);
+}
+
+.gen-image-empty > p {
+  margin: 0;
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-80);
+}
+
+.gen-image-empty > span {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
+/* "Options changed — regenerate to apply" hint in the footer-left. */
+.gen-footer-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-orange-100);
 }
 
 /* Sections — Describe / Visual style / Mood share the same layout. */
