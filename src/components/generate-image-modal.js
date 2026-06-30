@@ -343,9 +343,9 @@ function renderPreviewStage() {
         ${overlay}
       </div>`;
   }
-  // Idle — a single inviting placeholder at the chosen ratio.
+  // Idle — a quiet centred placeholder on the tinted stage (no card chrome).
   return `
-    <div class="gen-empty" style="aspect-ratio:${activeRatio()}">
+    <div class="gen-empty">
       <i class="ap-icon-image" aria-hidden="true"></i>
       <p class="gen-empty-title">Your image appears here</p>
       <span class="gen-empty-sub">Set your options, then generate.</span>
