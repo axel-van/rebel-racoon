@@ -295,12 +295,16 @@ function renderControls() {
       <p class="gen-section-label">Mood<span>— optional</span></p>
       <div class="gen-chips">${renderChips(MOOD_OPTIONS, moodKey, "data-gen-mood")}</div>
     </div>
+    ${renderBrandColorsNote()}
+  `;
+}
 
+function renderFormatSection() {
+  return `
     <div class="gen-section">
       <p class="gen-section-label">Format<span>${currentNetwork ? `— best for ${networkLabel(currentNetwork)}` : "— aspect ratio"}</span></p>
       <div class="gen-chips">${renderFormatChips()}</div>
     </div>
-    ${renderBrandColorsNote()}
   `;
 }
 
@@ -367,9 +371,10 @@ function renderPreviewPane() {
         <span>Set your options, then generate.</span>
       </div>`;
   }
-  const fmt = FORMATS[formatId];
+  // Format sits directly above the image — it shapes the frame, so it reads as
+  // a preview control rather than a generation option buried on the left.
   return `
-    <p class="gen-section-label">Preview<span>${fmt ? `— ${fmt.label} · ${fmt.tag}` : ""}</span></p>
+    ${renderFormatSection()}
     <div class="gen-image-viewport">
       <div class="gen-image-stage${stageMod}" style="${ratioStyle}">${stageInner}</div>
     </div>
