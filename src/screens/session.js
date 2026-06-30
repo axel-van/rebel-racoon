@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=148";
+import { renderTopbar } from "../components/topbar.js?v=149";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -63,7 +63,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=8";
-import * as contextBuilder from "../context-builder.js?v=130";
+import * as contextBuilder from "../context-builder.js?v=131";
 import { renderPicker } from "./_analyse-common.js?v=48";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -74,7 +74,7 @@ import {
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=25";
-import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=27";
+import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=28";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=47";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=47";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=54";
@@ -105,7 +105,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=257";
+} from "../components/right-panel.js?v=258";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=13";

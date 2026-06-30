@@ -279,9 +279,13 @@ function renderBody() {
   } else if (genState === "loading") {
     body.innerHTML = `
       <div class="gen-image-body">
-        <div class="gen-image-skeleton" aria-hidden="true"></div>
+        <div class="gen-image-skeleton gen-image-skeleton--loading">
+          <div class="gen-image-loading" role="status">
+            <span class="gen-image-spinner gen-image-spinner--xl"></span>
+            <p class="gen-image-loading-label">Generating image…</p>
+          </div>
+        </div>
         ${renderSummaryTags()}
-        <p class="gen-image-loading-label"><span class="gen-image-spinner"></span>Generating image…</p>
       </div>
     `;
     footer.hidden = false;

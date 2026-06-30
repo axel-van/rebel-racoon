@@ -1002,6 +1002,20 @@ body.has-modal {
   animation: gen-image-pulse 1.2s linear infinite;
 }
 
+/* While generating, the loader + label sit centred ON the image zone (the
+   skeleton) so it's obvious that's where the image will land. */
+.gen-image-skeleton--loading {
+  display: grid;
+  place-items: center;
+}
+
+.gen-image-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+}
+
 @keyframes gen-image-pulse {
   0% {
     background-position: 200% 0;
@@ -1032,6 +1046,16 @@ body.has-modal {
   border-radius: var(--app-radius-circle);
   animation: app-spin 0.7s linear infinite;
   flex-shrink: 0;
+}
+
+/* Large variant — the Archie mark centred in the image zone while generating.
+   (The archie-loader injector swaps the CSS spinner for the animated mark; its
+   box is driven by --archie-loader-size in archie-loader.css, so only bump
+   that here — don't touch width/height or the SVG falls back to intrinsic px.) */
+.gen-image-spinner.gen-image-spinner--xl {
+  border: 0;
+  animation: none;
+  --archie-loader-size: 64px;
 }
 
 /* Result state — preview + Regenerate / Edit options / Use-this-image. */
