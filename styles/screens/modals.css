@@ -867,6 +867,25 @@ body.has-modal {
   justify-content: center;
 }
 
+/* The "what was off?" detail opens as a popover above the rating row (over the
+   image), so revealing it never grows the modal vertically. */
+.gen-image-preview-pane .fb {
+  position: relative;
+}
+
+.gen-image-preview-pane .fb__panel:not([hidden]) {
+  position: absolute;
+  bottom: calc(100% + var(--ref-spacing-xs));
+  left: 0;
+  right: 0;
+  z-index: 2;
+  padding: var(--ref-spacing-sm);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--app-radius-card);
+  box-shadow: var(--app-shadow-popover-lg);
+}
+
 /* Stack on narrow widths so neither pane gets cramped. */
 @media (max-width: 760px) {
   .gen-image-layout {
