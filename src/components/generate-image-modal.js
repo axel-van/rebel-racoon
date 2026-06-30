@@ -20,8 +20,6 @@ import { escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 import { showToast } from "./toast.js?v=20";
 import { renderFeedbackControl, onFeedbackClick } from "./feedback-control.js?v=1";
-import { getSessionById } from "../sessions-store.js?v=3";
-import { getContextById, getDefaultContext } from "../contexts-store.js?v=31";
 import { getPosts } from "../posts-store.js?v=31";
 import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "../clip-formats.js?v=1";
 
@@ -128,23 +126,6 @@ function activeRatio() {
 }
 
 // The active Playbook's named brand colours (alpha feedback #10). Resolved
-// from the session → context; falls back to the default context's authored
-// `brandColors`, then to its scraped site palette. Empty when none apply.
-function activeBrandColors() {
-  const session = currentSessionId ? getSessionById(currentSessionId) : null;
-  const ctx = (session?.contextId && getContextById(session.contextId)) || getDefaultContext();
-  if (!ctx) return [];
-  if (Array.isArray(ctx.brandColors) && ctx.brandColors.length) {
-    return ctx.brandColors.filter((c) => c.hex);
-  }
-  const c = ctx.imageVoice?.websites?.[0]?.colors || {};
-  return [
-    { name: "Primary", hex: c.primary },
-    { name: "Accent", hex: c.accent },
-    { name: "Background", hex: c.background },
-  ].filter((s) => s.hex);
-}
-
 function buildFullPrompt() {
   const parts = [promptText.trim()];
   if (styleKey) {
@@ -154,10 +135,6 @@ function buildFullPrompt() {
   if (moodKey) {
     const m = MOOD_OPTIONS.find((o) => o.key === moodKey);
     if (m) parts.push(`${m.label.toLowerCase()} mood`);
-  }
-  const colors = activeBrandColors();
-  if (colors.length) {
-    parts.push(`using brand colours ${colors.map((c) => `${c.name || "brand"} (${c.hex})`).join(", ")}`);
   }
   return parts.filter(Boolean).join(", ");
 }
@@ -201,23 +178,6 @@ function renderChips(options, selectedKey, dataAttr) {
 
 // Read-only note showing which Playbook brand colours will steer the image,
 // so the user sees their palette is being honoured (alpha feedback #10).
-function renderBrandColorsNote() {
-  const colors = activeBrandColors();
-  if (!colors.length) return "";
-  const dots = colors
-    .map(
-      (c) =>
-        `<span class="gen-brand-swatch" title="${escapeHtml(`${c.name || "Brand"} ${c.hex}`)}" style="background:${escapeHtml(c.hex)}"></span>`,
-    )
-    .join("");
-  return `
-    <div class="gen-section gen-brand-colors">
-      <p class="gen-section-label">Brand colours<span>— from your Playbook</span></p>
-      <div class="gen-brand-swatches">${dots}</div>
-    </div>
-  `;
-}
-
 // True when the user has edited the prompt / style / mood since the
 // currently-previewed image was generated — so the preview is stale and a
 // "regenerate to apply" hint is warranted.
@@ -295,7 +255,6 @@ function renderControls() {
       <p class="gen-section-label">Mood<span>— optional</span></p>
       <div class="gen-chips">${renderChips(MOOD_OPTIONS, moodKey, "data-gen-mood")}</div>
     </div>
-    ${renderBrandColorsNote()}
   `;
 }
 

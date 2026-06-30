@@ -848,7 +848,7 @@ body.has-modal {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-md);
+  gap: var(--ref-spacing-sm);
 }
 
 /* Stack on narrow widths so neither pane gets cramped. */
@@ -1050,24 +1050,21 @@ body.has-modal {
   line-height: 1;
 }
 
-/* Preview viewport — a fixed-height stage region the framed preview is centred
-   in, so the modal height stays stable while the frame re-shapes per format. */
+/* Preview viewport — centres the framed stage horizontally; it hugs the
+   stage's height (no fixed height) so short ratios don't reserve dead space. */
 .gen-image-viewport {
   display: flex;
-  align-items: center;
   justify-content: center;
-  height: min(460px, 56vh);
 }
 
 /* Preview stage — adopts the selected format's aspect ratio (--gen-ratio,
    width/height) so the frame IS the output shape: the image fills it (below)
-   with no wasted canvas. width = min(full width, cap-height × ratio) keeps the
-   box inside both the pane width and the viewport height for every ratio. */
+   with no wasted canvas. width = min(full width, cap-height × ratio); the
+   height then follows from the ratio, capped so tall formats stay in view. */
 .gen-image-stage {
   --gen-ratio: 1.7778;
   aspect-ratio: var(--gen-ratio);
-  height: 100%;
-  width: min(100%, calc(min(460px, 56vh) * var(--gen-ratio)));
+  width: min(100%, calc(min(420px, 52vh) * var(--gen-ratio)));
   display: grid;
   place-items: center;
   overflow: hidden;
