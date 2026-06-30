@@ -67,9 +67,13 @@
 }
 
 /* The strip's own top padding would re-add the space we just tightened —
-   drop it in the card context so the feedback sits snug under the card. */
+   drop it in the card context so the feedback sits snug under the card.
+   A little extra space *below* the strip (on top of the feed's row gap)
+   widens the gap to the next draft, so the feedback clearly belongs to the
+   card above it rather than reading as a divider between two drafts. */
 .posts__card-wrap > .fb--strip {
   padding-top: 0;
+  margin-bottom: var(--ref-spacing-sm);
 }
 
 /* Scheduled status card sits flush above the post card — they read as
