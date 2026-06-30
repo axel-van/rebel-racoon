@@ -807,6 +807,8 @@ function slotsForPost(postId) {
 // disclosure that already carries the count, so the inner header is dropped.
 function renderSlotSection() {
   if (state.mode !== "optimal") return renderSlotList();
+  // Nothing to review until "Compute best times" has produced dates.
+  const disabled = !state.computed;
   return `
     <div class="schedule-modal__review">
       <button
@@ -814,6 +816,7 @@ function renderSlotSection() {
         class="ap-button ghost blue schedule-modal__slots-toggle"
         data-schedule-slots-toggle
         aria-expanded="${state.slotsExpanded ? "true" : "false"}"
+        ${disabled ? "disabled" : ""}
       >
         <i class="ap-icon-chevron-down schedule-modal__slots-toggle-arrow" aria-hidden="true"></i>
         <span>${state.slotsExpanded ? "Hide dates" : "Review dates"}</span>
