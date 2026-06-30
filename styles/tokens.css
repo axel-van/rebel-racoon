@@ -132,11 +132,10 @@
   --app-spacing-micro: 2px;
 
   /* ── Modal scrim ──────────────────────────────────────────────────── */
-  /* Brand-tinted slate (--ref-color-grey-100 base) at ~32% — matches
-     Material's 32-40% guidance for foreground legibility while keeping
-     the Archie brand undertone. Used by ds-patches .app-modal-backdrop
-     and schedule-modal scrim. */
-  --app-modal-backdrop: rgba(33, 46, 68, 0.32);
+  /* Modal scrim — grey-100 at 70% opacity, used by ds-patches
+     .app-modal-backdrop and the schedule-modal scrim so every modal dims
+     the page the same way. */
+  --app-modal-backdrop: color-mix(in srgb, var(--ref-color-grey-100) 70%, transparent);
 
   /* Thumbnail scrim — bottom-to-top fade burned into the lower half of
      a video thumbnail so text/pills overlaid on it stay legible against
