@@ -469,26 +469,31 @@ export function repurposeSourceNetworks(postIds) {
 }
 
 // Repurpose-target quick-picker items — the user's CONNECTED SOCIAL PROFILES,
-// minus the profile(s) the winner already succeeded on (repurposing means
-// spreading a win to your OTHER audiences). Presented as profile rows (brand
-// avatar + network badge + handle), the same shape as the draft flow's profile
-// picker. Falls back to every connected profile if excluding the source would
-// leave nothing to pick, so the flow never dead-ends.
+// presented as profile rows (brand avatar + network badge + handle). The
+// profile(s) the winner already ran on are flagged "· Source" in the caption
+// and led first, so the user can reuse that destination too (repost) or spread
+// the win to other audiences.
 export function repurposeProfileItems(postIds) {
   const sourceNets = repurposeSourceNetworks(postIds);
   const connected = getConnectedProfiles();
-  const others = connected.filter((p) => !sourceNets.includes(normNet(p.platform)));
-  const list = others.length ? others : connected;
-  return list.map((p) => ({
-    value: p.id,
-    label: p.handle,
-    caption: [p.platformLabel, p.kind].filter(Boolean).join(" · "),
-    avatar: {
-      imageUrl: p.photo,
-      initials: BRAND_INITIALS,
-      networkIcon: NETWORK_ICON_BY_PLATFORM[normNet(p.platform)],
-    },
-  }));
+  const isSource = (p) => sourceNets.includes(normNet(p.platform));
+  // Source profile(s) first, then the rest.
+  const ordered = [...connected.filter(isSource), ...connected.filter((p) => !isSource(p))];
+  return ordered.map((p) => {
+    const base = [p.platformLabel, p.kind].filter(Boolean).join(" · ");
+    return {
+      value: p.id,
+      label: p.handle,
+      // "Source" is emphasised (own class) so it stands out from the muted
+      // "Network · Kind" prefix. Caption is inserted raw by the picker renderer.
+      caption: isSource(p) ? `${base} · <span class="top-posts-source-tag">Source</span>` : base,
+      avatar: {
+        imageUrl: p.photo,
+        initials: BRAND_INITIALS,
+        networkIcon: NETWORK_ICON_BY_PLATFORM[normNet(p.platform)],
+      },
+    };
+  });
 }
 
 // Human labels for a set of angle values — used by session.js to echo the pick

@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=156";
+import { renderTopbar } from "../components/topbar.js?v=158";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -48,7 +48,7 @@ import {
 } from "../posts-store.js?v=31";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=43";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=35";
-import * as topPostsFlow from "../top-posts-flow.js?v=32";
+import * as topPostsFlow from "../top-posts-flow.js?v=34";
 import { renderTopPostsBoard, renderTopPostEcho, renderProfileChooser } from "../components/top-post-card.js?v=22";
 import * as sidebarWizard from "../sidebar-wizard.js?v=47";
 import * as inlineQuestion from "../inline-question.js?v=41";
@@ -2345,8 +2345,8 @@ function askAnglesForPost(sessionId, postIds, index, collected) {
 
 function askRepurposeProfiles(sessionId, anglesByPost) {
   const postIds = anglesByPost.map((e) => e.postId);
-  // The repurpose targets are the user's OTHER connected social profiles — the
-  // winner already ran on its source profile, so we spread it to the rest.
+  // Repurpose targets = all connected profiles; the source profile is flagged
+  // "· Source" and led first so the user can reuse it (repost) or spread out.
   const items = topPostsFlow.repurposeProfileItems(postIds);
   if (!items.length) {
     postAssistantMessage(
@@ -2358,7 +2358,7 @@ function askRepurposeProfiles(sessionId, anglesByPost) {
   postAssistantMessage(sessionId, "Which profiles should I repurpose these to?");
   inlineQuestion.ask(sessionId, {
     title: "Pick the profiles to repurpose to",
-    subtitle: "I'll adapt each draft to the profile's network — not the one it already won on.",
+    subtitle: "I'll adapt each draft to the profile's network — reuse the source or spread to others.",
     stepLabel: "Profiles",
     multi: true,
     submitLabel: "Repurpose",

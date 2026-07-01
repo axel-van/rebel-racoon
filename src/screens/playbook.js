@@ -19,7 +19,7 @@
 
 import { navigate } from "../router.js?v=30";
 import { escapeHtml as esc } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=156";
+import { renderTopbar } from "../components/topbar.js?v=158";
 import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=31";
 import { mount, snapshotEditable } from "../playbook-view.js?v=30";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";

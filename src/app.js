@@ -1,7 +1,7 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=9";
 import { initArchieLoader } from "./archie-loader.js?v=2";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=156";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=158";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=141";
 import { init as initRightPanel } from "./components/right-panel.js?v=263";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=49";
@@ -23,7 +23,7 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=101";
 import { renderDashboard } from "./screens/dashboard.js?v=48";
-import { renderSession } from "./screens/session.js?v=348";
+import { renderSession } from "./screens/session.js?v=350";
 import { renderIdeas } from "./screens/ideas.js?v=114";
 import { renderContexts } from "./screens/contexts.js?v=123";
 import { renderConnectors } from "./screens/connectors.js?v=62";

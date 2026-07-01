@@ -215,6 +215,13 @@
   color: var(--sys-text-color-light);
 }
 
+/* "Source" marker in the repurpose profile picker caption — lifts it out of the
+   muted "Network · Kind" prefix so the origin profile reads clearly. */
+.top-posts-source-tag {
+  color: var(--ref-color-electric-blue-150);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
 /* ── Loading beat (profile → board) ─────────────────────────────────── */
 .top-posts-loading {
   display: flex;
