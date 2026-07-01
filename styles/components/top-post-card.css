@@ -215,23 +215,6 @@
   color: var(--sys-text-color-light);
 }
 
-.top-posts-profile-card__count {
-  flex: 0 0 auto;
-  font-size: var(--sys-text-style-caption-size);
-  color: var(--sys-text-color-light);
-}
-
-.top-posts-profile-card__count b {
-  color: var(--ref-color-green-100);
-  font-variant-numeric: tabular-nums;
-}
-
-.top-posts-profile-card__empty {
-  flex: 0 0 auto;
-  font-size: var(--sys-text-style-caption-size);
-  color: var(--sys-text-color-light);
-}
-
 /* ── Loading beat (profile → board) ─────────────────────────────────── */
 .top-posts-loading {
   display: flex;

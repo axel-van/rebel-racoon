@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=155";
+import { renderTopbar } from "../components/topbar.js?v=156";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -48,8 +48,8 @@ import {
 } from "../posts-store.js?v=31";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=43";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=35";
-import * as topPostsFlow from "../top-posts-flow.js?v=31";
-import { renderTopPostsBoard, renderTopPostEcho, renderProfileChooser } from "../components/top-post-card.js?v=21";
+import * as topPostsFlow from "../top-posts-flow.js?v=32";
+import { renderTopPostsBoard, renderTopPostEcho, renderProfileChooser } from "../components/top-post-card.js?v=22";
 import * as sidebarWizard from "../sidebar-wizard.js?v=47";
 import * as inlineQuestion from "../inline-question.js?v=41";
 import * as clipStudio from "../clip-studio.js?v=17";
@@ -2318,16 +2318,24 @@ function askAnglesForPost(sessionId, postIds, index, collected) {
   window.setTimeout(() => {
     if (!inlineQuestion.isActive(sessionId)) return;
     const items = topPostsFlow.repurposeAngleItems([postId]);
+    // Record the chosen angle (a preset key or the user's own "Other" text) and
+    // advance to the next post.
+    const advance = (angle) => {
+      const value = (angle || "").trim();
+      if (!value) return;
+      postUserTurn(sessionId, topPostsFlow.angleLabels([value]).join(" · "));
+      askAnglesForPost(sessionId, postIds, index + 1, [...collected, { postId, angles: [value] }]);
+    };
     inlineQuestion.ask(sessionId, {
       title: multi ? `Angle · post ${index + 1} of ${total}` : "Angle from your post",
-      subtitle: "Pick one angle to spin from this post.",
+      subtitle: "Pick one angle to spin from this post — or describe your own.",
       stepLabel,
       // Single-select — clicking an angle picks it and advances to the next post.
       items,
-      onPick: (angle) => {
-        postUserTurn(sessionId, topPostsFlow.angleLabels([angle]).join(" · "));
-        askAnglesForPost(sessionId, postIds, index + 1, [...collected, { postId, angles: [angle] }]);
-      },
+      // "Other" — a free-text row where the user asks for any angle they want.
+      customPlaceholder: "Describe another angle…",
+      onPick: advance,
+      onCustom: advance,
       // Back to the previous post's angle (drops its saved pick so it can be redone).
       // No Back on the first post — there's nothing before it, and no Skip anywhere.
       onBack: index > 0 ? () => askAnglesForPost(sessionId, postIds, index - 1, collected.slice(0, -1)) : undefined,

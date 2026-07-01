@@ -250,27 +250,18 @@ function renderProfileSelect(lenses, activeProfile, total) {
 // ── Profile chooser (step 1) ─────────────────────────────────────────
 // The repurposing flow opens here: pick which connected profile to mine, before
 // any winners load. One card per connected profile (brand avatar + network badge
-// + handle + "N winning posts"). Clicking a card (data-top-post-choose-profile
-// carries the network slug) loads that profile's winners and reveals the board.
-// A profile with no winners yet is shown disabled with a gentle note. `profiles`
-// comes from top-posts-flow.getProfileChoices().
+// + handle). Clicking a card (data-top-post-choose-profile carries the network
+// slug) loads that profile's winners and reveals the board. No winner count here
+// — it isn't known until the profile's posts load. `profiles` comes from
+// top-posts-flow.getProfileChoices().
 export function renderProfileChooser(profiles) {
   const cards = (profiles || [])
     .map((p) => {
       const avatarInner = p.photo
         ? `<img src="${p.photo}" alt="" />`
         : `<span class="ap-avatar-initials">${BRAND_INITIALS}</span>`;
-      const empty = p.winners === 0;
-      const metric = empty
-        ? `<span class="top-posts-profile-card__empty">No winning posts yet</span>`
-        : `<span class="top-posts-profile-card__count"><b>${p.winners}</b> winning ${p.winners === 1 ? "post" : "posts"}</span>`;
       return html`
-        <button
-          type="button"
-          class="ap-card top-posts-profile-card"
-          data-top-post-choose-profile="${p.network}"
-          ${empty ? "disabled" : ""}
-        >
+        <button type="button" class="ap-card top-posts-profile-card" data-top-post-choose-profile="${p.network}">
           <span class="ap-avatar size-56 top-posts-profile-card__avatar" aria-hidden="true"
             >${raw(avatarInner)}<span class="ap-avatar-network"
               ><i class="${p.networkIcon || iconFor(p.network)}"></i></span
@@ -279,7 +270,6 @@ export function renderProfileChooser(profiles) {
             <span class="top-posts-profile-card__handle">${p.handle}</span>
             <span class="top-posts-profile-card__caption">${p.caption}</span>
           </span>
-          ${raw(metric)}
           <i class="ap-icon-chevron-right top-posts-profile-card__go" aria-hidden="true"></i>
         </button>
       `;

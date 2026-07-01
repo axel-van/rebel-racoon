@@ -194,10 +194,20 @@ function genericAngleCopy(post, key) {
   }
 }
 
-// Resolve the base body for one post × angle — handcrafted copy when we have it,
-// generic fallback otherwise. The result is then run through adaptForNetwork per
-// target channel.
+// Mock body for a user's own free-text angle ("Other" option) — lead with their
+// instruction, anchored on the post's excerpt so it reads as a real take.
+function customAngleCopy(post, instruction) {
+  const ask = (instruction || "").trim().replace(/\s+/g, " ");
+  const hook = /[.!?]$/.test(ask) ? ask : `${ask}.`;
+  return [hook, post.excerpt];
+}
+
+// Resolve the base body for one post × angle. A known angle key uses the
+// handcrafted copy (or generic fallback); anything else is the user's own
+// free-text instruction from the "Other" option. Run through adaptForNetwork per
+// target channel afterwards.
 function copyForAngle(post, key) {
+  if (!ANGLE_KEYS.includes(key)) return customAngleCopy(post, key);
   const copy = ANGLE_COPY[post.id] || {};
   return copy[key] || genericAngleCopy(post, key);
 }
@@ -324,16 +334,10 @@ export function setSort(sessionId, sort) {
   notifyPicker(sessionId);
 }
 
-// Connected social profiles offered on the chooser screen (step 1), each with
-// the count of winning posts on that network (grouped from getTopPosts). This is
-// what the user picks first — the spec's "select a social profile in the first
-// place".
+// Connected social profiles offered on the chooser screen (step 1). This is what
+// the user picks first — the spec's "select a social profile in the first place".
+// No winner count: it isn't known until the chosen profile's posts load.
 export function getProfileChoices() {
-  const counts = {};
-  for (const p of getTopPosts()) {
-    const n = normNet(p.network);
-    if (n) counts[n] = (counts[n] || 0) + 1;
-  }
   return getConnectedProfiles().map((a) => {
     const net = normNet(a.platform);
     return {
@@ -343,7 +347,6 @@ export function getProfileChoices() {
       caption: [a.platformLabel, a.kind].filter(Boolean).join(" · "),
       photo: a.photo,
       networkIcon: NETWORK_ICON_BY_PLATFORM[net] || null,
-      winners: counts[net] || 0,
     };
   });
 }
@@ -553,7 +556,9 @@ export function executeRepurpose(sessionId, anglesByPost, channels) {
   const entries = (anglesByPost || [])
     .map((e) => ({
       post: getTopPost(e.postId),
-      keys: (e.angles || []).filter((k) => ANGLE_KEYS.includes(k)),
+      // A key is a known angle OR the user's free-text "Other" instruction —
+      // keep both (copyForAngle resolves each). Drop only empties.
+      keys: (e.angles || []).map((k) => (k || "").trim()).filter(Boolean),
     }))
     .filter((e) => e.post);
   if (!entries.length) return;
