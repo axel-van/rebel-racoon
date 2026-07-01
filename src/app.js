@@ -18,7 +18,6 @@ import { init as initSaveFolderModal } from "./components/save-folder-modal.js?v
 import { init as initAnalyzeProfilesModal } from "./components/analyze-profiles-modal.js?v=9";
 import { init as initFillDocumentModal } from "./components/fill-document-modal.js?v=5";
 import { init as initSearchModal } from "./components/search-modal.js?v=5";
-import { init as initTopPostModal } from "./components/top-post-modal.js?v=4";
 import {
   init as initConversationStatusCard,
   render as renderConversationStatusCard,
@@ -88,7 +87,6 @@ initSaveFolderModal();
 initAnalyzeProfilesModal();
 initFillDocumentModal();
 initSearchModal();
-initTopPostModal();
 initConversationStatusCard();
 
 // Re-render the sidebar on every route change so the active conversation row

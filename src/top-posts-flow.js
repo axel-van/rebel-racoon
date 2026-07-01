@@ -1,18 +1,25 @@
-// "Milk a top post" conversational flow orchestrator.
+// Published-posts repurposing conversational flow orchestrator.
 //
 // Launched from the "Use top performing posts" new-chat starter card
 // (session.js starter click delegation → startTopPostsFlow). Runs inline in
 // the current session's assistant panel so it reads as one continuous
 // conversation.
 //
-// Arc:
-//   1. startTopPostsFlow  — surface the user's winners; pick one to build on.
-//   2. buildVariations    — echo the pick, explain WHY it worked, then go
-//                           straight to spinning up fresh variations of it.
-//                           Variations is the only reuse mode, so there's no
-//                           reuse-mode picker between the pick and the result.
-//   3. generateVariations — thinking chip → create the variation drafts → post
-//                           a result turn (drafts via posts-store).
+// Arc (mirrors the product spec "select one or more posts → pick a new angle →
+// adapt to each connected network → schedule"):
+//   1. startTopPostsFlow  — surface the user's winners (board screen). The user
+//                           filters/sorts, then selects one or more via the
+//                           per-card checkbox + bulk bar (or the per-card
+//                           "Repurpose" shortcut for a single winner).
+//   2. echoRepurposePicks — echo the picked post(s). session.js then drives the
+//                           angle + profile quick-pickers (inline-question), the
+//                           same numbered Quickpicker the draft flow uses; the
+//                           data helpers here (ANGLE_CHOICES / repurposeProfile-
+//                           Items) feed those pickers. The profile picker offers
+//                           the OTHER connected profiles — not the one the winner
+//                           already ran on.
+//   3. executeRepurpose   — thinking chip → one adapted draft per
+//                           post × angle × target profile → post a result turn.
 
 import {
   postAssistantMessage,
@@ -23,7 +30,13 @@ import {
 } from "./assistant.js?v=52";
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=2";
 import { addPostDraft } from "./posts-store.js?v=31";
+import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=22";
 import { showToast } from "./components/toast.js?v=20";
+
+// Cap on drafts produced in one run — post × angle × channel can multiply fast
+// (e.g. 3 posts × 4 angles × 3 channels = 36). Keep the result turn scannable;
+// the title flags when the set was clipped.
+const MAX_DRAFTS = 10;
 
 // Simulated "generating" delay — matches draft-flow's chip duration so the
 // milker feels like the rest of the studio.
@@ -68,10 +81,18 @@ function genError(err, retry) {
   });
 }
 
-// The reframings used to build the variation set. Each keys into ANGLE_COPY for
-// the actual post body. No longer user-pickable — "Spin up variations" emits one
-// draft per key — so only the key matters now.
+// The reframings the user can spin a winner into. Each keys into ANGLE_COPY for
+// the actual post body. ANGLE_KEYS is the default set (used when the user skips
+// the picker); ANGLE_CHOICES drives the in-chat quick-picker (value/label/icon,
+// the same shape draft-flow's channel picker uses).
 const ANGLE_KEYS = ["contrarian", "howto", "story", "data"];
+
+export const ANGLE_CHOICES = [
+  { value: "contrarian", label: "Contrarian", icon: "ap-icon-target" },
+  { value: "howto", label: "How-to", icon: "ap-icon-numbered-list" },
+  { value: "story", label: "Story", icon: "ap-icon-single-chat-bubble" },
+  { value: "data", label: "Data-backed", icon: "ap-icon-data-report" },
+];
 
 // Handcrafted, ready-to-post copy for each seeded winner × angle. This is what
 // makes the variations read like real posts rather than rephrased prompts. A
@@ -168,13 +189,45 @@ function genericAngleCopy(post, key) {
   }
 }
 
-// Resolve the variation set for a post — one ready-to-post body per reframing,
-// each a variation of the post's own copy (handcrafted, or generic fallback).
-function variationsForPost(post) {
+// Resolve the base body for one post × angle — handcrafted copy when we have it,
+// generic fallback otherwise. The result is then run through adaptForNetwork per
+// target channel.
+function copyForAngle(post, key) {
   const copy = ANGLE_COPY[post.id] || {};
-  return ANGLE_KEYS.map((key) => ({
-    text: copy[key] || genericAngleCopy(post, key),
-  }));
+  return copy[key] || genericAngleCopy(post, key);
+}
+
+// Adapt a base body to a target network's format + character constraints — the
+// spec's "adapt the output to each connected network". Light, deterministic
+// transforms (this is a prototype): X/Threads compress to a single punchy
+// sub-280-char take; the long-form networks keep the full paragraph body.
+function adaptForNetwork(textArr, network) {
+  const net = (network || "").toLowerCase();
+  const paras = Array.isArray(textArr) ? textArr : [textArr];
+  if (net === "x" || net === "twitter") {
+    // Grow from the hook, adding whole paragraphs while they fit, then clip on a
+    // word boundary so the tweet never cuts mid-word.
+    let out = (paras[0] || "").trim();
+    for (let i = 1; i < paras.length; i += 1) {
+      const next = `${out} ${paras[i].trim()}`;
+      if (next.length <= 270) out = next;
+      else break;
+    }
+    if (out.length > 280) out = `${out.slice(0, 269).replace(/\s+\S*$/, "")}…`;
+    return [out];
+  }
+  // LinkedIn / Facebook / Instagram keep the full body (Instagram's hashtags are
+  // trimmed by adaptHashtags, not here).
+  return paras;
+}
+
+// Trim the source post's hashtags to what each network wears well — X stays
+// terse (≤2), everyone else keeps the set.
+function adaptHashtags(tags, network) {
+  const net = (network || "").toLowerCase();
+  const list = tags || [];
+  if (net === "x" || net === "twitter") return list.slice(0, 2);
+  return list;
 }
 
 // First sentence of a blob, used by the generic fallbacks + the X adapter.
@@ -199,9 +252,10 @@ function variationOrigin(post) {
 // Step 1 is a visual grid of post cards (a "screen"), not a numbered
 // quick-picker — it takes over the assistant panel the same way Batch / Clip
 // Studio do. session.js checks isPickerActive() in renderAssistantPanel, paints
-// the grid via renderTopPostsPickerScreen, and routes a card click back here
-// through pickWinner(), which goes straight to spinning up variations.
-const pickerStates = new Map(); // sessionId → { posts }
+// the grid via renderTopPostsPickerScreen, and routes a card / bulk-bar click
+// back to session.js's startRepurposeFlow, which echoes the picks then opens
+// the angle quick-picker.
+const pickerStates = new Map(); // sessionId → { posts, sort, profile, period, selected }
 const pickerSubs = new Map(); // sessionId → Set<fn>
 
 function notifyPicker(sessionId) {
@@ -223,12 +277,31 @@ export function subscribePicker(sessionId, fn) {
   return () => pickerSubs.get(sessionId)?.delete(fn);
 }
 
-// A card click — clear the grid, then spin up variations for that winner.
-export function pickWinner(sessionId, postId) {
-  if (!pickerStates.has(sessionId)) return;
-  pickerStates.delete(sessionId);
+// Toggle a winner in the multi-select set (per-card checkbox). Drives the bulk
+// bar count + the card's selected state.
+export function toggleSelect(sessionId, postId) {
+  const s = pickerStates.get(sessionId);
+  if (!s) return;
+  if (!s.selected) s.selected = new Set();
+  if (s.selected.has(postId)) s.selected.delete(postId);
+  else s.selected.add(postId);
   notifyPicker(sessionId);
-  buildVariations(sessionId, postId);
+}
+
+// Clear the multi-select set (bulk bar "Cancel").
+export function clearSelection(sessionId) {
+  const s = pickerStates.get(sessionId);
+  if (!s || !s.selected || s.selected.size === 0) return;
+  s.selected.clear();
+  notifyPicker(sessionId);
+}
+
+// Change the active period filter (toolbar chip). "all" | "90d" | "30d".
+export function setPeriod(sessionId, period) {
+  const s = pickerStates.get(sessionId);
+  if (!s || s.period === period) return;
+  s.period = period;
+  notifyPicker(sessionId);
 }
 
 // Leave the grid without picking (Esc / route change cleanup).
@@ -262,7 +335,13 @@ export function setProfile(sessionId, profile) {
 function openBoard(sessionId) {
   const posts = getTopPosts();
   if (!posts.length) return;
-  pickerStates.set(sessionId, { posts, sort: "performance", profile: "all" });
+  pickerStates.set(sessionId, {
+    posts,
+    sort: "performance",
+    profile: "all",
+    period: "all",
+    selected: new Set(),
+  });
   notifyPicker(sessionId);
 }
 
@@ -280,52 +359,190 @@ export function startTopPostsFlow(sessionId) {
   openBoard(sessionId);
 }
 
-// ---- Step 2: echo the pick, explain the why, spin up variations -------
+// ---- Step 2: echo the pick(s) ----------------------------------------
 //
-// Variations is the only reuse mode, so picking a winner goes straight to
-// generating fresh takes — no reuse-mode picker in between.
-function buildVariations(sessionId, postId) {
-  const post = getTopPost(postId);
-  if (!post) return;
-  // Echo the chosen post as a compact preview card (not a truncated text
-  // bubble) so it stays visible in the conversation.
-  postTopPostPickTurn(sessionId, {
-    network: post.network,
-    excerpt: post.excerpt,
-    perfBadge: post.perfBadge,
-    vsAvg: post.vsAvg,
-    engagementRate: post.engagementRate,
-    impressions: post.impressions,
-  });
-  postAssistantMessage(sessionId, `Great pick. Here are a few fresh takes on it:`);
-  generateVariations(sessionId, post);
+// Clears the board grid (it may or may not be up — the Details-modal
+// "Repurpose" path calls in with the grid still active) and echoes every chosen
+// winner as a compact preview card so the picks stay visible in the
+// conversation. Returns the valid post ids so the caller can drive the angle
+// quick-picker; the picker itself lives in session.js (inline-question), which
+// owns the onPick closures the way the draft flow's profile picker does.
+export function echoRepurposePicks(sessionId, postIds) {
+  const ids = (postIds || []).filter(Boolean);
+  const posts = ids.map(getTopPost).filter(Boolean);
+  if (!posts.length) return [];
+
+  if (pickerStates.has(sessionId)) {
+    pickerStates.delete(sessionId);
+    notifyPicker(sessionId);
+  }
+
+  for (const post of posts) {
+    postTopPostPickTurn(sessionId, {
+      network: post.network,
+      excerpt: post.excerpt,
+      perfBadge: post.perfBadge,
+      vsAvg: post.vsAvg,
+      engagementRate: post.engagementRate,
+      impressions: post.impressions,
+    });
+  }
+  return posts.map((p) => p.id);
 }
 
-// ---- Step 3: Variations of the winning post ---------------------------
+// Normalise a network/platform slug (top posts + social accounts both use "x",
+// but be defensive about a stray "twitter").
+function normNet(n) {
+  const s = (n || "").toLowerCase();
+  return s === "twitter" ? "x" : s;
+}
 
-// Generate several drafts straight away. Each draft is a variation of the
-// selected post's own copy (the per-winner handcrafted reframings double as the
-// variation set; a winner with no handcrafted copy falls back to
-// genericAngleCopy() off its excerpt).
-function generateVariations(sessionId, post) {
+// Unique source networks across the picked posts — the profiles the winner(s)
+// already live on, which the repurpose target picker excludes.
+export function repurposeSourceNetworks(postIds) {
+  const posts = (postIds || []).map(getTopPost).filter(Boolean);
+  return [...new Set(posts.map((p) => normNet(p.network)).filter((n) => CHANNEL_META[n]))];
+}
+
+// Repurpose-target quick-picker items — the user's CONNECTED SOCIAL PROFILES,
+// minus the profile(s) the winner already succeeded on (repurposing means
+// spreading a win to your OTHER audiences). Presented as profile rows (brand
+// avatar + network badge + handle), the same shape as the draft flow's profile
+// picker. Falls back to every connected profile if excluding the source would
+// leave nothing to pick, so the flow never dead-ends.
+export function repurposeProfileItems(postIds) {
+  const sourceNets = repurposeSourceNetworks(postIds);
+  const connected = getConnectedProfiles();
+  const others = connected.filter((p) => !sourceNets.includes(normNet(p.platform)));
+  const list = others.length ? others : connected;
+  return list.map((p) => ({
+    value: p.id,
+    label: p.handle,
+    caption: [p.platformLabel, p.kind].filter(Boolean).join(" · "),
+    avatar: {
+      imageUrl: p.photo,
+      initials: BRAND_INITIALS,
+      networkIcon: NETWORK_ICON_BY_PLATFORM[normNet(p.platform)],
+    },
+  }));
+}
+
+// Human labels for a set of angle values — used by session.js to echo the pick
+// as a user turn once the quick-picker unmounts (profiles echo as chips).
+export function angleLabels(values) {
+  return (values || []).map((v) => ANGLE_CHOICES.find((a) => a.value === v)?.label || v);
+}
+
+function truncate(s, n = 60) {
+  const t = (s || "").trim();
+  return t.length > n ? `${t.slice(0, n - 1).replace(/\s+\S*$/, "")}…` : t;
+}
+
+// Angle variations "extracted" from the picked winner(s) — the four reframings,
+// but described in terms of THIS post's own topic + hook so the picker reads as
+// suggestions pulled from the post rather than generic labels. Values stay the
+// canonical ANGLE_KEYS so executeRepurpose resolves the right ANGLE_COPY body.
+// session.js reveals these after a short "reading your post…" loading state.
+export function repurposeAngleItems(postIds) {
+  const posts = (postIds || []).map(getTopPost).filter(Boolean);
+  const multi = posts.length > 1;
+  const p = posts[0];
+  const topic = p?.topic ? p.topic.toLowerCase() : "this";
+  const subject = multi ? "these winners" : `your ${topic} post`;
+  const hook = p ? truncate(firstSentence(p.excerpt)) : "";
+  return [
+    {
+      value: "contrarian",
+      label: "Contrarian take",
+      caption: multi ? "Flip the premise and argue the other side." : `Challenge the idea behind “${hook}”.`,
+    },
+    {
+      value: "howto",
+      label: "Actionable how-to",
+      caption: `Turn ${subject} into a step-by-step readers can follow today.`,
+    },
+    {
+      value: "story",
+      label: "Behind-the-scenes story",
+      caption: multi ? "Tell the story behind these results." : `Tell the story that led to ${topic}.`,
+    },
+    {
+      value: "data",
+      label: "Data-backed proof",
+      caption: `Lead with the number that made ${multi ? "them" : "it"} land.`,
+    },
+  ];
+}
+
+// First sentence of a picked post — used by session.js to name which post the
+// current per-post angle step is for.
+export function repurposePostHook(postId) {
+  const p = getTopPost(postId);
+  return p ? truncate(firstSentence(p.excerpt), 70) : "";
+}
+
+// ---- Step 3: generate the adapted drafts ------------------------------
+//
+// Each winner carries its OWN chosen angles (the user picked them post by post),
+// so `anglesByPost` is [{ postId, angles: [key] }]. One draft per
+// post × its-angles × channel, each body adapted to the target network. Falls
+// back sanely if an entry came back empty (all angles / source network). Capped
+// at MAX_DRAFTS.
+export function executeRepurpose(sessionId, anglesByPost, channels) {
+  const entries = (anglesByPost || [])
+    .map((e) => ({
+      post: getTopPost(e.postId),
+      keys: (e.angles || []).filter((k) => ANGLE_KEYS.includes(k)),
+    }))
+    .filter((e) => e.post);
+  if (!entries.length) return;
+
+  const pickedChannels = (channels || []).filter((c) => CHANNEL_META[(c || "").toLowerCase()]);
+
   withPendingChip(
     sessionId,
     () => {
-      const variations = variationsForPost(post);
-      const drafts = variations.map((v) => {
-        const draft = addPostDraft(sessionId, {
-          network: post.network,
-          text: v.text,
-          hashtags: post.hashtags || [],
-        });
-        draft.origin = variationOrigin(post);
-        return draft;
-      });
+      const drafts = [];
+      let capped = false;
+      outer: for (const { post, keys } of entries) {
+        const chans = pickedChannels.length ? pickedChannels : [post.network];
+        const angleKeys = keys.length ? keys : ANGLE_KEYS;
+        for (const key of angleKeys) {
+          const base = copyForAngle(post, key);
+          for (const ch of chans) {
+            if (drafts.length >= MAX_DRAFTS) {
+              capped = true;
+              break outer;
+            }
+            const draft = addPostDraft(sessionId, {
+              network: ch,
+              text: adaptForNetwork(base, ch),
+              hashtags: adaptHashtags(post.hashtags, ch),
+            });
+            draft.origin = variationOrigin(post);
+            drafts.push(draft);
+          }
+        }
+      }
       postDraftResult(sessionId, {
-        ideaTitle: `New takes on your top ${labelFor(post.network)} post`,
+        ideaTitle: repurposeTitle(
+          entries.map((e) => e.post),
+          drafts.length,
+          capped,
+        ),
         drafts,
       });
     },
-    (err) => genError(err, () => generateVariations(sessionId, post)),
+    (err) => genError(err, () => executeRepurpose(sessionId, anglesByPost, channels)),
   );
+}
+
+// Result-turn title: names the source when it's a single winner, counts them
+// otherwise, and flags a clipped set so the count never reads as "all of them".
+function repurposeTitle(posts, count, capped) {
+  const base =
+    posts.length === 1
+      ? `New takes on your top ${labelFor(posts[0].network)} post`
+      : `Fresh takes on ${posts.length} of your top posts`;
+  return capped ? `${base} · first ${count}` : base;
 }

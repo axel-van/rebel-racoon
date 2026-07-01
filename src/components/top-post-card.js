@@ -4,7 +4,7 @@
 // so it's built for comparison, not just display.
 //
 //   renderTopPostsBoard({ posts, sort }) → sort toolbar + responsive card grid
-//   renderTopPostCard(post, { maxVsAvg }) → one decision card
+//   renderTopPostCard(post, { selected }) → one decision card
 //
 // Each card leads with the decision metric (×-vs-average, big), backed by a
 // relative-performance bar (sorted descending, value labels always visible),
@@ -46,6 +46,47 @@ export const SORTS = [
   { key: "recent", label: "Recent", compare: (a, b) => a.daysAgo - b.daysAgo },
 ];
 
+// Period filter — narrow the board to a recency window (spec: "filter by
+// metrics"). `maxDays` is the inclusive age ceiling in days; "all" keeps
+// everything. Matched against each post's `daysAgo`.
+export const PERIODS = [
+  { key: "all", label: "All time", maxDays: Infinity },
+  { key: "90d", label: "Last 90 days", maxDays: 90 },
+  { key: "30d", label: "Last 30 days", maxDays: 30 },
+];
+
+// One compact DS .ap-select (a native <details> dropdown) for a filter axis —
+// Period or Sort. Collapsing the old chip rows into two dropdowns keeps the
+// toolbar to a single tidy line. Options carry the same data-* hooks the chips
+// did (data-top-post-period / -sort), so the session delegation is unchanged;
+// picking one re-renders the board, which closes the <details>.
+function renderFilterSelect({ dataAttr, label, active, options }) {
+  const opts = options
+    .map((o) => {
+      const on = o.key === active.key;
+      return `<div
+          class="ap-select-option${on ? " selected" : ""}"
+          ${dataAttr}="${o.key}"
+          role="option"
+          aria-selected="${on ? "true" : "false"}"
+        >
+          <span class="ap-select-option-text">${o.label}</span>
+          ${on ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
+        </div>`;
+    })
+    .join("");
+  return `<details class="ap-select top-posts-select">
+      <summary class="ap-select-trigger">
+        <span class="ap-select-inline-label">${label}</span>
+        <span class="ap-select-value">${active.label}</span>
+        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+      </summary>
+      <div class="ap-select-dropdown" role="listbox" aria-label="${label}">
+        <div class="ap-select-options">${opts}</div>
+      </div>
+    </details>`;
+}
+
 function iconFor(network) {
   return NET_ICON[(network || "").toLowerCase()] || "ap-icon-share";
 }
@@ -62,47 +103,54 @@ function formatCompact(n) {
   return `${k >= 10 ? Math.round(k) : k.toFixed(1)}K`;
 }
 
-function renderTopPostCard(post, { maxVsAvg }) {
-  // Relative-performance bar — this post's ×-vs-average against the strongest
-  // in the current set, so the grid reads as a ranking at a glance.
-  const pct = maxVsAvg > 0 ? Math.max(8, Math.round((post.vsAvg / maxVsAvg) * 100)) : 0;
+function renderTopPostCard(post, { selected = false }) {
+  // These are posts from the brand's own profiles, so the card leads with the
+  // profile identity (brand avatar + network badge + handle) — the same lens the
+  // board's profile chips sort by — rather than a bare network label. Falls back
+  // to the network label when no connected profile resolves.
+  const account = profileForNetwork(post.network);
+  const net = (post.network || "").toLowerCase();
+  const networkIcon = NETWORK_ICON_BY_PLATFORM[net] || iconFor(post.network);
+  const handle = account?.handle || labelFor(post.network);
+  const avatarInner = account?.photo
+    ? `<img src="${account.photo}" alt="" />`
+    : `<span class="ap-avatar-initials">${BRAND_INITIALS}</span>`;
   return html`
-    <article class="ap-card top-post-card">
-      <span class="top-post-card__id">
-        <span class="top-post-card__head">
-          <span class="top-post-card__net">
-            <i class="${iconFor(post.network)}" aria-hidden="true"></i>
-            ${labelFor(post.network)}
-          </span>
-          <span class="ap-status green no-dot top-post-card__badge">${post.perfBadge}</span>
+    <article class="ap-card top-post-card${selected ? " top-post-card--selected" : ""}">
+      <div class="top-post-card__head">
+        <input
+          type="checkbox"
+          class="top-post-card__select"
+          data-top-post-select="${post.id}"
+          aria-label="Select for repurposing"
+          ${selected ? "checked" : ""}
+        />
+        <span class="top-post-card__profile">
+          <span class="ap-avatar size-24 top-post-card__avatar" aria-hidden="true"
+            >${raw(avatarInner)}<span class="ap-avatar-network"><i class="${networkIcon}"></i></span
+          ></span>
+          <span class="top-post-card__handle">${handle}</span>
         </span>
-        <span class="top-post-card__excerpt">${post.excerpt}</span>
+        <span class="ap-status green no-dot top-post-card__badge">${post.perfBadge}</span>
+      </div>
+
+      <p class="top-post-card__excerpt">${post.excerpt}</p>
+
+      <div class="top-post-card__perf">
+        <span class="top-post-card__hero">
+          <span class="top-post-card__hero-value">${post.vsAvg}×</span>
+          <span class="top-post-card__hero-label">vs&nbsp;average</span>
+        </span>
+        <span class="top-post-card__submetrics"
+          >${post.engagementRate}% engagement · ${formatCompact(post.impressions)} reach</span
+        >
+      </div>
+
+      <div class="top-post-card__foot">
         <span class="top-post-card__meta">${post.publishedAt} · ${post.topic}</span>
-      </span>
-
-      <span class="top-post-card__perf">
-        <span class="top-post-card__stats">
-          <span class="top-post-stat top-post-stat--hero">
-            <span class="top-post-stat__value">${post.vsAvg}×</span>
-            <span class="top-post-stat__label">vs avg</span>
-          </span>
-          <span class="top-post-stat">
-            <span class="top-post-stat__value">${post.engagementRate}%</span>
-            <span class="top-post-stat__label">engagement</span>
-          </span>
-          <span class="top-post-stat">
-            <span class="top-post-stat__value">${formatCompact(post.impressions)}</span>
-            <span class="top-post-stat__label">reach</span>
-          </span>
-        </span>
-        <span class="top-post-card__bar" aria-hidden="true">
-          <span class="top-post-card__bar-fill" style="width: ${pct}%"></span>
-        </span>
-      </span>
-
-      <div class="top-post-card__actions">
-        <button type="button" class="ap-button stroked grey" data-top-post-details="${post.id}">Details</button>
-        <button type="button" class="ap-button primary blue" data-top-post-repurpose="${post.id}">Repurpose</button>
+        <button type="button" class="ap-button primary blue top-post-card__cta" data-top-post-repurpose="${post.id}">
+          Repurpose
+        </button>
       </div>
     </article>
   `;
@@ -125,117 +173,6 @@ export function renderTopPostEcho(post) {
       <span class="top-post-echo__stats">
         <b>${post.vsAvg}×</b> vs avg · ${post.engagementRate}% eng · ${formatCompact(post.impressions)} reach
       </span>
-    </div>
-  `;
-}
-
-// ── Preview panel ────────────────────────────────────────────────────
-// Rendered into the right-panel "top-post" mode (right-panel.js → openTopPost).
-// Three blocks: a detailed stats grid, a faithful network-style preview of the
-// published post, and the actions (Build on this + open the real post).
-
-// Plausible per-network permalink. The prototype has no real post ids, so this
-// is cosmetic — it demonstrates the "go see it on the network" affordance.
-const NET_HOME = {
-  linkedin: "https://www.linkedin.com/feed/",
-  x: "https://x.com/",
-  twitter: "https://x.com/",
-  instagram: "https://www.instagram.com/",
-  facebook: "https://www.facebook.com/",
-  tiktok: "https://www.tiktok.com/",
-  youtube: "https://www.youtube.com/",
-};
-
-function postUrl(post) {
-  return NET_HOME[(post.network || "").toLowerCase()] || "#";
-}
-
-function statTile(value, label, hero = false) {
-  return `<div class="tp-stat${hero ? " tp-stat--hero" : ""}">
-    <span class="tp-stat__value">${value}</span>
-    <span class="tp-stat__label">${label}</span>
-  </div>`;
-}
-
-export function renderTopPostPreview(post) {
-  if (!post) return "";
-  const net = labelFor(post.network);
-  // The three analytical metrics that drive the decision. The raw engagement
-  // counts (reactions / comments / shares) live in the Exact-post card below,
-  // so they're not duplicated here.
-  const stats = [
-    statTile(`${post.vsAvg}×`, "vs your average", true),
-    statTile(`${post.engagementRate}%`, "engagement rate"),
-    statTile(formatCompact(post.impressions), "reach"),
-  ].join("");
-
-  const hashtags = (post.hashtags || []).length
-    ? `<p class="tp-post__hashtags">${post.hashtags.map((h) => `#${h}`).join(" ")}</p>`
-    : "";
-
-  // Rendered as the inner of the DS .ap-dialog (top-post-modal.js): header
-  // (post identity) + content (2-col analytics / exact post) + footer (actions,
-  // hug + right-aligned per the DS dialog footer).
-  return html`
-    <button class="ap-dialog-close" type="button" data-tpm-close aria-label="Close">
-      <i class="ap-icon-close"></i>
-    </button>
-    <div class="ap-dialog-header">
-      <span class="tp-preview__head">
-        <span class="tp-preview__net">
-          <i class="${iconFor(post.network)}" aria-hidden="true"></i>
-          ${net}
-        </span>
-        <span class="ap-status green no-dot">${post.perfBadge}</span>
-      </span>
-    </div>
-
-    <div class="ap-dialog-content">
-      <div class="tp-preview tp-preview--split">
-        <div class="tp-preview__col">
-          <section class="tp-preview__section">
-            <h3 class="tp-preview__title">How it performed</h3>
-            <div class="tp-stats">${raw(stats)}</div>
-          </section>
-        </div>
-
-        <div class="tp-preview__col">
-          <section class="tp-preview__section">
-            <h3 class="tp-preview__title">Exact post</h3>
-            <article class="tp-post">
-              <header class="tp-post__head">
-                <span class="tp-post__avatar" aria-hidden="true"><i class="${iconFor(post.network)}"></i></span>
-                <span class="tp-post__byline">
-                  <span class="tp-post__author">Your brand</span>
-                  <span class="tp-post__meta">${post.publishedAt} · ${net}</span>
-                </span>
-              </header>
-              <p class="tp-post__body">${post.excerpt}</p>
-              ${raw(hashtags)}
-              <div class="tp-post__engagement">
-                <span
-                  ><i class="ap-icon-thumb-up_fill" aria-hidden="true"></i> ${(
-                    post.reactions ?? 0
-                  ).toLocaleString()}</span
-                >
-                <span>${(post.comments ?? 0).toLocaleString()} comments</span>
-                <span
-                  >${(post.saves ?? post.shares ?? 0).toLocaleString()} ${post.saves != null ? "saves" : "shares"}</span
-                >
-              </div>
-            </article>
-          </section>
-        </div>
-      </div>
-    </div>
-
-    <div class="ap-dialog-footer">
-      <div class="ap-dialog-footer-right">
-        <a class="ap-button stroked" href="${postUrl(post)}" target="_blank" rel="noopener noreferrer">
-          View on ${net} <i class="ap-icon-external-link" aria-hidden="true"></i>
-        </a>
-        <button type="button" class="ap-button primary blue" data-top-post-build="${post.id}">Repurpose</button>
-      </div>
     </div>
   `;
 }
@@ -270,89 +207,124 @@ function buildProfileLenses(posts) {
     .sort((a, b) => b.count - a.count);
 }
 
-// One profile chip — DS avatar (brand photo + corner network badge) + handle +
-// winner count. Built on the shared .ap-filter-chip primitives (count, pressed
-// state) but with its own `top-posts-profile-chip` modifier that lets the chip
-// grow to fit the 24px avatar (the DS chip's fixed 24px height would crop it).
-// Driven by aria-pressed; `data-top-post-profile` carries the network slug (or
-// "all") back to the session delegation.
-function renderProfileChip(lens, activeProfile) {
-  const pressed = lens.network === activeProfile;
-  const avatarInner = lens.photo
-    ? `<img src="${lens.photo}" alt="" />`
-    : `<span class="ap-avatar-initials">${BRAND_INITIALS}</span>`;
-  return html`<button
-    type="button"
-    class="ap-filter-chip top-posts-profile-chip"
-    data-top-post-profile="${lens.network}"
-    aria-pressed="${pressed ? "true" : "false"}"
-  >
-    <span class="ap-avatar size-24 top-posts-profile-chip__avatar" aria-hidden="true"
-      >${raw(avatarInner)}<span class="ap-avatar-network"><i class="${lens.networkIcon}"></i></span
-    ></span>
-    <span>${lens.name}</span>
-    <span class="ap-filter-chip-count">${lens.count}</span>
-  </button>`;
+// Profile lens as a scalable DS .ap-select dropdown — "All profiles" + one row
+// per profile (avatar + handle + winner count). The options list scrolls (the DS
+// caps it at 280px), so this holds 5 or 50 profiles without the old chip row
+// exploding across the toolbar. Each option carries data-top-post-profile (a
+// network slug or "all") — the same hook the session delegation already handles.
+function renderProfileOption(dataValue, { avatar, text, count, selected }) {
+  return `<div
+      class="ap-select-option${selected ? " selected" : ""}"
+      data-top-post-profile="${dataValue}"
+      role="option"
+      aria-selected="${selected ? "true" : "false"}"
+    >
+      ${avatar || ""}
+      <span class="ap-select-option-text">${text}</span>
+      <span class="top-posts-select__count">${count}</span>
+      ${selected ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
+    </div>`;
+}
+
+function renderProfileSelect(lenses, activeProfile, total) {
+  const activeLens = lenses.find((l) => l.network === activeProfile);
+  const triggerValue = activeProfile === "all" ? "All profiles" : activeLens?.name || "All profiles";
+
+  const allOpt = renderProfileOption("all", {
+    text: "All profiles",
+    count: total,
+    selected: activeProfile === "all",
+  });
+
+  const rows = lenses
+    .map((l) => {
+      const avatarInner = l.photo
+        ? `<img src="${l.photo}" alt="" />`
+        : `<span class="ap-avatar-initials">${BRAND_INITIALS}</span>`;
+      const avatar = `<span class="ap-avatar size-24 top-posts-select__opt-avatar" aria-hidden="true"
+        >${avatarInner}<span class="ap-avatar-network"><i class="${l.networkIcon}"></i></span></span>`;
+      return renderProfileOption(l.network, {
+        avatar,
+        text: l.name,
+        count: l.count,
+        selected: l.network === activeProfile,
+      });
+    })
+    .join("");
+
+  return `<details class="ap-select top-posts-select top-posts-profile-select">
+      <summary class="ap-select-trigger">
+        <span class="ap-select-inline-label">Profile</span>
+        <span class="ap-select-value">${triggerValue}</span>
+        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+      </summary>
+      <div class="ap-select-dropdown" role="listbox" aria-label="Filter by profile">
+        <div class="ap-select-options">${allOpt}${rows}</div>
+      </div>
+    </details>`;
 }
 
 // The full board: profile selector (primary lens) + sort toolbar + the sorted
 // card grid. `sort` is one of SORTS[].key; `profile` is a network slug or "all"
 // (defaults to "all" — every winner).
-export function renderTopPostsBoard({ posts, sort = "performance", profile = "all" }) {
+export function renderTopPostsBoard({ posts, sort = "performance", profile = "all", period = "all", selected }) {
   const all = posts || [];
+  const sel = selected instanceof Set ? selected : new Set(selected || []);
   const lenses = buildProfileLenses(all);
   // Guard against a stale profile filter (e.g. its last winner was removed):
   // fall back to "all" so the grid never renders empty.
   const activeProfile = profile !== "all" && lenses.some((l) => l.network === profile) ? profile : "all";
 
-  const visible = activeProfile === "all" ? all : all.filter((p) => (p.network || "").toLowerCase() === activeProfile);
+  const activePeriod = PERIODS.find((p) => p.key === period) || PERIODS[0];
+  const byProfile =
+    activeProfile === "all" ? all : all.filter((p) => (p.network || "").toLowerCase() === activeProfile);
+  const visible = byProfile.filter((p) => (p.daysAgo ?? 0) <= activePeriod.maxDays);
 
   const active = SORTS.find((s) => s.key === sort) || SORTS[0];
   const sorted = [...visible].sort(active.compare);
-  // Re-rank the relative-performance bar within the visible set so the board
-  // reads as "best posts for THIS profile", not against the global leader.
-  const maxVsAvg = sorted.reduce((m, p) => Math.max(m, p.vsAvg || 0), 0);
   const count = sorted.length;
 
-  // Profile selector — "All profiles" leads, then one chip per profile lens.
-  const allChip = html`<button
-    type="button"
-    class="ap-filter-chip top-posts-profile-chip top-posts-profile-chip--all"
-    data-top-post-profile="all"
-    aria-pressed="${activeProfile === "all" ? "true" : "false"}"
-  >
-    <span class="ap-filter-chip-icon"><i class="ap-icon-feature-analytics" aria-hidden="true"></i></span>
-    <span>All profiles</span>
-    <span class="ap-filter-chip-count">${all.length}</span>
-  </button>`;
-  const profileChips = lenses.map((l) => renderProfileChip(l, activeProfile)).join("");
+  const cards = sorted.map((p) => renderTopPostCard(p, { selected: sel.has(p.id) })).join("");
 
-  const sortChips = SORTS.map(
-    (s) =>
-      html`<button
-        type="button"
-        class="ap-filter-chip top-posts-sort__chip"
-        data-top-post-sort="${s.key}"
-        aria-pressed="${s.key === active.key ? "true" : "false"}"
-      >
-        ${s.label}
-      </button>`,
-  ).join("");
-
-  const cards = sorted.map((p) => renderTopPostCard(p, { maxVsAvg })).join("");
+  // The toolbar is a single fixed-height slot that swaps between filter mode and
+  // selection mode IN PLACE — so checking a post never pushes the grid down (no
+  // layout shift). Filter mode: count + Profile/Period/Sort dropdowns (all three
+  // scale to any number of options). Selection mode: count + Repurpose/Cancel.
+  const selecting = sel.size > 0;
+  const toolbar = selecting
+    ? html`
+        <div class="top-posts-toolbar top-posts-toolbar--selecting" role="region" aria-label="Bulk repurpose actions">
+          <span class="top-posts-toolbar__count top-posts-toolbar__count--accent">${sel.size} selected</span>
+          <div class="top-posts-toolbar__actions">
+            <button type="button" class="ap-button primary blue" data-top-post-repurpose-bulk>
+              <i class="ap-icon-shuffle" aria-hidden="true"></i>
+              <span>Repurpose ${sel.size} ${sel.size === 1 ? "post" : "posts"}</span>
+            </button>
+            <button type="button" class="ap-button transparent grey" data-top-post-repurpose-cancel>Cancel</button>
+          </div>
+        </div>
+      `
+    : html`
+        <div class="top-posts-toolbar">
+          <span class="top-posts-toolbar__count">${count} winning ${count === 1 ? "post" : "posts"}</span>
+          <div class="top-posts-filters">
+            ${raw(renderProfileSelect(lenses, activeProfile, all.length))}
+            ${raw(
+              renderFilterSelect({
+                dataAttr: "data-top-post-period",
+                label: "Period",
+                active: activePeriod,
+                options: PERIODS,
+              }),
+            )}
+            ${raw(renderFilterSelect({ dataAttr: "data-top-post-sort", label: "Sort", active, options: SORTS }))}
+          </div>
+        </div>
+      `;
 
   return html`
     <div class="top-posts-board">
-      <div class="top-posts-profiles" role="group" aria-label="Explore winners by profile">
-        ${raw(allChip)}${raw(profileChips)}
-      </div>
-      <div class="top-posts-toolbar">
-        <span class="top-posts-toolbar__count">${count} winning ${count === 1 ? "post" : "posts"}</span>
-        <div class="top-posts-sort" role="group" aria-label="Sort posts">
-          <span class="top-posts-sort__label muted">Sort by</span>
-          ${raw(sortChips)}
-        </div>
-      </div>
+      ${raw(toolbar)}
       <div class="top-posts-grid" role="group" aria-label="Your top-performing posts">${raw(cards)}</div>
     </div>
   `;

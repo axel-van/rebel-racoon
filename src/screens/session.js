@@ -48,8 +48,8 @@ import {
 } from "../posts-store.js?v=31";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=43";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=35";
-import * as topPostsFlow from "../top-posts-flow.js?v=23";
-import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=11";
+import * as topPostsFlow from "../top-posts-flow.js?v=28";
+import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=16";
 import * as sidebarWizard from "../sidebar-wizard.js?v=47";
 import * as inlineQuestion from "../inline-question.js?v=41";
 import * as clipStudio from "../clip-studio.js?v=17";
@@ -98,7 +98,6 @@ import {
 import { renderClipCard } from "../components/clip-card.js?v=8";
 import { onFeedbackClick } from "../components/feedback-control.js?v=1";
 import { showToast } from "../components/toast.js?v=20";
-import { open as openTopPostModal } from "../components/top-post-modal.js?v=4";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
@@ -1902,14 +1901,14 @@ const TOP_POSTS_STEPS = [
   {
     tone: "in",
     icon: "ap-icon-feature-analytics",
-    title: "Pick a winner",
-    text: "Choose one of your top-performing posts — sorted by performance, reach, or recency.",
+    title: "Pick your winners",
+    text: "Select one or more top-performing posts — filter by profile, period, or performance.",
   },
   {
     tone: "ai",
     icon: "ap-icon-archie-official",
-    title: "Choose how to reuse it",
-    text: "Repurpose to other channels, spin variations, refresh & repost, or save the angle.",
+    title: "Angles & channels",
+    text: "Choose the angles to spin and the connected networks to adapt them for.",
   },
   {
     tone: "out",
@@ -1936,11 +1935,19 @@ function renderTopPostsPickerScreen(session) {
             >
             <h1 class="top-posts-intro__title">Build on what already works</h1>
             <p class="top-posts-intro__sub">
-              Pick one of your best-performing posts and I'll repurpose, remix, or refresh it into new drafts.
+              Pick one or more of your best-performing posts and I'll spin fresh angles, adapted to each channel.
             </p>
           </div>
           ${raw(buildWorkflowFlow(TOP_POSTS_STEPS))}
-          ${raw(renderTopPostsBoard({ posts: state.posts, sort: state.sort, profile: state.profile }))}
+          ${raw(
+            renderTopPostsBoard({
+              posts: state.posts,
+              sort: state.sort,
+              profile: state.profile,
+              period: state.period,
+              selected: state.selected,
+            }),
+          )}
         </div>
       </div>
     </aside>
@@ -2240,6 +2247,101 @@ function askProfileQuestion(sessionId, ideaId, { count = 1, angle = null, angleP
     },
     onBack: onBack || undefined,
     onSkip: onBack ? undefined : () => {},
+  });
+}
+
+// ── Published-posts repurposing (top-posts flow) ──────────────────────
+// The winner board (top-posts-flow.js) hands off here once the user picks one or
+// more winners — via a card's "Repurpose" or the bulk bar. We echo the picks,
+// then walk the winners ONE AT A TIME so the user chooses angles per post (each
+// picker shows angles extracted from THAT post; no skipping), then the profiles
+// step, then generate the network-adapted drafts.
+function startRepurposeFlow(sessionId, postIds) {
+  const ids = topPostsFlow.echoRepurposePicks(sessionId, postIds);
+  if (!ids.length) return;
+  askAnglesForPost(sessionId, ids, 0, []);
+}
+
+// One post's angle step. `collected` accumulates [{ postId, angles }] as we go;
+// when every post has its angles we advance to the profiles step. No Skip — the
+// user picks at least one angle for each post (a default keeps the submit live).
+function askAnglesForPost(sessionId, postIds, index, collected) {
+  if (index >= postIds.length) {
+    askRepurposeProfiles(sessionId, collected);
+    return;
+  }
+  const postId = postIds[index];
+  const multi = postIds.length > 1;
+  const total = postIds.length;
+  const stepLabel = multi ? `Post ${index + 1}/${total}` : "Angles";
+
+  postAssistantMessage(
+    sessionId,
+    multi
+      ? `Post ${index + 1} of ${total} — “${topPostsFlow.repurposePostHook(postId)}”. Which angles should I spin?`
+      : "Let me pull some angles from this post.",
+  );
+  // Loading state — Archie "reads" this winner and extracts its angle variations.
+  inlineQuestion.ask(sessionId, {
+    loading: true,
+    title: multi ? `Angles · post ${index + 1} of ${total}` : "Angles from your post",
+    subtitle: "Reading it and pulling the strongest fresh angles…",
+    stepLabel,
+  });
+  window.setTimeout(() => {
+    if (!inlineQuestion.isActive(sessionId)) return;
+    const items = topPostsFlow.repurposeAngleItems([postId]);
+    inlineQuestion.ask(sessionId, {
+      title: multi ? `Angles · post ${index + 1} of ${total}` : "Angles from your post",
+      subtitle: multi
+        ? "Pick the angles to spin from this post — one draft per angle, per profile."
+        : "Pick the angles I'll spin — one draft per angle, per profile.",
+      stepLabel,
+      multi: true,
+      // Pre-select one so the picker can't be submitted empty (and can't be skipped).
+      defaultSelected: items.length ? [items[0].value] : [],
+      submitLabel: index < total - 1 ? "Next post" : "Choose profiles",
+      items,
+      onPick: (angles) => {
+        postUserTurn(sessionId, topPostsFlow.angleLabels(angles).join(" · "));
+        askAnglesForPost(sessionId, postIds, index + 1, [...collected, { postId, angles }]);
+      },
+      // Back to the previous post's angles (drops its saved pick so it can be redone).
+      // No Back on the first post — there's nothing before it, and no Skip anywhere.
+      onBack: index > 0 ? () => askAnglesForPost(sessionId, postIds, index - 1, collected.slice(0, -1)) : undefined,
+    });
+  }, 2500);
+}
+
+function askRepurposeProfiles(sessionId, anglesByPost) {
+  const postIds = anglesByPost.map((e) => e.postId);
+  // The repurpose targets are the user's OTHER connected social profiles — the
+  // winner already ran on its source profile, so we spread it to the rest.
+  const items = topPostsFlow.repurposeProfileItems(postIds);
+  if (!items.length) {
+    postAssistantMessage(
+      sessionId,
+      "No other connected profiles to repurpose to. Connect one in Settings → Social accounts.",
+    );
+    return;
+  }
+  postAssistantMessage(sessionId, "Which profiles should I repurpose these to?");
+  inlineQuestion.ask(sessionId, {
+    title: "Pick the profiles to repurpose to",
+    subtitle: "I'll adapt each draft to the profile's network — not the one it already won on.",
+    stepLabel: "Profiles",
+    multi: true,
+    submitLabel: "Repurpose",
+    items,
+    onPick: (accountIds) => {
+      const accounts = accountIds.map((id) => getConnectedProfiles().find((a) => a.id === id)).filter(Boolean);
+      // Echo the picks as profile chips (avatar + handle), same as the draft flow.
+      postUserProfilesTurn(sessionId, accounts);
+      const networks = [...new Set(accounts.map((a) => (a.platform === "twitter" ? "x" : a.platform)))];
+      topPostsFlow.executeRepurpose(sessionId, anglesByPost, networks);
+    },
+    // Back to the last post's angle step (drops its saved pick so it can be redone).
+    onBack: () => askAnglesForPost(sessionId, postIds, postIds.length - 1, anglesByPost.slice(0, -1)),
   });
 }
 
@@ -3111,9 +3213,33 @@ function wireAssistantPanel(root, session, attachedContext) {
       if (wizardChat) wizardChat.scrollTop = wizardChat.scrollHeight;
     });
   };
+  // Top-posts board — a filter/sort/selection change only needs the board grid
+  // repainted, so swap just the `.top-posts-board` subtree in place. Re-rendering
+  // the whole aside (like the wizard subscription) would re-mount the intro +
+  // workflow-flow steps and replay their entrance animation on every checkbox
+  // toggle. Falls back to a full refresh on first open (board not mounted yet)
+  // and when the picker closes (→ swap to the thread).
+  const refreshTopPostsBoard = () => {
+    const board = root.querySelector(".top-posts-board");
+    const state = topPostsFlow.getPickerState(session.id);
+    if (!board || !state) {
+      refreshAssistantAside();
+      return;
+    }
+    const tmp = document.createElement("div");
+    tmp.innerHTML = renderTopPostsBoard({
+      posts: state.posts,
+      sort: state.sort,
+      profile: state.profile,
+      period: state.period,
+      selected: state.selected,
+    });
+    const fresh = tmp.firstElementChild;
+    if (fresh) board.replaceWith(fresh);
+  };
   const offWizard = sidebarWizard.subscribe(session.id, refreshAssistantAside);
   const offInlineQuestion = inlineQuestion.subscribe(session.id, refreshAssistantAside);
-  const offTopPosts = topPostsFlow.subscribePicker(session.id, refreshAssistantAside);
+  const offTopPosts = topPostsFlow.subscribePicker(session.id, refreshTopPostsBoard);
   // Clip Studio — every stage transition + analyzing ticker tick re-renders the
   // whole assistant aside (mirrors the wizard subscription).
   const offClipStudio = clipStudio.subscribe(session.id, () => {
@@ -4144,22 +4270,37 @@ function bindSession(root, session) {
         topPostsFlow.setSort(session.id, topPostSort.dataset.topPostSort);
         return;
       }
-      // Winner-board card "Details" → open the post in the preview modal to
-      // inspect stats + the exact post; its in-modal "Repurpose" hands back via
-      // onBuild → the reuse-mode picker.
-      const topPostDetails = event.target.closest("[data-top-post-details]");
-      if (topPostDetails) {
-        const id = topPostDetails.dataset.topPostDetails;
-        const post = topPostsFlow.getPickerState(session.id)?.posts.find((p) => p.id === id);
-        if (post) {
-          openTopPostModal(post, { onBuild: () => topPostsFlow.pickWinner(session.id, id) });
-        }
+      // Winner-board period chip → narrow the grid to a recency window (checked
+      // before the card pick since chips sit outside the cards).
+      const topPostPeriod = event.target.closest("[data-top-post-period]");
+      if (topPostPeriod) {
+        topPostsFlow.setPeriod(session.id, topPostPeriod.dataset.topPostPeriod);
         return;
       }
-      // "Repurpose" → straight into the reuse-mode picker for that winner.
+      // Per-card selection checkbox → toggle the winner in the multi-select set
+      // (drives the bulk bar). Checked before Details/Repurpose so a click on the
+      // checkbox doesn't also trip a card action.
+      const topPostSelect = event.target.closest("[data-top-post-select]");
+      if (topPostSelect) {
+        topPostsFlow.toggleSelect(session.id, topPostSelect.dataset.topPostSelect);
+        return;
+      }
+      // Bulk bar "Repurpose N posts" → repurpose every selected winner in one go.
+      if (event.target.closest("[data-top-post-repurpose-bulk]")) {
+        const boardState = topPostsFlow.getPickerState(session.id);
+        const ids = boardState?.selected ? [...boardState.selected] : [];
+        if (ids.length) startRepurposeFlow(session.id, ids);
+        return;
+      }
+      // Bulk bar "Cancel" → clear the selection.
+      if (event.target.closest("[data-top-post-repurpose-cancel]")) {
+        topPostsFlow.clearSelection(session.id);
+        return;
+      }
+      // Per-card "Repurpose" shortcut → repurpose just that winner.
       const topPostRepurpose = event.target.closest("[data-top-post-repurpose]");
       if (topPostRepurpose) {
-        topPostsFlow.pickWinner(session.id, topPostRepurpose.dataset.topPostRepurpose);
+        startRepurposeFlow(session.id, [topPostRepurpose.dataset.topPostRepurpose]);
         return;
       }
 

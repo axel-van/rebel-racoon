@@ -51,7 +51,6 @@ body.has-modal {
 .analyze-profiles-modal,
 .fill-document-modal,
 .search-modal,
-.top-post-modal,
 .shortcut-legend {
   position: fixed;
   top: 50vh;
@@ -62,18 +61,6 @@ body.has-modal {
   max-height: calc(100vh - 48px);
   border: 1px solid var(--sys-border-color-default);
   box-shadow: var(--app-shadow-popover-lg);
-}
-
-/* Top-post preview — wide enough for the 2-column preview; the DS dialog
-   content scrolls inside a capped height while header + footer stay pinned. */
-.top-post-modal {
-  width: min(calc(100% - 32px), 820px);
-  max-height: min(calc(100vh - 48px), 760px);
-}
-
-.top-post-modal .ap-dialog-content {
-  min-height: 0;
-  overflow-y: auto;
 }
 
 .connectors-modal {
@@ -464,7 +451,6 @@ body.has-modal {
 .analyze-profiles-modal.open,
 .fill-document-modal.open,
 .search-modal.open,
-.top-post-modal.open,
 .shortcut-legend.open {
   display: flex;
   animation: app-modal-fade-in var(--ref-animation-normal) ease;
