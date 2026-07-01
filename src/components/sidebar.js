@@ -6,7 +6,7 @@ import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { open as openSearchModal } from "./search-modal.js?v=5";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=5";
+import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=6";
 import {
   getSessions,
   getSessionById,
@@ -15,7 +15,7 @@ import {
   togglePin as togglePinSession,
   subscribe as subscribeSessions,
 } from "../sessions-store.js?v=3";
-import { isFlagOn } from "../feature-flags.js?v=8";
+import { isFlagOn } from "../feature-flags.js?v=9";
 import { isNewUser } from "../user-mode.js?v=22";
 import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=42";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=31";

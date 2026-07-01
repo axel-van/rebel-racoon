@@ -31,6 +31,7 @@ import {
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=2";
 import { addPostDraft } from "./posts-store.js?v=31";
 import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=22";
+import { isFlagOn } from "./feature-flags.js?v=9";
 import { showToast } from "./components/toast.js?v=20";
 
 // Cap on drafts produced in one run — post × angle × channel can multiply fast
@@ -41,6 +42,10 @@ const MAX_DRAFTS = 10;
 // Simulated "generating" delay — matches draft-flow's chip duration so the
 // milker feels like the rest of the studio.
 const GEN_DELAY_MS = 6000;
+
+// Simulated "loading this profile's top posts" beat between the profile chooser
+// (step 1) and the winner board.
+const PROFILE_LOAD_MS = 1800;
 
 const CHANNEL_META = {
   linkedin: { icon: "ap-icon-linkedin-official", label: "LinkedIn" },
@@ -255,7 +260,7 @@ function variationOrigin(post) {
 // the grid via renderTopPostsPickerScreen, and routes a card / bulk-bar click
 // back to session.js's startRepurposeFlow, which echoes the picks then opens
 // the angle quick-picker.
-const pickerStates = new Map(); // sessionId → { posts, sort, profile, period, selected }
+const pickerStates = new Map(); // sessionId → { stage, posts, profile, sort, period, selected }
 const pickerSubs = new Map(); // sessionId → Set<fn>
 
 function notifyPicker(sessionId) {
@@ -319,8 +324,47 @@ export function setSort(sessionId, sort) {
   notifyPicker(sessionId);
 }
 
-// Change the active profile lens (profile chip click). "all" or a network slug.
-// Re-renders the board, filtered to that profile's winners.
+// Connected social profiles offered on the chooser screen (step 1), each with
+// the count of winning posts on that network (grouped from getTopPosts). This is
+// what the user picks first — the spec's "select a social profile in the first
+// place".
+export function getProfileChoices() {
+  const counts = {};
+  for (const p of getTopPosts()) {
+    const n = normNet(p.network);
+    if (n) counts[n] = (counts[n] || 0) + 1;
+  }
+  return getConnectedProfiles().map((a) => {
+    const net = normNet(a.platform);
+    return {
+      network: net,
+      accountId: a.id,
+      handle: a.handle,
+      caption: [a.platformLabel, a.kind].filter(Boolean).join(" · "),
+      photo: a.photo,
+      networkIcon: NETWORK_ICON_BY_PLATFORM[net] || null,
+      winners: counts[net] || 0,
+    };
+  });
+}
+
+// Seed the picker at a given stage. Posts are loaded once up front; the board
+// filters them to the active profile ("all" = every winner, the flag-OFF mode).
+function openStage(sessionId, stage, profile = null) {
+  const posts = getTopPosts();
+  if (!posts.length) return;
+  pickerStates.set(sessionId, {
+    stage,
+    posts,
+    profile,
+    sort: "performance",
+    period: "all",
+    selected: new Set(),
+  });
+  notifyPicker(sessionId);
+}
+
+// Change the active profile lens (flag-OFF dropdown). "all" or a network slug.
 export function setProfile(sessionId, profile) {
   const s = pickerStates.get(sessionId);
   if (!s || s.profile === profile) return;
@@ -328,20 +372,33 @@ export function setProfile(sessionId, profile) {
   notifyPicker(sessionId);
 }
 
-// (Re)open the board grid for the current winners. Silent — no intro turn —
-// so it doubles as the "← Back" target from the reuse-mode picker without
-// duplicating Archie's opener. Preserves nothing else; the sort resets to the
-// default, which is fine for a re-entry.
-function openBoard(sessionId) {
-  const posts = getTopPosts();
-  if (!posts.length) return;
-  pickerStates.set(sessionId, {
-    posts,
-    sort: "performance",
-    profile: "all",
-    period: "all",
-    selected: new Set(),
-  });
+// Profile chosen on the chooser screen → briefly "load" its top posts, then
+// reveal the board scoped to that profile.
+export function chooseProfile(sessionId, network) {
+  const s = pickerStates.get(sessionId);
+  if (!s) return;
+  s.profile = normNet(network);
+  s.stage = "loading";
+  s.selected = new Set();
+  notifyPicker(sessionId);
+  setTimeout(() => {
+    const cur = pickerStates.get(sessionId);
+    if (!cur || cur.stage !== "loading") return; // bailed / re-entered
+    cur.stage = "board";
+    notifyPicker(sessionId);
+  }, PROFILE_LOAD_MS);
+}
+
+// Board → back to the profile chooser (step 1). Resets the profile, selection
+// and filters so the chooser opens clean.
+export function backToProfiles(sessionId) {
+  const s = pickerStates.get(sessionId);
+  if (!s) return;
+  s.stage = "profile";
+  s.profile = null;
+  s.selected = new Set();
+  s.sort = "performance";
+  s.period = "all";
   notifyPicker(sessionId);
 }
 
@@ -354,9 +411,13 @@ export function startTopPostsFlow(sessionId) {
     );
     return;
   }
-  // No intro chat bubble — the board screen renders its own studio-style
-  // header (renderTopPostsPickerScreen in session.js).
-  openBoard(sessionId);
+  // Flag ON (default): step 1 is the full-page profile chooser. Flag OFF: open
+  // straight on the board of all winners with the in-toolbar profile dropdown.
+  if (isFlagOn("repurposeProfileFirst")) {
+    openStage(sessionId, "profile");
+  } else {
+    openStage(sessionId, "board", "all");
+  }
 }
 
 // ---- Step 2: echo the pick(s) ----------------------------------------

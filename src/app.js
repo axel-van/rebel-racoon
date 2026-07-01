@@ -1,8 +1,8 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
-import { isFlagOn } from "./feature-flags.js?v=8";
+import { isFlagOn } from "./feature-flags.js?v=9";
 import { initArchieLoader } from "./archie-loader.js?v=2";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=154";
-import { initSidebar, renderSidebar } from "./components/sidebar.js?v=140";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=155";
+import { initSidebar, renderSidebar } from "./components/sidebar.js?v=141";
 import { init as initRightPanel } from "./components/right-panel.js?v=263";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=49";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=24";
@@ -23,7 +23,7 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=101";
 import { renderDashboard } from "./screens/dashboard.js?v=48";
-import { renderSession } from "./screens/session.js?v=339";
+import { renderSession } from "./screens/session.js?v=346";
 import { renderIdeas } from "./screens/ideas.js?v=114";
 import { renderContexts } from "./screens/contexts.js?v=123";
 import { renderConnectors } from "./screens/connectors.js?v=62";

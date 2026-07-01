@@ -65,6 +65,17 @@ export const FLAGS = Object.freeze([
       "brief panel. Used to evaluate the UI without color coding.",
   },
   {
+    id: "repurposeProfileFirst",
+    label: "Repurposing: profile-first screen",
+    default: true,
+    hides:
+      "When ON (default), the repurposing flow opens on a full-page profile " +
+      "chooser: pick a connected profile → load its winners → a board scoped " +
+      "to that profile (no profile dropdown), with a 'Change profile' back in " +
+      "the topbar. When OFF, it opens straight on the board of all winners with " +
+      "an in-toolbar 'All profiles' dropdown filter (the previous behaviour).",
+  },
+  {
     id: "leftNavAltMode",
     label: "left-nav alt mode",
     default: false,

@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=154";
+import { renderTopbar } from "../components/topbar.js?v=155";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -48,8 +48,8 @@ import {
 } from "../posts-store.js?v=31";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=43";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=35";
-import * as topPostsFlow from "../top-posts-flow.js?v=28";
-import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=16";
+import * as topPostsFlow from "../top-posts-flow.js?v=31";
+import { renderTopPostsBoard, renderTopPostEcho, renderProfileChooser } from "../components/top-post-card.js?v=21";
 import * as sidebarWizard from "../sidebar-wizard.js?v=47";
 import * as inlineQuestion from "../inline-question.js?v=41";
 import * as clipStudio from "../clip-studio.js?v=17";
@@ -62,7 +62,7 @@ import {
   clearActiveConnector,
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
-import { isFlagOn } from "../feature-flags.js?v=8";
+import { isFlagOn } from "../feature-flags.js?v=9";
 import * as contextBuilder from "../context-builder.js?v=136";
 import { renderPicker } from "./_analyse-common.js?v=48";
 import { renderSourceCard } from "../components/source-card.js?v=33";
@@ -1901,14 +1901,14 @@ const TOP_POSTS_STEPS = [
   {
     tone: "in",
     icon: "ap-icon-feature-analytics",
-    title: "Pick your winners",
-    text: "Select one or more top-performing posts — filter by profile, period, or performance.",
+    title: "Pick a profile",
+    text: "Choose which connected profile to mine for winning posts.",
   },
   {
     tone: "ai",
     icon: "ap-icon-archie-official",
-    title: "Angles & channels",
-    text: "Choose the angles to spin and the connected networks to adapt them for.",
+    title: "Winners & angles",
+    text: "Select winning posts and pick a fresh angle for each.",
   },
   {
     tone: "out",
@@ -1921,10 +1921,47 @@ const TOP_POSTS_STEPS = [
 function renderTopPostsPickerScreen(session) {
   const state = topPostsFlow.getPickerState(session.id);
   if (!state) return "";
-  // A studio-style screen (like Batch / Clip): a centered intro header +
-  // workflow-flow steps, then the sortable winner board. Distinct container
-  // classes (not #inlineQuestionChat / wizard-chat) so the chat scroll-pin in
-  // wireAssistantPanel doesn't yank it to the bottom — it opens at the top.
+  // A studio-style screen (like Batch / Clip): a centered intro header, then a
+  // stage-dependent body — profile chooser (step 1) → loading beat → winner
+  // board. Distinct container classes (not #inlineQuestionChat / wizard-chat) so
+  // the chat scroll-pin in wireAssistantPanel doesn't yank it to the bottom.
+  const account = state.profile ? profileForNetwork(state.profile) : null;
+  const profileName = account?.handle || "";
+
+  let intro;
+  let body;
+  if (state.stage === "profile") {
+    // Step 1 is a focused single task — pick a profile. Drop the workflow-flow
+    // roadmap here so the profile cards are the hero of the screen, not a narrow
+    // column competing with a full-width band above (it returns on the board).
+    intro = "First, pick the profile you want to mine — I'll surface its winning posts.";
+    body = html`${raw(renderProfileChooser(topPostsFlow.getProfileChoices()))}`;
+  } else if (state.stage === "loading") {
+    intro = profileName ? `Loading your top posts from ${profileName}…` : "Loading your top posts…";
+    body = html`
+      <div class="top-posts-loading" role="status" aria-live="polite">
+        <span class="archie-loader" style="--archie-loader-size: 44px"></span>
+        <span class="top-posts-loading__label">Pulling ${profileName || "your"} winners…</span>
+      </div>
+    `;
+  } else {
+    intro = profileName
+      ? `Your top-performing posts on ${profileName} — pick one or more to spin fresh angles.`
+      : "Pick one or more of your best-performing posts to spin fresh angles.";
+    body = html`
+      ${raw(buildWorkflowFlow(TOP_POSTS_STEPS))}
+      ${raw(
+        renderTopPostsBoard({
+          posts: state.posts,
+          sort: state.sort,
+          profile: state.profile,
+          period: state.period,
+          selected: state.selected,
+        }),
+      )}
+    `;
+  }
+
   return html`
     <aside class="session__assistant session__assistant--wizard session__assistant--board" aria-label="Assistant panel">
       <div class="analyse__chat session__assistant-board-chat">
@@ -1934,20 +1971,9 @@ function renderTopPostsPickerScreen(session) {
               ><i class="ap-icon-feature-analytics" aria-hidden="true"></i>Top posts</span
             >
             <h1 class="top-posts-intro__title">Build on what already works</h1>
-            <p class="top-posts-intro__sub">
-              Pick one or more of your best-performing posts and I'll spin fresh angles, adapted to each channel.
-            </p>
+            <p class="top-posts-intro__sub">${intro}</p>
           </div>
-          ${raw(buildWorkflowFlow(TOP_POSTS_STEPS))}
-          ${raw(
-            renderTopPostsBoard({
-              posts: state.posts,
-              sort: state.sort,
-              profile: state.profile,
-              period: state.period,
-              selected: state.selected,
-            }),
-          )}
+          ${raw(body)}
         </div>
       </div>
     </aside>
@@ -2262,9 +2288,10 @@ function startRepurposeFlow(sessionId, postIds) {
   askAnglesForPost(sessionId, ids, 0, []);
 }
 
-// One post's angle step. `collected` accumulates [{ postId, angles }] as we go;
-// when every post has its angles we advance to the profiles step. No Skip — the
-// user picks at least one angle for each post (a default keeps the submit live).
+// One post's angle step — pick exactly ONE angle for this post. `collected`
+// accumulates [{ postId, angles: [key] }] as we go; when every post has its
+// angle we advance to the profiles step. Single-select (click picks and
+// advances instantly); no Skip — the user picks an angle for each post.
 function askAnglesForPost(sessionId, postIds, index, collected) {
   if (index >= postIds.length) {
     askRepurposeProfiles(sessionId, collected);
@@ -2273,18 +2300,18 @@ function askAnglesForPost(sessionId, postIds, index, collected) {
   const postId = postIds[index];
   const multi = postIds.length > 1;
   const total = postIds.length;
-  const stepLabel = multi ? `Post ${index + 1}/${total}` : "Angles";
+  const stepLabel = multi ? `Post ${index + 1}/${total}` : "Angle";
 
   postAssistantMessage(
     sessionId,
     multi
-      ? `Post ${index + 1} of ${total} — “${topPostsFlow.repurposePostHook(postId)}”. Which angles should I spin?`
+      ? `Post ${index + 1} of ${total} — “${topPostsFlow.repurposePostHook(postId)}”. Which angle should I spin?`
       : "Let me pull some angles from this post.",
   );
   // Loading state — Archie "reads" this winner and extracts its angle variations.
   inlineQuestion.ask(sessionId, {
     loading: true,
-    title: multi ? `Angles · post ${index + 1} of ${total}` : "Angles from your post",
+    title: multi ? `Angle · post ${index + 1} of ${total}` : "Angle from your post",
     subtitle: "Reading it and pulling the strongest fresh angles…",
     stepLabel,
   });
@@ -2292,21 +2319,16 @@ function askAnglesForPost(sessionId, postIds, index, collected) {
     if (!inlineQuestion.isActive(sessionId)) return;
     const items = topPostsFlow.repurposeAngleItems([postId]);
     inlineQuestion.ask(sessionId, {
-      title: multi ? `Angles · post ${index + 1} of ${total}` : "Angles from your post",
-      subtitle: multi
-        ? "Pick the angles to spin from this post — one draft per angle, per profile."
-        : "Pick the angles I'll spin — one draft per angle, per profile.",
+      title: multi ? `Angle · post ${index + 1} of ${total}` : "Angle from your post",
+      subtitle: "Pick one angle to spin from this post.",
       stepLabel,
-      multi: true,
-      // Pre-select one so the picker can't be submitted empty (and can't be skipped).
-      defaultSelected: items.length ? [items[0].value] : [],
-      submitLabel: index < total - 1 ? "Next post" : "Choose profiles",
+      // Single-select — clicking an angle picks it and advances to the next post.
       items,
-      onPick: (angles) => {
-        postUserTurn(sessionId, topPostsFlow.angleLabels(angles).join(" · "));
-        askAnglesForPost(sessionId, postIds, index + 1, [...collected, { postId, angles }]);
+      onPick: (angle) => {
+        postUserTurn(sessionId, topPostsFlow.angleLabels([angle]).join(" · "));
+        askAnglesForPost(sessionId, postIds, index + 1, [...collected, { postId, angles: [angle] }]);
       },
-      // Back to the previous post's angles (drops its saved pick so it can be redone).
+      // Back to the previous post's angle (drops its saved pick so it can be redone).
       // No Back on the first post — there's nothing before it, and no Skip anywhere.
       onBack: index > 0 ? () => askAnglesForPost(sessionId, postIds, index - 1, collected.slice(0, -1)) : undefined,
     });
@@ -3222,7 +3244,9 @@ function wireAssistantPanel(root, session, attachedContext) {
   const refreshTopPostsBoard = () => {
     const board = root.querySelector(".top-posts-board");
     const state = topPostsFlow.getPickerState(session.id);
-    if (!board || !state) {
+    // Only a board-internal change (sort/period/selection) swaps in place; a
+    // stage change (→ profile chooser / loading) re-renders the whole screen.
+    if (!board || !state || state.stage !== "board") {
       refreshAssistantAside();
       return;
     }
@@ -4255,9 +4279,14 @@ function bindSession(root, session) {
         topPostsFlow.startTopPostsFlow(session.id);
         return;
       }
-      // Winner-board profile chip → switch the profile lens (filters the grid
-      // to that profile's winners). Checked before the card pick since the
-      // selector sits outside the cards.
+      // Profile chooser card (step 1) → load that profile's winners and reveal
+      // the board scoped to it.
+      const topPostChoose = event.target.closest("[data-top-post-choose-profile]");
+      if (topPostChoose) {
+        topPostsFlow.chooseProfile(session.id, topPostChoose.dataset.topPostChooseProfile);
+        return;
+      }
+      // Winner-board profile dropdown option (flag OFF — the in-toolbar filter).
       const topPostProfile = event.target.closest("[data-top-post-profile]");
       if (topPostProfile) {
         topPostsFlow.setProfile(session.id, topPostProfile.dataset.topPostProfile);

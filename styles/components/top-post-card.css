@@ -106,7 +106,7 @@
   gap: var(--ref-spacing-xs);
 }
 
-/* Filters cluster (Profile + Period + Sort dropdowns) on the right of the toolbar. */
+/* Filters cluster (Period + Sort dropdowns) on the right of the toolbar. */
 .top-posts-filters {
   display: flex;
   align-items: center;
@@ -115,9 +115,7 @@
 }
 
 /* Compact board dropdown — hug its content (override the DS full-width default)
-   so the three sit side by side; the dropdown panel stays comfortably wide and
-   its option list scrolls (DS caps .ap-select-options at 280px) so Profile holds
-   any number of connected accounts without breaking the layout. */
+   so Period + Sort sit side by side; the dropdown panel stays comfortably wide. */
 .top-posts-select {
   width: auto;
 }
@@ -135,40 +133,126 @@
   min-width: 200px;
 }
 
-/* Profile dropdown holds avatar + handle + count rows, so give it more room and
-   keep a long handle from stretching the trigger. */
-.top-posts-profile-select .ap-select-dropdown {
-  min-width: 260px;
+/* ── Profile chooser (step 1) ────────────────────────────────────────
+   The first screen: one full-width card per connected profile, stacked in a
+   single centered column so each row is comfortable to read and tap. */
+.top-posts-profile-chooser {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  max-width: 720px;
+  margin: var(--ref-spacing-lg) auto 0;
 }
 
-.top-posts-profile-select .ap-select-value {
-  max-width: 160px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* Card = a button; reset the button chrome and lay out avatar · identity · count
+   · enter-chevron. Roomy padding + a firm min-height give each row weight so the
+   short list reads as a deliberate choice, not a few lost tiles. Blue hover
+   border, no elevation (app convention). */
+.top-posts-profile-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ref-spacing-md);
+  width: 100%;
+  min-height: 96px;
+  padding: var(--ref-spacing-lg);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 1px solid var(--app-border);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
 }
 
-/* Profile option row: avatar (firm 24px) · handle (grows) · winner count. */
-.top-posts-select__opt-avatar {
+.top-posts-profile-card:hover:not(:disabled) {
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-05);
+}
+
+/* Enter affordance — muted chevron that turns blue with the card on hover. */
+.top-posts-profile-card__go {
+  flex: 0 0 auto;
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-grey-40);
+  transition: color 120ms ease;
+}
+
+.top-posts-profile-card:hover:not(:disabled) .top-posts-profile-card__go {
+  color: var(--ref-color-electric-blue-100);
+}
+
+.top-posts-profile-card:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.top-posts-profile-card__avatar {
   flex: 0 0 auto;
 }
 
-.top-posts-select .ap-select-option .ap-select-option-text {
-  flex: 1;
+.top-posts-profile-card__id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin-right: auto;
 }
 
-.top-posts-select__count {
-  flex: 0 0 auto;
+.top-posts-profile-card__handle {
+  font-size: var(--sys-text-style-subtitle-size);
+  line-height: var(--sys-text-style-subtitle-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-150);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-posts-profile-card__caption {
+  font-size: var(--sys-text-style-caption-size);
   color: var(--sys-text-color-light);
+}
+
+.top-posts-profile-card__count {
+  flex: 0 0 auto;
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+}
+
+.top-posts-profile-card__count b {
+  color: var(--ref-color-green-100);
   font-variant-numeric: tabular-nums;
 }
 
-.top-posts-select .ap-select-option.selected .top-posts-select__count {
-  color: var(--ref-color-electric-blue-150);
+.top-posts-profile-card__empty {
+  flex: 0 0 auto;
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+}
+
+/* ── Loading beat (profile → board) ─────────────────────────────────── */
+.top-posts-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xxl) 0;
+  color: var(--ref-color-grey-60);
+}
+
+.top-posts-loading__label {
+  font-size: var(--sys-text-style-body-size);
+}
+
+/* Board empty-state (chosen profile has no winners in the current window). */
+.top-posts-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: var(--ref-spacing-lg) 0;
+  text-align: center;
+  color: var(--ref-color-grey-60);
 }
 
 /* ── Grid ───────────────────────────────────────────────────────── */

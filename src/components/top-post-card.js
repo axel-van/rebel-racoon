@@ -14,6 +14,7 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { profileForNetwork, NETWORK_ICON_BY_PLATFORM, BRAND_INITIALS } from "../social-profiles.js?v=22";
+import { isFlagOn } from "../feature-flags.js?v=9";
 
 const NET_ICON = {
   linkedin: "ap-icon-linkedin-official",
@@ -177,13 +178,9 @@ export function renderTopPostEcho(post) {
   `;
 }
 
-// ── Profile lens ─────────────────────────────────────────────────────
-// Group the winners by network into "profile lenses" so the board can be
-// explored one profile at a time. Each lens resolves its identity from the
-// connected social profile when one exists (brand avatar + handle), falling
-// back to the network's own icon + label so a winner on a not-yet-connected
-// network (e.g. TikTok) is still reachable. Ordered by winner count, descending
-// — the profile you've won most on leads.
+// ── Profile dropdown (flag OFF — the previous in-toolbar filter) ──────
+// Group winners by network into lenses (name + avatar + count), rendered as a
+// scalable DS .ap-select. Only used when the repurposeProfileFirst flag is OFF.
 function buildProfileLenses(posts) {
   const byNet = new Map();
   for (const p of posts || []) {
@@ -197,8 +194,6 @@ function buildProfileLenses(posts) {
       const account = profileForNetwork(lens.network);
       return {
         ...lens,
-        // The connected brand handle reads as a "profile"; otherwise the
-        // network label keeps the lens honest about what it is.
         name: account?.handle || labelFor(lens.network),
         photo: account?.photo || null,
         networkIcon: NETWORK_ICON_BY_PLATFORM[lens.network] || iconFor(lens.network),
@@ -207,11 +202,6 @@ function buildProfileLenses(posts) {
     .sort((a, b) => b.count - a.count);
 }
 
-// Profile lens as a scalable DS .ap-select dropdown — "All profiles" + one row
-// per profile (avatar + handle + winner count). The options list scrolls (the DS
-// caps it at 280px), so this holds 5 or 50 profiles without the old chip row
-// exploding across the toolbar. Each option carries data-top-post-profile (a
-// network slug or "all") — the same hook the session delegation already handles.
 function renderProfileOption(dataValue, { avatar, text, count, selected }) {
   return `<div
       class="ap-select-option${selected ? " selected" : ""}"
@@ -229,13 +219,7 @@ function renderProfileOption(dataValue, { avatar, text, count, selected }) {
 function renderProfileSelect(lenses, activeProfile, total) {
   const activeLens = lenses.find((l) => l.network === activeProfile);
   const triggerValue = activeProfile === "all" ? "All profiles" : activeLens?.name || "All profiles";
-
-  const allOpt = renderProfileOption("all", {
-    text: "All profiles",
-    count: total,
-    selected: activeProfile === "all",
-  });
-
+  const allOpt = renderProfileOption("all", { text: "All profiles", count: total, selected: activeProfile === "all" });
   const rows = lenses
     .map((l) => {
       const avatarInner = l.photo
@@ -251,7 +235,6 @@ function renderProfileSelect(lenses, activeProfile, total) {
       });
     })
     .join("");
-
   return `<details class="ap-select top-posts-select top-posts-profile-select">
       <summary class="ap-select-trigger">
         <span class="ap-select-inline-label">Profile</span>
@@ -264,16 +247,59 @@ function renderProfileSelect(lenses, activeProfile, total) {
     </details>`;
 }
 
-// The full board: profile selector (primary lens) + sort toolbar + the sorted
-// card grid. `sort` is one of SORTS[].key; `profile` is a network slug or "all"
-// (defaults to "all" — every winner).
-export function renderTopPostsBoard({ posts, sort = "performance", profile = "all", period = "all", selected }) {
+// ── Profile chooser (step 1) ─────────────────────────────────────────
+// The repurposing flow opens here: pick which connected profile to mine, before
+// any winners load. One card per connected profile (brand avatar + network badge
+// + handle + "N winning posts"). Clicking a card (data-top-post-choose-profile
+// carries the network slug) loads that profile's winners and reveals the board.
+// A profile with no winners yet is shown disabled with a gentle note. `profiles`
+// comes from top-posts-flow.getProfileChoices().
+export function renderProfileChooser(profiles) {
+  const cards = (profiles || [])
+    .map((p) => {
+      const avatarInner = p.photo
+        ? `<img src="${p.photo}" alt="" />`
+        : `<span class="ap-avatar-initials">${BRAND_INITIALS}</span>`;
+      const empty = p.winners === 0;
+      const metric = empty
+        ? `<span class="top-posts-profile-card__empty">No winning posts yet</span>`
+        : `<span class="top-posts-profile-card__count"><b>${p.winners}</b> winning ${p.winners === 1 ? "post" : "posts"}</span>`;
+      return html`
+        <button
+          type="button"
+          class="ap-card top-posts-profile-card"
+          data-top-post-choose-profile="${p.network}"
+          ${empty ? "disabled" : ""}
+        >
+          <span class="ap-avatar size-56 top-posts-profile-card__avatar" aria-hidden="true"
+            >${raw(avatarInner)}<span class="ap-avatar-network"
+              ><i class="${p.networkIcon || iconFor(p.network)}"></i></span
+          ></span>
+          <span class="top-posts-profile-card__id">
+            <span class="top-posts-profile-card__handle">${p.handle}</span>
+            <span class="top-posts-profile-card__caption">${p.caption}</span>
+          </span>
+          ${raw(metric)}
+          <i class="ap-icon-chevron-right top-posts-profile-card__go" aria-hidden="true"></i>
+        </button>
+      `;
+    })
+    .join("");
+  return html`<div class="top-posts-profile-chooser" role="group" aria-label="Choose a profile to repurpose from">
+    ${raw(cards)}
+  </div>`;
+}
+
+// The board: Period/Sort toolbar + the sorted card grid, scoped to the profile
+// chosen on step 1. `profile` is a network slug; `sort` is one of SORTS[].key.
+export function renderTopPostsBoard({ posts, sort = "performance", profile = null, period = "all", selected }) {
   const all = posts || [];
   const sel = selected instanceof Set ? selected : new Set(selected || []);
-  const lenses = buildProfileLenses(all);
-  // Guard against a stale profile filter (e.g. its last winner was removed):
-  // fall back to "all" so the grid never renders empty.
-  const activeProfile = profile !== "all" && lenses.some((l) => l.network === profile) ? profile : "all";
+  // Flag ON (profile-first): `profile` is a specific network chosen upstream.
+  // Flag OFF: `profile` is "all" (or a network) and an in-toolbar dropdown lets
+  // the user switch — "all" means no network filter.
+  const profileFirst = isFlagOn("repurposeProfileFirst");
+  const activeProfile = profile && profile !== "all" ? profile.toLowerCase() : "all";
 
   const activePeriod = PERIODS.find((p) => p.key === period) || PERIODS[0];
   const byProfile =
@@ -284,7 +310,9 @@ export function renderTopPostsBoard({ posts, sort = "performance", profile = "al
   const sorted = [...visible].sort(active.compare);
   const count = sorted.length;
 
-  const cards = sorted.map((p) => renderTopPostCard(p, { selected: sel.has(p.id) })).join("");
+  const cards = sorted.length
+    ? sorted.map((p) => renderTopPostCard(p, { selected: sel.has(p.id) })).join("")
+    : `<p class="top-posts-empty">No winning posts in this window — try a wider period.</p>`;
 
   // The toolbar is a single fixed-height slot that swaps between filter mode and
   // selection mode IN PLACE — so checking a post never pushes the grid down (no
@@ -308,7 +336,7 @@ export function renderTopPostsBoard({ posts, sort = "performance", profile = "al
         <div class="top-posts-toolbar">
           <span class="top-posts-toolbar__count">${count} winning ${count === 1 ? "post" : "posts"}</span>
           <div class="top-posts-filters">
-            ${raw(renderProfileSelect(lenses, activeProfile, all.length))}
+            ${raw(profileFirst ? "" : renderProfileSelect(buildProfileLenses(all), activeProfile, all.length))}
             ${raw(
               renderFilterSelect({
                 dataAttr: "data-top-post-period",

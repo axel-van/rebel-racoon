@@ -26,7 +26,12 @@ import {
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=3";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=31";
-import { isFlagOn } from "../feature-flags.js?v=8";
+import { isFlagOn } from "../feature-flags.js?v=9";
+import {
+  getPickerState as getTopPostsState,
+  subscribePicker as subscribeTopPosts,
+  backToProfiles as topPostsBackToProfiles,
+} from "../top-posts-flow.js?v=31";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static
@@ -76,9 +81,32 @@ export function renderTopbar(_options = {}) {
     : onSession
       ? `${renderSessionPills(rpMode, draftCount, isEmpty, ideaCount)}${renderStatusCardToggle(statusCardAvailable)}`
       : "";
+  // On the repurposing winner board (profile-first mode), the topbar leads with
+  // a "Change profile" back — the app's standard back affordance — in place of
+  // the session title.
+  const left = onPlaybook ? renderBack() : isTopPostsBoard() ? renderTopPostsBack() : renderTitle(onSession);
   el.innerHTML = html`
-    <div class="app-topbar__left">${raw(onPlaybook ? renderBack() : renderTitle(onSession))}</div>
+    <div class="app-topbar__left">${raw(left)}</div>
     <div class="app-topbar__right">${raw(rightSide)}</div>
+  `;
+}
+
+// True when the active session is showing the repurposing board (step 2) in the
+// profile-first mode — i.e. there's a "Change profile" step to go back to.
+function isTopPostsBoard() {
+  if (!isSessionRoute() || !isFlagOn("repurposeProfileFirst")) return false;
+  const sid = currentSessionId();
+  return !!sid && getTopPostsState(sid)?.stage === "board";
+}
+
+// "‹ Change profile" — same back treatment as the Playbook page, so the
+// repurposing board's back matches every other back in the app.
+function renderTopPostsBack() {
+  return `
+    <button type="button" class="ap-button ghost grey app-topbar__back" data-topbar-topposts-back title="Change profile">
+      <i class="ap-icon-arrow-left" aria-hidden="true"></i>
+      <span>Change profile</span>
+    </button>
   `;
 }
 
@@ -167,6 +195,12 @@ export function initTopbar() {
     const backBtn = event.target.closest("[data-topbar-back]");
     if (backBtn) {
       navigate(backBtn.dataset.topbarBack || "/");
+      return;
+    }
+    // "Change profile" — back to the repurposing profile chooser (step 1).
+    if (event.target.closest("[data-topbar-topposts-back]")) {
+      const sid = currentSessionId();
+      if (sid) topPostsBackToProfiles(sid);
       return;
     }
     // Click the conversation title → open the rename modal for it.
@@ -272,6 +306,7 @@ export function initTopbar() {
   let unsubscribeSources = null;
   let unsubscribeLibrary = null;
   let unsubscribePosts = null;
+  let unsubscribeTopPosts = null;
   function syncThreadSubscription() {
     const sid = currentSessionId();
     if (sid === lastSessionId) return;
@@ -291,12 +326,19 @@ export function initTopbar() {
       unsubscribePosts();
       unsubscribePosts = null;
     }
+    if (unsubscribeTopPosts) {
+      unsubscribeTopPosts();
+      unsubscribeTopPosts = null;
+    }
     lastSessionId = sid;
     if (sid) {
       unsubscribeThread = subscribeThread(sid, () => renderTopbar());
       unsubscribeSources = subscribeSources(sid, () => renderTopbar());
       unsubscribeLibrary = subscribeLibrary(sid, () => renderTopbar());
       unsubscribePosts = subscribePosts(sid, () => renderTopbar());
+      // Repurposing stage changes (profile → board → back) flip the topbar
+      // between the session title and the "Change profile" back.
+      unsubscribeTopPosts = subscribeTopPosts(sid, () => renderTopbar());
     }
   }
   syncThreadSubscription();
