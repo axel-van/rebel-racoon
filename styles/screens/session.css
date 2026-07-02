@@ -555,6 +555,11 @@
   position: relative;
   display: block;
   height: 39px;
+  /* Nudge left so the wordmark — not the whole lockup — optically centers under
+     the text below (the monogram adds left-weight, so a dead-centered lockup
+     reads a touch right). Use `left`, not `transform`: the empty-chat entrance
+     animation (empty-rise) already drives `transform`, which would override it. */
+  left: -26px;
 }
 
 /* The monogram is static; the two "archie" wordmark styles slowly crossfade so
