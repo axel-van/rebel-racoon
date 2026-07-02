@@ -10,9 +10,10 @@ import {
   removePost,
   insertPost,
   updatePostContent,
+  attachImageToDraft,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=31";
-import { renderPostCard } from "./post-card.js?v=42";
+import { renderPostCard } from "./post-card.js?v=45";
 import { renderClipCard } from "./clip-card.js?v=8";
 import { onFeedbackClick } from "./feedback-control.js?v=1";
 // Shared compact idea card — same component the standalone Ideas page uses.
@@ -39,7 +40,7 @@ import { iconFor } from "../file-kinds.js?v=20";
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
-import { open as openScheduleModal } from "./schedule-modal.js?v=49";
+import { open as openScheduleModal } from "./schedule-modal.js?v=50";
 import { open as openGenerateImageModal } from "./generate-image-modal.js?v=33";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
@@ -622,6 +623,16 @@ export function init() {
     const imageBtn = event.target.closest("[data-post-image]");
     if (imageBtn) {
       onPostImage(imageBtn.dataset.postImage);
+      return;
+    }
+    const imageUploadBtn = event.target.closest("[data-post-image-upload]");
+    if (imageUploadBtn) {
+      onPostImageUpload(imageUploadBtn.dataset.postImageUpload);
+      return;
+    }
+    const imageRemoveBtn = event.target.closest("[data-post-image-remove]");
+    if (imageRemoveBtn) {
+      onPostImageRemove(imageRemoveBtn.dataset.postImageRemove);
       return;
     }
     // "Edit clip" on a draft generated from a video clip — reopen the source
@@ -1962,6 +1973,35 @@ function onPostImage(postId) {
   // panel so the new image lands in the card immediately; sessionId lets the
   // modal pull this Playbook's brand colours into the prompt (#10).
   openGenerateImageModal(postId, () => renderPanel(), { sessionId: sid });
+}
+
+// Upload / change a draft image without the AI modal — spin up a throwaway
+// file picker, turn the pick into an object URL and attach it to the draft.
+// Mirrors generate-image-modal.js#onStyleUpload. We deliberately keep the
+// object URL alive (no revoke) since the card keeps rendering it as its src.
+function onPostImageUpload(postId) {
+  const sid = activeSessionId();
+  if (!sid) return;
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.addEventListener("change", () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    attachImageToDraft(sid, postId, URL.createObjectURL(file));
+    renderPanel();
+  });
+  input.click();
+}
+
+// Clear a draft image — nulling imageUrl drops the card back to the
+// generate/upload placeholder (post-card.js renders on imageUrl presence).
+function onPostImageRemove(postId) {
+  const sid = activeSessionId();
+  if (!sid) return;
+  attachImageToDraft(sid, postId, null);
+  renderPanel();
+  import("./toast.js?v=20").then(({ showToast }) => showToast("Image removed"));
 }
 
 // --- Inline edit handlers ---------------------------------------------

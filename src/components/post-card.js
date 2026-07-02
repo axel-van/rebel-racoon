@@ -160,11 +160,29 @@ export function renderPostCard(post, opts = {}) {
   const mediaBlock = post.clipRef
     ? `${renderClipPlayer(post)}${subtitleBadge}`
     : post.imageUrl
-      ? `<img class="posts__card-image" src="${post.imageUrl}" alt="Generated image for this post" loading="lazy" />`
-      : `<button type="button" class="posts__card-image-placeholder" data-post-image="${post.id}">
-          <i class="ap-icon-archie-official"></i>
-          <span>Generate an image</span>
-        </button>`;
+      ? `<div class="posts__card-image-wrap">
+          <img class="posts__card-image" src="${post.imageUrl}" alt="Image for this post" loading="lazy" />
+          <div class="posts__card-image-controls">
+            <button type="button" class="ap-button ghost grey" data-post-image-upload="${post.id}">
+              <i class="ap-icon-upload"></i>
+              <span>Change</span>
+            </button>
+            <button type="button" class="ap-button ghost red" data-post-image-remove="${post.id}">
+              <i class="ap-icon-trash"></i>
+              <span>Remove</span>
+            </button>
+          </div>
+        </div>`
+      : `<div class="posts__card-image-actions">
+          <button type="button" class="ap-button mermaid" data-post-image="${post.id}">
+            <i class="ap-icon-archie-official"></i>
+            <span>Generate an image</span>
+          </button>
+          <button type="button" class="ap-button stroked grey" data-post-image-upload="${post.id}">
+            <i class="ap-icon-upload"></i>
+            <span>Upload an image</span>
+          </button>
+        </div>`;
 
   return html`
     <article
