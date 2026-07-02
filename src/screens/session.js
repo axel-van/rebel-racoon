@@ -1883,11 +1883,11 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
     .join("");
   return html`
     <div class="empty-chat" data-empty-chat>
-      <span class="empty-chat__eyebrow">
-        <i class="ap-icon-archie-official" aria-hidden="true"></i>
-        Archie · AI content studio
+      <span class="empty-chat__logo" role="img" aria-label="Archie">
+        <img class="empty-chat__logo-word empty-chat__logo-word--a" src="assets/logos/archie-wordmark.svg" alt="" />
+        <img class="empty-chat__logo-mono" src="assets/logos/archie-mono.svg" alt="" />
+        <img class="empty-chat__logo-word empty-chat__logo-word--b" src="assets/logos/archie-alt-wordmark.svg" alt="" />
       </span>
-      <h1 class="empty-chat__hello">What are you working on?</h1>
       <div class="empty-chat__sub">
         Drop a source — I'll turn it into a batch of ready-to-schedule posts, all from one chat.
       </div>

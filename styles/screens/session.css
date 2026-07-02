@@ -546,36 +546,91 @@
   }
 }
 
-/* Brand eyebrow above the headline — a soft orange pill (orange = AI per
-   the project's brand convention) that gives the empty state a premium,
-   intentional opening. Mirrors the .welcome-hero__eyebrow recipe but uses
-   orange-10 (orange-05 is not a real DS token). */
-.empty-chat__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
-  border-radius: var(--app-radius-pill);
-  background: var(--app-butter);
-  color: var(--ref-color-orange-150);
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  letter-spacing: 0.01em;
+/* Brand logo above the headline — the Archie wordmark (orange = AI per the
+   project's brand convention) gives the empty state a premium, intentional
+   opening. Two wordmark styles are stacked and slowly crossfade so the logo
+   "breathes" discreetly between them. Height-constrained; the primary sizes the
+   box, the alternate overlays it. */
+.empty-chat__logo {
+  position: relative;
+  display: block;
+  height: 39px;
 }
 
-.empty-chat__eyebrow i {
-  font-size: var(--sys-icon-css-sm);
+/* The monogram is static; the two "archie" wordmark styles slowly crossfade so
+   the word appears to morph between them (a soft dissolve — no true path
+   interpolation, which the proto's no-dependency setup can't do). */
+
+/* Primary wordmark sits in flow and defines the box. */
+.empty-chat__logo-word--a {
+  display: block;
+  height: 100%;
+  width: auto;
+  animation: empty-chat-word-a 10s ease-in-out infinite;
 }
 
-.empty-chat__hello {
-  margin: 0;
-  font-family: var(--ref-font-family);
-  font-size: var(--sys-text-style-marketing-size);
-  line-height: var(--sys-text-style-marketing-line-height);
-  font-weight: var(--sys-text-style-marketing-weight);
-  letter-spacing: -0.01em;
-  color: var(--ref-color-grey-100);
+/* Static monogram overlays the wordmark's left slot. */
+.empty-chat__logo-mono {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: auto;
+}
+
+/* Alternate wordmark overlays the primary. Scaled a touch on X so both styles
+   span the same width → left and right edges line up, keeping the dissolve tight
+   (they have slightly different letter metrics). */
+.empty-chat__logo-word--b {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: auto;
+  transform-origin: left center;
+  transform: scaleX(1.028);
+  opacity: 0;
+  animation: empty-chat-word-b 10s ease-in-out infinite;
+}
+
+@keyframes empty-chat-word-a {
+  0%,
+  38% {
+    opacity: 1;
+  }
+  50%,
+  88% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes empty-chat-word-b {
+  0%,
+  38% {
+    opacity: 0;
+  }
+  50%,
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Respect reduced-motion — settle on the primary wordmark, no crossfade. */
+@media (prefers-reduced-motion: reduce) {
+  .empty-chat__logo-word--a {
+    animation: none;
+    opacity: 1;
+  }
+  .empty-chat__logo-word--b {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 .empty-chat__sub {
