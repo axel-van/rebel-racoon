@@ -463,17 +463,17 @@ function onClick(event) {
     }
     return;
   }
-  // "Clear all dates" — wipe the chosen dates. In Optimal this returns to the
-  // pre-compute state (Schedule disables, Compute goes primary, dates collapse);
-  // in Custom it reseeds the one-per-day defaults.
+  // "Clear all dates" — wipe the chosen dates and return to the pristine
+  // pre-compute state: back to Optimal, one date per draft, not yet computed.
+  // The date list collapses, "Compute best times" goes primary and Schedule
+  // disables — the same reset whether the user was in computed Optimal or in
+  // Custom. (A true empty set would dead-end Custom: you can't re-add a date to
+  // an empty grid, so we reset to the seed instead of leaving nothing.)
   if (event.target.closest("[data-schedule-clear]")) {
-    if (state.mode === "optimal") {
-      state.slots = spreadOneEach(state.posts);
-      state.computed = false;
-      state.slotsExpanded = false;
-    } else {
-      state.slots = customDefaultSlots(state.posts);
-    }
+    state.mode = "optimal";
+    state.slots = spreadOneEach(state.posts, state.strategy);
+    state.computed = false;
+    state.slotsExpanded = false;
     render();
     return;
   }

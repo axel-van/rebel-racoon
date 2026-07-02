@@ -85,25 +85,9 @@
   border-radius: var(--ref-border-radius-md);
 }
 
-/* Selection mode — same box, just tinted blue (routine bulk action). */
-.top-posts-toolbar--selecting {
-  background: var(--ref-color-electric-blue-05);
-  border-color: var(--ref-color-electric-blue-100);
-}
-
 .top-posts-toolbar__count {
   font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-150);
-}
-
-.top-posts-toolbar__count--accent {
-  color: var(--ref-color-electric-blue-150);
-}
-
-.top-posts-toolbar__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
 }
 
 /* Filters cluster (Period + Sort dropdowns) on the right of the toolbar. */
@@ -133,86 +117,49 @@
   min-width: 200px;
 }
 
-/* ── Profile chooser (step 1) ────────────────────────────────────────
-   The first screen: one full-width card per connected profile, stacked in a
-   single centered column so each row is comfortable to read and tap. */
-.top-posts-profile-chooser {
+/* ── Account picker (step 1) ─────────────────────────────────────────
+   The first screen reuses the app's numbered Quickpicker (.analyse__options,
+   rendered by renderPicker). This wrapper just centres it under the workflow
+   roadmap and constrains its width so it reads as a focused card, not a
+   full-bleed band, then stacks the keyboard hint bar beneath it. */
+.top-posts-account-picker {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--ref-spacing-sm);
-  max-width: 720px;
+  width: 100%;
+  max-width: 620px;
   margin: var(--ref-spacing-lg) auto 0;
 }
 
-/* Card = a button; reset the button chrome and lay out avatar · identity · count
-   · enter-chevron. Roomy padding + a firm min-height give each row weight so the
-   short list reads as a deliberate choice, not a few lost tiles. Blue hover
-   border, no elevation (app convention). */
-.top-posts-profile-card {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--ref-spacing-md);
+.top-posts-account-picker .analyse__options {
   width: 100%;
-  min-height: 96px;
-  padding: var(--ref-spacing-lg);
-  text-align: left;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  border: 1px solid var(--app-border);
-  transition:
-    border-color 120ms ease,
-    background-color 120ms ease;
 }
 
-.top-posts-profile-card:hover:not(:disabled) {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-05);
+.top-posts-account-picker .analyse__hints {
+  margin: 0;
 }
 
-/* Enter affordance — muted chevron that turns blue with the card on hover. */
-.top-posts-profile-card__go {
-  flex: 0 0 auto;
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-grey-40);
-  transition: color 120ms ease;
-}
-
-.top-posts-profile-card:hover:not(:disabled) .top-posts-profile-card__go {
-  color: var(--ref-color-electric-blue-100);
-}
-
-.top-posts-profile-card:disabled {
-  cursor: default;
-  opacity: 0.55;
-}
-
-.top-posts-profile-card__avatar {
-  flex: 0 0 auto;
-}
-
-.top-posts-profile-card__id {
+/* Playbook picker on step 1 — the voice the repurposed drafts follow. Sits
+   above the account card, left-aligned within the same centred column, with a
+   muted hint beneath. Reuses the DS .ap-select (same shape as the Batch / Clip
+   Studio playbook controls). */
+.top-posts-playbook {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  margin-right: auto;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
 }
 
-.top-posts-profile-card__handle {
-  font-size: var(--sys-text-style-subtitle-size);
-  line-height: var(--sys-text-style-subtitle-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-grey-150);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.top-posts-playbook__select {
+  align-self: flex-start;
 }
 
-.top-posts-profile-card__caption {
+.top-posts-playbook__hint {
+  margin: 0;
   font-size: var(--sys-text-style-caption-size);
-  color: var(--sys-text-color-light);
+  line-height: var(--sys-text-style-caption-line-height);
 }
 
 /* "Source" marker in the repurpose profile picker caption — lifts it out of the
@@ -266,7 +213,10 @@
   gap: var(--ref-spacing-sm);
   text-align: left;
   border: 1px solid var(--app-border);
-  transition: border-color 120ms ease;
+  /* Match the app's content-card radius (source / idea / post cards) rather than
+     the DS default 8px, so the winner board sits consistently with the rest. */
+  border-radius: var(--app-radius-card);
+  transition: border-color 160ms ease;
 }
 
 /* Hover — blue border, no elevation (app convention for interactive cards). */
@@ -274,20 +224,94 @@
   border-color: var(--ref-color-electric-blue-100);
 }
 
-/* Multi-select checkbox — leading in the identity head so it's clearly visible. */
-.top-post-card__select {
-  flex: 0 0 auto;
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  cursor: pointer;
-  accent-color: var(--ref-color-electric-blue-100);
+/* ── Zone 0 · media preview tile ────────────────────────────────── */
+/* One uniform 16:9 box at the top of every card that adapts to the post's media
+   type (video / image / text) so the winner's format reads at a glance and the
+   grid stays regular. */
+.top-post-card__media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  /* Full-bleed cover: pull the tile out to the card's edges (counter the card
+     padding) so the media reads as a cover, not a framed thumbnail. Top corners
+     follow the card radius (inset 1px for the border); the flex gap below keeps
+     it clear of the identity row. */
+  margin: calc(-1 * var(--ref-spacing-sm)) calc(-1 * var(--ref-spacing-sm)) 0;
+  border-radius: calc(var(--app-radius-card) - 1px) calc(var(--app-radius-card) - 1px) 0 0;
+  overflow: hidden;
+  background: var(--ref-color-grey-05);
 }
 
-/* Selected — blue border + faint blue wash (blue, never green, no elevation). */
-.top-post-card--selected {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-05);
+.top-post-card__media-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Video — centered play affordance + duration pill (poster is a still frame). */
+.top-post-card__media-play {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--ref-color-grey-150);
+  font-size: 20px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+
+/* Glassy duration chip — reads over any poster. */
+.top-post-card__media-dur {
+  position: absolute;
+  right: var(--ref-spacing-xs);
+  bottom: var(--ref-spacing-xs);
+  padding: 2px 7px;
+  border-radius: var(--ref-border-radius-sm);
+  background: rgba(17, 24, 39, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--ref-color-white);
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+}
+
+/* Text — the excerpt featured as a quote (no image), same box as the others.
+   A soft diagonal wash + a quiet glyph give it depth without competing with the
+   real photos in the grid. */
+.top-post-card__media--text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-md);
+  background: linear-gradient(
+    155deg,
+    var(--ref-color-grey-10) 0%,
+    var(--ref-color-grey-05) 55%,
+    var(--ref-color-white) 100%
+  );
+}
+
+.top-post-card__media-glyph {
+  color: var(--ref-color-grey-60);
+  font-size: 18px;
+}
+
+.top-post-card__media-quote {
+  margin: 0;
+  color: var(--ref-color-grey-150);
+  font-weight: var(--sys-text-style-body-weight);
+  line-height: var(--sys-text-style-body-line-height);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ── Zone 1 · identity ──────────────────────────────────────────── */
@@ -322,24 +346,16 @@
 /* ── Zone 2 · the post ──────────────────────────────────────────── */
 /* Regular weight (not bold) so the copy reads as content, not another heading —
    the whole card felt heavy when everything was bold. Two-line clamp. */
-.top-post-card__excerpt {
-  margin: 0;
-  color: var(--ref-color-grey-150);
-  font-weight: var(--sys-text-style-body-weight);
-  line-height: var(--sys-text-style-body-line-height);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
 /* ── Zone 3 · performance ───────────────────────────────────────── */
-/* One hero number (×-vs-average, green) carries the whole story; engagement +
-   reach fold into a single muted line below it instead of three big columns. */
+/* The ×-vs-average hero (green) carries the headline; the raw counts sit below
+   it as a scannable 4-column strip (value over label). A hairline rule splits
+   the post copy from its metrics so the card reads content → performance. */
 .top-post-card__perf {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--ref-spacing-xs);
+  padding-top: var(--ref-spacing-xs);
+  border-top: 1px solid var(--app-border);
 }
 
 .top-post-card__hero {
@@ -361,24 +377,51 @@
   color: var(--sys-text-color-light);
 }
 
-.top-post-card__submetrics {
-  font-size: var(--sys-text-style-caption-size);
-  color: var(--sys-text-color-light);
+/* Metric strip — four equal columns, value stacked over its label. Each metric
+   is its own column so the numbers line up and scan top-to-bottom, instead of a
+   dot-separated run-on that wrapped mid-pair. */
+.top-post-card__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+}
+
+.top-post-card__stat {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Value: the emphasis. Dark + bold, tabular so columns align; never green —
+   green stays reserved for the ×-vs-average hero. */
+.top-post-card__stat-value {
+  font-size: var(--sys-text-style-body-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-150);
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Zone 4 · footer (meta + CTA) ───────────────────────────────── */
-/* Low-priority meta sits with the action; the CTA hugs its label on the right
-   (never full-width). margin-top:auto pins the footer so cards align in the grid. */
+.top-post-card__stat-label {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
+}
+
+/* ── Zone 4 · footer (meta + source link + CTA) ─────────────────── */
+/* One row: date on the left, then a right-hugging actions cluster ("Open
+   original" link + Repurpose CTA). The date's margin-right:auto absorbs the
+   slack — no fixed gap eating width — so the full date fits and the button
+   stays auto-width (never full-width). margin-top:auto pins the footer so cards
+   align in the grid. */
 .top-post-card__foot {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--ref-spacing-xs);
   margin-top: auto;
 }
 
 .top-post-card__meta {
+  margin-right: auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -386,6 +429,15 @@
   font-size: var(--sys-text-style-caption-size);
   color: var(--sys-text-color-light);
 }
+
+.top-post-card__actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+/* "Open original" uses the DS .ap-icon-button (stroked) as-is — no overrides. */
 
 .top-post-card__cta {
   flex: 0 0 auto;
@@ -420,6 +472,12 @@
   margin-right: auto;
 }
 
+/* Post-type glyph on the right of the echo head — a quiet format indicator. */
+.top-post-echo__head .top-post-echo__type {
+  font-size: 15px;
+  color: var(--sys-text-color-light);
+}
+
 .top-post-echo__excerpt {
   color: var(--ref-color-grey-150);
   line-height: var(--sys-text-style-body-line-height);
@@ -436,5 +494,12 @@
 }
 
 .top-post-echo__stats b {
+  color: var(--ref-color-grey-150);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+/* The ×-vs-average keeps the green performance accent; the raw counts stay
+   neutral (see .top-post-card__submetrics b). */
+.top-post-echo__stats .top-post-echo__avg {
   color: var(--ref-color-green-100);
 }

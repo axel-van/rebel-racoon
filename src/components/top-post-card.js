@@ -12,7 +12,7 @@
 // render; no module-local state (the active sort lives in top-posts-flow's
 // picker state).
 
-import { html, raw } from "../utils.js?v=21";
+import { html, raw, escapeHtml } from "../utils.js?v=21";
 import { profileForNetwork, NETWORK_ICON_BY_PLATFORM, BRAND_INITIALS } from "../social-profiles.js?v=22";
 import { isFlagOn } from "../feature-flags.js?v=9";
 
@@ -104,7 +104,59 @@ function formatCompact(n) {
   return `${k >= 10 ? Math.round(k) : k.toFixed(1)}K`;
 }
 
-function renderTopPostCard(post, { selected = false }) {
+// Permalink to the original post on its network — the "Open original" link.
+// Prototype: these are mock winners, so we build a plausible per-network URL
+// from the post id (opens in a new tab). A real integration would carry the
+// permalink on the post payload instead.
+const PERMALINK = {
+  linkedin: (id) => `https://www.linkedin.com/feed/update/${id}`,
+  x: (id) => `https://x.com/i/web/status/${id}`,
+  twitter: (id) => `https://x.com/i/web/status/${id}`,
+  instagram: (id) => `https://www.instagram.com/p/${id}/`,
+  facebook: (id) => `https://www.facebook.com/${id}`,
+};
+function postPermalink(network, id) {
+  const fn = PERMALINK[(network || "").toLowerCase()];
+  return fn ? fn(id) : "#";
+}
+
+// Post-type glyphs — used on the echo head so a picked post still signals its
+// kind without the full preview tile.
+const MEDIA_ICON = { video: "ap-icon-play_fill", image: "ap-icon-image", text: "ap-icon-file--text" };
+
+// Seconds → "M:SS" for the video duration pill.
+function fmtDuration(s) {
+  const sec = Math.max(0, Math.round(s || 0));
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+}
+
+// The preview tile at the top of every card, adapting to the post's media type:
+//   video → poster image + play overlay + duration pill
+//   image → poster image
+//   text  → the excerpt featured as a large quote on a surface tile
+// A uniform 16:9 box so the board grid stays regular whatever the mix.
+function renderMediaTile(post) {
+  const type = post.mediaType || "text";
+  if (type === "text") {
+    return `
+      <div class="top-post-card__media top-post-card__media--text">
+        <i class="ap-icon-file--text top-post-card__media-glyph" aria-hidden="true"></i>
+        <p class="top-post-card__media-quote">${escapeHtml(post.excerpt)}</p>
+      </div>`;
+  }
+  const img = `<img class="top-post-card__media-img" src="${post.image}" alt="" loading="lazy" />`;
+  if (type === "video") {
+    return `
+      <div class="top-post-card__media top-post-card__media--video">
+        ${img}
+        <span class="top-post-card__media-play" aria-hidden="true"><i class="ap-icon-play_fill"></i></span>
+        ${post.mediaDuration ? `<span class="top-post-card__media-dur">${fmtDuration(post.mediaDuration)}</span>` : ""}
+      </div>`;
+  }
+  return `<div class="top-post-card__media top-post-card__media--image">${img}</div>`;
+}
+
+function renderTopPostCard(post) {
   // These are posts from the brand's own profiles, so the card leads with the
   // profile identity (brand avatar + network badge + handle) — the same lens the
   // board's profile chips sort by — rather than a bare network label. Falls back
@@ -116,42 +168,61 @@ function renderTopPostCard(post, { selected = false }) {
   const avatarInner = account?.photo
     ? `<img src="${account.photo}" alt="" />`
     : `<span class="ap-avatar-initials">${BRAND_INITIALS}</span>`;
+  // Metric breakdown (Views / Reach / Reactions / Shares) — the raw counts the
+  // decision leans on, below the ×-vs-average hero. Rendered as a 4-column strip
+  // (value stacked over label) so each metric reads as its own scannable column
+  // instead of a run-on line. IG surfaces Saves in place of Shares.
+  const secondaryVal = post.saves != null ? post.saves : post.shares;
+  const secondaryLabel = post.saves != null ? "Saves" : "Shares";
+  const statsHtml = [
+    [formatCompact(post.views), "Views"],
+    [formatCompact(post.impressions), "Reach"],
+    [formatCompact(post.reactions), "Reactions"],
+    [formatCompact(secondaryVal), secondaryLabel],
+  ]
+    .map(
+      ([v, l]) =>
+        `<div class="top-post-card__stat"><span class="top-post-card__stat-value">${v}</span><span class="top-post-card__stat-label">${l}</span></div>`,
+    )
+    .join("");
   return html`
-    <article class="ap-card top-post-card${selected ? " top-post-card--selected" : ""}">
+    <article class="ap-card top-post-card">
+      ${raw(renderMediaTile(post))}
+
       <div class="top-post-card__head">
-        <input
-          type="checkbox"
-          class="top-post-card__select"
-          data-top-post-select="${post.id}"
-          aria-label="Select for repurposing"
-          ${selected ? "checked" : ""}
-        />
         <span class="top-post-card__profile">
           <span class="ap-avatar size-24 top-post-card__avatar" aria-hidden="true"
             >${raw(avatarInner)}<span class="ap-avatar-network"><i class="${networkIcon}"></i></span
           ></span>
           <span class="top-post-card__handle">${handle}</span>
         </span>
-        <span class="ap-status green no-dot top-post-card__badge">${post.perfBadge}</span>
       </div>
-
-      <p class="top-post-card__excerpt">${post.excerpt}</p>
 
       <div class="top-post-card__perf">
         <span class="top-post-card__hero">
           <span class="top-post-card__hero-value">${post.vsAvg}×</span>
           <span class="top-post-card__hero-label">vs&nbsp;average</span>
         </span>
-        <span class="top-post-card__submetrics"
-          >${post.engagementRate}% engagement · ${formatCompact(post.impressions)} reach</span
-        >
+        <div class="top-post-card__stats">${raw(statsHtml)}</div>
       </div>
 
       <div class="top-post-card__foot">
-        <span class="top-post-card__meta">${post.publishedAt} · ${post.topic}</span>
-        <button type="button" class="ap-button primary blue top-post-card__cta" data-top-post-repurpose="${post.id}">
-          Repurpose
-        </button>
+        <span class="top-post-card__meta">${post.publishedOn}</span>
+        <div class="top-post-card__actions">
+          <a
+            class="ap-icon-button stroked"
+            href="${postPermalink(post.network, post.id)}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open original post"
+            title="Open original"
+          >
+            <i class="ap-icon-external-link" aria-hidden="true"></i>
+          </a>
+          <button type="button" class="ap-button primary blue top-post-card__cta" data-top-post-repurpose="${post.id}">
+            Repurpose
+          </button>
+        </div>
       </div>
     </article>
   `;
@@ -168,11 +239,15 @@ export function renderTopPostEcho(post) {
       <span class="top-post-echo__head">
         <i class="${iconFor(post.network)}" aria-hidden="true"></i>
         <span class="top-post-echo__net">${labelFor(post.network)}</span>
-        <span class="ap-status green no-dot">${post.perfBadge}</span>
+        <i class="${MEDIA_ICON[post.mediaType] || MEDIA_ICON.text} top-post-echo__type" aria-hidden="true"></i>
       </span>
       <span class="top-post-echo__excerpt">${post.excerpt}</span>
       <span class="top-post-echo__stats">
-        <b>${post.vsAvg}×</b> vs avg · ${post.engagementRate}% eng · ${formatCompact(post.impressions)} reach
+        <b class="top-post-echo__avg">${post.vsAvg}×</b> vs avg · <b>${formatCompact(post.views)}</b> views ·
+        <b>${formatCompact(post.impressions)}</b> reach · <b>${formatCompact(post.reactions)}</b> reactions ·
+        <b>${formatCompact(post.saves != null ? post.saves : post.shares)}</b> ${post.saves != null
+          ? "saves"
+          : "shares"}
       </span>
     </div>
   `;
@@ -247,44 +322,14 @@ function renderProfileSelect(lenses, activeProfile, total) {
     </details>`;
 }
 
-// ── Profile chooser (step 1) ─────────────────────────────────────────
-// The repurposing flow opens here: pick which connected profile to mine, before
-// any winners load. One card per connected profile (brand avatar + network badge
-// + handle). Clicking a card (data-top-post-choose-profile carries the network
-// slug) loads that profile's winners and reveals the board. No winner count here
-// — it isn't known until the profile's posts load. `profiles` comes from
-// top-posts-flow.getProfileChoices().
-export function renderProfileChooser(profiles) {
-  const cards = (profiles || [])
-    .map((p) => {
-      const avatarInner = p.photo
-        ? `<img src="${p.photo}" alt="" />`
-        : `<span class="ap-avatar-initials">${BRAND_INITIALS}</span>`;
-      return html`
-        <button type="button" class="ap-card top-posts-profile-card" data-top-post-choose-profile="${p.network}">
-          <span class="ap-avatar size-56 top-posts-profile-card__avatar" aria-hidden="true"
-            >${raw(avatarInner)}<span class="ap-avatar-network"
-              ><i class="${p.networkIcon || iconFor(p.network)}"></i></span
-          ></span>
-          <span class="top-posts-profile-card__id">
-            <span class="top-posts-profile-card__handle">${p.handle}</span>
-            <span class="top-posts-profile-card__caption">${p.caption}</span>
-          </span>
-          <i class="ap-icon-chevron-right top-posts-profile-card__go" aria-hidden="true"></i>
-        </button>
-      `;
-    })
-    .join("");
-  return html`<div class="top-posts-profile-chooser" role="group" aria-label="Choose a profile to repurpose from">
-    ${raw(cards)}
-  </div>`;
-}
+// Step 1 (pick which connected account to mine) is now the app's numbered
+// Quickpicker (renderPicker), rendered by session.js from
+// top-posts-flow.getProfileChoices() — no bespoke card grid here anymore.
 
 // The board: Period/Sort toolbar + the sorted card grid, scoped to the profile
 // chosen on step 1. `profile` is a network slug; `sort` is one of SORTS[].key.
-export function renderTopPostsBoard({ posts, sort = "performance", profile = null, period = "all", selected }) {
+export function renderTopPostsBoard({ posts, sort = "performance", profile = null, period = "all" }) {
   const all = posts || [];
-  const sel = selected instanceof Set ? selected : new Set(selected || []);
   // Flag ON (profile-first): `profile` is a specific network chosen upstream.
   // Flag OFF: `profile` is "all" (or a network) and an in-toolbar dropdown lets
   // the user switch — "all" means no network filter.
@@ -301,44 +346,29 @@ export function renderTopPostsBoard({ posts, sort = "performance", profile = nul
   const count = sorted.length;
 
   const cards = sorted.length
-    ? sorted.map((p) => renderTopPostCard(p, { selected: sel.has(p.id) })).join("")
+    ? sorted.map((p) => renderTopPostCard(p)).join("")
     : `<p class="top-posts-empty">No winning posts in this window — try a wider period.</p>`;
 
-  // The toolbar is a single fixed-height slot that swaps between filter mode and
-  // selection mode IN PLACE — so checking a post never pushes the grid down (no
-  // layout shift). Filter mode: count + Profile/Period/Sort dropdowns (all three
-  // scale to any number of options). Selection mode: count + Repurpose/Cancel.
-  const selecting = sel.size > 0;
-  const toolbar = selecting
-    ? html`
-        <div class="top-posts-toolbar top-posts-toolbar--selecting" role="region" aria-label="Bulk repurpose actions">
-          <span class="top-posts-toolbar__count top-posts-toolbar__count--accent">${sel.size} selected</span>
-          <div class="top-posts-toolbar__actions">
-            <button type="button" class="ap-button primary blue" data-top-post-repurpose-bulk>
-              <i class="ap-icon-shuffle" aria-hidden="true"></i>
-              <span>Repurpose ${sel.size} ${sel.size === 1 ? "post" : "posts"}</span>
-            </button>
-            <button type="button" class="ap-button transparent grey" data-top-post-repurpose-cancel>Cancel</button>
-          </div>
-        </div>
-      `
-    : html`
-        <div class="top-posts-toolbar">
-          <span class="top-posts-toolbar__count">${count} winning ${count === 1 ? "post" : "posts"}</span>
-          <div class="top-posts-filters">
-            ${raw(profileFirst ? "" : renderProfileSelect(buildProfileLenses(all), activeProfile, all.length))}
-            ${raw(
-              renderFilterSelect({
-                dataAttr: "data-top-post-period",
-                label: "Period",
-                active: activePeriod,
-                options: PERIODS,
-              }),
-            )}
-            ${raw(renderFilterSelect({ dataAttr: "data-top-post-sort", label: "Sort", active, options: SORTS }))}
-          </div>
-        </div>
-      `;
+  // One post is repurposed at a time (via each card's "Repurpose" button), so
+  // the toolbar just holds the count + the Period/Sort filters (+ the Profile
+  // dropdown in flag-OFF mode). No multi-select / bulk bar.
+  const toolbar = html`
+    <div class="top-posts-toolbar">
+      <span class="top-posts-toolbar__count">${count} winning ${count === 1 ? "post" : "posts"}</span>
+      <div class="top-posts-filters">
+        ${raw(profileFirst ? "" : renderProfileSelect(buildProfileLenses(all), activeProfile, all.length))}
+        ${raw(
+          renderFilterSelect({
+            dataAttr: "data-top-post-period",
+            label: "Period",
+            active: activePeriod,
+            options: PERIODS,
+          }),
+        )}
+        ${raw(renderFilterSelect({ dataAttr: "data-top-post-sort", label: "Sort", active, options: SORTS }))}
+      </div>
+    </div>
+  `;
 
   return html`
     <div class="top-posts-board">

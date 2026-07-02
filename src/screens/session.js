@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=158";
+import { renderTopbar } from "../components/topbar.js?v=168";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -48,8 +48,8 @@ import {
 } from "../posts-store.js?v=31";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=43";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=35";
-import * as topPostsFlow from "../top-posts-flow.js?v=34";
-import { renderTopPostsBoard, renderTopPostEcho, renderProfileChooser } from "../components/top-post-card.js?v=22";
+import * as topPostsFlow from "../top-posts-flow.js?v=44";
+import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=36";
 import * as sidebarWizard from "../sidebar-wizard.js?v=47";
 import * as inlineQuestion from "../inline-question.js?v=41";
 import * as clipStudio from "../clip-studio.js?v=17";
@@ -63,7 +63,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=9";
-import * as contextBuilder from "../context-builder.js?v=136";
+import * as contextBuilder from "../context-builder.js?v=137";
 import { renderPicker } from "./_analyse-common.js?v=48";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -104,12 +104,12 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=263";
+} from "../components/right-panel.js?v=267";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=13";
 import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=18";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=15";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=23";
 // Pure thread-turn renderers — shared with the component handoff gallery so
 // the previews there never drift from the app (handoff/components.html).
 import {
@@ -765,6 +765,38 @@ function renderClipPlaybookControl(ctx) {
   return `
     <details class="ap-select clip-studio__select" data-clip-playbook>
       <summary class="ap-select-trigger" title="Choose the playbook for these posts">
+        <span class="ap-select-inline-label">Playbook</span>
+        ${valueMarkup}
+        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+      </summary>
+      <div class="ap-select-dropdown" role="listbox" aria-label="Choose a playbook">
+        <div class="ap-select-options">${items}</div>
+      </div>
+    </details>`;
+}
+
+// Playbook picker for the top-posts step 1 (account screen) — the chosen
+// Playbook governs the voice of the repurposed drafts. Mirrors the batch / clip
+// playbook controls; routes through the `data-topposts-playbook-pick` delegate.
+function renderTopPostsPlaybookControl(ctx) {
+  const playbooks = getContexts();
+  const items = playbooks
+    .map((c) => {
+      const isSel = ctx && c.id === ctx.id;
+      return `
+        <div class="ap-select-option${isSel ? " selected" : ""}" data-topposts-playbook-pick="${escapeHtml(c.id)}" role="option" aria-selected="${isSel ? "true" : "false"}">
+          <span class="composer-context__dot" style="background: ${dotColorVar(c.color || "grey")};"></span>
+          <span class="ap-select-option-text">${escapeHtml(c.name)}</span>
+          ${isSel ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
+        </div>`;
+    })
+    .join("");
+  const valueMarkup = ctx
+    ? `<span class="ap-select-value">${escapeHtml(ctx.name)}</span>`
+    : `<span class="ap-select-value ap-select-placeholder">Select a playbook</span>`;
+  return `
+    <details class="ap-select top-posts-playbook__select" data-topposts-playbook>
+      <summary class="ap-select-trigger" title="Choose the playbook for these drafts">
         <span class="ap-select-inline-label">Playbook</span>
         ${valueMarkup}
         <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
@@ -1901,20 +1933,20 @@ const TOP_POSTS_STEPS = [
   {
     tone: "in",
     icon: "ap-icon-feature-analytics",
-    title: "Pick a profile",
-    text: "Choose which connected profile to mine for winning posts.",
+    title: "Pick an account",
+    text: "Choose a connected account to pull your winning posts from.",
   },
   {
     tone: "ai",
     icon: "ap-icon-archie-official",
-    title: "Winners & angles",
-    text: "Select winning posts and pick a fresh angle for each.",
+    title: "See the winners",
+    text: "I rank its posts by engagement — pick one and a fresh angle.",
   },
   {
     tone: "out",
     icon: "ap-icon-stack",
-    title: "Fresh drafts",
-    text: "I draft new posts in your playbook's voice — ready to review and schedule.",
+    title: "Reuse into drafts",
+    text: "I write fresh versions in your playbook's voice — ready to review and schedule.",
   },
 ];
 
@@ -1931,11 +1963,33 @@ function renderTopPostsPickerScreen(session) {
   let intro;
   let body;
   if (state.stage === "profile") {
-    // Step 1 is a focused single task — pick a profile. Drop the workflow-flow
-    // roadmap here so the profile cards are the hero of the screen, not a narrow
-    // column competing with a full-width band above (it returns on the board).
-    intro = "First, pick the profile you want to mine — I'll surface its winning posts.";
-    body = html`${raw(renderProfileChooser(topPostsFlow.getProfileChoices()))}`;
+    // Step 1 — pick which connected account to mine. This is the *exact* in-chat
+    // picker component (inlineQuestion.ask, armed by top-posts-flow when the
+    // profile stage opens): we render its chrome (handler "inline-question")
+    // inside the studio framing (workflow roadmap + a keyboard hint bar), so it
+    // reads — and behaves — like every other in-chat pick. Single-select:
+    // clicking a row (or pressing its digit) routes through the shared
+    // inline-question delegate → inlineQuestion.pick → chooseProfile.
+    intro =
+      "Pick a connected account and I'll surface its winning posts — reuse any into fresh drafts in your playbook's voice.";
+    const picker = renderPicker(inlineQuestion.renderChrome(session.id)?.picker);
+    // The Playbook whose voice the repurposed drafts will follow, chosen here on
+    // step 1 (defaults to the workspace default; persists through to generation).
+    const playbookCtx = getContextById(topPostsFlow.getContextId(session.id));
+    body = html`
+      ${raw(buildWorkflowFlow(TOP_POSTS_STEPS))}
+      <div class="top-posts-account-picker">
+        <div class="top-posts-playbook">
+          ${raw(renderTopPostsPlaybookControl(playbookCtx))}
+          <p class="top-posts-playbook__hint muted">I'll write the fresh drafts in this playbook's voice.</p>
+        </div>
+        ${raw(picker)}
+        <p class="analyse__hints muted">
+          <kbd>↑</kbd><kbd>↓</kbd> navigate · <kbd>1</kbd>–<kbd>9</kbd> pick · <kbd>Enter</kbd> select ·
+          <kbd>Esc</kbd> exit
+        </p>
+      </div>
+    `;
   } else if (state.stage === "loading") {
     intro = profileName ? `Loading your top posts from ${profileName}…` : "Loading your top posts…";
     body = html`
@@ -1946,8 +2000,8 @@ function renderTopPostsPickerScreen(session) {
     `;
   } else {
     intro = profileName
-      ? `Your top-performing posts on ${profileName} — pick one or more to spin fresh angles.`
-      : "Pick one or more of your best-performing posts to spin fresh angles.";
+      ? `Your top-performing posts on ${profileName} — pick one to spin fresh angles.`
+      : "Pick one of your best-performing posts to spin fresh angles.";
     body = html`
       ${raw(buildWorkflowFlow(TOP_POSTS_STEPS))}
       ${raw(
@@ -1956,7 +2010,6 @@ function renderTopPostsPickerScreen(session) {
           sort: state.sort,
           profile: state.profile,
           period: state.period,
-          selected: state.selected,
         }),
       )}
     `;
@@ -1970,7 +2023,7 @@ function renderTopPostsPickerScreen(session) {
             <span class="top-posts-intro__badge"
               ><i class="ap-icon-feature-analytics" aria-hidden="true"></i>Top posts</span
             >
-            <h1 class="top-posts-intro__title">Build on what already works</h1>
+            <h1 class="top-posts-intro__title">Reuse your best-performing posts</h1>
             <p class="top-posts-intro__sub">${intro}</p>
           </div>
           ${raw(body)}
@@ -3264,7 +3317,6 @@ function wireAssistantPanel(root, session, attachedContext) {
       sort: state.sort,
       profile: state.profile,
       period: state.period,
-      selected: state.selected,
     });
     const fresh = tmp.firstElementChild;
     if (fresh) board.replaceWith(fresh);
@@ -4287,11 +4339,13 @@ function bindSession(root, session) {
         topPostsFlow.startTopPostsFlow(session.id);
         return;
       }
-      // Profile chooser card (step 1) → load that profile's winners and reveal
-      // the board scoped to it.
-      const topPostChoose = event.target.closest("[data-top-post-choose-profile]");
-      if (topPostChoose) {
-        topPostsFlow.chooseProfile(session.id, topPostChoose.dataset.topPostChooseProfile);
+      // (Step 1's profile chooser is the exact inline-question picker now — its
+      // rows route through the shared [data-inline-question] delegate above.)
+      // Step 1 Playbook picker → set the voice governing the repurposed drafts.
+      const topPostsPlaybook = event.target.closest("[data-topposts-playbook-pick]");
+      if (topPostsPlaybook) {
+        topPostsFlow.setContext(session.id, topPostsPlaybook.dataset.toppostsPlaybookPick);
+        root.querySelector("[data-topposts-playbook]")?.removeAttribute("open");
         return;
       }
       // Winner-board profile dropdown option (flag OFF — the in-toolbar filter).
@@ -4314,27 +4368,7 @@ function bindSession(root, session) {
         topPostsFlow.setPeriod(session.id, topPostPeriod.dataset.topPostPeriod);
         return;
       }
-      // Per-card selection checkbox → toggle the winner in the multi-select set
-      // (drives the bulk bar). Checked before Details/Repurpose so a click on the
-      // checkbox doesn't also trip a card action.
-      const topPostSelect = event.target.closest("[data-top-post-select]");
-      if (topPostSelect) {
-        topPostsFlow.toggleSelect(session.id, topPostSelect.dataset.topPostSelect);
-        return;
-      }
-      // Bulk bar "Repurpose N posts" → repurpose every selected winner in one go.
-      if (event.target.closest("[data-top-post-repurpose-bulk]")) {
-        const boardState = topPostsFlow.getPickerState(session.id);
-        const ids = boardState?.selected ? [...boardState.selected] : [];
-        if (ids.length) startRepurposeFlow(session.id, ids);
-        return;
-      }
-      // Bulk bar "Cancel" → clear the selection.
-      if (event.target.closest("[data-top-post-repurpose-cancel]")) {
-        topPostsFlow.clearSelection(session.id);
-        return;
-      }
-      // Per-card "Repurpose" shortcut → repurpose just that winner.
+      // Card "Repurpose" → repurpose that one winner (one post at a time).
       const topPostRepurpose = event.target.closest("[data-top-post-repurpose]");
       if (topPostRepurpose) {
         startRepurposeFlow(session.id, [topPostRepurpose.dataset.topPostRepurpose]);

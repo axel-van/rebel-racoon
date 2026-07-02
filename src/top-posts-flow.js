@@ -28,11 +28,13 @@ import {
   postDraftResult,
   postTopPostPickTurn,
 } from "./assistant.js?v=52";
-import { getTopPosts, getTopPost } from "./top-posts-store.js?v=2";
+import { getTopPosts, getTopPost } from "./top-posts-store.js?v=6";
 import { addPostDraft } from "./posts-store.js?v=31";
 import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=22";
 import { isFlagOn } from "./feature-flags.js?v=9";
 import { showToast } from "./components/toast.js?v=20";
+import * as inlineQuestion from "./inline-question.js?v=41";
+import { getDefaultContext } from "./contexts-store.js?v=31";
 
 // Cap on drafts produced in one run — post × angle × channel can multiply fast
 // (e.g. 3 posts × 4 angles × 3 channels = 36). Keep the result turn scannable;
@@ -104,7 +106,7 @@ export const ANGLE_CHOICES = [
 // post id missing here falls back to genericAngleCopy() below, so the flow
 // still works for any future / user-added winner.
 const ANGLE_COPY = {
-  "top-1": {
+  "top-li-1": {
     contrarian: [
       "Unpopular opinion: your onboarding checklist is *why* people churn.",
       "We deleted ours. Activation went up 18%.",
@@ -129,7 +131,7 @@ const ANGLE_COPY = {
       "Every extra step was quietly costing us conversions.",
     ],
   },
-  "top-2": {
+  "top-x-1": {
     contrarian: [
       "Hot take: most “AI content tools” are just expensive autocomplete.",
       "The ones that win do the boring thing — they remember your brand voice across every post.",
@@ -151,7 +153,7 @@ const ANGLE_COPY = {
       "Consistency beat cleverness, and it wasn't close.",
     ],
   },
-  "top-3": {
+  "top-ig-1": {
     contrarian: [
       "You don't need a big team to ship great content.",
       "Our 4-person crew ships a full week of posts in one afternoon.",
@@ -270,8 +272,12 @@ function variationOrigin(post) {
 // the grid via renderTopPostsPickerScreen, and routes a card / bulk-bar click
 // back to session.js's startRepurposeFlow, which echoes the picks then opens
 // the angle quick-picker.
-const pickerStates = new Map(); // sessionId → { stage, posts, profile, sort, period, selected }
+const pickerStates = new Map(); // sessionId → { stage, posts, profile, sort, period }
 const pickerSubs = new Map(); // sessionId → Set<fn>
+// The Playbook governing the voice of the repurposed drafts, chosen on step 1's
+// account screen. Kept OUTSIDE pickerStates because step 2 (echoRepurposePicks)
+// clears the picker state, but the choice must survive to executeRepurpose.
+const repurposeContexts = new Map(); // sessionId → contextId | null
 
 function notifyPicker(sessionId) {
   const subs = pickerSubs.get(sessionId);
@@ -292,22 +298,15 @@ export function subscribePicker(sessionId, fn) {
   return () => pickerSubs.get(sessionId)?.delete(fn);
 }
 
-// Toggle a winner in the multi-select set (per-card checkbox). Drives the bulk
-// bar count + the card's selected state.
-export function toggleSelect(sessionId, postId) {
-  const s = pickerStates.get(sessionId);
-  if (!s) return;
-  if (!s.selected) s.selected = new Set();
-  if (s.selected.has(postId)) s.selected.delete(postId);
-  else s.selected.add(postId);
-  notifyPicker(sessionId);
+// The Playbook chosen on step 1 — its voice governs the repurposed drafts.
+export function getContextId(sessionId) {
+  return repurposeContexts.get(sessionId) || null;
 }
 
-// Clear the multi-select set (bulk bar "Cancel").
-export function clearSelection(sessionId) {
-  const s = pickerStates.get(sessionId);
-  if (!s || !s.selected || s.selected.size === 0) return;
-  s.selected.clear();
+// Pick the Playbook for this repurpose run (step 1's account screen). Notifies
+// so the studio screen repaints the select with the new value.
+export function setContext(sessionId, contextId) {
+  repurposeContexts.set(sessionId, contextId || null);
   notifyPicker(sessionId);
 }
 
@@ -319,8 +318,12 @@ export function setPeriod(sessionId, period) {
   notifyPicker(sessionId);
 }
 
-// Leave the grid without picking (Esc / route change cleanup).
+// Leave the grid without picking (Esc / route change cleanup). Clears the
+// inline-question that drives the profile stage too, so both stores reset
+// together (see armProfilePicker).
 export function exitPicker(sessionId) {
+  inlineQuestion.exit(sessionId);
+  repurposeContexts.delete(sessionId);
   if (!pickerStates.has(sessionId)) return;
   pickerStates.delete(sessionId);
   notifyPicker(sessionId);
@@ -334,20 +337,41 @@ export function setSort(sessionId, sort) {
   notifyPicker(sessionId);
 }
 
-// Connected social profiles offered on the chooser screen (step 1). This is what
+// Connected social profiles offered on the account picker (step 1). This is what
 // the user picks first — the spec's "select a social profile in the first place".
+// Shaped as renderPicker items (value / label / caption / avatar) so step 1
+// reuses the app's numbered Quickpicker rather than a bespoke card grid. `value`
+// is the network slug → the click delegation hands it straight to chooseProfile.
 // No winner count: it isn't known until the chosen profile's posts load.
 export function getProfileChoices() {
   return getConnectedProfiles().map((a) => {
     const net = normNet(a.platform);
     return {
-      network: net,
+      value: net,
       accountId: a.id,
-      handle: a.handle,
+      label: a.handle,
       caption: [a.platformLabel, a.kind].filter(Boolean).join(" · "),
-      photo: a.photo,
-      networkIcon: NETWORK_ICON_BY_PLATFORM[net] || null,
+      avatar: {
+        imageUrl: a.photo || null,
+        initials: a.photo ? null : BRAND_INITIALS,
+        networkIcon: NETWORK_ICON_BY_PLATFORM[net] || null,
+      },
     };
+  });
+}
+
+// Arm the account picker (step 1) as the *exact* in-chat picker component:
+// inlineQuestion.ask() with the connected-profile choices. session.js renders
+// its chrome inside the studio screen (hero + roadmap), and picking a row runs
+// chooseProfile via the shared inline-question click delegate. No intro (the
+// studio hero introduces the step) and no skip/back (single-select stays
+// immediate, no footer) — matching the previous bespoke picker.
+function armProfilePicker(sessionId) {
+  inlineQuestion.ask(sessionId, {
+    items: getProfileChoices(),
+    title: "Pick an account",
+    subtitle: "I'll load its top posts, ranked by engagement.",
+    onPick: (network) => chooseProfile(sessionId, network),
   });
 }
 
@@ -362,7 +386,6 @@ function openStage(sessionId, stage, profile = null) {
     profile,
     sort: "performance",
     period: "all",
-    selected: new Set(),
   });
   notifyPicker(sessionId);
 }
@@ -382,7 +405,6 @@ export function chooseProfile(sessionId, network) {
   if (!s) return;
   s.profile = normNet(network);
   s.stage = "loading";
-  s.selected = new Set();
   notifyPicker(sessionId);
   setTimeout(() => {
     const cur = pickerStates.get(sessionId);
@@ -392,16 +414,16 @@ export function chooseProfile(sessionId, network) {
   }, PROFILE_LOAD_MS);
 }
 
-// Board → back to the profile chooser (step 1). Resets the profile, selection
-// and filters so the chooser opens clean.
+// Board → back to the profile chooser (step 1). Resets the profile and filters
+// so the chooser opens clean.
 export function backToProfiles(sessionId) {
   const s = pickerStates.get(sessionId);
   if (!s) return;
   s.stage = "profile";
   s.profile = null;
-  s.selected = new Set();
   s.sort = "performance";
   s.period = "all";
+  armProfilePicker(sessionId);
   notifyPicker(sessionId);
 }
 
@@ -414,10 +436,14 @@ export function startTopPostsFlow(sessionId) {
     );
     return;
   }
+  // Pre-select the default Playbook so drafts already have a voice; the user can
+  // switch it on step 1's account screen (setContext).
+  repurposeContexts.set(sessionId, getDefaultContext()?.id || null);
   // Flag ON (default): step 1 is the full-page profile chooser. Flag OFF: open
   // straight on the board of all winners with the in-toolbar profile dropdown.
   if (isFlagOn("repurposeProfileFirst")) {
     openStage(sessionId, "profile");
+    armProfilePicker(sessionId);
   } else {
     openStage(sessionId, "board", "all");
   }
@@ -449,6 +475,11 @@ export function echoRepurposePicks(sessionId, postIds) {
       vsAvg: post.vsAvg,
       engagementRate: post.engagementRate,
       impressions: post.impressions,
+      views: post.views,
+      reactions: post.reactions,
+      shares: post.shares,
+      saves: post.saves,
+      mediaType: post.mediaType,
     });
   }
   return posts.map((p) => p.id);
@@ -569,6 +600,8 @@ export function executeRepurpose(sessionId, anglesByPost, channels) {
   if (!entries.length) return;
 
   const pickedChannels = (channels || []).filter((c) => CHANNEL_META[(c || "").toLowerCase()]);
+  // The Playbook chosen on step 1 governs the drafts' voice — stamp it on each.
+  const contextId = repurposeContexts.get(sessionId) || null;
 
   withPendingChip(
     sessionId,
@@ -591,6 +624,7 @@ export function executeRepurpose(sessionId, anglesByPost, channels) {
               hashtags: adaptHashtags(post.hashtags, ch),
             });
             draft.origin = variationOrigin(post);
+            draft.contextId = contextId;
             drafts.push(draft);
           }
         }

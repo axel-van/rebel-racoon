@@ -13,10 +13,27 @@
 
 import * as sidebarWizard from "../../sidebar-wizard.js?v=47";
 import * as inlineQuestion from "../../inline-question.js?v=41";
+import * as topPostsFlow from "../../top-posts-flow.js?v=44";
 import { bindWizardKeyboard, unbindWizardKeyboard } from "../_analyse-common.js?v=48";
 
 export function rebindWizardKeyboard(aside, sessionId) {
   if (!aside) return;
+  // Top-posts step 1 — the account picker is the exact inline-question component
+  // (handler "inline-question"), armed by top-posts-flow when the profile stage
+  // opens. Single-select: a digit / Enter clicks the row, which the shared
+  // inline-question delegate routes to inlineQuestion.pick → chooseProfile. This
+  // branch stays ahead of the generic inline-question one so Esc exits the whole
+  // top-posts flow (clearing both stores), not just the question.
+  if (topPostsFlow.getPickerState(sessionId)?.stage === "profile") {
+    bindWizardKeyboard(aside, {
+      handler: "inline-question",
+      onExit: () => {
+        unbindWizardKeyboard();
+        topPostsFlow.exitPicker(sessionId);
+      },
+    });
+    return;
+  }
   if (sidebarWizard.isActive(sessionId)) {
     bindWizardKeyboard(aside, {
       handler: "wizard-answer",

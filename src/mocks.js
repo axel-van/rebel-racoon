@@ -108,196 +108,361 @@ export const chatStarters = [
 //   whyItWorked        the pattern Archie verbalises before milking it
 // `metricLine` is the legacy one-line summary still used by the Save-the-angle
 // idea rationale. Account-level (not per session); empty in new-alt mode.
-export const topPosts = [
-  {
-    id: "top-1",
-    network: "linkedin",
-    publishedAt: "12d ago",
-    daysAgo: 12,
-    topic: "Onboarding",
-    excerpt:
-      "We deleted our entire onboarding checklist. Activation went up 18%. Here's the counterintuitive reason fewer steps converted more people.",
-    perfBadge: "Top 3%",
-    vsAvg: 3.4,
-    engagementRate: 7.2,
-    impressions: 41800,
-    reactions: 1240,
-    comments: 86,
-    shares: 51,
-    metricLine: "3.4× your average engagement · 1,240 reactions · 86 comments",
-    whyItWorked: "a contrarian hook backed by one concrete number, then a promise to explain the why",
-    hashtags: ["SaaS", "Onboarding"],
-  },
-  {
-    id: "top-2",
-    network: "x",
-    publishedAt: "20d ago",
-    daysAgo: 20,
-    topic: "AI tooling",
-    excerpt:
-      "Most “AI content tools” just autocomplete. The ones that win do the boring part: they remember your brand voice across every post. That's the whole game.",
-    perfBadge: "Top 5%",
-    vsAvg: 2.8,
-    engagementRate: 5.1,
-    impressions: 33200,
-    reactions: 940,
-    comments: 47,
-    shares: 210,
-    metricLine: "2.8× your average engagement · 940 likes · 210 reposts",
-    whyItWorked: "a sharp category take that names the real problem, ending on a quotable one-liner",
-    hashtags: ["AI", "ContentMarketing"],
-  },
-  {
-    id: "top-3",
-    network: "instagram",
-    publishedAt: "32d ago",
-    daysAgo: 32,
-    topic: "Behind the scenes",
-    excerpt:
-      "Behind the scenes: how our 4-person team ships a week of social content in one afternoon. Swipe for the exact workflow →",
-    perfBadge: "Top 8%",
-    vsAvg: 2.1,
-    engagementRate: 6.4,
-    impressions: 28900,
-    reactions: 2030,
-    comments: 64,
-    saves: 312,
-    metricLine: "2.1× your average engagement · 2,030 likes · 312 saves",
-    whyItWorked: "a behind-the-scenes promise plus a save-worthy, step-by-step payoff",
-    hashtags: ["BehindTheScenes", "Workflow"],
-  },
-  {
-    id: "top-4",
-    network: "linkedin",
-    publishedAt: "5d ago",
-    daysAgo: 5,
-    topic: "Hiring",
-    excerpt:
-      "We stopped asking for cover letters. Best hiring decision we made all year. Here's the one question we ask instead.",
-    perfBadge: "Top 2%",
-    vsAvg: 4.1,
-    engagementRate: 8.6,
-    impressions: 52600,
-    reactions: 1890,
-    comments: 142,
-    shares: 96,
-    metricLine: "4.1× your average engagement · 1,890 reactions · 142 comments",
-    whyItWorked: "a bold policy change stated as a result first, then the practical how",
-    hashtags: ["Hiring", "Culture"],
-  },
-  {
-    id: "top-5",
-    network: "x",
-    publishedAt: "3d ago",
-    daysAgo: 3,
-    topic: "Pricing",
-    excerpt:
-      "Your pricing page is a trust test, not a math problem. Stop optimizing the number. Start optimizing the doubt.",
-    perfBadge: "Top 12%",
-    vsAvg: 1.9,
-    engagementRate: 4.2,
-    impressions: 18400,
-    reactions: 610,
-    comments: 33,
-    shares: 88,
-    metricLine: "1.9× your average engagement · 610 likes · 88 reposts",
-    whyItWorked: "a reframing one-liner that flips a common assumption in the first breath",
-    hashtags: ["Pricing", "SaaS"],
-  },
-  {
-    id: "top-6",
-    network: "instagram",
-    publishedAt: "48d ago",
-    daysAgo: 48,
-    topic: "Templates",
-    excerpt: "The 3 content templates we reuse every single week. Steal them — swipe through and save the last one.",
-    perfBadge: "Top 15%",
-    vsAvg: 1.6,
-    engagementRate: 5.3,
-    impressions: 22100,
-    reactions: 1480,
-    comments: 41,
-    saves: 198,
-    metricLine: "1.6× your average engagement · 1,480 likes · 198 saves",
-    whyItWorked: "a numbered, steal-this promise with instant, save-worthy utility",
-    hashtags: ["Templates", "Content"],
-  },
-  {
-    id: "top-7",
-    network: "facebook",
-    publishedAt: "26d ago",
-    daysAgo: 26,
-    topic: "Community",
-    excerpt:
-      "We asked our community one question and got 200 replies in a day. Here's the question — and why it worked.",
-    perfBadge: "Top 7%",
-    vsAvg: 2.3,
-    engagementRate: 4.9,
-    impressions: 31700,
-    reactions: 1120,
-    comments: 210,
-    shares: 64,
-    metricLine: "2.3× your average engagement · 1,120 reactions · 210 comments",
-    whyItWorked: "a curiosity gap plus social proof packed into the first line",
-    hashtags: ["Community", "Engagement"],
-  },
-  {
-    id: "top-8",
-    network: "linkedin",
-    publishedAt: "60d ago",
-    daysAgo: 60,
-    topic: "Remote work",
-    excerpt:
-      "Remote work didn't kill culture. Bad meetings did. We cut meetings by 40% and shipped faster. Here's the system.",
-    perfBadge: "Top 18%",
-    vsAvg: 1.4,
-    engagementRate: 3.8,
-    impressions: 24500,
-    reactions: 720,
-    comments: 38,
-    shares: 22,
-    metricLine: "1.4× your average engagement · 720 reactions · 38 comments",
-    whyItWorked: "a myth-bust followed immediately by a concrete number",
-    hashtags: ["RemoteWork", "Productivity"],
-  },
-  {
-    id: "top-9",
-    network: "tiktok",
-    publishedAt: "8d ago",
-    daysAgo: 8,
-    topic: "Demo",
-    excerpt: "POV: you draft a week of content in the time it takes to drink your coffee ☕",
-    perfBadge: "Top 4%",
-    vsAvg: 3.0,
-    engagementRate: 9.1,
-    impressions: 47300,
-    reactions: 3120,
-    comments: 88,
-    shares: 142,
-    metricLine: "3.0× your average engagement · 3,120 likes · 142 shares",
-    whyItWorked: "a relatable POV hook with a fast, visual payoff",
-    hashtags: ["ContentCreator", "Productivity"],
-  },
-  {
-    id: "top-10",
-    network: "x",
-    publishedAt: "40d ago",
-    daysAgo: 40,
-    topic: "Growth",
-    excerpt:
-      "Growth isn't a hack. It's 100 boring things done consistently. Here are the 10 that moved the needle most for us.",
-    perfBadge: "Top 14%",
-    vsAvg: 1.7,
-    engagementRate: 4.5,
-    impressions: 20800,
-    reactions: 690,
-    comments: 29,
-    shares: 96,
-    metricLine: "1.7× your average engagement · 690 likes · 96 reposts",
-    whyItWorked: "a contrarian opener that resolves into a concrete listicle payoff",
-    hashtags: ["Growth", "Marketing"],
-  },
+// ~9 winners per connected profile (LinkedIn / X / Instagram / Facebook), so
+// picking any profile in the repurposing flow surfaces a full board. Each
+// network's list is authored best-first; buildTopPosts() stamps a descending
+// performance ramp (vsAvg / badge / engagement / reach / recency) onto them so
+// the default "Performance" sort reads as a clean ranking. The three winners
+// with handcrafted repurpose copy keep the ids top-li-1 / top-x-1 / top-ig-1
+// (see ANGLE_COPY in top-posts-flow.js).
+const TOP_POST_CONTENT = {
+  linkedin: [
+    {
+      topic: "Onboarding",
+      excerpt:
+        "We deleted our entire onboarding checklist. Activation went up 18%. Here's the counterintuitive reason fewer steps converted more people.",
+      hashtags: ["SaaS", "Onboarding"],
+      why: "a contrarian hook backed by one concrete number, then a promise to explain the why",
+    },
+    {
+      topic: "Hiring",
+      excerpt:
+        "We stopped asking for cover letters. Best hiring decision we made all year. Here's the one question we ask instead.",
+      hashtags: ["Hiring", "Culture"],
+      why: "a bold policy change stated as a result first, then the practical how",
+    },
+    {
+      topic: "Leadership",
+      excerpt:
+        "The best managers I've worked with did one thing relentlessly: they made decisions reversible. Here's how that quietly doubles a team's speed.",
+      hashtags: ["Leadership", "Management"],
+    },
+    {
+      topic: "Product",
+      excerpt:
+        "We killed our most-requested feature. Churn dropped. Turns out 'most requested' and 'most valuable' are almost never the same list.",
+      hashtags: ["Product", "SaaS"],
+    },
+    {
+      topic: "Careers",
+      excerpt:
+        "Nobody gets promoted for being busy. They get promoted for removing work. A short take on doing less, better.",
+      hashtags: ["Careers", "Productivity"],
+    },
+    {
+      topic: "Culture",
+      excerpt:
+        "We published every salary band internally. It was terrifying. It was also the single biggest trust unlock we've ever done.",
+      hashtags: ["Culture", "Transparency"],
+    },
+    {
+      topic: "Remote work",
+      excerpt:
+        "Remote work didn't kill culture. Bad meetings did. We cut meetings by 40% and shipped faster. Here's the system.",
+      hashtags: ["RemoteWork", "Productivity"],
+      why: "a myth-bust followed immediately by a concrete number",
+    },
+    {
+      topic: "Sales",
+      excerpt:
+        "Our best sales month came from saying no to three deals. Focus isn't a buzzword — it's a pipeline strategy.",
+      hashtags: ["Sales", "Strategy"],
+    },
+    {
+      topic: "Strategy",
+      excerpt:
+        "Your strategy isn't a deck. It's what you say no to on a random Tuesday. Everything else is decoration.",
+      hashtags: ["Strategy", "Leadership"],
+    },
+  ],
+  x: [
+    {
+      topic: "AI tooling",
+      excerpt:
+        "Most “AI content tools” just autocomplete. The ones that win do the boring part: they remember your brand voice across every post. That's the whole game.",
+      hashtags: ["AI", "ContentMarketing"],
+      why: "a sharp category take that names the real problem, ending on a quotable one-liner",
+    },
+    {
+      topic: "Marketing",
+      excerpt:
+        "Nobody shares your product. They share how it makes them look. Build for the screenshot, not the spec sheet.",
+      hashtags: ["Marketing", "Brand"],
+    },
+    {
+      topic: "Pricing",
+      excerpt:
+        "Your pricing page is a trust test, not a math problem. Stop optimizing the number. Start optimizing the doubt.",
+      hashtags: ["Pricing", "SaaS"],
+      why: "a reframing one-liner that flips a common assumption in the first breath",
+    },
+    {
+      topic: "Writing",
+      excerpt: "Cut your first sentence. It's a warm-up. Your real hook is sentence two — every single time.",
+      hashtags: ["Writing", "Copywriting"],
+    },
+    {
+      topic: "Growth",
+      excerpt:
+        "Growth isn't a hack. It's 100 boring things done consistently. Here are the 10 that moved the needle most for us.",
+      hashtags: ["Growth", "Marketing"],
+      why: "a contrarian opener that resolves into a concrete listicle payoff",
+    },
+    {
+      topic: "Startups",
+      excerpt: "You don't have a marketing problem. You have a 'nobody can explain what you do in one line' problem.",
+      hashtags: ["Startups", "Positioning"],
+    },
+    {
+      topic: "Founders",
+      excerpt: "The moat isn't the feature. It's the four years of unglamorous decisions nobody else wants to copy.",
+      hashtags: ["Founders", "Moats"],
+    },
+    {
+      topic: "Productivity",
+      excerpt: "Calendars are where priorities go to die. If it actually matters, it's a project — not a meeting.",
+      hashtags: ["Productivity", "Focus"],
+    },
+    {
+      topic: "Content",
+      excerpt: "Post the thing you're slightly afraid to post. That's the one that works. The safe one is invisible.",
+      hashtags: ["Content", "CreatorEconomy"],
+    },
+  ],
+  instagram: [
+    {
+      topic: "Behind the scenes",
+      excerpt:
+        "Behind the scenes: how our 4-person team ships a week of social content in one afternoon. Swipe for the exact workflow →",
+      hashtags: ["BehindTheScenes", "Workflow"],
+      why: "a behind-the-scenes promise plus a save-worthy, step-by-step payoff",
+    },
+    {
+      topic: "Hooks",
+      excerpt: "5 hooks that stopped the scroll last month. Save this before your next post →",
+      hashtags: ["ContentTips", "Hooks"],
+    },
+    {
+      topic: "Templates",
+      excerpt: "The 3 content templates we reuse every single week. Steal them — swipe through and save the last one.",
+      hashtags: ["Templates", "Content"],
+      why: "a numbered, steal-this promise with instant, save-worthy utility",
+    },
+    {
+      topic: "Workflow",
+      excerpt: "Our whole content system fits on one screen. Screenshot slide 4 — that's the part everyone asks about.",
+      hashtags: ["Workflow", "Systems"],
+    },
+    {
+      topic: "Carousel",
+      excerpt: "How to turn one blog post into 10 posts. A carousel you'll actually come back to — save it.",
+      hashtags: ["Repurposing", "Carousel"],
+    },
+    {
+      topic: "Reels",
+      excerpt: "The 6-second intro formula our Reels use. Copy it word for word →",
+      hashtags: ["Reels", "VideoTips"],
+    },
+    {
+      topic: "Design",
+      excerpt: "Same photo, three edits, three completely different vibes. Which one's your brand? Swipe →",
+      hashtags: ["Design", "BrandAesthetic"],
+    },
+    {
+      topic: "Grid",
+      excerpt: "Your grid is your first impression. 4 tweaks that make a feed look 'expensive'. Swipe →",
+      hashtags: ["Aesthetic", "Branding"],
+    },
+    {
+      topic: "Community",
+      excerpt:
+        "We reposted our community's words for a week and engagement doubled. Here's the permission-to-repost script →",
+      hashtags: ["Community", "UGC"],
+    },
+  ],
+  facebook: [
+    {
+      topic: "Community",
+      excerpt:
+        "We asked our community one question and got 200 replies in a day. Here's the question — and why it worked.",
+      hashtags: ["Community", "Engagement"],
+      why: "a curiosity gap plus social proof packed into the first line",
+    },
+    {
+      topic: "Story",
+      excerpt:
+        "A customer emailed us at 2am, furious. What we did next turned them into our loudest advocate. The full story 👇",
+      hashtags: ["CustomerStory", "Support"],
+    },
+    {
+      topic: "Event",
+      excerpt:
+        "300 of you showed up to our first live session. Here's everything we learned about what this community actually wants.",
+      hashtags: ["Community", "Events"],
+    },
+    {
+      topic: "Announcement",
+      excerpt:
+        "We're making our most-loved guide completely free — no email gate. Here's why 'give it away' is good business.",
+      hashtags: ["Announcement", "Content"],
+    },
+    {
+      topic: "Milestone",
+      excerpt:
+        "10 years ago this was a spreadsheet and a dream. Today it's a team of 40. A thank-you to everyone who bet early.",
+      hashtags: ["Milestone", "Gratitude"],
+    },
+    {
+      topic: "Poll",
+      excerpt:
+        "Quick one for the group: what's the ONE tool you'd never give up? We'll compile the top answers into a guide.",
+      hashtags: ["Poll", "Community"],
+    },
+    {
+      topic: "Tips",
+      excerpt:
+        "5 questions every small team should ask before hiring their first marketer. Comment 'guide' and we'll send it over.",
+      hashtags: ["SmallBusiness", "Marketing"],
+    },
+    {
+      topic: "Growth",
+      excerpt:
+        "We just passed 50,000 of you here. To celebrate, we're answering every question you drop below for the next 24 hours.",
+      hashtags: ["Community", "AMA"],
+    },
+    {
+      topic: "Discussion",
+      excerpt:
+        "Hot take: most 'engagement' advice makes pages boring. Here's what we did instead — and the reactions surprised us.",
+      hashtags: ["Engagement", "SocialMedia"],
+    },
+  ],
+};
+
+// Descending performance ramp applied per network (best-first). Nine tiers so
+// each profile fills a board; picking-order = performance.
+const TOP_POST_RAMP = [
+  { vsAvg: 4.3, badge: "Top 2%", eng: 8.4, imp: 53000, days: 4 },
+  { vsAvg: 3.6, badge: "Top 4%", eng: 7.0, imp: 45000, days: 9 },
+  { vsAvg: 3.0, badge: "Top 6%", eng: 6.2, imp: 39000, days: 15 },
+  { vsAvg: 2.6, badge: "Top 9%", eng: 5.5, imp: 34000, days: 21 },
+  { vsAvg: 2.2, badge: "Top 12%", eng: 4.9, imp: 29000, days: 27 },
+  { vsAvg: 1.9, badge: "Top 15%", eng: 4.3, imp: 25000, days: 34 },
+  { vsAvg: 1.6, badge: "Top 18%", eng: 3.8, imp: 21000, days: 41 },
+  { vsAvg: 1.4, badge: "Top 23%", eng: 3.4, imp: 18000, days: 50 },
+  { vsAvg: 1.2, badge: "Top 28%", eng: 3.0, imp: 15000, days: 61 },
 ];
+
+// Decorrelate the metrics: each post takes its vsAvg/badge from the ramp by its
+// own index (so the default "Performance" sort reads 4.3→1.2), but its
+// engagement %, reach, and recency are pulled from DIFFERENT ramp rows via these
+// permutations. Without this every metric is rank-aligned and all four sorts
+// return the same order (i.e. sorting looks broken). Each is a permutation of 0-8.
+const TOP_POST_ENG_ORDER = [2, 6, 0, 8, 1, 5, 3, 7, 4];
+const TOP_POST_REACH_ORDER = [4, 1, 7, 0, 8, 3, 6, 2, 5];
+const TOP_POST_DAYS_ORDER = [6, 3, 8, 1, 4, 0, 7, 5, 2];
+
+const TOP_POST_ID_ABBR = { linkedin: "li", x: "x", instagram: "ig", facebook: "fb" };
+
+// Media type per winner — a post can be a video, an image, or plain text. Which
+// one shapes how it's repurposed, so the winner cards surface it as a preview
+// tile. Assigned by a per-network pattern (index-aligned to TOP_POST_CONTENT) so
+// each profile's board shows a realistic mix rather than authoring it per item.
+// IG skews visual; X/LinkedIn broader.
+const TOP_POST_MEDIA_PATTERN = {
+  linkedin: ["image", "text", "video", "text", "image", "text", "video", "text", "image"],
+  x: ["text", "text", "image", "text", "video", "text", "text", "image", "text"],
+  instagram: ["image", "video", "image", "video", "image", "image", "video", "image", "video"],
+  facebook: ["image", "text", "image", "video", "text", "image", "text", "video", "text"],
+};
+
+// Curated stock photos (Unsplash direct URLs — business / tech / marketing) used
+// as the poster for image + video winners. Cropped to 16:9 to match the tile. No
+// local post-image assets exist in the proto, so these load over the network; the
+// card falls back to a grey tile if one is blocked.
+const TOP_POST_IMAGES = [
+  "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=640&h=360&q=70",
+  "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=640&h=360&q=70",
+  "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=640&h=360&q=70",
+  "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=640&h=360&q=70",
+  "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=640&h=360&q=70",
+  "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=640&h=360&q=70",
+];
+
+// Plausible durations (seconds) cycled onto video winners → "M:SS" duration pill.
+const TOP_POST_DURATIONS = [47, 92, 128, 33, 61];
+
+// Absolute publish date for a post given its recency (daysAgo). Derived from a
+// FIXED base ("today" = 2 Jul 2026) so the mock reads consistently regardless of
+// the real clock — e.g. daysAgo 4 → "Jun 28, 2026". Shown on the winner cards
+// alongside the relative "Nd ago" age.
+const TOP_POST_TODAY = new Date(2026, 6, 2);
+const TOP_POST_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function topPostDate(daysAgo) {
+  const d = new Date(TOP_POST_TODAY);
+  d.setDate(d.getDate() - daysAgo);
+  return `${TOP_POST_MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+
+function buildTopPosts() {
+  const out = [];
+  // Running counters so image/video winners cycle through the stock pool +
+  // durations across the whole set (not per network) for variety.
+  let imgIdx = 0;
+  let durIdx = 0;
+  for (const [network, posts] of Object.entries(TOP_POST_CONTENT)) {
+    posts.forEach((c, i) => {
+      const last = TOP_POST_RAMP.length - 1;
+      // vsAvg / badge track the post's own rank (Performance = 4.3→1.2), but the
+      // other metrics come from different ramp rows so each sort reorders.
+      const perf = TOP_POST_RAMP[i] || TOP_POST_RAMP[last];
+      const eng = (TOP_POST_RAMP[TOP_POST_ENG_ORDER[i] ?? i] || TOP_POST_RAMP[last]).eng;
+      const imp = (TOP_POST_RAMP[TOP_POST_REACH_ORDER[i] ?? i] || TOP_POST_RAMP[last]).imp;
+      const days = (TOP_POST_RAMP[TOP_POST_DAYS_ORDER[i] ?? i] || TOP_POST_RAMP[last]).days;
+      const reactions = Math.round(((imp * eng) / 100) * 0.78);
+      const comments = Math.round(reactions * 0.09);
+      const secondary = Math.round(reactions * 0.14); // shares (or saves on IG)
+      const usesSaves = network === "instagram";
+      const mediaType = TOP_POST_MEDIA_PATTERN[network]?.[i] || "text";
+      const post = {
+        id: `top-${TOP_POST_ID_ABBR[network]}-${i + 1}`,
+        network,
+        publishedAt: `${days}d ago`,
+        publishedOn: topPostDate(days),
+        daysAgo: days,
+        topic: c.topic,
+        excerpt: c.excerpt,
+        perfBadge: perf.badge,
+        vsAvg: perf.vsAvg,
+        engagementRate: eng,
+        impressions: imp,
+        // Views (total) run above Reach (unique accounts) — the two metrics the
+        // winner cards surface side by side.
+        views: Math.round(imp * 1.7),
+        reactions,
+        comments,
+        metricLine: `${perf.vsAvg}× your average engagement · ${reactions.toLocaleString()} reactions · ${comments} comments`,
+        whyItWorked: c.why || "a strong hook backed by a concrete result",
+        hashtags: c.hashtags,
+        // Media type drives the card's preview tile (video / image / text).
+        mediaType,
+      };
+      if (usesSaves) post.saves = secondary;
+      else post.shares = secondary;
+      // Image + video winners carry a poster image; video also a duration.
+      if (mediaType === "image" || mediaType === "video") {
+        post.image = TOP_POST_IMAGES[imgIdx++ % TOP_POST_IMAGES.length];
+      }
+      if (mediaType === "video") {
+        post.mediaDuration = TOP_POST_DURATIONS[durIdx++ % TOP_POST_DURATIONS.length];
+      }
+      out.push(post);
+    });
+  }
+  return out;
+}
+
+export const topPosts = buildTopPosts();
 
 // Per-session source seed. Each conversation owns its own sources — no
 // cross-session reuse. Listed by sessionId for clarity; sources-stream.js
