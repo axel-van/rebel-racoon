@@ -480,6 +480,8 @@ export function echoRepurposePicks(sessionId, postIds) {
       shares: post.shares,
       saves: post.saves,
       mediaType: post.mediaType,
+      image: post.image,
+      mediaDuration: post.mediaDuration,
     });
   }
   return posts.map((p) => p.id);

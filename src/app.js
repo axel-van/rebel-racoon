@@ -1,7 +1,7 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=9";
 import { initArchieLoader } from "./archie-loader.js?v=2";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=168";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=169";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=142";
 import { init as initRightPanel } from "./components/right-panel.js?v=267";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=50";
@@ -23,15 +23,15 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=102";
 import { renderDashboard } from "./screens/dashboard.js?v=48";
-import { renderSession } from "./screens/session.js?v=372";
-import { renderIdeas } from "./screens/ideas.js?v=123";
-import { renderContexts } from "./screens/contexts.js?v=132";
-import { renderConnectors } from "./screens/connectors.js?v=71";
+import { renderSession } from "./screens/session.js?v=373";
+import { renderIdeas } from "./screens/ideas.js?v=124";
+import { renderContexts } from "./screens/contexts.js?v=133";
+import { renderConnectors } from "./screens/connectors.js?v=72";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
 import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=127";
-import { renderPlaybook } from "./screens/playbook.js?v=136";
+import { renderPlaybook } from "./screens/playbook.js?v=137";
 import * as __capAddSource from "./components/add-source-modal.js?v=54";
 import * as __capGenImage from "./components/generate-image-modal.js?v=33";
 import * as __capBug from "./components/bug-report-modal.js?v=24";

@@ -444,16 +444,84 @@
 }
 
 /* ── Conversation echo (picked-post preview in the thread) ───────── */
+/* A compact, chat-sized take on the board card: media thumbnail + body, one row
+   tall, right-aligned as a user turn. */
 .top-post-echo {
+  display: flex;
+  gap: var(--ref-spacing-sm);
+  align-self: flex-end;
+  max-width: 440px;
+  padding: var(--ref-spacing-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+  background: var(--ref-color-white);
+}
+
+/* Media thumbnail — fixed width, stretches to the card height. Mirrors the board
+   tile (image / video poster + play + duration / text glyph) at chat scale. */
+.top-post-echo__thumb {
+  position: relative;
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 92px;
+  min-height: 68px;
+  border-radius: var(--ref-border-radius-md);
+  overflow: hidden;
+  background: var(--ref-color-grey-05);
+}
+
+.top-post-echo__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.top-post-echo__thumb--text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ref-color-grey-60);
+  font-size: 22px;
+  background: linear-gradient(155deg, var(--ref-color-grey-10), var(--ref-color-grey-05));
+}
+
+.top-post-echo__thumb-play {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--ref-color-grey-150);
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.top-post-echo__thumb-dur {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  padding: 1px 5px;
+  border-radius: var(--ref-border-radius-sm);
+  background: rgba(17, 24, 39, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--ref-color-white);
+  font-size: 10px;
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  font-variant-numeric: tabular-nums;
+}
+
+.top-post-echo__body {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xxs);
-  align-self: flex-end;
-  max-width: 420px;
-  padding: var(--ref-spacing-sm);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-card, 12px);
-  background: var(--ref-color-white);
+  min-width: 0;
 }
 
 .top-post-echo__head {
@@ -465,17 +533,7 @@
 }
 
 .top-post-echo__head i {
-  font-size: 18px;
-}
-
-.top-post-echo__net {
-  margin-right: auto;
-}
-
-/* Post-type glyph on the right of the echo head — a quiet format indicator. */
-.top-post-echo__head .top-post-echo__type {
-  font-size: 15px;
-  color: var(--sys-text-color-light);
+  font-size: 16px;
 }
 
 .top-post-echo__excerpt {

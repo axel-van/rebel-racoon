@@ -120,10 +120,6 @@ function postPermalink(network, id) {
   return fn ? fn(id) : "#";
 }
 
-// Post-type glyphs — used on the echo head so a picked post still signals its
-// kind without the full preview tile.
-const MEDIA_ICON = { video: "ap-icon-play_fill", image: "ap-icon-image", text: "ap-icon-file--text" };
-
 // Seconds → "M:SS" for the video duration pill.
 function fmtDuration(s) {
   const sec = Math.max(0, Math.round(s || 0));
@@ -234,21 +230,38 @@ function renderTopPostCard(post) {
 // chosen post stays visible as a real preview rather than a truncated text echo.
 export function renderTopPostEcho(post) {
   if (!post) return "";
+  // A compact, chat-sized take on the board card: a small media thumbnail
+  // (image / video poster + play + duration / text glyph) beside the network,
+  // excerpt and a trimmed stat line. Same visual language, one row tall.
+  const type = post.mediaType || "text";
+  let thumb;
+  if (type === "text") {
+    thumb = `<span class="top-post-echo__thumb top-post-echo__thumb--text"><i class="ap-icon-file--text" aria-hidden="true"></i></span>`;
+  } else {
+    const overlay =
+      type === "video"
+        ? `<span class="top-post-echo__thumb-play" aria-hidden="true"><i class="ap-icon-play_fill"></i></span>${
+            post.mediaDuration ? `<span class="top-post-echo__thumb-dur">${fmtDuration(post.mediaDuration)}</span>` : ""
+          }`
+        : "";
+    thumb = `<span class="top-post-echo__thumb">${
+      post.image ? `<img src="${post.image}" alt="" loading="lazy" />` : ""
+    }${overlay}</span>`;
+  }
   return html`
     <div class="top-post-echo">
-      <span class="top-post-echo__head">
-        <i class="${iconFor(post.network)}" aria-hidden="true"></i>
-        <span class="top-post-echo__net">${labelFor(post.network)}</span>
-        <i class="${MEDIA_ICON[post.mediaType] || MEDIA_ICON.text} top-post-echo__type" aria-hidden="true"></i>
-      </span>
-      <span class="top-post-echo__excerpt">${post.excerpt}</span>
-      <span class="top-post-echo__stats">
-        <b class="top-post-echo__avg">${post.vsAvg}×</b> vs avg · <b>${formatCompact(post.views)}</b> views ·
-        <b>${formatCompact(post.impressions)}</b> reach · <b>${formatCompact(post.reactions)}</b> reactions ·
-        <b>${formatCompact(post.saves != null ? post.saves : post.shares)}</b> ${post.saves != null
-          ? "saves"
-          : "shares"}
-      </span>
+      ${raw(thumb)}
+      <div class="top-post-echo__body">
+        <span class="top-post-echo__head">
+          <i class="${iconFor(post.network)}" aria-hidden="true"></i>
+          <span class="top-post-echo__net">${labelFor(post.network)}</span>
+        </span>
+        <span class="top-post-echo__excerpt">${post.excerpt}</span>
+        <span class="top-post-echo__stats">
+          <b class="top-post-echo__avg">${post.vsAvg}×</b> vs avg · <b>${formatCompact(post.views)}</b> views ·
+          <b>${formatCompact(post.impressions)}</b> reach
+        </span>
+      </div>
     </div>
   `;
 }

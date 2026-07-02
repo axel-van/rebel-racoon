@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=168";
+import { renderTopbar } from "../components/topbar.js?v=169";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -48,8 +48,8 @@ import {
 } from "../posts-store.js?v=31";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=43";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=35";
-import * as topPostsFlow from "../top-posts-flow.js?v=44";
-import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=36";
+import * as topPostsFlow from "../top-posts-flow.js?v=45";
+import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=37";
 import * as sidebarWizard from "../sidebar-wizard.js?v=47";
 import * as inlineQuestion from "../inline-question.js?v=41";
 import * as clipStudio from "../clip-studio.js?v=17";
@@ -109,7 +109,7 @@ import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=13";
 import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=18";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=23";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=24";
 // Pure thread-turn renderers — shared with the component handoff gallery so
 // the previews there never drift from the app (handoff/components.html).
 import {
