@@ -56,18 +56,15 @@
   outline: none;
 }
 
-.app-sidebar__brand-logo {
-  display: inline-flex;
-  align-items: center;
-}
-
-/* The full logo lockup (mark + wordmark). Inherits the brand colour via
-   `currentColor`, so it goes blue on hover with the rest of the button. */
-.app-sidebar__brand-logo-svg {
-  display: block;
-  height: 16px;
-  width: auto;
-  fill: currentColor;
+/* Wordmark title. Inherits the brand button's h3 typography and colour
+   (goes blue on hover with the rest of the button); reset the default
+   heading margins so it sits flush in the flex row. */
+.app-sidebar__brand-title {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: inherit;
+  color: inherit;
 }
 
 /* BETA chip — compact pill with the mermaid AI gradient so the brand
