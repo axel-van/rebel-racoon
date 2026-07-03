@@ -29,11 +29,11 @@ import {
   postDraftResult,
   postTopPostPickTurn,
   postTopPostsWidget,
-} from "./assistant.js?v=54";
+} from "./assistant.js?v=55";
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=6";
 import { addPostDraft } from "./posts-store.js?v=31";
 import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=22";
-import { SORTS } from "./components/top-post-card.js?v=38";
+import { SORTS } from "./components/top-post-card.js?v=39";
 import { isFlagOn } from "./feature-flags.js?v=9";
 import { showToast } from "./components/toast.js?v=20";
 import * as inlineQuestion from "./inline-question.js?v=43";

@@ -291,23 +291,22 @@ export function renderTopPostSelectRow(post, { selected = false, disabled = fals
   `;
 }
 
-// The widget card — header + selectable rows + a "Continue with N posts" CTA.
-// When `answered`, rows freeze and the footer drops (a static record of the pick).
+// The widget card — header + single-select rows + a "Reuse this post" CTA.
+// SINGLE-select (pick one winner, like the studio's per-card Repurpose). When
+// `answered`, rows freeze and the footer drops (a static record of the pick).
 export function renderTopPostsWidget({ network, posts = [], selected = [], answered = false } = {}) {
   const sel = new Set(selected);
   const rows = posts.map((p) => renderTopPostSelectRow(p, { selected: sel.has(p.id), disabled: answered })).join("");
-  const count = sel.size;
   const footer = answered
     ? ""
     : `<div class="top-posts-widget__foot">
-        <span class="top-posts-widget__count muted">${count} selected</span>
         <button
           type="button"
           class="ap-button primary blue top-posts-widget__cta"
           data-topposts-widget-confirm
-          ${count ? "" : "disabled"}
+          ${sel.size ? "" : "disabled"}
         >
-          <span>${count ? `Continue with ${count} post${count === 1 ? "" : "s"}` : "Continue"}</span>
+          <span>Reuse this post</span>
         </button>
       </div>`;
   return html`
@@ -317,7 +316,7 @@ export function renderTopPostsWidget({ network, posts = [], selected = [], answe
           <i class="${iconFor(network)}" aria-hidden="true"></i>
           Your top ${labelFor(network)} posts
         </span>
-        <span class="top-posts-widget__hint muted">Pick one or more</span>
+        <span class="top-posts-widget__hint muted">Pick one</span>
       </div>
       <div class="top-posts-widget__list">${raw(rows)}</div>
       ${raw(footer)}

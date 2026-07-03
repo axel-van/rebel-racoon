@@ -653,13 +653,9 @@
 .top-posts-widget__foot {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--ref-spacing-sm);
   padding-top: var(--ref-spacing-xs);
-}
-.top-posts-widget__count {
-  font-size: var(--sys-text-style-caption-size);
-  font-variant-numeric: tabular-nums;
 }
 .top-posts-widget__cta {
   flex: 0 0 auto;

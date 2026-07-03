@@ -463,21 +463,17 @@ function activeTopPostsWidget(sessionId) {
   return null;
 }
 
-// Toggle a post in the active top-posts widget's selection. Returns whether the
-// post is now selected. Deliberately does NOT notify() — the caller updates the
-// clicked row in place (like the multi-select Quickpicker) so selecting several
-// posts stays smooth: no whole-thread re-render, no image reload, no scroll
-// reset inside the widget list.
+// Pick a post in the active top-posts widget. SINGLE-select: the clicked post
+// becomes the sole selection (clicking the selected one clears it). Returns
+// whether the post is now selected. Deliberately does NOT notify() — the caller
+// updates the rows in place (like the Quickpicker) so there's no whole-thread
+// re-render, image reload, or scroll reset inside the widget list.
 export function toggleTopPostsWidgetPick(sessionId, postId) {
   const msg = activeTopPostsWidget(sessionId);
   if (!msg) return false;
-  const i = msg.selected.indexOf(postId);
-  if (i >= 0) {
-    msg.selected.splice(i, 1);
-    return false;
-  }
-  msg.selected.push(postId);
-  return true;
+  const alreadyOnly = msg.selected.length === 1 && msg.selected[0] === postId;
+  msg.selected = alreadyOnly ? [] : [postId];
+  return !alreadyOnly;
 }
 
 // Freeze the active top-posts widget (status → "answered", disabling further

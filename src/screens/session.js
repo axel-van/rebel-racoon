@@ -31,7 +31,7 @@ import {
   markConnectPromptResolved,
   toggleTopPostsWidgetPick,
   answerTopPostsWidget,
-} from "../assistant.js?v=54";
+} from "../assistant.js?v=55";
 import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
 import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=42";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=31";
@@ -51,7 +51,7 @@ import {
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=43";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=35";
 import * as topPostsFlow from "../top-posts-flow.js?v=52";
-import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=38";
+import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=39";
 import { getTopPost } from "../top-posts-store.js?v=6";
 import * as sidebarWizard from "../sidebar-wizard.js?v=47";
 import * as inlineQuestion from "../inline-question.js?v=43";
@@ -107,7 +107,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=268";
+} from "../components/right-panel.js?v=269";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=13";
@@ -4475,24 +4475,23 @@ function bindSession(root, session) {
         inlineQuestion.submitSingle(session.id);
         return;
       }
-      // Inline widget (Add-menu flow) — toggle a post in the in-chat selector.
-      // Update the clicked row + footer IN PLACE (no whole-thread re-render) so
-      // multi-select stays smooth — matches the multi-select Quickpicker.
+      // Inline widget (Add-menu flow) — pick a post in the in-chat selector.
+      // SINGLE-select: clear every row, then mark the clicked one. Done IN PLACE
+      // (no whole-thread re-render) so there's no image reload / scroll reset.
       const widgetToggle = event.target.closest("[data-topposts-widget-toggle]");
       if (widgetToggle && !widgetToggle.disabled) {
         const nowSelected = toggleTopPostsWidgetPick(session.id, widgetToggle.dataset.toppostsWidgetToggle);
-        widgetToggle.classList.toggle("is-selected", nowSelected);
-        widgetToggle.setAttribute("aria-pressed", nowSelected ? "true" : "false");
         const widget = widgetToggle.closest("[data-topposts-widget]");
-        const count = widget ? widget.querySelectorAll("[data-topposts-widget-toggle].is-selected").length : 0;
-        const countEl = widget?.querySelector(".top-posts-widget__count");
-        if (countEl) countEl.textContent = `${count} selected`;
-        const cta = widget?.querySelector("[data-topposts-widget-confirm]");
-        if (cta) {
-          cta.disabled = count === 0;
-          const label = cta.querySelector("span");
-          if (label) label.textContent = count ? `Continue with ${count} post${count === 1 ? "" : "s"}` : "Continue";
+        widget?.querySelectorAll("[data-topposts-widget-toggle]").forEach((el) => {
+          el.classList.remove("is-selected");
+          el.setAttribute("aria-pressed", "false");
+        });
+        if (nowSelected) {
+          widgetToggle.classList.add("is-selected");
+          widgetToggle.setAttribute("aria-pressed", "true");
         }
+        const cta = widget?.querySelector("[data-topposts-widget-confirm]");
+        if (cta) cta.disabled = !nowSelected;
         return;
       }
       // Inline widget — confirm the selection → freeze the widget, then hand off
