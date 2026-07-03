@@ -440,9 +440,15 @@ function startClipExtractionTicker(sessionId, sourceId, totalMs) {
       return;
     }
     const progress = Math.min(0.99, elapsed / totalMs);
+    const nextStage = clipStageFor(progress);
+    // Only repaint when the stage LABEL changes (≈4 times), not every 200ms.
+    // The thread repaint recreates the loader's animated SVG, so notifying every
+    // tick restarted its animation before it could complete a cycle (looked
+    // frozen). Progress is still tracked for any consumer that reads it.
+    const stageChanged = src.clipStage !== nextStage;
     src.clipProgress = progress;
-    src.clipStage = clipStageFor(progress);
-    notifySources(sessionId);
+    src.clipStage = nextStage;
+    if (stageChanged) notifySources(sessionId);
     setTimeout(tick, tickInterval);
   };
   setTimeout(tick, tickInterval);
