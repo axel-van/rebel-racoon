@@ -26,6 +26,7 @@ import { iconFor } from "../file-kinds.js?v=20";
 import { escapeText, escapeAttr } from "../utils.js?v=21";
 import { installMoreMenu } from "./more-menu.js?v=1";
 import { renderFeedbackThumbs, renderFeedbackPanel } from "./feedback-control.js?v=1";
+import { videoForClip } from "../clip-captions.js?v=5";
 
 function fmtTime(s) {
   if (!Number.isFinite(s) || s < 0) return "0:00";
@@ -51,7 +52,7 @@ installMoreMenu({
 
 export function renderClipCard(
   clip,
-  { sourceName = "", sourceKind = "Video", sessionId = null, whyOpen = false } = {},
+  { sourceName = "", sourceKind = "Video", sessionId = null, whyOpen = false, selected = false } = {},
 ) {
   const duration = fmtTime((clip.end || 0) - (clip.start || 0));
   const safeTitle = escapeText(clip.title || "Untitled clip");
@@ -100,8 +101,26 @@ export function renderClipCard(
     `
     : "";
 
+  // Selection checkbox — multi-select for the "Draft posts from N clips" bulk
+  // action. Toggles clipSelection in right-panel (data-clip-select handler),
+  // which repaints the list + footer CTA.
+  const selectBtn = sessionId
+    ? `
+      <button
+        type="button"
+        class="clip-card__select${selected ? " is-selected" : ""}"
+        data-clip-select="${escapeAttr(clip.id)}"
+        aria-pressed="${selected ? "true" : "false"}"
+        aria-label="${selected ? "Deselect clip" : "Select clip"}"
+      >
+        <i class="ap-icon-check" aria-hidden="true"></i>
+      </button>
+    `
+    : "";
+
   return `
-    <article class="rpanel-ideas__card clip-card" data-clip-id="${escapeAttr(clip.id)}">
+    <article class="rpanel-ideas__card clip-card${selected ? " is-selected" : ""}" data-clip-id="${escapeAttr(clip.id)}">
+      ${selectBtn}
       <button
         type="button"
         class="clip-card__thumb-btn"
@@ -109,6 +128,15 @@ export function renderClipCard(
         aria-label="Play clip: ${safeTitle}"
       >
         <span class="clip-card__thumb" style="background-image: ${thumbBackground(clip.hue)}">
+          <video
+            class="clip-card__thumb-video"
+            src="${escapeAttr(videoForClip(clip))}#t=${Math.max(0, Math.round(clip.start || 0))}"
+            preload="metadata"
+            muted
+            playsinline
+            tabindex="-1"
+            aria-hidden="true"
+          ></video>
           <span class="clip-card__thumb-play" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="26" height="26"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
           </span>

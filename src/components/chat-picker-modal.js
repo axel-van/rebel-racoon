@@ -13,13 +13,13 @@
 //   });
 
 import { recentSessions } from "../mocks.js?v=45";
-import { getSources } from "../sources-stream.js?v=44";
-import { getIdeas } from "../library.js?v=42";
+import { getSources } from "../sources-stream.js?v=45";
+import { getIdeas } from "../library.js?v=43";
 import { getPosts } from "../posts-store.js?v=31";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 
 const MODAL_ID = "chatPicker";
-import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "../screens/_analyse-common.js?v=50";
+import { renderPicker, bindWizardKeyboard, unbindWizardKeyboard } from "../screens/_analyse-common.js?v=54";
 
 let backdrop, modal, body;
 let initialized = false;

@@ -365,17 +365,20 @@
   padding: 0;
 }
 
+/* Lead icon container — the DS Quickpicker "Option" lead: a 32px grey-05
+   rounded square (radius-md) holding a small glyph, distinct from (and larger
+   than) the 28px shortcut badge. Matches the Figma component. */
 .session__assistant-wizard-bar .analyse__option-icon {
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  border-radius: var(--app-radius-sm);
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: var(--ref-border-radius-md);
   background: var(--ref-color-grey-05);
   color: var(--ref-color-grey-100);
 }
 
 .session__assistant-wizard-bar .analyse__option-icon > i {
-  font-size: var(--sys-icon-css-md);
+  font-size: var(--sys-icon-css-sm);
   line-height: 1;
 }
 

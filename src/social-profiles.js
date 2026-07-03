@@ -80,13 +80,14 @@ export function getConnectedProfiles() {
 // badge), so we lead with the handle and demote "Facebook · Page" to the
 // muted caption. Reused by both the onboarding profile step and the
 // in-session draft profile picker so the two stay identical.
-export function buildConnectedProfileItems() {
+// `requirePosts` (default true) is for the "analyse my top posts" flows: a
+// profile with no published history can't be analysed, so it's disabled with a
+// "No posts to analyze" note. Pass `requirePosts: false` when the profile is
+// only a DESTINATION (e.g. picking which accounts to draft clips for) — there
+// every connected account is a valid target regardless of post history.
+export function buildConnectedProfileItems({ requirePosts = true } = {}) {
   return getConnectedProfiles().map((p) => {
-    // A profile with no published posts can't be analysed — there's no
-    // history for Archie to learn the voice and format from. Keep the usual
-    // "Platform · Kind" caption and surface the limitation as a trailing
-    // indication on the right, with the row disabled.
-    const hasNoPosts = p.postCount === 0;
+    const hasNoPosts = requirePosts && p.postCount === 0;
     const captionParts = [];
     if (p.platformLabel) captionParts.push(p.platformLabel);
     if (p.kind) captionParts.push(p.kind);

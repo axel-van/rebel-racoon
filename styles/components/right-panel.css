@@ -906,23 +906,17 @@
   align-items: center;
 }
 
-/* Sticky footer with the multi-select Draft CTA. Sits at the bottom of
-   the panel body, above the panel border. Only renders when ≥ 1 clip
-   is selected. */
-.rpanel-outputs__footer {
-  position: sticky;
-  bottom: 0;
-  display: flex;
-  justify-content: stretch;
-  padding: var(--ref-spacing-sm);
-  background: var(--ref-color-white);
-  border-top: 1px solid var(--ref-color-grey-10);
-  box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.04);
+/* Clips bulk band — reuses the Drafts group-band chrome (select-all + count +
+   auto-width Draft / Delete actions) as a STICKY toolbar at the top of the
+   Clips list (inherits position:sticky/top:0/z-index from group-header). The
+   body's top padding is zeroed while the band is present so, when stuck, no
+   clip peeks through the scrollport padding above it; the negative margin
+   collapses the body's flex gap so the bar sits directly on the grid. */
+.rpanel-ideas__body:has(.rpanel-outputs__band) {
+  padding-top: 0;
 }
-
-.rpanel-outputs__footer .ap-button {
-  width: 100%;
-  justify-content: center;
+.rpanel-drafts__group-header.rpanel-outputs__band {
+  margin-bottom: calc(-1 * var(--ref-spacing-md));
 }
 
 /* Sources mode — list of attached sources for the active session. Sits

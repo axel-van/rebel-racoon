@@ -13,13 +13,13 @@
 // tones, contentStyle, objective, contentAction, ctaLinks, language, color,
 // suggestions, editingId, onComplete }.
 
-import * as inlineQuestion from "./inline-question.js?v=43";
+import * as inlineQuestion from "./inline-question.js?v=46";
 import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=55";
-import * as rightPanel from "./components/right-panel.js?v=269";
+import * as rightPanel from "./components/right-panel.js?v=277";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=31";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=23";
 import { connectors as connectorMocks } from "./mocks.js?v=45";
-import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=22";
+import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=23";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>

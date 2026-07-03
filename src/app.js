@@ -1,49 +1,49 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=9";
 import { initArchieLoader } from "./archie-loader.js?v=2";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=169";
-import { initSidebar, renderSidebar } from "./components/sidebar.js?v=142";
-import { init as initRightPanel } from "./components/right-panel.js?v=269";
-import { init as initScheduleModal } from "./components/schedule-modal.js?v=50";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=178";
+import { initSidebar, renderSidebar } from "./components/sidebar.js?v=150";
+import { init as initRightPanel } from "./components/right-panel.js?v=277";
+import { init as initScheduleModal } from "./components/schedule-modal.js?v=51";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=24";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
-import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=33";
-import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=47";
-import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=47";
-import { init as initAddSourceModal } from "./components/add-source-modal.js?v=54";
+import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=35";
+import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=49";
+import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=50";
+import { init as initAddSourceModal } from "./components/add-source-modal.js?v=55";
 import { init as initConnectorsModal } from "./components/connectors-modal.js?v=8";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
 import { init as initRenameModal } from "./components/rename-modal.js?v=2";
 import { init as initSaveFolderModal } from "./components/save-folder-modal.js?v=6";
-import { init as initAnalyzeProfilesModal } from "./components/analyze-profiles-modal.js?v=9";
+import { init as initAnalyzeProfilesModal } from "./components/analyze-profiles-modal.js?v=10";
 import { init as initFillDocumentModal } from "./components/fill-document-modal.js?v=5";
 import { init as initSearchModal } from "./components/search-modal.js?v=5";
 import {
   init as initConversationStatusCard,
   render as renderConversationStatusCard,
-} from "./components/conversation-status-card.js?v=102";
+} from "./components/conversation-status-card.js?v=110";
 import { renderDashboard } from "./screens/dashboard.js?v=48";
-import { renderSession } from "./screens/session.js?v=380";
-import { renderIdeas } from "./screens/ideas.js?v=124";
-import { renderContexts } from "./screens/contexts.js?v=133";
-import { renderConnectors } from "./screens/connectors.js?v=72";
+import { renderSession } from "./screens/session.js?v=389";
+import { renderIdeas } from "./screens/ideas.js?v=133";
+import { renderContexts } from "./screens/contexts.js?v=142";
+import { renderConnectors } from "./screens/connectors.js?v=81";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=127";
-import { renderPlaybook } from "./screens/playbook.js?v=137";
-import * as __capAddSource from "./components/add-source-modal.js?v=54";
-import * as __capGenImage from "./components/generate-image-modal.js?v=33";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=135";
+import { renderPlaybook } from "./screens/playbook.js?v=146";
+import * as __capAddSource from "./components/add-source-modal.js?v=55";
+import * as __capGenImage from "./components/generate-image-modal.js?v=35";
 import * as __capBug from "./components/bug-report-modal.js?v=24";
 import * as __capFeedback from "./components/feedback-modal.js?v=26";
-import * as __capChatPicker from "./components/chat-picker-modal.js?v=47";
+import * as __capChatPicker from "./components/chat-picker-modal.js?v=50";
 import * as __capSearch from "./components/search-modal.js?v=5";
 import {
   openDrafts as __capOpenDrafts,
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=269";
+} from "./components/right-panel.js?v=277";
 
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb

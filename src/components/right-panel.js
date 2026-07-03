@@ -13,35 +13,35 @@ import {
   attachImageToDraft,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=31";
-import { renderPostCard } from "./post-card.js?v=45";
-import { renderClipCard } from "./clip-card.js?v=8";
+import { renderPostCard } from "./post-card.js?v=47";
+import { renderClipCard } from "./clip-card.js?v=10";
 import { onFeedbackClick } from "./feedback-control.js?v=1";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
-import { open as openVideoClipsModal } from "./video-clips-modal.js?v=47";
-import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=140";
+import { open as openVideoClipsModal } from "./video-clips-modal.js?v=49";
+import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=150";
 import {
   getSources as getStreamSources,
   subscribeSources,
   updateSourceClips,
   removeSources,
   renameSource,
-} from "../sources-stream.js?v=44";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=54";
+} from "../sources-stream.js?v=45";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=55";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=25";
 import { askConnector } from "../connector-ask.js?v=5";
 import { renderConnectorLogo } from "../connectors-view.js?v=7";
 import { open as openConnectorsModal } from "./connectors-modal.js?v=8";
-import { addMention as addComposerMention } from "../composer-mentions.js?v=16";
+import { addMention as addComposerMention } from "../composer-mentions.js?v=17";
 import { iconFor } from "../file-kinds.js?v=20";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
-import { open as openScheduleModal } from "./schedule-modal.js?v=50";
-import { open as openGenerateImageModal } from "./generate-image-modal.js?v=33";
+import { open as openScheduleModal } from "./schedule-modal.js?v=51";
+import { open as openGenerateImageModal } from "./generate-image-modal.js?v=35";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
@@ -729,7 +729,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=380").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=389").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -919,7 +919,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=380").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=389").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -937,8 +937,60 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=380").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=389").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
+      });
+      return;
+    }
+    // Bulk delete — destructive, so gate behind the confirm modal (like the
+    // drafts section delete), then drop the selected clips from their sources
+    // with an Undo toast that restores each source's prior clips array.
+    if (event.target.closest("[data-rpanel-clips-delete]")) {
+      const sid = activeSessionId();
+      if (!sid) return;
+      const picked = collectAllClips().filter(({ clip }) => clipSelection.has(clip.id));
+      const count = picked.length;
+      if (count === 0) return;
+      const clipWord = count === 1 ? "clip" : "clips";
+      const idsBySource = new Map();
+      for (const { clip, sourceId } of picked) {
+        if (!idsBySource.has(sourceId)) idsBySource.set(sourceId, new Set());
+        idsBySource.get(sourceId).add(clip.id);
+      }
+      // Snapshot each affected source's full clips array so Undo restores order.
+      const snapshot = [...idsBySource.keys()].map((srcId) => {
+        const source = getStreamSources(sid).find((s) => s.id === srcId);
+        return { srcId, clips: source && Array.isArray(source.clips) ? [...source.clips] : [] };
+      });
+      openConfirmModal({
+        title: `Delete ${count} ${clipWord}?`,
+        body: `${count === 1 ? "This clip" : `These ${count} clips`} will be removed from the session. You can undo right after.`,
+        confirmLabel: `Delete ${count} ${clipWord}`,
+        danger: true,
+        onConfirm: () => {
+          for (const [srcId, ids] of idsBySource) {
+            const source = getStreamSources(sid).find((s) => s.id === srcId);
+            if (source && Array.isArray(source.clips)) {
+              updateSourceClips(
+                srcId,
+                source.clips.filter((c) => !ids.has(c.id)),
+              );
+            }
+          }
+          clipSelection = new Set();
+          renderPanel();
+          import("./toast.js?v=20").then(({ showToast }) => {
+            showToast(`${count} ${clipWord} deleted`, {
+              action: {
+                label: "Undo",
+                onClick: () => {
+                  for (const { srcId, clips } of snapshot) updateSourceClips(srcId, clips);
+                  renderPanel();
+                },
+              },
+            });
+          });
+        },
       });
       return;
     }
@@ -1115,6 +1167,13 @@ export function init() {
     const selectNetworkBox = event.target.matches("[data-rpanel-drafts-select-network]") ? event.target : null;
     if (selectNetworkBox) {
       setNetworkSelection(selectNetworkBox.dataset.rpanelDraftsSelectNetwork, event.target.checked);
+      return;
+    }
+    // Clips "Select all" — toggle every clip in/out of the selection.
+    if (event.target.matches("[data-rpanel-clips-select-all]")) {
+      const all = collectAllClips().map(({ clip }) => clip.id);
+      clipSelection = event.target.checked ? new Set(all) : new Set();
+      renderPanel();
       return;
     }
   });
@@ -2512,26 +2571,53 @@ function renderClipsList(entries) {
         sourceKind,
         sessionId: sid,
         whyOpen: isClipWhyOpen(clip.id),
+        selected: clipSelection.has(clip.id),
       }),
     )
     .join("");
 
+  // Bulk band — mirrors the Drafts group band: a select-all checkbox + count,
+  // and (once a selection exists) auto-width actions to draft or delete the
+  // selected clips at once. Reuses the .rpanel-drafts__group-* chrome so the two
+  // surfaces read the same; no full-width footer button.
+  const total = entries.length;
   const selectedCount = entries.filter(({ clip }) => clipSelection.has(clip.id)).length;
-  const footer =
-    selectedCount > 0
-      ? `
-        <div class="rpanel-outputs__footer">
-          <button type="button" class="ap-button mermaid" data-rpanel-clips-draft>
+  const selecting = selectedCount > 0;
+  const allSelected = total > 0 && selectedCount === total;
+  const indeterminate = selecting && !allSelected;
+  const countLabel = selecting ? `· ${selectedCount} selected` : `· ${total} clip${total > 1 ? "s" : ""}`;
+  const actions = selecting
+    ? `
+        <div class="rpanel-drafts__group-actions">
+          <button type="button" class="ap-button stroked blue" data-rpanel-clips-draft>
             <i class="ap-icon-archie-official"></i>
-            <span>Draft posts from ${selectedCount} clip${selectedCount > 1 ? "s" : ""}</span>
+            <span>Draft ${selectedCount > 1 ? "posts" : "post"}</span>
           </button>
+          <button type="button" class="ap-icon-button" data-rpanel-clips-delete aria-label="Delete ${selectedCount} selected clip${selectedCount > 1 ? "s" : ""}">
+            <i class="ap-icon-trash" aria-hidden="true"></i>
+          </button>
+        </div>`
+    : "";
+  const band = `
+    <div class="rpanel-drafts__group-header rpanel-outputs__band${selecting ? " is-selecting" : ""}">
+      <div class="rpanel-drafts__group-band">
+        <label class="ap-checkbox-container ${indeterminate ? "indeterminate" : ""}" aria-label="Select all clips">
+          <input type="checkbox" data-rpanel-clips-select-all ${allSelected ? "checked" : ""} />
+          <i></i>
+        </label>
+        <div class="rpanel-drafts__group-identity">
+          <i class="ap-icon-file--video rpanel-drafts__group-icon" aria-hidden="true"></i>
+          <span class="rpanel-drafts__group-label">Clips</span>
+          <span class="rpanel-drafts__group-count">${countLabel}</span>
         </div>
-      `
-      : "";
+        ${actions}
+      </div>
+    </div>
+  `;
 
   return `
+    ${band}
     <div class="rpanel-outputs__clips">${cards}</div>
-    ${footer}
   `;
 }
 
@@ -2651,7 +2737,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=380").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=389").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

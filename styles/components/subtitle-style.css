@@ -1,0 +1,231 @@
+/* Card-grid picker variant + its two consumers: the clip aspect-ratio tiles
+ * and the subtitle-style previews (in-chat "draft from clips" flow).
+ *
+ * The grid lives inside the shared `.analyse__options` picker frame (border +
+ * radius + header/footer) — see styles/screens/analyse.css. Cards reuse the
+ * same `data-inline-question` hook as rows, so click + keyboard nav are shared.
+ *
+ * The subtitle "MAKE IT POP" mocks reproduce creator caption styles (Karaoké,
+ * Beasty, …). Their accent colours are stylistic sample values (like connector
+ * brand accents), intentionally not DS tokens. */
+
+/* ── Card grid ─────────────────────────────────────────────────────────── */
+/* Auto-fit columns keep the grid compact: subtitle cards need enough width to
+   read the "MAKE IT POP" mock; the aspect-ratio tiles are tiny glyphs so they
+   pack much tighter (distinguished via :has() so no JS/markup change needed). */
+.analyse__options--cards .analyse__cards {
+  display: grid;
+  /* Fixed column count when the caller sets --card-cols (e.g. the subtitle 3×3
+     grid); minmax(0,1fr) lets the equal columns stretch to fill the width
+     without overflowing on a narrow panel. */
+  grid-template-columns: repeat(var(--card-cols, 3), minmax(0, 1fr));
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm);
+}
+
+/* Aspect-ratio tiles have no fixed count — auto-fit collapses empty tracks so
+   the 5 tiles stretch across the full width instead of clustering at the left. */
+.analyse__options--cards .analyse__cards:has(.ratio-tile) {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
+
+.analyse__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-md);
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    border-color var(--ref-animation-short) var(--app-ease-out),
+    background-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+/* Card hover convention: blue border, no elevation, never green. */
+.analyse__card:hover {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.analyse__card:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: -1px;
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.analyse__card-shortcut {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 1;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--app-radius-sm);
+  background: color-mix(in srgb, var(--app-surface) 82%, transparent);
+  border: 1px solid var(--app-border-soft);
+  color: var(--sys-text-color-light);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.analyse__card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.analyse__card-label {
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.analyse__card-caption {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
+/* Meta row under the caption — e.g. the network logos a ratio suits best. */
+.analyse__card-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+}
+
+.ratio-nets {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ratio-nets i {
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* ── Aspect-ratio proportion tiles ─────────────────────────────────────── */
+.ratio-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-grey-05);
+}
+
+/* The frame's aspect-ratio is set inline per format; a fixed height lets the
+   width derive so 16:9 reads wide and 9:16 reads tall at a glance. */
+.ratio-tile__frame {
+  height: 44px;
+  max-width: 100%;
+  border-radius: 3px;
+  background: var(--ref-color-electric-blue-05);
+  border: 1.5px solid var(--ref-color-electric-blue-100);
+}
+
+/* ── Subtitle-style previews ("MAKE IT POP" mocks) ─────────────────────── */
+.sub-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  border-radius: var(--app-radius-sm);
+  padding: 6px;
+  background: #16181d;
+  overflow: hidden;
+}
+
+.sub-preview__line {
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+/* The active/keyword word — italics stripped; each style recolours it. */
+.sub-preview__line em {
+  font-style: normal;
+  color: inherit;
+}
+
+/* No subtitles — light empty tile with a "banned" glyph. */
+.sub-preview--none {
+  background: var(--ref-color-grey-05);
+  color: var(--sys-text-color-light);
+}
+.sub-preview--none i {
+  font-size: 20px;
+}
+
+/* Karaoké — white caps, green active word. */
+.sub-preview--karaoke .sub-preview__line em {
+  color: #27e36a;
+}
+
+/* Deep Diver — sentence-case text on a clean light pill, black active word. */
+.sub-preview--deep-diver .sub-preview__line {
+  text-transform: none;
+  color: #9aa0aa;
+  background: #f3f4f6;
+  border-radius: 7px;
+  padding: 3px 8px;
+}
+.sub-preview--deep-diver .sub-preview__line em {
+  color: #14161a;
+}
+
+/* Youshaei — muted base, mint active word. */
+.sub-preview--youshaei .sub-preview__line {
+  color: #aeb6c2;
+}
+.sub-preview--youshaei .sub-preview__line em {
+  color: #2ad6c8;
+}
+
+/* PopLine — white caps, active word with a purple underline. */
+.sub-preview--popline .sub-preview__line em {
+  color: #ffffff;
+  border-bottom: 3px solid #7c4dff;
+  padding-bottom: 1px;
+}
+
+/* Mozi — bold white caps, green keyword. */
+.sub-preview--mozi .sub-preview__line em {
+  color: #27e36a;
+}
+
+/* ThinkMedia — italic caps, green popping keyword. */
+.sub-preview--thinkmedia .sub-preview__line {
+  font-style: italic;
+}
+.sub-preview--thinkmedia .sub-preview__line em {
+  color: #27e36a;
+}
+
+/* Beasty — glowing bubble text, green glowing keyword. */
+.sub-preview--beasty .sub-preview__line {
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.55);
+}
+.sub-preview--beasty .sub-preview__line em {
+  color: #7cfc00;
+  text-shadow: 0 0 10px rgba(124, 252, 0, 0.85);
+}
+
+/* Simple — clean bold white caps, no accent on the keyword. */
+.sub-preview--simple .sub-preview__line em {
+  color: #ffffff;
+}

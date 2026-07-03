@@ -13,7 +13,7 @@
 // picker state).
 
 import { html, raw, escapeHtml } from "../utils.js?v=21";
-import { profileForNetwork, NETWORK_ICON_BY_PLATFORM, BRAND_INITIALS } from "../social-profiles.js?v=22";
+import { profileForNetwork, NETWORK_ICON_BY_PLATFORM, BRAND_INITIALS } from "../social-profiles.js?v=23";
 import { isFlagOn } from "../feature-flags.js?v=9";
 
 const NET_ICON = {

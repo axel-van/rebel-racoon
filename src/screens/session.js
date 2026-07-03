@@ -1,14 +1,16 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=169";
+import { renderTopbar } from "../components/topbar.js?v=178";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
   renderProfileTag,
   profileForNetwork,
-} from "../social-profiles.js?v=22";
-import { FORMATS, formatsForNetwork, defaultFormatFor } from "../clip-formats.js?v=1";
+  NETWORK_ICON_BY_PLATFORM,
+  NETWORK_LABEL,
+} from "../social-profiles.js?v=23";
+import { FORMATS, formatsForNetwork, defaultFormatFor } from "../clip-formats.js?v=3";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=3";
 import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=31";
 import { isNewUser } from "../user-mode.js?v=22";
@@ -33,14 +35,14 @@ import {
   answerTopPostsWidget,
 } from "../assistant.js?v=55";
 import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=42";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=31";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=43";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=32";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=16";
+} from "../composer-mentions.js?v=17";
 import {
   getPosts,
   addPostDraft,
@@ -48,14 +50,14 @@ import {
   setSubtitleStyle,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=31";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=43";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=44";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=35";
-import * as topPostsFlow from "../top-posts-flow.js?v=52";
-import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=39";
+import * as topPostsFlow from "../top-posts-flow.js?v=57";
+import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=40";
 import { getTopPost } from "../top-posts-store.js?v=6";
-import * as sidebarWizard from "../sidebar-wizard.js?v=47";
-import * as inlineQuestion from "../inline-question.js?v=43";
-import * as clipStudio from "../clip-studio.js?v=17";
+import * as sidebarWizard from "../sidebar-wizard.js?v=50";
+import * as inlineQuestion from "../inline-question.js?v=46";
+import * as clipStudio from "../clip-studio.js?v=18";
 import * as batchStudio from "../batch-studio.js?v=4";
 import { askConnector } from "../connector-ask.js?v=5";
 import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=25";
@@ -66,8 +68,8 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=9";
-import * as contextBuilder from "../context-builder.js?v=137";
-import { renderPicker } from "./_analyse-common.js?v=50";
+import * as contextBuilder from "../context-builder.js?v=145";
+import { renderPicker } from "./_analyse-common.js?v=54";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
 import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=2";
@@ -77,10 +79,10 @@ import {
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=25";
-import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=33";
-import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=47";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=47";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=54";
+import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=35";
+import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=49";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=50";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=55";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=8";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
@@ -97,8 +99,8 @@ import {
   updateSourceClips,
   extractClipsForSource,
   setSourceIdeaCount,
-} from "../sources-stream.js?v=44";
-import { renderClipCard } from "../components/clip-card.js?v=8";
+} from "../sources-stream.js?v=45";
+import { renderClipCard } from "../components/clip-card.js?v=10";
 import { onFeedbackClick } from "../components/feedback-control.js?v=1";
 import { showToast } from "../components/toast.js?v=20";
 import {
@@ -107,12 +109,12 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=269";
+} from "../components/right-panel.js?v=277";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=13";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=18";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=24";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=19";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=29";
 // Pure thread-turn renderers — shared with the component handoff gallery so
 // the previews there never drift from the app (handoff/components.html).
 import {
@@ -2433,6 +2435,8 @@ function askRepurposeScope(sessionId, anglesByPost) {
     stepLabel: "Target",
     items: topPostsFlow.repurposeScopeItems(postIds),
     // Clamp the "Same profile" row's inline counter (its only step); starts at 1.
+    // renderPicker renders an explicit "Generate N drafts" button for the counter
+    // row, and the row itself no longer advances on click.
     defaultCount: 1,
     countMin: 1,
     countMax: 5,
@@ -2646,12 +2650,32 @@ export function askDraftCountQuestion(sessionId, ideaId, { angle = null, onBack 
 //
 // `entries` is [{ clip, sourceName, sourceId }] — one per selected clip.
 
+// Subtitle-style catalog for the clip-draft flow. Values line up with the rich
+// caption presets in clip-captions.js (karaoke, deep-diver, …) so a draft's
+// stored subtitleStyle resolves to a real preset when the clip is later opened
+// in the Video Clips editor. Each entry carries a `preview` — trusted HTML that
+// CSS-renders a "MAKE IT POP" mock in that style (styles/components/subtitle-style.css).
+function subPreview(value) {
+  if (value === "none") {
+    return `<span class="sub-preview sub-preview--none"><i class="ap-icon-ban" aria-hidden="true"></i></span>`;
+  }
+  return `<span class="sub-preview sub-preview--${value}"><span class="sub-preview__line">Make it <em>Pop</em></span></span>`;
+}
+
 const CLIP_SUBTITLE_ITEMS = [
-  { value: "bold", label: "Bold", caption: "Heavy, high-contrast captions — great for fast cuts." },
-  { value: "clean", label: "Clean", caption: "Minimal sentence-case captions, unobtrusive." },
-  { value: "caption", label: "Caption", caption: "Lowercase, casual social style." },
-  { value: "none", label: "No subtitles", caption: "Skip burned-in captions." },
-];
+  { value: "none", label: "No subtitles", caption: "Clips without subtitles" },
+  { value: "karaoke", label: "Karaoké", caption: "Each word pops as it's spoken" },
+  { value: "deep-diver", label: "Deep Diver", caption: "Active word on a clean pill" },
+  { value: "youshaei", label: "Youshaei", caption: "Bold centered, mint active word" },
+  { value: "popline", label: "PopLine", caption: "Active word with a color underline" },
+  { value: "mozi", label: "Mozi", caption: "Bold caps, keywords in color" },
+  { value: "thinkmedia", label: "ThinkMedia", caption: "Italic caps, popping keywords" },
+  { value: "beasty", label: "Beasty", caption: "Glowing bubble text, color keywords" },
+  { value: "simple", label: "Simple", caption: "Clean bold caps, no effects" },
+].map((it) => ({ ...it, preview: subPreview(it.value) }));
+
+// Fast id → label lookup for echoing the picked style back into the chat.
+const CLIP_SUBTITLE_LABEL = Object.fromEntries(CLIP_SUBTITLE_ITEMS.map((it) => [it.value, it.label]));
 
 export function startClipDraftFlow(sessionId, entries) {
   const list = Array.isArray(entries) ? entries : entries ? [entries] : [];
@@ -2666,34 +2690,71 @@ export function startClipDraftFlow(sessionId, entries) {
   askClipFormat(sessionId, list);
 }
 
-// Step 1 — which aspect ratio? All export formats are offered (the target
-// accounts aren't picked yet, so we don't filter by network).
+// Order the aspect-ratio tiles the way creators think of them: landscape,
+// vertical, then the squarer ratios.
+const CLIP_RATIO_ORDER = ["16:9", "9:16", "4:3", "1:1", "4:5"];
+
+// A small proportion tile — a rectangle drawn at the format's true aspect
+// ratio (CSS `aspect-ratio`), styled in styles/components/subtitle-style.css.
+function ratioTilePreview(fmt) {
+  return `<span class="ratio-tile"><span class="ratio-tile__frame" style="aspect-ratio:${fmt.id.replace(":", "/")}"></span></span>`;
+}
+
+// Row of full-colour network logos for the platforms a format suits best —
+// rendered under the ratio label so the user picks the right shape per target.
+function ratioNetworksMeta(fmt) {
+  const nets = fmt.networks || [];
+  if (!nets.length) return "";
+  return `<span class="ratio-nets" aria-label="Best for ${nets.map((p) => NETWORK_LABEL[p] || p).join(", ")}">${nets
+    .map((p) => `<i class="${NETWORK_ICON_BY_PLATFORM[p]}" title="${NETWORK_LABEL[p] || p}" aria-hidden="true"></i>`)
+    .join("")}</span>`;
+}
+
+// Step 1 — which aspect ratio? All export formats are offered as visual
+// proportion tiles (the target accounts aren't picked yet, so we don't filter
+// by network).
 function askClipFormat(sessionId, entries) {
-  const formats = Object.values(FORMATS);
+  const formats = CLIP_RATIO_ORDER.map((id) => FORMATS[id]).filter(Boolean);
   postAssistantMessage(sessionId, "What aspect ratio would you like for the clips?");
   inlineQuestion.ask(sessionId, {
     title: "Pick an export format",
     stepLabel: "Ratio",
     skipLabel: "Cancel",
-    items: formats.map((f) => ({ value: f.id, label: `${f.tag} · ${f.label}` })),
+    variant: "cards",
+    items: formats.map((f) => ({
+      value: f.id,
+      label: f.tag,
+      caption: f.label,
+      preview: ratioTilePreview(f),
+      meta: ratioNetworksMeta(f),
+    })),
     onPick: (formatId) => {
       const fmt = FORMATS[formatId];
-      postUserTurn(sessionId, fmt ? fmt.tag : formatId);
+      postUserTurn(sessionId, fmt ? `${fmt.tag} · ${fmt.label}` : formatId);
       askClipSubtitle(sessionId, entries, formatId);
     },
     onSkip: () => {},
   });
 }
 
-// Step 2 — which subtitle style? (AI-generated, burned into the video.)
+// Step 2 — which subtitle style? (AI-generated, burned into the video.) Shown
+// as a 2-column card grid, each card CSS-rendering the style on a "MAKE IT POP"
+// mock; the pick echoes back as a selection card.
 function askClipSubtitle(sessionId, entries, format) {
   postAssistantMessage(sessionId, "Choose a subtitle style — I'll generate and burn them into the video.");
   inlineQuestion.ask(sessionId, {
-    title: "Subtitle style",
+    title: "Choose a subtitle style",
     stepLabel: "Subtitles",
+    variant: "cards",
+    // Fixed 3×3 grid — "No subtitles" is the first card (see CLIP_SUBTITLE_ITEMS).
+    cardCols: 3,
     items: CLIP_SUBTITLE_ITEMS,
     onPick: (style) => {
-      postUserTurn(sessionId, style === "none" ? "No subtitles" : `${SUBTITLE_PICK_LABEL[style] || style} subtitles`);
+      postSelectionEcho(sessionId, {
+        icon: "ap-icon-closed-captions",
+        title: CLIP_SUBTITLE_LABEL[style] || style,
+        meta: style === "none" ? "No subtitles" : "Subtitle style",
+      });
       askClipAccounts(sessionId, entries, format, style);
     },
     onBack: () => askClipFormat(sessionId, entries),
@@ -2720,7 +2781,9 @@ function askClipAccounts(sessionId, entries, format, style) {
     multi: true,
     defaultSelected: preset,
     submitLabel: "Continue",
-    items: buildConnectedProfileItems(),
+    // Destination picker (not an analysis step) — every connected account is a
+    // valid target, so don't gate on post history.
+    items: buildConnectedProfileItems({ requirePosts: false }),
     onPick: (ids) => {
       const accounts = (Array.isArray(ids) ? ids : [ids])
         .map((id) => connected.find((a) => a.id === id))
@@ -2816,13 +2879,13 @@ function runVideoIdeasChoice(sessionId, sourceId, filename) {
   }, 1600);
 }
 
-// "Extract & create clips" — post the clip-extraction turn (renders pending
-// while no clips exist yet), then attach the clips so it flips to "ready".
+// "Extract & create clips" — post the clip-extraction turn (renders pending,
+// cycling through explanatory stages while no clips exist yet), then kick off
+// the staged ~7.5s extraction. The ticker owns the timing and flips the turn to
+// "ready" (via clipExtractionStatus) once the clips are attached.
 function runVideoClipsChoice(sessionId, sourceId, filename) {
   postClipExtractionTurn(sessionId, { sourceId, filename });
-  setTimeout(() => {
-    extractClipsForSource(sessionId, sourceId);
-  }, 1600);
+  extractClipsForSource(sessionId, sourceId);
 }
 
 function renderThread(messages, sessionId) {
@@ -3708,13 +3771,16 @@ function renderClipExtractionTurn(message, sessionId) {
   const isReady = source.clipExtractionStatus === "ready" || clipsCount > 0;
 
   if (!isReady) {
+    // Live stage label from the extraction ticker (sources-stream); falls back
+    // to a generic line before the first tick lands.
+    const stage = source.clipStage || "Cutting your clips";
     return `
       <div class="chat-turn chat-turn--ai chat-turn--clip-extraction">
         ${renderResultCard({
           state: "pending",
-          busyLabel: "Extracting clips",
-          title: "Cutting your clips…",
-          sub: "About 45s. You can keep chatting.",
+          busyLabel: stage,
+          title: `${stage}…`,
+          sub: "Turning your video into post-ready clips — this takes a moment. You can keep chatting.",
         })}
       </div>
     `;
@@ -4166,12 +4232,29 @@ function bindSession(root, session) {
         inlineQuestion.stepSubmit(session.id);
         return;
       }
+      // Counter-submit — the explicit "Generate N drafts" footer button that
+      // commits an inline-counter row (e.g. the repurpose scope "Same profile").
+      // Reuses pick(), which passes the counter row's current count to onPick.
+      const counterSubmitBtn = event.target.closest("[data-inline-question-counter-submit]");
+      if (counterSubmitBtn) {
+        event.preventDefault();
+        inlineQuestion.pick(session.id, counterSubmitBtn.dataset.inlineQuestionCounterSubmit);
+        return;
+      }
 
       // Inline single-question pick / skip / custom-submit / multi-submit.
       const inlineQuestionBtn = event.target.closest("[data-inline-question]");
       if (inlineQuestionBtn) {
         event.preventDefault();
         const opts = inlineQuestionBtn.closest(".analyse__options");
+        // A counter row paired with a footer "Generate" button commits via that
+        // button — its body click is inert (only the −/+ act, handled above).
+        if (
+          inlineQuestionBtn.classList.contains("analyse__option--counter") &&
+          opts?.querySelector("[data-inline-question-counter-submit]")
+        ) {
+          return;
+        }
         if (opts?.dataset.multi !== undefined) {
           const wasSelected = inlineQuestionBtn.classList.contains("is-selected");
           inlineQuestionBtn.classList.toggle("is-selected", !wasSelected);

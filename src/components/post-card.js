@@ -20,7 +20,7 @@
 // `?focusPost=<id>`.
 
 import { html, raw } from "../utils.js?v=21";
-import { isPortraitFormat } from "../clip-formats.js?v=1";
+import { isPortraitFormat } from "../clip-formats.js?v=3";
 import { presetById } from "../clip-captions.js?v=5";
 import { renderFeedbackControl } from "./feedback-control.js?v=1";
 
@@ -450,9 +450,19 @@ function escapeForEditor(s) {
 const PORTRAIT_NETWORKS = new Set(["tiktok", "instagram"]);
 
 const SUBTITLE_LABEL = {
+  // Legacy light styles (Video Clips modal caption tab).
   bold: "Bold",
   clean: "Clean",
   caption: "Caption",
+  // Clip-draft flow styles (align with the subtitle-style card grid).
+  karaoke: "Karaoké",
+  "deep-diver": "Deep Diver",
+  youshaei: "Youshaei",
+  popline: "PopLine",
+  mozi: "Mozi",
+  thinkmedia: "ThinkMedia",
+  beasty: "Beasty",
+  simple: "Simple",
 };
 
 // Resolve a subtitle style id to a human label. The conversational draft flow

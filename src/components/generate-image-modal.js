@@ -22,7 +22,7 @@ import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordin
 import { showToast } from "./toast.js?v=20";
 import { renderFeedbackControl, onFeedbackClick } from "./feedback-control.js?v=1";
 import { getPosts } from "../posts-store.js?v=31";
-import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "../clip-formats.js?v=1";
+import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "../clip-formats.js?v=3";
 
 const MODAL_ID = "generateImage";
 

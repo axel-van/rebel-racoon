@@ -30,6 +30,14 @@
 //                               −/+ version stepper even in single-select mode;
 //                               clicking the row advances and onPick gets its
 //                               count as a 2nd arg (clamped by countMin/countMax)
+//   variant           string  — "cards" renders items as a visual card grid
+//                               (preview + label + caption per card) instead of
+//                               numbered rows; single-select advance. Each item
+//                               may carry `preview` (trusted HTML for the visual).
+//   cardCols          number  — fix the card grid's column count (else auto-fit)
+//   footerAction      object  — { value, label, icon? } — a prominent button in
+//                               the cards footer that resolves via onPick(value)
+//                               (e.g. "No subtitles" beneath the style grid)
 //   multi             bool    — when true, render multi-select toggles + Continue button
 //   single            bool    — single-select-with-confirm: rows highlight (one
 //                               at a time) instead of advancing; the CALLER owns
@@ -56,7 +64,7 @@
 //   onSkip()          fn      — called when Skip / Esc; if omitted, no skip btn
 //   onBack()          fn      — called when ← Back is clicked; if omitted, no back btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=50";
+import { chatTurn } from "./screens/_analyse-common.js?v=54";
 
 const states = new Map(); // sessionId → opts
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -255,6 +263,13 @@ export function renderChrome(sessionId) {
     loading: s.loading === true,
     title: s.title || null,
     subtitle: s.subtitle || null,
+    // Card-grid variant — visual cards instead of numbered rows (clip
+    // aspect-ratio + subtitle-style steps). Single-select advance.
+    variant: s.variant || null,
+    cardCols: s.cardCols || null,
+    // Footer action — a prominent bottom button in the cards footer that
+    // resolves like any pick (e.g. "No subtitles" under the style grid).
+    footerAction: s.footerAction || null,
     stepIndicator: s.stepLabel || null,
     skipLabel: s.onSkip ? s.skipLabel || "Skip" : null,
     showBack: !!s.onBack,

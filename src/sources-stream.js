@@ -405,17 +405,70 @@ function attachVideoClips(src) {
   return clips.length;
 }
 
+// Clip-extraction stages — crossfade through explanatory labels over the
+// simulated extraction window so the pending clip-extraction turn reads as real
+// AI work rather than a static spinner. Mirrors PROCESSING_STAGES.
+const CLIP_EXTRACTION_STAGES = [
+  { from: 0, label: "Transcribing audio" },
+  { from: 0.2, label: "Detecting highlights & hooks" },
+  { from: 0.45, label: "Scoring moments" },
+  { from: 0.7, label: "Cutting clips" },
+  { from: 0.9, label: "Generating captions" },
+];
+const CLIP_EXTRACTION_MS = 7500;
+
+function clipStageFor(progress) {
+  const stage = [...CLIP_EXTRACTION_STAGES].reverse().find((s) => progress >= s.from);
+  return stage ? stage.label : CLIP_EXTRACTION_STAGES[0].label;
+}
+
+// Drive the extracting source through its stages every 200ms, then attach the
+// canned clips and flip it to "ready" once the window elapses.
+function startClipExtractionTicker(sessionId, sourceId, totalMs) {
+  const startedAt = Date.now();
+  const tickInterval = 200;
+  const tick = () => {
+    const list = sourcesBySession.get(sessionId);
+    const src = list && list.find((s) => s.id === sourceId);
+    if (!src || src.clipExtractionStatus !== "extracting") return;
+    const elapsed = Date.now() - startedAt;
+    if (elapsed >= totalMs) {
+      attachVideoClips(src); // sets clipExtractionStatus = "ready" + clips
+      src.clipProgress = 1;
+      src.clipStage = undefined;
+      notifySources(sessionId);
+      return;
+    }
+    const progress = Math.min(0.99, elapsed / totalMs);
+    src.clipProgress = progress;
+    src.clipStage = clipStageFor(progress);
+    notifySources(sessionId);
+    setTimeout(tick, tickInterval);
+  };
+  setTimeout(tick, tickInterval);
+}
+
 // Post-hoc clip extraction — used by the "Extract clips" branch of the
-// video-intake choice. Attaches the canned clip set to an already-Processed
-// video source and notifies, so the inline clip-extraction turn flips to
-// "ready" and the source-intake "M clips" pill appears. Returns clip count.
-export function extractClipsForSource(sessionId, sourceId) {
+// video-intake choice. Runs a staged ~7.5s extraction (transcribe → detect →
+// score → cut → caption) on an already-Processed video source, then attaches
+// the canned clip set so the inline clip-extraction turn flips to "ready" and
+// the source-intake "M clips" pill appears. Pass { animate: false } to attach
+// immediately (no staged loader). Returns the clip count when synchronous, else 0.
+export function extractClipsForSource(sessionId, sourceId, { animate = true } = {}) {
   const list = sourcesBySession.get(sessionId);
   const src = list && list.find((s) => s.id === sourceId);
   if (!src) return 0;
-  const count = attachVideoClips(src);
+  if (!animate) {
+    const count = attachVideoClips(src);
+    notifySources(sessionId);
+    return count;
+  }
+  src.clipExtractionStatus = "extracting";
+  src.clipProgress = 0;
+  src.clipStage = clipStageFor(0);
   notifySources(sessionId);
-  return count;
+  startClipExtractionTicker(sessionId, sourceId, CLIP_EXTRACTION_MS);
+  return 0;
 }
 
 // Set a source's idea count post-hoc — used by the "Analyze for ideas"

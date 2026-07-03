@@ -102,8 +102,24 @@ export function renderPicker(picker) {
     // Loading state — render a brand loader in place of the option rows
     // (e.g. while Archie "finds the angles") until the real items arrive.
     loading = false,
+    // Card-grid variant — render each item as a visual card (preview + label
+    // + caption) in a responsive grid instead of a numbered row. Single-select
+    // advance (clicking a card resolves), but Back/Skip still render in the
+    // footer. `cardCols` fixes the column count (else the grid auto-fits).
+    // Each item may carry `preview` (trusted HTML for the card's visual).
+    variant = null,
+    cardCols = null,
+    // Card-grid footer action — { value, label, icon? }. Rendered as a
+    // prominent bottom button that resolves like a pick (data-{handler}=value).
+    footerAction = null,
   } = picker;
   const preset = new Set(defaultSelected);
+  // Counter-submit — a single-select picker with an inline-counter row commits
+  // via an explicit footer "Generate N drafts" button (not a row-click), so the
+  // counter row drops its chevron and the footer renders the button.
+  const counterItem = items.find((it) => it.counter);
+  const hasCounterSubmit = !!counterItem && !multi && !single && !stepper;
+  const counterSubmitCount = counterItem ? (stepCounts[counterItem.value] ?? stepMin) : 0;
   // Both multi and single render rows as selectable toggles (check icon,
   // aria-pressed, .is-selected) rather than immediate-advance chevron rows.
   const selectable = multi || single;
@@ -224,7 +240,7 @@ export function renderPicker(picker) {
               <span class="analyse__stepper-count">${count}</span>
               ${stepBtn("inc", "ap-icon-plus", count >= stepMax)}
             </span>
-            <i class="ap-icon-chevron-right analyse__option-chevron" aria-hidden="true"></i>
+            ${hasCounterSubmit ? "" : `<i class="ap-icon-chevron-right analyse__option-chevron" aria-hidden="true"></i>`}
           </div>
         `;
       }
@@ -375,12 +391,50 @@ export function renderPicker(picker) {
     ? `<button type="button" class="ap-button primary blue" data-${handler}-submit ${preset.size === 0 ? "disabled" : ""}><span>${submitLabel}</span></button>`
     : stepper
       ? `<button type="button" class="ap-button primary blue" data-${handler}-generate ${stepTotal <= 0 ? "disabled" : ""}><span>${submitLabel}</span></button>`
-      : "";
+      : hasCounterSubmit
+        ? `<button type="button" class="ap-button primary blue" data-${handler}-counter-submit="${counterItem.value}"><span>Generate ${counterSubmitCount} draft${counterSubmitCount === 1 ? "" : "s"}</span></button>`
+        : "";
   const rightCluster = `${skipBtn}${primaryBtn}`;
   const footer =
     backBtn || rightCluster
       ? `<div class="analyse__options-submit">${backBtn}<span class="analyse__footer-spacer" aria-hidden="true"></span>${rightCluster}</div>`
       : "";
+
+  // Card-grid variant — a visual picker (preview + label + caption per item)
+  // used by the clip aspect-ratio + subtitle-style steps. Cards keep the same
+  // `data-${handler}="value"` hook as rows, so the click delegate and keyboard
+  // nav (digits / arrows / Enter) work unchanged. Single-select advance; the
+  // footer only carries Back / Skip (no submit — clicking a card resolves).
+  if (variant === "cards") {
+    const cards = items
+      .map(
+        (it, i) => `
+          <button type="button" class="analyse__card" data-${handler}="${it.value}">
+            <span class="analyse__card-shortcut" aria-hidden="true">${i + 1}</span>
+            ${it.preview ? `<span class="analyse__card-preview">${it.preview}</span>` : ""}
+            <span class="analyse__card-text">
+              <span class="analyse__card-label">${it.label}</span>
+              ${it.caption ? `<span class="analyse__card-caption muted">${it.caption}</span>` : ""}
+              ${it.meta ? `<span class="analyse__card-meta">${it.meta}</span>` : ""}
+            </span>
+          </button>
+        `,
+      )
+      .join("");
+    const gridStyle = cardCols ? ` style="--card-cols:${cardCols}"` : "";
+    // Cards footer — Back (left) + a prominent footer action (right, e.g. "No
+    // subtitles"). It carries data-{handler}=value so the shared click delegate
+    // resolves it through the normal pick() path.
+    const footerActionBtn = footerAction
+      ? `<button type="button" class="ap-button primary blue" data-${handler}="${footerAction.value}">${footerAction.icon ? `<i class="${footerAction.icon}" aria-hidden="true"></i>` : ""}<span>${footerAction.label}</span></button>`
+      : "";
+    const cardsRight = `${skipBtn}${footerActionBtn}`;
+    const cardsFooter =
+      backBtn || cardsRight
+        ? `<div class="analyse__options-submit">${backBtn}<span class="analyse__footer-spacer" aria-hidden="true"></span>${cardsRight}</div>`
+        : "";
+    return `<div class="analyse__options analyse__options--cards">${header}<div class="analyse__cards"${gridStyle}>${cards}</div>${cardsFooter}</div>`;
+  }
 
   return `<div class="analyse__options${selectable ? " analyse__options--multi" : ""}${stepper ? " analyse__options--stepper" : ""}" ${multi ? "data-multi" : ""}${single ? " data-single" : ""}${stepper ? " data-stepper" : ""}>${header}${rows}${customRow}${fileRow}${footer}</div>`;
 }

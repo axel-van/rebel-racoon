@@ -32,11 +32,11 @@ import {
 } from "./assistant.js?v=55";
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=6";
 import { addPostDraft } from "./posts-store.js?v=31";
-import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=22";
-import { SORTS } from "./components/top-post-card.js?v=39";
+import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=23";
+import { SORTS } from "./components/top-post-card.js?v=40";
 import { isFlagOn } from "./feature-flags.js?v=9";
 import { showToast } from "./components/toast.js?v=20";
-import * as inlineQuestion from "./inline-question.js?v=43";
+import * as inlineQuestion from "./inline-question.js?v=46";
 import { getDefaultContext } from "./contexts-store.js?v=31";
 
 // Cap on drafts produced in one run — post × angle × channel can multiply fast
@@ -485,10 +485,10 @@ export function startTopPostsInline(sessionId) {
 // (SORTS), asked up front so the widget can surface the strongest posts for the
 // metric the user actually cares about (views / reach / engagement / recency).
 const RANK_CHOICES = [
-  { value: "performance", label: "Performance", caption: "Highest vs your average." },
-  { value: "engagement", label: "Engagement rate", caption: "Most reactions per view." },
-  { value: "reach", label: "Reach", caption: "Seen by the most people." },
-  { value: "recent", label: "Most recent", caption: "Freshest posts first." },
+  { value: "performance", label: "Performance", caption: "Highest vs your average.", icon: "ap-icon-data-increase" },
+  { value: "engagement", label: "Engagement rate", caption: "Most reactions per view.", icon: "ap-icon-heart" },
+  { value: "reach", label: "Reach", caption: "Seen by the most people.", icon: "ap-icon-eye-on" },
+  { value: "recent", label: "Most recent", caption: "Freshest posts first.", icon: "ap-icon-clock" },
 ];
 
 // Account chosen → ask which metric to rank by before surfacing the winners.
