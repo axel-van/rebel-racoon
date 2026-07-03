@@ -430,6 +430,66 @@ export function postTopPostPickTurn(sessionId, post) {
   notify(sessionId);
 }
 
+// Interactive "top posts" selection widget — the inline (Add-menu) alternative
+// to the full-screen studio board. Renders a compact, multi-select list of an
+// account's winners directly in the conversation (renderTopPostsWidgetTurn in
+// session.js). The selection lives ON the turn object and mutates in place, so
+// every thread re-render reflects it (mirrors the source-intake mutate pattern).
+export function postTopPostsWidget(sessionId, { network, postIds }) {
+  const thread = getThread(sessionId);
+  const id = newId();
+  thread.push({
+    id,
+    role: "assistant",
+    variant: "top-posts-widget",
+    meta: "Archie",
+    network: network || null,
+    postIds: Array.isArray(postIds) ? postIds.slice() : [],
+    selected: [],
+    status: "ready",
+    createdAt: Date.now(),
+  });
+  notify(sessionId);
+  return id;
+}
+
+// Find the latest still-open (ready) top-posts widget turn for a session.
+function activeTopPostsWidget(sessionId) {
+  const thread = getThread(sessionId);
+  for (let i = thread.length - 1; i >= 0; i -= 1) {
+    const m = thread[i];
+    if (m.variant === "top-posts-widget" && m.status === "ready") return m;
+  }
+  return null;
+}
+
+// Toggle a post in the active top-posts widget's selection. Returns whether the
+// post is now selected. Deliberately does NOT notify() — the caller updates the
+// clicked row in place (like the multi-select Quickpicker) so selecting several
+// posts stays smooth: no whole-thread re-render, no image reload, no scroll
+// reset inside the widget list.
+export function toggleTopPostsWidgetPick(sessionId, postId) {
+  const msg = activeTopPostsWidget(sessionId);
+  if (!msg) return false;
+  const i = msg.selected.indexOf(postId);
+  if (i >= 0) {
+    msg.selected.splice(i, 1);
+    return false;
+  }
+  msg.selected.push(postId);
+  return true;
+}
+
+// Freeze the active top-posts widget (status → "answered", disabling further
+// selection) and return the chosen post ids so the caller can advance the flow.
+export function answerTopPostsWidget(sessionId) {
+  const msg = activeTopPostsWidget(sessionId);
+  if (!msg) return [];
+  msg.status = "answered";
+  notify(sessionId);
+  return msg.selected.slice();
+}
+
 // Generic "you picked this object" echo — a compact icon + title + meta chip in
 // the thread, used whenever the user selects a dynamic object (source, idea,
 // clip, …) so the pick stays visible like the post / profile echoes do.

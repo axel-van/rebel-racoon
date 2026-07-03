@@ -29,7 +29,9 @@ import {
   submitAssistantChoice,
   sendConnectorMessage,
   markConnectPromptResolved,
-} from "../assistant.js?v=52";
+  toggleTopPostsWidgetPick,
+  answerTopPostsWidget,
+} from "../assistant.js?v=54";
 import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
 import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=42";
 import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=31";
@@ -48,8 +50,9 @@ import {
 } from "../posts-store.js?v=31";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=43";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=35";
-import * as topPostsFlow from "../top-posts-flow.js?v=50";
-import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=37";
+import * as topPostsFlow from "../top-posts-flow.js?v=52";
+import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=38";
+import { getTopPost } from "../top-posts-store.js?v=6";
 import * as sidebarWizard from "../sidebar-wizard.js?v=47";
 import * as inlineQuestion from "../inline-question.js?v=43";
 import * as clipStudio from "../clip-studio.js?v=17";
@@ -104,7 +107,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=267";
+} from "../components/right-panel.js?v=268";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=13";
@@ -1533,6 +1536,15 @@ function renderComposer(attachedContext, session, selectable) {
                     </div>
                   </div>
                 </button>
+                <div class="ap-action-dropdown-divider" aria-hidden="true"></div>
+                <button type="button" class="ap-action-dropdown-item" data-add-source="top-posts" role="menuitem">
+                  <i class="ap-icon-feature-analytics"></i>
+                  <div class="ap-action-dropdown-item-text">
+                    <div class="ap-action-dropdown-item-label-container">
+                      <span class="ap-action-dropdown-item-label">Top performing posts</span>
+                    </div>
+                  </div>
+                </button>
                 ${renderConnectorsSubmenu()}
               </div>
             </div>
@@ -2876,6 +2888,11 @@ function renderTurn(message, sessionId) {
     `;
   }
 
+  // Inline "top posts" selection widget — the Add-menu flow's in-chat board.
+  if (message.role === "assistant" && message.variant === "top-posts-widget") {
+    return renderTopPostsWidgetTurn(message);
+  }
+
   if (message.role === "user" && message.variant === "selection-echo") {
     return renderSelectionEchoTurn(message.echo);
   }
@@ -2897,6 +2914,24 @@ function renderTurn(message, sessionId) {
   }
 
   return renderMessageBubble(message);
+}
+
+// Inline "top posts" selection widget turn — an AI-side turn hosting the
+// interactive multi-select card (renderTopPostsWidget). Resolves the post ids to
+// live winners each render; selection + answered state live on the turn message.
+function renderTopPostsWidgetTurn(message) {
+  const posts = (message.postIds || []).map(getTopPost).filter(Boolean);
+  return `
+    <div class="chat-turn chat-turn--ai">
+      <i class="ap-icon-archie-official chat-turn-avatar" aria-hidden="true"></i>
+      ${renderTopPostsWidget({
+        network: message.network,
+        posts,
+        selected: message.selected || [],
+        answered: message.status === "answered",
+      })}
+    </div>
+  `;
 }
 
 // Visual echo of the selected profiles — a right-aligned wrap of chips.
@@ -4440,6 +4475,35 @@ function bindSession(root, session) {
         inlineQuestion.submitSingle(session.id);
         return;
       }
+      // Inline widget (Add-menu flow) — toggle a post in the in-chat selector.
+      // Update the clicked row + footer IN PLACE (no whole-thread re-render) so
+      // multi-select stays smooth — matches the multi-select Quickpicker.
+      const widgetToggle = event.target.closest("[data-topposts-widget-toggle]");
+      if (widgetToggle && !widgetToggle.disabled) {
+        const nowSelected = toggleTopPostsWidgetPick(session.id, widgetToggle.dataset.toppostsWidgetToggle);
+        widgetToggle.classList.toggle("is-selected", nowSelected);
+        widgetToggle.setAttribute("aria-pressed", nowSelected ? "true" : "false");
+        const widget = widgetToggle.closest("[data-topposts-widget]");
+        const count = widget ? widget.querySelectorAll("[data-topposts-widget-toggle].is-selected").length : 0;
+        const countEl = widget?.querySelector(".top-posts-widget__count");
+        if (countEl) countEl.textContent = `${count} selected`;
+        const cta = widget?.querySelector("[data-topposts-widget-confirm]");
+        if (cta) {
+          cta.disabled = count === 0;
+          const label = cta.querySelector("span");
+          if (label) label.textContent = count ? `Continue with ${count} post${count === 1 ? "" : "s"}` : "Continue";
+        }
+        return;
+      }
+      // Inline widget — confirm the selection → freeze the widget, then hand off
+      // to the shared angle → scope → profile steps (skip the duplicate echo,
+      // since the frozen widget already shows the picks).
+      if (event.target.closest("[data-topposts-widget-confirm]")) {
+        const ids = answerTopPostsWidget(session.id);
+        const valid = topPostsFlow.echoRepurposePicks(session.id, ids, { echo: false });
+        if (valid.length) askAnglesForPost(session.id, valid, 0, []);
+        return;
+      }
       // Step 1 Playbook picker → set the voice governing the repurposed drafts.
       const topPostsPlaybook = event.target.closest("[data-topposts-playbook-pick]");
       if (topPostsPlaybook) {
@@ -4875,6 +4939,13 @@ function bindSession(root, session) {
         const kind = addSrcItem.dataset.addSource;
         const menu = root.querySelector("[data-assistant-attach-menu]");
         if (menu) menu.hidden = true;
+        // "Top performing posts" isn't a source — it launches the repurpose flow
+        // INLINE in this conversation (account Quickpicker → in-chat post-selection
+        // widget → angle/scope/profile steps), never the full-screen studio.
+        if (kind === "top-posts") {
+          topPostsFlow.startTopPostsInline(session.id);
+          return;
+        }
         // URL + Paste text need the modal UI (a URL field / textarea) — open
         // the modal on the matching tab. The URL modal is where link-service
         // detection + the "connect this service first" prompt live, so adding

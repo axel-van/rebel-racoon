@@ -1,5 +1,5 @@
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=52";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=54";
 import { isFlagOn } from "../feature-flags.js?v=9";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=45";
 import { isNewUser } from "../user-mode.js?v=22";
@@ -729,7 +729,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=339").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=379").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -919,7 +919,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=339").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=379").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -937,7 +937,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=339").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=379").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -2651,7 +2651,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=339").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=379").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

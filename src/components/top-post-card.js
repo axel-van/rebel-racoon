@@ -266,6 +266,65 @@ export function renderTopPostEcho(post) {
   `;
 }
 
+// ── Inline selection widget (Add-menu flow) ─────────────────────────
+// A ChatGPT-apps-style interactive card embedded in the conversation: a compact,
+// multi-select list of an account's winners + a confirm CTA. Reuses the echo
+// card visuals; selection lives on the widget turn (assistant.js) and re-renders
+// in place. `renderTopPostsWidgetTurn` in session.js wraps this in an AI turn.
+
+// One selectable row — the echo card fronted by a toggle + check. The whole row
+// is the toggle (data-topposts-widget-toggle); `disabled` freezes it once the
+// selection is confirmed.
+export function renderTopPostSelectRow(post, { selected = false, disabled = false } = {}) {
+  if (!post) return "";
+  return html`
+    <button
+      type="button"
+      class="top-posts-widget__row${selected ? " is-selected" : ""}"
+      data-topposts-widget-toggle="${post.id}"
+      aria-pressed="${selected ? "true" : "false"}"
+      ${raw(disabled ? "disabled" : "")}
+    >
+      <span class="top-posts-widget__check" aria-hidden="true"><i class="ap-icon-check"></i></span>
+      ${raw(renderTopPostEcho(post))}
+    </button>
+  `;
+}
+
+// The widget card — header + selectable rows + a "Continue with N posts" CTA.
+// When `answered`, rows freeze and the footer drops (a static record of the pick).
+export function renderTopPostsWidget({ network, posts = [], selected = [], answered = false } = {}) {
+  const sel = new Set(selected);
+  const rows = posts.map((p) => renderTopPostSelectRow(p, { selected: sel.has(p.id), disabled: answered })).join("");
+  const count = sel.size;
+  const footer = answered
+    ? ""
+    : `<div class="top-posts-widget__foot">
+        <span class="top-posts-widget__count muted">${count} selected</span>
+        <button
+          type="button"
+          class="ap-button primary blue top-posts-widget__cta"
+          data-topposts-widget-confirm
+          ${count ? "" : "disabled"}
+        >
+          <span>${count ? `Continue with ${count} post${count === 1 ? "" : "s"}` : "Continue"}</span>
+        </button>
+      </div>`;
+  return html`
+    <div class="top-posts-widget${answered ? " top-posts-widget--answered" : ""}" data-topposts-widget>
+      <div class="top-posts-widget__head">
+        <span class="top-posts-widget__title">
+          <i class="${iconFor(network)}" aria-hidden="true"></i>
+          Your top ${labelFor(network)} posts
+        </span>
+        <span class="top-posts-widget__hint muted">Pick one or more</span>
+      </div>
+      <div class="top-posts-widget__list">${raw(rows)}</div>
+      ${raw(footer)}
+    </div>
+  `;
+}
+
 // ── Profile dropdown (flag OFF — the previous in-toolbar filter) ──────
 // Group winners by network into lenses (name + avatar + count), rendered as a
 // scalable DS .ap-select. Only used when the repurposeProfileFirst flag is OFF.

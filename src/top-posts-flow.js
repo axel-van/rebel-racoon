@@ -28,10 +28,12 @@ import {
   finishPending,
   postDraftResult,
   postTopPostPickTurn,
-} from "./assistant.js?v=52";
+  postTopPostsWidget,
+} from "./assistant.js?v=54";
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=6";
 import { addPostDraft } from "./posts-store.js?v=31";
 import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=22";
+import { SORTS } from "./components/top-post-card.js?v=38";
 import { isFlagOn } from "./feature-flags.js?v=9";
 import { showToast } from "./components/toast.js?v=20";
 import * as inlineQuestion from "./inline-question.js?v=43";
@@ -451,6 +453,83 @@ export function startTopPostsFlow(sessionId) {
   }
 }
 
+// ---- Inline (Add-menu) variant ---------------------------------------
+//
+// Launched from the composer Add menu (session.js), this runs the SAME
+// repurpose feature but entirely IN the conversation — never the studio
+// takeover. It asks for the account with the in-chat Quickpicker, then posts an
+// interactive selection widget (assistant.postTopPostsWidget) instead of the
+// full-page board. Once posts are confirmed, session.js hands off to the shared
+// angle → scope → profile steps + executeRepurpose, unchanged.
+export function startTopPostsInline(sessionId) {
+  if (!getTopPosts().length) {
+    postAssistantMessage(
+      sessionId,
+      "Once your posts start performing, I'll surface your winners here so you can spin new posts out of what already works. Publish a few and come back.",
+    );
+    return;
+  }
+  // Default the drafts' voice to the workspace default (parity with the studio,
+  // which also pre-selects it; the inline flow keeps it implicit to stay short).
+  repurposeContexts.set(sessionId, getDefaultContext()?.id || null);
+  postAssistantMessage(sessionId, "Which account should I pull your winners from?");
+  inlineQuestion.ask(sessionId, {
+    items: getProfileChoices(),
+    title: "Pick an account",
+    subtitle: "I'll pull its top posts next.",
+    onPick: (network) => askRankCriterion(sessionId, network),
+  });
+}
+
+// Which metric ranks the winners — the same lenses the studio board sorts by
+// (SORTS), asked up front so the widget can surface the strongest posts for the
+// metric the user actually cares about (views / reach / engagement / recency).
+const RANK_CHOICES = [
+  { value: "performance", label: "Performance", caption: "Highest vs your average." },
+  { value: "engagement", label: "Engagement rate", caption: "Most reactions per view." },
+  { value: "reach", label: "Reach", caption: "Seen by the most people." },
+  { value: "recent", label: "Most recent", caption: "Freshest posts first." },
+];
+
+// Account chosen → ask which metric to rank by before surfacing the winners.
+function askRankCriterion(sessionId, network) {
+  postAssistantMessage(sessionId, "How should I rank them?");
+  inlineQuestion.ask(sessionId, {
+    items: RANK_CHOICES,
+    title: "Rank by",
+    subtitle: "I'll put the strongest posts for that metric first.",
+    onPick: (sortKey) => presentWinners(sessionId, network, sortKey),
+    // Back to the account question (re-arm it without re-posting the intro).
+    onBack: () =>
+      inlineQuestion.ask(sessionId, {
+        items: getProfileChoices(),
+        title: "Pick an account",
+        subtitle: "I'll pull its top posts next.",
+        onPick: (net) => askRankCriterion(sessionId, net),
+      }),
+  });
+}
+
+// Metric chosen → brief "finding your winners" beat, then drop the interactive
+// selection widget into the thread scoped to that account, sorted by the metric.
+function presentWinners(sessionId, network, sortKey = "performance") {
+  const net = normNet(network);
+  const sort = SORTS.find((s) => s.key === sortKey) || SORTS[0];
+  const pendingId = startPending(sessionId, "Finding your top posts");
+  setTimeout(() => {
+    finishPending(sessionId, pendingId);
+    const postIds = getTopPosts()
+      .filter((p) => normNet(p.network) === net)
+      .sort(sort.compare)
+      .map((p) => p.id);
+    postAssistantMessage(
+      sessionId,
+      `Here are your top ${labelFor(net)} posts by ${sort.label.toLowerCase()} — pick the ones you'd like to reuse.`,
+    );
+    postTopPostsWidget(sessionId, { network: net, postIds });
+  }, PROFILE_LOAD_MS);
+}
+
 // ---- Step 2: echo the pick(s) ----------------------------------------
 //
 // Clears the board grid (it may or may not be up — the Details-modal
@@ -459,7 +538,7 @@ export function startTopPostsFlow(sessionId) {
 // conversation. Returns the valid post ids so the caller can drive the angle
 // quick-picker; the picker itself lives in session.js (inline-question), which
 // owns the onPick closures the way the draft flow's profile picker does.
-export function echoRepurposePicks(sessionId, postIds) {
+export function echoRepurposePicks(sessionId, postIds, { echo = true } = {}) {
   const ids = (postIds || []).filter(Boolean);
   const posts = ids.map(getTopPost).filter(Boolean);
   if (!posts.length) return [];
@@ -468,6 +547,10 @@ export function echoRepurposePicks(sessionId, postIds) {
     pickerStates.delete(sessionId);
     notifyPicker(sessionId);
   }
+
+  // The inline widget path already shows the picks (a frozen selection card), so
+  // it validates ids without posting duplicate compact echoes (`echo: false`).
+  if (!echo) return posts.map((p) => p.id);
 
   for (const post of posts) {
     postTopPostPickTurn(sessionId, {

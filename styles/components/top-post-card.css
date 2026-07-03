@@ -538,3 +538,129 @@
 .top-post-echo__stats .top-post-echo__avg {
   color: var(--ref-color-green-100);
 }
+
+/* ── Inline selection widget (Add-menu flow) ─────────────────────────
+   An "app card" embedded in the AI conversation turn: a header, a compact
+   multi-select list of winners, and a confirm CTA. */
+.top-posts-widget {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  width: 100%;
+  max-width: 460px;
+  padding: var(--ref-spacing-md);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--app-surface);
+}
+
+.top-posts-widget__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+}
+.top-posts-widget__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-150);
+}
+.top-posts-widget__hint {
+  font-size: var(--sys-text-style-caption-size);
+}
+
+/* Scrollable list so a long winner set stays inside the turn. */
+.top-posts-widget__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+/* Each row is a full-width toggle wrapping the echo card. Blue border on hover
+   / selected (card hover convention); a leading check marks the selection. */
+.top-posts-widget__row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  width: 100%;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+.top-posts-widget__row:hover {
+  border-color: var(--ref-color-electric-blue-100);
+}
+.top-posts-widget__row.is-selected {
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-05);
+}
+.top-posts-widget__row[disabled] {
+  cursor: default;
+}
+
+/* Echo card fills the row (the row owns the frame now). */
+.top-posts-widget__row .top-post-echo {
+  align-self: stretch;
+  max-width: none;
+  flex: 1 1 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+/* Check circle — outline by default, fills blue when the row is selected. */
+.top-posts-widget__check {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--app-border);
+  border-radius: 999px;
+  color: var(--ref-color-white);
+  font-size: 12px;
+}
+.top-posts-widget__check i {
+  visibility: hidden;
+}
+.top-posts-widget__row.is-selected .top-posts-widget__check {
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-100);
+}
+.top-posts-widget__row.is-selected .top-posts-widget__check i {
+  visibility: visible;
+}
+
+/* Frozen state after confirm — dim + non-interactive record of the pick. */
+.top-posts-widget--answered {
+  opacity: 0.72;
+}
+.top-posts-widget--answered .top-posts-widget__row {
+  cursor: default;
+}
+
+.top-posts-widget__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  padding-top: var(--ref-spacing-xs);
+}
+.top-posts-widget__count {
+  font-size: var(--sys-text-style-caption-size);
+  font-variant-numeric: tabular-nums;
+}
+.top-posts-widget__cta {
+  flex: 0 0 auto;
+}
