@@ -48,10 +48,10 @@ import {
 } from "../posts-store.js?v=31";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=43";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=35";
-import * as topPostsFlow from "../top-posts-flow.js?v=45";
+import * as topPostsFlow from "../top-posts-flow.js?v=50";
 import { renderTopPostsBoard, renderTopPostEcho } from "../components/top-post-card.js?v=37";
 import * as sidebarWizard from "../sidebar-wizard.js?v=47";
-import * as inlineQuestion from "../inline-question.js?v=41";
+import * as inlineQuestion from "../inline-question.js?v=43";
 import * as clipStudio from "../clip-studio.js?v=17";
 import * as batchStudio from "../batch-studio.js?v=4";
 import { askConnector } from "../connector-ask.js?v=5";
@@ -64,7 +64,7 @@ import {
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=9";
 import * as contextBuilder from "../context-builder.js?v=137";
-import { renderPicker } from "./_analyse-common.js?v=48";
+import { renderPicker } from "./_analyse-common.js?v=50";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
 import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=2";
@@ -795,7 +795,7 @@ function renderTopPostsPlaybookControl(ctx) {
     ? `<span class="ap-select-value">${escapeHtml(ctx.name)}</span>`
     : `<span class="ap-select-value ap-select-placeholder">Select a playbook</span>`;
   return `
-    <details class="ap-select top-posts-playbook__select" data-topposts-playbook>
+    <details class="ap-select studio-commit__playbook" data-topposts-playbook>
       <summary class="ap-select-trigger" title="Choose the playbook for these drafts">
         <span class="ap-select-inline-label">Playbook</span>
         ${valueMarkup}
@@ -1976,18 +1976,27 @@ function renderTopPostsPickerScreen(session) {
     // The Playbook whose voice the repurposed drafts will follow, chosen here on
     // step 1 (defaults to the workspace default; persists through to generation).
     const playbookCtx = getContextById(topPostsFlow.getContextId(session.id));
+    // The account is highlighted (not advanced) on click; "Next" confirms the
+    // account + Playbook together. Disabled until an account is selected.
+    const selectedAccount = inlineQuestion.getSelected(session.id);
     body = html`
       ${raw(buildWorkflowFlow(TOP_POSTS_STEPS))}
       <div class="top-posts-account-picker">
-        <div class="top-posts-playbook">
-          ${raw(renderTopPostsPlaybookControl(playbookCtx))}
-          <p class="top-posts-playbook__hint muted">I'll write the fresh drafts in this playbook's voice.</p>
-        </div>
         ${raw(picker)}
-        <p class="analyse__hints muted">
-          <kbd>↑</kbd><kbd>↓</kbd> navigate · <kbd>1</kbd>–<kbd>9</kbd> pick · <kbd>Enter</kbd> select ·
-          <kbd>Esc</kbd> exit
-        </p>
+        <div class="studio-commit">
+          <div class="studio-commit__row">
+            ${raw(renderTopPostsPlaybookControl(playbookCtx))}
+            <button
+              type="button"
+              class="ap-button primary blue studio-commit__cta"
+              data-topposts-next
+              ${selectedAccount ? "" : "disabled"}
+            >
+              <span>Show my top posts</span>
+            </button>
+          </div>
+          <p class="studio-commit__hint muted">I'll write the fresh drafts in this playbook's voice.</p>
+        </div>
       </div>
     `;
   } else if (state.stage === "loading") {
@@ -2347,7 +2356,7 @@ function startRepurposeFlow(sessionId, postIds) {
 // advances instantly); no Skip — the user picks an angle for each post.
 function askAnglesForPost(sessionId, postIds, index, collected) {
   if (index >= postIds.length) {
-    askRepurposeProfiles(sessionId, collected);
+    askRepurposeScope(sessionId, collected);
     return;
   }
   const postId = postIds[index];
@@ -2396,35 +2405,114 @@ function askAnglesForPost(sessionId, postIds, index, collected) {
   }, 2500);
 }
 
-function askRepurposeProfiles(sessionId, anglesByPost) {
+// Profile-selection step 2a — decide WHERE the repurposed drafts land: keep the
+// win on the profile it already ran on, or spread it to the user's OTHER
+// connected profiles. The "Same profile" row carries an INLINE version counter,
+// so picking it generates straight from here (no dedicated follow-up step);
+// "Other profiles" opens the per-profile version stepper to choose which.
+function askRepurposeScope(sessionId, anglesByPost) {
   const postIds = anglesByPost.map((e) => e.postId);
-  // Repurpose targets = all connected profiles; the source profile is flagged
-  // "· Source" and led first so the user can reuse it (repost) or spread out.
-  const items = topPostsFlow.repurposeProfileItems(postIds);
+  const backToAngles = () => askAnglesForPost(sessionId, postIds, postIds.length - 1, anglesByPost.slice(0, -1));
+
+  postAssistantMessage(sessionId, "Where should I repurpose these?");
+  inlineQuestion.ask(sessionId, {
+    title: "Same profile or spread it out?",
+    subtitle: "Repost fresh takes for the same audience, or adapt them for your other profiles.",
+    stepLabel: "Target",
+    items: topPostsFlow.repurposeScopeItems(postIds),
+    // Clamp the "Same profile" row's inline counter (its only step); starts at 1.
+    defaultCount: 1,
+    countMin: 1,
+    countMax: 5,
+    // `count` is set only for the counter-bearing "same" row.
+    onPick: (scope, count) => {
+      if (scope === "other") {
+        // Back from the version stepper returns to the scope chooser.
+        askRepurposeProfiles(sessionId, anglesByPost, {
+          // List ALL connected profiles — the source(s) too, led first and
+          // flagged "· Source" — so the win can still go back to the origin
+          // while spreading to others.
+          include: "all",
+          title: "Pick the profiles to repurpose to",
+          subtitle: "Set how many versions I'll write for each profile — leave one at 0 to skip it.",
+          // Opt-in per profile: nothing picked until a profile is bumped.
+          defaultCount: 0,
+          countMin: 0,
+          onBack: () => askRepurposeScope(sessionId, anglesByPost),
+        });
+        return;
+      }
+      // Same profile — generate `count` versions on each winner's own source
+      // network, right here. Echo the source profile(s) + the version count.
+      const versions = Math.max(1, count || 1);
+      const sources = topPostsFlow.repurposeSourceProfiles(postIds);
+      if (sources.length) postUserProfilesTurn(sessionId, sources);
+      postUserTurn(sessionId, `${versions} draft${versions === 1 ? "" : "s"} · same profile`);
+      const targets = topPostsFlow.repurposeSourceNetworks(postIds).map((network) => ({ network, count: versions }));
+      topPostsFlow.executeRepurpose(sessionId, anglesByPost, targets);
+    },
+    // Back to the last post's angle step (drops its saved pick so it can be redone).
+    onBack: backToAngles,
+  });
+}
+
+// Profile-selection step 2b — the per-profile version stepper (like the draft
+// flow's "drafts per angle"). Each listed profile carries its own version count;
+// "Generate N drafts" sums them and each draft is adapted to its profile's
+// network. `opts.include` scopes the profile list ("source" for the same-profile
+// repost, "other" to spread out); `onBack` returns to the scope chooser.
+function askRepurposeProfiles(sessionId, anglesByPost, opts = {}) {
+  const {
+    include = "other",
+    title = "Pick the profiles to repurpose to",
+    subtitle = "Set how many versions I'll write for each profile — leave one at 0 to skip it.",
+    defaultCount = 0,
+    countMin = 0,
+    onBack,
+  } = opts;
+  const postIds = anglesByPost.map((e) => e.postId);
+  const items = topPostsFlow.repurposeProfileItems(postIds, { include });
   if (!items.length) {
     postAssistantMessage(
       sessionId,
-      "No other connected profiles to repurpose to. Connect one in Settings → Social accounts.",
+      "No connected profiles to repurpose to. Connect one in Settings → Social accounts.",
     );
     return;
   }
   postAssistantMessage(sessionId, "Which profiles should I repurpose these to?");
   inlineQuestion.ask(sessionId, {
-    title: "Pick the profiles to repurpose to",
-    subtitle: "I'll adapt each draft to the profile's network — reuse the source or spread to others.",
-    stepLabel: "Profiles",
-    multi: true,
-    submitLabel: "Repurpose",
+    title,
+    subtitle,
+    stepLabel: "Versions per profile",
+    // Per-profile version counter, capped so a single run stays scannable.
+    stepper: true,
+    defaultCount,
+    countMin,
+    countMax: 5,
+    submitCountLabel: (total) => `Generate ${total} draft${total === 1 ? "" : "s"}`,
     items,
-    onPick: (accountIds) => {
-      const accounts = accountIds.map((id) => getConnectedProfiles().find((a) => a.id === id)).filter(Boolean);
-      // Echo the picks as profile chips (avatar + handle), same as the draft flow.
-      postUserProfilesTurn(sessionId, accounts);
-      const networks = [...new Set(accounts.map((a) => (a.platform === "twitter" ? "x" : a.platform)))];
-      topPostsFlow.executeRepurpose(sessionId, anglesByPost, networks);
+    onPick: ({ picks, total }) => {
+      // Each pick is { value: accountId, count } (count already > 0). Resolve
+      // to the account + its network, echo the chosen profiles as chips, then
+      // generate `count` versions per profile.
+      const targets = picks
+        .map((p) => ({ account: getConnectedProfiles().find((a) => a.id === p.value) || null, count: p.count }))
+        .filter((t) => t.account);
+      postUserProfilesTurn(
+        sessionId,
+        targets.map((t) => t.account),
+      );
+      postUserTurn(
+        sessionId,
+        `${total} draft${total === 1 ? "" : "s"} · ${targets.length} profile${targets.length === 1 ? "" : "s"}`,
+      );
+      const networkTargets = targets.map((t) => ({
+        network: t.account.platform === "twitter" ? "x" : t.account.platform,
+        count: t.count,
+      }));
+      topPostsFlow.executeRepurpose(sessionId, anglesByPost, networkTargets);
     },
-    // Back to the last post's angle step (drops its saved pick so it can be redone).
-    onBack: () => askAnglesForPost(sessionId, postIds, postIds.length - 1, anglesByPost.slice(0, -1)),
+    onBack,
   });
 }
 
@@ -4060,6 +4148,10 @@ function bindSession(root, session) {
           // Stepper mode — clicking a row selects it (the count drives the
           // generate button); it doesn't pick-and-advance.
           inlineQuestion.stepSelect(session.id, inlineQuestionBtn.dataset.inlineQuestion);
+        } else if (opts?.dataset.single !== undefined) {
+          // Single-select-with-confirm — highlight the row; a separate submit
+          // (e.g. the top-posts "Next" button) confirms it.
+          inlineQuestion.singleSelect(session.id, inlineQuestionBtn.dataset.inlineQuestion);
         } else {
           inlineQuestion.pick(session.id, inlineQuestionBtn.dataset.inlineQuestion);
         }
@@ -4340,7 +4432,14 @@ function bindSession(root, session) {
         return;
       }
       // (Step 1's profile chooser is the exact inline-question picker now — its
-      // rows route through the shared [data-inline-question] delegate above.)
+      // rows route through the shared [data-inline-question] delegate above,
+      // in single-select mode: clicking highlights, "Next" confirms.)
+      // Step 1 "Next" → confirm the highlighted account + Playbook and load its
+      // winners (submitSingle resolves the picker → chooseProfile).
+      if (event.target.closest("[data-topposts-next]")) {
+        inlineQuestion.submitSingle(session.id);
+        return;
+      }
       // Step 1 Playbook picker → set the voice governing the repurposed drafts.
       const topPostsPlaybook = event.target.closest("[data-topposts-playbook-pick]");
       if (topPostsPlaybook) {

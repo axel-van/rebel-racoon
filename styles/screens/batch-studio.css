@@ -179,7 +179,13 @@
 /* ── Commit group — Playbook field + primary CTA, inline at the foot of the
    content column (no detached footer bar). Separated from the inputs with a
    divider so it reads as the "now choose a playbook and go" decision point. */
-.batch-studio__commit {
+/* Shared workflow "commit bar" — the divider + right-aligned [Playbook · CTA]
+   row + right-aligned hint used at the bottom of every studio workflow (Batch,
+   Clip, Top-posts). The `.studio-commit*` aliases are the workflow-neutral name
+   so all three reuse ONE component; `.batch-studio__*` is kept for Batch's
+   existing markup. */
+.batch-studio__commit,
+.studio-commit {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xxs);
@@ -193,7 +199,8 @@
   font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-100);
 }
-.batch-studio__field-hint {
+.batch-studio__field-hint,
+.studio-commit__hint {
   margin: var(--ref-spacing-xxs) 0 0;
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
@@ -202,28 +209,33 @@
 
 /* Select + CTA sit side by side, aligned to the right (matching the Clip
    Studio action bar). */
-.batch-studio__commit-row {
+.batch-studio__commit-row,
+.studio-commit__row {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: var(--ref-spacing-sm);
   flex-wrap: wrap;
 }
-.batch-studio__field-hint {
+.batch-studio__field-hint,
+.studio-commit__hint {
   text-align: right;
 }
 
 /* Playbook select — always a fixed 256px, never grows or shrinks. */
-.batch-studio__playbook {
+.batch-studio__playbook,
+.studio-commit__playbook {
   flex: 0 0 256px;
   width: 256px;
 }
-.batch-studio__playbook > .ap-select-trigger {
+.batch-studio__playbook > .ap-select-trigger,
+.studio-commit__playbook > .ap-select-trigger {
   width: 100%;
   justify-content: space-between;
 }
 
 /* Primary action — sized to its label. */
-.batch-studio__start {
+.batch-studio__start,
+.studio-commit__cta {
   flex: 0 0 auto;
 }

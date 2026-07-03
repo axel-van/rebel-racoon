@@ -93,22 +93,31 @@ export function renderPicker(picker) {
     stepTotal = 0,
     stepMin = 1,
     stepMax = 20,
+    // Single-select-with-confirm mode — like multi (rows highlight instead of
+    // advancing) but only ONE row can be selected; the caller supplies its own
+    // submit affordance (e.g. a "Next" button). `selectedValue` is the chosen
+    // row's value, tracked in the picker's state so it survives re-renders.
+    single = false,
+    selectedValue = null,
     // Loading state — render a brand loader in place of the option rows
     // (e.g. while Archie "finds the angles") until the real items arrive.
     loading = false,
   } = picker;
   const preset = new Set(defaultSelected);
+  // Both multi and single render rows as selectable toggles (check icon,
+  // aria-pressed, .is-selected) rather than immediate-advance chevron rows.
+  const selectable = multi || single;
 
-  // Multi-select swaps the trailing chevron for a check icon (visible only
+  // Selectable rows swap the trailing chevron for a check icon (visible only
   // when the option is selected via .is-selected) so the user understands
   // the row is a toggle, not an immediate jump.
-  const trailingIcon = multi
+  const trailingIcon = selectable
     ? `<span class="analyse__option-check" aria-hidden="true"><i class="ap-icon-check"></i></span>`
     : `<i class="ap-icon-chevron-right analyse__option-chevron" aria-hidden="true"></i>`;
 
   const rows = items
     .map((it, i) => {
-      const isPreset = multi && preset.has(it.value);
+      const isPreset = single ? it.value === selectedValue : multi && preset.has(it.value);
       // Three icon variants: avatar (DS .ap-avatar with optional network
       // badge), imgSrc (raw <img>), or icon font. The avatar variant
       // strips the icon container's grey background and overflow
@@ -179,6 +188,47 @@ export function renderPicker(picker) {
         `;
       }
 
+      // A single-select row that carries its OWN inline counter (e.g. the
+      // "Same profile" repurpose row): −/+ tweak the version count in place,
+      // and clicking the row body advances with that count. Reuses the stepper
+      // markup + count state but keeps single-select semantics (no separate
+      // Generate button — the row itself is the action, hence the chevron).
+      if (it.counter && !selectable && !stepper) {
+        const count = stepCounts[it.value] ?? stepMin;
+        const stepBtn = (dir, icon, disabled) => `
+          <button
+            type="button"
+            class="ap-icon-button transparent sm analyse__stepper-btn"
+            data-${handler}-step="${dir}"
+            data-step-value="${it.value}"
+            ${disabled ? "disabled" : ""}
+            tabindex="-1"
+            aria-label="${dir === "inc" ? "Increase" : "Decrease"} versions for ${it.label}"
+          ><i class="${icon}"></i></button>
+        `;
+        return `
+          <div
+            class="analyse__option analyse__option--counter"
+            data-${handler}="${it.value}"
+            role="button"
+            tabindex="0"
+          >
+            <span class="analyse__option-shortcut" aria-hidden="true">${i + 1}</span>
+            ${iconSlot}
+            <span class="analyse__option-text">
+              <span class="analyse__option-label">${it.label}</span>
+              ${it.caption ? `<span class="muted">${it.caption}</span>` : ""}
+            </span>
+            <span class="analyse__stepper" aria-hidden="false">
+              ${stepBtn("dec", "ap-icon-minus", count <= stepMin)}
+              <span class="analyse__stepper-count">${count}</span>
+              ${stepBtn("inc", "ap-icon-plus", count >= stepMax)}
+            </span>
+            <i class="ap-icon-chevron-right analyse__option-chevron" aria-hidden="true"></i>
+          </div>
+        `;
+      }
+
       // A disabled row (e.g. a social profile with no posts to analyse) is a
       // real <button disabled> so it swallows clicks and drops out of the tab
       // order; the keyboard nav also skips it. An optional `endNote` renders a
@@ -196,7 +246,7 @@ export function renderPicker(picker) {
           class="analyse__option${isPreset ? " is-selected" : ""}${isDisabled ? " analyse__option--disabled" : ""}"
           data-${handler}="${it.value}"
           ${isDisabled ? `disabled aria-disabled="true"` : ""}
-          ${multi ? `aria-pressed="${isPreset ? "true" : "false"}"` : ""}
+          ${selectable ? `aria-pressed="${isPreset ? "true" : "false"}"` : ""}
         >
           <span class="analyse__option-shortcut" aria-hidden="true">${i + 1}</span>
           ${iconSlot}
@@ -332,7 +382,7 @@ export function renderPicker(picker) {
       ? `<div class="analyse__options-submit">${backBtn}<span class="analyse__footer-spacer" aria-hidden="true"></span>${rightCluster}</div>`
       : "";
 
-  return `<div class="analyse__options${multi ? " analyse__options--multi" : ""}${stepper ? " analyse__options--stepper" : ""}" ${multi ? "data-multi" : ""}${stepper ? " data-stepper" : ""}>${header}${rows}${customRow}${fileRow}${footer}</div>`;
+  return `<div class="analyse__options${selectable ? " analyse__options--multi" : ""}${stepper ? " analyse__options--stepper" : ""}" ${multi ? "data-multi" : ""}${single ? " data-single" : ""}${stepper ? " data-stepper" : ""}>${header}${rows}${customRow}${fileRow}${footer}</div>`;
 }
 
 // -- Keyboard wiring --------------------------------------------------------

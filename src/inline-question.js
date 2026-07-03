@@ -25,8 +25,16 @@
 //   subtitle          string  — optional helper line under the title (what to do)
 //   stepLabel         string  — small label on the top right (e.g. "Profile")
 //   skipLabel         string  — label on the Skip button (default "Skip")
-//   items             array   — [{ value, label, caption?, icon?, imgSrc? }]
+//   items             array   — [{ value, label, caption?, icon?, imgSrc?, counter? }]
+//                               a row with `counter: true` carries an inline
+//                               −/+ version stepper even in single-select mode;
+//                               clicking the row advances and onPick gets its
+//                               count as a 2nd arg (clamped by countMin/countMax)
 //   multi             bool    — when true, render multi-select toggles + Continue button
+//   single            bool    — single-select-with-confirm: rows highlight (one
+//                               at a time) instead of advancing; the CALLER owns
+//                               the submit (e.g. a Next button → submitSingle).
+//                               `selected` seeds the initial highlight.
 //   defaultSelected   array   — values to render pre-selected (multi mode only)
 //   submitLabel       string  — multi-select submit button label (default "Continue")
 //   stepper           bool    — per-row count steppers; each row carries its
@@ -48,7 +56,7 @@
 //   onSkip()          fn      — called when Skip / Esc; if omitted, no skip btn
 //   onBack()          fn      — called when ← Back is clicked; if omitted, no back btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=48";
+import { chatTurn } from "./screens/_analyse-common.js?v=50";
 
 const states = new Map(); // sessionId → opts
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -67,6 +75,18 @@ export function ask(sessionId, opts) {
     opts._counts = {};
     for (const it of opts.items || []) opts._counts[it.value] = def;
     opts._selected = opts.items?.[0]?.value ?? null;
+  } else if (opts.single) {
+    // Single-select-with-confirm — one highlighted row, confirmed by a separate
+    // submit affordance (e.g. a "Next" button). Track the selection here so it
+    // survives re-renders (the picker chrome re-reads `_selected`).
+    opts._selected = opts.selected ?? opts.defaultSelected?.[0] ?? null;
+  } else if ((opts.items || []).some((it) => it.counter)) {
+    // A single-select picker can still carry inline counters on individual
+    // rows (e.g. the "Same profile" repurpose row): seed a count for each such
+    // row so the −/+ have state, without switching to full stepper mode.
+    const def = opts.defaultCount ?? 1;
+    opts._counts = {};
+    for (const it of opts.items || []) if (it.counter) opts._counts[it.value] = it.count ?? def;
   }
   states.set(sessionId, opts);
   notify(sessionId);
@@ -80,16 +100,42 @@ export function stepSelect(sessionId, value) {
   notify(sessionId);
 }
 
-// Stepper mode — bump the active item's count by ±delta, clamped, and make
-// it the selected row.
+// Single-select mode — highlight a row without advancing (the caller confirms
+// via its own submit, e.g. a "Next" button). Re-render reflects the highlight.
+export function singleSelect(sessionId, value) {
+  const s = states.get(sessionId);
+  if (!s || !s.single) return;
+  s._selected = value;
+  notify(sessionId);
+}
+
+// Single-select mode — confirm the highlighted row (no-op if nothing selected).
+export function submitSingle(sessionId) {
+  const s = states.get(sessionId);
+  if (!s || !s.single || !s._selected) return;
+  const value = s._selected;
+  states.delete(sessionId);
+  notify(sessionId);
+  s.onPick?.(value);
+}
+
+// Single-select mode — the currently highlighted value (or null). Lets the
+// caller render its confirm affordance's enabled/disabled state.
+export function getSelected(sessionId) {
+  return states.get(sessionId)?._selected ?? null;
+}
+
+// Bump a row's count by ±delta, clamped. Works for full stepper pickers and
+// for single-select pickers that carry an inline counter on a row (any picker
+// with seeded `_counts`). In stepper mode it also makes the row the selection.
 export function stepBump(sessionId, value, delta) {
   const s = states.get(sessionId);
-  if (!s || !s.stepper) return;
+  if (!s || !s._counts) return;
   const min = s.countMin ?? 1;
   const max = s.countMax ?? 20;
   const cur = s._counts[value] ?? s.defaultCount ?? 1;
   s._counts[value] = Math.max(min, Math.min(max, cur + delta));
-  s._selected = value;
+  if (s.stepper) s._selected = value;
   notify(sessionId);
 }
 
@@ -113,9 +159,12 @@ export function stepSubmit(sessionId) {
 export function pick(sessionId, value) {
   const s = states.get(sessionId);
   if (!s) return;
+  // A row may carry an inline counter (single-select); hand its current count
+  // to onPick as a second arg (ignored by handlers that don't take a count).
+  const count = s._counts?.[value];
   states.delete(sessionId);
   notify(sessionId);
-  s.onPick?.(value);
+  s.onPick?.(value, count);
 }
 
 export function submitMulti(sessionId, values) {
@@ -217,6 +266,10 @@ export function renderChrome(sessionId) {
     customFileHint: s.customFileHint || "",
     customFileIcon: s.customFileIcon || "ap-icon-upload",
     multi: s.multi === true,
+    // Single-select-with-confirm — selectable rows, one at a time; the caller
+    // owns the submit. `selectedValue` drives the highlight.
+    single: s.single === true,
+    selectedValue: s._selected ?? null,
     defaultSelected: Array.isArray(s.defaultSelected) ? s.defaultSelected : [],
     // Stepper mode — per-row counts; the submit reflects the TOTAL across
     // every row (each angle contributes its own count; 0 opts out).

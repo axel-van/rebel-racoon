@@ -14,10 +14,11 @@
 //   2. echoRepurposePicks — echo the picked post(s). session.js then drives the
 //                           angle + profile quick-pickers (inline-question), the
 //                           same numbered Quickpicker the draft flow uses; the
-//                           data helpers here (ANGLE_CHOICES / repurposeProfile-
-//                           Items) feed those pickers. The profile picker offers
-//                           the OTHER connected profiles — not the one the winner
-//                           already ran on.
+//                           data helpers here (ANGLE_CHOICES / repurposeScope-
+//                           Items / repurposeProfileItems) feed those pickers.
+//                           The profile step opens on a same-vs-other choice:
+//                           repost a fresh take back to the winner's own profile,
+//                           or spread it to OTHER connected profiles.
 //   3. executeRepurpose   — thinking chip → one adapted draft per
 //                           post × angle × target profile → post a result turn.
 
@@ -33,7 +34,7 @@ import { addPostDraft } from "./posts-store.js?v=31";
 import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=22";
 import { isFlagOn } from "./feature-flags.js?v=9";
 import { showToast } from "./components/toast.js?v=20";
-import * as inlineQuestion from "./inline-question.js?v=41";
+import * as inlineQuestion from "./inline-question.js?v=43";
 import { getDefaultContext } from "./contexts-store.js?v=31";
 
 // Cap on drafts produced in one run — post × angle × channel can multiply fast
@@ -362,15 +363,16 @@ export function getProfileChoices() {
 
 // Arm the account picker (step 1) as the *exact* in-chat picker component:
 // inlineQuestion.ask() with the connected-profile choices. session.js renders
-// its chrome inside the studio screen (hero + roadmap), and picking a row runs
-// chooseProfile via the shared inline-question click delegate. No intro (the
-// studio hero introduces the step) and no skip/back (single-select stays
-// immediate, no footer) — matching the previous bespoke picker.
+// its chrome inside the studio screen (hero + roadmap + Playbook control), and
+// the screen's "Next" button confirms the highlighted account (submitSingle →
+// chooseProfile). Single-select-with-confirm so the account + Playbook choices
+// are validated together in one step rather than the row advancing on click.
 function armProfilePicker(sessionId) {
   inlineQuestion.ask(sessionId, {
     items: getProfileChoices(),
     title: "Pick an account",
     subtitle: "I'll load its top posts, ranked by engagement.",
+    single: true,
     onPick: (network) => chooseProfile(sessionId, network),
   });
 }
@@ -501,17 +503,76 @@ export function repurposeSourceNetworks(postIds) {
   return [...new Set(posts.map((p) => normNet(p.network)).filter((n) => CHANNEL_META[n]))];
 }
 
+// The connected profile account(s) the picked winner(s) already ran on — the
+// "same profile" repurpose target. Top posts are network-level (they don't pin a
+// specific account), so this resolves by matching the source network(s).
+export function repurposeSourceProfiles(postIds) {
+  const sourceNets = repurposeSourceNetworks(postIds);
+  return getConnectedProfiles().filter((p) => sourceNets.includes(normNet(p.platform)));
+}
+
+// Step 2a — the same-vs-other choice, and the ONLY step for a same-profile
+// repost. A single-select Quickpicker: keep the win on the profile it ran on (a
+// fresh take for the same audience) or spread it to the user's OTHER connected
+// profiles. The "same" row carries an inline version counter (`counter: true`)
+// so the user sets how many drafts and generates right here — no extra step;
+// "other" navigates to the per-profile picker. The "same" row shows the source
+// profile's own avatar when a single source resolves; "other" is disabled when
+// there's nothing else connected.
+export function repurposeScopeItems(postIds) {
+  const sources = repurposeSourceProfiles(postIds);
+  const otherCount = repurposeProfileItems(postIds, { include: "other" }).length;
+  const single = sources.length === 1 ? sources[0] : null;
+
+  const sameAvatar = single
+    ? {
+        imageUrl: single.photo || null,
+        initials: single.photo ? null : BRAND_INITIALS,
+        networkIcon: NETWORK_ICON_BY_PLATFORM[normNet(single.platform)] || null,
+      }
+    : null;
+
+  return [
+    {
+      value: "same",
+      label: single ? `Same profile — ${single.handle}` : "The same profile",
+      caption: single ? "Repost a fresh take for the same audience" : "A fresh take back on each post's own profile",
+      avatar: sameAvatar || undefined,
+      icon: sameAvatar ? undefined : "ap-icon-refresh",
+      // Inline version counter — the same-profile repost generates from right
+      // here, so no dedicated follow-up step is needed.
+      counter: true,
+    },
+    {
+      value: "other",
+      label: "Other profiles",
+      caption: otherCount
+        ? "Adapt the win for your other connected profiles"
+        : "No other connected profiles to spread to",
+      icon: "ap-icon-multiple-users",
+      disabled: otherCount === 0,
+      endNote: otherCount === 0 ? "Nothing to pick" : null,
+    },
+  ];
+}
+
 // Repurpose-target quick-picker items — the user's CONNECTED SOCIAL PROFILES,
-// presented as profile rows (brand avatar + network badge + handle). The
-// profile(s) the winner already ran on are flagged "· Source" in the caption
-// and led first, so the user can reuse that destination too (repost) or spread
-// the win to other audiences.
-export function repurposeProfileItems(postIds) {
+// presented as profile rows (brand avatar + network badge + handle). `include`
+// scopes the list to the scope choice that opened the step:
+//   "other"  (default) → profiles the winner did NOT run on (spread the win)
+//   "source"           → only the profile(s) the winner already ran on (repost)
+//   "all"              → every profile, source(s) first and flagged "· Source"
+// The "· Source" tag is only added in the mixed "all" list — in a source-only
+// list the context already makes it obvious.
+export function repurposeProfileItems(postIds, { include = "other" } = {}) {
   const sourceNets = repurposeSourceNetworks(postIds);
   const connected = getConnectedProfiles();
   const isSource = (p) => sourceNets.includes(normNet(p.platform));
-  // Source profile(s) first, then the rest.
-  const ordered = [...connected.filter(isSource), ...connected.filter((p) => !isSource(p))];
+  let ordered;
+  if (include === "source") ordered = connected.filter(isSource);
+  else if (include === "all") ordered = [...connected.filter(isSource), ...connected.filter((p) => !isSource(p))];
+  else ordered = connected.filter((p) => !isSource(p)); // "other"
+  const tagSource = include === "all";
   return ordered.map((p) => {
     const base = [p.platformLabel, p.kind].filter(Boolean).join(" · ");
     return {
@@ -519,7 +580,7 @@ export function repurposeProfileItems(postIds) {
       label: p.handle,
       // "Source" is emphasised (own class) so it stands out from the muted
       // "Network · Kind" prefix. Caption is inserted raw by the picker renderer.
-      caption: isSource(p) ? `${base} · <span class="top-posts-source-tag">Source</span>` : base,
+      caption: tagSource && isSource(p) ? `${base} · <span class="top-posts-source-tag">Source</span>` : base,
       avatar: {
         imageUrl: p.photo,
         initials: BRAND_INITIALS,
@@ -583,14 +644,29 @@ export function repurposePostHook(postId) {
   return p ? truncate(firstSentence(p.excerpt), 70) : "";
 }
 
+// Normalise the target argument into a `[{ network, count }]` list applied to
+// every picked post. Accepts either the new per-profile shape (objects, from the
+// "Other profiles" stepper where each profile carries its own draft count) or a
+// bare network-slug array (each treated as count 1). Invalid networks are
+// dropped; counts floor at 1. An empty result signals "each post on its own
+// source network" (the "same profile" branch).
+function normalizeTargets(targets) {
+  return (targets || [])
+    .map((t) => (typeof t === "string" ? { network: t, count: 1 } : t || {}))
+    .map((t) => ({ network: (t.network || "").toLowerCase(), count: Math.max(1, Math.floor(t.count) || 1) }))
+    .filter((t) => CHANNEL_META[t.network]);
+}
+
 // ---- Step 3: generate the adapted drafts ------------------------------
 //
 // Each winner carries its OWN chosen angles (the user picked them post by post),
-// so `anglesByPost` is [{ postId, angles: [key] }]. One draft per
-// post × its-angles × channel, each body adapted to the target network. Falls
-// back sanely if an entry came back empty (all angles / source network). Capped
-// at MAX_DRAFTS.
-export function executeRepurpose(sessionId, anglesByPost, channels) {
+// so `anglesByPost` is [{ postId, angles: [key] }]. `targets` is the profiles to
+// publish to as `[{ network, count }]` — `count` is how many versions to write
+// for that profile (the per-profile stepper). One draft per
+// post × its-angles × target × version, each body adapted to the target network.
+// An empty `targets` means "same profile" — each post back on its own source
+// network, one version. Capped at MAX_DRAFTS.
+export function executeRepurpose(sessionId, anglesByPost, targets) {
   const entries = (anglesByPost || [])
     .map((e) => ({
       post: getTopPost(e.postId),
@@ -601,7 +677,7 @@ export function executeRepurpose(sessionId, anglesByPost, channels) {
     .filter((e) => e.post);
   if (!entries.length) return;
 
-  const pickedChannels = (channels || []).filter((c) => CHANNEL_META[(c || "").toLowerCase()]);
+  const pickedTargets = normalizeTargets(targets);
   // The Playbook chosen on step 1 governs the drafts' voice — stamp it on each.
   const contextId = repurposeContexts.get(sessionId) || null;
 
@@ -611,23 +687,26 @@ export function executeRepurpose(sessionId, anglesByPost, channels) {
       const drafts = [];
       let capped = false;
       outer: for (const { post, keys } of entries) {
-        const chans = pickedChannels.length ? pickedChannels : [post.network];
+        // No explicit targets → repost to this post's own network (one version).
+        const postTargets = pickedTargets.length ? pickedTargets : [{ network: post.network, count: 1 }];
         const angleKeys = keys.length ? keys : ANGLE_KEYS;
         for (const key of angleKeys) {
           const base = copyForAngle(post, key);
-          for (const ch of chans) {
-            if (drafts.length >= MAX_DRAFTS) {
-              capped = true;
-              break outer;
+          for (const { network, count } of postTargets) {
+            for (let i = 0; i < count; i += 1) {
+              if (drafts.length >= MAX_DRAFTS) {
+                capped = true;
+                break outer;
+              }
+              const draft = addPostDraft(sessionId, {
+                network,
+                text: adaptForNetwork(base, network),
+                hashtags: adaptHashtags(post.hashtags, network),
+              });
+              draft.origin = variationOrigin(post);
+              draft.contextId = contextId;
+              drafts.push(draft);
             }
-            const draft = addPostDraft(sessionId, {
-              network: ch,
-              text: adaptForNetwork(base, ch),
-              hashtags: adaptHashtags(post.hashtags, ch),
-            });
-            draft.origin = variationOrigin(post);
-            draft.contextId = contextId;
-            drafts.push(draft);
           }
         }
       }
@@ -640,7 +719,7 @@ export function executeRepurpose(sessionId, anglesByPost, channels) {
         drafts,
       });
     },
-    (err) => genError(err, () => executeRepurpose(sessionId, anglesByPost, channels)),
+    (err) => genError(err, () => executeRepurpose(sessionId, anglesByPost, targets)),
   );
 }
 

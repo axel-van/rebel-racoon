@@ -12,9 +12,9 @@
 //     swap. No-op if no wizard is active.
 
 import * as sidebarWizard from "../../sidebar-wizard.js?v=47";
-import * as inlineQuestion from "../../inline-question.js?v=41";
-import * as topPostsFlow from "../../top-posts-flow.js?v=45";
-import { bindWizardKeyboard, unbindWizardKeyboard } from "../_analyse-common.js?v=48";
+import * as inlineQuestion from "../../inline-question.js?v=43";
+import * as topPostsFlow from "../../top-posts-flow.js?v=50";
+import { bindWizardKeyboard, unbindWizardKeyboard } from "../_analyse-common.js?v=50";
 
 export function rebindWizardKeyboard(aside, sessionId) {
   if (!aside) return;

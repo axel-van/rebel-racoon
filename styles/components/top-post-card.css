@@ -122,11 +122,14 @@
    rendered by renderPicker). This wrapper just centres it under the workflow
    roadmap and constrains its width so it reads as a focused card, not a
    full-bleed band, then stacks the keyboard hint bar beneath it. */
+/* Step 1 column — the account card stacked above the shared `.studio-commit`
+   bar (Playbook select + confirm CTA + hint), the same commit component the
+   Batch / Clip studios use. The commit owns its own top spacing (margin +
+   divider), so the wrapper adds no gap of its own. */
 .top-posts-account-picker {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--ref-spacing-sm);
+  align-items: stretch;
   width: 100%;
   max-width: 620px;
   margin: var(--ref-spacing-lg) auto 0;
@@ -134,32 +137,6 @@
 
 .top-posts-account-picker .analyse__options {
   width: 100%;
-}
-
-.top-posts-account-picker .analyse__hints {
-  margin: 0;
-}
-
-/* Playbook picker on step 1 — the voice the repurposed drafts follow. Sits
-   above the account card, left-aligned within the same centred column, with a
-   muted hint beneath. Reuses the DS .ap-select (same shape as the Batch / Clip
-   Studio playbook controls). */
-.top-posts-playbook {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--ref-spacing-xs);
-  width: 100%;
-}
-
-.top-posts-playbook__select {
-  align-self: flex-start;
-}
-
-.top-posts-playbook__hint {
-  margin: 0;
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
 }
 
 /* "Source" marker in the repurpose profile picker caption — lifts it out of the
