@@ -901,9 +901,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-sm);
-  /* Center the capped clip rows — same as the ideas grid + Drafts feed. */
-  align-items: center;
+  /* No side padding + left-aligned rows so each row's checkbox gutter starts at
+     the same x as the sticky band's select-all checkbox (like the Drafts feed). */
+  padding: var(--ref-spacing-sm) 0;
+  align-items: stretch;
 }
 
 /* Clip row — a left checkbox gutter + the clip card, mirroring the Drafts
