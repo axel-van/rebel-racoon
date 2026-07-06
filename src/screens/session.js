@@ -69,7 +69,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=9";
-import * as contextBuilder from "../context-builder.js?v=157";
+import * as contextBuilder from "../context-builder.js?v=158";
 import { renderPicker } from "./_analyse-common.js?v=54";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";

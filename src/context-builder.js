@@ -258,36 +258,33 @@ function askAltUrl(sessionId, prefilledUrl = "") {
   });
 }
 
-// Language step (multilingual flag ON only) — pick the language(s) the Playbook
-// publishes in. The first pick is the primary. Voice examples are authored per
-// language later, never translated.
+// Language step (multilingual flag ON only) — pick the ONE language this
+// Playbook writes in. It becomes the Playbook's primary language, the default
+// Archie drafts posts in; more languages can be added later in the editor.
+// Voice examples are authored per language, never translated.
 function askAltLanguage(sessionId) {
   postAssistantMessage(
     sessionId,
-    "Which language(s) will this Playbook publish in? I'll write posts natively in each — never translated.",
+    "Which language should this Playbook write in? It's the language I'll draft your posts in — you can add more later in the Playbook.",
   );
   const d = drafts.get(sessionId);
   const current =
-    Array.isArray(d?.languages) && d.languages.length
-      ? d.languages
-      : [d?.primaryLanguage || d?.language || DEFAULT_LANGUAGE];
+    d?.primaryLanguage || d?.language || (Array.isArray(d?.languages) && d.languages[0]) || DEFAULT_LANGUAGE;
   inlineQuestion.ask(sessionId, {
-    title: "Choose your Playbook language(s)",
-    subtitle: "Pick one or more. The first you pick is the primary.",
+    title: "Choose your Playbook language",
+    subtitle: "The language I'll write your posts in. You can add more later.",
     stepLabel: altStepLabel(2),
     items: LANGUAGE_OPTIONS.map((l) => ({ value: l, label: l, icon: "ap-icon-web" })),
-    multi: true,
-    defaultSelected: current,
-    submitLabel: "Continue",
-    onPick: (langs) => {
-      const chosen = Array.isArray(langs) && langs.length ? langs : [DEFAULT_LANGUAGE];
+    selected: current,
+    onPick: (lang) => {
+      const chosen = lang || DEFAULT_LANGUAGE;
       const dd = drafts.get(sessionId);
       if (dd) {
-        dd.languages = chosen.slice();
-        dd.primaryLanguage = chosen[0];
-        dd.language = chosen[0];
+        dd.languages = [chosen];
+        dd.primaryLanguage = chosen;
+        dd.language = chosen;
       }
-      postUserTurn(sessionId, chosen.join(" · "));
+      postUserTurn(sessionId, chosen);
       inlineQuestion.exit(sessionId);
       notify(sessionId);
       askAltProfile(sessionId);
