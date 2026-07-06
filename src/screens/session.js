@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=183";
+import { renderTopbar } from "../components/topbar.js?v=184";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -68,7 +68,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=9";
-import * as contextBuilder from "../context-builder.js?v=150";
+import * as contextBuilder from "../context-builder.js?v=151";
 import { renderPicker } from "./_analyse-common.js?v=54";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -109,7 +109,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=282";
+} from "../components/right-panel.js?v=283";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=13";
@@ -2644,9 +2644,10 @@ export function startClipDraftFlow(sessionId, entries) {
 const CLIP_RATIO_ORDER = ["16:9", "9:16", "4:3", "1:1", "4:5"];
 
 // A small proportion tile — a rectangle drawn at the format's true aspect
-// ratio (CSS `aspect-ratio`), styled in styles/components/subtitle-style.css.
+// ratio (CSS `aspect-ratio`), with the ratio label centered inside it so the
+// card needs no separate "16:9" line. Styled in subtitle-style.css.
 function ratioTilePreview(fmt) {
-  return `<span class="ratio-tile"><span class="ratio-tile__frame" style="aspect-ratio:${fmt.id.replace(":", "/")}"></span></span>`;
+  return `<span class="ratio-tile"><span class="ratio-tile__frame" style="aspect-ratio:${fmt.id.replace(":", "/")}"></span><span class="ratio-tile__tag">${fmt.tag}</span></span>`;
 }
 
 // Row of full-colour network logos for the platforms a format suits best —
@@ -2672,8 +2673,8 @@ function askClipFormat(sessionId, entries) {
     variant: "cards",
     items: formats.map((f) => ({
       value: f.id,
-      label: f.tag,
-      caption: f.label,
+      // Ratio ("16:9") lives inside the frame; the label carries the name only.
+      label: f.label,
       preview: ratioTilePreview(f),
       meta: ratioNetworksMeta(f),
     })),

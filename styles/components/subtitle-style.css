@@ -122,6 +122,7 @@
 
 /* ── Aspect-ratio proportion tiles ─────────────────────────────────────── */
 .ratio-tile {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -138,6 +139,21 @@
   border-radius: 3px;
   background: var(--ref-color-electric-blue-05);
   border: 1.5px solid var(--ref-color-electric-blue-100);
+}
+
+/* Ratio label centered over the frame — absolute so narrow frames (9:16) don't
+   clip the text; it reads as a number labeling the shape. */
+.ratio-tile__tag {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: 1;
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-electric-blue-150);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
 }
 
 /* ── Subtitle-style previews ("MAKE IT POP" mocks) ─────────────────────── */
