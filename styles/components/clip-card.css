@@ -81,10 +81,10 @@
   outline-offset: -2px;
 }
 
-/* Multi-select checkbox — top-left of the thumbnail, over the scrim. Toggles
-   the clip into the "Draft posts from N clips" bulk selection. Selected state
-   fills electric blue with a check; the whole card also gets a blue border
-   (see .clip-card.is-selected) per the card selection convention. */
+/* Multi-select checkbox — the DS .ap-checkbox-container, positioned top-left of
+   the thumbnail (over the scrim). The DS owns the box + check appearance; this
+   only places it and sits it on a soft dark chip so it stays legible over any
+   thumbnail. The whole card also gets a blue border when selected. */
 .clip-card {
   position: relative;
 }
@@ -94,43 +94,9 @@
   top: var(--ref-spacing-xs);
   left: var(--ref-spacing-xs);
   z-index: 3;
-  width: 24px;
-  height: 24px;
-  display: grid;
-  place-items: center;
-  padding: 0;
+  padding: 3px;
   border-radius: var(--app-radius-sm);
-  border: 1.5px solid var(--ref-color-white);
-  background: color-mix(in srgb, var(--ref-color-grey-100) 42%, transparent);
-  color: var(--ref-color-white);
-  cursor: pointer;
-  transition:
-    background-color var(--ref-animation-short) var(--app-ease-out),
-    border-color var(--ref-animation-short) var(--app-ease-out);
-}
-
-.clip-card__select > i {
-  font-size: 15px;
-  opacity: 0;
-  transition: opacity var(--ref-animation-short) var(--app-ease-out);
-}
-
-.clip-card__select:hover {
-  border-color: var(--ref-color-electric-blue-100);
-}
-
-.clip-card__select.is-selected {
-  background: var(--ref-color-electric-blue-100);
-  border-color: var(--ref-color-electric-blue-100);
-}
-
-.clip-card__select.is-selected > i {
-  opacity: 1;
-}
-
-.clip-card__select:focus-visible {
-  outline: 2px solid var(--ref-color-electric-blue-100);
-  outline-offset: 2px;
+  background: color-mix(in srgb, var(--ref-color-grey-100) 38%, transparent);
 }
 
 .clip-card.is-selected {

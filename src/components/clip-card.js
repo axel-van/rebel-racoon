@@ -101,20 +101,15 @@ export function renderClipCard(
     `
     : "";
 
-  // Selection checkbox — multi-select for the "Draft posts from N clips" bulk
-  // action. Toggles clipSelection in right-panel (data-clip-select handler),
-  // which repaints the list + footer CTA.
+  // Selection checkbox — the DS .ap-checkbox-container (same control as the
+  // Drafts cards + the clips select-all), positioned over the thumbnail.
+  // Toggles clipSelection in right-panel (data-clip-select change handler).
   const selectBtn = sessionId
     ? `
-      <button
-        type="button"
-        class="clip-card__select${selected ? " is-selected" : ""}"
-        data-clip-select="${escapeAttr(clip.id)}"
-        aria-pressed="${selected ? "true" : "false"}"
-        aria-label="${selected ? "Deselect clip" : "Select clip"}"
-      >
-        <i class="ap-icon-check" aria-hidden="true"></i>
-      </button>
+      <label class="ap-checkbox-container clip-card__select" aria-label="Select clip">
+        <input type="checkbox" data-clip-select="${escapeAttr(clip.id)}" ${selected ? "checked" : ""} />
+        <i></i>
+      </label>
     `
     : "";
 

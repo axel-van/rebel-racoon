@@ -14,12 +14,12 @@ import {
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=31";
 import { renderPostCard } from "./post-card.js?v=47";
-import { renderClipCard } from "./clip-card.js?v=10";
+import { renderClipCard } from "./clip-card.js?v=11";
 import { onFeedbackClick } from "./feedback-control.js?v=1";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=49";
-import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=151";
+import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=152";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -729,7 +729,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=390").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=391").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -843,15 +843,8 @@ export function init() {
       renderPanel();
       return;
     }
-    // Clip selection toggle (multi-select in Clips tab).
-    const clipSelectInput = event.target.closest("[data-clip-select]");
-    if (clipSelectInput) {
-      const cid = clipSelectInput.getAttribute("data-clip-select");
-      if (clipSelection.has(cid)) clipSelection.delete(cid);
-      else clipSelection.add(cid);
-      renderPanel();
-      return;
-    }
+    // Clip selection toggle is a DS checkbox — handled in the `change`
+    // delegate below (mirrors the Drafts per-card checkbox), not on click.
     // Clip-card "Edit" affordance (kebab menu item or thumbnail click).
     // Opens the video-clips modal pre-positioned on the target clip so
     // the user lands directly on the trim/preview surface.
@@ -919,7 +912,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=390").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=391").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -937,7 +930,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=390").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=391").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -1167,6 +1160,14 @@ export function init() {
     const selectNetworkBox = event.target.matches("[data-rpanel-drafts-select-network]") ? event.target : null;
     if (selectNetworkBox) {
       setNetworkSelection(selectNetworkBox.dataset.rpanelDraftsSelectNetwork, event.target.checked);
+      return;
+    }
+    // Per-clip multi-select checkbox (Clips tab).
+    if (event.target.matches("[data-clip-select]")) {
+      const cid = event.target.dataset.clipSelect;
+      if (event.target.checked) clipSelection.add(cid);
+      else clipSelection.delete(cid);
+      renderPanel();
       return;
     }
     // Clips "Select all" — toggle every clip in/out of the selection.
@@ -2737,7 +2738,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=390").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=391").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
