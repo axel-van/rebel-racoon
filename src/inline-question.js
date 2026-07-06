@@ -81,7 +81,9 @@ export function ask(sessionId, opts) {
   if (opts.stepper) {
     const def = opts.defaultCount ?? 1;
     opts._counts = {};
-    for (const it of opts.items || []) opts._counts[it.value] = def;
+    // A row may seed its own starting count (e.g. source profiles start at 1,
+    // others at 0 in the unified repurpose picker); else use defaultCount.
+    for (const it of opts.items || []) opts._counts[it.value] = it.count ?? def;
     opts._selected = opts.items?.[0]?.value ?? null;
   } else if (opts.single) {
     // Single-select-with-confirm — one highlighted row, confirmed by a separate

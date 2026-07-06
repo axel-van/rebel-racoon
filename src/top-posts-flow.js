@@ -14,11 +14,11 @@
 //   2. echoRepurposePicks — echo the picked post(s). session.js then drives the
 //                           angle + profile quick-pickers (inline-question), the
 //                           same numbered Quickpicker the draft flow uses; the
-//                           data helpers here (ANGLE_CHOICES / repurposeScope-
-//                           Items / repurposeProfileItems) feed those pickers.
-//                           The profile step opens on a same-vs-other choice:
-//                           repost a fresh take back to the winner's own profile,
-//                           or spread it to OTHER connected profiles.
+//                           data helpers here (ANGLE_CHOICES / repurposeProfile-
+//                           Items) feed those pickers. The profile step is a
+//                           single per-profile version stepper listing every
+//                           connected profile — source-network profiles lead,
+//                           tagged "· Source" and pre-set to 1 version.
 //   3. executeRepurpose   — thinking chip → one adapted draft per
 //                           post × angle × target profile → post a result turn.
 
@@ -37,7 +37,7 @@ import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "
 import { SORTS } from "./components/top-post-card.js?v=40";
 import { isFlagOn } from "./feature-flags.js?v=9";
 import { showToast } from "./components/toast.js?v=20";
-import * as inlineQuestion from "./inline-question.js?v=46";
+import * as inlineQuestion from "./inline-question.js?v=47";
 import { getDefaultContext } from "./contexts-store.js?v=31";
 
 // Cap on drafts produced in one run — post × angle × channel can multiply fast
@@ -662,6 +662,9 @@ export function repurposeProfileItems(postIds, { include = "other" } = {}) {
     return {
       value: p.id,
       label: p.handle,
+      // Flag source-network profiles so the caller can default them "on" in the
+      // unified repurpose stepper (source pre-set to 1, others to 0).
+      isSource: isSource(p),
       // "Source" is emphasised (own class) so it stands out from the muted
       // "Network · Kind" prefix. Caption is inserted raw by the picker renderer.
       caption: tagSource && isSource(p) ? `${base} · <span class="top-posts-source-tag">Source</span>` : base,
