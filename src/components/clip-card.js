@@ -130,7 +130,7 @@ export function renderClipCard(
               <i class="ap-icon-arrow-right clip-card__timeframe-arrow" aria-hidden="true"></i>
               <span class="clip-card__timeframe-time">${fmtTime(clip.end || 0)}</span>
             </span>
-            <span class="ap-tag orange clip-card__timeframe-duration">${duration}</span>
+            <span class="clip-card__timeframe-duration">${duration}</span>
           </span>
         </span>
       </button>
