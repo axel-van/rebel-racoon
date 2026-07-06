@@ -657,15 +657,15 @@ span.chat-bubble-choice-chip {
 
 .drafts-card:hover,
 .drafts-card:focus-visible {
-  /* Interactive lift: the border picks up the thread's navy
-     clickable accent on hover/focus, same gesture as the choice chips. */
-  border-color: var(--app-convo-navy);
+  /* Clickable-card convention: blue border on hover/focus (never navy/black),
+     the same accent every interactive card in the app uses. */
+  border-color: var(--ref-color-electric-blue-100);
   outline: none;
 }
 
 .drafts-card.is-active {
-  border-color: var(--app-convo-navy);
-  background: var(--app-convo-navy-10);
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-05);
 }
 
 /* Non-interactive result-card states (folded in from the old
