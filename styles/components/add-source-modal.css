@@ -194,25 +194,10 @@
   gap: var(--ref-spacing-xs);
 }
 
+/* Layout-only — the field chrome (border, padding, hover / blue focus states)
+   comes from the DS .ap-textarea-field wrapper; this just sizes the box. */
 .add-source__paste-input {
-  width: 100%;
   min-height: 200px;
-  resize: vertical;
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--ref-border-radius-md);
-  padding: var(--ref-spacing-sm);
-  font-family: inherit;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--ref-color-grey-100);
-  background: var(--ref-color-white);
-  box-sizing: border-box;
-}
-
-.add-source__paste-input:focus {
-  outline: none;
-  border-color: var(--ref-color-orange-100);
-  box-shadow: 0 0 0 3px var(--ref-color-orange-10);
 }
 
 .add-source__paste-row {

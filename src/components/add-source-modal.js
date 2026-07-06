@@ -334,7 +334,9 @@ function renderPasteTextTab() {
   const count = state.pasteValue.length;
   return html`
     <div class="add-source__paste">
-      <div class="ap-form-field">
+      <!-- DS textarea component — .ap-textarea-field owns the field states
+           (hover / blue focus / focus-visible ring); .resizable = vertical. -->
+      <div class="ap-textarea-field resizable">
         <div class="add-source__paste-label-row">
           <label for="addSourcePasteInput">Paste your text</label>
           <button type="button" class="ap-button ghost blue add-source__paste-clip" data-paste-clipboard>
