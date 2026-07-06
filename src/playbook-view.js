@@ -161,6 +161,18 @@ function repaint() {
   if (mountTarget) paint();
 }
 
+// Repaint without losing the scroll position. paint() rebuilds the whole
+// `.welcome-screen` (the scroll container), so its scrollTop resets to 0 —
+// jarring for in-place toggles like the Voice language switcher. Capture the
+// scroll offset and restore it onto the freshly-rendered scroller.
+function repaintPreservingScroll() {
+  if (!mountTarget) return;
+  const top = mountTarget.querySelector(".welcome-screen")?.scrollTop ?? 0;
+  paint();
+  const next = mountTarget.querySelector(".welcome-screen");
+  if (next) next.scrollTop = top;
+}
+
 function isReady() {
   return cfg.isReady ? cfg.isReady() : true;
 }
@@ -1280,7 +1292,7 @@ function onClick(event) {
   const voiceLang = event.target.closest("[data-recap-voice-lang]");
   if (voiceLang) {
     activeVoiceLang = voiceLang.dataset.recapVoiceLang;
-    repaint();
+    repaintPreservingScroll();
     return;
   }
 
