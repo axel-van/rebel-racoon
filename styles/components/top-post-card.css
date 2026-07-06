@@ -431,6 +431,9 @@
   padding: var(--ref-spacing-sm);
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-card);
+  /* User-side corner language: sharp top-right (12 / 0 / 12 / 12), same as
+     .chat-bubble--user, so every right-aligned response shares the shape. */
+  border-top-right-radius: 0;
   background: var(--ref-color-white);
 }
 

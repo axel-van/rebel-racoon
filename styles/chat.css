@@ -39,6 +39,9 @@
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   border: 1px solid var(--app-convo-navy-20);
   border-radius: var(--app-radius-card, 12px);
+  /* User-side corner language: sharp top-right (12 / 0 / 12 / 12), same as
+     .chat-bubble--user, so every right-aligned response shares the shape. */
+  border-top-right-radius: 0;
   background: var(--app-convo-navy-05);
 }
 
