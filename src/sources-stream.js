@@ -629,6 +629,30 @@ export function startConnectorImport(connector, doc, sessionId) {
   return upload.id;
 }
 
+// Add an already-known item as a ready (Processed) source — no upload, no
+// processing ticker. Used when a repurposed top post should show up in the
+// Sources panel so the user can find what fed their drafts. Deduped by id
+// (stable per post), so repurposing the same post twice doesn't duplicate it.
+// `iconClass` lets the row render a network logo (see renderSourceRow).
+export function addReadySource(sessionId, { id, filename, kind = "Post", preview = "", iconClass = null }) {
+  const list = getOrInitSessionSources(sessionId);
+  if (list.some((s) => s.id === id)) return id;
+  list.unshift({
+    id,
+    filename,
+    kind,
+    status: "Processed",
+    signal: "Reused",
+    signalColor: "grey",
+    ideaCount: 0,
+    addedAt: "just now",
+    preview,
+    iconClass,
+  });
+  notifySources(sessionId);
+  return id;
+}
+
 // Scripted-source pipeline used by the session composer's inline `+` menu
 // (Add PDF / Add video / Add URL). The caller controls timing — push the
 // source as Processing, then flip it Processed in lockstep with the

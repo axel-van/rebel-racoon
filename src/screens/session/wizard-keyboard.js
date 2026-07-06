@@ -13,7 +13,7 @@
 
 import * as sidebarWizard from "../../sidebar-wizard.js?v=50";
 import * as inlineQuestion from "../../inline-question.js?v=46";
-import * as topPostsFlow from "../../top-posts-flow.js?v=57";
+import * as topPostsFlow from "../../top-posts-flow.js?v=58";
 import { bindWizardKeyboard, unbindWizardKeyboard } from "../_analyse-common.js?v=54";
 
 export function rebindWizardKeyboard(aside, sessionId) {

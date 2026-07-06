@@ -32,6 +32,7 @@ import {
 } from "./assistant.js?v=55";
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=6";
 import { addPostDraft } from "./posts-store.js?v=31";
+import { addReadySource } from "./sources-stream.js?v=47";
 import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=23";
 import { SORTS } from "./components/top-post-card.js?v=40";
 import { isFlagOn } from "./feature-flags.js?v=9";
@@ -767,6 +768,18 @@ export function executeRepurpose(sessionId, anglesByPost, targets) {
   withPendingChip(
     sessionId,
     () => {
+      // Each repurposed post becomes a ready source so the user can later find
+      // which post fed these drafts (deduped by id in sources-stream).
+      for (const { post } of entries) {
+        const meta = CHANNEL_META[normNet(post.network)] || {};
+        addReadySource(sessionId, {
+          id: `src-toppost-${post.id}`,
+          filename: truncate(firstSentence(post.excerpt), 60),
+          kind: `${meta.label || "Post"} post`,
+          preview: `Repurposed${post.perfBadge ? ` · ${post.perfBadge}` : ""}`,
+          iconClass: meta.icon || null,
+        });
+      }
       const drafts = [];
       let capped = false;
       outer: for (const { post, keys } of entries) {

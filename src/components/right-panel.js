@@ -19,21 +19,21 @@ import { onFeedbackClick } from "./feedback-control.js?v=1";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=49";
-import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=152";
+import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=153";
 import {
   getSources as getStreamSources,
   subscribeSources,
   updateSourceClips,
   removeSources,
   renameSource,
-} from "../sources-stream.js?v=46";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=56";
+} from "../sources-stream.js?v=47";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=57";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=25";
 import { askConnector } from "../connector-ask.js?v=5";
 import { renderConnectorLogo } from "../connectors-view.js?v=7";
 import { open as openConnectorsModal } from "./connectors-modal.js?v=8";
-import { addMention as addComposerMention } from "../composer-mentions.js?v=18";
+import { addMention as addComposerMention } from "../composer-mentions.js?v=19";
 import { iconFor } from "../file-kinds.js?v=20";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
@@ -729,7 +729,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=391").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=392").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -912,7 +912,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=391").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=392").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -930,7 +930,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=391").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=392").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -2313,7 +2313,9 @@ function closeAllSourceMenus(except) {
 }
 
 function renderSourceRow(src) {
-  const icon = SOURCE_KIND_ICON[src.kind] || "ap-icon-file";
+  // Explicit iconClass wins (e.g. a repurposed post's network logo), else map
+  // by kind, else the generic file glyph.
+  const icon = src.iconClass || SOURCE_KIND_ICON[src.kind] || "ap-icon-file";
   const isProcessing = src.status !== "Processed";
   // Only surface a status pill while the source is in-flight. Once
   // Processed, the card stays uncluttered. Mermaid-tinted pill mirrors
@@ -2738,7 +2740,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=391").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=392").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
