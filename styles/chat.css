@@ -686,24 +686,12 @@ span.chat-bubble-choice-chip {
   opacity: 0.65;
 }
 
-/* Transparent tile so the shared dot-grid loader (.drafts-card__spinner,
-   styled in archie-loader.css) paints directly on the card surface. */
-.drafts-card__icon--spinner {
-  background: transparent;
-}
-
-.drafts-card__icon--muted {
-  background: var(--ref-color-grey-05);
-}
-
-.drafts-card__icon--muted > i {
-  background: none;
-  color: var(--ref-color-grey-100);
-}
-
-/* Icon tile — soft mermaid background; the sparkles icon is mask-based,
-   so painting its OWN background with the mermaid gradient renders the
-   glyph itself in the purple→pink AI accent. */
+/* Icon tile — Archie's brand identity: soft orange tile + flat orange glyph
+   (orange = AI per the app convention), the same paint as the thread's Archie
+   avatar and the brand loader. The tile is IDENTICAL across pending / ready /
+   unavailable so the card doesn't jump colors when the state flips — only the
+   tile's content swaps (loader → glyph). The archie mark is mask-based, so its
+   `background` paints the glyph itself. */
 .drafts-card__icon {
   display: inline-flex;
   align-items: center;
@@ -711,13 +699,28 @@ span.chat-bubble-choice-chip {
   width: var(--ref-spacing-lg);
   height: var(--ref-spacing-lg);
   border-radius: var(--app-radius-button-sm);
-  background: var(--ref-color-mermaid-10);
+  background: var(--ref-color-orange-10);
   flex-shrink: 0;
 }
 
 .drafts-card__icon > i {
   font-size: var(--sys-icon-css-sm);
-  background: var(--ref-color-mermaid-gradient-background);
+  background: var(--ref-color-orange-100);
+}
+
+/* Pending — the brand pixel-pop loader (injected by archie-loader.js, paints
+   orange via currentColor) sits on the same orange tile as the ready glyph.
+   NOTE: state modifiers live AFTER the base rule so they actually win. */
+.drafts-card__icon--spinner {
+  background: var(--ref-color-orange-10);
+}
+
+.drafts-card__icon--muted {
+  background: var(--ref-color-grey-05);
+}
+
+.drafts-card__icon--muted > i {
+  background: var(--ref-color-grey-100);
 }
 
 .drafts-card__main {
