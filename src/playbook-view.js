@@ -15,13 +15,9 @@
 // is safe because only one route renders at a time.
 
 import { html, raw, escapeHtml as esc } from "./utils.js?v=21";
-import { analyzeWebsite } from "./context-mock-analysis.js?v=23";
-
-// Archie's UI and AI generation are English-only today. Other languages
-// were removed (audit B8) to keep the Playbook field honest — re-add them
-// here AND in components/right-panel.js LANGUAGE_OPTIONS when multilingual
-// generation ships.
-const LANGUAGE_OPTIONS = ["English"];
+import { analyzeWebsite } from "./context-mock-analysis.js?v=24";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1";
+import { isFlagOn } from "./feature-flags.js?v=9";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -48,6 +44,10 @@ const SECTIONS = [
 // (q = prompt, a = what Archie does with it); Voice & style and Brand each get
 // a single "captured by Archie" banner.
 const FIELD_HINTS = {
+  languages: {
+    q: "Which languages do you publish in?",
+    a: "Pick one or more. I write posts in the language you choose — and use the native Voice examples for that language, never a translation.",
+  },
   businessSummary: {
     q: "Does this describe your business correctly?",
     a: "Archie analysed your website and wrote this summary.",
@@ -92,6 +92,7 @@ let cfg = null;
 let editScope = null; // null (read) | "goals" | "voice" | "brand"
 let snapshot = null; // deep copy of editable fields, for Cancel
 let audienceCustom = false; // "Other…" picked in the Primary audience dropdown
+let activeVoiceLang = null; // which language the Voice & style panel is showing/editing
 let loadingTimer = null;
 let loadingStage = 0;
 let phase = "ready"; // "loading" | "ready"
@@ -265,6 +266,9 @@ export function snapshotEditable(d) {
       contentAction: d.contentAction || [],
       ctaLinks: d.ctaLinks || [],
       language: d.language || "",
+      languages: d.languages || [],
+      primaryLanguage: d.primaryLanguage || "",
+      voiceByLanguage: d.voiceByLanguage || {},
       signatureHooks: d.signatureHooks || [],
       closingPatterns: d.closingPatterns || [],
       formattingStyle: d.formattingStyle || "",
@@ -277,6 +281,62 @@ export function snapshotEditable(d) {
       referenceImages: d.referenceImages || [],
     }),
   );
+}
+
+// ── Language helpers (multilingual Playbook) ───────────────────────────────
+
+// Multilingual Playbooks are gated behind a feature flag (default OFF). When
+// OFF, a Playbook behaves single-language: only the primary language surfaces,
+// no per-language voice switcher, no draft-time language question.
+function multilingualOn() {
+  return isFlagOn("multilingualPlaybook");
+}
+
+// The Playbook's declared languages, always a non-empty array. Collapses to
+// the primary language alone when the multilingual flag is OFF (secondary
+// languages stay in the data, just hidden).
+function contextLanguages(data) {
+  const langs = Array.isArray(data.languages) && data.languages.length ? data.languages : null;
+  const primary = data.primaryLanguage || (langs && langs[0]) || data.language || "English";
+  if (!multilingualOn()) return [primary];
+  return langs || [primary];
+}
+
+// The language the Voice & style panel currently shows/edits — kept valid
+// against the declared languages, defaulting to the primary.
+function currentVoiceLang(data) {
+  const langs = contextLanguages(data);
+  if (!activeVoiceLang || !langs.includes(activeVoiceLang)) {
+    activeVoiceLang = data.primaryLanguage && langs.includes(data.primaryLanguage) ? data.primaryLanguage : langs[0];
+  }
+  return activeVoiceLang;
+}
+
+// The per-language voice entry for the active language (created on demand).
+// Voice examples (signatureHooks / closingPatterns / cta) are authored per
+// language and NEVER machine-translated.
+//
+// When the entry is missing, the PRIMARY language seeds from the flat legacy
+// fields — a draft fresh from the website analysis has flat signatureHooks /
+// closingPatterns populated but no per-language map yet, so without this the
+// recap would read "Not set yet". Secondary languages start empty (authored
+// natively per language).
+function voiceEntry(data) {
+  const lang = currentVoiceLang(data);
+  if (!data.voiceByLanguage || typeof data.voiceByLanguage !== "object") data.voiceByLanguage = {};
+  if (!data.voiceByLanguage[lang]) {
+    const primary = data.primaryLanguage || contextLanguages(data)[0];
+    data.voiceByLanguage[lang] =
+      lang === primary
+        ? {
+            signatureHooks: Array.isArray(data.signatureHooks) ? data.signatureHooks.slice() : [],
+            closingPatterns: Array.isArray(data.closingPatterns) ? data.closingPatterns.slice() : [],
+            cta: data.cta || "",
+            ctaLabels: {},
+          }
+        : emptyVoiceEntry(data);
+  }
+  return data.voiceByLanguage[lang];
 }
 
 // ── Shared bits ──────────────────────────────────────────────────────────
@@ -609,18 +669,55 @@ function renderSectionHint(hint) {
 
 // ── Section panels ─────────────────────────────────────────────────────
 
+// Read view — the declared languages as chips, the primary one marked.
+function renderLanguageChips(data) {
+  const langs = contextLanguages(data);
+  const primary = data.primaryLanguage || langs[0];
+  return `<div class="recap__chips">${langs
+    .map(
+      (l) =>
+        `<span class="ap-tag blue recap__chip">${esc(l)}${l === primary && langs.length > 1 ? ` <span class="recap__lang-primary-tag">primary</span>` : ""}</span>`,
+    )
+    .join("")}</div>`;
+}
+
+// Edit view — toggle chips for language membership + a primary-language picker
+// when more than one is selected. Voice examples are then authored per language
+// in the Voice & style panel (never machine-translated).
+function renderLanguagePicker(data) {
+  const selected = contextLanguages(data);
+  const primary = data.primaryLanguage || selected[0];
+  // Single-language mode (flag OFF) — a plain picker fixed to the primary
+  // language, matching the pre-multilingual behaviour.
+  if (!multilingualOn()) {
+    return `<select class="ap-native-select recap__lang-select" data-recap-primary-language aria-label="Language">
+      <option value="${esc(primary)}" selected>${esc(primary)}</option>
+    </select>`;
+  }
+  const chips = LANGUAGE_OPTIONS.map((o) => {
+    const on = selected.includes(o);
+    return `<button type="button" class="ap-filter-chip" aria-pressed="${on}" data-recap-lang-toggle="${esc(o)}">${esc(o)}</button>`;
+  }).join("");
+  const primaryPicker =
+    selected.length > 1
+      ? `<label class="recap__lang-primary">
+           <span class="recap__lang-primary-label">Primary — the language I write in by default</span>
+           <select class="ap-native-select recap__lang-select" data-recap-primary-language aria-label="Primary language">
+             ${selected.map((o) => `<option value="${esc(o)}" ${o === primary ? "selected" : ""}>${esc(o)}</option>`).join("")}
+           </select>
+         </label>`
+      : "";
+  return `<div class="recap__lang-picker" data-recap-langs>${chips}</div>${primaryPicker}`;
+}
+
 function renderGoalsPanel(data, edit) {
   const section = SECTIONS[0];
-  const language = data.language || "English";
   let body;
   if (edit) {
-    const selected = language;
     body = [
       renderRow(
-        "Language",
-        `<select class="ap-native-select recap__lang-select" data-recap-language aria-label="Language">
-          ${LANGUAGE_OPTIONS.map((o) => `<option value="${esc(o)}" ${o === selected ? "selected" : ""}>${esc(o)}</option>`).join("")}
-        </select>`,
+        contextLanguages(data).length > 1 ? "Languages" : "Language",
+        (multilingualOn() ? renderFieldHint(FIELD_HINTS.languages) : "") + renderLanguagePicker(data),
       ),
       renderRow(
         "Business",
@@ -640,9 +737,9 @@ function renderGoalsPanel(data, edit) {
     ].join("");
   } else {
     body = [
-      // Mirror the edit order: Language leads the panel so the recap surfaces
-      // which language Archie writes in (it's the first field in edit mode).
-      renderRow("Language", renderText(language)),
+      // Mirror the edit order: language leads the panel so the recap surfaces
+      // which language(s) Archie writes in (it's the first field in edit mode).
+      renderRow(contextLanguages(data).length > 1 ? "Languages" : "Language", renderLanguageChips(data)),
       renderRow("Business", renderText(data.businessSummary)),
       // Primary audience is single-select, so show it as plain text rather than
       // a one-chip row; the other goal fields stay multi-value chips.
@@ -670,9 +767,31 @@ function renderVoiceModeToggle(mode) {
     </div>`;
 }
 
+// Per-language switcher for the guided Voice examples. Only shown when the
+// Playbook has more than one language — signature hooks + closing patterns are
+// authored natively per language, never translated.
+function renderVoiceLangSwitcher(data) {
+  const langs = contextLanguages(data);
+  if (langs.length < 2) return "";
+  const active = currentVoiceLang(data);
+  return `
+    <div class="recap__voice-langs" role="group" aria-label="Voice language">
+      <span class="recap__voice-langs-label">Examples for</span>
+      <div class="recap__voice-langs-group">
+        ${langs
+          .map(
+            (l) =>
+              `<button type="button" class="ap-filter-chip" aria-pressed="${l === active}" data-recap-voice-lang="${esc(l)}">${esc(l)}</button>`,
+          )
+          .join("")}
+      </div>
+    </div>`;
+}
+
 function renderVoicePanel(data, edit) {
   const section = SECTIONS[1];
   const manual = data.voiceMode === "manual";
+  const ve = voiceEntry(data);
   let body;
   if (edit) {
     const fields = manual
@@ -682,7 +801,8 @@ function renderVoicePanel(data, edit) {
            </div>
          </div>`
       : [
-          ...LINE_FIELDS.map((f) => renderRow(f.label, renderLineEditor(f.key, data[f.key], f.placeholder))),
+          renderVoiceLangSwitcher(data),
+          ...LINE_FIELDS.map((f) => renderRow(f.label, renderLineEditor(f.key, ve[f.key], f.placeholder))),
           renderRow(
             "Formatting",
             renderTextarea(
@@ -701,8 +821,9 @@ function renderVoicePanel(data, edit) {
     body = renderRow("In your words", renderText(data.voiceManual));
   } else {
     body = [
-      renderRow("Signature hooks", renderQuotes(data.signatureHooks)),
-      renderRow("Closing patterns", renderQuotes(data.closingPatterns)),
+      renderVoiceLangSwitcher(data),
+      renderRow("Signature hooks", renderQuotes(ve.signatureHooks)),
+      renderRow("Closing patterns", renderQuotes(ve.closingPatterns)),
       renderRow("Formatting", renderText(data.formattingStyle)),
       renderRow("Visual style", renderText(data.visualStyle)),
     ].join("");
@@ -813,7 +934,7 @@ function renderHeader(data) {
   const usedIn = typeof data.usedIn === "number" ? data.usedIn : null;
 
   const meta = [
-    `<span class="recap__meta-item"><i class="ap-icon-web" aria-hidden="true"></i>${esc(data.language || "English")}</span>`,
+    `<span class="recap__meta-item"><i class="ap-icon-web" aria-hidden="true"></i>${esc(contextLanguages(data).join(" · "))}</span>`,
     domain ? `<span class="recap__meta-item recap__meta-dim">${esc(domain)}</span>` : "",
     usedIn !== null ? `<span class="recap__meta-item">Used in ${usedIn} ${usedIn === 1 ? "chat" : "chats"}</span>` : "",
   ]
@@ -861,7 +982,7 @@ function renderRail(data) {
   const domain = site?.domain || prettyUrl(data.websiteUrl);
 
   const facts = [
-    `<div class="recap__fact"><dt>Language</dt><dd>${esc(data.language || "English")}</dd></div>`,
+    `<div class="recap__fact"><dt>${contextLanguages(data).length > 1 ? "Languages" : "Language"}</dt><dd>${esc(contextLanguages(data).join(", "))}</dd></div>`,
     usedIn !== null
       ? `<div class="recap__fact"><dt>Used in</dt><dd>${usedIn} ${usedIn === 1 ? "chat" : "chats"}</dd></div>`
       : "",
@@ -1038,9 +1159,12 @@ function addAudienceCustom() {
 function addLine(field) {
   const data = cfg.getData();
   if (!data) return;
-  const list = Array.isArray(data[field]) ? data[field].slice() : [];
+  // Signature hooks / closing patterns are authored per language — write into
+  // the active language's voice entry, not the flat mirror.
+  const entry = voiceEntry(data);
+  const list = Array.isArray(entry[field]) ? entry[field].slice() : [];
   list.push("");
-  data[field] = list;
+  entry[field] = list;
   repaint();
   const inputs = mountTarget?.querySelectorAll(`[data-recap-line-list="${field}"]`);
   inputs?.[inputs.length - 1]?.focus();
@@ -1101,9 +1225,17 @@ function onClick(event) {
     if (Array.isArray(data.ctaLinks)) {
       data.ctaLinks = data.ctaLinks.filter((c) => (c.label || "").trim() || (c.url || "").trim() || c.suggested);
     }
+    // Drop empty lines from the flat mirror AND every per-language voice entry.
     ["signatureHooks", "closingPatterns"].forEach((f) => {
       if (Array.isArray(data[f])) data[f] = data[f].filter((s) => (s || "").trim());
     });
+    if (data.voiceByLanguage && typeof data.voiceByLanguage === "object") {
+      Object.values(data.voiceByLanguage).forEach((entry) => {
+        ["signatureHooks", "closingPatterns"].forEach((f) => {
+          if (Array.isArray(entry[f])) entry[f] = entry[f].filter((s) => (s || "").trim());
+        });
+      });
+    }
     cfg.commit?.();
     snapshot = null;
     editScope = null;
@@ -1118,6 +1250,37 @@ function onClick(event) {
     data.voiceMode = voiceMode.dataset.recapVoiceMode;
     repaint();
     mountTarget?.querySelector("[data-recap-text='voiceManual']")?.focus();
+    return;
+  }
+
+  // Languages (Audience & goals) — toggle a language in/out of the Playbook.
+  const langToggle = event.target.closest("[data-recap-lang-toggle]");
+  if (langToggle) {
+    const lang = langToggle.dataset.recapLangToggle;
+    const langs = contextLanguages(data).slice();
+    const at = langs.indexOf(lang);
+    if (at >= 0) {
+      if (langs.length <= 1) return; // never remove the last language
+      langs.splice(at, 1);
+      if (data.voiceByLanguage) delete data.voiceByLanguage[lang];
+      if (data.primaryLanguage === lang) data.primaryLanguage = langs[0];
+      if (activeVoiceLang === lang) activeVoiceLang = null;
+    } else {
+      langs.push(lang);
+      if (!data.voiceByLanguage || typeof data.voiceByLanguage !== "object") data.voiceByLanguage = {};
+      if (!data.voiceByLanguage[lang]) data.voiceByLanguage[lang] = emptyVoiceEntry(data);
+    }
+    data.languages = langs;
+    if (!data.primaryLanguage || !langs.includes(data.primaryLanguage)) data.primaryLanguage = langs[0];
+    repaint();
+    return;
+  }
+
+  // Voice & style — switch which language's examples are shown/edited.
+  const voiceLang = event.target.closest("[data-recap-voice-lang]");
+  if (voiceLang) {
+    activeVoiceLang = voiceLang.dataset.recapVoiceLang;
+    repaint();
     return;
   }
 
@@ -1167,7 +1330,8 @@ function onClick(event) {
   if (lineRemove) {
     const field = lineRemove.dataset.recapLineList;
     const idx = Number(lineRemove.dataset.recapLineIndex);
-    if (Array.isArray(data[field])) data[field] = data[field].filter((_, i) => i !== idx);
+    const entry = voiceEntry(data);
+    if (Array.isArray(entry[field])) entry[field] = entry[field].filter((_, i) => i !== idx);
     repaint();
     return;
   }
@@ -1247,7 +1411,9 @@ function onInput(event) {
   } else if (t.matches("[data-recap-line-field]")) {
     const list = t.dataset.recapLineList;
     const idx = Number(t.dataset.recapLineIndex);
-    if (Array.isArray(data[list]) && data[list][idx] !== undefined) data[list][idx] = t.value;
+    // Voice examples are per language — mutate the active language's entry.
+    const entry = voiceEntry(data);
+    if (Array.isArray(entry[list]) && entry[list][idx] !== undefined) entry[list][idx] = t.value;
   } else if (t.matches("[data-recap-cta-field]")) {
     const idx = Number(t.dataset.recapCtaIndex);
     const field = t.dataset.recapCtaField;
@@ -1269,8 +1435,13 @@ function onChange(event) {
   if (!editScope) return;
   const data = cfg.getData();
   if (!data) return;
-  if (event.target.matches("[data-recap-language]")) {
-    data.language = event.target.value;
+  if (event.target.matches("[data-recap-primary-language]")) {
+    const val = event.target.value;
+    const langs = contextLanguages(data);
+    if (langs.includes(val)) {
+      data.primaryLanguage = val;
+      repaint(); // refresh the "primary" tag + header/rail
+    }
     return;
   }
   // Reference-image upload (#11) — read each picked image as a data URL and

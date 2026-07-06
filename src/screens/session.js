@@ -1,7 +1,7 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=187";
-import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=51";
+import { renderTopbar } from "../components/topbar.js?v=188";
+import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=52";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
@@ -13,7 +13,7 @@ import {
 } from "../social-profiles.js?v=24";
 import { FORMATS, formatsForNetwork, defaultFormatFor } from "../clip-formats.js?v=3";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=4";
-import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=32";
+import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=33";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
   getThread,
@@ -50,11 +50,11 @@ import {
   attachImageToDraft,
   setSubtitleStyle,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=32";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=47";
+} from "../posts-store.js?v=33";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=48";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=36";
-import * as topPostsFlow from "../top-posts-flow.js?v=60";
-import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=41";
+import * as topPostsFlow from "../top-posts-flow.js?v=61";
+import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=42";
 import { getTopPost } from "../top-posts-store.js?v=7";
 import * as sidebarWizard from "../sidebar-wizard.js?v=51";
 import * as inlineQuestion from "../inline-question.js?v=47";
@@ -69,7 +69,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=9";
-import * as contextBuilder from "../context-builder.js?v=154";
+import * as contextBuilder from "../context-builder.js?v=157";
 import { renderPicker } from "./_analyse-common.js?v=54";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -110,7 +110,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=286";
+} from "../components/right-panel.js?v=289";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=14";
@@ -2300,6 +2300,48 @@ function defaultChatNameLocal() {
 // selection card (so the pick stays visible) then opens the profile step.
 // Internal steps (count / angle / Back) call askProfileQuestion directly, so
 // the idea echo is posted exactly once, at selection time.
+// The Playbook languages backing this chat (primary first). Falls back to the
+// default Playbook + "English" so the flow always has a language to write in.
+function playbookLanguages(sessionId) {
+  const session = getSessionById(sessionId);
+  const ctx = session?.contextId ? getContextById(session.contextId) : getDefaultContext();
+  const langs = ctx && Array.isArray(ctx.languages) && ctx.languages.length ? ctx.languages.slice() : null;
+  const primary = ctx?.primaryLanguage || (langs && langs[0]) || ctx?.language || "English";
+  return { languages: langs || [primary], primary };
+}
+
+// Language gate for the draft flow. When the Playbook publishes in more than
+// one language, ask which to write in (default = primary) and echo the pick;
+// otherwise skip silently. Posts are then generated in that language using its
+// native Voice examples — never a translation. `proceed(language)` continues.
+function askLanguageQuestion(sessionId, ideaId, proceed) {
+  const { languages, primary } = playbookLanguages(sessionId);
+  // Multilingual gated behind a flag (default OFF) — and skip when there's only
+  // one language to choose from anyway.
+  if (!isFlagOn("multilingualPlaybook") || languages.length <= 1) {
+    proceed(primary);
+    return;
+  }
+  postAssistantMessage(sessionId, "Which language should I write in?");
+  inlineQuestion.ask(sessionId, {
+    title: "Choose a language",
+    stepLabel: "Language",
+    items: languages.map((l) => ({
+      value: l,
+      label: l,
+      caption: l === primary ? "Primary — your Playbook default" : undefined,
+      icon: "ap-icon-web",
+    })),
+    onPick: (lang) => {
+      const chosen = languages.includes(lang) ? lang : primary;
+      postSelectionEcho(sessionId, { icon: "ap-icon-web", title: chosen, meta: "Language" });
+      proceed(chosen);
+    },
+    // A default always exists, so Skip writes in the primary language.
+    onSkip: () => proceed(primary),
+  });
+}
+
 function startIdeaDraft(sessionId, ideaId) {
   const idea = getIdeas(sessionId).find((i) => i.id === ideaId);
   if (idea) {
@@ -2312,10 +2354,14 @@ function startIdeaDraft(sessionId, ideaId) {
       meta: srcName ? `Idea · from ${srcName}` : "Idea",
     });
   }
-  askProfileQuestion(sessionId, ideaId);
+  askLanguageQuestion(sessionId, ideaId, (language) => askProfileQuestion(sessionId, ideaId, { language }));
 }
 
-function askProfileQuestion(sessionId, ideaId, { count = 1, angle = null, anglePicks = null, onBack = null } = {}) {
+function askProfileQuestion(
+  sessionId,
+  ideaId,
+  { count = 1, angle = null, anglePicks = null, onBack = null, language = null } = {},
+) {
   // Connected profiles + their picker presentation come from the shared
   // social-profiles helper, so this picker proposes the exact same
   // accounts (brand handle + avatar with network badge) as the Playbook
@@ -2343,9 +2389,9 @@ function askProfileQuestion(sessionId, ideaId, { count = 1, angle = null, angleP
       // Multi-angle batch (from the angle stepper) → one draft run that
       // produces each angle's count. Otherwise the legacy single-angle path.
       if (anglePicks && anglePicks.length) {
-        executeDraftBatch(sessionId, ideaId, channels, anglePicks);
+        executeDraftBatch(sessionId, ideaId, channels, anglePicks, language);
       } else {
-        startDraftFlow(sessionId, ideaId, count, channels, angle);
+        startDraftFlow(sessionId, ideaId, count, channels, angle, language);
       }
     },
     onBack: onBack || undefined,
@@ -2488,12 +2534,18 @@ function askRepurposeProfiles(sessionId, anglesByPost) {
 // chosen angle is threaded through the rest of the flow (count → profile →
 // generate) so the produced drafts reflect it. Mirrors the screenshot
 // pattern by reusing the inline-question numbered-card picker.
-export function askAngleQuestion(sessionId, ideaId) {
+export function askAngleQuestion(sessionId, ideaId, { language = null } = {}) {
+  // Language gate first (once) — then re-enter with the chosen language so it
+  // threads through the angle → count → profile → generate chain.
+  if (language === null) {
+    askLanguageQuestion(sessionId, ideaId, (lang) => askAngleQuestion(sessionId, ideaId, { language: lang }));
+    return;
+  }
   const angles = getAnglesForIdea(sessionId, ideaId);
   // No resolvable idea / angles — fall back to the original count flow so
   // the Draft button never dead-ends.
   if (!angles.length) {
-    askDraftCountQuestion(sessionId, ideaId);
+    askDraftCountQuestion(sessionId, ideaId, { language });
     return;
   }
   postAssistantMessage(sessionId, "Let's draft from these angles.");
@@ -2541,8 +2593,9 @@ export function askAngleQuestion(sessionId, ideaId) {
         );
         askProfileQuestion(sessionId, ideaId, {
           anglePicks,
+          language,
           // ← Back returns to the angle picker so the user can re-choose.
-          onBack: () => askAngleQuestion(sessionId, ideaId),
+          onBack: () => askAngleQuestion(sessionId, ideaId, { language }),
         });
       },
       // First step of the flow — no earlier question, so it's Cancel (not Back).
@@ -2554,7 +2607,7 @@ export function askAngleQuestion(sessionId, ideaId) {
 // Step 2: how many drafts. Threads the chosen `angle` through to the
 // profile picker. When reached from the angle step (`onBack` set) the
 // picker shows a Back affordance; entered directly it shows Cancel.
-export function askDraftCountQuestion(sessionId, ideaId, { angle = null, onBack = null } = {}) {
+export function askDraftCountQuestion(sessionId, ideaId, { angle = null, onBack = null, language = null } = {}) {
   postAssistantMessage(sessionId, "How many drafts should I generate?");
   const advance = (count) => {
     // Clamp to a reasonable range — single-digit + custom typed numbers
@@ -2566,8 +2619,9 @@ export function askDraftCountQuestion(sessionId, ideaId, { angle = null, onBack 
     askProfileQuestion(sessionId, ideaId, {
       count: n,
       angle,
+      language,
       // ← Back returns to the count picker so the user can change their mind.
-      onBack: () => askDraftCountQuestion(sessionId, ideaId, { angle, onBack }),
+      onBack: () => askDraftCountQuestion(sessionId, ideaId, { angle, onBack, language }),
     });
   };
   inlineQuestion.ask(sessionId, {
@@ -4062,7 +4116,14 @@ function bindSession(root, session) {
   function dispatchChoiceSubmit(msg, selectedValues) {
     submitAssistantChoice(session.id, msg.id, selectedValues);
     if (msg.handler === "draft-channels" && msg.context?.ideaId) {
-      executeDraft(session.id, msg.context.ideaId, selectedValues, 1, msg.context.angle || null);
+      executeDraft(
+        session.id,
+        msg.context.ideaId,
+        selectedValues,
+        1,
+        msg.context.angle || null,
+        msg.context.language || null,
+      );
     } else if (msg.handler === "start-action") {
       handleActionPick(session.id, msg, selectedValues, { setQuery });
     } else if (msg.handler === "subtitle-style-pick") {
@@ -4541,12 +4602,6 @@ function bindSession(root, session) {
       if (topPostsPlaybook) {
         topPostsFlow.setContext(session.id, topPostsPlaybook.dataset.toppostsPlaybookPick);
         root.querySelector("[data-topposts-playbook]")?.removeAttribute("open");
-        return;
-      }
-      // Winner-board profile dropdown option (flag OFF — the in-toolbar filter).
-      const topPostProfile = event.target.closest("[data-top-post-profile]");
-      if (topPostProfile) {
-        topPostsFlow.setProfile(session.id, topPostProfile.dataset.topPostProfile);
         return;
       }
       // Winner-board sort chip → re-sort the grid (checked before the card

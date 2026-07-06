@@ -851,6 +851,64 @@
   max-width: 240px;
 }
 
+/* ── Languages (multilingual Playbook) ────────────────────────────────── */
+.recap__lang-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xs);
+}
+
+.recap__lang-primary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  margin-top: var(--ref-spacing-sm);
+}
+
+.recap__lang-primary-label {
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-weight);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-80);
+}
+
+/* "primary" marker on the read-mode language chip + edit primary picker */
+.recap__lang-primary-tag {
+  margin-left: var(--ref-spacing-xxs);
+  padding: 0 var(--ref-spacing-xxs);
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-grey-10);
+  font-size: 0.72em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+
+/* Voice examples — per-language switcher toolbar. Mirrors the Guided /
+   Write-it-yourself toggle (.recap__voice-mode): same padding + divider so it
+   aligns to the panel grid instead of floating flush-left. */
+.recap__voice-langs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-lg);
+  border-bottom: 1px solid var(--app-border-soft);
+}
+
+.recap__voice-langs-label {
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-60);
+}
+
+/* The chips group tightly, like the segmented mode toggle. */
+.recap__voice-langs-group {
+  display: flex;
+  gap: var(--ref-spacing-xxs);
+}
+
 /* ── CTA links (read) ─────────────────────────────────────────────────── */
 .recap__cta-list {
   list-style: none;

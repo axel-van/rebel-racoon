@@ -65,23 +65,16 @@ export const FLAGS = Object.freeze([
       "brief panel. Used to evaluate the UI without color coding.",
   },
   {
-    id: "repurposeProfileFirst",
-    label: "Repurposing: profile-first screen",
-    default: true,
-    hides:
-      "When ON (default), the repurposing flow opens on a full-page profile " +
-      "chooser: pick a connected profile → load its winners → a board scoped " +
-      "to that profile (no profile dropdown), with a 'Change profile' back in " +
-      "the topbar. When OFF, it opens straight on the board of all winners with " +
-      "an in-toolbar 'All profiles' dropdown filter (the previous behaviour).",
-  },
-  {
-    id: "leftNavAltMode",
-    label: "left-nav alt mode",
+    id: "multilingualPlaybook",
+    label: "Multilingual Playbooks",
     default: false,
     hides:
-      "When ON, the left nav no longer auto-collapses when the right panel " +
-      "opens (or on resize). The sidebar stays expanded and the chat column " +
-      "narrows instead; the user can still collapse it manually.",
+      "When OFF (default), Playbooks are single-language: the Audience & goals " +
+      "language row is a plain English-only picker, the Voice & style panel has " +
+      "no per-language switcher, and the draft flow never asks which language to " +
+      "write in. When ON, a Playbook holds several languages (languages[] / " +
+      "primaryLanguage / voiceByLanguage), the Voice examples are authored per " +
+      "language, and drafting asks the target language. Underlying multilingual " +
+      "data is preserved either way — only the surfaces are gated.",
   },
 ]);

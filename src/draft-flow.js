@@ -16,8 +16,8 @@
 
 import { postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=56";
 import { getIdeas } from "./library.js?v=46";
-import { ideas as GLOBAL_IDEAS, anglesByIdea } from "./mocks.js?v=51";
-import { addPostDraft } from "./posts-store.js?v=32";
+import { ideas as GLOBAL_IDEAS, anglesByIdea } from "./mocks.js?v=52";
+import { addPostDraft } from "./posts-store.js?v=33";
 import { showToast } from "./components/toast.js?v=20";
 
 // Simulated "generating drafts" delay shared by every draft flow.
@@ -117,7 +117,7 @@ function labelFor(channel) {
   return CHANNEL_META[channel.toLowerCase()]?.label || channel;
 }
 
-export function startDraftFlow(sessionId, ideaId, count = 1, channelOverride = null, angle = null) {
+export function startDraftFlow(sessionId, ideaId, count = 1, channelOverride = null, angle = null, language = null) {
   const idea = resolveIdea(sessionId, ideaId);
   if (!idea) return;
 
@@ -130,7 +130,7 @@ export function startDraftFlow(sessionId, ideaId, count = 1, channelOverride = n
     // channel picker. Used by the right-panel count+profile flow where
     // the user has already chosen which network to draft for.
     if (Array.isArray(channelOverride) && channelOverride.length > 0) {
-      executeDraft(sessionId, ideaId, channelOverride, count, angle);
+      executeDraft(sessionId, ideaId, channelOverride, count, angle, language);
       return;
     }
 
@@ -141,7 +141,7 @@ export function startDraftFlow(sessionId, ideaId, count = 1, channelOverride = n
     // channel so we don't stack two pickers back-to-back.
     if (count > 1 || channels.length <= 1) {
       const chosen = channels.length >= 1 ? [channels[0]] : ["linkedin"];
-      executeDraft(sessionId, ideaId, chosen, count, angle);
+      executeDraft(sessionId, ideaId, chosen, count, angle, language);
       return;
     }
 
@@ -156,15 +156,15 @@ export function startDraftFlow(sessionId, ideaId, count = 1, channelOverride = n
       choices,
       multi: true,
       handler: "draft-channels",
-      // Carry the chosen angle so the multi-channel fallback path can
-      // pass it on to executeDraft (see dispatchChoiceSubmit).
-      context: { ideaId: idea.id, angle },
+      // Carry the chosen angle + language so the multi-channel fallback path
+      // can pass them on to executeDraft (see dispatchChoiceSubmit).
+      context: { ideaId: idea.id, angle, language },
       submitLabel: "Draft them",
     });
   });
 }
 
-export function executeDraft(sessionId, ideaId, selectedChannels, count = 1, angle = null) {
+export function executeDraft(sessionId, ideaId, selectedChannels, count = 1, angle = null, language = null) {
   const idea = resolveIdea(sessionId, ideaId);
   if (!idea || !selectedChannels || selectedChannels.length === 0) return;
 
@@ -188,6 +188,7 @@ export function executeDraft(sessionId, ideaId, selectedChannels, count = 1, ang
           network: selectedChannels[i % selectedChannels.length],
           text: [idea.title, ...(draftBody ? [draftBody] : [])],
           hashtags: [],
+          language,
         }),
       );
       postDraftResult(sessionId, {
@@ -195,7 +196,7 @@ export function executeDraft(sessionId, ideaId, selectedChannels, count = 1, ang
         drafts,
       });
     },
-    (err) => draftError(err, () => executeDraft(sessionId, ideaId, selectedChannels, count, angle)),
+    (err) => draftError(err, () => executeDraft(sessionId, ideaId, selectedChannels, count, angle, language)),
   );
 }
 
@@ -204,7 +205,7 @@ export function executeDraft(sessionId, ideaId, selectedChannels, count = 1, ang
 // already > 0). Channels are cycled round-robin across the whole batch so a
 // single chosen profile still yields the right total. Mirrors executeDraft's
 // pending + try/catch + Retry contract.
-export function executeDraftBatch(sessionId, ideaId, selectedChannels, anglePicks) {
+export function executeDraftBatch(sessionId, ideaId, selectedChannels, anglePicks, language = null) {
   const idea = resolveIdea(sessionId, ideaId);
   const channels = Array.isArray(selectedChannels) && selectedChannels.length ? selectedChannels : ["linkedin"];
   if (!idea || !Array.isArray(anglePicks) || anglePicks.length === 0) return;
@@ -222,6 +223,7 @@ export function executeDraftBatch(sessionId, ideaId, selectedChannels, anglePick
               network: channels[ch % channels.length],
               text: [idea.title, ...(draftBody ? [draftBody] : [])],
               hashtags: [],
+              language,
             }),
           );
           ch += 1;
@@ -229,6 +231,6 @@ export function executeDraftBatch(sessionId, ideaId, selectedChannels, anglePick
       }
       postDraftResult(sessionId, { ideaTitle: idea.title, drafts });
     },
-    (err) => draftError(err, () => executeDraftBatch(sessionId, ideaId, selectedChannels, anglePicks)),
+    (err) => draftError(err, () => executeDraftBatch(sessionId, ideaId, selectedChannels, anglePicks, language)),
   );
 }

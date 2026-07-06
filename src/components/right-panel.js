@@ -1,10 +1,11 @@
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=56";
 import { isFlagOn } from "../feature-flags.js?v=9";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=51";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=52";
 import { isNewUser } from "../user-mode.js?v=22";
 import { getPath } from "../router.js?v=30";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
+import { LANGUAGE_OPTIONS } from "../languages.js?v=1";
 import {
   getPosts,
   removePost,
@@ -12,7 +13,7 @@ import {
   updatePostContent,
   attachImageToDraft,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=32";
+} from "../posts-store.js?v=33";
 import { renderPostCard } from "./post-card.js?v=47";
 import { renderClipCard } from "./clip-card.js?v=13";
 import { onFeedbackClick } from "./feedback-control.js?v=1";
@@ -247,7 +248,6 @@ function predictedChatWidthWithSidebarExpanded() {
 // syncSidebarToWidth). We don't run on mode swaps inside an already-open
 // panel — only on the closed → open transition (and on resize).
 function maybeCollapseSidebar() {
-  if (isFlagOn("leftNavAltMode")) return; // alt mode: never auto-collapse
   if (!state.mode) return;
   if (isSidebarCollapsed()) return;
   if (predictedChatWidthWithSidebarExpanded() >= CHAT_MIN_WIDTH_PX) return;
@@ -657,7 +657,7 @@ export function init() {
           updateSourceClips(srcId, nextClips);
           const edited = (nextClips || []).find((c) => c.id === ref.clipId);
           if (!edited) return;
-          import("../posts-store.js?v=32").then(({ updatePostClip }) => {
+          import("../posts-store.js?v=33").then(({ updatePostClip }) => {
             updatePostClip(sid, pid, {
               start: edited.start,
               end: edited.end,
@@ -729,7 +729,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=398").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=401").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -912,7 +912,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=398").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=401").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -930,7 +930,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=398").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=401").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -2752,7 +2752,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=398").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=401").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
@@ -2760,9 +2760,7 @@ function useIdea(ideaId) {
 // --- V1 Brief panel ---------------------------------------------------
 
 const COLOR_SWATCHES = ["orange", "blue", "green", "purple", "red", "yellow"];
-// Archie's UI and AI generation are English-only today. Mirror of the list
-// in src/playbook-view.js — re-add other languages here when shipped.
-const LANGUAGE_OPTIONS = ["English"];
+// LANGUAGE_OPTIONS now lives in src/languages.js (single source of truth).
 const TONE_FALLBACKS = [
   "Conversational & approachable",
   "Bold & opinionated",
@@ -2979,17 +2977,25 @@ function renderBriefVoiceFeature(d, isRead) {
 // chip (`<details>`); in edit mode the full CTA editor renders inline
 // below the row so the user never has to "open" a control to edit.
 function renderBriefEssentialsBar(d, isRead) {
-  const language = d?.language || "";
+  // Multilingual Playbook — declared languages (primary first). Falls back to
+  // the legacy scalar `language` for un-normalized drafts. When the multilingual
+  // flag is OFF, collapse to the primary language alone.
+  const allLanguages =
+    Array.isArray(d?.languages) && d.languages.length ? d.languages : d?.language ? [d.language] : [];
+  const primaryLanguage = d?.primaryLanguage || allLanguages[0] || "";
+  const languages = isFlagOn("multilingualPlaybook") ? allLanguages : primaryLanguage ? [primaryLanguage] : [];
   const ctas = Array.isArray(d?.ctaLinks) ? d.ctaLinks : [];
 
   if (isRead) {
     const activeCtas = ctas.filter((l) => l.checked);
-    if (!language && activeCtas.length === 0) return "";
-    const langPill = language
+    if (!languages.length && activeCtas.length === 0) return "";
+    const langPill = languages.length
       ? `
         <span class="context-brief__essentials-item">
-          <span class="context-brief__essentials-label">Language</span>
-          <span class="ap-tag blue context-brief__chip-readonly">${escapeText(language)}</span>
+          <span class="context-brief__essentials-label">${languages.length > 1 ? "Languages" : "Language"}</span>
+          ${languages
+            .map((l) => `<span class="ap-tag blue context-brief__chip-readonly">${escapeText(l)}</span>`)
+            .join("")}
         </span>
       `
       : "";
@@ -3036,9 +3042,9 @@ function renderBriefEssentialsBar(d, isRead) {
   const langPicker = renderBriefSinglePick({
     field: "language",
     title: "Select a language for ideas and posts",
-    hint: "Archie will write in this language.",
+    hint: "Archie writes in this language. Add more later in the Playbook editor.",
     options: LANGUAGE_OPTIONS,
-    value: language || "English",
+    value: primaryLanguage || "English",
     suggested: d?.suggestions?.language || "",
     isRead: false,
   });

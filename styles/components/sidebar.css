@@ -588,13 +588,20 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
   color: var(--ref-color-grey-60);
 }
 
-/* Feature-flag row — label/hint left, DS toggle right. */
+/* Feature-flag row — label/hint left, DS toggle pinned right. */
 .admin-menu__flag {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--ref-spacing-sm);
   padding: var(--ref-spacing-xs) 0;
   cursor: pointer;
+}
+/* The flag label renders as a bare span (no opt-text wrapper), so let it grow
+   to fill the row and push the toggle to the far right. */
+.admin-menu__flag > .admin-menu__opt-label {
+  flex: 1;
+  min-width: 0;
 }
 .admin-menu__flag + .admin-menu__flag {
   border-top: 1px solid var(--app-border);

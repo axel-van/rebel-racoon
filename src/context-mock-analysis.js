@@ -104,6 +104,8 @@ const AGORAPULSE = {
       { label: "Blog & resources", url: "agorapulse.com/blog", checked: false, suggested: true },
     ],
     language: "English",
+    languages: ["English"],
+    primaryLanguage: "English",
     color: "orange",
     imageVoice: {
       websites: [
@@ -201,6 +203,8 @@ const GENERIC = {
     ],
     ctaLinks: [{ label: "Homepage", url: "", checked: true, suggested: true }],
     language: "English",
+    languages: ["English"],
+    primaryLanguage: "English",
     color: "blue",
     imageVoice: {
       websites: [

@@ -15,11 +15,13 @@
 
 import * as inlineQuestion from "./inline-question.js?v=47";
 import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=56";
-import * as rightPanel from "./components/right-panel.js?v=286";
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=32";
-import { analyzeWebsite } from "./context-mock-analysis.js?v=23";
-import { connectors as connectorMocks } from "./mocks.js?v=51";
+import * as rightPanel from "./components/right-panel.js?v=289";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=33";
+import { analyzeWebsite } from "./context-mock-analysis.js?v=24";
+import { connectors as connectorMocks } from "./mocks.js?v=52";
 import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=24";
+import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1";
+import { isFlagOn } from "./feature-flags.js?v=9";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -206,14 +208,30 @@ export function startAlt(sessionId, { onComplete, prefilledUrl = "" } = {}) {
   askAltUrl(sessionId, url);
 }
 
+// Onboarding step count + label. A language step is inserted (right after the
+// URL) only when multilingual Playbooks are enabled — so the flow stays a tight
+// 3 steps by default and becomes 4 with the flag on.
+function altTotalSteps() {
+  return isFlagOn("multilingualPlaybook") ? 4 : 3;
+}
+function altStepLabel(n) {
+  return `${n} / ${altTotalSteps()}`;
+}
+// The step after the URL question — the language picker when multilingual is on,
+// otherwise straight to the profile step.
+function askAltAfterUrl(sessionId) {
+  if (isFlagOn("multilingualPlaybook")) askAltLanguage(sessionId);
+  else askAltProfile(sessionId);
+}
+
 function askAltUrl(sessionId, prefilledUrl = "") {
   const intro = prefilledUrl
-    ? "Here's the site I found — confirm it below to begin. Three quick steps (site, profile, optional docs) and your Playbook's ready."
-    : "Drop your website URL below to begin. Three quick steps (site, profile, optional docs) and your Playbook's ready.";
+    ? "Here's the site I found — confirm it below to begin."
+    : "Drop your website URL below to begin.";
   postAssistantMessage(sessionId, intro);
   inlineQuestion.ask(sessionId, {
     title: "What's your website URL?",
-    stepLabel: "1 / 3",
+    stepLabel: altStepLabel(1),
     items: [],
     customPlaceholder: "https://your-brand.com",
     customValue: prefilledUrl,
@@ -235,7 +253,48 @@ function askAltUrl(sessionId, prefilledUrl = "") {
         applyAnalysisToDraft(dd, analyzeWebsite(dd.sourceUrl || dd.websiteUrl));
         notify(sessionId);
       }, 6000);
+      askAltAfterUrl(sessionId);
+    },
+  });
+}
+
+// Language step (multilingual flag ON only) — pick the language(s) the Playbook
+// publishes in. The first pick is the primary. Voice examples are authored per
+// language later, never translated.
+function askAltLanguage(sessionId) {
+  postAssistantMessage(
+    sessionId,
+    "Which language(s) will this Playbook publish in? I'll write posts natively in each — never translated.",
+  );
+  const d = drafts.get(sessionId);
+  const current =
+    Array.isArray(d?.languages) && d.languages.length
+      ? d.languages
+      : [d?.primaryLanguage || d?.language || DEFAULT_LANGUAGE];
+  inlineQuestion.ask(sessionId, {
+    title: "Choose your Playbook language(s)",
+    subtitle: "Pick one or more. The first you pick is the primary.",
+    stepLabel: altStepLabel(2),
+    items: LANGUAGE_OPTIONS.map((l) => ({ value: l, label: l, icon: "ap-icon-web" })),
+    multi: true,
+    defaultSelected: current,
+    submitLabel: "Continue",
+    onPick: (langs) => {
+      const chosen = Array.isArray(langs) && langs.length ? langs : [DEFAULT_LANGUAGE];
+      const dd = drafts.get(sessionId);
+      if (dd) {
+        dd.languages = chosen.slice();
+        dd.primaryLanguage = chosen[0];
+        dd.language = chosen[0];
+      }
+      postUserTurn(sessionId, chosen.join(" · "));
+      inlineQuestion.exit(sessionId);
+      notify(sessionId);
       askAltProfile(sessionId);
+    },
+    onBack: () => {
+      const dd = drafts.get(sessionId);
+      askAltUrl(sessionId, dd?.sourceUrl || dd?.websiteUrl || "");
     },
   });
 }
@@ -249,7 +308,7 @@ function askAltProfile(sessionId) {
   const items = buildConnectedProfileItems();
   inlineQuestion.ask(sessionId, {
     title: "Which profile will publish?",
-    stepLabel: "2 / 3",
+    stepLabel: altStepLabel(isFlagOn("multilingualPlaybook") ? 3 : 2),
     items,
     onPick: (id) => {
       const profile = connectedProfiles.find((p) => p.id === id);
@@ -265,10 +324,15 @@ function askAltProfile(sessionId) {
       askAltDocuments(sessionId);
     },
     onBack: () => {
-      // Re-render question 1 with whatever URL the draft already holds
-      // (the prefilled value, or what the user typed when they advanced).
-      const d = drafts.get(sessionId);
-      askAltUrl(sessionId, d?.sourceUrl || d?.websiteUrl || "");
+      // Step back to the language picker (multilingual on) or the URL question.
+      if (isFlagOn("multilingualPlaybook")) {
+        askAltLanguage(sessionId);
+      } else {
+        // Re-render question 1 with whatever URL the draft already holds
+        // (the prefilled value, or what the user typed when they advanced).
+        const d = drafts.get(sessionId);
+        askAltUrl(sessionId, d?.sourceUrl || d?.websiteUrl || "");
+      }
     },
   });
 }
@@ -292,7 +356,7 @@ function askAltDocuments(sessionId) {
   inlineQuestion.ask(sessionId, {
     title: "Connect documents (optional)",
     subtitle: "You can connect more sources later in Settings.",
-    stepLabel: "3 / 3",
+    stepLabel: altStepLabel(isFlagOn("multilingualPlaybook") ? 4 : 3),
     items,
     multi: true,
     submitLabel: "Continue",
@@ -377,7 +441,12 @@ export function openEdit(contextId) {
     objective: Array.isArray(saved.objective) ? saved.objective.slice() : [],
     contentAction: Array.isArray(saved.contentAction) ? saved.contentAction.slice() : [],
     ctaLinks: Array.isArray(saved.ctaLinks) ? saved.ctaLinks.map((l) => ({ ...l })) : [],
-    language: saved.language || "English",
+    language: saved.language || saved.primaryLanguage || "English",
+    // Carry the multilingual model through so an edit here doesn't drop any
+    // secondary-language voice authored on the /playbook page (save() merges).
+    languages: Array.isArray(saved.languages) ? saved.languages.slice() : undefined,
+    primaryLanguage: saved.primaryLanguage || saved.language || "English",
+    voiceByLanguage: saved.voiceByLanguage ? cloneVoiceByLanguage(saved.voiceByLanguage) : undefined,
     color: saved.color || "orange",
     voiceProfile: saved.voiceProfile && typeof saved.voiceProfile === "object" ? { ...saved.voiceProfile } : null,
     imageVoice:
@@ -645,7 +714,6 @@ export function save(sessionId) {
     contentAction: d.contentAction,
     ctaLinks: d.ctaLinks.filter((l) => l.checked),
     cta: d.ctaLinks.find((l) => l.checked)?.url || "",
-    language: d.language,
     voiceProfile: d.voiceProfile || null,
     imageVoice: d.imageVoice && Array.isArray(d.imageVoice.websites) ? d.imageVoice : { websites: [] },
     // New 3-section model fields (previously dropped on save).
@@ -659,6 +727,49 @@ export function save(sessionId) {
     referenceImages: Array.isArray(d.referenceImages) ? d.referenceImages.map((i) => ({ ...i })) : [],
     updatedAt: "just now",
   };
+
+  // Multilingual model — context-builder edits a single (primary) language's
+  // voice. Preserve any secondary-language voice already saved on the context
+  // and write the edited hooks/closings into the primary entry. The store
+  // re-derives the flat mirror (signatureHooks/closingPatterns/cta) from here.
+  const primaryLanguage = d.primaryLanguage || d.language || DEFAULT_LANGUAGE;
+  const existing = d.editingId ? getContextById(d.editingId) : null;
+  // Merge the existing context's voice (preserve secondary languages on edit)
+  // with the draft's own voiceByLanguage — the latter holds this session's
+  // per-language edits (and the primary entry the recap seeded from analysis).
+  const baseVbl = {
+    ...(existing && existing.voiceByLanguage && typeof existing.voiceByLanguage === "object"
+      ? cloneVoiceByLanguage(existing.voiceByLanguage)
+      : {}),
+    ...(d.voiceByLanguage && typeof d.voiceByLanguage === "object" ? cloneVoiceByLanguage(d.voiceByLanguage) : {}),
+  };
+  // Languages come from the draft first (the onboarding language step / edits),
+  // then any already saved on the context, else just the primary. addContext /
+  // updateContext normalize this and fill empty voice entries per language.
+  const draftLangs = Array.isArray(d.languages) && d.languages.length ? d.languages.slice() : null;
+  const languages =
+    draftLangs ||
+    (Array.isArray(existing?.languages) && existing.languages.length ? existing.languages.slice() : [primaryLanguage]);
+  // Only seed the primary entry from the flat analysis fields when there's no
+  // per-language entry at all — never overwrite an entry the user edited (which
+  // would resurrect hooks they deleted).
+  if (!baseVbl[primaryLanguage]) {
+    baseVbl[primaryLanguage] = {
+      signatureHooks: payload.signatureHooks.slice(),
+      closingPatterns: payload.closingPatterns.slice(),
+      cta: "",
+      ctaLabels: {},
+    };
+  }
+  // Drop empty lines from every language entry.
+  Object.values(baseVbl).forEach((e) => {
+    if (Array.isArray(e.signatureHooks)) e.signatureHooks = e.signatureHooks.filter((s) => (s || "").trim());
+    if (Array.isArray(e.closingPatterns)) e.closingPatterns = e.closingPatterns.filter((s) => (s || "").trim());
+  });
+  payload.languages = languages.includes(primaryLanguage) ? languages : [primaryLanguage, ...languages];
+  payload.primaryLanguage = primaryLanguage;
+  payload.voiceByLanguage = baseVbl;
+
   const saved = d.editingId ? updateContext(d.editingId, payload) : addContext(payload);
   const onComplete = d.onComplete;
   drafts.delete(sessionId);

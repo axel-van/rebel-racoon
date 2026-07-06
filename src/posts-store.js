@@ -7,7 +7,7 @@
 //   attachImageToDraft(sessionId, postId, imageUrl)
 //   subscribe(sessionId, fn)    → unsubscribe fn
 
-import { postsBySession as seedPostsBySession, recentSessions as seedRecentSessions } from "./mocks.js?v=51";
+import { postsBySession as seedPostsBySession, recentSessions as seedRecentSessions } from "./mocks.js?v=52";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createSessionNotifier } from "./store-utils.js?v=2";
 
@@ -37,7 +37,7 @@ export function getPosts(sessionId) {
 // Returns the created post object so callers can reference its id.
 export function addPostDraft(
   sessionId,
-  { network, text, hashtags = [], clipRef = null, subtitleStyle = null, format = null },
+  { network, text, hashtags = [], clipRef = null, subtitleStyle = null, format = null, language = null },
 ) {
   const posts = getPosts(sessionId);
   // Use the first existing post's author as a template — keeps the demo
@@ -55,6 +55,9 @@ export function addPostDraft(
     network: network === "x" ? "twitter" : network,
     status: "ready",
     timeLabel: "just now",
+    // The language this draft was generated in — defaults to the Playbook's
+    // primary language when the draft flow doesn't ask. Null for legacy drafts.
+    language: language || null,
     text: Array.isArray(text) ? text : [text],
     hashtags,
     cta: "",

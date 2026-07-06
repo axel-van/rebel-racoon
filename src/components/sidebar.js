@@ -18,11 +18,11 @@ import {
 import { isFlagOn } from "../feature-flags.js?v=9";
 import { isNewUser } from "../user-mode.js?v=22";
 import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=46";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=32";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=33";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=26";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=286";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=289";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=56";
-import { clearSession as clearPostsSession } from "../posts-store.js?v=32";
+import { clearSession as clearPostsSession } from "../posts-store.js?v=33";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=48";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.

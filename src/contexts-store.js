@@ -17,13 +17,22 @@
 // chooses "Save as global". updateContext is used by the section-edit flow
 // when scope is "Update everywhere".
 
-import { contexts as seed } from "./mocks.js?v=51";
+import { contexts as seed } from "./mocks.js?v=52";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
+import {
+  normalizeLanguages,
+  mirrorPrimaryToTopLevel,
+  syncTopLevelToPrimary,
+  cloneVoiceByLanguage,
+} from "./languages.js?v=1";
 
 // Lot 15 — first-time user mode starts empty so the standalone /contexts
-// page renders its empty state. Returning user keeps the mock seed.
-const contexts = isNewUser() ? [] : seed.map((c) => ({ ...c }));
+// page renders its empty state. Returning user keeps the mock seed. Every
+// seed is upgraded to the multilingual shape (languages/primaryLanguage/
+// voiceByLanguage) lazily via normalizeLanguages — legacy single-language
+// mocks keep rendering identically.
+const contexts = isNewUser() ? [] : seed.map((c) => normalizeLanguages({ ...c }));
 const notifier = createNotifier("contexts-store");
 
 export const subscribe = notifier.subscribe;
@@ -95,7 +104,12 @@ export function addContext(ctx = {}) {
     objective: Array.isArray(ctx.objective) ? ctx.objective.slice() : [],
     contentAction: Array.isArray(ctx.contentAction) ? ctx.contentAction.slice() : [],
     ctaLinks: Array.isArray(ctx.ctaLinks) ? ctx.ctaLinks.map((l) => ({ ...l })) : [],
+    // — multilingual model (see languages.js) — flat `language` kept as a
+    //   transitional mirror of primaryLanguage.
     language: ctx.language || "English",
+    languages: Array.isArray(ctx.languages) ? ctx.languages.slice() : undefined,
+    primaryLanguage: ctx.primaryLanguage || undefined,
+    voiceByLanguage: ctx.voiceByLanguage ? cloneVoiceByLanguage(ctx.voiceByLanguage) : undefined,
     connectedSocials: Array.isArray(ctx.connectedSocials) ? ctx.connectedSocials.slice() : [],
     selectedProfileId: ctx.selectedProfileId || null,
     imageVoice:
@@ -118,6 +132,12 @@ export function addContext(ctx = {}) {
     updatedAt: ctx.updatedAt || "just now",
     analysis: ctx.analysis || { voice: null, brief: null, brand: null },
   };
+  // Fill the multilingual structure (languages/primaryLanguage/voiceByLanguage)
+  // then push the primary entry down onto the flat legacy fields. Safe here:
+  // at construction the primary entry either came from the caller's
+  // voiceByLanguage or was seeded from the flat fields — mirroring is idempotent.
+  normalizeLanguages(next);
+  mirrorPrimaryToTopLevel(next);
   // Re-attach the legacy voice/brief/brand getters so old call sites stay
   // working on freshly-added contexts too.
   Object.defineProperty(next, "voice", { get: () => next.analysis?.voice, enumerable: true });
@@ -177,7 +197,18 @@ export function updateContext(id, patch) {
   if (patch.brandTypography !== undefined) c.brandTypography = patch.brandTypography;
   if (patch.brandColors !== undefined) c.brandColors = patch.brandColors;
   if (patch.referenceImages !== undefined) c.referenceImages = patch.referenceImages;
-  if (patch.language !== undefined) c.language = patch.language;
+  // — multilingual fields —
+  if (patch.languages !== undefined)
+    c.languages = Array.isArray(patch.languages) ? patch.languages.slice() : patch.languages;
+  if (patch.primaryLanguage !== undefined) c.primaryLanguage = patch.primaryLanguage;
+  if (patch.voiceByLanguage !== undefined) c.voiceByLanguage = cloneVoiceByLanguage(patch.voiceByLanguage);
+  // Transitional single-language patch — map onto primaryLanguage + languages.
+  if (patch.language !== undefined) {
+    c.language = patch.language;
+    c.primaryLanguage = patch.language;
+    const rest = Array.isArray(c.languages) ? c.languages.filter((l) => l !== patch.language) : [];
+    c.languages = [patch.language, ...rest];
+  }
   if (patch.connectedSocials !== undefined) c.connectedSocials = patch.connectedSocials;
   if (patch.selectedProfileId !== undefined) c.selectedProfileId = patch.selectedProfileId;
   if (patch.usedIn !== undefined) c.usedIn = patch.usedIn;
@@ -187,6 +218,28 @@ export function updateContext(id, patch) {
   if (patch.voice !== undefined) c.analysis = { ...(c.analysis || {}), voice: patch.voice };
   if (patch.brief !== undefined) c.analysis = { ...(c.analysis || {}), brief: patch.brief };
   if (patch.brand !== undefined) c.analysis = { ...(c.analysis || {}), brand: patch.brand };
+
+  // Keep the per-language voice map and the flat legacy mirror in sync.
+  const touchedLangStruct =
+    patch.languages !== undefined ||
+    patch.primaryLanguage !== undefined ||
+    patch.voiceByLanguage !== undefined ||
+    patch.language !== undefined;
+  const touchedFlatVoice =
+    patch.signatureHooks !== undefined ||
+    patch.closingPatterns !== undefined ||
+    patch.cta !== undefined ||
+    patch.ctaLinks !== undefined;
+  if (touchedLangStruct) {
+    // voiceByLanguage / primaryLanguage are authoritative → refresh flat mirror.
+    normalizeLanguages(c);
+    mirrorPrimaryToTopLevel(c);
+  } else if (touchedFlatVoice) {
+    // Legacy caller edited the flat fields → push them into the primary entry.
+    normalizeLanguages(c);
+    syncTopLevelToPrimary(c);
+  }
+
   notify();
   return c;
 }
@@ -208,6 +261,9 @@ export function duplicateContext(id) {
     doRules: (src.doRules || []).slice(),
     dontRules: (src.dontRules || []).slice(),
     cta: src.cta,
+    languages: Array.isArray(src.languages) ? src.languages.slice() : undefined,
+    primaryLanguage: src.primaryLanguage || undefined,
+    voiceByLanguage: src.voiceByLanguage ? cloneVoiceByLanguage(src.voiceByLanguage) : undefined,
     signatureHooks: (src.signatureHooks || []).slice(),
     closingPatterns: (src.closingPatterns || []).slice(),
     formattingStyle: src.formattingStyle || "",

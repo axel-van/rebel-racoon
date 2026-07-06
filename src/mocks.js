@@ -1280,6 +1280,42 @@ export const contexts = [
       { label: "30-day free trial", url: "acme.example.com/trial", checked: true, suggested: false },
       { label: "Book a demo", url: "acme.example.com/demo", checked: true, suggested: false },
     ],
+    // Multilingual Playbook — the flat signatureHooks/closingPatterns/cta above
+    // mirror the primary (English) entry. Voice examples are authored PER
+    // LANGUAGE; Archie selects the native set, never translates.
+    languages: ["English", "Français"],
+    primaryLanguage: "English",
+    voiceByLanguage: {
+      English: {
+        signatureHooks: [
+          "Most teams get this backwards:",
+          "Here's what actually moved the needle:",
+          "We cut [task] from days to minutes —",
+        ],
+        closingPatterns: ["Try it free for 30 days — link in the comments.", "What's your take? Reply and tell me."],
+        cta: "Try Acme free for 30 days.",
+        ctaLabels: {
+          "acme.example.com/trial": "30-day free trial",
+          "acme.example.com/demo": "Book a demo",
+        },
+      },
+      Français: {
+        signatureHooks: [
+          "La plupart des équipes s'y prennent à l'envers :",
+          "Voici ce qui a vraiment fait bouger les choses :",
+          "On a réduit [tâche] de plusieurs jours à quelques minutes —",
+        ],
+        closingPatterns: [
+          "Essayez gratuitement pendant 30 jours — lien en commentaire.",
+          "Votre avis ? Répondez et dites-moi.",
+        ],
+        cta: "Essayez Acme gratuitement pendant 30 jours.",
+        ctaLabels: {
+          "acme.example.com/trial": "Essai gratuit de 30 jours",
+          "acme.example.com/demo": "Réserver une démo",
+        },
+      },
+    },
     language: "English",
     imageVoice: {
       websites: [

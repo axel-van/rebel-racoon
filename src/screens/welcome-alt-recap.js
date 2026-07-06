@@ -5,8 +5,8 @@
 // actual rendering + per-card edit machine lives in ../playbook-view.js.
 
 import { navigate } from "../router.js?v=30";
-import { getDraft, isAnalysisReady, save, patchDraft, restoreDraft } from "../context-builder.js?v=154";
-import { mount } from "../playbook-view.js?v=31";
+import { getDraft, isAnalysisReady, save, patchDraft, restoreDraft } from "../context-builder.js?v=157";
+import { mount } from "../playbook-view.js?v=35";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
 
 const WELCOME_ALT_KEY = "welcomeAltSessionId";

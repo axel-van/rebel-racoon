@@ -13,11 +13,11 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=286";
+} from "./right-panel.js?v=289";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=48";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=56";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=46";
-import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=32";
+import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=33";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
@@ -25,13 +25,13 @@ import {
 } from "./conversation-status-card.js?v=119";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=4";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { subscribe as subscribeContexts } from "../contexts-store.js?v=32";
+import { subscribe as subscribeContexts } from "../contexts-store.js?v=33";
 import { isFlagOn } from "../feature-flags.js?v=9";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=60";
+} from "../top-posts-flow.js?v=61";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static
@@ -91,10 +91,10 @@ export function renderTopbar(_options = {}) {
   `;
 }
 
-// True when the active session is showing the repurposing board (step 2) in the
-// profile-first mode — i.e. there's a "Change profile" step to go back to.
+// True when the active session is showing the repurposing board (step 2) —
+// i.e. there's a "Change profile" step to go back to.
 function isTopPostsBoard() {
-  if (!isSessionRoute() || !isFlagOn("repurposeProfileFirst")) return false;
+  if (!isSessionRoute()) return false;
   const sid = currentSessionId();
   return !!sid && getTopPostsState(sid)?.stage === "board";
 }

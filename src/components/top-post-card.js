@@ -14,7 +14,6 @@
 
 import { html, raw, escapeHtml } from "../utils.js?v=21";
 import { profileForNetwork, NETWORK_ICON_BY_PLATFORM, BRAND_INITIALS } from "../social-profiles.js?v=24";
-import { isFlagOn } from "../feature-flags.js?v=9";
 
 const NET_ICON = {
   linkedin: "ap-icon-linkedin-official",
@@ -324,75 +323,6 @@ export function renderTopPostsWidget({ network, posts = [], selected = [], answe
   `;
 }
 
-// ── Profile dropdown (flag OFF — the previous in-toolbar filter) ──────
-// Group winners by network into lenses (name + avatar + count), rendered as a
-// scalable DS .ap-select. Only used when the repurposeProfileFirst flag is OFF.
-function buildProfileLenses(posts) {
-  const byNet = new Map();
-  for (const p of posts || []) {
-    const net = (p.network || "").toLowerCase();
-    if (!net) continue;
-    if (!byNet.has(net)) byNet.set(net, { network: net, count: 0 });
-    byNet.get(net).count += 1;
-  }
-  return [...byNet.values()]
-    .map((lens) => {
-      const account = profileForNetwork(lens.network);
-      return {
-        ...lens,
-        name: account?.handle || labelFor(lens.network),
-        photo: account?.photo || null,
-        networkIcon: NETWORK_ICON_BY_PLATFORM[lens.network] || iconFor(lens.network),
-      };
-    })
-    .sort((a, b) => b.count - a.count);
-}
-
-function renderProfileOption(dataValue, { avatar, text, count, selected }) {
-  return `<div
-      class="ap-select-option${selected ? " selected" : ""}"
-      data-top-post-profile="${dataValue}"
-      role="option"
-      aria-selected="${selected ? "true" : "false"}"
-    >
-      ${avatar || ""}
-      <span class="ap-select-option-text">${text}</span>
-      <span class="top-posts-select__count">${count}</span>
-      ${selected ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
-    </div>`;
-}
-
-function renderProfileSelect(lenses, activeProfile, total) {
-  const activeLens = lenses.find((l) => l.network === activeProfile);
-  const triggerValue = activeProfile === "all" ? "All profiles" : activeLens?.name || "All profiles";
-  const allOpt = renderProfileOption("all", { text: "All profiles", count: total, selected: activeProfile === "all" });
-  const rows = lenses
-    .map((l) => {
-      const avatarInner = l.photo
-        ? `<img src="${l.photo}" alt="" />`
-        : `<span class="ap-avatar-initials">${BRAND_INITIALS}</span>`;
-      const avatar = `<span class="ap-avatar size-24 top-posts-select__opt-avatar" aria-hidden="true"
-        >${avatarInner}<span class="ap-avatar-network"><i class="${l.networkIcon}"></i></span></span>`;
-      return renderProfileOption(l.network, {
-        avatar,
-        text: l.name,
-        count: l.count,
-        selected: l.network === activeProfile,
-      });
-    })
-    .join("");
-  return `<details class="ap-select top-posts-select top-posts-profile-select">
-      <summary class="ap-select-trigger">
-        <span class="ap-select-inline-label">Profile</span>
-        <span class="ap-select-value">${triggerValue}</span>
-        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
-      </summary>
-      <div class="ap-select-dropdown" role="listbox" aria-label="Filter by profile">
-        <div class="ap-select-options">${allOpt}${rows}</div>
-      </div>
-    </details>`;
-}
-
 // Step 1 (pick which connected account to mine) is now the app's numbered
 // Quickpicker (renderPicker), rendered by session.js from
 // top-posts-flow.getProfileChoices() — no bespoke card grid here anymore.
@@ -401,10 +331,8 @@ function renderProfileSelect(lenses, activeProfile, total) {
 // chosen on step 1. `profile` is a network slug; `sort` is one of SORTS[].key.
 export function renderTopPostsBoard({ posts, sort = "performance", profile = null, period = "all" }) {
   const all = posts || [];
-  // Flag ON (profile-first): `profile` is a specific network chosen upstream.
-  // Flag OFF: `profile` is "all" (or a network) and an in-toolbar dropdown lets
-  // the user switch — "all" means no network filter.
-  const profileFirst = isFlagOn("repurposeProfileFirst");
+  // `profile` is a specific network chosen on the step-1 profile chooser;
+  // "all" (or null) means no network filter.
   const activeProfile = profile && profile !== "all" ? profile.toLowerCase() : "all";
 
   const activePeriod = PERIODS.find((p) => p.key === period) || PERIODS[0];
@@ -421,13 +349,12 @@ export function renderTopPostsBoard({ posts, sort = "performance", profile = nul
     : `<p class="top-posts-empty">No winning posts in this window — try a wider period.</p>`;
 
   // One post is repurposed at a time (via each card's "Repurpose" button), so
-  // the toolbar just holds the count + the Period/Sort filters (+ the Profile
-  // dropdown in flag-OFF mode). No multi-select / bulk bar.
+  // the toolbar just holds the count + the Period/Sort filters. No multi-select
+  // / bulk bar.
   const toolbar = html`
     <div class="top-posts-toolbar">
       <span class="top-posts-toolbar__count">${count} winning ${count === 1 ? "post" : "posts"}</span>
       <div class="top-posts-filters">
-        ${raw(profileFirst ? "" : renderProfileSelect(buildProfileLenses(all), activeProfile, all.length))}
         ${raw(
           renderFilterSelect({
             dataAttr: "data-top-post-period",

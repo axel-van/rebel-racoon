@@ -25,11 +25,11 @@ import {
   openSources as openSourcesPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=286";
+} from "./right-panel.js?v=289";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=56";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=48";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=46";
-import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=32";
+import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=33";
 import { subscribe as subscribeSessions } from "../sessions-store.js?v=4";
 import { addMention } from "../composer-mentions.js?v=20";
 import { isFlagOn } from "../feature-flags.js?v=9";

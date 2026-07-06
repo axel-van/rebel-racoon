@@ -31,14 +31,13 @@ import {
   postTopPostsWidget,
 } from "./assistant.js?v=56";
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=7";
-import { addPostDraft } from "./posts-store.js?v=32";
+import { addPostDraft } from "./posts-store.js?v=33";
 import { addReadySource } from "./sources-stream.js?v=48";
 import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=24";
-import { SORTS } from "./components/top-post-card.js?v=41";
-import { isFlagOn } from "./feature-flags.js?v=9";
+import { SORTS } from "./components/top-post-card.js?v=42";
 import { showToast } from "./components/toast.js?v=20";
 import * as inlineQuestion from "./inline-question.js?v=47";
-import { getDefaultContext } from "./contexts-store.js?v=32";
+import { getDefaultContext } from "./contexts-store.js?v=33";
 
 // Cap on drafts produced in one run — post × angle × channel can multiply fast
 // (e.g. 3 posts × 4 angles × 3 channels = 36). Keep the result turn scannable;
@@ -395,14 +394,6 @@ function openStage(sessionId, stage, profile = null) {
   notifyPicker(sessionId);
 }
 
-// Change the active profile lens (flag-OFF dropdown). "all" or a network slug.
-export function setProfile(sessionId, profile) {
-  const s = pickerStates.get(sessionId);
-  if (!s || s.profile === profile) return;
-  s.profile = profile;
-  notifyPicker(sessionId);
-}
-
 // Profile chosen on the chooser screen → briefly "load" its top posts, then
 // reveal the board scoped to that profile.
 export function chooseProfile(sessionId, network) {
@@ -444,14 +435,10 @@ export function startTopPostsFlow(sessionId) {
   // Pre-select the default Playbook so drafts already have a voice; the user can
   // switch it on step 1's account screen (setContext).
   repurposeContexts.set(sessionId, getDefaultContext()?.id || null);
-  // Flag ON (default): step 1 is the full-page profile chooser. Flag OFF: open
-  // straight on the board of all winners with the in-toolbar profile dropdown.
-  if (isFlagOn("repurposeProfileFirst")) {
-    openStage(sessionId, "profile");
-    armProfilePicker(sessionId);
-  } else {
-    openStage(sessionId, "board", "all");
-  }
+  // Step 1 is the full-page profile chooser: pick a connected profile → load its
+  // winners → a board scoped to that profile.
+  openStage(sessionId, "profile");
+  armProfilePicker(sessionId);
 }
 
 // ---- Inline (Add-menu) variant ---------------------------------------
