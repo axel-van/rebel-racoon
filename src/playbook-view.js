@@ -640,6 +640,9 @@ function renderGoalsPanel(data, edit) {
     ].join("");
   } else {
     body = [
+      // Mirror the edit order: Language leads the panel so the recap surfaces
+      // which language Archie writes in (it's the first field in edit mode).
+      renderRow("Language", renderText(language)),
       renderRow("Business", renderText(data.businessSummary)),
       // Primary audience is single-select, so show it as plain text rather than
       // a one-chip row; the other goal fields stay multi-value chips.
