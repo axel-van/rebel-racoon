@@ -14,12 +14,12 @@ import {
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=31";
 import { renderPostCard } from "./post-card.js?v=47";
-import { renderClipCard } from "./clip-card.js?v=11";
+import { renderClipCard } from "./clip-card.js?v=12";
 import { onFeedbackClick } from "./feedback-control.js?v=1";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=49";
-import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=153";
+import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=154";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -729,7 +729,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=392").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=393").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -912,7 +912,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=392").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=393").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -930,7 +930,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=392").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=393").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -2568,15 +2568,27 @@ function renderClipsList(entries) {
 
   const sid = activeSessionId();
   const cards = entries
-    .map(({ clip, sourceName, sourceKind }) =>
-      renderClipCard(clip, {
-        sourceName,
-        sourceKind,
-        sessionId: sid,
-        whyOpen: isClipWhyOpen(clip.id),
-        selected: clipSelection.has(clip.id),
-      }),
-    )
+    .map(({ clip, sourceName, sourceKind }) => {
+      const selected = clipSelection.has(clip.id);
+      // Checkbox in a left gutter OUTSIDE the card (mirrors the Drafts rows),
+      // then the clip card.
+      return `
+        <div class="rpanel-outputs__clip-row${selected ? " is-selected" : ""}">
+          <div class="rpanel-outputs__clip-check">
+            <label class="ap-checkbox-container" aria-label="Select clip">
+              <input type="checkbox" data-clip-select="${clip.id}" ${selected ? "checked" : ""} />
+              <i></i>
+            </label>
+          </div>
+          ${renderClipCard(clip, {
+            sourceName,
+            sourceKind,
+            sessionId: sid,
+            whyOpen: isClipWhyOpen(clip.id),
+            selected,
+          })}
+        </div>`;
+    })
     .join("");
 
   // Bulk band — mirrors the Drafts group band: a select-all checkbox + count,
@@ -2740,7 +2752,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=392").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=393").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

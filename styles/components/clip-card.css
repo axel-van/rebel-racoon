@@ -81,24 +81,12 @@
   outline-offset: -2px;
 }
 
-/* Multi-select checkbox — the DS .ap-checkbox-container, positioned top-left of
-   the thumbnail (over the scrim). The DS owns the box + check appearance; this
-   only places it and sits it on a soft dark chip so it stays legible over any
-   thumbnail. The whole card also gets a blue border when selected. */
 .clip-card {
   position: relative;
 }
 
-.clip-card__select {
-  position: absolute;
-  top: var(--ref-spacing-xs);
-  left: var(--ref-spacing-xs);
-  z-index: 3;
-  padding: 3px;
-  border-radius: var(--app-radius-sm);
-  background: color-mix(in srgb, var(--ref-color-grey-100) 38%, transparent);
-}
-
+/* Selected card gets a blue border (the checkbox itself lives in the row
+   gutter outside the card — see .rpanel-outputs__clip-row in right-panel.css). */
 .clip-card.is-selected {
   border-color: var(--ref-color-electric-blue-100);
 }

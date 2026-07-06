@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=181";
+import { renderTopbar } from "../components/topbar.js?v=182";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=45";
 import {
   getConnectedProfiles,
@@ -68,7 +68,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=9";
-import * as contextBuilder from "../context-builder.js?v=148";
+import * as contextBuilder from "../context-builder.js?v=149";
 import { renderPicker } from "./_analyse-common.js?v=54";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -100,7 +100,7 @@ import {
   extractClipsForSource,
   setSourceIdeaCount,
 } from "../sources-stream.js?v=47";
-import { renderClipCard } from "../components/clip-card.js?v=11";
+import { renderClipCard } from "../components/clip-card.js?v=12";
 import { onFeedbackClick } from "../components/feedback-control.js?v=1";
 import { showToast } from "../components/toast.js?v=20";
 import {
@@ -109,7 +109,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=280";
+} from "../components/right-panel.js?v=281";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=13";
@@ -2705,7 +2705,7 @@ function ratioTilePreview(fmt) {
 function ratioNetworksMeta(fmt) {
   const nets = fmt.networks || [];
   if (!nets.length) return "";
-  return `<span class="ratio-nets" aria-label="Best for ${nets.map((p) => NETWORK_LABEL[p] || p).join(", ")}">${nets
+  return `<span class="ratio-nets" aria-label="Best for ${nets.map((p) => NETWORK_LABEL[p] || p).join(", ")}"><span class="ratio-nets__label muted">Best for</span>${nets
     .map((p) => `<i class="${NETWORK_ICON_BY_PLATFORM[p]}" title="${NETWORK_LABEL[p] || p}" aria-hidden="true"></i>`)
     .join("")}</span>`;
 }

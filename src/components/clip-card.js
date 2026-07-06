@@ -101,21 +101,10 @@ export function renderClipCard(
     `
     : "";
 
-  // Selection checkbox — the DS .ap-checkbox-container (same control as the
-  // Drafts cards + the clips select-all), positioned over the thumbnail.
-  // Toggles clipSelection in right-panel (data-clip-select change handler).
-  const selectBtn = sessionId
-    ? `
-      <label class="ap-checkbox-container clip-card__select" aria-label="Select clip">
-        <input type="checkbox" data-clip-select="${escapeAttr(clip.id)}" ${selected ? "checked" : ""} />
-        <i></i>
-      </label>
-    `
-    : "";
-
+  // Selection checkbox lives OUTSIDE the card, in a left gutter rendered by
+  // renderClipsList (same layout as the Drafts rows) — not on the card itself.
   return `
     <article class="rpanel-ideas__card clip-card${selected ? " is-selected" : ""}" data-clip-id="${escapeAttr(clip.id)}">
-      ${selectBtn}
       <button
         type="button"
         class="clip-card__thumb-btn"

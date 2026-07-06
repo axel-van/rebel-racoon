@@ -109,6 +109,12 @@
   gap: 5px;
 }
 
+.ratio-nets__label {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  margin-right: 1px;
+}
+
 .ratio-nets i {
   font-size: 15px;
   line-height: 1;

@@ -902,8 +902,29 @@
   flex-direction: column;
   gap: var(--ref-spacing-sm);
   padding: var(--ref-spacing-sm);
-  /* Center the capped clip cards — same as the ideas grid + Drafts feed. */
+  /* Center the capped clip rows — same as the ideas grid + Drafts feed. */
   align-items: center;
+}
+
+/* Clip row — a left checkbox gutter + the clip card, mirroring the Drafts
+   .posts__row so the selection control sits OUTSIDE the card. */
+.rpanel-outputs__clip-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  max-width: 560px;
+}
+
+.rpanel-outputs__clip-check {
+  flex-shrink: 0;
+  padding-top: var(--ref-spacing-xxs);
+}
+
+.rpanel-outputs__clip-row > .clip-card {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
 }
 
 /* Clips bulk band — reuses the Drafts group-band chrome (select-all + count +
