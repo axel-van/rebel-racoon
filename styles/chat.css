@@ -657,14 +657,16 @@ span.chat-bubble-choice-chip {
 
 .drafts-card:hover,
 .drafts-card:focus-visible {
-  /* Clickable-card convention: blue border on hover/focus (never navy/black),
-     the same accent every interactive card in the app uses. */
-  border-color: var(--ref-color-electric-blue-100);
+  /* Clickable-card convention: a light-blue wash on hover/focus (never
+     navy/black) — soft blue fill + a light blue border, not a hard outline. */
+  border-color: var(--ref-color-electric-blue-20);
+  background: var(--ref-color-electric-blue-05);
   outline: none;
 }
 
+/* Active (pinned) — the same light-blue wash with a slightly firmer border. */
 .drafts-card.is-active {
-  border-color: var(--ref-color-electric-blue-100);
+  border-color: var(--ref-color-electric-blue-40);
   background: var(--ref-color-electric-blue-05);
 }
 
