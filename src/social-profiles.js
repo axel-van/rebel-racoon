@@ -7,7 +7,7 @@
 // as the muted caption, and a DS avatar carrying the brand photo plus a
 // corner network badge.
 
-import { socialAccounts } from "./mocks.js?v=45";
+import { socialAccounts } from "./mocks.js?v=51";
 import { escapeHtml } from "./utils.js?v=21";
 
 // Map our mock's `platform` slug to the DS's official full-color network
@@ -66,6 +66,37 @@ export function renderProfileTag(account, { network } = {}) {
       <span class="ap-avatar size-24" aria-hidden="true">${avatarInner}${badge}</span>
       <span class="profile-tag__name">${escapeHtml(name)}</span>
     </span>
+  `;
+}
+
+// Conversation echo card for a picked profile — matches the selection-echo
+// visual (rounded navy-tint card, 32px leading visual, two lines): the profile
+// NAME on top, the @handle below (or "Platform · Kind" when the handle isn't a
+// distinct @). Used by the chat "which account(s)?" echoes so profile picks
+// read like every other selection echo in the thread.
+export function renderProfileEchoCard(account, { network } = {}) {
+  const platform = account?.platform || normalizePlatform(network);
+  const name = account?.name || account?.handle || NETWORK_LABEL[platform] || platform || "Profile";
+  const handle = account?.handle || "";
+  const meta =
+    handle && handle !== name
+      ? handle
+      : [account?.platformLabel || NETWORK_LABEL[platform], account?.kind].filter(Boolean).join(" · ");
+  const networkIcon = NETWORK_ICON_BY_PLATFORM[platform];
+  const avatarInner = account?.photo
+    ? `<img src="${account.photo}" alt="" />`
+    : `<span class="ap-avatar-initials">${BRAND_INITIALS}</span>`;
+  const badge = networkIcon ? `<span class="ap-avatar-network"><i class="${networkIcon}"></i></span>` : "";
+  return `
+    <div class="selection-echo selection-echo--profile" title="${escapeHtml(name)}">
+      <span class="selection-echo__icon selection-echo__icon--avatar">
+        <span class="ap-avatar size-32" aria-hidden="true">${avatarInner}${badge}</span>
+      </span>
+      <span class="selection-echo__body">
+        <span class="selection-echo__title">${escapeHtml(name)}</span>
+        ${meta ? `<span class="selection-echo__meta">${escapeHtml(meta)}</span>` : ""}
+      </span>
+    </div>
   `;
 }
 

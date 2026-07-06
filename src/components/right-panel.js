@@ -1,7 +1,7 @@
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=55";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=56";
 import { isFlagOn } from "../feature-flags.js?v=9";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=45";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=51";
 import { isNewUser } from "../user-mode.js?v=22";
 import { getPath } from "../router.js?v=30";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -12,36 +12,36 @@ import {
   updatePostContent,
   attachImageToDraft,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=31";
+} from "../posts-store.js?v=32";
 import { renderPostCard } from "./post-card.js?v=47";
 import { renderClipCard } from "./clip-card.js?v=12";
 import { onFeedbackClick } from "./feedback-control.js?v=1";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=49";
-import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=156";
+import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=157";
 import {
   getSources as getStreamSources,
   subscribeSources,
   updateSourceClips,
   removeSources,
   renameSource,
-} from "../sources-stream.js?v=47";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=57";
+} from "../sources-stream.js?v=48";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=58";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { getConnectedConnectors } from "../connectors-store.js?v=25";
-import { askConnector } from "../connector-ask.js?v=5";
-import { renderConnectorLogo } from "../connectors-view.js?v=7";
-import { open as openConnectorsModal } from "./connectors-modal.js?v=8";
-import { addMention as addComposerMention } from "../composer-mentions.js?v=19";
+import { getConnectedConnectors } from "../connectors-store.js?v=26";
+import { askConnector } from "../connector-ask.js?v=6";
+import { renderConnectorLogo } from "../connectors-view.js?v=8";
+import { open as openConnectorsModal } from "./connectors-modal.js?v=9";
+import { addMention as addComposerMention } from "../composer-mentions.js?v=20";
 import { iconFor } from "../file-kinds.js?v=20";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
-import { open as openScheduleModal } from "./schedule-modal.js?v=51";
-import { open as openGenerateImageModal } from "./generate-image-modal.js?v=35";
+import { open as openScheduleModal } from "./schedule-modal.js?v=52";
+import { open as openGenerateImageModal } from "./generate-image-modal.js?v=36";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
@@ -657,7 +657,7 @@ export function init() {
           updateSourceClips(srcId, nextClips);
           const edited = (nextClips || []).find((c) => c.id === ref.clipId);
           if (!edited) return;
-          import("../posts-store.js?v=31").then(({ updatePostClip }) => {
+          import("../posts-store.js?v=32").then(({ updatePostClip }) => {
             updatePostClip(sid, pid, {
               start: edited.start,
               end: edited.end,
@@ -729,7 +729,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=395").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=396").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -912,7 +912,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=395").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=396").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -930,7 +930,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=395").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=396").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -1781,7 +1781,7 @@ function onPostRewrite(postId, intent = "fresh") {
   // streaming → commit. Loaded lazily so the rewrite code is only
   // pulled in when the user actually triggers a regen. `intent` biases
   // the rewrite (shorter / longer / warmer / formal / fresh).
-  import("../draft-rewrite.js?v=5").then(({ startRewrite }) => {
+  import("../draft-rewrite.js?v=6").then(({ startRewrite }) => {
     startRewrite(sid, postId, intent);
   });
 }
@@ -1926,7 +1926,7 @@ function onSectionSave(network) {
   if (snapshot.length === 0) return;
   const count = snapshot.length;
   const draftWord = count === 1 ? "draft" : "drafts";
-  Promise.all([import("./save-folder-modal.js?v=6"), import("../folders-store.js?v=1")]).then(
+  Promise.all([import("./save-folder-modal.js?v=7"), import("../folders-store.js?v=2")]).then(
     ([{ open: openSaveModal }, { addDraftsToFolder }]) => {
       openSaveModal({
         count,
@@ -2752,7 +2752,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=395").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=396").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

@@ -21,7 +21,7 @@ import { escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 import { showToast } from "./toast.js?v=20";
 import { renderFeedbackControl, onFeedbackClick } from "./feedback-control.js?v=1";
-import { getPosts } from "../posts-store.js?v=31";
+import { getPosts } from "../posts-store.js?v=32";
 import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "../clip-formats.js?v=3";
 
 const MODAL_ID = "generateImage";

@@ -88,15 +88,19 @@
   max-width: 460px;
 }
 
-/* Profile echo (renderProfilesTurn) — the canonical .profile-tag, pill-styled
-   for the right-aligned chat row. The renderer is shared with the drafts card
-   and schedule modal; only this chat-context pill chrome is local. */
-.chat-profiles .profile-tag {
-  padding: 3px var(--ref-spacing-xs) 3px 3px;
-  background: var(--app-convo-navy-05);
-  border: 1px solid var(--app-convo-navy-20);
-  border-radius: var(--app-radius-pill);
-  color: var(--app-convo-navy-deep);
+/* Profile echo (renderProfilesTurn) — each pick is a selection-echo card
+   (avatar + name + @handle) so profile picks read like the other echoes.
+   The avatar variant drops the icon slot's white disc and overflow clipping
+   so the corner network badge stays visible. */
+.selection-echo__icon--avatar {
+  background: transparent;
+  overflow: visible;
+}
+
+.selection-echo--profile .selection-echo__meta {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Shared profile tag — the canonical "show a profile" UI: DS avatar

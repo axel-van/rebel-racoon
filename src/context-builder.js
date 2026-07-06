@@ -14,12 +14,12 @@
 // suggestions, editingId, onComplete }.
 
 import * as inlineQuestion from "./inline-question.js?v=47";
-import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=55";
-import * as rightPanel from "./components/right-panel.js?v=283";
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=31";
+import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=56";
+import * as rightPanel from "./components/right-panel.js?v=284";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=32";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=23";
-import { connectors as connectorMocks } from "./mocks.js?v=45";
-import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=23";
+import { connectors as connectorMocks } from "./mocks.js?v=51";
+import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=24";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
