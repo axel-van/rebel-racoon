@@ -351,10 +351,12 @@ export function renderTopPostsWidget({ network, posts = [], selected = [], answe
 // View-density toggle (Large cards ↔ Compact rows). A two-option segmented
 // switch driven by aria-pressed; picking one re-renders the board (setLayout).
 function renderLayoutToggle(layout) {
+  // DS icon buttons; the active view is the .blue variant (blue icon + a light
+  // blue fill from the component CSS) so the current density reads as selected.
   const opt = (key, icon, label) =>
     `<button
         type="button"
-        class="top-posts-view__btn"
+        class="ap-icon-button stroked${layout === key ? " blue" : ""}"
         data-top-post-layout="${key}"
         aria-pressed="${layout === key ? "true" : "false"}"
         aria-label="${label}"

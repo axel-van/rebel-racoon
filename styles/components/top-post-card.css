@@ -117,45 +117,17 @@
   min-width: 200px;
 }
 
-/* View-density toggle (Large ↔ Compact) — a two-segment icon switch, active
-   segment driven by aria-pressed. */
+/* View-density toggle (Large ↔ Compact) — two DS icon buttons. The active view
+   uses the .ap-icon-button.blue variant (blue icon); the fill below makes that
+   selected state persist rather than only showing on hover. */
 .top-posts-view {
   display: inline-flex;
-  align-items: stretch;
-  border: 1px solid var(--app-border);
-  border-radius: var(--ref-border-radius-sm);
-  overflow: hidden;
-}
-
-.top-posts-view__btn {
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--sys-text-color-light);
-  font-size: 18px;
-  cursor: pointer;
-  transition:
-    background-color 120ms ease,
-    color 120ms ease;
+  gap: var(--ref-spacing-xxxs);
 }
 
-.top-posts-view__btn + .top-posts-view__btn {
-  border-left: 1px solid var(--app-border);
-}
-
-.top-posts-view__btn:hover {
-  background: var(--ref-color-grey-05);
-  color: var(--ref-color-grey-150);
-}
-
-.top-posts-view__btn[aria-pressed="true"] {
-  background: var(--ref-color-grey-10);
-  color: var(--ref-color-grey-150);
+.top-posts-view .ap-icon-button.blue {
+  background: var(--ref-color-electric-blue-05);
 }
 
 /* ── Account picker (step 1) ─────────────────────────────────────────
