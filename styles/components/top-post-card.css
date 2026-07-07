@@ -214,6 +214,13 @@
 /* Auto-fill at a ~300px track → 3 compact columns at the 980px container,
    gracefully reflowing to 2 / 1 as the panel narrows (e.g. when the preview
    panel opens and the content column shrinks). */
+/* "Load more" pager — centred below the grid; the button stays auto-width. */
+.top-posts-load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--ref-spacing-md);
+}
+
 .top-posts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -314,14 +321,34 @@
   overflow: hidden;
 }
 
-/* Text-only winners have no media, so the copy becomes the hero: the type steps
-   up to h2 and the block centres in the filled body — so the card reads as an
-   intentional quote, not a short line stranded in white space. */
-.top-post-card__text--solo {
+/* Text-only winners have no media, so the copy sits in a "note" tile: a soft
+   surface carrying a file-text glyph + the excerpt, filling the space media
+   would. The tile owns the layout; the copy is just larger, darker type. */
+.top-post-card__note {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-md);
+  border-radius: var(--ref-border-radius-sm);
+  /* Soft diagonal wash fading to white — depth without competing with the flat
+     grey header / footer bands. */
+  background: linear-gradient(
+    155deg,
+    var(--ref-color-grey-10) 0%,
+    var(--ref-color-grey-05) 55%,
+    var(--ref-color-white) 100%
+  );
+}
+
+.top-post-card__note-glyph {
+  flex: 0 0 auto;
+  color: var(--ref-color-grey-60);
+  font-size: 22px;
+}
+
+.top-post-card__text--solo {
+  display: block;
   -webkit-line-clamp: initial;
   font-size: var(--sys-text-style-h2-size);
   line-height: var(--sys-text-style-h2-line-height);
@@ -374,6 +401,26 @@
   font-size: 20px;
 }
 
+/* The DS play glyph (ap-icon-play_fill) is drawn off-centre inside its em box,
+   so it never sits true-centre in the circle no matter how the box is aligned.
+   Hide it and draw the triangle geometrically — perfectly centred by construction
+   (the `left` nudge offsets the triangle's own left-leaning centroid). Sizes are
+   em-based so it scales with the button's font-size (large 20px / compact 13px). */
+.top-post-card__media-play > i {
+  display: none;
+}
+
+.top-post-card__media-play::before {
+  content: "";
+  position: relative;
+  left: 0.08em;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0.36em 0 0.36em 0.62em;
+  border-color: transparent transparent transparent var(--ref-color-grey-150);
+}
+
 /* Duration pill — bottom-left, camera icon + time, on the grey-100 overlay
    (@ 70%), matching the Figma `Variant=Video` chip. */
 .top-post-card__media-dur {
@@ -413,9 +460,8 @@
   flex-direction: column;
   gap: var(--ref-spacing-xxs);
   padding: var(--ref-spacing-xs);
-  /* Footer band — mirrors the header: grey-05 fill + grey-10 hairline, so the
-     metrics/actions read as a bookend to the post-preview header. */
-  background: var(--ref-color-grey-05);
+  /* White (like the body); a grey-10 hairline is the only separator between the
+     post content and its stats. */
   border-top: 1px solid var(--app-border-soft);
 }
 
@@ -529,11 +575,21 @@
   -webkit-line-clamp: 3;
 }
 
-/* Text-only compact card: no thumbnail, copy spans the row at body size. */
+/* Text-only compact card: drop the note treatment entirely (no surface, no
+   glyph) — just the copy at body size, centred in the row like the other
+   compact cards. */
+.top-posts-grid--compact .top-post-card__note {
+  justify-content: center;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+}
+
+.top-posts-grid--compact .top-post-card__note-glyph {
+  display: none;
+}
+
 .top-posts-grid--compact .top-post-card__text--solo {
-  display: flex;
-  align-items: center;
-  -webkit-line-clamp: initial;
   font-size: var(--sys-text-style-body-size);
   line-height: var(--sys-text-style-body-line-height);
   color: var(--ref-color-grey-150);

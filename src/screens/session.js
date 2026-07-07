@@ -53,9 +53,9 @@ import {
 } from "../posts-store.js?v=33";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=48";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=36";
-import * as topPostsFlow from "../top-posts-flow.js?v=63";
-import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=44";
-import { getTopPost } from "../top-posts-store.js?v=7";
+import * as topPostsFlow from "../top-posts-flow.js?v=65";
+import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=46";
+import { getTopPost } from "../top-posts-store.js?v=8";
 import * as sidebarWizard from "../sidebar-wizard.js?v=51";
 import * as inlineQuestion from "../inline-question.js?v=47";
 import * as clipStudio from "../clip-studio.js?v=21";
@@ -2035,6 +2035,8 @@ function renderTopPostsPickerScreen(session) {
           profile: state.profile,
           period: state.period,
           layout: state.layout,
+          visibleCount: state.visibleCount,
+          loadingMore: state.loadingMore,
         }),
       )}
     `;
@@ -3445,6 +3447,8 @@ function wireAssistantPanel(root, session, attachedContext) {
       profile: state.profile,
       period: state.period,
       layout: state.layout,
+      visibleCount: state.visibleCount,
+      loadingMore: state.loadingMore,
     });
     const fresh = tmp.firstElementChild;
     if (fresh) board.replaceWith(fresh);
@@ -4541,6 +4545,11 @@ function bindSession(root, session) {
       const topPostLayout = event.target.closest("[data-top-post-layout]");
       if (topPostLayout) {
         topPostsFlow.setLayout(session.id, topPostLayout.dataset.topPostLayout);
+        return;
+      }
+      // Winner-board "Load more" → reveal the next page of winners.
+      if (event.target.closest("[data-top-post-load-more]")) {
+        topPostsFlow.loadMore(session.id);
         return;
       }
       // Card "Repurpose" → repurpose that one winner (one post at a time).

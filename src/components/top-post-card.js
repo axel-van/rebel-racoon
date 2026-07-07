@@ -180,6 +180,16 @@ function renderTopPostCard(post) {
     )
     .join("");
   const mediaHtml = renderMediaBlock(post);
+  // Text-only winners have no media, so the copy becomes the body: a "note" tile
+  // (file-text glyph + the excerpt on a soft surface) that signals a text post
+  // and fills the space media would. Media posts keep copy-above-media.
+  const bodyInner = mediaHtml
+    ? html`<p class="top-post-card__text">${post.excerpt}</p>
+        ${raw(mediaHtml)}`
+    : html` <div class="top-post-card__note">
+        <i class="ap-icon-file--text top-post-card__note-glyph" aria-hidden="true"></i>
+        <p class="top-post-card__text top-post-card__text--solo">${post.excerpt}</p>
+      </div>`;
   return html`
     <article class="ap-card top-post-card">
       <header class="top-post-card__preview-head">
@@ -190,10 +200,7 @@ function renderTopPostCard(post) {
         <span class="top-post-card__time">${post.publishedOn}</span>
       </header>
 
-      <div class="top-post-card__body">
-        <p class="top-post-card__text ${mediaHtml ? "" : "top-post-card__text--solo"}">${post.excerpt}</p>
-        ${raw(mediaHtml)}
-      </div>
+      <div class="top-post-card__body">${raw(bodyInner)}</div>
 
       <div class="top-post-card__perf">
         <div class="top-post-card__stats">${raw(statsHtml)}</div>
@@ -359,7 +366,15 @@ function renderLayoutToggle(layout) {
     </div>`;
 }
 
-export function renderTopPostsBoard({ posts, sort = "performance", profile = null, period = "all", layout = "large" }) {
+export function renderTopPostsBoard({
+  posts,
+  sort = "performance",
+  profile = null,
+  period = "all",
+  layout = "large",
+  visibleCount = 12,
+  loadingMore = false,
+}) {
   const all = posts || [];
   // `profile` is a specific network chosen on the step-1 profile chooser;
   // "all" (or null) means no network filter.
@@ -374,9 +389,28 @@ export function renderTopPostsBoard({ posts, sort = "performance", profile = nul
   const sorted = [...visible].sort(active.compare);
   const count = sorted.length;
 
-  const cards = sorted.length
-    ? sorted.map((p) => renderTopPostCard(p)).join("")
+  // Pagination — the board reveals `visibleCount` at a time; "Load more" (below)
+  // grows the window. `remaining` drives the button's label + visibility.
+  const shown = sorted.slice(0, Math.max(0, visibleCount));
+  const remaining = count - shown.length;
+
+  const cards = shown.length
+    ? shown.map((p) => renderTopPostCard(p)).join("")
     : `<p class="top-posts-empty">No winning posts in this window — try a wider period.</p>`;
+
+  const loadMore =
+    remaining > 0
+      ? `<div class="top-posts-load-more">
+          <button
+            type="button"
+            class="ap-button stroked grey${loadingMore ? " loading" : ""}"
+            data-top-post-load-more
+            ${loadingMore ? "disabled" : ""}
+          >
+            Load ${remaining > 12 ? "12" : remaining} more${loadingMore ? '<span class="ap-loading-bar"></span>' : ""}
+          </button>
+        </div>`
+      : "";
 
   // One post is repurposed at a time (via each card's "Repurpose" button), so
   // the toolbar just holds the count + the Period/Sort filters. No multi-select
@@ -404,6 +438,7 @@ export function renderTopPostsBoard({ posts, sort = "performance", profile = nul
     <div class="top-posts-board">
       ${raw(toolbar)}
       <div class="${gridClass}" role="group" aria-label="Your top-performing posts">${raw(cards)}</div>
+      ${raw(loadMore)}
     </div>
   `;
 }

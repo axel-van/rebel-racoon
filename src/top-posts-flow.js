@@ -32,14 +32,21 @@ import {
   postUserTurn,
   postUserProfilesTurn,
 } from "./assistant.js?v=56";
-import { getTopPosts, getTopPost } from "./top-posts-store.js?v=7";
+import { getTopPosts, getTopPost } from "./top-posts-store.js?v=8";
 import { addPostDraft } from "./posts-store.js?v=33";
 import { addReadySource } from "./sources-stream.js?v=48";
 import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=24";
-import { SORTS } from "./components/top-post-card.js?v=44";
+import { SORTS } from "./components/top-post-card.js?v=46";
 import { showToast } from "./components/toast.js?v=20";
 import * as inlineQuestion from "./inline-question.js?v=47";
 import { getDefaultContext } from "./contexts-store.js?v=33";
+
+// Board pagination — how many winners the board reveals per page ("Load more"
+// adds another page). The board starts showing this many and grows by it.
+const TOP_POSTS_PAGE = 12;
+
+// Simulated "fetching more winners" beat for the board's Load-more button.
+const LOAD_MORE_MS = 700;
 
 // Cap on drafts produced in one run — post × angle × channel can multiply fast
 // (e.g. 3 posts × 4 angles × 3 channels = 36). Keep the result turn scannable;
@@ -200,6 +207,7 @@ export function setPeriod(sessionId, period) {
   const s = pickerStates.get(sessionId);
   if (!s || s.period === period) return;
   s.period = period;
+  s.visibleCount = TOP_POSTS_PAGE; // new filter → restart pagination
   notifyPicker(sessionId);
 }
 
@@ -219,6 +227,7 @@ export function setSort(sessionId, sort) {
   const s = pickerStates.get(sessionId);
   if (!s || s.sort === sort) return;
   s.sort = sort;
+  s.visibleCount = TOP_POSTS_PAGE; // new order → restart pagination
   notifyPicker(sessionId);
 }
 
@@ -228,6 +237,23 @@ export function setLayout(sessionId, layout) {
   if (!s || s.layout === layout) return;
   s.layout = layout;
   notifyPicker(sessionId);
+}
+
+// Reveal the next page of winners (the board's "Load more", 12 at a time). Shows
+// a brief loading state on the button (DS .ap-loading-bar) before the new cards
+// land, so fetching more reads as real work rather than an instant jump.
+export function loadMore(sessionId) {
+  const s = pickerStates.get(sessionId);
+  if (!s || s.loadingMore) return;
+  s.loadingMore = true;
+  notifyPicker(sessionId);
+  setTimeout(() => {
+    const cur = pickerStates.get(sessionId);
+    if (!cur || !cur.loadingMore) return;
+    cur.visibleCount += TOP_POSTS_PAGE;
+    cur.loadingMore = false;
+    notifyPicker(sessionId);
+  }, LOAD_MORE_MS);
 }
 
 // Connected social profiles offered on the account picker (step 1). This is what
@@ -281,6 +307,7 @@ function openStage(sessionId, stage, profile = null) {
     sort: "performance",
     period: "all",
     layout: "large",
+    visibleCount: TOP_POSTS_PAGE,
   });
   notifyPicker(sessionId);
 }

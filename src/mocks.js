@@ -402,6 +402,28 @@ function topPostDate(daysAgo) {
   return `${TOP_POST_MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
+// How many winners to synthesise per network. The authored content (9 items) is
+// cycled to fill the board so the "Load more" pager (12 at a time) has a real
+// second page to reveal; metrics / dates / media keep degrading past the ramp.
+const TOP_POSTS_PER_NETWORK = 24;
+
+// Ramp row for any rank i — reads the authored 9 tiers, then extends the decay
+// below the last tier so cycled winners keep descending (vsAvg floored at 1.0×
+// so the tail still reads as "at least average").
+function topPostRamp(i) {
+  const R = TOP_POST_RAMP;
+  if (i < R.length) return R[i];
+  const base = R[R.length - 1];
+  const over = i - (R.length - 1);
+  return {
+    vsAvg: Math.max(1, +(base.vsAvg - over * 0.03).toFixed(1)),
+    badge: `Top ${Math.min(70, 28 + over * 3)}%`,
+    eng: Math.max(1.5, +(base.eng - over * 0.12).toFixed(1)),
+    imp: Math.max(2000, Math.round(base.imp - over * 800)),
+    days: base.days + over * 7,
+  };
+}
+
 function buildTopPosts() {
   const out = [];
   // Running counters so image/video winners cycle through the stock pool +
@@ -409,19 +431,21 @@ function buildTopPosts() {
   let imgIdx = 0;
   let durIdx = 0;
   for (const [network, posts] of Object.entries(TOP_POST_CONTENT)) {
-    posts.forEach((c, i) => {
-      const last = TOP_POST_RAMP.length - 1;
-      // vsAvg / badge track the post's own rank (Performance = 4.3→1.2), but the
-      // other metrics come from different ramp rows so each sort reorders.
-      const perf = TOP_POST_RAMP[i] || TOP_POST_RAMP[last];
-      const eng = (TOP_POST_RAMP[TOP_POST_ENG_ORDER[i] ?? i] || TOP_POST_RAMP[last]).eng;
-      const imp = (TOP_POST_RAMP[TOP_POST_REACH_ORDER[i] ?? i] || TOP_POST_RAMP[last]).imp;
-      const days = (TOP_POST_RAMP[TOP_POST_DAYS_ORDER[i] ?? i] || TOP_POST_RAMP[last]).days;
+    for (let i = 0; i < TOP_POSTS_PER_NETWORK; i += 1) {
+      const c = posts[i % posts.length]; // cycle the authored content
+      const j = i % 9; // position within the 9-item cycle (drives the permutations)
+      const block = Math.floor(i / 9) * 9; // shift the permutation into the right decay tier
+      // vsAvg / badge track the post's own rank (Performance descends overall),
+      // but the other metrics come from different ramp rows so each sort reorders.
+      const perf = topPostRamp(i);
+      const eng = topPostRamp(block + TOP_POST_ENG_ORDER[j]).eng;
+      const imp = topPostRamp(block + TOP_POST_REACH_ORDER[j]).imp;
+      const days = topPostRamp(block + TOP_POST_DAYS_ORDER[j]).days;
       const reactions = Math.round(((imp * eng) / 100) * 0.78);
       const comments = Math.round(reactions * 0.09);
       const secondary = Math.round(reactions * 0.14); // shares (or saves on IG)
       const usesSaves = network === "instagram";
-      const mediaType = TOP_POST_MEDIA_PATTERN[network]?.[i] || "text";
+      const mediaType = TOP_POST_MEDIA_PATTERN[network]?.[j] || "text";
       const post = {
         id: `top-${TOP_POST_ID_ABBR[network]}-${i + 1}`,
         network,
@@ -455,7 +479,7 @@ function buildTopPosts() {
         post.mediaDuration = TOP_POST_DURATIONS[durIdx++ % TOP_POST_DURATIONS.length];
       }
       out.push(post);
-    });
+    }
   }
   return out;
 }
