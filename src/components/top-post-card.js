@@ -12,7 +12,7 @@
 // render; no module-local state (the active sort lives in top-posts-flow's
 // picker state).
 
-import { html, raw, escapeHtml } from "../utils.js?v=21";
+import { html, raw } from "../utils.js?v=21";
 import { profileForNetwork, NETWORK_ICON_BY_PLATFORM, BRAND_INITIALS } from "../social-profiles.js?v=24";
 
 const NET_ICON = {
@@ -125,27 +125,26 @@ function fmtDuration(s) {
   return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
 }
 
-// The preview tile at the top of every card, adapting to the post's media type:
+// The media block inside the post-preview body, mirroring the Figma
+// `.post Contructor` component: a rounded 16:9 media below the copy.
 //   video → poster image + play overlay + duration pill
 //   image → poster image
-//   text  → the excerpt featured as a large quote on a surface tile
-// A uniform 16:9 box so the board grid stays regular whatever the mix.
-function renderMediaTile(post) {
+//   text  → no media (the excerpt above carries the card on its own)
+function renderMediaBlock(post) {
   const type = post.mediaType || "text";
-  if (type === "text") {
-    return `
-      <div class="top-post-card__media top-post-card__media--text">
-        <i class="ap-icon-file--text top-post-card__media-glyph" aria-hidden="true"></i>
-        <p class="top-post-card__media-quote">${escapeHtml(post.excerpt)}</p>
-      </div>`;
-  }
+  if (type !== "image" && type !== "video") return "";
   const img = `<img class="top-post-card__media-img" src="${post.image}" alt="" loading="lazy" />`;
   if (type === "video") {
     return `
       <div class="top-post-card__media top-post-card__media--video">
         ${img}
+        <span class="top-post-card__media-scrim" aria-hidden="true"></span>
         <span class="top-post-card__media-play" aria-hidden="true"><i class="ap-icon-play_fill"></i></span>
-        ${post.mediaDuration ? `<span class="top-post-card__media-dur">${fmtDuration(post.mediaDuration)}</span>` : ""}
+        ${
+          post.mediaDuration
+            ? `<span class="top-post-card__media-dur"><i class="ap-icon-video" aria-hidden="true"></i>${fmtDuration(post.mediaDuration)}</span>`
+            : ""
+        }
       </div>`;
   }
   return `<div class="top-post-card__media top-post-card__media--image">${img}</div>`;
@@ -180,43 +179,48 @@ function renderTopPostCard(post) {
         `<div class="top-post-card__stat"><span class="top-post-card__stat-value">${v}</span><span class="top-post-card__stat-label">${l}</span></div>`,
     )
     .join("");
+  const mediaHtml = renderMediaBlock(post);
   return html`
     <article class="ap-card top-post-card">
-      ${raw(renderMediaTile(post))}
+      <header class="top-post-card__preview-head">
+        <span class="ap-avatar size-24 top-post-card__avatar" aria-hidden="true"
+          >${raw(avatarInner)}<span class="ap-avatar-network"><i class="${networkIcon}"></i></span
+        ></span>
+        <span class="top-post-card__author">${handle}</span>
+        <span class="top-post-card__time">${post.publishedOn}</span>
+      </header>
 
-      <div class="top-post-card__head">
-        <span class="top-post-card__profile">
-          <span class="ap-avatar size-24 top-post-card__avatar" aria-hidden="true"
-            >${raw(avatarInner)}<span class="ap-avatar-network"><i class="${networkIcon}"></i></span
-          ></span>
-          <span class="top-post-card__handle">${handle}</span>
-        </span>
+      <div class="top-post-card__body">
+        <p class="top-post-card__text ${mediaHtml ? "" : "top-post-card__text--solo"}">${post.excerpt}</p>
+        ${raw(mediaHtml)}
       </div>
 
       <div class="top-post-card__perf">
-        <span class="top-post-card__hero">
-          <span class="top-post-card__hero-value">${post.vsAvg}×</span>
-          <span class="top-post-card__hero-label">vs&nbsp;average</span>
-        </span>
         <div class="top-post-card__stats">${raw(statsHtml)}</div>
-      </div>
-
-      <div class="top-post-card__foot">
-        <span class="top-post-card__meta">${post.publishedOn}</span>
-        <div class="top-post-card__actions">
-          <a
-            class="ap-icon-button stroked"
-            href="${postPermalink(post.network, post.id)}"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Open original post"
-            title="Open original"
-          >
-            <i class="ap-icon-external-link" aria-hidden="true"></i>
-          </a>
-          <button type="button" class="ap-button primary blue top-post-card__cta" data-top-post-repurpose="${post.id}">
-            Repurpose
-          </button>
+        <div class="top-post-card__foot">
+          <span class="top-post-card__hero">
+            <span class="top-post-card__hero-value">${post.vsAvg}×</span>
+            <span class="top-post-card__hero-label">vs&nbsp;average</span>
+          </span>
+          <div class="top-post-card__actions">
+            <a
+              class="ap-icon-button stroked"
+              href="${postPermalink(post.network, post.id)}"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open original post"
+              title="Open original"
+            >
+              <i class="ap-icon-external-link" aria-hidden="true"></i>
+            </a>
+            <button
+              type="button"
+              class="ap-button primary blue top-post-card__cta"
+              data-top-post-repurpose="${post.id}"
+            >
+              Repurpose
+            </button>
+          </div>
         </div>
       </div>
     </article>
@@ -271,31 +275,39 @@ export function renderTopPostEcho(post) {
 // card visuals; selection lives on the widget turn (assistant.js) and re-renders
 // in place. `renderTopPostsWidgetTurn` in session.js wraps this in an AI turn.
 
-// One selectable row — the echo card fronted by a toggle + check. The whole row
-// is the toggle (data-topposts-widget-toggle); `disabled` freezes it once the
-// selection is confirmed.
-export function renderTopPostSelectRow(post, { selected = false, disabled = false } = {}) {
+// One selectable row — the echo card fronted by the DS radio (`.ap-radio-container`
+// + a real `<input type=radio>`). The whole row is a `<label>` so clicking anywhere
+// selects the radio; a shared `name` (per widget `group`) makes the rows a native
+// single-select group. `disabled` freezes it once the selection is confirmed.
+export function renderTopPostSelectRow(post, { selected = false, disabled = false, group = "" } = {}) {
   if (!post) return "";
   return html`
-    <button
-      type="button"
-      class="top-posts-widget__row${selected ? " is-selected" : ""}"
-      data-topposts-widget-toggle="${post.id}"
-      aria-pressed="${selected ? "true" : "false"}"
-      ${raw(disabled ? "disabled" : "")}
-    >
-      <span class="top-posts-widget__check" aria-hidden="true"><i class="ap-icon-check"></i></span>
+    <label class="top-posts-widget__row${selected ? " is-selected" : ""}">
+      <span class="ap-radio-container">
+        <input
+          type="radio"
+          name="topposts-pick-${group}"
+          value="${post.id}"
+          data-topposts-widget-radio="${post.id}"
+          ${raw(selected ? "checked" : "")}
+          ${raw(disabled ? "disabled" : "")}
+        />
+      </span>
       ${raw(renderTopPostEcho(post))}
-    </button>
+    </label>
   `;
 }
 
 // The widget card — header + single-select rows + a "Reuse this post" CTA.
 // SINGLE-select (pick one winner, like the studio's per-card Repurpose). When
 // `answered`, rows freeze and the footer drops (a static record of the pick).
-export function renderTopPostsWidget({ network, posts = [], selected = [], answered = false } = {}) {
+// `group` scopes the radios' shared `name` to this widget so multiple widgets in
+// one thread don't cross-select.
+export function renderTopPostsWidget({ network, posts = [], selected = [], answered = false, group = "" } = {}) {
   const sel = new Set(selected);
-  const rows = posts.map((p) => renderTopPostSelectRow(p, { selected: sel.has(p.id), disabled: answered })).join("");
+  const rows = posts
+    .map((p) => renderTopPostSelectRow(p, { selected: sel.has(p.id), disabled: answered, group }))
+    .join("");
   const footer = answered
     ? ""
     : `<div class="top-posts-widget__foot">
@@ -317,7 +329,7 @@ export function renderTopPostsWidget({ network, posts = [], selected = [], answe
         </span>
         <span class="top-posts-widget__hint muted">Pick one</span>
       </div>
-      <div class="top-posts-widget__list">${raw(rows)}</div>
+      <div class="top-posts-widget__list" role="radiogroup" aria-label="Pick one post to reuse">${raw(rows)}</div>
       ${raw(footer)}
     </div>
   `;
@@ -329,7 +341,25 @@ export function renderTopPostsWidget({ network, posts = [], selected = [], answe
 
 // The board: Period/Sort toolbar + the sorted card grid, scoped to the profile
 // chosen on step 1. `profile` is a network slug; `sort` is one of SORTS[].key.
-export function renderTopPostsBoard({ posts, sort = "performance", profile = null, period = "all" }) {
+// View-density toggle (Large cards ↔ Compact rows). A two-option segmented
+// switch driven by aria-pressed; picking one re-renders the board (setLayout).
+function renderLayoutToggle(layout) {
+  const opt = (key, icon, label) =>
+    `<button
+        type="button"
+        class="top-posts-view__btn"
+        data-top-post-layout="${key}"
+        aria-pressed="${layout === key ? "true" : "false"}"
+        aria-label="${label}"
+        title="${label}"
+      ><i class="${icon}" aria-hidden="true"></i></button>`;
+  return `<div class="top-posts-view" role="group" aria-label="Card size">
+      ${opt("large", "ap-icon-view-cards", "Large cards")}
+      ${opt("compact", "ap-icon-view-list", "Compact cards")}
+    </div>`;
+}
+
+export function renderTopPostsBoard({ posts, sort = "performance", profile = null, period = "all", layout = "large" }) {
   const all = posts || [];
   // `profile` is a specific network chosen on the step-1 profile chooser;
   // "all" (or null) means no network filter.
@@ -364,14 +394,16 @@ export function renderTopPostsBoard({ posts, sort = "performance", profile = nul
           }),
         )}
         ${raw(renderFilterSelect({ dataAttr: "data-top-post-sort", label: "Sort", active, options: SORTS }))}
+        ${raw(renderLayoutToggle(layout))}
       </div>
     </div>
   `;
 
+  const gridClass = layout === "compact" ? "top-posts-grid top-posts-grid--compact" : "top-posts-grid";
   return html`
     <div class="top-posts-board">
       ${raw(toolbar)}
-      <div class="top-posts-grid" role="group" aria-label="Your top-performing posts">${raw(cards)}</div>
+      <div class="${gridClass}" role="group" aria-label="Your top-performing posts">${raw(cards)}</div>
     </div>
   `;
 }

@@ -53,8 +53,8 @@ import {
 } from "../posts-store.js?v=33";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=48";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=36";
-import * as topPostsFlow from "../top-posts-flow.js?v=61";
-import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=42";
+import * as topPostsFlow from "../top-posts-flow.js?v=63";
+import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=44";
 import { getTopPost } from "../top-posts-store.js?v=7";
 import * as sidebarWizard from "../sidebar-wizard.js?v=51";
 import * as inlineQuestion from "../inline-question.js?v=47";
@@ -2034,6 +2034,7 @@ function renderTopPostsPickerScreen(session) {
           sort: state.sort,
           profile: state.profile,
           period: state.period,
+          layout: state.layout,
         }),
       )}
     `;
@@ -2402,84 +2403,21 @@ function askProfileQuestion(
 // ── Published-posts repurposing (top-posts flow) ──────────────────────
 // The winner board (top-posts-flow.js) hands off here once the user picks one or
 // more winners — via a card's "Repurpose" or the bulk bar. We echo the picks,
-// then walk the winners ONE AT A TIME so the user chooses angles per post (each
-// picker shows angles extracted from THAT post; no skipping), then the profiles
-// step, then generate the network-adapted drafts.
+// then go straight to the profiles step and generate the network-adapted drafts.
 function startRepurposeFlow(sessionId, postIds) {
   const ids = topPostsFlow.echoRepurposePicks(sessionId, postIds);
   if (!ids.length) return;
-  askAnglesForPost(sessionId, ids, 0, []);
+  askRepurposeProfiles(sessionId, ids);
 }
 
-// One post's angle step — pick exactly ONE angle for this post. `collected`
-// accumulates [{ postId, angles: [key] }] as we go; when every post has its
-// angle we advance to the profiles step. Single-select (click picks and
-// advances instantly); no Skip — the user picks an angle for each post.
-function askAnglesForPost(sessionId, postIds, index, collected) {
-  if (index >= postIds.length) {
-    askRepurposeProfiles(sessionId, collected);
-    return;
-  }
-  const postId = postIds[index];
-  const multi = postIds.length > 1;
-  const total = postIds.length;
-  const stepLabel = multi ? `Post ${index + 1}/${total}` : "Angle";
-
-  postAssistantMessage(
-    sessionId,
-    multi
-      ? `Post ${index + 1} of ${total} — “${topPostsFlow.repurposePostHook(postId)}”. Which angle should I spin?`
-      : "Let me pull some angles from this post.",
-  );
-  // Loading state — Archie "reads" this winner and extracts its angle variations.
-  inlineQuestion.ask(sessionId, {
-    loading: true,
-    title: multi ? `Angle · post ${index + 1} of ${total}` : "Angle from your post",
-    subtitle: "Reading it and pulling the strongest fresh angles…",
-    stepLabel,
-  });
-  window.setTimeout(() => {
-    if (!inlineQuestion.isActive(sessionId)) return;
-    const items = topPostsFlow.repurposeAngleItems([postId]);
-    // Record the chosen angle (a preset key or the user's own "Other" text) and
-    // advance to the next post.
-    const advance = (angle) => {
-      const value = (angle || "").trim();
-      if (!value) return;
-      postUserTurn(sessionId, topPostsFlow.angleLabels([value]).join(" · "));
-      askAnglesForPost(sessionId, postIds, index + 1, [...collected, { postId, angles: [value] }]);
-    };
-    inlineQuestion.ask(sessionId, {
-      title: multi ? `Angle · post ${index + 1} of ${total}` : "Angle from your post",
-      subtitle: "Pick one angle to spin from this post — or describe your own.",
-      stepLabel,
-      // Single-select — clicking an angle picks it and advances to the next post.
-      items,
-      // "Other" — a free-text row where the user asks for any angle they want.
-      customPlaceholder: "Describe another angle…",
-      onPick: advance,
-      onCustom: advance,
-      // Back to the previous post's angle (drops its saved pick so it can be redone).
-      // No Back on the first post — there's nothing before it, and no Skip anywhere.
-      onBack: index > 0 ? () => askAnglesForPost(sessionId, postIds, index - 1, collected.slice(0, -1)) : undefined,
-    });
-  }, 2500);
-}
-
-// Profile-selection step 2a — decide WHERE the repurposed drafts land: keep the
-// win on the profile it already ran on, or spread it to the user's OTHER
-// connected profiles. The "Same profile" row carries an INLINE version counter,
-// so picking it generates straight from here (no dedicated follow-up step);
-// "Other profiles" opens the per-profile version stepper to choose which.
 // Profile-selection — a SINGLE unified per-profile version stepper (no separate
 // "same vs other" scope step). Lists every connected profile: source-network
 // profiles first, tagged "· Source" and pre-set to 1 version; other profiles
 // start at 0. "Generate N drafts" sums the counts and each draft is adapted to
-// its profile's network. Every repurpose entry point funnels here after the
-// angle step, so they all behave identically.
-function askRepurposeProfiles(sessionId, anglesByPost) {
-  const postIds = anglesByPost.map((e) => e.postId);
-  const backToAngles = () => askAnglesForPost(sessionId, postIds, postIds.length - 1, anglesByPost.slice(0, -1));
+// its profile's network. This is the first (and only) step after the picks are
+// echoed — every repurpose entry point funnels here, so they all behave
+// identically.
+function askRepurposeProfiles(sessionId, postIds) {
   // Source profiles lead and start at 1; the rest start at 0 (opt-in).
   const items = topPostsFlow
     .repurposeProfileItems(postIds, { include: "all" })
@@ -2521,10 +2459,8 @@ function askRepurposeProfiles(sessionId, anglesByPost) {
         network: t.account.platform === "twitter" ? "x" : t.account.platform,
         count: t.count,
       }));
-      topPostsFlow.executeRepurpose(sessionId, anglesByPost, networkTargets);
+      topPostsFlow.executeRepurpose(sessionId, postIds, networkTargets);
     },
-    // Back to the last post's angle step (drops its saved pick so it can be redone).
-    onBack: backToAngles,
   });
 }
 
@@ -2997,6 +2933,7 @@ function renderTopPostsWidgetTurn(message) {
         posts,
         selected: message.selected || [],
         answered: message.status === "answered",
+        group: message.id,
       })}
     </div>
   `;
@@ -3507,6 +3444,7 @@ function wireAssistantPanel(root, session, attachedContext) {
       sort: state.sort,
       profile: state.profile,
       period: state.period,
+      layout: state.layout,
     });
     const fresh = tmp.firstElementChild;
     if (fresh) board.replaceWith(fresh);
@@ -4569,32 +4507,13 @@ function bindSession(root, session) {
         inlineQuestion.submitSingle(session.id);
         return;
       }
-      // Inline widget (Add-menu flow) — pick a post in the in-chat selector.
-      // SINGLE-select: clear every row, then mark the clicked one. Done IN PLACE
-      // (no whole-thread re-render) so there's no image reload / scroll reset.
-      const widgetToggle = event.target.closest("[data-topposts-widget-toggle]");
-      if (widgetToggle && !widgetToggle.disabled) {
-        const nowSelected = toggleTopPostsWidgetPick(session.id, widgetToggle.dataset.toppostsWidgetToggle);
-        const widget = widgetToggle.closest("[data-topposts-widget]");
-        widget?.querySelectorAll("[data-topposts-widget-toggle]").forEach((el) => {
-          el.classList.remove("is-selected");
-          el.setAttribute("aria-pressed", "false");
-        });
-        if (nowSelected) {
-          widgetToggle.classList.add("is-selected");
-          widgetToggle.setAttribute("aria-pressed", "true");
-        }
-        const cta = widget?.querySelector("[data-topposts-widget-confirm]");
-        if (cta) cta.disabled = !nowSelected;
-        return;
-      }
       // Inline widget — confirm the selection → freeze the widget, then hand off
-      // to the shared angle → scope → profile steps (skip the duplicate echo,
-      // since the frozen widget already shows the picks).
+      // to the shared profiles step (skip the duplicate echo, since the frozen
+      // widget already shows the picks).
       if (event.target.closest("[data-topposts-widget-confirm]")) {
         const ids = answerTopPostsWidget(session.id);
         const valid = topPostsFlow.echoRepurposePicks(session.id, ids, { echo: false });
-        if (valid.length) askAnglesForPost(session.id, valid, 0, []);
+        if (valid.length) askRepurposeProfiles(session.id, valid);
         return;
       }
       // Step 1 Playbook picker → set the voice governing the repurposed drafts.
@@ -4616,6 +4535,12 @@ function bindSession(root, session) {
       const topPostPeriod = event.target.closest("[data-top-post-period]");
       if (topPostPeriod) {
         topPostsFlow.setPeriod(session.id, topPostPeriod.dataset.topPostPeriod);
+        return;
+      }
+      // Winner-board view toggle → switch card density (large ↔ compact).
+      const topPostLayout = event.target.closest("[data-top-post-layout]");
+      if (topPostLayout) {
+        topPostsFlow.setLayout(session.id, topPostLayout.dataset.topPostLayout);
         return;
       }
       // Card "Repurpose" → repurpose that one winner (one post at a time).
@@ -5076,6 +5001,26 @@ function bindSession(root, session) {
     (event) => {
       if (!event.target.matches("#assistantInput")) return;
       autosizeInput(event.target);
+    },
+    { signal },
+  );
+
+  // Inline top-posts widget — the DS radios are a native single-select group,
+  // so selection arrives as a `change` (click or keyboard). Sync the store,
+  // reflect the checked row in place (no whole-thread re-render → no image
+  // reload / scroll reset), and enable the confirm CTA.
+  root.addEventListener(
+    "change",
+    (event) => {
+      const radio = event.target.closest("[data-topposts-widget-radio]");
+      if (!radio || radio.disabled) return;
+      toggleTopPostsWidgetPick(session.id, radio.dataset.toppostsWidgetRadio);
+      const widget = radio.closest("[data-topposts-widget]");
+      widget?.querySelectorAll(".top-posts-widget__row").forEach((row) => {
+        row.classList.toggle("is-selected", !!row.querySelector("input[type=radio]")?.checked);
+      });
+      const cta = widget?.querySelector("[data-topposts-widget-confirm]");
+      if (cta) cta.disabled = false;
     },
     { signal },
   );

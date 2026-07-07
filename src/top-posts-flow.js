@@ -5,22 +5,22 @@
 // the current session's assistant panel so it reads as one continuous
 // conversation.
 //
-// Arc (mirrors the product spec "select one or more posts → pick a new angle →
-// adapt to each connected network → schedule"):
+// Arc (mirrors the product spec "select one or more posts → adapt to each
+// connected network → schedule"):
 //   1. startTopPostsFlow  — surface the user's winners (board screen). The user
 //                           filters/sorts, then selects one or more via the
 //                           per-card checkbox + bulk bar (or the per-card
 //                           "Repurpose" shortcut for a single winner).
 //   2. echoRepurposePicks — echo the picked post(s). session.js then drives the
-//                           angle + profile quick-pickers (inline-question), the
-//                           same numbered Quickpicker the draft flow uses; the
-//                           data helpers here (ANGLE_CHOICES / repurposeProfile-
-//                           Items) feed those pickers. The profile step is a
-//                           single per-profile version stepper listing every
-//                           connected profile — source-network profiles lead,
-//                           tagged "· Source" and pre-set to 1 version.
+//                           profile quick-picker (inline-question), the same
+//                           numbered Quickpicker the draft flow uses; the data
+//                           helper here (repurposeProfileItems) feeds it. The
+//                           profile step is a single per-profile version stepper
+//                           listing every connected profile — source-network
+//                           profiles lead, tagged "· Source" and pre-set to 1
+//                           version.
 //   3. executeRepurpose   — thinking chip → one adapted draft per
-//                           post × angle × target profile → post a result turn.
+//                           post × target profile × version → post a result turn.
 
 import {
   postAssistantMessage,
@@ -29,12 +29,14 @@ import {
   postDraftResult,
   postTopPostPickTurn,
   postTopPostsWidget,
+  postUserTurn,
+  postUserProfilesTurn,
 } from "./assistant.js?v=56";
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=7";
 import { addPostDraft } from "./posts-store.js?v=33";
 import { addReadySource } from "./sources-stream.js?v=48";
 import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=24";
-import { SORTS } from "./components/top-post-card.js?v=42";
+import { SORTS } from "./components/top-post-card.js?v=44";
 import { showToast } from "./components/toast.js?v=20";
 import * as inlineQuestion from "./inline-question.js?v=47";
 import { getDefaultContext } from "./contexts-store.js?v=33";
@@ -91,130 +93,11 @@ function genError(err, retry) {
   });
 }
 
-// The reframings the user can spin a winner into. Each keys into ANGLE_COPY for
-// the actual post body. ANGLE_KEYS is the default set (used when the user skips
-// the picker); ANGLE_CHOICES drives the in-chat quick-picker (value/label/icon,
-// the same shape draft-flow's channel picker uses).
-const ANGLE_KEYS = ["contrarian", "howto", "story", "data"];
-
-export const ANGLE_CHOICES = [
-  { value: "contrarian", label: "Contrarian", icon: "ap-icon-target" },
-  { value: "howto", label: "How-to", icon: "ap-icon-numbered-list" },
-  { value: "story", label: "Story", icon: "ap-icon-single-chat-bubble" },
-  { value: "data", label: "Data-backed", icon: "ap-icon-data-report" },
-];
-
-// Handcrafted, ready-to-post copy for each seeded winner × angle. This is what
-// makes the variations read like real posts rather than rephrased prompts. A
-// post id missing here falls back to genericAngleCopy() below, so the flow
-// still works for any future / user-added winner.
-const ANGLE_COPY = {
-  "top-li-1": {
-    contrarian: [
-      "Unpopular opinion: your onboarding checklist is *why* people churn.",
-      "We deleted ours. Activation went up 18%.",
-      "Every step you add is one more place to drop off. The fix was never a better checklist — it was fewer decisions between signup and the first win.",
-    ],
-    howto: [
-      "How we lifted activation 18% by removing onboarding steps, not adding them:",
-      "1. Map every click between signup and first value.",
-      "2. Delete everything that isn't the first win.",
-      "3. Make that first win impossible to miss.",
-      "Fewer steps. More activated users.",
-    ],
-    story: [
-      "Six months ago our onboarding had 11 steps. We were proud of it.",
-      "Then we watched a new user rage-quit on step 7.",
-      "So we deleted the whole checklist and kept exactly one thing: the first win.",
-      "Activation went up 18%. Sometimes the best feature is the one you remove.",
-    ],
-    data: [
-      "18%.",
-      "That's how much activation rose after we *deleted* our onboarding checklist — not optimised it, deleted it.",
-      "Every extra step was quietly costing us conversions.",
-    ],
-  },
-  "top-x-1": {
-    contrarian: [
-      "Hot take: most “AI content tools” are just expensive autocomplete.",
-      "The ones that win do the boring thing — they remember your brand voice across every post.",
-      "That's the whole game. Everything else is a demo.",
-    ],
-    howto: [
-      "How to tell a real AI content tool from autocomplete in 30 seconds:",
-      "Ask it to write 5 posts. If they sound like 5 different brands, it doesn't know your voice.",
-      "Voice memory beats clever phrasing. Every time.",
-    ],
-    story: [
-      "We tried 6 AI writing tools last quarter.",
-      "Five produced text. One produced *us*.",
-      "The difference wasn't the model — it was whether it held our voice between posts. That was the only feature that mattered.",
-    ],
-    data: [
-      "6 tools tested. 1 kept.",
-      "The keeper wasn't the smartest writer — it was the only one that held our brand voice across every post.",
-      "Consistency beat cleverness, and it wasn't close.",
-    ],
-  },
-  "top-ig-1": {
-    contrarian: [
-      "You don't need a big team to ship great content.",
-      "Our 4-person crew ships a full week of posts in one afternoon.",
-      "The secret isn't more people — it's one repeatable workflow. Swipe for it →",
-    ],
-    howto: [
-      "How a 4-person team ships a week of content in one afternoon:",
-      "1. Batch every idea first, write second.",
-      "2. Turn one source into many posts.",
-      "3. Template the boring parts.",
-      "Save this for your next content day 📌",
-    ],
-    story: [
-      "A year ago, content took us all week — and we still missed posts.",
-      "Now? One afternoon, a week's worth, done.",
-      "Here's the exact workflow that got us there →",
-    ],
-    data: [
-      "1 afternoon = 1 week of content. With 4 people.",
-      "We used to spread this across 5 days. Same output, a fraction of the time.",
-      "The workflow behind it →",
-    ],
-  },
-};
-
-// Generic fallback when a winner has no handcrafted copy — still produces a
-// believable post shaped by the chosen angle, anchored on the post's excerpt.
-function genericAngleCopy(post, key) {
-  const core = firstSentence(post.excerpt);
-  switch (key) {
-    case "contrarian":
-      return [`Unpopular opinion: ${lowerFirst(core)}`, post.excerpt];
-    case "howto":
-      return ["Here's how it actually works, step by step:", post.excerpt];
-    case "story":
-      return ["Here's the story behind one of our best-performing posts:", post.excerpt];
-    case "data":
-    default:
-      return ["The proof that changed our mind:", post.excerpt];
-  }
-}
-
-// Mock body for a user's own free-text angle ("Other" option) — lead with their
-// instruction, anchored on the post's excerpt so it reads as a real take.
-function customAngleCopy(post, instruction) {
-  const ask = (instruction || "").trim().replace(/\s+/g, " ");
-  const hook = /[.!?]$/.test(ask) ? ask : `${ask}.`;
-  return [hook, post.excerpt];
-}
-
-// Resolve the base body for one post × angle. A known angle key uses the
-// handcrafted copy (or generic fallback); anything else is the user's own
-// free-text instruction from the "Other" option. Run through adaptForNetwork per
-// target channel afterwards.
-function copyForAngle(post, key) {
-  if (!ANGLE_KEYS.includes(key)) return customAngleCopy(post, key);
-  const copy = ANGLE_COPY[post.id] || {};
-  return copy[key] || genericAngleCopy(post, key);
+// The base body a winner is repurposed from — its own published copy. Repurposing
+// keeps the post's message intact and adapts it per target network (below); it no
+// longer re-angles the content. Run through adaptForNetwork per target channel.
+function plainCopy(post) {
+  return [post.excerpt];
 }
 
 // Adapt a base body to a target network's format + character constraints — the
@@ -250,21 +133,20 @@ function adaptHashtags(tags, network) {
   return list;
 }
 
-// First sentence of a blob, used by the generic fallbacks + the X adapter.
+// First sentence of a blob, used by the source label + the X adapter.
 function firstSentence(text) {
   const m = (text || "").match(/[^.!?]*[.!?]/);
   return (m ? m[0] : text || "").trim();
-}
-
-function lowerFirst(s) {
-  return s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
 }
 
 // Provenance stamped onto every generated draft so the Drafts panel always
 // shows where a post came from (the flow's core promise: capitalise on what
 // worked). Rendered as a pill by post-card.js.
 function variationOrigin(post) {
-  return { icon: "ap-icon-shuffle", label: `New angle on your top ${labelFor(post.network)} post · ${post.perfBadge}` };
+  return {
+    icon: "ap-icon-shuffle",
+    label: `Repurposed from your top ${labelFor(post.network)} post · ${post.perfBadge}`,
+  };
 }
 
 // ---- Step 1: the winner-selection grid screen -------------------------
@@ -274,7 +156,7 @@ function variationOrigin(post) {
 // Studio do. session.js checks isPickerActive() in renderAssistantPanel, paints
 // the grid via renderTopPostsPickerScreen, and routes a card / bulk-bar click
 // back to session.js's startRepurposeFlow, which echoes the picks then opens
-// the angle quick-picker.
+// the profiles step.
 const pickerStates = new Map(); // sessionId → { stage, posts, profile, sort, period }
 const pickerSubs = new Map(); // sessionId → Set<fn>
 // The Playbook governing the voice of the repurposed drafts, chosen on step 1's
@@ -340,6 +222,14 @@ export function setSort(sessionId, sort) {
   notifyPicker(sessionId);
 }
 
+// Change the card display density (toolbar view toggle: "large" | "compact").
+export function setLayout(sessionId, layout) {
+  const s = pickerStates.get(sessionId);
+  if (!s || s.layout === layout) return;
+  s.layout = layout;
+  notifyPicker(sessionId);
+}
+
 // Connected social profiles offered on the account picker (step 1). This is what
 // the user picks first — the spec's "select a social profile in the first place".
 // Shaped as renderPicker items (value / label / caption / avatar) so step 1
@@ -390,6 +280,7 @@ function openStage(sessionId, stage, profile = null) {
     profile,
     sort: "performance",
     period: "all",
+    layout: "large",
   });
   notifyPicker(sessionId);
 }
@@ -465,8 +356,21 @@ export function startTopPostsInline(sessionId) {
     items: getProfileChoices(),
     title: "Pick an account",
     subtitle: "I'll pull its top posts next.",
-    onPick: (network) => askRankCriterion(sessionId, network),
+    onPick: (network) => {
+      echoAccountPick(sessionId, network);
+      askRankCriterion(sessionId, network);
+    },
   });
+}
+
+// Echo the picked account as a visual profile turn so the choice stays visible
+// in the conversation (matches the draft flow's profile echo). value is a
+// network slug — resolve it back to the connected profile for the avatar chip.
+function echoAccountPick(sessionId, network) {
+  const net = normNet(network);
+  const account = getConnectedProfiles().find((a) => normNet(a.platform) === net);
+  if (account) postUserProfilesTurn(sessionId, [account]);
+  else postUserTurn(sessionId, labelFor(net));
 }
 
 // Which metric ranks the winners — the same lenses the studio board sorts by
@@ -486,16 +390,28 @@ function askRankCriterion(sessionId, network) {
     items: RANK_CHOICES,
     title: "Rank by",
     subtitle: "I'll put the strongest posts for that metric first.",
-    onPick: (sortKey) => presentWinners(sessionId, network, sortKey),
+    onPick: (sortKey) => {
+      echoRankPick(sessionId, sortKey);
+      presentWinners(sessionId, network, sortKey);
+    },
     // Back to the account question (re-arm it without re-posting the intro).
     onBack: () =>
       inlineQuestion.ask(sessionId, {
         items: getProfileChoices(),
         title: "Pick an account",
         subtitle: "I'll pull its top posts next.",
-        onPick: (net) => askRankCriterion(sessionId, net),
+        onPick: (net) => {
+          echoAccountPick(sessionId, net);
+          askRankCriterion(sessionId, net);
+        },
       }),
   });
+}
+
+// Echo the chosen ranking metric as a user text turn.
+function echoRankPick(sessionId, sortKey) {
+  const choice = RANK_CHOICES.find((c) => c.value === sortKey);
+  postUserTurn(sessionId, choice ? choice.label : sortKey);
 }
 
 // Metric chosen → brief "finding your winners" beat, then drop the interactive
@@ -664,58 +580,9 @@ export function repurposeProfileItems(postIds, { include = "other" } = {}) {
   });
 }
 
-// Human labels for a set of angle values — used by session.js to echo the pick
-// as a user turn once the quick-picker unmounts (profiles echo as chips).
-export function angleLabels(values) {
-  return (values || []).map((v) => ANGLE_CHOICES.find((a) => a.value === v)?.label || v);
-}
-
 function truncate(s, n = 60) {
   const t = (s || "").trim();
   return t.length > n ? `${t.slice(0, n - 1).replace(/\s+\S*$/, "")}…` : t;
-}
-
-// Angle variations "extracted" from the picked winner(s) — the four reframings,
-// but described in terms of THIS post's own topic + hook so the picker reads as
-// suggestions pulled from the post rather than generic labels. Values stay the
-// canonical ANGLE_KEYS so executeRepurpose resolves the right ANGLE_COPY body.
-// session.js reveals these after a short "reading your post…" loading state.
-export function repurposeAngleItems(postIds) {
-  const posts = (postIds || []).map(getTopPost).filter(Boolean);
-  const multi = posts.length > 1;
-  const p = posts[0];
-  const topic = p?.topic ? p.topic.toLowerCase() : "this";
-  const subject = multi ? "these winners" : `your ${topic} post`;
-  const hook = p ? truncate(firstSentence(p.excerpt)) : "";
-  return [
-    {
-      value: "contrarian",
-      label: "Contrarian take",
-      caption: multi ? "Flip the premise and argue the other side." : `Challenge the idea behind “${hook}”.`,
-    },
-    {
-      value: "howto",
-      label: "Actionable how-to",
-      caption: `Turn ${subject} into a step-by-step readers can follow today.`,
-    },
-    {
-      value: "story",
-      label: "Behind-the-scenes story",
-      caption: multi ? "Tell the story behind these results." : `Tell the story that led to ${topic}.`,
-    },
-    {
-      value: "data",
-      label: "Data-backed proof",
-      caption: `Lead with the number that made ${multi ? "them" : "it"} land.`,
-    },
-  ];
-}
-
-// First sentence of a picked post — used by session.js to name which post the
-// current per-post angle step is for.
-export function repurposePostHook(postId) {
-  const p = getTopPost(postId);
-  return p ? truncate(firstSentence(p.excerpt), 70) : "";
 }
 
 // Normalise the target argument into a `[{ network, count }]` list applied to
@@ -733,23 +600,15 @@ function normalizeTargets(targets) {
 
 // ---- Step 3: generate the adapted drafts ------------------------------
 //
-// Each winner carries its OWN chosen angles (the user picked them post by post),
-// so `anglesByPost` is [{ postId, angles: [key] }]. `targets` is the profiles to
-// publish to as `[{ network, count }]` — `count` is how many versions to write
-// for that profile (the per-profile stepper). One draft per
-// post × its-angles × target × version, each body adapted to the target network.
-// An empty `targets` means "same profile" — each post back on its own source
-// network, one version. Capped at MAX_DRAFTS.
-export function executeRepurpose(sessionId, anglesByPost, targets) {
-  const entries = (anglesByPost || [])
-    .map((e) => ({
-      post: getTopPost(e.postId),
-      // A key is a known angle OR the user's free-text "Other" instruction —
-      // keep both (copyForAngle resolves each). Drop only empties.
-      keys: (e.angles || []).map((k) => (k || "").trim()).filter(Boolean),
-    }))
-    .filter((e) => e.post);
-  if (!entries.length) return;
+// `postIds` is the picked winners. `targets` is the profiles to publish to as
+// `[{ network, count }]` — `count` is how many versions to write for that
+// profile (the per-profile stepper). One draft per post × target × version,
+// each body adapted to the target network. An empty `targets` means "same
+// profile" — each post back on its own source network, one version. Capped at
+// MAX_DRAFTS.
+export function executeRepurpose(sessionId, postIds, targets) {
+  const posts = (postIds || []).map(getTopPost).filter(Boolean);
+  if (!posts.length) return;
 
   const pickedTargets = normalizeTargets(targets);
   // The Playbook chosen on step 1 governs the drafts' voice — stamp it on each.
@@ -760,7 +619,7 @@ export function executeRepurpose(sessionId, anglesByPost, targets) {
     () => {
       // Each repurposed post becomes a ready source so the user can later find
       // which post fed these drafts (deduped by id in sources-stream).
-      for (const { post } of entries) {
+      for (const post of posts) {
         const meta = CHANNEL_META[normNet(post.network)] || {};
         addReadySource(sessionId, {
           id: `src-toppost-${post.id}`,
@@ -772,40 +631,33 @@ export function executeRepurpose(sessionId, anglesByPost, targets) {
       }
       const drafts = [];
       let capped = false;
-      outer: for (const { post, keys } of entries) {
+      outer: for (const post of posts) {
         // No explicit targets → repost to this post's own network (one version).
         const postTargets = pickedTargets.length ? pickedTargets : [{ network: post.network, count: 1 }];
-        const angleKeys = keys.length ? keys : ANGLE_KEYS;
-        for (const key of angleKeys) {
-          const base = copyForAngle(post, key);
-          for (const { network, count } of postTargets) {
-            for (let i = 0; i < count; i += 1) {
-              if (drafts.length >= MAX_DRAFTS) {
-                capped = true;
-                break outer;
-              }
-              const draft = addPostDraft(sessionId, {
-                network,
-                text: adaptForNetwork(base, network),
-                hashtags: adaptHashtags(post.hashtags, network),
-              });
-              draft.origin = variationOrigin(post);
-              draft.contextId = contextId;
-              drafts.push(draft);
+        const base = plainCopy(post);
+        for (const { network, count } of postTargets) {
+          for (let i = 0; i < count; i += 1) {
+            if (drafts.length >= MAX_DRAFTS) {
+              capped = true;
+              break outer;
             }
+            const draft = addPostDraft(sessionId, {
+              network,
+              text: adaptForNetwork(base, network),
+              hashtags: adaptHashtags(post.hashtags, network),
+            });
+            draft.origin = variationOrigin(post);
+            draft.contextId = contextId;
+            drafts.push(draft);
           }
         }
       }
       postDraftResult(sessionId, {
-        ideaTitle: repurposeTitle(
-          entries.map((e) => e.post),
-          drafts.length,
-          capped,
-        ),
+        ideaTitle: repurposeTitle(posts, drafts.length, capped),
         drafts,
       });
     },
-    (err) => genError(err, () => executeRepurpose(sessionId, anglesByPost, targets)),
+    (err) => genError(err, () => executeRepurpose(sessionId, postIds, targets)),
   );
 }
 

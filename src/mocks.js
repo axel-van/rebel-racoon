@@ -112,9 +112,7 @@ export const chatStarters = [
 // picking any profile in the repurposing flow surfaces a full board. Each
 // network's list is authored best-first; buildTopPosts() stamps a descending
 // performance ramp (vsAvg / badge / engagement / reach / recency) onto them so
-// the default "Performance" sort reads as a clean ranking. The three winners
-// with handcrafted repurpose copy keep the ids top-li-1 / top-x-1 / top-ig-1
-// (see ANGLE_COPY in top-posts-flow.js).
+// the default "Performance" sort reads as a clean ranking.
 const TOP_POST_CONTENT = {
   linkedin: [
     {

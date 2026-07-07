@@ -211,13 +211,15 @@
 .session__assistant-wizard-bar {
   position: relative;
   padding: var(--ref-spacing-sm) var(--ref-spacing-md);
-  background: var(--app-surface);
+  background: var(--app-bg);
 }
 
-/* Fade the chat content above into the wizard bar's surface, mirroring
-   the gradient used on `.session__composer::before`. Removes the hard
-   border-top edge and gives the wizard chrome the same "rises out of
-   the conversation" feel as the regular composer. */
+/* Fade the chat content above into the wizard bar, mirroring the gradient
+   used on `.session__composer::before`. Fades to the conversation background
+   (grey-bg), not white — the picker card below carries its own white surface,
+   so the bar itself must blend into the conversation. Removes the hard
+   border-top edge and gives the wizard chrome the same "rises out of the
+   conversation" feel as the regular composer. 249,249,250 = --ref-color-grey-bg. */
 .session__assistant-wizard-bar::before {
   content: "";
   position: absolute;
@@ -227,11 +229,11 @@
   height: 96px;
   background: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.05) 25%,
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0.55) 75%,
-    rgba(255, 255, 255, 1) 100%
+    rgba(249, 249, 250, 0) 0%,
+    rgba(249, 249, 250, 0.05) 25%,
+    rgba(249, 249, 250, 0.2) 50%,
+    rgba(249, 249, 250, 0.55) 75%,
+    rgba(249, 249, 250, 1) 100%
   );
   pointer-events: none;
 }

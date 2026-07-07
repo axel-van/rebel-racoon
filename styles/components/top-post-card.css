@@ -117,6 +117,47 @@
   min-width: 200px;
 }
 
+/* View-density toggle (Large ↔ Compact) — a two-segment icon switch, active
+   segment driven by aria-pressed. */
+.top-posts-view {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--app-border);
+  border-radius: var(--ref-border-radius-sm);
+  overflow: hidden;
+}
+
+.top-posts-view__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--sys-text-color-light);
+  font-size: 18px;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.top-posts-view__btn + .top-posts-view__btn {
+  border-left: 1px solid var(--app-border);
+}
+
+.top-posts-view__btn:hover {
+  background: var(--ref-color-grey-05);
+  color: var(--ref-color-grey-150);
+}
+
+.top-posts-view__btn[aria-pressed="true"] {
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-grey-150);
+}
+
 /* ── Account picker (step 1) ─────────────────────────────────────────
    The first screen reuses the app's numbered Quickpicker (.analyse__options,
    rendered by renderPicker). This wrapper just centres it under the workflow
@@ -177,17 +218,28 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--ref-spacing-sm);
+  /* Cards in a row share one height (stretch). Each card's body flex-grows to
+     absorb the extra: media cards fill with the image, text-only cards fill with
+     a centered pull-quote — so a short winner never leaves a dead gap. */
+  align-items: stretch;
 }
 
 /* ── Card ───────────────────────────────────────────────────────── */
-/* Four calm zones stacked with one consistent gap: identity → post →
-   performance → footer (meta + CTA). One accent only (the ×-vs-average);
-   everything else is regular weight or muted, so the card reads at a glance. */
+/* Built on the Figma `.post Contructor` preview for the top part, then the
+   existing performance + footer below it. Zones: preview header (grey band) →
+   body (copy + media) → performance → footer (source link + CTA). One accent
+   only (the ×-vs-average green); everything else is regular weight or muted, so
+   the card reads at a glance. Zero card padding — each zone pads itself so the
+   header band can span edge-to-edge. */
 .top-post-card {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: var(--ref-spacing-sm);
+  padding: 0;
+  /* Reset the DS .ap-card gap (16px) — each zone (header / body / perf / foot)
+     owns its own padding, so the card itself must not add space between them. */
+  gap: 0;
+  overflow: hidden;
   text-align: left;
   border: 1px solid var(--app-border);
   /* Match the app's content-card radius (source / idea / post cards) rather than
@@ -201,19 +253,91 @@
   border-color: var(--ref-color-electric-blue-100);
 }
 
-/* ── Zone 0 · media preview tile ────────────────────────────────── */
-/* One uniform 16:9 box at the top of every card that adapts to the post's media
-   type (video / image / text) so the winner's format reads at a glance and the
-   grid stays regular. */
+/* ── Zone 0 · preview header (Figma `.post Contructor` header band) ── */
+/* Grey band with a hairline underline: a network-colored status strip, the
+   brand avatar (+ corner network badge), the author handle, and the publish
+   date right-aligned as the post timestamp. */
+.top-post-card__preview-head {
+  display: flex;
+  align-items: center;
+  /* Header band: grey-10 hairline underline, 4px gap. Padding matches the body
+     and perf zones so every zone shares one inner edge. */
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-xs);
+  background: var(--ref-color-grey-05);
+  border-bottom: 1px solid var(--app-border-soft);
+}
+
+.top-post-card__author {
+  margin-right: auto;
+  min-width: 0;
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-150);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-post-card__time {
+  flex: 0 0 auto;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-100);
+}
+
+/* ── Zone 1 · body (copy + media) ───────────────────────────────── */
+/* Post copy always on top, then the media below it when present — matching the
+   Figma component (text then media). */
+.top-post-card__body {
+  display: flex;
+  flex-direction: column;
+  /* 12px padding (shared inner edge); 8px gap between copy and media. */
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs);
+  /* Absorb the card's spare height so cards in a row match: the media (or the
+     solo pull-quote) grows to fill. */
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Copy: caption size / grey-100, clamped to 3 lines. Text-only posts (no media)
+   get more room so the card doesn't read as sparse. */
+.top-post-card__text {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  font-weight: var(--sys-text-style-body-weight);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-100);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Text-only winners have no media, so the copy becomes the hero: the type steps
+   up to h2 and the block centres in the filled body — so the card reads as an
+   intentional quote, not a short line stranded in white space. */
+.top-post-card__text--solo {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  -webkit-line-clamp: initial;
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  font-weight: var(--sys-text-style-body-weight);
+  color: var(--ref-color-grey-150);
+}
+
+/* Media — rounded tile below the copy (Figma media is a rounded 4px tile).
+   16:9 is the baseline, but it flex-grows to fill any spare card height so cards
+   in a row stay equal-height without a gap. */
 .top-post-card__media {
   position: relative;
   aspect-ratio: 16 / 9;
-  /* Full-bleed cover: pull the tile out to the card's edges (counter the card
-     padding) so the media reads as a cover, not a framed thumbnail. Top corners
-     follow the card radius (inset 1px for the border); the flex gap below keeps
-     it clear of the identity row. */
-  margin: calc(-1 * var(--ref-spacing-sm)) calc(-1 * var(--ref-spacing-sm)) 0;
-  border-radius: calc(var(--app-radius-card) - 1px) calc(var(--app-radius-card) - 1px) 0 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  border-radius: var(--ref-border-radius-sm);
   overflow: hidden;
   background: var(--ref-color-grey-05);
 }
@@ -225,13 +349,22 @@
   object-fit: cover;
 }
 
-/* Video — centered play affordance + duration pill (poster is a still frame). */
+/* Video — a dark scrim over the poster (Figma: grey-100 @ 50%) so the white play
+   affordance and duration pill read on any frame. */
+.top-post-card__media-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(52, 69, 99, 0.5);
+}
+
+/* Centered play affordance — sits above the scrim. */
 .top-post-card__media-play {
   position: absolute;
   inset: 0;
+  z-index: 1;
   margin: auto;
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -239,128 +372,59 @@
   background: rgba(255, 255, 255, 0.95);
   color: var(--ref-color-grey-150);
   font-size: 20px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
 }
 
-/* Glassy duration chip — reads over any poster. */
+/* Duration pill — bottom-left, camera icon + time, on the grey-100 overlay
+   (@ 70%), matching the Figma `Variant=Video` chip. */
 .top-post-card__media-dur {
   position: absolute;
-  right: var(--ref-spacing-xs);
-  bottom: var(--ref-spacing-xs);
-  padding: 2px 7px;
+  left: var(--ref-spacing-xxxs);
+  bottom: var(--ref-spacing-xxxs);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  padding: 2px var(--ref-spacing-xxxs);
   border-radius: var(--ref-border-radius-sm);
-  background: rgba(17, 24, 39, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(52, 69, 99, 0.7);
   color: var(--ref-color-white);
   font-size: var(--sys-text-style-caption-size);
   font-weight: var(--sys-text-style-caption-bold-weight);
+  line-height: var(--sys-text-style-caption-line-height);
   font-variant-numeric: tabular-nums;
-  line-height: 1.4;
 }
 
-/* Text — the excerpt featured as a quote (no image), same box as the others.
-   A soft diagonal wash + a quiet glyph give it depth without competing with the
-   real photos in the grid. */
-.top-post-card__media--text {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-md);
-  background: linear-gradient(
-    155deg,
-    var(--ref-color-grey-10) 0%,
-    var(--ref-color-grey-05) 55%,
-    var(--ref-color-white) 100%
-  );
+.top-post-card__media-dur > i {
+  font-size: 16px;
 }
 
-.top-post-card__media-glyph {
-  color: var(--ref-color-grey-60);
-  font-size: 18px;
-}
-
-.top-post-card__media-quote {
-  margin: 0;
-  color: var(--ref-color-grey-150);
-  font-weight: var(--sys-text-style-body-weight);
-  line-height: var(--sys-text-style-body-line-height);
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* ── Zone 1 · identity ──────────────────────────────────────────── */
-.top-post-card__head {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-}
-
-/* Profile (avatar + handle) — these are posts from the brand's own profiles, so
-   we lead with which profile. Grows to push the perf badge to the right. */
-.top-post-card__profile {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  min-width: 0;
-  margin-right: auto;
-}
-
+/* Avatar in the preview header — never shrinks. */
 .top-post-card__avatar {
   flex: 0 0 auto;
 }
 
-.top-post-card__handle {
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-grey-150);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ── Zone 2 · the post ──────────────────────────────────────────── */
-/* Regular weight (not bold) so the copy reads as content, not another heading —
-   the whole card felt heavy when everything was bold. Two-line clamp. */
-/* ── Zone 3 · performance ───────────────────────────────────────── */
-/* The ×-vs-average hero (green) carries the headline; the raw counts sit below
-   it as a scannable 4-column strip (value over label). A hairline rule splits
-   the post copy from its metrics so the card reads content → performance. */
+/* ── Zone 2 · performance (metrics + actions) ───────────────────── */
+/* Two tight rows under a hairline: the raw counts as a scannable 4-column strip,
+   then one full-width row pairing the ×-vs-average hero (green, the headline)
+   with the actions — so the CTA reads straight off the metric ("2.6× → repurpose
+   it") and no horizontal space is wasted. */
 .top-post-card__perf {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  padding-top: var(--ref-spacing-xs);
-  border-top: 1px solid var(--app-border);
-}
-
-.top-post-card__hero {
-  display: flex;
-  align-items: baseline;
   gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs);
+  /* Footer band — mirrors the header: grey-05 fill + grey-10 hairline, so the
+     metrics/actions read as a bookend to the post-preview header. */
+  background: var(--ref-color-grey-05);
+  border-top: 1px solid var(--app-border-soft);
 }
 
-.top-post-card__hero-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1.1;
-  color: var(--ref-color-green-100);
-  font-variant-numeric: tabular-nums;
-}
-
-.top-post-card__hero-label {
-  font-size: var(--sys-text-style-caption-size);
-  color: var(--sys-text-color-light);
-}
-
-/* Metric strip — four equal columns, value stacked over its label. Each metric
-   is its own column so the numbers line up and scan top-to-bottom, instead of a
-   dot-separated run-on that wrapped mid-pair. */
+/* Metric strip — four equal columns, value stacked over its label, so the
+   numbers line up and scan left-to-right. */
 .top-post-card__stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  gap: 0 var(--ref-spacing-xs);
 }
 
 .top-post-card__stat {
@@ -385,24 +449,30 @@
   color: var(--sys-text-color-light);
 }
 
-/* ── Zone 4 · footer (meta + source link + CTA) ─────────────────── */
-/* One row: date on the left, then a right-hugging actions cluster ("Open
-   original" link + Repurpose CTA). The date's margin-right:auto absorbs the
-   slack — no fixed gap eating width — so the full date fits and the button
-   stays auto-width (never full-width). margin-top:auto pins the footer so cards
-   align in the grid. */
+/* Action row — hero metric on the left, actions hugging the right. */
 .top-post-card__foot {
   display: flex;
   align-items: center;
-  margin-top: auto;
+  gap: var(--ref-spacing-xs);
 }
 
-.top-post-card__meta {
+.top-post-card__hero {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ref-spacing-xxxs);
   margin-right: auto;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.top-post-card__hero-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ref-color-green-100);
+  font-variant-numeric: tabular-nums;
+}
+
+.top-post-card__hero-label {
   font-size: var(--sys-text-style-caption-size);
   color: var(--sys-text-color-light);
 }
@@ -418,6 +488,55 @@
 
 .top-post-card__cta {
   flex: 0 0 auto;
+}
+
+/* ── Compact layout (toolbar view toggle → "compact") ──────────────
+   Reworks the preview body into a dense row — a small square thumbnail beside
+   the copy instead of a full-width media. The header and metrics/actions bands
+   are unchanged, and cards still share one height (grid stretch + body flex). */
+.top-posts-grid--compact .top-post-card__body {
+  flex-direction: row;
+  align-items: stretch;
+  gap: var(--ref-spacing-xs);
+}
+
+/* Thumbnail — small, fixed-width, left of the copy; fills the row height so
+   equal-height cards never leave a gap. */
+.top-posts-grid--compact .top-post-card__media {
+  order: -1;
+  flex: 0 0 auto;
+  width: 72px;
+  min-height: 72px;
+  aspect-ratio: auto;
+  align-self: stretch;
+}
+
+/* Shrink the video affordance to the thumbnail; the duration pill is too small
+   to read here, so drop it. */
+.top-posts-grid--compact .top-post-card__media-play {
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+}
+
+.top-posts-grid--compact .top-post-card__media-dur {
+  display: none;
+}
+
+/* Copy sits beside the thumbnail, centred against it, clamped to 3 lines. */
+.top-posts-grid--compact .top-post-card__text {
+  align-self: center;
+  -webkit-line-clamp: 3;
+}
+
+/* Text-only compact card: no thumbnail, copy spans the row at body size. */
+.top-posts-grid--compact .top-post-card__text--solo {
+  display: flex;
+  align-items: center;
+  -webkit-line-clamp: initial;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-150);
 }
 
 /* ── Conversation echo (picked-post preview in the thread) ───────── */
@@ -639,40 +758,11 @@
   background: transparent;
 }
 
-/* Radio indicator — hollow ring by default, fills electric blue with a
-   checkmark that pops in when the row is selected. */
-.top-posts-widget__check {
+/* Selection indicator — the DS radio (.ap-radio-container renders the dot via
+   its ::before and reflects the real <input type=radio> state). Keep it from
+   growing so the dot stays a fixed leading marker. */
+.top-posts-widget__row .ap-radio-container {
   flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border: 2px solid var(--ref-color-grey-40);
-  border-radius: 999px;
-  color: var(--ref-color-white);
-  font-size: 12px;
-  transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
-}
-.top-posts-widget__check i {
-  opacity: 0;
-  transform: scale(0.4);
-  transition:
-    opacity 0.15s ease,
-    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.top-posts-widget__row:hover .top-posts-widget__check {
-  border-color: var(--ref-color-electric-blue-60);
-}
-.top-posts-widget__row.is-selected .top-posts-widget__check {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-100);
-}
-.top-posts-widget__row.is-selected .top-posts-widget__check i {
-  opacity: 1;
-  transform: scale(1);
 }
 
 /* Frozen state after confirm — dim + non-interactive record of the pick. */
