@@ -227,9 +227,14 @@
   transition: border-color 160ms ease;
 }
 
-/* Hover — blue border, no elevation (app convention for interactive cards). */
+/* Hover — blue border (no elevation, app convention) + the header band tints
+   light blue so the whole card reads as interactive. */
 .top-post-card:hover {
   border-color: var(--ref-color-electric-blue-100);
+}
+
+.top-post-card:hover .top-post-card__preview-head {
+  background: var(--ref-color-electric-blue-05);
 }
 
 /* ── Zone 0 · preview header (Figma `.post Contructor` header band) ── */
@@ -245,6 +250,7 @@
   padding: var(--ref-spacing-xs);
   background: var(--ref-color-grey-05);
   border-bottom: 1px solid var(--app-border-soft);
+  transition: background-color 160ms ease;
 }
 
 .top-post-card__author {
@@ -476,7 +482,9 @@
 
 .top-post-card__hero {
   display: flex;
-  align-items: baseline;
+  /* Centre the label against the big value — baseline-aligning them left the
+     "vs average" sitting visibly low next to the larger ×-figure. */
+  align-items: center;
   gap: var(--ref-spacing-xxxs);
   margin-right: auto;
   min-width: 0;
