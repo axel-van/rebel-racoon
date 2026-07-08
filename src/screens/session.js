@@ -54,7 +54,7 @@ import {
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=48";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=36";
 import * as topPostsFlow from "../top-posts-flow.js?v=69";
-import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=53";
+import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=54";
 import { getTopPost } from "../top-posts-store.js?v=8";
 import * as sidebarWizard from "../sidebar-wizard.js?v=51";
 import * as inlineQuestion from "../inline-question.js?v=47";

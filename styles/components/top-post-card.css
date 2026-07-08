@@ -310,12 +310,6 @@
   pointer-events: none;
 }
 
-.top-post-card__note-glyph {
-  flex: 0 0 auto;
-  color: var(--ref-color-grey-60);
-  font-size: 22px;
-}
-
 /* A winner card is a preview, not the full post. The pull-quote's type scales to
    the post length (short → big, long → small; tier set in JS by soloSizeTier),
    and every tier line-clamps so an extreme body (a network's max-length post,
@@ -377,18 +371,19 @@
   object-fit: cover;
 }
 
-/* Multi-image (carousel) badge — bottom-left, stacked-images glyph + count on a
-   dark scrim so it reads on any photo. Mirrors the DS media overlay badges
+/* Post-type badge — bottom-left overlay pill (icon + label) on a dark scrim so
+   it reads on any photo or on the text-note surface. One badge for every format
+   (Text / Photo / Carousel · N / Video); mirrors the DS media overlay badges
    (video duration / story), which sit bottom-left. */
-.top-post-card__media-count {
+.top-post-card__type {
   position: absolute;
-  bottom: var(--ref-spacing-xxxs);
-  left: var(--ref-spacing-xxxs);
+  bottom: var(--ref-spacing-xxs);
+  left: var(--ref-spacing-xxs);
   z-index: 1;
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  padding: 2px var(--ref-spacing-xxxs);
+  gap: var(--ref-spacing-xxxs);
+  padding: 2px var(--ref-spacing-xxs);
   border-radius: var(--ref-border-radius-sm);
   background: rgba(52, 69, 99, 0.72);
   color: var(--ref-color-white);
@@ -398,7 +393,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.top-post-card__media-count > i {
+.top-post-card__type > i {
   font-size: 14px;
 }
 

@@ -119,23 +119,40 @@ function postPermalink(network, id) {
   return fn ? fn(id) : "#";
 }
 
+// Post-type indicator — a small overlay pill (icon + label) shown bottom-left of
+// every card's visual zone, so the board reads the format of each winner at a
+// glance. Generalises the old carousel-only count badge to all post types
+// (Text / Photo / Carousel · N / Video), mirroring the DS media overlay badges.
+function postTypeBadge(post) {
+  const type = post.mediaType || "text";
+  const count = post.imageCount || 1;
+  let icon = "ap-icon-file--text";
+  let label = "Text";
+  if (type === "video") {
+    icon = "ap-icon-video";
+    label = "Video";
+  } else if (type === "image" && count > 1) {
+    icon = "ap-icon-multiple-images";
+    label = `Carousel · ${count}`;
+  } else if (type === "image") {
+    icon = "ap-icon-image";
+    label = "Photo";
+  }
+  return `<span class="top-post-card__type" title="${label}"><i class="${icon}" aria-hidden="true"></i>${label}</span>`;
+}
+
 // The media block inside the post-preview body, mirroring the Figma
-// `.post Contructor` component: a rounded 16:9 media below the copy.
+// `.post Contructor` component: a rounded 16:9 media below the copy, with the
+// post-type badge overlaid bottom-left.
 //   image → poster image
-//   text  → no media (the excerpt above carries the card on its own)
+//   text  → no media (the pull-quote note carries the card on its own)
 function renderMediaBlock(post) {
   const type = post.mediaType || "text";
   if (type !== "image") return "";
-  const img = `<img class="top-post-card__media-img" src="${post.image}" alt="" loading="lazy" />`;
-  // Multi-image (carousel) posts flag the extra shots with a stacked-images
-  // badge + count in the corner, so the board distinguishes a single photo from
-  // a gallery at a glance.
-  const count = post.imageCount || 1;
-  const badge =
-    count > 1
-      ? `<span class="top-post-card__media-count" title="${count} images"><i class="ap-icon-multiple-images" aria-hidden="true"></i>${count}</span>`
-      : "";
-  return `<div class="top-post-card__media top-post-card__media--image">${img}${badge}</div>`;
+  return `<div class="top-post-card__media top-post-card__media--image">
+      <img class="top-post-card__media-img" src="${post.image}" alt="" loading="lazy" />
+      ${postTypeBadge(post)}
+    </div>`;
 }
 
 // A text-only winner has no media, so the pull-quote IS the card — and posts vary
@@ -182,15 +199,15 @@ function renderTopPostCard(post) {
     )
     .join("");
   const mediaHtml = renderMediaBlock(post);
-  // Text-only winners have no media, so the copy becomes the body: a "note" tile
-  // (file-text glyph + the excerpt on a soft surface) that signals a text post
-  // and fills the space media would. Media posts keep copy-above-media.
+  // Text-only winners have no media, so the copy IS the body: the pull-quote on a
+  // soft "note" surface, with the post-type badge overlaid bottom-left (same as
+  // the media cards). Media posts keep copy-above-media.
   const bodyInner = mediaHtml
     ? html`<p class="top-post-card__text">${post.excerpt}</p>
         ${raw(mediaHtml)}`
     : html` <div class="top-post-card__note">
-        <i class="ap-icon-file--text top-post-card__note-glyph" aria-hidden="true"></i>
         <p class="top-post-card__text top-post-card__text--solo ${soloSizeTier(post.excerpt)}">${post.excerpt}</p>
+        ${raw(postTypeBadge(post))}
       </div>`;
   return html`
     <article class="ap-card top-post-card">
