@@ -377,12 +377,13 @@
   object-fit: cover;
 }
 
-/* Multi-image (carousel) badge — top-right, stacked-images glyph + count on a
-   dark scrim so it reads on any photo. Mirrors the network carousel indicator. */
+/* Multi-image (carousel) badge — bottom-left, stacked-images glyph + count on a
+   dark scrim so it reads on any photo. Mirrors the DS media overlay badges
+   (video duration / story), which sit bottom-left. */
 .top-post-card__media-count {
   position: absolute;
-  top: var(--ref-spacing-xxxs);
-  right: var(--ref-spacing-xxxs);
+  bottom: var(--ref-spacing-xxxs);
+  left: var(--ref-spacing-xxxs);
   z-index: 1;
   display: inline-flex;
   align-items: center;
