@@ -1089,6 +1089,29 @@
   white-space: nowrap;
 }
 
+/* Repurposed top post: the winner card (renderTopPostEcho) IS the source card —
+   no wrapping row box. Strip the row's frame so the echo card stands on its own,
+   then give the echo its full card treatment (native border + a shadow). */
+.rpanel-sources__row--toppost {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.rpanel-sources__toppost {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.rpanel-sources__toppost .top-post-echo {
+  align-self: stretch;
+  max-width: none;
+  /* Undo the echo's user-bubble sharp top-right corner + right alignment, and
+     lift it with the same low shadow the other source cards use. */
+  border-top-right-radius: var(--app-radius-card);
+  box-shadow: var(--app-shadow-low);
+}
+
 .rpanel-sources__row-status {
   flex-shrink: 0;
 }

@@ -634,7 +634,10 @@ export function startConnectorImport(connector, doc, sessionId) {
 // Sources panel so the user can find what fed their drafts. Deduped by id
 // (stable per post), so repurposing the same post twice doesn't duplicate it.
 // `iconClass` lets the row render a network logo (see renderSourceRow).
-export function addReadySource(sessionId, { id, filename, kind = "Post", preview = "", iconClass = null }) {
+export function addReadySource(
+  sessionId,
+  { id, filename, kind = "Post", preview = "", iconClass = null, topPost = null },
+) {
   const list = getOrInitSessionSources(sessionId);
   if (list.some((s) => s.id === id)) return id;
   list.unshift({
@@ -648,6 +651,10 @@ export function addReadySource(sessionId, { id, filename, kind = "Post", preview
     addedAt: "just now",
     preview,
     iconClass,
+    // A repurposed top post carries its full winner payload so the Sources
+    // panel can render the real post card (renderTopPostEcho) instead of a
+    // generic file row.
+    topPost,
   });
   notifySources(sessionId);
   return id;

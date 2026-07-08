@@ -15,6 +15,7 @@ import {
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=33";
 import { renderPostCard } from "./post-card.js?v=47";
+import { renderTopPostEcho } from "./top-post-card.js?v=53";
 import { renderClipCard } from "./clip-card.js?v=13";
 import { onFeedbackClick } from "./feedback-control.js?v=1";
 // Shared compact idea card — same component the standalone Ideas page uses.
@@ -27,7 +28,7 @@ import {
   updateSourceClips,
   removeSources,
   renameSource,
-} from "../sources-stream.js?v=48";
+} from "../sources-stream.js?v=49";
 import { open as openAddSourceModal } from "./add-source-modal.js?v=59";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { getConnectedConnectors } from "../connectors-store.js?v=26";
@@ -2428,18 +2429,35 @@ function renderSourceRow(src) {
       </div>
     </div>`;
 
-  return `
-    <div class="rpanel-sources__row" data-source-id="${src.id}">
-      <div class="rpanel-sources__card-head">
-        <span class="rpanel-sources__row-icon" aria-hidden="true">${
-          src.serviceLogo
-            ? `<img class="rpanel-sources__row-logo" src="${escapeAttr(src.serviceLogo)}" alt="" />`
-            : `<i class="${icon}"></i>`
-        }</span>
+  // A repurposed top post renders the real winner card (renderTopPostEcho) in
+  // place of the generic icon + name + preview, so its Sources row matches the
+  // card the user picked it from.
+  const headMain = src.topPost
+    ? `<div class="rpanel-sources__toppost">${renderTopPostEcho(src.topPost)}</div>`
+    : `<span class="rpanel-sources__row-icon" aria-hidden="true">${
+        src.serviceLogo
+          ? `<img class="rpanel-sources__row-logo" src="${escapeAttr(src.serviceLogo)}" alt="" />`
+          : `<i class="${icon}"></i>`
+      }</span>
         <div class="rpanel-sources__row-text">
           <div class="rpanel-sources__row-name" title="${escapeAttr(src.filename)}">${escapeText(src.filename)}</div>
           ${src.preview ? `<div class="rpanel-sources__row-preview" title="${escapeAttr(src.preview)}">${escapeText(src.preview)}</div>` : ""}
-        </div>
+        </div>`;
+
+  // A repurposed top post shows only the card itself — no Reference / kebab
+  // actions and no ideas list (it produced drafts, not extracted ideas).
+  if (src.topPost) {
+    return `
+      <div class="rpanel-sources__row rpanel-sources__row--toppost" data-source-id="${src.id}">
+        <div class="rpanel-sources__card-head">${headMain}</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="rpanel-sources__row" data-source-id="${src.id}">
+      <div class="rpanel-sources__card-head">
+        ${headMain}
         ${statusEl}
         ${mentionBtn}
         ${moreMenu}

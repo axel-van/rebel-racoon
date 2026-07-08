@@ -34,9 +34,9 @@ import {
 } from "./assistant.js?v=56";
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=8";
 import { addPostDraft } from "./posts-store.js?v=33";
-import { addReadySource } from "./sources-stream.js?v=48";
+import { addReadySource } from "./sources-stream.js?v=49";
 import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=24";
-import { SORTS } from "./components/top-post-card.js?v=48";
+import { SORTS, PERIODS } from "./components/top-post-card.js?v=53";
 import { showToast } from "./components/toast.js?v=20";
 import * as inlineQuestion from "./inline-question.js?v=47";
 import { getDefaultContext } from "./contexts-store.js?v=33";
@@ -349,7 +349,7 @@ export function startTopPostsInline(sessionId) {
     subtitle: "I'll pull its top posts next.",
     onPick: (network) => {
       echoAccountPick(sessionId, network);
-      askRankCriterion(sessionId, network);
+      askPeriod(sessionId, network);
     },
   });
 }
@@ -364,25 +364,21 @@ function echoAccountPick(sessionId, network) {
   else postUserTurn(sessionId, labelFor(net));
 }
 
-// Which metric ranks the winners — the same lenses the studio board sorts by
-// (SORTS), asked up front so the widget can surface the strongest posts for the
-// metric the user actually cares about (views / reach / engagement / recency).
-const RANK_CHOICES = [
-  { value: "performance", label: "Performance", caption: "Highest vs your average.", icon: "ap-icon-data-increase" },
-  { value: "engagement", label: "Engagement rate", caption: "Most reactions per view.", icon: "ap-icon-heart" },
-  { value: "reach", label: "Reach", caption: "Seen by the most people.", icon: "ap-icon-eye-on" },
-];
+// The recency window to pull winners from — the same periods the studio board
+// filters by (PERIODS), asked before the ranking metric so we only rank posts
+// inside the window the user cares about.
+const PERIOD_CHOICES = PERIODS.map((p) => ({ value: p.key, label: p.label, icon: "ap-icon-clock" }));
 
-// Account chosen → ask which metric to rank by before surfacing the winners.
-function askRankCriterion(sessionId, network) {
-  postAssistantMessage(sessionId, "How should I rank them?");
+// Account chosen → ask which time window to pull winners from before ranking.
+function askPeriod(sessionId, network) {
+  postAssistantMessage(sessionId, "How far back should I look?");
   inlineQuestion.ask(sessionId, {
-    items: RANK_CHOICES,
-    title: "Rank by",
-    subtitle: "I'll put the strongest posts for that metric first.",
-    onPick: (sortKey) => {
-      echoRankPick(sessionId, sortKey);
-      presentWinners(sessionId, network, sortKey);
+    items: PERIOD_CHOICES,
+    title: "Time period",
+    subtitle: "I'll only rank posts published in that window.",
+    onPick: (periodKey) => {
+      echoPeriodPick(sessionId, periodKey);
+      askRankCriterion(sessionId, network, periodKey);
     },
     // Back to the account question (re-arm it without re-posting the intro).
     onBack: () =>
@@ -392,7 +388,47 @@ function askRankCriterion(sessionId, network) {
         subtitle: "I'll pull its top posts next.",
         onPick: (net) => {
           echoAccountPick(sessionId, net);
-          askRankCriterion(sessionId, net);
+          askPeriod(sessionId, net);
+        },
+      }),
+  });
+}
+
+// Echo the chosen time window as a user text turn.
+function echoPeriodPick(sessionId, periodKey) {
+  const choice = PERIOD_CHOICES.find((c) => c.value === periodKey);
+  postUserTurn(sessionId, choice ? choice.label : periodKey);
+}
+
+// Which metric ranks the winners — the same lenses the studio board sorts by
+// (SORTS), asked up front so the widget can surface the strongest posts for the
+// metric the user actually cares about (views / reach / engagement / recency).
+const RANK_CHOICES = [
+  { value: "performance", label: "Performance", caption: "Highest vs your average.", icon: "ap-icon-data-increase" },
+  { value: "engagement", label: "Engagement rate", caption: "Most reactions per view.", icon: "ap-icon-heart" },
+  { value: "reach", label: "Reach", caption: "Seen by the most people.", icon: "ap-icon-eye-on" },
+];
+
+// Window chosen → ask which metric to rank by before surfacing the winners.
+function askRankCriterion(sessionId, network, period = "1m") {
+  postAssistantMessage(sessionId, "How should I rank them?");
+  inlineQuestion.ask(sessionId, {
+    items: RANK_CHOICES,
+    title: "Rank by",
+    subtitle: "I'll put the strongest posts for that metric first.",
+    onPick: (sortKey) => {
+      echoRankPick(sessionId, sortKey);
+      presentWinners(sessionId, network, sortKey, period);
+    },
+    // Back to the period question (re-arm it without re-posting the intro).
+    onBack: () =>
+      inlineQuestion.ask(sessionId, {
+        items: PERIOD_CHOICES,
+        title: "Time period",
+        subtitle: "I'll only rank posts published in that window.",
+        onPick: (periodKey) => {
+          echoPeriodPick(sessionId, periodKey);
+          askRankCriterion(sessionId, network, periodKey);
         },
       }),
   });
@@ -406,14 +442,15 @@ function echoRankPick(sessionId, sortKey) {
 
 // Metric chosen → brief "finding your winners" beat, then drop the interactive
 // selection widget into the thread scoped to that account, sorted by the metric.
-function presentWinners(sessionId, network, sortKey = "performance") {
+function presentWinners(sessionId, network, sortKey = "performance", period = "1m") {
   const net = normNet(network);
   const sort = SORTS.find((s) => s.key === sortKey) || SORTS[0];
+  const window = PERIODS.find((p) => p.key === period) || PERIODS[0];
   const pendingId = startPending(sessionId, "Finding your top posts");
   setTimeout(() => {
     finishPending(sessionId, pendingId);
     const postIds = getTopPosts()
-      .filter((p) => normNet(p.network) === net)
+      .filter((p) => normNet(p.network) === net && (p.daysAgo ?? 0) <= window.maxDays)
       .sort(sort.compare)
       .map((p) => p.id);
     postAssistantMessage(
@@ -616,6 +653,8 @@ export function executeRepurpose(sessionId, postIds, targets) {
           kind: `${meta.label || "Post"} post`,
           preview: `Repurposed${post.perfBadge ? ` · ${post.perfBadge}` : ""}`,
           iconClass: meta.icon || null,
+          // Carry the winner so the Sources panel renders the real post card.
+          topPost: post,
         });
       }
       const drafts = [];

@@ -53,8 +53,8 @@ import {
 } from "../posts-store.js?v=33";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=48";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=36";
-import * as topPostsFlow from "../top-posts-flow.js?v=67";
-import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=48";
+import * as topPostsFlow from "../top-posts-flow.js?v=69";
+import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=53";
 import { getTopPost } from "../top-posts-store.js?v=8";
 import * as sidebarWizard from "../sidebar-wizard.js?v=51";
 import * as inlineQuestion from "../inline-question.js?v=47";
@@ -100,7 +100,7 @@ import {
   updateSourceClips,
   extractClipsForSource,
   setSourceIdeaCount,
-} from "../sources-stream.js?v=48";
+} from "../sources-stream.js?v=49";
 import { renderClipCard } from "../components/clip-card.js?v=13";
 import { onFeedbackClick } from "../components/feedback-control.js?v=1";
 import { showToast } from "../components/toast.js?v=20";
@@ -110,7 +110,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=289";
+} from "../components/right-panel.js?v=291";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=14";
@@ -2007,7 +2007,7 @@ function renderTopPostsPickerScreen(session) {
               data-topposts-next
               ${selectedAccount ? "" : "disabled"}
             >
-              <span>Show my top posts</span>
+              <span>Show my 20 top posts</span>
             </button>
           </div>
           <p class="studio-commit__hint muted">I'll write the fresh drafts in this playbook's voice.</p>

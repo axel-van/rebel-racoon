@@ -261,6 +261,16 @@ export function renderTopPostEcho(post) {
         <span class="top-post-echo__head">
           <i class="${iconFor(post.network)}" aria-hidden="true"></i>
           <span class="top-post-echo__net">${labelFor(post.network)}</span>
+          <a
+            class="top-post-echo__origin"
+            href="${postPermalink(post.network, post.id)}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="View original post on ${labelFor(post.network)}"
+          >
+            <span>View on</span>
+            <i class="${iconFor(post.network)}" aria-hidden="true"></i>
+          </a>
         </span>
         <span class="top-post-echo__excerpt">${post.excerpt}</span>
         <span class="top-post-echo__stats">

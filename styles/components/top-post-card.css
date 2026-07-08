@@ -544,6 +544,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xxs);
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -551,6 +552,7 @@
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
+  width: 100%;
   color: var(--ref-color-grey-150);
   font-weight: var(--sys-text-style-body-bold-weight);
 }
@@ -585,6 +587,29 @@
   color: var(--ref-color-green-100);
 }
 
+/* "View on <network>" link — sits on the card's header line, pushed to the far
+   right, so it never adds to the card's height. Blue bold caption + the
+   network's own icon (matches the DS "View On" post-preview component). */
+.top-post-echo__origin {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  flex: 0 0 auto;
+  margin-left: auto;
+  white-space: nowrap;
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--ref-color-electric-blue-150);
+  text-decoration: none;
+}
+
+.top-post-echo__origin i {
+  font-size: 16px;
+}
+
+.top-post-echo__origin:hover span {
+  text-decoration: underline;
+}
+
 /* ── Inline selection widget (Add-menu flow) ─────────────────────────
    A premium "app card" embedded in the AI conversation turn: a header, a
    single-select list of winners, and a confirm CTA. Edge-to-edge sections
@@ -593,7 +618,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 460px;
+  max-width: 540px;
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-card);
   background: var(--app-surface);
