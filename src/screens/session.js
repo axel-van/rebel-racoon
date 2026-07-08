@@ -2034,9 +2034,6 @@ function renderTopPostsPickerScreen(session) {
           sort: state.sort,
           profile: state.profile,
           period: state.period,
-          layout: state.layout,
-          visibleCount: state.visibleCount,
-          loadingMore: state.loadingMore,
         }),
       )}
     `;
@@ -2414,16 +2411,14 @@ function startRepurposeFlow(sessionId, postIds) {
 
 // Profile-selection — a SINGLE unified per-profile version stepper (no separate
 // "same vs other" scope step). Lists every connected profile: source-network
-// profiles first, tagged "· Source" and pre-set to 1 version; other profiles
-// start at 0. "Generate N drafts" sums the counts and each draft is adapted to
-// its profile's network. This is the first (and only) step after the picks are
-// echoed — every repurpose entry point funnels here, so they all behave
+// profiles first, tagged "· Source". Every profile starts at 0 — the user opts
+// in explicitly. "Generate N drafts" sums the counts and each draft is adapted
+// to its profile's network. This is the first (and only) step after the picks
+// are echoed — every repurpose entry point funnels here, so they all behave
 // identically.
 function askRepurposeProfiles(sessionId, postIds) {
-  // Source profiles lead and start at 1; the rest start at 0 (opt-in).
-  const items = topPostsFlow
-    .repurposeProfileItems(postIds, { include: "all" })
-    .map((it) => ({ ...it, count: it.isSource ? 1 : 0 }));
+  // Every profile starts at 0 (fully opt-in); source profiles just lead the list.
+  const items = topPostsFlow.repurposeProfileItems(postIds, { include: "all" }).map((it) => ({ ...it, count: 0 }));
   if (!items.length) {
     postAssistantMessage(
       sessionId,
@@ -3446,9 +3441,6 @@ function wireAssistantPanel(root, session, attachedContext) {
       sort: state.sort,
       profile: state.profile,
       period: state.period,
-      layout: state.layout,
-      visibleCount: state.visibleCount,
-      loadingMore: state.loadingMore,
     });
     const fresh = tmp.firstElementChild;
     if (fresh) board.replaceWith(fresh);
@@ -4539,17 +4531,6 @@ function bindSession(root, session) {
       const topPostPeriod = event.target.closest("[data-top-post-period]");
       if (topPostPeriod) {
         topPostsFlow.setPeriod(session.id, topPostPeriod.dataset.topPostPeriod);
-        return;
-      }
-      // Winner-board view toggle → switch card density (large ↔ compact).
-      const topPostLayout = event.target.closest("[data-top-post-layout]");
-      if (topPostLayout) {
-        topPostsFlow.setLayout(session.id, topPostLayout.dataset.topPostLayout);
-        return;
-      }
-      // Winner-board "Load more" → reveal the next page of winners.
-      if (event.target.closest("[data-top-post-load-more]")) {
-        topPostsFlow.loadMore(session.id);
         return;
       }
       // Card "Repurpose" → repurpose that one winner (one post at a time).

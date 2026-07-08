@@ -124,21 +124,20 @@ const TOP_POST_CONTENT = {
     },
     {
       topic: "Hiring",
-      excerpt:
-        "We stopped asking for cover letters. Best hiring decision we made all year. Here's the one question we ask instead.",
+      excerpt: "We stopped asking for cover letters. Best hiring call we made all year.",
       hashtags: ["Hiring", "Culture"],
       why: "a bold policy change stated as a result first, then the practical how",
     },
     {
       topic: "Leadership",
       excerpt:
-        "The best managers I've worked with did one thing relentlessly: they made decisions reversible. Here's how that quietly doubles a team's speed.",
+        "The best managers I've worked with did one thing relentlessly: they made decisions reversible. Cheap to try, cheap to undo. It sounds like a small habit, but it's the quiet reason some teams move twice as fast as everyone else — nobody is paralyzed by getting it perfect the first time.",
       hashtags: ["Leadership", "Management"],
     },
     {
       topic: "Product",
       excerpt:
-        "We killed our most-requested feature. Churn dropped. Turns out 'most requested' and 'most valuable' are almost never the same list.",
+        "We killed our most-requested feature and churn actually dropped. 'Most requested' and 'most valuable' are almost never the same list.",
       hashtags: ["Product", "SaaS"],
     },
     {
@@ -150,20 +149,18 @@ const TOP_POST_CONTENT = {
     {
       topic: "Culture",
       excerpt:
-        "We published every salary band internally. It was terrifying. It was also the single biggest trust unlock we've ever done.",
+        "We published every salary band internally last quarter. I won't pretend it wasn't terrifying — I lost sleep over it for a week. But it turned out to be the single biggest trust unlock we've ever done, and not one person left over it. Transparency compounds quietly.",
       hashtags: ["Culture", "Transparency"],
     },
     {
       topic: "Remote work",
-      excerpt:
-        "Remote work didn't kill culture. Bad meetings did. We cut meetings by 40% and shipped faster. Here's the system.",
+      excerpt: "Remote work didn't kill culture. Bad meetings did. We cut ours by 40% and shipped faster.",
       hashtags: ["RemoteWork", "Productivity"],
       why: "a myth-bust followed immediately by a concrete number",
     },
     {
       topic: "Sales",
-      excerpt:
-        "Our best sales month came from saying no to three deals. Focus isn't a buzzword — it's a pipeline strategy.",
+      excerpt: "Our best sales month came from saying no to three deals.",
       hashtags: ["Sales", "Strategy"],
     },
     {
@@ -177,14 +174,13 @@ const TOP_POST_CONTENT = {
     {
       topic: "AI tooling",
       excerpt:
-        "Most “AI content tools” just autocomplete. The ones that win do the boring part: they remember your brand voice across every post. That's the whole game.",
+        "Most “AI content tools” just autocomplete a blank box and call it magic. The ones that actually win do the boring, unglamorous part: they remember your brand voice across every single post, every channel, for months. That consistency is the whole game — and it's the part nobody bothers to demo.",
       hashtags: ["AI", "ContentMarketing"],
       why: "a sharp category take that names the real problem, ending on a quotable one-liner",
     },
     {
       topic: "Marketing",
-      excerpt:
-        "Nobody shares your product. They share how it makes them look. Build for the screenshot, not the spec sheet.",
+      excerpt: "Nobody shares your product. They share how it makes them look.",
       hashtags: ["Marketing", "Brand"],
     },
     {
@@ -196,7 +192,7 @@ const TOP_POST_CONTENT = {
     },
     {
       topic: "Writing",
-      excerpt: "Cut your first sentence. It's a warm-up. Your real hook is sentence two — every single time.",
+      excerpt: "Cut your first sentence. Your real hook is sentence two.",
       hashtags: ["Writing", "Copywriting"],
     },
     {
@@ -208,12 +204,13 @@ const TOP_POST_CONTENT = {
     },
     {
       topic: "Startups",
-      excerpt: "You don't have a marketing problem. You have a 'nobody can explain what you do in one line' problem.",
+      excerpt:
+        "You don't have a marketing problem. You have a 'nobody can explain what you do in one line' problem. Fix the sentence first.",
       hashtags: ["Startups", "Positioning"],
     },
     {
       topic: "Founders",
-      excerpt: "The moat isn't the feature. It's the four years of unglamorous decisions nobody else wants to copy.",
+      excerpt: "The moat isn't the feature. It's four years of decisions nobody wants to copy.",
       hashtags: ["Founders", "Moats"],
     },
     {
@@ -289,7 +286,7 @@ const TOP_POST_CONTENT = {
     {
       topic: "Story",
       excerpt:
-        "A customer emailed us at 2am, furious. What we did next turned them into our loudest advocate. The full story 👇",
+        "A customer emailed us at 2am, absolutely furious — caps lock, the whole thing. Instead of firing back a templated apology, we picked up the phone and called her. What happened over the next twenty minutes turned her into our single loudest advocate. Here's the full story, and the three things we quietly changed because of it 👇",
       hashtags: ["CustomerStory", "Support"],
     },
     {
@@ -301,13 +298,13 @@ const TOP_POST_CONTENT = {
     {
       topic: "Announcement",
       excerpt:
-        "We're making our most-loved guide completely free — no email gate. Here's why 'give it away' is good business.",
+        "We're making our most-loved guide completely free — no email gate, no catch. Here's why giving it away is good business.",
       hashtags: ["Announcement", "Content"],
     },
     {
       topic: "Milestone",
       excerpt:
-        "10 years ago this was a spreadsheet and a dream. Today it's a team of 40. A thank-you to everyone who bet early.",
+        "Ten years ago this was a spreadsheet and a stubborn idea nobody else believed in. Today it's a team of 40, across six countries, serving people we never imagined we'd reach. To everyone who bet on us early — before there was anything to bet on: thank you. This one's yours.",
       hashtags: ["Milestone", "Gratitude"],
     },
     {
@@ -319,13 +316,12 @@ const TOP_POST_CONTENT = {
     {
       topic: "Tips",
       excerpt:
-        "5 questions every small team should ask before hiring their first marketer. Comment 'guide' and we'll send it over.",
+        "5 questions every small team should ask before hiring their first marketer. Comment 'guide' and we'll send the full list over.",
       hashtags: ["SmallBusiness", "Marketing"],
     },
     {
       topic: "Growth",
-      excerpt:
-        "We just passed 50,000 of you here. To celebrate, we're answering every question you drop below for the next 24 hours.",
+      excerpt: "We just passed 50,000 of you here. Ask us anything for the next 24 hours 👇",
       hashtags: ["Community", "AMA"],
     },
     {
@@ -338,17 +334,20 @@ const TOP_POST_CONTENT = {
 };
 
 // Descending performance ramp applied per network (best-first). Nine tiers so
-// each profile fills a board; picking-order = performance.
+// each profile fills a board; picking-order = performance. `days` (recency) is
+// kept inside ~1 month for the whole top block so the default "Last month"
+// window already shows a full board; cycled winners beyond the block age past it
+// (topPostRamp adds 7d each), so the wider periods reveal progressively more.
 const TOP_POST_RAMP = [
-  { vsAvg: 4.3, badge: "Top 2%", eng: 8.4, imp: 53000, days: 4 },
-  { vsAvg: 3.6, badge: "Top 4%", eng: 7.0, imp: 45000, days: 9 },
-  { vsAvg: 3.0, badge: "Top 6%", eng: 6.2, imp: 39000, days: 15 },
-  { vsAvg: 2.6, badge: "Top 9%", eng: 5.5, imp: 34000, days: 21 },
-  { vsAvg: 2.2, badge: "Top 12%", eng: 4.9, imp: 29000, days: 27 },
-  { vsAvg: 1.9, badge: "Top 15%", eng: 4.3, imp: 25000, days: 34 },
-  { vsAvg: 1.6, badge: "Top 18%", eng: 3.8, imp: 21000, days: 41 },
-  { vsAvg: 1.4, badge: "Top 23%", eng: 3.4, imp: 18000, days: 50 },
-  { vsAvg: 1.2, badge: "Top 28%", eng: 3.0, imp: 15000, days: 61 },
+  { vsAvg: 4.3, badge: "Top 2%", eng: 8.4, imp: 53000, days: 2 },
+  { vsAvg: 3.6, badge: "Top 4%", eng: 7.0, imp: 45000, days: 5 },
+  { vsAvg: 3.0, badge: "Top 6%", eng: 6.2, imp: 39000, days: 8 },
+  { vsAvg: 2.6, badge: "Top 9%", eng: 5.5, imp: 34000, days: 12 },
+  { vsAvg: 2.2, badge: "Top 12%", eng: 4.9, imp: 29000, days: 16 },
+  { vsAvg: 1.9, badge: "Top 15%", eng: 4.3, imp: 25000, days: 19 },
+  { vsAvg: 1.6, badge: "Top 18%", eng: 3.8, imp: 21000, days: 23 },
+  { vsAvg: 1.4, badge: "Top 23%", eng: 3.4, imp: 18000, days: 26 },
+  { vsAvg: 1.2, badge: "Top 28%", eng: 3.0, imp: 15000, days: 29 },
 ];
 
 // Decorrelate the metrics: each post takes its vsAvg/badge from the ramp by its
@@ -362,20 +361,20 @@ const TOP_POST_DAYS_ORDER = [6, 3, 8, 1, 4, 0, 7, 5, 2];
 
 const TOP_POST_ID_ABBR = { linkedin: "li", x: "x", instagram: "ig", facebook: "fb" };
 
-// Media type per winner — a post can be a video, an image, or plain text. Which
-// one shapes how it's repurposed, so the winner cards surface it as a preview
-// tile. Assigned by a per-network pattern (index-aligned to TOP_POST_CONTENT) so
-// each profile's board shows a realistic mix rather than authoring it per item.
-// IG skews visual; X/LinkedIn broader.
+// Media type per winner — a post is either an image or plain text (video posts
+// are never repurposed here). Which one shapes how it's repurposed, so the
+// winner cards surface it as a preview tile. Assigned by a per-network pattern
+// (index-aligned to TOP_POST_CONTENT) so each profile's board shows a realistic
+// mix rather than authoring it per item. IG skews visual; X/LinkedIn broader.
 const TOP_POST_MEDIA_PATTERN = {
-  linkedin: ["image", "text", "video", "text", "image", "text", "video", "text", "image"],
-  x: ["text", "text", "image", "text", "video", "text", "text", "image", "text"],
-  instagram: ["image", "video", "image", "video", "image", "image", "video", "image", "video"],
-  facebook: ["image", "text", "image", "video", "text", "image", "text", "video", "text"],
+  linkedin: ["image", "text", "text", "text", "image", "text", "text", "text", "image"],
+  x: ["text", "text", "image", "text", "text", "text", "text", "image", "text"],
+  instagram: ["image", "text", "image", "text", "image", "image", "text", "image", "text"],
+  facebook: ["image", "text", "image", "text", "text", "image", "text", "text", "text"],
 };
 
 // Curated stock photos (Unsplash direct URLs — business / tech / marketing) used
-// as the poster for image + video winners. Cropped to 16:9 to match the tile. No
+// as the poster for image winners. Cropped to 16:9 to match the tile. No
 // local post-image assets exist in the proto, so these load over the network; the
 // card falls back to a grey tile if one is blocked.
 const TOP_POST_IMAGES = [
@@ -387,8 +386,10 @@ const TOP_POST_IMAGES = [
   "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=640&h=360&q=70",
 ];
 
-// Plausible durations (seconds) cycled onto video winners → "M:SS" duration pill.
-const TOP_POST_DURATIONS = [47, 92, 128, 33, 61];
+// Image count cycled across image winners: 1 = single photo, >1 = a multi-image
+// (carousel) post, which the card flags with a stacked-images badge. Mixed so a
+// board shows both single and multi-image winners.
+const TOP_POST_IMAGE_COUNTS = [1, 3, 1, 2, 5, 1, 4, 1];
 
 // Absolute publish date for a post given its recency (daysAgo). Derived from a
 // FIXED base ("today" = 2 Jul 2026) so the mock reads consistently regardless of
@@ -400,6 +401,61 @@ function topPostDate(daysAgo) {
   const d = new Date(TOP_POST_TODAY);
   d.setDate(d.getDate() - daysAgo);
   return `${TOP_POST_MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+
+// Maximum body length (characters) a text post can reach on each network — the
+// real platform limits (as of 2026). Text winners get random copy at a spread of
+// lengths up to this cap (see TEXT_LEN_LADDER) so the board exercises every
+// pull-quote size tier AND the worst case: a maxed-out post must truncate, not
+// break the card, its wrapping, or the grid.
+const NETWORK_MAX_CHARS = {
+  linkedin: 3000,
+  x: 280,
+  instagram: 2200,
+  facebook: 63206,
+};
+
+// Target lengths cycled across a network's text winners so the board shows the
+// full range of size tiers (short pull-quote → small body copy). The network's
+// own max is appended per-network so at least one card per board hits the cap and
+// proves truncation works.
+const TEXT_LEN_LADDER = [55, 135, 260, 520, 1400];
+
+// Sentence pool for synthesising random long-form post copy. Assembled and sliced
+// to an exact target length so a text winner fills its network's max body.
+const FILLER_SENTENCES = [
+  "Growth isn't a single lever you pull — it's a hundred unglamorous decisions made consistently, week after week, long after the excitement wears off.",
+  "The teams that win aren't the ones with the biggest budget; they're the ones who ship, measure, and adjust faster than everyone else.",
+  "Most content fails not because it's bad, but because it never had a hook worth stopping for in the first two seconds.",
+  "We spent a quarter obsessing over a metric that turned out not to matter, and the lesson cost us more than the number ever could.",
+  "Your brand voice is the one asset a competitor can't copy overnight, so protect it like it's the product — because it is.",
+  "Every process that scales starts as a messy experiment somebody was brave enough to run without permission.",
+  "The best marketing doesn't feel like marketing; it feels like a colleague sharing something useful they genuinely believe in.",
+  "Consistency beats intensity: one honest post a week for a year will outperform a frantic launch month every single time.",
+  "We killed a feature half the team loved because the data was clear, and retention thanked us within two weeks.",
+  "Attention is earned in seconds and lost in silence, so give people a reason to care before you ask them to act.",
+  "The hardest part of strategy isn't deciding what to do — it's having the discipline to say no to everything else.",
+  "Small teams move fast because there's nowhere for a decision to hide; ownership is obvious and accountability is real.",
+  "If you can't explain what you do in a single clear sentence, no ad budget in the world will fix the confusion.",
+  "Trust compounds quietly in the background until one day it becomes the only reason a customer chooses you at all.",
+  "We learned more from the campaign that flopped than from the three that quietly worked exactly as planned.",
+  "Great communities aren't built by broadcasting louder; they're built by listening closely and replying like a human.",
+  "Every dashboard is a story someone chose to tell, so always ask what the numbers are conveniently leaving out.",
+  "The goal was never more posts — it was more of the right posts, aimed at the people who actually needed to hear them.",
+];
+
+// Build a string of ~`len` characters of random copy from the pool, trimmed back
+// to the last whole word (and any trailing punctuation) so a card never ends
+// mid-word. Stays within `len` — the CSS line-clamp handles visual truncation.
+function randomText(len) {
+  let out = "";
+  while (out.length < len) {
+    const s = FILLER_SENTENCES[Math.floor(Math.random() * FILLER_SENTENCES.length)];
+    out += (out ? " " : "") + s;
+  }
+  const cut = out.slice(0, len);
+  const lastSpace = cut.lastIndexOf(" ");
+  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:—-]+$/, "");
 }
 
 // How many winners to synthesise per network. The authored content (9 items) is
@@ -426,11 +482,15 @@ function topPostRamp(i) {
 
 function buildTopPosts() {
   const out = [];
-  // Running counters so image/video winners cycle through the stock pool +
-  // durations across the whole set (not per network) for variety.
+  // Running counter so image winners cycle through the stock pool across the
+  // whole set (not per network) for variety.
   let imgIdx = 0;
-  let durIdx = 0;
   for (const [network, posts] of Object.entries(TOP_POST_CONTENT)) {
+    // Per-network ladder of text lengths (short → this network's max) cycled
+    // across its text winners so every board shows the size-tier spread + the cap.
+    const cap = NETWORK_MAX_CHARS[network] || 3000;
+    const textLadder = [...new Set([...TEXT_LEN_LADDER.map((t) => Math.min(t, cap)), cap])];
+    let textIdx = 0;
     for (let i = 0; i < TOP_POSTS_PER_NETWORK; i += 1) {
       const c = posts[i % posts.length]; // cycle the authored content
       const j = i % 9; // position within the 9-item cycle (drives the permutations)
@@ -453,7 +513,10 @@ function buildTopPosts() {
         publishedOn: topPostDate(days),
         daysAgo: days,
         topic: c.topic,
-        excerpt: c.excerpt,
+        // Text winners get random copy at a laddered length (short → this
+        // network's max) so the board shows every size tier; image winners keep
+        // their authored caption.
+        excerpt: mediaType === "text" ? randomText(textLadder[textIdx++ % textLadder.length]) : c.excerpt,
         perfBadge: perf.badge,
         vsAvg: perf.vsAvg,
         engagementRate: eng,
@@ -466,17 +529,16 @@ function buildTopPosts() {
         metricLine: `${perf.vsAvg}× your average engagement · ${reactions.toLocaleString()} reactions · ${comments} comments`,
         whyItWorked: c.why || "a strong hook backed by a concrete result",
         hashtags: c.hashtags,
-        // Media type drives the card's preview tile (video / image / text).
+        // Media type drives the card's preview tile (image / text).
         mediaType,
       };
       if (usesSaves) post.saves = secondary;
       else post.shares = secondary;
-      // Image + video winners carry a poster image; video also a duration.
-      if (mediaType === "image" || mediaType === "video") {
-        post.image = TOP_POST_IMAGES[imgIdx++ % TOP_POST_IMAGES.length];
-      }
-      if (mediaType === "video") {
-        post.mediaDuration = TOP_POST_DURATIONS[durIdx++ % TOP_POST_DURATIONS.length];
+      // Image winners carry a poster image + an image count (>1 = carousel).
+      if (mediaType === "image") {
+        post.image = TOP_POST_IMAGES[imgIdx % TOP_POST_IMAGES.length];
+        post.imageCount = TOP_POST_IMAGE_COUNTS[imgIdx % TOP_POST_IMAGE_COUNTS.length];
+        imgIdx += 1;
       }
       out.push(post);
     }

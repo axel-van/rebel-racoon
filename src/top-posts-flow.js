@@ -41,13 +41,6 @@ import { showToast } from "./components/toast.js?v=20";
 import * as inlineQuestion from "./inline-question.js?v=47";
 import { getDefaultContext } from "./contexts-store.js?v=33";
 
-// Board pagination — how many winners the board reveals per page ("Load more"
-// adds another page). The board starts showing this many and grows by it.
-const TOP_POSTS_PAGE = 12;
-
-// Simulated "fetching more winners" beat for the board's Load-more button.
-const LOAD_MORE_MS = 700;
-
 // Cap on drafts produced in one run — post × angle × channel can multiply fast
 // (e.g. 3 posts × 4 angles × 3 channels = 36). Keep the result turn scannable;
 // the title flags when the set was clipped.
@@ -202,12 +195,11 @@ export function setContext(sessionId, contextId) {
   notifyPicker(sessionId);
 }
 
-// Change the active period filter (toolbar chip). "all" | "90d" | "30d".
+// Change the active period filter (toolbar chip). "1m" | "3m" | "6m" | "1y".
 export function setPeriod(sessionId, period) {
   const s = pickerStates.get(sessionId);
   if (!s || s.period === period) return;
   s.period = period;
-  s.visibleCount = TOP_POSTS_PAGE; // new filter → restart pagination
   notifyPicker(sessionId);
 }
 
@@ -227,33 +219,7 @@ export function setSort(sessionId, sort) {
   const s = pickerStates.get(sessionId);
   if (!s || s.sort === sort) return;
   s.sort = sort;
-  s.visibleCount = TOP_POSTS_PAGE; // new order → restart pagination
   notifyPicker(sessionId);
-}
-
-// Change the card display density (toolbar view toggle: "large" | "compact").
-export function setLayout(sessionId, layout) {
-  const s = pickerStates.get(sessionId);
-  if (!s || s.layout === layout) return;
-  s.layout = layout;
-  notifyPicker(sessionId);
-}
-
-// Reveal the next page of winners (the board's "Load more", 12 at a time). Shows
-// a brief loading state on the button (DS .ap-loading-bar) before the new cards
-// land, so fetching more reads as real work rather than an instant jump.
-export function loadMore(sessionId) {
-  const s = pickerStates.get(sessionId);
-  if (!s || s.loadingMore) return;
-  s.loadingMore = true;
-  notifyPicker(sessionId);
-  setTimeout(() => {
-    const cur = pickerStates.get(sessionId);
-    if (!cur || !cur.loadingMore) return;
-    cur.visibleCount += TOP_POSTS_PAGE;
-    cur.loadingMore = false;
-    notifyPicker(sessionId);
-  }, LOAD_MORE_MS);
 }
 
 // Connected social profiles offered on the account picker (step 1). This is what
@@ -305,9 +271,7 @@ function openStage(sessionId, stage, profile = null) {
     posts,
     profile,
     sort: "performance",
-    period: "all",
-    layout: "large",
-    visibleCount: TOP_POSTS_PAGE,
+    period: "1m",
   });
   notifyPicker(sessionId);
 }
@@ -336,7 +300,7 @@ export function backToProfiles(sessionId) {
   s.stage = "profile";
   s.profile = null;
   s.sort = "performance";
-  s.period = "all";
+  s.period = "1m";
   armProfilePicker(sessionId);
   notifyPicker(sessionId);
 }
@@ -407,7 +371,6 @@ const RANK_CHOICES = [
   { value: "performance", label: "Performance", caption: "Highest vs your average.", icon: "ap-icon-data-increase" },
   { value: "engagement", label: "Engagement rate", caption: "Most reactions per view.", icon: "ap-icon-heart" },
   { value: "reach", label: "Reach", caption: "Seen by the most people.", icon: "ap-icon-eye-on" },
-  { value: "recent", label: "Most recent", caption: "Freshest posts first.", icon: "ap-icon-clock" },
 ];
 
 // Account chosen → ask which metric to rank by before surfacing the winners.
@@ -497,7 +460,6 @@ export function echoRepurposePicks(sessionId, postIds, { echo = true } = {}) {
       saves: post.saves,
       mediaType: post.mediaType,
       image: post.image,
-      mediaDuration: post.mediaDuration,
     });
   }
   return posts.map((p) => p.id);

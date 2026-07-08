@@ -117,19 +117,6 @@
   min-width: 200px;
 }
 
-/* View-density toggle (Large ↔ Compact) — two DS icon buttons. The active view
-   uses the .ap-icon-button.blue variant (blue icon); the fill below makes that
-   selected state persist rather than only showing on hover. */
-.top-posts-view {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-}
-
-.top-posts-view .ap-icon-button.blue {
-  background: var(--ref-color-electric-blue-05);
-}
-
 /* ── Account picker (step 1) ─────────────────────────────────────────
    The first screen reuses the app's numbered Quickpicker (.analyse__options,
    rendered by renderPicker). This wrapper just centres it under the workflow
@@ -186,20 +173,15 @@
 /* Auto-fill at a ~300px track → 3 compact columns at the 980px container,
    gracefully reflowing to 2 / 1 as the panel narrows (e.g. when the preview
    panel opens and the content column shrinks). */
-/* "Load more" pager — centred below the grid; the button stays auto-width. */
-.top-posts-load-more {
-  display: flex;
-  justify-content: center;
-  margin-top: var(--ref-spacing-md);
-}
-
 .top-posts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--ref-spacing-sm);
-  /* Cards in a row share one height (stretch). Each card's body flex-grows to
-     absorb the extra: media cards fill with the image, text-only cards fill with
-     a centered pull-quote — so a short winner never leaves a dead gap. */
+  /* Every card is the SAME height across the whole board — not just per row.
+     A fixed row track (not `auto`) gives one uniform height to every card; the
+     body flex-grows to fill it (image covers, pull-quote sizes + clamps to fit),
+     and the card clips any overflow. */
+  grid-auto-rows: 400px;
   align-items: stretch;
 }
 
@@ -303,20 +285,29 @@
    surface carrying a file-text glyph + the excerpt, filling the space media
    would. The tile owns the layout; the copy is just larger, darker type. */
 .top-post-card__note {
+  position: relative;
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
   padding: var(--ref-spacing-md);
-  border-radius: var(--ref-border-radius-sm);
-  /* Soft diagonal wash fading to white — depth without competing with the flat
-     grey header / footer bands. */
-  background: linear-gradient(
-    155deg,
-    var(--ref-color-grey-10) 0%,
-    var(--ref-color-grey-05) 55%,
-    var(--ref-color-white) 100%
-  );
+  overflow: hidden;
+}
+
+/* Truncation cue — a soft fade to the card's background at the very bottom edge.
+   It sits mostly below the clamped text (the line-clamp "…" stays readable above
+   it) and only reads on cut-off posts: a long pull-quote fills the space so the
+   fade hugs its last line, while a short post leaves empty space below, where the
+   fade dissolves invisibly into the matching white background. */
+.top-post-card__note::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2rem;
+  background: linear-gradient(to top, var(--ref-color-white), transparent);
+  pointer-events: none;
 }
 
 .top-post-card__note-glyph {
@@ -325,13 +316,45 @@
   font-size: 22px;
 }
 
+/* A winner card is a preview, not the full post. The pull-quote's type scales to
+   the post length (short → big, long → small; tier set in JS by soloSizeTier),
+   and every tier line-clamps so an extreme body (a network's max-length post,
+   e.g. Facebook's 63k chars) truncates instead of blowing the card — and its grid
+   row — to thousands of pixels. Line counts fall as the font shrinks so each
+   tier's clamped block stays a similar, compact height. */
 .top-post-card__text--solo {
-  display: block;
-  -webkit-line-clamp: initial;
-  font-size: var(--sys-text-style-h2-size);
-  line-height: var(--sys-text-style-h2-line-height);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   font-weight: var(--sys-text-style-body-weight);
   color: var(--ref-color-grey-150);
+}
+
+/* Clamp counts are tuned to the fixed card's ~140px text area so the CLAMP is
+   always the limiter (it appends "…"), never the note's overflow (which would
+   hard-cut with no ellipsis). Keep clamp × line-height ≤ ~140px per tier. */
+.top-post-card__text--xl {
+  font-size: var(--sys-text-style-h1-size);
+  line-height: var(--sys-text-style-h1-line-height);
+  -webkit-line-clamp: 4;
+}
+
+.top-post-card__text--lg {
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  -webkit-line-clamp: 5;
+}
+
+.top-post-card__text--md {
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  -webkit-line-clamp: 5;
+}
+
+.top-post-card__text--sm {
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  -webkit-line-clamp: 7;
 }
 
 /* Media — rounded tile below the copy (Figma media is a rounded 4px tile).
@@ -354,64 +377,19 @@
   object-fit: cover;
 }
 
-/* Video — a dark scrim over the poster (Figma: grey-100 @ 50%) so the white play
-   affordance and duration pill read on any frame. */
-.top-post-card__media-scrim {
+/* Multi-image (carousel) badge — top-right, stacked-images glyph + count on a
+   dark scrim so it reads on any photo. Mirrors the network carousel indicator. */
+.top-post-card__media-count {
   position: absolute;
-  inset: 0;
-  background: rgba(52, 69, 99, 0.5);
-}
-
-/* Centered play affordance — sits above the scrim. */
-.top-post-card__media-play {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  margin: auto;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.95);
-  color: var(--ref-color-grey-150);
-  font-size: 20px;
-}
-
-/* The DS play glyph (ap-icon-play_fill) is drawn off-centre inside its em box,
-   so it never sits true-centre in the circle no matter how the box is aligned.
-   Hide it and draw the triangle geometrically — perfectly centred by construction
-   (the `left` nudge offsets the triangle's own left-leaning centroid). Sizes are
-   em-based so it scales with the button's font-size (large 20px / compact 13px). */
-.top-post-card__media-play > i {
-  display: none;
-}
-
-.top-post-card__media-play::before {
-  content: "";
-  position: relative;
-  left: 0.08em;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 0.36em 0 0.36em 0.62em;
-  border-color: transparent transparent transparent var(--ref-color-grey-150);
-}
-
-/* Duration pill — bottom-left, camera icon + time, on the grey-100 overlay
-   (@ 70%), matching the Figma `Variant=Video` chip. */
-.top-post-card__media-dur {
-  position: absolute;
-  left: var(--ref-spacing-xxxs);
-  bottom: var(--ref-spacing-xxxs);
+  top: var(--ref-spacing-xxxs);
+  right: var(--ref-spacing-xxxs);
   z-index: 1;
   display: inline-flex;
   align-items: center;
-  gap: var(--ref-spacing-xxxs);
+  gap: 2px;
   padding: 2px var(--ref-spacing-xxxs);
   border-radius: var(--ref-border-radius-sm);
-  background: rgba(52, 69, 99, 0.7);
+  background: rgba(52, 69, 99, 0.72);
   color: var(--ref-color-white);
   font-size: var(--sys-text-style-caption-size);
   font-weight: var(--sys-text-style-caption-bold-weight);
@@ -419,8 +397,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-.top-post-card__media-dur > i {
-  font-size: 16px;
+.top-post-card__media-count > i {
+  font-size: 14px;
 }
 
 /* Avatar in the preview header — never shrinks. */
@@ -516,65 +494,6 @@
   flex: 0 0 auto;
 }
 
-/* ── Compact layout (toolbar view toggle → "compact") ──────────────
-   Reworks the preview body into a dense row — a small square thumbnail beside
-   the copy instead of a full-width media. The header and metrics/actions bands
-   are unchanged, and cards still share one height (grid stretch + body flex). */
-.top-posts-grid--compact .top-post-card__body {
-  flex-direction: row;
-  align-items: stretch;
-  gap: var(--ref-spacing-xs);
-}
-
-/* Thumbnail — small, fixed-width, left of the copy; fills the row height so
-   equal-height cards never leave a gap. */
-.top-posts-grid--compact .top-post-card__media {
-  order: -1;
-  flex: 0 0 auto;
-  width: 72px;
-  min-height: 72px;
-  aspect-ratio: auto;
-  align-self: stretch;
-}
-
-/* Shrink the video affordance to the thumbnail; the duration pill is too small
-   to read here, so drop it. */
-.top-posts-grid--compact .top-post-card__media-play {
-  width: 28px;
-  height: 28px;
-  font-size: 13px;
-}
-
-.top-posts-grid--compact .top-post-card__media-dur {
-  display: none;
-}
-
-/* Copy sits beside the thumbnail, centred against it, clamped to 3 lines. */
-.top-posts-grid--compact .top-post-card__text {
-  align-self: center;
-  -webkit-line-clamp: 3;
-}
-
-/* Text-only compact card: drop the note treatment entirely (no surface, no
-   glyph) — just the copy at body size, centred in the row like the other
-   compact cards. */
-.top-posts-grid--compact .top-post-card__note {
-  justify-content: center;
-  padding: 0;
-  background: none;
-  border-radius: 0;
-}
-
-.top-posts-grid--compact .top-post-card__note-glyph {
-  display: none;
-}
-
-.top-posts-grid--compact .top-post-card__text--solo {
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--ref-color-grey-150);
-}
-
 /* ── Conversation echo (picked-post preview in the thread) ───────── */
 /* A compact, chat-sized take on the board card: media thumbnail + body, one row
    tall, right-aligned as a user turn. */
@@ -593,7 +512,7 @@
 }
 
 /* Media thumbnail — fixed width, stretches to the card height. Mirrors the board
-   tile (image / video poster + play + duration / text glyph) at chat scale. */
+   tile (image poster / text glyph) at chat scale. */
 .top-post-echo__thumb {
   position: relative;
   flex: 0 0 auto;
@@ -619,37 +538,6 @@
   color: var(--ref-color-grey-60);
   font-size: 22px;
   background: linear-gradient(155deg, var(--ref-color-grey-10), var(--ref-color-grey-05));
-}
-
-.top-post-echo__thumb-play {
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.95);
-  color: var(--ref-color-grey-150);
-  font-size: 13px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
-}
-
-.top-post-echo__thumb-dur {
-  position: absolute;
-  right: 4px;
-  bottom: 4px;
-  padding: 1px 5px;
-  border-radius: var(--ref-border-radius-sm);
-  background: rgba(17, 24, 39, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  color: var(--ref-color-white);
-  font-size: 10px;
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  font-variant-numeric: tabular-nums;
 }
 
 .top-post-echo__body {

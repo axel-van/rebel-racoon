@@ -43,16 +43,16 @@ export const SORTS = [
   { key: "performance", label: "Performance", compare: (a, b) => b.vsAvg - a.vsAvg },
   { key: "engagement", label: "Engagement", compare: (a, b) => b.engagementRate - a.engagementRate },
   { key: "reach", label: "Reach", compare: (a, b) => b.impressions - a.impressions },
-  { key: "recent", label: "Recent", compare: (a, b) => a.daysAgo - b.daysAgo },
 ];
 
 // Period filter — narrow the board to a recency window (spec: "filter by
-// metrics"). `maxDays` is the inclusive age ceiling in days; "all" keeps
-// everything. Matched against each post's `daysAgo`.
+// metrics"). `maxDays` is the inclusive age ceiling in days. Matched against each
+// post's `daysAgo`. Default window is the first entry (last month).
 export const PERIODS = [
-  { key: "all", label: "All time", maxDays: Infinity },
-  { key: "90d", label: "Last 90 days", maxDays: 90 },
-  { key: "30d", label: "Last 30 days", maxDays: 30 },
+  { key: "1m", label: "Last month", maxDays: 30 },
+  { key: "3m", label: "Last 3 months", maxDays: 90 },
+  { key: "6m", label: "Last 6 months", maxDays: 180 },
+  { key: "1y", label: "Last year", maxDays: 365 },
 ];
 
 // One compact DS .ap-select (a native <details> dropdown) for a filter axis —
@@ -119,35 +119,37 @@ function postPermalink(network, id) {
   return fn ? fn(id) : "#";
 }
 
-// Seconds → "M:SS" for the video duration pill.
-function fmtDuration(s) {
-  const sec = Math.max(0, Math.round(s || 0));
-  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
-}
-
 // The media block inside the post-preview body, mirroring the Figma
 // `.post Contructor` component: a rounded 16:9 media below the copy.
-//   video → poster image + play overlay + duration pill
 //   image → poster image
 //   text  → no media (the excerpt above carries the card on its own)
 function renderMediaBlock(post) {
   const type = post.mediaType || "text";
-  if (type !== "image" && type !== "video") return "";
+  if (type !== "image") return "";
   const img = `<img class="top-post-card__media-img" src="${post.image}" alt="" loading="lazy" />`;
-  if (type === "video") {
-    return `
-      <div class="top-post-card__media top-post-card__media--video">
-        ${img}
-        <span class="top-post-card__media-scrim" aria-hidden="true"></span>
-        <span class="top-post-card__media-play" aria-hidden="true"><i class="ap-icon-play_fill"></i></span>
-        ${
-          post.mediaDuration
-            ? `<span class="top-post-card__media-dur"><i class="ap-icon-video" aria-hidden="true"></i>${fmtDuration(post.mediaDuration)}</span>`
-            : ""
-        }
-      </div>`;
-  }
-  return `<div class="top-post-card__media top-post-card__media--image">${img}</div>`;
+  // Multi-image (carousel) posts flag the extra shots with a stacked-images
+  // badge + count in the corner, so the board distinguishes a single photo from
+  // a gallery at a glance.
+  const count = post.imageCount || 1;
+  const badge =
+    count > 1
+      ? `<span class="top-post-card__media-count" title="${count} images"><i class="ap-icon-multiple-images" aria-hidden="true"></i>${count}</span>`
+      : "";
+  return `<div class="top-post-card__media top-post-card__media--image">${img}${badge}</div>`;
+}
+
+// A text-only winner has no media, so the pull-quote IS the card — and posts vary
+// wildly in length (a one-line hook vs a network's max-length body). Scale the
+// type to the length so short posts read big and punchy while long ones step down
+// to fit more, and every tier line-clamps so the card height stays bounded (the
+// copy truncates rather than growing the card / its grid row). Thresholds are on
+// the rendered character count.
+function soloSizeTier(text) {
+  const n = (text || "").length;
+  if (n <= 70) return "top-post-card__text--xl";
+  if (n <= 150) return "top-post-card__text--lg";
+  if (n <= 300) return "top-post-card__text--md";
+  return "top-post-card__text--sm";
 }
 
 function renderTopPostCard(post) {
@@ -188,7 +190,7 @@ function renderTopPostCard(post) {
         ${raw(mediaHtml)}`
     : html` <div class="top-post-card__note">
         <i class="ap-icon-file--text top-post-card__note-glyph" aria-hidden="true"></i>
-        <p class="top-post-card__text top-post-card__text--solo">${post.excerpt}</p>
+        <p class="top-post-card__text top-post-card__text--solo ${soloSizeTier(post.excerpt)}">${post.excerpt}</p>
       </div>`;
   return html`
     <article class="ap-card top-post-card">
@@ -241,22 +243,16 @@ function renderTopPostCard(post) {
 export function renderTopPostEcho(post) {
   if (!post) return "";
   // A compact, chat-sized take on the board card: a small media thumbnail
-  // (image / video poster + play + duration / text glyph) beside the network,
-  // excerpt and a trimmed stat line. Same visual language, one row tall.
+  // (image poster / text glyph) beside the network, excerpt and a trimmed stat
+  // line. Same visual language, one row tall.
   const type = post.mediaType || "text";
   let thumb;
   if (type === "text") {
     thumb = `<span class="top-post-echo__thumb top-post-echo__thumb--text"><i class="ap-icon-file--text" aria-hidden="true"></i></span>`;
   } else {
-    const overlay =
-      type === "video"
-        ? `<span class="top-post-echo__thumb-play" aria-hidden="true"><i class="ap-icon-play_fill"></i></span>${
-            post.mediaDuration ? `<span class="top-post-echo__thumb-dur">${fmtDuration(post.mediaDuration)}</span>` : ""
-          }`
-        : "";
     thumb = `<span class="top-post-echo__thumb">${
       post.image ? `<img src="${post.image}" alt="" loading="lazy" />` : ""
-    }${overlay}</span>`;
+    }</span>`;
   }
   return html`
     <div class="top-post-echo">
@@ -348,35 +344,8 @@ export function renderTopPostsWidget({ network, posts = [], selected = [], answe
 
 // The board: Period/Sort toolbar + the sorted card grid, scoped to the profile
 // chosen on step 1. `profile` is a network slug; `sort` is one of SORTS[].key.
-// View-density toggle (Large cards ↔ Compact rows). A two-option segmented
-// switch driven by aria-pressed; picking one re-renders the board (setLayout).
-function renderLayoutToggle(layout) {
-  // DS icon buttons; the active view is the .blue variant (blue icon + a light
-  // blue fill from the component CSS) so the current density reads as selected.
-  const opt = (key, icon, label) =>
-    `<button
-        type="button"
-        class="ap-icon-button stroked${layout === key ? " blue" : ""}"
-        data-top-post-layout="${key}"
-        aria-pressed="${layout === key ? "true" : "false"}"
-        aria-label="${label}"
-        title="${label}"
-      ><i class="${icon}" aria-hidden="true"></i></button>`;
-  return `<div class="top-posts-view" role="group" aria-label="Card size">
-      ${opt("large", "ap-icon-view-cards", "Large cards")}
-      ${opt("compact", "ap-icon-view-list", "Compact cards")}
-    </div>`;
-}
-
-export function renderTopPostsBoard({
-  posts,
-  sort = "performance",
-  profile = null,
-  period = "all",
-  layout = "large",
-  visibleCount = 12,
-  loadingMore = false,
-}) {
+// The board shows every matching winner (no pagination).
+export function renderTopPostsBoard({ posts, sort = "performance", profile = null, period = "all" }) {
   const all = posts || [];
   // `profile` is a specific network chosen on the step-1 profile chooser;
   // "all" (or null) means no network filter.
@@ -391,28 +360,9 @@ export function renderTopPostsBoard({
   const sorted = [...visible].sort(active.compare);
   const count = sorted.length;
 
-  // Pagination — the board reveals `visibleCount` at a time; "Load more" (below)
-  // grows the window. `remaining` drives the button's label + visibility.
-  const shown = sorted.slice(0, Math.max(0, visibleCount));
-  const remaining = count - shown.length;
-
-  const cards = shown.length
-    ? shown.map((p) => renderTopPostCard(p)).join("")
+  const cards = sorted.length
+    ? sorted.map((p) => renderTopPostCard(p)).join("")
     : `<p class="top-posts-empty">No winning posts in this window — try a wider period.</p>`;
-
-  const loadMore =
-    remaining > 0
-      ? `<div class="top-posts-load-more">
-          <button
-            type="button"
-            class="ap-button stroked grey${loadingMore ? " loading" : ""}"
-            data-top-post-load-more
-            ${loadingMore ? "disabled" : ""}
-          >
-            Load ${remaining > 12 ? "12" : remaining} more${loadingMore ? '<span class="ap-loading-bar"></span>' : ""}
-          </button>
-        </div>`
-      : "";
 
   // One post is repurposed at a time (via each card's "Repurpose" button), so
   // the toolbar just holds the count + the Period/Sort filters. No multi-select
@@ -430,17 +380,14 @@ export function renderTopPostsBoard({
           }),
         )}
         ${raw(renderFilterSelect({ dataAttr: "data-top-post-sort", label: "Sort", active, options: SORTS }))}
-        ${raw(renderLayoutToggle(layout))}
       </div>
     </div>
   `;
 
-  const gridClass = layout === "compact" ? "top-posts-grid top-posts-grid--compact" : "top-posts-grid";
   return html`
     <div class="top-posts-board">
       ${raw(toolbar)}
-      <div class="${gridClass}" role="group" aria-label="Your top-performing posts">${raw(cards)}</div>
-      ${raw(loadMore)}
+      <div class="top-posts-grid" role="group" aria-label="Your top-performing posts">${raw(cards)}</div>
     </div>
   `;
 }
