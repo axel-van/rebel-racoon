@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Archie — Conversation thread component handoff</title>
+    <title>Archie — UI component handoff</title>
 
     <!-- Agorapulse Design System (variables → font → icons → ui-css) -->
     <link rel="stylesheet" href="../ds/desktop_variables.css?v=3" />
@@ -27,6 +27,13 @@
     <link rel="stylesheet" href="../styles/screens/posts.css?v=3" />
     <!-- Quick-picker (inline question) styles for the live picker previews. -->
     <link rel="stylesheet" href="../styles/screens/analyse.css?v=3" />
+    <!-- Content-card styles so the live source / idea (full) / post / clip /
+         top-post / feedback previews render with their real chrome. -->
+    <link rel="stylesheet" href="../styles/screens/dashboard.css?v=3" />
+    <link rel="stylesheet" href="../styles/screens/sources.css?v=3" />
+    <link rel="stylesheet" href="../styles/components/top-post-card.css?v=3" />
+    <link rel="stylesheet" href="../styles/components/feedback-control.css?v=3" />
+    <link rel="stylesheet" href="../styles/components/conversation-status-card.css?v=3" />
 
     <style>
       /* ── Handoff page chrome ───────────────────────────────────────── */
@@ -110,25 +117,29 @@
         margin-bottom: 48px;
       }
 
-      .hd-toc h2 {
-        margin: 0 0 12px;
+      .hd-toc {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px 32px;
+      }
+
+      .hd-toc__group h2 {
+        margin: 0 0 10px;
         font-size: 12px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: var(--hd-muted);
+        color: var(--hd-accent);
       }
 
-      .hd-toc ol {
+      .hd-toc ul {
         margin: 0;
-        padding-left: 20px;
-        columns: 2;
-        column-gap: 32px;
+        padding: 0;
+        list-style: none;
       }
 
       .hd-toc li {
         margin: 4px 0;
-        break-inside: avoid;
       }
 
       .hd-toc a {
@@ -219,6 +230,9 @@
         flex-direction: column;
         gap: 24px;
         min-height: 120px;
+        /* Wide components (post card, schedule slots) scroll inside their own
+           preview rather than clipping at the card edge. */
+        overflow-x: auto;
       }
 
       .hd-comp__code {
@@ -376,31 +390,56 @@
       .hd-comp__preview .chat-turn--user {
         align-self: flex-end;
       }
+
+      /* Wrap row for laying out atom variants (buttons, chips, pills) side by
+         side inside a preview. */
+      .hd-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+      }
+
+      /* Big in-page separator between the component groups (mirrors the TOC). */
+      .hd-group-title {
+        margin: 8px 0 24px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--hd-border);
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--hd-accent);
+      }
+
+      /* On dark-surfaced previews (video-clips ramp) invert the card bg. */
+      .hd-comp__preview--dark {
+        background: #14181f;
+      }
     </style>
   </head>
 
   <body>
     <main class="hd-shell">
       <header class="hd-header">
-        <h1>Conversation thread — component handoff</h1>
+        <h1>Archie — UI component handoff</h1>
         <p>
-          A visual gallery of the components that render inside the
-          <code>.session__assistant-thread</code> on <code>/session/:id</code>. Every preview is rendered
-          <strong>live</strong> by importing the app&rsquo;s own renderers — the shared pure functions in
-          <code>src/screens/session/thread-turns.js</code> and <code>src/screens/_analyse-common.js</code> (the same
-          ones <code>session.js</code> uses). Markup and styles both cascade from <code>src/</code> +
-          <code>styles/</code>, so this page can never drift from the app. Inspect a preview in dev tools for the full
-          markup.
+          A visual gallery of the <strong>app-specific</strong> UI components of the Archie prototype — loaders,
+          feedback, the content cards (source, idea, post, clip, top-post), the composer status bars, and the full
+          conversation-thread system. Each preview is rendered <strong>live</strong> by importing the app&rsquo;s exact
+          renderer and feeding it the real mock shapes from <code>src/mocks.js</code>, so it can never drift. Inspect
+          any preview in dev tools for the full markup.
         </p>
+        <div class="hd-note" style="margin-top: 16px">
+          <strong>Design-system atoms are intentionally not documented here.</strong> Generic DS building blocks
+          (buttons, inputs, tags, chips, infobox…) live in the Agorapulse Design System itself — use the
+          <code>ds-css</code> MCP (<code>list_components</code> / <code>get_component</code>) as their source of truth.
+          This page covers only what Archie composes on top.
+        </div>
         <div class="hd-meta">
           <span>
-            <strong>Source:</strong>
-            <code>src/screens/session.js</code> (renderTurn dispatch) + <code>src/assistant.js</code> (turn types)
-          </span>
-          <span>
-            <strong>Styles:</strong>
-            <code>styles/chat.css</code> +
-            <code>styles/screens/session.css</code>
+            <strong>App components:</strong>
+            <code>src/components/*.js</code> + <code>src/screens/session/thread-turns.js</code>
           </span>
           <span>
             <strong>DS:</strong>
@@ -408,27 +447,368 @@
             <code>@agorapulse/ui-symbol</code>
           </span>
         </div>
+        <div class="hd-meta">
+          <span>
+            📖 Full functional docs:
+            <code>docs/reference/FEATURES.md</code> · DS usage: <code>docs/reference/UI-PATTERNS.md</code>
+          </span>
+        </div>
       </header>
 
       <nav class="hd-toc" aria-label="Table of contents">
-        <h2>Sections</h2>
-        <ol>
-          <li><a href="#turns">1. Turn wrappers</a></li>
-          <li><a href="#bubbles">2. Bubbles (AI / User / Source intake)</a></li>
-          <li><a href="#bubble-content">3. Bubble content blocks</a></li>
-          <li><a href="#choices">4. Choice chips</a></li>
-          <li><a href="#extraction">5. Extraction turn (Idea cards)</a></li>
-          <li><a href="#drafts">6. Drafts result (not inline)</a></li>
-          <li><a href="#clip-extraction">7. Clip / Idea extraction card</a></li>
-          <li><a href="#notices">8. Notices (mermaid, grey, extracting)</a></li>
-          <li><a href="#quick-picker">9. Quick picker (inline question)</a></li>
-          <li><a href="#switch-skeleton">10. Chat-switch skeleton</a></li>
-        </ol>
+        <div class="hd-toc__group">
+          <h2>A · Loaders &amp; feedback</h2>
+          <ul>
+            <li><a href="#loaders">11. Loaders (Archie mark)</a></li>
+            <li><a href="#feedback">12. Feedback control</a></li>
+            <li><a href="#toasts">13. Toasts / snackbars</a></li>
+          </ul>
+        </div>
+        <div class="hd-toc__group">
+          <h2>B · Content cards</h2>
+          <ul>
+            <li><a href="#source-card">14. Source card</a></li>
+            <li><a href="#idea-card">15. Idea card (full)</a></li>
+            <li><a href="#post-card">16. Post card</a></li>
+            <li><a href="#clip-card">17. Clip card</a></li>
+            <li><a href="#top-posts">18. Top-post select / echo</a></li>
+            <li><a href="#empty">19. Empty states</a></li>
+          </ul>
+        </div>
+        <div class="hd-toc__group">
+          <h2>C · Status bars</h2>
+          <ul>
+            <li><a href="#status-card">20. Status card / composer bars</a></li>
+          </ul>
+        </div>
+        <div class="hd-toc__group">
+          <h2>D · Conversation thread</h2>
+          <ul>
+            <li><a href="#turns">1. Turn wrappers</a></li>
+            <li><a href="#bubbles">2. Bubbles (AI / User / Source intake)</a></li>
+            <li><a href="#bubble-content">3. Bubble content blocks</a></li>
+            <li><a href="#choices">4. Choice chips</a></li>
+            <li><a href="#extraction">5. Extraction turn (Idea cards)</a></li>
+            <li><a href="#drafts">6. Drafts result (not inline)</a></li>
+            <li><a href="#clip-extraction">7. Result card — all states</a></li>
+            <li><a href="#notices">8. Notices (mermaid, extracting)</a></li>
+            <li><a href="#quick-picker">9. Quick picker (inline question)</a></li>
+            <li><a href="#switch-skeleton">10. Chat-switch skeleton</a></li>
+          </ul>
+        </div>
       </nav>
 
       <!-- ════════════════════════════════════════════════════════════════
-            0. DECISION MATRIX
+            GROUP A — LOADERS & FEEDBACK
             ════════════════════════════════════════════════════════════ -->
+      <h2 class="hd-group-title">A · Loaders &amp; feedback</h2>
+
+      <!-- 16. LOADERS -->
+      <section class="hd-section" id="loaders">
+        <h2>11. Loaders (Archie mark)</h2>
+        <p class="hd-lead">
+          Every spinner in the app renders the <strong>same</strong> animated Archie mark. Any element with
+          <code>.ap-loader</code> (or <code>.archie-loader</code>, or a per-component <code>*-spinner</code> class) gets
+          the SMIL SVG injected by <code>initArchieLoader()</code> in <code>src/archie-loader.js</code>. Colour = brand
+          orange by default (<code>--archie-loader-color</code>), <code>currentColor</code> on filled CTAs. Sizes:
+          <code>.size-16 / 24 / 30 / 48</code>.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.ap-loader</code> — sizes (live)</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="hd-row" style="gap: 24px" data-live="loaders"></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- 17. FEEDBACK CONTROL -->
+      <section class="hd-section" id="feedback">
+        <h2>12. Feedback control</h2>
+        <p class="hd-lead">
+          The &ldquo;How&rsquo;s this?&rdquo; thumbs strip rendered under cards (ideas, clips, drafts, generated
+          images). Live from <code>renderFeedbackControl()</code> in <code>src/components/feedback-control.js</code>.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.feedback-control</code></p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview" data-live="feedback"></div>
+          </div>
+        </article>
+      </section>
+
+      <!-- 18. TOASTS -->
+      <section class="hd-section" id="toasts">
+        <h2>13. Toasts / snackbars</h2>
+        <p class="hd-lead">
+          <code>showToast()</code> (<code>src/components/toast.js</code>) wraps the DS <code>.ap-snackbar</code>. Queue
+          caps at 3, dwell 3200ms (paused on hover), optional Undo action (<code>.ap-link</code>) + close. Variants:
+          success (default) / error.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.ap-snackbar</code></p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="ap-snackbar success" style="position: static">
+                <div class="ap-snackbar-left"><i></i><span>5 posts scheduled</span></div>
+                <div class="ap-snackbar-right">
+                  <button type="button" class="ap-link">Undo</button>
+                  <button type="button" aria-label="Close"><i class="ap-icon-close" aria-hidden="true"></i></button>
+                </div>
+              </div>
+              <div class="ap-snackbar error" style="position: static">
+                <div class="ap-snackbar-left"><i></i><span>Couldn&rsquo;t import — try again.</span></div>
+                <div class="ap-snackbar-right">
+                  <button type="button" aria-label="Close"><i class="ap-icon-close" aria-hidden="true"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            GROUP B — CONTENT CARDS
+            ════════════════════════════════════════════════════════════ -->
+      <h2 class="hd-group-title">B · Content cards</h2>
+
+      <!-- 19. SOURCE CARD -->
+      <section class="hd-section" id="source-card">
+        <h2>14. Source card</h2>
+        <p class="hd-lead">
+          <code>renderSourceCard()</code> (<code>src/components/source-card.js</code>). Tinted kind-box, filename, meta
+          sub-line, Ask / Reference / &hellip; cluster. Processing state swaps the box for the Archie spinner and shows
+          a live stage pill + progress bar. Live below.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.source-card</code> — processed vs processing</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview" data-live="source-card"></div>
+          </div>
+        </article>
+      </section>
+
+      <!-- 20. IDEA CARD (FULL) -->
+      <section class="hd-section" id="idea-card">
+        <h2>15. Idea card (full)</h2>
+        <p class="hd-lead">
+          <code>renderIdeaCard()</code> (<code>src/components/idea-card.js</code>) — the workspace card with a potential
+          pill (High / Medium / Low from confidence), kind badge, hook, hashtags, a Sources toggle, and Draft /
+          Reference / &hellip; actions. (The compact variant used in the panel &amp; extraction turn is in §5.)
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.idea-card</code></p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview" data-live="idea-card"></div>
+          </div>
+        </article>
+      </section>
+
+      <!-- 21. POST CARD -->
+      <section class="hd-section" id="post-card">
+        <h2>16. Post card</h2>
+        <p class="hd-lead">
+          <code>renderPostCard()</code> (<code>src/components/post-card.js</code>) — a LinkedIn-style draft preview:
+          author block, body + hashtags + CTA, media block, engagement stats, a per-network character counter, and the
+          action stack (Reference / Regenerate / Save / Schedule / Delete). <code>needs_fixes</code> drafts get a red
+          error infobox.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.posts__row</code> (post) — ready</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview" data-live="post-card"></div>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.posts__row</code> (post) — needs_fixes</p>
+              <p class="hd-comp__desc">Validation errors surfaced as a red infobox above the card.</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview" data-live="post-card-fixes"></div>
+          </div>
+        </article>
+      </section>
+
+      <!-- 22. CLIP CARD -->
+      <section class="hd-section" id="clip-card">
+        <h2>17. Clip card</h2>
+        <p class="hd-lead">
+          <code>renderClipCard()</code> (<code>src/components/clip-card.js</code>) — video-clip card with a hue-gradient
+          thumbnail, time range + duration, a &ldquo;Why this clip&rdquo; disclosure, and feedback / Reference / Draft.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.clip-card</code></p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview" data-live="clip-card"></div>
+          </div>
+        </article>
+      </section>
+
+      <!-- 23. TOP POSTS -->
+      <section class="hd-section" id="top-posts">
+        <h2>18. Top-post select row / echo</h2>
+        <p class="hd-lead">
+          The repurposing surfaces (<code>src/components/top-post-card.js</code>).
+          <code>renderTopPostSelectRow()</code> = a DS-radio-fronted winner row (the in-chat multi-select widget).
+          <code>renderTopPostEcho()</code> = the compact selection-echo card shown once a winner is picked.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.top-posts-widget__row</code> (select) + <code>.top-post-echo</code></p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="hd-preview-row">
+                <span class="hd-preview-row__label">Select rows (single-select)</span>
+                <div data-live="top-post-rows"></div>
+              </div>
+              <div class="hd-preview-row">
+                <span class="hd-preview-row__label">Echo (picked)</span>
+                <div data-live="top-post-echo"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- 24. EMPTY STATES -->
+      <section class="hd-section" id="empty">
+        <h2>19. Empty states</h2>
+        <p class="hd-lead">
+          <code>renderEmptyState()</code> (<code>src/components/empty-state.js</code>) — the unified icon + title + body
+          + optional CTA primitive used across every list surface (Ideas, Drafts, Sources, panels).
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.session__empty</code></p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview" data-live="empty"></div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            GROUP C — STATUS BARS
+            ════════════════════════════════════════════════════════════ -->
+      <h2 class="hd-group-title">C · Status bars</h2>
+
+      <!-- 25. STATUS CARD -->
+      <section class="hd-section" id="status-card">
+        <h2>20. Status card / composer bars</h2>
+        <p class="hd-lead">
+          <code>.ap-status-card</code> is a <code>ds-patches.css</code> primitive (the DS ships the tokens + an Angular
+          component, but no CSS-UI class). It backs the composer&rsquo;s reconciled status bar: a grey in-progress state
+          (branded loader + label) and green &ldquo;ready&rdquo; states with a <code>.ap-link</code> action. Colour
+          variants: <code>.grey / .green / .blue / .orange / .tagOrange / .red</code>.
+        </p>
+
+        <div class="hd-note">
+          <strong>Full-width by design.</strong> The bar spans <code>width: 100%</code> and is glued to the top of the
+          composer (<code>.session__composer-status</code> rounds its top corners). The previews below are constrained
+          to a realistic composer width so they read the way they do in the app — not stretched across the page.
+        </div>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.ap-status-card.grey</code> — in progress</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div style="width: 100%; max-width: 560px">
+                <div class="ap-status-card grey session__composer-status" role="status" aria-live="polite">
+                  <div class="upper">
+                    <span class="ap-loader grey size-16" aria-hidden="true"></span>
+                    <div class="flow">Generating drafts…</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.ap-status-card.green</code> — ready</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div style="width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 12px">
+                <div class="ap-status-card green session__composer-status" role="status">
+                  <div class="upper">
+                    <i class="ap-icon-file" aria-hidden="true"></i>
+                    <div class="flow"><span>5 drafts ready to review</span></div>
+                    <button type="button" class="ap-link small standalone">Review</button>
+                  </div>
+                </div>
+                <div class="ap-status-card green session__composer-status" role="status">
+                  <div class="upper">
+                    <i class="ap-icon-archie-official" aria-hidden="true"></i>
+                    <div class="flow"><span>3 ideas ready</span></div>
+                    <button type="button" class="ap-link small standalone">View ideas</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════
+            GROUP D — CONVERSATION THREAD
+            ════════════════════════════════════════════════════════════ -->
+      <h2 class="hd-group-title">D · Conversation thread</h2>
+
       <!-- ════════════════════════════════════════════════════════════════
             1. TURN WRAPPERS
             ════════════════════════════════════════════════════════════ -->
@@ -983,6 +1363,17 @@
     <script type="module">
       import { renderCompactIdeaCard } from "../src/components/idea-card-compact.js";
       import { renderPicker, bulletsBlock, fieldsBlock } from "../src/screens/_analyse-common.js";
+      // Group A–D component renderers — the exact functions the app renders with.
+      import { renderSourceCard } from "../src/components/source-card.js";
+      import { renderIdeaCard } from "../src/components/idea-card.js";
+      import { renderPostCard } from "../src/components/post-card.js";
+      import { renderClipCard } from "../src/components/clip-card.js";
+      import { renderTopPostSelectRow, renderTopPostEcho } from "../src/components/top-post-card.js";
+      import { renderFeedbackControl } from "../src/components/feedback-control.js";
+      import { renderEmptyState } from "../src/components/empty-state.js";
+      import { initArchieLoader } from "../src/archie-loader.js";
+      // Real mock shapes — guarantees the card previews match the stores exactly.
+      import { sourcesBySession, ideasBySession, postsBySession, topPosts } from "../src/mocks.js";
       // Shared, dependency-free thread-turn renderers — the SAME functions
       // session.js renders the live thread with. Importing them here is what
       // keeps §1–§8 + §10 from ever drifting.
@@ -1086,7 +1477,83 @@
       const clipTurn = (cardHtml) =>
         `<div class="chat-turn chat-turn--ai chat-turn--clip-extraction">${cardHtml}</div>`;
 
+      // ── Group A–D mock data, pulled from the real seed session ──────────
+      const ACME_SOURCES = sourcesBySession["s-acme-launch"] || [];
+      const ACME_IDEAS = ideasBySession["s-acme-launch"] || [];
+      const ACME_POSTS = postsBySession["s-acme-launch"] || [];
+      // The founder-keynote.mp4 source carries an inline clips[] array.
+      const DEMO_CLIP = (ACME_SOURCES.find((s) => Array.isArray(s.clips) && s.clips.length)?.clips || [])[0];
+      // A crafted in-flight source so the processing state (spinner + stage
+      // pill + progress bar) is visible next to a finished one.
+      const PROCESSING_SOURCE = {
+        id: "src-proc-demo",
+        filename: "webinar-recording.mp4",
+        kind: "Video",
+        status: "Processing",
+        addedAt: "just now",
+        progress: 0.45,
+        stage: "Identifying ideas",
+        etaSec: 8,
+      };
+
       const FILLERS = {
+        // §11 — Loaders (SVG injected globally by initArchieLoader below)
+        loaders: (slot) => {
+          slot.innerHTML = ["16", "24", "30", "48"]
+            .map(
+              (s) =>
+                `<span style="display:inline-flex;flex-direction:column;align-items:center;gap:6px;color:var(--hd-muted);font-size:11px"><span class="ap-loader size-${s}" aria-hidden="true"></span>size-${s}</span>`,
+            )
+            .join("");
+        },
+        // §12 — Feedback control
+        feedback: (slot) => {
+          slot.innerHTML = renderFeedbackControl("hd-demo-feedback", { kind: "idea" });
+        },
+        // §14 — Source card (processed + processing)
+        "source-card": (slot) => {
+          slot.innerHTML =
+            (ACME_SOURCES[0] ? renderSourceCard(ACME_SOURCES[0], ACME_IDEAS) : "") +
+            renderSourceCard(PROCESSING_SOURCE, []);
+        },
+        // §15 — Idea card (full)
+        "idea-card": (slot) => {
+          if (ACME_IDEAS[0]) slot.innerHTML = renderIdeaCard(ACME_IDEAS[0], ACME_SOURCES);
+        },
+        // §16 — Post card (ready + needs_fixes)
+        "post-card": (slot) => {
+          const ready = ACME_POSTS.find((p) => p.status === "ready");
+          if (ready) slot.innerHTML = renderPostCard(ready);
+        },
+        "post-card-fixes": (slot) => {
+          const fixes = ACME_POSTS.find((p) => p.status === "needs_fixes");
+          if (fixes) slot.innerHTML = renderPostCard(fixes);
+        },
+        // §17 — Clip card
+        "clip-card": (slot) => {
+          if (DEMO_CLIP)
+            slot.innerHTML = renderClipCard(DEMO_CLIP, { sourceName: "founder-keynote.mp4", whyOpen: true });
+        },
+        // §18 — Top posts (select rows + echo)
+        "top-post-rows": (slot) => {
+          slot.innerHTML = topPosts
+            .slice(0, 3)
+            .map((p, i) => renderTopPostSelectRow(p, { selected: i === 0, group: "hd-demo" }))
+            .join("");
+        },
+        "top-post-echo": (slot) => {
+          if (topPosts[0]) slot.innerHTML = renderTopPostEcho(topPosts[0]);
+        },
+        // §19 — Empty state
+        empty: (slot) => {
+          slot.innerHTML = renderEmptyState({
+            icon: "ap-icon-file--text",
+            title: "No ideas yet",
+            body: "Add a source and I'll pull out the key messages, facts, quotes, and stories you can turn into posts.",
+            actionHtml: '<button type="button" class="ap-button primary blue"><span>Add a source</span></button>',
+          });
+        },
+
         // §1 — Turn wrappers
         "turn-ai": (slot) => {
           slot.innerHTML = renderMessageBubble({
@@ -1267,9 +1734,27 @@
         };
       }
 
+      // Defensive fill — a single renderer throwing must NOT abort the whole
+      // module (which would blank every remaining live preview and read as
+      // "no CSS"). Each slot is isolated; failures surface inline + in console.
       for (const slot of document.querySelectorAll("[data-live]")) {
         const fill = FILLERS[slot.dataset.live];
-        if (fill) fill(slot);
+        if (!fill) continue;
+        try {
+          fill(slot);
+        } catch (err) {
+          console.error(`[handoff] preview "${slot.dataset.live}" failed:`, err);
+          slot.innerHTML = `<div class="hd-note" style="margin:0">Preview <code>${slot.dataset.live}</code> failed to render — see console.</div>`;
+        }
+      }
+
+      // Inject the branded Archie mark into every .ap-loader / *-spinner on the
+      // page (the §11 loaders + the §20 status-card spinner + any card spinners).
+      // Same one-shot sweep + MutationObserver the app boots with.
+      try {
+        initArchieLoader();
+      } catch (err) {
+        console.error("[handoff] initArchieLoader failed:", err);
       }
     </script>
   </body>

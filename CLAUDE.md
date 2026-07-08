@@ -25,17 +25,18 @@ With Claude Code the dev server auto-launches via `.claude/launch.json` (server 
 
 ### Routes (declared in `src/app.js`)
 
-| Route                | Screen                 | Notes                                                                                              |
-| -------------------- | ---------------------- | -------------------------------------------------------------------------------------------------- |
-| `/`                  | `dashboard.js`         | Redirect-only: first-time → `/welcome-alt`, returning → most-recent session or a fresh one         |
-| `/session/:id`       | `session.js`           | The main chat surface (largest file); hosts the assistant thread, composer, and per-session flows  |
-| `/ideas`             | `ideas.js`             | Standalone Ideas library (grid + kind filter + search + sort)                                      |
-| `/contexts`          | `contexts.js`          | Standalone **Playbooks** library (cards + edit)                                                    |
-| `/playbook/:id`      | `playbook.js`          | Playbook detail page (topbar back → `/contexts`)                                                   |
-| `/connectors`        | `connectors.js`        | Connectors gallery (marketplace); detail opens in a modal                                          |
-| `/settings`          | `settings.js`          | Two-pane: Social accounts / Admin (prototype controls). Connectors live on `/connectors`, not here |
-| `/welcome-alt`       | `welcome-alt.js`       | First-time onboarding kickoff (thin redirect into a transient session)                             |
-| `/welcome-alt/recap` | `welcome-alt-recap.js` | Onboarding recap reveal of the built Playbook                                                      |
+| Route                | Screen                 | Notes                                                                                             |
+| -------------------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
+| `/`                  | `dashboard.js`         | Redirect-only: first-time → `/welcome-alt`, returning → most-recent session or a fresh one        |
+| `/session/:id`       | `session.js`           | The main chat surface (largest file); hosts the assistant thread, composer, and per-session flows |
+| `/ideas`             | `ideas.js`             | Standalone Ideas library (grid + kind filter + search + sort)                                     |
+| `/contexts`          | `contexts.js`          | Standalone **Playbooks** library (cards + edit)                                                   |
+| `/playbook/:id`      | `playbook.js`          | Playbook detail page (topbar back → `/contexts`)                                                  |
+| `/connectors`        | `connectors.js`        | Connectors gallery (marketplace); detail opens in a modal (gated by the `connectors` flag)        |
+| `/welcome-alt`       | `welcome-alt.js`       | First-time onboarding kickoff (thin redirect into a transient session)                            |
+| `/welcome-alt/recap` | `welcome-alt-recap.js` | Onboarding recap reveal of the built Playbook                                                     |
+
+There is **no `/settings` route** — it was removed. The prototype Admin controls (user mode + feature flags + docs link) now live in the sidebar footer cog popover (`admin-menu.js`, rendered by `sidebar.js`); the old Social-accounts page was dropped (`social-profiles.js` remains as a shared helper).
 
 `setAfterRender` (in `app.js`) re-renders the sidebar + conversation-status-card after every route change and toggles the `body.onboarding` full-bleed class for the welcome-alt flow.
 
@@ -84,20 +85,30 @@ src/
   connectors-view.js    — shared pure render helpers for the connectors gallery + detail
   connector-ask.js      — launches the in-chat "Ask a connector" flow (gallery + right panel)
 
+  # Studios (full-panel takeovers) + newer surfaces (not exhaustive — see docs/reference/FEATURES.md)
+  batch-studio.js       — batch-of-posts studio (upload/analyse → review)
+  clip-studio.js        — full-screen video clip extraction + editing studio
+  top-posts-flow.js / top-posts-store.js — published-posts "winners" board + repurpose entry
+  folders-store.js      — save-to-folder store; feedback-store.js — feedback submissions
+  languages.js          — language catalog for multilingual Playbooks
+  url-services.js       — recognises a service (Notion/Google Docs/…) from a pasted URL
+  admin-menu.js         — sidebar cog Admin popover (user mode + feature flags + docs)
+
   screens/
     dashboard.js, session.js, ideas.js, contexts.js, playbook.js,
-    settings.js, connectors.js, welcome-alt.js, welcome-alt-recap.js
+    connectors.js, welcome-alt.js, welcome-alt-recap.js
     _analyse-common.js  — shared "chat bubble + numbered picker bar" wizard primitives
     session/
       intake-lifecycle.js — flips source-intake turns loading→ready as sources process
       thinking-chip.js    — animated "thinking…" composer chip + elapsed/credit counter
+      thread-turns.js     — renders each assistant-thread turn type
       wizard-keyboard.js  — keyboard nav (↑↓ / 1–9 / Enter / Esc) for the picker
 
   components/             — each exports init() (injects DOM once) + render/open()
     topbar.js             persistent header: route title (rename on session) +
                           Sources / Ideas / Drafts pills + status-card toggle; back on /playbook
     sidebar.js            left rail: brand, New chat, Search, Ideas / Playbooks / Connectors nav,
-                          recent chats (pin/rename/delete), footer popmenu (feedback/bug/shortcuts/settings)
+                          recent chats (pin/rename/delete), footer popmenu (feedback/bug/shortcuts + Admin menu)
     right-panel.js        sliding panel — modes: drafts / ideas / sources / clips / context-brief
     conversation-status-card.js  floating in-progress card (sources/ideas/drafts counts)
     content-workspace.js  shared Sources+Ideas library layout (search / sort / By Source / All Ideas)
@@ -156,7 +167,7 @@ Connectors (Notion, Slite, Google Drive, GitHub, …) are seeded in `mocks.js` (
 
 ### Admin / user mode (prototype controls)
 
-`/settings` → **Admin** section is the prototype control panel (replaces the old floating chip): switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()` (e.g. `connectors` — default OFF, gates the whole connectors feature; `sidebarIdeas`, `hidePlaybookColors`, `draftInlineEdit`).
+The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototype control panel: switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()`. The 8 flags: `draftInlineEdit` (OFF), `sidebarIdeas` (OFF), `playbookDefault` (OFF), `connectors` (OFF — gates the whole connectors feature), `conversationStatusCard` (ON), `statusActionSnackbars` (ON), `hidePlaybookColors` (ON), `multilingualPlaybook` (OFF). Full table + gates: [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md#14-admin-feature-flags--user-modes).
 
 ### Module loading
 
@@ -231,6 +242,8 @@ Exception: the `sparklesMermaid` icon uses inline SVG for its gradient fill. Thi
 
 All docs (except this file and `README.md`) live under [`docs/`](docs/). Start from [`docs/README.md`](docs/README.md) for the full index.
 
+- [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md) — **functional catalog of every app feature** (flows, states, entry points). Start here to learn what the app does.
+- [`docs/reference/UI-PATTERNS.md`](docs/reference/UI-PATTERNS.md) — concrete DS usage (ds-patches inventory, app tokens, UI patterns, the loader system, colour convention).
 - [`docs/reference/`](docs/reference/) — current truth about the proto (architecture, routes, stores, design system, glossary).
 - [`docs/audits/`](docs/audits/) — current audits (PROD-VS-PROTOTYPE, PROD-CHANGES).
 - [`docs/copy/`](docs/copy/) — UX copy principles (voice, tone, glossary).

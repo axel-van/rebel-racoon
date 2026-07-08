@@ -12,10 +12,12 @@ Documentation qui décrit l'état actuel du code. À maintenir à jour quand le 
 
 | Document                                                                 | Sujet                                                                                    |
 | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| [`reference/FEATURES.md`](reference/FEATURES.md)                         | **Catalogue fonctionnel** : toutes les features de l'app, leurs flows, états, entrées    |
 | [`reference/ARCHITECTURE.md`](reference/ARCHITECTURE.md)                 | Architecture du proto, lifecycle, source layout, patterns de fichiers                    |
 | [`reference/ROUTES.md`](reference/ROUTES.md)                             | Route table, handoffs cross-routes, URL state hash query                                 |
 | [`reference/STORES.md`](reference/STORES.md)                             | Stores : pattern de base, catalogue, persistence, invariants, singleton warning          |
 | [`reference/DESIGN-SYSTEM.md`](reference/DESIGN-SYSTEM.md)               | Workflow DS obligatoire, tokens, composants `.ap-*`, MCP `ds-css`                        |
+| [`reference/UI-PATTERNS.md`](reference/UI-PATTERNS.md)                   | **Usage concret du DS** : `ds-patches`, tokens app, patterns UI, loaders, couleur        |
 | [`reference/PANEL-SIDEBAR-RULES.md`](reference/PANEL-SIDEBAR-RULES.md)   | **Règles simples v1** sidebar + right panel (tailles & comportements), hors status-card  |
 | [`reference/SHELL-LAYOUT.md`](reference/SHELL-LAYOUT.md)                 | Détail technique complet : right panel / status-card / sidebar + formules de tailles     |
 | [`reference/SIDEBAR-PANEL-RECIPE.md`](reference/SIDEBAR-PANEL-RECIPE.md) | **Recette autonome** : recréer le comportement sidebar + right panel de zéro (sans code) |
@@ -45,7 +47,9 @@ Documentation qui décrit l'état actuel du code. À maintenir à jour quand le 
 
 | Tu cherches…                                            | Va voir                                                                  |
 | ------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Ce que fait telle feature (flow, états, entrées)        | [`reference/FEATURES.md`](reference/FEATURES.md)                         |
 | Comment fonctionne le proto en général                  | [`reference/ARCHITECTURE.md`](reference/ARCHITECTURE.md)                 |
+| Quelles classes/tokens DS l'app utilise en pratique     | [`reference/UI-PATTERNS.md`](reference/UI-PATTERNS.md)                   |
 | Comment ajouter une route / un écran                    | [`reference/ROUTES.md`](reference/ROUTES.md)                             |
 | Comment ajouter / modifier un store                     | [`reference/STORES.md`](reference/STORES.md)                             |
 | Comment poser une couleur / un spacing                  | [`reference/DESIGN-SYSTEM.md`](reference/DESIGN-SYSTEM.md)               |

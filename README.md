@@ -26,24 +26,24 @@ With Claude Code the dev server auto-launches via `.claude/launch.json`.
 
 ## Routes
 
-| Route                | Screen                 |
-| -------------------- | ---------------------- |
-| `/`                  | Dashboard (redirect)   |
-| `/session/:id`       | Chat (main surface)    |
-| `/ideas`             | Ideas library          |
-| `/contexts`          | Playbooks library      |
-| `/playbook/:id`      | Playbook detail        |
-| `/connectors`        | Connectors gallery     |
-| `/settings`          | Settings + Admin       |
-| `/welcome-alt`       | Onboarding (new user)  |
-| `/welcome-alt/recap` | Onboarding recap       |
+| Route                | Screen                |
+| -------------------- | --------------------- |
+| `/`                  | Dashboard (redirect)  |
+| `/session/:id`       | Chat (main surface)   |
+| `/ideas`             | Ideas library         |
+| `/contexts`          | Playbooks library     |
+| `/playbook/:id`      | Playbook detail       |
+| `/connectors`        | Connectors gallery    |
+| `/welcome-alt`       | Onboarding (new user) |
+| `/welcome-alt/recap` | Onboarding recap      |
 
-Full route + handoff documentation: [`docs/reference/ROUTES.md`](docs/reference/ROUTES.md).
+Full route + handoff documentation: [`docs/reference/ROUTES.md`](docs/reference/ROUTES.md). Il n'y a **plus** de route `/settings` : les contrôles Admin (user mode + feature flags) vivent dans le popover ⚙️ de la sidebar.
 
 ## Documentation
 
 - **Pour Claude Code et les agents** : [`CLAUDE.md`](CLAUDE.md) — vue d'ensemble, conventions, MCP.
 - **Index complet** : [`docs/README.md`](docs/README.md).
-- **Architecture du proto** : [`docs/reference/`](docs/reference/) — architecture, routes, stores, design system, glossaire.
+- **Toutes les features** : [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md) — catalogue fonctionnel complet.
+- **Architecture du proto** : [`docs/reference/`](docs/reference/) — architecture, routes, stores, design system (+ [`UI-PATTERNS.md`](docs/reference/UI-PATTERNS.md)), glossaire.
 - **Audits courants** : [`docs/audits/`](docs/audits/) — prod-vs-proto + plan de changements prod.
 - **Copy / UX** : [`docs/copy/`](docs/copy/) — principes éditoriaux.
