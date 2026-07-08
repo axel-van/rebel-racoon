@@ -226,17 +226,23 @@
 .top-post-card__preview-head {
   display: flex;
   align-items: center;
-  /* Header band: grey-10 hairline underline, 4px gap. Padding matches the body
-     and perf zones so every zone shares one inner edge. */
-  gap: var(--ref-spacing-xxxs);
+  /* Header band: grey-10 hairline underline. Padding matches the body and perf
+     zones so every zone shares one inner edge. */
+  gap: var(--ref-spacing-xxs);
   padding: var(--ref-spacing-xs);
   background: var(--ref-color-grey-05);
   border-bottom: 1px solid var(--app-border-soft);
   transition: background-color 160ms ease;
 }
 
+/* Author + date stacked (name over date), like a social post header. */
+.top-post-card__identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .top-post-card__author {
-  margin-right: auto;
   min-width: 0;
   font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-grey-150);
@@ -250,6 +256,11 @@
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   color: var(--ref-color-grey-100);
+}
+
+/* "View on" link pinned to the header's far right. */
+.top-post-card__preview-head .top-post-view-on {
+  margin-left: auto;
 }
 
 /* ── Zone 1 · body (copy + media) ───────────────────────────────── */
@@ -455,10 +466,10 @@
   gap: var(--ref-spacing-xs);
 }
 
+/* Hero metric on one line (×-value + "vs average"), pushed left; the Repurpose
+   button hugs the right. "View on" now lives in the header, so the foot has room. */
 .top-post-card__hero {
   display: flex;
-  /* Centre the label against the big value — baseline-aligning them left the
-     "vs average" sitting visibly low next to the larger ×-figure. */
   align-items: center;
   gap: var(--ref-spacing-xxxs);
   margin-right: auto;
@@ -517,7 +528,7 @@
   position: relative;
   flex: 0 0 auto;
   align-self: flex-start;
-  width: 72px;
+  width: 88px;
   aspect-ratio: 1 / 1;
   border-radius: var(--ref-border-radius-md);
   overflow: hidden;
@@ -589,27 +600,33 @@
   color: var(--ref-color-green-100);
 }
 
-/* "View on <network>" link — sits on the card's header line, pushed to the far
-   right, so it never adds to the card's height. Blue bold caption + the
-   network's own icon (matches the DS "View On" post-preview component). */
-.top-post-echo__origin {
+/* "View on <network>" link — shared by the board card footer and the echo card
+   head. Blue caption + the network's own icon; the label underlines on hover. */
+.top-post-view-on {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
   flex: 0 0 auto;
-  margin-left: auto;
   white-space: nowrap;
   font-size: var(--sys-text-style-caption-size);
+  /* Explicit weight so the link looks identical everywhere — otherwise it
+     inherits the echo head's bold in one place and regular in the footer. */
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-electric-blue-150);
   text-decoration: none;
 }
 
-.top-post-echo__origin i {
+.top-post-view-on i {
   font-size: 16px;
 }
 
-.top-post-echo__origin:hover span {
+.top-post-view-on:hover span {
   text-decoration: underline;
+}
+
+/* In the echo head the link is pushed to the far right of the profile row. */
+.top-post-echo__head .top-post-view-on {
+  margin-left: auto;
 }
 
 /* ── Inline selection widget (Add-menu flow) ─────────────────────────

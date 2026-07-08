@@ -123,6 +123,19 @@ function postPermalink(network, id) {
   return fn ? fn(id) : "#";
 }
 
+// "View on <network>" link — a discreet text link + the network's own icon,
+// opening the original post in a new tab. Shared by the board card footer and
+// the conversation echo card so both use the same affordance.
+function renderViewOnLink(post) {
+  return `<a
+      class="top-post-view-on"
+      href="${postPermalink(post.network, post.id)}"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="View original post on ${labelFor(post.network)}"
+    ><span>View on</span><i class="${iconFor(post.network)}" aria-hidden="true"></i></a>`;
+}
+
 // Post-type indicator — a small overlay pill (icon + label) shown bottom-left of
 // every card's visual zone, so the board reads the format of each winner at a
 // glance. Generalises the old carousel-only count badge to all post types
@@ -228,8 +241,11 @@ function renderTopPostCard(post) {
         <span class="ap-avatar size-24 top-post-card__avatar" aria-hidden="true"
           >${raw(avatarInner)}<span class="ap-avatar-network"><i class="${networkIcon}"></i></span
         ></span>
-        <span class="top-post-card__author">${handle}</span>
-        <span class="top-post-card__time">${post.publishedOn}</span>
+        <span class="top-post-card__identity">
+          <span class="top-post-card__author">${handle}</span>
+          <span class="top-post-card__time">${post.publishedOn}</span>
+        </span>
+        ${raw(renderViewOnLink(post))}
       </header>
 
       <div class="top-post-card__body">${raw(bodyInner)}</div>
@@ -241,25 +257,9 @@ function renderTopPostCard(post) {
             <span class="top-post-card__hero-value">${post.vsAvg}×</span>
             <span class="top-post-card__hero-label">vs&nbsp;average</span>
           </span>
-          <div class="top-post-card__actions">
-            <a
-              class="ap-icon-button stroked"
-              href="${postPermalink(post.network, post.id)}"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open original post"
-              title="Open original"
-            >
-              <i class="ap-icon-external-link" aria-hidden="true"></i>
-            </a>
-            <button
-              type="button"
-              class="ap-button primary blue top-post-card__cta"
-              data-top-post-repurpose="${post.id}"
-            >
-              Repurpose
-            </button>
-          </div>
+          <button type="button" class="ap-button primary blue top-post-card__cta" data-top-post-repurpose="${post.id}">
+            Repurpose
+          </button>
         </div>
       </div>
     </article>
@@ -303,16 +303,7 @@ export function renderTopPostEcho(post) {
             >${raw(avatarInner)}<span class="ap-avatar-network"><i class="${networkIcon}"></i></span
           ></span>
           <span class="top-post-echo__net">${handle}</span>
-          <a
-            class="top-post-echo__origin"
-            href="${postPermalink(post.network, post.id)}"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="View original post on ${labelFor(post.network)}"
-          >
-            <span>View on</span>
-            <i class="${iconFor(post.network)}" aria-hidden="true"></i>
-          </a>
+          ${raw(renderViewOnLink(post))}
         </span>
         <span class="top-post-echo__excerpt">${post.excerpt}</span>
         <span class="top-post-echo__stats">

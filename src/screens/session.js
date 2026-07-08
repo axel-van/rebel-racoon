@@ -59,7 +59,7 @@ import {
   renderTopPostEcho,
   renderTopPostsWidget,
   TOP_POSTS_LIMIT,
-} from "../components/top-post-card.js?v=60";
+} from "../components/top-post-card.js?v=62";
 import { getTopPost } from "../top-posts-store.js?v=8";
 import * as sidebarWizard from "../sidebar-wizard.js?v=51";
 import * as inlineQuestion from "../inline-question.js?v=47";
