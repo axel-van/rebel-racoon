@@ -53,8 +53,13 @@ import {
 } from "../posts-store.js?v=33";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=48";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=36";
-import * as topPostsFlow from "../top-posts-flow.js?v=69";
-import { renderTopPostsBoard, renderTopPostEcho, renderTopPostsWidget } from "../components/top-post-card.js?v=56";
+import * as topPostsFlow from "../top-posts-flow.js?v=70";
+import {
+  renderTopPostsBoard,
+  renderTopPostEcho,
+  renderTopPostsWidget,
+  TOP_POSTS_LIMIT,
+} from "../components/top-post-card.js?v=60";
 import { getTopPost } from "../top-posts-store.js?v=8";
 import * as sidebarWizard from "../sidebar-wizard.js?v=51";
 import * as inlineQuestion from "../inline-question.js?v=47";
@@ -2007,7 +2012,7 @@ function renderTopPostsPickerScreen(session) {
               data-topposts-next
               ${selectedAccount ? "" : "disabled"}
             >
-              <span>Show my 20 top posts</span>
+              <span>Show my ${TOP_POSTS_LIMIT} top posts</span>
             </button>
           </div>
           <p class="studio-commit__hint muted">I'll write the fresh drafts in this playbook's voice.</p>

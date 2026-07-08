@@ -510,12 +510,15 @@
 
 /* Media thumbnail — fixed width, stretches to the card height. Mirrors the board
    tile (image poster / text glyph) at chat scale. */
+/* Always a square, in every context the echo card renders (widget rows, the
+   picked-post turn, the Sources panel) — top-aligned with the profile head, not
+   stretched to the card height. */
 .top-post-echo__thumb {
   position: relative;
   flex: 0 0 auto;
-  align-self: stretch;
-  width: 92px;
-  min-height: 68px;
+  align-self: flex-start;
+  width: 72px;
+  aspect-ratio: 1 / 1;
   border-radius: var(--ref-border-radius-md);
   overflow: hidden;
   background: var(--ref-color-grey-05);
@@ -554,8 +557,10 @@
   font-weight: var(--sys-text-style-body-bold-weight);
 }
 
-.top-post-echo__head i {
-  font-size: 16px;
+/* Posting-profile avatar — DS .ap-avatar size-24 with a network badge; never
+   shrinks so the handle + "View on" link keep the remaining row. */
+.top-post-echo__avatar {
+  flex: 0 0 auto;
 }
 
 .top-post-echo__excerpt {
@@ -634,7 +639,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  font-weight: var(--sys-text-style-body-bold-weight);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-150);
 }
 .top-posts-widget__title i {
@@ -660,41 +667,16 @@
   padding: 0 var(--ref-spacing-md) var(--ref-spacing-md);
 }
 
-/* Each row is a full-width single-select toggle wrapping the echo card. Blue
-   border on hover / selected (card hover convention); a leading radio marks the
-   pick. Selected adds a crisp inset ring so the edge reads as 2px without a
-   layout shift. */
+/* Each row reuses the DS radio-button card (`.ap-radio-card.card`): the card
+   owns the frame, the radio dot (::before) and the hover / checked border
+   states. We only widen it, centre the dot against the media row, and strip the
+   echo's own frame so it fills the card. */
 .top-posts-widget__row {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-sm);
   width: 100%;
-  padding: var(--ref-spacing-sm);
-  border: 1px solid var(--app-border);
-  border-radius: var(--ref-border-radius-md);
-  background: var(--ref-color-white);
-  text-align: left;
-  cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    background 0.15s ease,
-    box-shadow 0.15s ease;
-}
-.top-posts-widget__row:hover {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--app-surface-subtle);
-}
-.top-posts-widget__row.is-selected,
-.top-posts-widget__row.is-selected:hover {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-05);
-  box-shadow: inset 0 0 0 1px var(--ref-color-electric-blue-100);
-}
-.top-posts-widget__row[disabled] {
-  cursor: default;
+  align-items: center;
 }
 
-/* Echo card fills the row (the row owns the frame now). */
+/* Echo card fills the card (the radio card owns the frame now). */
 .top-posts-widget__row .top-post-echo {
   align-self: stretch;
   max-width: none;
@@ -702,13 +684,6 @@
   padding: 0;
   border: 0;
   background: transparent;
-}
-
-/* Selection indicator — the DS radio (.ap-radio-container renders the dot via
-   its ::before and reflects the real <input type=radio> state). Keep it from
-   growing so the dot stays a fixed leading marker. */
-.top-posts-widget__row .ap-radio-container {
-  flex: 0 0 auto;
 }
 
 /* Frozen state after confirm — dim + non-interactive record of the pick. */

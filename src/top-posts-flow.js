@@ -36,7 +36,7 @@ import { getTopPosts, getTopPost } from "./top-posts-store.js?v=8";
 import { addPostDraft } from "./posts-store.js?v=33";
 import { addReadySource } from "./sources-stream.js?v=49";
 import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=24";
-import { SORTS, PERIODS } from "./components/top-post-card.js?v=56";
+import { SORTS, PERIODS } from "./components/top-post-card.js?v=60";
 import { showToast } from "./components/toast.js?v=20";
 import * as inlineQuestion from "./inline-question.js?v=47";
 import { getDefaultContext } from "./contexts-store.js?v=33";
@@ -271,7 +271,9 @@ function openStage(sessionId, stage, profile = null) {
     posts,
     profile,
     sort: "performance",
-    period: "1m",
+    // Widest window by default so the board can surface the full top 20 (the
+    // "Show my 20 top posts" promise); the user narrows it with the filter.
+    period: "1y",
   });
   notifyPicker(sessionId);
 }
@@ -300,7 +302,7 @@ export function backToProfiles(sessionId) {
   s.stage = "profile";
   s.profile = null;
   s.sort = "performance";
-  s.period = "1m";
+  s.period = "1y";
   armProfilePicker(sessionId);
   notifyPicker(sessionId);
 }

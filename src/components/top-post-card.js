@@ -55,6 +55,10 @@ export const PERIODS = [
   { key: "1y", label: "Last year", maxDays: 365 },
 ];
 
+// How many winners the board surfaces — the "Show my 20 top posts" promise.
+// The board caps its sorted list at this; the CTA copy uses it too.
+export const TOP_POSTS_LIMIT = 20;
+
 // One compact DS .ap-select (a native <details> dropdown) for a filter axis —
 // Period or Sort. Collapsing the old chip rows into two dropdowns keeps the
 // toolbar to a single tidy line. Options carry the same data-* hooks the chips
@@ -269,8 +273,8 @@ function renderTopPostCard(post) {
 export function renderTopPostEcho(post) {
   if (!post) return "";
   // A compact, chat-sized take on the board card: a small media thumbnail
-  // (image poster / text glyph) beside the network, excerpt and a trimmed stat
-  // line. Same visual language, one row tall.
+  // (image poster / text glyph) beside the posting profile, excerpt and a
+  // trimmed stat line. Same visual language, one row tall.
   const type = post.mediaType || "text";
   let thumb;
   if (type === "text") {
@@ -280,13 +284,25 @@ export function renderTopPostEcho(post) {
       post.image ? `<img src="${post.image}" alt="" loading="lazy" />` : ""
     }</span>`;
   }
+  // Lead with the posting profile (brand avatar + network badge + handle) — the
+  // same identity the board card shows — not a bare network label. Falls back to
+  // the network label when no connected profile resolves.
+  const net = (post.network || "").toLowerCase();
+  const account = profileForNetwork(post.network);
+  const networkIcon = NETWORK_ICON_BY_PLATFORM[net] || iconFor(post.network);
+  const handle = account?.handle || labelFor(post.network);
+  const avatarInner = account?.photo
+    ? `<img src="${account.photo}" alt="" />`
+    : `<span class="ap-avatar-initials">${BRAND_INITIALS}</span>`;
   return html`
     <div class="top-post-echo">
       ${raw(thumb)}
       <div class="top-post-echo__body">
         <span class="top-post-echo__head">
-          <i class="${iconFor(post.network)}" aria-hidden="true"></i>
-          <span class="top-post-echo__net">${labelFor(post.network)}</span>
+          <span class="ap-avatar size-16 top-post-echo__avatar" aria-hidden="true"
+            >${raw(avatarInner)}<span class="ap-avatar-network"><i class="${networkIcon}"></i></span
+          ></span>
+          <span class="top-post-echo__net">${handle}</span>
           <a
             class="top-post-echo__origin"
             href="${postPermalink(post.network, post.id)}"
@@ -314,25 +330,25 @@ export function renderTopPostEcho(post) {
 // card visuals; selection lives on the widget turn (assistant.js) and re-renders
 // in place. `renderTopPostsWidgetTurn` in session.js wraps this in an AI turn.
 
-// One selectable row — the echo card fronted by the DS radio (`.ap-radio-container`
-// + a real `<input type=radio>`). The whole row is a `<label>` so clicking anywhere
-// selects the radio; a shared `name` (per widget `group`) makes the rows a native
-// single-select group. `disabled` freezes it once the selection is confirmed.
+// One selectable row — the echo card inside the DS radio-button card
+// (`.ap-radio-card.card`): the card renders the radio dot (::before) + the
+// selected/hover border, we just supply the content. The whole row is a
+// `<label>` so clicking anywhere selects the (visually-hidden) real
+// `<input type=radio>`; a shared `name` (per widget `group`) makes the rows a
+// native single-select group. `disabled` freezes it once the pick is confirmed.
 export function renderTopPostSelectRow(post, { selected = false, disabled = false, group = "" } = {}) {
   if (!post) return "";
   return html`
-    <label class="top-posts-widget__row${selected ? " is-selected" : ""}">
-      <span class="ap-radio-container">
-        <input
-          type="radio"
-          name="topposts-pick-${group}"
-          value="${post.id}"
-          data-topposts-widget-radio="${post.id}"
-          ${raw(selected ? "checked" : "")}
-          ${raw(disabled ? "disabled" : "")}
-        />
-      </span>
-      ${raw(renderTopPostEcho(post))}
+    <label class="ap-radio-card card top-posts-widget__row">
+      <input
+        type="radio"
+        name="topposts-pick-${group}"
+        value="${post.id}"
+        data-topposts-widget-radio="${post.id}"
+        ${raw(selected ? "checked" : "")}
+        ${raw(disabled ? "disabled" : "")}
+      />
+      <div>${raw(renderTopPostEcho(post))}</div>
     </label>
   `;
 }
@@ -393,7 +409,8 @@ export function renderTopPostsBoard({ posts, sort = "performance", profile = nul
   const visible = byProfile.filter((p) => (p.daysAgo ?? 0) <= activePeriod.maxDays);
 
   const active = SORTS.find((s) => s.key === sort) || SORTS[0];
-  const sorted = [...visible].sort(active.compare);
+  // Cap at the top N (the "Show my 20 top posts" promise) after sorting.
+  const sorted = [...visible].sort(active.compare).slice(0, TOP_POSTS_LIMIT);
   const count = sorted.length;
 
   const cards = sorted.length
