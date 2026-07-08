@@ -664,7 +664,6 @@
   display: none;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
-  margin-top: var(--ref-spacing-xs);
   padding: var(--ref-spacing-sm);
   border-radius: var(--app-radius-card);
   background: var(--app-surface-subtle);
