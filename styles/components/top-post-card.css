@@ -383,18 +383,19 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
-  padding: 2px var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxxs);
   border-radius: var(--ref-border-radius-sm);
   background: rgba(52, 69, 99, 0.72);
   color: var(--ref-color-white);
   font-size: var(--sys-text-style-caption-size);
   font-weight: var(--sys-text-style-caption-bold-weight);
-  line-height: var(--sys-text-style-caption-line-height);
+  line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 
 .top-post-card__type > i {
-  font-size: 14px;
+  font-size: 16px;
+  line-height: 1;
 }
 
 /* Avatar in the preview header — never shrinks. */

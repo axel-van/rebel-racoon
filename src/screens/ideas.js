@@ -3,7 +3,7 @@ import { renderTopbar } from "../components/topbar.js?v=188";
 // Same compact idea card as the right-panel Ideas mode.
 import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=2";
 import { showToast } from "../components/toast.js?v=20";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=52";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=54";
 
 // Sources moved to a per-session model — there's no workspace-wide
 // source list on this standalone /ideas page. idea-card renders source

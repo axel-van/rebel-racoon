@@ -1,7 +1,7 @@
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=56";
 import { isFlagOn } from "../feature-flags.js?v=9";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=52";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=54";
 import { isNewUser } from "../user-mode.js?v=22";
 import { getPath } from "../router.js?v=30";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -15,7 +15,7 @@ import {
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=33";
 import { renderPostCard } from "./post-card.js?v=47";
-import { renderTopPostEcho } from "./top-post-card.js?v=54";
+import { renderTopPostEcho } from "./top-post-card.js?v=56";
 import { renderClipCard } from "./clip-card.js?v=13";
 import { onFeedbackClick } from "./feedback-control.js?v=1";
 // Shared compact idea card — same component the standalone Ideas page uses.

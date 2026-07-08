@@ -126,19 +126,28 @@ function postPermalink(network, id) {
 function postTypeBadge(post) {
   const type = post.mediaType || "text";
   const count = post.imageCount || 1;
+  // Icon-only badge; a carousel shows its image count, a document its page count.
   let icon = "ap-icon-file--text";
-  let label = "Text";
+  let title = "Text";
+  let text = "";
   if (type === "video") {
     icon = "ap-icon-video";
-    label = "Video";
+    title = "Video";
+  } else if (type === "document") {
+    // LinkedIn Document — no preview, so the badge carries the page count.
+    const pages = post.pageCount || 1;
+    icon = "ap-icon-file--pdf";
+    title = `Document · ${pages} pages`;
+    text = `${pages} pages`;
   } else if (type === "image" && count > 1) {
     icon = "ap-icon-multiple-images";
-    label = `Carousel · ${count}`;
+    title = `Carousel · ${count} images`;
+    text = String(count);
   } else if (type === "image") {
     icon = "ap-icon-image";
-    label = "Photo";
+    title = "Photo";
   }
-  return `<span class="top-post-card__type" title="${label}"><i class="${icon}" aria-hidden="true"></i>${label}</span>`;
+  return `<span class="top-post-card__type${text ? "" : " top-post-card__type--icon"}" title="${title}"><i class="${icon}" aria-hidden="true"></i>${text}</span>`;
 }
 
 // The media block inside the post-preview body, mirroring the Figma

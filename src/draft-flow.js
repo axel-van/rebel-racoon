@@ -16,7 +16,7 @@
 
 import { postAssistantChoice, startPending, finishPending, postDraftResult } from "./assistant.js?v=56";
 import { getIdeas } from "./library.js?v=46";
-import { ideas as GLOBAL_IDEAS, anglesByIdea } from "./mocks.js?v=52";
+import { ideas as GLOBAL_IDEAS, anglesByIdea } from "./mocks.js?v=54";
 import { addPostDraft } from "./posts-store.js?v=33";
 import { showToast } from "./components/toast.js?v=20";
 

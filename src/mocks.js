@@ -366,12 +366,17 @@ const TOP_POST_ID_ABBR = { linkedin: "li", x: "x", instagram: "ig", facebook: "f
 // winner cards surface it as a preview tile. Assigned by a per-network pattern
 // (index-aligned to TOP_POST_CONTENT) so each profile's board shows a realistic
 // mix rather than authoring it per item. IG skews visual; X/LinkedIn broader.
+// LinkedIn also has native Document posts (a PDF carousel) — flagged "document"
+// so the board indicates the type + page count (no visual preview).
 const TOP_POST_MEDIA_PATTERN = {
-  linkedin: ["image", "text", "text", "text", "image", "text", "text", "text", "image"],
+  linkedin: ["image", "document", "text", "text", "image", "text", "document", "text", "image"],
   x: ["text", "text", "image", "text", "text", "text", "text", "image", "text"],
   instagram: ["image", "text", "image", "text", "image", "image", "text", "image", "text"],
   facebook: ["image", "text", "image", "text", "text", "image", "text", "text", "text"],
 };
+
+// Page counts cycled across Document winners (LinkedIn PDF carousels).
+const TOP_POST_PAGE_COUNTS = [7, 12, 5, 10, 9];
 
 // Curated stock photos (Unsplash direct URLs — business / tech / marketing) used
 // as the poster for image winners. Cropped to 16:9 to match the tile. No
@@ -485,6 +490,8 @@ function buildTopPosts() {
   // Running counter so image winners cycle through the stock pool across the
   // whole set (not per network) for variety.
   let imgIdx = 0;
+  // Running counter so Document winners cycle through the page-count list.
+  let docIdx = 0;
   for (const [network, posts] of Object.entries(TOP_POST_CONTENT)) {
     // Per-network ladder of text lengths (short → this network's max) cycled
     // across its text winners so every board shows the size-tier spread + the cap.
@@ -516,7 +523,10 @@ function buildTopPosts() {
         // Text winners get random copy at a laddered length (short → this
         // network's max) so the board shows every size tier; image winners keep
         // their authored caption.
-        excerpt: mediaType === "text" ? randomText(textLadder[textIdx++ % textLadder.length]) : c.excerpt,
+        excerpt:
+          mediaType === "text" || mediaType === "document"
+            ? randomText(textLadder[textIdx++ % textLadder.length])
+            : c.excerpt,
         perfBadge: perf.badge,
         vsAvg: perf.vsAvg,
         engagementRate: eng,
@@ -539,6 +549,11 @@ function buildTopPosts() {
         post.image = TOP_POST_IMAGES[imgIdx % TOP_POST_IMAGES.length];
         post.imageCount = TOP_POST_IMAGE_COUNTS[imgIdx % TOP_POST_IMAGE_COUNTS.length];
         imgIdx += 1;
+      }
+      // Document winners (LinkedIn PDF carousels) carry a page count — no preview.
+      if (mediaType === "document") {
+        post.pageCount = TOP_POST_PAGE_COUNTS[docIdx % TOP_POST_PAGE_COUNTS.length];
+        docIdx += 1;
       }
       out.push(post);
     }
