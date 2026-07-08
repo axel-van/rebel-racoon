@@ -94,6 +94,21 @@ function generateAngles(idea) {
   ];
 }
 
+// Provenance stamped onto every idea-drafted post → rendered as the collapsible
+// "Generation context" panel by post-card.js: the angle the user picked (when
+// any) as the headline, and the source idea it drew on.
+function ideaContext(idea, angle) {
+  return {
+    kind: "idea",
+    headline: angle ? { icon: "ap-icon-target", text: `Angle · ${angle.description}` } : null,
+    source: {
+      icon: "ap-icon-sparkles",
+      label: "1 source idea",
+      detail: idea.body || idea.title,
+    },
+  };
+}
+
 // Resolve the 4 angles to suggest for an idea: handcrafted set from
 // mocks when present, otherwise a generic generated set. Returns [] when
 // the idea can't be resolved.
@@ -183,14 +198,16 @@ export function executeDraft(sessionId, ideaId, selectedChannels, count = 1, ang
       // Mock draft body reflects the chosen angle when present so the
       // generated preview feels shaped by the reframing the user picked.
       const draftBody = angle ? angle.description : idea.body;
-      const drafts = Array.from({ length: total }, (_, i) =>
-        addPostDraft(sessionId, {
+      const drafts = Array.from({ length: total }, (_, i) => {
+        const d = addPostDraft(sessionId, {
           network: selectedChannels[i % selectedChannels.length],
           text: [idea.title, ...(draftBody ? [draftBody] : [])],
           hashtags: [],
           language,
-        }),
-      );
+        });
+        d.generationContext = ideaContext(idea, angle);
+        return d;
+      });
       postDraftResult(sessionId, {
         ideaTitle: idea.title,
         drafts,
@@ -218,14 +235,14 @@ export function executeDraftBatch(sessionId, ideaId, selectedChannels, anglePick
       for (const { angle, count } of anglePicks) {
         const draftBody = angle ? angle.description : idea.body;
         for (let i = 0; i < count; i += 1) {
-          drafts.push(
-            addPostDraft(sessionId, {
-              network: channels[ch % channels.length],
-              text: [idea.title, ...(draftBody ? [draftBody] : [])],
-              hashtags: [],
-              language,
-            }),
-          );
+          const d = addPostDraft(sessionId, {
+            network: channels[ch % channels.length],
+            text: [idea.title, ...(draftBody ? [draftBody] : [])],
+            hashtags: [],
+            language,
+          });
+          d.generationContext = ideaContext(idea, angle);
+          drafts.push(d);
           ch += 1;
         }
       }

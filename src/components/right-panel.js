@@ -14,8 +14,8 @@ import {
   attachImageToDraft,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=33";
-import { renderPostCard } from "./post-card.js?v=47";
-import { renderTopPostEcho } from "./top-post-card.js?v=62";
+import { renderPostCard } from "./post-card.js?v=64";
+import { renderTopPostEcho } from "./top-post-card.js?v=64";
 import { renderClipCard } from "./clip-card.js?v=13";
 import { onFeedbackClick } from "./feedback-control.js?v=1";
 // Shared compact idea card — same component the standalone Ideas page uses.

@@ -36,7 +36,7 @@ import { getTopPosts, getTopPost } from "./top-posts-store.js?v=8";
 import { addPostDraft } from "./posts-store.js?v=33";
 import { addReadySource } from "./sources-stream.js?v=49";
 import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=24";
-import { SORTS, PERIODS } from "./components/top-post-card.js?v=62";
+import { SORTS, PERIODS } from "./components/top-post-card.js?v=64";
 import { showToast } from "./components/toast.js?v=20";
 import * as inlineQuestion from "./inline-question.js?v=47";
 import { getDefaultContext } from "./contexts-store.js?v=33";
@@ -139,13 +139,24 @@ function firstSentence(text) {
   return (m ? m[0] : text || "").trim();
 }
 
-// Provenance stamped onto every generated draft so the Drafts panel always
+// Provenance stamped onto every repurposed draft so the Drafts panel always
 // shows where a post came from (the flow's core promise: capitalise on what
-// worked). Rendered as a pill by post-card.js.
-function variationOrigin(post) {
+// worked). Rendered as the collapsible "Generation context" panel by
+// post-card.js — a headline (the winner it was repurposed from) + the source
+// post's own copy.
+function repurposeContext(post) {
+  const meta = CHANNEL_META[normNet(post.network)] || {};
   return {
-    icon: "ap-icon-shuffle",
-    label: `Repurposed from your top ${labelFor(post.network)} post · ${post.perfBadge}`,
+    kind: "repurpose",
+    headline: {
+      icon: "ap-icon-shuffle",
+      text: `Repurposed from your top ${labelFor(post.network)} post · ${post.perfBadge}`,
+    },
+    source: {
+      icon: meta.icon || "ap-icon-file--text",
+      label: `Your top ${labelFor(post.network)} post`,
+      detail: post.excerpt,
+    },
   };
 }
 
@@ -676,7 +687,7 @@ export function executeRepurpose(sessionId, postIds, targets) {
               text: adaptForNetwork(base, network),
               hashtags: adaptHashtags(post.hashtags, network),
             });
-            draft.origin = variationOrigin(post);
+            draft.generationContext = repurposeContext(post);
             draft.contextId = contextId;
             drafts.push(draft);
           }

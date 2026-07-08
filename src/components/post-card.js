@@ -44,19 +44,6 @@ export function renderPostCard(post, opts = {}) {
       : ""
   }</div>`;
 
-  // Provenance pill — set by flows that generate a draft from an existing
-  // asset (e.g. the top-posts milker stamps `post.origin`). Surfaces where the
-  // draft came from right in the Drafts panel, where the originating
-  // conversation context is otherwise lost. Hidden while editing / regenerating.
-  const originBadge =
-    post.origin && !post.isRegenerating
-      ? `<div class="posts__card-origin-row">
-          <span class="ap-status no-dot posts__card-origin">
-            <i class="${post.origin.icon}" aria-hidden="true"></i> ${post.origin.label}
-          </span>
-        </div>`
-      : "";
-
   const bodyParagraphs = post.text.map((p) => `<p class="posts__card-paragraph">${p}</p>`).join("");
 
   const hashtags = post.hashtags.length
@@ -123,6 +110,25 @@ export function renderPostCard(post, opts = {}) {
     !editing && !regenerating
       ? renderFeedbackControl(`draft:${post.id}`, { kind: "draft", label: "How's this draft?" })
       : "";
+
+  // Below-card foot row: the feedback strip on the left, the "Generation
+  // context" disclosure toggle on the right (same line). A hidden checkbox +
+  // label drives a CSS-only collapse so the panel can drop full-width beneath
+  // the row without any JS wiring. When the draft has no provenance, the
+  // feedback strip renders on its own.
+  const gcBody = !editing && !regenerating ? renderGenerationContextBody(post) : "";
+  const belowCard = gcBody
+    ? `<input type="checkbox" id="gc-${post.id}" class="posts__gencontext-check" hidden />
+       <div class="posts__card-footrow">
+         ${feedbackStrip}
+         <label class="posts__gencontext-toggle" for="gc-${post.id}">
+           <i class="ap-icon-information-circle posts__gencontext-info" aria-hidden="true"></i>
+           <span class="posts__gencontext-toggle-label">Generation context</span>
+           <i class="ap-icon-chevron-down posts__gencontext-chevron" aria-hidden="true"></i>
+         </label>
+       </div>
+       <div class="posts__gencontext-panel">${gcBody}</div>`
+    : feedbackStrip;
 
   const stats = post.stats || {};
   const engagement =
@@ -206,8 +212,7 @@ export function renderPostCard(post, opts = {}) {
             </div>
           </header>
 
-          ${raw(originBadge)} ${raw(editorBody)} ${raw(charCount)} ${raw(editActions)} ${raw(mediaBlock)}
-          ${raw(engagement)}
+          ${raw(editorBody)} ${raw(charCount)} ${raw(editActions)} ${raw(mediaBlock)} ${raw(engagement)}
 
           <!-- Footer is a non-interactive LinkedIn-style preview of the
                engagement bar — decoration only, not real actions (see
@@ -232,7 +237,7 @@ export function renderPostCard(post, opts = {}) {
             </span>
           </footer>
         </article>
-        ${raw(feedbackStrip)}
+        ${raw(belowCard)}
       </div>
 
       <div class="posts__row-actions" aria-label="Post actions">
@@ -352,6 +357,33 @@ export function renderPostCard(post, opts = {}) {
       </div>
     </article>
   `;
+}
+
+// Generation context panel body — the provenance a generated draft drew on:
+// a tinted headline (the angle picked, or the winner it was repurposed from) +
+// the source. Returns "" when the draft has no provenance. The toggle + the
+// collapse mechanism live in renderPostCard's foot row (a CSS checkbox toggle),
+// so the panel can expand full-width while the toggle stays inline on the right.
+function renderGenerationContextBody(post) {
+  const gc = post.generationContext;
+  if (!gc) return "";
+  const tone = gc.kind === "repurpose" ? "repurpose" : "angle";
+  const headline = gc.headline
+    ? `<div class="posts__gencontext-headline posts__gencontext-headline--${tone}">
+        <i class="${gc.headline.icon}" aria-hidden="true"></i>
+        <span>${gc.headline.text}</span>
+      </div>`
+    : "";
+  const source = gc.source
+    ? `<div class="posts__gencontext-source">
+        <span class="posts__gencontext-source-head">
+          <i class="${gc.source.icon}" aria-hidden="true"></i>
+          <span>${gc.source.label}</span>
+        </span>
+        ${gc.source.detail ? `<p class="posts__gencontext-source-detail">${gc.source.detail}</p>` : ""}
+      </div>`
+    : "";
+  return `${headline}${source}`;
 }
 
 // Per-network character budgets + the full-colour DS logo used by the

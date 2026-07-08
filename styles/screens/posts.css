@@ -620,25 +620,108 @@
   align-self: flex-start;
 }
 
-/* Provenance pill — where a generated draft came from (e.g. the top-posts
-   milker). Sits just under the author header, above the body. Quiet metadata
-   (.ap-status grey no-dot) with the source-network/action glyph. */
-.posts__card-origin-row {
+/* ── Generation context ───────────────────────────────────────────────
+   A compact "why this draft exists" disclosure below each generated draft.
+   The toggle sits on the RIGHT of the foot row, sharing the line with the
+   "How's this draft?" feedback on the left; the panel drops full-width beneath.
+   Collapse is a CSS checkbox toggle (hidden input + label) so no JS is needed. */
+.posts__card-footrow {
   display: flex;
-  margin-bottom: var(--ref-spacing-xs);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
 }
 
-/* Light orange (= AI / milker provenance) — visible but not loud: a soft tint
-   with orange text, a step up from the old quiet grey without shouting. */
-.posts__card-origin {
-  align-self: flex-start;
+.posts__gencontext-toggle {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
   gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
+  border-radius: var(--app-radius-pill);
+  color: var(--ref-color-electric-blue-100);
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+.posts__gencontext-toggle:hover {
+  background: var(--ref-color-electric-blue-05);
+}
+.posts__gencontext-info {
+  font-size: 16px;
+}
+.posts__gencontext-chevron {
+  font-size: 14px;
+  transition: transform 0.2s ease;
+}
+.posts__gencontext-check:checked ~ .posts__card-footrow .posts__gencontext-chevron {
+  transform: rotate(180deg);
+}
+
+.posts__gencontext-panel {
+  display: none;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  margin-top: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
+  border-radius: var(--app-radius-card);
+  background: var(--app-surface-subtle);
+}
+.posts__gencontext-check:checked ~ .posts__gencontext-panel {
+  display: flex;
+}
+
+/* Headline provenance line — tinted pill. Orange = repurposed from a winner;
+   purple = the angle the user picked. */
+.posts__gencontext-headline {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  border-radius: var(--ref-border-radius-md);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+.posts__gencontext-headline i {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  font-size: 16px;
+}
+.posts__gencontext-headline--repurpose {
   background: var(--ref-color-orange-10);
   color: var(--ref-color-orange-100);
 }
+.posts__gencontext-headline--angle {
+  background: var(--ref-color-purple-10);
+  color: var(--ref-color-purple-100);
+}
 
-.posts__card-origin i {
-  color: var(--ref-color-orange-100);
+/* Source the draft drew on — icon + label, then a muted excerpt beneath. */
+.posts__gencontext-source {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+}
+.posts__gencontext-source-head {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  color: var(--ref-color-grey-150);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  font-size: var(--sys-text-style-caption-size);
+}
+.posts__gencontext-source-head i {
+  font-size: 16px;
+  color: var(--ref-color-grey-80);
+}
+.posts__gencontext-source-detail {
+  margin: 0;
+  padding-left: calc(16px + var(--ref-spacing-xxs));
+  color: var(--sys-text-color-light);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
 }
 
 /* Per-network character count (DS CharacterCounts, node 3185:48434).

@@ -51,15 +51,15 @@ import {
   setSubtitleStyle,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=33";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=48";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=49";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=36";
-import * as topPostsFlow from "../top-posts-flow.js?v=70";
+import * as topPostsFlow from "../top-posts-flow.js?v=71";
 import {
   renderTopPostsBoard,
   renderTopPostEcho,
   renderTopPostsWidget,
   TOP_POSTS_LIMIT,
-} from "../components/top-post-card.js?v=62";
+} from "../components/top-post-card.js?v=64";
 import { getTopPost } from "../top-posts-store.js?v=8";
 import * as sidebarWizard from "../sidebar-wizard.js?v=51";
 import * as inlineQuestion from "../inline-question.js?v=47";
