@@ -195,7 +195,7 @@ function soloSizeTier(text) {
   return "top-post-card__text--sm";
 }
 
-function renderTopPostCard(post) {
+export function renderTopPostCard(post) {
   // These are posts from the brand's own profiles, so the card leads with the
   // profile identity (brand avatar + network badge + handle) — the same lens the
   // board's profile chips sort by — rather than a bare network label. Falls back

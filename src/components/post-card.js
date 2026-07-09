@@ -364,7 +364,7 @@ export function renderPostCard(post, opts = {}) {
 // the source. Returns "" when the draft has no provenance. The toggle + the
 // collapse mechanism live in renderPostCard's foot row (a CSS checkbox toggle),
 // so the panel can expand full-width while the toggle stays inline on the right.
-function renderGenerationContextBody(post) {
+export function renderGenerationContextBody(post) {
   const gc = post.generationContext;
   if (!gc) return "";
   const tone = gc.kind === "repurpose" ? "repurpose" : gc.kind === "clip" ? "clip" : "angle";

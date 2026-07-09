@@ -204,13 +204,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--ref-spacing-xxs);
+  /* Fixed square frame — identical for the file-kind glyph and the processing
+     Archie loader, so the box never grows to the loader's wider aspect ratio. */
+  width: 32px;
+  height: 32px;
   background: var(--ref-color-grey-05);
   border-radius: var(--ref-border-radius-sm);
-}
-
-.source-card--processing .source-card__kind-box {
-  background: var(--ref-color-electric-blue-10);
 }
 
 .source-card__kind-icon {

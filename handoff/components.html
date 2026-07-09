@@ -19,7 +19,6 @@
     <link rel="stylesheet" href="../styles/ds-patches.css?v=3" />
     <link rel="stylesheet" href="../styles/chat.css?v=3" />
     <link rel="stylesheet" href="../styles/screens/session.css?v=3" />
-    <link rel="stylesheet" href="../styles/components/archie-loader.css?v=3" />
     <!-- Card styles, so the live previews (idea / clip / post cards) render
          with their real chrome. -->
     <link rel="stylesheet" href="../styles/components/right-panel.css?v=3" />
@@ -34,6 +33,11 @@
     <link rel="stylesheet" href="../styles/components/top-post-card.css?v=3" />
     <link rel="stylesheet" href="../styles/components/feedback-control.css?v=3" />
     <link rel="stylesheet" href="../styles/components/conversation-status-card.css?v=3" />
+    <!-- archie-loader.css MUST load last (as it does in index.html): its loader
+         box rules deliberately override the legacy rotating-border definitions
+         that live in each screen/modal CSS (e.g. .source-card__spinner in
+         dashboard.css). Loading it earlier lets those stale rings win. -->
+    <link rel="stylesheet" href="../styles/components/archie-loader.css?v=3" />
 
     <style>
       /* ── Handoff page chrome ───────────────────────────────────────── */
@@ -470,15 +474,16 @@
             <li><a href="#source-card">14. Source card</a></li>
             <li><a href="#idea-card">15. Idea card (full)</a></li>
             <li><a href="#post-card">16. Post card</a></li>
-            <li><a href="#clip-card">17. Clip card</a></li>
-            <li><a href="#top-posts">18. Top-post select / echo</a></li>
-            <li><a href="#empty">19. Empty states</a></li>
+            <li><a href="#gencontext">17. Generation context</a></li>
+            <li><a href="#clip-card">18. Clip card</a></li>
+            <li><a href="#top-posts">19. Top-post repurposing (board / widget / echo)</a></li>
+            <li><a href="#empty">20. Empty states</a></li>
           </ul>
         </div>
         <div class="hd-toc__group">
           <h2>C · Status bars</h2>
           <ul>
-            <li><a href="#status-card">20. Status card / composer bars</a></li>
+            <li><a href="#status-card">21. Status card / composer bars</a></li>
           </ul>
         </div>
         <div class="hd-toc__group">
@@ -594,7 +599,8 @@
         <p class="hd-lead">
           <code>renderSourceCard()</code> (<code>src/components/source-card.js</code>). Tinted kind-box, filename, meta
           sub-line, Ask / Reference / &hellip; cluster. Processing state swaps the box for the Archie spinner and shows
-          a live stage pill + progress bar. Live below.
+          a live stage pill (in the app it also grows a thin progress bar once the async ticker attaches
+          <code>progress</code>; omitted from this static preview). Live below.
         </p>
 
         <article class="hd-comp">
@@ -664,9 +670,36 @@
         </article>
       </section>
 
+      <!-- GENERATION CONTEXT -->
+      <section class="hd-section" id="gencontext">
+        <h2>17. Generation context</h2>
+        <p class="hd-lead">
+          The collapsible &ldquo;why this draft exists&rdquo; disclosure that sits in every generated draft&rsquo;s foot
+          row (live in the post card, §16). The toggle shares the line with the feedback strip; the panel drops
+          full-width beneath. Body from <code>renderGenerationContextBody()</code> in
+          <code>src/components/post-card.js</code> — a tinted headline pill + the source the draft drew on. Three tones
+          keyed off <code>generationContext.kind</code>: <strong>idea</strong> (purple angle),
+          <strong>repurpose</strong> (orange winner), <strong>clip</strong> (blue source video). Panels shown expanded.
+        </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.posts__gencontext-panel</code> — all three tones</p>
+              <p class="hd-comp__desc">
+                Stamped by draft-flow (idea), top-posts-flow (repurpose) &amp; the clip paths.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview" data-live="gencontext"></div>
+          </div>
+        </article>
+      </section>
+
       <!-- 22. CLIP CARD -->
       <section class="hd-section" id="clip-card">
-        <h2>17. Clip card</h2>
+        <h2>18. Clip card</h2>
         <p class="hd-lead">
           <code>renderClipCard()</code> (<code>src/components/clip-card.js</code>) — video-clip card with a hue-gradient
           thumbnail, time range + duration, a &ldquo;Why this clip&rdquo; disclosure, and feedback / Reference / Draft.
@@ -686,12 +719,43 @@
 
       <!-- 23. TOP POSTS -->
       <section class="hd-section" id="top-posts">
-        <h2>18. Top-post select row / echo</h2>
+        <h2>19. Top-post repurposing (card / widget / echo)</h2>
         <p class="hd-lead">
           The repurposing surfaces (<code>src/components/top-post-card.js</code>).
-          <code>renderTopPostSelectRow()</code> = a DS-radio-fronted winner row (the in-chat multi-select widget).
-          <code>renderTopPostEcho()</code> = the compact selection-echo card shown once a winner is picked.
+          <code>renderTopPostCard()</code> = one winner card (brand identity, pull-quote or media, a 4-metric strip, the
+          ×-vs-average hero, and a Repurpose CTA); the board tiles these in a Period/Sort grid. Shown below is one card
+          per post type. <code>renderTopPostsWidget()</code> = the compact in-chat single-select widget (DS-radio rows +
+          &ldquo;Reuse this post&rdquo;). <code>renderTopPostSelectRow()</code> = one radio row;
+          <code>renderTopPostEcho()</code> = the selection-echo card shown once a winner is picked.
         </p>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.top-post-card</code> — one per post type</p>
+              <p class="hd-comp__desc">
+                Text (pull-quote), photo, carousel, and LinkedIn document — the type badge is bottom-left of each
+                visual.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="top-posts-grid" data-live="top-post-types"></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.top-posts-widget</code> — in-chat single-select</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview" data-live="top-post-widget"></div>
+          </div>
+        </article>
 
         <article class="hd-comp">
           <header class="hd-comp__head">
@@ -716,7 +780,7 @@
 
       <!-- 24. EMPTY STATES -->
       <section class="hd-section" id="empty">
-        <h2>19. Empty states</h2>
+        <h2>20. Empty states</h2>
         <p class="hd-lead">
           <code>renderEmptyState()</code> (<code>src/components/empty-state.js</code>) — the unified icon + title + body
           + optional CTA primitive used across every list surface (Ideas, Drafts, Sources, panels).
@@ -741,7 +805,7 @@
 
       <!-- 25. STATUS CARD -->
       <section class="hd-section" id="status-card">
-        <h2>20. Status card / composer bars</h2>
+        <h2>21. Status card / composer bars</h2>
         <p class="hd-lead">
           <code>.ap-status-card</code> is a <code>ds-patches.css</code> primitive (the DS ships the tokens + an Angular
           component, but no CSS-UI class). It backs the composer&rsquo;s reconciled status bar: a grey in-progress state
@@ -1366,9 +1430,14 @@
       // Group A–D component renderers — the exact functions the app renders with.
       import { renderSourceCard } from "../src/components/source-card.js";
       import { renderIdeaCard } from "../src/components/idea-card.js";
-      import { renderPostCard } from "../src/components/post-card.js";
+      import { renderPostCard, renderGenerationContextBody } from "../src/components/post-card.js";
       import { renderClipCard } from "../src/components/clip-card.js";
-      import { renderTopPostSelectRow, renderTopPostEcho } from "../src/components/top-post-card.js";
+      import {
+        renderTopPostSelectRow,
+        renderTopPostEcho,
+        renderTopPostsWidget,
+        renderTopPostCard,
+      } from "../src/components/top-post-card.js";
       import { renderFeedbackControl } from "../src/components/feedback-control.js";
       import { renderEmptyState } from "../src/components/empty-state.js";
       import { initArchieLoader } from "../src/archie-loader.js";
@@ -1483,17 +1552,16 @@
       const ACME_POSTS = postsBySession["s-acme-launch"] || [];
       // The founder-keynote.mp4 source carries an inline clips[] array.
       const DEMO_CLIP = (ACME_SOURCES.find((s) => Array.isArray(s.clips) && s.clips.length)?.clips || [])[0];
-      // A crafted in-flight source so the processing state (spinner + stage
-      // pill + progress bar) is visible next to a finished one.
+      // A crafted in-flight source so the processing state (Archie spinner +
+      // stage pill) is visible next to a finished one. No ticker fields
+      // (progress/stage/etaSec) → no live progress bar in this static gallery;
+      // the sub-line falls back to "Processing · Added <when>".
       const PROCESSING_SOURCE = {
         id: "src-proc-demo",
         filename: "webinar-recording.mp4",
         kind: "Video",
         status: "Processing",
         addedAt: "just now",
-        progress: 0.45,
-        stage: "Identifying ideas",
-        etaSec: 8,
       };
 
       const FILLERS = {
@@ -1534,7 +1602,80 @@
           if (DEMO_CLIP)
             slot.innerHTML = renderClipCard(DEMO_CLIP, { sourceName: "founder-keynote.mp4", whyOpen: true });
         },
-        // §18 — Top posts (select rows + echo)
+        // §17 — Generation context (all three tones, panels forced open —
+        // the collapse is a CSS checkbox that has no sibling here).
+        gencontext: (slot) => {
+          const panel = (gc) =>
+            `<div class="posts__gencontext-panel" style="display:flex">${renderGenerationContextBody({ generationContext: gc })}</div>`;
+          const tones = [
+            {
+              label: "idea (angle)",
+              gc: {
+                kind: "idea",
+                headline: { icon: "ap-icon-target", text: "Angle · The honest founder retro" },
+                source: {
+                  icon: "ap-icon-sparkles",
+                  label: "1 source idea",
+                  detail: "The three constraints that killed our first launch",
+                },
+              },
+            },
+            {
+              label: "repurpose (winner)",
+              gc: {
+                kind: "repurpose",
+                headline: { icon: "ap-icon-shuffle", text: "Repurposed from your top LinkedIn post · 4.2× reach" },
+                source: {
+                  icon: "ap-icon-linkedin-official",
+                  label: "Your top LinkedIn post",
+                  detail: "Three constraints killed our first launch: scope, distribution, and onboarding…",
+                },
+              },
+            },
+            {
+              label: "clip (source video)",
+              gc: {
+                kind: "clip",
+                headline: { icon: "ap-icon-video", text: "Clip · 3 hooks that stop the scroll" },
+                source: {
+                  icon: "ap-icon-file--video",
+                  label: "founder-keynote.mp4",
+                  detail: "A 30s cut showing the three-hook opener from the keynote.",
+                },
+              },
+            },
+          ];
+          slot.innerHTML = tones
+            .map(
+              (t) =>
+                `<div class="hd-preview-row"><span class="hd-preview-row__label">${t.label}</span>${panel(t.gc)}</div>`,
+            )
+            .join("");
+        },
+        // §19 — Top-post card, one per post type (text / photo / carousel /
+        // document) — the different card variants, not the whole board.
+        "top-post-types": (slot) => {
+          const pick = (fn) => topPosts.find(fn);
+          const samples = [
+            pick((p) => (p.mediaType || "text") === "text"),
+            pick((p) => p.mediaType === "image" && (p.imageCount || 1) === 1),
+            pick((p) => p.mediaType === "image" && (p.imageCount || 1) > 1),
+            pick((p) => p.mediaType === "document"),
+          ].filter(Boolean);
+          slot.innerHTML = samples.map((p) => renderTopPostCard(p)).join("");
+        },
+        // §19 — Top-post widget (in-chat single-select)
+        "top-post-widget": (slot) => {
+          const net = (topPosts[0]?.network || "linkedin").toLowerCase();
+          const posts = topPosts.filter((p) => (p.network || "").toLowerCase() === net).slice(0, 1);
+          slot.innerHTML = renderTopPostsWidget({
+            network: net,
+            posts,
+            selected: posts[0] ? [posts[0].id] : [],
+            group: "hd-demo-widget",
+          });
+        },
+        // §19 — Top posts (select rows + echo)
         "top-post-rows": (slot) => {
           slot.innerHTML = topPosts
             .slice(0, 3)
