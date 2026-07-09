@@ -1089,33 +1089,34 @@
   white-space: nowrap;
 }
 
-/* Repurposed top post: the winner card (renderTopPostEcho) IS the source card —
-   no wrapping row box. Strip the row's frame so the echo card stands on its own,
-   then give the echo its full card treatment (native border + a shadow). */
-.rpanel-sources__row--toppost {
+/* Repurposed top post: same card frame as every other source row. The rich
+   winner echo (renderTopPostEcho) sits flush as the card body — its own border /
+   shadow / bubble corner / padding are stripped so it reads as content, not a
+   card-in-a-card — with the Reference / kebab actions in a footer bar below it. */
+.rpanel-sources__toppost {
+  min-width: 0;
+}
+.rpanel-sources__toppost .top-post-echo {
+  align-self: stretch;
+  max-width: none;
   padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
 }
-.rpanel-sources__toppost {
-  flex: 1 1 auto;
-  min-width: 0;
+/* Footer actions bar — right-aligned, separated from the echo body by a hairline
+   so it reads as belonging to the card (mirrors the idea/clip card footer). */
+.rpanel-sources__toppost-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ref-spacing-xxs);
+  padding-top: var(--ref-spacing-xxs);
+  border-top: 1px solid var(--app-border);
 }
-.rpanel-sources__toppost .top-post-echo {
-  align-self: stretch;
-  max-width: none;
-  /* Undo the echo's user-bubble sharp top-right corner + right alignment, and
-     lift it with the same low shadow the other source cards use. */
-  border-top-right-radius: var(--app-radius-card);
-  box-shadow: var(--app-shadow-low);
-}
-/* Reference / kebab sit inline to the right of the (rich, multi-line) echo card.
-   The echo (flex: 1) would otherwise crush the labelled Reference button and clip
-   its text — pin it so its label always shows, letting the echo absorb the slack. */
-.rpanel-sources__row--toppost .rpanel-sources__row-mention {
-  flex-shrink: 0;
+.rpanel-sources__toppost-foot .rpanel-sources__row-status {
+  margin-right: auto;
 }
 
 .rpanel-sources__row-status {
