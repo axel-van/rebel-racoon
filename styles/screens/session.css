@@ -1978,23 +1978,24 @@ body.hide-playbook-colors .composer-context__dot {
   display: block;
   height: 56px;
   border-radius: var(--app-radius-card);
-  /* Archie "butter" placeholder — ties the chat-switch loading to Archie's
-     in-conversation brand accent rather than a neutral grey. */
+  /* Neutral grey placeholder for every bubble by default. */
   background: linear-gradient(
     100deg,
-    var(--app-butter) 0%,
-    color-mix(in srgb, var(--app-butter) 80%, var(--app-butter-accent)) 50%,
-    var(--app-butter) 100%
+    var(--ref-color-grey-05) 0%,
+    var(--ref-color-grey-10) 50%,
+    var(--ref-color-grey-05) 100%
   );
   background-size: 200% 100%;
   animation: thread-skeleton-shimmer 1.4s linear infinite;
 }
 .thread-skeleton__row--out .thread-skeleton__bubble {
+  /* The single "out" (user, right) bubble carries Archie's butter accent
+     so the chat-switch loading nods to the brand without going all-butter. */
   background: linear-gradient(
     100deg,
-    var(--ref-color-electric-blue-10) 0%,
-    var(--ref-color-electric-blue-20, var(--ref-color-electric-blue-10)) 50%,
-    var(--ref-color-electric-blue-10) 100%
+    var(--app-butter) 0%,
+    color-mix(in srgb, var(--app-butter) 80%, var(--app-butter-accent)) 50%,
+    var(--app-butter) 100%
   );
   background-size: 200% 100%;
 }
