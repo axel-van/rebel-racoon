@@ -2444,12 +2444,19 @@ export function renderSourceRow(src) {
           ${src.preview ? `<div class="rpanel-sources__row-preview" title="${escapeAttr(src.preview)}">${escapeText(src.preview)}</div>` : ""}
         </div>`;
 
-  // A repurposed top post shows only the card itself — no Reference / kebab
-  // actions and no ideas list (it produced drafts, not extracted ideas).
+  // A repurposed top post keeps the winner card as its head, plus the same
+  // Reference / kebab actions as a file source (inline, right of the card) — it
+  // is a real stream source. Still no ideas list: it produced drafts, not
+  // extracted ideas (sourceIdeas is empty for it anyway).
   if (src.topPost) {
     return `
       <div class="rpanel-sources__row rpanel-sources__row--toppost" data-source-id="${src.id}">
-        <div class="rpanel-sources__card-head">${headMain}</div>
+        <div class="rpanel-sources__card-head">
+          ${headMain}
+          ${statusEl}
+          ${mentionBtn}
+          ${moreMenu}
+        </div>
       </div>
     `;
   }

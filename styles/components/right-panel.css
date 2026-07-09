@@ -1111,6 +1111,12 @@
   border-top-right-radius: var(--app-radius-card);
   box-shadow: var(--app-shadow-low);
 }
+/* Reference / kebab sit inline to the right of the (rich, multi-line) echo card.
+   The echo (flex: 1) would otherwise crush the labelled Reference button and clip
+   its text — pin it so its label always shows, letting the echo absorb the slack. */
+.rpanel-sources__row--toppost .rpanel-sources__row-mention {
+  flex-shrink: 0;
+}
 
 .rpanel-sources__row-status {
   flex-shrink: 0;
