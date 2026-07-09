@@ -754,6 +754,26 @@
         <article class="hd-comp">
           <header class="hd-comp__head">
             <div>
+              <p class="hd-comp__name"><code>.top-post-card__text--solo</code> — type scales to post length</p>
+              <p class="hd-comp__desc">
+                A text-only winner has no media, so the pull-quote <em>is</em> the card.
+                <code>soloSizeTier()</code> picks a size tier from the character count so short posts read big and
+                punchy and long ones step down to fit more — and every tier line-clamps so the card height stays
+                bounded: <strong>xl</strong> ≤ 70 chars (h1, 4 lines) · <strong>lg</strong> ≤ 150 (h2, 5) ·
+                <strong>md</strong> ≤ 300 (h3, 5) · <strong>sm</strong> &gt; 300 (body, 7). A soft fade masks the clamp.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="top-posts-grid" data-live="top-post-text-tiers"></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
               <p class="hd-comp__name"><code>.top-posts-widget</code> — in-chat single-select</p>
             </div>
           </header>
@@ -1442,6 +1462,7 @@
         renderTopPostEcho,
         renderTopPostsWidget,
         renderTopPostCard,
+        soloSizeTier,
       } from "../src/components/top-post-card.js";
       import { renderFeedbackControl } from "../src/components/feedback-control.js";
       import { renderEmptyState } from "../src/components/empty-state.js";
@@ -1669,6 +1690,33 @@
             pick((p) => p.mediaType === "document"),
           ].filter(Boolean);
           slot.innerHTML = samples.map((p) => renderTopPostCard(p)).join("");
+        },
+        // §19 — Text-only winner: the pull-quote type scales to length. Four
+        // sample lengths → soloSizeTier() picks the class (live, so the tier
+        // boundaries never drift from the component).
+        "top-post-text-tiers": (slot) => {
+          const samples = [
+            "Consistency beats intensity. Show up every week for a year.",
+            "Consistency beats intensity: one honest post a week for a year will outperform a frantic launch month, every single time.",
+            "Consistency beats intensity: one honest post a week for a year will outperform a frantic launch month. We stopped chasing viral moments and started compounding small, useful posts — and the reach followed the discipline, not the drama.",
+            "Consistency beats intensity: one honest post a week for a year will outperform a frantic launch month. We stopped chasing viral moments and started compounding small, useful posts. The reach followed the discipline, not the drama — and the pipeline followed the reach. A year in, our worst week now beats our old best month, and nobody burned out to get there.",
+          ];
+          slot.innerHTML = samples
+            .map((text) => {
+              const tier = soloSizeTier(text); // e.g. "top-post-card__text--xl"
+              const label = tier.split("--").pop();
+              return `<div>
+                <span class="hd-preview-row__label">${label} · ${text.length} chars</span>
+                <article class="ap-card top-post-card" style="margin-top:6px">
+                  <div class="top-post-card__body">
+                    <div class="top-post-card__note">
+                      <p class="top-post-card__text top-post-card__text--solo ${tier}">${text}</p>
+                    </div>
+                  </div>
+                </article>
+              </div>`;
+            })
+            .join("");
         },
         // §19 — Top-post widget (in-chat single-select)
         "top-post-widget": (slot) => {

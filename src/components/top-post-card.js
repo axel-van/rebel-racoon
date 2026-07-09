@@ -187,7 +187,7 @@ function renderMediaBlock(post) {
 // to fit more, and every tier line-clamps so the card height stays bounded (the
 // copy truncates rather than growing the card / its grid row). Thresholds are on
 // the rendered character count.
-function soloSizeTier(text) {
+export function soloSizeTier(text) {
   const n = (text || "").length;
   if (n <= 70) return "top-post-card__text--xl";
   if (n <= 150) return "top-post-card__text--lg";
