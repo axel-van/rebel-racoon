@@ -564,7 +564,11 @@
   align-items: center;
   gap: var(--ref-spacing-xxs);
   width: 100%;
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
+  /* Pin the DS body style so the handle doesn't inherit an ambient
+     font-size / line-height (which inflated the head row's height). */
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
   font-weight: var(--sys-text-style-body-bold-weight);
 }
 
@@ -575,7 +579,8 @@
 }
 
 .top-post-echo__excerpt {
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-body-size);
   line-height: var(--sys-text-style-body-line-height);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -585,19 +590,20 @@
 
 .top-post-echo__stats {
   font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
   color: var(--sys-text-color-light);
   font-variant-numeric: tabular-nums;
 }
 
 .top-post-echo__stats b {
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-grey-100);
   font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 /* The ×-vs-average keeps the green performance accent; the raw counts stay
    neutral (see .top-post-card__submetrics b). */
 .top-post-echo__stats .top-post-echo__avg {
-  color: var(--ref-color-green-100);
+  color: var(--ref-color-green-150);
 }
 
 /* "View on <network>" link — shared by the board card footer and the echo card
@@ -609,6 +615,7 @@
   flex: 0 0 auto;
   white-space: nowrap;
   font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
   /* Explicit weight so the link looks identical everywhere — otherwise it
      inherits the echo head's bold in one place and regular in the footer. */
   font-weight: var(--sys-text-style-caption-bold-weight);
