@@ -2248,6 +2248,22 @@ function startAskFlowFromSession(sessionId, sourceId, filename) {
   }
 }
 
+// Provenance for a draft cut from a video clip → the collapsible "Generation
+// context" panel (post-card.js): the clip it was generated from as the
+// headline + the source video it was cut out of. Mirrors ideaContext /
+// repurposeContext in draft-flow / top-posts-flow.
+function clipContext(clip, sourceName) {
+  return {
+    kind: "clip",
+    headline: { icon: "ap-icon-video", text: `Clip · ${clip.title}` },
+    source: {
+      icon: "ap-icon-file--video",
+      label: sourceName || "Video source",
+      detail: clip.summary || "",
+    },
+  };
+}
+
 // Open the Video Clips modal with the standard "session" callback wiring:
 // save persists clip edits in sources-stream; use-clips drafts the picked
 // clips into THIS session (drafts pill increments + inline draft turn +
@@ -2257,8 +2273,8 @@ function openVideoClipsModalForSession(source, session) {
   openVideoClipsModal(source, {
     onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
     onUseClips: (selectedClips, src) => {
-      const drafts = selectedClips.map((clip) =>
-        addPostDraft(session.id, {
+      const drafts = selectedClips.map((clip) => {
+        const d = addPostDraft(session.id, {
           network: clip.network,
           text: [clip.title, clip.summary].filter(Boolean),
           hashtags: (clip.tags || []).map((t) => `#${t}`),
@@ -2268,8 +2284,10 @@ function openVideoClipsModalForSession(source, session) {
             sourceName: src.filename,
             hue: clip.hue,
           },
-        }),
-      );
+        });
+        d.generationContext = clipContext(clip, src.filename);
+        return d;
+      });
       postDraftResult(session.id, {
         ideaTitle: `From ${src.filename}`,
         drafts,
@@ -2752,16 +2770,16 @@ function generateClipDrafts(sessionId, entries, accounts, format, style) {
     const drafts = [];
     for (const { clip, sourceName, sourceId } of entries) {
       for (const a of accounts) {
-        drafts.push(
-          addPostDraft(sessionId, {
-            network: a.platform,
-            text: [clip.title, clip.summary].filter(Boolean),
-            hashtags: (clip.tags || []).map((t) => `#${t}`),
-            clipRef: { start: clip.start, end: clip.end, sourceName, hue: clip.hue, sourceId, clipId: clip.id },
-            format,
-            subtitleStyle: style === "none" ? null : style,
-          }),
-        );
+        const d = addPostDraft(sessionId, {
+          network: a.platform,
+          text: [clip.title, clip.summary].filter(Boolean),
+          hashtags: (clip.tags || []).map((t) => `#${t}`),
+          clipRef: { start: clip.start, end: clip.end, sourceName, hue: clip.hue, sourceId, clipId: clip.id },
+          format,
+          subtitleStyle: style === "none" ? null : style,
+        });
+        d.generationContext = clipContext(clip, sourceName);
+        drafts.push(d);
       }
     }
     const title = entries.length === 1 ? entries[0].clip.title : `${entries.length} clips`;
@@ -3982,16 +4000,16 @@ function finalizeClipStudio(session) {
     const drafts = [];
     for (const clip of clips) {
       for (const a of accounts) {
-        drafts.push(
-          addPostDraft(session.id, {
-            network: a.platform,
-            text: [clip.title, clip.summary].filter(Boolean),
-            hashtags: (clip.tags || []).map((t) => `#${t}`),
-            clipRef: { start: clip.start, end: clip.end, sourceName, hue: clip.hue },
-            format: perNet[a.platform] || st.config?.format || clip.format || "9:16",
-            subtitleStyle: captionStyle,
-          }),
-        );
+        const d = addPostDraft(session.id, {
+          network: a.platform,
+          text: [clip.title, clip.summary].filter(Boolean),
+          hashtags: (clip.tags || []).map((t) => `#${t}`),
+          clipRef: { start: clip.start, end: clip.end, sourceName, hue: clip.hue },
+          format: perNet[a.platform] || st.config?.format || clip.format || "9:16",
+          subtitleStyle: captionStyle,
+        });
+        d.generationContext = clipContext(clip, sourceName);
+        drafts.push(d);
       }
     }
     postDraftResult(session.id, { ideaTitle: `Clips from ${sourceName}`, drafts });

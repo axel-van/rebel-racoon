@@ -625,11 +625,26 @@
    The toggle sits on the RIGHT of the foot row, sharing the line with the
    "How's this draft?" feedback on the left; the panel drops full-width beneath.
    Collapse is a CSS checkbox toggle (hidden input + label) so no JS is needed. */
+/* The feedback strip flows full-width so its "What was off?" panel can expand
+   to the card width; the Generation context toggle is pinned to the top-right
+   corner so it stays on the "How's this draft?" line rather than riding the
+   strip's centre (and moving down) when that panel opens. */
 .posts__card-footrow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ref-spacing-sm);
+  position: relative;
+}
+/* Strip is the sole in-flow child → spans the card. Its asymmetric top padding
+   would offset its row from the pinned toggle, so drop it here (the card-wrap
+   gap already spaces the row from the card above). */
+.posts__card-footrow > .fb--strip {
+  padding-top: 0;
+}
+.posts__card-footrow > .posts__gencontext-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  /* Match the feedback row's icon-button height so the toggle centres on the
+     same line as "How's this draft?". */
+  min-height: var(--sys-icon-button-height);
 }
 
 .posts__gencontext-toggle {
@@ -695,6 +710,10 @@
 .posts__gencontext-headline--angle {
   background: var(--ref-color-purple-10);
   color: var(--ref-color-purple-100);
+}
+.posts__gencontext-headline--clip {
+  background: var(--ref-color-electric-blue-10);
+  color: var(--ref-color-electric-blue-100);
 }
 
 /* Source the draft drew on — icon + label, then a muted excerpt beneath. */

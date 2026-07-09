@@ -1732,6 +1732,17 @@ const AUTHOR_JT = {
   visibility: "Public",
 };
 
+// Provenance stamped on every seeded draft so each card shows the collapsible
+// "Generation context" panel (post-card.js) — same shape draft-flow's
+// ideaContext produces for live idea drafts: the angle picked as the headline
+// pill + the source idea the draft drew on. Keeps the demo honest: every
+// existing draft can show where it came from, not just newly generated ones.
+const seedIdeaGen = (angle, ideaTitle) => ({
+  kind: "idea",
+  headline: { icon: "ap-icon-target", text: `Angle · ${angle}` },
+  source: { icon: "ap-icon-sparkles", label: "1 source idea", detail: ideaTitle },
+});
+
 export const postsBySession = {
   "s-acme-launch": [
     {
@@ -1748,6 +1759,7 @@ export const postsBySession = {
       cta: "",
       stats: { likes: 147, comments: 8, reposts: 11 },
       hasImage: false,
+      generationContext: seedIdeaGen("The data-backed post-mortem", "Why we stopped writing quarterly OKRs"),
     },
     {
       id: "post-acme-2",
@@ -1763,6 +1775,7 @@ export const postsBySession = {
       cta: "",
       stats: { likes: 0, comments: 0, reposts: 0 },
       hasImage: false,
+      generationContext: seedIdeaGen("The contrarian take", "Why we stopped writing quarterly OKRs"),
       errors: [
         {
           id: "e-acme-2-1",
@@ -1792,6 +1805,7 @@ export const postsBySession = {
       cta: "",
       stats: { likes: 198, comments: 22, reposts: 14 },
       hasImage: false,
+      generationContext: seedIdeaGen("The honest founder retro", "The three constraints that killed our first launch"),
     },
     {
       id: "post-acme-4",
@@ -1806,6 +1820,7 @@ export const postsBySession = {
       cta: "",
       stats: { likes: 0, comments: 0, reposts: 0 },
       hasImage: false,
+      generationContext: seedIdeaGen("The behind-the-scenes recap", "What a founder keynote looks like at 50 people"),
       errors: [
         {
           id: "e-acme-4-1",
@@ -1831,6 +1846,7 @@ export const postsBySession = {
       cta: "Read the full Riverside story →",
       stats: { likes: 132, comments: 9, reposts: 7 },
       hasImage: false,
+      generationContext: seedIdeaGen("The customer-proof angle", "Riverside's 6-week onboarding rebuild"),
     },
     {
       id: "post-riv-2",
@@ -1846,6 +1862,7 @@ export const postsBySession = {
       cta: "",
       stats: { likes: 89, comments: 6, reposts: 4 },
       hasImage: false,
+      generationContext: seedIdeaGen("The verbatim quote", '"We just needed one place to start a draft."'),
     },
     {
       id: "post-riv-3",
@@ -1860,6 +1877,7 @@ export const postsBySession = {
       cta: "",
       stats: { likes: 0, comments: 0, reposts: 0 },
       hasImage: false,
+      generationContext: seedIdeaGen("The reframe angle", "The metric Riverside cared about that we didn't track"),
       errors: [
         {
           id: "e-riv-3-1",
@@ -1884,6 +1902,10 @@ export const postsBySession = {
       cta: "Read the full case study →",
       stats: { likes: 0, comments: 0, reposts: 0 },
       hasImage: false,
+      generationContext: seedIdeaGen(
+        "The before-and-after story",
+        "From spreadsheet chaos to one workflow — the Riverside arc",
+      ),
     },
     {
       id: "post-riv-5",
@@ -1896,6 +1918,7 @@ export const postsBySession = {
       cta: "",
       stats: { likes: 41, comments: 2, reposts: 6 },
       hasImage: false,
+      generationContext: seedIdeaGen("The punchy quote hook", '"We just needed one place to start a draft."'),
     },
   ],
   "s-state-of-social": [
@@ -1914,6 +1937,10 @@ export const postsBySession = {
       cta: "Follow for more practical B2B content systems and repeatable editorial angles.",
       stats: { likes: 281, comments: 13, reposts: 19 },
       hasImage: false,
+      generationContext: seedIdeaGen(
+        "The data-backed manifesto",
+        "Three numbers from the 2026 report that flipped my Q3 plan",
+      ),
     },
     {
       id: "post-sos-2",
@@ -1930,6 +1957,7 @@ export const postsBySession = {
       cta: "Save this one — useful the next time you're tempted to post something just to post.",
       stats: { likes: 62, comments: 4, reposts: 2 },
       hasImage: false,
+      generationContext: seedIdeaGen("The editorial rule of thumb", "The one founder story we won't tell (and why)"),
     },
   ],
   "s-weekly-recap": [
@@ -1947,6 +1975,7 @@ export const postsBySession = {
       cta: "",
       stats: { likes: 73, comments: 5, reposts: 3 },
       hasImage: false,
+      generationContext: seedIdeaGen("The tactical breakdown", "What week 12 told us about Tuesday vs Thursday"),
     },
   ],
 };

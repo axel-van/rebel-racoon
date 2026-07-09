@@ -19,7 +19,8 @@
 }
 
 .fb__label {
-  font-size: var(--sys-text-style-body-size);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
   color: var(--ref-color-grey-80);
 }
 

@@ -367,7 +367,7 @@ export function renderPostCard(post, opts = {}) {
 function renderGenerationContextBody(post) {
   const gc = post.generationContext;
   if (!gc) return "";
-  const tone = gc.kind === "repurpose" ? "repurpose" : "angle";
+  const tone = gc.kind === "repurpose" ? "repurpose" : gc.kind === "clip" ? "clip" : "angle";
   const headline = gc.headline
     ? `<div class="posts__gencontext-headline posts__gencontext-headline--${tone}">
         <i class="${gc.headline.icon}" aria-hidden="true"></i>
