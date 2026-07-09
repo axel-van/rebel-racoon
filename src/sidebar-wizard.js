@@ -256,8 +256,8 @@ function analyzingNoticeHtml() {
   return `
     <div class="chat-turn chat-turn--ai chat-turn--extracting">
       <div class="extracting-notice">
-        <span class="ap-status mermaid">Analyzing</span>
         <span class="extracting-notice__spinner" aria-hidden="true"></span>
+        <span class="ap-status mermaid">Analyzing</span>
       </div>
     </div>
   `;

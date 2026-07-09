@@ -256,8 +256,8 @@ export function renderExtractingNotice() {
   return `
     <div class="chat-turn chat-turn--ai chat-turn--extracting">
       <div class="extracting-notice" role="status" aria-label="Extracting ideas from this source">
-        <span class="ap-status mermaid">Extracting</span>
         <span class="extracting-notice__spinner" aria-hidden="true"></span>
+        <span class="ap-status mermaid">Extracting</span>
       </div>
     </div>
   `;
@@ -302,7 +302,7 @@ export function renderResultCard({
          </span>`;
   const ctaHtml =
     state === "ready" && cta
-      ? `<span class="drafts-card__cta" aria-hidden="true">
+      ? `<span class="ap-link standalone small drafts-card__cta" aria-hidden="true">
            <span class="drafts-card__cta-label">${escapeHtml(cta.label)}</span>
            <i class="ap-icon-chevron-right"></i>
          </span>`

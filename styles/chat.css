@@ -781,19 +781,13 @@ span.chat-bubble-choice-chip {
   font-weight: var(--sys-text-style-body-bold-weight);
 }
 
-/* "Review ›" label — navy to match the thread's clickable
-   affordances (source-intake "View ideas" pill, the "View idea" links
-   inside the extraction turn). Reads as a quiet link beside the title
-   while the whole card stays clickable; the chevron nudges right on
-   hover/focus, the same micro-cue as the source-intake pill. */
+/* "Review ›" / "Open clips ›" label — the DS link (.ap-link standalone small)
+   drives the colour + type so it reads as a real design-system link beside the
+   title while the whole card stays clickable; we only keep it from shrinking and
+   nudge the chevron right on hover/focus, the same micro-cue as the
+   source-intake pill. */
 .drafts-card__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--app-spacing-micro);
   flex-shrink: 0;
-  font: var(--sys-text-style-body-bold-weight) var(--sys-text-style-body-bold-size) /
-    var(--sys-text-style-body-bold-line-height) var(--sys-text-style-body-bold-font-family);
-  color: var(--app-convo-navy);
 }
 
 .drafts-card__cta > i {
