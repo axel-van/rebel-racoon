@@ -302,6 +302,13 @@
   color: var(--ref-color-grey-100);
 }
 
+/* Single-line option (no caption sibling) → the label is the whole option, so
+   it reads as body-regular. Bold is reserved for when it's a title sitting over
+   a muted caption (a two-line row). */
+.analyse__option-label:only-child {
+  font-weight: var(--sys-text-style-body-weight);
+}
+
 .analyse__option-chevron {
   color: var(--sys-text-color-light);
   flex-shrink: 0;
