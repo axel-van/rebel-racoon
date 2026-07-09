@@ -941,11 +941,10 @@
 /* --- Extracting notice (Figma 25:1413) ------------------------------- */
 /* Inline "Extracting" pill + 16px blue spinner, shown in the thread while a
    source extraction is running. Lifecycle is owned by the pending marker in
-   the assistant thread (assistant.js startPending / finishPending). */
-
-.chat-turn--extracting {
-  align-items: center;
-}
+   the assistant thread (assistant.js startPending / finishPending). The turn
+   inherits align-items: flex-start from .chat-turn--ai so the notice sits
+   left, like every other conversation status; the spinner↔pill vertical
+   centring is owned by .extracting-notice below. */
 
 .extracting-notice {
   display: inline-flex;
