@@ -53,27 +53,46 @@
   content: "";
   position: absolute;
   inset: auto 0 0 0;
-  height: 55%;
+  /* Lighter now that both overlays are self-contained chips — lets more of the
+     real video frame show through for a cleaner, clip-player look. */
+  height: 45%;
   background: var(--app-thumb-scrim);
   pointer-events: none;
 }
 
+/* Play affordance — the platform-standard circular button (YouTube / Reels /
+   clip-editor convention): a frosted translucent disc centred on the thumb with
+   a white triangle, far more polished than a bare floating triangle. The glyph
+   is nudged right ~2px for optical centring inside the disc. */
 .clip-card__thumb-play {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--app-radius-circle);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   color: var(--ref-color-white);
-  opacity: 0.92;
-  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.35));
   pointer-events: none;
-  transition: transform var(--ref-animation-short) var(--app-ease-out);
+  transition:
+    transform var(--ref-animation-short) var(--app-ease-out),
+    background var(--ref-animation-short) var(--app-ease-out);
+}
+
+.clip-card__thumb-play > svg {
+  margin-left: 2px;
 }
 
 .clip-card__thumb-btn:hover .clip-card__thumb-play,
 .clip-card__thumb-btn:focus-visible .clip-card__thumb-play {
-  transform: scale(1.08);
+  transform: translate(-50%, -50%) scale(1.08);
+  background: rgba(0, 0, 0, 0.62);
 }
 
 .clip-card__thumb-btn:focus-visible {
@@ -109,14 +128,20 @@
   gap: var(--ref-spacing-xs);
 }
 
+/* Time-range chip — same translucent-black pill as the duration badge so both
+   bottom overlays read as one consistent metadata language (no more bare white
+   text competing with a chip). */
 .clip-card__timeframe-bounds {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
+  padding: 1px 5px;
+  border-radius: var(--ref-border-radius-sm);
+  background: rgba(0, 0, 0, 0.72);
   color: var(--ref-color-white);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
 }
 
 .clip-card__timeframe-time {
@@ -124,9 +149,9 @@
 }
 
 .clip-card__timeframe-arrow {
-  font-size: var(--sys-icon-css-sm);
+  font-size: var(--sys-icon-css-xs);
   color: var(--ref-color-white);
-  opacity: 0.9;
+  opacity: 0.85;
 }
 
 /* Duration badge — the platform-standard translucent black chip with white
