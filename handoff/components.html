@@ -615,7 +615,8 @@
           the right-panel &ldquo;sources in this chat&rdquo; list: file-kind icon, filename, the ideas this source
           produced (each a link into the Ideas tab), a <code>@ Reference</code> button, and a &hellip; menu (Edit name /
           Reanalyze / Delete, plus View clips for videos). While a source is still processing it shows the Archie stage
-          pill in place of the ideas + Reference. Live below.
+          pill in place of the ideas + Reference. A repurposed top post used as a source (middle) renders the winner
+          echo card as its body, with the Reference / kebab actions in a footer bar. Live below.
         </p>
         <div class="hd-note" style="margin: 0 0 16px">
           The old standalone <code>.source-card</code> (<code>renderSourceCard()</code>, with an &ldquo;Ask&rdquo;
@@ -625,7 +626,9 @@
         <article class="hd-comp">
           <header class="hd-comp__head">
             <div>
-              <p class="hd-comp__name"><code>.rpanel-sources__row</code> — processed (with ideas) vs processing</p>
+              <p class="hd-comp__name">
+                <code>.rpanel-sources__row</code> — processed (with ideas) vs post-used-as-source vs processing
+              </p>
             </div>
           </header>
           <div class="hd-comp__body">
@@ -1627,6 +1630,21 @@
         status: "Processing",
         addedAt: "just now",
       };
+      // A repurposed top post used as a source — carries the winner echo card
+      // (renderSourceRow renders it as the card body, with the Reference / kebab
+      // actions in a footer bar). Mirrors what executeRepurpose() seeds.
+      const POST_SOURCE = (() => {
+        const post = topPosts.find((p) => (p.network || "").toLowerCase() === "instagram") || topPosts[0];
+        if (!post) return null;
+        return {
+          id: "src-toppost-demo",
+          filename: (post.excerpt || "").split(/(?<=[.!?])\s/)[0].slice(0, 60),
+          kind: "Instagram post",
+          status: "Processed",
+          preview: "Repurposed",
+          topPost: post,
+        };
+      })();
 
       const FILLERS = {
         // §11 — Loaders (SVG injected globally by initArchieLoader below)
@@ -1655,7 +1673,9 @@
         // the shared mock ideas internally, so the nested-ideas list is live.
         "source-card": (slot) => {
           slot.innerHTML =
-            (ACME_SOURCES[0] ? renderSourceRow(ACME_SOURCES[0]) : "") + renderSourceRow(PROCESSING_SOURCE);
+            (ACME_SOURCES[0] ? renderSourceRow(ACME_SOURCES[0]) : "") +
+            (POST_SOURCE ? renderSourceRow(POST_SOURCE) : "") +
+            renderSourceRow(PROCESSING_SOURCE);
         },
         // §15 — Idea card (full)
         "idea-card": (slot) => {
