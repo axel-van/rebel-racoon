@@ -46,7 +46,7 @@ export const FLAGS = Object.freeze([
   {
     id: "statusActionSnackbars",
     label: "Action success snackbars",
-    default: true,
+    default: false,
     hides:
       "When OFF, suppress the success snackbars that now duplicate the " +
       "persistent composer status bar: 'N drafts ready to review', " +
