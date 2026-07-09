@@ -26,6 +26,8 @@
     <link rel="stylesheet" href="../styles/screens/posts.css?v=3" />
     <!-- Quick-picker (inline question) styles for the live picker previews. -->
     <link rel="stylesheet" href="../styles/screens/analyse.css?v=3" />
+    <!-- Subtitle-style card previews for the clip subtitle quick-picker (§9). -->
+    <link rel="stylesheet" href="../styles/components/subtitle-style.css?v=3" />
     <!-- Content-card styles so the live source / idea (full) / post / clip /
          top-post / feedback previews render with their real chrome. -->
     <link rel="stylesheet" href="../styles/screens/dashboard.css?v=3" />
@@ -1096,8 +1098,10 @@
       <section class="hd-section" id="choices">
         <h2>4. Choice chips</h2>
         <p class="hd-lead">
-          Inline picker that appears inside an AI bubble — multi-select chips with optional icons or visual previews,
-          plus a Submit button when <code>multi: true</code>. Becomes static spans once answered.
+          Inline picker that appears inside an AI bubble — multi-select chips with brand icon + label, plus a Submit
+          button when <code>multi: true</code>. Becomes static spans once answered. Still used for the channel picker
+          (draft flow) and the action picker (start flow). Visual/preview picks (subtitle style, aspect ratio) now use
+          the Quick picker's card grid instead — see §9.
         </p>
 
         <article class="hd-comp">
@@ -1111,21 +1115,6 @@
           </header>
           <div class="hd-comp__body">
             <div class="hd-comp__preview" data-live="choices-text"></div>
-          </div>
-        </article>
-
-        <article class="hd-comp">
-          <header class="hd-comp__head">
-            <div>
-              <p class="hd-comp__name"><code>.chat-bubble-choices--visual</code> (preview tiles)</p>
-              <p class="hd-comp__desc">
-                Subtitle-style picker — 2-row tile: visual sample on top (POST in the style), label below. Each style
-                gets its own preview class.
-              </p>
-            </div>
-          </header>
-          <div class="hd-comp__body">
-            <div class="hd-comp__preview" data-live="choices-visual"></div>
           </div>
         </article>
       </section>
@@ -1397,6 +1386,26 @@
             </div>
           </div>
         </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.analyse__options--cards</code> — visual card grid (subtitle style)</p>
+              <p class="hd-comp__desc">
+                Card grid (<code>variant: "cards"</code>) used by the clip-draft flow's aspect-ratio and subtitle-style
+                steps — each card CSS-renders its style on a &ldquo;Make it Pop&rdquo; mock. Clicking a card resolves
+                the pick (this is what the subtitle choice uses, in place of a choice-chip bubble).
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="analyse__sticky-bar session__assistant-wizard-bar">
+                <div class="analyse__sticky-bar-inner" data-live="picker-cards"></div>
+              </div>
+            </div>
+          </div>
+        </article>
       </section>
 
       <!-- ════════════════════════════════════════════════════════════════
@@ -1452,6 +1461,7 @@
     <script type="module">
       import { renderCompactIdeaCard } from "../src/components/idea-card-compact.js";
       import { renderPicker, bulletsBlock, fieldsBlock } from "../src/screens/_analyse-common.js";
+      import { CLIP_SUBTITLE_ITEMS } from "../src/clip-subtitles.js";
       // Group A–D component renderers — the exact functions the app renders with.
       import { renderSourceRow } from "../src/components/right-panel.js";
       import { renderIdeaCard } from "../src/components/idea-card.js";
@@ -1563,6 +1573,17 @@
           customFile: true,
           customFileLabel: "Drop a file here, or click to browse",
           customFileHint: "PDF · DOCX · TXT",
+        },
+        // Card-grid variant — the visual picker used by the clip-draft flow's
+        // ratio + subtitle-style steps. Here it renders the real subtitle
+        // catalog (CLIP_SUBTITLE_ITEMS), each card CSS-rendering its style.
+        "picker-cards": {
+          handler: "demo",
+          title: "Choose a subtitle style",
+          stepIndicator: "Subtitles",
+          variant: "cards",
+          cardCols: 3,
+          items: CLIP_SUBTITLE_ITEMS,
         },
       };
 
@@ -1731,8 +1752,9 @@
         },
         // §19 — Top posts (select rows + echo)
         "top-post-rows": (slot) => {
+          // Two rows — enough to show the selected vs unselected radio state.
           slot.innerHTML = topPosts
-            .slice(0, 3)
+            .slice(0, 2)
             .map((p, i) => renderTopPostSelectRow(p, { selected: i === 0, group: "hd-demo" }))
             .join("");
         },
@@ -1842,17 +1864,6 @@
               { value: "x", label: "X", icon: "ap-icon-twitter-official" },
               { value: "instagram", label: "Instagram", icon: "ap-icon-instagram" },
               { value: "tiktok", label: "TikTok", icon: "ap-icon-tiktok-official" },
-            ],
-          });
-        },
-        "choices-visual": (slot) => {
-          slot.innerHTML = renderChoiceTurn({
-            id: "demo-visual",
-            text: "Pick a subtitle style for the clips:",
-            instant: true,
-            choices: [
-              { value: "bold", label: "Bold", preview: "POST", previewKind: "bold" },
-              { value: "minimal", label: "Minimal", preview: "POST", previewKind: "minimal" },
             ],
           });
         },
