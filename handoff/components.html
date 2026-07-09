@@ -26,7 +26,7 @@
     <link rel="stylesheet" href="../styles/screens/posts.css?v=3" />
     <!-- Quick-picker (inline question) styles for the live picker previews. -->
     <link rel="stylesheet" href="../styles/screens/analyse.css?v=3" />
-    <!-- Subtitle-style card previews for the clip subtitle quick-picker (§9). -->
+    <!-- Subtitle-style card previews for the clip subtitle quick-picker (§8). -->
     <link rel="stylesheet" href="../styles/components/subtitle-style.css?v=3" />
     <!-- Content-card styles so the live source / idea (full) / post / clip /
          top-post / feedback previews render with their real chrome. -->
@@ -494,13 +494,12 @@
             <li><a href="#turns">1. Turn wrappers</a></li>
             <li><a href="#bubbles">2. Bubbles (AI / User / Source intake)</a></li>
             <li><a href="#bubble-content">3. Bubble content blocks</a></li>
-            <li><a href="#choices">4. Choice chips</a></li>
-            <li><a href="#extraction">5. Extraction turn (Idea cards)</a></li>
-            <li><a href="#drafts">6. Drafts result (not inline)</a></li>
-            <li><a href="#clip-extraction">7. Result card — all states</a></li>
-            <li><a href="#notices">8. Notices (mermaid, extracting)</a></li>
-            <li><a href="#quick-picker">9. Quick picker (inline question)</a></li>
-            <li><a href="#switch-skeleton">10. Chat-switch skeleton</a></li>
+            <li><a href="#extraction">4. Extraction turn (Idea cards)</a></li>
+            <li><a href="#drafts">5. Drafts result (not inline)</a></li>
+            <li><a href="#clip-extraction">6. Result card — all states</a></li>
+            <li><a href="#notices">7. Notices (mermaid, extracting)</a></li>
+            <li><a href="#quick-picker">8. Quick picker (inline question)</a></li>
+            <li><a href="#switch-skeleton">9. Chat-switch skeleton</a></li>
           </ul>
         </div>
       </nav>
@@ -641,7 +640,7 @@
         <p class="hd-lead">
           <code>renderIdeaCard()</code> (<code>src/components/idea-card.js</code>) — the workspace card with a potential
           pill (High / Medium / Low from confidence), kind badge, hook, hashtags, a Sources toggle, and Draft /
-          Reference / &hellip; actions. (The compact variant used in the panel &amp; extraction turn is in §5.)
+          Reference / &hellip; actions. (The compact variant used in the panel &amp; extraction turn is in §4.)
         </p>
 
         <article class="hd-comp">
@@ -1106,37 +1105,10 @@
       </section>
 
       <!-- ════════════════════════════════════════════════════════════════
-            4. CHOICE CHIPS
-            ════════════════════════════════════════════════════════════ -->
-      <section class="hd-section" id="choices">
-        <h2>4. Choice chips</h2>
-        <p class="hd-lead">
-          Inline picker that appears inside an AI bubble — multi-select chips with brand icon + label, plus a Submit
-          button when <code>multi: true</code>. Becomes static spans once answered. Still used for the channel picker
-          (draft flow) and the action picker (start flow). Visual/preview picks (subtitle style, aspect ratio) now use
-          the Quick picker's card grid instead — see §9.
-        </p>
-
-        <article class="hd-comp">
-          <header class="hd-comp__head">
-            <div>
-              <p class="hd-comp__name"><code>.chat-bubble-choices</code> (text + icon)</p>
-              <p class="hd-comp__desc">
-                Channel picker variant — pill-shaped chips with brand icon + label. Multi-select with Submit footer.
-              </p>
-            </div>
-          </header>
-          <div class="hd-comp__body">
-            <div class="hd-comp__preview" data-live="choices-text"></div>
-          </div>
-        </article>
-      </section>
-
-      <!-- ════════════════════════════════════════════════════════════════
-            5. EXTRACTION TURN
+            4. EXTRACTION TURN
             ════════════════════════════════════════════════════════════ -->
       <section class="hd-section" id="extraction">
-        <h2>5. Extraction turn (Idea cards)</h2>
+        <h2>4. Extraction turn (Idea cards)</h2>
         <p class="hd-lead">
           Mermaid &ldquo;Extracted N ideas&rdquo; pill that wraps an expandable <code>&lt;details&gt;</code>. When open,
           shows the analyzed source filename + N idea cards. Each idea has a title/body and a footer with thumbs +
@@ -1179,7 +1151,7 @@
             6. DRAFTS CARD
             ════════════════════════════════════════════════════════════ -->
       <section class="hd-section" id="drafts">
-        <h2>6. Drafts result — not rendered inline</h2>
+        <h2>5. Drafts result — not rendered inline</h2>
         <p class="hd-lead">
           Draft batches are intentionally <strong>not</strong> surfaced as an inline thread card anymore. Drafts can
           finish while the user is doing something else, so a card here would interleave the conversation unpredictably.
@@ -1192,7 +1164,7 @@
           <code>.drafts-card__nets</code> / <code>.drafts-card__chevron</code>) is gone — those classes no longer exist
           in <code>styles/</code> or <code>src/</code>. <code>renderTurn()</code> returns an empty string for
           <code>variant: "draft"</code>. The live, current result-card family (clips / ideas ready, pending,
-          unavailable) lives in <strong>§7</strong> below, rendered by the shared <code>renderResultCard()</code>.
+          unavailable) lives in <strong>§6</strong> below, rendered by the shared <code>renderResultCard()</code>.
         </div>
       </section>
 
@@ -1200,9 +1172,9 @@
             7. CLIP / IDEA EXTRACTION CARD
             ════════════════════════════════════════════════════════════ -->
       <section class="hd-section" id="clip-extraction">
-        <h2>7. Result card — all states</h2>
+        <h2>6. Result card — all states</h2>
         <p class="hd-lead">
-          Every &ldquo;result of a long AI job&rdquo; in the thread is one component: <code>.drafts-card</code> (§6),
+          Every &ldquo;result of a long AI job&rdquo; in the thread is one component: <code>.drafts-card</code> (§5),
           rendered by <code>renderResultCard()</code>. Drafts, clips and ideas share the <strong>ready</strong> state;
           the two transient states are modifiers on the same card — <code>.drafts-card--pending</code> (dot-grid loader
           tile) and <code>.drafts-card--unavailable</code> (source removed). The old <code>.clip-extraction-card</code>
@@ -1257,7 +1229,7 @@
             8. NOTICES
             ════════════════════════════════════════════════════════════ -->
       <section class="hd-section" id="notices">
-        <h2>8. Notices (mermaid, extracting)</h2>
+        <h2>7. Notices (mermaid, extracting)</h2>
         <p class="hd-lead">
           Lightweight status pills posted into the thread by the assistant. <strong>Mermaid</strong> = AI work (the
           &ldquo;Thinking&rdquo; / &ldquo;Drafting&rdquo; reasoning chip). <strong>Extracting</strong> = inline pill +
@@ -1309,12 +1281,12 @@
             9. QUICK PICKER (inline question)
             ════════════════════════════════════════════════════════════ -->
       <section class="hd-section" id="quick-picker">
-        <h2>9. Quick picker (inline question)</h2>
+        <h2>8. Quick picker (inline question)</h2>
         <p class="hd-lead">
           A one-question picker that overlays the composer. Built by <code>renderPicker()</code> and driven by
-          <code>inline-question.js</code>. Same chrome, five modes — all previews below are rendered live from the real
-          <code>renderPicker()</code>, so they never drift. Header carries an optional title, step label, subtitle, and
-          back arrow.
+          <code>inline-question.js</code>. Same chrome, seven modes (single / multi / stepper / custom / file + two card
+          grids) — all previews below are rendered live from the real <code>renderPicker()</code>, so they never drift.
+          Header carries an optional title, step label, subtitle, and back arrow.
         </p>
 
         <article class="hd-comp">
@@ -1444,7 +1416,7 @@
             10. CHAT-SWITCH SKELETON
             ════════════════════════════════════════════════════════════ -->
       <section class="hd-section" id="switch-skeleton">
-        <h2>10. Chat-switch skeleton</h2>
+        <h2>9. Chat-switch skeleton</h2>
         <p class="hd-lead">
           Shown for ~340ms inside <code>.session__assistant-thread</code> when switching to a different chat, then
           swapped for the real thread (a synchronous innerHTML swap, so the real content never flashes first). Only a
@@ -1517,11 +1489,10 @@
       import { sourcesBySession, ideasBySession, postsBySession, topPosts } from "../src/mocks.js";
       // Shared, dependency-free thread-turn renderers — the SAME functions
       // session.js renders the live thread with. Importing them here is what
-      // keeps §1–§8 + §10 from ever drifting.
+      // keeps §1–§7 + §9 from ever drifting.
       import {
         renderMessageBubble,
         renderSourceIntakeTurn,
-        renderChoiceTurn,
         renderNotice,
         renderSystemNotice,
         renderExtractingNotice,
@@ -1633,7 +1604,7 @@
         },
       };
 
-      // Result cards (§7) and the clip-extraction wrapper (§1) live inside a
+      // Result cards (§6) and the clip-extraction wrapper (§1) live inside a
       // `.chat-turn--clip-extraction` in the real thread — wrap the card so the
       // preview matches the app's turn chrome.
       const clipTurn = (cardHtml) =>
@@ -1906,23 +1877,7 @@
           ]);
         },
 
-        // §4 — Choice chips
-        "choices-text": (slot) => {
-          slot.innerHTML = renderChoiceTurn({
-            id: "demo-choice",
-            text: "Which channels should I draft for?",
-            submitLabel: "Draft them",
-            selected: ["linkedin"],
-            choices: [
-              { value: "linkedin", label: "LinkedIn", icon: "ap-icon-linkedin" },
-              { value: "x", label: "X", icon: "ap-icon-twitter-official" },
-              { value: "instagram", label: "Instagram", icon: "ap-icon-instagram" },
-              { value: "tiktok", label: "TikTok", icon: "ap-icon-tiktok-official" },
-            ],
-          });
-        },
-
-        // §5 — Idea cards (already live)
+        // §4 — Idea cards (already live)
         "idea-cards": (slot) => {
           slot.innerHTML = IDEAS.map((idea) =>
             renderCompactIdeaCard(idea, SOURCES, { whyOpen: idea.id === "demo-1", showMention: false }),
