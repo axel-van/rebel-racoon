@@ -2313,7 +2313,7 @@ function closeAllSourceMenus(except) {
   });
 }
 
-function renderSourceRow(src) {
+export function renderSourceRow(src) {
   // Explicit iconClass wins (e.g. a repurposed post's network logo), else map
   // by kind, else the generic file glyph.
   const icon = src.iconClass || SOURCE_KIND_ICON[src.kind] || "ap-icon-file";

@@ -597,16 +597,21 @@
       <section class="hd-section" id="source-card">
         <h2>14. Source card</h2>
         <p class="hd-lead">
-          <code>renderSourceCard()</code> (<code>src/components/source-card.js</code>). Tinted kind-box, filename, meta
-          sub-line, Ask / Reference / &hellip; cluster. Processing state swaps the box for the Archie spinner and shows
-          a live stage pill (in the app it also grows a thin progress bar once the async ticker attaches
-          <code>progress</code>; omitted from this static preview). Live below.
+          <code>renderSourceRow()</code> (<code>src/components/right-panel.js</code>) — the source card as it appears in
+          the right-panel &ldquo;sources in this chat&rdquo; list: file-kind icon, filename, the ideas this source
+          produced (each a link into the Ideas tab), a <code>@ Reference</code> button, and a &hellip; menu (Edit name /
+          Reanalyze / Delete, plus View clips for videos). While a source is still processing it shows the Archie stage
+          pill in place of the ideas + Reference. Live below.
         </p>
+        <div class="hd-note" style="margin: 0 0 16px">
+          The old standalone <code>.source-card</code> (<code>renderSourceCard()</code>, with an &ldquo;Ask&rdquo;
+          button) is no longer a primary surface — it now backs only the Batch Studio staged-intake list.
+        </div>
 
         <article class="hd-comp">
           <header class="hd-comp__head">
             <div>
-              <p class="hd-comp__name"><code>.source-card</code> — processed vs processing</p>
+              <p class="hd-comp__name"><code>.rpanel-sources__row</code> — processed (with ideas) vs processing</p>
             </div>
           </header>
           <div class="hd-comp__body">
@@ -1428,7 +1433,7 @@
       import { renderCompactIdeaCard } from "../src/components/idea-card-compact.js";
       import { renderPicker, bulletsBlock, fieldsBlock } from "../src/screens/_analyse-common.js";
       // Group A–D component renderers — the exact functions the app renders with.
-      import { renderSourceCard } from "../src/components/source-card.js";
+      import { renderSourceRow } from "../src/components/right-panel.js";
       import { renderIdeaCard } from "../src/components/idea-card.js";
       import { renderPostCard, renderGenerationContextBody } from "../src/components/post-card.js";
       import { renderClipCard } from "../src/components/clip-card.js";
@@ -1578,11 +1583,12 @@
         feedback: (slot) => {
           slot.innerHTML = renderFeedbackControl("hd-demo-feedback", { kind: "idea" });
         },
-        // §14 — Source card (processed + processing)
+        // §14 — Source card (right-panel row): a processed source with its
+        // ideas + Reference, then one still processing. renderSourceRow reads
+        // the shared mock ideas internally, so the nested-ideas list is live.
         "source-card": (slot) => {
           slot.innerHTML =
-            (ACME_SOURCES[0] ? renderSourceCard(ACME_SOURCES[0], ACME_IDEAS) : "") +
-            renderSourceCard(PROCESSING_SOURCE, []);
+            (ACME_SOURCES[0] ? renderSourceRow(ACME_SOURCES[0]) : "") + renderSourceRow(PROCESSING_SOURCE);
         },
         // §15 — Idea card (full)
         "idea-card": (slot) => {
