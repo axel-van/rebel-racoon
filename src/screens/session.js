@@ -11,7 +11,7 @@ import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
 } from "../social-profiles.js?v=24";
-import { FORMATS, formatsForNetwork, defaultFormatFor } from "../clip-formats.js?v=3";
+import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=3";
 import { CLIP_SUBTITLE_ITEMS, CLIP_SUBTITLE_LABEL } from "../clip-subtitles.js?v=1";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=4";
 import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=33";
@@ -2628,45 +2628,18 @@ export function startClipDraftFlow(sessionId, entries) {
   askClipFormat(sessionId, list);
 }
 
-// Order the aspect-ratio tiles the way creators think of them: landscape,
-// vertical, then the squarer ratios.
-const CLIP_RATIO_ORDER = ["16:9", "9:16", "4:3", "1:1", "4:5"];
-
-// A small proportion tile — a rectangle drawn at the format's true aspect
-// ratio (CSS `aspect-ratio`), with the ratio label centered inside it so the
-// card needs no separate "16:9" line. Styled in subtitle-style.css.
-function ratioTilePreview(fmt) {
-  return `<span class="ratio-tile"><span class="ratio-tile__frame" style="aspect-ratio:${fmt.id.replace(":", "/")}"></span><span class="ratio-tile__tag">${fmt.tag}</span></span>`;
-}
-
-// Row of full-colour network logos for the platforms a format suits best —
-// rendered under the ratio label so the user picks the right shape per target.
-function ratioNetworksMeta(fmt) {
-  const nets = fmt.networks || [];
-  if (!nets.length) return "";
-  return `<span class="ratio-nets" aria-label="Best for ${nets.map((p) => NETWORK_LABEL[p] || p).join(", ")}"><span class="ratio-nets__label muted">Best for</span>${nets
-    .map((p) => `<i class="${NETWORK_ICON_BY_PLATFORM[p]}" title="${NETWORK_LABEL[p] || p}" aria-hidden="true"></i>`)
-    .join("")}</span>`;
-}
-
 // Step 1 — which aspect ratio? All export formats are offered as visual
 // proportion tiles (the target accounts aren't picked yet, so we don't filter
-// by network).
+// by network). Items come from clip-formats.clipFormatItems() (shared with the
+// handoff gallery).
 function askClipFormat(sessionId, entries) {
-  const formats = CLIP_RATIO_ORDER.map((id) => FORMATS[id]).filter(Boolean);
   postAssistantMessage(sessionId, "What aspect ratio would you like for the clips?");
   inlineQuestion.ask(sessionId, {
     title: "Pick an export format",
     stepLabel: "Ratio",
     skipLabel: "Cancel",
     variant: "cards",
-    items: formats.map((f) => ({
-      value: f.id,
-      // Ratio ("16:9") lives inside the frame; the label carries the name only.
-      label: f.label,
-      preview: ratioTilePreview(f),
-      meta: ratioNetworksMeta(f),
-    })),
+    items: clipFormatItems(),
     onPick: (formatId) => {
       const fmt = FORMATS[formatId];
       postUserTurn(sessionId, fmt ? `${fmt.tag} · ${fmt.label}` : formatId);

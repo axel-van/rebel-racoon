@@ -1390,11 +1390,30 @@
         <article class="hd-comp">
           <header class="hd-comp__head">
             <div>
+              <p class="hd-comp__name"><code>.analyse__options--cards</code> — visual card grid (aspect ratio)</p>
+              <p class="hd-comp__desc">
+                Card grid (<code>variant: "cards"</code>) used by the clip-draft flow's aspect-ratio step: a proportion
+                tile drawn at each format's true ratio + the &ldquo;Best for&rdquo; network logos. Clicking a card
+                resolves the pick.
+              </p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview">
+              <div class="analyse__sticky-bar session__assistant-wizard-bar">
+                <div class="analyse__sticky-bar-inner" data-live="picker-ratio"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
               <p class="hd-comp__name"><code>.analyse__options--cards</code> — visual card grid (subtitle style)</p>
               <p class="hd-comp__desc">
-                Card grid (<code>variant: "cards"</code>) used by the clip-draft flow's aspect-ratio and subtitle-style
-                steps — each card CSS-renders its style on a &ldquo;Make it Pop&rdquo; mock. Clicking a card resolves
-                the pick (this is what the subtitle choice uses, in place of a choice-chip bubble).
+                Same card grid, the subtitle-style step — each card CSS-renders its style on a &ldquo;Make it Pop&rdquo;
+                mock. This is what the subtitle choice uses, in place of a choice-chip bubble.
               </p>
             </div>
           </header>
@@ -1462,6 +1481,7 @@
       import { renderCompactIdeaCard } from "../src/components/idea-card-compact.js";
       import { renderPicker, bulletsBlock, fieldsBlock } from "../src/screens/_analyse-common.js";
       import { CLIP_SUBTITLE_ITEMS } from "../src/clip-subtitles.js";
+      import { clipFormatItems } from "../src/clip-formats.js";
       // Group A–D component renderers — the exact functions the app renders with.
       import { renderSourceRow } from "../src/components/right-panel.js";
       import { renderIdeaCard } from "../src/components/idea-card.js";
@@ -1584,6 +1604,16 @@
           variant: "cards",
           cardCols: 3,
           items: CLIP_SUBTITLE_ITEMS,
+        },
+        // Card grid variant #2 — the aspect-ratio step: proportion tiles + the
+        // "Best for" network logos, from clip-formats.clipFormatItems().
+        "picker-ratio": {
+          handler: "demo",
+          title: "Pick an export format",
+          stepIndicator: "Ratio",
+          skipLabel: "Cancel",
+          variant: "cards",
+          items: clipFormatItems(),
         },
       };
 

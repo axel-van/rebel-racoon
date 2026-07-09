@@ -1,3 +1,5 @@
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=24";
+
 // Shared aspect-ratio catalog for video clips.
 //
 // Single source of truth for the export formats a clip can be cropped to,
@@ -38,4 +40,43 @@ export function defaultFormatFor(net) {
 // landscape. Lets consumers pick a portrait vs landscape preview frame.
 export function isPortraitFormat(id) {
   return id === "9:16" || id === "4:5";
+}
+
+// ── Clip-draft "pick an export format" quick-picker items ────────────────
+// The aspect-ratio step of the draft-from-clip flow (screens/session.js) and
+// the handoff gallery both build the card-grid picker from this — one shared
+// source so the two never drift.
+
+// Order the aspect-ratio tiles the way creators think of them: landscape,
+// vertical, then the squarer ratios.
+export const CLIP_RATIO_ORDER = ["16:9", "9:16", "4:3", "1:1", "4:5"];
+
+// A small proportion tile — a rectangle drawn at the format's true aspect ratio
+// (CSS `aspect-ratio`) with the ratio label centered inside. Styled in
+// subtitle-style.css.
+export function ratioTilePreview(fmt) {
+  return `<span class="ratio-tile"><span class="ratio-tile__frame" style="aspect-ratio:${fmt.id.replace(":", "/")}"></span><span class="ratio-tile__tag">${fmt.tag}</span></span>`;
+}
+
+// Row of full-colour network logos for the platforms a format suits best —
+// rendered under the ratio label so the user picks the right shape per target.
+export function ratioNetworksMeta(fmt) {
+  const nets = fmt.networks || [];
+  if (!nets.length) return "";
+  return `<span class="ratio-nets" aria-label="Best for ${nets.map((p) => NETWORK_LABEL[p] || p).join(", ")}"><span class="ratio-nets__label muted">Best for</span>${nets
+    .map((p) => `<i class="${NETWORK_ICON_BY_PLATFORM[p]}" title="${NETWORK_LABEL[p] || p}" aria-hidden="true"></i>`)
+    .join("")}</span>`;
+}
+
+// The picker items (value/label/preview/meta) for the aspect-ratio step.
+export function clipFormatItems() {
+  return CLIP_RATIO_ORDER.map((id) => FORMATS[id])
+    .filter(Boolean)
+    .map((f) => ({
+      value: f.id,
+      // Ratio ("16:9") lives inside the frame; the label carries the name only.
+      label: f.label,
+      preview: ratioTilePreview(f),
+      meta: ratioNetworksMeta(f),
+    }));
 }
