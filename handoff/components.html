@@ -1798,10 +1798,13 @@
         // §19 — Top posts (select rows + echo)
         "top-post-rows": (slot) => {
           // Two rows — enough to show the selected vs unselected radio state.
-          slot.innerHTML = topPosts
+          // Wrapped in the real .top-posts-widget__list so the rows carry the
+          // same inter-row gap they do in the live widget.
+          const rows = topPosts
             .slice(0, 2)
             .map((p, i) => renderTopPostSelectRow(p, { selected: i === 0, group: "hd-demo" }))
             .join("");
+          slot.innerHTML = `<div class="top-posts-widget__list">${rows}</div>`;
         },
         "top-post-echo": (slot) => {
           if (topPosts[0]) slot.innerHTML = renderTopPostEcho(topPosts[0]);
