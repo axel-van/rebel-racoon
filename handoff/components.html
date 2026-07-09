@@ -540,17 +540,30 @@
         <h2>12. Feedback control</h2>
         <p class="hd-lead">
           The &ldquo;How&rsquo;s this?&rdquo; thumbs strip rendered under cards (ideas, clips, drafts, generated
-          images). Live from <code>renderFeedbackControl()</code> in <code>src/components/feedback-control.js</code>.
+          images). Live from <code>renderFeedbackControl()</code> in <code>src/components/feedback-control.js</code>. A
+          thumbs-down opens the &ldquo;What was off?&rdquo; panel — reason chips + a comment box + Send.
         </p>
 
         <article class="hd-comp">
           <header class="hd-comp__head">
             <div>
-              <p class="hd-comp__name"><code>.feedback-control</code></p>
+              <p class="hd-comp__name"><code>.fb--strip</code> — collapsed (idle)</p>
             </div>
           </header>
           <div class="hd-comp__body">
             <div class="hd-comp__preview" data-live="feedback"></div>
+          </div>
+        </article>
+
+        <article class="hd-comp">
+          <header class="hd-comp__head">
+            <div>
+              <p class="hd-comp__name"><code>.fb__panel</code> — opened (thumbs-down)</p>
+              <p class="hd-comp__desc">Seeded with a down verdict + a reason so the panel renders expanded.</p>
+            </div>
+          </header>
+          <div class="hd-comp__body">
+            <div class="hd-comp__preview" data-live="feedback-open"></div>
           </div>
         </article>
       </section>
@@ -1495,6 +1508,9 @@
         soloSizeTier,
       } from "../src/components/top-post-card.js";
       import { renderFeedbackControl } from "../src/components/feedback-control.js";
+      // Same ?v= as feedback-control.js imports, so we seed the SAME store
+      // instance the renderer reads (a different ?v= is a separate module).
+      import { setVerdict, recordDetail } from "../src/feedback-store.js?v=1";
       import { renderEmptyState } from "../src/components/empty-state.js";
       import { initArchieLoader } from "../src/archie-loader.js";
       // Real mock shapes — guarantees the card previews match the stores exactly.
@@ -1651,9 +1667,17 @@
             )
             .join("");
         },
-        // §12 — Feedback control
+        // §12 — Feedback control (collapsed)
         feedback: (slot) => {
           slot.innerHTML = renderFeedbackControl("hd-demo-feedback", { kind: "idea" });
+        },
+        // §12 — Feedback control, opened: seed a down verdict + a reason so the
+        // "What was off?" panel renders expanded (its open state is data-driven).
+        "feedback-open": (slot) => {
+          const id = "hd-demo-feedback-open";
+          setVerdict(id, "down", { kind: "idea" });
+          recordDetail(id, { reasons: ["wrong-tone"] }, { kind: "idea" });
+          slot.innerHTML = renderFeedbackControl(id, { kind: "idea" });
         },
         // §14 — Source card (right-panel row): a processed source with its
         // ideas + Reference, then one still processing. renderSourceRow reads
