@@ -112,7 +112,25 @@ export function renderPicker(picker) {
     // Card-grid footer action — { value, label, icon? }. Rendered as a
     // prominent bottom button that resolves like a pick (data-{handler}=value).
     footerAction = null,
+    // Search field — render a live filter box above the rows (used for long
+    // lists like "pick one of 40 connected profiles"). Rows carry a
+    // `data-search` haystack that the global input delegate matches against;
+    // when searchable, the per-row 1–9 shortcut badges are dropped (they no
+    // longer map to a filtered list).
+    searchable = false,
+    searchPlaceholder = "Search…",
   } = picker;
+  // A short-hand for "hide the numbered shortcut on this row" — true only in
+  // searchable mode.
+  const showShortcut = !searchable;
+  // Build the `data-search` haystack (lowercased) so the live filter matches
+  // more than the visible label — an item may supply an explicit `search`
+  // string (e.g. brand name + network for an @handle row); otherwise fall back
+  // to label + caption. Quotes escaped for the attribute.
+  const searchAttr = (it) =>
+    searchable
+      ? ` data-search="${(it.search || `${it.label || ""} ${it.caption || ""}`).toLowerCase().replace(/"/g, "&quot;")}"`
+      : "";
   const preset = new Set(defaultSelected);
   // Counter-submit — a single-select picker with an inline-counter row commits
   // via an explicit footer "Generate N drafts" button (not a row-click), so the
@@ -184,12 +202,12 @@ export function renderPicker(picker) {
         return `
           <div
             class="analyse__option analyse__option--stepper${isActive ? " is-selected" : " is-empty"}"
-            data-${handler}="${it.value}"
+            data-${handler}="${it.value}"${searchAttr(it)}
             role="button"
             tabindex="0"
             aria-pressed="${isActive ? "true" : "false"}"
           >
-            <span class="analyse__option-shortcut" aria-hidden="true">${i + 1}</span>
+            ${showShortcut ? `<span class="analyse__option-shortcut" aria-hidden="true">${i + 1}</span>` : ""}
             ${iconSlot}
             <span class="analyse__option-text">
               <span class="analyse__option-label">${it.label}</span>
@@ -260,11 +278,11 @@ export function renderPicker(picker) {
         <button
           type="button"
           class="analyse__option${isPreset ? " is-selected" : ""}${isDisabled ? " analyse__option--disabled" : ""}"
-          data-${handler}="${it.value}"
+          data-${handler}="${it.value}"${searchAttr(it)}
           ${isDisabled ? `disabled aria-disabled="true"` : ""}
           ${selectable ? `aria-pressed="${isPreset ? "true" : "false"}"` : ""}
         >
-          <span class="analyse__option-shortcut" aria-hidden="true">${i + 1}</span>
+          ${showShortcut ? `<span class="analyse__option-shortcut" aria-hidden="true">${i + 1}</span>` : ""}
           ${iconSlot}
           <span class="analyse__option-text">
             <span class="analyse__option-label">${it.label}</span>
@@ -436,7 +454,29 @@ export function renderPicker(picker) {
     return `<div class="analyse__options analyse__options--cards">${header}<div class="analyse__cards"${gridStyle}>${cards}</div>${cardsFooter}</div>`;
   }
 
-  return `<div class="analyse__options${selectable ? " analyse__options--multi" : ""}${stepper ? " analyse__options--stepper" : ""}" ${multi ? "data-multi" : ""}${single ? " data-single" : ""}${stepper ? " data-stepper" : ""}>${header}${rows}${customRow}${fileRow}${footer}</div>`;
+  // Search field + scrollable list — only in searchable mode. The DS
+  // `.ap-input-group` search field sits below the header; the rows move into a
+  // capped-height scroll container so a 40-row list doesn't push the footer off
+  // screen. A hidden empty-state row shows when the filter matches nothing (the
+  // global input delegate in this module toggles both live, no re-render).
+  const searchBox = searchable
+    ? `<div class="ap-input-group analyse__picker-search">
+         <i class="ap-icon-search" aria-hidden="true"></i>
+         <input
+           type="search"
+           class="analyse__picker-search-input"
+           placeholder="${searchPlaceholder}"
+           data-${handler}-search
+           aria-label="${searchPlaceholder}"
+           autocomplete="off"
+         />
+       </div>`
+    : "";
+  const rowsBlock = searchable
+    ? `<div class="analyse__options-list">${rows}<div class="analyse__options-empty muted" hidden>No matches — try a different search.</div></div>`
+    : rows;
+
+  return `<div class="analyse__options${selectable ? " analyse__options--multi" : ""}${stepper ? " analyse__options--stepper" : ""}${searchable ? " analyse__options--searchable" : ""}" ${multi ? "data-multi" : ""}${single ? " data-single" : ""}${stepper ? " data-stepper" : ""}>${header}${searchBox}${rowsBlock}${customRow}${fileRow}${footer}</div>`;
 }
 
 // -- Keyboard wiring --------------------------------------------------------
@@ -466,6 +506,28 @@ document.addEventListener("input", (event) => {
   if (!input.matches?.(".analyse__option-input")) return;
   const send = input.closest(".analyse__option")?.querySelector(".analyse__option-send");
   if (send) send.disabled = !input.value.trim();
+});
+
+// Live search filter for searchable pickers. A picker only re-renders on its
+// host's notify(), which would blow away the field's focus + value mid-type,
+// so — like the send-button sync above — we filter in place: show/hide rows by
+// their `data-search` haystack and toggle the empty state. Host-agnostic
+// (matches the shared class) and self-scoped (no-op unless the event is a
+// picker search field). Registered once at module load.
+document.addEventListener("input", (event) => {
+  const input = event.target;
+  if (!input.matches?.(".analyse__picker-search-input")) return;
+  const container = input.closest(".analyse__options");
+  if (!container) return;
+  const q = input.value.trim().toLowerCase();
+  let visible = 0;
+  for (const row of container.querySelectorAll("[data-search]")) {
+    const match = !q || row.dataset.search.includes(q);
+    row.classList.toggle("is-hidden", !match);
+    if (match) visible += 1;
+  }
+  const empty = container.querySelector(".analyse__options-empty");
+  if (empty) empty.hidden = visible !== 0;
 });
 
 export function bindWizardKeyboard(
@@ -508,7 +570,12 @@ export function bindWizardKeyboard(
       const dir = event.key === "ArrowDown" ? 1 : -1;
       const currentIdx = focusables.indexOf(document.activeElement);
       let nextIdx = currentIdx < 0 ? (dir === 1 ? 0 : focusables.length - 1) : currentIdx + dir;
-      while (nextIdx >= 0 && nextIdx < focusables.length && focusables[nextIdx]?.disabled) {
+      // Skip rows that are disabled OR filtered out by the search box.
+      while (
+        nextIdx >= 0 &&
+        nextIdx < focusables.length &&
+        (focusables[nextIdx]?.disabled || focusables[nextIdx]?.classList.contains("is-hidden"))
+      ) {
         nextIdx += dir;
       }
       if (nextIdx >= 0 && nextIdx < focusables.length) focusables[nextIdx]?.focus();
@@ -553,6 +620,17 @@ export function bindWizardKeyboard(
     // Enter — multi-select submits the current selection; single-select
     // submits typed input or activates the focused/first option.
     if (event.key === "Enter") {
+      // Search field — Enter jumps to the first still-visible option; it must
+      // NEVER resolve the question as a free-text answer (that input is the
+      // custom row, matched below), so handle it before the custom-submit path.
+      if (event.target.matches?.(`[data-${handler}-search]`)) {
+        event.preventDefault();
+        const firstVisible = focusables.find(
+          (el) => el.tagName !== "INPUT" && !el.disabled && !el.classList.contains("is-hidden"),
+        );
+        firstVisible?.click();
+        return;
+      }
       if (activeIsInput && onCustomSubmit) {
         event.preventDefault();
         const value = event.target.value.trim();
@@ -599,9 +677,11 @@ export function bindWizardKeyboard(
   // question state, so the second submit landed on the next step's
   // picker with the stale text value as input — auto-skipping it.)
 
-  // Focus first option on render (skipping disabled rows).
+  // Focus the search field when the picker is searchable (so the user can type
+  // straight away); otherwise focus the first enabled option.
   queueMicrotask(() => {
-    const first = target.querySelector(`[data-${handler}]:not([disabled])`);
+    const search = target.querySelector(`[data-${handler}-search]`);
+    const first = search || target.querySelector(`[data-${handler}]:not([disabled])`);
     if (first) first.focus();
     // And always scroll the chat to the bottom on new step.
     const chat = target.querySelector("#analyseChat");

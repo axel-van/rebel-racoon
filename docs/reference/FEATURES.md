@@ -316,18 +316,19 @@ Détail dimensions/coexistence avec la status-card : [`SHELL-LAYOUT.md`](SHELL-L
 - **Feature flags** : une toggle par flag.
 - **Docs** : lien externe **« Conversation thread components »** → `/handoff/components.html`.
 
-### Feature flags ([`ff-catalog.js`](../../src/ff-catalog.js)) — les 8
+### Feature flags ([`ff-catalog.js`](../../src/ff-catalog.js)) — les 9
 
-| id                       | label                         | défaut  | Gate                                                                                |
-| ------------------------ | ----------------------------- | ------- | ----------------------------------------------------------------------------------- |
-| `draftInlineEdit`        | Inline edit on draft posts    | **OFF** | Édition inline des post cards.                                                      |
-| `sidebarIdeas`           | Ideas in left sidebar         | **OFF** | Entrée Ideas dans la sidebar.                                                       |
-| `playbookDefault`        | Default Playbook toggle       | **OFF** | Étoile ★ set/unset default sur `/playbook/:id`.                                     |
-| `connectors`             | Connectors (live MCP sources) | **OFF** | Toute la feature connecteurs (gallery, modal, submenu, Live connectors, tab modal). |
-| `conversationStatusCard` | Conversation status card      | **ON**  | Carte flottante + toggle « i ».                                                     |
-| `statusActionSnackbars`  | Action success snackbars      | **OFF** | Snackbars succès dupliquant la status bar.                                          |
-| `hidePlaybookColors`     | Hide playbook colors          | **ON**  | Masque les visuels couleur Playbook partout (+ classe `body.hide-playbook-colors`). |
-| `multilingualPlaybook`   | Multilingual Playbooks        | **OFF** | Playbooks multi-langues (voice par langue, étape langue du draft flow).             |
+| id                       | label                          | défaut  | Gate                                                                                                        |
+| ------------------------ | ------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------- |
+| `draftInlineEdit`        | Inline edit on draft posts     | **OFF** | Édition inline des post cards.                                                                              |
+| `sidebarIdeas`           | Ideas in left sidebar          | **OFF** | Entrée Ideas dans la sidebar.                                                                               |
+| `playbookDefault`        | Default Playbook toggle        | **OFF** | Étoile ★ set/unset default sur `/playbook/:id`.                                                             |
+| `connectors`             | Connectors (live MCP sources)  | **OFF** | Toute la feature connecteurs (gallery, modal, submenu, Live connectors, tab modal).                         |
+| `conversationStatusCard` | Conversation status card       | **ON**  | Carte flottante + toggle « i ».                                                                             |
+| `statusActionSnackbars`  | Action success snackbars       | **OFF** | Snackbars succès dupliquant la status bar.                                                                  |
+| `hidePlaybookColors`     | Hide playbook colors           | **ON**  | Masque les visuels couleur Playbook partout (+ classe `body.hide-playbook-colors`).                         |
+| `multilingualPlaybook`   | Multilingual Playbooks         | **OFF** | Playbooks multi-langues (voice par langue, étape langue du draft flow).                                     |
+| `manyProfiles`           | Many connected profiles (demo) | **OFF** | Seed ~40 profils connectés variés → le quickpicker de profil affiche une recherche live (voir §draft flow). |
 
 Persistés en `localStorage` (`archie-feature-flags`), lus via `isFlagOn()`. Voir aussi [`STORES.md`](STORES.md).
 

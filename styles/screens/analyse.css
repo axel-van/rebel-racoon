@@ -238,6 +238,44 @@
   white-space: nowrap;
 }
 
+/* Searchable picker — a DS search field below the header filters a long option
+   list (e.g. a user with many connected profiles) in place. The rows move into
+   a capped-height scroll container so the footer stays reachable; filtered-out
+   rows get .is-hidden, and an empty state shows when nothing matches. */
+.analyse__picker-search {
+  margin: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  width: auto;
+}
+
+.analyse__picker-search .ap-icon-search {
+  color: var(--ref-color-grey-60);
+}
+
+.analyse__options--searchable .analyse__options-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 320px;
+  overflow-y: auto;
+  border-top: 1px solid var(--app-border-soft);
+}
+
+/* The list owns the row separators when searchable, so the last visible row
+   inside the scroll box shouldn't carry the frame's bottom border. */
+.analyse__options--searchable .analyse__options-list .analyse__option:last-child {
+  border-bottom: 0;
+}
+
+.analyse__option.is-hidden {
+  display: none;
+}
+
+.analyse__options-empty {
+  padding: var(--ref-spacing-sm);
+  text-align: center;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
 .analyse__option-shortcut {
   min-width: 22px;
   height: 22px;

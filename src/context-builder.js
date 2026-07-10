@@ -19,7 +19,7 @@ import * as rightPanel from "./components/right-panel.js?v=291";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=33";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=24";
 import { connectors as connectorMocks } from "./mocks.js?v=54";
-import { getConnectedProfiles, buildConnectedProfileItems } from "./social-profiles.js?v=24";
+import { getConnectedProfiles, buildConnectedProfileItems, PROFILE_SEARCH_THRESHOLD } from "./social-profiles.js?v=24";
 import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1";
 import { isFlagOn } from "./feature-flags.js?v=9";
 
@@ -307,6 +307,9 @@ function askAltProfile(sessionId) {
     title: "Which profile will publish?",
     stepLabel: altStepLabel(isFlagOn("multilingualPlaybook") ? 3 : 2),
     items,
+    // With many connected profiles, filter the list live instead of scrolling.
+    searchable: items.length > PROFILE_SEARCH_THRESHOLD,
+    searchPlaceholder: "Search profiles by name, handle or network…",
     onPick: (id) => {
       const profile = connectedProfiles.find((p) => p.id === id);
       const d = drafts.get(sessionId);

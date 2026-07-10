@@ -59,6 +59,17 @@ export const FLAGS = Object.freeze([
       "brief panel. Used to evaluate the UI without color coding.",
   },
   {
+    id: "manyProfiles",
+    label: "Many connected profiles (demo)",
+    default: false,
+    hides:
+      "When ON, seeds a large, varied set of connected social profiles (~40 " +
+      "across Facebook / Instagram / LinkedIn / X / TikTok / YouTube) so the " +
+      "profile quickpicker's search field can be evaluated with a realistic " +
+      "long list. When OFF (default), only the base connected accounts show " +
+      "and the picker stays a short, unsearched list.",
+  },
+  {
     id: "multilingualPlaybook",
     label: "Multilingual Playbooks",
     default: false,

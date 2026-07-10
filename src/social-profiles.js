@@ -7,8 +7,9 @@
 // as the muted caption, and a DS avatar carrying the brand photo plus a
 // corner network badge.
 
-import { socialAccounts } from "./mocks.js?v=54";
+import { socialAccounts, demoManyProfiles } from "./mocks.js?v=54";
 import { escapeHtml } from "./utils.js?v=21";
+import { isFlagOn } from "./feature-flags.js?v=9";
 
 // Map our mock's `platform` slug to the DS's official full-color network
 // icon used by the .ap-avatar-network corner badge.
@@ -35,6 +36,11 @@ export const NETWORK_LABEL = {
 // Mock brand initials shown as the avatar fallback when no photo loads.
 export const BRAND_INITIALS = "NS";
 
+// Above this many profiles, a profile picker turns on its live search box so a
+// long connected-account list stays scannable. Shared so every profile picker
+// (draft, clips, onboarding, repurpose) flips to search at the same count.
+export const PROFILE_SEARCH_THRESHOLD = 8;
+
 // Normalise a network slug (posts-store rewrites x → twitter; undo here).
 function normalizePlatform(network) {
   return network === "twitter" ? "x" : network || "";
@@ -59,7 +65,7 @@ export function renderProfileTag(account, { network } = {}) {
   const networkIcon = NETWORK_ICON_BY_PLATFORM[platform];
   const avatarInner = account?.photo
     ? `<img src="${account.photo}" alt="" />`
-    : `<span class="ap-avatar-initials">${BRAND_INITIALS}</span>`;
+    : `<span class="ap-avatar-initials">${account?.initials || BRAND_INITIALS}</span>`;
   const badge = networkIcon ? `<span class="ap-avatar-network"><i class="${networkIcon}"></i></span>` : "";
   return `
     <span class="profile-tag" title="${escapeHtml(name)}">
@@ -85,7 +91,7 @@ export function renderProfileEchoCard(account, { network } = {}) {
   const networkIcon = NETWORK_ICON_BY_PLATFORM[platform];
   const avatarInner = account?.photo
     ? `<img src="${account.photo}" alt="" />`
-    : `<span class="ap-avatar-initials">${BRAND_INITIALS}</span>`;
+    : `<span class="ap-avatar-initials">${account?.initials || BRAND_INITIALS}</span>`;
   const badge = networkIcon ? `<span class="ap-avatar-network"><i class="${networkIcon}"></i></span>` : "";
   return `
     <div class="selection-echo selection-echo--profile" title="${escapeHtml(name)}">
@@ -100,9 +106,13 @@ export function renderProfileEchoCard(account, { network } = {}) {
   `;
 }
 
-// All currently-connected social accounts (mock).
+// All currently-connected social accounts (mock). With the `manyProfiles`
+// feature flag ON, the base connected accounts are followed by a large, varied
+// demo set (see mocks.demoManyProfiles) so the profile quickpicker's search
+// can be evaluated against a realistic ~40-profile list.
 export function getConnectedProfiles() {
-  return socialAccounts.filter((p) => p.status === "connected");
+  const base = socialAccounts.filter((p) => p.status === "connected");
+  return isFlagOn("manyProfiles") ? [...base, ...demoManyProfiles] : base;
 }
 
 // Build inline-question picker items for the connected profiles. The
@@ -126,11 +136,15 @@ export function buildConnectedProfileItems({ requirePosts = true } = {}) {
       value: p.id,
       label: p.handle,
       caption: captionParts.join(" · "),
+      // Search haystack for the picker's live filter — the brand name and
+      // network aren't always visible in the label (e.g. an @handle row), so
+      // fold them in explicitly so "linkedin" or a brand name both match.
+      search: [p.name, p.handle, p.platformLabel, p.kind].filter(Boolean).join(" "),
       disabled: hasNoPosts,
       endNote: hasNoPosts ? "No posts to analyze" : null,
       avatar: {
         imageUrl: p.photo,
-        initials: BRAND_INITIALS,
+        initials: p.initials || BRAND_INITIALS,
         networkIcon: NETWORK_ICON_BY_PLATFORM[p.platform],
       },
     };

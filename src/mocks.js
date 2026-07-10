@@ -3002,3 +3002,79 @@ export const socialAccounts = [
     status: "disconnected",
   },
 ];
+
+// Demo dataset for the `manyProfiles` feature flag. A large, varied set of
+// CONNECTED social profiles — several brands, each on a handful of the six
+// badge-supported networks — so the profile quickpicker's search field can be
+// evaluated against a realistic long list. Not part of the default seed;
+// social-profiles.js appends it to getConnectedProfiles() only when the flag
+// is on. Every entry carries its own `initials` so the avatar fallback reads
+// as a distinct brand (no shared photo).
+export const demoManyProfiles = (() => {
+  // [platform, platformLabel, kind, handleStyle] — "@" builds an @handle from
+  // the brand slug, "name" reuses the brand name as the handle.
+  const networks = [
+    ["facebook", "Facebook", "Page", "name"],
+    ["instagram", "Instagram", "Profile", "@"],
+    ["linkedin", "LinkedIn", "Page", "name"],
+    ["x", "X (Twitter)", "Profile", "@"],
+    ["tiktok", "TikTok", "Profile", "@"],
+    ["youtube", "YouTube", "Channel", "name"],
+  ];
+  // [brand name, which networks it's on (indices into `networks`), post counts
+  // aligned to those networks] — a couple of profiles sit at 0 posts so the
+  // "No posts to analyze" disabled state still appears in the long list.
+  const brands = [
+    ["Bright Harbor", [0, 1, 2, 3], [210, 540, 96, 1200]],
+    ["Cedar & Co.", [0, 2, 5], [88, 140, 0]],
+    ["Lumen Labs", [1, 3, 4], [1900, 320, 760]],
+    ["Northgate Coffee", [0, 1, 4], [430, 2100, 980]],
+    ["Verdant Home", [1, 2, 5], [670, 210, 145]],
+    ["Atlas Outdoors", [0, 3, 5], [150, 540, 0]],
+    ["Marigold Bakery", [1, 4], [3100, 1450]],
+    ["Pulse Fitness", [0, 1, 2, 4], [260, 1800, 90, 620]],
+    ["Harbor & Vine", [2, 3], [310, 45]],
+    ["Solstice Travel", [1, 5], [2400, 380]],
+    ["Copper Kettle", [0, 1], [120, 890]],
+    ["Nimbus Software", [2, 3, 5], [540, 720, 0]],
+    ["Willow Studio", [1, 4], [960, 540]],
+  ];
+  // ~36 demo profiles across 13 brands — with the 4 base Northwind accounts
+  // that's ~40 connected profiles, a realistic "many profiles" list.
+  const slug = (name) =>
+    name
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, "");
+  const initialsOf = (name) =>
+    name
+      .replace(/&/g, " ")
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0].toUpperCase())
+      .join("");
+  const out = [];
+  let i = 0;
+  for (const [name, netIdx, counts] of brands) {
+    const initials = initialsOf(name);
+    netIdx.forEach((idx, j) => {
+      const [platform, platformLabel, kind, handleStyle] = networks[idx];
+      const handle = handleStyle === "@" ? `@${slug(name)}` : name;
+      out.push({
+        id: `demo-${i++}`,
+        platform,
+        platformLabel,
+        kind,
+        name,
+        handle,
+        initials,
+        photo: null,
+        status: "connected",
+        token: "ok",
+        postCount: counts[j],
+      });
+    });
+  }
+  return out;
+})();

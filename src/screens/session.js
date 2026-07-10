@@ -10,6 +10,7 @@ import {
   profileForNetwork,
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
+  PROFILE_SEARCH_THRESHOLD,
 } from "../social-profiles.js?v=24";
 import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=3";
 import { CLIP_SUBTITLE_ITEMS, CLIP_SUBTITLE_LABEL } from "../clip-subtitles.js?v=1";
@@ -2431,10 +2432,15 @@ function askProfileQuestion(
     return;
   }
   postAssistantMessage(sessionId, "Which profile should I draft this for?");
+  const profileItems = buildConnectedProfileItems();
   inlineQuestion.ask(sessionId, {
     title: "Pick a connected social profile",
     stepLabel: "Profile",
-    items: buildConnectedProfileItems(),
+    items: profileItems,
+    // With a lot of connected accounts, a flat list is slow to scan — add a
+    // live search box so the user can filter by name/handle/network.
+    searchable: profileItems.length > PROFILE_SEARCH_THRESHOLD,
+    searchPlaceholder: "Search profiles by name, handle or network…",
     onPick: (accountId) => {
       const account = connected.find((a) => a.id === accountId);
       // Echo the pick as a visual profile chip (avatar + handle) so selecting a
@@ -2493,6 +2499,9 @@ function askRepurposeProfiles(sessionId, postIds) {
     countMax: 5,
     submitCountLabel: (total) => `Generate ${total} draft${total === 1 ? "" : "s"}`,
     items,
+    // Long profile lists get a live search box to filter down before setting counts.
+    searchable: items.length > PROFILE_SEARCH_THRESHOLD,
+    searchPlaceholder: "Search profiles by name, handle or network…",
     onPick: ({ picks, total }) => {
       // Each pick is { value: accountId, count } (count already > 0). Resolve
       // to the account + its network, echo the chosen profiles as chips, then
@@ -2718,6 +2727,9 @@ function askClipAccounts(sessionId, entries, format, style) {
   postAssistantMessage(sessionId, "Which account(s) should I draft for?");
   const clipNets = new Set(entries.map((e) => e.clip.network));
   const preset = connected.filter((a) => clipNets.has(a.platform)).map((a) => a.id);
+  // Destination picker (not an analysis step) — every connected account is a
+  // valid target, so don't gate on post history.
+  const clipProfileItems = buildConnectedProfileItems({ requirePosts: false });
   inlineQuestion.ask(sessionId, {
     title: "Pick one or more connected accounts",
     stepLabel: "Accounts",
@@ -2725,9 +2737,10 @@ function askClipAccounts(sessionId, entries, format, style) {
     multi: true,
     defaultSelected: preset,
     submitLabel: "Continue",
-    // Destination picker (not an analysis step) — every connected account is a
-    // valid target, so don't gate on post history.
-    items: buildConnectedProfileItems({ requirePosts: false }),
+    // A long list of destinations gets a live search box to narrow it down.
+    searchable: clipProfileItems.length > PROFILE_SEARCH_THRESHOLD,
+    searchPlaceholder: "Search accounts by name, handle or network…",
+    items: clipProfileItems,
     onPick: (ids) => {
       const accounts = (Array.isArray(ids) ? ids : [ids])
         .map((id) => connected.find((a) => a.id === id))

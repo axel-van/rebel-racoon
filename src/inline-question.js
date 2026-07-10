@@ -38,6 +38,13 @@
 //   footerAction      object  — { value, label, icon? } — a prominent button in
 //                               the cards footer that resolves via onPick(value)
 //                               (e.g. "No subtitles" beneath the style grid)
+//   searchable        bool    — render a live search box above the rows that
+//                               filters options by label/caption in place (no
+//                               re-render). Use for long lists (e.g. a user
+//                               with many connected profiles). Suppresses the
+//                               per-row 1–9 shortcut badges (meaningless once
+//                               the list is filtered).
+//   searchPlaceholder string  — placeholder for the search box (default "Search…")
 //   multi             bool    — when true, render multi-select toggles + Continue button
 //   single            bool    — single-select-with-confirm: rows highlight (one
 //                               at a time) instead of advancing; the CALLER owns
@@ -265,6 +272,10 @@ export function renderChrome(sessionId) {
     loading: s.loading === true,
     title: s.title || null,
     subtitle: s.subtitle || null,
+    // Search field — when true, render a live filter box above the rows so a
+    // long list (e.g. a user with many connected profiles) stays scannable.
+    searchable: s.searchable === true,
+    searchPlaceholder: s.searchPlaceholder || "Search…",
     // Card-grid variant — visual cards instead of numbered rows (clip
     // aspect-ratio + subtitle-style steps). Single-select advance.
     variant: s.variant || null,
