@@ -3,7 +3,7 @@
   "fileKey": "ulQHaMfPhTQwNLib6IDOez",
   "figmaUrl": "https://www.figma.com/design/ulQHaMfPhTQwNLib6IDOez/Archie",
   "appBaseUrl": "https://mbousendorfer.github.io/rebel-racoon/",
-  "lastSyncCommit": "",
+  "lastSyncCommit": "15709dccd88184e3e8df28bddf7e2e647571898c",
   "componentsPage": {
     "node": "384:80",
     "name": "💠 Components",
@@ -43,7 +43,9 @@
       "Quickpicker Lead": "887:1629",
       "Top Post Card — carousel": "1169:1687",
       "Top Post Card — image": "1205:1666",
-      "Top Post Card — text": "1206:1677"
+      "Top Post Card — text": "1206:1677",
+      "Connector Card": "1233:2255",
+      "Generation context": "1248:1964"
     }
   },
   "framesComment": "The 4 maintained SCREEN frames the user assigned (2026-07-10). These are full 1440-wide screen assemblies on the Flows/Screens page — distinct from the mockups on the '💠 Components' page (e.g. the 'Session — Central thread' assembly 618:759 there is NOT the maintained session; 643:4812 is). Each is an assembly of component instances — sync by (re)instancing components per the isolation rules, never by editing raw layers. Verified each node id against the live file.",
@@ -85,7 +87,7 @@
       "route": "#/connectors",
       "source": "src/screens/connectors.js",
       "styles": "styles/screens/connectors.css",
-      "note": "Connectors gallery. As of 2026-07-10 the frame is a STUB — only a Sidebar instance, content not built yet; first sync should assemble the gallery. Feature is gated behind the `connectors` flag (OFF by default) in the app."
+      "note": "Connectors gallery. Full assembly: Sidebar + Topbar (title 'Connectors') + hero (title/subtitle + DS Status count pill) + toolbar (DS Form-Search + DS Tag category chips) + 6 category groups of 'Connector Card' instances (set 1233:2255; State=Default/Connected). Logos use accent monogram tiles (code fallback), not brand SVGs. Detail/empty/mobile not built. Feature gated behind the `connectors` flag (OFF by default) in the app."
     }
   }
 }
