@@ -55,7 +55,8 @@
       "Modal \u2014 Report a bug": "1273:2188",
       "Modal \u2014 Schedule": "1274:2239",
       "Modal \u2014 Add source (Upload)": "1275:2299",
-      "Modal \u2014 Video clips": "1275:3784"
+      "Modal \u2014 Video clips": "1275:3784",
+      "Workflow Step": "1286:2474"
     }
   },
   "framesComment": "The 4 maintained SCREEN frames the user assigned (2026-07-10). These are full 1440-wide screen assemblies on the Flows/Screens page — distinct from the mockups on the '💠 Components' page (e.g. the 'Session — Central thread' assembly 618:759 there is NOT the maintained session; 643:4812 is). Each is an assembly of component instances — sync by (re)instancing components per the isolation rules, never by editing raw layers. Verified each node id against the live file.",
