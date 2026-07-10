@@ -31,7 +31,7 @@ export const FLAGS = Object.freeze([
   {
     id: "conversationStatusCard",
     label: "Conversation status card",
-    default: true,
+    default: false,
     hides:
       "When OFF, hides the floating conversation status card (sources / " +
       "ideas / clips / drafts summary) entirely, including its 'i' toggle " +

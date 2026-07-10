@@ -324,7 +324,7 @@ Détail dimensions/coexistence avec la status-card : [`SHELL-LAYOUT.md`](SHELL-L
 | `sidebarIdeas`           | Ideas in left sidebar          | **OFF** | Entrée Ideas dans la sidebar.                                                                               |
 | `playbookDefault`        | Default Playbook toggle        | **OFF** | Étoile ★ set/unset default sur `/playbook/:id`.                                                             |
 | `connectors`             | Connectors (live MCP sources)  | **OFF** | Toute la feature connecteurs (gallery, modal, submenu, Live connectors, tab modal).                         |
-| `conversationStatusCard` | Conversation status card       | **ON**  | Carte flottante + toggle « i ».                                                                             |
+| `conversationStatusCard` | Conversation status card       | **OFF** | Carte flottante + toggle « i ».                                                                             |
 | `statusActionSnackbars`  | Action success snackbars       | **OFF** | Snackbars succès dupliquant la status bar.                                                                  |
 | `hidePlaybookColors`     | Hide playbook colors           | **ON**  | Masque les visuels couleur Playbook partout (+ classe `body.hide-playbook-colors`).                         |
 | `multilingualPlaybook`   | Multilingual Playbooks         | **OFF** | Playbooks multi-langues (voice par langue, étape langue du draft flow).                                     |
