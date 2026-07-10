@@ -3,7 +3,7 @@
   "fileKey": "ulQHaMfPhTQwNLib6IDOez",
   "figmaUrl": "https://www.figma.com/design/ulQHaMfPhTQwNLib6IDOez/Archie",
   "appBaseUrl": "https://mbousendorfer.github.io/rebel-racoon/",
-  "lastSyncCommit": "9a4096f0daa770ef4fc1af0fbe334eeb6088eb1e",
+  "lastSyncCommit": "637647ac77f0c5e16d96d4055731a984e2d57355",
   "componentsPage": {
     "node": "384:80",
     "name": "💠 Components",
@@ -47,16 +47,17 @@
       "Connector Card": "1233:2255",
       "Generation context": "1248:1964",
       "Starter Card": "1256:1964",
-      "Modal \u2014 Confirm (delete)": "1267:2309",
-      "Modal \u2014 Rename": "1268:2034",
-      "Modal \u2014 Feedback": "1269:2065",
-      "Modal \u2014 Generate image": "1270:2111",
-      "Modal \u2014 Save drafts": "1272:2396",
-      "Modal \u2014 Report a bug": "1273:2188",
-      "Modal \u2014 Schedule": "1274:2239",
-      "Modal \u2014 Add source (Upload)": "1275:2299",
-      "Modal \u2014 Video clips": "1275:3784",
-      "Workflow Step": "1286:2474"
+      "Modal — Confirm (delete)": "1267:2309",
+      "Modal — Rename": "1268:2034",
+      "Modal — Feedback": "1269:2065",
+      "Modal — Generate image": "1270:2111",
+      "Modal — Save drafts": "1272:2396",
+      "Modal — Report a bug": "1273:2188",
+      "Modal — Schedule": "1274:2239",
+      "Modal — Add source (Upload)": "1275:2299",
+      "Modal — Video clips": "1275:3784",
+      "Workflow Step": "1286:2474",
+      "Dropzone — Large": "1307:2211"
     }
   },
   "framesComment": "The 4 maintained SCREEN frames the user assigned (2026-07-10). These are full 1440-wide screen assemblies on the Flows/Screens page — distinct from the mockups on the '💠 Components' page (e.g. the 'Session — Central thread' assembly 618:759 there is NOT the maintained session; 643:4812 is). Each is an assembly of component instances — sync by (re)instancing components per the isolation rules, never by editing raw layers. Verified each node id against the live file.",
@@ -94,7 +95,7 @@
     },
     "session-new-chat": {
       "node": "1259:1105",
-      "name": "Session \u2014 New chat",
+      "name": "Session — New chat",
       "route": "#/session/:id (empty hero)",
       "source": "src/screens/session.js",
       "styles": "styles/screens/session.css",
@@ -102,11 +103,11 @@
     },
     "top-posts-board": {
       "node": "1264:1240",
-      "name": "Top Posts \u2014 Board",
-      "route": "#/session/:id (top-posts repurpose flow \u2014 winner board)",
+      "name": "Top Posts — Board",
+      "route": "#/session/:id (top-posts repurpose flow — winner board)",
       "source": "src/top-posts-flow.js + src/components/top-post-card.js (renderTopPostsBoard)",
       "styles": "styles/screens/posts.css / session.css",
-      "note": "Winner-selection board rendered in the assistant thread: intro Chat \u2014 AI Message + toolbar (count + Period/Sort filters) + wrapping grid of Top Post Card instances (carousel/image/text formats, set 1169:1687 / 1205:1666 / 1206:1677). FLAG: the Period/Sort filters use DS stroked-grey Buttons with a chevron as a DS-clean stand-in for the app's custom .ap-select inline dropdown (no DS Figma equivalent)."
+      "note": "Winner-selection board rendered in the assistant thread: intro Chat — AI Message + toolbar (count + Period/Sort filters) + wrapping grid of Top Post Card instances (carousel/image/text formats, set 1169:1687 / 1205:1666 / 1206:1677). FLAG: the Period/Sort filters use DS stroked-grey Buttons with a chevron as a DS-clean stand-in for the app's custom .ap-select inline dropdown (no DS Figma equivalent)."
     },
     "batch-studio": {
       "node": "1276:1644",
@@ -126,11 +127,19 @@
     },
     "clip-studio-setup": {
       "node": "1291:2136",
-      "name": "Clip Studio \u2014 Setup",
+      "name": "Clip Studio — Setup",
       "route": "#/session/clip-studio-* (upload/config stage)",
       "source": "src/clip-studio.js + src/screens/session.js (renderClipStudio config)",
       "styles": "styles/screens/clip-studio.css",
-      "note": "Auto Clips upload/config stage: Sidebar + Topbar + centered column = 'Auto Clips' badge + title + subtitle + workflow (Add your video / I find the highlights / Post-ready clips) + main card [left: Analyzing video preview (dark, blue border, silhouette + archie loader glyph) + 'ff \u00b7 Analyzing\u2026' + Replace file + 'or paste a different link' + URL input + Import; right: Clip duration select (Auto) + Additional instructions + Surprise me link + textarea] + CTA (Playbook + Find clip ideas). Uses Workflow Step component. FLAG: video-preview illustration (silhouette + Analyzing pill) is hand-built with decorative literal colors (not DS tokens)."
+      "note": "Auto Clips upload/config stage: Sidebar + Topbar + centered column = 'Auto Clips' badge + title + subtitle + workflow (Add your video / I find the highlights / Post-ready clips) + main card [left: Analyzing video preview (dark, blue border, silhouette + archie loader glyph) + 'ff · Analyzing…' + Replace file + 'or paste a different link' + URL input + Import; right: Clip duration select (Auto) + Additional instructions + Surprise me link + textarea] + CTA (Playbook + Find clip ideas). Uses Workflow Step component. FLAG: video-preview illustration (silhouette + Analyzing pill) is hand-built with decorative literal colors (not DS tokens)."
+    },
+    "clip-studio-setup-upload": {
+      "node": "1310:2202",
+      "name": "Clip Studio — Setup (Upload)",
+      "route": "#/session/clip-studio-* (initial upload state, before a video is added)",
+      "source": "src/clip-studio.js + src/screens/session.js (renderClipStudio config, leftPanel = dropzone branch)",
+      "styles": "styles/screens/clip-studio.css",
+      "note": "Initial UPLOAD state of the Auto Clips setup (clip-studio--upload, before analysis). Cloned from 'Clip Studio — Setup' (1291:2136) which shows the ANALYZING state; only the left upload-area differs. Left column = 'Dropzone — Large' component instance (1307:2211) + 'or' divider + URL row (Form-Input 'Paste a YouTube or Google Drive URL' + Import button). Intro (Auto Clips badge/title/subtitle), 3 Workflow Step instances, right column (Clip duration select 'Auto' + Additional instructions/Surprise me/textarea) and CTA (Playbook + Find clip ideas) are shared with the analyzing frame."
     },
     "connectors": {
       "node": "1228:3355",
