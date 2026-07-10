@@ -3,7 +3,7 @@
   "fileKey": "ulQHaMfPhTQwNLib6IDOez",
   "figmaUrl": "https://www.figma.com/design/ulQHaMfPhTQwNLib6IDOez/Archie",
   "appBaseUrl": "https://mbousendorfer.github.io/rebel-racoon/",
-  "lastSyncCommit": "15709dccd88184e3e8df28bddf7e2e647571898c",
+  "lastSyncCommit": "9a4096f0daa770ef4fc1af0fbe334eeb6088eb1e",
   "componentsPage": {
     "node": "384:80",
     "name": "💠 Components",
@@ -45,7 +45,8 @@
       "Top Post Card — image": "1205:1666",
       "Top Post Card — text": "1206:1677",
       "Connector Card": "1233:2255",
-      "Generation context": "1248:1964"
+      "Generation context": "1248:1964",
+      "Starter Card": "1256:1964"
     }
   },
   "framesComment": "The 4 maintained SCREEN frames the user assigned (2026-07-10). These are full 1440-wide screen assemblies on the Flows/Screens page — distinct from the mockups on the '💠 Components' page (e.g. the 'Session — Central thread' assembly 618:759 there is NOT the maintained session; 643:4812 is). Each is an assembly of component instances — sync by (re)instancing components per the isolation rules, never by editing raw layers. Verified each node id against the live file.",
@@ -80,6 +81,14 @@
       "source": "src/screens/session.js",
       "styles": "styles/screens/session.css",
       "note": "Main chat surface — largest screen. Also touches src/screens/session/*, chat.css."
+    },
+    "session-new-chat": {
+      "node": "1259:1105",
+      "name": "Session \u2014 New chat",
+      "route": "#/session/:id (empty hero)",
+      "source": "src/screens/session.js",
+      "styles": "styles/screens/session.css",
+      "note": "First-run empty hero (renderEmptyHero): Sidebar (Expanded) + Topbar (title 'New chat', Sources/Ideas/Drafts counters 0) + centered hero = Archie wordmark (brand SVG) + subtitle + Composer Card instance + 'Or jump into a workflow' label + starter-grid of 3 'Starter Card' instances (Batch/mermaid, Video clips/purple, Top posts/green). Starter Card is a LOCAL hand-built component (no DS 'workflow card') with Title/Subtitle/CTA text props + Art INSTANCE_SWAP; watermarks are V2 Icons."
     },
     "connectors": {
       "node": "1228:3355",
