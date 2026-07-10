@@ -49,7 +49,8 @@
       "Starter Card": "1256:1964",
       "Modal \u2014 Confirm (delete)": "1267:2309",
       "Modal \u2014 Rename": "1268:2034",
-      "Modal \u2014 Feedback": "1269:2065"
+      "Modal \u2014 Feedback": "1269:2065",
+      "Modal \u2014 Generate image": "1270:2111"
     }
   },
   "framesComment": "The 4 maintained SCREEN frames the user assigned (2026-07-10). These are full 1440-wide screen assemblies on the Flows/Screens page — distinct from the mockups on the '💠 Components' page (e.g. the 'Session — Central thread' assembly 618:759 there is NOT the maintained session; 643:4812 is). Each is an assembly of component instances — sync by (re)instancing components per the isolation rules, never by editing raw layers. Verified each node id against the live file.",
