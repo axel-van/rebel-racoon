@@ -30,6 +30,47 @@ node-ids des frames, la route à screenshoter, et les fichiers source de chaque 
    ne déplace pas, ne supprime pas les autres frames du fichier.
 6. **Un élément hand-built (composant DS manquant) doit être signalé explicitement**
    dans le rapport final — ne le présente jamais comme du DS natif.
+7. **Ce fichier est COMPONENT-FIRST.** Les éléments réutilisés vivent comme composants
+   locaux sur la page `💠 Components` (`componentsPage` du manifeste) ; les écrans sont
+   des **assemblages d'instances**. Ne duplique jamais un calque brut d'un écran à l'autre —
+   voir « Isolation & réutilisation de composants ».
+
+## Isolation & réutilisation de composants (cœur de la demande)
+
+Le fichier Figma est organisé ainsi : la page `💠 Components` (node `384:80`) porte tous
+les composants réutilisables, rangés par section (`componentsPage.sections` :
+Chat components / Components / Panels / Screens / Overlays), et les écrans (ex.
+« Session — Central thread ») ne sont que des **instances** de ces composants.
+
+**Arbre de décision — pour chaque élément d'UI rencontré dans un écran :**
+
+1. **Le DS le couvre** (V2 Atoms / Molecules) ? → instancie le composant DS. (règle
+   existante de `/design-guidelines`.)
+2. **Sinon, un composant LOCAL existe déjà** sur `💠 Components` ? → réutilise-le
+   (instancie-le). Vérifie via `get_metadata` sur `384:80` + match par **nom** ;
+   `componentsPage.knownComponents` du manifeste est un **indice daté**, pas la vérité — la
+   page live fait foi.
+3. **Sinon, l'élément est RÉUTILISÉ** (≥2 occurrences, dans un écran ou entre écrans, ou
+   clairement destiné à l'être) ? → **crée un composant local** :
+   - a. Construis-le **une fois** avec les composants DS + variables liées (jamais de
+     hex/px en dur — cf. règles non négociables).
+   - b. Convertis-le en composant (`createComponentFromNode` / componentize — l'API exacte
+     est dans `/figma-use`, à charger avant tout `use_figma`).
+   - c. S'il a des **états** (Default / Hover / Focus / Selected / Disabled…), fais-en un
+     **component set** avec des variantes `State=…` — c'est la convention en place
+     (Idea Card, Clip Card, Sidebar Row, Quickpicker Option…).
+   - d. Range le master dans la **section qui correspond** (`componentsPage.sections`).
+   - e. **Nomme-le** selon la convention voisine (« Idea Card », « Chat — … »,
+     « Source Row », « Right Panel — … »…).
+   - f. Place des **instances** dans les écrans concernés ; le calque brut ne reste jamais
+     dupliqué.
+4. **Élément unique** (une seule occurrence, non réutilisable) → tu peux le composer à plat
+   dans l'écran, mais **signale-le** dans le rapport (candidat à composantiser plus tard).
+
+**Anti-doublon (erreur n°1) :** relis toujours la page composants (`get_metadata 384:80`)
+avant de créer quoi que ce soit. Fabriquer un second « Idea Card » parce qu'une recherche a
+échoué est exactement ce qu'il faut éviter — `search_design_system` mis-ranke, la page
+fait autorité.
 
 ## Procédure
 
@@ -51,12 +92,18 @@ node-ids des frames, la route à screenshoter, et les fichiers source de chaque 
 ### 3. Résoudre côté Figma
 
 - `get_metadata` sur le `node` de la frame pour connaître sa structure actuelle.
-- `search_design_system` + les node-ids de composants connus (voir mémoire projet :
-  composants Archie, Drawer, Quickpicker) pour retrouver les instances à (ré)utiliser.
+- `get_metadata` sur la page `💠 Components` (`384:80`) pour lister les composants
+  locaux réutilisables (croise avec `componentsPage.knownComponents` du manifeste, qui
+  n'est qu'un indice daté).
+- `search_design_system` pour les composants DS. Rappel : la page composants + le DS
+  font autorité, pas le ranking de recherche.
 
 ### 4. Appliquer (via `use_figma`, skills chargés)
 
-- Mets à jour la frame : texte, variantes, ajout/retrait d'instances DS, bindings de
+- Pour **chaque élément** de l'écran, applique l'arbre de décision « Isolation &
+  réutilisation de composants » : instancier DS → réutiliser un composant local →
+  créer un composant local si l'élément est réutilisé → composer à plat sinon.
+- Mets à jour la frame : texte, variantes, ajout/retrait d'instances, bindings de
   variables. Reconstruis entièrement seulement si la structure a fondamentalement changé
   (dans ce cas `/figma-generate-design`).
 - Respecte les gotchas de slots documentés (`Action Dropdown`, `Modale` : append puis
@@ -64,7 +111,11 @@ node-ids des frames, la route à screenshoter, et les fichiers source de chaque 
 
 ### 5. Rapporter
 
-- Liste par écran : node touché, ce qui a changé, éléments hand-built flaggés.
+- Liste par écran : node touché, ce qui a changé, composants **réutilisés** vs
+  **créés** (avec leur section d'accueil), et éléments hand-built / candidats à
+  composantiser flaggés.
+- Si tu as créé des composants, propose de les ajouter à `componentsPage.knownComponents`
+  dans le manifeste (node + nom) pour accélérer les prochains runs.
 - Propose de mettre à jour `lastSyncCommit` dans `docs/figma-sync-map.json` avec le SHA
   courant (`git rev-parse HEAD`) — mais applique-le seulement si l'utilisateur confirme.
 

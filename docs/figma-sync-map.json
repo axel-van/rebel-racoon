@@ -1,28 +1,72 @@
 {
-  "$comment": "Mapping app-surface -> Figma node used by the figma-sync agent. fileKey comes from the Figma URL (figma.com/design/<fileKey>/...). node ids use the ':' form (384:80), NOT the URL's '384-80'. Fill 'node' for each frame as you build/locate it in Figma; leave '' if not yet placed. 'route' is the app hash route the agent screenshots for the visual source of truth.",
+  "$comment": "Mapping used by the figma-sync agent. This Figma file is COMPONENT-FIRST: reusable UI lives as local Figma components on the '💠 Components' page (componentsPage below), and screens are ASSEMBLIES OF INSTANCES of those components — never duplicated raw layers. When an app element is reused, the agent reuses (or creates) a component on that page, then instances it. node ids use the ':' form (384:80); the URL uses '384-80'. knownComponents is a HINT captured on 2026-07-10 — the live page (get_metadata 384:80) is always the source of truth.",
   "fileKey": "ulQHaMfPhTQwNLib6IDOez",
   "figmaUrl": "https://www.figma.com/design/ulQHaMfPhTQwNLib6IDOez/Archie",
   "appBaseUrl": "https://mbousendorfer.github.io/rebel-racoon/",
   "lastSyncCommit": "",
+  "componentsPage": {
+    "node": "384:80",
+    "name": "💠 Components",
+    "$comment": "Home of every reusable local component. Place a NEW component in the section matching its kind. ALWAYS reuse an existing component (match by name) before creating a duplicate.",
+    "sections": {
+      "Chat components": "621:2029",
+      "Components": "669:1232",
+      "Panels": "670:1232",
+      "Screens": "670:1233",
+      "Overlays": "670:1234"
+    },
+    "knownComponents": {
+      "Sidebar": "592:424",
+      "Sidebar Row": "590:395",
+      "Sidebar Nav Item": "594:423",
+      "Topbar": "597:422",
+      "Conversation Status Card": "572:323",
+      "Composer Card": "576:346",
+      "Source Row": "574:332",
+      "Clip Card": "567:211",
+      "Idea Card": "568:380",
+      "Post Card": "622:1270",
+      "Card — Why": "615:709",
+      "Chat — User Message": "586:369",
+      "Chat — AI Message": "617:757",
+      "Chat — Source Intake": "587:394",
+      "Chat — Extraction Notice": "586:373",
+      "Chat — Drafts Card": "588:375",
+      "Right Panel — Sources": "643:2653",
+      "Right Panel — Ideas": "643:2651",
+      "Right Panel — Drafts": "643:2652",
+      "Playbook Card": "699:1235",
+      "Quickpicker": "870:1594",
+      "Quickpicker Option": "864:1486",
+      "Quickpicker Header": "869:1425",
+      "Quickpicker Action bar": "869:1426",
+      "Quickpicker Lead": "887:1629",
+      "Top Post Card — carousel": "1169:1687",
+      "Top Post Card — image": "1205:1666",
+      "Top Post Card — text": "1206:1677"
+    }
+  },
   "frames": {
     "session": {
-      "node": "384:80",
+      "node": "618:759",
       "route": "#/session/s1",
       "source": "src/screens/session.js",
       "styles": "styles/screens/session.css",
-      "note": "Main chat surface — largest screen. Also touches src/screens/session/*, chat.css."
+      "note": "'Session — Central thread' — lives in the Screens section (670:1233) as an ASSEMBLY of Chat-* + Composer Card instances. Update by (re)instancing components, never by editing raw layers. Also touches src/screens/session/*, chat.css."
     },
     "contexts": {
       "node": "",
       "route": "#/contexts",
       "source": "src/screens/contexts.js",
-      "styles": "styles/screens/contexts.css"
+      "styles": "styles/screens/contexts.css",
+      "note": "Playbooks library. No assembled screen frame yet — build one in the Screens section from Playbook Card (699:1235) instances."
     },
     "playbook": {
       "node": "",
       "route": "#/playbook/p1",
       "source": "src/screens/playbook.js",
-      "styles": "styles/screens/contexts.css"
+      "styles": "styles/screens/contexts.css",
+      "note": "Playbook detail. No assembled frame yet; Recap Panel components exist (814:1156 + variants)."
     },
     "connectors": {
       "node": "",
