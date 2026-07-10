@@ -124,6 +124,14 @@
       "styles": "styles/screens/clip-studio.css",
       "note": "Full-screen clip review/editor (clips stage): Sidebar + Topbar + head (Back to setup + 'Clips ready' AI badge + title + subtitle) + review settings (Output format + Caption style button rows) + wrapping grid of Clip Card instances each with a DS Checkbox selection overlay + docked bottom bar (Add clip / N selected / Continue). Upload stage exists separately as 'Clip Studio - Setup' (924:52). FLAG: format/caption selectors are DS Buttons standing in for the app's ratio-shape/caption-preview cards; AI badge hand-built."
     },
+    "clip-studio-setup": {
+      "node": "1291:2136",
+      "name": "Clip Studio \u2014 Setup",
+      "route": "#/session/clip-studio-* (upload/config stage)",
+      "source": "src/clip-studio.js + src/screens/session.js (renderClipStudio config)",
+      "styles": "styles/screens/clip-studio.css",
+      "note": "Auto Clips upload/config stage: Sidebar + Topbar + centered column = 'Auto Clips' badge + title + subtitle + workflow (Add your video / I find the highlights / Post-ready clips) + main card [left: Analyzing video preview (dark, blue border, silhouette + archie loader glyph) + 'ff \u00b7 Analyzing\u2026' + Replace file + 'or paste a different link' + URL input + Import; right: Clip duration select (Auto) + Additional instructions + Surprise me link + textarea] + CTA (Playbook + Find clip ideas). Uses Workflow Step component. FLAG: video-preview illustration (silhouette + Analyzing pill) is hand-built with decorative literal colors (not DS tokens)."
+    },
     "connectors": {
       "node": "1228:3355",
       "name": "Connectors",
