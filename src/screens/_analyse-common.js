@@ -116,21 +116,27 @@ export function renderPicker(picker) {
     // lists like "pick one of 40 connected profiles"). Rows carry a
     // `data-search` haystack that the global input delegate matches against;
     // when searchable, the per-row 1–9 shortcut badges are dropped (they no
-    // longer map to a filtered list).
+    // longer map to a filtered list). `searchQuery` is the persisted query so a
+    // re-render (row highlight / stepper ±) re-applies the same filter.
     searchable = false,
     searchPlaceholder = "Search…",
+    searchQuery = "",
   } = picker;
   // A short-hand for "hide the numbered shortcut on this row" — true only in
   // searchable mode.
   const showShortcut = !searchable;
-  // Build the `data-search` haystack (lowercased) so the live filter matches
-  // more than the visible label — an item may supply an explicit `search`
-  // string (e.g. brand name + network for an @handle row); otherwise fall back
-  // to label + caption. Quotes escaped for the attribute.
-  const searchAttr = (it) =>
-    searchable
-      ? ` data-search="${(it.search || `${it.label || ""} ${it.caption || ""}`).toLowerCase().replace(/"/g, "&quot;")}"`
-      : "";
+  // The haystack for a row (lowercased): an explicit `search` string (e.g. brand
+  // name + network for an @handle row) or a fallback of label + caption.
+  const haystackOf = (it) => (it.search || `${it.label || ""} ${it.caption || ""}`).toLowerCase();
+  // Build the `data-search` attribute so the live input delegate can match
+  // without re-render. Quotes escaped for the attribute.
+  const searchAttr = (it) => (searchable ? ` data-search="${haystackOf(it).replace(/"/g, "&quot;")}"` : "");
+  // Render-time filter — a row is hidden when the persisted query doesn't match.
+  // Applied as a class so an interaction-driven re-render keeps the same view
+  // the live delegate produced while typing.
+  const searchNeedle = searchable ? searchQuery.trim().toLowerCase() : "";
+  const rowHidden = (it) => !!searchNeedle && !haystackOf(it).includes(searchNeedle);
+  const hiddenClass = (it) => (rowHidden(it) ? " is-hidden" : "");
   const preset = new Set(defaultSelected);
   // Counter-submit — a single-select picker with an inline-counter row commits
   // via an explicit footer "Generate N drafts" button (not a row-click), so the
@@ -201,7 +207,7 @@ export function renderPicker(picker) {
         `;
         return `
           <div
-            class="analyse__option analyse__option--stepper${isActive ? " is-selected" : " is-empty"}"
+            class="analyse__option analyse__option--stepper${isActive ? " is-selected" : " is-empty"}${hiddenClass(it)}"
             data-${handler}="${it.value}"${searchAttr(it)}
             role="button"
             tabindex="0"
@@ -277,7 +283,7 @@ export function renderPicker(picker) {
       return `
         <button
           type="button"
-          class="analyse__option${isPreset ? " is-selected" : ""}${isDisabled ? " analyse__option--disabled" : ""}"
+          class="analyse__option${isPreset ? " is-selected" : ""}${isDisabled ? " analyse__option--disabled" : ""}${hiddenClass(it)}"
           data-${handler}="${it.value}"${searchAttr(it)}
           ${isDisabled ? `disabled aria-disabled="true"` : ""}
           ${selectable ? `aria-pressed="${isPreset ? "true" : "false"}"` : ""}
@@ -466,14 +472,18 @@ export function renderPicker(picker) {
            type="search"
            class="analyse__picker-search-input"
            placeholder="${searchPlaceholder}"
+           value="${searchQuery.replace(/"/g, "&quot;")}"
            data-${handler}-search
            aria-label="${searchPlaceholder}"
            autocomplete="off"
          />
        </div>`
     : "";
+  // Empty state visible when a persisted query matches nothing (a re-render
+  // should keep showing it; the live delegate toggles it while typing).
+  const noMatches = searchable && !!searchNeedle && !items.some((it) => !rowHidden(it));
   const rowsBlock = searchable
-    ? `<div class="analyse__options-list">${rows}<div class="analyse__options-empty muted" hidden>No matches — try a different search.</div></div>`
+    ? `<div class="analyse__options-list">${rows}<div class="analyse__options-empty muted"${noMatches ? "" : " hidden"}>No matches — try a different search.</div></div>`
     : rows;
 
   return `<div class="analyse__options${selectable ? " analyse__options--multi" : ""}${stepper ? " analyse__options--stepper" : ""}${searchable ? " analyse__options--searchable" : ""}" ${multi ? "data-multi" : ""}${single ? " data-single" : ""}${stepper ? " data-stepper" : ""}>${header}${searchBox}${rowsBlock}${customRow}${fileRow}${footer}</div>`;
@@ -677,11 +687,14 @@ export function bindWizardKeyboard(
   // question state, so the second submit landed on the next step's
   // picker with the stale text value as input — auto-skipping it.)
 
-  // Focus the search field when the picker is searchable (so the user can type
-  // straight away); otherwise focus the first enabled option.
+  // Focus the search field on first open (empty) so the user can type straight
+  // away — but don't steal focus back on interaction-driven re-renders (a
+  // populated query means they've already typed; e.g. clicking a stepper ±
+  // shouldn't yank focus off the button). With no search box, focus the first
+  // enabled option as before.
   queueMicrotask(() => {
     const search = target.querySelector(`[data-${handler}-search]`);
-    const first = search || target.querySelector(`[data-${handler}]:not([disabled])`);
+    const first = search ? (search.value ? null : search) : target.querySelector(`[data-${handler}]:not([disabled])`);
     if (first) first.focus();
     // And always scroll the chat to the bottom on new step.
     const chat = target.querySelector("#analyseChat");

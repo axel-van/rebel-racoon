@@ -31,15 +31,20 @@ import {
   postTopPostsWidget,
   postUserTurn,
   postUserProfilesTurn,
-} from "./assistant.js?v=56";
-import { getTopPosts, getTopPost } from "./top-posts-store.js?v=8";
-import { addPostDraft } from "./posts-store.js?v=33";
-import { addReadySource } from "./sources-stream.js?v=49";
-import { getConnectedProfiles, BRAND_INITIALS, NETWORK_ICON_BY_PLATFORM } from "./social-profiles.js?v=24";
-import { SORTS, PERIODS } from "./components/top-post-card.js?v=64";
+} from "./assistant.js?v=57";
+import { getTopPosts, getTopPost } from "./top-posts-store.js?v=9";
+import { addPostDraft } from "./posts-store.js?v=34";
+import { addReadySource } from "./sources-stream.js?v=50";
+import {
+  getConnectedProfiles,
+  BRAND_INITIALS,
+  NETWORK_ICON_BY_PLATFORM,
+  PROFILE_SEARCH_THRESHOLD,
+} from "./social-profiles.js?v=25";
+import { SORTS, PERIODS } from "./components/top-post-card.js?v=65";
 import { showToast } from "./components/toast.js?v=20";
-import * as inlineQuestion from "./inline-question.js?v=47";
-import { getDefaultContext } from "./contexts-store.js?v=33";
+import * as inlineQuestion from "./inline-question.js?v=48";
+import { getDefaultContext } from "./contexts-store.js?v=34";
 
 // Cap on drafts produced in one run — post × angle × channel can multiply fast
 // (e.g. 3 posts × 4 angles × 3 channels = 36). Keep the result turn scannable;
@@ -237,23 +242,49 @@ export function setSort(sessionId, sort) {
 // the user picks first — the spec's "select a social profile in the first place".
 // Shaped as renderPicker items (value / label / caption / avatar) so step 1
 // reuses the app's numbered Quickpicker rather than a bespoke card grid. `value`
-// is the network slug → the click delegation hands it straight to chooseProfile.
-// No winner count: it isn't known until the chosen profile's posts load.
+// is the ACCOUNT id — unique even when several connected accounts share a network
+// (the many-profiles case), so each row highlights + echoes independently; the
+// picker's onPick resolves it back to an account + network. `search` folds in the
+// brand name so a name query matches an @handle row. No winner count: it isn't
+// known until the chosen profile's posts load.
 export function getProfileChoices() {
   return getConnectedProfiles().map((a) => {
     const net = normNet(a.platform);
     return {
-      value: net,
+      value: a.id,
+      network: net,
       accountId: a.id,
       label: a.handle,
       caption: [a.platformLabel, a.kind].filter(Boolean).join(" · "),
+      search: [a.name, a.handle, a.platformLabel, a.kind].filter(Boolean).join(" "),
       avatar: {
         imageUrl: a.photo || null,
-        initials: a.photo ? null : BRAND_INITIALS,
+        initials: a.photo ? null : a.initials || BRAND_INITIALS,
         networkIcon: NETWORK_ICON_BY_PLATFORM[net] || null,
       },
     };
   });
+}
+
+// Shared arming of the account Quickpicker (studio step 1, inline step 1, and the
+// period step's Back all pick the same connected accounts). Rows are keyed by
+// account id; onAccount receives the resolved account (or null) + its network
+// slug. A live search box appears once the connected list is long enough that a
+// flat list stops being scannable.
+function accountPickerOpts({ title, subtitle, single = false, onAccount }) {
+  const choices = getProfileChoices();
+  return {
+    items: choices,
+    title,
+    subtitle,
+    single,
+    searchable: choices.length > PROFILE_SEARCH_THRESHOLD,
+    searchPlaceholder: "Search accounts by name, handle or network…",
+    onPick: (accountId) => {
+      const account = getConnectedProfiles().find((a) => a.id === accountId) || null;
+      onAccount(account, account ? normNet(account.platform) : normNet(accountId));
+    },
+  };
 }
 
 // Arm the account picker (step 1) as the *exact* in-chat picker component:
@@ -263,13 +294,15 @@ export function getProfileChoices() {
 // chooseProfile). Single-select-with-confirm so the account + Playbook choices
 // are validated together in one step rather than the row advancing on click.
 function armProfilePicker(sessionId) {
-  inlineQuestion.ask(sessionId, {
-    items: getProfileChoices(),
-    title: "Pick an account",
-    subtitle: "I'll load its top posts, ranked by engagement.",
-    single: true,
-    onPick: (network) => chooseProfile(sessionId, network),
-  });
+  inlineQuestion.ask(
+    sessionId,
+    accountPickerOpts({
+      title: "Pick an account",
+      subtitle: "I'll load its top posts, ranked by engagement.",
+      single: true,
+      onAccount: (_account, network) => chooseProfile(sessionId, network),
+    }),
+  );
 }
 
 // Seed the picker at a given stage. Posts are loaded once up front; the board
@@ -356,25 +389,24 @@ export function startTopPostsInline(sessionId) {
   // which also pre-selects it; the inline flow keeps it implicit to stay short).
   repurposeContexts.set(sessionId, getDefaultContext()?.id || null);
   postAssistantMessage(sessionId, "Which account should I pull your winners from?");
-  inlineQuestion.ask(sessionId, {
-    items: getProfileChoices(),
-    title: "Pick an account",
-    subtitle: "I'll pull its top posts next.",
-    onPick: (network) => {
-      echoAccountPick(sessionId, network);
-      askPeriod(sessionId, network);
-    },
-  });
+  inlineQuestion.ask(
+    sessionId,
+    accountPickerOpts({
+      title: "Pick an account",
+      subtitle: "I'll pull its top posts next.",
+      onAccount: (account, network) => {
+        echoAccount(sessionId, account, network);
+        askPeriod(sessionId, network);
+      },
+    }),
+  );
 }
 
 // Echo the picked account as a visual profile turn so the choice stays visible
-// in the conversation (matches the draft flow's profile echo). value is a
-// network slug — resolve it back to the connected profile for the avatar chip.
-function echoAccountPick(sessionId, network) {
-  const net = normNet(network);
-  const account = getConnectedProfiles().find((a) => normNet(a.platform) === net);
+// in the conversation (matches the draft flow's profile echo).
+function echoAccount(sessionId, account, network) {
   if (account) postUserProfilesTurn(sessionId, [account]);
-  else postUserTurn(sessionId, labelFor(net));
+  else postUserTurn(sessionId, labelFor(normNet(network)));
 }
 
 // The recency window to pull winners from — the same periods the studio board
@@ -395,15 +427,17 @@ function askPeriod(sessionId, network) {
     },
     // Back to the account question (re-arm it without re-posting the intro).
     onBack: () =>
-      inlineQuestion.ask(sessionId, {
-        items: getProfileChoices(),
-        title: "Pick an account",
-        subtitle: "I'll pull its top posts next.",
-        onPick: (net) => {
-          echoAccountPick(sessionId, net);
-          askPeriod(sessionId, net);
-        },
-      }),
+      inlineQuestion.ask(
+        sessionId,
+        accountPickerOpts({
+          title: "Pick an account",
+          subtitle: "I'll pull its top posts next.",
+          onAccount: (account, net) => {
+            echoAccount(sessionId, account, net);
+            askPeriod(sessionId, net);
+          },
+        }),
+      ),
   });
 }
 
@@ -610,9 +644,12 @@ export function repurposeProfileItems(postIds, { include = "other" } = {}) {
       // "Source" is emphasised (own class) so it stands out from the muted
       // "Network · Kind" prefix. Caption is inserted raw by the picker renderer.
       caption: tagSource && isSource(p) ? `${base} · <span class="top-posts-source-tag">Source</span>` : base,
+      // Plain-text haystack for the picker's live search (the caption carries
+      // HTML, so build search text from the raw fields instead).
+      search: [p.name, p.handle, p.platformLabel, p.kind].filter(Boolean).join(" "),
       avatar: {
         imageUrl: p.photo,
-        initials: BRAND_INITIALS,
+        initials: p.initials || BRAND_INITIALS,
         networkIcon: NETWORK_ICON_BY_PLATFORM[normNet(p.platform)],
       },
     };

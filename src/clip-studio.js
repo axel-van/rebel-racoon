@@ -17,7 +17,7 @@
 // video-clips-modal trimmer, the right-panel Clips/Drafts surfaces, and the
 // draft-creation flow all operate on one source with no divergence.
 
-import { buildClipsForSource, updateSourceClips, getSources } from "./sources-stream.js?v=49";
+import { buildClipsForSource, updateSourceClips, getSources } from "./sources-stream.js?v=50";
 
 const states = new Map(); // sessionId → state
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -264,6 +264,16 @@ export function setProfileSelection(sessionId, ids) {
   if (!s) return;
   s.profileSelection = [...ids];
   notify(sessionId);
+}
+
+// Live search query for the profiles step. Deliberately does NOT notify — the
+// caller filters the rendered rows in place so the search field keeps focus
+// while typing; the query is persisted here only so a re-render (from a
+// checkbox toggle) can re-apply the filter.
+export function setProfileSearch(sessionId, q) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  s.profileSearch = q;
 }
 
 export function toggleProfile(sessionId, id) {

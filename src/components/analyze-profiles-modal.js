@@ -15,11 +15,16 @@
 
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { escapeHtml as esc } from "../utils.js?v=21";
-import { getConnectedProfiles, NETWORK_ICON_BY_PLATFORM, BRAND_INITIALS } from "../social-profiles.js?v=24";
+import {
+  getConnectedProfiles,
+  NETWORK_ICON_BY_PLATFORM,
+  BRAND_INITIALS,
+  PROFILE_SEARCH_THRESHOLD,
+} from "../social-profiles.js?v=25";
 
 const MODAL_ID = "analyze-profiles";
 
-let backdrop, modal, listEl, confirmBtn, cancelBtn, closeBtn;
+let backdrop, modal, listEl, confirmBtn, cancelBtn, closeBtn, searchGroup, searchInput, noMatchEl;
 let initialized = false;
 let pendingOnConfirm = null;
 
@@ -43,7 +48,18 @@ const HTML = `
     <p class="analyze-profiles-modal__lead">
       Pick the profiles to learn from — Archie reads their recent posts and rebuilds your Voice &amp; style.
     </p>
+    <div class="ap-input-group analyze-profiles-modal__search" id="analyzeProfilesSearchGroup" hidden>
+      <i class="ap-icon-search" aria-hidden="true"></i>
+      <input
+        type="search"
+        id="analyzeProfilesSearch"
+        placeholder="Search profiles by name, handle or network…"
+        aria-label="Search profiles"
+        autocomplete="off"
+      />
+    </div>
     <div class="analyze-profiles-modal__list" id="analyzeProfilesList" role="group" aria-label="Connected profiles"></div>
+    <p class="analyze-profiles-modal__empty" id="analyzeProfilesNoMatch" hidden>No profiles match your search.</p>
     <div class="ap-infobox warning analyze-profiles-modal__warn">
       <i class="ap-icon-info_fill" aria-hidden="true"></i>
       <div class="ap-infobox-content">
@@ -75,12 +91,13 @@ function renderList() {
       const noPosts = p.postCount === 0;
       const caption = [p.platformLabel, p.kind].filter(Boolean).join(" · ");
       const icon = NETWORK_ICON_BY_PLATFORM[p.platform] || "";
+      const haystack = [p.name, p.handle, p.platformLabel, p.kind].filter(Boolean).join(" ").toLowerCase();
       return `
-      <label class="ap-checkbox-container analyze-profiles-modal__row ${noPosts ? "is-disabled" : ""}">
+      <label class="ap-checkbox-container analyze-profiles-modal__row ${noPosts ? "is-disabled" : ""}" data-search="${esc(haystack)}">
         <input type="checkbox" value="${esc(p.id)}" data-profile-check ${noPosts ? "disabled" : ""} />
         <i></i>
         <span class="ap-avatar size-36" aria-hidden="true">
-          ${p.photo ? `<img src="${esc(p.photo)}" alt="" />` : `<span class="ap-avatar-initials">${esc(BRAND_INITIALS)}</span>`}
+          ${p.photo ? `<img src="${esc(p.photo)}" alt="" />` : `<span class="ap-avatar-initials">${esc(p.initials || BRAND_INITIALS)}</span>`}
           ${icon ? `<span class="ap-avatar-network"><i class="${esc(icon)}"></i></span>` : ""}
         </span>
         <span class="analyze-profiles-modal__meta">
@@ -95,6 +112,19 @@ function renderList() {
 
 function selectedIds() {
   return Array.from(listEl.querySelectorAll("[data-profile-check]:checked")).map((el) => el.value);
+}
+
+// Show/hide rows against the search query; reveal the empty state when nothing
+// matches. Checked-but-hidden rows still count toward the confirm selection.
+function filterList() {
+  const q = (searchInput.value || "").trim().toLowerCase();
+  let visible = 0;
+  listEl.querySelectorAll("[data-search]").forEach((row) => {
+    const match = !q || row.dataset.search.includes(q);
+    row.classList.toggle("is-hidden", !match);
+    if (match) visible += 1;
+  });
+  noMatchEl.hidden = visible !== 0;
 }
 
 function syncConfirm() {
@@ -113,6 +143,9 @@ function injectOnce() {
   confirmBtn = document.getElementById("analyzeProfilesConfirm");
   cancelBtn = document.getElementById("analyzeProfilesCancel");
   closeBtn = document.getElementById("analyzeProfilesClose");
+  searchGroup = document.getElementById("analyzeProfilesSearchGroup");
+  searchInput = document.getElementById("analyzeProfilesSearch");
+  noMatchEl = document.getElementById("analyzeProfilesNoMatch");
 
   cancelBtn.addEventListener("click", close);
   closeBtn.addEventListener("click", close);
@@ -121,6 +154,9 @@ function injectOnce() {
   listEl.addEventListener("change", (e) => {
     if (e.target.matches("[data-profile-check]")) syncConfirm();
   });
+  // Live search — filter rows in place (the list isn't re-rendered on toggle,
+  // so a simple show/hide keeps checkbox state and focus intact).
+  searchInput.addEventListener("input", filterList);
   modal.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       e.preventDefault();
@@ -151,6 +187,10 @@ export function open({ onConfirm = null } = {}) {
   pendingOnConfirm = onConfirm;
   renderList();
   syncConfirm();
+  // Reset + reveal the search box only when the list is long enough to warrant it.
+  searchInput.value = "";
+  searchGroup.hidden = getConnectedProfiles().length <= PROFILE_SEARCH_THRESHOLD;
+  noMatchEl.hidden = true;
 
   backdrop.hidden = false;
   backdrop.classList.add("open");

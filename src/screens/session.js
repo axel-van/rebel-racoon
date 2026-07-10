@@ -1,7 +1,7 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=188";
-import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=54";
+import { renderTopbar } from "../components/topbar.js?v=189";
+import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=55";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
@@ -11,11 +11,11 @@ import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
   PROFILE_SEARCH_THRESHOLD,
-} from "../social-profiles.js?v=24";
-import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=3";
+} from "../social-profiles.js?v=25";
+import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=4";
 import { CLIP_SUBTITLE_ITEMS, CLIP_SUBTITLE_LABEL } from "../clip-subtitles.js?v=1";
-import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=4";
-import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=33";
+import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=5";
+import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=34";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
   getThread,
@@ -36,49 +36,49 @@ import {
   markConnectPromptResolved,
   toggleTopPostsWidgetPick,
   answerTopPostsWidget,
-} from "../assistant.js?v=56";
+} from "../assistant.js?v=57";
 import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=46";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=35";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=47";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=36";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=20";
+} from "../composer-mentions.js?v=21";
 import {
   getPosts,
   addPostDraft,
   attachImageToDraft,
   setSubtitleStyle,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=33";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=49";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=36";
-import * as topPostsFlow from "../top-posts-flow.js?v=71";
+} from "../posts-store.js?v=34";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=50";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=37";
+import * as topPostsFlow from "../top-posts-flow.js?v=72";
 import {
   renderTopPostsBoard,
   renderTopPostEcho,
   renderTopPostsWidget,
   TOP_POSTS_LIMIT,
-} from "../components/top-post-card.js?v=64";
-import { getTopPost } from "../top-posts-store.js?v=8";
+} from "../components/top-post-card.js?v=65";
+import { getTopPost } from "../top-posts-store.js?v=9";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
-import * as sidebarWizard from "../sidebar-wizard.js?v=51";
-import * as inlineQuestion from "../inline-question.js?v=47";
-import * as clipStudio from "../clip-studio.js?v=21";
+import * as sidebarWizard from "../sidebar-wizard.js?v=52";
+import * as inlineQuestion from "../inline-question.js?v=48";
+import * as clipStudio from "../clip-studio.js?v=22";
 import * as batchStudio from "../batch-studio.js?v=4";
-import { askConnector } from "../connector-ask.js?v=6";
-import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=26";
-import { renderConnectorLogo } from "../connectors-view.js?v=8";
+import { askConnector } from "../connector-ask.js?v=7";
+import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=27";
+import { renderConnectorLogo } from "../connectors-view.js?v=9";
 import {
   getActiveConnector,
   clearActiveConnector,
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
-import { isFlagOn } from "../feature-flags.js?v=9";
-import * as contextBuilder from "../context-builder.js?v=158";
-import { renderPicker } from "./_analyse-common.js?v=54";
+import { isFlagOn } from "../feature-flags.js?v=10";
+import * as contextBuilder from "../context-builder.js?v=159";
+import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
 import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=2";
@@ -88,11 +88,11 @@ import {
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=25";
-import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=36";
-import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=49";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=53";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=59";
-import { open as openConnectorsModal } from "../components/connectors-modal.js?v=9";
+import { open as openGenerateImageModal } from "../components/generate-image-modal.js?v=37";
+import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=50";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=54";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=60";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=10";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
   classifyFile,
@@ -108,7 +108,7 @@ import {
   updateSourceClips,
   extractClipsForSource,
   setSourceIdeaCount,
-} from "../sources-stream.js?v=49";
+} from "../sources-stream.js?v=50";
 import { renderClipCard } from "../components/clip-card.js?v=13";
 import { onFeedbackClick } from "../components/feedback-control.js?v=1";
 import { showToast } from "../components/toast.js?v=20";
@@ -118,12 +118,12 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=291";
+} from "../components/right-panel.js?v=292";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=14";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=22";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=32";
+import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=15";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=23";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=33";
 // Pure thread-turn renderers — shared with the component handoff gallery so
 // the previews there never drift from the app (handoff/components.html).
 import {
@@ -1083,9 +1083,16 @@ function renderClipStudioProfiles(session, st) {
   const profiles = getConnectedProfiles();
   const selectedProfiles = st.profileSelection || [];
   const selClips = (st.selectedClipIds || []).length;
+  // Long profile lists get a live search box (same threshold as the in-chat
+  // profile Quickpickers). The query lives in clip-studio state so it survives
+  // the re-render a checkbox toggle triggers.
+  const searchable = profiles.length > PROFILE_SEARCH_THRESHOLD;
+  const q = (st.profileSearch || "").trim().toLowerCase();
   const rows = profiles
     .map((p) => {
       const on = selectedProfiles.includes(p.id);
+      const haystack = [p.name, p.handle, p.platformLabel, p.kind].filter(Boolean).join(" ").toLowerCase();
+      const hidden = searchable && q && !haystack.includes(q);
       const recId = defaultFormatFor(p.platform);
       // Default each profile to the output format chosen up-front; the network's
       // own recommended format is just marked "Recommended" (overridable).
@@ -1100,7 +1107,7 @@ function renderClipStudioProfiles(session, st) {
         })
         .join("");
       return `
-        <div class="clip-studio__profile${on ? " is-on" : ""}">
+        <div class="clip-studio__profile${on ? " is-on" : ""}${hidden ? " is-hidden" : ""}" data-search="${escapeHtml(haystack)}">
           <label class="clip-studio__profile-pick">
             <input type="checkbox" data-clip-profile="${escapeHtml(p.id)}" ${on ? "checked" : ""} aria-label="Select profile" />
             <i aria-hidden="true"></i>
@@ -1123,8 +1130,26 @@ function renderClipStudioProfiles(session, st) {
           <p class="clip-studio__sub muted">
             Pick the profiles to draft on. I've set the best video format per network — change any if you like.
           </p>
+          ${searchable
+            ? html`
+                <div class="ap-input-group clip-studio__profile-search">
+                  <i class="ap-icon-search" aria-hidden="true"></i>
+                  <input
+                    type="search"
+                    data-clip-profile-search
+                    placeholder="Search profiles by name, handle or network…"
+                    value="${st.profileSearch || ""}"
+                    aria-label="Search profiles"
+                    autocomplete="off"
+                  />
+                </div>
+              `
+            : ""}
         </div>
-        <div class="clip-studio__profiles">${raw(rows)}</div>
+        <div class="clip-studio__profiles">
+          ${raw(rows)}
+          <p class="clip-studio__profiles-empty muted" hidden>No profiles match your search.</p>
+        </div>
       </div>
       <div class="clip-studio__bar">
         <button type="button" class="ap-button ghost grey" data-clip-back><span>Back</span></button>
@@ -5144,11 +5169,34 @@ function bindSession(root, session) {
         contentState.q = event.target.value;
         rerenderContentWorkspace(root, session);
       }
+      // Inline-question searchable picker — persist the query (no re-render; the
+      // shared _analyse-common delegate filters rows live). Persisting means an
+      // interaction-driven re-render (single-select highlight, stepper ±) keeps
+      // the filter instead of snapping back to the full list.
+      if (event.target.matches("[data-inline-question-search]")) {
+        inlineQuestion.setSearch(session.id, event.target.value);
+      }
       // Clip Studio — instructions textarea. Store silently (mutate state
       // without notify) so typing doesn't trigger a full aside re-render.
       if (event.target.matches('[data-clip-config="instructions"]')) {
         const cs = clipStudio.getState(session.id);
         if (cs) cs.config.instructions = event.target.value;
+      }
+      // Clip Studio — profiles-step live search. Filter the rendered rows in
+      // place (no re-render → the field keeps focus); persist the query in
+      // state so a checkbox-toggle re-render re-applies it.
+      if (event.target.matches("[data-clip-profile-search]")) {
+        clipStudio.setProfileSearch(session.id, event.target.value);
+        const q = event.target.value.trim().toLowerCase();
+        const list = root.querySelector(".clip-studio__profiles");
+        let visible = 0;
+        list?.querySelectorAll("[data-search]").forEach((row) => {
+          const match = !q || row.dataset.search.includes(q);
+          row.classList.toggle("is-hidden", !match);
+          if (match) visible += 1;
+        });
+        const empty = list?.querySelector(".clip-studio__profiles-empty");
+        if (empty) empty.hidden = visible !== 0;
       }
     },
     { signal },

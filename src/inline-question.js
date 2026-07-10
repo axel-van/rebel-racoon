@@ -71,7 +71,7 @@
 //   onSkip()          fn      — called when Skip / Esc; if omitted, no skip btn
 //   onBack()          fn      — called when ← Back is clicked; if omitted, no back btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=54";
+import { chatTurn } from "./screens/_analyse-common.js?v=55";
 
 const states = new Map(); // sessionId → opts
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -115,6 +115,17 @@ export function stepSelect(sessionId, value) {
   if (!s || !s.stepper) return;
   s._selected = value;
   notify(sessionId);
+}
+
+// Persist the live search query (searchable pickers). Deliberately does NOT
+// notify — the search box filters rows in place via the shared input delegate,
+// so notifying would re-render mid-keystroke and drop focus. Persisting here
+// means an interaction-driven re-render (single-select highlight, stepper ±)
+// re-applies the same filter instead of snapping back to the full list.
+export function setSearch(sessionId, q) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  s._search = q;
 }
 
 // Single-select mode — highlight a row without advancing (the caller confirms
@@ -274,8 +285,10 @@ export function renderChrome(sessionId) {
     subtitle: s.subtitle || null,
     // Search field — when true, render a live filter box above the rows so a
     // long list (e.g. a user with many connected profiles) stays scannable.
+    // `searchQuery` is the persisted query so re-renders keep the filter.
     searchable: s.searchable === true,
     searchPlaceholder: s.searchPlaceholder || "Search…",
+    searchQuery: s._search || "",
     // Card-grid variant — visual cards instead of numbered rows (clip
     // aspect-ratio + subtitle-style steps). Single-select advance.
     variant: s.variant || null,

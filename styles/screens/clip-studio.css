@@ -842,10 +842,26 @@
 }
 
 /* Profiles step */
+/* Live search — shown only when the profile list is long (many connected
+   accounts). Sits in the head, above the scrollable profile list. */
+.clip-studio__profile-search {
+  margin-top: var(--ref-spacing-sm);
+}
+.clip-studio__profile-search .ap-icon-search {
+  color: var(--ref-color-grey-60);
+}
 .clip-studio__profiles {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
+}
+.clip-studio__profiles-empty {
+  padding: var(--ref-spacing-md) 0;
+  text-align: center;
+}
+/* Filtered-out profile (search miss). */
+.clip-studio__profile.is-hidden {
+  display: none;
 }
 .clip-studio__profile {
   display: flex;

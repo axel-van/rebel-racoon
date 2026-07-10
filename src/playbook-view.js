@@ -17,7 +17,7 @@
 import { html, raw, escapeHtml as esc } from "./utils.js?v=21";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=24";
 import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1";
-import { isFlagOn } from "./feature-flags.js?v=9";
+import { isFlagOn } from "./feature-flags.js?v=10";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [

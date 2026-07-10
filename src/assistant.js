@@ -6,11 +6,11 @@
 //
 // Subscribers re-render the thread DOM on any change — no global store.
 
-import { ideas, threadsBySession as seedThreadsBySession, connectorDocs } from "./mocks.js?v=54";
-import { findConnector } from "./connectors-store.js?v=26";
+import { ideas, threadsBySession as seedThreadsBySession, connectorDocs } from "./mocks.js?v=55";
+import { findConnector } from "./connectors-store.js?v=27";
 import { createSessionNotifier } from "./store-utils.js?v=2";
 import { showToast } from "./components/toast.js?v=20";
-import { isFlagOn } from "./feature-flags.js?v=9";
+import { isFlagOn } from "./feature-flags.js?v=10";
 
 const threads = new Map(); // sessionId → messages[]
 const notifier = createSessionNotifier("assistant");

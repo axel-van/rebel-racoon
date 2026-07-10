@@ -103,10 +103,25 @@ body.has-modal {
   color: var(--ref-color-grey-80);
 }
 
+/* Live search — shown only when the connected list is long. Sits between the
+   lead copy and the checkable list. */
+.analyze-profiles-modal__search {
+  margin-bottom: var(--ref-spacing-xs);
+}
+
+.analyze-profiles-modal__search .ap-icon-search {
+  color: var(--ref-color-grey-60);
+}
+
 .analyze-profiles-modal__list {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xxs);
+}
+
+/* Filtered-out row (search miss). */
+.analyze-profiles-modal__row.is-hidden {
+  display: none;
 }
 
 /* Rows are selectable cards: the control is the DS checkbox
