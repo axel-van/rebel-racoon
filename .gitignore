@@ -1,6 +1,7 @@
 node_modules/
 ds/
 .idea/
+.claude/worktrees/
 .DS_Store
 **/.DS_Store
 
