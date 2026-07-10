@@ -46,45 +46,38 @@
       "Top Post Card — text": "1206:1677"
     }
   },
+  "framesComment": "The 4 maintained SCREEN frames the user assigned (2026-07-10). These are full 1440-wide screen assemblies on the Flows/Screens page — distinct from the mockups on the '💠 Components' page (e.g. the 'Session — Central thread' assembly 618:759 there is NOT the maintained session; 643:4812 is). Each is an assembly of component instances — sync by (re)instancing components per the isolation rules, never by editing raw layers. Verified each node id against the live file.",
   "frames": {
-    "session": {
-      "node": "618:759",
-      "route": "#/session/s1",
-      "source": "src/screens/session.js",
-      "styles": "styles/screens/session.css",
-      "note": "'Session — Central thread' — lives in the Screens section (670:1233) as an ASSEMBLY of Chat-* + Composer Card instances. Update by (re)instancing components, never by editing raw layers. Also touches src/screens/session/*, chat.css."
-    },
-    "contexts": {
-      "node": "",
-      "route": "#/contexts",
-      "source": "src/screens/contexts.js",
-      "styles": "styles/screens/contexts.css",
-      "note": "Playbooks library. No assembled screen frame yet — build one in the Screens section from Playbook Card (699:1235) instances."
-    },
-    "playbook": {
-      "node": "",
-      "route": "#/playbook/p1",
-      "source": "src/screens/playbook.js",
-      "styles": "styles/screens/contexts.css",
-      "note": "Playbook detail. No assembled frame yet; Recap Panel components exist (814:1156 + variants)."
-    },
-    "connectors": {
-      "node": "",
-      "route": "#/connectors",
-      "source": "src/screens/connectors.js",
-      "styles": "styles/screens/connectors.css"
-    },
     "welcome-alt": {
-      "node": "",
+      "node": "697:1858",
+      "name": "Welcome-alt",
       "route": "#/welcome-alt",
       "source": "src/screens/welcome-alt.js",
       "styles": "styles/screens/welcome.css"
     },
-    "welcome-alt-recap": {
-      "node": "",
-      "route": "#/welcome-alt/recap",
-      "source": "src/screens/welcome-alt-recap.js",
-      "styles": "styles/screens/welcome.css"
+    "contexts": {
+      "node": "703:1941",
+      "name": "Playbooks",
+      "route": "#/contexts",
+      "source": "src/screens/contexts.js",
+      "styles": "styles/screens/contexts.css",
+      "note": "Playbooks LIST page (Sidebar + Topbar + Playbook Card instances + ghost 'Create a Playbook' card)."
+    },
+    "playbook": {
+      "node": "812:2796",
+      "name": "Playbook detail",
+      "route": "#/playbook/p1",
+      "source": "src/screens/playbook.js",
+      "styles": "styles/screens/contexts.css",
+      "note": "Playbook DETAIL page (Sidebar + Topbar + rail + Recap Panel components)."
+    },
+    "session": {
+      "node": "643:4812",
+      "name": "Session",
+      "route": "#/session/s1",
+      "source": "src/screens/session.js",
+      "styles": "styles/screens/session.css",
+      "note": "Main chat surface — largest screen. Also touches src/screens/session/*, chat.css."
     }
   }
 }
