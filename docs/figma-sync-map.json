@@ -107,6 +107,14 @@
       "styles": "styles/screens/posts.css / session.css",
       "note": "Winner-selection board rendered in the assistant thread: intro Chat \u2014 AI Message + toolbar (count + Period/Sort filters) + wrapping grid of Top Post Card instances (carousel/image/text formats, set 1169:1687 / 1205:1666 / 1206:1677). FLAG: the Period/Sort filters use DS stroked-grey Buttons with a chevron as a DS-clean stand-in for the app's custom .ap-select inline dropdown (no DS Figma equivalent)."
     },
+    "batch-studio": {
+      "node": "1276:1644",
+      "name": "Batch Studio",
+      "route": "#/session/batch-* (Batch from a source intake)",
+      "source": "src/batch-studio.js + src/screens/session.js (renderBatchStudio)",
+      "styles": "styles/screens/batch-studio.css",
+      "note": "Full-page 'Batch from a source' takeover: Sidebar + Topbar + centered column = 'Batch' AI badge + title/subtitle + big dropzone (Browse files) + 'Or add another way' (A link / Pasted text) + staged Source Row list + commit row (Playbook control + Start drafting). FLAG: dropzone + AI badge hand-built (no DS dropzone/AI-badge component); upload glyph is an imported SVG."
+    },
     "connectors": {
       "node": "1228:3355",
       "name": "Connectors",
