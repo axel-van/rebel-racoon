@@ -78,6 +78,14 @@
       "source": "src/screens/session.js",
       "styles": "styles/screens/session.css",
       "note": "Main chat surface — largest screen. Also touches src/screens/session/*, chat.css."
+    },
+    "connectors": {
+      "node": "1228:3355",
+      "name": "Connectors",
+      "route": "#/connectors",
+      "source": "src/screens/connectors.js",
+      "styles": "styles/screens/connectors.css",
+      "note": "Connectors gallery. As of 2026-07-10 the frame is a STUB — only a Sidebar instance, content not built yet; first sync should assemble the gallery. Feature is gated behind the `connectors` flag (OFF by default) in the app."
     }
   }
 }
