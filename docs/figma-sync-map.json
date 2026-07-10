@@ -115,6 +115,14 @@
       "styles": "styles/screens/batch-studio.css",
       "note": "Full-page 'Batch from a source' takeover: Sidebar + Topbar + centered column = 'Batch' AI badge + title/subtitle + big dropzone (Browse files) + 'Or add another way' (A link / Pasted text) + staged Source Row list + commit row (Playbook control + Start drafting). FLAG: dropzone + AI badge hand-built (no DS dropzone/AI-badge component); upload glyph is an imported SVG."
     },
+    "clip-studio": {
+      "node": "1280:1809",
+      "name": "Clip Studio",
+      "route": "#/session/clip-studio-* (clips review stage)",
+      "source": "src/clip-studio.js + src/screens/session.js (renderClipStudioClips)",
+      "styles": "styles/screens/clip-studio.css",
+      "note": "Full-screen clip review/editor (clips stage): Sidebar + Topbar + head (Back to setup + 'Clips ready' AI badge + title + subtitle) + review settings (Output format + Caption style button rows) + wrapping grid of Clip Card instances each with a DS Checkbox selection overlay + docked bottom bar (Add clip / N selected / Continue). Upload stage exists separately as 'Clip Studio - Setup' (924:52). FLAG: format/caption selectors are DS Buttons standing in for the app's ratio-shape/caption-preview cards; AI badge hand-built."
+    },
     "connectors": {
       "node": "1228:3355",
       "name": "Connectors",
