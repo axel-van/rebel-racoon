@@ -29,7 +29,6 @@ With Claude Code the dev server auto-launches via `.claude/launch.json` (server 
 | -------------------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
 | `/`                  | `dashboard.js`         | Redirect-only: first-time → `/welcome-alt`, returning → most-recent session or a fresh one        |
 | `/session/:id`       | `session.js`           | The main chat surface (largest file); hosts the assistant thread, composer, and per-session flows |
-| `/ideas`             | `ideas.js`             | Standalone Ideas library (grid + kind filter + search + sort)                                     |
 | `/contexts`          | `contexts.js`          | Standalone **Playbooks** library (cards + edit)                                                   |
 | `/playbook/:id`      | `playbook.js`          | Playbook detail page (topbar back → `/contexts`)                                                  |
 | `/connectors`        | `connectors.js`        | Connectors gallery (marketplace); detail opens in a modal (gated by the `connectors` flag)        |
@@ -107,7 +106,7 @@ src/
   components/             — each exports init() (injects DOM once) + render/open()
     topbar.js             persistent header: route title (rename on session) +
                           Sources / Ideas / Drafts pills + status-card toggle; back on /playbook
-    sidebar.js            left rail: brand, New chat, Search, Ideas / Playbooks / Connectors nav,
+    sidebar.js            left rail: brand, New chat, Search, Playbooks / Connectors nav,
                           recent chats (pin/rename/delete), footer popmenu (feedback/bug/shortcuts + Admin menu)
     right-panel.js        sliding panel — modes: drafts / ideas / sources / clips / context-brief
     conversation-status-card.js  floating in-progress card (sources/ideas/drafts counts)
@@ -167,7 +166,7 @@ Connectors (Notion, Slite, Google Drive, GitHub, …) are seeded in `mocks.js` (
 
 ### Admin / user mode (prototype controls)
 
-The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototype control panel: switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()`. The 8 flags: `draftInlineEdit` (OFF), `sidebarIdeas` (OFF), `playbookDefault` (OFF), `connectors` (OFF — gates the whole connectors feature), `conversationStatusCard` (ON), `statusActionSnackbars` (OFF), `hidePlaybookColors` (ON), `multilingualPlaybook` (OFF). Full table + gates: [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md#14-admin-feature-flags--user-modes).
+The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototype control panel: switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()`. The 7 flags: `draftInlineEdit` (OFF), `playbookDefault` (OFF), `connectors` (OFF — gates the whole connectors feature), `conversationStatusCard` (ON), `statusActionSnackbars` (OFF), `hidePlaybookColors` (ON), `multilingualPlaybook` (OFF). Full table + gates: [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md#14-admin-feature-flags--user-modes).
 
 ### Module loading
 

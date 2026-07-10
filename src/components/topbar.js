@@ -509,7 +509,6 @@ function currentSessionId() {
 function currentTitle() {
   const path = getPath();
   if (path === "/") return "Home";
-  if (path === "/ideas") return "Ideas";
   if (path === "/contexts") return "Playbooks";
   if (path === "/connectors") return "Connectors";
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);

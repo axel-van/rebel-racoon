@@ -1173,9 +1173,9 @@ export const ideasBySession = {
 };
 
 // Flat union — kept for legacy consumers that read a single global pool
-// (assistant.js reasoning text, screens/ideas.js standalone route,
-// right-panel.js Ideas tab). Stays mutable so library.js dual-write
-// (`injectIdeasForSource` → seedIdeas.unshift) continues to land here.
+// (assistant.js reasoning text, right-panel.js Ideas tab). Stays mutable
+// so library.js dual-write (`injectIdeasForSource` → seedIdeas.unshift)
+// continues to land here.
 export const ideas = [
   ...ideasBySession["s-acme-launch"],
   ...ideasBySession["s-riverside"],

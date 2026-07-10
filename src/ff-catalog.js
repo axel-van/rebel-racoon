@@ -9,12 +9,6 @@ export const FLAGS = Object.freeze([
       "inline editing for draft posts).",
   },
   {
-    id: "sidebarIdeas",
-    label: "Ideas in left sidebar",
-    default: false,
-    hides: "Ideas entry in the left sidebar navigation.",
-  },
-  {
     id: "playbookDefault",
     label: "Default Playbook toggle",
     default: false,

@@ -17,7 +17,7 @@ import {
 } from "../sessions-store.js?v=4";
 import { isFlagOn } from "../feature-flags.js?v=9";
 import { isNewUser } from "../user-mode.js?v=22";
-import { getIdeas, clearSession as clearLibrarySession } from "../library.js?v=46";
+import { clearSession as clearLibrarySession } from "../library.js?v=46";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=33";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=26";
 import { closePanel as closeRightPanel } from "./right-panel.js?v=291";
@@ -471,20 +471,15 @@ function renderFootMenu({ collapsed }) {
   return collapsed ? inner : `<div class="app-sidebar__foot-tools">${inner}</div>`;
 }
 
-// Library nav — Ideas / Contexts standalone views. `count` resolves to
-// a live count from the relevant store so the trailing `.ap-counter`
+// Library nav — Playbooks / Connectors standalone views. `count` resolves
+// to a live count from the relevant store so the trailing `.ap-counter`
 // badge stays in sync. Sources moved into per-session ownership; they
 // are no longer browseable workspace-wide so the global /sources page
-// was dropped. Chats: the recent-conversations list below is the
-// canonical entry point for session navigation.
+// was dropped, and the standalone /ideas library was removed too (ideas
+// now live only inside a session + the right panel). Chats: the
+// recent-conversations list below is the canonical entry point for
+// session navigation.
 const NAV = [
-  {
-    path: "/ideas",
-    icon: "ap-icon-sparkles",
-    label: "Ideas",
-    match: (p) => p === "/ideas",
-    count: () => getSessions().reduce((n, s) => n + getIdeas(s.id).length, 0),
-  },
   {
     path: "/contexts",
     icon: "ap-icon-target",
@@ -503,7 +498,7 @@ const NAV = [
 
 function renderNav(path) {
   // Action rows at the top of the nav group: New conversation + Search.
-  // Both are verbs (not routes), so they live alongside Playbooks / Ideas
+  // Both are verbs (not routes), so they live alongside Playbooks / Connectors
   // but never carry the `.is-active` cue. Their ⇧⌘O / ⌘K kbd hints are
   // hover-revealed (cf. sidebar.css — opacity 0 → 1 on :hover/:focus).
   const newConversationItem = `
@@ -535,7 +530,6 @@ function renderNav(path) {
   `;
 
   const routeItems = NAV.filter((item) => {
-    if (item.path === "/ideas") return isFlagOn("sidebarIdeas");
     if (item.path === "/connectors") return isFlagOn("connectors");
     return true;
   })

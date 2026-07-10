@@ -24,7 +24,6 @@ import {
 } from "./components/conversation-status-card.js?v=119";
 import { renderDashboard } from "./screens/dashboard.js?v=49";
 import { renderSession } from "./screens/session.js?v=409";
-import { renderIdeas } from "./screens/ideas.js?v=142";
 import { renderContexts } from "./screens/contexts.js?v=151";
 import { renderConnectors } from "./screens/connectors.js?v=90";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
@@ -50,7 +49,6 @@ import {
 // stays in sync with the active context.
 route("/", renderDashboard);
 route("/session/:id", renderSession);
-route("/ideas", renderIdeas);
 route("/contexts", renderContexts);
 route("/playbook/:id", renderPlaybook);
 route("/connectors", renderConnectors);

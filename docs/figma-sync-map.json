@@ -12,18 +12,6 @@
       "styles": "styles/screens/session.css",
       "note": "Main chat surface — largest screen. Also touches src/screens/session/*, chat.css."
     },
-    "dashboard": {
-      "node": "",
-      "route": "#/",
-      "source": "src/screens/dashboard.js",
-      "styles": "styles/screens/dashboard.css"
-    },
-    "ideas": {
-      "node": "",
-      "route": "#/ideas",
-      "source": "src/screens/ideas.js",
-      "styles": "styles/screens/ideas.css"
-    },
     "contexts": {
       "node": "",
       "route": "#/contexts",
