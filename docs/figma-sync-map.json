@@ -1,0 +1,58 @@
+{
+  "$comment": "Mapping app-surface -> Figma node used by the figma-sync agent. fileKey comes from the Figma URL (figma.com/design/<fileKey>/...). node ids use the ':' form (384:80), NOT the URL's '384-80'. Fill 'node' for each frame as you build/locate it in Figma; leave '' if not yet placed. 'route' is the app hash route the agent screenshots for the visual source of truth.",
+  "fileKey": "ulQHaMfPhTQwNLib6IDOez",
+  "figmaUrl": "https://www.figma.com/design/ulQHaMfPhTQwNLib6IDOez/Archie",
+  "appBaseUrl": "https://mbousendorfer.github.io/rebel-racoon/",
+  "lastSyncCommit": "",
+  "frames": {
+    "session": {
+      "node": "384:80",
+      "route": "#/session/s1",
+      "source": "src/screens/session.js",
+      "styles": "styles/screens/session.css",
+      "note": "Main chat surface — largest screen. Also touches src/screens/session/*, chat.css."
+    },
+    "dashboard": {
+      "node": "",
+      "route": "#/",
+      "source": "src/screens/dashboard.js",
+      "styles": "styles/screens/dashboard.css"
+    },
+    "ideas": {
+      "node": "",
+      "route": "#/ideas",
+      "source": "src/screens/ideas.js",
+      "styles": "styles/screens/ideas.css"
+    },
+    "contexts": {
+      "node": "",
+      "route": "#/contexts",
+      "source": "src/screens/contexts.js",
+      "styles": "styles/screens/contexts.css"
+    },
+    "playbook": {
+      "node": "",
+      "route": "#/playbook/p1",
+      "source": "src/screens/playbook.js",
+      "styles": "styles/screens/contexts.css"
+    },
+    "connectors": {
+      "node": "",
+      "route": "#/connectors",
+      "source": "src/screens/connectors.js",
+      "styles": "styles/screens/connectors.css"
+    },
+    "welcome-alt": {
+      "node": "",
+      "route": "#/welcome-alt",
+      "source": "src/screens/welcome-alt.js",
+      "styles": "styles/screens/welcome.css"
+    },
+    "welcome-alt-recap": {
+      "node": "",
+      "route": "#/welcome-alt/recap",
+      "source": "src/screens/welcome-alt-recap.js",
+      "styles": "styles/screens/welcome.css"
+    }
+  }
+}
