@@ -90,6 +90,14 @@
       "styles": "styles/screens/session.css",
       "note": "First-run empty hero (renderEmptyHero): Sidebar (Expanded) + Topbar (title 'New chat', Sources/Ideas/Drafts counters 0) + centered hero = Archie wordmark (brand SVG) + subtitle + Composer Card instance + 'Or jump into a workflow' label + starter-grid of 3 'Starter Card' instances (Batch/mermaid, Video clips/purple, Top posts/green). Starter Card is a LOCAL hand-built component (no DS 'workflow card') with Title/Subtitle/CTA text props + Art INSTANCE_SWAP; watermarks are V2 Icons."
     },
+    "top-posts-board": {
+      "node": "1264:1240",
+      "name": "Top Posts \u2014 Board",
+      "route": "#/session/:id (top-posts repurpose flow \u2014 winner board)",
+      "source": "src/top-posts-flow.js + src/components/top-post-card.js (renderTopPostsBoard)",
+      "styles": "styles/screens/posts.css / session.css",
+      "note": "Winner-selection board rendered in the assistant thread: intro Chat \u2014 AI Message + toolbar (count + Period/Sort filters) + wrapping grid of Top Post Card instances (carousel/image/text formats, set 1169:1687 / 1205:1666 / 1206:1677). FLAG: the Period/Sort filters use DS stroked-grey Buttons with a chevron as a DS-clean stand-in for the app's custom .ap-select inline dropdown (no DS Figma equivalent)."
+    },
     "connectors": {
       "node": "1228:3355",
       "name": "Connectors",
