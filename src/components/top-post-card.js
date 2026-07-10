@@ -409,7 +409,7 @@ export function renderTopPostsBoard({ posts, sort = "performance", profile = nul
     ? sorted.map((p) => renderTopPostCard(p)).join("")
     : renderEmptyState({
         icon: "ap-icon-feature-analytics",
-        title: "No winning posts in this window",
+        title: "No best-performing posts in this window",
         body: "None of your posts beat your average for this period. Widen the time range to look further back.",
         wrapperClass: "session__empty top-posts-empty",
       });
@@ -419,7 +419,7 @@ export function renderTopPostsBoard({ posts, sort = "performance", profile = nul
   // / bulk bar.
   const toolbar = html`
     <div class="top-posts-toolbar">
-      <span class="top-posts-toolbar__count">${count} winning ${count === 1 ? "post" : "posts"}</span>
+      <span class="top-posts-toolbar__count">${count} best-performing ${count === 1 ? "post" : "posts"}</span>
       <div class="top-posts-filters">
         ${raw(
           renderFilterSelect({

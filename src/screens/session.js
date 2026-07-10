@@ -1956,7 +1956,7 @@ const TOP_POSTS_STEPS = [
     tone: "in",
     icon: "ap-icon-feature-analytics",
     title: "Pick an account",
-    text: "Choose a connected account to pull your winning posts from.",
+    text: "Choose a connected account to pull your best-performing posts from.",
   },
   {
     tone: "ai",
@@ -2024,7 +2024,7 @@ function renderTopPostsPickerScreen(session) {
     // clicking a row (or pressing its digit) routes through the shared
     // inline-question delegate → inlineQuestion.pick → chooseProfile.
     intro =
-      "Pick a connected account and I'll surface its winning posts — reuse any into fresh drafts in your playbook's voice.";
+      "Pick a connected account and I'll surface its best-performing posts — reuse any into fresh drafts in your playbook's voice.";
     const picker = renderPicker(inlineQuestion.renderChrome(session.id)?.picker);
     // The Playbook whose voice the repurposed drafts will follow, chosen here on
     // step 1 (defaults to the workspace default; persists through to generation).
