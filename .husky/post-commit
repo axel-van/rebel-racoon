@@ -1,0 +1,49 @@
+#!/usr/bin/env sh
+# post-commit — garde la doc en phase avec le code après chaque commit qui touche
+# du CODE. Voir .claude/agents/doc-sync.md.
+#
+# Deux modes :
+#   • ADVISORY (défaut) : affiche un rappel gratuit "lance @doc-sync". 0 token,
+#     aucune escalade de permission. Tu lances l'agent quand tu veux.
+#   • AUTO (opt-in)     : lance l'agent doc-sync en tâche de fond (Haiku) qui
+#     resynchronise la doc et pousse un commit chore(docs) séparé.
+#     À activer sciemment :  git config hooks.docSyncAuto true
+#     (l'agent doit alors pouvoir committer/pusher sans prompt — voir plus bas.)
+#
+# Désactiver tout le hook :  git config hooks.docSync false   (ou DOC_SYNC_DISABLED=1)
+
+# --- Kill switches -----------------------------------------------------------
+[ "$DOC_SYNC_DISABLED" = "1" ] && exit 0
+[ "$(git config --bool hooks.docSync 2>/dev/null)" = "false" ] && exit 0
+
+# --- Anti-boucle -------------------------------------------------------------
+# 1) Déjà dans un run doc-sync (son propre commit) → ne pas reboucler.
+[ "$DOC_SYNC_RUNNING" = "1" ] && exit 0
+# 2) Commit qui ne touche QUE de la doc (docs/, CLAUDE.md, README.md) → rien à
+#    synchroniser ; c'est exactement la forme du commit produit par l'agent.
+changed=$(git diff-tree --no-commit-id --name-only -r HEAD)
+code_changed=$(printf '%s\n' "$changed" | grep -vE '^(docs/|CLAUDE\.md$|README\.md$)' | grep -v '^[[:space:]]*$')
+[ -z "$code_changed" ] && exit 0
+
+sha=$(git rev-parse --short HEAD)
+
+# --- Mode AUTO (opt-in) ------------------------------------------------------
+if [ "$(git config --bool hooks.docSyncAuto 2>/dev/null)" = "true" ] \
+   && command -v claude >/dev/null 2>&1; then
+  log="${TMPDIR:-/tmp}/archie-doc-sync.log"
+  # Tâche de fond détachée, Haiku (rapide + peu coûteux). DOC_SYNC_RUNNING=1 :
+  # le commit chore(docs) de l'agent héritera de la var et ne rebouclera pas.
+  # NB: pour committer/pusher sans TTY, l'agent a besoin d'un mode de permission
+  # non-interactif — configure-le via ta CLI (ex. --permission-mode) selon ta
+  # tolérance au risque ; ce hook ne force aucun bypass de permission.
+  DOC_SYNC_RUNNING=1 nohup claude -p "@doc-sync resynchronise la documentation avec le commit $sha" \
+    --model haiku \
+    >"$log" 2>&1 &
+  exit 0
+fi
+
+# --- Mode ADVISORY (défaut) --------------------------------------------------
+printf '\n\033[33m📝 doc-sync :\033[0m le commit %s touche du code — la doc est peut-être à mettre à jour.\n' "$sha" >&2
+printf '   Lance l'"'"'agent :  \033[36m@doc-sync resynchronise la doc du dernier commit\033[0m\n' >&2
+printf '   (auto à chaque commit : git config hooks.docSyncAuto true · désactiver : git config hooks.docSync false)\n\n' >&2
+exit 0
