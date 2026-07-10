@@ -468,6 +468,12 @@ function randomText(len) {
 // second page to reveal; metrics / dates / media keep degrading past the ramp.
 const TOP_POSTS_PER_NETWORK = 24;
 
+// Networks intentionally left with ZERO winners so the repurpose board shows its
+// empty state when that profile is picked. X is empty by design here (a
+// showcase); its authored content above is kept so it can surface again just by
+// removing it from this set.
+const TOP_POST_EMPTY_NETWORKS = new Set(["x"]);
+
 // Ramp row for any rank i — reads the authored 9 tiers, then extends the decay
 // below the last tier so cycled winners keep descending (vsAvg floored at 1.0×
 // so the tail still reads as "at least average").
@@ -493,6 +499,8 @@ function buildTopPosts() {
   // Running counter so Document winners cycle through the page-count list.
   let docIdx = 0;
   for (const [network, posts] of Object.entries(TOP_POST_CONTENT)) {
+    // Skip networks flagged empty by design → their board renders the empty state.
+    if (TOP_POST_EMPTY_NETWORKS.has(network)) continue;
     // Per-network ladder of text lengths (short → this network's max) cycled
     // across its text winners so every board shows the size-tier spread + the cap.
     const cap = NETWORK_MAX_CHARS[network] || 3000;
