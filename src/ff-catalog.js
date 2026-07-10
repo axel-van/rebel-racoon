@@ -49,14 +49,15 @@ export const FLAGS = Object.freeze([
       "bar (and the in-progress / video-ready toasts) stay regardless.",
   },
   {
-    id: "hidePlaybookColors",
-    label: "Hide playbook colors",
-    default: true,
+    id: "playbookColors",
+    label: "Playbook colors",
+    default: false,
     hides:
-      "When ON, hides the playbook color visuals everywhere: the top " +
-      "stripe + palette dots on /contexts cards, the color dot on " +
+      "When OFF (default), hides the playbook color visuals everywhere: the " +
+      "top stripe + palette dots on /contexts cards, the color dot on " +
       "sidebar conversation rows, and the color swatch picker in the " +
-      "brief panel. Used to evaluate the UI without color coding.",
+      "brief panel. When ON, the color coding is shown. Body gets " +
+      "`hide-playbook-colors` while the flag is OFF.",
   },
   {
     id: "manyProfiles",

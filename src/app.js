@@ -97,7 +97,7 @@ initConversationStatusCard();
 // flow runs the chat inside the onboarding chrome.
 // Feature flag → body class. Driven once at boot (flag changes always
 // reload the page, so we don't need to re-evaluate on every route).
-document.body.classList.toggle("hide-playbook-colors", isFlagOn("hidePlaybookColors"));
+document.body.classList.toggle("hide-playbook-colors", !isFlagOn("playbookColors"));
 
 setAfterRender((path) => {
   renderSidebar();
