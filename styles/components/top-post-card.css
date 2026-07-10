@@ -160,13 +160,11 @@
   font-size: var(--sys-text-style-body-size);
 }
 
-/* Board empty-state (chosen profile has no winners in the current window). */
+/* Board empty-state (chosen profile has no winners in the current window).
+   Wraps the shared renderEmptyState chrome (.session__empty-*); this rule only
+   makes the block span the full grid width — .session__empty owns the layout. */
 .top-posts-empty {
   grid-column: 1 / -1;
-  margin: 0;
-  padding: var(--ref-spacing-lg) 0;
-  text-align: center;
-  color: var(--ref-color-grey-60);
 }
 
 /* ── Grid ───────────────────────────────────────────────────────── */

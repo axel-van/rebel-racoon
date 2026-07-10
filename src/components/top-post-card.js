@@ -14,6 +14,7 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { profileForNetwork, NETWORK_ICON_BY_PLATFORM, BRAND_INITIALS } from "../social-profiles.js?v=24";
+import { renderEmptyState } from "./empty-state.js?v=1";
 
 const NET_ICON = {
   linkedin: "ap-icon-linkedin-official",
@@ -406,7 +407,12 @@ export function renderTopPostsBoard({ posts, sort = "performance", profile = nul
 
   const cards = sorted.length
     ? sorted.map((p) => renderTopPostCard(p)).join("")
-    : `<p class="top-posts-empty">No winning posts in this window — try a wider period.</p>`;
+    : renderEmptyState({
+        icon: "ap-icon-feature-analytics",
+        title: "No winning posts in this window",
+        body: "None of your posts beat your average for this period. Widen the time range to look further back.",
+        wrapperClass: "session__empty top-posts-empty",
+      });
 
   // One post is repurposed at a time (via each card's "Repurpose" button), so
   // the toolbar just holds the count + the Period/Sort filters. No multi-select

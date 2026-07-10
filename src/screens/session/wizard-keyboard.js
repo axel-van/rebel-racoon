@@ -34,6 +34,18 @@ export function rebindWizardKeyboard(aside, sessionId) {
     });
     return;
   }
+  // Top-posts empty studio (no published history) — no picker to nav, but Esc
+  // should still leave the whole flow like the profile stage does.
+  if (topPostsFlow.getPickerState(sessionId)?.stage === "empty") {
+    bindWizardKeyboard(aside, {
+      handler: "inline-question",
+      onExit: () => {
+        unbindWizardKeyboard();
+        topPostsFlow.exitPicker(sessionId);
+      },
+    });
+    return;
+  }
   if (sidebarWizard.isActive(sessionId)) {
     bindWizardKeyboard(aside, {
       handler: "wizard-answer",

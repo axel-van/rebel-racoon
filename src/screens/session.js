@@ -62,6 +62,7 @@ import {
   TOP_POSTS_LIMIT,
 } from "../components/top-post-card.js?v=64";
 import { getTopPost } from "../top-posts-store.js?v=8";
+import { renderEmptyState } from "../components/empty-state.js?v=1";
 import * as sidebarWizard from "../sidebar-wizard.js?v=51";
 import * as inlineQuestion from "../inline-question.js?v=47";
 import * as clipStudio from "../clip-studio.js?v=21";
@@ -1974,6 +1975,37 @@ const TOP_POSTS_STEPS = [
 function renderTopPostsPickerScreen(session) {
   const state = topPostsFlow.getPickerState(session.id);
   if (!state) return "";
+  // No published history yet (new user) — the studio opens straight onto a
+  // dedicated empty state instead of the account chooser. A single "Back to
+  // chat" affordance (also Esc) is the only way out since there's nothing to
+  // pick.
+  if (state.stage === "empty") {
+    return html`
+      <aside
+        class="session__assistant session__assistant--wizard session__assistant--board"
+        aria-label="Assistant panel"
+      >
+        <div class="analyse__chat session__assistant-board-chat">
+          <div class="analyse__chat-inner session__assistant-board-inner">
+            <div class="top-posts-intro">
+              <span class="top-posts-intro__badge"
+                ><i class="ap-icon-feature-analytics" aria-hidden="true"></i>Top posts</span
+              >
+            </div>
+            ${raw(
+              renderEmptyState({
+                icon: "ap-icon-feature-analytics",
+                title: "No top posts to reuse yet",
+                body: "Once your posts start performing, I'll surface your winners here so you can spin fresh drafts out of what already works. Publish a few and come back.",
+                actionHtml:
+                  '<button type="button" class="ap-button stroked" data-topposts-exit><span>Back to chat</span></button>',
+              }),
+            )}
+          </div>
+        </div>
+      </aside>
+    `;
+  }
   // A studio-style screen (like Batch / Clip): a centered intro header, then a
   // stage-dependent body — profile chooser (step 1) → loading beat → winner
   // board. Distinct container classes (not #inlineQuestionChat / wizard-chat) so
@@ -4475,6 +4507,12 @@ function bindSession(root, session) {
       // winners (submitSingle resolves the picker → chooseProfile).
       if (event.target.closest("[data-topposts-next]")) {
         inlineQuestion.submitSingle(session.id);
+        return;
+      }
+      // No-history empty studio → "Back to chat" leaves the picker (→ normal
+      // chat). exitPicker notifies, so refreshTopPostsBoard repaints the aside.
+      if (event.target.closest("[data-topposts-exit]")) {
+        topPostsFlow.exitPicker(session.id);
         return;
       }
       // Inline widget — confirm the selection → freeze the widget, then hand off

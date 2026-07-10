@@ -320,11 +320,11 @@ export function backToProfiles(sessionId) {
 
 export function startTopPostsFlow(sessionId) {
   if (!getTopPosts().length) {
-    // New-alt users have no published history yet.
-    postAssistantMessage(
-      sessionId,
-      "Once your posts start performing, I'll surface your winners here so you can spin new posts out of what already works. Publish a few and come back.",
-    );
+    // New-alt users have no published history yet — open the studio on a
+    // dedicated empty state rather than a bare chat line (which reads as a dead
+    // end). session.js paints the "empty" stage; Esc / "Back to chat" exits.
+    pickerStates.set(sessionId, { stage: "empty", posts: [], profile: null, sort: "performance", period: "1y" });
+    notifyPicker(sessionId);
     return;
   }
   // Pre-select the default Playbook so drafts already have a voice; the user can
