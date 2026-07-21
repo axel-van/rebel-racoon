@@ -632,18 +632,54 @@ function renderNav(path) {
   return newConversationItem + searchItem + routeItems;
 }
 
-// "Sort & group" control — options for the two rows. Kept intentionally
-// minimal: grouping by Playbook (the session's contextId) and sorting by name
-// or the current (recency) order are the only dimensions the session record
-// actually supports today.
+// "Sort & group" control — options for the two rows. Grouping is limited to the
+// dimensions the session record supports: Playbook (contextId) and Date
+// (derived from the lastActivity label). Sorting is name or the current
+// (recency) order.
 const ORGANIZE_GROUP_OPTIONS = [
   { value: "none", label: "None" },
   { value: "playbook", label: "Playbook" },
+  { value: "date", label: "Date" },
 ];
 const ORGANIZE_SORT_OPTIONS = [
   { value: "recency", label: "Recency" },
   { value: "alphabetical", label: "Alphabetical" },
 ];
+
+// Chronological buckets for "Group by → Date", most-recent first. Rendered in
+// this order, empty buckets skipped.
+const ORGANIZE_DATE_BUCKETS = ["Today", "Yesterday", "Previous 7 days", "Previous 30 days", "Older"];
+
+// Map a session to a date bucket. Sessions carry no real timestamp — only the
+// human `lastActivity` label ("2 hours ago", "Yesterday", "5 days ago", "just
+// now") — so parse that. Unknown / undated → "Older".
+function sessionDateBucket(session) {
+  const s = (session.lastActivity || "").toLowerCase();
+  if (
+    !s ||
+    s.includes("now") ||
+    s.includes("today") ||
+    s.includes("second") ||
+    s.includes("min") ||
+    s.includes("hour") ||
+    s.includes("hr")
+  ) {
+    return "Today";
+  }
+  if (s.includes("yesterday")) return "Yesterday";
+  const dayMatch = s.match(/(\d+)\s*day/);
+  if (dayMatch) {
+    const n = parseInt(dayMatch[1], 10);
+    if (n <= 1) return "Yesterday";
+    if (n <= 7) return "Previous 7 days";
+    if (n <= 30) return "Previous 30 days";
+    return "Older";
+  }
+  const weekMatch = s.match(/(\d+)\s*week/);
+  if (weekMatch) return parseInt(weekMatch[1], 10) * 7 <= 30 ? "Previous 30 days" : "Older";
+  if (s.includes("week")) return "Previous 30 days";
+  return "Older";
+}
 
 // Apply the active sort to a list of sessions. "recency" keeps the store order
 // (sessions are seeded newest-first); "alphabetical" sorts by name.
@@ -784,6 +820,22 @@ function renderRecentLists(activeSessionId) {
     for (const [, bucket] of ordered) {
       out += heading(bucket.label);
       out += rows(bucket.rows);
+    }
+  } else if (groupBy === "date") {
+    // Bucket the unpinned rows by recency, rendered in fixed chronological
+    // order (most-recent first); empty buckets are skipped.
+    const buckets = new Map();
+    for (const s of unpinned) {
+      const label = sessionDateBucket(s);
+      if (!buckets.has(label)) buckets.set(label, []);
+      buckets.get(label).push(s);
+    }
+    for (const label of ORGANIZE_DATE_BUCKETS) {
+      const bucketRows = buckets.get(label);
+      if (bucketRows && bucketRows.length > 0) {
+        out += heading(label);
+        out += rows(bucketRows);
+      }
     }
   } else if (unpinned.length > 0) {
     out += heading("Recent");
