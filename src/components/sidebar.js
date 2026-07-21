@@ -42,6 +42,33 @@ const COLLAPSED_KEY = "archie-sidebar-collapsed";
 
 let menuOpen = false;
 
+// Recent-chats "Sort & group" control (gated by the `sidebarOrganize` flag).
+// The chosen { groupBy, sortBy } persists across reloads — mirror the
+// feature-flags localStorage idiom (defensive JSON read, merge with defaults).
+const ORGANIZE_KEY = "archie-chat-organize";
+const ORGANIZE_DEFAULTS = { groupBy: "none", sortBy: "recency" };
+
+let organizeOpen = false;
+
+function getOrganizePrefs() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(ORGANIZE_KEY) || "{}");
+    return { ...ORGANIZE_DEFAULTS, ...(stored && typeof stored === "object" ? stored : {}) };
+  } catch {
+    return { ...ORGANIZE_DEFAULTS };
+  }
+}
+
+function setOrganizePref(key, value) {
+  try {
+    const prefs = getOrganizePrefs();
+    prefs[key] = value;
+    window.localStorage.setItem(ORGANIZE_KEY, JSON.stringify(prefs));
+  } catch {
+    /* private-browsing / storage disabled — ignore, prefs stay session-local */
+  }
+}
+
 // Search lives in a dedicated modal now (cf. ./search-modal.js — opened from
 // the Search… row in the top nav). The sidebar no longer carries an inline
 // `<input>` or a live filter query — opening the modal is the only path.
@@ -101,6 +128,23 @@ function setMenuOpen(open) {
       popmenu.style.left = `${rect.left}px`;
       popmenu.style.bottom = `${window.innerHeight - rect.top + 8}px`;
     }
+  }
+}
+
+// Open/close the "Sort & group" popover. Mirrors setMenuOpen: the panel is
+// position:fixed (the sidebar clips overflow), so anchor it to the trigger's
+// rect each open — dropping down from just below the filter button, left-aligned
+// so the row flyouts have room to open rightward over the content.
+function setOrganizeMenuOpen(open) {
+  organizeOpen = open;
+  const menu = document.querySelector("[data-sidebar-organize-menu]");
+  const trigger = document.querySelector("[data-sidebar-organize-toggle]");
+  if (menu) menu.hidden = !open;
+  if (trigger) trigger.setAttribute("aria-expanded", String(open));
+  if (open && menu && trigger) {
+    const rect = trigger.getBoundingClientRect();
+    menu.style.left = `${rect.left}px`;
+    menu.style.top = `${rect.bottom + 6}px`;
   }
 }
 
@@ -190,6 +234,24 @@ export function initSidebar() {
       navigate(`/session/${sessionRow.dataset.sidebarSession}`);
       return;
     }
+    // "Sort & group" control — toggle the popover on its trigger.
+    if (event.target.closest("[data-sidebar-organize-toggle]")) {
+      setOrganizeMenuOpen(!organizeOpen);
+      return;
+    }
+    // "Sort & group" — pick an option (groupBy / sortBy). Persist, close, and
+    // re-render so the recent list reorders/regroups.
+    const organizeOpt = event.target.closest("[data-sidebar-organize-set]");
+    if (organizeOpt) {
+      event.preventDefault();
+      const { organizeKey, organizeValue } = organizeOpt.dataset;
+      if (organizeKey && organizeValue) {
+        setOrganizePref(organizeKey, organizeValue);
+        setOrganizeMenuOpen(false);
+        renderSidebar();
+      }
+      return;
+    }
     // Footer popmenu — toggle on the trigger, dispatch on item click.
     if (event.target.closest("[data-sidebar-foot-toggle]")) {
       setMenuOpen(!menuOpen);
@@ -254,6 +316,13 @@ export function initSidebar() {
     setMenuOpen(false);
   });
 
+  // Click outside the "Sort & group" popover → close.
+  document.addEventListener("click", (event) => {
+    if (!organizeOpen) return;
+    if (event.target.closest("[data-sidebar-organize-menu], [data-sidebar-organize-toggle]")) return;
+    setOrganizeMenuOpen(false);
+  });
+
   // Click outside an open row ⋮ menu → close it. The dropdown is
   // fixed-positioned so its click events bubble normally to document.
   document.addEventListener("click", (event) => {
@@ -275,6 +344,7 @@ export function initSidebar() {
   window.addEventListener("resize", () => {
     const openDetails = el.querySelector(".app-sidebar__row-menu[open]");
     if (openDetails) openDetails.removeAttribute("open");
+    if (organizeOpen) setOrganizeMenuOpen(false);
   });
 
   // Cmd/Ctrl+B toggles the sidebar — matches Claude.ai. Skip the binding when
@@ -283,6 +353,10 @@ export function initSidebar() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && menuOpen) {
       setMenuOpen(false);
+      return;
+    }
+    if (event.key === "Escape" && organizeOpen) {
+      setOrganizeMenuOpen(false);
       return;
     }
     if (event.key !== "b" && event.key !== "B") return;
@@ -321,6 +395,7 @@ export function renderSidebar() {
   // Re-rendering tears down the popmenu DOM, so reset the local state to
   // match. Any open menu has to be re-opened with a fresh click.
   menuOpen = false;
+  organizeOpen = false;
   const path = getPath();
   const activeSessionId = matchSessionId(path);
   const collapsed = isSidebarCollapsed();
@@ -369,6 +444,8 @@ export function renderSidebar() {
     </div>
 
     <nav class="app-sidebar__nav" aria-label="Library">${raw(renderNav(path))}</nav>
+
+    ${raw(renderOrganizeHeader())}
 
     <div class="app-sidebar__list" aria-label="Recent conversations">${raw(renderRecentLists(activeSessionId))}</div>
 
@@ -555,6 +632,104 @@ function renderNav(path) {
   return newConversationItem + searchItem + routeItems;
 }
 
+// "Sort & group" control — options for the two rows. Kept intentionally
+// minimal: grouping by Playbook (the session's contextId) and sorting by name
+// or the current (recency) order are the only dimensions the session record
+// actually supports today.
+const ORGANIZE_GROUP_OPTIONS = [
+  { value: "none", label: "None" },
+  { value: "playbook", label: "Playbook" },
+];
+const ORGANIZE_SORT_OPTIONS = [
+  { value: "recency", label: "Recency" },
+  { value: "alphabetical", label: "Alphabetical" },
+];
+
+function organizeOptionLabel(options, value) {
+  return (options.find((o) => o.value === value) || options[0]).label;
+}
+
+// Apply the active sort to a list of sessions. "recency" keeps the store order
+// (sessions are seeded newest-first); "alphabetical" sorts by name.
+function sortSessions(list, sortBy) {
+  if (sortBy === "alphabetical") {
+    return list.slice().sort((a, b) => a.name.localeCompare(b.name));
+  }
+  return list.slice();
+}
+
+// One "Group by" / "Sort by" row: a label + its current value, with a
+// hover/focus flyout of choices (Claude-style). Reuses the DS action-dropdown
+// item + surface; only the wrap/value/flyout positioning is app-local CSS.
+function renderOrganizeRow(label, key, options, current) {
+  const opts = options
+    .map((opt) => {
+      const active = opt.value === current;
+      return `
+        <button
+          type="button"
+          role="menuitemradio"
+          aria-checked="${active ? "true" : "false"}"
+          class="ap-action-dropdown-item"
+          data-sidebar-organize-set
+          data-organize-key="${key}"
+          data-organize-value="${opt.value}"
+        >
+          <div class="ap-action-dropdown-item-text">
+            <div class="ap-action-dropdown-item-label-container">
+              <span class="ap-action-dropdown-item-label">${opt.label}</span>
+            </div>
+          </div>
+          ${active ? `<i class="ap-icon-check app-sidebar__organize-check" aria-hidden="true"></i>` : ""}
+        </button>
+      `;
+    })
+    .join("");
+  return `
+    <div class="app-sidebar__organize-row-wrap">
+      <button type="button" class="ap-action-dropdown-item app-sidebar__organize-row" aria-haspopup="menu">
+        <div class="ap-action-dropdown-item-text">
+          <div class="ap-action-dropdown-item-label-container">
+            <span class="ap-action-dropdown-item-label">${label}</span>
+          </div>
+        </div>
+        <span class="app-sidebar__organize-value">${organizeOptionLabel(options, current)}</span>
+        <i class="ap-icon-chevron-right app-sidebar__organize-chevron" aria-hidden="true"></i>
+      </button>
+      <div class="ap-action-dropdown app-sidebar__organize-submenu" role="menu">${opts}</div>
+    </div>
+  `;
+}
+
+// Header row above the recent-chats list: a quiet "Chats" caption + a filter
+// button that opens the Group by / Sort by popover. Gated by the
+// `sidebarOrganize` flag — returns nothing (and the list keeps its default
+// Pinned/Recent order) when the flag is OFF.
+function renderOrganizeHeader() {
+  if (!isFlagOn("sidebarOrganize")) return "";
+  const { groupBy, sortBy } = getOrganizePrefs();
+  return `
+    <div class="app-sidebar__list-header">
+      <span class="app-sidebar__list-header-label">Chats</span>
+      <button
+        type="button"
+        class="ap-icon-button transparent app-sidebar__organize-toggle"
+        data-sidebar-organize-toggle
+        aria-haspopup="menu"
+        aria-expanded="false"
+        aria-label="Sort & group chats"
+        title="Sort & group chats"
+      >
+        <i class="ap-icon-filter"></i>
+      </button>
+      <div class="ap-action-dropdown app-sidebar__organize-menu" role="menu" data-sidebar-organize-menu hidden>
+        ${renderOrganizeRow("Group by", "groupBy", ORGANIZE_GROUP_OPTIONS, groupBy)}
+        ${renderOrganizeRow("Sort by", "sortBy", ORGANIZE_SORT_OPTIONS, sortBy)}
+      </div>
+    </div>
+  `;
+}
+
 // Pinned + Recent groups. Search lives in a dedicated modal now
 // (./search-modal.js) — the sidebar always renders the full list.
 function renderRecentLists(activeSessionId) {
@@ -575,17 +750,54 @@ function renderRecentLists(activeSessionId) {
       </div>
     `;
   }
-  const pinned = allSessions.filter((s) => s.pinned);
-  const unpinned = allSessions.filter((s) => !s.pinned);
+  // When the flag is OFF, fall back to the default order (none / recency) so the
+  // list behaves exactly as before.
+  const { groupBy, sortBy } = isFlagOn("sidebarOrganize") ? getOrganizePrefs() : ORGANIZE_DEFAULTS;
+
+  const pinned = sortSessions(
+    allSessions.filter((s) => s.pinned),
+    sortBy,
+  );
+  const unpinned = sortSessions(
+    allSessions.filter((s) => !s.pinned),
+    sortBy,
+  );
+
+  const heading = (label) => `<div class="app-sidebar__section-heading">${escapeHtml(label)}</div>`;
+  const rows = (list) => list.map((s) => renderSessionRow(s, activeSessionId)).join("");
 
   let out = "";
+  // Pinned always leads, regardless of grouping.
   if (pinned.length > 0) {
-    out += `<div class="app-sidebar__section-heading">Pinned</div>`;
-    out += pinned.map((s) => renderSessionRow(s, activeSessionId)).join("");
+    out += heading("Pinned");
+    out += rows(pinned);
   }
-  if (unpinned.length > 0) {
-    out += `<div class="app-sidebar__section-heading">Recent</div>`;
-    out += unpinned.map((s) => renderSessionRow(s, activeSessionId)).join("");
+
+  if (groupBy === "playbook") {
+    // Bucket the unpinned rows by their Playbook (contextId), ordered by first
+    // appearance in the sorted list; a "No playbook" bucket is forced last.
+    const buckets = new Map();
+    const NONE = "__none__";
+    for (const s of unpinned) {
+      const ctx = s.contextId ? getContextById(s.contextId) : null;
+      const key = ctx?.id || NONE;
+      if (!buckets.has(key)) {
+        buckets.set(key, { label: ctx?.name || "No playbook", rows: [] });
+      }
+      buckets.get(key).rows.push(s);
+    }
+    const ordered = [...buckets.entries()].sort(([a], [b]) => {
+      if (a === NONE) return 1;
+      if (b === NONE) return -1;
+      return 0;
+    });
+    for (const [, bucket] of ordered) {
+      out += heading(bucket.label);
+      out += rows(bucket.rows);
+    }
+  } else if (unpinned.length > 0) {
+    out += heading("Recent");
+    out += rows(unpinned);
   }
   return out;
 }

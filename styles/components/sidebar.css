@@ -193,6 +193,83 @@
   color: var(--ref-color-grey-60);
 }
 
+/* ── "Sort & group" control (sidebarOrganize flag) ──────────────────────
+   A header row above the list: a quiet "Chats" caption + a filter button
+   that opens a Group by / Sort by popover. The popover mirrors the foot
+   popmenu (fixed + JS-anchored to escape the sidebar's overflow); each row
+   flies out to its choices on hover/focus. */
+.app-sidebar__list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xxs);
+  padding: 0 var(--ref-spacing-xs);
+  margin-bottom: var(--ref-spacing-xxxs);
+}
+
+.app-sidebar__list-header-label {
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-60);
+}
+
+.app-sidebar__organize-toggle {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+/* Fixed (not absolute) so the popover isn't clipped by the sidebar's overflow;
+   setOrganizeMenuOpen anchors left/top from the filter button's rect. Overflow
+   stays visible so the per-row flyouts can escape rightward. */
+.ap-action-dropdown.app-sidebar__organize-menu {
+  position: fixed;
+  right: auto;
+  min-width: 208px;
+  overflow: visible;
+  z-index: var(--app-z-overlay);
+}
+
+.ap-action-dropdown.app-sidebar__organize-menu[hidden] {
+  display: none;
+}
+
+.app-sidebar__organize-row-wrap {
+  position: relative;
+}
+
+/* Push the current value + chevron to the trailing edge of the row. */
+.app-sidebar__organize-row .app-sidebar__organize-value {
+  margin-left: auto;
+  color: var(--ref-color-grey-60);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+.app-sidebar__organize-chevron {
+  color: var(--ref-color-grey-40);
+}
+
+/* Hover/focus flyout — opens to the right of its row (Claude-style). */
+.ap-action-dropdown.app-sidebar__organize-submenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  display: none;
+  min-width: 176px;
+  z-index: var(--app-z-overlay);
+}
+
+.app-sidebar__organize-row-wrap:hover > .app-sidebar__organize-submenu,
+.app-sidebar__organize-row-wrap:focus-within > .app-sidebar__organize-submenu {
+  display: block;
+}
+
+.app-sidebar__organize-check {
+  margin-left: auto;
+  color: var(--ref-color-electric-blue-100);
+}
+
 .app-sidebar__row {
   position: relative;
   display: flex;
