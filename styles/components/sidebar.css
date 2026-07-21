@@ -185,12 +185,28 @@
   gap: var(--ref-spacing-xxxs);
 }
 
+/* Section / group labels ("Pinned", "Recent", or a Playbook name). Treated as
+   quiet uppercase micro-labels so they recede as structure and the chat titles
+   below read as the primary content (blur test). Bigger top margin than bottom
+   margin makes each group read as a unit: space *between* groups clearly
+   exceeds the space *within* a group. */
 .app-sidebar__section-heading {
-  margin: var(--ref-spacing-xs) var(--ref-spacing-xxs) var(--ref-spacing-xxs);
+  margin: var(--ref-spacing-sm) var(--ref-spacing-xxs) var(--ref-spacing-xxxs);
   font-size: var(--sys-text-style-caption-bold-size);
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: var(--ref-color-grey-60);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The first group hugs the "Chats" header instead of taking the full
+   between-groups gap. */
+.app-sidebar__section-heading:first-child {
+  margin-top: var(--ref-spacing-xxs);
 }
 
 /* ── "Sort & group" control (sidebarOrganize flag) ──────────────────────
@@ -207,11 +223,14 @@
   margin-bottom: var(--ref-spacing-xxxs);
 }
 
+/* Region title. One tier above the group labels below it (grey-80 vs the
+   grey-60 uppercase group headings), so the hierarchy reads Chats > group
+   label > chat title without competing with the dark titles themselves. */
 .app-sidebar__list-header-label {
   font-size: var(--sys-text-style-caption-bold-size);
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-60);
+  color: var(--ref-color-grey-80);
 }
 
 .app-sidebar__organize-toggle {
