@@ -645,10 +645,6 @@ const ORGANIZE_SORT_OPTIONS = [
   { value: "alphabetical", label: "Alphabetical" },
 ];
 
-function organizeOptionLabel(options, value) {
-  return (options.find((o) => o.value === value) || options[0]).label;
-}
-
 // Apply the active sort to a list of sessions. "recency" keeps the store order
 // (sessions are seeded newest-first); "alphabetical" sorts by name.
 function sortSessions(list, sortBy) {
@@ -658,11 +654,12 @@ function sortSessions(list, sortBy) {
   return list.slice();
 }
 
-// One "Group by" / "Sort by" row: a label + its current value, with a
-// hover/focus flyout of choices (Claude-style). Reuses the DS action-dropdown
-// item + surface; only the wrap/value/flyout positioning is app-local CSS.
-function renderOrganizeRow(label, key, options, current) {
-  const opts = options
+// One section of the "Sort & group" popover — a quiet label + its option rows,
+// the active one marked with a check. Deliberately FLAT: the ADS has no
+// nested/flyout-dropdown pattern, so all options are shown at once inside a
+// single action-dropdown, reusing only the DS item + divider primitives.
+function renderOrganizeSection(label, key, options, current) {
+  const items = options
     .map((opt) => {
       const active = opt.value === current;
       return `
@@ -686,17 +683,9 @@ function renderOrganizeRow(label, key, options, current) {
     })
     .join("");
   return `
-    <div class="app-sidebar__organize-row-wrap">
-      <button type="button" class="ap-action-dropdown-item app-sidebar__organize-row" aria-haspopup="menu">
-        <div class="ap-action-dropdown-item-text">
-          <div class="ap-action-dropdown-item-label-container">
-            <span class="ap-action-dropdown-item-label">${label}</span>
-          </div>
-        </div>
-        <span class="app-sidebar__organize-value">${organizeOptionLabel(options, current)}</span>
-        <i class="ap-icon-chevron-right app-sidebar__organize-chevron" aria-hidden="true"></i>
-      </button>
-      <div class="ap-action-dropdown app-sidebar__organize-submenu" role="menu">${opts}</div>
+    <div class="app-sidebar__organize-section" role="group" aria-label="${label}">
+      <div class="app-sidebar__organize-section-label" aria-hidden="true">${label}</div>
+      ${items}
     </div>
   `;
 }
@@ -723,8 +712,9 @@ function renderOrganizeHeader() {
         <i class="ap-icon-filter"></i>
       </button>
       <div class="ap-action-dropdown app-sidebar__organize-menu" role="menu" data-sidebar-organize-menu hidden>
-        ${renderOrganizeRow("Group by", "groupBy", ORGANIZE_GROUP_OPTIONS, groupBy)}
-        ${renderOrganizeRow("Sort by", "sortBy", ORGANIZE_SORT_OPTIONS, sortBy)}
+        ${renderOrganizeSection("Group by", "groupBy", ORGANIZE_GROUP_OPTIONS, groupBy)}
+        <div class="ap-action-dropdown-divider" role="separator"></div>
+        ${renderOrganizeSection("Sort by", "sortBy", ORGANIZE_SORT_OPTIONS, sortBy)}
       </div>
     </div>
   `;
