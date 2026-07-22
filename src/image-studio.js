@@ -126,7 +126,10 @@ export function start(key, { postId = null, network = null, formatId = null } = 
   // posts-store stores X as "twitter"; the format catalogue keys on "x".
   const net = network === "twitter" ? "x" : network || null;
   states.set(key, {
-    stage: "compose", // compose | generating | results | edit
+    // Two peer modes toggled via the top segmented control. "edit" is only
+    // reachable once an image exists (currentImage set after generation).
+    mode: "generate", // "generate" | "edit"
+    genPhase: "idle", // "idle" | "generating" | "results" (generate-mode canvas)
     postId,
     network: net,
     formatId: formatId || (net ? defaultFormatFor(net) : "1:1"),
@@ -281,52 +284,9 @@ export function runDerive(sessionId) {
 
 // ── Generation ──────────────────────────────────────────────────────────────
 
-export function runGeneration(sessionId) {
-  const s = states.get(sessionId);
-  if (!s) return;
-  s.lastError = null;
-  s.stage = "generating";
-  s.selectedIndex = null;
-  s.variations = [];
-  if (s._genTimer) clearTimeout(s._genTimer);
-  const runId = Date.now().toString(36);
-  s._genTimer = setTimeout(() => {
-    const cur = states.get(sessionId);
-    if (!cur || cur.stage !== "generating") return;
-    const dims = dimsFor(cur.formatId);
-    cur.variations = Array.from({ length: cur.variationCount }, (_, i) => {
-      const seed = seedFor(cur, `${runId}-${i}`);
-      return { seed, url: picsum(seed, dims), w: dims[0], h: dims[1] };
-    });
-    cur.stage = "results";
-    cur._genTimer = null;
-    notify(sessionId);
-  }, GEN_MS);
-  notify(sessionId);
-}
-
-// Back to the compose surface from the results grid (keeps every input).
-export function backToCompose(sessionId) {
-  const s = states.get(sessionId);
-  if (!s) return;
-  if (s._genTimer) clearTimeout(s._genTimer);
-  s._genTimer = null;
-  s.stage = "compose";
-  notify(sessionId);
-}
-
-export function selectVariation(sessionId, index) {
-  const s = states.get(sessionId);
-  if (!s) return;
-  s.selectedIndex = index;
-  notify(sessionId);
-}
-
-// Open the edit surface on a variation (or the already-selected one).
-export function editVariation(sessionId, index) {
-  const s = states.get(sessionId);
-  if (!s) return;
-  const i = index == null ? s.selectedIndex : index;
+// Snapshot a variation as the working image, resetting any edit history so the
+// selection is a fresh base for the Edit mode.
+function adoptVariation(s, i) {
   const v = s.variations[i];
   if (!v) return;
   s.selectedIndex = i;
@@ -334,18 +294,52 @@ export function editVariation(sessionId, index) {
   s.editHistory = [];
   s.activeTool = null;
   s.editPrompt = "";
-  s.stage = "edit";
+}
+
+export function runGeneration(sessionId) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  s.lastError = null;
+  s.mode = "generate";
+  s.genPhase = "generating";
+  s.selectedIndex = null;
+  s.variations = [];
+  if (s._genTimer) clearTimeout(s._genTimer);
+  const runId = Date.now().toString(36);
+  s._genTimer = setTimeout(() => {
+    const cur = states.get(sessionId);
+    if (!cur || cur.genPhase !== "generating") return;
+    const dims = dimsFor(cur.formatId);
+    cur.variations = Array.from({ length: cur.variationCount }, (_, i) => {
+      const seed = seedFor(cur, `${runId}-${i}`);
+      return { seed, url: picsum(seed, dims), w: dims[0], h: dims[1] };
+    });
+    cur.genPhase = "results";
+    // Auto-adopt the first variation as the working image so the Edit mode
+    // unlocks immediately; the user can still pick another in the grid.
+    adoptVariation(cur, 0);
+    cur._genTimer = null;
+    notify(sessionId);
+  }, GEN_MS);
   notify(sessionId);
 }
 
-export function backToResults(sessionId) {
+// Switch between the two peer modes. "edit" requires a working image.
+export function setMode(sessionId, mode) {
   const s = states.get(sessionId);
   if (!s) return;
-  if (s._editTimer) clearTimeout(s._editTimer);
-  s._editTimer = null;
-  s.editBusy = false;
-  s.activeTool = null;
-  s.stage = "results";
+  if (mode === "edit" && !s.currentImage) return;
+  s.mode = mode;
+  if (mode === "generate") s.activeTool = null;
+  notify(sessionId);
+}
+
+// Pick a variation from the results grid (stays in generate mode; updates the
+// working image so Edit mode operates on it).
+export function selectVariation(sessionId, index) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  adoptVariation(s, index);
   notify(sessionId);
 }
 

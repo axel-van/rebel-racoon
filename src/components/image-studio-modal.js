@@ -15,7 +15,7 @@ import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordin
 import { showToast } from "./toast.js?v=20";
 import { getPosts, attachImageToDraft } from "../posts-store.js?v=34";
 import { NETWORK_LABEL } from "../social-profiles.js?v=25";
-import * as imageStudio from "../image-studio.js?v=2";
+import * as imageStudio from "../image-studio.js?v=3";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -47,17 +47,160 @@ function state() {
 }
 
 // ── Render ────────────────────────────────────────────────────────────────
+//
+// One persistent two-column layout for both modes: a controls PANEL on the left
+// (mode-dependent) and a shared CANVAS on the right (preview / variations /
+// working image). A top segmented control switches the two peer modes; "Edit"
+// unlocks once an image exists.
 
 function renderStudio(st) {
-  if (st.stage === "generating") return renderGenerating(st);
-  if (st.stage === "results") return renderResults(st);
-  if (st.stage === "edit") return renderEdit(st);
-  return renderCompose(st);
+  return html`
+    <div class="image-studio image-studio--${st.mode}">
+      ${raw(topBar(st))}
+      <div class="image-studio__workspace">
+        <aside class="image-studio__panel" aria-label="${st.mode === "edit" ? "Edit tools" : "Generation options"}">
+          ${raw(st.mode === "edit" ? editControls(st) : generateControls(st))}
+        </aside>
+        <section class="image-studio__canvas" aria-label="Preview">${raw(canvasContent(st))}</section>
+      </div>
+      ${raw(footer(st))}
+    </div>
+  `;
 }
 
-function studioTopBar(title) {
+function topBar(st) {
+  const canEdit = !!st.currentImage;
+  const editAttrs = canEdit ? "" : 'disabled title="Generate an image first"';
   return `<div class="image-studio__top">
-    <span class="image-studio__top-title"><i class="ap-icon-archie-official" aria-hidden="true"></i>${escapeHtml(title)}</span>
+    <span class="image-studio__top-title"><i class="ap-icon-archie-official" aria-hidden="true"></i>Image Studio</span>
+    <div class="image-studio__bar-spacer"></div>
+    <div class="ap-tabs image-studio__modes">
+      <div class="ap-tabs-nav" role="tablist" aria-label="Studio mode">
+        <button type="button" class="ap-tabs-tab${st.mode === "generate" ? " active" : ""}" role="tab" aria-selected="${st.mode === "generate"}" data-img-mode="generate">Generate</button>
+        <button type="button" class="ap-tabs-tab${st.mode === "edit" ? " active" : ""}" role="tab" aria-selected="${st.mode === "edit"}" data-img-mode="edit" ${editAttrs}>Edit</button>
+      </div>
+    </div>
+    <div class="image-studio__bar-spacer"></div>
+  </div>`;
+}
+
+// Left panel — generate mode: prompt (lead) + reference / style / mood / format
+// / variations.
+function generateControls(st) {
+  const deriveLabel = st.promptLoading
+    ? `<span class="gen-spinner"></span><span>Suggesting from this post…</span>`
+    : `<i class="ap-icon-archie-official" aria-hidden="true"></i><span>Suggest from this post</span>`;
+  const promptGroup = `
+    <div class="image-studio__group image-studio__group--prompt">
+      <label class="image-studio__group-label" for="imgStudioPrompt">Describe your image</label>
+      <textarea id="imgStudioPrompt" class="image-studio__prompt-input" data-img-prompt rows="3" placeholder="e.g. A bold graphic of an upward-trending growth chart, vibrant blue and orange, minimalist style…">${escapeHtml(st.promptText)}</textarea>
+      <button type="button" class="image-studio__derive" data-img-derive ${st.promptLoading ? "disabled" : ""}>${deriveLabel}</button>
+    </div>`;
+  return promptGroup + composeGroups(st);
+}
+
+// Left panel — edit mode: the Firefly-style tool rail.
+function editControls(st) {
+  const tools = imageStudio.EDIT_TOOLS.map((t) => {
+    const active = st.activeTool === t.key;
+    return `<button type="button" class="image-studio__tool${active ? " is-active" : ""}" data-img-tool="${escapeHtml(t.key)}" aria-pressed="${active}" ${st.editBusy ? "disabled" : ""}>
+      <i class="${t.icon}" aria-hidden="true"></i><span>${escapeHtml(t.label)}</span>
+    </button>`;
+  }).join("");
+  return `<div class="image-studio__tools" aria-label="Edit tools">${tools}</div>`;
+}
+
+// Right canvas — shared; content depends on mode / generation phase.
+function canvasContent(st) {
+  if (st.mode === "edit") return editCanvas(st);
+  if (st.genPhase === "generating") return generatingCanvas(st);
+  if (st.genPhase === "results") return resultsCanvas(st);
+  return `<div class="gen-empty">
+    <i class="ap-icon-image" aria-hidden="true"></i>
+    <p class="gen-empty-title">Your image appears here</p>
+    <span class="gen-empty-sub">Describe it on the left, then generate.</span>
+  </div>`;
+}
+
+function generatingCanvas(st) {
+  const ratio = imageStudio.activeRatio(KEY);
+  return `<div class="gen-stage-wrap" style="--gen-ratio:${ratio}">
+    <div class="gen-single gen-single--loading" style="aspect-ratio:${ratio}" role="status" aria-label="Generating">
+      <div class="gen-loading-inner">
+        <span class="gen-image-spinner gen-loading-mark"></span>
+        <p class="gen-loading-label">Generating ${st.variationCount} variation${st.variationCount > 1 ? "s" : ""}…</p>
+      </div>
+    </div>
+  </div>`;
+}
+
+function resultsCanvas(st) {
+  const ratio = imageStudio.activeRatio(KEY);
+  const cards = st.variations
+    .map((v, i) => {
+      const sel = st.selectedIndex === i;
+      return `<button type="button" class="image-studio__variation${sel ? " is-selected" : ""}" data-img-variation="${i}" aria-pressed="${sel}">
+        <img src="${escapeHtml(v.url)}" alt="Variation ${i + 1}" style="--imgs-ratio:${ratio}" />
+        ${sel ? `<span class="image-studio__variation-check" aria-hidden="true"><i class="ap-icon-check"></i></span>` : ""}
+      </button>`;
+    })
+    .join("");
+  const single = st.variations.length === 1 ? " is-single" : "";
+  return `<div class="image-studio__grid${single}" style="--imgs-ratio:${ratio}">${cards}</div>`;
+}
+
+function editCanvas(st) {
+  const img = st.currentImage;
+  const ratio = img ? img.w / img.h : imageStudio.activeRatio(KEY);
+  const brushTool = st.activeTool === "annotate" || st.activeTool === "fill" || st.activeTool === "remove";
+  const canvasOverlay =
+    brushTool && img
+      ? `<canvas class="image-studio__annotate" data-img-annotate data-tool="${escapeHtml(st.activeTool)}" width="${img.w}" height="${img.h}"></canvas>`
+      : "";
+  const busy = st.editBusy
+    ? `<div class="image-studio__busy"><span class="gen-image-spinner"></span><span>Applying…</span></div>`
+    : "";
+  const badge =
+    img && img.upscaled
+      ? `<span class="image-studio__badge"><i class="ap-icon-arrow-up" aria-hidden="true"></i>Upscaled 2×</span>`
+      : img && img.noBg
+        ? `<span class="image-studio__badge"><i class="ap-icon-cropper" aria-hidden="true"></i>Background removed (preview)</span>`
+        : "";
+  return `<div class="image-studio__edit-canvas">
+    <div class="image-studio__frame${img && img.noBg ? " is-nobg" : ""}" style="--imgs-ratio:${ratio}">
+      <img class="image-studio__frame-img" src="${img ? img.url : ""}" alt="Working image" />
+      ${canvasOverlay}${busy}${badge}
+    </div>
+    ${editSubpanel(st)}
+  </div>`;
+}
+
+// Bottom bar — one primary CTA per mode / phase.
+function footer(st) {
+  if (st.mode === "edit") {
+    return `<div class="image-studio__bar">
+      <button type="button" class="ap-button ghost grey" data-img-undo ${imageStudio.canUndo(KEY) ? "" : "disabled"}><i class="ap-icon-refresh"></i><span>Undo</span></button>
+      <div class="image-studio__bar-spacer"></div>
+      <button type="button" class="ap-button primary orange" data-img-use ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Use this image</span></button>
+    </div>`;
+  }
+  if (st.genPhase === "generating") {
+    return `<div class="image-studio__bar">
+      <div class="image-studio__bar-spacer"></div>
+      <button type="button" class="ap-button primary orange loading" disabled><span class="ap-loading-bar"></span><span>Generating…</span></button>
+    </div>`;
+  }
+  if (st.genPhase === "results") {
+    return `<div class="image-studio__bar">
+      <div class="image-studio__bar-spacer"></div>
+      <button type="button" class="ap-button stroked grey" data-img-regenerate><i class="ap-icon-refresh"></i><span>Regenerate</span></button>
+      <button type="button" class="ap-button primary orange" data-img-use ${st.currentImage ? "" : "disabled"}><i class="ap-icon-check"></i><span>Use this image</span></button>
+    </div>`;
+  }
+  const promptValid = st.promptText.trim().length > 0;
+  return `<div class="image-studio__bar">
+    <div class="image-studio__bar-spacer"></div>
+    <button type="button" class="ap-button primary orange" data-img-generate ${promptValid && !st.promptLoading ? "" : "disabled"}><i class="ap-icon-archie-official"></i><span>Generate</span></button>
   </div>`;
 }
 
@@ -164,113 +307,6 @@ function composeGroups(st) {
   `;
 }
 
-function renderCompose(st) {
-  const promptValid = st.promptText.trim().length > 0;
-  const deriveLabel = st.promptLoading
-    ? `<span class="gen-spinner"></span><span>Suggesting from this post…</span>`
-    : `<i class="ap-icon-archie-official" aria-hidden="true"></i><span>Suggest from this post</span>`;
-  // The prompt is the studio's primary input, so it leads the compose stage as a
-  // prominent centered composer card — not a thin bottom strip. The rail's
-  // reference / style / mood / format options stay secondary on the left.
-  const composer = `
-    <div class="image-studio__composer">
-      <div class="image-studio__composer-card">
-        <label class="image-studio__composer-label" for="imgStudioPrompt">Describe your image</label>
-        <textarea id="imgStudioPrompt" class="image-studio__composer-input" data-img-prompt rows="4" placeholder="e.g. A bold graphic of an upward-trending growth chart, vibrant blue and orange, minimalist style…">${escapeHtml(st.promptText)}</textarea>
-        <div class="image-studio__composer-actions">
-          <button type="button" class="image-studio__derive" data-img-derive ${st.promptLoading ? "disabled" : ""}>${deriveLabel}</button>
-          <div class="image-studio__bar-spacer"></div>
-          <button type="button" class="ap-button primary orange image-studio__generate" data-img-generate ${promptValid && !st.promptLoading ? "" : "disabled"}>
-            <i class="ap-icon-archie-official"></i><span>Generate</span>
-          </button>
-        </div>
-      </div>
-      <p class="image-studio__composer-hint">Steer the result with references, a style, mood or format on the left — all optional.</p>
-    </div>`;
-  return html`
-    <div class="image-studio image-studio--compose">
-      ${raw(studioTopBar("Generate an image"))}
-      <div class="image-studio__scroll">
-        <div class="image-studio__compose">
-          <div class="image-studio__rail">${raw(composeGroups(st))}</div>
-          ${raw(composer)}
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function renderGenerating(st) {
-  const ratio = imageStudio.activeRatio(KEY);
-  return html`
-    <div class="image-studio image-studio--generating">
-      ${raw(studioTopBar("Generate an image"))}
-      <div class="image-studio__scroll">
-        <div class="image-studio__results">
-          <div class="gen-stage-wrap" style="--gen-ratio:${ratio}">
-            <div
-              class="gen-single gen-single--loading"
-              style="aspect-ratio:${ratio}"
-              role="status"
-              aria-label="Generating"
-            >
-              <div class="gen-loading-inner">
-                <span class="gen-image-spinner gen-loading-mark"></span>
-                <p class="gen-loading-label">
-                  Generating ${st.variationCount} variation${st.variationCount > 1 ? "s" : ""}…
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function renderResults(st) {
-  const ratio = imageStudio.activeRatio(KEY);
-  const cards = st.variations
-    .map((v, i) => {
-      const sel = st.selectedIndex === i;
-      return `<button type="button" class="image-studio__variation${sel ? " is-selected" : ""}" data-img-variation="${i}" aria-pressed="${sel}">
-        <img src="${escapeHtml(v.url)}" alt="Variation ${i + 1}" style="--imgs-ratio:${ratio}" />
-        ${sel ? `<span class="image-studio__variation-check" aria-hidden="true"><i class="ap-icon-check"></i></span>` : ""}
-      </button>`;
-    })
-    .join("");
-  const single = st.variations.length === 1 ? " is-single" : "";
-  const hasSel = st.selectedIndex != null;
-  return html`
-    <div class="image-studio image-studio--results">
-      ${raw(studioTopBar("Generate an image"))}
-      <div class="image-studio__scroll">
-        <div class="image-studio__results">
-          <div class="image-studio__results-head">
-            <h2 class="image-studio__results-title">Pick a variation</h2>
-          </div>
-          <div class="image-studio__grid${single}" style="--imgs-ratio:${ratio}">${raw(cards)}</div>
-        </div>
-      </div>
-      <div class="image-studio__bar">
-        <button type="button" class="ap-button stroked grey" data-img-back-compose>
-          <i class="ap-icon-chevron-left"></i><span>Back to options</span>
-        </button>
-        <button type="button" class="ap-button ghost grey" data-img-regenerate>
-          <i class="ap-icon-refresh"></i><span>Regenerate</span>
-        </button>
-        <div class="image-studio__bar-spacer"></div>
-        <button type="button" class="ap-button stroked grey" data-img-edit ${hasSel ? "" : "disabled"}>
-          <i class="ap-icon-pen"></i><span>Edit image</span>
-        </button>
-        <button type="button" class="ap-button primary orange" data-img-use ${hasSel ? "" : "disabled"}>
-          <i class="ap-icon-check"></i><span>Use this image</span>
-        </button>
-      </div>
-    </div>
-  `;
-}
-
 function editSubpanel(st) {
   const tool = st.activeTool;
   if (!tool) return "";
@@ -326,60 +362,6 @@ function editSubpanel(st) {
       <button type="button" class="ap-button primary orange" data-img-apply-edit="${escapeHtml(tool)}"><i class="ap-icon-check"></i><span>Apply</span></button>
     </div>
   </div>`;
-}
-
-function renderEdit(st) {
-  const img = st.currentImage;
-  const ratio = img ? img.w / img.h : imageStudio.activeRatio(KEY);
-  const tools = imageStudio.EDIT_TOOLS.map((t) => {
-    const active = st.activeTool === t.key;
-    return `<button type="button" class="image-studio__tool${active ? " is-active" : ""}" data-img-tool="${escapeHtml(t.key)}" aria-pressed="${active}" ${st.editBusy ? "disabled" : ""}>
-      <i class="${t.icon}" aria-hidden="true"></i><span>${escapeHtml(t.label)}</span>
-    </button>`;
-  }).join("");
-  const brushTool = st.activeTool === "annotate" || st.activeTool === "fill" || st.activeTool === "remove";
-  const canvasOverlay =
-    brushTool && img
-      ? `<canvas class="image-studio__annotate" data-img-annotate data-tool="${escapeHtml(st.activeTool)}" width="${img.w}" height="${img.h}"></canvas>`
-      : "";
-  const busy = st.editBusy
-    ? `<div class="image-studio__busy"><span class="gen-image-spinner"></span><span>Applying…</span></div>`
-    : "";
-  const badge =
-    img && img.upscaled
-      ? `<span class="image-studio__badge"><i class="ap-icon-arrow-up" aria-hidden="true"></i>Upscaled 2×</span>`
-      : img && img.noBg
-        ? `<span class="image-studio__badge"><i class="ap-icon-cropper" aria-hidden="true"></i>Background removed (preview)</span>`
-        : "";
-  return html`
-    <div class="image-studio image-studio--edit">
-      ${raw(studioTopBar("Edit image"))}
-      <div class="image-studio__scroll">
-        <div class="image-studio__edit">
-          <div class="image-studio__tools" aria-label="Edit tools">${raw(tools)}</div>
-          <div class="image-studio__stage">
-            <div class="image-studio__frame${img && img.noBg ? " is-nobg" : ""}" style="--imgs-ratio:${ratio}">
-              <img class="image-studio__frame-img" src="${img ? img.url : ""}" alt="Working image" />
-              ${raw(canvasOverlay)} ${raw(busy)} ${raw(badge)}
-            </div>
-            ${raw(editSubpanel(st))}
-          </div>
-        </div>
-      </div>
-      <div class="image-studio__bar">
-        <button type="button" class="ap-button stroked grey" data-img-back-results>
-          <i class="ap-icon-chevron-left"></i><span>Back to variations</span>
-        </button>
-        <button type="button" class="ap-button ghost grey" data-img-undo ${imageStudio.canUndo(KEY) ? "" : "disabled"}>
-          <i class="ap-icon-refresh"></i><span>Undo</span>
-        </button>
-        <div class="image-studio__bar-spacer"></div>
-        <button type="button" class="ap-button primary orange" data-img-use ${st.editBusy ? "disabled" : ""}>
-          <i class="ap-icon-check"></i><span>Use this image</span>
-        </button>
-      </div>
-    </div>
-  `;
 }
 
 function renderBody() {
@@ -513,18 +495,17 @@ function onClick(event) {
   const refRm = event.target.closest("[data-img-ref-remove]");
   if (refRm) return void imageStudio.removeReferenceImage(KEY, refRm.dataset.imgRefRemove);
   if (event.target.closest("[data-img-derive]") && !st.promptLoading) return void imageStudio.runDerive(KEY);
-  if (event.target.closest("[data-img-generate]")) {
+  const modeBtn = event.target.closest("[data-img-mode]");
+  if (modeBtn) return void imageStudio.setMode(KEY, modeBtn.dataset.imgMode);
+  // Generate + Regenerate share the same path: sync the prompt, then run.
+  if (event.target.closest("[data-img-generate]") || event.target.closest("[data-img-regenerate]")) {
     const ta = modal.querySelector("[data-img-prompt]");
     if (ta) imageStudio.setPromptSilent(KEY, ta.value);
     if ((state()?.promptText || "").trim()) imageStudio.runGeneration(KEY);
     return;
   }
-  if (event.target.closest("[data-img-back-compose]")) return void imageStudio.backToCompose(KEY);
-  if (event.target.closest("[data-img-regenerate]")) return void imageStudio.runGeneration(KEY);
   const varPick = event.target.closest("[data-img-variation]");
   if (varPick) return void imageStudio.selectVariation(KEY, Number(varPick.dataset.imgVariation));
-  if (event.target.closest("[data-img-edit]")) return void imageStudio.editVariation(KEY, null);
-  if (event.target.closest("[data-img-back-results]")) return void imageStudio.backToResults(KEY);
   const toolBtn = event.target.closest("[data-img-tool]");
   if (toolBtn) return void imageStudio.setActiveTool(KEY, toolBtn.dataset.imgTool);
   if (event.target.closest("[data-img-clear-brush]")) {
