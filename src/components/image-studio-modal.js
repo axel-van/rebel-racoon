@@ -165,50 +165,36 @@ function composeGroups(st) {
 }
 
 function renderCompose(st) {
-  const ratio = imageStudio.activeRatio(KEY);
   const promptValid = st.promptText.trim().length > 0;
   const deriveLabel = st.promptLoading
     ? `<span class="gen-spinner"></span><span>Suggesting from this post…</span>`
     : `<i class="ap-icon-archie-official" aria-hidden="true"></i><span>Suggest from this post</span>`;
+  // The prompt is the studio's primary input, so it leads the compose stage as a
+  // prominent centered composer card — not a thin bottom strip. The rail's
+  // reference / style / mood / format options stay secondary on the left.
+  const composer = `
+    <div class="image-studio__composer">
+      <div class="image-studio__composer-card">
+        <label class="image-studio__composer-label" for="imgStudioPrompt">Describe your image</label>
+        <textarea id="imgStudioPrompt" class="image-studio__composer-input" data-img-prompt rows="4" placeholder="e.g. A bold graphic of an upward-trending growth chart, vibrant blue and orange, minimalist style…">${escapeHtml(st.promptText)}</textarea>
+        <div class="image-studio__composer-actions">
+          <button type="button" class="image-studio__derive" data-img-derive ${st.promptLoading ? "disabled" : ""}>${deriveLabel}</button>
+          <div class="image-studio__bar-spacer"></div>
+          <button type="button" class="ap-button primary orange image-studio__generate" data-img-generate ${promptValid && !st.promptLoading ? "" : "disabled"}>
+            <i class="ap-icon-archie-official"></i><span>Generate</span>
+          </button>
+        </div>
+      </div>
+      <p class="image-studio__composer-hint">Steer the result with references, a style, mood or format on the left — all optional.</p>
+    </div>`;
   return html`
     <div class="image-studio image-studio--compose">
       ${raw(studioTopBar("Generate an image"))}
       <div class="image-studio__scroll">
         <div class="image-studio__compose">
           <div class="image-studio__rail">${raw(composeGroups(st))}</div>
-          <div class="image-studio__preview">
-            <div class="gen-stage-wrap" style="--gen-ratio:${ratio}">
-              <div class="gen-empty">
-                <i class="ap-icon-image" aria-hidden="true"></i>
-                <p class="gen-empty-title">Your image appears here</p>
-                <span class="gen-empty-sub">Describe it below, then generate.</span>
-              </div>
-            </div>
-          </div>
+          ${raw(composer)}
         </div>
-      </div>
-      <div class="image-studio__bar">
-        <div class="image-studio__prompt">
-          <textarea
-            class="image-studio__prompt-field"
-            data-img-prompt
-            rows="1"
-            placeholder="Describe the image you want to generate…"
-          >
-${st.promptText}</textarea
-          >
-          <button type="button" class="image-studio__derive" data-img-derive ${st.promptLoading ? "disabled" : ""}>
-            ${raw(deriveLabel)}
-          </button>
-        </div>
-        <button
-          type="button"
-          class="ap-button primary orange"
-          data-img-generate
-          ${promptValid && !st.promptLoading ? "" : "disabled"}
-        >
-          <i class="ap-icon-archie-official"></i><span>Generate</span>
-        </button>
       </div>
     </div>
   `;

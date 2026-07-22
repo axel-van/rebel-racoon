@@ -96,9 +96,10 @@
   padding: var(--ref-spacing-lg);
   max-width: 1180px;
   width: 100%;
+  min-height: 100%;
   margin: 0 auto;
   box-sizing: border-box;
-  align-items: start;
+  align-items: stretch;
 }
 
 @media (max-width: 900px) {
@@ -243,33 +244,45 @@
   color: var(--ref-color-electric-blue-100);
 }
 
-/* Preview column — reuses gen-stage-wrap / gen-single / gen-empty. */
-.image-studio__preview {
-  min-width: 0;
-  background: var(--ref-color-grey-05);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-card);
-  padding: var(--ref-spacing-lg);
-  display: flex;
-  min-height: 340px;
-}
-
-/* ── Bottom prompt bar (compose) ────────────────────────────────────────── */
-.image-studio__prompt {
-  flex: 1;
+/* ── Composer (compose stage hero) ──────────────────────────────────────────
+   The prompt is the primary input, so it leads the compose stage as a
+   prominent, elevated card centered in the main column. */
+.image-studio__composer {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxs);
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xl) var(--ref-spacing-md);
 }
 
-.image-studio__prompt-field {
+.image-studio__composer-card {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-lg);
+  background: var(--ref-color-white);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+  box-shadow: var(--app-shadow-low);
+}
+
+.image-studio__composer-label {
+  font-size: var(--sys-text-style-subtitle-size);
+  line-height: var(--sys-text-style-subtitle-line-height);
+  font-weight: var(--sys-text-style-subtitle-weight);
+  color: var(--ref-color-grey-80);
+}
+
+.image-studio__composer-input {
   width: 100%;
   box-sizing: border-box;
-  resize: none;
-  min-height: 44px;
-  max-height: 120px;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  resize: vertical;
+  min-height: 132px;
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-md);
   background: var(--ref-color-white);
@@ -279,14 +292,33 @@
   color: var(--ref-color-grey-80);
 }
 
-.image-studio__prompt-field:focus-visible {
+.image-studio__composer-input::placeholder {
+  color: var(--ref-color-grey-60);
+}
+
+.image-studio__composer-input:focus-visible {
   outline: none;
   border-color: var(--ref-color-electric-blue-100);
   box-shadow: 0 0 0 3px var(--app-convo-navy-10);
 }
 
+.image-studio__composer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  margin-top: var(--ref-spacing-xxs);
+}
+
+.image-studio__composer-hint {
+  margin: 0;
+  max-width: 640px;
+  text-align: center;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
 .image-studio__derive {
-  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
