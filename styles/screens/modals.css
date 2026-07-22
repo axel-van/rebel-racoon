@@ -41,7 +41,7 @@ body.has-modal {
 
 .bug-report-modal,
 .feedback-modal,
-.generate-image-modal,
+.image-studio-modal,
 .chat-picker-modal,
 .add-source-modal,
 .connectors-modal,
@@ -456,7 +456,7 @@ body.has-modal {
 
 .bug-report-modal.open,
 .feedback-modal.open,
-.generate-image-modal.open,
+.image-studio-modal.open,
 .chat-picker-modal.open,
 .add-source-modal.open,
 .connectors-modal.open,
@@ -824,49 +824,10 @@ body.has-modal {
   margin: 0;
 }
 
-/* ── Generate Image modal ────────────────────────────────── */
-
-.generate-image-modal {
-  width: min(calc(100% - 32px), 1040px);
-}
-
-.generate-image-modal .ap-dialog-content {
-  flex: 1;
-  overflow-y: auto;
-  gap: var(--ref-spacing-md);
-}
-
-/* Two-pane studio: a fixed control rail (left) beside a wider preview stage
-   (right) that holds the format selector + the variations grid. */
-.gen-image-layout {
-  display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap: var(--ref-spacing-lg);
-  align-items: stretch;
-}
-
-.gen-image-controls,
-.gen-image-preview-pane {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-md);
-}
-
-/* The preview is a single tinted stage — the one surface that earns its keep,
-   making the generated image pop. Children stretch to a definite width (so the
-   frame's width math resolves); the frame + feedback centre themselves. */
-.gen-image-preview-pane {
-  padding: var(--ref-spacing-lg);
-  background: var(--ref-color-grey-05);
-  border-radius: var(--app-radius-card);
-}
-
-/* The "How's this image?" rating belongs to the image — centre it under the
-   stage. */
-.gen-image-preview-pane .fb__row {
-  justify-content: center;
-}
+/* ── Image Studio modal ──────────────────────────────────────
+   The near-fullscreen Image Studio modal reuses the shared centered shell
+   above; its size + internals live in styles/screens/image-studio.css. The
+   .gen-* image tiles / preview primitives further down are shared with it. */
 
 /* The "what was off?" detail opens as a popover above the rating row (over the
    image), so revealing it never grows the modal vertically. */

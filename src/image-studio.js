@@ -122,13 +122,12 @@ export function activeRatio(sessionId) {
 }
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────
-export function start(sessionId, { postId = null, originSessionId = null, network = null, formatId = null } = {}) {
+export function start(key, { postId = null, network = null, formatId = null } = {}) {
   // posts-store stores X as "twitter"; the format catalogue keys on "x".
   const net = network === "twitter" ? "x" : network || null;
-  states.set(sessionId, {
+  states.set(key, {
     stage: "compose", // compose | generating | results | edit
     postId,
-    originSessionId,
     network: net,
     formatId: formatId || (net ? defaultFormatFor(net) : "1:1"),
     promptText: "",
@@ -150,7 +149,7 @@ export function start(sessionId, { postId = null, originSessionId = null, networ
     _editTimer: null,
     _deriveTimer: null,
   });
-  notify(sessionId);
+  notify(key);
 }
 
 export function exit(sessionId) {

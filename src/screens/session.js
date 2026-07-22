@@ -46,13 +46,7 @@ import {
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
 } from "../composer-mentions.js?v=21";
-import {
-  getPosts,
-  addPostDraft,
-  attachImageToDraft,
-  setSubtitleStyle,
-  subscribe as subscribePostsStore,
-} from "../posts-store.js?v=34";
+import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=34";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=50";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=37";
 import * as topPostsFlow from "../top-posts-flow.js?v=72";
@@ -68,7 +62,6 @@ import * as sidebarWizard from "../sidebar-wizard.js?v=52";
 import * as inlineQuestion from "../inline-question.js?v=48";
 import * as clipStudio from "../clip-studio.js?v=22";
 import * as batchStudio from "../batch-studio.js?v=4";
-import * as imageStudio from "../image-studio.js?v=1";
 import { askConnector } from "../connector-ask.js?v=7";
 import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=27";
 import { renderConnectorLogo } from "../connectors-view.js?v=9";
@@ -118,7 +111,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=293";
+} from "../components/right-panel.js?v=294";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=15";
@@ -253,19 +246,6 @@ export function renderSession(params, target) {
       batchStudio.start(session.id, { contextId: getDefaultContext()?.id || null });
   }
 
-  // Image Studio — dedicated full-screen "Generate an image" flow (Firefly-
-  // inspired) in its own `image-studio-*` session, launched from a draft. Same
-  // one-shot-handoff gate; the handoff carries { postId, originSessionId,
-  // network, formatId } so the chosen image can attach back to the draft. Kick
-  // off the "suggest a prompt from this post" derive on first mount.
-  if (session.id.startsWith("image-studio-") && !imageStudio.isActive(session.id)) {
-    const imgHandoff = consumeHandoff("pendingStartImageStudio");
-    if (imgHandoff) {
-      imageStudio.start(session.id, imgHandoff);
-      if (imgHandoff.postId) imageStudio.runDerive(session.id);
-    }
-  }
-
   renderTopbar({ crumb: session.name });
 
   // Resolution priority — URL state wins over the mock seed so wizard-
@@ -382,11 +362,6 @@ function renderAssistantPanel(session, attachedContext) {
   // sources + pick a Playbook → new chat). Owns the panel while active.
   if (batchStudio.isActive(session.id)) {
     return renderBatchStudio(session);
-  }
-  // Image Studio — dedicated full-screen "Generate an image" flow. Owns the
-  // panel while active (compose → generating → results → edit).
-  if (imageStudio.isActive(session.id)) {
-    return renderImageStudio(session);
   }
   // Wizard mode — when sidebar-wizard has state for this session, replace the
   // normal thread + composer with the analyse-style wizard chrome.
@@ -554,526 +529,6 @@ const BATCH_STUDIO_STEPS = [
     text: "I draft a post for each idea in your playbook's voice — ready to review and schedule.",
   },
 ];
-
-// ══ Image Studio ══════════════════════════════════════════════════════════
-// Full-screen "Generate an image" flow, rendered from image-studio.js state.
-// Stages: compose (rail + preview + prompt bar) → generating (loader) →
-// results (variations grid) → edit (Firefly-style tool rail + canvas).
-// Reuses the shared .gen-* image tiles / preview primitives (styles/screens/
-// modals.css) so this and the old modal never drift.
-
-function renderImageStudio(session) {
-  const st = imageStudio.getState(session.id);
-  if (!st) return "";
-  if (st.stage === "generating") return renderImageStudioGenerating(session, st);
-  if (st.stage === "results") return renderImageStudioResults(session, st);
-  if (st.stage === "edit") return renderImageStudioEdit(session, st);
-  return renderImageStudioCompose(session, st);
-}
-
-// Visual-style exemplar cards + a "Your style" upload tile (reuses gen-style-*).
-function imageStudioStyleCards(st) {
-  const builtins = imageStudio.STYLE_OPTIONS.map((o) => {
-    const sel = st.styleKey === o.key;
-    return `<button type="button" class="gen-style-card${sel ? " is-selected" : ""}" data-img-style="${escapeHtml(o.key)}" aria-pressed="${sel}" title="${escapeHtml(o.label)}">
-      <span class="gen-style-thumb">
-        <img src="https://picsum.photos/seed/archie-style-${escapeHtml(o.key)}/220/170" alt="" loading="lazy" />
-        ${sel ? `<span class="gen-style-check" aria-hidden="true"><i class="ap-icon-check"></i></span>` : ""}
-      </span>
-      <span class="gen-style-name">${escapeHtml(o.label)}</span>
-    </button>`;
-  }).join("");
-  const customSel = st.styleKey === "custom";
-  const customThumb = st.customStyleUrl
-    ? `<img src="${escapeHtml(st.customStyleUrl)}" alt="Your uploaded style" />${customSel ? `<span class="gen-style-check" aria-hidden="true"><i class="ap-icon-check"></i></span>` : ""}`
-    : `<span class="gen-style-upload-ph"><i class="ap-icon-plus" aria-hidden="true"></i></span>`;
-  const customCard = `<button type="button" class="gen-style-card gen-style-card--upload${customSel ? " is-selected" : ""}${st.customStyleUrl ? " has-image" : ""}" data-img-style-upload aria-pressed="${customSel}" title="Upload your own style">
-    <span class="gen-style-thumb">${customThumb}</span>
-    <span class="gen-style-name">${st.customStyleUrl ? "Your style" : "Upload yours"}</span>
-  </button>`;
-  return builtins + customCard;
-}
-
-function imageStudioMoodChips(st) {
-  return imageStudio.MOOD_OPTIONS.map((o) => {
-    const pressed = st.moodKey === o.key;
-    return `<button type="button" class="ap-filter-chip" data-img-mood="${escapeHtml(o.key)}" aria-pressed="${pressed}">${escapeHtml(o.label)}</button>`;
-  }).join("");
-}
-
-function imageStudioFormatChip(f, selected, dataAttr) {
-  return `<button type="button" class="gen-format-chip${selected ? " is-selected" : ""}" ${dataAttr}="${escapeHtml(f.id)}" aria-pressed="${selected}">
-    <span class="gen-format-glyph" style="aspect-ratio:${f.ratio}" aria-hidden="true"></span>
-    <span class="gen-format-meta">
-      <span class="gen-format-tag">${escapeHtml(f.tag)}</span>
-      <span class="gen-format-name">${escapeHtml(f.label)}</span>
-    </span>
-  </button>`;
-}
-
-function imageStudioRefs(st) {
-  const tiles = st.referenceImages
-    .map(
-      (r) => `<div class="image-studio__ref">
-        <img src="${escapeHtml(r.url)}" alt="Reference image" />
-        <button type="button" class="image-studio__ref-remove" data-img-ref-remove="${escapeHtml(r.id)}" aria-label="Remove reference"><i class="ap-icon-close" aria-hidden="true"></i></button>
-      </div>`,
-    )
-    .join("");
-  const addTile =
-    st.referenceImages.length < imageStudio.MAX_REFS
-      ? `<button type="button" class="image-studio__ref-add" data-img-ref-add><i class="ap-icon-plus" aria-hidden="true"></i><span>Add</span></button>`
-      : "";
-  return tiles + addTile;
-}
-
-function imageStudioComposeGroups(session, st) {
-  const fmtHint = st.network ? `Best for ${NETWORK_LABEL[st.network] || st.network}` : "Aspect ratio";
-  const fmtChips = imageStudio
-    .formatChoices(session.id)
-    .map((f) => imageStudioFormatChip(f, st.formatId === f.id, "data-img-format"))
-    .join("");
-  const varChips = imageStudio.VARIATION_CHOICES.map(
-    (n) =>
-      `<button type="button" class="ap-filter-chip" data-img-varcount="${n}" aria-pressed="${st.variationCount === n}">${n}</button>`,
-  ).join("");
-  return `
-    <div class="image-studio__group">
-      <div class="image-studio__group-head">
-        <p class="image-studio__group-label">Reference images</p>
-        <span class="image-studio__count">${st.referenceImages.length}/${imageStudio.MAX_REFS}</span>
-      </div>
-      <div class="image-studio__refs">${imageStudioRefs(st)}</div>
-    </div>
-    <div class="image-studio__group">
-      <div class="image-studio__group-head">
-        <p class="image-studio__group-label">Visual style</p>
-        <span class="image-studio__opt">Optional</span>
-      </div>
-      <div class="gen-style-grid">${imageStudioStyleCards(st)}</div>
-    </div>
-    <div class="image-studio__group">
-      <div class="image-studio__group-head">
-        <p class="image-studio__group-label">Mood</p>
-        <span class="image-studio__opt">Optional</span>
-      </div>
-      <div class="image-studio__chips">${imageStudioMoodChips(st)}</div>
-    </div>
-    <div class="image-studio__group">
-      <div class="image-studio__group-head">
-        <p class="image-studio__group-label">Format</p>
-        <span class="image-studio__count">${escapeHtml(fmtHint)}</span>
-      </div>
-      <div class="gen-format-chips">${fmtChips}</div>
-    </div>
-    <div class="image-studio__group">
-      <div class="image-studio__group-head">
-        <p class="image-studio__group-label">Variations</p>
-      </div>
-      <div class="image-studio__chips">${varChips}</div>
-    </div>
-  `;
-}
-
-function renderImageStudioCompose(session, st) {
-  const ratio = imageStudio.activeRatio(session.id);
-  const promptValid = st.promptText.trim().length > 0;
-  const deriveLabel = st.promptLoading
-    ? `<span class="gen-spinner"></span><span>Suggesting from this post…</span>`
-    : `<i class="ap-icon-archie-official" aria-hidden="true"></i><span>Suggest from this post</span>`;
-  return html`
-    <aside class="session__assistant image-studio image-studio--compose" aria-label="Generate an image">
-      <div class="image-studio__top">
-        <button
-          type="button"
-          class="ap-icon-button transparent sm"
-          data-img-cancel
-          title="Back to draft"
-          aria-label="Back to draft"
-        >
-          <i class="ap-icon-chevron-left"></i>
-        </button>
-        <span class="image-studio__top-title"
-          ><i class="ap-icon-archie-official" aria-hidden="true"></i>Generate an image</span
-        >
-      </div>
-      <div class="image-studio__scroll">
-        <div class="image-studio__compose">
-          <div class="image-studio__rail">${raw(imageStudioComposeGroups(session, st))}</div>
-          <div class="image-studio__preview">
-            <div class="gen-stage-wrap" style="--gen-ratio:${ratio}">
-              <div class="gen-empty">
-                <i class="ap-icon-image" aria-hidden="true"></i>
-                <p class="gen-empty-title">Your image appears here</p>
-                <span class="gen-empty-sub">Describe it below, then generate.</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="image-studio__bar">
-        <div class="image-studio__prompt">
-          <textarea
-            class="image-studio__prompt-field"
-            data-img-prompt
-            rows="1"
-            placeholder="Describe the image you want to generate…"
-          >
-${st.promptText}</textarea
-          >
-          <button type="button" class="image-studio__derive" data-img-derive ${st.promptLoading ? "disabled" : ""}>
-            ${raw(deriveLabel)}
-          </button>
-        </div>
-        <button
-          type="button"
-          class="ap-button primary orange"
-          data-img-generate
-          ${promptValid && !st.promptLoading ? "" : "disabled"}
-        >
-          <i class="ap-icon-archie-official"></i><span>Generate</span>
-        </button>
-      </div>
-    </aside>
-  `;
-}
-
-function renderImageStudioGenerating(session, st) {
-  const ratio = imageStudio.activeRatio(session.id);
-  return html`
-    <aside class="session__assistant image-studio image-studio--generating" aria-label="Generating image">
-      <div class="image-studio__top">
-        <span class="image-studio__top-title"
-          ><i class="ap-icon-archie-official" aria-hidden="true"></i>Generate an image</span
-        >
-      </div>
-      <div class="image-studio__scroll">
-        <div class="image-studio__results">
-          <div class="gen-stage-wrap" style="--gen-ratio:${ratio}">
-            <div
-              class="gen-single gen-single--loading"
-              style="aspect-ratio:${ratio}"
-              role="status"
-              aria-label="Generating"
-            >
-              <div class="gen-loading-inner">
-                <span class="gen-image-spinner gen-loading-mark"></span>
-                <p class="gen-loading-label">
-                  Generating ${st.variationCount} variation${st.variationCount > 1 ? "s" : ""}…
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </aside>
-  `;
-}
-
-function renderImageStudioResults(session, st) {
-  const ratio = imageStudio.activeRatio(session.id);
-  const cards = st.variations
-    .map((v, i) => {
-      const sel = st.selectedIndex === i;
-      return `<button type="button" class="image-studio__variation${sel ? " is-selected" : ""}" data-img-variation="${i}" aria-pressed="${sel}">
-        <img src="${escapeHtml(v.url)}" alt="Variation ${i + 1}" style="--imgs-ratio:${ratio}" />
-        ${sel ? `<span class="image-studio__variation-check" aria-hidden="true"><i class="ap-icon-check"></i></span>` : ""}
-      </button>`;
-    })
-    .join("");
-  const single = st.variations.length === 1 ? " is-single" : "";
-  const hasSel = st.selectedIndex != null;
-  return html`
-    <aside class="session__assistant image-studio image-studio--results" aria-label="Choose a variation">
-      <div class="image-studio__top">
-        <button
-          type="button"
-          class="ap-icon-button transparent sm"
-          data-img-cancel
-          title="Back to draft"
-          aria-label="Back to draft"
-        >
-          <i class="ap-icon-chevron-left"></i>
-        </button>
-        <span class="image-studio__top-title"
-          ><i class="ap-icon-archie-official" aria-hidden="true"></i>Generate an image</span
-        >
-      </div>
-      <div class="image-studio__scroll">
-        <div class="image-studio__results">
-          <div class="image-studio__results-head">
-            <h2 class="image-studio__results-title">Pick a variation</h2>
-          </div>
-          <div class="image-studio__grid${single}" style="--imgs-ratio:${ratio}">${raw(cards)}</div>
-        </div>
-      </div>
-      <div class="image-studio__bar">
-        <button type="button" class="ap-button stroked grey" data-img-back-compose>
-          <i class="ap-icon-chevron-left"></i><span>Back to options</span>
-        </button>
-        <button type="button" class="ap-button ghost grey" data-img-regenerate>
-          <i class="ap-icon-refresh"></i><span>Regenerate</span>
-        </button>
-        <div class="image-studio__bar-spacer"></div>
-        <button type="button" class="ap-button stroked grey" data-img-edit ${hasSel ? "" : "disabled"}>
-          <i class="ap-icon-pen"></i><span>Edit image</span>
-        </button>
-        <button type="button" class="ap-button primary orange" data-img-use ${hasSel ? "" : "disabled"}>
-          <i class="ap-icon-check"></i><span>Use this image</span>
-        </button>
-      </div>
-    </aside>
-  `;
-}
-
-function imageStudioEditSubpanel(session, st) {
-  const tool = st.activeTool;
-  if (!tool) return "";
-  const meta = imageStudio.EDIT_TOOLS.find((t) => t.key === tool);
-  if (!meta) return "";
-  if (tool === "prompt") {
-    return `<div class="image-studio__subpanel">
-      <p class="image-studio__subpanel-label">Describe the change</p>
-      <textarea class="image-studio__edit-prompt" data-img-edit-prompt rows="2" placeholder="e.g. warmer lighting, add a laptop on the desk…">${escapeHtml(st.editPrompt || "")}</textarea>
-      <div class="image-studio__subpanel-row">
-        <span class="image-studio__subpanel-hint">Preview — reruns the generation with your note.</span>
-        <div class="image-studio__bar-spacer"></div>
-        <button type="button" class="ap-button primary orange" data-img-apply-edit="prompt"><i class="ap-icon-archie-official"></i><span>Apply</span></button>
-      </div>
-    </div>`;
-  }
-  if (tool === "expand") {
-    const chips = imageStudio
-      .formatChoices(session.id)
-      .map((f) => imageStudioFormatChip(f, st.formatId === f.id, "data-img-expand-format"))
-      .join("");
-    return `<div class="image-studio__subpanel">
-      <p class="image-studio__subpanel-label">Expand to a new ratio</p>
-      <div class="gen-format-chips">${chips}</div>
-      <p class="image-studio__subpanel-hint">Preview — reshapes the frame and regenerates the outer area.</p>
-    </div>`;
-  }
-  if (tool === "annotate" || tool === "fill" || tool === "remove") {
-    const hint =
-      tool === "annotate"
-        ? "Draw on the image — your strokes are baked into the picture."
-        : `Brush the area to ${tool === "fill" ? "fill in" : "remove"} — preview reruns generation on that region.`;
-    return `<div class="image-studio__subpanel">
-      <div class="image-studio__subpanel-row">
-        <p class="image-studio__subpanel-label">${escapeHtml(meta.label)}</p>
-        <span class="image-studio__subpanel-hint">${escapeHtml(hint)}</span>
-        <div class="image-studio__bar-spacer"></div>
-        <button type="button" class="ap-button ghost grey" data-img-clear-brush><span>Clear</span></button>
-        <button type="button" class="ap-button primary orange" data-img-apply-edit="${escapeHtml(tool)}"><i class="ap-icon-check"></i><span>Apply</span></button>
-      </div>
-    </div>`;
-  }
-  // upscale / removebg — one-click.
-  const hint =
-    tool === "upscale"
-      ? "Doubles the resolution of the current image."
-      : "Isolates the subject on a transparent background (preview).";
-  return `<div class="image-studio__subpanel">
-    <div class="image-studio__subpanel-row">
-      <p class="image-studio__subpanel-label">${escapeHtml(meta.label)}</p>
-      <span class="image-studio__subpanel-hint">${escapeHtml(hint)}</span>
-      <div class="image-studio__bar-spacer"></div>
-      <button type="button" class="ap-button primary orange" data-img-apply-edit="${escapeHtml(tool)}"><i class="ap-icon-check"></i><span>Apply</span></button>
-    </div>
-  </div>`;
-}
-
-function renderImageStudioEdit(session, st) {
-  const img = st.currentImage;
-  const ratio = img ? img.w / img.h : imageStudio.activeRatio(session.id);
-  const tools = imageStudio.EDIT_TOOLS.map((t) => {
-    const active = st.activeTool === t.key;
-    return `<button type="button" class="image-studio__tool${active ? " is-active" : ""}" data-img-tool="${escapeHtml(t.key)}" aria-pressed="${active}" ${st.editBusy ? "disabled" : ""}>
-      <i class="${t.icon}" aria-hidden="true"></i><span>${escapeHtml(t.label)}</span>
-    </button>`;
-  }).join("");
-  const brushTool = st.activeTool === "annotate" || st.activeTool === "fill" || st.activeTool === "remove";
-  const canvasOverlay =
-    brushTool && img
-      ? `<canvas class="image-studio__annotate" data-img-annotate data-tool="${escapeHtml(st.activeTool)}" width="${img.w}" height="${img.h}"></canvas>`
-      : "";
-  const busy = st.editBusy
-    ? `<div class="image-studio__busy"><span class="gen-image-spinner"></span><span>Applying…</span></div>`
-    : "";
-  const badge =
-    img && img.upscaled
-      ? `<span class="image-studio__badge"><i class="ap-icon-arrow-up" aria-hidden="true"></i>Upscaled 2×</span>`
-      : img && img.noBg
-        ? `<span class="image-studio__badge"><i class="ap-icon-cropper" aria-hidden="true"></i>Background removed (preview)</span>`
-        : "";
-  return html`
-    <aside class="session__assistant image-studio image-studio--edit" aria-label="Edit image">
-      <div class="image-studio__top">
-        <button
-          type="button"
-          class="ap-icon-button transparent sm"
-          data-img-back-results
-          title="Back to variations"
-          aria-label="Back to variations"
-        >
-          <i class="ap-icon-chevron-left"></i>
-        </button>
-        <span class="image-studio__top-title"
-          ><i class="ap-icon-archie-official" aria-hidden="true"></i>Edit image</span
-        >
-      </div>
-      <div class="image-studio__scroll">
-        <div class="image-studio__edit">
-          <div class="image-studio__tools" aria-label="Edit tools">${raw(tools)}</div>
-          <div class="image-studio__stage">
-            <div class="image-studio__frame${img && img.noBg ? " is-nobg" : ""}" style="--imgs-ratio:${ratio}">
-              <img class="image-studio__frame-img" src="${img ? img.url : ""}" alt="Working image" />
-              ${raw(canvasOverlay)} ${raw(busy)} ${raw(badge)}
-            </div>
-            ${raw(imageStudioEditSubpanel(session, st))}
-          </div>
-        </div>
-      </div>
-      <div class="image-studio__bar">
-        <button type="button" class="ap-button stroked grey" data-img-back-results>
-          <i class="ap-icon-chevron-left"></i><span>Back to variations</span>
-        </button>
-        <button
-          type="button"
-          class="ap-button ghost grey"
-          data-img-undo
-          ${imageStudio.canUndo(session.id) ? "" : "disabled"}
-        >
-          <i class="ap-icon-refresh"></i><span>Undo</span>
-        </button>
-        <div class="image-studio__bar-spacer"></div>
-        <button type="button" class="ap-button primary orange" data-img-use ${st.editBusy ? "disabled" : ""}>
-          <i class="ap-icon-check"></i><span>Use this image</span>
-        </button>
-      </div>
-    </aside>
-  `;
-}
-
-// ── Image Studio behavior helpers ────────────────────────────────────────────
-
-// Throwaway file picker for the "Your style" tile (kind="style") and the
-// reference-images grid (kind="ref"). Mirrors right-panel#onPostImageUpload.
-function openImageStudioFilePicker(session, kind) {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.addEventListener("change", () => {
-    const file = input.files && input.files[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    if (kind === "style") imageStudio.setCustomStyle(session.id, url);
-    else imageStudio.addReferenceImage(session.id, url);
-  });
-  input.click();
-}
-
-// Leave the studio without attaching — return to the origin draft.
-function exitImageStudio(session) {
-  const st = imageStudio.getState(session.id);
-  const origin = st?.originSessionId;
-  const postId = st?.postId;
-  imageStudio.exit(session.id);
-  if (origin) navigate(`/session/${origin}?panel=drafts${postId ? `&focusPost=${postId}` : ""}`);
-}
-
-// Commit the working image to the origin draft, then return to it.
-function useImageStudioImage(session) {
-  const st = imageStudio.getState(session.id);
-  if (!st) return;
-  const url = imageStudio.commit(session.id);
-  const origin = st.originSessionId;
-  const postId = st.postId;
-  if (url && origin && postId) attachImageToDraft(origin, postId, url);
-  imageStudio.exit(session.id);
-  if (origin) {
-    navigate(`/session/${origin}?panel=drafts${postId ? `&focusPost=${postId}` : ""}`);
-    if (url) showToast("Image added to your draft");
-  }
-}
-
-// Apply an edit. Annotation composites the strokes into the image locally (a
-// faithful result); every other tool runs a mocked reseed inside applyEdit.
-function applyImageStudioEdit(session, tool, root) {
-  if (tool === "annotate") {
-    const canvas = root.querySelector("canvas[data-img-annotate]");
-    const st = imageStudio.getState(session.id);
-    if (!canvas || !st?.currentImage) return;
-    compositeImageStudioAnnotation(st.currentImage.url, canvas)
-      .then((dataUrl) => imageStudio.applyEdit(session.id, "annotate", { dataUrl }))
-      .catch(() => imageStudio.applyEdit(session.id, "annotate")); // fallback: mocked reseed
-    return;
-  }
-  if (tool === "prompt") {
-    const ta = root.querySelector("[data-img-edit-prompt]");
-    if (ta) imageStudio.setEditPromptSilent(session.id, ta.value);
-  }
-  imageStudio.applyEdit(session.id, tool);
-}
-
-// Composite the source image + the annotation canvas into a PNG data URL.
-// Picsum sends `Access-Control-Allow-Origin: *`, so crossOrigin lets us export;
-// if the canvas ends up tainted, the caller falls back to a mocked reseed.
-function compositeImageStudioAnnotation(url, canvas) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      try {
-        const out = document.createElement("canvas");
-        out.width = img.naturalWidth || canvas.width;
-        out.height = img.naturalHeight || canvas.height;
-        const ctx = out.getContext("2d");
-        ctx.drawImage(img, 0, 0, out.width, out.height);
-        ctx.drawImage(canvas, 0, 0, out.width, out.height);
-        resolve(out.toDataURL("image/png"));
-      } catch (err) {
-        reject(err);
-      }
-    };
-    img.onerror = reject;
-    img.src = url;
-  });
-}
-
-// Freehand stroke on the brush canvas. Annotate = opaque orange (baked into the
-// image); fill / remove = translucent blue mask (visual only — the region seeds
-// a mocked reseed).
-function startImageStudioStroke(canvas, downEvent) {
-  downEvent.preventDefault();
-  const ctx = canvas.getContext("2d");
-  const rect = canvas.getBoundingClientRect();
-  const sx = canvas.width / rect.width;
-  const sy = canvas.height / rect.height;
-  const annotate = canvas.dataset.tool === "annotate";
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.strokeStyle = annotate ? "#ff3c00" : "#178dfe";
-  ctx.globalAlpha = annotate ? 1 : 0.4;
-  ctx.lineWidth = annotate ? Math.max(4, canvas.width * 0.01) : Math.max(18, canvas.width * 0.06);
-  const at = (e) => [(e.clientX - rect.left) * sx, (e.clientY - rect.top) * sy];
-  const [x0, y0] = at(downEvent);
-  ctx.beginPath();
-  ctx.moveTo(x0, y0);
-  ctx.lineTo(x0 + 0.01, y0 + 0.01);
-  ctx.stroke();
-  const move = (e) => {
-    const [x, y] = at(e);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-  };
-  const up = () => {
-    window.removeEventListener("pointermove", move);
-    window.removeEventListener("pointerup", up);
-  };
-  window.addEventListener("pointermove", move);
-  window.addEventListener("pointerup", up);
-}
 
 function buildBatchStudioSteps() {
   return buildWorkflowFlow(BATCH_STUDIO_STEPS);
@@ -4050,8 +3505,6 @@ function wireAssistantPanel(root, session, attachedContext) {
     if (root.querySelector("[data-batch-rest]")) repaintBatchRest(root, session);
     else refreshAssistantAside();
   });
-  // Image Studio — every stage transition / edit tick re-renders the aside.
-  const offImageStudio = imageStudio.subscribe(session.id, refreshAssistantAside);
   // Initial bind in case the panel was rendered with wizard / question mode on.
   rebindWizardKeyboardIfActive();
 
@@ -4197,7 +3650,6 @@ function wireAssistantPanel(root, session, attachedContext) {
     offTopPosts();
     offClipStudio();
     offBatchStudio();
-    offImageStudio();
     offComposerSources();
     offComposerUploads();
     unsubMentions();
@@ -5289,106 +4741,6 @@ function bindSession(root, session) {
         }
       }
 
-      // --- Image Studio (dedicated generate-an-image flow) ---
-      if (imageStudio.isActive(session.id)) {
-        const ist = imageStudio.getState(session.id);
-        if (event.target.closest("[data-img-cancel]")) {
-          exitImageStudio(session);
-          return;
-        }
-        if (event.target.closest("[data-img-style-upload]")) {
-          openImageStudioFilePicker(session, "style");
-          return;
-        }
-        const imgStyle = event.target.closest("[data-img-style]");
-        if (imgStyle) {
-          imageStudio.setStyle(session.id, imgStyle.dataset.imgStyle);
-          return;
-        }
-        const imgMood = event.target.closest("[data-img-mood]");
-        if (imgMood) {
-          imageStudio.setMood(session.id, imgMood.dataset.imgMood);
-          return;
-        }
-        const imgFmt = event.target.closest("[data-img-format]");
-        if (imgFmt) {
-          imageStudio.setFormat(session.id, imgFmt.dataset.imgFormat);
-          return;
-        }
-        const imgVar = event.target.closest("[data-img-varcount]");
-        if (imgVar) {
-          imageStudio.setVariationCount(session.id, Number(imgVar.dataset.imgVarcount));
-          return;
-        }
-        if (event.target.closest("[data-img-ref-add]")) {
-          openImageStudioFilePicker(session, "ref");
-          return;
-        }
-        const imgRefRm = event.target.closest("[data-img-ref-remove]");
-        if (imgRefRm) {
-          imageStudio.removeReferenceImage(session.id, imgRefRm.dataset.imgRefRemove);
-          return;
-        }
-        if (event.target.closest("[data-img-derive]") && !ist?.promptLoading) {
-          imageStudio.runDerive(session.id);
-          return;
-        }
-        if (event.target.closest("[data-img-generate]")) {
-          const ta = root.querySelector("[data-img-prompt]");
-          if (ta) imageStudio.setPromptSilent(session.id, ta.value);
-          if ((imageStudio.getState(session.id)?.promptText || "").trim()) imageStudio.runGeneration(session.id);
-          return;
-        }
-        if (event.target.closest("[data-img-back-compose]")) {
-          imageStudio.backToCompose(session.id);
-          return;
-        }
-        if (event.target.closest("[data-img-regenerate]")) {
-          imageStudio.runGeneration(session.id);
-          return;
-        }
-        const imgVarPick = event.target.closest("[data-img-variation]");
-        if (imgVarPick) {
-          imageStudio.selectVariation(session.id, Number(imgVarPick.dataset.imgVariation));
-          return;
-        }
-        if (event.target.closest("[data-img-edit]")) {
-          imageStudio.editVariation(session.id, null);
-          return;
-        }
-        if (event.target.closest("[data-img-back-results]")) {
-          imageStudio.backToResults(session.id);
-          return;
-        }
-        const imgTool = event.target.closest("[data-img-tool]");
-        if (imgTool) {
-          imageStudio.setActiveTool(session.id, imgTool.dataset.imgTool);
-          return;
-        }
-        if (event.target.closest("[data-img-clear-brush]")) {
-          const canvas = root.querySelector("canvas[data-img-annotate]");
-          if (canvas) canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-          return;
-        }
-        const imgExpand = event.target.closest("[data-img-expand-format]");
-        if (imgExpand) {
-          imageStudio.applyEdit(session.id, "expand", { formatId: imgExpand.dataset.imgExpandFormat });
-          return;
-        }
-        const imgApply = event.target.closest("[data-img-apply-edit]");
-        if (imgApply) {
-          applyImageStudioEdit(session, imgApply.dataset.imgApplyEdit, root);
-          return;
-        }
-        if (event.target.closest("[data-img-undo]")) {
-          imageStudio.undoEdit(session.id);
-          return;
-        }
-        if (event.target.closest("[data-img-use]")) {
-          useImageStudioImage(session);
-          return;
-        }
-      }
       // Prompt-injection starters carry a `data-starter-prompt`. Coming-soon
       // teasers are non-interactive (no prompt, aria-disabled) — ignore clicks.
       if (starterBtn && starterBtn.dataset.starterPrompt != null) {
@@ -5812,16 +5164,6 @@ function bindSession(root, session) {
         const cs = clipStudio.getState(session.id);
         if (cs) cs.config.instructions = event.target.value;
       }
-      // Image Studio — prompt / edit-prompt textareas. Store silently (no
-      // re-render so the field keeps focus) and toggle Generate's enabled state.
-      if (event.target.matches("[data-img-prompt]")) {
-        imageStudio.setPromptSilent(session.id, event.target.value);
-        const gen = root.querySelector("[data-img-generate]");
-        if (gen) gen.disabled = !event.target.value.trim();
-      }
-      if (event.target.matches("[data-img-edit-prompt]")) {
-        imageStudio.setEditPromptSilent(session.id, event.target.value);
-      }
       // Clip Studio — profiles-step live search. Filter the rendered rows in
       // place (no re-render → the field keeps focus); persist the query in
       // state so a checkbox-toggle re-render re-applies it.
@@ -5885,17 +5227,6 @@ function bindSession(root, session) {
         const url = (input?.value || "").trim();
         if (url) handleClipStudioUrl(session, url);
       }
-    },
-    { signal },
-  );
-
-  // Image Studio — freehand brush on the edit-mode canvas overlay (annotate /
-  // fill / remove). Delegated so it survives the aside node-swap on re-render.
-  root.addEventListener(
-    "pointerdown",
-    (event) => {
-      const canvas = event.target.closest("canvas[data-img-annotate]");
-      if (canvas) startImageStudioStroke(canvas, event);
     },
     { signal },
   );

@@ -8,7 +8,25 @@
    Light ADS theme — orange = AI/Generate CTA (.ap-button primary orange),
    electric-blue = selection (variation ring, chips). */
 
-.session__assistant.image-studio {
+/* Near-fullscreen dialog shell (opts into the shared centered modal shell in
+   modals.css; only the size lives here). */
+.image-studio-modal {
+  width: min(96vw, 1440px);
+  height: 92vh;
+  max-height: 940px;
+  padding: 0;
+}
+
+.image-studio-modal__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* The studio fills the modal body as a flex column. */
+.image-studio {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   height: 100%;
