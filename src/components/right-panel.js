@@ -3,7 +3,8 @@ import { getThread, subscribe as subscribeThread } from "../assistant.js?v=57";
 import { isFlagOn } from "../feature-flags.js?v=10";
 import { ideas as MOCK_IDEAS } from "../mocks.js?v=55";
 import { isNewUser } from "../user-mode.js?v=22";
-import { getPath } from "../router.js?v=30";
+import { getPath, navigate } from "../router.js?v=30";
+import { setHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { LANGUAGE_OPTIONS } from "../languages.js?v=1";
 import {
@@ -43,7 +44,6 @@ import { iconFor } from "../file-kinds.js?v=20";
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
 import { open as openScheduleModal } from "./schedule-modal.js?v=53";
-import { open as openGenerateImageModal } from "./generate-image-modal.js?v=37";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
@@ -730,7 +730,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=410").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=411").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -913,7 +913,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=410").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=411").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -931,7 +931,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=410").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=411").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -2027,19 +2027,28 @@ function onPostDelete(postId) {
   });
 }
 
+// "Generate an image" on a draft → launch the full-screen Image Studio in its
+// own `image-studio-*` session, carrying the draft binding via handoff. On
+// "Use this image" the studio attaches the result back to this draft and
+// navigates here with ?panel=drafts (reopening this surface). Navigating away
+// closes this overlay (no panel param) — a clean full-screen takeover.
 function onPostImage(postId) {
   const sid = activeSessionId();
   if (!sid) return;
-  // generate-image-modal.open(postId, onUse, opts) — onUse re-renders the
-  // panel so the new image lands in the card immediately; sessionId lets the
-  // modal pull this Playbook's brand colours into the prompt (#10).
-  openGenerateImageModal(postId, () => renderPanel(), { sessionId: sid });
+  const post = getPosts(sid).find((p) => p.id === postId);
+  setHandoff("pendingStartImageStudio", {
+    postId,
+    originSessionId: sid,
+    network: post?.network || null,
+    formatId: post?.format || null,
+  });
+  navigate(`/session/image-studio-${Date.now().toString(36)}`);
 }
 
-// Upload / change a draft image without the AI modal — spin up a throwaway
+// Upload / change a draft image without the AI studio — spin up a throwaway
 // file picker, turn the pick into an object URL and attach it to the draft.
-// Mirrors generate-image-modal.js#onStyleUpload. We deliberately keep the
-// object URL alive (no revoke) since the card keeps rendering it as its src.
+// We deliberately keep the object URL alive (no revoke) since the card keeps
+// rendering it as its src.
 function onPostImageUpload(postId) {
   const sid = activeSessionId();
   if (!sid) return;
@@ -2779,7 +2788,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=410").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=411").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

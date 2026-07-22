@@ -3,11 +3,10 @@ import { isFlagOn } from "./feature-flags.js?v=10";
 import { initArchieLoader } from "./archie-loader.js?v=2";
 import { initTopbar, renderTopbar } from "./components/topbar.js?v=189";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=160";
-import { init as initRightPanel } from "./components/right-panel.js?v=292";
+import { init as initRightPanel } from "./components/right-panel.js?v=293";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=53";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=24";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
-import { init as initGenerateImageModal } from "./components/generate-image-modal.js?v=37";
 import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=50";
 import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=54";
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=60";
@@ -23,7 +22,7 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=120";
 import { renderDashboard } from "./screens/dashboard.js?v=50";
-import { renderSession } from "./screens/session.js?v=410";
+import { renderSession } from "./screens/session.js?v=411";
 import { renderContexts } from "./screens/contexts.js?v=152";
 import { renderConnectors } from "./screens/connectors.js?v=91";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
@@ -32,7 +31,6 @@ import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=146";
 import { renderPlaybook } from "./screens/playbook.js?v=157";
 import * as __capAddSource from "./components/add-source-modal.js?v=60";
-import * as __capGenImage from "./components/generate-image-modal.js?v=37";
 import * as __capBug from "./components/bug-report-modal.js?v=24";
 import * as __capFeedback from "./components/feedback-modal.js?v=26";
 import * as __capChatPicker from "./components/chat-picker-modal.js?v=54";
@@ -42,7 +40,7 @@ import {
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=292";
+} from "./components/right-panel.js?v=293";
 
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
@@ -74,7 +72,6 @@ initScheduleModal();
 // without worrying about init ordering.
 initBugReportModal();
 initFeedbackModal();
-initGenerateImageModal();
 initVideoClipsModal();
 initChatPickerModal();
 initAddSourceModal();
@@ -131,9 +128,6 @@ start();
         switch (which) {
           case "add-source":
             __capAddSource.open({ tab: tab || "upload" });
-            break;
-          case "generate-image":
-            __capGenImage.open(null, () => {});
             break;
           case "bug":
             __capBug.open();

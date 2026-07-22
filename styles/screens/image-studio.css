@@ -1,0 +1,589 @@
+/* Image Studio — full-screen "Generate an image" flow (Firefly-inspired) that
+   takes over the assistant panel in an `image-studio-*` session. Shares the
+   flex-column shell of Clip / Batch Studio (scroll body + sticky bottom bar) and
+   REUSES the `.gen-*` image-tile + preview primitives from screens/modals.css
+   (gen-style-card, gen-format-chip, gen-stage-wrap, gen-single, gen-empty,
+   gen-image-spinner, gen-spinner) so the two never drift.
+
+   Light ADS theme — orange = AI/Generate CTA (.ap-button primary orange),
+   electric-blue = selection (variation ring, chips). */
+
+.session__assistant.image-studio {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--app-bg);
+}
+
+/* ── Slim top toolbar (Back to draft + stage title) ─────────────────────── */
+.image-studio__top {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-lg);
+  border-bottom: 1px solid var(--app-border);
+  background: var(--ref-color-white);
+}
+
+.image-studio__top-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  font-size: var(--sys-text-style-subtitle-size);
+  line-height: var(--sys-text-style-subtitle-line-height);
+  font-weight: var(--sys-text-style-subtitle-weight);
+  color: var(--ref-color-grey-80);
+}
+
+.image-studio__top-title > i {
+  color: var(--app-archie-mark);
+}
+
+/* ── Scroll body ────────────────────────────────────────────────────────── */
+.image-studio__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* ── Bottom bar (prompt + Generate, or stage actions) ───────────────────── */
+.image-studio__bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-lg);
+  border-top: 1px solid var(--app-border);
+  background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-low);
+}
+
+.image-studio__bar-spacer {
+  flex: 1;
+}
+
+.image-studio__bar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+/* ── Compose: settings rail + live preview ──────────────────────────────── */
+.image-studio__compose {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: var(--ref-spacing-lg);
+  padding: var(--ref-spacing-lg);
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .image-studio__compose {
+    grid-template-columns: 1fr;
+  }
+}
+
+.image-studio__rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  min-width: 0;
+}
+
+/* Each settings group is a white card on the grey canvas (figure/ground). */
+.image-studio__group {
+  background: var(--ref-color-white);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+  padding: var(--ref-spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+}
+
+.image-studio__group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+}
+
+.image-studio__group-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  margin: 0;
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-80);
+}
+
+.image-studio__count {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+.image-studio__opt {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px var(--ref-spacing-xxs);
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-grey-05);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+.image-studio__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+}
+
+/* Reference-images grid — reuses the gen-style upload tile, plus a small count
+   and a remove affordance per filled tile. */
+.image-studio__refs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--ref-spacing-xs);
+}
+
+.image-studio__ref {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--app-radius-md);
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  background: var(--ref-color-grey-05);
+}
+
+.image-studio__ref img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.image-studio__ref-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--app-radius-circle);
+  background: rgba(10, 27, 51, 0.72);
+  color: var(--ref-color-white);
+  cursor: pointer;
+}
+
+.image-studio__ref-remove > i {
+  font-size: 11px;
+}
+
+.image-studio__ref-remove:hover {
+  background: rgba(10, 27, 51, 0.9);
+}
+
+/* The "add reference" tile — dashed placeholder that opens the file picker. */
+.image-studio__ref-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xxs);
+  aspect-ratio: 1;
+  border: 1px dashed var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
+  color: var(--ref-color-grey-60);
+  cursor: pointer;
+  font-size: var(--sys-text-style-caption-size);
+  transition:
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.image-studio__ref-add > i {
+  font-size: 18px;
+}
+
+.image-studio__ref-add:hover {
+  border-color: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-electric-blue-100);
+}
+
+/* Preview column — reuses gen-stage-wrap / gen-single / gen-empty. */
+.image-studio__preview {
+  min-width: 0;
+  background: var(--ref-color-grey-05);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+  padding: var(--ref-spacing-lg);
+  display: flex;
+  min-height: 340px;
+}
+
+/* ── Bottom prompt bar (compose) ────────────────────────────────────────── */
+.image-studio__prompt {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.image-studio__prompt-field {
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  min-height: 44px;
+  max-height: 120px;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
+  font-family: inherit;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-80);
+}
+
+.image-studio__prompt-field:focus-visible {
+  outline: none;
+  border-color: var(--ref-color-electric-blue-100);
+  box-shadow: 0 0 0 3px var(--app-convo-navy-10);
+}
+
+.image-studio__derive {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--app-archie-mark);
+  cursor: pointer;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+}
+
+.image-studio__derive[disabled] {
+  cursor: default;
+  color: var(--ref-color-grey-60);
+}
+
+/* ── Results: variations grid ───────────────────────────────────────────── */
+.image-studio__results {
+  padding: var(--ref-spacing-lg);
+  max-width: 1040px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.image-studio__results-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  margin-bottom: var(--ref-spacing-md);
+}
+
+.image-studio__results-title {
+  margin: 0;
+  font-size: var(--sys-text-style-subtitle-size);
+  line-height: var(--sys-text-style-subtitle-line-height);
+  font-weight: var(--sys-text-style-subtitle-weight);
+  color: var(--ref-color-grey-80);
+}
+
+.image-studio__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--ref-spacing-md);
+}
+
+.image-studio__grid.is-single {
+  grid-template-columns: minmax(0, 480px);
+  justify-content: center;
+}
+
+.image-studio__variation {
+  position: relative;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: var(--app-radius-card);
+  background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-subtle);
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.image-studio__variation:hover {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.image-studio__variation.is-selected {
+  border-color: var(--ref-color-electric-blue-100);
+  box-shadow: 0 0 0 3px var(--app-convo-navy-10);
+}
+
+.image-studio__variation img {
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--imgs-ratio, 1);
+  object-fit: cover;
+}
+
+.image-studio__variation-check {
+  position: absolute;
+  top: var(--ref-spacing-xs);
+  right: var(--ref-spacing-xs);
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-white);
+  box-shadow: var(--app-shadow-subtle);
+}
+
+.image-studio__variation-check > i {
+  font-size: 13px;
+}
+
+/* ── Edit surface ───────────────────────────────────────────────────────── */
+.image-studio__edit {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: var(--ref-spacing-lg);
+  padding: var(--ref-spacing-lg);
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  align-items: start;
+}
+
+@media (max-width: 820px) {
+  .image-studio__edit {
+    grid-template-columns: 1fr;
+  }
+}
+
+.image-studio__tools {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  background: var(--ref-color-white);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+  padding: var(--ref-spacing-xs);
+}
+
+.image-studio__tool {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border: none;
+  border-radius: var(--app-radius-md);
+  background: none;
+  color: var(--ref-color-grey-80);
+  cursor: pointer;
+  text-align: left;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+}
+
+.image-studio__tool > i {
+  font-size: 16px;
+  color: var(--ref-color-grey-60);
+}
+
+.image-studio__tool:hover {
+  background: var(--ref-color-grey-05);
+}
+
+.image-studio__tool.is-active {
+  background: var(--app-convo-navy-05);
+  color: var(--app-convo-navy);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+}
+
+.image-studio__tool.is-active > i {
+  color: var(--app-convo-navy);
+}
+
+.image-studio__tool[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.image-studio__stage {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+}
+
+/* The working image frame — height-driven so any ratio fits (mirrors
+   .gen-single sizing). Hosts the img, an optional brush <canvas>, a busy
+   overlay, and badges. */
+.image-studio__frame {
+  position: relative;
+  aspect-ratio: var(--imgs-ratio, 1);
+  width: min(100%, calc(min(52vh, 460px) * var(--imgs-ratio, 1)));
+  max-height: min(52vh, 460px);
+  margin-inline: auto;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-popover-lg);
+  overflow: hidden;
+}
+
+/* Remove-background preview — checkerboard "cutout" behind the image. */
+.image-studio__frame.is-nobg {
+  background-color: var(--ref-color-white);
+  background-image:
+    linear-gradient(45deg, var(--ref-color-grey-10) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--ref-color-grey-10) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--ref-color-grey-10) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--ref-color-grey-10) 75%);
+  background-size: 18px 18px;
+  background-position:
+    0 0,
+    0 9px,
+    9px -9px,
+    -9px 0;
+}
+
+.image-studio__frame-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.image-studio__frame.is-nobg .image-studio__frame-img {
+  object-fit: contain;
+}
+
+/* Brush canvas overlay (annotate / fill / remove). */
+.image-studio__annotate {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+/* Per-edit loader over the image. */
+.image-studio__busy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-sm);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+}
+
+.image-studio__busy .gen-image-spinner {
+  --archie-loader-size: 72px;
+}
+
+/* Little corner badge for faithful ops (Upscaled 2× / Background removed). */
+.image-studio__badge {
+  position: absolute;
+  bottom: var(--ref-spacing-xs);
+  left: var(--ref-spacing-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-subtle);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-80);
+}
+
+/* Contextual sub-panel below the canvas (prompt field / expand ratio picker /
+   brush hint). */
+.image-studio__subpanel {
+  background: var(--ref-color-white);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.image-studio__subpanel-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+}
+
+.image-studio__subpanel-label {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-80);
+}
+
+.image-studio__subpanel-hint {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+.image-studio__edit-prompt {
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  min-height: 40px;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
+  font-family: inherit;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-80);
+}
