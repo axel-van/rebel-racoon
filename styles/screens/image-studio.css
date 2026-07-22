@@ -41,7 +41,7 @@
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-lg);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-md);
   padding-right: 56px; /* clear the absolute .ap-dialog-close */
   border-bottom: 1px solid var(--app-border);
   background: var(--ref-color-white);
@@ -70,7 +70,7 @@
 }
 
 .image-studio__modes .ap-tabs-nav {
-  padding-inline: var(--ref-spacing-lg);
+  padding-inline: var(--ref-spacing-md);
 }
 
 .image-studio__workspace {
@@ -92,9 +92,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm);
-  background: var(--app-bg);
+  background: var(--ref-color-white);
   border-right: 1px solid var(--app-border);
 }
 
@@ -109,14 +107,17 @@
 }
 
 /* ── Left-panel groups (generate mode) ──────────────────────────────────── */
+/* Flat sections separated by a divider — no per-section card chrome. */
 .image-studio__group {
-  background: var(--ref-color-white);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-card);
-  padding: var(--ref-spacing-sm);
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  border-bottom: 1px solid var(--app-border);
+}
+
+.image-studio__group:last-child {
+  border-bottom: none;
 }
 
 /* Tighten the reused .gen-* tile grids for this denser panel. */
@@ -288,12 +289,14 @@
 }
 
 /* ── Edit-mode tool rail (left panel) ───────────────────────────────────── */
-/* The tools use the DS Action Dropdown (.ap-action-dropdown) natively; let it
-   fill the panel width instead of its default fixed popover width. */
+/* The tools use the DS Action Dropdown (.ap-action-dropdown) items, but flat
+   (no popover chrome) to match the borderless panel — a plain menu list. */
 .image-studio__tools.ap-action-dropdown {
   width: 100%;
   box-shadow: none;
-  border: 1px solid var(--app-border);
+  border: none;
+  border-radius: 0;
+  padding: var(--ref-spacing-xs);
 }
 
 /* ── Canvas: variations grid (generate results) ─────────────────────────── */
