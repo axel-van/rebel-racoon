@@ -299,67 +299,81 @@
   padding: var(--ref-spacing-xs);
 }
 
-/* ── Canvas: variations grid (generate results) ─────────────────────────── */
-.image-studio__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+/* ── Canvas: generate results — one big preview + bottom filmstrip ──────── */
+.image-studio__preview-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: var(--ref-spacing-md);
   width: 100%;
-  max-width: 820px;
+  height: 100%;
 }
 
-.image-studio__grid.is-single {
-  grid-template-columns: minmax(0, 460px);
+.image-studio__preview-main {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
   justify-content: center;
 }
 
-.image-studio__variation {
+.image-studio__filmstrip {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--ref-spacing-xs);
+  max-width: 100%;
+}
+
+.image-studio__thumb {
   position: relative;
+  width: 64px;
+  height: 64px;
   padding: 0;
   border: 2px solid transparent;
-  border-radius: var(--app-radius-card);
-  background: var(--ref-color-white);
-  box-shadow: var(--app-shadow-subtle);
+  border-radius: var(--app-radius-md);
   overflow: hidden;
   cursor: pointer;
+  background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-subtle);
   transition:
     border-color 120ms ease,
     box-shadow 120ms ease;
 }
 
-.image-studio__variation:hover {
-  border-color: var(--ref-color-electric-blue-100);
-}
-
-.image-studio__variation.is-selected {
-  border-color: var(--ref-color-electric-blue-100);
-  box-shadow: 0 0 0 3px var(--app-convo-navy-10);
-}
-
-.image-studio__variation img {
-  display: block;
+.image-studio__thumb img {
   width: 100%;
-  aspect-ratio: var(--imgs-ratio, 1);
+  height: 100%;
   object-fit: cover;
+  display: block;
 }
 
-.image-studio__variation-check {
+.image-studio__thumb:hover {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.image-studio__thumb.is-selected {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.image-studio__thumb-check {
   position: absolute;
-  top: var(--ref-spacing-xs);
-  right: var(--ref-spacing-xs);
-  width: 24px;
-  height: 24px;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--app-radius-circle);
   background: var(--ref-color-electric-blue-100);
   color: var(--ref-color-white);
-  box-shadow: var(--app-shadow-subtle);
 }
 
-.image-studio__variation-check > i {
-  font-size: 13px;
+.image-studio__thumb-check > i {
+  font-size: 10px;
 }
 
 /* ── Canvas: edit working image ─────────────────────────────────────────── */

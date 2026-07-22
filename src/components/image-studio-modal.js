@@ -138,19 +138,32 @@ function generatingCanvas(st) {
   </div>`;
 }
 
+// One large preview of the selected variation + a bottom filmstrip (chutier) to
+// switch between variations. The filmstrip is hidden when there's only one.
 function resultsCanvas(st) {
   const ratio = imageStudio.activeRatio(KEY);
-  const cards = st.variations
-    .map((v, i) => {
-      const sel = st.selectedIndex === i;
-      return `<button type="button" class="image-studio__variation${sel ? " is-selected" : ""}" data-img-variation="${i}" aria-pressed="${sel}">
-        <img src="${escapeHtml(v.url)}" alt="Variation ${i + 1}" style="--imgs-ratio:${ratio}" />
-        ${sel ? `<span class="image-studio__variation-check" aria-hidden="true"><i class="ap-icon-check"></i></span>` : ""}
-      </button>`;
-    })
-    .join("");
-  const single = st.variations.length === 1 ? " is-single" : "";
-  return `<div class="image-studio__grid${single}" style="--imgs-ratio:${ratio}">${cards}</div>`;
+  const sel = st.selectedIndex == null ? 0 : st.selectedIndex;
+  const current = st.variations[sel] || st.variations[0];
+  const strip =
+    st.variations.length > 1
+      ? `<div class="image-studio__filmstrip" role="tablist" aria-label="Variations">${st.variations
+          .map((v, i) => {
+            const on = i === sel;
+            return `<button type="button" class="image-studio__thumb${on ? " is-selected" : ""}" role="tab" aria-selected="${on}" data-img-variation="${i}" title="Variation ${i + 1}">
+              <img src="${escapeHtml(v.url)}" alt="Variation ${i + 1}" />
+              ${on ? `<span class="image-studio__thumb-check" aria-hidden="true"><i class="ap-icon-check"></i></span>` : ""}
+            </button>`;
+          })
+          .join("")}</div>`
+      : "";
+  return `<div class="image-studio__preview-stage">
+    <div class="image-studio__preview-main">
+      <div class="image-studio__frame" style="--imgs-ratio:${ratio}">
+        <img class="image-studio__frame-img" src="${current ? escapeHtml(current.url) : ""}" alt="Selected variation" />
+      </div>
+    </div>
+    ${strip}
+  </div>`;
 }
 
 function editCanvas(st) {
