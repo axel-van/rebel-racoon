@@ -15,7 +15,7 @@ import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordin
 import { showToast } from "./toast.js?v=20";
 import { getPosts, attachImageToDraft } from "../posts-store.js?v=34";
 import { NETWORK_LABEL } from "../social-profiles.js?v=25";
-import * as imageStudio from "../image-studio.js?v=6";
+import * as imageStudio from "../image-studio.js?v=7";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -144,18 +144,24 @@ function resultsCanvas(st) {
   const ratio = imageStudio.activeRatio(KEY);
   const sel = st.selectedIndex == null ? 0 : st.selectedIndex;
   const current = st.variations[sel] || st.variations[0];
-  const strip =
-    st.variations.length > 1
-      ? `<div class="image-studio__filmstrip" role="tablist" aria-label="Variations">${st.variations
-          .map((v, i) => {
-            const on = i === sel;
-            return `<button type="button" class="image-studio__thumb${on ? " is-selected" : ""}" role="tab" aria-selected="${on}" data-img-variation="${i}" title="Variation ${i + 1}">
-              <img src="${escapeHtml(v.url)}" alt="Variation ${i + 1}" />
-              ${on ? `<span class="image-studio__thumb-check" aria-hidden="true"><i class="ap-icon-check"></i></span>` : ""}
-            </button>`;
-          })
-          .join("")}</div>`
+  const thumbs = st.variations
+    .map((v, i) => {
+      const on = i === sel;
+      return `<button type="button" class="image-studio__thumb${on ? " is-selected" : ""}" role="tab" aria-selected="${on}" data-img-variation="${i}" title="Variation ${i + 1}">
+        <img src="${escapeHtml(v.url)}" alt="Variation ${i + 1}" />
+        ${on ? `<span class="image-studio__thumb-check" aria-hidden="true"><i class="ap-icon-check"></i></span>` : ""}
+      </button>`;
+    })
+    .join("");
+  const addTile =
+    st.variations.length < 8
+      ? `<button type="button" class="image-studio__thumb image-studio__thumb--add" data-img-add-variation title="Generate another" ${st.addingVariation ? "disabled" : ""}>${
+          st.addingVariation
+            ? `<span class="gen-image-spinner"></span>`
+            : `<i class="ap-icon-plus" aria-hidden="true"></i>`
+        }</button>`
       : "";
+  const strip = `<div class="image-studio__filmstrip" role="tablist" aria-label="Variations">${thumbs}${addTile}</div>`;
   return `<div class="image-studio__preview-stage">
     <div class="image-studio__preview-main">
       <div class="image-studio__frame" style="--imgs-ratio:${ratio}">
@@ -400,53 +406,60 @@ function editSubpanel(st) {
 
 // Contextual panel for the overlay tools (Add logo / Add text). Edits the
 // currently-selected overlay live; a shared Apply flattens the layer.
+// The overlay panel shows an element's OPTIONS only when it's selected; when
+// nothing is selected it shows the tool's add affordance. Deletion is via the
+// element's × handle, so there's no Delete button here.
 function overlaySubpanel(st, tool) {
   const sel = st.overlays.find((o) => o.id === st.selectedOverlayId) || null;
-  const hint = `<span class="image-studio__subpanel-hint">Drag to move · corner to resize · top handle to rotate. Added to the image when you use it.</span>`;
+  const manipHint = `<p class="image-studio__subpanel-hint">Drag to move · corner to resize · top handle to rotate · × to delete. Added to the image when you use it.</p>`;
 
-  if (tool === "logo") {
-    const presets = imageStudio.LOGO_PRESETS.map(
-      (p) =>
-        `<button type="button" class="image-studio__preset" data-img-logo-preset="${escapeHtml(p.url)}" title="${escapeHtml(p.label)}"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.label)}" /></button>`,
+  if (tool === "text") {
+    const t = sel && sel.kind === "text" ? sel : null;
+    if (!t) {
+      return `<div class="image-studio__subpanel">
+        <div class="image-studio__subpanel-row">
+          <button type="button" class="ap-button stroked blue" data-img-add-text><i class="ap-icon-closed-captions"></i><span>Add text</span></button>
+          <span class="image-studio__subpanel-hint">Add a text element, then style and place it.</span>
+        </div>
+      </div>`;
+    }
+    const colors = imageStudio.TEXT_COLORS.map(
+      (c) =>
+        `<button type="button" class="image-studio__swatch${t.color === c ? " is-selected" : ""}" data-img-text-color="${c}" style="--sw:${c}" aria-label="${c}"></button>`,
     ).join("");
-    const del =
-      sel && sel.kind === "logo"
-        ? `<button type="button" class="ap-button ghost red" data-img-overlay-delete="${sel.id}"><i class="ap-icon-trash"></i><span>Delete</span></button>`
-        : "";
+    const sizes = imageStudio.TEXT_SIZES.map(
+      (s) =>
+        `<button type="button" class="ap-filter-chip" data-img-text-size="${s.value}" aria-pressed="${Math.abs(t.sizeF - s.value) < 0.001}">${s.label}</button>`,
+    ).join("");
     return `<div class="image-studio__subpanel">
-      <div class="image-studio__subpanel-row">
-        <p class="image-studio__subpanel-label">Add a logo</p>
-        <div class="image-studio__bar-spacer"></div>
-        <button type="button" class="ap-button stroked blue" data-img-logo-upload><i class="ap-icon-upload"></i><span>Upload</span></button>
+      <input type="text" class="image-studio__edit-prompt" data-img-text-input placeholder="Your text" value="${escapeHtml(t.text)}" />
+      <div class="image-studio__subpanel-row image-studio__text-controls">
+        <span class="image-studio__swatches">${colors}</span>
+        <div class="image-studio__chips">${sizes}</div>
+        <button type="button" class="ap-filter-chip" data-img-text-bold aria-pressed="${!!t.bold}">Bold</button>
+        <button type="button" class="ap-filter-chip" data-img-text-outline aria-pressed="${!!t.outline}">Outline</button>
       </div>
-      <div class="image-studio__presets">${presets}</div>
-      <div class="image-studio__subpanel-row">${hint}<div class="image-studio__bar-spacer"></div>${del}</div>
+      ${manipHint}
     </div>`;
   }
 
-  // text
-  const t = sel && sel.kind === "text" ? sel : null;
-  const colors = imageStudio.TEXT_COLORS.map(
-    (c) =>
-      `<button type="button" class="image-studio__swatch${t && t.color === c ? " is-selected" : ""}" data-img-text-color="${c}" style="--sw:${c}" aria-label="${c}"></button>`,
-  ).join("");
-  const sizes = imageStudio.TEXT_SIZES.map(
-    (s) =>
-      `<button type="button" class="ap-filter-chip" data-img-text-size="${s.value}" aria-pressed="${t && Math.abs(t.sizeF - s.value) < 0.001}">${s.label}</button>`,
+  // logo tool — a selected logo has no extra options (manipulate via handles);
+  // otherwise show the add chooser (upload + presets).
+  if (sel && sel.kind === "logo") {
+    return `<div class="image-studio__subpanel">${manipHint}</div>`;
+  }
+  const presets = imageStudio.LOGO_PRESETS.map(
+    (p) =>
+      `<button type="button" class="image-studio__preset" data-img-logo-preset="${escapeHtml(p.url)}" title="${escapeHtml(p.label)}"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.label)}" /></button>`,
   ).join("");
   return `<div class="image-studio__subpanel">
-    <input type="text" class="image-studio__edit-prompt" data-img-text-input placeholder="Your text" value="${t ? escapeHtml(t.text) : ""}" ${t ? "" : "disabled"} />
-    <div class="image-studio__subpanel-row image-studio__text-controls">
-      <span class="image-studio__swatches">${colors}</span>
-      <div class="image-studio__chips">${sizes}</div>
-      <button type="button" class="ap-filter-chip" data-img-text-bold aria-pressed="${t ? !!t.bold : false}">Bold</button>
-      <button type="button" class="ap-filter-chip" data-img-text-outline aria-pressed="${t ? !!t.outline : false}">Outline</button>
+    <div class="image-studio__subpanel-row">
+      <p class="image-studio__subpanel-label">Add a logo</p>
+      <div class="image-studio__bar-spacer"></div>
+      <button type="button" class="ap-button stroked blue" data-img-logo-upload><i class="ap-icon-upload"></i><span>Upload</span></button>
     </div>
-    <div class="image-studio__subpanel-row">${hint}<div class="image-studio__bar-spacer"></div>${
-      t
-        ? `<button type="button" class="ap-button ghost red" data-img-overlay-delete="${t.id}"><i class="ap-icon-trash"></i><span>Delete</span></button>`
-        : ""
-    }</div>
+    <div class="image-studio__presets">${presets}</div>
+    <p class="image-studio__subpanel-hint">Pick a logo or upload one, then drag it into place.</p>
   </div>`;
 }
 
@@ -732,22 +745,19 @@ function onClick(event) {
     if ((state()?.promptText || "").trim()) imageStudio.runGeneration(KEY);
     return;
   }
+  if (event.target.closest("[data-img-add-variation]")) return void imageStudio.addVariation(KEY);
   const varPick = event.target.closest("[data-img-variation]");
   if (varPick) return void imageStudio.selectVariation(KEY, Number(varPick.dataset.imgVariation));
   const toolBtn = event.target.closest("[data-img-tool]");
   if (toolBtn) {
     const t = toolBtn.dataset.imgTool;
-    // Overlay tools don't toggle: "Add text" adds an element; "Add logo" opens
-    // the upload/presets panel (the element is added on pick).
-    if (t === "text") {
-      imageStudio.setActiveTool(KEY, "text", { toggle: false });
-      imageStudio.addOverlay(KEY, { kind: "text" });
-      return;
-    }
-    if (t === "logo") return void imageStudio.setActiveTool(KEY, "logo", { toggle: false });
+    // Overlay tools don't toggle; their panel holds the add affordance + (when
+    // an element is selected) its options.
+    if (t === "text" || t === "logo") return void imageStudio.setActiveTool(KEY, t, { toggle: false });
     return void imageStudio.setActiveTool(KEY, t);
   }
   // Overlay controls (Add logo / Add text panels).
+  if (event.target.closest("[data-img-add-text]")) return void imageStudio.addOverlay(KEY, { kind: "text" });
   if (event.target.closest("[data-img-logo-upload]")) return void openLogoPicker();
   const preset = event.target.closest("[data-img-logo-preset]");
   if (preset) return void imageStudio.addOverlay(KEY, { kind: "logo", url: preset.dataset.imgLogoPreset });

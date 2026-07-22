@@ -691,3 +691,28 @@
   border-color: var(--ref-color-electric-blue-100);
   box-shadow: 0 0 0 2px var(--app-convo-navy-10);
 }
+
+/* Filmstrip "+" tile — generate another variation. */
+.image-studio__thumb--add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--app-border);
+  background: var(--ref-color-white);
+  box-shadow: none;
+  color: var(--ref-color-grey-60);
+}
+
+.image-studio__thumb--add > i {
+  font-size: 20px;
+}
+
+.image-studio__thumb--add:hover {
+  border-color: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-electric-blue-100);
+}
+
+.image-studio__thumb--add[disabled] {
+  cursor: default;
+  opacity: 0.6;
+}

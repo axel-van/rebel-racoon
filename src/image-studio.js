@@ -161,6 +161,7 @@ export function start(key, { postId = null, network = null, formatId = null } = 
     referenceImages: [], // [{ id, url }] (max MAX_REFS)
     variationCount: 2,
     variations: [], // [{ seed, url, w, h }]
+    addingVariation: false, // a "+" generate-another is in flight
     selectedIndex: null,
     currentImage: null, // { url, w, h, seed, noBg? } — the working image in edit
     activeTool: null, // one of EDIT_TOOLS keys
@@ -364,6 +365,28 @@ export function selectVariation(sessionId, index) {
   if (!s) return;
   adoptVariation(s, index);
   notify(sessionId);
+}
+
+// Generate one more variation from the "+" tile and append it to the filmstrip.
+const MAX_VARIATIONS = 8;
+export function addVariation(sessionId) {
+  const s = states.get(sessionId);
+  if (!s || s.genPhase !== "results" || s.addingVariation || s.variations.length >= MAX_VARIATIONS) return;
+  s.addingVariation = true;
+  notify(sessionId);
+  const runId = Date.now().toString(36);
+  if (s._genTimer) clearTimeout(s._genTimer);
+  s._genTimer = setTimeout(() => {
+    const cur = states.get(sessionId);
+    if (!cur) return;
+    const dims = dimsFor(cur.formatId);
+    const seed = seedFor(cur, `add-${runId}-${cur.variations.length}`);
+    cur.variations.push({ seed, url: picsum(seed, dims), w: dims[0], h: dims[1] });
+    cur.addingVariation = false;
+    adoptVariation(cur, cur.variations.length - 1); // select the fresh one
+    cur._genTimer = null;
+    notify(sessionId);
+  }, GEN_MS);
 }
 
 // ── Edit surface ────────────────────────────────────────────────────────────
