@@ -15,7 +15,7 @@ import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordin
 import { showToast } from "./toast.js?v=20";
 import { getPosts, attachImageToDraft } from "../posts-store.js?v=34";
 import { NETWORK_LABEL } from "../social-profiles.js?v=25";
-import * as imageStudio from "../image-studio.js?v=4";
+import * as imageStudio from "../image-studio.js?v=5";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -407,10 +407,7 @@ function editSubpanel(st) {
 // currently-selected overlay live; a shared Apply flattens the layer.
 function overlaySubpanel(st, tool) {
   const sel = st.overlays.find((o) => o.id === st.selectedOverlayId) || null;
-  const applyBtn = st.overlays.length
-    ? `<button type="button" class="ap-button primary orange" data-img-apply-edit="overlay"><i class="ap-icon-check"></i><span>Apply</span></button>`
-    : "";
-  const hint = `<span class="image-studio__subpanel-hint">Drag to move · corner to resize · top handle to rotate.</span>`;
+  const hint = `<span class="image-studio__subpanel-hint">Drag to move · corner to resize · top handle to rotate. Added to the image when you use it.</span>`;
 
   if (tool === "logo") {
     const presets = imageStudio.LOGO_PRESETS.map(
@@ -428,7 +425,7 @@ function overlaySubpanel(st, tool) {
         <button type="button" class="ap-button stroked blue" data-img-logo-upload><i class="ap-icon-upload"></i><span>Upload</span></button>
       </div>
       <div class="image-studio__presets">${presets}</div>
-      <div class="image-studio__subpanel-row">${hint}<div class="image-studio__bar-spacer"></div>${del}${applyBtn}</div>
+      <div class="image-studio__subpanel-row">${hint}<div class="image-studio__bar-spacer"></div>${del}</div>
     </div>`;
   }
 
@@ -454,7 +451,7 @@ function overlaySubpanel(st, tool) {
       t
         ? `<button type="button" class="ap-button ghost red" data-img-overlay-delete="${t.id}"><i class="ap-icon-trash"></i><span>Delete</span></button>`
         : ""
-    }${applyBtn}</div>
+    }</div>
   </div>`;
 }
 
@@ -498,12 +495,23 @@ const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
 // Commit the working image to the origin draft, then close.
 function useImage() {
-  const url = imageStudio.commit(KEY);
-  if (url && currentSessionId && currentPostId) {
-    attachImageToDraft(currentSessionId, currentPostId, url);
-    showToast("Image added to your draft");
+  const st = state();
+  const finalize = (url) => {
+    if (url && currentSessionId && currentPostId) {
+      attachImageToDraft(currentSessionId, currentPostId, url);
+      showToast("Image added to your draft");
+    }
+    close();
+  };
+  // Overlay elements stay live/editable until here; flatten them into the image
+  // only at commit (no per-edit "Apply").
+  if (st?.currentImage && st.overlays.length) {
+    compositeOverlays(st.currentImage.url, st.overlays, st.currentImage.w, st.currentImage.h)
+      .then(finalize)
+      .catch(() => finalize(imageStudio.commit(KEY)));
+    return;
   }
-  close();
+  finalize(imageStudio.commit(KEY));
 }
 
 // Apply an edit. Annotation composites the strokes into the image locally (a
@@ -516,14 +524,6 @@ function applyEditTool(tool) {
     compositeAnnotation(st.currentImage.url, canvas)
       .then((dataUrl) => imageStudio.applyEdit(KEY, "annotate", { dataUrl }))
       .catch(() => imageStudio.applyEdit(KEY, "annotate")); // fallback: mocked reseed
-    return;
-  }
-  if (tool === "overlay") {
-    const st = state();
-    if (!st?.currentImage || !st.overlays.length) return;
-    compositeOverlays(st.currentImage.url, st.overlays, st.currentImage.w, st.currentImage.h)
-      .then((dataUrl) => imageStudio.applyEdit(KEY, "overlay", { dataUrl }))
-      .catch(() => showToast("Couldn't flatten the elements. Try again.", { variant: "error" }));
     return;
   }
   if (tool === "prompt") {

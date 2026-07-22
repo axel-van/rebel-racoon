@@ -420,19 +420,6 @@ export function applyEdit(sessionId, tool, payload = {}) {
     return;
   }
 
-  // Flatten the overlay layer into the image (faithful composite from caller).
-  if (tool === "overlay" && payload.dataUrl) {
-    const prev = s.currentImage;
-    s.editHistory.push({ ...prev });
-    s.currentImage = { url: payload.dataUrl, w: prev.w, h: prev.h, seed: `${prev.seed}-ov` };
-    for (const o of s.overlays) if (o.kind === "logo") safeRevoke(o.url);
-    s.overlays = [];
-    s.selectedOverlayId = null;
-    s.activeTool = null;
-    notify(sessionId);
-    return;
-  }
-
   s.editBusy = true;
   notify(sessionId);
   if (s._editTimer) clearTimeout(s._editTimer);
