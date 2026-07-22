@@ -15,7 +15,7 @@ import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordin
 import { showToast } from "./toast.js?v=20";
 import { getPosts, attachImageToDraft } from "../posts-store.js?v=34";
 import { NETWORK_LABEL } from "../social-profiles.js?v=25";
-import * as imageStudio from "../image-studio.js?v=5";
+import * as imageStudio from "../image-studio.js?v=6";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -178,11 +178,9 @@ function editCanvas(st) {
     ? `<div class="image-studio__busy"><span class="gen-image-spinner"></span><span>Applying…</span></div>`
     : "";
   const badge =
-    img && img.upscaled
-      ? `<span class="image-studio__badge"><i class="ap-icon-arrow-up" aria-hidden="true"></i>Upscaled 2×</span>`
-      : img && img.noBg
-        ? `<span class="image-studio__badge"><i class="ap-icon-cropper" aria-hidden="true"></i>Background removed (preview)</span>`
-        : "";
+    img && img.noBg
+      ? `<span class="image-studio__badge"><i class="ap-icon-cropper" aria-hidden="true"></i>Background removed (preview)</span>`
+      : "";
   return `<div class="image-studio__edit-canvas">
     <div class="image-studio__frame${img && img.noBg ? " is-nobg" : ""}" style="--imgs-ratio:${ratio}">
       <img class="image-studio__frame-img" src="${img ? img.url : ""}" alt="Working image" />
@@ -388,11 +386,8 @@ function editSubpanel(st) {
       </div>
     </div>`;
   }
-  // upscale / removebg — one-click.
-  const hint =
-    tool === "upscale"
-      ? "Doubles the resolution of the current image."
-      : "Isolates the subject on a transparent background (preview).";
+  // removebg — one-click apply.
+  const hint = "Isolates the subject on a transparent background (preview).";
   return `<div class="image-studio__subpanel">
     <div class="image-studio__subpanel-row">
       <p class="image-studio__subpanel-label">${escapeHtml(meta.label)}</p>

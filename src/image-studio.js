@@ -16,10 +16,10 @@
 //
 // Everything is MOCKED (no real image API): generateImage returns a seeded
 // Picsum URL keyed on the inputs; the edit tools reseed / composite locally.
-// Only Annotation (canvas composite) and Upscale (same seed, 2× dims) produce a
-// faithful result — the generative tools (Fill / Remove / Expand / Remove
+// Only Annotation (canvas composite) and the added logo/text elements produce
+// faithful results — the generative tools (Fill / Remove / Expand / Remove
 // background) are honest previews. The committed url rides back to the draft via
-// attachImageToDraft (see session.js).
+// attachImageToDraft (see the modal component).
 
 import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=4";
 
@@ -65,7 +65,6 @@ export const EDIT_TOOLS = [
   { key: "fill", label: "Generative fill", icon: "ap-icon-plus", panel: "brush", faithful: false },
   { key: "remove", label: "Remove object", icon: "ap-icon-trash", panel: "brush", faithful: false },
   { key: "expand", label: "Expand", icon: "ap-icon-maximize", panel: "format", faithful: false },
-  { key: "upscale", label: "Upscale", icon: "ap-icon-arrow-up", panel: null, faithful: true },
   { key: "removebg", label: "Remove background", icon: "ap-icon-cropper", panel: null, faithful: false },
   // Overlay tools — add a draggable logo / text element onto the image, then
   // flatten it in. `panel: "overlay"` renders the overlay controls.
@@ -163,7 +162,7 @@ export function start(key, { postId = null, network = null, formatId = null } = 
     variationCount: 2,
     variations: [], // [{ seed, url, w, h }]
     selectedIndex: null,
-    currentImage: null, // { url, w, h, seed, upscaled?, noBg? } — the working image in edit
+    currentImage: null, // { url, w, h, seed, noBg? } — the working image in edit
     activeTool: null, // one of EDIT_TOOLS keys
     editBusy: false,
     editHistory: [], // undo stack of prior currentImage snapshots
@@ -378,15 +377,10 @@ export function setActiveTool(sessionId, tool, { toggle = true } = {}) {
 }
 
 // Produce the (faked) edited image. Only annotate (handled by the caller, which
-// passes a composited data URL) and upscale are faithful; the rest reseed.
+// passes a composited data URL) is faithful; the rest reseed.
 function computeEdit(s, tool, payload) {
   const cur = s.currentImage;
   const stamp = Date.now().toString(36);
-  if (tool === "upscale") {
-    const w = cur.w * 2;
-    const h = cur.h * 2;
-    return { url: picsum(cur.seed, [w, h]), w, h, seed: cur.seed, upscaled: true };
-  }
   if (tool === "expand") {
     const fmt = payload.formatId || s.formatId;
     s.formatId = fmt; // the frame genuinely changes shape
@@ -396,7 +390,6 @@ function computeEdit(s, tool, payload) {
   }
   if (tool === "removebg") {
     // We can't segment — present the current image on a checkerboard cutout.
-    // Fresh object (no spread) so a prior Upscale badge doesn't linger.
     return { url: cur.url, w: cur.w, h: cur.h, seed: `${cur.seed}-nobg`, noBg: true };
   }
   // prompt / fill / remove → reseed at the same dimensions (mock).
