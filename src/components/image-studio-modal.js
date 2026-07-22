@@ -783,6 +783,14 @@ function onClick(event) {
   if (applyBtn) return void applyEditTool(applyBtn.dataset.imgApplyEdit);
   if (event.target.closest("[data-img-undo]")) return void imageStudio.undoEdit(KEY);
   if (event.target.closest("[data-img-use]")) return void useImage();
+  // Click on the image but not on an element → deselect the active overlay.
+  if (
+    st.selectedOverlayId &&
+    event.target.closest(".image-studio__frame") &&
+    !event.target.closest("[data-img-overlay]")
+  ) {
+    return void imageStudio.selectOverlay(KEY, null);
+  }
 }
 
 function onInput(event) {
