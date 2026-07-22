@@ -92,8 +92,8 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-md);
-  padding: var(--ref-spacing-md);
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
   background: var(--app-bg);
   border-right: 1px solid var(--app-border);
 }
@@ -113,10 +113,16 @@
   background: var(--ref-color-white);
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-card);
-  padding: var(--ref-spacing-md);
+  padding: var(--ref-spacing-sm);
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-xs);
+}
+
+/* Tighten the reused .gen-* tile grids for this denser panel. */
+.image-studio .gen-style-grid,
+.image-studio .gen-format-chips {
+  gap: var(--ref-spacing-xxs);
 }
 
 .image-studio__group-head {
@@ -210,7 +216,7 @@
 .image-studio__refs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-xxs);
 }
 
 .image-studio__ref {
