@@ -15,7 +15,7 @@ import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordin
 import { showToast } from "./toast.js?v=20";
 import { getPosts, attachImageToDraft } from "../posts-store.js?v=34";
 import { NETWORK_LABEL } from "../social-profiles.js?v=25";
-import * as imageStudio from "../image-studio.js?v=3";
+import * as imageStudio from "../image-studio.js?v=4";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -186,10 +186,31 @@ function editCanvas(st) {
   return `<div class="image-studio__edit-canvas">
     <div class="image-studio__frame${img && img.noBg ? " is-nobg" : ""}" style="--imgs-ratio:${ratio}">
       <img class="image-studio__frame-img" src="${img ? img.url : ""}" alt="Working image" />
-      ${canvasOverlay}${busy}${badge}
+      ${overlayLayer(st)}${canvasOverlay}${busy}${badge}
     </div>
     ${editSubpanel(st)}
   </div>`;
+}
+
+// Draggable logo/text elements layered over the working image (edit mode).
+function overlayLayer(st) {
+  if (!st.overlays.length) return "";
+  return `<div class="image-studio__overlay-layer" data-img-overlay-layer>${st.overlays
+    .map((o) => renderOverlay(o, o.id === st.selectedOverlayId))
+    .join("")}</div>`;
+}
+
+function renderOverlay(o, selected) {
+  const base = `left:${o.xF * 100}%; top:${o.yF * 100}%; transform:translate(-50%,-50%) rotate(${o.rot || 0}rad);`;
+  const style = o.kind === "logo" ? `${base} width:${o.wF * 100}%;` : base;
+  const inner =
+    o.kind === "logo"
+      ? `<img src="${escapeHtml(o.url)}" alt="" draggable="false" />`
+      : `<span class="image-studio__overlay-text" style="color:${escapeHtml(o.color || "#FFFFFF")}; font-size:${o.sizeF * 100}cqh; font-weight:${o.bold ? 700 : 400};${o.outline ? " text-shadow:0 2px 8px rgba(0,0,0,.55); -webkit-text-stroke:0.055em rgba(0,0,0,.6);" : ""}">${escapeHtml(o.text || "")}</span>`;
+  const handles = `<button type="button" class="image-studio__overlay-delete" data-img-overlay-delete="${o.id}" aria-label="Delete element"><i class="ap-icon-close" aria-hidden="true"></i></button>
+    <span class="image-studio__overlay-rotate" data-img-overlay-rotate="${o.id}" title="Rotate" aria-hidden="true"><i class="ap-icon-refresh"></i></span>
+    <span class="image-studio__overlay-resize" data-img-overlay-resize="${o.id}" title="Resize" aria-hidden="true"></span>`;
+  return `<div class="image-studio__overlay${o.kind === "text" ? " is-text" : ""}${selected ? " is-selected" : ""}" data-img-overlay="${o.id}" style="${style}">${inner}${handles}</div>`;
 }
 
 // Bottom bar — one primary CTA per mode / phase.
@@ -329,6 +350,7 @@ function editSubpanel(st) {
   if (!tool) return "";
   const meta = imageStudio.EDIT_TOOLS.find((t) => t.key === tool);
   if (!meta) return "";
+  if (tool === "logo" || tool === "text") return overlaySubpanel(st, tool);
   if (tool === "prompt") {
     return `<div class="image-studio__subpanel">
       <p class="image-studio__subpanel-label">Describe the change</p>
@@ -381,6 +403,61 @@ function editSubpanel(st) {
   </div>`;
 }
 
+// Contextual panel for the overlay tools (Add logo / Add text). Edits the
+// currently-selected overlay live; a shared Apply flattens the layer.
+function overlaySubpanel(st, tool) {
+  const sel = st.overlays.find((o) => o.id === st.selectedOverlayId) || null;
+  const applyBtn = st.overlays.length
+    ? `<button type="button" class="ap-button primary orange" data-img-apply-edit="overlay"><i class="ap-icon-check"></i><span>Apply</span></button>`
+    : "";
+  const hint = `<span class="image-studio__subpanel-hint">Drag to move · corner to resize · top handle to rotate.</span>`;
+
+  if (tool === "logo") {
+    const presets = imageStudio.LOGO_PRESETS.map(
+      (p) =>
+        `<button type="button" class="image-studio__preset" data-img-logo-preset="${escapeHtml(p.url)}" title="${escapeHtml(p.label)}"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.label)}" /></button>`,
+    ).join("");
+    const del =
+      sel && sel.kind === "logo"
+        ? `<button type="button" class="ap-button ghost red" data-img-overlay-delete="${sel.id}"><i class="ap-icon-trash"></i><span>Delete</span></button>`
+        : "";
+    return `<div class="image-studio__subpanel">
+      <div class="image-studio__subpanel-row">
+        <p class="image-studio__subpanel-label">Add a logo</p>
+        <div class="image-studio__bar-spacer"></div>
+        <button type="button" class="ap-button stroked blue" data-img-logo-upload><i class="ap-icon-upload"></i><span>Upload</span></button>
+      </div>
+      <div class="image-studio__presets">${presets}</div>
+      <div class="image-studio__subpanel-row">${hint}<div class="image-studio__bar-spacer"></div>${del}${applyBtn}</div>
+    </div>`;
+  }
+
+  // text
+  const t = sel && sel.kind === "text" ? sel : null;
+  const colors = imageStudio.TEXT_COLORS.map(
+    (c) =>
+      `<button type="button" class="image-studio__swatch${t && t.color === c ? " is-selected" : ""}" data-img-text-color="${c}" style="--sw:${c}" aria-label="${c}"></button>`,
+  ).join("");
+  const sizes = imageStudio.TEXT_SIZES.map(
+    (s) =>
+      `<button type="button" class="ap-filter-chip" data-img-text-size="${s.value}" aria-pressed="${t && Math.abs(t.sizeF - s.value) < 0.001}">${s.label}</button>`,
+  ).join("");
+  return `<div class="image-studio__subpanel">
+    <input type="text" class="image-studio__edit-prompt" data-img-text-input placeholder="Your text" value="${t ? escapeHtml(t.text) : ""}" ${t ? "" : "disabled"} />
+    <div class="image-studio__subpanel-row image-studio__text-controls">
+      <span class="image-studio__swatches">${colors}</span>
+      <div class="image-studio__chips">${sizes}</div>
+      <button type="button" class="ap-filter-chip" data-img-text-bold aria-pressed="${t ? !!t.bold : false}">Bold</button>
+      <button type="button" class="ap-filter-chip" data-img-text-outline aria-pressed="${t ? !!t.outline : false}">Outline</button>
+    </div>
+    <div class="image-studio__subpanel-row">${hint}<div class="image-studio__bar-spacer"></div>${
+      t
+        ? `<button type="button" class="ap-button ghost red" data-img-overlay-delete="${t.id}"><i class="ap-icon-trash"></i><span>Delete</span></button>`
+        : ""
+    }${applyBtn}</div>
+  </div>`;
+}
+
 function renderBody() {
   const st = state();
   if (!st || !body) return;
@@ -405,6 +482,20 @@ function openFilePicker(kind) {
   input.click();
 }
 
+// Upload a logo → add it as a draggable overlay element.
+function openLogoPicker() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.addEventListener("change", () => {
+    const file = input.files && input.files[0];
+    if (file) imageStudio.addOverlay(KEY, { kind: "logo", url: URL.createObjectURL(file) });
+  });
+  input.click();
+}
+
+const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
 // Commit the working image to the origin draft, then close.
 function useImage() {
   const url = imageStudio.commit(KEY);
@@ -425,6 +516,14 @@ function applyEditTool(tool) {
     compositeAnnotation(st.currentImage.url, canvas)
       .then((dataUrl) => imageStudio.applyEdit(KEY, "annotate", { dataUrl }))
       .catch(() => imageStudio.applyEdit(KEY, "annotate")); // fallback: mocked reseed
+    return;
+  }
+  if (tool === "overlay") {
+    const st = state();
+    if (!st?.currentImage || !st.overlays.length) return;
+    compositeOverlays(st.currentImage.url, st.overlays, st.currentImage.w, st.currentImage.h)
+      .then((dataUrl) => imageStudio.applyEdit(KEY, "overlay", { dataUrl }))
+      .catch(() => showToast("Couldn't flatten the elements. Try again.", { variant: "error" }));
     return;
   }
   if (tool === "prompt") {
@@ -456,6 +555,61 @@ function compositeAnnotation(url, canvas) {
     };
     img.onerror = reject;
     img.src = url;
+  });
+}
+
+function loadImg(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+// Flatten the base image + all overlay elements (logos drawn, text painted with
+// optional outline/shadow) into a PNG data URL at the image's intrinsic size.
+function compositeOverlays(baseUrl, overlays, w, h) {
+  const logoUrls = [...new Set(overlays.filter((o) => o.kind === "logo").map((o) => o.url))];
+  return Promise.all([loadImg(baseUrl), ...logoUrls.map(loadImg)]).then(([base, ...logos]) => {
+    const logoMap = new Map(logoUrls.map((u, i) => [u, logos[i]]));
+    const out = document.createElement("canvas");
+    out.width = w;
+    out.height = h;
+    const ctx = out.getContext("2d");
+    ctx.drawImage(base, 0, 0, w, h);
+    for (const o of overlays) {
+      ctx.save();
+      ctx.translate(o.xF * w, o.yF * h);
+      ctx.rotate(o.rot || 0);
+      if (o.kind === "logo") {
+        const img = logoMap.get(o.url);
+        const dw = o.wF * w;
+        const ratio = img && img.naturalWidth ? img.naturalHeight / img.naturalWidth : 1;
+        const dh = dw * ratio;
+        if (img) ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
+      } else {
+        const fontPx = o.sizeF * h;
+        ctx.font = `${o.bold ? 700 : 400} ${fontPx}px Averta, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        if (o.outline) {
+          ctx.shadowColor = "rgba(0,0,0,0.55)";
+          ctx.shadowBlur = fontPx * 0.18;
+          ctx.shadowOffsetY = fontPx * 0.04;
+          ctx.lineWidth = fontPx * 0.12;
+          ctx.strokeStyle = "rgba(0,0,0,0.6)";
+          ctx.lineJoin = "round";
+          ctx.strokeText(o.text || "", 0, 0);
+          ctx.shadowColor = "transparent";
+        }
+        ctx.fillStyle = o.color || "#FFFFFF";
+        ctx.fillText(o.text || "", 0, 0);
+      }
+      ctx.restore();
+    }
+    return out.toDataURL("image/png");
   });
 }
 
@@ -493,6 +647,68 @@ function startStroke(canvas, downEvent) {
   window.addEventListener("pointerup", up);
 }
 
+// Move / resize / rotate a placed overlay. Updates state silently + the element
+// directly during the gesture (no re-render → smooth), then notifies on up.
+function startOverlayGesture(event, el) {
+  event.preventDefault();
+  const id = el.dataset.imgOverlay;
+  const o = imageStudio.getOverlay(KEY, id);
+  const frame = modal.querySelector(".image-studio__frame");
+  if (!o || !frame) return;
+  const rect = frame.getBoundingClientRect();
+  const mode = event.target.closest("[data-img-overlay-resize]")
+    ? "resize"
+    : event.target.closest("[data-img-overlay-rotate]")
+      ? "rotate"
+      : "move";
+  // Select immediately without a re-render (toggle classes directly).
+  const st = state();
+  if (st) st.selectedOverlayId = id;
+  modal.querySelectorAll(".image-studio__overlay.is-selected").forEach((n) => n.classList.remove("is-selected"));
+  el.classList.add("is-selected");
+
+  const cx = rect.left + o.xF * rect.width;
+  const cy = rect.top + o.yF * rect.height;
+  const startDist = Math.hypot(event.clientX - cx, event.clientY - cy) || 1;
+  const startAngle = Math.atan2(event.clientY - cy, event.clientX - cx);
+  const start = { px: event.clientX, py: event.clientY, xF: o.xF, yF: o.yF, wF: o.wF, sizeF: o.sizeF, rot: o.rot || 0 };
+  const textNode = el.querySelector(".image-studio__overlay-text");
+
+  const move = (e) => {
+    if (mode === "move") {
+      const xF = clamp(start.xF + (e.clientX - start.px) / rect.width, 0.02, 0.98);
+      const yF = clamp(start.yF + (e.clientY - start.py) / rect.height, 0.02, 0.98);
+      imageStudio.updateOverlaySilent(KEY, id, { xF, yF });
+      el.style.left = `${xF * 100}%`;
+      el.style.top = `${yF * 100}%`;
+    } else if (mode === "resize") {
+      const factor = Math.hypot(e.clientX - cx, e.clientY - cy) / startDist;
+      if (o.kind === "logo") {
+        const wF = clamp(start.wF * factor, 0.05, 1.3);
+        imageStudio.updateOverlaySilent(KEY, id, { wF });
+        el.style.width = `${wF * 100}%`;
+      } else {
+        const sizeF = clamp(start.sizeF * factor, 0.02, 0.5);
+        imageStudio.updateOverlaySilent(KEY, id, { sizeF });
+        if (textNode) textNode.style.fontSize = `${sizeF * 100}cqh`;
+      }
+    } else {
+      const rot = start.rot + (Math.atan2(e.clientY - cy, e.clientX - cx) - startAngle);
+      imageStudio.updateOverlaySilent(KEY, id, { rot });
+      el.style.transform = `translate(-50%, -50%) rotate(${rot}rad)`;
+    }
+  };
+  const up = () => {
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", up);
+    const cur = state();
+    if (cur) cur.activeTool = o.kind; // surface the matching panel
+    imageStudio.notifyOverlays(KEY);
+  };
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", up);
+}
+
 // ── Event delegation ──────────────────────────────────────────────────────
 
 function onClick(event) {
@@ -524,7 +740,38 @@ function onClick(event) {
   const varPick = event.target.closest("[data-img-variation]");
   if (varPick) return void imageStudio.selectVariation(KEY, Number(varPick.dataset.imgVariation));
   const toolBtn = event.target.closest("[data-img-tool]");
-  if (toolBtn) return void imageStudio.setActiveTool(KEY, toolBtn.dataset.imgTool);
+  if (toolBtn) {
+    const t = toolBtn.dataset.imgTool;
+    // Overlay tools don't toggle: "Add text" adds an element; "Add logo" opens
+    // the upload/presets panel (the element is added on pick).
+    if (t === "text") {
+      imageStudio.setActiveTool(KEY, "text", { toggle: false });
+      imageStudio.addOverlay(KEY, { kind: "text" });
+      return;
+    }
+    if (t === "logo") return void imageStudio.setActiveTool(KEY, "logo", { toggle: false });
+    return void imageStudio.setActiveTool(KEY, t);
+  }
+  // Overlay controls (Add logo / Add text panels).
+  if (event.target.closest("[data-img-logo-upload]")) return void openLogoPicker();
+  const preset = event.target.closest("[data-img-logo-preset]");
+  if (preset) return void imageStudio.addOverlay(KEY, { kind: "logo", url: preset.dataset.imgLogoPreset });
+  const ovDel = event.target.closest("[data-img-overlay-delete]");
+  if (ovDel) return void imageStudio.removeOverlay(KEY, ovDel.dataset.imgOverlayDelete);
+  const txtColor = event.target.closest("[data-img-text-color]");
+  if (txtColor && st.selectedOverlayId)
+    return void imageStudio.updateOverlay(KEY, st.selectedOverlayId, { color: txtColor.dataset.imgTextColor });
+  const txtSize = event.target.closest("[data-img-text-size]");
+  if (txtSize && st.selectedOverlayId)
+    return void imageStudio.updateOverlay(KEY, st.selectedOverlayId, { sizeF: Number(txtSize.dataset.imgTextSize) });
+  if (event.target.closest("[data-img-text-bold]") && st.selectedOverlayId) {
+    const o = imageStudio.getOverlay(KEY, st.selectedOverlayId);
+    return void imageStudio.updateOverlay(KEY, st.selectedOverlayId, { bold: !o?.bold });
+  }
+  if (event.target.closest("[data-img-text-outline]") && st.selectedOverlayId) {
+    const o = imageStudio.getOverlay(KEY, st.selectedOverlayId);
+    return void imageStudio.updateOverlay(KEY, st.selectedOverlayId, { outline: !o?.outline });
+  }
   if (event.target.closest("[data-img-clear-brush]")) {
     const canvas = modal.querySelector("canvas[data-img-annotate]");
     if (canvas) canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
@@ -545,12 +792,22 @@ function onInput(event) {
     if (gen) gen.disabled = !event.target.value.trim();
   } else if (event.target.matches("[data-img-edit-prompt]")) {
     imageStudio.setEditPromptSilent(KEY, event.target.value);
+  } else if (event.target.matches("[data-img-text-input]")) {
+    // Live-edit the selected text overlay without a re-render (keeps focus).
+    const st = state();
+    if (!st?.selectedOverlayId) return;
+    imageStudio.updateOverlaySilent(KEY, st.selectedOverlayId, { text: event.target.value });
+    const node = modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .image-studio__overlay-text`);
+    if (node) node.textContent = event.target.value;
   }
 }
 
 function onPointerDown(event) {
   const canvas = event.target.closest("canvas[data-img-annotate]");
-  if (canvas) startStroke(canvas, event);
+  if (canvas) return void startStroke(canvas, event);
+  if (event.target.closest("[data-img-overlay-delete]")) return; // click handles delete
+  const overlayEl = event.target.closest("[data-img-overlay]");
+  if (overlayEl) startOverlayGesture(event, overlayEl);
 }
 
 // ── Public API ────────────────────────────────────────────────────────────

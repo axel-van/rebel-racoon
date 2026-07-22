@@ -67,7 +67,28 @@ export const EDIT_TOOLS = [
   { key: "expand", label: "Expand", icon: "ap-icon-maximize", panel: "format", faithful: false },
   { key: "upscale", label: "Upscale", icon: "ap-icon-arrow-up", panel: null, faithful: true },
   { key: "removebg", label: "Remove background", icon: "ap-icon-cropper", panel: null, faithful: false },
+  // Overlay tools — add a draggable logo / text element onto the image, then
+  // flatten it in. `panel: "overlay"` renders the overlay controls.
+  { key: "logo", label: "Add logo", icon: "ap-icon-file--image", panel: "overlay", faithful: true },
+  { key: "text", label: "Add text", icon: "ap-icon-closed-captions", panel: "overlay", faithful: true },
 ];
+
+// Curated logo presets for the "Add logo" tray (real bundled assets).
+export const LOGO_PRESETS = [
+  { label: "Brand", url: "assets/avatars/northwind-studio.svg" },
+  { label: "Archie", url: "assets/logos/archie-mono.svg" },
+  { label: "Wordmark", url: "assets/logos/archie-wordmark.svg" },
+];
+
+// Text-overlay size presets (fraction of image height).
+export const TEXT_SIZES = [
+  { label: "S", value: 0.06 },
+  { label: "M", value: 0.09 },
+  { label: "L", value: 0.14 },
+];
+
+// Text-overlay colour swatches.
+export const TEXT_COLORS = ["#FFFFFF", "#0A1B33", "#FF3C00", "#178DFE"];
 
 // Pixel dimensions per format so the mock image fills the frame at the chosen
 // ratio (no letterboxing).
@@ -147,6 +168,8 @@ export function start(key, { postId = null, network = null, formatId = null } = 
     editBusy: false,
     editHistory: [], // undo stack of prior currentImage snapshots
     editPrompt: "", // scratch text for the Reprompt tool
+    overlays: [], // draggable logo/text elements layered on the working image
+    selectedOverlayId: null,
     lastError: null,
     _genTimer: null,
     _editTimer: null,
@@ -163,6 +186,7 @@ export function exit(sessionId) {
   if (s._deriveTimer) clearTimeout(s._deriveTimer);
   if (s.customStyleUrl) safeRevoke(s.customStyleUrl);
   for (const r of s.referenceImages) safeRevoke(r.url);
+  for (const o of s.overlays) if (o.kind === "logo") safeRevoke(o.url);
   states.delete(sessionId);
   notify(sessionId);
 }
@@ -345,10 +369,10 @@ export function selectVariation(sessionId, index) {
 
 // ── Edit surface ────────────────────────────────────────────────────────────
 
-export function setActiveTool(sessionId, tool) {
+export function setActiveTool(sessionId, tool, { toggle = true } = {}) {
   const s = states.get(sessionId);
   if (!s || s.editBusy) return;
-  s.activeTool = s.activeTool === tool ? null : tool;
+  s.activeTool = toggle && s.activeTool === tool ? null : tool;
   s.editPrompt = "";
   notify(sessionId);
 }
@@ -396,6 +420,19 @@ export function applyEdit(sessionId, tool, payload = {}) {
     return;
   }
 
+  // Flatten the overlay layer into the image (faithful composite from caller).
+  if (tool === "overlay" && payload.dataUrl) {
+    const prev = s.currentImage;
+    s.editHistory.push({ ...prev });
+    s.currentImage = { url: payload.dataUrl, w: prev.w, h: prev.h, seed: `${prev.seed}-ov` };
+    for (const o of s.overlays) if (o.kind === "logo") safeRevoke(o.url);
+    s.overlays = [];
+    s.selectedOverlayId = null;
+    s.activeTool = null;
+    notify(sessionId);
+    return;
+  }
+
   s.editBusy = true;
   notify(sessionId);
   if (s._editTimer) clearTimeout(s._editTimer);
@@ -417,6 +454,72 @@ export function undoEdit(sessionId) {
   if (!s || !s.editHistory.length || s.editBusy) return;
   s.currentImage = s.editHistory.pop();
   s.activeTool = null;
+  notify(sessionId);
+}
+
+// ── Overlay layer (Add logo / Add text) ─────────────────────────────────────
+
+let overlaySeq = 0;
+
+const OVERLAY_DEFAULTS = {
+  logo: { xF: 0.5, yF: 0.5, wF: 0.28, rot: 0 },
+  text: { text: "Your text", color: "#FFFFFF", sizeF: 0.09, bold: true, outline: true, xF: 0.5, yF: 0.5, rot: 0 },
+};
+
+export function addOverlay(sessionId, partial = {}) {
+  const s = states.get(sessionId);
+  if (!s) return null;
+  overlaySeq += 1;
+  const id = `ov-${overlaySeq}`;
+  const overlay = { id, ...(OVERLAY_DEFAULTS[partial.kind] || {}), ...partial };
+  s.overlays.push(overlay);
+  s.selectedOverlayId = id;
+  notify(sessionId);
+  return id;
+}
+
+// Merge a patch and re-render (for panel controls: text / colour / size…).
+export function updateOverlay(sessionId, id, patch) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  const o = s.overlays.find((x) => x.id === id);
+  if (!o) return;
+  Object.assign(o, patch);
+  notify(sessionId);
+}
+
+// Merge a patch WITHOUT re-rendering — used during a drag/resize/rotate gesture
+// (the caller updates the DOM directly for smoothness); pair with notifyOverlays
+// on pointerup. Mirrors caption-editor's move/commit split.
+export function updateOverlaySilent(sessionId, id, patch) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  const o = s.overlays.find((x) => x.id === id);
+  if (o) Object.assign(o, patch);
+}
+
+export function notifyOverlays(sessionId) {
+  notify(sessionId);
+}
+
+export function selectOverlay(sessionId, id) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  s.selectedOverlayId = id;
+  notify(sessionId);
+}
+
+export function getOverlay(sessionId, id) {
+  return states.get(sessionId)?.overlays.find((o) => o.id === id) || null;
+}
+
+export function removeOverlay(sessionId, id) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  const o = s.overlays.find((x) => x.id === id);
+  if (o && o.kind === "logo") safeRevoke(o.url);
+  s.overlays = s.overlays.filter((x) => x.id !== id);
+  if (s.selectedOverlayId === id) s.selectedOverlayId = null;
   notify(sessionId);
 }
 

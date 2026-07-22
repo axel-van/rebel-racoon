@@ -534,3 +534,160 @@
 .image-studio__bar-spacer {
   flex: 1;
 }
+
+/* ── Edit: overlay elements (Add logo / Add text) ───────────────────────── */
+/* Frame becomes a size container so text overlays can size in cqh (fraction of
+   image height), matching the bake (sizeF × height). */
+.image-studio__frame {
+  container-type: size;
+}
+
+.image-studio__overlay-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.image-studio__overlay {
+  position: absolute;
+  display: inline-flex;
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+  line-height: 0;
+}
+
+.image-studio__overlay > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.image-studio__overlay-text {
+  display: block;
+  white-space: nowrap;
+  line-height: 1.05;
+  pointer-events: none;
+}
+
+.image-studio__overlay.is-selected {
+  outline: 1px dashed var(--ref-color-electric-blue-100);
+  outline-offset: 3px;
+}
+
+.image-studio__overlay-delete,
+.image-studio__overlay-rotate,
+.image-studio__overlay-resize {
+  position: absolute;
+  z-index: 2;
+  display: none;
+}
+
+.image-studio__overlay.is-selected .image-studio__overlay-delete,
+.image-studio__overlay.is-selected .image-studio__overlay-rotate,
+.image-studio__overlay.is-selected .image-studio__overlay-resize {
+  display: inline-flex;
+}
+
+.image-studio__overlay-delete {
+  top: -10px;
+  right: -10px;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--app-radius-circle);
+  background: rgba(10, 27, 51, 0.82);
+  color: var(--ref-color-white);
+  cursor: pointer;
+}
+
+.image-studio__overlay-delete > i {
+  font-size: 11px;
+}
+
+.image-studio__overlay-rotate {
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-electric-blue-100);
+  color: var(--ref-color-electric-blue-100);
+  cursor: grab;
+}
+
+.image-studio__overlay-rotate > i {
+  font-size: 11px;
+}
+
+.image-studio__overlay-resize {
+  bottom: -8px;
+  right: -8px;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-white);
+  border: 2px solid var(--ref-color-electric-blue-100);
+  cursor: nwse-resize;
+}
+
+/* Overlay panel controls */
+.image-studio__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xs);
+}
+
+.image-studio__preset {
+  width: 48px;
+  height: 48px;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
+  cursor: pointer;
+}
+
+.image-studio__preset img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.image-studio__preset:hover {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.image-studio__text-controls {
+  flex-wrap: wrap;
+}
+
+.image-studio__swatches {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.image-studio__swatch {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: var(--app-radius-circle);
+  background: var(--sw, #fff);
+  border: 2px solid var(--app-border);
+  cursor: pointer;
+}
+
+.image-studio__swatch.is-selected {
+  border-color: var(--ref-color-electric-blue-100);
+  box-shadow: 0 0 0 2px var(--app-convo-navy-10);
+}
