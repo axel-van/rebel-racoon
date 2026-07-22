@@ -62,49 +62,15 @@
   color: var(--app-archie-mark);
 }
 
-/* Mode segmented control (Generate / Edit) — a compact pill toggle. */
+/* Mode switch (Generate / Edit) uses the DS Tabs component natively as a
+   full-width bar; only inset the tabs to align with the panel/canvas padding. */
 .image-studio__modes {
   flex: 0 0 auto;
-  display: inline-flex;
-  padding: 3px;
-  gap: 2px;
-  border-radius: var(--app-radius-pill);
-  background: var(--ref-color-grey-05);
-  border: 1px solid var(--app-border);
+  background: var(--ref-color-white);
 }
 
 .image-studio__modes .ap-tabs-nav {
-  display: inline-flex;
-  gap: 2px;
-  border: none;
-}
-
-.image-studio__modes .ap-tabs-tab {
-  border: none;
-  background: none;
-  margin: 0;
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-md);
-  border-radius: var(--app-radius-pill);
-  cursor: pointer;
-  color: var(--ref-color-grey-60);
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-}
-
-.image-studio__modes .ap-tabs-tab:hover:not(.active):not([disabled]) {
-  color: var(--ref-color-grey-80);
-}
-
-.image-studio__modes .ap-tabs-tab.active {
-  background: var(--ref-color-white);
-  color: var(--app-convo-navy);
-  box-shadow: var(--app-shadow-subtle);
-}
-
-.image-studio__modes .ap-tabs-tab[disabled] {
-  opacity: 0.45;
-  cursor: not-allowed;
+  padding-inline: var(--ref-spacing-lg);
 }
 
 .image-studio__workspace {
@@ -316,57 +282,12 @@
 }
 
 /* ── Edit-mode tool rail (left panel) ───────────────────────────────────── */
-.image-studio__tools {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  background: var(--ref-color-white);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-card);
-  padding: var(--ref-spacing-xs);
-}
-
-.image-studio__tool {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
+/* The tools use the DS Action Dropdown (.ap-action-dropdown) natively; let it
+   fill the panel width instead of its default fixed popover width. */
+.image-studio__tools.ap-action-dropdown {
   width: 100%;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border: none;
-  border-radius: var(--app-radius-md);
-  background: none;
-  color: var(--ref-color-grey-80);
-  cursor: pointer;
-  text-align: left;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  transition:
-    background 120ms ease,
-    color 120ms ease;
-}
-
-.image-studio__tool > i {
-  font-size: 16px;
-  color: var(--ref-color-grey-60);
-}
-
-.image-studio__tool:hover:not([disabled]) {
-  background: var(--ref-color-grey-05);
-}
-
-.image-studio__tool.is-active {
-  background: var(--app-convo-navy-05);
-  color: var(--app-convo-navy);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-}
-
-.image-studio__tool.is-active > i {
-  color: var(--app-convo-navy);
-}
-
-.image-studio__tool[disabled] {
-  opacity: 0.5;
-  cursor: default;
+  box-shadow: none;
+  border: 1px solid var(--app-border);
 }
 
 /* ── Canvas: variations grid (generate results) ─────────────────────────── */

@@ -70,18 +70,19 @@ function renderStudio(st) {
 
 function topBar(st) {
   const canEdit = !!st.currentImage;
+  const editState = (st.mode === "edit" ? " active" : "") + (canEdit ? "" : " disabled");
   const editAttrs = canEdit ? "" : 'disabled title="Generate an image first"';
+  // DS Tabs (.ap-tabs) as the two peer modes — a full-width tab bar under the
+  // title, used natively (no custom styling).
   return `<div class="image-studio__top">
-    <span class="image-studio__top-title"><i class="ap-icon-archie-official" aria-hidden="true"></i>Image Studio</span>
-    <div class="image-studio__bar-spacer"></div>
+      <span class="image-studio__top-title"><i class="ap-icon-archie-official" aria-hidden="true"></i>Image Studio</span>
+    </div>
     <div class="ap-tabs image-studio__modes">
       <div class="ap-tabs-nav" role="tablist" aria-label="Studio mode">
-        <button type="button" class="ap-tabs-tab${st.mode === "generate" ? " active" : ""}" role="tab" aria-selected="${st.mode === "generate"}" data-img-mode="generate">Generate</button>
-        <button type="button" class="ap-tabs-tab${st.mode === "edit" ? " active" : ""}" role="tab" aria-selected="${st.mode === "edit"}" data-img-mode="edit" ${editAttrs}>Edit</button>
+        <button type="button" class="ap-tabs-tab${st.mode === "generate" ? " active" : ""}" role="tab" aria-selected="${st.mode === "generate"}" data-img-mode="generate"><span>Generate</span></button>
+        <button type="button" class="ap-tabs-tab${editState}" role="tab" aria-selected="${st.mode === "edit"}" data-img-mode="edit" ${editAttrs}><span>Edit</span></button>
       </div>
-    </div>
-    <div class="image-studio__bar-spacer"></div>
-  </div>`;
+    </div>`;
 }
 
 // Left panel — generate mode: prompt (lead) + reference / style / mood / format
@@ -99,15 +100,18 @@ function generateControls(st) {
   return promptGroup + composeGroups(st);
 }
 
-// Left panel — edit mode: the Firefly-style tool rail.
+// Left panel — edit mode: the tool rail as a DS Action Dropdown menu
+// (.ap-action-dropdown items, 40px rows). Active tool uses the DS `.focused`
+// item state.
 function editControls(st) {
-  const tools = imageStudio.EDIT_TOOLS.map((t) => {
+  const items = imageStudio.EDIT_TOOLS.map((t) => {
     const active = st.activeTool === t.key;
-    return `<button type="button" class="image-studio__tool${active ? " is-active" : ""}" data-img-tool="${escapeHtml(t.key)}" aria-pressed="${active}" ${st.editBusy ? "disabled" : ""}>
-      <i class="${t.icon}" aria-hidden="true"></i><span>${escapeHtml(t.label)}</span>
+    return `<button type="button" class="ap-action-dropdown-item${active ? " focused" : ""}" role="menuitem" data-img-tool="${escapeHtml(t.key)}" ${st.editBusy ? "disabled" : ""}>
+      <i class="${t.icon}" aria-hidden="true"></i>
+      <span class="ap-action-dropdown-item-text">${escapeHtml(t.label)}</span>
     </button>`;
   }).join("");
-  return `<div class="image-studio__tools" aria-label="Edit tools">${tools}</div>`;
+  return `<div class="ap-action-dropdown image-studio__tools" role="menu" aria-label="Edit tools">${items}</div>`;
 }
 
 // Right canvas — shared; content depends on mode / generation phase.
