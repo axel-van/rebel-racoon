@@ -541,8 +541,9 @@ button.image-studio__ref--pick:focus-visible {
   border-radius: var(--app-radius-md);
 }
 
-/* Floating action bar — a card centred at the canvas bottom, two rows: the
-   Reprompt field + Apply on top, then Crop / Add text / Add logo below. */
+/* Floating action bar — a card centred at the canvas bottom. Two zones with a
+   clear hierarchy: the AI prompt field (generative) up top, then the manual
+   hand-tools (Crop / Add text / Add logo) below an "or edit by hand" divider. */
 .image-studio__actionbar {
   position: absolute;
   left: 50%;
@@ -551,12 +552,12 @@ button.image-studio__ref--pick:focus-visible {
   z-index: 4;
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  width: min(94%, 520px);
-  padding: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-xs);
+  width: min(94%, 540px);
+  padding: var(--ref-spacing-sm);
   background: var(--ref-color-white);
   border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-lg);
+  border-radius: var(--app-radius-modal);
   box-shadow: var(--app-shadow-popover-lg);
 }
 
@@ -571,6 +572,36 @@ button.image-studio__ref--pick:focus-visible {
   gap: var(--ref-spacing-xs);
 }
 
+/* Zone 1 — the AI prompt as a real, filled field: a soft-tinted pill carrying
+   the mermaid-sparkle AI cue, the input, and the orange Apply CTA. Reads
+   unmistakably as "type a prompt" (was bare text with no field affordance). */
+.image-studio__ai-field {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xxs) var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  background: var(--app-surface-subtle);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-pill);
+  transition:
+    border-color 150ms var(--app-ease-out),
+    box-shadow 150ms var(--app-ease-out),
+    background 150ms var(--app-ease-out);
+}
+
+.image-studio__ai-field:focus-within {
+  background: var(--ref-color-white);
+  border-color: var(--app-archie-mark);
+  box-shadow: 0 0 0 3px rgba(255, 60, 0, 0.12);
+}
+
+/* The mermaid-gradient sparkle — the app's AI identity mark. Mask-based icon, so
+   paint the gradient onto its background and let the glyph clip it. */
+.image-studio__ai-icon {
+  flex: 0 0 auto;
+  background: var(--ref-color-mermaid-gradient-background);
+}
+
 .image-studio__actionbar-input {
   flex: 1 1 auto;
   min-width: 0;
@@ -579,7 +610,7 @@ button.image-studio__ref--pick:focus-visible {
   font: inherit;
   font-size: var(--sys-text-style-body-size);
   color: var(--ref-color-grey-80);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs) 0;
 }
 
 .image-studio__actionbar-input::placeholder {
@@ -592,6 +623,25 @@ button.image-studio__ref--pick:focus-visible {
 
 .image-studio__actionbar-apply {
   flex: 0 0 auto;
+}
+
+/* The zone divider — an "or edit by hand" label flanked by hairlines. It's the
+   line that keeps the AI path and the manual path from blurring together. */
+.image-studio__actionbar-or {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  color: var(--ref-color-grey-60);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
+.image-studio__actionbar-or::before,
+.image-studio__actionbar-or::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--app-border-soft);
 }
 
 .image-studio__actionbar-anchor {

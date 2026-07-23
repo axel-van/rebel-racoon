@@ -109,8 +109,12 @@ function generateControls(st) {
   return promptGroup + composeGroups(st);
 }
 
-// Edit mode — the floating action bar over the canvas bottom: an always-on
-// Reprompt field + Apply (the #1 edit), then compact Crop / Add text / Add logo.
+// Edit mode — the floating action bar over the canvas bottom. Two clearly
+// separated zones so the AI path and the manual path don't blur together:
+//   1. AI zone — a filled prompt field (mermaid-sparkle cue = generative AI)
+//      with the orange Apply CTA; describe a change and I redraw the image.
+//   2. Manual zone — Crop / Add text / Add logo, precise hand tools, split off
+//      below an "or edit by hand" divider so they read as the alternative.
 // Crop drops straight into a draw-a-rectangle mode (see cropConfirmBar); Add logo
 // opens a small popover; text is added and edited directly on the canvas (see
 // renderOverlay). Inspired by the bottom tool bar of Krea AI / DALL·E.
@@ -119,10 +123,12 @@ function actionBar(st) {
   if (st.cropDrawing) return cropConfirmBar(st);
   const busy = st.editBusy ? "disabled" : "";
   return `<div class="image-studio__actionbar" role="toolbar" aria-label="Edit tools">
-    <div class="image-studio__actionbar-row">
-      <input type="text" class="image-studio__actionbar-input" data-img-edit-prompt placeholder="Describe a change to the image…" value="${escapeHtml(st.editPrompt || "")}" ${busy} />
+    <div class="image-studio__ai-field">
+      <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
+      <input type="text" class="image-studio__actionbar-input" data-img-edit-prompt placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" value="${escapeHtml(st.editPrompt || "")}" ${busy} />
       <button type="button" class="ap-button primary orange image-studio__actionbar-apply" data-img-apply-edit="prompt" ${busy}><i class="ap-icon-archie-official" aria-hidden="true"></i><span>Apply</span></button>
     </div>
+    <div class="image-studio__actionbar-or" aria-hidden="true"><span>or edit by hand</span></div>
     <div class="image-studio__actionbar-row image-studio__actionbar-tools">
       <button type="button" class="ap-button stroked grey" data-img-crop-start ${busy}><i class="ap-icon-cropper" aria-hidden="true"></i><span>Crop</span></button>
       <button type="button" class="ap-button stroked grey" data-img-add-text ${busy}><i class="ap-icon-closed-captions" aria-hidden="true"></i><span>Add text</span></button>
