@@ -851,3 +851,14 @@
 .image-studio__ref-badge > i {
   font-size: 11px;
 }
+
+/* Format hint: network icon + "Best for <Network>". */
+.image-studio__count--net {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.image-studio__count--net > i {
+  font-size: 14px;
+}

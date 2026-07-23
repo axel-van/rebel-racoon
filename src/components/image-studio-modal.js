@@ -16,7 +16,7 @@ import { showToast } from "./toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../posts-store.js?v=36";
 import { getSessionById } from "../sessions-store.js?v=6";
 import { getContextById } from "../contexts-store.js?v=35";
-import { NETWORK_LABEL } from "../social-profiles.js?v=26";
+import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../social-profiles.js?v=26";
 import * as imageStudio from "../image-studio.js?v=11";
 
 const MODAL_ID = "imageStudio";
@@ -342,7 +342,12 @@ function refs(st) {
 }
 
 function composeGroups(st) {
-  const fmtHint = st.network ? `Best for ${NETWORK_LABEL[st.network] || st.network}` : "Aspect ratio";
+  // Format hint — the draft's network icon + "Best for <Network>" (or a plain
+  // "Aspect ratio" label when no network is known).
+  const netIcon = st.network ? NETWORK_ICON_BY_PLATFORM[st.network] : null;
+  const fmtHint = st.network
+    ? `${netIcon ? `<i class="${netIcon}" aria-hidden="true"></i>` : ""}Best for ${escapeHtml(NETWORK_LABEL[st.network] || st.network)}`
+    : "Aspect ratio";
   const fmtChips = imageStudio
     .formatChoices(KEY)
     .map((f) => formatChip(f, st.formatId === f.id, "data-img-format"))
@@ -424,7 +429,7 @@ function composeGroups(st) {
     <div class="image-studio__group">
       <div class="image-studio__group-head">
         <p class="image-studio__group-label">Format</p>
-        <span class="image-studio__count">${escapeHtml(fmtHint)}</span>
+        <span class="image-studio__count image-studio__count--net">${fmtHint}</span>
       </div>
       <div class="gen-format-chips">${fmtChips}</div>
     </div>
