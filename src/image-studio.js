@@ -21,7 +21,7 @@
 // background) are honest previews. The committed url rides back to the draft via
 // attachImageToDraft (see the modal component).
 
-import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=4";
+import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=5";
 
 const states = new Map(); // sessionId → state
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -154,7 +154,18 @@ export function activeRatio(sessionId) {
 }
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────
-export function start(key, { postId = null, network = null, formatId = null, editImage = null, carousel = null } = {}) {
+export function start(
+  key,
+  {
+    postId = null,
+    network = null,
+    formatId = null,
+    editImage = null,
+    carousel = null,
+    playbookRefs = [],
+    playbookName = "",
+  } = {},
+) {
   // posts-store stores X as "twitter"; the format catalogue keys on "x".
   const net = network === "twitter" ? "x" : network || null;
   const resolvedFormat = formatId || (net ? defaultFormatFor(net) : "1:1");
@@ -169,6 +180,14 @@ export function start(key, { postId = null, network = null, formatId = null, edi
   let variations = []; // [{ seed, url, w, h }]
   let selectedIndex = null;
   let slideCount = supportsCarousel(net) ? 4 : 0;
+  // Brand reference images from the session's Playbook — prefilled into the
+  // Reference images grid (marked fromPlaybook) so generated imagery stays
+  // on-brand. The user can add their own or toggle the Playbook set off.
+  const pbRefs = (Array.isArray(playbookRefs) ? playbookRefs : [])
+    .filter((r) => r && r.url)
+    .map((r, i) => ({ id: r.id || `pb-${i}`, url: r.url, label: r.label || "" }));
+  const usePlaybookRefs = pbRefs.length > 0;
+  const initialRefs = usePlaybookRefs ? pbRefs.slice(0, MAX_REFS).map((r) => ({ ...r, fromPlaybook: true })) : [];
   if (editImage && editImage.url) {
     const [w, h] = editImage.w && editImage.h ? [editImage.w, editImage.h] : dimsFor(resolvedFormat);
     currentImage = { url: editImage.url, w, h, seed: `${postId || "img"}-edit` };
@@ -198,7 +217,10 @@ export function start(key, { postId = null, network = null, formatId = null, edi
     styleKey: null,
     moodKey: null,
     customStyleUrl: null, // object URL of an uploaded "Your style" reference
-    referenceImages: [], // [{ id, url }] (max MAX_REFS)
+    referenceImages: initialRefs, // [{ id, url, label?, fromPlaybook? }] (max MAX_REFS)
+    playbookRefs: pbRefs, // the Playbook's brand images (snapshot, for the toggle)
+    playbookName: playbookName || "", // brand/playbook label for the toggle
+    usePlaybookRefs, // include the Playbook brand images in the grid
     variationCount: 2, // single-image mode: how many alternatives to pick from
     slideCount, // carousel mode: how many slides to generate
     variations, // [{ seed, url, w, h }] — alternatives (single) or slides (carousel)
@@ -341,8 +363,28 @@ export function removeReferenceImage(sessionId, id) {
   const s = states.get(sessionId);
   if (!s) return;
   const ref = s.referenceImages.find((r) => r.id === id);
-  if (ref) safeRevoke(ref.url);
+  // Only revoke uploaded object URLs — never the Playbook's shared image URLs.
+  if (ref && !ref.fromPlaybook) safeRevoke(ref.url);
   s.referenceImages = s.referenceImages.filter((r) => r.id !== id);
+  notify(sessionId);
+}
+
+// Toggle the Playbook's brand reference images in/out of the grid. Off = ignore
+// the Playbook (user-added images are always kept); on = re-add the brand set.
+export function setUsePlaybookRefs(sessionId, on) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  s.usePlaybookRefs = !!on;
+  if (on) {
+    for (const r of s.playbookRefs) {
+      if (s.referenceImages.length >= MAX_REFS) break;
+      if (!s.referenceImages.some((x) => x.id === r.id)) {
+        s.referenceImages.push({ ...r, fromPlaybook: true });
+      }
+    }
+  } else {
+    s.referenceImages = s.referenceImages.filter((r) => !r.fromPlaybook);
+  }
   notify(sessionId);
 }
 

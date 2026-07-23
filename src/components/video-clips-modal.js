@@ -21,7 +21,7 @@
 
 import { escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { FORMATS, NETWORK_FORMATS } from "../clip-formats.js?v=4";
+import { FORMATS, NETWORK_FORMATS } from "../clip-formats.js?v=5";
 import { iconFor } from "../file-kinds.js?v=20";
 import { DEFAULT_PRESET, buildCaptions, videoForClip } from "../clip-captions.js?v=5";
 

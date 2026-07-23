@@ -13,9 +13,11 @@
 import { html, raw, escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 import { showToast } from "./toast.js?v=20";
-import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../posts-store.js?v=35";
-import { NETWORK_LABEL } from "../social-profiles.js?v=25";
-import * as imageStudio from "../image-studio.js?v=10";
+import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../posts-store.js?v=36";
+import { getSessionById } from "../sessions-store.js?v=6";
+import { getContextById } from "../contexts-store.js?v=35";
+import { NETWORK_LABEL } from "../social-profiles.js?v=26";
+import * as imageStudio from "../image-studio.js?v=11";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -325,8 +327,9 @@ function formatChip(f, selected, dataAttr) {
 function refs(st) {
   const tiles = st.referenceImages
     .map(
-      (r) => `<div class="image-studio__ref">
-        <img src="${escapeHtml(r.url)}" alt="Reference image" />
+      (r) => `<div class="image-studio__ref${r.fromPlaybook ? " is-playbook" : ""}">
+        <img src="${escapeHtml(r.url)}" alt="${escapeHtml(r.label || "Reference image")}" />
+        ${r.fromPlaybook ? `<span class="image-studio__ref-badge" title="From your Playbook" aria-hidden="true"><i class="ap-icon-archie-official"></i></span>` : ""}
         <button type="button" class="image-studio__ref-remove" data-img-ref-remove="${escapeHtml(r.id)}" aria-label="Remove reference"><i class="ap-icon-close" aria-hidden="true"></i></button>
       </div>`,
     )
@@ -385,12 +388,23 @@ function composeGroups(st) {
           `<button type="button" class="ap-filter-chip" data-img-varcount="${n}" aria-pressed="${st.variationCount === n}">${n}</button>`,
       ).join("")}</div>
     </div>`;
+  // Reference images — prefilled from the session's Playbook brand set (if any),
+  // with a toggle to include/ignore them; the user can always add their own.
+  const hasPlaybookRefs = Array.isArray(st.playbookRefs) && st.playbookRefs.length > 0;
+  const brand = st.playbookName || "Playbook";
+  const playbookToggle = hasPlaybookRefs
+    ? `<div class="image-studio__pb-row">
+        <button type="button" class="ap-filter-chip image-studio__pb-chip" data-img-toggle-playbook-refs aria-pressed="${st.usePlaybookRefs}"><i class="ap-icon-archie-official" aria-hidden="true"></i>${escapeHtml(brand)} brand images</button>
+        <span class="image-studio__pb-hint">${st.usePlaybookRefs ? "From your Playbook — turn off to ignore." : "Add them back from your Playbook."}</span>
+      </div>`
+    : "";
   return `
     <div class="image-studio__group">
       <div class="image-studio__group-head">
         <p class="image-studio__group-label">Reference images</p>
         <span class="image-studio__count">${st.referenceImages.length}/${imageStudio.MAX_REFS}</span>
       </div>
+      ${playbookToggle}
       <div class="image-studio__refs">${refs(st)}</div>
     </div>
     <div class="image-studio__group">
@@ -835,6 +849,8 @@ function onClick(event) {
   if (outBtn) return void imageStudio.setOutputMode(KEY, outBtn.dataset.imgOutput);
   const slideBtn = event.target.closest("[data-img-slidecount]");
   if (slideBtn) return void imageStudio.setSlideCount(KEY, Number(slideBtn.dataset.imgSlidecount));
+  const pbToggle = event.target.closest("[data-img-toggle-playbook-refs]");
+  if (pbToggle) return void imageStudio.setUsePlaybookRefs(KEY, pbToggle.getAttribute("aria-pressed") !== "true");
   if (event.target.closest("[data-img-ref-add]")) return void openFilePicker("ref");
   const refRm = event.target.closest("[data-img-ref-remove]");
   if (refRm) return void imageStudio.removeReferenceImage(KEY, refRm.dataset.imgRefRemove);
@@ -959,12 +975,18 @@ export function open(postId, opts = {}) {
   // results view (add / remove / regenerate slides). Otherwise the generate flow.
   const editImageUrl = opts.editImageUrl || null;
   const carouselUrls = Array.isArray(opts.carouselUrls) && opts.carouselUrls.length > 1 ? opts.carouselUrls : null;
+  // Pull the session's Playbook brand reference images so generation stays
+  // on-brand — the user can add their own or toggle the Playbook set off.
+  const session = currentSessionId ? getSessionById(currentSessionId) : null;
+  const ctx = session?.contextId ? getContextById(session.contextId) : null;
   imageStudio.start(KEY, {
     postId: currentPostId,
     network: post?.network || null,
     formatId: post?.format || null,
     editImage: editImageUrl ? { url: editImageUrl } : null,
     carousel: carouselUrls ? { urls: carouselUrls } : null,
+    playbookRefs: ctx?.referenceImages || [],
+    playbookName: ctx?.brandName || ctx?.name || "",
   });
   if (unsub) unsub();
   unsub = imageStudio.subscribe(KEY, renderBody);

@@ -799,3 +799,55 @@
   margin-right: var(--ref-spacing-xxxs);
   font-size: 13px;
 }
+
+/* ── Reference images: Playbook brand set ───────────────────────────────── */
+.image-studio__pb-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.image-studio__pb-chip {
+  align-self: flex-start;
+}
+
+.image-studio__pb-chip > i {
+  margin-right: var(--ref-spacing-xxxs);
+  font-size: 13px;
+  color: var(--app-archie-mark);
+}
+
+/* When the toggle is on, keep the AI-mark glyph readable on the pressed fill. */
+.image-studio__pb-chip[aria-pressed="true"] > i {
+  color: inherit;
+}
+
+.image-studio__pb-hint {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+/* Playbook-sourced reference tiles get an AI-mark badge + a brand-blue ring. */
+.image-studio__ref.is-playbook {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.image-studio__ref-badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-subtle);
+  color: var(--app-archie-mark);
+}
+
+.image-studio__ref-badge > i {
+  font-size: 11px;
+}

@@ -1383,6 +1383,13 @@ export const contexts = [
       { name: "Background", hex: "#FFFFFF" },
       { name: "Text", hex: "#1A1F36" },
     ],
+    // Brand reference images (#11) — the visual references the Image Studio
+    // pulls in so generated imagery stays on-brand.
+    referenceImages: [
+      { id: "acme-ref-1", label: "Product UI", url: "https://picsum.photos/seed/acme-brand-ui/480/480" },
+      { id: "acme-ref-2", label: "Team candid", url: "https://picsum.photos/seed/acme-brand-team/480/480" },
+      { id: "acme-ref-3", label: "Brand board", url: "https://picsum.photos/seed/acme-brand-board/480/480" },
+    ],
     ctaLinks: [
       { label: "30-day free trial", url: "acme.example.com/trial", checked: true, suggested: false },
       { label: "Book a demo", url: "acme.example.com/demo", checked: true, suggested: false },

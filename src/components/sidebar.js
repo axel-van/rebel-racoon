@@ -4,7 +4,7 @@ import { open as openBugReportModal } from "./bug-report-modal.js?v=24";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=26";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { open as openSearchModal } from "./search-modal.js?v=7";
+import { open as openSearchModal } from "./search-modal.js?v=8";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=7";
 import {
@@ -14,16 +14,16 @@ import {
   deleteSession,
   togglePin as togglePinSession,
   subscribe as subscribeSessions,
-} from "../sessions-store.js?v=5";
+} from "../sessions-store.js?v=6";
 import { isFlagOn } from "../feature-flags.js?v=10";
 import { isNewUser } from "../user-mode.js?v=22";
-import { clearSession as clearLibrarySession } from "../library.js?v=47";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=34";
-import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=27";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=307";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=57";
-import { clearSession as clearPostsSession } from "../posts-store.js?v=35";
-import { clearSession as clearSourcesSession } from "../sources-stream.js?v=50";
+import { clearSession as clearLibrarySession } from "../library.js?v=48";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=35";
+import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=28";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=308";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=58";
+import { clearSession as clearPostsSession } from "../posts-store.js?v=36";
+import { clearSession as clearSourcesSession } from "../sources-stream.js?v=51";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the
