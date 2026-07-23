@@ -680,15 +680,17 @@ button.image-studio__ref--pick:focus-visible {
   width: 260px;
 }
 
+/* The text-style popovers share one "titled panel" chrome: a header (title +
+   optional toggle) over a full-bleed hairline, then a padded body. Padding lives
+   on the head + body so the divider can bleed edge-to-edge. */
 .image-studio__popover--textcolor,
 .image-studio__popover--shadow,
 .image-studio__popover--font {
   left: 50%;
   transform: translateX(-50%);
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-sm);
+  padding: 0;
+  overflow: hidden; /* clip the full-bleed head divider + body to the radius */
   animation-name: image-studio-pop-center; /* keep centred while rising in */
 }
 
@@ -697,33 +699,22 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 .image-studio__popover--shadow {
-  width: 224px;
-  gap: var(--ref-spacing-xs);
+  width: 236px;
 }
 
 .image-studio__popover--font {
-  width: 212px;
-  gap: var(--ref-spacing-xs);
+  width: 220px;
 }
 
-/* Colour groups — the brand set gets a soft, borderless tinted panel (reads as
-   "your brand" without a heavy box); the rest sit plainly below. Both lay their
-   swatches out as a wide 5-per-row grid. */
+/* Colour groups — Brand and More sit as two eyebrow-labelled rows, separated by
+   whitespace (no boxes). The swatches carry the colour; the labels stay quiet. */
 .image-studio__color-group {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
-  /* Match the framed brand panel's inner inset so every label + swatch row in
-     the popover shares one left edge (the head + slider row match this too). */
-  padding-inline: 10px;
 }
 
-.image-studio__color-group--brand {
-  padding: 8px 10px 10px;
-  border-radius: var(--app-radius-starter);
-  background: var(--ref-color-grey-05);
-}
-
+/* Tier 2 — quiet uppercase eyebrow marking each swatch group. */
 .image-studio__color-label {
   margin: 0;
   font-size: 10.5px;
@@ -736,8 +727,8 @@ button.image-studio__ref--pick:focus-visible {
 
 .image-studio__popover--textcolor .image-studio__swatches {
   display: grid;
-  grid-template-columns: repeat(5, 24px); /* match the 24px swatch so cells don't clip */
-  gap: var(--ref-spacing-xs);
+  grid-template-columns: repeat(4, 28px); /* match the 28px swatch so cells don't clip */
+  gap: var(--ref-spacing-sm);
 }
 
 .image-studio__popover-label {
@@ -750,13 +741,33 @@ button.image-studio__ref--pick:focus-visible {
   color: var(--ref-color-grey-60);
 }
 
+/* Titled-panel header — the title anchors the popover; the optional DS toggle
+   sits opposite. A full-bleed hairline separates it from the body. */
 .image-studio__popover-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--ref-spacing-sm);
-  margin-bottom: var(--ref-spacing-xs);
-  padding-inline: 10px; /* align the head label + toggle with the swatch rows below */
+  min-height: 40px;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border-bottom: 1px solid var(--app-border-soft);
+}
+
+/* Tier 1 — the popover title: dark, sentence-case, the clear anchor (was the
+   same tiny grey eyebrow as the group labels, which read as "one tone"). */
+.image-studio__popover-title {
+  margin: 0;
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.image-studio__popover-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm);
 }
 
 /* Mini toolbar attached to a selected TEXT element (upright pill above it). */
@@ -890,7 +901,6 @@ button.image-studio__ref--pick:focus-visible {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-sm);
-  padding-inline: 10px; /* align with the shadow popover's head label */
 }
 
 .image-studio__slider-row .ap-slider {
@@ -927,7 +937,7 @@ button.image-studio__ref--pick:focus-visible {
   align-items: center;
   gap: var(--ref-spacing-xs);
   width: 100%;
-  padding: 5px 8px;
+  padding: 7px 10px;
   border: none;
   background: none;
   border-radius: var(--app-radius-md);
@@ -951,6 +961,7 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 .image-studio__font-row.is-selected {
+  background: var(--ref-color-electric-blue-10);
   color: var(--ref-color-electric-blue-100);
 }
 
@@ -1506,8 +1517,8 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 .image-studio__swatch {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   border: none;
   border-radius: var(--app-radius-circle);

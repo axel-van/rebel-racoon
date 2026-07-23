@@ -118,7 +118,7 @@ function swatchGrid({ st, selected, applyAttr, pickAttr, pickLabel }) {
   const others = dedupe([...imageStudio.TEXT_COLORS, ...(st.customTextColors || [])]);
   const addSwatch = `<label class="image-studio__swatch image-studio__swatch--add" title="${pickLabel}"><input type="color" ${pickAttr} aria-label="${pickLabel}" /><i class="ap-icon-plus" aria-hidden="true"></i></label>`;
   const brandGroup = brand.length
-    ? `<div class="image-studio__color-group image-studio__color-group--brand">
+    ? `<div class="image-studio__color-group">
         <p class="image-studio__color-label">Brand</p>
         <span class="image-studio__swatches">${brand.map(swatch).join("")}</span>
       </div>`
@@ -131,15 +131,16 @@ function swatchGrid({ st, selected, applyAttr, pickAttr, pickLabel }) {
 }
 
 function textColorPopover(o, st) {
-  return `<div class="image-studio__popover image-studio__popover--textcolor" data-img-popover role="menu" aria-label="Text colour">${swatchGrid(
-    {
+  return `<div class="image-studio__popover image-studio__popover--textcolor" data-img-popover role="menu" aria-label="Text colour">
+    <div class="image-studio__popover-head"><p class="image-studio__popover-title">Colour</p></div>
+    <div class="image-studio__popover-body">${swatchGrid({
       st,
       selected: o.color,
       applyAttr: "data-img-text-color",
       pickAttr: "data-img-text-colorpick",
       pickLabel: "Add text colour",
-    },
-  )}</div>`;
+    })}</div>
+  </div>`;
 }
 
 // A small on/off switch (DS toggle) for an effect popover's header.
@@ -153,10 +154,10 @@ function textOutlinePopover(o, st) {
   const on = !!o.outline;
   return `<div class="image-studio__popover image-studio__popover--textcolor image-studio__popover--outline${on ? "" : " is-off"}" data-img-popover role="menu" aria-label="Outline">
     <div class="image-studio__popover-head">
-      <p class="image-studio__color-label">Outline</p>
+      <p class="image-studio__popover-title">Outline</p>
       ${fxToggle("data-img-outline-toggle", on, "Toggle outline")}
     </div>
-    ${swatchGrid({ st, selected: o.outlineColor, applyAttr: "data-img-outline-color", pickAttr: "data-img-outline-colorpick", pickLabel: "Add outline colour" })}
+    <div class="image-studio__popover-body">${swatchGrid({ st, selected: o.outlineColor, applyAttr: "data-img-outline-color", pickAttr: "data-img-outline-colorpick", pickLabel: "Add outline colour" })}</div>
   </div>`;
 }
 
@@ -167,12 +168,14 @@ function textShadowPopover(o) {
   const val = o.shadowIntensity ?? 55;
   return `<div class="image-studio__popover image-studio__popover--shadow${on ? "" : " is-off"}" data-img-popover role="menu" aria-label="Shadow">
     <div class="image-studio__popover-head">
-      <p class="image-studio__color-label">Shadow</p>
+      <p class="image-studio__popover-title">Shadow</p>
       ${fxToggle("data-img-shadow-toggle", on, "Toggle shadow")}
     </div>
-    <div class="image-studio__slider-row">
-      <input type="range" class="ap-slider" min="0" max="100" step="1" value="${val}" data-img-shadow-intensity aria-label="Shadow intensity" style="--fill:${val}%" ${on ? "" : "disabled"} />
-      <span class="image-studio__slider-val" data-img-shadow-val>${val}</span>
+    <div class="image-studio__popover-body">
+      <div class="image-studio__slider-row">
+        <input type="range" class="ap-slider" min="0" max="100" step="1" value="${val}" data-img-shadow-intensity aria-label="Shadow intensity" style="--fill:${val}%" ${on ? "" : "disabled"} />
+        <span class="image-studio__slider-val" data-img-shadow-val>${val}</span>
+      </div>
     </div>
   </div>`;
 }
@@ -192,12 +195,15 @@ function textFontPopover(o, st) {
   const builtins = imageStudio.FONT_OPTIONS.map((f) => row(f.family, f.label)).join("");
   const custom = (st.customFonts || []).map((f) => row(f.family, f.label)).join("");
   return `<div class="image-studio__popover image-studio__popover--font" data-img-popover role="menu" aria-label="Font">
-    <div class="image-studio__font-list">${builtins}${custom}</div>
-    <div class="image-studio__font-div" aria-hidden="true"></div>
-    <button type="button" class="image-studio__font-row image-studio__font-row--upload" data-img-font-upload>
-      <i class="ap-icon-upload image-studio__font-upload-icon" aria-hidden="true"></i>
-      <span class="image-studio__font-name">Import my font…</span>
-    </button>
+    <div class="image-studio__popover-head"><p class="image-studio__popover-title">Font</p></div>
+    <div class="image-studio__popover-body">
+      <div class="image-studio__font-list">${builtins}${custom}</div>
+      <div class="image-studio__font-div" aria-hidden="true"></div>
+      <button type="button" class="image-studio__font-row image-studio__font-row--upload" data-img-font-upload>
+        <i class="ap-icon-upload image-studio__font-upload-icon" aria-hidden="true"></i>
+        <span class="image-studio__font-name">Import my font…</span>
+      </button>
+    </div>
   </div>`;
 }
 
