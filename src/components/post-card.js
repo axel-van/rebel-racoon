@@ -163,10 +163,29 @@ export function renderPostCard(post, opts = {}) {
     ? `<span class="ap-status grey no-dot posts__card-subtitle-pill">Subtitles · ${subtitleLabel}</span>`
     : "";
 
+  const isCarousel = Array.isArray(post.carousel) && post.carousel.length > 1;
   const mediaBlock = post.clipRef
     ? `${renderClipPlayer(post)}${subtitleBadge}`
-    : post.imageUrl
-      ? `<div class="posts__card-image-wrap">
+    : isCarousel
+      ? `<div class="posts__card-image-wrap posts__card-image-wrap--carousel">
+          <img class="posts__card-image" src="${post.carousel[0]}" alt="Carousel slide 1 for this post" loading="lazy" />
+          <span class="posts__card-carousel-badge"><i class="ap-icon-multiple-images" aria-hidden="true"></i>${post.carousel.length}</span>
+          <div class="posts__card-carousel-dots" aria-hidden="true">${post.carousel
+            .map((_, i) => `<span class="posts__card-carousel-dot${i === 0 ? " is-active" : ""}"></span>`)
+            .join("")}</div>
+          <div class="posts__card-image-controls">
+            <button type="button" class="ap-button ghost grey" data-post-image-edit="${post.id}">
+              <i class="ap-icon-archie-official"></i>
+              <span>Edit slides</span>
+            </button>
+            <button type="button" class="ap-button ghost red" data-post-image-remove="${post.id}">
+              <i class="ap-icon-trash"></i>
+              <span>Remove</span>
+            </button>
+          </div>
+        </div>`
+      : post.imageUrl
+        ? `<div class="posts__card-image-wrap">
           <img class="posts__card-image" src="${post.imageUrl}" alt="Image for this post" loading="lazy" />
           <div class="posts__card-image-controls">
             <button type="button" class="ap-button ghost grey" data-post-image-edit="${post.id}">
@@ -183,7 +202,7 @@ export function renderPostCard(post, opts = {}) {
             </button>
           </div>
         </div>`
-      : `<div class="posts__card-image-actions">
+        : `<div class="posts__card-image-actions">
           <button type="button" class="ap-button mermaid" data-post-image="${post.id}">
             <i class="ap-icon-archie-official"></i>
             <span>Generate an image</span>

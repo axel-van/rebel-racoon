@@ -128,13 +128,28 @@ export function updatePostClip(sessionId, postId, { start, end, format, subtitle
   notify(sessionId);
 }
 
-// Update a post's image (called from the generate-image modal callback).
+// Update a post's image (called from the generate-image modal callback). A
+// single image clears any carousel — the two are mutually exclusive.
 export function attachImageToDraft(sessionId, postId, imageUrl) {
   const posts = getPosts(sessionId);
   const post = posts.find((p) => p.id === postId);
   if (post) {
     post.hasImage = true;
     post.imageUrl = imageUrl;
+    post.carousel = null;
+    notify(sessionId);
+  }
+}
+
+// Attach a multi-slide carousel (generate mode, carousel output). Slide 0 doubles
+// as the poster `imageUrl` so single-image render/attach paths keep working.
+export function attachCarouselToDraft(sessionId, postId, urls) {
+  const posts = getPosts(sessionId);
+  const post = posts.find((p) => p.id === postId);
+  if (post && urls && urls.length) {
+    post.hasImage = true;
+    post.imageUrl = urls[0];
+    post.carousel = [...urls];
     notify(sessionId);
   }
 }

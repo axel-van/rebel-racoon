@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=191";
+import { renderTopbar } from "../components/topbar.js?v=192";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=55";
 import {
   getConnectedProfiles,
@@ -46,10 +46,10 @@ import {
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
 } from "../composer-mentions.js?v=21";
-import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=34";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=50";
+import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=35";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=51";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=37";
-import * as topPostsFlow from "../top-posts-flow.js?v=72";
+import * as topPostsFlow from "../top-posts-flow.js?v=73";
 import {
   renderTopPostsBoard,
   renderTopPostEcho,
@@ -71,7 +71,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=10";
-import * as contextBuilder from "../context-builder.js?v=161";
+import * as contextBuilder from "../context-builder.js?v=162";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -83,7 +83,7 @@ import {
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=25";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=50";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=54";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=55";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=60";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=10";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
@@ -111,12 +111,12 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=305";
+} from "../components/right-panel.js?v=306";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=15";
 import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=23";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=33";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=34";
 // Pure thread-turn renderers — shared with the component handoff gallery so
 // the previews there never drift from the app (handoff/components.html).
 import {

@@ -317,6 +317,50 @@
   opacity: 1;
 }
 
+/* Carousel draft — poster slide + a count badge (top-left) + slide dots. */
+.posts__card-carousel-badge {
+  position: absolute;
+  top: var(--ref-spacing-xs);
+  left: var(--ref-spacing-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  padding: 2px var(--ref-spacing-xs);
+  border-radius: var(--app-radius-pill);
+  background: rgba(10, 27, 51, 0.72);
+  color: var(--ref-color-white);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+}
+
+.posts__card-carousel-badge > i {
+  font-size: 13px;
+}
+
+.posts__card-carousel-dots {
+  position: absolute;
+  bottom: var(--ref-spacing-xs);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.posts__card-carousel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--app-radius-circle);
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 2px rgba(10, 27, 51, 0.5);
+}
+
+.posts__card-carousel-dot.is-active {
+  width: 7px;
+  height: 7px;
+  background: var(--ref-color-white);
+}
+
 /* ── Video clip player (drafts from Video Clips modal) ──────────────
  * Renders in place of the image / placeholder when post.clipRef exists.
  * The frame itself is a gradient from clip.hue (set inline) — these

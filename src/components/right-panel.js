@@ -13,15 +13,15 @@ import {
   updatePostContent,
   attachImageToDraft,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=34";
-import { renderPostCard } from "./post-card.js?v=66";
+} from "../posts-store.js?v=35";
+import { renderPostCard } from "./post-card.js?v=67";
 import { renderTopPostEcho } from "./top-post-card.js?v=65";
 import { renderClipCard } from "./clip-card.js?v=13";
 import { onFeedbackClick } from "./feedback-control.js?v=1";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=50";
-import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=162";
+import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=163";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -43,7 +43,7 @@ import { iconFor } from "../file-kinds.js?v=20";
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
 import { open as openScheduleModal } from "./schedule-modal.js?v=53";
-import { open as openImageStudioModal } from "./image-studio-modal.js?v=12";
+import { open as openImageStudioModal } from "./image-studio-modal.js?v=13";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
@@ -663,7 +663,7 @@ export function init() {
           updateSourceClips(srcId, nextClips);
           const edited = (nextClips || []).find((c) => c.id === ref.clipId);
           if (!edited) return;
-          import("../posts-store.js?v=34").then(({ updatePostClip }) => {
+          import("../posts-store.js?v=35").then(({ updatePostClip }) => {
             updatePostClip(sid, pid, {
               start: edited.start,
               end: edited.end,
@@ -735,7 +735,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=414").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=415").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -918,7 +918,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=414").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=415").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -936,7 +936,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=414").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=415").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -1787,7 +1787,7 @@ function onPostRewrite(postId, intent = "fresh") {
   // streaming → commit. Loaded lazily so the rewrite code is only
   // pulled in when the user actually triggers a regen. `intent` biases
   // the rewrite (shorter / longer / warmer / formal / fresh).
-  import("../draft-rewrite.js?v=7").then(({ startRewrite }) => {
+  import("../draft-rewrite.js?v=8").then(({ startRewrite }) => {
     startRewrite(sid, postId, intent);
   });
 }
@@ -2049,8 +2049,14 @@ function onPostImageEdit(postId) {
   const sid = activeSessionId();
   if (!sid) return;
   const post = getPosts(sid).find((p) => p.id === postId);
-  if (!post || !post.imageUrl) return;
-  openImageStudioModal(postId, { sessionId: sid, editImageUrl: post.imageUrl });
+  if (!post) return;
+  // A carousel reopens in the studio's carousel results (add / remove /
+  // regenerate slides); a single image opens straight into Edit mode.
+  if (Array.isArray(post.carousel) && post.carousel.length > 1) {
+    openImageStudioModal(postId, { sessionId: sid, carouselUrls: post.carousel });
+  } else if (post.imageUrl) {
+    openImageStudioModal(postId, { sessionId: sid, editImageUrl: post.imageUrl });
+  }
 }
 
 // Upload / change a draft image without the AI studio — spin up a throwaway
@@ -2796,7 +2802,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=414").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=415").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

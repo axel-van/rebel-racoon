@@ -13,9 +13,9 @@
 import { html, raw, escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 import { showToast } from "./toast.js?v=20";
-import { getPosts, attachImageToDraft } from "../posts-store.js?v=34";
+import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../posts-store.js?v=35";
 import { NETWORK_LABEL } from "../social-profiles.js?v=25";
-import * as imageStudio from "../image-studio.js?v=8";
+import * as imageStudio from "../image-studio.js?v=9";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -69,9 +69,13 @@ function renderStudio(st) {
 }
 
 function topBar(st) {
-  const canEdit = !!st.currentImage;
+  // Per-slide retouch isn't part of the carousel v1 — the Edit tab stays for the
+  // single-image flow only.
+  const canEdit = !!st.currentImage && st.outputMode !== "carousel";
   const editState = (st.mode === "edit" ? " active" : "") + (canEdit ? "" : " disabled");
-  const editAttrs = canEdit ? "" : 'disabled title="Generate an image first"';
+  const editAttrs = canEdit
+    ? ""
+    : `disabled title="${st.outputMode === "carousel" ? "Editing slides isn't available for carousels yet" : "Generate an image first"}"`;
   // DS Tabs (.ap-tabs) as the two peer modes — a full-width tab bar under the
   // title, used natively (no custom styling).
   return `<div class="image-studio__top">
@@ -141,15 +145,30 @@ function generatingCanvas(st) {
   </div>`;
 }
 
-// One large preview of the selected variation + a bottom filmstrip (chutier) to
-// switch between variations. The filmstrip is hidden when there's only one.
+// One large preview of the focused image + a bottom filmstrip (chutier). In
+// single mode the filmstrip is a pick-one (check on the chosen variation); in
+// carousel mode every tile is a kept slide (numbered, removable) and clicking a
+// tile only focuses it for preview.
 function resultsCanvas(st) {
   const ratio = imageStudio.activeRatio(KEY);
+  const carousel = st.outputMode === "carousel";
   const sel = st.selectedIndex == null ? 0 : st.selectedIndex;
   const current = st.variations[sel] || st.variations[0];
+  const cap = carousel ? imageStudio.carouselMaxFor(st.network) || 8 : 8;
+  const canRemove = carousel && st.variations.length > 2;
   const thumbs = st.variations
     .map((v, i) => {
       const on = i === sel;
+      // Carousel tiles are <div>s (not <button>s) so the per-slide remove
+      // <button> can nest validly; single-mode tiles stay pick-one <button>s.
+      if (carousel) {
+        const label = `Slide ${i + 1}`;
+        return `<div class="image-studio__thumb${on ? " is-selected" : ""}" role="button" tabindex="0" aria-pressed="${on}" data-img-variation="${i}" title="${label}">
+          <img src="${escapeHtml(v.url)}" alt="${label}" />
+          <span class="image-studio__thumb-num" aria-hidden="true">${i + 1}</span>
+          ${canRemove ? `<button type="button" class="image-studio__thumb-remove" data-img-remove-variation="${i}" aria-label="Remove ${label}"><i class="ap-icon-close" aria-hidden="true"></i></button>` : ""}
+        </div>`;
+      }
       return `<button type="button" class="image-studio__thumb${on ? " is-selected" : ""}" role="tab" aria-selected="${on}" data-img-variation="${i}" title="Variation ${i + 1}">
         <img src="${escapeHtml(v.url)}" alt="Variation ${i + 1}" />
         ${on ? `<span class="image-studio__thumb-check" aria-hidden="true"><i class="ap-icon-check"></i></span>` : ""}
@@ -157,18 +176,22 @@ function resultsCanvas(st) {
     })
     .join("");
   const addTile =
-    st.variations.length < 8
-      ? `<button type="button" class="image-studio__thumb image-studio__thumb--add" data-img-add-variation title="Generate another" ${st.addingVariation ? "disabled" : ""}>${
+    st.variations.length < cap
+      ? `<button type="button" class="image-studio__thumb image-studio__thumb--add" data-img-add-variation title="${carousel ? "Add a slide" : "Generate another"}" ${st.addingVariation ? "disabled" : ""}>${
           st.addingVariation
             ? `<span class="gen-image-spinner"></span>`
             : `<i class="ap-icon-plus" aria-hidden="true"></i>`
         }</button>`
       : "";
-  const strip = `<div class="image-studio__filmstrip" role="tablist" aria-label="Variations">${thumbs}${addTile}</div>`;
+  const stripLabel = carousel
+    ? `<p class="image-studio__filmstrip-label"><i class="ap-icon-multiple-images" aria-hidden="true"></i>Carousel · ${st.variations.length} slides — all slides are kept</p>`
+    : "";
+  const strip = `<div class="image-studio__filmstrip-wrap">${stripLabel}<div class="image-studio__filmstrip" role="tablist" aria-label="${carousel ? "Slides" : "Variations"}">${thumbs}${addTile}</div></div>`;
   return `<div class="image-studio__preview-stage">
     <div class="image-studio__preview-main">
       <div class="image-studio__frame" style="--imgs-ratio:${ratio}">
-        <img class="image-studio__frame-img" src="${current ? escapeHtml(current.url) : ""}" alt="Selected variation" />
+        <img class="image-studio__frame-img" src="${current ? escapeHtml(current.url) : ""}" alt="${carousel ? `Slide ${sel + 1}` : "Selected variation"}" />
+        ${carousel ? `<span class="image-studio__slide-pos" aria-hidden="true">${sel + 1} / ${st.variations.length}</span>` : ""}
       </div>
     </div>
     ${strip}
@@ -236,10 +259,13 @@ function footer(st) {
     </div>`;
   }
   if (st.genPhase === "results") {
+    const carousel = st.outputMode === "carousel";
+    const useLabel = carousel ? `Use carousel · ${st.variations.length} slides` : "Use this image";
+    const useReady = carousel ? st.variations.length >= 2 : !!st.currentImage;
     return `<div class="image-studio__bar">
       <div class="image-studio__bar-spacer"></div>
       <button type="button" class="ap-button stroked grey" data-img-regenerate><i class="ap-icon-refresh"></i><span>Regenerate</span></button>
-      <button type="button" class="ap-button primary orange" data-img-use ${st.currentImage ? "" : "disabled"}><i class="ap-icon-check"></i><span>Use this image</span></button>
+      <button type="button" class="ap-button primary orange" data-img-use ${useReady ? "" : "disabled"}><i class="ap-icon-check"></i><span>${useLabel}</span></button>
     </div>`;
   }
   const promptValid = st.promptText.trim().length > 0;
@@ -310,10 +336,47 @@ function composeGroups(st) {
     .formatChoices(KEY)
     .map((f) => formatChip(f, st.formatId === f.id, "data-img-format"))
     .join("");
-  const varChips = imageStudio.VARIATION_CHOICES.map(
-    (n) =>
-      `<button type="button" class="ap-filter-chip" data-img-varcount="${n}" aria-pressed="${st.variationCount === n}">${n}</button>`,
-  ).join("");
+  // Output type (single image vs carousel) — only when the draft's network
+  // supports carousels (LinkedIn / Instagram). The count group below adapts:
+  // "Variations" (pick one) for single, "Slides" (all kept) for carousel.
+  const carousel = imageStudio.supportsCarousel(st.network);
+  const isCarousel = carousel && st.outputMode === "carousel";
+  const outputGroup = carousel
+    ? `<div class="image-studio__group">
+      <div class="image-studio__group-head">
+        <p class="image-studio__group-label">Output</p>
+        <span class="image-studio__count">${NETWORK_LABEL[st.network] || st.network} supports carousels</span>
+      </div>
+      <div class="image-studio__chips">
+        <button type="button" class="ap-filter-chip" data-img-output="single" aria-pressed="${!isCarousel}"><i class="ap-icon-image" aria-hidden="true"></i>Single image</button>
+        <button type="button" class="ap-filter-chip" data-img-output="carousel" aria-pressed="${isCarousel}"><i class="ap-icon-multiple-images" aria-hidden="true"></i>Carousel</button>
+      </div>
+    </div>`
+    : "";
+  const countGroup = isCarousel
+    ? `<div class="image-studio__group">
+      <div class="image-studio__group-head">
+        <p class="image-studio__group-label">Slides</p>
+        <span class="image-studio__count">up to ${imageStudio.carouselMaxFor(st.network)}</span>
+      </div>
+      <div class="image-studio__chips">${imageStudio.SLIDE_CHOICES.filter(
+        (n) => n <= imageStudio.carouselMaxFor(st.network),
+      )
+        .map(
+          (n) =>
+            `<button type="button" class="ap-filter-chip" data-img-slidecount="${n}" aria-pressed="${st.slideCount === n}">${n}</button>`,
+        )
+        .join("")}</div>
+    </div>`
+    : `<div class="image-studio__group">
+      <div class="image-studio__group-head">
+        <p class="image-studio__group-label">Variations</p>
+      </div>
+      <div class="image-studio__chips">${imageStudio.VARIATION_CHOICES.map(
+        (n) =>
+          `<button type="button" class="ap-filter-chip" data-img-varcount="${n}" aria-pressed="${st.variationCount === n}">${n}</button>`,
+      ).join("")}</div>
+    </div>`;
   return `
     <div class="image-studio__group">
       <div class="image-studio__group-head">
@@ -343,12 +406,8 @@ function composeGroups(st) {
       </div>
       <div class="gen-format-chips">${fmtChips}</div>
     </div>
-    <div class="image-studio__group">
-      <div class="image-studio__group-head">
-        <p class="image-studio__group-label">Variations</p>
-      </div>
-      <div class="image-studio__chips">${varChips}</div>
-    </div>
+    ${outputGroup}
+    ${countGroup}
   `;
 }
 
@@ -507,6 +566,17 @@ const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 // Commit the working image to the origin draft, then close.
 function useImage() {
   const st = state();
+  // Carousel: attach every slide as a multi-slide post (no overlays / edit in
+  // this v1). Single image: the working image (with any overlays flattened).
+  if (st?.outputMode === "carousel") {
+    const urls = imageStudio.commitCarousel(KEY);
+    if (urls.length && currentSessionId && currentPostId) {
+      attachCarouselToDraft(currentSessionId, currentPostId, urls);
+      showToast(`Carousel added to your draft · ${urls.length} slides`);
+    }
+    close();
+    return;
+  }
   const finalize = (url) => {
     if (url && currentSessionId && currentPostId) {
       attachImageToDraft(currentSessionId, currentPostId, url);
@@ -735,6 +805,10 @@ function onClick(event) {
   if (fmtBtn) return void imageStudio.setFormat(KEY, fmtBtn.dataset.imgFormat);
   const varBtn = event.target.closest("[data-img-varcount]");
   if (varBtn) return void imageStudio.setVariationCount(KEY, Number(varBtn.dataset.imgVarcount));
+  const outBtn = event.target.closest("[data-img-output]");
+  if (outBtn) return void imageStudio.setOutputMode(KEY, outBtn.dataset.imgOutput);
+  const slideBtn = event.target.closest("[data-img-slidecount]");
+  if (slideBtn) return void imageStudio.setSlideCount(KEY, Number(slideBtn.dataset.imgSlidecount));
   if (event.target.closest("[data-img-ref-add]")) return void openFilePicker("ref");
   const refRm = event.target.closest("[data-img-ref-remove]");
   if (refRm) return void imageStudio.removeReferenceImage(KEY, refRm.dataset.imgRefRemove);
@@ -749,6 +823,9 @@ function onClick(event) {
     return;
   }
   if (event.target.closest("[data-img-add-variation]")) return void imageStudio.addVariation(KEY);
+  // Remove a slide — checked before the tile-select since it's nested in the tile.
+  const varRm = event.target.closest("[data-img-remove-variation]");
+  if (varRm) return void imageStudio.removeVariation(KEY, Number(varRm.dataset.imgRemoveVariation));
   const varPick = event.target.closest("[data-img-variation]");
   if (varPick) return void imageStudio.selectVariation(KEY, Number(varPick.dataset.imgVariation));
   const toolBtn = event.target.closest("[data-img-tool]");
@@ -851,13 +928,16 @@ export function open(postId, opts = {}) {
   // image will publish (a LinkedIn draft defaults to LinkedIn's ratio).
   const post = currentSessionId ? getPosts(currentSessionId).find((p) => p.id === currentPostId) : null;
   // editImageUrl (post card hover → "Edit") opens straight into Edit mode on the
-  // draft's existing image instead of the generate flow.
+  // draft's existing image; carouselUrls reopens an existing carousel in the
+  // results view (add / remove / regenerate slides). Otherwise the generate flow.
   const editImageUrl = opts.editImageUrl || null;
+  const carouselUrls = Array.isArray(opts.carouselUrls) && opts.carouselUrls.length > 1 ? opts.carouselUrls : null;
   imageStudio.start(KEY, {
     postId: currentPostId,
     network: post?.network || null,
     formatId: post?.format || null,
     editImage: editImageUrl ? { url: editImageUrl } : null,
+    carousel: carouselUrls ? { urls: carouselUrls } : null,
   });
   if (unsub) unsub();
   unsub = imageStudio.subscribe(KEY, renderBody);
@@ -875,7 +955,7 @@ export function open(postId, opts = {}) {
     loadImg(editImageUrl)
       .then((img) => imageStudio.setEditImageDims(KEY, img.naturalWidth, img.naturalHeight))
       .catch(() => {});
-  } else if (currentPostId) {
+  } else if (currentPostId && !carouselUrls) {
     imageStudio.runDerive(KEY);
   }
 }

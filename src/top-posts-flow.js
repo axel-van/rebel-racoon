@@ -33,7 +33,7 @@ import {
   postUserProfilesTurn,
 } from "./assistant.js?v=57";
 import { getTopPosts, getTopPost } from "./top-posts-store.js?v=9";
-import { addPostDraft } from "./posts-store.js?v=34";
+import { addPostDraft } from "./posts-store.js?v=35";
 import { addReadySource } from "./sources-stream.js?v=50";
 import {
   getConnectedProfiles,

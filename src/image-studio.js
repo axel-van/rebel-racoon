@@ -34,6 +34,18 @@ const DERIVE_MS = 3200; // "suggest a prompt from this post"
 export const MAX_REFS = 6;
 export const VARIATION_CHOICES = [1, 2, 3, 4];
 
+// Carousels — only some networks support a multi-slide post. Map is network →
+// max slides. LinkedIn (document/carousel) and Instagram are the ones we offer.
+export const CAROUSEL_MAX = { linkedin: 20, instagram: 10 };
+export const SLIDE_CHOICES = [3, 4, 5, 6, 8, 10];
+export function carouselMaxFor(network) {
+  const net = network === "twitter" ? "x" : network || null;
+  return CAROUSEL_MAX[net] || 0;
+}
+export function supportsCarousel(network) {
+  return carouselMaxFor(network) > 0;
+}
+
 // Visual-style exemplars + moods — ported from the old generate-image modal
 // (they lived nowhere else). Single-select with toggle-off, both optional.
 export const STYLE_OPTIONS = [
@@ -142,7 +154,7 @@ export function activeRatio(sessionId) {
 }
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────
-export function start(key, { postId = null, network = null, formatId = null, editImage = null } = {}) {
+export function start(key, { postId = null, network = null, formatId = null, editImage = null, carousel = null } = {}) {
   // posts-store stores X as "twitter"; the format catalogue keys on "x".
   const net = network === "twitter" ? "x" : network || null;
   const resolvedFormat = formatId || (net ? defaultFormatFor(net) : "1:1");
@@ -152,17 +164,32 @@ export function start(key, { postId = null, network = null, formatId = null, edi
   // setEditImageDims), otherwise the format's dims.
   let currentImage = null;
   let mode = "generate";
+  let genPhase = "idle"; // "idle" | "generating" | "results" (generate-mode canvas)
+  let outputMode = "single"; // "single" | "carousel" (multi-slide post)
+  let variations = []; // [{ seed, url, w, h }]
+  let selectedIndex = null;
+  let slideCount = supportsCarousel(net) ? 4 : 0;
   if (editImage && editImage.url) {
     const [w, h] = editImage.w && editImage.h ? [editImage.w, editImage.h] : dimsFor(resolvedFormat);
     currentImage = { url: editImage.url, w, h, seed: `${postId || "img"}-edit` };
     mode = "edit";
+  } else if (carousel && carousel.urls && carousel.urls.length) {
+    // Reopen an existing carousel to add / remove / regenerate slides.
+    const [w, h] = dimsFor(resolvedFormat);
+    outputMode = "carousel";
+    genPhase = "results";
+    slideCount = carousel.urls.length;
+    variations = carousel.urls.map((url, i) => ({ seed: `${postId || "img"}-slide-${i}`, url, w, h }));
+    selectedIndex = 0;
+    currentImage = { url: variations[0].url, w, h, seed: variations[0].seed };
   }
   states.set(key, {
     // Two peer modes toggled via the top segmented control. "edit" is only
     // reachable once an image exists (currentImage set after generation or
     // seeded here when editing an existing draft image).
     mode, // "generate" | "edit"
-    genPhase: "idle", // "idle" | "generating" | "results" (generate-mode canvas)
+    genPhase,
+    outputMode, // single image vs multi-slide carousel (generate mode)
     postId,
     network: net,
     formatId: resolvedFormat,
@@ -172,10 +199,11 @@ export function start(key, { postId = null, network = null, formatId = null, edi
     moodKey: null,
     customStyleUrl: null, // object URL of an uploaded "Your style" reference
     referenceImages: [], // [{ id, url }] (max MAX_REFS)
-    variationCount: 2,
-    variations: [], // [{ seed, url, w, h }]
+    variationCount: 2, // single-image mode: how many alternatives to pick from
+    slideCount, // carousel mode: how many slides to generate
+    variations, // [{ seed, url, w, h }] — alternatives (single) or slides (carousel)
     addingVariation: false, // a "+" generate-another is in flight
-    selectedIndex: null,
+    selectedIndex,
     currentImage, // { url, w, h, seed, noBg? } — the working image in edit
     activeTool: null, // one of EDIT_TOOLS keys
     editBusy: false,
@@ -282,6 +310,24 @@ export function setVariationCount(sessionId, n) {
   notify(sessionId);
 }
 
+// Single image vs multi-slide carousel (generate mode). Only meaningful when the
+// draft network supports carousels — the modal gates the control on that.
+export function setOutputMode(sessionId, mode) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  s.outputMode = mode === "carousel" ? "carousel" : "single";
+  if (s.outputMode === "carousel" && s.slideCount < 2) s.slideCount = 4;
+  notify(sessionId);
+}
+
+export function setSlideCount(sessionId, n) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  const max = carouselMaxFor(s.network) || 10;
+  s.slideCount = Math.max(2, Math.min(max, n));
+  notify(sessionId);
+}
+
 let refSeq = 0;
 export function addReferenceImage(sessionId, url) {
   const s = states.get(sessionId);
@@ -357,7 +403,8 @@ export function runGeneration(sessionId) {
     const cur = states.get(sessionId);
     if (!cur || cur.genPhase !== "generating") return;
     const dims = dimsFor(cur.formatId);
-    cur.variations = Array.from({ length: cur.variationCount }, (_, i) => {
+    const count = cur.outputMode === "carousel" ? cur.slideCount : cur.variationCount;
+    cur.variations = Array.from({ length: count }, (_, i) => {
       const seed = seedFor(cur, `${runId}-${i}`);
       return { seed, url: picsum(seed, dims), w: dims[0], h: dims[1] };
     });
@@ -390,11 +437,14 @@ export function selectVariation(sessionId, index) {
   notify(sessionId);
 }
 
-// Generate one more variation from the "+" tile and append it to the filmstrip.
+// Generate one more variation / slide from the "+" tile and append it.
 const MAX_VARIATIONS = 8;
+function addCap(s) {
+  return s.outputMode === "carousel" ? carouselMaxFor(s.network) || MAX_VARIATIONS : MAX_VARIATIONS;
+}
 export function addVariation(sessionId) {
   const s = states.get(sessionId);
-  if (!s || s.genPhase !== "results" || s.addingVariation || s.variations.length >= MAX_VARIATIONS) return;
+  if (!s || s.genPhase !== "results" || s.addingVariation || s.variations.length >= addCap(s)) return;
   s.addingVariation = true;
   notify(sessionId);
   const runId = Date.now().toString(36);
@@ -406,10 +456,23 @@ export function addVariation(sessionId) {
     const seed = seedFor(cur, `add-${runId}-${cur.variations.length}`);
     cur.variations.push({ seed, url: picsum(seed, dims), w: dims[0], h: dims[1] });
     cur.addingVariation = false;
-    adoptVariation(cur, cur.variations.length - 1); // select the fresh one
+    adoptVariation(cur, cur.variations.length - 1); // focus the fresh one
+    if (cur.outputMode === "carousel") cur.slideCount = cur.variations.length;
     cur._genTimer = null;
     notify(sessionId);
   }, GEN_MS);
+}
+
+// Remove a slide from a carousel (results). Kept ≥ 2 slides — a carousel needs
+// at least two. Single-image mode never shows the remove control.
+export function removeVariation(sessionId, index) {
+  const s = states.get(sessionId);
+  if (!s || s.variations.length <= 2) return;
+  s.variations.splice(index, 1);
+  s.slideCount = s.variations.length;
+  const sel = Math.min(s.selectedIndex ?? 0, s.variations.length - 1);
+  adoptVariation(s, sel);
+  notify(sessionId);
 }
 
 // ── Edit surface ────────────────────────────────────────────────────────────
@@ -562,4 +625,12 @@ export function commit(sessionId) {
   if (s.currentImage) return s.currentImage.url;
   if (s.selectedIndex != null) return s.variations[s.selectedIndex]?.url || null;
   return null;
+}
+
+// The ordered slide URLs to attach as a carousel (generate mode, carousel
+// output). All generated slides are kept — this is not a pick-one.
+export function commitCarousel(sessionId) {
+  const s = states.get(sessionId);
+  if (!s) return [];
+  return s.variations.map((v) => v.url);
 }
