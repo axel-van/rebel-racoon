@@ -15,7 +15,7 @@ import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordin
 import { showToast } from "./toast.js?v=20";
 import { getPosts, attachImageToDraft } from "../posts-store.js?v=34";
 import { NETWORK_LABEL } from "../social-profiles.js?v=25";
-import * as imageStudio from "../image-studio.js?v=7";
+import * as imageStudio from "../image-studio.js?v=8";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -850,10 +850,14 @@ export function open(postId, opts = {}) {
   // Resolve the draft's network so the format options + default match where the
   // image will publish (a LinkedIn draft defaults to LinkedIn's ratio).
   const post = currentSessionId ? getPosts(currentSessionId).find((p) => p.id === currentPostId) : null;
+  // editImageUrl (post card hover → "Edit") opens straight into Edit mode on the
+  // draft's existing image instead of the generate flow.
+  const editImageUrl = opts.editImageUrl || null;
   imageStudio.start(KEY, {
     postId: currentPostId,
     network: post?.network || null,
     formatId: post?.format || null,
+    editImage: editImageUrl ? { url: editImageUrl } : null,
   });
   if (unsub) unsub();
   unsub = imageStudio.subscribe(KEY, renderBody);
@@ -865,7 +869,15 @@ export function open(postId, opts = {}) {
   document.body.classList.add("has-modal");
 
   renderBody();
-  if (currentPostId) imageStudio.runDerive(KEY);
+  if (editImageUrl) {
+    // Refine the working-image dims from the real image so the frame ratio and
+    // the overlay bake match it (start() used a format-based guess).
+    loadImg(editImageUrl)
+      .then((img) => imageStudio.setEditImageDims(KEY, img.naturalWidth, img.naturalHeight))
+      .catch(() => {});
+  } else if (currentPostId) {
+    imageStudio.runDerive(KEY);
+  }
 }
 
 function close() {

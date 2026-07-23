@@ -142,17 +142,30 @@ export function activeRatio(sessionId) {
 }
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────
-export function start(key, { postId = null, network = null, formatId = null } = {}) {
+export function start(key, { postId = null, network = null, formatId = null, editImage = null } = {}) {
   // posts-store stores X as "twitter"; the format catalogue keys on "x".
   const net = network === "twitter" ? "x" : network || null;
+  const resolvedFormat = formatId || (net ? defaultFormatFor(net) : "1:1");
+  // Opening straight into Edit on the draft's existing image (post card hover →
+  // "Edit"): seed it as the working image so the Edit tab is unlocked + active.
+  // Dims come from the image when known (the caller refines them async via
+  // setEditImageDims), otherwise the format's dims.
+  let currentImage = null;
+  let mode = "generate";
+  if (editImage && editImage.url) {
+    const [w, h] = editImage.w && editImage.h ? [editImage.w, editImage.h] : dimsFor(resolvedFormat);
+    currentImage = { url: editImage.url, w, h, seed: `${postId || "img"}-edit` };
+    mode = "edit";
+  }
   states.set(key, {
     // Two peer modes toggled via the top segmented control. "edit" is only
-    // reachable once an image exists (currentImage set after generation).
-    mode: "generate", // "generate" | "edit"
+    // reachable once an image exists (currentImage set after generation or
+    // seeded here when editing an existing draft image).
+    mode, // "generate" | "edit"
     genPhase: "idle", // "idle" | "generating" | "results" (generate-mode canvas)
     postId,
     network: net,
-    formatId: formatId || (net ? defaultFormatFor(net) : "1:1"),
+    formatId: resolvedFormat,
     promptText: "",
     promptLoading: false,
     styleKey: null,
@@ -163,7 +176,7 @@ export function start(key, { postId = null, network = null, formatId = null } = 
     variations: [], // [{ seed, url, w, h }]
     addingVariation: false, // a "+" generate-another is in flight
     selectedIndex: null,
-    currentImage: null, // { url, w, h, seed, noBg? } — the working image in edit
+    currentImage, // { url, w, h, seed, noBg? } — the working image in edit
     activeTool: null, // one of EDIT_TOOLS keys
     editBusy: false,
     editHistory: [], // undo stack of prior currentImage snapshots
@@ -175,6 +188,16 @@ export function start(key, { postId = null, network = null, formatId = null } = 
     _editTimer: null,
     _deriveTimer: null,
   });
+  notify(key);
+}
+
+// Refine the working image's intrinsic dims once the caller has loaded it — so
+// the frame ratio and the overlay bake (compositeOverlays draws base at w×h)
+// match the real image rather than the format-based guess used at start().
+export function setEditImageDims(key, w, h) {
+  const s = states.get(key);
+  if (!s || !s.currentImage || !w || !h) return;
+  s.currentImage = { ...s.currentImage, w, h };
   notify(key);
 }
 

@@ -14,14 +14,14 @@ import {
   attachImageToDraft,
   subscribe as subscribePostsStore,
 } from "../posts-store.js?v=34";
-import { renderPostCard } from "./post-card.js?v=65";
+import { renderPostCard } from "./post-card.js?v=66";
 import { renderTopPostEcho } from "./top-post-card.js?v=65";
 import { renderClipCard } from "./clip-card.js?v=13";
 import { onFeedbackClick } from "./feedback-control.js?v=1";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=50";
-import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=161";
+import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=162";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -43,7 +43,7 @@ import { iconFor } from "../file-kinds.js?v=20";
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
 import { open as openScheduleModal } from "./schedule-modal.js?v=53";
-import { open as openImageStudioModal } from "./image-studio-modal.js?v=11";
+import { open as openImageStudioModal } from "./image-studio-modal.js?v=12";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
@@ -626,6 +626,11 @@ export function init() {
       onPostImage(imageBtn.dataset.postImage);
       return;
     }
+    const imageEditBtn = event.target.closest("[data-post-image-edit]");
+    if (imageEditBtn) {
+      onPostImageEdit(imageEditBtn.dataset.postImageEdit);
+      return;
+    }
     const imageUploadBtn = event.target.closest("[data-post-image-upload]");
     if (imageUploadBtn) {
       onPostImageUpload(imageUploadBtn.dataset.postImageUpload);
@@ -730,7 +735,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=413").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=414").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -913,7 +918,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=413").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=414").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -931,7 +936,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=413").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=414").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -2037,6 +2042,17 @@ function onPostImage(postId) {
   openImageStudioModal(postId, { sessionId: sid });
 }
 
+// "Edit" on a draft that already has an image → open the Image Studio straight
+// in Edit mode on that image (retouch / add logos + text / expand), then "Use
+// this image" re-attaches the result to the draft.
+function onPostImageEdit(postId) {
+  const sid = activeSessionId();
+  if (!sid) return;
+  const post = getPosts(sid).find((p) => p.id === postId);
+  if (!post || !post.imageUrl) return;
+  openImageStudioModal(postId, { sessionId: sid, editImageUrl: post.imageUrl });
+}
+
 // Upload / change a draft image without the AI studio — spin up a throwaway
 // file picker, turn the pick into an object URL and attach it to the draft.
 // We deliberately keep the object URL alive (no revoke) since the card keeps
@@ -2780,7 +2796,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=413").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=414").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

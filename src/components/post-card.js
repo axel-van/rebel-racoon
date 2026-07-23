@@ -169,6 +169,10 @@ export function renderPostCard(post, opts = {}) {
       ? `<div class="posts__card-image-wrap">
           <img class="posts__card-image" src="${post.imageUrl}" alt="Image for this post" loading="lazy" />
           <div class="posts__card-image-controls">
+            <button type="button" class="ap-button ghost grey" data-post-image-edit="${post.id}">
+              <i class="ap-icon-archie-official"></i>
+              <span>Edit</span>
+            </button>
             <button type="button" class="ap-button ghost grey" data-post-image-upload="${post.id}">
               <i class="ap-icon-upload"></i>
               <span>Change</span>
