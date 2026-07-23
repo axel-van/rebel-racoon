@@ -13,7 +13,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=319";
+} from "./right-panel.js?v=320";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=51";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=58";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=48";

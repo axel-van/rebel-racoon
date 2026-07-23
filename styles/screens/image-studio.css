@@ -937,7 +937,7 @@ button.image-studio__ref--pick:focus-visible {
   align-items: center;
   gap: var(--ref-spacing-xs);
   width: 100%;
-  padding: 7px 10px;
+  padding: 4px 10px;
   border: none;
   background: none;
   border-radius: var(--app-radius-md);
@@ -970,19 +970,22 @@ button.image-studio__ref--pick:focus-visible {
   color: var(--ref-color-electric-blue-100);
 }
 
-.image-studio__font-row--upload {
-  color: var(--ref-color-grey-80);
-  font-weight: var(--ref-font-weight-bold);
-}
-
-.image-studio__font-upload-icon {
-  color: var(--ref-color-grey-60);
+/* Import action — a real DS stroked button (not a menu row), kept auto-width and
+   left-aligned so it doesn't stretch to fill the popover body. */
+.image-studio__font-import {
+  align-self: flex-start;
 }
 
 .image-studio__font-div {
   height: 1px;
-  margin: 2px 0;
-  background: var(--app-border);
+  margin: 0;
+  background: var(--app-border-soft);
+}
+
+/* The font popover runs tight — a compact list, so the rows + divider + import
+   action sit close rather than floating in whitespace. */
+.image-studio__popover--font .image-studio__popover-body {
+  gap: var(--ref-spacing-xs);
 }
 
 /* Inline text-edit state — text becomes typeable; the drag chrome steps aside. */

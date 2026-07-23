@@ -199,10 +199,7 @@ function textFontPopover(o, st) {
     <div class="image-studio__popover-body">
       <div class="image-studio__font-list">${builtins}${custom}</div>
       <div class="image-studio__font-div" aria-hidden="true"></div>
-      <button type="button" class="image-studio__font-row image-studio__font-row--upload" data-img-font-upload>
-        <i class="ap-icon-upload image-studio__font-upload-icon" aria-hidden="true"></i>
-        <span class="image-studio__font-name">Import my font…</span>
-      </button>
+      <button type="button" class="ap-button stroked grey image-studio__font-import" data-img-font-upload><i class="ap-icon-upload" aria-hidden="true"></i><span>Import my font…</span></button>
     </div>
   </div>`;
 }
