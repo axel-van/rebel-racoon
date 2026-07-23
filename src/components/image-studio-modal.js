@@ -152,14 +152,18 @@ function cropConfirmBar(st) {
 }
 
 // Freeform + the ratio presets, as a single chip group that locks the crop box's
-// aspect (Freeform = unconstrained, the default).
+// aspect (Freeform = unconstrained, the default). Each chip carries a small glyph
+// drawn to its own proportions (Freeform = a dashed square) so the ratio reads at
+// a glance — more legible than a bare label.
 function cropAspectChips(st) {
-  const freeform = `<button type="button" class="ap-filter-chip" data-img-crop-aspect="free" aria-pressed="${!st.cropAspect}">Freeform</button>`;
+  const chip = (id, label, ratio, on) =>
+    `<button type="button" class="image-studio__crop-aspect${ratio ? "" : " image-studio__crop-aspect--free"}${on ? " is-selected" : ""}" data-img-crop-aspect="${escapeHtml(id)}" aria-pressed="${on}"><span class="image-studio__crop-aspect-glyph"${ratio ? ` style="aspect-ratio:${ratio}"` : ""} aria-hidden="true"></span><span>${escapeHtml(label)}</span></button>`;
+  const freeform = chip("free", "Freeform", null, !st.cropAspect);
   const presets = imageStudio
     .formatChoices(KEY)
     .map((f) => {
       const on = !!st.cropAspect && Math.abs(st.cropAspect - f.ratio) < 0.001;
-      return `<button type="button" class="ap-filter-chip" data-img-crop-aspect="${escapeHtml(f.id)}" aria-pressed="${on}">${escapeHtml(f.tag)}</button>`;
+      return chip(f.id, f.tag, f.ratio, on);
     })
     .join("");
   return `${freeform}${presets}`;

@@ -1331,8 +1331,60 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 .image-studio__crop-aspects {
-  gap: var(--ref-spacing-xxxs);
+  gap: var(--ref-spacing-xs);
   flex-wrap: wrap;
+}
+
+/* Visual aspect chips — a proportional glyph + the ratio label. The glyph is an
+   inline-block sized by its inline aspect-ratio at a fixed height (same trick as
+   the generate panel's .gen-format-glyph); Freeform shows a dashed square. */
+.image-studio__crop-aspect {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-white);
+  cursor: pointer;
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--ref-font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  transition:
+    border-color var(--ref-animation-short) var(--app-ease-out),
+    background var(--ref-animation-short) var(--app-ease-out);
+}
+
+.image-studio__crop-aspect:hover {
+  border-color: var(--ref-color-grey-40);
+  background: var(--ref-color-grey-05);
+}
+
+.image-studio__crop-aspect[aria-pressed="true"] {
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-10);
+  color: var(--ref-color-electric-blue-100);
+}
+
+.image-studio__crop-aspect-glyph {
+  display: inline-block;
+  height: 14px;
+  width: auto; /* presets: sized by inline aspect-ratio */
+  flex: 0 0 auto;
+  border: 1.5px solid var(--ref-color-grey-50);
+  border-radius: 2px;
+}
+
+/* Freeform has no aspect-ratio → a dashed square standing for "unconstrained". */
+.image-studio__crop-aspect--free .image-studio__crop-aspect-glyph {
+  width: 14px;
+  border-style: dashed;
+}
+
+.image-studio__crop-aspect[aria-pressed="true"] .image-studio__crop-aspect-glyph {
+  border-color: var(--ref-color-electric-blue-100);
 }
 
 /* Logo tray — a uniform grid that scales: more logos just add rows and the
