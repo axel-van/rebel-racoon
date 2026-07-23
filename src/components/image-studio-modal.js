@@ -18,7 +18,7 @@ import { getSessionById } from "../sessions-store.js?v=6";
 import { getContextById } from "../contexts-store.js?v=37";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../social-profiles.js?v=26";
 import { renderPostCard } from "./post-card.js?v=68";
-import * as imageStudio from "../image-studio.js?v=23";
+import * as imageStudio from "../image-studio.js?v=24";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -343,7 +343,10 @@ function previewCanvas(st) {
 // Draggable logo/text elements layered over the working image (edit mode).
 function overlayLayer(st) {
   if (!st.overlays.length) return "";
-  return `<div class="image-studio__overlay-layer" data-img-overlay-layer>${st.overlays
+  // Selected → un-clip so a bleeding element + its chrome stay grabbable; idle →
+  // clip to the image (matches the flattened result).
+  const cls = `image-studio__overlay-layer${st.selectedOverlayId ? " has-selection" : ""}`;
+  return `<div class="${cls}" data-img-overlay-layer>${st.overlays
     .map((o) => renderOverlay(o, o.id === st.selectedOverlayId, o.id === st.editingOverlayId, st))
     .join("")}</div>`;
 }
@@ -352,20 +355,16 @@ function overlayLayer(st) {
 // so it appears the moment the element is selected — no re-render needed). Holds
 // the style controls that used to live in the side panel: colour (opens the
 // swatch popover), size S/M/L, Bold, Outline, Delete.
+// Size is changed with the corner handle (drag), so the toolbar carries only the
+// labelled style controls: colour, Bold, Outline, and an icon-only Delete.
 function textToolbar(o, st, selected) {
-  const sizes = imageStudio.TEXT_SIZES.map(
-    (s) =>
-      `<button type="button" class="image-studio__tt-size${Math.abs(o.sizeF - s.value) < 0.001 ? " is-on" : ""}" data-img-text-size="${s.value}" aria-pressed="${Math.abs(o.sizeF - s.value) < 0.001}">${s.label}</button>`,
-  ).join("");
   const colorOpen = selected && st.openPopover === "textColor";
   return `<div class="image-studio__text-toolbar" data-img-text-toolbar>
-    <button type="button" class="image-studio__tt-color" data-img-popover-toggle="textColor" aria-haspopup="true" aria-expanded="${colorOpen}" aria-label="Text colour" style="--sw:${escapeHtml(o.color || "#FFFFFF")}"></button>
+    <button type="button" class="image-studio__tt-btn" data-img-popover-toggle="textColor" aria-haspopup="true" aria-expanded="${colorOpen}" aria-label="Text colour"><span class="image-studio__tt-swatch" style="--sw:${escapeHtml(o.color || "#FFFFFF")}"></span><span>Colour</span></button>
     ${colorOpen ? textColorPopover(o, st) : ""}
     <span class="image-studio__tt-sep" aria-hidden="true"></span>
-    <span class="image-studio__tt-sizes">${sizes}</span>
-    <span class="image-studio__tt-sep" aria-hidden="true"></span>
-    <button type="button" class="image-studio__tt-toggle image-studio__tt-bold" data-img-text-bold aria-pressed="${!!o.bold}" aria-label="Bold">B</button>
-    <button type="button" class="image-studio__tt-toggle image-studio__tt-outline" data-img-text-outline aria-pressed="${!!o.outline}" aria-label="Outline">A</button>
+    <button type="button" class="image-studio__tt-btn image-studio__tt-bold" data-img-text-bold aria-pressed="${!!o.bold}">Bold</button>
+    <button type="button" class="image-studio__tt-btn image-studio__tt-outline" data-img-text-outline aria-pressed="${!!o.outline}">Outline</button>
     <span class="image-studio__tt-sep" aria-hidden="true"></span>
     <button type="button" class="image-studio__tt-del" data-img-overlay-delete="${o.id}" aria-label="Delete text"><i class="ap-icon-trash" aria-hidden="true"></i></button>
   </div>`;
@@ -846,7 +845,11 @@ function startOverlayGesture(event, el) {
   el.classList.add("is-selected");
   // Hide the text mini-toolbar while dragging so it doesn't trail the element.
   const layer = modal.querySelector("[data-img-overlay-layer]");
-  if (layer) layer.classList.add("is-gesturing");
+  if (layer) {
+    layer.classList.add("is-gesturing");
+    layer.appendChild(el); // bring the selected element to the front (DOM order)
+    imageStudio.bringOverlayToFrontSilent(KEY, id); // keep state order in sync
+  }
 
   const cx = rect.left + o.xF * rect.width;
   const cy = rect.top + o.yF * rect.height;
@@ -978,12 +981,6 @@ function onClick(event) {
   if (txtColor && st.selectedOverlayId) {
     imageStudio.updateOverlay(KEY, st.selectedOverlayId, { color: txtColor.dataset.imgTextColor });
     imageStudio.setOpenPopover(KEY, null);
-    restoreEdit();
-    return;
-  }
-  const txtSize = event.target.closest("[data-img-text-size]");
-  if (txtSize && st.selectedOverlayId) {
-    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { sizeF: Number(txtSize.dataset.imgTextSize) });
     restoreEdit();
     return;
   }

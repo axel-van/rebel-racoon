@@ -84,13 +84,6 @@ export const LOGO_PRESETS = [
   { label: "Wordmark", url: "assets/logos/archie-wordmark.svg" },
 ];
 
-// Text-overlay size presets (fraction of image height).
-export const TEXT_SIZES = [
-  { label: "S", value: 0.06 },
-  { label: "M", value: 0.09 },
-  { label: "L", value: 0.14 },
-];
-
 // Text-overlay colour swatches.
 export const TEXT_COLORS = ["#FFFFFF", "#0A1B33", "#FF3C00", "#178DFE"];
 
@@ -718,12 +711,28 @@ export function notifyOverlays(sessionId) {
   notify(sessionId);
 }
 
+// Overlays paint in array order (no explicit z-index), so moving an element to
+// the end of the list brings it to the front. Depth is managed implicitly:
+// selecting an element promotes it above the others.
+function moveOverlayToFront(s, id) {
+  const i = s.overlays.findIndex((o) => o.id === id);
+  if (i >= 0 && i < s.overlays.length - 1) s.overlays.push(s.overlays.splice(i, 1)[0]);
+}
+
+// Reorder-to-front without a re-render — used during a drag gesture (the modal
+// moves the DOM node directly; pair with notifyOverlays on pointerup).
+export function bringOverlayToFrontSilent(sessionId, id) {
+  const s = states.get(sessionId);
+  if (s) moveOverlayToFront(s, id);
+}
+
 export function selectOverlay(sessionId, id) {
   const s = states.get(sessionId);
   if (!s) return;
   // Selecting a different element (or nothing) exits any inline text edit.
   if (id !== s.selectedOverlayId) s.editingOverlayId = null;
   s.selectedOverlayId = id;
+  if (id) moveOverlayToFront(s, id); // selected element comes to the front
   notify(sessionId);
 }
 
@@ -733,7 +742,10 @@ export function setEditingOverlay(sessionId, id) {
   const s = states.get(sessionId);
   if (!s) return;
   s.editingOverlayId = id || null;
-  if (id) s.selectedOverlayId = id;
+  if (id) {
+    s.selectedOverlayId = id;
+    moveOverlayToFront(s, id);
+  }
   notify(sessionId);
 }
 

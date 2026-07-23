@@ -789,26 +789,13 @@ button.image-studio__ref--pick:focus-visible {
   background: var(--app-border);
 }
 
-.image-studio__tt-color {
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-circle);
-  background: var(--sw, #fff);
-  cursor: pointer;
-}
-
-.image-studio__tt-sizes {
+/* Labelled toolbar buttons (Colour / Bold / Outline). */
+.image-studio__tt-btn {
   display: inline-flex;
-  gap: 2px;
-}
-
-.image-studio__tt-size,
-.image-studio__tt-toggle {
-  min-width: 24px;
-  height: 24px;
-  padding: 0 6px;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  height: 26px;
+  padding: 0 8px;
   border: none;
   background: none;
   border-radius: var(--app-radius-md);
@@ -818,27 +805,31 @@ button.image-studio__ref--pick:focus-visible {
   font-weight: var(--ref-font-weight-bold);
 }
 
-.image-studio__tt-size:hover,
-.image-studio__tt-toggle:hover {
+.image-studio__tt-btn:hover {
   background: var(--ref-color-grey-05);
 }
 
-.image-studio__tt-size[aria-pressed="true"],
-.image-studio__tt-toggle[aria-pressed="true"] {
+.image-studio__tt-btn[aria-pressed="true"] {
   background: var(--ref-color-electric-blue-10);
   color: var(--ref-color-electric-blue-100);
 }
 
-/* Outline toggle is an "A" drawn as a stroke so it reads as outlined text. */
-.image-studio__tt-outline {
-  -webkit-text-stroke: 1px var(--ref-color-grey-80);
-  color: transparent;
+/* The colour button's leading dot previews the current text colour. */
+.image-studio__tt-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--app-radius-circle);
+  border: 1px solid var(--app-border);
+  background: var(--sw, #fff);
+}
+
+.image-studio__tt-bold {
+  font-weight: var(--ref-font-weight-bold);
 }
 
 .image-studio__tt-outline[aria-pressed="true"] {
   background: var(--ref-color-electric-blue-10);
-  -webkit-text-stroke-color: var(--ref-color-electric-blue-100);
-  color: transparent;
+  color: var(--ref-color-electric-blue-100);
 }
 
 .image-studio__tt-del {
@@ -1030,9 +1021,18 @@ button.image-studio__ref--pick:focus-visible {
   container-type: size;
 }
 
+/* Overlays are clipped to the image rect (WYSIWYG — matches the flattened bake).
+   While an element is selected or being dragged the layer un-clips, so a bleeding
+   element and its handles/toolbar stay fully visible and grabbable. */
 .image-studio__overlay-layer {
   position: absolute;
   inset: 0;
+  overflow: hidden;
+}
+
+.image-studio__overlay-layer.has-selection,
+.image-studio__overlay-layer.is-gesturing {
+  overflow: visible;
 }
 
 .image-studio__overlay {
