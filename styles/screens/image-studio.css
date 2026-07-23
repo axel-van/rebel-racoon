@@ -377,16 +377,6 @@
 }
 
 /* ── Canvas: edit working image ─────────────────────────────────────────── */
-.image-studio__edit-canvas {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--ref-spacing-sm);
-  width: 100%;
-  max-width: 760px;
-  max-height: 100%;
-}
-
 .image-studio__frame {
   position: relative;
   aspect-ratio: var(--imgs-ratio, 1);
@@ -470,13 +460,13 @@
   color: var(--ref-color-grey-80);
 }
 
-/* Contextual sub-panel below the working image (tool controls). */
+/* Contextual options for the active tool / selected element. Lives in the left
+   panel under the tool rail — a flat section split off by a top divider (matches
+   the generate-mode groups), not a floating card. */
 .image-studio__subpanel {
   width: 100%;
   box-sizing: border-box;
-  background: var(--ref-color-white);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-card);
+  border-top: 1px solid var(--app-border);
   padding: var(--ref-spacing-sm) var(--ref-spacing-md);
   display: flex;
   flex-direction: column;
@@ -487,6 +477,16 @@
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-sm);
+}
+
+/* Action buttons for a tool sit in their own row so they stay auto-width
+   (never stretched) even though the panel column is align-stretch. */
+.image-studio__subpanel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  margin-top: var(--ref-spacing-xxs);
 }
 
 .image-studio__subpanel-label {

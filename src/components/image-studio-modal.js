@@ -101,8 +101,10 @@ function generateControls(st) {
 }
 
 // Left panel — edit mode: the tool rail as a DS Action Dropdown menu
-// (.ap-action-dropdown items, 40px rows). Active tool uses the DS `.focused`
-// item state.
+// (.ap-action-dropdown items, 40px rows) + the active tool's / selected
+// element's options stacked below, separated by a divider. Keeping the options
+// in this sidebar (not below the image) means selecting an element never shifts
+// the canvas image — only this panel reflows.
 function editControls(st) {
   const items = imageStudio.EDIT_TOOLS.map((t) => {
     const active = st.activeTool === t.key;
@@ -111,7 +113,8 @@ function editControls(st) {
       <span class="ap-action-dropdown-item-text">${escapeHtml(t.label)}</span>
     </button>`;
   }).join("");
-  return `<div class="ap-action-dropdown image-studio__tools" role="menu" aria-label="Edit tools">${items}</div>`;
+  const tools = `<div class="ap-action-dropdown image-studio__tools" role="menu" aria-label="Edit tools">${items}</div>`;
+  return tools + editSubpanel(st);
 }
 
 // Right canvas — shared; content depends on mode / generation phase.
@@ -187,13 +190,13 @@ function editCanvas(st) {
     img && img.noBg
       ? `<span class="image-studio__badge"><i class="ap-icon-cropper" aria-hidden="true"></i>Background removed (preview)</span>`
       : "";
-  return `<div class="image-studio__edit-canvas">
-    <div class="image-studio__frame${img && img.noBg ? " is-nobg" : ""}" style="--imgs-ratio:${ratio}">
+  // Canvas holds ONLY the image frame in edit mode; the tool/element options
+  // live in the left panel (editControls → editSubpanel), so the image stays
+  // put when the selection changes.
+  return `<div class="image-studio__frame${img && img.noBg ? " is-nobg" : ""}" style="--imgs-ratio:${ratio}">
       <img class="image-studio__frame-img" src="${img ? img.url : ""}" alt="Working image" />
       ${overlayLayer(st)}${canvasOverlay}${busy}${badge}
-    </div>
-    ${editSubpanel(st)}
-  </div>`;
+    </div>`;
 }
 
 // Draggable logo/text elements layered over the working image (edit mode).
@@ -349,6 +352,9 @@ function composeGroups(st) {
   `;
 }
 
+// The tool-specific options that stack under the tool rail in the left panel.
+// Laid out vertically (label → controls → hint → actions row) so they read well
+// in the narrow panel; action buttons sit in their own row and stay auto-width.
 function editSubpanel(st) {
   const tool = st.activeTool;
   if (!tool) return "";
@@ -358,10 +364,9 @@ function editSubpanel(st) {
   if (tool === "prompt") {
     return `<div class="image-studio__subpanel">
       <p class="image-studio__subpanel-label">Describe the change</p>
-      <textarea class="image-studio__edit-prompt" data-img-edit-prompt rows="2" placeholder="e.g. warmer lighting, add a laptop on the desk…">${escapeHtml(st.editPrompt || "")}</textarea>
-      <div class="image-studio__subpanel-row">
-        <span class="image-studio__subpanel-hint">Preview — reruns the generation with your note.</span>
-        <div class="image-studio__bar-spacer"></div>
+      <textarea class="image-studio__edit-prompt" data-img-edit-prompt rows="3" placeholder="e.g. warmer lighting, add a laptop on the desk…">${escapeHtml(st.editPrompt || "")}</textarea>
+      <p class="image-studio__subpanel-hint">Reruns the generation with your note.</p>
+      <div class="image-studio__subpanel-actions">
         <button type="button" class="ap-button primary orange" data-img-apply-edit="prompt"><i class="ap-icon-archie-official"></i><span>Apply</span></button>
       </div>
     </div>`;
@@ -374,19 +379,18 @@ function editSubpanel(st) {
     return `<div class="image-studio__subpanel">
       <p class="image-studio__subpanel-label">Expand to a new ratio</p>
       <div class="gen-format-chips">${chips}</div>
-      <p class="image-studio__subpanel-hint">Preview — reshapes the frame and regenerates the outer area.</p>
+      <p class="image-studio__subpanel-hint">Reshapes the frame and regenerates the outer area.</p>
     </div>`;
   }
   if (tool === "annotate" || tool === "fill" || tool === "remove") {
     const hint =
       tool === "annotate"
         ? "Draw on the image — your strokes are baked into the picture."
-        : `Brush the area to ${tool === "fill" ? "fill in" : "remove"} — preview reruns generation on that region.`;
+        : `Brush the area to ${tool === "fill" ? "fill in" : "remove"} — reruns generation on that region.`;
     return `<div class="image-studio__subpanel">
-      <div class="image-studio__subpanel-row">
-        <p class="image-studio__subpanel-label">${escapeHtml(meta.label)}</p>
-        <span class="image-studio__subpanel-hint">${escapeHtml(hint)}</span>
-        <div class="image-studio__bar-spacer"></div>
+      <p class="image-studio__subpanel-label">${escapeHtml(meta.label)}</p>
+      <p class="image-studio__subpanel-hint">${escapeHtml(hint)}</p>
+      <div class="image-studio__subpanel-actions">
         <button type="button" class="ap-button ghost grey" data-img-clear-brush><span>Clear</span></button>
         <button type="button" class="ap-button primary orange" data-img-apply-edit="${escapeHtml(tool)}"><i class="ap-icon-check"></i><span>Apply</span></button>
       </div>
@@ -395,10 +399,9 @@ function editSubpanel(st) {
   // removebg — one-click apply.
   const hint = "Isolates the subject on a transparent background (preview).";
   return `<div class="image-studio__subpanel">
-    <div class="image-studio__subpanel-row">
-      <p class="image-studio__subpanel-label">${escapeHtml(meta.label)}</p>
-      <span class="image-studio__subpanel-hint">${escapeHtml(hint)}</span>
-      <div class="image-studio__bar-spacer"></div>
+    <p class="image-studio__subpanel-label">${escapeHtml(meta.label)}</p>
+    <p class="image-studio__subpanel-hint">${escapeHtml(hint)}</p>
+    <div class="image-studio__subpanel-actions">
       <button type="button" class="ap-button primary orange" data-img-apply-edit="${escapeHtml(tool)}"><i class="ap-icon-check"></i><span>Apply</span></button>
     </div>
   </div>`;
@@ -417,9 +420,9 @@ function overlaySubpanel(st, tool) {
     const t = sel && sel.kind === "text" ? sel : null;
     if (!t) {
       return `<div class="image-studio__subpanel">
-        <div class="image-studio__subpanel-row">
+        <p class="image-studio__subpanel-hint">Add a text element, then style and place it.</p>
+        <div class="image-studio__subpanel-actions">
           <button type="button" class="ap-button stroked blue" data-img-add-text><i class="ap-icon-closed-captions"></i><span>Add text</span></button>
-          <span class="image-studio__subpanel-hint">Add a text element, then style and place it.</span>
         </div>
       </div>`;
     }
