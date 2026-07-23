@@ -147,37 +147,44 @@ function cropPopover(st) {
 }
 
 function logoPopover() {
+  // Upload is the first tile in the grid (a dashed "add" cell) so it reads as
+  // part of the set and the layout scales to many logos: the grid scrolls.
+  const uploadTile = `<button type="button" class="image-studio__preset image-studio__preset--upload" data-img-logo-upload title="Upload a logo"><i class="ap-icon-upload" aria-hidden="true"></i><span>Upload</span></button>`;
   const presets = imageStudio.LOGO_PRESETS.map(
     (p) =>
       `<button type="button" class="image-studio__preset" data-img-logo-preset="${escapeHtml(p.url)}" title="${escapeHtml(p.label)}"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.label)}" /></button>`,
   ).join("");
-  return `<div class="image-studio__popover image-studio__popover--logo" data-img-popover role="menu" aria-label="Add logo">
-    <div class="image-studio__popover-head">
-      <p class="image-studio__popover-label">Add a logo</p>
-      <button type="button" class="ap-button stroked blue" data-img-logo-upload><i class="ap-icon-upload"></i><span>Upload</span></button>
-    </div>
-    <div class="image-studio__presets">${presets}</div>
+  return `<div class="image-studio__popover image-studio__popover--logo" data-img-popover role="menu" aria-label="Logos">
+    <p class="image-studio__popover-label">Logos</p>
+    <div class="image-studio__presets">${uploadTile}${presets}</div>
   </div>`;
 }
 
 // The text-colour swatches for the selected text element, opened from its mini
-// toolbar. Brand (Playbook) colours first, then the defaults, then any custom
-// colours — deduped — plus an "add colour" picker.
+// toolbar. The Playbook brand colours get their own framed section (so they read
+// as "your brand"); the rest — the defaults + any custom colours + an "add"
+// picker — sit below. All deduped case-insensitively across both groups.
 function textColorPopover(o, st) {
-  const seen = new Set();
-  const swatchList = [...(st.playbookColors || []), ...imageStudio.TEXT_COLORS, ...(st.customTextColors || [])]
-    .map((c) => (c || "").toUpperCase())
-    .filter((c) => c && !seen.has(c) && seen.add(c));
   const selectedHex = (o.color || "").toUpperCase();
-  const swatches =
-    swatchList
-      .map(
-        (c) =>
-          `<button type="button" class="image-studio__swatch${selectedHex === c ? " is-selected" : ""}" data-img-text-color="${c}" style="--sw:${c}" aria-label="${c}"></button>`,
-      )
-      .join("") +
-    `<label class="image-studio__swatch image-studio__swatch--add" title="Add colour"><input type="color" data-img-text-colorpick aria-label="Add text colour" /><i class="ap-icon-plus" aria-hidden="true"></i></label>`;
-  return `<div class="image-studio__popover image-studio__popover--textcolor" data-img-popover role="menu" aria-label="Text colour"><span class="image-studio__swatches">${swatches}</span></div>`;
+  const swatch = (c) =>
+    `<button type="button" class="image-studio__swatch${selectedHex === c ? " is-selected" : ""}" data-img-text-color="${c}" style="--sw:${c}" aria-label="${c}"></button>`;
+  const seen = new Set();
+  const dedupe = (list) =>
+    (list || []).map((c) => (c || "").toUpperCase()).filter((c) => c && !seen.has(c) && seen.add(c));
+  const brand = dedupe(st.playbookColors); // brand first → wins the dedupe
+  const others = dedupe([...imageStudio.TEXT_COLORS, ...(st.customTextColors || [])]);
+  const addSwatch = `<label class="image-studio__swatch image-studio__swatch--add" title="Add colour"><input type="color" data-img-text-colorpick aria-label="Add text colour" /><i class="ap-icon-plus" aria-hidden="true"></i></label>`;
+  const brandGroup = brand.length
+    ? `<div class="image-studio__color-group image-studio__color-group--brand">
+        <p class="image-studio__color-label">Brand</p>
+        <span class="image-studio__swatches">${brand.map(swatch).join("")}</span>
+      </div>`
+    : "";
+  const othersGroup = `<div class="image-studio__color-group">
+      ${brand.length ? `<p class="image-studio__color-label">More</p>` : ""}
+      <span class="image-studio__swatches">${others.map(swatch).join("")}${addSwatch}</span>
+    </div>`;
+  return `<div class="image-studio__popover image-studio__popover--textcolor" data-img-popover role="menu" aria-label="Text colour">${brandGroup}${othersGroup}</div>`;
 }
 
 // A compact segmented pill at the top of the right pane, flipping between the

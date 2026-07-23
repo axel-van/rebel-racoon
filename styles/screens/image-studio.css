@@ -686,10 +686,18 @@ button.image-studio__ref--pick:focus-visible {
   box-shadow: var(--app-shadow-popover-lg);
 }
 
+.image-studio__popover--crop {
+  width: 320px; /* let the 3 ratio chips breathe */
+}
+
+.image-studio__popover--crop .gen-format-chips > button {
+  flex: 1; /* chips share the width evenly */
+}
+
 .image-studio__popover--logo {
   left: auto;
   right: 0;
-  width: 252px; /* fit the 3 preset tiles on one row + a roomy header */
+  width: 260px;
 }
 
 .image-studio__popover--textcolor {
@@ -697,10 +705,36 @@ button.image-studio__ref--pick:focus-visible {
   transform: translateX(-50%);
   min-width: 0;
   width: max-content; /* sized by the swatch grid below */
+  padding: var(--ref-spacing-xs);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
 }
 
-/* Lay the colour swatches out as a wide, even grid (5 per row) rather than a
-   cramped 2-column stack. */
+/* Colour groups — the brand set gets a framed, tinted section; the rest sit
+   plainly below. Both lay their swatches out as a wide 5-per-row grid. */
+.image-studio__color-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.image-studio__color-group--brand {
+  padding: 6px;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-grey-05);
+}
+
+.image-studio__color-label {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--ref-font-weight-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ref-color-grey-60);
+}
+
 .image-studio__popover--textcolor .image-studio__swatches {
   display: grid;
   grid-template-columns: repeat(5, 22px);
@@ -1092,16 +1126,18 @@ button.image-studio__ref--pick:focus-visible {
   cursor: nwse-resize;
 }
 
-/* Overlay panel controls */
+/* Logo tray — a uniform grid that scales: more logos just add rows and the
+   tray scrolls, rather than widening the popover. */
 .image-studio__presets {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--ref-spacing-xs);
+  max-height: 188px; /* ~3 rows, then scroll */
+  overflow-y: auto;
 }
 
 .image-studio__preset {
-  width: 48px;
-  height: 48px;
+  aspect-ratio: 1;
   padding: 6px;
   display: inline-flex;
   align-items: center;
@@ -1110,6 +1146,24 @@ button.image-studio__ref--pick:focus-visible {
   border-radius: var(--app-radius-md);
   background: var(--ref-color-white);
   cursor: pointer;
+}
+
+/* Upload sits as the first "add" tile in the grid. */
+.image-studio__preset--upload {
+  flex-direction: column;
+  gap: 2px;
+  border-style: dashed;
+  color: var(--ref-color-electric-blue-100);
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.image-studio__preset--upload > i {
+  font-size: 18px;
+}
+
+.image-studio__preset--upload:hover {
+  background: var(--ref-color-electric-blue-10);
 }
 
 .image-studio__preset img {
