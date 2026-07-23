@@ -18,7 +18,7 @@ import { getSessionById } from "../sessions-store.js?v=6";
 import { getContextById } from "../contexts-store.js?v=37";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../social-profiles.js?v=26";
 import { renderPostCard } from "./post-card.js?v=68";
-import * as imageStudio from "../image-studio.js?v=21";
+import * as imageStudio from "../image-studio.js?v=23";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -57,15 +57,18 @@ function state() {
 // unlocks once an image exists.
 
 function renderStudio(st) {
+  // Edit mode is a direct editor: a full-width canvas with a floating action bar
+  // + on-canvas manipulation (no left panel). Generate keeps its 2-column
+  // options-panel + canvas layout.
+  const workspace =
+    st.mode === "edit"
+      ? `<section class="image-studio__canvas" aria-label="Preview">${canvasContent(st)}</section>`
+      : `<aside class="image-studio__panel" aria-label="Generation options">${generateControls(st)}</aside>
+         <section class="image-studio__canvas" aria-label="Preview">${canvasContent(st)}</section>`;
   return html`
     <div class="image-studio image-studio--${st.mode}">
       ${raw(topBar(st))}
-      <div class="image-studio__workspace">
-        <aside class="image-studio__panel" aria-label="${st.mode === "edit" ? "Edit tools" : "Generation options"}">
-          ${raw(st.mode === "edit" ? editControls(st) : generateControls(st))}
-        </aside>
-        <section class="image-studio__canvas" aria-label="Preview">${raw(canvasContent(st))}</section>
-      </div>
+      <div class="image-studio__workspace">${raw(workspace)}</div>
       ${raw(footer(st))}
     </div>
   `;
@@ -106,21 +109,75 @@ function generateControls(st) {
   return promptGroup + composeGroups(st);
 }
 
-// Left panel — edit mode: a horizontal segmented tool palette (icon + label
-// pills, one always pressed) at the top, then the active tool's / selected
-// element's options below it. Keeping the options in this sidebar (not below
-// the image) means selecting a tool or element never shifts the canvas image —
-// only this panel reflows.
-function editControls(st) {
-  const items = imageStudio.EDIT_TOOLS.map((t) => {
-    const active = st.activeTool === t.key;
-    return `<button type="button" class="image-studio__tool" data-img-tool="${escapeHtml(t.key)}" aria-pressed="${active}" ${st.editBusy ? "disabled" : ""}>
-      <i class="${t.icon}" aria-hidden="true"></i>
-      <span>${escapeHtml(t.label)}</span>
-    </button>`;
-  }).join("");
-  const tools = `<div class="image-studio__tools" role="group" aria-label="Edit tools">${items}</div>`;
-  return tools + editSubpanel(st);
+// Edit mode — the floating action bar over the canvas bottom: an always-on
+// Reprompt field + Apply (the #1 edit), then compact Crop / Add text / Add logo.
+// Crop and Add logo open small popovers anchored to their button; text is added
+// and edited directly on the canvas (see renderOverlay). Inspired by the bottom
+// tool bar of Krea AI / DALL·E.
+function actionBar(st) {
+  const busy = st.editBusy ? "disabled" : "";
+  return `<div class="image-studio__actionbar" role="toolbar" aria-label="Edit tools">
+    <div class="image-studio__actionbar-row">
+      <input type="text" class="image-studio__actionbar-input" data-img-edit-prompt placeholder="Describe a change to the image…" value="${escapeHtml(st.editPrompt || "")}" ${busy} />
+      <button type="button" class="ap-button primary orange image-studio__actionbar-apply" data-img-apply-edit="prompt" ${busy}><i class="ap-icon-archie-official" aria-hidden="true"></i><span>Apply</span></button>
+    </div>
+    <div class="image-studio__actionbar-row image-studio__actionbar-tools">
+      <div class="image-studio__actionbar-anchor">
+        <button type="button" class="image-studio__actionbar-btn" data-img-popover-toggle="crop" aria-haspopup="true" aria-expanded="${st.openPopover === "crop"}" ${busy}><i class="ap-icon-cropper" aria-hidden="true"></i><span>Crop</span></button>
+        ${st.openPopover === "crop" ? cropPopover(st) : ""}
+      </div>
+      <button type="button" class="image-studio__actionbar-btn" data-img-add-text ${busy}><i class="ap-icon-closed-captions" aria-hidden="true"></i><span>Add text</span></button>
+      <div class="image-studio__actionbar-anchor">
+        <button type="button" class="image-studio__actionbar-btn" data-img-popover-toggle="logo" aria-haspopup="true" aria-expanded="${st.openPopover === "logo"}" ${busy}><i class="ap-icon-file--image" aria-hidden="true"></i><span>Add logo</span></button>
+        ${st.openPopover === "logo" ? logoPopover(st) : ""}
+      </div>
+    </div>
+  </div>`;
+}
+
+function cropPopover(st) {
+  const chips = imageStudio
+    .formatChoices(KEY)
+    .map((f) => formatChip(f, st.formatId === f.id, "data-img-crop-format"))
+    .join("");
+  return `<div class="image-studio__popover image-studio__popover--crop" data-img-popover role="menu" aria-label="Crop ratio">
+    <p class="image-studio__popover-label">Crop to ratio</p>
+    <div class="gen-format-chips">${chips}</div>
+  </div>`;
+}
+
+function logoPopover() {
+  const presets = imageStudio.LOGO_PRESETS.map(
+    (p) =>
+      `<button type="button" class="image-studio__preset" data-img-logo-preset="${escapeHtml(p.url)}" title="${escapeHtml(p.label)}"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.label)}" /></button>`,
+  ).join("");
+  return `<div class="image-studio__popover image-studio__popover--logo" data-img-popover role="menu" aria-label="Add logo">
+    <div class="image-studio__popover-head">
+      <p class="image-studio__popover-label">Add a logo</p>
+      <button type="button" class="ap-button stroked blue" data-img-logo-upload><i class="ap-icon-upload"></i><span>Upload</span></button>
+    </div>
+    <div class="image-studio__presets">${presets}</div>
+  </div>`;
+}
+
+// The text-colour swatches for the selected text element, opened from its mini
+// toolbar. Brand (Playbook) colours first, then the defaults, then any custom
+// colours — deduped — plus an "add colour" picker.
+function textColorPopover(o, st) {
+  const seen = new Set();
+  const swatchList = [...(st.playbookColors || []), ...imageStudio.TEXT_COLORS, ...(st.customTextColors || [])]
+    .map((c) => (c || "").toUpperCase())
+    .filter((c) => c && !seen.has(c) && seen.add(c));
+  const selectedHex = (o.color || "").toUpperCase();
+  const swatches =
+    swatchList
+      .map(
+        (c) =>
+          `<button type="button" class="image-studio__swatch${selectedHex === c ? " is-selected" : ""}" data-img-text-color="${c}" style="--sw:${c}" aria-label="${c}"></button>`,
+      )
+      .join("") +
+    `<label class="image-studio__swatch image-studio__swatch--add" title="Add colour"><input type="color" data-img-text-colorpick aria-label="Add text colour" /><i class="ap-icon-plus" aria-hidden="true"></i></label>`;
+  return `<div class="image-studio__popover image-studio__popover--textcolor" data-img-popover role="menu" aria-label="Text colour"><span class="image-studio__swatches">${swatches}</span></div>`;
 }
 
 // A compact segmented pill at the top of the right pane, flipping between the
@@ -152,7 +209,10 @@ function canvasContent(st) {
       <p class="gen-empty-title">Your image appears here</p>
       <span class="gen-empty-sub">Describe it on the left, then generate.</span>
     </div>`;
-  return `${toggle}<div class="image-studio__canvas-body">${inner}</div>`;
+  // Edit mode (image view): the floating action bar lives over the canvas.
+  const editingImage = st.mode === "edit" && !(showToggle && st.canvasView === "feed");
+  const bar = editingImage ? actionBar(st) : "";
+  return `${toggle}<div class="image-studio__canvas-body">${inner}</div>${bar}`;
 }
 
 function generatingCanvas(st) {
@@ -230,11 +290,11 @@ function editCanvas(st) {
     st.outputMode === "carousel"
       ? `<span class="image-studio__badge image-studio__badge--slide"><i class="ap-icon-multiple-images" aria-hidden="true"></i>Editing slide ${(st.selectedIndex ?? 0) + 1} / ${st.variations.length}</span>`
       : "";
-  // Canvas holds ONLY the image frame in edit mode; the tool/element options
-  // live in the left panel (editControls → editSubpanel), so the image stays
-  // put when the selection changes.
+  // Direct editor: the image is clipped inside .image-studio__frame-clip while
+  // the frame itself is overflow:visible, so the on-element toolbars / popovers /
+  // handles can extend past the image edge without being cut off.
   return `<div class="image-studio__frame" style="--imgs-ratio:${ratio}">
-      <img class="image-studio__frame-img" src="${img ? img.url : ""}" alt="Working image" />
+      <div class="image-studio__frame-clip"><img class="image-studio__frame-img" src="${img ? img.url : ""}" alt="Working image" /></div>
       ${overlayLayer(st)}${busy}${badge}
     </div>`;
 }
@@ -277,21 +337,60 @@ function previewCanvas(st) {
 function overlayLayer(st) {
   if (!st.overlays.length) return "";
   return `<div class="image-studio__overlay-layer" data-img-overlay-layer>${st.overlays
-    .map((o) => renderOverlay(o, o.id === st.selectedOverlayId))
+    .map((o) => renderOverlay(o, o.id === st.selectedOverlayId, o.id === st.editingOverlayId, st))
     .join("")}</div>`;
 }
 
-function renderOverlay(o, selected) {
+// Mini toolbar attached to a selected TEXT element (shown via .is-selected CSS,
+// so it appears the moment the element is selected — no re-render needed). Holds
+// the style controls that used to live in the side panel: colour (opens the
+// swatch popover), size S/M/L, Bold, Outline, Delete.
+function textToolbar(o, st, selected) {
+  const sizes = imageStudio.TEXT_SIZES.map(
+    (s) =>
+      `<button type="button" class="image-studio__tt-size${Math.abs(o.sizeF - s.value) < 0.001 ? " is-on" : ""}" data-img-text-size="${s.value}" aria-pressed="${Math.abs(o.sizeF - s.value) < 0.001}">${s.label}</button>`,
+  ).join("");
+  const colorOpen = selected && st.openPopover === "textColor";
+  return `<div class="image-studio__text-toolbar" data-img-text-toolbar>
+    <button type="button" class="image-studio__tt-color" data-img-popover-toggle="textColor" aria-haspopup="true" aria-expanded="${colorOpen}" aria-label="Text colour" style="--sw:${escapeHtml(o.color || "#FFFFFF")}"></button>
+    ${colorOpen ? textColorPopover(o, st) : ""}
+    <span class="image-studio__tt-sep" aria-hidden="true"></span>
+    <span class="image-studio__tt-sizes">${sizes}</span>
+    <span class="image-studio__tt-sep" aria-hidden="true"></span>
+    <button type="button" class="image-studio__tt-toggle image-studio__tt-bold" data-img-text-bold aria-pressed="${!!o.bold}" aria-label="Bold">B</button>
+    <button type="button" class="image-studio__tt-toggle image-studio__tt-outline" data-img-text-outline aria-pressed="${!!o.outline}" aria-label="Outline">A</button>
+    <span class="image-studio__tt-sep" aria-hidden="true"></span>
+    <button type="button" class="image-studio__tt-del" data-img-overlay-delete="${o.id}" aria-label="Delete text"><i class="ap-icon-trash" aria-hidden="true"></i></button>
+  </div>`;
+}
+
+function renderOverlay(o, selected, editing, st) {
   const base = `left:${o.xF * 100}%; top:${o.yF * 100}%; transform:translate(-50%,-50%) rotate(${o.rot || 0}rad);`;
   const style = o.kind === "logo" ? `${base} width:${o.wF * 100}%;` : base;
-  const inner =
-    o.kind === "logo"
-      ? `<img src="${escapeHtml(o.url)}" alt="" draggable="false" />`
-      : `<span class="image-studio__overlay-text" style="color:${escapeHtml(o.color || "#FFFFFF")}; font-size:${o.sizeF * 100}cqh; font-weight:${o.bold ? 700 : 400};${o.outline ? " text-shadow:0 2px 8px rgba(0,0,0,.55); -webkit-text-stroke:0.055em rgba(0,0,0,.6);" : ""}">${escapeHtml(o.text || "")}</span>`;
-  const handles = `<button type="button" class="image-studio__overlay-delete" data-img-overlay-delete="${o.id}" aria-label="Delete element"><i class="ap-icon-close" aria-hidden="true"></i></button>
-    <span class="image-studio__overlay-rotate" data-img-overlay-rotate="${o.id}" title="Rotate" aria-hidden="true"><i class="ap-icon-refresh"></i></span>
-    <span class="image-studio__overlay-resize" data-img-overlay-resize="${o.id}" title="Resize" aria-hidden="true"></span>`;
-  return `<div class="image-studio__overlay${o.kind === "text" ? " is-text" : ""}${selected ? " is-selected" : ""}" data-img-overlay="${o.id}" style="${style}">${inner}${handles}</div>`;
+  let inner;
+  let chrome;
+  if (o.kind === "logo") {
+    inner = `<img src="${escapeHtml(o.url)}" alt="" draggable="false" />`;
+    // Logos keep the corner ×, rotate and resize handles.
+    chrome = `<button type="button" class="image-studio__overlay-delete" data-img-overlay-delete="${o.id}" aria-label="Delete element"><i class="ap-icon-close" aria-hidden="true"></i></button>
+      <span class="image-studio__overlay-rotate" data-img-overlay-rotate="${o.id}" title="Rotate" aria-hidden="true"><i class="ap-icon-refresh"></i></span>
+      <span class="image-studio__overlay-resize" data-img-overlay-resize="${o.id}" title="Resize" aria-hidden="true"></span>`;
+  } else {
+    const textStyle = `color:${escapeHtml(o.color || "#FFFFFF")}; font-size:${o.sizeF * 100}cqh; font-weight:${o.bold ? 700 : 400};${o.outline ? " text-shadow:0 2px 8px rgba(0,0,0,.55); -webkit-text-stroke:0.055em rgba(0,0,0,.6);" : ""}`;
+    // Editing = contenteditable + focusable; otherwise inert so pointerdown falls
+    // through to the draggable overlay div.
+    const editAttrs = editing
+      ? ` contenteditable="true" role="textbox" aria-multiline="false" aria-label="Text element" spellcheck="false"`
+      : "";
+    inner = `<span class="image-studio__overlay-text" data-img-overlay-text${editAttrs} style="${textStyle}">${escapeHtml(o.text || "")}</span>`;
+    // Text elements: mini toolbar (style) + rotate/resize handles. Delete lives
+    // in the toolbar. Handles are hidden while editing (see CSS).
+    chrome = `${textToolbar(o, st, selected)}
+      <span class="image-studio__overlay-rotate" data-img-overlay-rotate="${o.id}" title="Rotate" aria-hidden="true"><i class="ap-icon-refresh"></i></span>
+      <span class="image-studio__overlay-resize" data-img-overlay-resize="${o.id}" title="Resize" aria-hidden="true"></span>`;
+  }
+  const cls = `image-studio__overlay${o.kind === "text" ? " is-text" : ""}${selected ? " is-selected" : ""}${editing ? " is-editing" : ""}`;
+  return `<div class="${cls}" data-img-overlay="${o.id}" tabindex="0" role="button" aria-label="${o.kind === "text" ? "Text element" : "Logo element"}" style="${style}">${inner}${chrome}</div>`;
 }
 
 // Bottom bar — one primary CTA per mode / phase.
@@ -536,109 +635,6 @@ function composeGroups(st) {
   return `${refsGroup}${styleGroup}${moodGroup}${formatGroup}${outputGroup}`;
 }
 
-// The tool-specific options that stack under the tool rail in the left panel.
-// Laid out vertically (label → controls → hint → actions row) so they read well
-// in the narrow panel; action buttons sit in their own row and stay auto-width.
-function editSubpanel(st) {
-  const tool = st.activeTool;
-  if (!tool) return "";
-  const meta = imageStudio.EDIT_TOOLS.find((t) => t.key === tool);
-  if (!meta) return "";
-  if (tool === "logo" || tool === "text") return overlaySubpanel(st, tool);
-  if (tool === "prompt") {
-    return `<div class="image-studio__subpanel">
-      <p class="image-studio__subpanel-label">Describe the change</p>
-      <textarea class="image-studio__edit-prompt" data-img-edit-prompt rows="3" placeholder="e.g. warmer lighting, add a laptop on the desk…">${escapeHtml(st.editPrompt || "")}</textarea>
-      <p class="image-studio__subpanel-hint">Reruns the generation with your note.</p>
-      <div class="image-studio__subpanel-actions">
-        <button type="button" class="ap-button primary orange" data-img-apply-edit="prompt"><i class="ap-icon-archie-official"></i><span>Apply</span></button>
-      </div>
-    </div>`;
-  }
-  if (tool === "crop") {
-    const chips = imageStudio
-      .formatChoices(KEY)
-      .map((f) => formatChip(f, st.formatId === f.id, "data-img-crop-format"))
-      .join("");
-    return `<div class="image-studio__subpanel">
-      <p class="image-studio__subpanel-label">Crop to ratio</p>
-      <div class="gen-format-chips">${chips}</div>
-      <p class="image-studio__subpanel-hint">Reframes the current image to the ratio you pick.</p>
-    </div>`;
-  }
-  return "";
-}
-
-// Contextual panel for the overlay tools (Add logo / Add text). Edits the
-// currently-selected overlay live; a shared Apply flattens the layer.
-// The overlay panel shows an element's OPTIONS only when it's selected; when
-// nothing is selected it shows the tool's add affordance. Deletion is via the
-// element's × handle, so there's no Delete button here.
-function overlaySubpanel(st, tool) {
-  const sel = st.overlays.find((o) => o.id === st.selectedOverlayId) || null;
-  const manipHint = `<p class="image-studio__subpanel-hint">Drag to move · corner to resize · top handle to rotate · × to delete. Added to the image when you use it.</p>`;
-
-  if (tool === "text") {
-    const t = sel && sel.kind === "text" ? sel : null;
-    if (!t) {
-      return `<div class="image-studio__subpanel">
-        <p class="image-studio__subpanel-hint">Add a text element, then style and place it.</p>
-        <div class="image-studio__subpanel-actions">
-          <button type="button" class="ap-button stroked blue" data-img-add-text><i class="ap-icon-closed-captions"></i><span>Add text</span></button>
-        </div>
-      </div>`;
-    }
-    // Brand colours (from the Playbook) first, then the defaults, then any
-    // custom colours the user added — deduped case-insensitively.
-    const seen = new Set();
-    const swatchList = [...(st.playbookColors || []), ...imageStudio.TEXT_COLORS, ...(st.customTextColors || [])]
-      .map((c) => (c || "").toUpperCase())
-      .filter((c) => c && !seen.has(c) && seen.add(c));
-    const selectedHex = (t.color || "").toUpperCase();
-    const colors =
-      swatchList
-        .map(
-          (c) =>
-            `<button type="button" class="image-studio__swatch${selectedHex === c ? " is-selected" : ""}" data-img-text-color="${c}" style="--sw:${c}" aria-label="${c}"></button>`,
-        )
-        .join("") +
-      `<label class="image-studio__swatch image-studio__swatch--add" title="Add colour"><input type="color" data-img-text-colorpick aria-label="Add text colour" /><i class="ap-icon-plus" aria-hidden="true"></i></label>`;
-    const sizes = imageStudio.TEXT_SIZES.map(
-      (s) =>
-        `<button type="button" class="ap-filter-chip" data-img-text-size="${s.value}" aria-pressed="${Math.abs(t.sizeF - s.value) < 0.001}">${s.label}</button>`,
-    ).join("");
-    return `<div class="image-studio__subpanel">
-      <input type="text" class="image-studio__edit-prompt" data-img-text-input placeholder="Your text" value="${escapeHtml(t.text)}" />
-      <div class="image-studio__subpanel-row image-studio__text-controls">
-        <span class="image-studio__swatches">${colors}</span>
-        <div class="image-studio__chips">${sizes}</div>
-        <button type="button" class="ap-filter-chip" data-img-text-bold aria-pressed="${!!t.bold}">Bold</button>
-        <button type="button" class="ap-filter-chip" data-img-text-outline aria-pressed="${!!t.outline}">Outline</button>
-      </div>
-      ${manipHint}
-    </div>`;
-  }
-
-  // logo tool — a selected logo has no extra options (manipulate via handles);
-  // otherwise show the add chooser (upload + presets).
-  if (sel && sel.kind === "logo") {
-    return `<div class="image-studio__subpanel">${manipHint}</div>`;
-  }
-  const presets = imageStudio.LOGO_PRESETS.map(
-    (p) =>
-      `<button type="button" class="image-studio__preset" data-img-logo-preset="${escapeHtml(p.url)}" title="${escapeHtml(p.label)}"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.label)}" /></button>`,
-  ).join("");
-  return `<div class="image-studio__subpanel">
-    <div class="image-studio__subpanel-row">
-      <p class="image-studio__subpanel-label">Add a logo</p>
-      <div class="image-studio__bar-spacer"></div>
-      <button type="button" class="ap-button stroked blue" data-img-logo-upload><i class="ap-icon-upload"></i><span>Upload</span></button>
-    </div>
-    <div class="image-studio__presets">${presets}</div>
-    <p class="image-studio__subpanel-hint">Pick a logo or upload one, then drag it into place.</p>
-  </div>`;
-}
-
 function renderBody() {
   const st = state();
   if (!st || !body) return;
@@ -647,16 +643,33 @@ function renderBody() {
 
 // ── Behavior helpers ──────────────────────────────────────────────────────
 
-// After a text element is dropped in (Text tool or the Add-text button), focus
-// its input and select the "Your text" placeholder so the user can type over it
-// immediately — no clicking into the field first. notify() re-renders
-// synchronously, so the fresh input is already in the DOM by the time we call
-// this from the click handler.
-function focusTextInput() {
-  const input = modal.querySelector("[data-img-text-input]");
-  if (!input) return;
-  input.focus();
-  input.select();
+// Focus the contenteditable of the text overlay currently in edit mode, so the
+// user types directly on the image. `selectAll` selects the whole placeholder
+// ("Your text") so the first keystroke replaces it (used when adding); otherwise
+// the caret sits at the end (used after a style click re-render). notify() is
+// synchronous, so the node is already in the DOM when we call this.
+function focusEditingText({ selectAll = false } = {}) {
+  const st = state();
+  if (!st?.editingOverlayId) return;
+  const node = modal.querySelector(`[data-img-overlay="${st.editingOverlayId}"] [data-img-overlay-text]`);
+  if (!node) return;
+  node.focus();
+  const sel = window.getSelection();
+  if (!sel) return;
+  const range = document.createRange();
+  range.selectNodeContents(node);
+  if (!selectAll) range.collapse(false); // caret to end
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+// Safety net before baking: push the live contenteditable text into state, in
+// case a click stole focus before the last `input` event fired.
+function syncEditingText() {
+  const st = state();
+  if (!st?.editingOverlayId) return;
+  const node = modal.querySelector(`[data-img-overlay="${st.editingOverlayId}"] [data-img-overlay-text]`);
+  if (node) imageStudio.updateOverlaySilent(KEY, st.editingOverlayId, { text: node.textContent });
 }
 
 // Throwaway file picker for the "Your style" tile (kind="style") and the
@@ -691,6 +704,7 @@ const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
 // Commit the working image to the origin draft, then close.
 function useImage() {
+  syncEditingText(); // fold any in-flight inline text edit into state first
   const st = state();
   // Carousel: attach every (possibly per-slide-edited) slide as a multi-slide
   // post. Single image: the working image with any overlays flattened.
@@ -725,6 +739,7 @@ function useImage() {
 // slide, then return to the carousel results filmstrip (updateSlide flips the
 // mode). "Use carousel" then ships the edited set.
 function commitSlideEdit() {
+  syncEditingText();
   const st = state();
   if (!st || st.selectedIndex == null || !st.currentImage) return;
   const idx = st.selectedIndex;
@@ -822,6 +837,9 @@ function startOverlayGesture(event, el) {
   if (st) st.selectedOverlayId = id;
   modal.querySelectorAll(".image-studio__overlay.is-selected").forEach((n) => n.classList.remove("is-selected"));
   el.classList.add("is-selected");
+  // Hide the text mini-toolbar while dragging so it doesn't trail the element.
+  const layer = modal.querySelector("[data-img-overlay-layer]");
+  if (layer) layer.classList.add("is-gesturing");
 
   const cx = rect.left + o.xF * rect.width;
   const cy = rect.top + o.yF * rect.height;
@@ -857,8 +875,11 @@ function startOverlayGesture(event, el) {
   const up = () => {
     window.removeEventListener("pointermove", move);
     window.removeEventListener("pointerup", up);
+    if (layer) layer.classList.remove("is-gesturing");
+    // Interacting with an element ends any inline text edit (of another element);
+    // the re-render below drops its contenteditable.
     const cur = state();
-    if (cur) cur.activeTool = o.kind; // surface the matching panel
+    if (cur) cur.editingOverlayId = null;
     imageStudio.notifyOverlays(KEY);
   };
   window.addEventListener("pointermove", move);
@@ -912,50 +933,79 @@ function onClick(event) {
   if (varRm) return void imageStudio.removeVariation(KEY, Number(varRm.dataset.imgRemoveVariation));
   const varPick = event.target.closest("[data-img-variation]");
   if (varPick) return void imageStudio.selectVariation(KEY, Number(varPick.dataset.imgVariation));
-  const toolBtn = event.target.closest("[data-img-tool]");
-  // Segmented palette: single-select, no toggle-off — one tool stays active so
-  // the options panel is never empty. The Text tool drops a text element in;
-  // focus its input so the user can type straight away.
-  if (toolBtn) {
-    imageStudio.setActiveTool(KEY, toolBtn.dataset.imgTool, { toggle: false });
-    if (state()?.activeTool === "text") focusTextInput();
-    return;
+  // ── Edit action bar + on-canvas manipulation ──
+  // Action-bar / text-toolbar popover toggle (Crop, Add logo, text colour).
+  const popToggle = event.target.closest("[data-img-popover-toggle]");
+  if (popToggle) {
+    const name = popToggle.dataset.imgPopoverToggle;
+    return void imageStudio.setOpenPopover(KEY, st.openPopover === name ? null : name);
   }
-  // Overlay controls (Add logo / Add text panels).
+  // A click outside any open popover (but not on its trigger) closes it; fall
+  // through so the click still performs its normal action.
+  if (st.openPopover && !event.target.closest("[data-img-popover]")) imageStudio.setOpenPopover(KEY, null);
+
+  // Add text → drop an element that opens straight into inline edit; focus it so
+  // typing replaces "Your text".
   if (event.target.closest("[data-img-add-text]")) {
     imageStudio.addOverlay(KEY, { kind: "text" });
-    focusTextInput();
+    focusEditingText({ selectAll: true });
     return;
   }
-  if (event.target.closest("[data-img-logo-upload]")) return void openLogoPicker();
+  if (event.target.closest("[data-img-logo-upload]")) {
+    imageStudio.setOpenPopover(KEY, null);
+    return void openLogoPicker();
+  }
   const preset = event.target.closest("[data-img-logo-preset]");
-  if (preset) return void imageStudio.addOverlay(KEY, { kind: "logo", url: preset.dataset.imgLogoPreset });
+  if (preset) {
+    imageStudio.setOpenPopover(KEY, null);
+    return void imageStudio.addOverlay(KEY, { kind: "logo", url: preset.dataset.imgLogoPreset });
+  }
   const ovDel = event.target.closest("[data-img-overlay-delete]");
   if (ovDel) return void imageStudio.removeOverlay(KEY, ovDel.dataset.imgOverlayDelete);
+  // Text style controls (from the element's mini toolbar); keep the caret in the
+  // contenteditable afterwards if we're editing.
+  const restoreEdit = () => {
+    if (state()?.editingOverlayId) focusEditingText({ selectAll: false });
+  };
   const txtColor = event.target.closest("[data-img-text-color]");
-  if (txtColor && st.selectedOverlayId)
-    return void imageStudio.updateOverlay(KEY, st.selectedOverlayId, { color: txtColor.dataset.imgTextColor });
+  if (txtColor && st.selectedOverlayId) {
+    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { color: txtColor.dataset.imgTextColor });
+    imageStudio.setOpenPopover(KEY, null);
+    restoreEdit();
+    return;
+  }
   const txtSize = event.target.closest("[data-img-text-size]");
-  if (txtSize && st.selectedOverlayId)
-    return void imageStudio.updateOverlay(KEY, st.selectedOverlayId, { sizeF: Number(txtSize.dataset.imgTextSize) });
+  if (txtSize && st.selectedOverlayId) {
+    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { sizeF: Number(txtSize.dataset.imgTextSize) });
+    restoreEdit();
+    return;
+  }
   if (event.target.closest("[data-img-text-bold]") && st.selectedOverlayId) {
     const o = imageStudio.getOverlay(KEY, st.selectedOverlayId);
-    return void imageStudio.updateOverlay(KEY, st.selectedOverlayId, { bold: !o?.bold });
+    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { bold: !o?.bold });
+    restoreEdit();
+    return;
   }
   if (event.target.closest("[data-img-text-outline]") && st.selectedOverlayId) {
     const o = imageStudio.getOverlay(KEY, st.selectedOverlayId);
-    return void imageStudio.updateOverlay(KEY, st.selectedOverlayId, { outline: !o?.outline });
+    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { outline: !o?.outline });
+    restoreEdit();
+    return;
   }
   const cropFmt = event.target.closest("[data-img-crop-format]");
-  if (cropFmt) return void imageStudio.applyEdit(KEY, "crop", { formatId: cropFmt.dataset.imgCropFormat });
+  if (cropFmt) {
+    imageStudio.setOpenPopover(KEY, null);
+    return void imageStudio.applyEdit(KEY, "crop", { formatId: cropFmt.dataset.imgCropFormat });
+  }
   const applyBtn = event.target.closest("[data-img-apply-edit]");
   if (applyBtn) return void applyEditTool(applyBtn.dataset.imgApplyEdit);
   if (event.target.closest("[data-img-undo]")) return void imageStudio.undoEdit(KEY);
   if (event.target.closest("[data-img-apply-slide]")) return void commitSlideEdit();
   if (event.target.closest("[data-img-use]")) return void useImage();
-  // Click on the image but not on an element → deselect the active overlay.
+  // Click on the image but not on an element → deselect + exit inline edit
+  // (selectOverlay(null) also clears editingOverlayId).
   if (
-    st.selectedOverlayId &&
+    (st.selectedOverlayId || st.editingOverlayId) &&
     event.target.closest(".image-studio__frame") &&
     !event.target.closest("[data-img-overlay]")
   ) {
@@ -970,13 +1020,12 @@ function onInput(event) {
     if (gen) gen.disabled = !event.target.value.trim();
   } else if (event.target.matches("[data-img-edit-prompt]")) {
     imageStudio.setEditPromptSilent(KEY, event.target.value);
-  } else if (event.target.matches("[data-img-text-input]")) {
-    // Live-edit the selected text overlay without a re-render (keeps focus).
+  } else if (event.target.matches("[data-img-overlay-text]")) {
+    // Inline text editing: sync the contenteditable to state WITHOUT re-render so
+    // the caret / focus survive (the DOM node is the source of truth here).
     const st = state();
-    if (!st?.selectedOverlayId) return;
-    imageStudio.updateOverlaySilent(KEY, st.selectedOverlayId, { text: event.target.value });
-    const node = modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .image-studio__overlay-text`);
-    if (node) node.textContent = event.target.value;
+    if (st?.editingOverlayId)
+      imageStudio.updateOverlaySilent(KEY, st.editingOverlayId, { text: event.target.textContent });
   } else if (event.target.matches("[data-img-text-colorpick]")) {
     // Live colour preview while dragging the picker (no re-render).
     const st = state();
@@ -991,13 +1040,72 @@ function onInput(event) {
 function onChange(event) {
   if (event.target.matches("[data-img-text-colorpick]")) {
     imageStudio.addCustomTextColor(KEY, event.target.value);
+    imageStudio.setOpenPopover(KEY, null);
+    if (state()?.editingOverlayId) focusEditingText({ selectAll: false });
   }
 }
 
 function onPointerDown(event) {
   if (event.target.closest("[data-img-overlay-delete]")) return; // click handles delete
+  // Clicks on the element's mini toolbar / a popover are UI, not a drag.
+  if (event.target.closest("[data-img-text-toolbar]") || event.target.closest("[data-img-popover]")) return;
   const overlayEl = event.target.closest("[data-img-overlay]");
-  if (overlayEl) startOverlayGesture(event, overlayEl);
+  if (!overlayEl) return;
+  // While a text element is being edited, let pointer events reach the
+  // contenteditable (caret placement / selection) instead of starting a drag.
+  const st = state();
+  if (st?.editingOverlayId === overlayEl.dataset.imgOverlay) return;
+  startOverlayGesture(event, overlayEl);
+}
+
+// Double-click a text element to edit it inline (the keyboard equivalent is
+// Enter on a focused overlay — see onKeydown).
+function onDblClick(event) {
+  const ov = event.target.closest("[data-img-overlay]");
+  if (!ov) return;
+  const o = imageStudio.getOverlay(KEY, ov.dataset.imgOverlay);
+  if (o?.kind === "text" && !state()?.editBusy) {
+    imageStudio.setEditingOverlay(KEY, ov.dataset.imgOverlay);
+    focusEditingText({ selectAll: false });
+  }
+}
+
+// Capture-phase keydown so popover / inline-edit Escape wins before the modal's
+// document-level Escape-to-close, and Enter commits inline text (no newline).
+function onKeydown(event) {
+  const st = state();
+  if (!st) return;
+  if (event.key === "Enter" && st.editingOverlayId) {
+    event.preventDefault();
+    event.stopPropagation();
+    syncEditingText();
+    imageStudio.setEditingOverlay(KEY, null);
+    return;
+  }
+  if (event.key === "Enter" && !st.editingOverlayId) {
+    // Enter on a focused (selected, non-editing) text overlay enters edit mode.
+    const ov = event.target.closest?.("[data-img-overlay]");
+    const o = ov ? imageStudio.getOverlay(KEY, ov.dataset.imgOverlay) : null;
+    if (o?.kind === "text" && !st.editBusy) {
+      event.preventDefault();
+      event.stopPropagation();
+      imageStudio.setEditingOverlay(KEY, ov.dataset.imgOverlay);
+      focusEditingText({ selectAll: true });
+    }
+    return;
+  }
+  if (event.key === "Escape") {
+    if (st.openPopover) {
+      event.stopPropagation();
+      return void imageStudio.setOpenPopover(KEY, null);
+    }
+    if (st.editingOverlayId) {
+      event.stopPropagation();
+      syncEditingText();
+      return void imageStudio.setEditingOverlay(KEY, null);
+    }
+    // else: fall through to the modal's document-level Escape (close).
+  }
 }
 
 // ── Public API ────────────────────────────────────────────────────────────
@@ -1013,6 +1121,8 @@ export function init() {
   modal.addEventListener("input", onInput);
   modal.addEventListener("change", onChange);
   modal.addEventListener("pointerdown", onPointerDown);
+  modal.addEventListener("dblclick", onDblClick);
+  modal.addEventListener("keydown", onKeydown, true); // capture (Escape/Enter order)
   bindOverlayDismissal({ modal, backdrop, close });
 }
 

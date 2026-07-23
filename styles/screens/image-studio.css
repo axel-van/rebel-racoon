@@ -550,63 +550,284 @@ button.image-studio__ref--pick:focus-visible {
   color: var(--ref-color-electric-blue-100);
 }
 
-/* ── Edit-mode tool palette (left panel) ────────────────────────────────── */
-/* A horizontal segmented palette: icon+label pills that wrap, one always
-   pressed. Reads as a tool palette (not a menu list); the active tool is a blue
-   pill, never a full-width bar. Sits directly above the active tool's options.
-   Mirrors the token language of the canvas view toggle (.image-studio__viewseg). */
-.image-studio__tools {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
-  border-bottom: 1px solid var(--app-border);
+/* ── Edit mode: direct editor (full-width canvas + floating action bar) ──── */
+/* Edit drops the left options panel: the canvas fills the width and the tools
+   live in a floating bar over it, with direct on-canvas manipulation. */
+.image-studio--edit .image-studio__workspace {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.image-studio__tool {
+.image-studio--edit .image-studio__canvas {
+  position: relative; /* anchor for the floating action bar */
+  padding-bottom: 116px; /* clearance so the 2-row bar never overlaps the image */
+}
+
+/* Clip the image in an inner box so the frame itself can overflow — the
+   on-element toolbar / colour popover / handles extend past the image edge. */
+.image-studio--edit .image-studio__frame {
+  overflow: visible;
+}
+
+.image-studio__frame-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: var(--app-radius-md);
+}
+
+/* Floating action bar — a card centred at the canvas bottom, two rows: the
+   Reprompt field + Apply on top, then Crop / Add text / Add logo below. */
+.image-studio__actionbar {
+  position: absolute;
+  left: 50%;
+  bottom: var(--ref-spacing-md);
+  transform: translateX(-50%);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  width: min(94%, 520px);
+  padding: var(--ref-spacing-xs);
+  background: var(--ref-color-white);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-lg);
+  box-shadow: var(--app-shadow-popover-lg);
+}
+
+.image-studio__actionbar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.image-studio__actionbar-tools {
+  justify-content: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.image-studio__actionbar-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: var(--sys-text-style-body-size);
+  color: var(--ref-color-grey-80);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+}
+
+.image-studio__actionbar-input::placeholder {
+  color: var(--ref-color-grey-60);
+}
+
+.image-studio__actionbar-input:focus-visible {
+  outline: none;
+}
+
+.image-studio__actionbar-apply {
+  flex: 0 0 auto;
+}
+
+.image-studio__actionbar-anchor {
+  position: relative;
+}
+
+.image-studio__actionbar-btn {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
   padding: 6px 12px;
-  border: 1px solid var(--app-border);
+  border: none;
+  background: none;
   border-radius: var(--app-radius-pill);
-  background: var(--ref-color-white);
-  color: var(--ref-color-grey-60);
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--ref-font-weight-bold);
   cursor: pointer;
-  transition:
-    background var(--ref-animation-short) var(--app-ease-out),
-    color var(--ref-animation-short) var(--app-ease-out),
-    border-color var(--ref-animation-short) var(--app-ease-out);
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--ref-font-weight-bold);
+  transition: background var(--ref-animation-short) var(--app-ease-out);
 }
 
-.image-studio__tool > i {
+.image-studio__actionbar-btn > i {
   font-size: 16px;
+  color: var(--ref-color-grey-60);
 }
 
-.image-studio__tool:hover {
+.image-studio__actionbar-btn:hover {
   background: var(--ref-color-grey-05);
-  color: var(--app-text);
 }
 
-/* Active tool — a filled blue pill (selection = accent/blue, like the filter
-   chips); the orange = AI accent stays reserved for the Reprompt Apply CTA. */
-.image-studio__tool[aria-pressed="true"] {
-  background: var(--ref-color-electric-blue-10);
-  border-color: var(--ref-color-electric-blue-100);
+.image-studio__actionbar-btn[aria-expanded="true"],
+.image-studio__actionbar-btn[aria-expanded="true"] > i {
   color: var(--ref-color-electric-blue-100);
 }
 
-.image-studio__tool:disabled {
+.image-studio__actionbar-btn[aria-expanded="true"] {
+  background: var(--ref-color-electric-blue-10);
+}
+
+.image-studio__actionbar-btn:disabled,
+.image-studio__actionbar-input:disabled {
   opacity: 0.5;
   cursor: default;
 }
 
-.image-studio__tool:focus-visible {
-  outline: 2px solid var(--ref-color-electric-blue-100);
-  outline-offset: 1px;
+/* Small popover anchored above its trigger (Crop ratios / logo presets / text
+   colour). */
+.image-studio__popover {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 6;
+  min-width: 180px;
+  padding: var(--ref-spacing-sm);
+  background: var(--ref-color-white);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-lg);
+  box-shadow: var(--app-shadow-popover-lg);
+}
+
+.image-studio__popover--logo {
+  left: auto;
+  right: 0;
+}
+
+.image-studio__popover--textcolor {
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 0;
+}
+
+.image-studio__popover-label {
+  margin: 0 0 var(--ref-spacing-xs);
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-80);
+}
+
+.image-studio__popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  margin-bottom: var(--ref-spacing-xs);
+}
+
+/* Mini toolbar attached to a selected TEXT element (upright pill above it). */
+.image-studio__text-toolbar {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: none;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  padding: 4px 6px;
+  white-space: nowrap;
+  background: var(--ref-color-white);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-pill);
+  box-shadow: var(--app-shadow-popover-lg);
+}
+
+.image-studio__overlay.is-selected .image-studio__text-toolbar {
+  display: inline-flex;
+}
+
+/* Hide the toolbar mid-drag so it doesn't trail the element. */
+.image-studio__overlay-layer.is-gesturing .image-studio__text-toolbar {
+  display: none;
+}
+
+.image-studio__tt-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--app-border);
+}
+
+.image-studio__tt-color {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-circle);
+  background: var(--sw, #fff);
+  cursor: pointer;
+}
+
+.image-studio__tt-sizes {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.image-studio__tt-size,
+.image-studio__tt-toggle {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border: none;
+  background: none;
+  border-radius: var(--app-radius-md);
+  cursor: pointer;
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.image-studio__tt-size:hover,
+.image-studio__tt-toggle:hover {
+  background: var(--ref-color-grey-05);
+}
+
+.image-studio__tt-size[aria-pressed="true"],
+.image-studio__tt-toggle[aria-pressed="true"] {
+  background: var(--ref-color-electric-blue-10);
+  color: var(--ref-color-electric-blue-100);
+}
+
+/* Outline toggle is an "A" drawn as a stroke so it reads as outlined text. */
+.image-studio__tt-outline {
+  -webkit-text-stroke: 1px var(--ref-color-grey-80);
+  color: transparent;
+}
+
+.image-studio__tt-outline[aria-pressed="true"] {
+  background: var(--ref-color-electric-blue-10);
+  -webkit-text-stroke-color: var(--ref-color-electric-blue-100);
+  color: transparent;
+}
+
+.image-studio__tt-del {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: var(--app-radius-md);
+  cursor: pointer;
+  color: var(--ref-color-grey-60);
+}
+
+.image-studio__tt-del:hover {
+  background: var(--ref-color-grey-05);
+  color: var(--ref-color-grey-80);
+}
+
+/* Inline text-edit state — text becomes typeable; the drag chrome steps aside. */
+.image-studio__overlay.is-editing {
+  cursor: default;
+}
+
+.image-studio__overlay.is-editing .image-studio__overlay-text {
+  pointer-events: auto;
+  cursor: text;
+  user-select: text;
+  outline: none;
+}
+
+.image-studio__overlay.is-editing .image-studio__overlay-rotate,
+.image-studio__overlay.is-editing .image-studio__overlay-resize {
+  display: none;
 }
 
 /* ── Canvas: generate results — one big preview + bottom filmstrip ──────── */
@@ -739,66 +960,6 @@ button.image-studio__ref--pick:focus-visible {
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-80);
-}
-
-/* Contextual options for the active tool / selected element. Lives in the left
-   panel directly under the tool palette, as its body — the palette
-   (.image-studio__tools) already carries the divider (border-bottom), so no
-   second border here; a flat section (matches the generate-mode groups), not a
-   floating card. */
-.image-studio__subpanel {
-  width: 100%;
-  box-sizing: border-box;
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-}
-
-.image-studio__subpanel-row {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-sm);
-}
-
-/* Action buttons for a tool sit in their own row so they stay auto-width
-   (never stretched) even though the panel column is align-stretch. */
-.image-studio__subpanel-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  margin-top: var(--ref-spacing-xxs);
-}
-
-.image-studio__subpanel-label {
-  margin: 0;
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-80);
-}
-
-.image-studio__subpanel-hint {
-  margin: 0;
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-60);
-}
-
-.image-studio__edit-prompt {
-  width: 100%;
-  box-sizing: border-box;
-  resize: none;
-  min-height: 40px;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-md);
-  background: var(--ref-color-white);
-  font-family: inherit;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
   color: var(--ref-color-grey-80);
 }
 
@@ -949,10 +1110,6 @@ button.image-studio__ref--pick:focus-visible {
 
 .image-studio__preset:hover {
   border-color: var(--ref-color-electric-blue-100);
-}
-
-.image-studio__text-controls {
-  flex-wrap: wrap;
 }
 
 .image-studio__swatches {

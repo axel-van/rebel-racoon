@@ -240,6 +240,8 @@ export function start(
     editPrompt: "", // scratch text for the Reprompt tool
     overlays: [], // draggable logo/text elements layered on the working image
     selectedOverlayId: null,
+    editingOverlayId: null, // text overlay in inline (contenteditable) edit
+    openPopover: null, // edit action-bar popover open: "crop" | "logo" | "textColor"
     lastError: null,
     _genTimer: null,
     _editTimer: null,
@@ -468,6 +470,8 @@ function adoptVariation(s, i) {
   // Focusing a variation / slide is a fresh edit context — drop any overlays.
   s.overlays = [];
   s.selectedOverlayId = null;
+  s.editingOverlayId = null;
+  s.openPopover = null;
 }
 
 export function runGeneration(sessionId) {
@@ -508,10 +512,10 @@ export function setMode(sessionId, mode) {
   if (mode === "edit" && !s.currentImage) return;
   s.mode = mode;
   s.canvasView = "image";
-  if (mode === "edit") {
-    // Segmented palette: always land on an active tool so the options show.
-    if (!s.activeTool) s.activeTool = EDIT_TOOLS[0].key;
-  }
+  // Switching mode drops any transient edit-UI state (inline text edit / open
+  // action-bar popover) so we never strand it across a mode change.
+  s.editingOverlayId = null;
+  s.openPopover = null;
   if (mode === "generate") {
     s.activeTool = null;
     // Leaving a carousel-slide edit via the Generate tab = cancel: drop overlays
@@ -666,6 +670,9 @@ export function addOverlay(sessionId, partial = {}) {
   const overlay = { id, ...(OVERLAY_DEFAULTS[partial.kind] || {}), ...partial };
   s.overlays.push(overlay);
   s.selectedOverlayId = id;
+  // A fresh text element opens straight into inline edit (contenteditable) so
+  // the user types over "Your text" immediately — no extra click.
+  s.editingOverlayId = partial.kind === "text" ? id : null;
   notify(sessionId);
   return id;
 }
@@ -714,7 +721,28 @@ export function notifyOverlays(sessionId) {
 export function selectOverlay(sessionId, id) {
   const s = states.get(sessionId);
   if (!s) return;
+  // Selecting a different element (or nothing) exits any inline text edit.
+  if (id !== s.selectedOverlayId) s.editingOverlayId = null;
   s.selectedOverlayId = id;
+  notify(sessionId);
+}
+
+// Enter / leave inline (contenteditable) edit of a text overlay. Entering also
+// selects it. Leave with id = null.
+export function setEditingOverlay(sessionId, id) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  s.editingOverlayId = id || null;
+  if (id) s.selectedOverlayId = id;
+  notify(sessionId);
+}
+
+// Which edit action-bar / element popover is open (one at a time): "crop" |
+// "logo" | "textColor" | null.
+export function setOpenPopover(sessionId, name) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  s.openPopover = name || null;
   notify(sessionId);
 }
 
@@ -729,6 +757,7 @@ export function removeOverlay(sessionId, id) {
   if (o && o.kind === "logo") safeRevoke(o.url);
   s.overlays = s.overlays.filter((x) => x.id !== id);
   if (s.selectedOverlayId === id) s.selectedOverlayId = null;
+  if (s.editingOverlayId === id) s.editingOverlayId = null;
   notify(sessionId);
 }
 
@@ -770,6 +799,8 @@ export function updateSlide(sessionId, index, { url, w, h }) {
   s.editHistory = [];
   s.overlays = [];
   s.selectedOverlayId = null;
+  s.editingOverlayId = null;
+  s.openPopover = null;
   s.activeTool = null;
   s.editBusy = false;
   s.mode = "generate"; // back to the carousel results filmstrip
