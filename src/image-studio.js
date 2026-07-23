@@ -387,6 +387,9 @@ function adoptVariation(s, i) {
   s.editHistory = [];
   s.activeTool = null;
   s.editPrompt = "";
+  // Focusing a variation / slide is a fresh edit context — drop any overlays.
+  s.overlays = [];
+  s.selectedOverlayId = null;
 }
 
 export function runGeneration(sessionId) {
@@ -424,7 +427,19 @@ export function setMode(sessionId, mode) {
   if (!s) return;
   if (mode === "edit" && !s.currentImage) return;
   s.mode = mode;
-  if (mode === "generate") s.activeTool = null;
+  if (mode === "generate") {
+    s.activeTool = null;
+    // Leaving a carousel-slide edit via the Generate tab = cancel: drop overlays
+    // + edit history and revert the working image to the focused slide (an
+    // applied edit goes through updateSlide, which persists first).
+    if (s.outputMode === "carousel") {
+      s.overlays = [];
+      s.selectedOverlayId = null;
+      s.editHistory = [];
+      const v = s.selectedIndex != null ? s.variations[s.selectedIndex] : null;
+      if (v) s.currentImage = { url: v.url, w: v.w, h: v.h, seed: v.seed };
+    }
+  }
   notify(sessionId);
 }
 
@@ -633,4 +648,25 @@ export function commitCarousel(sessionId) {
   const s = states.get(sessionId);
   if (!s) return [];
   return s.variations.map((v) => v.url);
+}
+
+// Write an edited image back into a carousel slide (Edit tab on a carousel →
+// "Apply to slide"). Replaces variations[index], clears the edit scratch, and
+// returns to the carousel results view. The caller flattens any overlays first.
+let slideEditSeq = 0;
+export function updateSlide(sessionId, index, { url, w, h }) {
+  const s = states.get(sessionId);
+  if (!s || !s.variations[index] || !url) return;
+  const v = s.variations[index];
+  slideEditSeq += 1;
+  s.variations[index] = { url, w: w || v.w, h: h || v.h, seed: `${v.seed}-e${slideEditSeq}` };
+  s.selectedIndex = index;
+  s.currentImage = { ...s.variations[index] };
+  s.editHistory = [];
+  s.overlays = [];
+  s.selectedOverlayId = null;
+  s.activeTool = null;
+  s.editBusy = false;
+  s.mode = "generate"; // back to the carousel results filmstrip
+  notify(sessionId);
 }

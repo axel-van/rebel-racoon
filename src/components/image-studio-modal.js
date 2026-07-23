@@ -15,7 +15,7 @@ import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordin
 import { showToast } from "./toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../posts-store.js?v=35";
 import { NETWORK_LABEL } from "../social-profiles.js?v=25";
-import * as imageStudio from "../image-studio.js?v=9";
+import * as imageStudio from "../image-studio.js?v=10";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -69,13 +69,10 @@ function renderStudio(st) {
 }
 
 function topBar(st) {
-  // Per-slide retouch isn't part of the carousel v1 — the Edit tab stays for the
-  // single-image flow only.
-  const canEdit = !!st.currentImage && st.outputMode !== "carousel";
+  // Edit acts on the working image — in carousel mode that's the focused slide.
+  const canEdit = !!st.currentImage;
   const editState = (st.mode === "edit" ? " active" : "") + (canEdit ? "" : " disabled");
-  const editAttrs = canEdit
-    ? ""
-    : `disabled title="${st.outputMode === "carousel" ? "Editing slides isn't available for carousels yet" : "Generate an image first"}"`;
+  const editAttrs = canEdit ? "" : 'disabled title="Generate an image first"';
   // DS Tabs (.ap-tabs) as the two peer modes — a full-width tab bar under the
   // title, used natively (no custom styling).
   return `<div class="image-studio__top">
@@ -209,10 +206,15 @@ function editCanvas(st) {
   const busy = st.editBusy
     ? `<div class="image-studio__busy"><span class="gen-image-spinner"></span><span>Applying…</span></div>`
     : "";
-  const badge =
+  const noBgBadge =
     img && img.noBg
       ? `<span class="image-studio__badge"><i class="ap-icon-cropper" aria-hidden="true"></i>Background removed (preview)</span>`
       : "";
+  const slideBadge =
+    st.outputMode === "carousel"
+      ? `<span class="image-studio__badge image-studio__badge--slide"><i class="ap-icon-multiple-images" aria-hidden="true"></i>Editing slide ${(st.selectedIndex ?? 0) + 1} / ${st.variations.length}</span>`
+      : "";
+  const badge = slideBadge || noBgBadge;
   // Canvas holds ONLY the image frame in edit mode; the tool/element options
   // live in the left panel (editControls → editSubpanel), so the image stays
   // put when the selection changes.
@@ -246,10 +248,16 @@ function renderOverlay(o, selected) {
 // Bottom bar — one primary CTA per mode / phase.
 function footer(st) {
   if (st.mode === "edit") {
+    // Editing a carousel slide bakes the edit back into that slide and returns
+    // to the carousel; editing a single image attaches it to the draft.
+    const carouselSlide = st.outputMode === "carousel";
+    const primary = carouselSlide
+      ? `<button type="button" class="ap-button primary orange" data-img-apply-slide ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Apply to slide ${(st.selectedIndex ?? 0) + 1}</span></button>`
+      : `<button type="button" class="ap-button primary orange" data-img-use ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Use this image</span></button>`;
     return `<div class="image-studio__bar">
       <button type="button" class="ap-button ghost grey" data-img-undo ${imageStudio.canUndo(KEY) ? "" : "disabled"}><i class="ap-icon-refresh"></i><span>Undo</span></button>
       <div class="image-studio__bar-spacer"></div>
-      <button type="button" class="ap-button primary orange" data-img-use ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Use this image</span></button>
+      ${primary}
     </div>`;
   }
   if (st.genPhase === "generating") {
@@ -566,8 +574,8 @@ const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 // Commit the working image to the origin draft, then close.
 function useImage() {
   const st = state();
-  // Carousel: attach every slide as a multi-slide post (no overlays / edit in
-  // this v1). Single image: the working image (with any overlays flattened).
+  // Carousel: attach every (possibly per-slide-edited) slide as a multi-slide
+  // post. Single image: the working image with any overlays flattened.
   if (st?.outputMode === "carousel") {
     const urls = imageStudio.commitCarousel(KEY);
     if (urls.length && currentSessionId && currentPostId) {
@@ -593,6 +601,24 @@ function useImage() {
     return;
   }
   finalize(imageStudio.commit(KEY));
+}
+
+// Bake the current carousel-slide edit (overlays flattened in) back into that
+// slide, then return to the carousel results filmstrip (updateSlide flips the
+// mode). "Use carousel" then ships the edited set.
+function commitSlideEdit() {
+  const st = state();
+  if (!st || st.selectedIndex == null || !st.currentImage) return;
+  const idx = st.selectedIndex;
+  const { w, h } = st.currentImage;
+  const applySlide = (url) => imageStudio.updateSlide(KEY, idx, { url, w, h });
+  if (st.overlays.length) {
+    compositeOverlays(st.currentImage.url, st.overlays, w, h)
+      .then(applySlide)
+      .catch(() => applySlide(st.currentImage.url));
+    return;
+  }
+  applySlide(st.currentImage.url);
 }
 
 // Apply an edit. Annotation composites the strokes into the image locally (a
@@ -867,6 +893,7 @@ function onClick(event) {
   const applyBtn = event.target.closest("[data-img-apply-edit]");
   if (applyBtn) return void applyEditTool(applyBtn.dataset.imgApplyEdit);
   if (event.target.closest("[data-img-undo]")) return void imageStudio.undoEdit(KEY);
+  if (event.target.closest("[data-img-apply-slide]")) return void commitSlideEdit();
   if (event.target.closest("[data-img-use]")) return void useImage();
   // Click on the image but not on an element → deselect the active overlay.
   if (
