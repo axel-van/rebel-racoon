@@ -15,7 +15,7 @@ import {
 import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=5";
 import { CLIP_SUBTITLE_ITEMS, CLIP_SUBTITLE_LABEL } from "../clip-subtitles.js?v=1";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=6";
-import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=35";
+import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=36";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
   getThread,
@@ -71,7 +71,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=10";
-import * as contextBuilder from "../context-builder.js?v=166";
+import * as contextBuilder from "../context-builder.js?v=167";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";

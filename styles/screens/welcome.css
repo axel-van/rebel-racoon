@@ -773,6 +773,75 @@
   color: var(--ref-color-orange-100);
 }
 
+/* Reference-image usage guidance (#11) — an optional note + target networks
+   per image. Read view = card (thumb + meta); edit view = row (thumb + fields). */
+.recap__refimg-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  width: 168px;
+  margin: 0;
+}
+
+.recap__refimg-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.recap__refimg-note {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: 1.35;
+  color: var(--ref-color-grey-80);
+}
+
+.recap__refimg-nets {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+  font-size: var(--ref-font-size-md);
+  line-height: 1;
+}
+
+.recap__refimg-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  margin-bottom: var(--ref-spacing-xs);
+}
+
+.recap__refimg-row {
+  display: flex;
+  gap: var(--ref-spacing-sm);
+  align-items: flex-start;
+}
+
+.recap__refimg-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.recap__refimg-noteinput {
+  width: 100%;
+  resize: vertical;
+}
+
+.recap__refimg-netchips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+}
+
+.recap__refimg-netchip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
 .recap__type-grid {
   display: flex;
   flex-wrap: wrap;

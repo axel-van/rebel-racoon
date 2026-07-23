@@ -126,7 +126,9 @@ export function addContext(ctx = {}) {
     brandPersonality: ctx.brandPersonality || "",
     brandTypography: ctx.brandTypography && typeof ctx.brandTypography === "object" ? { ...ctx.brandTypography } : null,
     brandColors: Array.isArray(ctx.brandColors) ? ctx.brandColors.map((c) => ({ ...c })) : [],
-    referenceImages: Array.isArray(ctx.referenceImages) ? ctx.referenceImages.map((i) => ({ ...i })) : [],
+    referenceImages: Array.isArray(ctx.referenceImages)
+      ? ctx.referenceImages.map((i) => ({ ...i, networks: Array.isArray(i.networks) ? [...i.networks] : [] }))
+      : [],
     // — meta —
     usedIn: typeof ctx.usedIn === "number" ? ctx.usedIn : 0,
     updatedAt: ctx.updatedAt || "just now",
@@ -271,6 +273,10 @@ export function duplicateContext(id) {
     brandPersonality: src.brandPersonality || "",
     brandTypography: src.brandTypography ? { ...src.brandTypography } : null,
     brandColors: (src.brandColors || []).map((c) => ({ ...c })),
+    referenceImages: (src.referenceImages || []).map((i) => ({
+      ...i,
+      networks: Array.isArray(i.networks) ? [...i.networks] : [],
+    })),
     isDefault: false,
     usedIn: 0,
     analysis: src.analysis ? { ...src.analysis } : { voice: null, brief: null, brand: null },

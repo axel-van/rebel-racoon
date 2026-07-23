@@ -16,7 +16,7 @@
 import * as inlineQuestion from "./inline-question.js?v=48";
 import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=58";
 import * as rightPanel from "./components/right-panel.js?v=310";
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=35";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=36";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=24";
 import { connectors as connectorMocks } from "./mocks.js?v=56";
 import { getConnectedProfiles, buildConnectedProfileItems, PROFILE_SEARCH_THRESHOLD } from "./social-profiles.js?v=26";
@@ -64,7 +64,7 @@ function emptyDraft(overrides = {}) {
     brandPersonality: "",
     brandTypography: null, // { headingFont, bodyFont }
     brandColors: [], // Array<{ name, hex }>
-    referenceImages: [], // Array<{ id, label, url }>
+    referenceImages: [], // Array<{ id, label, url, note?, networks? }> — note/networks = optional usage guidance
     sourceType: null, // "website" | "documents" | "social"
     sourceUrl: "",
     sourceFile: null,
@@ -212,7 +212,7 @@ export function startAlt(sessionId, { onComplete, prefilledUrl = "" } = {}) {
 // URL) only when multilingual Playbooks are enabled — so the flow stays a tight
 // 3 steps by default and becomes 4 with the flag on.
 function altTotalSteps() {
-  return isFlagOn("multilingualPlaybook") ? 4 : 3;
+  return isFlagOn("multilingualPlaybook") ? 5 : 4;
 }
 function altStepLabel(n) {
   return `${n} / ${altTotalSteps()}`;
@@ -368,15 +368,84 @@ function askAltDocuments(sessionId) {
       }
       inlineQuestion.exit(sessionId);
       notify(sessionId);
-      maybeOpenAltBrief(sessionId);
+      askAltReferenceImages(sessionId);
     },
+    onSkip: () => {
+      inlineQuestion.exit(sessionId);
+      notify(sessionId);
+      askAltReferenceImages(sessionId);
+    },
+    onBack: () => askAltProfile(sessionId),
+  });
+}
+
+// Optional final step — upload reference images so generated visuals stay
+// on-brand. Picking the one action opens a file dialog (data URLs → the draft's
+// referenceImages, surfaced in the Playbook + the image generator); a cancelled
+// dialog leaves the question open so the user can still Skip.
+function askAltReferenceImages(sessionId) {
+  postAssistantMessage(
+    sessionId,
+    "Last one, optional: add a few reference images so I keep generated visuals on-brand. Or skip.",
+  );
+  inlineQuestion.ask(sessionId, {
+    title: "Add reference images (optional)",
+    subtitle: "Logos, product shots, a brand board — I use them in the image generator.",
+    stepLabel: altStepLabel(isFlagOn("multilingualPlaybook") ? 5 : 4),
+    items: [
+      {
+        value: "add",
+        label: "Add reference images",
+        caption: "Upload from your computer",
+        icon: "ap-icon-multiple-images",
+      },
+    ],
+    skipLabel: "Skip",
+    onPick: () => openAltReferenceImagePicker(sessionId),
     onSkip: () => {
       inlineQuestion.exit(sessionId);
       notify(sessionId);
       maybeOpenAltBrief(sessionId);
     },
-    onBack: () => askAltProfile(sessionId),
+    onBack: () => askAltDocuments(sessionId),
   });
+}
+
+// Throwaway multi-file picker → reads each image as a data URL (so it persists
+// with the Playbook, unlike an ephemeral object URL) into the draft, then
+// advances. Mirrors the Playbook Brand-section upload handler.
+let altRefSeq = 0;
+function openAltReferenceImagePicker(sessionId) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.multiple = true;
+  input.addEventListener("change", () => {
+    const files = Array.from(input.files || []);
+    if (!files.length) return; // cancelled — leave the question open to Skip
+    let pending = files.length;
+    for (const file of files) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const d = drafts.get(sessionId);
+        if (d) {
+          if (!Array.isArray(d.referenceImages)) d.referenceImages = [];
+          altRefSeq += 1;
+          d.referenceImages.push({ id: `ref-${altRefSeq}`, label: file.name, url: reader.result });
+        }
+        pending -= 1;
+        if (pending === 0) {
+          const n = files.length;
+          postUserTurn(sessionId, `${n} reference ${n === 1 ? "image" : "images"} added`);
+          inlineQuestion.exit(sessionId);
+          notify(sessionId);
+          maybeOpenAltBrief(sessionId);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+  input.click();
 }
 
 // At the end of the ALT chat, navigate to the centered /welcome-alt/recap
@@ -724,7 +793,9 @@ export function save(sessionId) {
     brandPersonality: d.brandPersonality || "",
     brandTypography: d.brandTypography ? { ...d.brandTypography } : null,
     brandColors: Array.isArray(d.brandColors) ? d.brandColors.map((c) => ({ ...c })) : [],
-    referenceImages: Array.isArray(d.referenceImages) ? d.referenceImages.map((i) => ({ ...i })) : [],
+    referenceImages: Array.isArray(d.referenceImages)
+      ? d.referenceImages.map((i) => ({ ...i, networks: Array.isArray(i.networks) ? [...i.networks] : [] }))
+      : [],
     updatedAt: "just now",
   };
 

@@ -15,11 +15,11 @@
 // notify() fanning out to re-render the assistant panel.
 //
 // Everything is MOCKED (no real image API): generateImage returns a seeded
-// Picsum URL keyed on the inputs; the edit tools reseed / composite locally.
-// Only Annotation (canvas composite) and the added logo/text elements produce
-// faithful results — the generative tools (Fill / Remove / Expand / Remove
-// background) are honest previews. The committed url rides back to the draft via
-// attachImageToDraft (see the modal component).
+// Picsum URL keyed on the inputs; the edit tools reseed / composite / crop
+// locally. Annotation (canvas composite), Crop (same-seed reframe) and the added
+// logo/text elements produce faithful results; Reprompt is an honest preview
+// (reseed). The committed url rides back to the draft via attachImageToDraft
+// (see the modal component).
 
 import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=5";
 
@@ -64,20 +64,16 @@ export const MOOD_OPTIONS = [
   { key: "playful", label: "Playful" },
 ];
 
-// Firefly-style edit tools. `mock` describes how the (faked) result is produced;
-// `panel` is the contextual sub-panel a tool needs before applying:
-//   - "brush"  → a canvas overlay to draw on (annotate composites; fill/remove
-//                brush a region that seeds a reseed)
+// Firefly-style edit tools. `panel` is the contextual sub-panel a tool needs
+// before applying:
+//   - "brush"  → a canvas overlay to draw on (annotate bakes strokes in)
 //   - "prompt" → a textarea describing the change (reseed)
-//   - "format" → an aspect picker (reseed at the new dimensions)
-//   - null     → one-click apply
+//   - "format" → a ratio picker (crop the current image to the chosen aspect)
+//   - "overlay"→ draggable logo / text element controls
 export const EDIT_TOOLS = [
   { key: "prompt", label: "Reprompt", icon: "ap-icon-archie-official", panel: "prompt", faithful: false },
   { key: "annotate", label: "Annotate", icon: "ap-icon-pen", panel: "brush", faithful: true },
-  { key: "fill", label: "Generative fill", icon: "ap-icon-plus", panel: "brush", faithful: false },
-  { key: "remove", label: "Remove object", icon: "ap-icon-trash", panel: "brush", faithful: false },
-  { key: "expand", label: "Expand", icon: "ap-icon-maximize", panel: "format", faithful: false },
-  { key: "removebg", label: "Remove background", icon: "ap-icon-cropper", panel: null, faithful: false },
+  { key: "crop", label: "Crop", icon: "ap-icon-cropper", panel: "format", faithful: true },
   // Overlay tools — add a draggable logo / text element onto the image, then
   // flatten it in. `panel: "overlay"` renders the overlay controls.
   { key: "logo", label: "Add logo", icon: "ap-icon-file--image", panel: "overlay", faithful: true },
@@ -185,7 +181,13 @@ export function start(
   // on-brand. The user can add their own or toggle the Playbook set off.
   const pbRefs = (Array.isArray(playbookRefs) ? playbookRefs : [])
     .filter((r) => r && r.url)
-    .map((r, i) => ({ id: r.id || `pb-${i}`, url: r.url, label: r.label || "" }));
+    .map((r, i) => ({
+      id: r.id || `pb-${i}`,
+      url: r.url,
+      label: r.label || "",
+      note: r.note || "",
+      networks: Array.isArray(r.networks) ? r.networks : [],
+    }));
   const usePlaybookRefs = pbRefs.length > 0;
   const initialRefs = usePlaybookRefs ? pbRefs.slice(0, MAX_REFS).map((r) => ({ ...r, fromPlaybook: true })) : [];
   if (editImage && editImage.url) {
@@ -207,6 +209,7 @@ export function start(
     // reachable once an image exists (currentImage set after generation or
     // seeded here when editing an existing draft image).
     mode, // "generate" | "edit"
+    canvasView: "image", // right-pane view: "image" | "feed" (in-feed preview)
     genPhase,
     outputMode, // single image vs multi-slide carousel (generate mode)
     postId,
@@ -221,12 +224,13 @@ export function start(
     playbookRefs: pbRefs, // the Playbook's brand images (snapshot, for the toggle)
     playbookName: playbookName || "", // brand/playbook label for the toggle
     usePlaybookRefs, // include the Playbook brand images in the grid
+    collapsedGroups: new Set(), // generate-panel section ids the user collapsed
     variationCount: 2, // single-image mode: how many alternatives to pick from
     slideCount, // carousel mode: how many slides to generate
     variations, // [{ seed, url, w, h }] — alternatives (single) or slides (carousel)
     addingVariation: false, // a "+" generate-another is in flight
     selectedIndex,
-    currentImage, // { url, w, h, seed, noBg? } — the working image in edit
+    currentImage, // { url, w, h, seed } — the working image in edit
     activeTool: null, // one of EDIT_TOOLS keys
     editBusy: false,
     editHistory: [], // undo stack of prior currentImage snapshots
@@ -369,6 +373,25 @@ export function removeReferenceImage(sessionId, id) {
   notify(sessionId);
 }
 
+// Toggle ONE Playbook reference image in/out of the used set. The Playbook
+// tiles are always shown in the grid; this flips whether a given one is sent
+// to generation (selected) or skipped. Adds respect the MAX_REFS cap.
+export function toggleReferenceImage(sessionId, id) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  const selected = s.referenceImages.some((r) => r.id === id);
+  if (selected) {
+    s.referenceImages = s.referenceImages.filter((r) => r.id !== id);
+  } else {
+    if (s.referenceImages.length >= MAX_REFS) return;
+    const pb = (s.playbookRefs || []).find((r) => r.id === id);
+    if (pb) s.referenceImages.push({ ...pb, fromPlaybook: true });
+  }
+  // Keep the bulk flag in sync so the "Use all / Clear" chip reflects reality.
+  s.usePlaybookRefs = s.referenceImages.some((r) => r.fromPlaybook);
+  notify(sessionId);
+}
+
 // Toggle the Playbook's brand reference images in/out of the grid. Off = ignore
 // the Playbook (user-added images are always kept); on = re-add the brand set.
 export function setUsePlaybookRefs(sessionId, on) {
@@ -385,6 +408,16 @@ export function setUsePlaybookRefs(sessionId, on) {
   } else {
     s.referenceImages = s.referenceImages.filter((r) => !r.fromPlaybook);
   }
+  notify(sessionId);
+}
+
+// Collapse / expand a generate-panel section (Reference images, Visual style,
+// Mood, Format, …). State is per-studio so it survives the panel re-render.
+export function toggleGroupCollapsed(sessionId, id) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  if (s.collapsedGroups.has(id)) s.collapsedGroups.delete(id);
+  else s.collapsedGroups.add(id);
   notify(sessionId);
 }
 
@@ -463,13 +496,15 @@ export function runGeneration(sessionId) {
   notify(sessionId);
 }
 
-// Switch between the peer modes. "edit" and "preview" both require a working
-// image (an in-feed preview needs something to show).
+// Switch between the peer modes. "edit" requires a working image. Switching
+// mode always returns the right pane to the plain image view (the in-feed
+// preview is a within-mode toggle, not a persistent mode).
 export function setMode(sessionId, mode) {
   const s = states.get(sessionId);
   if (!s) return;
-  if ((mode === "edit" || mode === "preview") && !s.currentImage) return;
+  if (mode === "edit" && !s.currentImage) return;
   s.mode = mode;
+  s.canvasView = "image";
   if (mode === "generate") {
     s.activeTool = null;
     // Leaving a carousel-slide edit via the Generate tab = cancel: drop overlays
@@ -483,6 +518,14 @@ export function setMode(sessionId, mode) {
       if (v) s.currentImage = { url: v.url, w: v.w, h: v.h, seed: v.seed };
     }
   }
+  notify(sessionId);
+}
+
+// Flip the right pane between the plain image and the in-feed network preview.
+export function setCanvasView(sessionId, view) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  s.canvasView = view === "feed" ? "feed" : "image";
   notify(sessionId);
 }
 
@@ -543,23 +586,21 @@ export function setActiveTool(sessionId, tool, { toggle = true } = {}) {
   notify(sessionId);
 }
 
-// Produce the (faked) edited image. Only annotate (handled by the caller, which
-// passes a composited data URL) is faithful; the rest reseed.
+// Produce the edited image. Annotate (handled by the caller, which passes a
+// composited data URL) and Crop are faithful; Reprompt reseeds.
 function computeEdit(s, tool, payload) {
   const cur = s.currentImage;
   const stamp = Date.now().toString(36);
-  if (tool === "expand") {
+  if (tool === "crop") {
+    // Crop = reframe the SAME photo to a new aspect. Keeping the seed and only
+    // changing the requested dimensions makes picsum return the current image
+    // cropped to the ratio — a faithful reframe, not a fresh generation.
     const fmt = payload.formatId || s.formatId;
     s.formatId = fmt; // the frame genuinely changes shape
     const dims = dimsFor(fmt);
-    const seed = `${cur.seed}-exp-${stamp}`;
-    return { url: picsum(seed, dims), w: dims[0], h: dims[1], seed };
+    return { url: picsum(cur.seed, dims), w: dims[0], h: dims[1], seed: cur.seed };
   }
-  if (tool === "removebg") {
-    // We can't segment — present the current image on a checkerboard cutout.
-    return { url: cur.url, w: cur.w, h: cur.h, seed: `${cur.seed}-nobg`, noBg: true };
-  }
-  // prompt / fill / remove → reseed at the same dimensions (mock).
+  // prompt → reseed at the same dimensions (mock).
   const seed = `${cur.seed}-${tool}-${stamp}`;
   return { url: picsum(seed, [cur.w, cur.h]), w: cur.w, h: cur.h, seed };
 }

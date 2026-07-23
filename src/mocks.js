@@ -1386,8 +1386,20 @@ export const contexts = [
     // Brand reference images (#11) — the visual references the Image Studio
     // pulls in so generated imagery stays on-brand.
     referenceImages: [
-      { id: "acme-ref-1", label: "Product UI", url: "https://picsum.photos/seed/acme-brand-ui/480/480" },
-      { id: "acme-ref-2", label: "Team candid", url: "https://picsum.photos/seed/acme-brand-team/480/480" },
+      {
+        id: "acme-ref-1",
+        label: "Product UI",
+        url: "https://picsum.photos/seed/acme-brand-ui/480/480",
+        note: "Use for feature launches & how-to posts. Keep the real UI — don't mock up fake screens or crop the logo.",
+        networks: ["linkedin", "x"],
+      },
+      {
+        id: "acme-ref-2",
+        label: "Team candid",
+        url: "https://picsum.photos/seed/acme-brand-team/480/480",
+        note: "Great for culture & hiring content. Don't over-retouch — keep it authentic.",
+        networks: ["instagram", "facebook"],
+      },
       { id: "acme-ref-3", label: "Brand board", url: "https://picsum.photos/seed/acme-brand-board/480/480" },
     ],
     ctaLinks: [

@@ -96,14 +96,64 @@
   border-right: 1px solid var(--app-border);
 }
 
-/* Right canvas — the preview stage. Centers its content; scrolls if taller. */
+/* Right canvas — the preview stage: an optional view toggle on top, then the
+   image/preview body which centres its content and scrolls if taller. */
 .image-studio__canvas {
   min-height: 0;
   overflow: auto;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-md);
   padding: var(--ref-spacing-lg);
   background: var(--ref-color-grey-05);
+}
+
+.image-studio__canvas-body {
+  flex: 1 1 auto;
+  align-self: stretch;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+
+/* Compact segmented view toggle (Image / In feed) — a small iOS-style pill with
+   a white "thumb" behind the active option. Auto width, centred, low profile. */
+.image-studio__viewseg {
+  flex: 0 0 auto;
+  align-self: center;
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--ref-color-grey-10);
+  border-radius: var(--app-radius-pill);
+}
+
+.image-studio__viewseg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  padding: 4px 10px;
+  border: none;
+  background: none;
+  border-radius: var(--app-radius-pill);
+  cursor: pointer;
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-60);
+  transition:
+    background var(--ref-animation-short) var(--app-ease-out),
+    color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.image-studio__viewseg-btn > i {
+  font-size: 14px;
+}
+
+.image-studio__viewseg-btn[aria-pressed="true"] {
+  background: var(--ref-color-white);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow-subtle);
 }
 
 /* ── Left-panel groups (generate mode) ──────────────────────────────────── */
@@ -133,6 +183,57 @@
   gap: var(--ref-spacing-xs);
 }
 
+/* Collapsible section header — the whole bar toggles the section. */
+button.image-studio__group-head {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+button.image-studio__group-head:disabled {
+  cursor: default;
+}
+
+.image-studio__group-head-right {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  flex: none;
+}
+
+.image-studio__group-chevron {
+  font-size: 16px;
+  color: var(--ref-color-grey-60);
+  transition: transform var(--ref-animation-short) var(--app-ease-out);
+}
+
+/* Chevron points down when collapsed, flips up when the section is open. */
+.image-studio__group.is-collapsible:not(.is-collapsed) .image-studio__group-chevron {
+  transform: rotate(180deg);
+}
+
+/* Collapsing hides the body; keep a tighter head-only footprint. */
+.image-studio__group.is-collapsible.is-collapsed {
+  gap: 0;
+}
+
+/* Disabled section (e.g. Visual style while references drive the look). */
+.image-studio__group.is-disabled .image-studio__group-label {
+  color: var(--ref-color-grey-40);
+}
+
+.image-studio__group-note {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+  font-style: italic;
+}
+
 .image-studio__group-label {
   display: inline-flex;
   align-items: center;
@@ -142,6 +243,32 @@
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-80);
+}
+
+/* Typographic hierarchy (three tiers so the panel doesn't read as one flat
+   size). Tier 1 — the prompt is the lead task: larger + bold + darkest. */
+.image-studio__group--prompt .image-studio__group-label {
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+
+/* Tier 2 — section headers become quiet uppercase eyebrows: they mark sections
+   without competing with the prompt or the controls below them. */
+.image-studio__group-head .image-studio__group-label {
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--ref-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ref-color-grey-80);
+}
+
+/* Tier 3 — the meta on the right of each header (count / Optional / hint) is the
+   quietest: regular weight, muted grey. */
+.image-studio__group-head-right {
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--ref-color-grey-60);
 }
 
 .image-studio__count {
@@ -236,6 +363,151 @@
   display: block;
 }
 
+/* Playbook tile with usage guidance — the toggle tile + a caption (target
+   network badges + note) below it, so the grid cell becomes a small column. */
+.image-studio__ref-figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  margin: 0;
+  min-width: 0;
+}
+
+.image-studio__ref-figure > .image-studio__ref {
+  width: 100%;
+}
+
+.image-studio__ref-caption {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  min-width: 0;
+}
+
+.image-studio__ref-nets {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+  font-size: var(--ref-font-size-md);
+  line-height: 1;
+}
+
+.image-studio__ref-notetext {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Playbook reference tiles are explicit use/skip toggle buttons. */
+button.image-studio__ref--pick {
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition:
+    filter 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+button.image-studio__ref--pick:disabled {
+  cursor: not-allowed;
+}
+
+/* USED: full colour + a solid brand ring so it clearly reads as active. */
+.image-studio__ref--pick.is-used {
+  border-color: var(--ref-color-electric-blue-100);
+  box-shadow: inset 0 0 0 1px var(--ref-color-electric-blue-100);
+}
+
+/* SKIPPED: desaturated + darkened via a scrim so the state is obvious at a
+   glance, backed by the worded label below (never colour alone). */
+.image-studio__ref--pick.is-skipped {
+  filter: grayscale(0.7);
+}
+
+.image-studio__ref-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 27, 51, 0.34);
+  opacity: 0;
+  transition: opacity 120ms ease;
+  pointer-events: none;
+}
+
+.image-studio__ref--pick.is-skipped .image-studio__ref-scrim {
+  opacity: 1;
+}
+
+button.image-studio__ref--pick:not(:disabled):hover {
+  filter: none;
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+button.image-studio__ref--pick:not(:disabled):hover .image-studio__ref-scrim {
+  opacity: 0;
+}
+
+button.image-studio__ref--pick:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
+}
+
+/* Checkbox affordance (top-left): filled blue + tick when used, hollow when
+   skipped — the universal "include this" control. */
+.image-studio__ref-box {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--app-radius-sm);
+  border: 1.5px solid var(--ref-color-white);
+  background: rgba(10, 27, 51, 0.28);
+  color: var(--ref-color-white);
+  box-shadow: var(--app-shadow-subtle);
+}
+
+.image-studio__ref-box > i {
+  font-size: 12px;
+}
+
+.image-studio__ref--pick.is-used .image-studio__ref-box {
+  background: var(--ref-color-electric-blue-100);
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+/* Worded state chip (bottom): "Used" / "Skipped" — the accessible signal that
+   does not depend on colour. */
+.image-studio__ref-state {
+  position: absolute;
+  left: 5px;
+  bottom: 5px;
+  padding: 1px 7px;
+  border-radius: var(--app-radius-pill);
+  font-size: 11px;
+  font-weight: var(--ref-font-weight-bold);
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+
+.image-studio__ref--pick.is-used .image-studio__ref-state {
+  background: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-white);
+}
+
+.image-studio__ref--pick.is-skipped .image-studio__ref-state {
+  background: var(--ref-color-white);
+  color: var(--ref-color-grey-80);
+}
+
 .image-studio__ref-remove {
   position: absolute;
   top: 4px;
@@ -261,26 +533,33 @@
   background: rgba(10, 27, 51, 0.9);
 }
 
+/* Same dashed-upload affordance as the "Upload yours" style card
+   (.gen-style-card--upload in modals.css): 2px dashed grey-20 ring, grey-05
+   fill, 28px plus, blue on hover — kept square to align with the ref grid. */
 .image-studio__ref-add {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xxxs);
   aspect-ratio: 1;
-  border: 1px dashed var(--app-border);
-  border-radius: var(--app-radius-md);
-  background: var(--ref-color-white);
-  color: var(--ref-color-grey-60);
+  border: 2px dashed var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  background: var(--ref-color-grey-05);
+  color: var(--ref-color-grey-40);
   cursor: pointer;
   font-size: var(--sys-text-style-caption-size);
   transition:
-    border-color 120ms ease,
-    color 120ms ease;
+    border-color var(--ref-animation-short) var(--app-ease-out),
+    color var(--ref-animation-short) var(--app-ease-out);
 }
 
 .image-studio__ref-add > i {
-  font-size: 18px;
+  font-size: 28px;
+}
+
+.image-studio__ref-add > span {
+  color: var(--ref-color-grey-80);
 }
 
 .image-studio__ref-add:hover {
@@ -390,30 +669,11 @@
   flex: 0 0 auto;
 }
 
-.image-studio__frame.is-nobg {
-  background-color: var(--ref-color-white);
-  background-image:
-    linear-gradient(45deg, var(--ref-color-grey-10) 25%, transparent 25%),
-    linear-gradient(-45deg, var(--ref-color-grey-10) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, var(--ref-color-grey-10) 75%),
-    linear-gradient(-45deg, transparent 75%, var(--ref-color-grey-10) 75%);
-  background-size: 18px 18px;
-  background-position:
-    0 0,
-    0 9px,
-    9px -9px,
-    -9px 0;
-}
-
 .image-studio__frame-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-.image-studio__frame.is-nobg .image-studio__frame-img {
-  object-fit: contain;
 }
 
 .image-studio__annotate {
@@ -800,56 +1060,60 @@
   font-size: 13px;
 }
 
-/* ── Reference images: Playbook brand set ───────────────────────────────── */
-.image-studio__pb-row {
+/* ── Reference images: Playbook brand bar + uploads ─────────────────────── */
+/* Brand attribution + bulk action — replaces the old ambiguous filter-chip so
+   the source and the Use-all/Clear-all control are both explicit. */
+.image-studio__ref-brandbar {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+  margin-bottom: var(--ref-spacing-xxxs);
+}
+
+.image-studio__ref-brandname {
+  display: inline-flex;
+  align-items: center;
   gap: var(--ref-spacing-xxxs);
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--app-text);
 }
 
-.image-studio__pb-chip {
-  align-self: flex-start;
-}
-
-.image-studio__pb-chip > i {
-  margin-right: var(--ref-spacing-xxxs);
-  font-size: 13px;
+.image-studio__ref-brandname > i {
+  font-size: 14px;
   color: var(--app-archie-mark);
 }
 
-/* When the toggle is on, keep the AI-mark glyph readable on the pressed fill. */
-.image-studio__pb-chip[aria-pressed="true"] > i {
-  color: inherit;
+/* Text-button bulk toggle (blue = routine list action). */
+.image-studio__ref-bulk {
+  flex: none;
+  padding: 2px 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-electric-blue-100);
 }
 
-.image-studio__pb-hint {
+.image-studio__ref-bulk:hover {
+  text-decoration: underline;
+}
+
+.image-studio__ref-help {
+  margin: 0 0 var(--ref-spacing-xs);
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   color: var(--ref-color-grey-60);
 }
 
-/* Playbook-sourced reference tiles get an AI-mark badge + a brand-blue ring. */
-.image-studio__ref.is-playbook {
-  border-color: var(--ref-color-electric-blue-100);
-}
-
-.image-studio__ref-badge {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 18px;
-  height: 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--app-radius-circle);
-  background: var(--ref-color-white);
-  box-shadow: var(--app-shadow-subtle);
-  color: var(--app-archie-mark);
-}
-
-.image-studio__ref-badge > i {
-  font-size: 11px;
+/* "Your uploads" divider label above the user's own images. */
+.image-studio__ref-sublabel {
+  margin: var(--ref-spacing-sm) 0 var(--ref-spacing-xxs);
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-60);
 }
 
 /* Format hint: network icon + "Best for <Network>". */
@@ -863,20 +1127,8 @@
   font-size: 14px;
 }
 
-/* ── Preview mode: the post in-feed (reuses the Drafts post-card) ────────── */
-/* Full-width single column — no left panel; the feed card is the focus. */
-.image-studio--preview .image-studio__panel {
-  display: none;
-}
-
-.image-studio--preview .image-studio__workspace {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.image-studio--preview .image-studio__canvas {
-  place-items: start center;
-}
-
+/* ── In-feed preview (reuses the Drafts post-card) — shown in the right pane
+   when the view toggle is on "In-feed preview". ──────────────────────────── */
 .image-studio__preview {
   display: flex;
   flex-direction: column;

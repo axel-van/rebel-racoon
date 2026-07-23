@@ -15,10 +15,10 @@ import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordin
 import { showToast } from "./toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../posts-store.js?v=36";
 import { getSessionById } from "../sessions-store.js?v=6";
-import { getContextById } from "../contexts-store.js?v=35";
+import { getContextById } from "../contexts-store.js?v=36";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../social-profiles.js?v=26";
 import { renderPostCard } from "./post-card.js?v=68";
-import * as imageStudio from "../image-studio.js?v=12";
+import * as imageStudio from "../image-studio.js?v=16";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -62,7 +62,7 @@ function renderStudio(st) {
       ${raw(topBar(st))}
       <div class="image-studio__workspace">
         <aside class="image-studio__panel" aria-label="${st.mode === "edit" ? "Edit tools" : "Generation options"}">
-          ${raw(st.mode === "edit" ? editControls(st) : st.mode === "preview" ? "" : generateControls(st))}
+          ${raw(st.mode === "edit" ? editControls(st) : generateControls(st))}
         </aside>
         <section class="image-studio__canvas" aria-label="Preview">${raw(canvasContent(st))}</section>
       </div>
@@ -72,14 +72,13 @@ function renderStudio(st) {
 }
 
 function topBar(st) {
-  // Edit / Preview both act on the working image — in carousel mode that's the
-  // focused slide (Edit) / the whole set (Preview).
+  // Edit acts on the working image; the in-feed preview is a right-pane view
+  // toggle (see canvasViewToggle), not a mode.
   const hasImg = !!st.currentImage;
   const editState = (st.mode === "edit" ? " active" : "") + (hasImg ? "" : " disabled");
-  const previewState = (st.mode === "preview" ? " active" : "") + (hasImg ? "" : " disabled");
   const lockedAttrs = hasImg ? "" : 'disabled title="Generate an image first"';
   // DS Tabs (.ap-tabs) as the peer modes — a full-width tab bar under the title,
-  // used natively (no custom styling). "Preview" shows the post in-feed.
+  // used natively (no custom styling).
   return `<div class="image-studio__top">
       <span class="image-studio__top-title"><i class="ap-icon-archie-official" aria-hidden="true"></i>Image Studio</span>
     </div>
@@ -87,7 +86,6 @@ function topBar(st) {
       <div class="ap-tabs-nav" role="tablist" aria-label="Studio mode">
         <button type="button" class="ap-tabs-tab${st.mode === "generate" ? " active" : ""}" role="tab" aria-selected="${st.mode === "generate"}" data-img-mode="generate"><span>Generate</span></button>
         <button type="button" class="ap-tabs-tab${editState}" role="tab" aria-selected="${st.mode === "edit"}" data-img-mode="edit" ${lockedAttrs}><span>Edit</span></button>
-        <button type="button" class="ap-tabs-tab${previewState}" role="tab" aria-selected="${st.mode === "preview"}" data-img-mode="preview" ${lockedAttrs}><span>Preview</span></button>
       </div>
     </div>`;
 }
@@ -124,17 +122,36 @@ function editControls(st) {
   return tools + editSubpanel(st);
 }
 
-// Right canvas — shared; content depends on mode / generation phase.
-function canvasContent(st) {
-  if (st.mode === "preview") return previewCanvas(st);
-  if (st.mode === "edit") return editCanvas(st);
-  if (st.genPhase === "generating") return generatingCanvas(st);
-  if (st.genPhase === "results") return resultsCanvas(st);
-  return `<div class="gen-empty">
-    <i class="ap-icon-image" aria-hidden="true"></i>
-    <p class="gen-empty-title">Your image appears here</p>
-    <span class="gen-empty-sub">Describe it on the left, then generate.</span>
+// A compact segmented pill at the top of the right pane, flipping between the
+// plain image and the network-accurate in-feed preview. Shown only once there's
+// an image to preview (results in generate mode, or edit mode).
+function canvasViewToggle(st) {
+  const feed = st.canvasView === "feed";
+  const netIcon = st.network ? NETWORK_ICON_BY_PLATFORM[st.network] || "ap-icon-eye" : "ap-icon-eye";
+  return `<div class="image-studio__viewseg" role="group" aria-label="Preview view">
+    <button type="button" class="image-studio__viewseg-btn" data-img-view="image" aria-pressed="${!feed}"><i class="ap-icon-image" aria-hidden="true"></i>Image</button>
+    <button type="button" class="image-studio__viewseg-btn" data-img-view="feed" aria-pressed="${feed}"><i class="${netIcon}" aria-hidden="true"></i>In feed</button>
   </div>`;
+}
+
+// Right canvas — shared; content depends on mode / generation phase, with an
+// optional in-feed preview view layered on top via the toggle.
+function canvasContent(st) {
+  const hasImg = !!st.currentImage || (st.genPhase === "results" && st.variations.length > 0);
+  const showToggle = hasImg && (st.mode === "edit" || (st.mode === "generate" && st.genPhase === "results"));
+  const toggle = showToggle ? canvasViewToggle(st) : "";
+  let inner;
+  if (showToggle && st.canvasView === "feed") inner = previewCanvas(st);
+  else if (st.mode === "edit") inner = editCanvas(st);
+  else if (st.genPhase === "generating") inner = generatingCanvas(st);
+  else if (st.genPhase === "results") inner = resultsCanvas(st);
+  else
+    inner = `<div class="gen-empty">
+      <i class="ap-icon-image" aria-hidden="true"></i>
+      <p class="gen-empty-title">Your image appears here</p>
+      <span class="gen-empty-sub">Describe it on the left, then generate.</span>
+    </div>`;
+  return `${toggle}<div class="image-studio__canvas-body">${inner}</div>`;
 }
 
 function generatingCanvas(st) {
@@ -205,7 +222,7 @@ function resultsCanvas(st) {
 function editCanvas(st) {
   const img = st.currentImage;
   const ratio = img ? img.w / img.h : imageStudio.activeRatio(KEY);
-  const brushTool = st.activeTool === "annotate" || st.activeTool === "fill" || st.activeTool === "remove";
+  const brushTool = st.activeTool === "annotate";
   const canvasOverlay =
     brushTool && img
       ? `<canvas class="image-studio__annotate" data-img-annotate data-tool="${escapeHtml(st.activeTool)}" width="${img.w}" height="${img.h}"></canvas>`
@@ -213,19 +230,14 @@ function editCanvas(st) {
   const busy = st.editBusy
     ? `<div class="image-studio__busy"><span class="gen-image-spinner"></span><span>Applying…</span></div>`
     : "";
-  const noBgBadge =
-    img && img.noBg
-      ? `<span class="image-studio__badge"><i class="ap-icon-cropper" aria-hidden="true"></i>Background removed (preview)</span>`
-      : "";
-  const slideBadge =
+  const badge =
     st.outputMode === "carousel"
       ? `<span class="image-studio__badge image-studio__badge--slide"><i class="ap-icon-multiple-images" aria-hidden="true"></i>Editing slide ${(st.selectedIndex ?? 0) + 1} / ${st.variations.length}</span>`
       : "";
-  const badge = slideBadge || noBgBadge;
   // Canvas holds ONLY the image frame in edit mode; the tool/element options
   // live in the left panel (editControls → editSubpanel), so the image stays
   // put when the selection changes.
-  return `<div class="image-studio__frame${img && img.noBg ? " is-nobg" : ""}" style="--imgs-ratio:${ratio}">
+  return `<div class="image-studio__frame" style="--imgs-ratio:${ratio}">
       <img class="image-studio__frame-img" src="${img ? img.url : ""}" alt="Working image" />
       ${overlayLayer(st)}${canvasOverlay}${busy}${badge}
     </div>`;
@@ -288,15 +300,6 @@ function renderOverlay(o, selected) {
 
 // Bottom bar — one primary CTA per mode / phase.
 function footer(st) {
-  if (st.mode === "preview") {
-    const carousel = st.outputMode === "carousel";
-    const useLabel = carousel ? `Use carousel · ${st.variations.length} slides` : "Use this image";
-    const ready = carousel ? st.variations.length >= 2 : !!st.currentImage;
-    return `<div class="image-studio__bar">
-      <div class="image-studio__bar-spacer"></div>
-      <button type="button" class="ap-button primary orange" data-img-use ${ready ? "" : "disabled"}><i class="ap-icon-check"></i><span>${useLabel}</span></button>
-    </div>`;
-  }
   if (st.mode === "edit") {
     // Editing a carousel slide bakes the edit back into that slide and returns
     // to the carousel; editing a single image attaches it to the draft.
@@ -372,21 +375,82 @@ function formatChip(f, selected, dataAttr) {
   </button>`;
 }
 
+// Playbook reference tile — an explicit include/exclude control. The whole tile
+// is the toggle; a checkbox + a worded "Used" / "Skipped" state (not colour
+// alone) make the two states unmistakable.
+function playbookRefTile(r, on, capReached) {
+  const lockedOff = !on && capReached;
+  const note = (r.note || "").trim();
+  const nets = Array.isArray(r.networks) ? r.networks.filter((n) => NETWORK_ICON_BY_PLATFORM[n]) : [];
+  const stateTitle = on ? "Used in this image — tap to skip" : "Skipped — tap to use";
+  const title = note ? `${note} · ${stateTitle}` : stateTitle;
+  const tile = `<button type="button" class="image-studio__ref image-studio__ref--pick${on ? " is-used" : " is-skipped"}" data-img-ref-toggle="${escapeHtml(r.id)}" aria-pressed="${on}"${lockedOff ? " disabled" : ""} title="${escapeHtml(title)}">
+    <img src="${escapeHtml(r.url)}" alt="${escapeHtml(r.label || "Reference image")}" />
+    <span class="image-studio__ref-scrim" aria-hidden="true"></span>
+    <span class="image-studio__ref-box" aria-hidden="true">${on ? `<i class="ap-icon-check"></i>` : ""}</span>
+    <span class="image-studio__ref-state">${on ? "Used" : "Skipped"}</span>
+  </button>`;
+  // No guidance — plain tile (keeps the grid compact).
+  if (!note && !nets.length) return tile;
+  const netBadges = nets.length
+    ? `<span class="image-studio__ref-nets">${nets
+        .map(
+          (n) =>
+            `<i class="${NETWORK_ICON_BY_PLATFORM[n]}" title="${escapeHtml(NETWORK_LABEL[n] || n)}" aria-label="${escapeHtml(NETWORK_LABEL[n] || n)}"></i>`,
+        )
+        .join("")}</span>`
+    : "";
+  const noteLine = note ? `<span class="image-studio__ref-notetext">${escapeHtml(note)}</span>` : "";
+  return `<figure class="image-studio__ref-figure">
+    ${tile}
+    <figcaption class="image-studio__ref-caption">${netBadges}${noteLine}</figcaption>
+  </figure>`;
+}
+
+function uploadRefTile(r) {
+  return `<div class="image-studio__ref">
+    <img src="${escapeHtml(r.url)}" alt="${escapeHtml(r.label || "Reference image")}" />
+    <button type="button" class="image-studio__ref-remove" data-img-ref-remove="${escapeHtml(r.id)}" aria-label="Remove reference"><i class="ap-icon-close" aria-hidden="true"></i></button>
+  </div>`;
+}
+
 function refs(st) {
-  const tiles = st.referenceImages
-    .map(
-      (r) => `<div class="image-studio__ref${r.fromPlaybook ? " is-playbook" : ""}">
-        <img src="${escapeHtml(r.url)}" alt="${escapeHtml(r.label || "Reference image")}" />
-        ${r.fromPlaybook ? `<span class="image-studio__ref-badge" title="From your Playbook" aria-hidden="true"><i class="ap-icon-archie-official"></i></span>` : ""}
-        <button type="button" class="image-studio__ref-remove" data-img-ref-remove="${escapeHtml(r.id)}" aria-label="Remove reference"><i class="ap-icon-close" aria-hidden="true"></i></button>
-      </div>`,
-    )
-    .join("");
-  const addTile =
-    st.referenceImages.length < imageStudio.MAX_REFS
-      ? `<button type="button" class="image-studio__ref-add" data-img-ref-add><i class="ap-icon-plus" aria-hidden="true"></i><span>Add</span></button>`
-      : "";
-  return tiles + addTile;
+  const usedIds = new Set(st.referenceImages.map((r) => r.id));
+  const capReached = st.referenceImages.length >= imageStudio.MAX_REFS;
+  const pb = st.playbookRefs || [];
+  const uploads = st.referenceImages.filter((r) => !r.fromPlaybook);
+  const uploadTiles = uploads.map(uploadRefTile).join("");
+  const addTile = !capReached
+    ? `<button type="button" class="image-studio__ref-add" data-img-ref-add><i class="ap-icon-plus" aria-hidden="true"></i><span>Add yours</span></button>`
+    : "";
+  // No Playbook set — a single plain grid of the user's own images.
+  if (!pb.length) return `<div class="image-studio__refs">${uploadTiles}${addTile}</div>`;
+  // Playbook set present: its pick-tiles first, then a labelled "Your uploads"
+  // grid so the brand framing above stays accurate.
+  const pbTiles = pb.map((r) => playbookRefTile(r, usedIds.has(r.id), capReached)).join("");
+  return `<div class="image-studio__refs">${pbTiles}</div>
+    <p class="image-studio__ref-sublabel">Your uploads</p>
+    <div class="image-studio__refs">${uploadTiles}${addTile}</div>`;
+}
+
+// A generate-panel section with a collapsible header (click to expand/collapse).
+// `rightHtml` sits at the right of the header (count / Optional chip / format
+// hint). When `disabled`, the section can't be expanded and shows `disabledHint`
+// instead of its chevron — used to switch Visual style off while references
+// drive the look.
+function collapsibleGroup(st, { id, label, rightHtml = "", body, disabled = false, disabledHint = "" }) {
+  const collapsed = disabled || st.collapsedGroups.has(id);
+  const right =
+    disabled && disabledHint
+      ? `<span class="image-studio__group-note">${escapeHtml(disabledHint)}</span>`
+      : `${rightHtml}<i class="ap-icon-chevron-down image-studio__group-chevron" aria-hidden="true"></i>`;
+  return `<div class="image-studio__group is-collapsible${collapsed ? " is-collapsed" : ""}${disabled ? " is-disabled" : ""}">
+    <button type="button" class="image-studio__group-head" data-img-group-toggle="${id}" aria-expanded="${!collapsed}"${disabled ? " disabled" : ""}>
+      <span class="image-studio__group-label">${label}</span>
+      <span class="image-studio__group-head-right">${right}</span>
+    </button>
+    <div class="image-studio__group-body"${collapsed ? " hidden" : ""}>${body}</div>
+  </div>`;
 }
 
 function composeGroups(st) {
@@ -405,85 +469,84 @@ function composeGroups(st) {
   // "Variations" (pick one) for single, "Slides" (all kept) for carousel.
   const carousel = imageStudio.supportsCarousel(st.network);
   const isCarousel = carousel && st.outputMode === "carousel";
-  const outputGroup = carousel
-    ? `<div class="image-studio__group">
-      <div class="image-studio__group-head">
-        <p class="image-studio__group-label">Output</p>
-        <span class="image-studio__count">${NETWORK_LABEL[st.network] || st.network} supports carousels</span>
-      </div>
-      <div class="image-studio__chips">
-        <button type="button" class="ap-filter-chip" data-img-output="single" aria-pressed="${!isCarousel}"><i class="ap-icon-image" aria-hidden="true"></i>Single image</button>
-        <button type="button" class="ap-filter-chip" data-img-output="carousel" aria-pressed="${isCarousel}"><i class="ap-icon-multiple-images" aria-hidden="true"></i>Carousel</button>
-      </div>
-    </div>`
-    : "";
-  const countGroup = isCarousel
-    ? `<div class="image-studio__group">
-      <div class="image-studio__group-head">
-        <p class="image-studio__group-label">Slides</p>
-        <span class="image-studio__count">up to ${imageStudio.carouselMaxFor(st.network)}</span>
-      </div>
-      <div class="image-studio__chips">${imageStudio.SLIDE_CHOICES.filter(
-        (n) => n <= imageStudio.carouselMaxFor(st.network),
-      )
-        .map(
-          (n) =>
-            `<button type="button" class="ap-filter-chip" data-img-slidecount="${n}" aria-pressed="${st.slideCount === n}">${n}</button>`,
-        )
-        .join("")}</div>
-    </div>`
-    : `<div class="image-studio__group">
-      <div class="image-studio__group-head">
-        <p class="image-studio__group-label">Variations</p>
-      </div>
-      <div class="image-studio__chips">${imageStudio.VARIATION_CHOICES.map(
-        (n) =>
-          `<button type="button" class="ap-filter-chip" data-img-varcount="${n}" aria-pressed="${st.variationCount === n}">${n}</button>`,
-      ).join("")}</div>
-    </div>`;
-  // Reference images — prefilled from the session's Playbook brand set (if any),
-  // with a toggle to include/ignore them; the user can always add their own.
+  // Reference images — the session's Playbook brand set is always shown; each
+  // tile is an explicit use/skip toggle. A brand bar explains where they come
+  // from and offers a bulk Use-all / Clear-all shortcut.
   const hasPlaybookRefs = Array.isArray(st.playbookRefs) && st.playbookRefs.length > 0;
   const brand = st.playbookName || "Playbook";
-  const playbookToggle = hasPlaybookRefs
-    ? `<div class="image-studio__pb-row">
-        <button type="button" class="ap-filter-chip image-studio__pb-chip" data-img-toggle-playbook-refs aria-pressed="${st.usePlaybookRefs}"><i class="ap-icon-archie-official" aria-hidden="true"></i>${escapeHtml(brand)} brand images</button>
-        <span class="image-studio__pb-hint">${st.usePlaybookRefs ? "From your Playbook — turn off to ignore." : "Add them back from your Playbook."}</span>
-      </div>`
+  const usedIds = new Set(st.referenceImages.map((r) => r.id));
+  const allSelected = hasPlaybookRefs && st.playbookRefs.every((r) => usedIds.has(r.id));
+  const hasUsedRefs = st.referenceImages.length > 0;
+  const brandBar = hasPlaybookRefs
+    ? `<div class="image-studio__ref-brandbar">
+        <span class="image-studio__ref-brandname"><i class="ap-icon-archie-official" aria-hidden="true"></i>From your ${escapeHtml(brand)} Playbook</span>
+        <button type="button" class="image-studio__ref-bulk" data-img-toggle-playbook-refs aria-pressed="${allSelected}">${allSelected ? "Clear all" : "Use all"}</button>
+      </div>
+      <p class="image-studio__ref-help">Tap an image to use it in this generation, or tap again to skip it.</p>`
     : "";
-  return `
-    <div class="image-studio__group">
-      <div class="image-studio__group-head">
-        <p class="image-studio__group-label">Reference images</p>
-        <span class="image-studio__count">${st.referenceImages.length}/${imageStudio.MAX_REFS}</span>
-      </div>
-      ${playbookToggle}
-      <div class="image-studio__refs">${refs(st)}</div>
-    </div>
-    <div class="image-studio__group">
-      <div class="image-studio__group-head">
-        <p class="image-studio__group-label">Visual style</p>
-        <span class="image-studio__opt">Optional</span>
-      </div>
-      <div class="gen-style-grid">${styleCards(st)}</div>
-    </div>
-    <div class="image-studio__group">
-      <div class="image-studio__group-head">
-        <p class="image-studio__group-label">Mood</p>
-        <span class="image-studio__opt">Optional</span>
-      </div>
-      <div class="image-studio__chips">${moodChips(st)}</div>
-    </div>
-    <div class="image-studio__group">
-      <div class="image-studio__group-head">
-        <p class="image-studio__group-label">Format</p>
-        <span class="image-studio__count image-studio__count--net">${fmtHint}</span>
-      </div>
-      <div class="gen-format-chips">${fmtChips}</div>
-    </div>
-    ${outputGroup}
-    ${countGroup}
-  `;
+
+  const refsGroup = collapsibleGroup(st, {
+    id: "refs",
+    label: "Reference images",
+    rightHtml: `<span class="image-studio__count">${st.referenceImages.length} used</span>`,
+    body: `${brandBar}${refs(st)}`,
+  });
+  // Visual style is mutually exclusive with reference images — when refs guide
+  // the look, this section switches off and folds away.
+  const styleGroup = collapsibleGroup(st, {
+    id: "style",
+    label: "Visual style",
+    rightHtml: `<span class="image-studio__opt">Optional</span>`,
+    body: `<div class="gen-style-grid">${styleCards(st)}</div>`,
+    disabled: hasUsedRefs,
+    disabledHint: "Guided by your reference images",
+  });
+  const moodGroup = collapsibleGroup(st, {
+    id: "mood",
+    label: "Mood",
+    rightHtml: `<span class="image-studio__opt">Optional</span>`,
+    body: `<div class="image-studio__chips">${moodChips(st)}</div>`,
+  });
+  const formatGroup = collapsibleGroup(st, {
+    id: "format",
+    label: "Format",
+    rightHtml: `<span class="image-studio__count image-studio__count--net">${fmtHint}</span>`,
+    body: `<div class="gen-format-chips">${fmtChips}</div>`,
+  });
+  const outputGroup = carousel
+    ? collapsibleGroup(st, {
+        id: "output",
+        label: "Output",
+        rightHtml: `<span class="image-studio__count">${NETWORK_LABEL[st.network] || st.network} supports carousels</span>`,
+        body: `<div class="image-studio__chips">
+          <button type="button" class="ap-filter-chip" data-img-output="single" aria-pressed="${!isCarousel}"><i class="ap-icon-image" aria-hidden="true"></i>Single image</button>
+          <button type="button" class="ap-filter-chip" data-img-output="carousel" aria-pressed="${isCarousel}"><i class="ap-icon-multiple-images" aria-hidden="true"></i>Carousel</button>
+        </div>`,
+      })
+    : "";
+  const countGroup = isCarousel
+    ? collapsibleGroup(st, {
+        id: "count",
+        label: "Slides",
+        rightHtml: `<span class="image-studio__count">up to ${imageStudio.carouselMaxFor(st.network)}</span>`,
+        body: `<div class="image-studio__chips">${imageStudio.SLIDE_CHOICES.filter(
+          (n) => n <= imageStudio.carouselMaxFor(st.network),
+        )
+          .map(
+            (n) =>
+              `<button type="button" class="ap-filter-chip" data-img-slidecount="${n}" aria-pressed="${st.slideCount === n}">${n}</button>`,
+          )
+          .join("")}</div>`,
+      })
+    : collapsibleGroup(st, {
+        id: "count",
+        label: "Variations",
+        body: `<div class="image-studio__chips">${imageStudio.VARIATION_CHOICES.map(
+          (n) =>
+            `<button type="button" class="ap-filter-chip" data-img-varcount="${n}" aria-pressed="${st.variationCount === n}">${n}</button>`,
+        ).join("")}</div>`,
+      });
+  return `${refsGroup}${styleGroup}${moodGroup}${formatGroup}${outputGroup}${countGroup}`;
 }
 
 // The tool-specific options that stack under the tool rail in the left panel.
@@ -505,40 +568,28 @@ function editSubpanel(st) {
       </div>
     </div>`;
   }
-  if (tool === "expand") {
+  if (tool === "crop") {
     const chips = imageStudio
       .formatChoices(KEY)
-      .map((f) => formatChip(f, st.formatId === f.id, "data-img-expand-format"))
+      .map((f) => formatChip(f, st.formatId === f.id, "data-img-crop-format"))
       .join("");
     return `<div class="image-studio__subpanel">
-      <p class="image-studio__subpanel-label">Expand to a new ratio</p>
+      <p class="image-studio__subpanel-label">Crop to ratio</p>
       <div class="gen-format-chips">${chips}</div>
-      <p class="image-studio__subpanel-hint">Reshapes the frame and regenerates the outer area.</p>
+      <p class="image-studio__subpanel-hint">Reframes the current image to the ratio you pick.</p>
     </div>`;
   }
-  if (tool === "annotate" || tool === "fill" || tool === "remove") {
-    const hint =
-      tool === "annotate"
-        ? "Draw on the image — your strokes are baked into the picture."
-        : `Brush the area to ${tool === "fill" ? "fill in" : "remove"} — reruns generation on that region.`;
+  if (tool === "annotate") {
     return `<div class="image-studio__subpanel">
       <p class="image-studio__subpanel-label">${escapeHtml(meta.label)}</p>
-      <p class="image-studio__subpanel-hint">${escapeHtml(hint)}</p>
+      <p class="image-studio__subpanel-hint">Draw on the image — your strokes are baked into the picture.</p>
       <div class="image-studio__subpanel-actions">
         <button type="button" class="ap-button ghost grey" data-img-clear-brush><span>Clear</span></button>
-        <button type="button" class="ap-button primary orange" data-img-apply-edit="${escapeHtml(tool)}"><i class="ap-icon-check"></i><span>Apply</span></button>
+        <button type="button" class="ap-button primary orange" data-img-apply-edit="annotate"><i class="ap-icon-check"></i><span>Apply</span></button>
       </div>
     </div>`;
   }
-  // removebg — one-click apply.
-  const hint = "Isolates the subject on a transparent background (preview).";
-  return `<div class="image-studio__subpanel">
-    <p class="image-studio__subpanel-label">${escapeHtml(meta.label)}</p>
-    <p class="image-studio__subpanel-hint">${escapeHtml(hint)}</p>
-    <div class="image-studio__subpanel-actions">
-      <button type="button" class="ap-button primary orange" data-img-apply-edit="${escapeHtml(tool)}"><i class="ap-icon-check"></i><span>Apply</span></button>
-    </div>
-  </div>`;
+  return "";
 }
 
 // Contextual panel for the overlay tools (Add logo / Add text). Edits the
@@ -902,14 +953,21 @@ function onClick(event) {
   if (outBtn) return void imageStudio.setOutputMode(KEY, outBtn.dataset.imgOutput);
   const slideBtn = event.target.closest("[data-img-slidecount]");
   if (slideBtn) return void imageStudio.setSlideCount(KEY, Number(slideBtn.dataset.imgSlidecount));
+  const grpToggle = event.target.closest("[data-img-group-toggle]");
+  if (grpToggle && !grpToggle.disabled)
+    return void imageStudio.toggleGroupCollapsed(KEY, grpToggle.dataset.imgGroupToggle);
   const pbToggle = event.target.closest("[data-img-toggle-playbook-refs]");
   if (pbToggle) return void imageStudio.setUsePlaybookRefs(KEY, pbToggle.getAttribute("aria-pressed") !== "true");
   if (event.target.closest("[data-img-ref-add]")) return void openFilePicker("ref");
+  const refToggle = event.target.closest("[data-img-ref-toggle]");
+  if (refToggle) return void imageStudio.toggleReferenceImage(KEY, refToggle.dataset.imgRefToggle);
   const refRm = event.target.closest("[data-img-ref-remove]");
   if (refRm) return void imageStudio.removeReferenceImage(KEY, refRm.dataset.imgRefRemove);
   if (event.target.closest("[data-img-derive]") && !st.promptLoading) return void imageStudio.runDerive(KEY);
   const modeBtn = event.target.closest("[data-img-mode]");
   if (modeBtn) return void imageStudio.setMode(KEY, modeBtn.dataset.imgMode);
+  const viewBtn = event.target.closest("[data-img-view]");
+  if (viewBtn) return void imageStudio.setCanvasView(KEY, viewBtn.dataset.imgView);
   // Generate + Regenerate share the same path: sync the prompt, then run.
   if (event.target.closest("[data-img-generate]") || event.target.closest("[data-img-regenerate]")) {
     const ta = modal.querySelector("[data-img-prompt]");
@@ -957,8 +1015,8 @@ function onClick(event) {
     if (canvas) canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
     return;
   }
-  const expandFmt = event.target.closest("[data-img-expand-format]");
-  if (expandFmt) return void imageStudio.applyEdit(KEY, "expand", { formatId: expandFmt.dataset.imgExpandFormat });
+  const cropFmt = event.target.closest("[data-img-crop-format]");
+  if (cropFmt) return void imageStudio.applyEdit(KEY, "crop", { formatId: cropFmt.dataset.imgCropFormat });
   const applyBtn = event.target.closest("[data-img-apply-edit]");
   if (applyBtn) return void applyEditTool(applyBtn.dataset.imgApplyEdit);
   if (event.target.closest("[data-img-undo]")) return void imageStudio.undoEdit(KEY);

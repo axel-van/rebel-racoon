@@ -18,6 +18,7 @@ import { html, raw, escapeHtml as esc } from "./utils.js?v=21";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=24";
 import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1";
 import { isFlagOn } from "./feature-flags.js?v=10";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=26";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -37,6 +38,7 @@ const SECTIONS = [
   { id: "pbk-sec-goals", scope: "goals", icon: "ap-icon-target", title: "Audience & goals" },
   { id: "pbk-sec-voice", scope: "voice", icon: "ap-icon-quote", title: "Voice & style" },
   { id: "pbk-sec-brand", scope: "brand", icon: "ap-icon-image", title: "Brand" },
+  { id: "pbk-sec-refs", scope: "refs", icon: "ap-icon-multiple-images", title: "Reference images" },
 ];
 
 // Edit-mode guidance. Surfaced only while a section is being edited (one at a
@@ -82,6 +84,10 @@ const SECTION_HINTS = {
   brand: {
     q: "Visual identity",
     a: "Archie picked these up from your site so visuals stay on-brand.",
+  },
+  refs: {
+    q: "Reference images",
+    a: "I pull these into the image generator so generated visuals stay on-brand. Add as many as you like — pick which ones to use each time.",
   },
 };
 
@@ -626,33 +632,81 @@ function renderCtaEditor(data) {
   `;
 }
 
-// Reference-image gallery (#11) — up to 10 visual references.
+// Reference-image gallery (#11) — up to 10 visual references, each with
+// optional usage guidance (a freeform note + target networks).
 const MAX_REF_IMAGES = 10;
+const REF_NETWORKS = ["facebook", "instagram", "linkedin", "x", "tiktok", "youtube"];
+
+// Read-only network mini-badges (icons only) for an image's target networks.
+function renderRefNetBadges(networks) {
+  const nets = Array.isArray(networks) ? networks.filter((n) => NETWORK_ICON_BY_PLATFORM[n]) : [];
+  if (!nets.length) return "";
+  return `<span class="recap__refimg-nets">${nets
+    .map(
+      (n) =>
+        `<i class="${NETWORK_ICON_BY_PLATFORM[n]}" title="${esc(NETWORK_LABEL[n] || n)}" aria-label="${esc(NETWORK_LABEL[n] || n)}"></i>`,
+    )
+    .join("")}</span>`;
+}
+
+// Edit-mode network toggle chips (reuse .ap-filter-chip, driven by aria-pressed).
+function renderRefNetChips(networks, i) {
+  const nets = Array.isArray(networks) ? networks : [];
+  return `<div class="recap__refimg-netchips">${REF_NETWORKS.map((n) => {
+    const on = nets.includes(n);
+    return `<button type="button" class="ap-filter-chip recap__refimg-netchip" aria-pressed="${on}" data-recap-refnet="${n}" data-recap-refimg-index="${i}"><i class="${NETWORK_ICON_BY_PLATFORM[n]}" aria-hidden="true"></i><span>${esc(NETWORK_LABEL[n] || n)}</span></button>`;
+  }).join("")}</div>`;
+}
 
 function renderRefImages(data, edit) {
   const imgs = Array.isArray(data.referenceImages) ? data.referenceImages : [];
   if (!edit && !imgs.length) return `<span class="recap__row-empty">None yet</span>`;
-  const thumbs = imgs
+
+  // Read view — a card per image: thumb + network badges + note caption.
+  if (!edit) {
+    const cards = imgs
+      .map((img) => {
+        const nets = renderRefNetBadges(img.networks);
+        const note = img.note && img.note.trim() ? `<p class="recap__refimg-note">${esc(img.note)}</p>` : "";
+        const meta = nets || note ? `<div class="recap__refimg-meta">${nets}${note}</div>` : "";
+        return `
+      <figure class="recap__refimg-card">
+        <div class="recap__refimg">
+          <img src="${esc(img.url)}" alt="${esc(img.label || "Reference image")}" loading="lazy" />
+        </div>
+        ${meta}
+      </figure>`;
+      })
+      .join("");
+    return `<div class="recap__refimgs">${cards}</div>`;
+  }
+
+  // Edit view — a row per image: thumb (with remove) + note textarea + network chips.
+  const rows = imgs
     .map(
       (img, i) => `
-      <div class="recap__refimg">
-        <img src="${esc(img.url)}" alt="${esc(img.label || "Reference image")}" loading="lazy" />
-        ${
-          edit
-            ? `<button type="button" class="recap__refimg-remove" data-recap-refimg-remove="${i}" aria-label="Remove image"><i class="ap-icon-close"></i></button>`
-            : ""
-        }
+      <div class="recap__refimg-row">
+        <div class="recap__refimg">
+          <img src="${esc(img.url)}" alt="${esc(img.label || "Reference image")}" loading="lazy" />
+          <button type="button" class="recap__refimg-remove" data-recap-refimg-remove="${i}" aria-label="Remove image"><i class="ap-icon-close"></i></button>
+        </div>
+        <div class="recap__refimg-fields">
+          <div class="ap-input-group">
+            <textarea class="recap__refimg-noteinput" data-recap-refnote data-recap-refimg-index="${i}" rows="2" placeholder="How &amp; when to use this image — do's &amp; don'ts, style notes…" aria-label="Usage guidance">${esc(img.note || "")}</textarea>
+          </div>
+          ${renderRefNetChips(img.networks, i)}
+        </div>
       </div>`,
     )
     .join("");
   const addBtn =
-    edit && imgs.length < MAX_REF_IMAGES
+    imgs.length < MAX_REF_IMAGES
       ? `<button type="button" class="recap__refimg-add" data-recap-refimg-add aria-label="Add reference images">
            <i class="ap-icon-plus"></i><span>Add</span>
          </button>
          <input type="file" accept="image/*" multiple hidden data-recap-refimg-input />`
       : "";
-  return `<div class="recap__refimgs">${thumbs}${addBtn}</div>`;
+  return `<div class="recap__refimg-rows">${rows}</div>${addBtn}`;
 }
 
 // Per-field edit hint (Audience & goals) — prompt + what Archie does with it.
@@ -915,18 +969,29 @@ function renderBrandPanel(data, edit) {
           "How the brand comes across — its character in a few sentences…",
         ),
       ),
-      renderRow("References", renderRefImages(data, true)),
     ].join("");
   } else {
     body = [
       renderRow("Brand color", renderSwatches(colors)),
       renderRow("Typography", renderTypeSpecimen(data)),
       renderRow("Personality", renderText(data.brandPersonality)),
-      ...(Array.isArray(data.referenceImages) && data.referenceImages.length
-        ? [renderRow("References", renderRefImages(data, false))]
-        : []),
     ].join("");
   }
+  return `
+    <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" ${edit ? "data-recap-editing-card" : ""}>
+      ${renderPanelHead(section, edit)}
+      <div class="recap__panel-body">${body}</div>
+    </section>
+  `;
+}
+
+// Reference images — a dedicated section (own rail link). Archie pulls these
+// into the image generator; the user picks which ones to use per generation.
+function renderRefsPanel(data, edit) {
+  const section = SECTIONS[3];
+  const body = edit
+    ? [renderSectionHint(SECTION_HINTS.refs), renderRow("Images", renderRefImages(data, true))].join("")
+    : renderRow("Images", renderRefImages(data, false));
   return `
     <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" ${edit ? "data-recap-editing-card" : ""}>
       ${renderPanelHead(section, edit)}
@@ -1086,6 +1151,7 @@ function paint() {
         ${renderGoalsPanel(data, scope === "goals")}
         ${renderVoicePanel(data, scope === "voice")}
         ${renderBrandPanel(data, scope === "brand")}
+        ${renderRefsPanel(data, scope === "refs")}
       </div>
     </div>
   `;
@@ -1211,6 +1277,7 @@ function onClick(event) {
   const penBtn = event.target.closest("[data-recap-edit-card]");
   if (penBtn) {
     if (penBtn.dataset.recapEditCard === "brand") ensureBrand(data);
+    if (penBtn.dataset.recapEditCard === "refs" && !Array.isArray(data.referenceImages)) data.referenceImages = [];
     snapshot = snapshotEditable(data);
     editScope = penBtn.dataset.recapEditCard;
     audienceCustom = false;
@@ -1401,6 +1468,19 @@ function onClick(event) {
     repaint();
     return;
   }
+  // Reference image — toggle a target network on/off.
+  const refNet = event.target.closest("[data-recap-refnet]");
+  if (refNet) {
+    const idx = Number(refNet.dataset.recapRefimgIndex);
+    const net = refNet.dataset.recapRefnet;
+    const img = data.referenceImages?.[idx];
+    if (img) {
+      const nets = Array.isArray(img.networks) ? img.networks : [];
+      img.networks = nets.includes(net) ? nets.filter((n) => n !== net) : [...nets, net];
+      repaint();
+    }
+    return;
+  }
 
   // Footer / header actions (mode-specific) — Save and start / Start chat / etc.
   cfg.onFooter?.(event);
@@ -1438,6 +1518,9 @@ function onInput(event) {
       const sw = mountTarget?.querySelector(`[data-recap-color-swatch="${idx}"]`);
       if (sw) sw.style.background = t.value;
     }
+  } else if (t.matches("[data-recap-refnote]")) {
+    const idx = Number(t.dataset.recapRefimgIndex);
+    if (data.referenceImages?.[idx]) data.referenceImages[idx].note = t.value;
   }
 }
 
