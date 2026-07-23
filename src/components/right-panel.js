@@ -43,7 +43,7 @@ import { iconFor } from "../file-kinds.js?v=20";
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
 import { open as openScheduleModal } from "./schedule-modal.js?v=54";
-import { open as openImageStudioModal } from "./image-studio-modal.js?v=44";
+import { open as openImageStudioModal } from "./image-studio/index.js?v=1";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
@@ -2035,7 +2035,7 @@ function onPostDelete(postId) {
 // "Generate an image" on a draft → open the near-fullscreen Image Studio modal.
 // The studio pulls the draft's network for its format defaults and, on "Use
 // this image", attaches the result straight back to this draft (see
-// image-studio-modal.js#useImage).
+// image-studio/index.js#useImage).
 function onPostImage(postId) {
   const sid = activeSessionId();
   if (!sid) return;

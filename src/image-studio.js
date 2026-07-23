@@ -63,20 +63,6 @@ export const MOOD_OPTIONS = [
   { key: "playful", label: "Playful" },
 ];
 
-// Firefly-style edit tools. `panel` is the contextual sub-panel a tool needs
-// before applying:
-//   - "prompt" → a textarea describing the change (reseed)
-//   - "format" → a ratio picker (crop the current image to the chosen aspect)
-//   - "overlay"→ draggable logo / text element controls
-export const EDIT_TOOLS = [
-  { key: "prompt", label: "Reprompt", icon: "ap-icon-archie-official", panel: "prompt", faithful: false },
-  { key: "crop", label: "Crop", icon: "ap-icon-cropper", panel: "format", faithful: true },
-  // Overlay tools — add a draggable logo / text element onto the image, then
-  // flatten it in. `panel: "overlay"` renders the overlay controls.
-  { key: "logo", label: "Logo", icon: "ap-icon-file--image", panel: "overlay", faithful: true },
-  { key: "text", label: "Text", icon: "ap-icon-closed-captions", panel: "overlay", faithful: true },
-];
-
 // Curated logo presets for the "Add logo" tray (real bundled assets).
 export const LOGO_PRESETS = [
   { label: "Brand", url: "assets/avatars/northwind-studio.svg" },
@@ -125,10 +111,6 @@ function seedFor(s, extra) {
 function notify(sessionId) {
   const subs = subscribers.get(sessionId);
   if (subs) for (const fn of subs) fn();
-}
-
-export function isActive(sessionId) {
-  return states.has(sessionId);
 }
 
 export function getState(sessionId) {
@@ -236,10 +218,6 @@ export function start(
     addingVariation: false, // a "+" generate-another is in flight
     selectedIndex,
     currentImage, // { url, w, h, seed } — the working image in edit
-    // The palette is a segmented control: one tool is always active in edit mode
-    // (so the options panel is never empty). Seed the first tool when opening
-    // straight into edit; generate mode has no active tool.
-    activeTool: mode === "edit" ? EDIT_TOOLS[0].key : null, // one of EDIT_TOOLS keys
     editBusy: false,
     editHistory: [], // undo stack of prior currentImage snapshots
     editPrompt: "", // scratch text for the Reprompt tool
@@ -253,7 +231,6 @@ export function start(
     cropDrawing: false,
     cropRect: null, // { xF, yF, wF, hF } while drawing
     cropAspect: null, // null = freeform, else a width/height decimal to lock
-    lastError: null,
     _genTimer: null,
     _editTimer: null,
     _deriveTimer: null,
@@ -477,7 +454,6 @@ function adoptVariation(s, i) {
   s.selectedIndex = i;
   s.currentImage = { url: v.url, w: v.w, h: v.h, seed: v.seed };
   s.editHistory = [];
-  s.activeTool = null;
   s.editPrompt = "";
   // Focusing a variation / slide is a fresh edit context — drop any overlays.
   s.overlays = [];
@@ -489,7 +465,6 @@ function adoptVariation(s, i) {
 export function runGeneration(sessionId) {
   const s = states.get(sessionId);
   if (!s) return;
-  s.lastError = null;
   s.mode = "generate";
   s.genPhase = "generating";
   s.selectedIndex = null;
@@ -529,7 +504,6 @@ export function setMode(sessionId, mode) {
   s.editingOverlayId = null;
   s.openPopover = null;
   if (mode === "generate") {
-    s.activeTool = null;
     // Leaving a carousel-slide edit via the Generate tab = cancel: drop overlays
     // + edit history and revert the working image to the focused slide (an
     // applied edit goes through updateSlide, which persists first).
@@ -601,24 +575,6 @@ export function removeVariation(sessionId, index) {
 
 // ── Edit surface ────────────────────────────────────────────────────────────
 
-export function setActiveTool(sessionId, tool, { toggle = true } = {}) {
-  const s = states.get(sessionId);
-  if (!s || s.editBusy) return;
-  const next = toggle && s.activeTool === tool ? null : tool;
-  s.activeTool = next;
-  s.editPrompt = "";
-  // Entering the Text tool: drop a ready-to-edit text element straight away so
-  // the user never has to click a separate "Add text" first. Skip if a text
-  // element is already selected (they're editing it). Logo keeps its chooser —
-  // it can't default (the user must pick which logo).
-  const editingText = s.overlays.some((o) => o.id === s.selectedOverlayId && o.kind === "text");
-  if (next === "text" && !editingText) {
-    addOverlay(sessionId, { kind: "text" }); // creates, selects + notifies
-    return;
-  }
-  notify(sessionId);
-}
-
 // Produce the edited image. Crop is faithful (same-seed reframe); Reprompt reseeds.
 function computeEdit(s, tool, payload) {
   const cur = s.currentImage;
@@ -661,7 +617,6 @@ export function undoEdit(sessionId) {
   const s = states.get(sessionId);
   if (!s || !s.editHistory.length || s.editBusy) return;
   s.currentImage = s.editHistory.pop();
-  s.activeTool = null;
   notify(sessionId);
 }
 
@@ -708,7 +663,6 @@ export function enterCropDraw(sessionId) {
   s.openPopover = null;
   s.selectedOverlayId = null;
   s.editingOverlayId = null;
-  s.activeTool = "crop";
   notify(sessionId);
 }
 
@@ -970,7 +924,6 @@ export function updateSlide(sessionId, index, { url, w, h }) {
   s.selectedOverlayId = null;
   s.editingOverlayId = null;
   s.openPopover = null;
-  s.activeTool = null;
   s.editBusy = false;
   s.mode = "generate"; // back to the carousel results filmstrip
   notify(sessionId);
