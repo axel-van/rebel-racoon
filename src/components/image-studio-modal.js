@@ -17,7 +17,8 @@ import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../posts-st
 import { getSessionById } from "../sessions-store.js?v=6";
 import { getContextById } from "../contexts-store.js?v=35";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../social-profiles.js?v=26";
-import * as imageStudio from "../image-studio.js?v=11";
+import { renderPostCard } from "./post-card.js?v=68";
+import * as imageStudio from "../image-studio.js?v=12";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -61,7 +62,7 @@ function renderStudio(st) {
       ${raw(topBar(st))}
       <div class="image-studio__workspace">
         <aside class="image-studio__panel" aria-label="${st.mode === "edit" ? "Edit tools" : "Generation options"}">
-          ${raw(st.mode === "edit" ? editControls(st) : generateControls(st))}
+          ${raw(st.mode === "edit" ? editControls(st) : st.mode === "preview" ? "" : generateControls(st))}
         </aside>
         <section class="image-studio__canvas" aria-label="Preview">${raw(canvasContent(st))}</section>
       </div>
@@ -71,19 +72,22 @@ function renderStudio(st) {
 }
 
 function topBar(st) {
-  // Edit acts on the working image — in carousel mode that's the focused slide.
-  const canEdit = !!st.currentImage;
-  const editState = (st.mode === "edit" ? " active" : "") + (canEdit ? "" : " disabled");
-  const editAttrs = canEdit ? "" : 'disabled title="Generate an image first"';
-  // DS Tabs (.ap-tabs) as the two peer modes — a full-width tab bar under the
-  // title, used natively (no custom styling).
+  // Edit / Preview both act on the working image — in carousel mode that's the
+  // focused slide (Edit) / the whole set (Preview).
+  const hasImg = !!st.currentImage;
+  const editState = (st.mode === "edit" ? " active" : "") + (hasImg ? "" : " disabled");
+  const previewState = (st.mode === "preview" ? " active" : "") + (hasImg ? "" : " disabled");
+  const lockedAttrs = hasImg ? "" : 'disabled title="Generate an image first"';
+  // DS Tabs (.ap-tabs) as the peer modes — a full-width tab bar under the title,
+  // used natively (no custom styling). "Preview" shows the post in-feed.
   return `<div class="image-studio__top">
       <span class="image-studio__top-title"><i class="ap-icon-archie-official" aria-hidden="true"></i>Image Studio</span>
     </div>
     <div class="ap-tabs image-studio__modes">
       <div class="ap-tabs-nav" role="tablist" aria-label="Studio mode">
         <button type="button" class="ap-tabs-tab${st.mode === "generate" ? " active" : ""}" role="tab" aria-selected="${st.mode === "generate"}" data-img-mode="generate"><span>Generate</span></button>
-        <button type="button" class="ap-tabs-tab${editState}" role="tab" aria-selected="${st.mode === "edit"}" data-img-mode="edit" ${editAttrs}><span>Edit</span></button>
+        <button type="button" class="ap-tabs-tab${editState}" role="tab" aria-selected="${st.mode === "edit"}" data-img-mode="edit" ${lockedAttrs}><span>Edit</span></button>
+        <button type="button" class="ap-tabs-tab${previewState}" role="tab" aria-selected="${st.mode === "preview"}" data-img-mode="preview" ${lockedAttrs}><span>Preview</span></button>
       </div>
     </div>`;
 }
@@ -122,6 +126,7 @@ function editControls(st) {
 
 // Right canvas — shared; content depends on mode / generation phase.
 function canvasContent(st) {
+  if (st.mode === "preview") return previewCanvas(st);
   if (st.mode === "edit") return editCanvas(st);
   if (st.genPhase === "generating") return generatingCanvas(st);
   if (st.genPhase === "results") return resultsCanvas(st);
@@ -226,6 +231,40 @@ function editCanvas(st) {
     </div>`;
 }
 
+// Preview mode — the post rendered in-feed exactly as the Drafts board shows it
+// (reuses renderPostCard), fed the CURRENT studio image / carousel. App chrome
+// (action stack, feedback strip, hover controls) is hidden via scoped CSS.
+function previewCanvas(st) {
+  const post =
+    currentSessionId && currentPostId ? getPosts(currentSessionId).find((p) => p.id === currentPostId) : null;
+  const base = post || {
+    id: currentPostId || "preview",
+    author: { name: "You", title: "", initials: "YO", connection: "1st", visibility: "public" },
+    network: st.network || "linkedin",
+    status: "ready",
+    timeLabel: "now",
+    text: ["Your post text will appear here."],
+    hashtags: [],
+    cta: "",
+    stats: { likes: 0, comments: 0, reposts: 0 },
+  };
+  let media;
+  if (st.outputMode === "carousel") {
+    const urls = st.variations.map((v) => v.url);
+    media = { imageUrl: urls[0] || null, carousel: urls };
+  } else {
+    const url = st.currentImage?.url || (st.selectedIndex != null ? st.variations[st.selectedIndex]?.url : null);
+    media = { imageUrl: url, carousel: null };
+  }
+  // Null clip/regenerate so the image branch renders (not the video PIP).
+  const previewPost = { ...base, clipRef: null, isRegenerating: false, ...media };
+  const netLabel = NETWORK_LABEL[st.network] || st.network || "your network";
+  return `<div class="image-studio__preview">
+    <p class="image-studio__preview-note">How this looks on ${escapeHtml(netLabel)}</p>
+    <div class="image-studio__preview-network">${renderPostCard(previewPost)}</div>
+  </div>`;
+}
+
 // Draggable logo/text elements layered over the working image (edit mode).
 function overlayLayer(st) {
   if (!st.overlays.length) return "";
@@ -249,6 +288,15 @@ function renderOverlay(o, selected) {
 
 // Bottom bar — one primary CTA per mode / phase.
 function footer(st) {
+  if (st.mode === "preview") {
+    const carousel = st.outputMode === "carousel";
+    const useLabel = carousel ? `Use carousel · ${st.variations.length} slides` : "Use this image";
+    const ready = carousel ? st.variations.length >= 2 : !!st.currentImage;
+    return `<div class="image-studio__bar">
+      <div class="image-studio__bar-spacer"></div>
+      <button type="button" class="ap-button primary orange" data-img-use ${ready ? "" : "disabled"}><i class="ap-icon-check"></i><span>${useLabel}</span></button>
+    </div>`;
+  }
   if (st.mode === "edit") {
     // Editing a carousel slide bakes the edit back into that slide and returns
     // to the carousel; editing a single image attaches it to the draft.

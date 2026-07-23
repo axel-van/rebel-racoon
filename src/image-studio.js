@@ -463,11 +463,12 @@ export function runGeneration(sessionId) {
   notify(sessionId);
 }
 
-// Switch between the two peer modes. "edit" requires a working image.
+// Switch between the peer modes. "edit" and "preview" both require a working
+// image (an in-feed preview needs something to show).
 export function setMode(sessionId, mode) {
   const s = states.get(sessionId);
   if (!s) return;
-  if (mode === "edit" && !s.currentImage) return;
+  if ((mode === "edit" || mode === "preview") && !s.currentImage) return;
   s.mode = mode;
   if (mode === "generate") {
     s.activeTool = null;

@@ -862,3 +862,57 @@
 .image-studio__count--net > i {
   font-size: 14px;
 }
+
+/* ── Preview mode: the post in-feed (reuses the Drafts post-card) ────────── */
+/* Full-width single column — no left panel; the feed card is the focus. */
+.image-studio--preview .image-studio__panel {
+  display: none;
+}
+
+.image-studio--preview .image-studio__workspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.image-studio--preview .image-studio__canvas {
+  place-items: start center;
+}
+
+.image-studio__preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  width: 100%;
+}
+
+.image-studio__preview-note {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+.image-studio__preview-network {
+  width: 100%;
+  max-width: 540px;
+}
+
+/* The feed card, minus the Drafts-board chrome (management controls, feedback
+   strip, provenance disclosure, hover controls, error banner). */
+.image-studio__preview-network .posts__row {
+  display: block;
+}
+
+.image-studio__preview-network .posts__card-wrap {
+  width: 100%;
+}
+
+.image-studio__preview-network .posts__row-check,
+.image-studio__preview-network .posts__row-actions,
+.image-studio__preview-network .posts__card-footrow,
+.image-studio__preview-network .posts__gencontext-panel,
+.image-studio__preview-network .posts__gencontext-check,
+.image-studio__preview-network .posts__card-image-controls,
+.image-studio__preview-network .ap-infobox {
+  display: none !important;
+}
