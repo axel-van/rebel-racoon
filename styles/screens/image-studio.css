@@ -672,18 +672,45 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 /* Small popover anchored above its trigger (Crop ratios / logo presets / text
-   colour). */
+   colour). Premium chrome: a hairline + layered soft shadow, 12px radius, and a
+   quick rise-in (globally neutralised under prefers-reduced-motion). */
+@keyframes image-studio-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes image-studio-pop-center {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
 .image-studio__popover {
   position: absolute;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 10px);
   left: 0;
   z-index: 6;
   min-width: 180px;
   padding: var(--ref-spacing-sm);
   background: var(--ref-color-white);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-lg);
-  box-shadow: var(--app-shadow-popover-lg);
+  border-radius: var(--app-radius-card);
+  box-shadow:
+    0 0 0 1px rgba(33, 46, 68, 0.05),
+    0 2px 5px rgba(33, 46, 68, 0.06),
+    0 16px 32px -10px rgba(33, 46, 68, 0.24);
+  transform-origin: bottom center;
+  animation: image-studio-pop 150ms var(--app-ease-out);
 }
 
 .image-studio__popover--crop {
@@ -705,32 +732,33 @@ button.image-studio__ref--pick:focus-visible {
   transform: translateX(-50%);
   min-width: 0;
   width: max-content; /* sized by the swatch grid below */
-  padding: var(--ref-spacing-xs);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  animation-name: image-studio-pop-center; /* keep centred while rising in */
+}
+
+/* Colour groups — the brand set gets a soft, borderless tinted panel (reads as
+   "your brand" without a heavy box); the rest sit plainly below. Both lay their
+   swatches out as a wide 5-per-row grid. */
+.image-studio__color-group {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
 }
 
-/* Colour groups — the brand set gets a framed, tinted section; the rest sit
-   plainly below. Both lay their swatches out as a wide 5-per-row grid. */
-.image-studio__color-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-}
-
 .image-studio__color-group--brand {
-  padding: 6px;
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-md);
+  padding: 8px 10px 10px;
+  border-radius: var(--app-radius-starter);
   background: var(--ref-color-grey-05);
 }
 
 .image-studio__color-label {
   margin: 0;
-  font-size: var(--sys-text-style-caption-size);
+  font-size: 10.5px;
+  line-height: 1;
   font-weight: var(--ref-font-weight-bold);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ref-color-grey-60);
 }
@@ -743,9 +771,12 @@ button.image-studio__ref--pick:focus-visible {
 
 .image-studio__popover-label {
   margin: 0 0 var(--ref-spacing-xs);
-  font-size: var(--sys-text-style-caption-bold-size);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-80);
+  font-size: 10.5px;
+  line-height: 1;
+  font-weight: var(--ref-font-weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ref-color-grey-60);
 }
 
 .image-studio__popover-head {
@@ -1143,9 +1174,13 @@ button.image-studio__ref--pick:focus-visible {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-md);
+  border-radius: var(--app-radius-starter);
   background: var(--ref-color-white);
   cursor: pointer;
+  transition:
+    border-color 120ms var(--app-ease-out),
+    box-shadow 120ms var(--app-ease-out),
+    transform 120ms var(--app-ease-out);
 }
 
 /* Upload sits as the first "add" tile in the grid. */
@@ -1179,22 +1214,34 @@ button.image-studio__ref--pick:focus-visible {
 .image-studio__swatches {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--ref-spacing-xs);
 }
 
 .image-studio__swatch {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   padding: 0;
+  border: none;
   border-radius: var(--app-radius-circle);
   background: var(--sw, #fff);
-  border: 2px solid var(--app-border);
   cursor: pointer;
+  /* Inset hairline so light swatches (white/cream) keep a crisp edge. */
+  box-shadow: inset 0 0 0 1px rgba(16, 24, 40, 0.12);
+  transition:
+    transform 120ms var(--app-ease-out),
+    box-shadow 120ms var(--app-ease-out);
 }
 
+.image-studio__swatch:hover {
+  transform: scale(1.12);
+}
+
+/* Selected — a white gap then an accent ring (reads on any swatch colour). */
 .image-studio__swatch.is-selected {
-  border-color: var(--ref-color-electric-blue-100);
-  box-shadow: 0 0 0 2px var(--app-convo-navy-10);
+  box-shadow:
+    inset 0 0 0 1px rgba(16, 24, 40, 0.12),
+    0 0 0 2px var(--ref-color-white),
+    0 0 0 4px var(--ref-color-electric-blue-100);
 }
 
 /* "Add colour" swatch — a dashed circle wrapping a hidden native colour input. */
