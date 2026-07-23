@@ -689,12 +689,22 @@ button.image-studio__ref--pick:focus-visible {
 .image-studio__popover--logo {
   left: auto;
   right: 0;
+  width: 252px; /* fit the 3 preset tiles on one row + a roomy header */
 }
 
 .image-studio__popover--textcolor {
   left: 50%;
   transform: translateX(-50%);
   min-width: 0;
+  width: max-content; /* sized by the swatch grid below */
+}
+
+/* Lay the colour swatches out as a wide, even grid (5 per row) rather than a
+   cramped 2-column stack. */
+.image-studio__popover--textcolor .image-studio__swatches {
+  display: grid;
+  grid-template-columns: repeat(5, 22px);
+  gap: var(--ref-spacing-xs);
 }
 
 .image-studio__popover-label {
