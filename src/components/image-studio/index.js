@@ -23,9 +23,9 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=36";
 import { getSessionById } from "../../sessions-store.js?v=6";
 import { getContextById } from "../../contexts-store.js?v=37";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=1";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=2";
 import { compositeOverlays, loadImg, shadowMetrics } from "./canvas.js?v=1";
-import { renderStudio } from "./shell-view.js?v=4";
+import { renderStudio } from "./shell-view.js?v=5";
 import {
   openFilePicker,
   openLogoPicker,
@@ -33,8 +33,8 @@ import {
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=1";
-import * as imageStudio from "../../image-studio.js?v=27";
+} from "./interactions.js?v=2";
+import * as imageStudio from "../../image-studio.js?v=28";
 
 let backdrop;
 let initialized = false;

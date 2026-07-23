@@ -7,9 +7,9 @@
 import { escapeHtml } from "../../utils.js?v=21";
 import { FORMATS, NETWORK_FORMATS } from "../../clip-formats.js?v=5";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=26";
-import { KEY } from "./context.js?v=1";
+import { KEY } from "./context.js?v=2";
 import { STROKE_K, shadowMetrics, cssFamily } from "./canvas.js?v=1";
-import * as imageStudio from "../../image-studio.js?v=27";
+import * as imageStudio from "../../image-studio.js?v=28";
 
 // Edit mode — the floating action bar over the canvas bottom. Two clearly
 // separated zones so the AI path and the manual path don't blur together:

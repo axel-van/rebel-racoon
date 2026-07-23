@@ -6,9 +6,9 @@
 // through ctx.modal.
 
 import { showToast } from "../toast.js?v=20";
-import { KEY, ctx, state, clamp } from "./context.js?v=1";
+import { KEY, ctx, state, clamp } from "./context.js?v=2";
 import { cropImage } from "./canvas.js?v=1";
-import * as imageStudio from "../../image-studio.js?v=27";
+import * as imageStudio from "../../image-studio.js?v=28";
 
 // ── File / font pickers ─────────────────────────────────────────────────────
 

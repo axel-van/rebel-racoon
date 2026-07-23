@@ -10,10 +10,10 @@ import { html, raw, escapeHtml } from "../../utils.js?v=21";
 import { getPosts } from "../../posts-store.js?v=36";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=26";
 import { renderPostCard } from "../post-card.js?v=68";
-import { KEY, ctx } from "./context.js?v=1";
-import { generateControls } from "./compose-view.js?v=1";
-import { actionBar, editCanvas } from "./edit-view.js?v=4";
-import * as imageStudio from "../../image-studio.js?v=27";
+import { KEY, ctx } from "./context.js?v=2";
+import { generateControls } from "./compose-view.js?v=2";
+import { actionBar, editCanvas } from "./edit-view.js?v=5";
+import * as imageStudio from "../../image-studio.js?v=28";
 
 export function renderStudio(st) {
   // Edit mode is a direct editor: a full-width canvas with a floating action bar
