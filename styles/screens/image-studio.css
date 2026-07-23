@@ -659,15 +659,6 @@ button.image-studio__ref--pick:focus-visible {
   display: block;
 }
 
-.image-studio__annotate {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  touch-action: none;
-  cursor: crosshair;
-}
-
 .image-studio__busy {
   position: absolute;
   inset: 0;
@@ -917,6 +908,7 @@ button.image-studio__ref--pick:focus-visible {
 
 .image-studio__swatches {
   display: inline-flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
@@ -933,6 +925,39 @@ button.image-studio__ref--pick:focus-visible {
 .image-studio__swatch.is-selected {
   border-color: var(--ref-color-electric-blue-100);
   box-shadow: 0 0 0 2px var(--app-convo-navy-10);
+}
+
+/* "Add colour" swatch — a dashed circle wrapping a hidden native colour input. */
+.image-studio__swatch--add {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ref-color-white);
+  border-style: dashed;
+  color: var(--ref-color-grey-60);
+  overflow: hidden;
+}
+
+.image-studio__swatch--add:hover {
+  border-color: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-electric-blue-100);
+}
+
+.image-studio__swatch--add > i {
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.image-studio__swatch--add > input[type="color"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
 }
 
 /* Filmstrip "+" tile — generate another variation. */

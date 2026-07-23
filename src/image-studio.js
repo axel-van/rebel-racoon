@@ -66,13 +66,11 @@ export const MOOD_OPTIONS = [
 
 // Firefly-style edit tools. `panel` is the contextual sub-panel a tool needs
 // before applying:
-//   - "brush"  → a canvas overlay to draw on (annotate bakes strokes in)
 //   - "prompt" → a textarea describing the change (reseed)
 //   - "format" → a ratio picker (crop the current image to the chosen aspect)
 //   - "overlay"→ draggable logo / text element controls
 export const EDIT_TOOLS = [
   { key: "prompt", label: "Reprompt", icon: "ap-icon-archie-official", panel: "prompt", faithful: false },
-  { key: "annotate", label: "Annotate", icon: "ap-icon-pen", panel: "brush", faithful: true },
   { key: "crop", label: "Crop", icon: "ap-icon-cropper", panel: "format", faithful: true },
   // Overlay tools — add a draggable logo / text element onto the image, then
   // flatten it in. `panel: "overlay"` renders the overlay controls.
@@ -160,6 +158,7 @@ export function start(
     carousel = null,
     playbookRefs = [],
     playbookName = "",
+    playbookColors = [],
   } = {},
 ) {
   // posts-store stores X as "twitter"; the format catalogue keys on "x".
@@ -222,6 +221,8 @@ export function start(
     customStyleUrl: null, // object URL of an uploaded "Your style" reference
     referenceImages: initialRefs, // [{ id, url, label?, fromPlaybook? }] (max MAX_REFS)
     playbookRefs: pbRefs, // the Playbook's brand images (snapshot, for the toggle)
+    playbookColors: (Array.isArray(playbookColors) ? playbookColors : []).filter(Boolean), // brand hex list for text swatches
+    customTextColors: [], // custom hex colours the user added to the text swatches
     playbookName: playbookName || "", // brand/playbook label for the toggle
     usePlaybookRefs, // include the Playbook brand images in the grid
     collapsedGroups: new Set(), // generate-panel section ids the user collapsed
@@ -586,8 +587,7 @@ export function setActiveTool(sessionId, tool, { toggle = true } = {}) {
   notify(sessionId);
 }
 
-// Produce the edited image. Annotate (handled by the caller, which passes a
-// composited data URL) and Crop are faithful; Reprompt reseeds.
+// Produce the edited image. Crop is faithful (same-seed reframe); Reprompt reseeds.
 function computeEdit(s, tool, payload) {
   const cur = s.currentImage;
   const stamp = Date.now().toString(36);
@@ -608,19 +608,6 @@ function computeEdit(s, tool, payload) {
 export function applyEdit(sessionId, tool, payload = {}) {
   const s = states.get(sessionId);
   if (!s || !s.currentImage || s.editBusy) return;
-
-  // Annotation composites synchronously (the caller hands us a data URL of the
-  // image + strokes) — no fake latency, a faithful result.
-  if (tool === "annotate" && payload.dataUrl) {
-    const prev = s.currentImage;
-    s.editHistory.push({ ...prev });
-    // Fresh object (no spread) so a prior op's badge flag doesn't linger.
-    s.currentImage = { url: payload.dataUrl, w: prev.w, h: prev.h, seed: `${prev.seed}-annot` };
-    s.activeTool = null;
-    notify(sessionId);
-    return;
-  }
-
   s.editBusy = true;
   notify(sessionId);
   if (s._editTimer) clearTimeout(s._editTimer);
@@ -664,6 +651,23 @@ export function addOverlay(sessionId, partial = {}) {
   s.selectedOverlayId = id;
   notify(sessionId);
   return id;
+}
+
+// Add a custom hex to the text-colour swatches (dedup, case-insensitive) and
+// apply it to the selected text overlay. Re-renders so the new swatch shows.
+export function addCustomTextColor(sessionId, hex) {
+  const s = states.get(sessionId);
+  if (!s || !hex) return;
+  const h = hex.toUpperCase();
+  const known = new Set(
+    [...(s.playbookColors || []), ...TEXT_COLORS, ...s.customTextColors].map((c) => c.toUpperCase()),
+  );
+  if (!known.has(h)) s.customTextColors.push(h);
+  if (s.selectedOverlayId) {
+    const o = s.overlays.find((x) => x.id === s.selectedOverlayId);
+    if (o) o.color = h;
+  }
+  notify(sessionId);
 }
 
 // Merge a patch and re-render (for panel controls: text / colour / size…).

@@ -18,7 +18,7 @@ import { getSessionById } from "../sessions-store.js?v=6";
 import { getContextById } from "../contexts-store.js?v=37";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../social-profiles.js?v=26";
 import { renderPostCard } from "./post-card.js?v=68";
-import * as imageStudio from "../image-studio.js?v=17";
+import * as imageStudio from "../image-studio.js?v=19";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -223,11 +223,6 @@ function resultsCanvas(st) {
 function editCanvas(st) {
   const img = st.currentImage;
   const ratio = img ? img.w / img.h : imageStudio.activeRatio(KEY);
-  const brushTool = st.activeTool === "annotate";
-  const canvasOverlay =
-    brushTool && img
-      ? `<canvas class="image-studio__annotate" data-img-annotate data-tool="${escapeHtml(st.activeTool)}" width="${img.w}" height="${img.h}"></canvas>`
-      : "";
   const busy = st.editBusy
     ? `<div class="image-studio__busy"><span class="gen-image-spinner"></span><span>Applying…</span></div>`
     : "";
@@ -240,7 +235,7 @@ function editCanvas(st) {
   // put when the selection changes.
   return `<div class="image-studio__frame" style="--imgs-ratio:${ratio}">
       <img class="image-studio__frame-img" src="${img ? img.url : ""}" alt="Working image" />
-      ${overlayLayer(st)}${canvasOverlay}${busy}${badge}
+      ${overlayLayer(st)}${busy}${badge}
     </div>`;
 }
 
@@ -571,16 +566,6 @@ function editSubpanel(st) {
       <p class="image-studio__subpanel-hint">Reframes the current image to the ratio you pick.</p>
     </div>`;
   }
-  if (tool === "annotate") {
-    return `<div class="image-studio__subpanel">
-      <p class="image-studio__subpanel-label">${escapeHtml(meta.label)}</p>
-      <p class="image-studio__subpanel-hint">Draw on the image — your strokes are baked into the picture.</p>
-      <div class="image-studio__subpanel-actions">
-        <button type="button" class="ap-button ghost grey" data-img-clear-brush><span>Clear</span></button>
-        <button type="button" class="ap-button primary orange" data-img-apply-edit="annotate"><i class="ap-icon-check"></i><span>Apply</span></button>
-      </div>
-    </div>`;
-  }
   return "";
 }
 
@@ -603,10 +588,21 @@ function overlaySubpanel(st, tool) {
         </div>
       </div>`;
     }
-    const colors = imageStudio.TEXT_COLORS.map(
-      (c) =>
-        `<button type="button" class="image-studio__swatch${t.color === c ? " is-selected" : ""}" data-img-text-color="${c}" style="--sw:${c}" aria-label="${c}"></button>`,
-    ).join("");
+    // Brand colours (from the Playbook) first, then the defaults, then any
+    // custom colours the user added — deduped case-insensitively.
+    const seen = new Set();
+    const swatchList = [...(st.playbookColors || []), ...imageStudio.TEXT_COLORS, ...(st.customTextColors || [])]
+      .map((c) => (c || "").toUpperCase())
+      .filter((c) => c && !seen.has(c) && seen.add(c));
+    const selectedHex = (t.color || "").toUpperCase();
+    const colors =
+      swatchList
+        .map(
+          (c) =>
+            `<button type="button" class="image-studio__swatch${selectedHex === c ? " is-selected" : ""}" data-img-text-color="${c}" style="--sw:${c}" aria-label="${c}"></button>`,
+        )
+        .join("") +
+      `<label class="image-studio__swatch image-studio__swatch--add" title="Add colour"><input type="color" data-img-text-colorpick aria-label="Add text colour" /><i class="ap-icon-plus" aria-hidden="true"></i></label>`;
     const sizes = imageStudio.TEXT_SIZES.map(
       (s) =>
         `<button type="button" class="ap-filter-chip" data-img-text-size="${s.value}" aria-pressed="${Math.abs(t.sizeF - s.value) < 0.001}">${s.label}</button>`,
@@ -731,48 +727,13 @@ function commitSlideEdit() {
   applySlide(st.currentImage.url);
 }
 
-// Apply an edit. Annotation composites the strokes into the image locally (a
-// faithful result); every other tool runs a mocked reseed inside applyEdit.
+// Apply an edit — a mocked reseed inside applyEdit (Reprompt syncs its note first).
 function applyEditTool(tool) {
-  if (tool === "annotate") {
-    const canvas = modal.querySelector("canvas[data-img-annotate]");
-    const st = state();
-    if (!canvas || !st?.currentImage) return;
-    compositeAnnotation(st.currentImage.url, canvas)
-      .then((dataUrl) => imageStudio.applyEdit(KEY, "annotate", { dataUrl }))
-      .catch(() => imageStudio.applyEdit(KEY, "annotate")); // fallback: mocked reseed
-    return;
-  }
   if (tool === "prompt") {
     const ta = modal.querySelector("[data-img-edit-prompt]");
     if (ta) imageStudio.setEditPromptSilent(KEY, ta.value);
   }
   imageStudio.applyEdit(KEY, tool);
-}
-
-// Composite the source image + the annotation canvas into a PNG data URL.
-// Picsum sends `Access-Control-Allow-Origin: *`, so crossOrigin lets us export;
-// if the canvas ends up tainted, the caller falls back to a mocked reseed.
-function compositeAnnotation(url, canvas) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      try {
-        const out = document.createElement("canvas");
-        out.width = img.naturalWidth || canvas.width;
-        out.height = img.naturalHeight || canvas.height;
-        const ctx = out.getContext("2d");
-        ctx.drawImage(img, 0, 0, out.width, out.height);
-        ctx.drawImage(canvas, 0, 0, out.width, out.height);
-        resolve(out.toDataURL("image/png"));
-      } catch (err) {
-        reject(err);
-      }
-    };
-    img.onerror = reject;
-    img.src = url;
-  });
 }
 
 function loadImg(url) {
@@ -828,40 +789,6 @@ function compositeOverlays(baseUrl, overlays, w, h) {
     }
     return out.toDataURL("image/png");
   });
-}
-
-// Freehand stroke on the brush canvas. Annotate = opaque orange (baked into the
-// image); fill / remove = translucent blue mask (visual only — the region seeds
-// a mocked reseed).
-function startStroke(canvas, downEvent) {
-  downEvent.preventDefault();
-  const ctx = canvas.getContext("2d");
-  const rect = canvas.getBoundingClientRect();
-  const sx = canvas.width / rect.width;
-  const sy = canvas.height / rect.height;
-  const annotate = canvas.dataset.tool === "annotate";
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.strokeStyle = annotate ? "#ff3c00" : "#178dfe";
-  ctx.globalAlpha = annotate ? 1 : 0.4;
-  ctx.lineWidth = annotate ? Math.max(4, canvas.width * 0.01) : Math.max(18, canvas.width * 0.06);
-  const at = (e) => [(e.clientX - rect.left) * sx, (e.clientY - rect.top) * sy];
-  const [x0, y0] = at(downEvent);
-  ctx.beginPath();
-  ctx.moveTo(x0, y0);
-  ctx.lineTo(x0 + 0.01, y0 + 0.01);
-  ctx.stroke();
-  const move = (e) => {
-    const [x, y] = at(e);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-  };
-  const up = () => {
-    window.removeEventListener("pointermove", move);
-    window.removeEventListener("pointerup", up);
-  };
-  window.addEventListener("pointermove", move);
-  window.addEventListener("pointerup", up);
 }
 
 // Move / resize / rotate a placed overlay. Updates state silently + the element
@@ -1002,11 +929,6 @@ function onClick(event) {
     const o = imageStudio.getOverlay(KEY, st.selectedOverlayId);
     return void imageStudio.updateOverlay(KEY, st.selectedOverlayId, { outline: !o?.outline });
   }
-  if (event.target.closest("[data-img-clear-brush]")) {
-    const canvas = modal.querySelector("canvas[data-img-annotate]");
-    if (canvas) canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-    return;
-  }
   const cropFmt = event.target.closest("[data-img-crop-format]");
   if (cropFmt) return void imageStudio.applyEdit(KEY, "crop", { formatId: cropFmt.dataset.imgCropFormat });
   const applyBtn = event.target.closest("[data-img-apply-edit]");
@@ -1038,12 +960,24 @@ function onInput(event) {
     imageStudio.updateOverlaySilent(KEY, st.selectedOverlayId, { text: event.target.value });
     const node = modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .image-studio__overlay-text`);
     if (node) node.textContent = event.target.value;
+  } else if (event.target.matches("[data-img-text-colorpick]")) {
+    // Live colour preview while dragging the picker (no re-render).
+    const st = state();
+    if (!st?.selectedOverlayId) return;
+    imageStudio.updateOverlaySilent(KEY, st.selectedOverlayId, { color: event.target.value });
+    const node = modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .image-studio__overlay-text`);
+    if (node) node.style.color = event.target.value;
+  }
+}
+
+// The native colour picker commits on "change" — persist it as a swatch then.
+function onChange(event) {
+  if (event.target.matches("[data-img-text-colorpick]")) {
+    imageStudio.addCustomTextColor(KEY, event.target.value);
   }
 }
 
 function onPointerDown(event) {
-  const canvas = event.target.closest("canvas[data-img-annotate]");
-  if (canvas) return void startStroke(canvas, event);
   if (event.target.closest("[data-img-overlay-delete]")) return; // click handles delete
   const overlayEl = event.target.closest("[data-img-overlay]");
   if (overlayEl) startOverlayGesture(event, overlayEl);
@@ -1060,6 +994,7 @@ export function init() {
   body = document.getElementById("imageStudioBody");
   modal.addEventListener("click", onClick);
   modal.addEventListener("input", onInput);
+  modal.addEventListener("change", onChange);
   modal.addEventListener("pointerdown", onPointerDown);
   bindOverlayDismissal({ modal, backdrop, close });
 }
@@ -1090,6 +1025,7 @@ export function open(postId, opts = {}) {
     carousel: carouselUrls ? { urls: carouselUrls } : null,
     playbookRefs: ctx?.referenceImages || [],
     playbookName: ctx?.brandName || ctx?.name || "",
+    playbookColors: (Array.isArray(ctx?.brandColors) ? ctx.brandColors : []).map((c) => c && c.hex).filter(Boolean),
   });
   if (unsub) unsub();
   unsub = imageStudio.subscribe(KEY, renderBody);
