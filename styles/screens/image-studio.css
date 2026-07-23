@@ -550,15 +550,63 @@ button.image-studio__ref--pick:focus-visible {
   color: var(--ref-color-electric-blue-100);
 }
 
-/* ── Edit-mode tool rail (left panel) ───────────────────────────────────── */
-/* The tools use the DS Action Dropdown (.ap-action-dropdown) items, but flat
-   (no popover chrome) to match the borderless panel — a plain menu list. */
-.image-studio__tools.ap-action-dropdown {
-  width: 100%;
-  box-shadow: none;
-  border: none;
-  border-radius: 0;
-  padding: var(--ref-spacing-xs);
+/* ── Edit-mode tool palette (left panel) ────────────────────────────────── */
+/* A horizontal segmented palette: icon+label pills that wrap, one always
+   pressed. Reads as a tool palette (not a menu list); the active tool is a blue
+   pill, never a full-width bar. Sits directly above the active tool's options.
+   Mirrors the token language of the canvas view toggle (.image-studio__viewseg). */
+.image-studio__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  border-bottom: 1px solid var(--app-border);
+}
+
+.image-studio__tool {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  padding: 6px 12px;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-white);
+  color: var(--ref-color-grey-60);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--ref-font-weight-bold);
+  cursor: pointer;
+  transition:
+    background var(--ref-animation-short) var(--app-ease-out),
+    color var(--ref-animation-short) var(--app-ease-out),
+    border-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.image-studio__tool > i {
+  font-size: 16px;
+}
+
+.image-studio__tool:hover {
+  background: var(--ref-color-grey-05);
+  color: var(--app-text);
+}
+
+/* Active tool — a filled blue pill (selection = accent/blue, like the filter
+   chips); the orange = AI accent stays reserved for the Reprompt Apply CTA. */
+.image-studio__tool[aria-pressed="true"] {
+  background: var(--ref-color-electric-blue-10);
+  border-color: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-electric-blue-100);
+}
+
+.image-studio__tool:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.image-studio__tool:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 1px;
 }
 
 /* ── Canvas: generate results — one big preview + bottom filmstrip ──────── */
@@ -695,12 +743,13 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 /* Contextual options for the active tool / selected element. Lives in the left
-   panel under the tool rail — a flat section split off by a top divider (matches
-   the generate-mode groups), not a floating card. */
+   panel directly under the tool palette, as its body — the palette
+   (.image-studio__tools) already carries the divider (border-bottom), so no
+   second border here; a flat section (matches the generate-mode groups), not a
+   floating card. */
 .image-studio__subpanel {
   width: 100%;
   box-sizing: border-box;
-  border-top: 1px solid var(--app-border);
   padding: var(--ref-spacing-sm) var(--ref-spacing-md);
   display: flex;
   flex-direction: column;

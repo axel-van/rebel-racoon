@@ -16,10 +16,9 @@
 //
 // Everything is MOCKED (no real image API): generateImage returns a seeded
 // Picsum URL keyed on the inputs; the edit tools reseed / composite / crop
-// locally. Annotation (canvas composite), Crop (same-seed reframe) and the added
-// logo/text elements produce faithful results; Reprompt is an honest preview
-// (reseed). The committed url rides back to the draft via attachImageToDraft
-// (see the modal component).
+// locally. Crop (same-seed reframe) and the added logo/text elements produce
+// faithful results; Reprompt is an honest preview (reseed). The committed url
+// rides back to the draft via attachImageToDraft (see the modal component).
 
 import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=5";
 
@@ -74,8 +73,8 @@ export const EDIT_TOOLS = [
   { key: "crop", label: "Crop", icon: "ap-icon-cropper", panel: "format", faithful: true },
   // Overlay tools — add a draggable logo / text element onto the image, then
   // flatten it in. `panel: "overlay"` renders the overlay controls.
-  { key: "logo", label: "Add logo", icon: "ap-icon-file--image", panel: "overlay", faithful: true },
-  { key: "text", label: "Add text", icon: "ap-icon-closed-captions", panel: "overlay", faithful: true },
+  { key: "logo", label: "Logo", icon: "ap-icon-file--image", panel: "overlay", faithful: true },
+  { key: "text", label: "Text", icon: "ap-icon-closed-captions", panel: "overlay", faithful: true },
 ];
 
 // Curated logo presets for the "Add logo" tray (real bundled assets).
@@ -232,7 +231,10 @@ export function start(
     addingVariation: false, // a "+" generate-another is in flight
     selectedIndex,
     currentImage, // { url, w, h, seed } — the working image in edit
-    activeTool: null, // one of EDIT_TOOLS keys
+    // The palette is a segmented control: one tool is always active in edit mode
+    // (so the options panel is never empty). Seed the first tool when opening
+    // straight into edit; generate mode has no active tool.
+    activeTool: mode === "edit" ? EDIT_TOOLS[0].key : null, // one of EDIT_TOOLS keys
     editBusy: false,
     editHistory: [], // undo stack of prior currentImage snapshots
     editPrompt: "", // scratch text for the Reprompt tool
@@ -506,6 +508,10 @@ export function setMode(sessionId, mode) {
   if (mode === "edit" && !s.currentImage) return;
   s.mode = mode;
   s.canvasView = "image";
+  if (mode === "edit") {
+    // Segmented palette: always land on an active tool so the options show.
+    if (!s.activeTool) s.activeTool = EDIT_TOOLS[0].key;
+  }
   if (mode === "generate") {
     s.activeTool = null;
     // Leaving a carousel-slide edit via the Generate tab = cancel: drop overlays
@@ -582,8 +588,18 @@ export function removeVariation(sessionId, index) {
 export function setActiveTool(sessionId, tool, { toggle = true } = {}) {
   const s = states.get(sessionId);
   if (!s || s.editBusy) return;
-  s.activeTool = toggle && s.activeTool === tool ? null : tool;
+  const next = toggle && s.activeTool === tool ? null : tool;
+  s.activeTool = next;
   s.editPrompt = "";
+  // Entering the Text tool: drop a ready-to-edit text element straight away so
+  // the user never has to click a separate "Add text" first. Skip if a text
+  // element is already selected (they're editing it). Logo keeps its chooser —
+  // it can't default (the user must pick which logo).
+  const editingText = s.overlays.some((o) => o.id === s.selectedOverlayId && o.kind === "text");
+  if (next === "text" && !editingText) {
+    addOverlay(sessionId, { kind: "text" }); // creates, selects + notifies
+    return;
+  }
   notify(sessionId);
 }
 
@@ -617,7 +633,8 @@ export function applyEdit(sessionId, tool, payload = {}) {
     cur.editHistory.push({ ...cur.currentImage });
     cur.currentImage = computeEdit(cur, tool, payload);
     cur.editBusy = false;
-    cur.activeTool = null;
+    // Keep the applied tool active (segmented palette is never empty) so the
+    // user can iterate — just clear the Reprompt scratch text.
     cur.editPrompt = "";
     cur._editTimer = null;
     notify(sessionId);

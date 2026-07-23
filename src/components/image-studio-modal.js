@@ -18,7 +18,7 @@ import { getSessionById } from "../sessions-store.js?v=6";
 import { getContextById } from "../contexts-store.js?v=37";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../social-profiles.js?v=26";
 import { renderPostCard } from "./post-card.js?v=68";
-import * as imageStudio from "../image-studio.js?v=19";
+import * as imageStudio from "../image-studio.js?v=21";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -106,20 +106,20 @@ function generateControls(st) {
   return promptGroup + composeGroups(st);
 }
 
-// Left panel — edit mode: the tool rail as a DS Action Dropdown menu
-// (.ap-action-dropdown items, 40px rows) + the active tool's / selected
-// element's options stacked below, separated by a divider. Keeping the options
-// in this sidebar (not below the image) means selecting an element never shifts
-// the canvas image — only this panel reflows.
+// Left panel — edit mode: a horizontal segmented tool palette (icon + label
+// pills, one always pressed) at the top, then the active tool's / selected
+// element's options below it. Keeping the options in this sidebar (not below
+// the image) means selecting a tool or element never shifts the canvas image —
+// only this panel reflows.
 function editControls(st) {
   const items = imageStudio.EDIT_TOOLS.map((t) => {
     const active = st.activeTool === t.key;
-    return `<button type="button" class="ap-action-dropdown-item${active ? " focused" : ""}" role="menuitem" data-img-tool="${escapeHtml(t.key)}" ${st.editBusy ? "disabled" : ""}>
+    return `<button type="button" class="image-studio__tool" data-img-tool="${escapeHtml(t.key)}" aria-pressed="${active}" ${st.editBusy ? "disabled" : ""}>
       <i class="${t.icon}" aria-hidden="true"></i>
-      <span class="ap-action-dropdown-item-text">${escapeHtml(t.label)}</span>
+      <span>${escapeHtml(t.label)}</span>
     </button>`;
   }).join("");
-  const tools = `<div class="ap-action-dropdown image-studio__tools" role="menu" aria-label="Edit tools">${items}</div>`;
+  const tools = `<div class="image-studio__tools" role="group" aria-label="Edit tools">${items}</div>`;
   return tools + editSubpanel(st);
 }
 
@@ -901,13 +901,9 @@ function onClick(event) {
   const varPick = event.target.closest("[data-img-variation]");
   if (varPick) return void imageStudio.selectVariation(KEY, Number(varPick.dataset.imgVariation));
   const toolBtn = event.target.closest("[data-img-tool]");
-  if (toolBtn) {
-    const t = toolBtn.dataset.imgTool;
-    // Overlay tools don't toggle; their panel holds the add affordance + (when
-    // an element is selected) its options.
-    if (t === "text" || t === "logo") return void imageStudio.setActiveTool(KEY, t, { toggle: false });
-    return void imageStudio.setActiveTool(KEY, t);
-  }
+  // Segmented palette: single-select, no toggle-off — one tool stays active so
+  // the options panel is never empty.
+  if (toolBtn) return void imageStudio.setActiveTool(KEY, toolBtn.dataset.imgTool, { toggle: false });
   // Overlay controls (Add logo / Add text panels).
   if (event.target.closest("[data-img-add-text]")) return void imageStudio.addOverlay(KEY, { kind: "text" });
   if (event.target.closest("[data-img-logo-upload]")) return void openLogoPicker();
