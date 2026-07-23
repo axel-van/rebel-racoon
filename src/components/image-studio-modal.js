@@ -18,7 +18,7 @@ import { getSessionById } from "../sessions-store.js?v=6";
 import { getContextById } from "../contexts-store.js?v=37";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../social-profiles.js?v=26";
 import { renderPostCard } from "./post-card.js?v=68";
-import * as imageStudio from "../image-studio.js?v=25";
+import * as imageStudio from "../image-studio.js?v=26";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -124,10 +124,10 @@ function actionBar(st) {
       <button type="button" class="ap-button primary orange image-studio__actionbar-apply" data-img-apply-edit="prompt" ${busy}><i class="ap-icon-archie-official" aria-hidden="true"></i><span>Apply</span></button>
     </div>
     <div class="image-studio__actionbar-row image-studio__actionbar-tools">
-      <button type="button" class="image-studio__actionbar-btn" data-img-crop-start ${busy}><i class="ap-icon-cropper" aria-hidden="true"></i><span>Crop</span></button>
-      <button type="button" class="image-studio__actionbar-btn" data-img-add-text ${busy}><i class="ap-icon-closed-captions" aria-hidden="true"></i><span>Add text</span></button>
+      <button type="button" class="ap-button stroked grey" data-img-crop-start ${busy}><i class="ap-icon-cropper" aria-hidden="true"></i><span>Crop</span></button>
+      <button type="button" class="ap-button stroked grey" data-img-add-text ${busy}><i class="ap-icon-closed-captions" aria-hidden="true"></i><span>Add text</span></button>
       <div class="image-studio__actionbar-anchor">
-        <button type="button" class="image-studio__actionbar-btn" data-img-popover-toggle="logo" aria-haspopup="true" aria-expanded="${st.openPopover === "logo"}" ${busy}><i class="ap-icon-file--image" aria-hidden="true"></i><span>Add logo</span></button>
+        <button type="button" class="ap-button stroked grey" data-img-popover-toggle="logo" aria-haspopup="true" aria-expanded="${st.openPopover === "logo"}" ${busy}><i class="ap-icon-file--image" aria-hidden="true"></i><span>Add logo</span></button>
         ${st.openPopover === "logo" ? logoPopover(st) : ""}
       </div>
     </div>
@@ -183,16 +183,19 @@ function logoPopover() {
 // toolbar. The Playbook brand colours get their own framed section (so they read
 // as "your brand"); the rest — the defaults + any custom colours + an "add"
 // picker — sit below. All deduped case-insensitively across both groups.
-function textColorPopover(o, st) {
-  const selectedHex = (o.color || "").toUpperCase();
+// Shared swatch grid (framed Brand group + More group + a native "add" picker),
+// reused by both the fill-colour and outline-colour popovers. `applyAttr` is the
+// data-attr stamped on each preset swatch; `pickAttr` on the hidden colour input.
+function swatchGrid({ st, selected, applyAttr, pickAttr, pickLabel }) {
+  const sel = (selected || "").toUpperCase();
   const swatch = (c) =>
-    `<button type="button" class="image-studio__swatch${selectedHex === c ? " is-selected" : ""}" data-img-text-color="${c}" style="--sw:${c}" aria-label="${c}"></button>`;
+    `<button type="button" class="image-studio__swatch${sel === c ? " is-selected" : ""}" ${applyAttr}="${c}" style="--sw:${c}" aria-label="${c}"></button>`;
   const seen = new Set();
   const dedupe = (list) =>
     (list || []).map((c) => (c || "").toUpperCase()).filter((c) => c && !seen.has(c) && seen.add(c));
   const brand = dedupe(st.playbookColors); // brand first → wins the dedupe
   const others = dedupe([...imageStudio.TEXT_COLORS, ...(st.customTextColors || [])]);
-  const addSwatch = `<label class="image-studio__swatch image-studio__swatch--add" title="Add colour"><input type="color" data-img-text-colorpick aria-label="Add text colour" /><i class="ap-icon-plus" aria-hidden="true"></i></label>`;
+  const addSwatch = `<label class="image-studio__swatch image-studio__swatch--add" title="${pickLabel}"><input type="color" ${pickAttr} aria-label="${pickLabel}" /><i class="ap-icon-plus" aria-hidden="true"></i></label>`;
   const brandGroup = brand.length
     ? `<div class="image-studio__color-group image-studio__color-group--brand">
         <p class="image-studio__color-label">Brand</p>
@@ -203,7 +206,78 @@ function textColorPopover(o, st) {
       ${brand.length ? `<p class="image-studio__color-label">More</p>` : ""}
       <span class="image-studio__swatches">${others.map(swatch).join("")}${addSwatch}</span>
     </div>`;
-  return `<div class="image-studio__popover image-studio__popover--textcolor" data-img-popover role="menu" aria-label="Text colour">${brandGroup}${othersGroup}</div>`;
+  return `${brandGroup}${othersGroup}`;
+}
+
+function textColorPopover(o, st) {
+  return `<div class="image-studio__popover image-studio__popover--textcolor" data-img-popover role="menu" aria-label="Text colour">${swatchGrid(
+    {
+      st,
+      selected: o.color,
+      applyAttr: "data-img-text-color",
+      pickAttr: "data-img-text-colorpick",
+      pickLabel: "Add text colour",
+    },
+  )}</div>`;
+}
+
+// A small on/off switch (DS toggle) for an effect popover's header.
+function fxToggle(attr, on, label) {
+  return `<label class="ap-toggle-container image-studio__fx-toggle" title="${label}"><input type="checkbox" ${attr} ${on ? "checked" : ""} aria-label="${label}" /><i aria-hidden="true"></i></label>`;
+}
+
+// Outline popover — on/off switch + a colour grid for the stroke colour. The grid
+// dims (and swatches disable) while outline is off.
+function textOutlinePopover(o, st) {
+  const on = !!o.outline;
+  return `<div class="image-studio__popover image-studio__popover--textcolor image-studio__popover--outline${on ? "" : " is-off"}" data-img-popover role="menu" aria-label="Outline">
+    <div class="image-studio__popover-head">
+      <p class="image-studio__color-label">Outline</p>
+      ${fxToggle("data-img-outline-toggle", on, "Toggle outline")}
+    </div>
+    ${swatchGrid({ st, selected: o.outlineColor, applyAttr: "data-img-outline-color", pickAttr: "data-img-outline-colorpick", pickLabel: "Add outline colour" })}
+  </div>`;
+}
+
+// Shadow popover — on/off switch + an intensity slider (0–100). The slider dims
+// (and disables) while shadow is off.
+function textShadowPopover(o) {
+  const on = !!o.shadow;
+  const val = o.shadowIntensity ?? 55;
+  return `<div class="image-studio__popover image-studio__popover--shadow${on ? "" : " is-off"}" data-img-popover role="menu" aria-label="Shadow">
+    <div class="image-studio__popover-head">
+      <p class="image-studio__color-label">Shadow</p>
+      ${fxToggle("data-img-shadow-toggle", on, "Toggle shadow")}
+    </div>
+    <div class="image-studio__slider-row">
+      <input type="range" class="ap-slider" min="0" max="100" step="1" value="${val}" data-img-shadow-intensity aria-label="Shadow intensity" style="--fill:${val}%" ${on ? "" : "disabled"} />
+      <span class="image-studio__slider-val" data-img-shadow-val>${val}</span>
+    </div>
+  </div>`;
+}
+
+// Font popover — a radio-style list of the bundled + uploaded fonts (each label
+// previewed in its own face), then an "Import my font" row.
+function textFontPopover(o, st) {
+  const cur = o.fontFamily || null;
+  const row = (family, label) => {
+    const on = (family || null) === cur;
+    const preview = family ? ` style="font-family:${cssFamily(family)}"` : "";
+    return `<button type="button" class="image-studio__font-row${on ? " is-selected" : ""}" data-img-font="${escapeHtml(family || "")}" role="menuitemradio" aria-checked="${on}">
+      <span class="image-studio__font-name"${preview}>${escapeHtml(label)}</span>
+      ${on ? `<i class="ap-icon-check image-studio__font-check" aria-hidden="true"></i>` : ""}
+    </button>`;
+  };
+  const builtins = imageStudio.FONT_OPTIONS.map((f) => row(f.family, f.label)).join("");
+  const custom = (st.customFonts || []).map((f) => row(f.family, f.label)).join("");
+  return `<div class="image-studio__popover image-studio__popover--font" data-img-popover role="menu" aria-label="Font">
+    <div class="image-studio__font-list">${builtins}${custom}</div>
+    <div class="image-studio__font-div" aria-hidden="true"></div>
+    <button type="button" class="image-studio__font-row image-studio__font-row--upload" data-img-font-upload>
+      <i class="ap-icon-upload image-studio__font-upload-icon" aria-hidden="true"></i>
+      <span class="image-studio__font-name">Import my font…</span>
+    </button>
+  </div>`;
 }
 
 // A compact segmented pill at the top of the right pane, flipping between the
@@ -395,16 +469,53 @@ function overlayLayer(st) {
 // Size is changed with the corner handle (drag), so the toolbar carries only the
 // labelled style controls: colour, Bold, Outline, and an icon-only Delete.
 function textToolbar(o, st, selected) {
-  const colorOpen = selected && st.openPopover === "textColor";
+  const open = (name) => selected && st.openPopover === name;
+  const colorOpen = open("textColor");
+  const fontOpen = open("textFont");
+  const outlineOpen = open("textOutline");
+  const shadowOpen = open("textShadow");
+  const fontLabel = o.fontFamily
+    ? (st.customFonts || []).find((f) => f.family === o.fontFamily)?.label || o.fontFamily
+    : "Default";
   return `<div class="image-studio__text-toolbar" data-img-text-toolbar>
     <button type="button" class="image-studio__tt-btn" data-img-popover-toggle="textColor" aria-haspopup="true" aria-expanded="${colorOpen}" aria-label="Text colour"><span class="image-studio__tt-swatch" style="--sw:${escapeHtml(o.color || "#FFFFFF")}"></span><span>Colour</span></button>
     ${colorOpen ? textColorPopover(o, st) : ""}
     <span class="image-studio__tt-sep" aria-hidden="true"></span>
+    <button type="button" class="image-studio__tt-btn image-studio__tt-font" data-img-popover-toggle="textFont" aria-haspopup="true" aria-expanded="${fontOpen}" title="Font — ${escapeHtml(fontLabel)}" aria-label="Font"><span class="image-studio__tt-aa" aria-hidden="true">Aa</span></button>
+    ${fontOpen ? textFontPopover(o, st) : ""}
     <button type="button" class="image-studio__tt-btn image-studio__tt-bold" data-img-text-bold aria-pressed="${!!o.bold}">Bold</button>
-    <button type="button" class="image-studio__tt-btn image-studio__tt-outline" data-img-text-outline aria-pressed="${!!o.outline}">Outline</button>
+    <span class="image-studio__tt-sep" aria-hidden="true"></span>
+    <button type="button" class="image-studio__tt-btn image-studio__tt-outline${o.outline ? " is-on" : ""}" data-img-popover-toggle="textOutline" aria-haspopup="true" aria-expanded="${outlineOpen}" title="Outline"><span class="image-studio__tt-swatch" style="--sw:${escapeHtml(o.outlineColor || "#0A1B33")}"></span><span>Outline</span></button>
+    ${outlineOpen ? textOutlinePopover(o, st) : ""}
+    <button type="button" class="image-studio__tt-btn image-studio__tt-shadow${o.shadow ? " is-on" : ""}" data-img-popover-toggle="textShadow" aria-haspopup="true" aria-expanded="${shadowOpen}" title="Shadow"><span class="image-studio__tt-shadowdot" aria-hidden="true"></span><span>Shadow</span></button>
+    ${shadowOpen ? textShadowPopover(o) : ""}
     <span class="image-studio__tt-sep" aria-hidden="true"></span>
     <button type="button" class="image-studio__tt-del" data-img-overlay-delete="${o.id}" aria-label="Delete text"><i class="ap-icon-trash" aria-hidden="true"></i></button>
   </div>`;
+}
+
+// ── Shared text-overlay render helpers ──────────────────────────────────────
+// Outline stroke + drop-shadow are expressed as fractions of the font size so the
+// live <span> (em units) and the canvas bake (×fontPx) render identically.
+const STROKE_K = 0.06; // -webkit-text-stroke width / canvas lineWidth ÷ font-size
+
+// shadowIntensity 0–100 → { blurEm, offYEm, alpha }. Calibrated so the default (55)
+// reproduces the previous baked shadow exactly: { blur .18em, offY .04em, α .55 }.
+function shadowMetrics(i) {
+  const t = Math.max(0, Math.min(100, i ?? 0)) / 55;
+  return { blurEm: 0.06 + t * 0.12, offYEm: 0.02 + t * 0.02, alpha: 0.2 + t * 0.35 };
+}
+
+// The primary family, quoted if multi-word (for document.fonts.load / canvas).
+function fontPrimary(family) {
+  if (!family) return "Averta";
+  return /\s/.test(family) ? `"${family}"` : family;
+}
+
+// Full family stack for CSS font-family / the canvas font shorthand — always keep
+// the Averta + sans-serif fallback. null family → the app default (Averta).
+function cssFamily(family) {
+  return family ? `${fontPrimary(family)}, Averta, sans-serif` : "Averta, sans-serif";
 }
 
 function renderOverlay(o, selected, editing, st) {
@@ -419,7 +530,12 @@ function renderOverlay(o, selected, editing, st) {
       <span class="image-studio__overlay-rotate" data-img-overlay-rotate="${o.id}" title="Rotate" aria-hidden="true"><i class="ap-icon-refresh"></i></span>
       <span class="image-studio__overlay-resize" data-img-overlay-resize="${o.id}" title="Resize" aria-hidden="true"></span>`;
   } else {
-    const textStyle = `color:${escapeHtml(o.color || "#FFFFFF")}; font-size:${o.sizeF * 100}cqh; font-weight:${o.bold ? 700 : 400};${o.outline ? " text-shadow:0 2px 8px rgba(0,0,0,.55); -webkit-text-stroke:0.055em rgba(0,0,0,.6);" : ""}`;
+    const sm = shadowMetrics(o.shadowIntensity);
+    const textStyle =
+      `color:${escapeHtml(o.color || "#FFFFFF")}; font-family:${cssFamily(o.fontFamily)};` +
+      ` font-size:${o.sizeF * 100}cqh; font-weight:${o.bold ? 700 : 400};` +
+      (o.outline ? ` -webkit-text-stroke:${STROKE_K}em ${escapeHtml(o.outlineColor || "#0A1B33")};` : "") +
+      (o.shadow ? ` text-shadow:0 ${sm.offYEm}em ${sm.blurEm}em rgba(0,0,0,${sm.alpha});` : "");
     // Editing = contenteditable + focusable; otherwise inert so pointerdown falls
     // through to the draggable overlay div.
     const editAttrs = editing
@@ -776,6 +892,43 @@ function openLogoPicker() {
   input.click();
 }
 
+let fontSeq = 0;
+const fontLabelFromName = (name) =>
+  (name || "")
+    .replace(/\.[^.]+$/, "")
+    .replace(/[-_]+/g, " ")
+    .trim() || "Custom font";
+
+// Upload a font file → register it via FontFace so both the live text and the
+// canvas bake can use it, then select it on the current overlay.
+function openFontPicker() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".ttf,.otf,.woff,.woff2,font/*";
+  input.addEventListener("change", () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const family = `studio-font-${++fontSeq}`;
+    new FontFace(family, `url("${url}")`)
+      .load()
+      .then((loaded) => {
+        document.fonts.add(loaded);
+        imageStudio.addCustomFont(KEY, { family, label: fontLabelFromName(file.name), url });
+        imageStudio.setOpenPopover(KEY, null);
+      })
+      .catch(() => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch {
+          /* ignore */
+        }
+        showToast("Couldn't load that font file.");
+      });
+  });
+  input.click();
+}
+
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
 // Commit the working image to the origin draft, then close.
@@ -853,7 +1006,17 @@ function loadImg(url) {
 // optional outline/shadow) into a PNG data URL at the image's intrinsic size.
 function compositeOverlays(baseUrl, overlays, w, h) {
   const logoUrls = [...new Set(overlays.filter((o) => o.kind === "logo").map((o) => o.url))];
-  return Promise.all([loadImg(baseUrl), ...logoUrls.map(loadImg)]).then(([base, ...logos]) => {
+  // Preload every (weight, family) a text overlay uses so the bake doesn't fall
+  // back to a system font before toDataURL. document.fonts.load never rejects.
+  const fontSpecs = [
+    ...new Set(
+      overlays.filter((o) => o.kind === "text").map((o) => `${o.bold ? 700 : 400} 32px ${fontPrimary(o.fontFamily)}`),
+    ),
+  ];
+  const fontsReady = document?.fonts
+    ? Promise.all(fontSpecs.map((s) => document.fonts.load(s).catch(() => {})))
+    : Promise.resolve();
+  return Promise.all([fontsReady, loadImg(baseUrl), ...logoUrls.map(loadImg)]).then(([, base, ...logos]) => {
     const logoMap = new Map(logoUrls.map((u, i) => [u, logos[i]]));
     const out = document.createElement("canvas");
     out.width = w;
@@ -872,21 +1035,30 @@ function compositeOverlays(baseUrl, overlays, w, h) {
         if (img) ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
       } else {
         const fontPx = o.sizeF * h;
-        ctx.font = `${o.bold ? 700 : 400} ${fontPx}px Averta, sans-serif`;
+        const text = o.text || "";
+        ctx.font = `${o.bold ? 700 : 400} ${fontPx}px ${cssFamily(o.fontFamily)}`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
+        // Three passes, matching the live CSS: 1) drop shadow cast off the fill
+        // glyph, 2) the coloured stroke, 3) the fill on top.
+        if (o.shadow) {
+          const sm = shadowMetrics(o.shadowIntensity);
+          ctx.save();
+          ctx.shadowColor = `rgba(0,0,0,${sm.alpha})`;
+          ctx.shadowBlur = sm.blurEm * fontPx;
+          ctx.shadowOffsetY = sm.offYEm * fontPx;
+          ctx.fillStyle = o.color || "#FFFFFF";
+          ctx.fillText(text, 0, 0);
+          ctx.restore();
+        }
         if (o.outline) {
-          ctx.shadowColor = "rgba(0,0,0,0.55)";
-          ctx.shadowBlur = fontPx * 0.18;
-          ctx.shadowOffsetY = fontPx * 0.04;
-          ctx.lineWidth = fontPx * 0.12;
-          ctx.strokeStyle = "rgba(0,0,0,0.6)";
+          ctx.lineWidth = STROKE_K * fontPx;
           ctx.lineJoin = "round";
-          ctx.strokeText(o.text || "", 0, 0);
-          ctx.shadowColor = "transparent";
+          ctx.strokeStyle = o.outlineColor || "#0A1B33";
+          ctx.strokeText(text, 0, 0);
         }
         ctx.fillStyle = o.color || "#FFFFFF";
-        ctx.fillText(o.text || "", 0, 0);
+        ctx.fillText(text, 0, 0);
       }
       ctx.restore();
     }
@@ -1159,15 +1331,24 @@ function onClick(event) {
     restoreEdit();
     return;
   }
-  if (event.target.closest("[data-img-text-bold]") && st.selectedOverlayId) {
-    const o = imageStudio.getOverlay(KEY, st.selectedOverlayId);
-    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { bold: !o?.bold });
+  const outColor = event.target.closest("[data-img-outline-color]");
+  if (outColor && st.selectedOverlayId) {
+    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { outlineColor: outColor.dataset.imgOutlineColor });
+    imageStudio.setOpenPopover(KEY, null);
     restoreEdit();
     return;
   }
-  if (event.target.closest("[data-img-text-outline]") && st.selectedOverlayId) {
+  const fontPick = event.target.closest("[data-img-font]");
+  if (fontPick && st.selectedOverlayId) {
+    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { fontFamily: fontPick.dataset.imgFont || null });
+    imageStudio.setOpenPopover(KEY, null);
+    restoreEdit();
+    return;
+  }
+  if (event.target.closest("[data-img-font-upload]")) return void openFontPicker();
+  if (event.target.closest("[data-img-text-bold]") && st.selectedOverlayId) {
     const o = imageStudio.getOverlay(KEY, st.selectedOverlayId);
-    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { outline: !o?.outline });
+    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { bold: !o?.bold });
     restoreEdit();
     return;
   }
@@ -1217,15 +1398,46 @@ function onInput(event) {
     imageStudio.updateOverlaySilent(KEY, st.selectedOverlayId, { color: event.target.value });
     const node = modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .image-studio__overlay-text`);
     if (node) node.style.color = event.target.value;
+  } else if (event.target.matches("[data-img-outline-colorpick]")) {
+    // Live outline-colour preview (stroke colour only; width stays).
+    const st = state();
+    if (!st?.selectedOverlayId) return;
+    imageStudio.updateOverlaySilent(KEY, st.selectedOverlayId, { outlineColor: event.target.value });
+    const node = modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .image-studio__overlay-text`);
+    if (node) node.style.webkitTextStrokeColor = event.target.value;
+  } else if (event.target.matches("[data-img-shadow-intensity]")) {
+    // Live shadow-intensity preview (no re-render → the slider drag isn't lost).
+    const st = state();
+    if (!st?.selectedOverlayId) return;
+    const v = Number(event.target.value);
+    imageStudio.updateOverlaySilent(KEY, st.selectedOverlayId, { shadowIntensity: v });
+    const sm = shadowMetrics(v);
+    const node = modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .image-studio__overlay-text`);
+    if (node) node.style.textShadow = `0 ${sm.offYEm}em ${sm.blurEm}em rgba(0,0,0,${sm.alpha})`;
+    event.target.style.setProperty("--fill", `${v}%`);
+    const valEl = modal.querySelector("[data-img-shadow-val]");
+    if (valEl) valEl.textContent = String(v);
   }
 }
 
 // The native colour picker commits on "change" — persist it as a swatch then.
 function onChange(event) {
+  const st = state();
   if (event.target.matches("[data-img-text-colorpick]")) {
-    imageStudio.addCustomTextColor(KEY, event.target.value);
+    imageStudio.addCustomColor(KEY, event.target.value, "color");
     imageStudio.setOpenPopover(KEY, null);
     if (state()?.editingOverlayId) focusEditingText({ selectAll: false });
+  } else if (event.target.matches("[data-img-outline-colorpick]")) {
+    imageStudio.addCustomColor(KEY, event.target.value, "outlineColor");
+    imageStudio.setOpenPopover(KEY, null);
+    if (state()?.editingOverlayId) focusEditingText({ selectAll: false });
+  } else if (event.target.matches("[data-img-outline-toggle]") && st?.selectedOverlayId) {
+    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { outline: event.target.checked });
+  } else if (event.target.matches("[data-img-shadow-toggle]") && st?.selectedOverlayId) {
+    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { shadow: event.target.checked });
+  } else if (event.target.matches("[data-img-shadow-intensity]") && st?.selectedOverlayId) {
+    // Slider release commits + re-renders (live preview happened in onInput).
+    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { shadowIntensity: Number(event.target.value) });
   } else if (event.target.matches("[data-img-toggle-playbook-refs]")) {
     // Brand kit switch (DS toggle checkbox).
     imageStudio.setUsePlaybookRefs(KEY, event.target.checked);
@@ -1272,9 +1484,13 @@ function onPointerDown(event) {
   const overlayEl = event.target.closest("[data-img-overlay]");
   if (!overlayEl) return;
   // While a text element is being edited, let pointer events reach the
-  // contenteditable (caret placement / selection) instead of starting a drag.
+  // contenteditable (caret placement / selection) instead of starting a drag —
+  // EXCEPT on the resize / rotate handles, which must stay grabbable so you can
+  // resize straight after changing a style (font/colour/…) without first
+  // clicking away to exit inline edit. A handle drag ends the edit on pointerup.
   const st = state();
-  if (st?.editingOverlayId === overlayEl.dataset.imgOverlay) return;
+  const onHandle = event.target.closest("[data-img-overlay-resize], [data-img-overlay-rotate]");
+  if (st?.editingOverlayId === overlayEl.dataset.imgOverlay && !onHandle) return;
   startOverlayGesture(event, overlayEl);
 }
 

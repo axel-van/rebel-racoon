@@ -1,0 +1,17 @@
+The bundled font files in this directory are licensed under the
+SIL Open Font License, Version 1.1.
+
+  - Montserrat        © The Montserrat Project Authors
+  - Playfair Display  © The Playfair Display Project Authors
+  - Oswald            © The Oswald Project Authors
+  - Caveat            © The Caveat Project Authors
+
+Each is distributed by Google Fonts (fonts.google.com) and reproduced here
+(latin subset, variable weight axis) so the Image Studio can bake them into
+exported images offline. The full license text is available at:
+
+  https://openfontlicense.org
+
+Under the OFL these fonts may be used, studied, modified and redistributed
+freely so long as they are not sold by themselves and any derivative uses
+the license. They are bundled here only as embedded assets of this prototype.

@@ -568,7 +568,7 @@ button.image-studio__ref--pick:focus-visible {
 
 .image-studio__actionbar-tools {
   justify-content: center;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xs);
 }
 
 .image-studio__actionbar-input {
@@ -598,40 +598,13 @@ button.image-studio__ref--pick:focus-visible {
   position: relative;
 }
 
-.image-studio__actionbar-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  padding: 6px 12px;
-  border: none;
-  background: none;
-  border-radius: var(--app-radius-pill);
-  cursor: pointer;
-  color: var(--ref-color-grey-80);
-  font-size: var(--sys-text-style-caption-bold-size);
-  font-weight: var(--ref-font-weight-bold);
-  transition: background var(--ref-animation-short) var(--app-ease-out);
-}
-
-.image-studio__actionbar-btn > i {
-  font-size: 16px;
-  color: var(--ref-color-grey-60);
-}
-
-.image-studio__actionbar-btn:hover {
-  background: var(--ref-color-grey-05);
-}
-
-.image-studio__actionbar-btn[aria-expanded="true"],
-.image-studio__actionbar-btn[aria-expanded="true"] > i {
+/* The edit-tools are DS .ap-button (stroked grey) — only the popover-open state
+   is app-specific: tint the active trigger with the studio's blue accent. */
+.image-studio__actionbar-tools .ap-button[aria-expanded="true"] {
+  border-color: var(--ref-color-electric-blue-100);
   color: var(--ref-color-electric-blue-100);
 }
 
-.image-studio__actionbar-btn[aria-expanded="true"] {
-  background: var(--ref-color-electric-blue-10);
-}
-
-.image-studio__actionbar-btn:disabled,
 .image-studio__actionbar-input:disabled {
   opacity: 0.5;
   cursor: default;
@@ -685,15 +658,30 @@ button.image-studio__ref--pick:focus-visible {
   width: 260px;
 }
 
-.image-studio__popover--textcolor {
+.image-studio__popover--textcolor,
+.image-studio__popover--shadow,
+.image-studio__popover--font {
   left: 50%;
   transform: translateX(-50%);
   min-width: 0;
-  width: max-content; /* sized by the swatch grid below */
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-sm);
   animation-name: image-studio-pop-center; /* keep centred while rising in */
+}
+
+.image-studio__popover--textcolor {
+  width: max-content; /* sized by the swatch grid below */
+}
+
+.image-studio__popover--shadow {
+  width: 224px;
+  gap: var(--ref-spacing-xs);
+}
+
+.image-studio__popover--font {
+  width: 212px;
+  gap: var(--ref-spacing-xs);
 }
 
 /* Colour groups — the brand set gets a soft, borderless tinted panel (reads as
@@ -703,6 +691,9 @@ button.image-studio__ref--pick:focus-visible {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
+  /* Match the framed brand panel's inner inset so every label + swatch row in
+     the popover shares one left edge (the head + slider row match this too). */
+  padding-inline: 10px;
 }
 
 .image-studio__color-group--brand {
@@ -723,7 +714,7 @@ button.image-studio__ref--pick:focus-visible {
 
 .image-studio__popover--textcolor .image-studio__swatches {
   display: grid;
-  grid-template-columns: repeat(5, 22px);
+  grid-template-columns: repeat(5, 24px); /* match the 24px swatch so cells don't clip */
   gap: var(--ref-spacing-xs);
 }
 
@@ -743,6 +734,7 @@ button.image-studio__ref--pick:focus-visible {
   justify-content: space-between;
   gap: var(--ref-spacing-sm);
   margin-bottom: var(--ref-spacing-xs);
+  padding-inline: 10px; /* align the head label + toggle with the swatch rows below */
 }
 
 /* Mini toolbar attached to a selected TEXT element (upright pill above it). */
@@ -816,9 +808,28 @@ button.image-studio__ref--pick:focus-visible {
   font-weight: var(--ref-font-weight-bold);
 }
 
-.image-studio__tt-outline[aria-pressed="true"] {
+/* Effect triggers (Outline / Shadow) tint blue when the effect is applied — the
+   same active treatment as an aria-pressed toggle, driven by the .is-on class. */
+.image-studio__tt-btn.is-on {
   background: var(--ref-color-electric-blue-10);
   color: var(--ref-color-electric-blue-100);
+}
+
+/* Font trigger — a compact "Aa" glyph in place of an icon (no font glyph in DS). */
+.image-studio__tt-aa {
+  font-size: 13px;
+  font-weight: var(--ref-font-weight-bold);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+/* Shadow trigger — a dot that casts its own soft shadow, reading as the effect. */
+.image-studio__tt-shadowdot {
+  width: 13px;
+  height: 13px;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-grey-40);
+  box-shadow: 1.5px 2.5px 3px rgba(16, 24, 40, 0.5);
 }
 
 .image-studio__tt-del {
@@ -835,6 +846,110 @@ button.image-studio__ref--pick:focus-visible {
 .image-studio__tt-del:hover {
   background: var(--ref-color-grey-05);
   color: var(--ref-color-grey-80);
+}
+
+/* Six controls widen the pill — keep it a single row sized to its content (the
+   toolbar bleeds over the image edge harmlessly; the frame is overflow:visible)
+   and never wider than the viewport. */
+.image-studio__overlay.is-selected .image-studio__text-toolbar {
+  width: max-content;
+  max-width: 90vw;
+}
+
+/* Effect-popover header switch — the DS toggle, sized down for the compact head. */
+.image-studio__fx-toggle {
+  flex: 0 0 auto;
+  transform: scale(0.82);
+  transform-origin: right center;
+}
+
+/* Shadow intensity slider row. */
+.image-studio__slider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  padding-inline: 10px; /* align with the shadow popover's head label */
+}
+
+.image-studio__slider-row .ap-slider {
+  flex: 1;
+}
+
+.image-studio__slider-val {
+  min-width: 2.5ch;
+  text-align: right;
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-80);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dim (and lock) the sub-controls when an effect is switched off. */
+.image-studio__popover--outline.is-off .image-studio__color-group,
+.image-studio__popover--shadow.is-off .image-studio__slider-row {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Font popover — a radio-style list + an "Import my font" row. */
+.image-studio__font-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 156px; /* ~5 rows; the popover opens upward inside the clipped canvas */
+  overflow-y: auto;
+}
+
+.image-studio__font-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: 5px 8px;
+  border: none;
+  background: none;
+  border-radius: var(--app-radius-md);
+  cursor: pointer;
+  color: var(--ref-color-grey-90);
+  text-align: left;
+}
+
+.image-studio__font-row:hover {
+  background: var(--ref-color-grey-05);
+}
+
+.image-studio__font-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.image-studio__font-row.is-selected {
+  color: var(--ref-color-electric-blue-100);
+}
+
+.image-studio__font-check {
+  margin-left: auto;
+  color: var(--ref-color-electric-blue-100);
+}
+
+.image-studio__font-row--upload {
+  color: var(--ref-color-grey-80);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.image-studio__font-upload-icon {
+  color: var(--ref-color-grey-60);
+}
+
+.image-studio__font-div {
+  height: 1px;
+  margin: 2px 0;
+  background: var(--app-border);
 }
 
 /* Inline text-edit state — text becomes typeable; the drag chrome steps aside. */

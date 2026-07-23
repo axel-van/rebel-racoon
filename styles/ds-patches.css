@@ -455,3 +455,82 @@ button.ap-link {
   border-color: var(--ref-color-electric-blue-100);
   background: var(--ref-color-electric-blue-10);
 }
+
+/* ── .ap-slider ─────────────────────────────────────────────────────────────
+ * A range input the DS doesn't ship. Electric-blue fill + thumb, grey track, pill
+ * radius. The filled portion is a gradient driven by a `--fill` percentage the JS
+ * updates live (one code path for both engines). Cross-browser thumb/track pseudo-
+ * elements can't be combined into one selector, so they're declared separately. */
+.ap-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ap-slider:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.ap-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: var(--app-radius-pill);
+  background: linear-gradient(
+    to right,
+    var(--ref-color-electric-blue-100) var(--fill, 0%),
+    var(--ref-color-grey-20) var(--fill, 0%)
+  );
+}
+
+.ap-slider::-moz-range-track {
+  height: 6px;
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-grey-20);
+}
+
+.ap-slider::-moz-range-progress {
+  height: 6px;
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-electric-blue-100);
+}
+
+.ap-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -5px; /* centre the 16px thumb on the 6px track */
+  border: 2px solid var(--ref-color-white);
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-electric-blue-100);
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.28);
+}
+
+.ap-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--ref-color-white);
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-electric-blue-100);
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.28);
+}
+
+.ap-slider:focus-visible {
+  outline: none;
+}
+
+.ap-slider:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 3px var(--ref-color-electric-blue-10),
+    0 1px 3px rgba(16, 24, 40, 0.28);
+}
+
+.ap-slider:focus-visible::-moz-range-thumb {
+  box-shadow:
+    0 0 0 3px var(--ref-color-electric-blue-10),
+    0 1px 3px rgba(16, 24, 40, 0.28);
+}

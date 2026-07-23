@@ -1,0 +1,37 @@
+/* Image Studio — bundled display fonts for on-canvas text overlays.
+   Served locally (no CDN, matching Averta), so the canvas bake can flatten
+   them into the exported PNG. All four are SIL Open Font License 1.1 (see
+   assets/fonts/OFL.txt). Each latin file is a variable font covering the
+   400–700 weight axis, so one file per family serves both regular and bold. */
+
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../assets/fonts/montserrat.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Playfair Display";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../assets/fonts/playfair-display.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Oswald";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../assets/fonts/oswald.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Caveat";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../assets/fonts/caveat.woff2") format("woff2");
+}

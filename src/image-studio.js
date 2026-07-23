@@ -87,6 +87,17 @@ export const LOGO_PRESETS = [
 // Text-overlay colour swatches.
 export const TEXT_COLORS = ["#FFFFFF", "#0A1B33", "#FF3C00", "#178DFE"];
 
+// Curated fonts for text overlays. `family: null` is the app default (Averta);
+// the rest are bundled locally via @font-face (styles/fonts.css) so the canvas
+// bake can flatten them offline. Users can also upload their own (customFonts).
+export const FONT_OPTIONS = [
+  { family: null, label: "Default" },
+  { family: "Montserrat", label: "Montserrat" },
+  { family: "Playfair Display", label: "Playfair Display" },
+  { family: "Oswald", label: "Oswald" },
+  { family: "Caveat", label: "Caveat" },
+];
+
 // Pixel dimensions per format so the mock image fills the frame at the chosen
 // ratio (no letterboxing).
 const FORMAT_DIMS = {
@@ -215,6 +226,7 @@ export function start(
     playbookRefs: pbRefs, // the Playbook's brand images (snapshot, for the toggle)
     playbookColors: (Array.isArray(playbookColors) ? playbookColors : []).filter(Boolean), // brand hex list for text swatches
     customTextColors: [], // custom hex colours the user added to the text swatches
+    customFonts: [], // [{ family, label, url }] fonts the user uploaded (FontFace)
     playbookName: playbookName || "", // brand/playbook label for the toggle
     usePlaybookRefs, // include the Playbook brand images in the grid
     collapsedGroups: new Set(), // generate-panel section ids the user collapsed
@@ -268,6 +280,7 @@ export function exit(sessionId) {
   if (s.customStyleUrl) safeRevoke(s.customStyleUrl);
   for (const r of s.referenceImages) safeRevoke(r.url);
   for (const o of s.overlays) if (o.kind === "logo") safeRevoke(o.url);
+  for (const f of s.customFonts || []) safeRevoke(f.url);
   states.delete(sessionId);
   notify(sessionId);
 }
@@ -766,7 +779,22 @@ let overlaySeq = 0;
 
 const OVERLAY_DEFAULTS = {
   logo: { xF: 0.5, yF: 0.5, wF: 0.28, rot: 0 },
-  text: { text: "Your text", color: "#FFFFFF", sizeF: 0.09, bold: true, outline: true, xF: 0.5, yF: 0.5, rot: 0 },
+  // outline (stroke) and shadow (drop shadow) are independent effects; fontFamily
+  // null = the default (Averta). Defaults reproduce ~today's look on fresh text.
+  text: {
+    text: "Your text",
+    color: "#FFFFFF",
+    outline: true,
+    outlineColor: "#0A1B33",
+    shadow: true,
+    shadowIntensity: 55,
+    fontFamily: null,
+    sizeF: 0.09,
+    bold: true,
+    xF: 0.5,
+    yF: 0.5,
+    rot: 0,
+  },
 };
 
 export function addOverlay(sessionId, partial = {}) {
@@ -784,9 +812,11 @@ export function addOverlay(sessionId, partial = {}) {
   return id;
 }
 
-// Add a custom hex to the text-colour swatches (dedup, case-insensitive) and
-// apply it to the selected text overlay. Re-renders so the new swatch shows.
-export function addCustomTextColor(sessionId, hex) {
+// Add a custom hex to the shared text-colour swatches (dedup, case-insensitive)
+// and apply it to the selected text overlay. `applyKey` picks which field to
+// write — "color" (fill) or "outlineColor" (stroke) — so the same swatch store
+// feeds both pickers. Re-renders so the new swatch shows.
+export function addCustomColor(sessionId, hex, applyKey = "color") {
   const s = states.get(sessionId);
   if (!s || !hex) return;
   const h = hex.toUpperCase();
@@ -796,7 +826,20 @@ export function addCustomTextColor(sessionId, hex) {
   if (!known.has(h)) s.customTextColors.push(h);
   if (s.selectedOverlayId) {
     const o = s.overlays.find((x) => x.id === s.selectedOverlayId);
-    if (o) o.color = h;
+    if (o) o[applyKey] = h;
+  }
+  notify(sessionId);
+}
+
+// Register an uploaded font (already loaded via FontFace + document.fonts.add)
+// as a selectable option and apply it to the selected text overlay.
+export function addCustomFont(sessionId, { family, label, url } = {}) {
+  const s = states.get(sessionId);
+  if (!s || !family) return;
+  if (!s.customFonts.some((f) => f.family === family)) s.customFonts.push({ family, label, url });
+  if (s.selectedOverlayId) {
+    const o = s.overlays.find((x) => x.id === s.selectedOverlayId);
+    if (o) o.fontFamily = family;
   }
   notify(sessionId);
 }
