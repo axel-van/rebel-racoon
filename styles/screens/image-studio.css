@@ -36,29 +36,22 @@
   background: var(--app-bg);
 }
 
-.image-studio__top {
+/* Classic DS modal header (.ap-dialog-header). Trim its default large padding
+   for this dense near-fullscreen studio; the Archie mark rides on the title. */
+.image-studio__header {
   flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-md);
-  padding-right: 56px; /* clear the absolute .ap-dialog-close */
-  border-bottom: 1px solid var(--app-border);
   background: var(--ref-color-white);
+  padding: var(--ref-spacing-md) var(--ref-spacing-md) var(--ref-spacing-sm);
+  padding-right: 56px; /* clear the absolute .ap-dialog-close */
 }
 
-.image-studio__top-title {
+.image-studio__title {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  font-size: var(--sys-text-style-subtitle-size);
-  line-height: var(--sys-text-style-subtitle-line-height);
-  font-weight: var(--sys-text-style-subtitle-weight);
-  color: var(--ref-color-grey-80);
-  white-space: nowrap;
 }
 
-.image-studio__top-title > i {
+.image-studio__title > i {
   color: var(--app-archie-mark);
 }
 
@@ -294,6 +287,14 @@ button.image-studio__group-head:disabled {
   gap: var(--ref-spacing-xxs);
 }
 
+/* Sub-label between the two chip rows in the merged Output group. */
+.image-studio__subgroup-label {
+  margin: var(--ref-spacing-xs) 0 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
 /* The lead prompt group + its input. */
 .image-studio__prompt-input {
   width: 100%;
@@ -363,43 +364,25 @@ button.image-studio__group-head:disabled {
   display: block;
 }
 
-/* Playbook tile with usage guidance — the toggle tile + a caption (target
-   network badges + note) below it, so the grid cell becomes a small column. */
-.image-studio__ref-figure {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  margin: 0;
-  min-width: 0;
-}
-
-.image-studio__ref-figure > .image-studio__ref {
-  width: 100%;
-}
-
-.image-studio__ref-caption {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  min-width: 0;
-}
-
-.image-studio__ref-nets {
+/* Usage guidance stays out of the grid — a small "i" badge (top-right) carries
+   the note + target networks in its native tooltip. */
+.image-studio__ref-info {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 20px;
+  height: 20px;
   display: inline-flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxs);
-  font-size: var(--ref-font-size-md);
-  line-height: 1;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--app-radius-circle);
+  background: rgba(10, 27, 51, 0.55);
+  color: var(--ref-color-white);
+  cursor: help;
 }
 
-.image-studio__ref-notetext {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-60);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.image-studio__ref-info > i {
+  font-size: 12px;
 }
 
 /* Playbook reference tiles are explicit use/skip toggle buttons. */

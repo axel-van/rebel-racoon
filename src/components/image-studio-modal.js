@@ -77,10 +77,11 @@ function topBar(st) {
   const hasImg = !!st.currentImage;
   const editState = (st.mode === "edit" ? " active" : "") + (hasImg ? "" : " disabled");
   const lockedAttrs = hasImg ? "" : 'disabled title="Generate an image first"';
-  // DS Tabs (.ap-tabs) as the peer modes — a full-width tab bar under the title,
-  // used natively (no custom styling).
-  return `<div class="image-studio__top">
-      <span class="image-studio__top-title"><i class="ap-icon-archie-official" aria-hidden="true"></i>Image Studio</span>
+  // Classic DS modal header (.ap-dialog-header / .ap-dialog-title); the × is the
+  // .ap-dialog-close in the shell. DS Tabs (.ap-tabs) sit under it as the peer
+  // modes, used natively.
+  return `<div class="ap-dialog-header image-studio__header">
+      <span class="ap-dialog-title image-studio__title"><i class="ap-icon-archie-official" aria-hidden="true"></i>Image Studio</span>
     </div>
     <div class="ap-tabs image-studio__modes">
       <div class="ap-tabs-nav" role="tablist" aria-label="Studio mode">
@@ -383,28 +384,22 @@ function playbookRefTile(r, on, capReached) {
   const note = (r.note || "").trim();
   const nets = Array.isArray(r.networks) ? r.networks.filter((n) => NETWORK_ICON_BY_PLATFORM[n]) : [];
   const stateTitle = on ? "Used in this image — tap to skip" : "Skipped — tap to use";
-  const title = note ? `${note} · ${stateTitle}` : stateTitle;
-  const tile = `<button type="button" class="image-studio__ref image-studio__ref--pick${on ? " is-used" : " is-skipped"}" data-img-ref-toggle="${escapeHtml(r.id)}" aria-pressed="${on}"${lockedOff ? " disabled" : ""} title="${escapeHtml(title)}">
+  // Guidance stays out of the grid — a small "i" badge carries the note +
+  // target networks in its tooltip instead of a caption under every tile.
+  const infoParts = [];
+  if (note) infoParts.push(note);
+  if (nets.length) infoParts.push(`Best for ${nets.map((n) => NETWORK_LABEL[n] || n).join(", ")}`);
+  const infoText = infoParts.join(" · ");
+  const infoBadge = infoText
+    ? `<span class="image-studio__ref-info" title="${escapeHtml(infoText)}" aria-label="${escapeHtml(infoText)}"><i class="ap-icon-info" aria-hidden="true"></i></span>`
+    : "";
+  return `<button type="button" class="image-studio__ref image-studio__ref--pick${on ? " is-used" : " is-skipped"}" data-img-ref-toggle="${escapeHtml(r.id)}" aria-pressed="${on}"${lockedOff ? " disabled" : ""} title="${escapeHtml(stateTitle)}">
     <img src="${escapeHtml(r.url)}" alt="${escapeHtml(r.label || "Reference image")}" />
     <span class="image-studio__ref-scrim" aria-hidden="true"></span>
     <span class="image-studio__ref-box" aria-hidden="true">${on ? `<i class="ap-icon-check"></i>` : ""}</span>
     <span class="image-studio__ref-state">${on ? "Used" : "Skipped"}</span>
+    ${infoBadge}
   </button>`;
-  // No guidance — plain tile (keeps the grid compact).
-  if (!note && !nets.length) return tile;
-  const netBadges = nets.length
-    ? `<span class="image-studio__ref-nets">${nets
-        .map(
-          (n) =>
-            `<i class="${NETWORK_ICON_BY_PLATFORM[n]}" title="${escapeHtml(NETWORK_LABEL[n] || n)}" aria-label="${escapeHtml(NETWORK_LABEL[n] || n)}"></i>`,
-        )
-        .join("")}</span>`
-    : "";
-  const noteLine = note ? `<span class="image-studio__ref-notetext">${escapeHtml(note)}</span>` : "";
-  return `<figure class="image-studio__ref-figure">
-    ${tile}
-    <figcaption class="image-studio__ref-caption">${netBadges}${noteLine}</figcaption>
-  </figure>`;
 }
 
 function uploadRefTile(r) {
@@ -513,40 +508,37 @@ function composeGroups(st) {
     rightHtml: `<span class="image-studio__count image-studio__count--net">${fmtHint}</span>`,
     body: `<div class="gen-format-chips">${fmtChips}</div>`,
   });
-  const outputGroup = carousel
-    ? collapsibleGroup(st, {
-        id: "output",
-        label: "Output",
-        rightHtml: `<span class="image-studio__count">${NETWORK_LABEL[st.network] || st.network} supports carousels</span>`,
-        body: `<div class="image-studio__chips">
-          <button type="button" class="ap-filter-chip" data-img-output="single" aria-pressed="${!isCarousel}"><i class="ap-icon-image" aria-hidden="true"></i>Single image</button>
-          <button type="button" class="ap-filter-chip" data-img-output="carousel" aria-pressed="${isCarousel}"><i class="ap-icon-multiple-images" aria-hidden="true"></i>Carousel</button>
-        </div>`,
-      })
-    : "";
-  const countGroup = isCarousel
-    ? collapsibleGroup(st, {
-        id: "count",
-        label: "Slides",
-        rightHtml: `<span class="image-studio__count">up to ${imageStudio.carouselMaxFor(st.network)}</span>`,
-        body: `<div class="image-studio__chips">${imageStudio.SLIDE_CHOICES.filter(
-          (n) => n <= imageStudio.carouselMaxFor(st.network),
-        )
-          .map(
-            (n) =>
-              `<button type="button" class="ap-filter-chip" data-img-slidecount="${n}" aria-pressed="${st.slideCount === n}">${n}</button>`,
-          )
-          .join("")}</div>`,
-      })
-    : collapsibleGroup(st, {
-        id: "count",
-        label: "Variations",
-        body: `<div class="image-studio__chips">${imageStudio.VARIATION_CHOICES.map(
+  // Output — merges the type toggle (single / carousel) with its count control
+  // (Variations for a single image, Slides for a carousel) in one section.
+  const outputChips = `<div class="image-studio__chips">
+    <button type="button" class="ap-filter-chip" data-img-output="single" aria-pressed="${!isCarousel}"><i class="ap-icon-image" aria-hidden="true"></i>Single image</button>
+    <button type="button" class="ap-filter-chip" data-img-output="carousel" aria-pressed="${isCarousel}"><i class="ap-icon-multiple-images" aria-hidden="true"></i>Carousel</button>
+  </div>`;
+  const countChips = isCarousel
+    ? `<div class="image-studio__chips">${imageStudio.SLIDE_CHOICES.filter(
+        (n) => n <= imageStudio.carouselMaxFor(st.network),
+      )
+        .map(
           (n) =>
-            `<button type="button" class="ap-filter-chip" data-img-varcount="${n}" aria-pressed="${st.variationCount === n}">${n}</button>`,
-        ).join("")}</div>`,
-      });
-  return `${refsGroup}${styleGroup}${moodGroup}${formatGroup}${outputGroup}${countGroup}`;
+            `<button type="button" class="ap-filter-chip" data-img-slidecount="${n}" aria-pressed="${st.slideCount === n}">${n}</button>`,
+        )
+        .join("")}</div>`
+    : `<div class="image-studio__chips">${imageStudio.VARIATION_CHOICES.map(
+        (n) =>
+          `<button type="button" class="ap-filter-chip" data-img-varcount="${n}" aria-pressed="${st.variationCount === n}">${n}</button>`,
+      ).join("")}</div>`;
+  const countLabel = isCarousel ? `Slides · up to ${imageStudio.carouselMaxFor(st.network)}` : "Variations";
+  const outputGroup = collapsibleGroup(st, {
+    id: "output",
+    label: carousel ? "Output" : "Variations",
+    rightHtml: carousel
+      ? `<span class="image-studio__count">${NETWORK_LABEL[st.network] || st.network} supports carousels</span>`
+      : "",
+    body: carousel
+      ? `${outputChips}<p class="image-studio__subgroup-label">${countLabel}</p>${countChips}`
+      : countChips,
+  });
+  return `${refsGroup}${styleGroup}${moodGroup}${formatGroup}${outputGroup}`;
 }
 
 // The tool-specific options that stack under the tool rail in the left panel.
