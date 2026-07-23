@@ -678,6 +678,8 @@ button.image-studio__ref--pick:focus-visible {
   left: auto;
   right: 0;
   width: 260px;
+  padding: 0; /* titled-panel chrome: head + body pad themselves */
+  overflow: hidden;
 }
 
 /* The text-style popovers share one "titled panel" chrome: a header (title +
@@ -729,16 +731,6 @@ button.image-studio__ref--pick:focus-visible {
   display: grid;
   grid-template-columns: repeat(4, 28px); /* match the 28px swatch so cells don't clip */
   gap: var(--ref-spacing-sm);
-}
-
-.image-studio__popover-label {
-  margin: 0 0 var(--ref-spacing-xs);
-  font-size: 10.5px;
-  line-height: 1;
-  font-weight: var(--ref-font-weight-bold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ref-color-grey-60);
 }
 
 /* Titled-panel header — the title anchors the popover; the optional DS toggle

@@ -95,8 +95,10 @@ function logoPopover() {
       `<button type="button" class="image-studio__preset" data-img-logo-preset="${escapeHtml(p.url)}" title="${escapeHtml(p.label)}"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.label)}" /></button>`,
   ).join("");
   return `<div class="image-studio__popover image-studio__popover--logo" data-img-popover role="menu" aria-label="Logos">
-    <p class="image-studio__popover-label">Logos</p>
-    <div class="image-studio__presets">${uploadTile}${presets}</div>
+    <div class="image-studio__popover-head"><p class="image-studio__popover-title">Logos</p></div>
+    <div class="image-studio__popover-body">
+      <div class="image-studio__presets">${uploadTile}${presets}</div>
+    </div>
   </div>`;
 }
 
