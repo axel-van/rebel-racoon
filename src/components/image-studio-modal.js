@@ -15,10 +15,10 @@ import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordin
 import { showToast } from "./toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../posts-store.js?v=36";
 import { getSessionById } from "../sessions-store.js?v=6";
-import { getContextById } from "../contexts-store.js?v=36";
+import { getContextById } from "../contexts-store.js?v=37";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../social-profiles.js?v=26";
 import { renderPostCard } from "./post-card.js?v=68";
-import * as imageStudio from "../image-studio.js?v=16";
+import * as imageStudio from "../image-studio.js?v=17";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key

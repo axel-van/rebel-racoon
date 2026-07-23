@@ -13,7 +13,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=310";
+} from "./right-panel.js?v=311";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=51";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=58";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=48";
@@ -22,16 +22,16 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=127";
+} from "./conversation-status-card.js?v=128";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=6";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { subscribe as subscribeContexts } from "../contexts-store.js?v=36";
+import { subscribe as subscribeContexts } from "../contexts-store.js?v=37";
 import { isFlagOn } from "../feature-flags.js?v=10";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=74";
+} from "../top-posts-flow.js?v=75";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static

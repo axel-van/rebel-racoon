@@ -652,9 +652,9 @@ function renderRefNetBadges(networks) {
 // Edit-mode network toggle chips (reuse .ap-filter-chip, driven by aria-pressed).
 function renderRefNetChips(networks, i) {
   const nets = Array.isArray(networks) ? networks : [];
-  return `<div class="recap__refimg-netchips">${REF_NETWORKS.map((n) => {
+  return `<div class="recap__refedit-nets">${REF_NETWORKS.map((n) => {
     const on = nets.includes(n);
-    return `<button type="button" class="ap-filter-chip recap__refimg-netchip" aria-pressed="${on}" data-recap-refnet="${n}" data-recap-refimg-index="${i}"><i class="${NETWORK_ICON_BY_PLATFORM[n]}" aria-hidden="true"></i><span>${esc(NETWORK_LABEL[n] || n)}</span></button>`;
+    return `<button type="button" class="ap-filter-chip recap__refedit-netchip" aria-pressed="${on}" data-recap-refnet="${n}" data-recap-refimg-index="${i}"><i class="${NETWORK_ICON_BY_PLATFORM[n]}" aria-hidden="true"></i><span>${esc(NETWORK_LABEL[n] || n)}</span></button>`;
   }).join("")}</div>`;
 }
 
@@ -681,32 +681,39 @@ function renderRefImages(data, edit) {
     return `<div class="recap__refimgs">${cards}</div>`;
   }
 
-  // Edit view — a row per image: thumb (with remove) + note textarea + network chips.
+  // Edit view — a card per image: a fixed thumb (with remove) beside a fields
+  // column (usage notes + target networks).
   const rows = imgs
     .map(
       (img, i) => `
-      <div class="recap__refimg-row">
-        <div class="recap__refimg">
+      <div class="recap__refedit-item">
+        <div class="recap__refedit-thumb">
           <img src="${esc(img.url)}" alt="${esc(img.label || "Reference image")}" loading="lazy" />
           <button type="button" class="recap__refimg-remove" data-recap-refimg-remove="${i}" aria-label="Remove image"><i class="ap-icon-close"></i></button>
         </div>
-        <div class="recap__refimg-fields">
-          <div class="ap-input-group">
-            <textarea class="recap__refimg-noteinput" data-recap-refnote data-recap-refimg-index="${i}" rows="2" placeholder="How &amp; when to use this image — do's &amp; don'ts, style notes…" aria-label="Usage guidance">${esc(img.note || "")}</textarea>
+        <div class="recap__refedit-body">
+          <div class="recap__refedit-field">
+            <span class="recap__refedit-flabel">Usage notes</span>
+            <div class="ap-textarea-field resizable">
+              <textarea data-recap-refnote data-recap-refimg-index="${i}" rows="2" placeholder="How &amp; when to use this image — do's &amp; don'ts, style notes…" aria-label="Usage guidance">${esc(img.note || "")}</textarea>
+            </div>
           </div>
-          ${renderRefNetChips(img.networks, i)}
+          <div class="recap__refedit-field">
+            <span class="recap__refedit-flabel">Best for</span>
+            ${renderRefNetChips(img.networks, i)}
+          </div>
         </div>
       </div>`,
     )
     .join("");
   const addBtn =
     imgs.length < MAX_REF_IMAGES
-      ? `<button type="button" class="recap__refimg-add" data-recap-refimg-add aria-label="Add reference images">
-           <i class="ap-icon-plus"></i><span>Add</span>
+      ? `<button type="button" class="ap-button secondary blue recap__refedit-add" data-recap-refimg-add>
+           <i class="ap-icon-plus"></i><span>Add image</span>
          </button>
          <input type="file" accept="image/*" multiple hidden data-recap-refimg-input />`
       : "";
-  return `<div class="recap__refimg-rows">${rows}</div>${addBtn}`;
+  return `<div class="recap__refedit">${rows}${addBtn}</div>`;
 }
 
 // Per-field edit hint (Audience & goals) — prompt + what Archie does with it.

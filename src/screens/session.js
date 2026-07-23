@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=196";
+import { renderTopbar } from "../components/topbar.js?v=197";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=56";
 import {
   getConnectedProfiles,
@@ -15,7 +15,7 @@ import {
 import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=5";
 import { CLIP_SUBTITLE_ITEMS, CLIP_SUBTITLE_LABEL } from "../clip-subtitles.js?v=1";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=6";
-import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=36";
+import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=37";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
   getThread,
@@ -49,7 +49,7 @@ import {
 import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=36";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=52";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=38";
-import * as topPostsFlow from "../top-posts-flow.js?v=74";
+import * as topPostsFlow from "../top-posts-flow.js?v=75";
 import {
   renderTopPostsBoard,
   renderTopPostEcho,
@@ -71,7 +71,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=10";
-import * as contextBuilder from "../context-builder.js?v=167";
+import * as contextBuilder from "../context-builder.js?v=168";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -111,12 +111,12 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=310";
+} from "../components/right-panel.js?v=311";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=16";
 import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=24";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=35";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=36";
 // Pure thread-turn renderers — shared with the component handoff gallery so
 // the previews there never drift from the app (handoff/components.html).
 import {

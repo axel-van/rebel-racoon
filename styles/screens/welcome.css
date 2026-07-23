@@ -804,42 +804,85 @@
   line-height: 1;
 }
 
-.recap__refimg-rows {
+/* Edit view — one bordered card per image: a fixed thumb beside a fields
+   column (usage notes + target networks). */
+.recap__refedit {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-sm);
   margin-bottom: var(--ref-spacing-xs);
 }
 
-.recap__refimg-row {
+.recap__refedit-item {
   display: flex;
-  gap: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-md);
   align-items: flex-start;
+  padding: var(--ref-spacing-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
 }
 
-.recap__refimg-fields {
+.recap__refedit-thumb {
+  position: relative;
+  flex: 0 0 96px;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--ref-border-radius-md);
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+}
+
+.recap__refedit-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.recap__refedit-body {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  flex: 1;
-  min-width: 0;
+  gap: var(--ref-spacing-sm);
 }
 
-.recap__refimg-noteinput {
+.recap__refedit-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+/* Small uppercase field label — de-emphasised so the controls lead. */
+.recap__refedit-flabel {
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--ref-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ref-color-grey-60);
+}
+
+/* DS textarea fills the fields column. */
+.recap__refedit-field .ap-textarea-field {
   width: 100%;
-  resize: vertical;
 }
 
-.recap__refimg-netchips {
+.recap__refedit-nets {
   display: flex;
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxs);
 }
 
-.recap__refimg-netchip {
+.recap__refedit-netchip {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
+}
+
+/* Keep the DS add button auto-width, left-aligned (never stretched). */
+.recap__refedit-add {
+  align-self: flex-start;
 }
 
 .recap__type-grid {
