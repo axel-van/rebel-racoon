@@ -235,6 +235,12 @@ export function start(
     selectedOverlayId: null,
     editingOverlayId: null, // text overlay in inline (contenteditable) edit
     openPopover: null, // edit action-bar popover open: "crop" | "logo" | "textColor"
+    // Freeform crop — clicking Crop enters a draw mode: a resizable rectangle
+    // (fractions of the frame) that genuinely crops the pixels on Apply. cropAspect
+    // locks the box to a ratio (w/h decimal); null = unconstrained (Freeform).
+    cropDrawing: false,
+    cropRect: null, // { xF, yF, wF, hF } while drawing
+    cropAspect: null, // null = freeform, else a width/height decimal to lock
     lastError: null,
     _genTimer: null,
     _editTimer: null,
@@ -643,6 +649,114 @@ export function undoEdit(sessionId) {
   if (!s || !s.editHistory.length || s.editBusy) return;
   s.currentImage = s.editHistory.pop();
   s.activeTool = null;
+  notify(sessionId);
+}
+
+// ── Freeform crop (draw a rectangle) ────────────────────────────────────────
+
+const clamp01 = (n) => Math.min(1, Math.max(0, n));
+
+// Clamp a crop rect to the frame and enforce a minimum size so a stray click
+// can't produce a zero-area crop.
+function sanitizeCropRect(r) {
+  const wF = Math.min(1, Math.max(0.05, r.wF));
+  const hF = Math.min(1, Math.max(0.05, r.hF));
+  const xF = clamp01(Math.min(r.xF, 1 - wF));
+  const yF = clamp01(Math.min(r.yF, 1 - hF));
+  return { xF, yF, wF, hF };
+}
+
+// Resize a rect to a target aspect (w/h, in frame pixels), centered on its
+// current center, then clamp back inside the frame. frameRatio = image w/h so
+// the fraction-space box matches the requested on-screen aspect.
+function fitRectToAspect(r, aspect, frameRatio) {
+  if (!aspect) return sanitizeCropRect(r);
+  const cx = r.xF + r.wF / 2;
+  const cy = r.yF + r.hF / 2;
+  // aspect = wPx/hPx; wF/hF relate by the frame's own aspect (frameRatio = W/H):
+  // wPx/hPx = (wF*W)/(hF*H) = (wF/hF)*frameRatio  ⇒  wF/hF = aspect/frameRatio.
+  const k = aspect / (frameRatio || 1);
+  let wF = r.wF;
+  let hF = wF / k;
+  if (hF > 1) {
+    hF = 1;
+    wF = hF * k;
+  }
+  wF = Math.min(wF, 1);
+  return sanitizeCropRect({ xF: cx - wF / 2, yF: cy - hF / 2, wF, hF });
+}
+
+export function enterCropDraw(sessionId) {
+  const s = states.get(sessionId);
+  if (!s || !s.currentImage || s.editBusy) return;
+  s.cropDrawing = true;
+  s.cropAspect = null;
+  s.cropRect = { xF: 0.15, yF: 0.15, wF: 0.7, hF: 0.7 };
+  s.openPopover = null;
+  s.selectedOverlayId = null;
+  s.editingOverlayId = null;
+  s.activeTool = "crop";
+  notify(sessionId);
+}
+
+// Silent during a drag (element updated inline for smoothness); notifying on up.
+export function setCropRectSilent(sessionId, rect) {
+  const s = states.get(sessionId);
+  if (!s || !s.cropDrawing) return;
+  s.cropRect = sanitizeCropRect(rect);
+}
+
+export function setCropRect(sessionId, rect) {
+  const s = states.get(sessionId);
+  if (!s || !s.cropDrawing) return;
+  s.cropRect = sanitizeCropRect(rect);
+  notify(sessionId);
+}
+
+export function setCropAspect(sessionId, aspect) {
+  const s = states.get(sessionId);
+  if (!s || !s.cropDrawing || !s.cropRect) return;
+  s.cropAspect = aspect || null;
+  const frameRatio = s.currentImage ? s.currentImage.w / s.currentImage.h : 1;
+  s.cropRect = fitRectToAspect(s.cropRect, s.cropAspect, frameRatio);
+  notify(sessionId);
+}
+
+export function cancelCropDraw(sessionId) {
+  const s = states.get(sessionId);
+  if (!s || !s.cropDrawing) return;
+  s.cropDrawing = false;
+  s.cropRect = null;
+  s.cropAspect = null;
+  notify(sessionId);
+}
+
+// The modal runs the async canvas crop; these two bracket it so the busy
+// overlay shows and history/undo stay consistent.
+export function beginCropApply(sessionId) {
+  const s = states.get(sessionId);
+  if (!s || !s.cropDrawing || s.editBusy) return;
+  s.editBusy = true;
+  notify(sessionId);
+}
+
+export function commitCrop(sessionId, { url, w, h } = {}) {
+  const s = states.get(sessionId);
+  if (!s || !url) return;
+  s.editHistory.push({ ...s.currentImage });
+  s.currentImage = { url, w, h, seed: `${s.currentImage.seed}-crop` };
+  s.formatId = "custom"; // no preset ratio matches a freeform crop
+  s.cropDrawing = false;
+  s.cropRect = null;
+  s.cropAspect = null;
+  s.editBusy = false;
+  notify(sessionId);
+}
+
+export function abortCropApply(sessionId) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  s.editBusy = false;
   notify(sessionId);
 }
 

@@ -18,7 +18,7 @@ import { getSessionById } from "../sessions-store.js?v=6";
 import { getContextById } from "../contexts-store.js?v=37";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../social-profiles.js?v=26";
 import { renderPostCard } from "./post-card.js?v=68";
-import * as imageStudio from "../image-studio.js?v=24";
+import * as imageStudio from "../image-studio.js?v=25";
 
 const MODAL_ID = "imageStudio";
 const KEY = "studio"; // single active studio → one state key
@@ -111,10 +111,12 @@ function generateControls(st) {
 
 // Edit mode — the floating action bar over the canvas bottom: an always-on
 // Reprompt field + Apply (the #1 edit), then compact Crop / Add text / Add logo.
-// Crop and Add logo open small popovers anchored to their button; text is added
-// and edited directly on the canvas (see renderOverlay). Inspired by the bottom
-// tool bar of Krea AI / DALL·E.
+// Crop drops straight into a draw-a-rectangle mode (see cropConfirmBar); Add logo
+// opens a small popover; text is added and edited directly on the canvas (see
+// renderOverlay). Inspired by the bottom tool bar of Krea AI / DALL·E.
 function actionBar(st) {
+  // Crop draw mode takes over the whole bar with its own confirm controls.
+  if (st.cropDrawing) return cropConfirmBar(st);
   const busy = st.editBusy ? "disabled" : "";
   return `<div class="image-studio__actionbar" role="toolbar" aria-label="Edit tools">
     <div class="image-studio__actionbar-row">
@@ -122,10 +124,7 @@ function actionBar(st) {
       <button type="button" class="ap-button primary orange image-studio__actionbar-apply" data-img-apply-edit="prompt" ${busy}><i class="ap-icon-archie-official" aria-hidden="true"></i><span>Apply</span></button>
     </div>
     <div class="image-studio__actionbar-row image-studio__actionbar-tools">
-      <div class="image-studio__actionbar-anchor">
-        <button type="button" class="image-studio__actionbar-btn" data-img-popover-toggle="crop" aria-haspopup="true" aria-expanded="${st.openPopover === "crop"}" ${busy}><i class="ap-icon-cropper" aria-hidden="true"></i><span>Crop</span></button>
-        ${st.openPopover === "crop" ? cropPopover(st) : ""}
-      </div>
+      <button type="button" class="image-studio__actionbar-btn" data-img-crop-start ${busy}><i class="ap-icon-cropper" aria-hidden="true"></i><span>Crop</span></button>
       <button type="button" class="image-studio__actionbar-btn" data-img-add-text ${busy}><i class="ap-icon-closed-captions" aria-hidden="true"></i><span>Add text</span></button>
       <div class="image-studio__actionbar-anchor">
         <button type="button" class="image-studio__actionbar-btn" data-img-popover-toggle="logo" aria-haspopup="true" aria-expanded="${st.openPopover === "logo"}" ${busy}><i class="ap-icon-file--image" aria-hidden="true"></i><span>Add logo</span></button>
@@ -135,15 +134,35 @@ function actionBar(st) {
   </div>`;
 }
 
-function cropPopover(st) {
-  const chips = imageStudio
-    .formatChoices(KEY)
-    .map((f) => formatChip(f, st.formatId === f.id, "data-img-crop-format"))
-    .join("");
-  return `<div class="image-studio__popover image-studio__popover--crop" data-img-popover role="menu" aria-label="Crop ratio">
-    <p class="image-studio__popover-label">Crop to ratio</p>
-    <div class="gen-format-chips">${chips}</div>
+// The crop-draw toolbar — replaces the tools row while a crop rectangle is being
+// drawn. A short hint, aspect-lock chips (Freeform + the ratio presets), then
+// Cancel / Apply crop.
+function cropConfirmBar(st) {
+  const busy = st.editBusy ? "disabled" : "";
+  return `<div class="image-studio__actionbar image-studio__actionbar--crop" role="toolbar" aria-label="Crop">
+    <div class="image-studio__actionbar-row image-studio__crop-row">
+      <p class="image-studio__crop-hint"><i class="ap-icon-cropper" aria-hidden="true"></i>Drag to draw a crop, or adjust the box</p>
+      <div class="image-studio__crop-actions">
+        <button type="button" class="ap-button ghost grey" data-img-crop-cancel ${busy}><span>Cancel</span></button>
+        <button type="button" class="ap-button primary orange" data-img-crop-apply ${busy}><i class="ap-icon-check" aria-hidden="true"></i><span>Apply crop</span></button>
+      </div>
+    </div>
+    <div class="image-studio__actionbar-row image-studio__crop-aspects">${cropAspectChips(st)}</div>
   </div>`;
+}
+
+// Freeform + the ratio presets, as a single chip group that locks the crop box's
+// aspect (Freeform = unconstrained, the default).
+function cropAspectChips(st) {
+  const freeform = `<button type="button" class="ap-filter-chip" data-img-crop-aspect="free" aria-pressed="${!st.cropAspect}">Freeform</button>`;
+  const presets = imageStudio
+    .formatChoices(KEY)
+    .map((f) => {
+      const on = !!st.cropAspect && Math.abs(st.cropAspect - f.ratio) < 0.001;
+      return `<button type="button" class="ap-filter-chip" data-img-crop-aspect="${escapeHtml(f.id)}" aria-pressed="${on}">${escapeHtml(f.tag)}</button>`;
+    })
+    .join("");
+  return `${freeform}${presets}`;
 }
 
 function logoPopover() {
@@ -302,7 +321,25 @@ function editCanvas(st) {
   // handles can extend past the image edge without being cut off.
   return `<div class="image-studio__frame" style="--imgs-ratio:${ratio}">
       <div class="image-studio__frame-clip"><img class="image-studio__frame-img" src="${img ? img.url : ""}" alt="Working image" /></div>
-      ${overlayLayer(st)}${busy}${badge}
+      ${overlayLayer(st)}${st.cropDrawing && !st.editBusy ? renderCropRect(st) : ""}${busy}${badge}
+    </div>`;
+}
+
+// The draggable/resizable crop rectangle drawn over the working image. Its own
+// overflow:hidden layer clips the box-shadow dim-mask to the image bounds (the
+// frame itself is overflow:visible in edit mode). Corner handles resize it; the
+// body drags it; pointerdown on the dimmed area draws a fresh rect.
+function renderCropRect(st) {
+  const r = st.cropRect || { xF: 0.15, yF: 0.15, wF: 0.7, hF: 0.7 };
+  const style = `left:${r.xF * 100}%; top:${r.yF * 100}%; width:${r.wF * 100}%; height:${r.hF * 100}%;`;
+  const handles = ["nw", "ne", "sw", "se"]
+    .map(
+      (c) =>
+        `<span class="image-studio__crop-handle image-studio__crop-handle--${c}" data-img-crop-handle="${c}" aria-hidden="true"></span>`,
+    )
+    .join("");
+  return `<div class="image-studio__crop-layer" data-img-crop-layer>
+      <div class="image-studio__croprect" data-img-croprect style="${style}">${handles}</div>
     </div>`;
 }
 
@@ -929,6 +966,112 @@ function startOverlayGesture(event, el) {
   window.addEventListener("pointerup", up);
 }
 
+// Draw / move / resize the freeform crop rectangle. Like startOverlayGesture but
+// in fraction space on { xF, yF, wF, hF }: "move" translates the box, "resize"
+// drags one corner from the opposite anchor, "draw" starts a fresh box from the
+// pointerdown point. Honours the aspect lock; updates inline during the drag,
+// persists (with a re-render) on pointer-up.
+function startCropGesture(event, mode, corner) {
+  event.preventDefault();
+  const frame = modal.querySelector(".image-studio__frame");
+  const boxEl = modal.querySelector("[data-img-croprect]");
+  const st = state();
+  if (!frame || !boxEl || !st || !st.cropRect) return;
+  const rect = frame.getBoundingClientRect();
+  const k = st.cropAspect ? st.cropAspect / (rect.width / rect.height) : null; // wF/hF lock
+  const r0 = { ...st.cropRect };
+  const fx = (cx) => clamp((cx - rect.left) / rect.width, 0, 1);
+  const fy = (cy) => clamp((cy - rect.top) / rect.height, 0, 1);
+
+  // Fixed corner for a resize; the pointerdown point for a fresh draw.
+  let anchorX;
+  let anchorY;
+  if (mode === "resize") {
+    anchorX = corner === "nw" || corner === "sw" ? r0.xF + r0.wF : r0.xF;
+    anchorY = corner === "nw" || corner === "ne" ? r0.yF + r0.hF : r0.yF;
+  } else if (mode === "draw") {
+    anchorX = fx(event.clientX);
+    anchorY = fy(event.clientY);
+  }
+  const startPx = event.clientX;
+  const startPy = event.clientY;
+
+  const paint = (next) => {
+    imageStudio.setCropRectSilent(KEY, next);
+    const c = state().cropRect;
+    boxEl.style.left = `${c.xF * 100}%`;
+    boxEl.style.top = `${c.yF * 100}%`;
+    boxEl.style.width = `${c.wF * 100}%`;
+    boxEl.style.height = `${c.hF * 100}%`;
+  };
+
+  const move = (e) => {
+    if (mode === "move") {
+      const dx = (e.clientX - startPx) / rect.width;
+      const dy = (e.clientY - startPy) / rect.height;
+      paint({
+        xF: clamp(r0.xF + dx, 0, 1 - r0.wF),
+        yF: clamp(r0.yF + dy, 0, 1 - r0.hF),
+        wF: r0.wF,
+        hF: r0.hF,
+      });
+      return;
+    }
+    // resize / draw — the corner opposite the anchor follows the pointer.
+    const px = fx(e.clientX);
+    const py = fy(e.clientY);
+    let wF = Math.abs(px - anchorX);
+    let hF = Math.abs(py - anchorY);
+    if (k) {
+      // Lock the aspect, driven by whichever axis the pointer moved farther on.
+      if (wF >= hF * k) hF = wF / k;
+      else wF = hF * k;
+    }
+    paint({
+      xF: px >= anchorX ? anchorX : anchorX - wF,
+      yF: py >= anchorY ? anchorY : anchorY - hF,
+      wF,
+      hF,
+    });
+  };
+  const up = () => {
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", up);
+    const cur = state();
+    if (cur && cur.cropRect) imageStudio.setCropRect(KEY, cur.cropRect); // persist + re-render
+  };
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", up);
+}
+
+// Crop the working image to the selection rectangle — a genuine pixel crop via
+// canvas (mirrors compositeOverlays), returning a PNG data URL + its dims.
+function cropImage(baseUrl, r) {
+  return loadImg(baseUrl).then((img) => {
+    const iw = img.naturalWidth || 1;
+    const ih = img.naturalHeight || 1;
+    const sx = Math.round(r.xF * iw);
+    const sy = Math.round(r.yF * ih);
+    const sw = Math.max(1, Math.round(r.wF * iw));
+    const sh = Math.max(1, Math.round(r.hF * ih));
+    const out = document.createElement("canvas");
+    out.width = sw;
+    out.height = sh;
+    out.getContext("2d").drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+    return { url: out.toDataURL("image/png"), w: sw, h: sh };
+  });
+}
+
+function applyCropSelection() {
+  const st = state();
+  if (!st || !st.currentImage || !st.cropRect || st.editBusy) return;
+  const r = st.cropRect;
+  imageStudio.beginCropApply(KEY);
+  cropImage(st.currentImage.url, r)
+    .then((res) => imageStudio.commitCrop(KEY, res))
+    .catch(() => imageStudio.abortCropApply(KEY));
+}
+
 // ── Event delegation ──────────────────────────────────────────────────────
 
 function onClick(event) {
@@ -1028,10 +1171,15 @@ function onClick(event) {
     restoreEdit();
     return;
   }
-  const cropFmt = event.target.closest("[data-img-crop-format]");
-  if (cropFmt) {
-    imageStudio.setOpenPopover(KEY, null);
-    return void imageStudio.applyEdit(KEY, "crop", { formatId: cropFmt.dataset.imgCropFormat });
+  // Crop tool → enter the draw-a-rectangle mode.
+  if (event.target.closest("[data-img-crop-start]")) return void imageStudio.enterCropDraw(KEY);
+  if (event.target.closest("[data-img-crop-cancel]")) return void imageStudio.cancelCropDraw(KEY);
+  if (event.target.closest("[data-img-crop-apply]")) return void applyCropSelection();
+  const cropAspect = event.target.closest("[data-img-crop-aspect]");
+  if (cropAspect) {
+    const id = cropAspect.dataset.imgCropAspect;
+    const ratio = id === "free" ? null : imageStudio.formatChoices(KEY).find((f) => f.id === id)?.ratio || null;
+    return void imageStudio.setCropAspect(KEY, ratio);
   }
   const applyBtn = event.target.closest("[data-img-apply-edit]");
   if (applyBtn) return void applyEditTool(applyBtn.dataset.imgApplyEdit);
@@ -1107,6 +1255,17 @@ function onDrop(event) {
 }
 
 function onPointerDown(event) {
+  const st0 = state();
+  // Crop draw mode owns pointer gestures on the frame: a handle resizes, the box
+  // moves, the dimmed area draws a fresh rectangle.
+  if (st0?.cropDrawing) {
+    if (st0.editBusy) return;
+    const handle = event.target.closest("[data-img-crop-handle]");
+    if (handle) return void startCropGesture(event, "resize", handle.dataset.imgCropHandle);
+    if (event.target.closest("[data-img-croprect]")) return void startCropGesture(event, "move");
+    if (event.target.closest("[data-img-crop-layer]")) return void startCropGesture(event, "draw");
+    return;
+  }
   if (event.target.closest("[data-img-overlay-delete]")) return; // click handles delete
   // Clicks on the element's mini toolbar / a popover are UI, not a drag.
   if (event.target.closest("[data-img-text-toolbar]") || event.target.closest("[data-img-popover]")) return;
@@ -1159,6 +1318,10 @@ function onKeydown(event) {
     if (st.openPopover) {
       event.stopPropagation();
       return void imageStudio.setOpenPopover(KEY, null);
+    }
+    if (st.cropDrawing && !st.editBusy) {
+      event.stopPropagation();
+      return void imageStudio.cancelCropDraw(KEY);
     }
     if (st.editingOverlayId) {
       event.stopPropagation();

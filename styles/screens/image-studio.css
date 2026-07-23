@@ -679,14 +679,6 @@ button.image-studio__ref--pick:focus-visible {
   animation: image-studio-pop 150ms var(--app-ease-out);
 }
 
-.image-studio__popover--crop {
-  width: 320px; /* let the 3 ratio chips breathe */
-}
-
-.image-studio__popover--crop .gen-format-chips > button {
-  flex: 1; /* chips share the width evenly */
-}
-
 .image-studio__popover--logo {
   left: auto;
   right: 0;
@@ -1121,6 +1113,111 @@ button.image-studio__ref--pick:focus-visible {
   background: var(--ref-color-white);
   border: 2px solid var(--ref-color-electric-blue-100);
   cursor: nwse-resize;
+}
+
+/* ── Edit: freeform crop (draw a rectangle) ─────────────────────────────── */
+/* The frame is overflow:visible in edit mode; the crop layer clips itself so
+   the rect's dim-mask (a huge spread box-shadow) covers only the image. */
+.image-studio__crop-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3; /* above overlays (2), below the busy overlay + action bar */
+  overflow: hidden;
+  border-radius: var(--app-radius-md);
+  touch-action: none;
+}
+
+.image-studio__croprect {
+  position: absolute;
+  box-sizing: border-box;
+  outline: 1px dashed var(--ref-color-electric-blue-100);
+  outline-offset: -1px;
+  box-shadow: 0 0 0 9999px rgba(10, 27, 51, 0.45); /* dims everything outside */
+  cursor: move;
+  touch-action: none;
+}
+
+/* Rule-of-thirds guides — subtle, purely visual. */
+.image-studio__croprect::before,
+.image-studio__croprect::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.image-studio__croprect::before {
+  border-left: 1px solid rgba(255, 255, 255, 0.35);
+  border-right: 1px solid rgba(255, 255, 255, 0.35);
+  margin: 0 33.33%;
+}
+
+.image-studio__croprect::after {
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  margin: 33.33% 0;
+}
+
+.image-studio__crop-handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-white);
+  border: 2px solid var(--ref-color-electric-blue-100);
+  z-index: 1;
+}
+
+.image-studio__crop-handle--nw {
+  top: -7px;
+  left: -7px;
+  cursor: nwse-resize;
+}
+
+.image-studio__crop-handle--ne {
+  top: -7px;
+  right: -7px;
+  cursor: nesw-resize;
+}
+
+.image-studio__crop-handle--sw {
+  bottom: -7px;
+  left: -7px;
+  cursor: nesw-resize;
+}
+
+.image-studio__crop-handle--se {
+  bottom: -7px;
+  right: -7px;
+  cursor: nwse-resize;
+}
+
+/* Crop-draw toolbar variant — the aspect-lock chips sit on their own row. */
+.image-studio__crop-row {
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+}
+
+.image-studio__crop-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  margin: 0;
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
+.image-studio__crop-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  margin-left: auto;
+}
+
+.image-studio__crop-aspects {
+  gap: var(--ref-spacing-xxxs);
+  flex-wrap: wrap;
 }
 
 /* Logo tray — a uniform grid that scales: more logos just add rows and the
