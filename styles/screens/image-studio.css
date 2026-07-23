@@ -1329,18 +1329,27 @@ button.image-studio__ref--pick:focus-visible {
   cursor: nwse-resize;
 }
 
+/* Crop-draw toolbar variant — wider than the edit bar so the ratio chips stay
+   on ONE row (no wrap), with a clear gap between the action tier and the
+   ratio tier. */
+.image-studio__actionbar--crop {
+  width: min(96%, 700px);
+  gap: var(--ref-spacing-sm);
+}
+
 /* Crop-draw toolbar variant — the aspect-lock chips sit on their own row. */
 .image-studio__crop-row {
   align-items: center;
   gap: var(--ref-spacing-sm);
 }
 
+/* Quiet helper — an instruction, not content: the lightest text in the bar. */
 .image-studio__crop-hint {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
   margin: 0;
-  color: var(--ref-color-grey-80);
+  color: var(--ref-color-grey-60);
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
 }
@@ -1387,8 +1396,8 @@ button.image-studio__ref--pick:focus-visible {
   background: var(--ref-color-white);
   cursor: pointer;
   color: var(--ref-color-grey-80);
-  font-size: var(--sys-text-style-caption-bold-size);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--ref-font-weight-regular);
   font-variant-numeric: tabular-nums;
   transition:
     border-color var(--ref-animation-short) var(--app-ease-out),
@@ -1408,10 +1417,13 @@ button.image-studio__ref--pick:focus-visible {
   background: var(--ref-color-grey-05);
 }
 
+/* Selected chip — the one place bold + colour earns its weight, so the active
+   ratio reads instantly against the calm, regular-weight row. */
 .image-studio__crop-aspect[aria-pressed="true"] {
   border-color: var(--ref-color-electric-blue-100);
   background: var(--ref-color-electric-blue-10);
   color: var(--ref-color-electric-blue-100);
+  font-weight: var(--ref-font-weight-bold);
 }
 
 .image-studio__crop-aspect-glyph {
