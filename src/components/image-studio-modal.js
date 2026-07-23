@@ -647,6 +647,18 @@ function renderBody() {
 
 // ── Behavior helpers ──────────────────────────────────────────────────────
 
+// After a text element is dropped in (Text tool or the Add-text button), focus
+// its input and select the "Your text" placeholder so the user can type over it
+// immediately — no clicking into the field first. notify() re-renders
+// synchronously, so the fresh input is already in the DOM by the time we call
+// this from the click handler.
+function focusTextInput() {
+  const input = modal.querySelector("[data-img-text-input]");
+  if (!input) return;
+  input.focus();
+  input.select();
+}
+
 // Throwaway file picker for the "Your style" tile (kind="style") and the
 // reference-images grid (kind="ref").
 function openFilePicker(kind) {
@@ -902,10 +914,19 @@ function onClick(event) {
   if (varPick) return void imageStudio.selectVariation(KEY, Number(varPick.dataset.imgVariation));
   const toolBtn = event.target.closest("[data-img-tool]");
   // Segmented palette: single-select, no toggle-off — one tool stays active so
-  // the options panel is never empty.
-  if (toolBtn) return void imageStudio.setActiveTool(KEY, toolBtn.dataset.imgTool, { toggle: false });
+  // the options panel is never empty. The Text tool drops a text element in;
+  // focus its input so the user can type straight away.
+  if (toolBtn) {
+    imageStudio.setActiveTool(KEY, toolBtn.dataset.imgTool, { toggle: false });
+    if (state()?.activeTool === "text") focusTextInput();
+    return;
+  }
   // Overlay controls (Add logo / Add text panels).
-  if (event.target.closest("[data-img-add-text]")) return void imageStudio.addOverlay(KEY, { kind: "text" });
+  if (event.target.closest("[data-img-add-text]")) {
+    imageStudio.addOverlay(KEY, { kind: "text" });
+    focusTextInput();
+    return;
+  }
   if (event.target.closest("[data-img-logo-upload]")) return void openLogoPicker();
   const preset = event.target.closest("[data-img-logo-preset]");
   if (preset) return void imageStudio.addOverlay(KEY, { kind: "logo", url: preset.dataset.imgLogoPreset });
