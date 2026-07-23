@@ -295,7 +295,7 @@ function textFontPopover(o, st) {
 // an image to preview (results in generate mode, or edit mode).
 function canvasViewToggle(st) {
   const feed = st.canvasView === "feed";
-  const netIcon = st.network ? NETWORK_ICON_BY_PLATFORM[st.network] || "ap-icon-eye" : "ap-icon-eye";
+  const netIcon = st.network ? NETWORK_ICON_BY_PLATFORM[st.network] || "ap-icon-eye-on" : "ap-icon-eye-on";
   return `<div class="image-studio__viewseg" role="group" aria-label="Preview view">
     <button type="button" class="image-studio__viewseg-btn" data-img-view="image" aria-pressed="${!feed}"><i class="ap-icon-image" aria-hidden="true"></i>Image</button>
     <button type="button" class="image-studio__viewseg-btn" data-img-view="feed" aria-pressed="${feed}"><i class="${netIcon}" aria-hidden="true"></i>In feed</button>

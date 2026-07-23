@@ -960,7 +960,7 @@ button.image-studio__ref--pick:focus-visible {
   background: none;
   border-radius: var(--app-radius-md);
   cursor: pointer;
-  color: var(--ref-color-grey-90);
+  color: var(--ref-color-grey-100);
   text-align: left;
 }
 
@@ -1423,7 +1423,7 @@ button.image-studio__ref--pick:focus-visible {
   height: 14px;
   width: auto; /* presets: sized by inline aspect-ratio */
   flex: 0 0 auto;
-  border: 1.5px solid var(--ref-color-grey-50);
+  border: 1.5px solid var(--ref-color-grey-40);
   border-radius: 2px;
 }
 
