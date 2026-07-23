@@ -509,25 +509,6 @@ function uploadRefTile(r) {
   </div>`;
 }
 
-function refs(st) {
-  const usedIds = new Set(st.referenceImages.map((r) => r.id));
-  const capReached = st.referenceImages.length >= imageStudio.MAX_REFS;
-  const pb = st.playbookRefs || [];
-  const uploads = st.referenceImages.filter((r) => !r.fromPlaybook);
-  const uploadTiles = uploads.map(uploadRefTile).join("");
-  const addTile = !capReached
-    ? `<button type="button" class="image-studio__ref-add" data-img-ref-add><i class="ap-icon-plus" aria-hidden="true"></i><span>Add yours</span></button>`
-    : "";
-  // No Playbook set — a single plain grid of the user's own images.
-  if (!pb.length) return `<div class="image-studio__refs">${uploadTiles}${addTile}</div>`;
-  // Playbook set present: its pick-tiles first, then a labelled "Your uploads"
-  // grid so the brand framing above stays accurate.
-  const pbTiles = pb.map((r) => playbookRefTile(r, usedIds.has(r.id), capReached)).join("");
-  return `<div class="image-studio__refs">${pbTiles}</div>
-    <p class="image-studio__ref-sublabel">Your uploads</p>
-    <div class="image-studio__refs">${uploadTiles}${addTile}</div>`;
-}
-
 // A generate-panel section with a collapsible header (click to expand/collapse).
 // `rightHtml` sits at the right of the header (count / Optional chip / format
 // hint). When `disabled`, the section can't be expanded and shows `disabledHint`
@@ -548,6 +529,76 @@ function collapsibleGroup(st, { id, label, rightHtml = "", body, disabled = fals
   </div>`;
 }
 
+// ── Ingredients (Generate) ───────────────────────────────────────────────────
+// Frames the generation inputs as "ingredients": a Brand kit toggle (the
+// Playbook's brand set, shown as use/skip tiles when on) + a Reference images
+// card with a drop-zone for the user's own uploads.
+function ingredientsSection(st) {
+  const hasPlaybookRefs = Array.isArray(st.playbookRefs) && st.playbookRefs.length > 0;
+  return `<div class="image-studio__group image-studio__group--ingredients">
+    <p class="image-studio__group-label image-studio__group-label--eyebrow">Ingredients</p>
+    <div class="image-studio__ingredients">
+      ${hasPlaybookRefs ? brandKitCard(st) : ""}
+      ${referenceImagesCard(st)}
+    </div>
+  </div>`;
+}
+
+function brandKitCard(st) {
+  const brand = st.playbookName || "Playbook";
+  const on = !!st.usePlaybookRefs;
+  const usedIds = new Set(st.referenceImages.map((r) => r.id));
+  const capReached = st.referenceImages.length >= imageStudio.MAX_REFS;
+  const tiles = (st.playbookRefs || []).map((r) => playbookRefTile(r, usedIds.has(r.id), capReached)).join("");
+  const body = on
+    ? `<div class="image-studio__ingredient-body">
+        <p class="image-studio__ref-help">Tap an image to use it, or tap again to skip.</p>
+        <div class="image-studio__refs">${tiles}</div>
+      </div>`
+    : "";
+  return `<div class="image-studio__ingredient${on ? " is-on" : ""}">
+    <div class="image-studio__ingredient-head">
+      <i class="ap-icon-star image-studio__ingredient-icon" aria-hidden="true"></i>
+      <span class="image-studio__ingredient-title">Brand kit · ${escapeHtml(brand)}</span>
+      <label class="ap-toggle-container image-studio__ingredient-toggle" title="Use your brand kit">
+        <input type="checkbox" data-img-toggle-playbook-refs ${on ? "checked" : ""} aria-label="Use ${escapeHtml(brand)} brand kit" />
+        <i aria-hidden="true"></i>
+      </label>
+    </div>
+    ${body}
+  </div>`;
+}
+
+function referenceImagesCard(st) {
+  const collapsed = st.collapsedGroups.has("refs");
+  const uploads = st.referenceImages.filter((r) => !r.fromPlaybook);
+  const uploadTiles = uploads.map(uploadRefTile).join("");
+  return `<div class="image-studio__ingredient image-studio__ingredient--refs${collapsed ? " is-collapsed" : ""}">
+    <button type="button" class="image-studio__ingredient-head" data-img-group-toggle="refs" aria-expanded="${!collapsed}">
+      <i class="ap-icon-file--image image-studio__ingredient-icon" aria-hidden="true"></i>
+      <span class="image-studio__ingredient-title">Reference images</span>
+      <i class="ap-icon-chevron-down image-studio__group-chevron" aria-hidden="true"></i>
+    </button>
+    <div class="image-studio__ingredient-body"${collapsed ? " hidden" : ""}>
+      ${dropzone(st)}
+      ${uploadTiles ? `<div class="image-studio__refs">${uploadTiles}</div>` : ""}
+      <p class="image-studio__ref-help">One image matches its style · two or more blend into a new look.</p>
+    </div>
+  </div>`;
+}
+
+function dropzone(st) {
+  if (st.referenceImages.length >= imageStudio.MAX_REFS) {
+    return `<div class="image-studio__dropzone is-full"><p class="image-studio__dropzone-sub">Maximum ${imageStudio.MAX_REFS} reference images reached.</p></div>`;
+  }
+  return `<div class="image-studio__dropzone" data-img-dropzone>
+    <i class="ap-icon-file--image image-studio__dropzone-icon" aria-hidden="true"></i>
+    <p class="image-studio__dropzone-title">Drop your reference images here</p>
+    <p class="image-studio__dropzone-sub">PNG, JPG or WebP up to 10MB · 2–10 images</p>
+    <button type="button" class="ap-button stroked grey" data-img-ref-add><i class="ap-icon-plus" aria-hidden="true"></i><span>Add images</span></button>
+  </div>`;
+}
+
 function composeGroups(st) {
   // Format hint — the draft's network icon + "Best for <Network>" (or a plain
   // "Aspect ratio" label when no network is known).
@@ -564,28 +615,10 @@ function composeGroups(st) {
   // "Variations" (pick one) for single, "Slides" (all kept) for carousel.
   const carousel = imageStudio.supportsCarousel(st.network);
   const isCarousel = carousel && st.outputMode === "carousel";
-  // Reference images — the session's Playbook brand set is always shown; each
-  // tile is an explicit use/skip toggle. A brand bar explains where they come
-  // from and offers a bulk Use-all / Clear-all shortcut.
-  const hasPlaybookRefs = Array.isArray(st.playbookRefs) && st.playbookRefs.length > 0;
-  const brand = st.playbookName || "Playbook";
-  const usedIds = new Set(st.referenceImages.map((r) => r.id));
-  const allSelected = hasPlaybookRefs && st.playbookRefs.every((r) => usedIds.has(r.id));
+  // Reference inputs are framed as "Ingredients": a Brand kit toggle (Playbook
+  // brand set as use/skip tiles) + a Reference images card with a drop-zone.
   const hasUsedRefs = st.referenceImages.length > 0;
-  const brandBar = hasPlaybookRefs
-    ? `<div class="image-studio__ref-brandbar">
-        <span class="image-studio__ref-brandname"><i class="ap-icon-archie-official" aria-hidden="true"></i>From your ${escapeHtml(brand)} Playbook</span>
-        <button type="button" class="image-studio__ref-bulk" data-img-toggle-playbook-refs aria-pressed="${allSelected}">${allSelected ? "Clear all" : "Use all"}</button>
-      </div>
-      <p class="image-studio__ref-help">Tap an image to use it in this generation, or tap again to skip it.</p>`
-    : "";
-
-  const refsGroup = collapsibleGroup(st, {
-    id: "refs",
-    label: "Reference images",
-    rightHtml: `<span class="image-studio__count">${st.referenceImages.length} used</span>`,
-    body: `${brandBar}${refs(st)}`,
-  });
+  const ingredients = ingredientsSection(st);
   // Visual style is mutually exclusive with reference images — when refs guide
   // the look, this section switches off and folds away.
   const styleGroup = collapsibleGroup(st, {
@@ -638,7 +671,7 @@ function composeGroups(st) {
       ? `${outputChips}<p class="image-studio__subgroup-label">${countLabel}</p>${countChips}`
       : countChips,
   });
-  return `${refsGroup}${styleGroup}${moodGroup}${formatGroup}${outputGroup}`;
+  return `${ingredients}${styleGroup}${moodGroup}${formatGroup}${outputGroup}`;
 }
 
 function renderBody() {
@@ -918,8 +951,7 @@ function onClick(event) {
   const grpToggle = event.target.closest("[data-img-group-toggle]");
   if (grpToggle && !grpToggle.disabled)
     return void imageStudio.toggleGroupCollapsed(KEY, grpToggle.dataset.imgGroupToggle);
-  const pbToggle = event.target.closest("[data-img-toggle-playbook-refs]");
-  if (pbToggle) return void imageStudio.setUsePlaybookRefs(KEY, pbToggle.getAttribute("aria-pressed") !== "true");
+  // Brand kit toggle is a DS switch (checkbox) — handled in onChange.
   if (event.target.closest("[data-img-ref-add]")) return void openFilePicker("ref");
   const refToggle = event.target.closest("[data-img-ref-toggle]");
   if (refToggle) return void imageStudio.toggleReferenceImage(KEY, refToggle.dataset.imgRefToggle);
@@ -1046,7 +1078,32 @@ function onChange(event) {
     imageStudio.addCustomTextColor(KEY, event.target.value);
     imageStudio.setOpenPopover(KEY, null);
     if (state()?.editingOverlayId) focusEditingText({ selectAll: false });
+  } else if (event.target.matches("[data-img-toggle-playbook-refs]")) {
+    // Brand kit switch (DS toggle checkbox).
+    imageStudio.setUsePlaybookRefs(KEY, event.target.checked);
   }
+}
+
+// Drag-and-drop reference images onto the "Reference images" drop-zone.
+function onDragOver(event) {
+  const dz = event.target.closest?.("[data-img-dropzone]");
+  if (!dz) return;
+  event.preventDefault();
+  dz.classList.add("is-dragover");
+}
+
+function onDragLeave(event) {
+  const dz = event.target.closest?.("[data-img-dropzone]");
+  if (dz && !dz.contains(event.relatedTarget)) dz.classList.remove("is-dragover");
+}
+
+function onDrop(event) {
+  const dz = event.target.closest?.("[data-img-dropzone]");
+  if (!dz) return;
+  event.preventDefault();
+  dz.classList.remove("is-dragover");
+  const files = [...(event.dataTransfer?.files || [])].filter((f) => f.type.startsWith("image/"));
+  for (const f of files) imageStudio.addReferenceImage(KEY, URL.createObjectURL(f));
 }
 
 function onPointerDown(event) {
@@ -1127,6 +1184,9 @@ export function init() {
   modal.addEventListener("pointerdown", onPointerDown);
   modal.addEventListener("dblclick", onDblClick);
   modal.addEventListener("keydown", onKeydown, true); // capture (Escape/Enter order)
+  modal.addEventListener("dragover", onDragOver);
+  modal.addEventListener("dragleave", onDragLeave);
+  modal.addEventListener("drop", onDrop);
   bindOverlayDismissal({ modal, backdrop, close });
 }
 
