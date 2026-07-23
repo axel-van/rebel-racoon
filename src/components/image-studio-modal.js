@@ -17,6 +17,7 @@ import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../posts-st
 import { getSessionById } from "../sessions-store.js?v=6";
 import { getContextById } from "../contexts-store.js?v=37";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../social-profiles.js?v=26";
+import { FORMATS, NETWORK_FORMATS } from "../clip-formats.js?v=5";
 import { renderPostCard } from "./post-card.js?v=68";
 import * as imageStudio from "../image-studio.js?v=26";
 
@@ -123,9 +124,11 @@ function actionBar(st) {
   if (st.cropDrawing) return cropConfirmBar(st);
   const busy = st.editBusy ? "disabled" : "";
   return `<div class="image-studio__actionbar" role="toolbar" aria-label="Edit tools">
-    <div class="image-studio__ai-field">
-      <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
-      <input type="text" class="image-studio__actionbar-input" data-img-edit-prompt placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" value="${escapeHtml(st.editPrompt || "")}" ${busy} />
+    <div class="image-studio__actionbar-ai">
+      <div class="ap-input-group">
+        <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
+        <input type="text" data-img-edit-prompt placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" value="${escapeHtml(st.editPrompt || "")}" ${busy} />
+      </div>
       <button type="button" class="ap-button primary orange image-studio__actionbar-apply" data-img-apply-edit="prompt" ${busy}><i class="ap-icon-archie-official" aria-hidden="true"></i><span>Apply</span></button>
     </div>
     <div class="image-studio__actionbar-or" aria-hidden="true"><span>or edit by hand</span></div>
@@ -160,19 +163,26 @@ function cropConfirmBar(st) {
 // Freeform + the ratio presets, as a single chip group that locks the crop box's
 // aspect (Freeform = unconstrained, the default). Each chip carries a small glyph
 // drawn to its own proportions (Freeform = a dashed square) so the ratio reads at
-// a glance — more legible than a bare label.
+// a glance — more legible than a bare label. When the draft targets a network,
+// a "Best for <Network>" hint leads the row and the ratios that network isn't
+// optimised for are disabled — Freeform stays available for an arbitrary crop.
 function cropAspectChips(st) {
-  const chip = (id, label, ratio, on) =>
-    `<button type="button" class="image-studio__crop-aspect${ratio ? "" : " image-studio__crop-aspect--free"}${on ? " is-selected" : ""}" data-img-crop-aspect="${escapeHtml(id)}" aria-pressed="${on}"><span class="image-studio__crop-aspect-glyph"${ratio ? ` style="aspect-ratio:${ratio}"` : ""} aria-hidden="true"></span><span>${escapeHtml(label)}</span></button>`;
-  const freeform = chip("free", "Freeform", null, !st.cropAspect);
-  const presets = imageStudio
-    .formatChoices(KEY)
+  const net = st.network || null;
+  const optimalIds = net ? NETWORK_FORMATS[net] || null : null;
+  const chip = (id, label, ratio, on, disabled) =>
+    `<button type="button" class="image-studio__crop-aspect${ratio ? "" : " image-studio__crop-aspect--free"}${on ? " is-selected" : ""}${disabled ? " is-disabled" : ""}" data-img-crop-aspect="${escapeHtml(id)}" aria-pressed="${on}"${disabled ? " disabled" : ""}><span class="image-studio__crop-aspect-glyph"${ratio ? ` style="aspect-ratio:${ratio}"` : ""} aria-hidden="true"></span><span>${escapeHtml(label)}</span></button>`;
+  const freeform = chip("free", "Freeform", null, !st.cropAspect, false);
+  const presets = Object.values(FORMATS)
     .map((f) => {
       const on = !!st.cropAspect && Math.abs(st.cropAspect - f.ratio) < 0.001;
-      return chip(f.id, f.tag, f.ratio, on);
+      const disabled = !!optimalIds && !optimalIds.includes(f.id);
+      return chip(f.id, f.tag, f.ratio, on, disabled);
     })
     .join("");
-  return `${freeform}${presets}`;
+  const bestFor = optimalIds
+    ? `<span class="image-studio__crop-bestfor"><i class="${NETWORK_ICON_BY_PLATFORM[net] || ""}" aria-hidden="true"></i>Best for ${escapeHtml(NETWORK_LABEL[net] || net)}</span>`
+    : "";
+  return `${bestFor}${freeform}${presets}`;
 }
 
 function logoPopover() {

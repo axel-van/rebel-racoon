@@ -572,53 +572,25 @@ button.image-studio__ref--pick:focus-visible {
   gap: var(--ref-spacing-xs);
 }
 
-/* Zone 1 — the AI prompt as a real, filled field: a soft-tinted pill carrying
-   the mermaid-sparkle AI cue, the input, and the orange Apply CTA. Reads
-   unmistakably as "type a prompt" (was bare text with no field affordance). */
-.image-studio__ai-field {
+/* Zone 1 — the AI prompt: the DS input component (.ap-input-group) carrying the
+   mermaid-sparkle AI cue, beside the orange Apply CTA. The input-group is the
+   real DS field (its own border / fill / focus); we only lay it out here. */
+.image-studio__actionbar-ai {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xxs) var(--ref-spacing-xxs) var(--ref-spacing-sm);
-  background: var(--app-surface-subtle);
-  border: 1px solid var(--app-border-soft);
-  border-radius: var(--app-radius-pill);
-  transition:
-    border-color 150ms var(--app-ease-out),
-    box-shadow 150ms var(--app-ease-out),
-    background 150ms var(--app-ease-out);
 }
 
-.image-studio__ai-field:focus-within {
-  background: var(--ref-color-white);
-  border-color: var(--app-archie-mark);
-  box-shadow: 0 0 0 3px rgba(255, 60, 0, 0.12);
+.image-studio__actionbar-ai .ap-input-group {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* The mermaid-gradient sparkle — the app's AI identity mark. Mask-based icon, so
-   paint the gradient onto its background and let the glyph clip it. */
+   paint the gradient onto its background and let the glyph clip it (overrides
+   the DS input-group's flat icon colour). */
 .image-studio__ai-icon {
-  flex: 0 0 auto;
   background: var(--ref-color-mermaid-gradient-background);
-}
-
-.image-studio__actionbar-input {
-  flex: 1 1 auto;
-  min-width: 0;
-  border: none;
-  background: none;
-  font: inherit;
-  font-size: var(--sys-text-style-body-size);
-  color: var(--ref-color-grey-80);
-  padding: var(--ref-spacing-xs) 0;
-}
-
-.image-studio__actionbar-input::placeholder {
-  color: var(--ref-color-grey-60);
-}
-
-.image-studio__actionbar-input:focus-visible {
-  outline: none;
 }
 
 .image-studio__actionbar-apply {
@@ -1385,6 +1357,22 @@ button.image-studio__ref--pick:focus-visible {
   flex-wrap: wrap;
 }
 
+/* "Best for <Network>" hint leading the aspect chips — the draft's network logo
+   + label, marking which ratios below are the optimised set. */
+.image-studio__crop-bestfor {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  margin-right: var(--ref-spacing-xxs);
+  color: var(--ref-color-grey-60);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
+.image-studio__crop-bestfor > i {
+  font-size: 14px;
+}
+
 /* Visual aspect chips — a proportional glyph + the ratio label. The glyph is an
    inline-block sized by its inline aspect-ratio at a fixed height (same trick as
    the generate panel's .gen-format-glyph); Freeform shows a dashed square. */
@@ -1405,6 +1393,14 @@ button.image-studio__ref--pick:focus-visible {
   transition:
     border-color var(--ref-animation-short) var(--app-ease-out),
     background var(--ref-animation-short) var(--app-ease-out);
+}
+
+/* Ratios the draft's network isn't optimised for — visible but not selectable,
+   so the optimised set reads by contrast. */
+.image-studio__crop-aspect.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .image-studio__crop-aspect:hover {
