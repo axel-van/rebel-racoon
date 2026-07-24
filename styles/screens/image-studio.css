@@ -1699,12 +1699,13 @@ button.image-studio__ref--pick:focus-visible {
   border-color: var(--ref-color-electric-blue-100);
 }
 
-/* Label — hidden in the grid (title tooltip only), shown as a row in list view. */
-.image-studio__preset-label {
+/* Meta (note + "Best for" networks) — hidden in the grid (thumbnail only),
+   shown beside the thumbnail in list view. No display name. */
+.image-studio__preset-meta {
   display: none;
 }
 
-/* List view — one row per image: thumbnail + label. */
+/* List view — one row per reference image: a roomy thumbnail + its info. */
 .image-studio__presets--list {
   display: flex;
   flex-direction: column;
@@ -1715,16 +1716,43 @@ button.image-studio__ref--pick:focus-visible {
   display: flex;
   align-items: center;
   width: 100%;
+  flex: 0 0 auto; /* don't shrink to fit the bounded, scrolling column */
   gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs);
 }
 
 .image-studio__presets--list .image-studio__preset img {
-  width: 40px;
-  height: 40px;
+  width: 56px;
+  height: 56px;
   aspect-ratio: auto;
   flex: 0 0 auto;
   border-radius: var(--app-radius-md);
+}
+
+.image-studio__presets--list .image-studio__preset-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  text-align: left;
+}
+
+.image-studio__preset-note {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-100);
+}
+
+.image-studio__preset-nets {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
 }
 
 .image-studio__presets--list .image-studio__preset-label {
