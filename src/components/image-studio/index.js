@@ -24,7 +24,7 @@ import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts
 import { getSessionById } from "../../sessions-store.js?v=6";
 import { getContextById } from "../../contexts-store.js?v=37";
 import { MODAL_ID, KEY, ctx, state } from "./context.js?v=2";
-import { compositeOverlays, loadImg, shadowMetrics } from "./canvas.js?v=1";
+import { compositeOverlays, loadImg, shadowMetrics, STROKE_K } from "./canvas.js?v=1";
 import { renderStudio } from "./shell-view.js?v=6";
 import {
   openFilePicker,
@@ -344,9 +344,9 @@ function onChange(event) {
     imageStudio.setOpenPopover(KEY, null);
     if (state()?.editingOverlayId) focusEditingText({ selectAll: false });
   } else if (event.target.matches("[data-img-outline-toggle]") && st?.selectedOverlayId) {
-    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { outline: event.target.checked });
+    toggleTextEffect("outline", event.target.checked);
   } else if (event.target.matches("[data-img-shadow-toggle]") && st?.selectedOverlayId) {
-    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { shadow: event.target.checked });
+    toggleTextEffect("shadow", event.target.checked);
   } else if (event.target.matches("[data-img-shadow-intensity]") && st?.selectedOverlayId) {
     // Slider release commits + re-renders (live preview happened in onInput).
     imageStudio.updateOverlay(KEY, st.selectedOverlayId, { shadowIntensity: Number(event.target.value) });
@@ -354,6 +354,31 @@ function onChange(event) {
     // Brand kit switch (DS toggle checkbox).
     imageStudio.setUsePlaybookRefs(KEY, event.target.checked);
   }
+}
+
+// Toggle outline / shadow on the selected text WITHOUT a re-render — the open
+// popover stays mounted so it doesn't replay its entrance animation (the "jump").
+// State is updated silently and the DOM is patched to match: the text style, the
+// popover's dim state, the toolbar button, and (shadow) the slider's enabled state.
+function toggleTextEffect(kind, on) {
+  const st = state();
+  const id = st?.selectedOverlayId;
+  if (!id) return;
+  imageStudio.updateOverlaySilent(KEY, id, { [kind]: on });
+  const o = (st.overlays || []).find((ov) => ov.id === id);
+  const textNode = ctx.modal.querySelector(`[data-img-overlay="${id}"] .image-studio__overlay-text`);
+  if (kind === "outline") {
+    if (textNode) textNode.style.webkitTextStroke = on ? `${STROKE_K}em ${o?.outlineColor || "#0A1B33"}` : "";
+  } else {
+    const sm = shadowMetrics(o?.shadowIntensity);
+    if (textNode) textNode.style.textShadow = on ? `0 ${sm.offYEm}em ${sm.blurEm}em rgba(0,0,0,${sm.alpha})` : "";
+    const slider = ctx.modal.querySelector("[data-img-shadow-intensity]");
+    if (slider) slider.disabled = !on;
+  }
+  const btn = ctx.modal.querySelector(`.image-studio__tt-${kind}`);
+  if (btn) btn.classList.toggle("is-on", on);
+  const pop = ctx.modal.querySelector(`.image-studio__popover--${kind}`);
+  if (pop) pop.classList.toggle("is-off", !on);
 }
 
 // Drag-and-drop reference images onto the "Reference images" drop-zone.
