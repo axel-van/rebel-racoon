@@ -270,15 +270,17 @@ button.image-studio__group-head:disabled {
   color: var(--ref-color-grey-60);
 }
 
-.image-studio__opt {
-  display: inline-flex;
-  align-items: center;
-  padding: 1px var(--ref-spacing-xxs);
-  border-radius: var(--app-radius-sm);
-  background: var(--ref-color-grey-05);
+/* Current-value summary shown at the right of a collapsed section header — the
+   de-emphasized value beside its label, so a folded section still reads. */
+.image-studio__group-summary {
+  min-width: 0;
+  max-width: 180px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-60);
+  color: var(--ref-color-grey-80);
 }
 
 .image-studio__chips {
@@ -300,7 +302,7 @@ button.image-studio__group-head:disabled {
   width: 100%;
   box-sizing: border-box;
   resize: vertical;
-  min-height: 88px;
+  min-height: 72px;
   padding: var(--ref-spacing-sm) var(--ref-spacing-sm);
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-md);
@@ -364,28 +366,8 @@ button.image-studio__group-head:disabled {
   display: block;
 }
 
-/* Usage guidance stays out of the grid — a small "i" badge (top-right) carries
-   the note + target networks in its native tooltip. */
-.image-studio__ref-info {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 20px;
-  height: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--app-radius-circle);
-  background: rgba(10, 27, 51, 0.55);
-  color: var(--ref-color-white);
-  cursor: help;
-}
-
-.image-studio__ref-info > i {
-  font-size: 12px;
-}
-
-/* Playbook reference tiles are explicit use/skip toggle buttons. */
+/* Playbook reference tiles are explicit use/skip toggle buttons. Note + target
+   networks ride in the tile's native tooltip (title) — no in-grid badge. */
 button.image-studio__ref--pick {
   padding: 0;
   cursor: pointer;
@@ -467,30 +449,6 @@ button.image-studio__ref--pick:focus-visible {
   border-color: var(--ref-color-electric-blue-100);
 }
 
-/* Worded state chip (bottom): "Used" / "Skipped" — the accessible signal that
-   does not depend on colour. */
-.image-studio__ref-state {
-  position: absolute;
-  left: 5px;
-  bottom: 5px;
-  padding: 1px 7px;
-  border-radius: var(--app-radius-pill);
-  font-size: 11px;
-  font-weight: var(--ref-font-weight-bold);
-  line-height: 1.5;
-  letter-spacing: 0.01em;
-}
-
-.image-studio__ref--pick.is-used .image-studio__ref-state {
-  background: var(--ref-color-electric-blue-100);
-  color: var(--ref-color-white);
-}
-
-.image-studio__ref--pick.is-skipped .image-studio__ref-state {
-  background: var(--ref-color-white);
-  color: var(--ref-color-grey-80);
-}
-
 .image-studio__ref-remove {
   position: absolute;
   top: 4px;
@@ -541,8 +499,9 @@ button.image-studio__ref--pick:focus-visible {
   border-radius: var(--app-radius-md);
 }
 
-/* Floating AI bar — a card centred at the canvas bottom holding the reprompt
-   field + Apply. The manual hand-tools live in .image-studio__palette (left). */
+/* Floating AI bar — a single-row card centred at the canvas bottom: the sparkle
+   AI cue, the reprompt textarea, then the compact icon Apply. The manual
+   hand-tools live in .image-studio__palette (left). */
 .image-studio__actionbar {
   position: absolute;
   left: 50%;
@@ -550,10 +509,10 @@ button.image-studio__ref--pick:focus-visible {
   transform: translateX(-50%);
   z-index: 4;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: var(--ref-spacing-xs);
   width: min(94%, 540px);
-  padding: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   background: var(--ref-color-white);
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-modal);
@@ -630,12 +589,12 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 /* The mermaid-gradient sparkle — the app's AI identity mark. Mask-based icon, so
-   paint the gradient onto its background and let the glyph clip it. Nudged down
-   to sit on the textarea's first line. */
+   paint the gradient onto its background and let the glyph clip it. Sized to the
+   body text so it reads as the leading cue for the field. */
 .image-studio__ai-icon {
+  flex: 0 0 auto;
   font-size: var(--sys-text-style-body-size);
   background: var(--ref-color-mermaid-gradient-background);
-  margin-top: var(--ref-spacing-xxs);
 }
 
 /* Textarea styled like .session__composer-input-field: borderless, transparent,
@@ -673,20 +632,31 @@ button.image-studio__ref--pick:focus-visible {
   cursor: default;
 }
 
-/* Toolbar row — the Apply CTA hugs the right edge (like the composer send). */
-.image-studio__reprompt-toolbar {
-  display: flex;
-  align-items: center;
-}
-
-.image-studio__actionbar-apply {
-  margin-left: auto;
+/* Apply — a 32×32 icon button, same box as the composer send. Qualified with
+   .ap-button to beat the DS button box-model (36px height + text padding). */
+.image-studio__actionbar-apply.ap-button {
   flex: 0 0 auto;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border-radius: var(--sys-border-radius-lg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.image-studio__actionbar-input:disabled {
-  opacity: 0.5;
-  cursor: default;
+/* Muted grey while the field is empty (placeholder visible) — "nothing to apply
+   yet", exactly like the composer send. Typing restores the orange paint. */
+.image-studio__actionbar:has(.image-studio__reprompt-field:placeholder-shown) .image-studio__actionbar-apply.ap-button {
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-grey-60);
+}
+
+.image-studio__actionbar:has(.image-studio__reprompt-field:placeholder-shown)
+  .image-studio__actionbar-apply.ap-button:hover {
+  background: var(--ref-color-grey-20);
 }
 
 /* Small popover anchored above its trigger (Crop ratios / logo presets / text
@@ -1790,24 +1760,14 @@ button.image-studio__ref--pick:focus-visible {
   gap: var(--ref-spacing-xs);
 }
 
-.image-studio__ingredient {
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-card);
-  background: var(--ref-color-white);
-  overflow: hidden;
-  transition: border-color var(--ref-animation-short) var(--app-ease-out);
-}
-
-.image-studio__ingredient.is-on {
-  border-color: var(--ref-color-electric-blue-100);
-}
-
+/* Flat sub-blocks (no per-card border) — the panel's section rhythm already
+   separates them, so nesting a bordered card only added visual weight. */
 .image-studio__ingredient-head {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
   width: 100%;
-  padding: var(--ref-spacing-sm);
+  padding: 0;
   border: 0;
   background: none;
   font: inherit;
@@ -1820,15 +1780,16 @@ button.image-studio__ingredient-head {
 
 .image-studio__ingredient-icon {
   flex: none;
-  font-size: 18px;
+  font-size: 16px;
   color: var(--ref-color-grey-60);
 }
 
 .image-studio__ingredient-title {
   flex: 1;
   min-width: 0;
-  font-size: var(--sys-text-style-body-size);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-100);
 }
 
@@ -1848,8 +1809,8 @@ button.image-studio__ingredient-head {
 .image-studio__ingredient-body {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-sm);
-  padding: 0 var(--ref-spacing-sm) var(--ref-spacing-sm);
+  gap: var(--ref-spacing-xs);
+  padding-top: var(--ref-spacing-xs);
 }
 
 /* Collapsed → actually hide: the display:flex above would otherwise beat the
@@ -1859,20 +1820,30 @@ button.image-studio__ingredient-head {
   display: none;
 }
 
-/* Premium drop-zone for user uploads. */
+/* Compact single-row drop target: a dashed bar (icon + two-line label) that is
+   itself the click + drop surface — no oversized empty zone, no extra button. */
 .image-studio__dropzone {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-lg) var(--ref-spacing-md);
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   border: 1.5px dashed var(--sys-border-color-default);
-  border-radius: var(--app-radius-starter);
+  border-radius: var(--app-radius-md);
   background: var(--ref-color-grey-05);
-  text-align: center;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
   transition:
     border-color var(--ref-animation-short) var(--app-ease-out),
     background var(--ref-animation-short) var(--app-ease-out);
+}
+
+.image-studio__dropzone:hover,
+.image-studio__dropzone:focus-visible {
+  outline: none;
+  border-color: var(--ref-color-electric-blue-100);
+  background: var(--ref-color-electric-blue-10);
 }
 
 .image-studio__dropzone.is-dragover {
@@ -1880,33 +1851,27 @@ button.image-studio__ingredient-head {
   background: var(--ref-color-electric-blue-10);
 }
 
-.image-studio__dropzone.is-full {
-  padding: var(--ref-spacing-md);
+.image-studio__dropzone-icon {
+  flex: none;
+  font-size: 16px;
+  color: var(--ref-color-grey-60);
 }
 
-.image-studio__dropzone-icon {
-  font-size: 22px;
-  color: var(--ref-color-grey-40);
+.image-studio__dropzone-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .image-studio__dropzone-title {
   margin: 0;
-  font-size: var(--sys-text-style-body-size);
-  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-100);
 }
 
 .image-studio__dropzone-sub {
-  margin: 0;
-  font-size: var(--sys-text-style-caption-size);
-  color: var(--ref-color-grey-60);
-}
-
-.image-studio__dropzone .ap-button {
-  margin-top: var(--ref-spacing-xs);
-}
-
-.image-studio__ref-help {
   margin: 0;
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);

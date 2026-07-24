@@ -11,23 +11,20 @@ import { KEY } from "./context.js?v=3";
 import { outlineMetrics, shadowMetrics, cssFamily } from "./canvas.js?v=2";
 import * as imageStudio from "../../image-studio.js?v=29";
 
-// Edit mode — the floating AI reprompt bar over the canvas bottom: a composer
-// card mirroring the main conversational composer (multi-line textarea + a
-// mermaid-sparkle cue = generative AI) with the orange Apply CTA in the toolbar
-// row; describe a change and I redraw the image. The manual hand-tools live in
-// the left palette (toolPalette). During crop the AI bar hides so the crop
-// toolbar (attached below the crop box) has clear space beneath the image.
+// Edit mode — the floating AI reprompt bar over the canvas bottom: a single-row
+// composer card — the mermaid-sparkle cue (= generative AI), a borderless
+// multi-line textarea like the main conversational composer, and a compact
+// orange icon button (the send-style Apply) — describe a change and I redraw the
+// image. The manual hand-tools live in the left palette (toolPalette). During
+// crop the AI bar hides so the crop toolbar (attached below the crop box) has
+// clear space beneath the image.
 export function actionBar(st) {
   if (st.cropDrawing) return "";
   const busy = st.editBusy ? "disabled" : "";
   return `<div class="image-studio__actionbar" role="toolbar" aria-label="AI edit">
-    <div class="image-studio__reprompt-input-row">
-      <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
-      <textarea class="image-studio__reprompt-field" data-img-edit-prompt rows="1" placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" ${busy}>${escapeHtml(st.editPrompt || "")}</textarea>
-    </div>
-    <div class="image-studio__reprompt-toolbar">
-      <button type="button" class="ap-button primary orange image-studio__actionbar-apply" data-img-apply-edit="prompt" ${busy}><i class="ap-icon-archie-official" aria-hidden="true"></i><span>Apply</span></button>
-    </div>
+    <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
+    <textarea class="image-studio__reprompt-field" data-img-edit-prompt rows="1" placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" ${busy}>${escapeHtml(st.editPrompt || "")}</textarea>
+    <button type="button" class="ap-button primary orange image-studio__actionbar-apply" data-img-apply-edit="prompt" aria-label="Apply" title="Apply" ${busy}><i class="ap-icon-archie-official" aria-hidden="true"></i></button>
   </div>`;
 }
 

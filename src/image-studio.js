@@ -211,7 +211,10 @@ export function start(
     customFonts: [], // [{ family, label, url }] fonts the user uploaded (FontFace)
     playbookName: playbookName || "", // brand/playbook label for the toggle
     usePlaybookRefs, // include the Playbook brand images in the grid
-    collapsedGroups: new Set(), // generate-panel section ids the user collapsed
+    // Secondary sections start collapsed to a single summary row so the panel
+    // opens compact (prompt + brand kit visible); their headers show the current
+    // value. The user expands only what they want to change.
+    collapsedGroups: new Set(["refs", "style", "mood", "format", "output"]),
     variationCount: 2, // single-image mode: how many alternatives to pick from
     slideCount, // carousel mode: how many slides to generate
     variations, // [{ seed, url, w, h }] — alternatives (single) or slides (carousel)
