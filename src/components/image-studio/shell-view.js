@@ -10,11 +10,26 @@ import { html, raw, escapeHtml } from "../../utils.js?v=21";
 import { getPosts } from "../../posts-store.js?v=36";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=26";
 import { renderPostCard } from "../post-card.js?v=68";
-import { KEY, ctx } from "./context.js?v=4";
-import { generateControls, deriveButton } from "./compose-view.js?v=7";
-import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=18";
+import { KEY, ctx } from "./context.js?v=5";
+import { generateControls, deriveButton } from "./compose-view.js?v=8";
+import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=19";
 import { compositeOverlays } from "./canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=30";
+import * as imageStudio from "../../image-studio.js?v=31";
+
+// Empty-state hint for the prompt composer — a full structured brief, so the
+// placeholder itself shows the kind of rich prompt the box is built for (and why
+// the expand toggle exists). Shown only when the field is empty.
+const PROMPT_PLACEHOLDER = `Campaign title: AI UX Safeguard
+Campaign objective: Raise awareness about the risks of unmediated AI in UX design and establish the line between acceleration and shortcuts.
+Audience: UX/UI Designers, Product Managers, Tech Leaders
+Tone: Professional, provocative, authoritative
+
+Title: AI can easily ruin your UX
+Key message: Velocity is useless if you are building the wrong things faster. Human oversight is non-negotiable.
+Narrative purpose: Grab attention immediately with a provocative statement and a striking visual metaphor of speed leading to chaos.
+Visual goal: Create an instant visual metaphor for speed without direction or acceleration leading to product degradation.
+Visual scene: A deep blue background. On the left, massive bold typography. On the right, a single powerful graphic: a thick, horizontal orange arrow representing velocity. The tail of the arrow is solid and perfectly defined, but as it points forward, the tip shatters and dissolves into a chaotic cloud of tiny, disconnected digital pixels and glitch fragments.
+Composition focus: The transition point of the arrow where order turns into digital chaos, aligned with the bold headline.`;
 
 // In-feed preview — the edit canvas layers logo/text overlays as live DOM over the
 // image, but the post-card preview can't (it just takes an image URL), so overlays
@@ -156,11 +171,14 @@ function generateComposer(st) {
   const busy = st.promptLoading || st.genPhase === "generating";
   const applyLabel = st.genPhase === "results" ? "Regenerate" : "Generate";
   const applyDisabled = busy || !(st.promptText || "").trim();
-  return `<div class="image-studio__composer">
+  const expanded = !!st.composerExpanded;
+  const expandLabel = expanded ? "Collapse prompt" : "Expand prompt";
+  return `<div class="image-studio__composer${expanded ? " is-expanded" : ""}">
     ${deriveButton(st)}
     <div class="image-studio__actionbar image-studio__actionbar--generate" role="group" aria-label="Image prompt">
       <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
-      <textarea id="imgStudioPrompt" class="image-studio__reprompt-field" data-img-prompt rows="3" placeholder="Describe your image…" aria-label="Describe your image" ${busy ? "disabled" : ""}>${escapeHtml(st.promptText)}</textarea>
+      <textarea id="imgStudioPrompt" class="image-studio__reprompt-field" data-img-prompt rows="3" placeholder="${escapeHtml(PROMPT_PLACEHOLDER)}" aria-label="Describe your image" ${busy ? "disabled" : ""}>${escapeHtml(st.promptText)}</textarea>
+      <button type="button" class="ap-button ghost grey image-studio__actionbar-expand" data-img-composer-expand aria-label="${expandLabel}" title="${expandLabel}" aria-pressed="${expanded}"><i class="ap-icon-${expanded ? "minimize" : "maximize"}" aria-hidden="true"></i></button>
       <button type="button" class="ap-button primary orange image-studio__actionbar-apply" data-img-generate aria-label="${applyLabel}" title="${applyLabel}" ${applyDisabled ? "disabled" : ""}><i class="ap-icon-arrow-up" aria-hidden="true"></i></button>
     </div>
   </div>`;

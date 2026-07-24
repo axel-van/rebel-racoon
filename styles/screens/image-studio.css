@@ -550,6 +550,28 @@ button.image-studio__ref--pick:focus-visible {
   margin-top: 3px;
 }
 
+/* Expanded mode: raise the cap so a long, structured prompt fits without
+   scrolling — the composer is anchored at the bottom, so it grows upward over
+   the canvas. Small mode keeps the shared 6-line cap. */
+.image-studio__composer.is-expanded .image-studio__reprompt-field {
+  max-height: min(52vh, 440px);
+}
+
+/* Compact ghost icon button (small ↔ expanded toggle), sized to match the
+   send-style Apply and aligned beside it at the bottom of the card. */
+.image-studio__actionbar-expand.ap-button {
+  flex: 0 0 auto;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border-radius: var(--sys-border-radius-lg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* The derive helper sits centered above the bar (on the grey canvas). */
 .image-studio__composer .image-studio__derive {
   align-self: center;

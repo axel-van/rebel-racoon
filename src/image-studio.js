@@ -215,6 +215,7 @@ export function start(
     // opens compact (prompt + brand kit visible); their headers show the current
     // value. The user expands only what they want to change.
     collapsedGroups: new Set(["refs", "style", "mood", "format", "output"]),
+    composerExpanded: false, // prompt composer size: small (default) vs expanded
     variationCount: 2, // single-image mode: how many alternatives to pick from
     slideCount, // carousel mode: how many slides to generate
     variations, // [{ seed, url, w, h }] — alternatives (single) or slides (carousel)
@@ -415,6 +416,15 @@ export function toggleGroupCollapsed(sessionId, id) {
   if (!s) return;
   if (s.collapsedGroups.has(id)) s.collapsedGroups.delete(id);
   else s.collapsedGroups.add(id);
+  notify(sessionId);
+}
+
+// Prompt composer size toggle (small ↔ expanded) — expanded raises the textarea's
+// max-height so a long, structured prompt fits without scrolling.
+export function toggleComposerExpanded(sessionId) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  s.composerExpanded = !s.composerExpanded;
   notify(sessionId);
 }
 

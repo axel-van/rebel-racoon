@@ -23,17 +23,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=36";
 import { getSessionById } from "../../sessions-store.js?v=6";
 import { getContextById } from "../../contexts-store.js?v=37";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=4";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=5";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "./canvas.js?v=2";
-import { renderStudio } from "./shell-view.js?v=22";
+import { renderStudio } from "./shell-view.js?v=23";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=6";
-import * as imageStudio from "../../image-studio.js?v=30";
+} from "./interactions.js?v=7";
+import * as imageStudio from "../../image-studio.js?v=31";
 
 let backdrop;
 let initialized = false;
@@ -59,9 +59,12 @@ function renderBody() {
   const st = state();
   if (!st || !ctx.body) return;
   ctx.body.innerHTML = renderStudio(st);
-  // Re-fit the reprompt textarea to any carried-over draft text (the fresh node
-  // renders at its 1-line floor until it's sized).
+  // Re-fit both prompt textareas to any carried-over text (the fresh nodes render
+  // at their CSS floor until sized) — the edit reprompt and the generate prompt
+  // (so a derived/long prompt shows at its natural height, and expand/collapse
+  // re-fits to the new max-height).
   autosizeReprompt(ctx.body.querySelector("[data-img-edit-prompt]"));
+  autosizeReprompt(ctx.body.querySelector("[data-img-prompt]"));
 }
 
 // ── Inline-text edit helpers ────────────────────────────────────────────────
@@ -188,6 +191,7 @@ function onClick(event) {
   const grpToggle = event.target.closest("[data-img-group-toggle]");
   if (grpToggle && !grpToggle.disabled)
     return void imageStudio.toggleGroupCollapsed(KEY, grpToggle.dataset.imgGroupToggle);
+  if (event.target.closest("[data-img-composer-expand]")) return void imageStudio.toggleComposerExpanded(KEY);
   // Brand kit toggle is a DS switch (checkbox) — handled in onChange.
   if (event.target.closest("[data-img-ref-add]")) return void openFilePicker("ref");
   const refToggle = event.target.closest("[data-img-ref-toggle]");
