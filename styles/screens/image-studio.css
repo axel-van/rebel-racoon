@@ -528,6 +528,7 @@ button.image-studio__ref--pick:focus-visible {
   align-items: center;
   gap: var(--ref-spacing-xxs);
   width: min(94%, 540px);
+  transition: width var(--ref-animation-short) var(--app-ease-out);
 }
 
 .image-studio__actionbar--generate {
@@ -548,7 +549,8 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .image-studio__actionbar--generate .image-studio__reprompt-field {
+  .image-studio__actionbar--generate .image-studio__reprompt-field,
+  .image-studio__composer {
     transition: none;
   }
 }
@@ -559,11 +561,16 @@ button.image-studio__ref--pick:focus-visible {
   margin-top: 3px;
 }
 
-/* Expanded mode: raise the cap so a long, structured prompt fits without
-   scrolling — the composer is anchored at the bottom, so it grows upward over
-   the canvas. Small mode keeps the shared 6-line cap. */
+/* Expanded mode is a much larger prompt panel — clearly taller AND wider than
+   the small composer — so a full structured brief is comfortable to read/edit.
+   Width animates from the center (the composer is translateX(-50%)-centered);
+   height grows upward via the field's max-height. Small mode stays compact
+   (540px wide, 6-line cap) for a strong contrast. */
+.image-studio__composer.is-expanded {
+  width: min(92%, 820px);
+}
 .image-studio__composer.is-expanded .image-studio__reprompt-field {
-  max-height: min(52vh, 440px);
+  max-height: min(72vh, 680px);
 }
 
 /* Compact ghost icon button (small ↔ expanded toggle), sized to match the

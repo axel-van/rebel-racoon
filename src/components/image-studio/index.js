@@ -193,18 +193,30 @@ function onClick(event) {
     return void imageStudio.toggleGroupCollapsed(KEY, grpToggle.dataset.imgGroupToggle);
   const expandBtn = event.target.closest("[data-img-composer-expand]");
   if (expandBtn) {
-    // Mutate in place (no re-render) so the max-height CSS transition animates on
-    // the persistent node; keep state in sync silently for later renders.
+    // Mutate in place (no re-render) so the max-height/width CSS transitions
+    // animate on the persistent node; keep state in sync silently for later
+    // renders.
     const willExpand = !state().composerExpanded;
     imageStudio.setComposerExpandedSilent(KEY, willExpand);
-    ctx.modal.querySelector(".image-studio__composer")?.classList.toggle("is-expanded", willExpand);
+    const composer = ctx.modal.querySelector(".image-studio__composer");
+    const ta = ctx.modal.querySelector("[data-img-prompt]");
+    composer?.classList.toggle("is-expanded", willExpand);
     const icon = expandBtn.querySelector("i");
     if (icon) icon.className = `ap-icon-${willExpand ? "minimize" : "maximize"}`;
     const label = willExpand ? "Collapse prompt" : "Expand prompt";
     expandBtn.setAttribute("aria-label", label);
     expandBtn.setAttribute("title", label);
     expandBtn.setAttribute("aria-pressed", String(willExpand));
-    autosizeReprompt(ctx.modal.querySelector("[data-img-prompt]"));
+    autosizeReprompt(ta); // interim fit (drives the height transition)
+    // Widening rewraps the text (fewer lines), so re-fit once the width settles.
+    if (composer && ta) {
+      const refit = (e) => {
+        if (e.target !== composer || e.propertyName !== "width") return;
+        composer.removeEventListener("transitionend", refit);
+        autosizeReprompt(ta);
+      };
+      composer.addEventListener("transitionend", refit);
+    }
     return;
   }
   // Brand kit toggle is a DS switch (checkbox) — handled in onChange.
