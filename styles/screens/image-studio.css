@@ -461,7 +461,7 @@ button.image-studio__ref--pick:focus-visible {
    is the positioning context here too. */
 .image-studio--generate .image-studio__canvas {
   position: relative;
-  padding-bottom: 96px; /* clearance for the floating composer */
+  padding-bottom: 168px; /* clearance for the roomy multi-line composer */
 }
 
 /* Keep the centered image clear of the variations rail when it's shown. */
@@ -530,6 +530,20 @@ button.image-studio__ref--pick:focus-visible {
   position: static;
   transform: none;
   width: 100%;
+  /* A roomy multi-line prompt box: the send button + AI cue align to the ends. */
+  align-items: flex-end;
+}
+
+/* Bigger prompt area than the single-row edit reprompt — reads as a proper
+   prompt box (grows further, then scrolls via the shared max-height). */
+.image-studio__actionbar--generate .image-studio__reprompt-field {
+  min-height: calc(var(--sys-text-style-body-line-height) * 3);
+}
+
+/* Keep the AI cue aligned with the first line, not the bottom. */
+.image-studio__actionbar--generate .image-studio__ai-icon {
+  align-self: flex-start;
+  margin-top: 3px;
 }
 
 /* The derive helper sits centered above the bar (on the grey canvas). */

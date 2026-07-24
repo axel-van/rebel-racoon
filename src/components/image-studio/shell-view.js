@@ -131,16 +131,21 @@ function canvasContent(st) {
 }
 
 // Generate mode — the prompt composer floating over the canvas bottom, built on
-// the same card as the edit action bar (mermaid-sparkle cue + borderless
-// auto-growing textarea). No send button: Generate is the footer CTA (Enter
-// fires it too). The "Suggest from this post" AI helper sits just above the bar.
+// the same card as the edit action bar (mermaid-sparkle cue + roomy auto-growing
+// textarea + a send-style Apply that (re)generates). The arrow-up button drives
+// Generate / Regenerate (data-img-generate covers both) — the footer keeps only
+// the commit CTA, mirroring Edit. The "Suggest from this post" AI helper sits
+// just above the bar.
 function generateComposer(st) {
-  const busy = st.promptLoading || st.genPhase === "generating" ? "disabled" : "";
+  const busy = st.promptLoading || st.genPhase === "generating";
+  const applyLabel = st.genPhase === "results" ? "Regenerate" : "Generate";
+  const applyDisabled = busy || !(st.promptText || "").trim();
   return `<div class="image-studio__composer">
     ${deriveButton(st)}
     <div class="image-studio__actionbar image-studio__actionbar--generate" role="group" aria-label="Image prompt">
       <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
-      <textarea id="imgStudioPrompt" class="image-studio__reprompt-field" data-img-prompt rows="1" placeholder="Describe your image…" aria-label="Describe your image" ${busy}>${escapeHtml(st.promptText)}</textarea>
+      <textarea id="imgStudioPrompt" class="image-studio__reprompt-field" data-img-prompt rows="3" placeholder="Describe your image…" aria-label="Describe your image" ${busy ? "disabled" : ""}>${escapeHtml(st.promptText)}</textarea>
+      <button type="button" class="ap-button primary orange image-studio__actionbar-apply" data-img-generate aria-label="${applyLabel}" title="${applyLabel}" ${applyDisabled ? "disabled" : ""}><i class="ap-icon-arrow-up" aria-hidden="true"></i></button>
     </div>
   </div>`;
 }
@@ -274,19 +279,14 @@ function footer(st) {
       <button type="button" class="ap-button primary orange loading" disabled><span class="ap-loading-bar"></span><span>Generating…</span></button>
     </div>`;
   }
-  if (st.genPhase === "results") {
-    const carousel = st.outputMode === "carousel";
-    const useLabel = carousel ? `Use carousel · ${st.variations.length} slides` : "Use this image";
-    const useReady = carousel ? st.variations.length >= 2 : !!st.currentImage;
-    return `<div class="image-studio__bar">
-      <div class="image-studio__bar-spacer"></div>
-      <button type="button" class="ap-button stroked grey" data-img-regenerate><i class="ap-icon-refresh"></i><span>Regenerate</span></button>
-      <button type="button" class="ap-button primary orange" data-img-use ${useReady ? "" : "disabled"}><i class="ap-icon-check"></i><span>${useLabel}</span></button>
-    </div>`;
-  }
-  const promptValid = st.promptText.trim().length > 0;
+  // Generate / Regenerate now live on the composer's ↑; the footer keeps only the
+  // commit CTA (mirrors Edit), disabled until there's an image to use.
+  const carousel = st.outputMode === "carousel";
+  const hasResults = st.genPhase === "results" && st.variations.length > 0;
+  const useLabel = hasResults && carousel ? `Use carousel · ${st.variations.length} slides` : "Use this image";
+  const useReady = hasResults && (carousel ? st.variations.length >= 2 : !!st.currentImage);
   return `<div class="image-studio__bar">
     <div class="image-studio__bar-spacer"></div>
-    <button type="button" class="ap-button primary orange" data-img-generate ${promptValid && !st.promptLoading ? "" : "disabled"}><i class="ap-icon-archie-official"></i><span>Generate</span></button>
+    <button type="button" class="ap-button primary orange" data-img-use ${useReady ? "" : "disabled"}><i class="ap-icon-check"></i><span>${useLabel}</span></button>
   </div>`;
 }
