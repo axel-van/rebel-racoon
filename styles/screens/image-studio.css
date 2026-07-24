@@ -901,71 +901,81 @@ button.image-studio__ref--pick:focus-visible {
   pointer-events: none;
 }
 
-/* Font popover — a radio-style list + an "Import my font" row. */
+/* Font popover — a DS single-select dropdown: full-width option rows built from
+   the .ap-select-option tokens, plus a footer "Import" action. */
 .image-studio__font-list {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  max-height: 156px; /* ~5 rows; the popover opens upward inside the clipped canvas */
+  gap: 0;
+  max-height: 240px; /* ~6 rows; the popover opens upward inside the clipped canvas */
   overflow-y: auto;
 }
 
+/* Mirrors .ap-select-option — the DS single-line select row. */
 .image-studio__font-row {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xs);
+  gap: var(--comp-select-one-line-spacing);
   width: 100%;
-  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
+  min-height: var(--comp-select-one-line-height);
+  padding: var(--ref-spacing-xxs) var(--comp-select-one-line-padding-horizontal);
   border: none;
   background: none;
-  border-radius: var(--app-radius-md);
   cursor: pointer;
-  color: var(--ref-color-grey-100);
+  color: var(--comp-select-one-line-text-color);
+  font-size: var(--comp-select-one-line-text-size);
+  line-height: var(--comp-select-one-line-text-line-height);
+  font-weight: var(--comp-select-one-line-text-font-weight);
   text-align: left;
+  transition: background-color 0.1s ease;
 }
 
 .image-studio__font-row:hover {
-  background: var(--ref-color-grey-05);
+  background: var(--ref-color-electric-blue-10);
+}
+
+.image-studio__font-row:active {
+  background: var(--ref-color-electric-blue-20);
 }
 
 .image-studio__font-name {
   flex: 1;
   min-width: 0;
-  font-size: 14px;
-  line-height: 1.15;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* Selected — the DS select "selected" option: blue tint + darker-blue bold text. */
 .image-studio__font-row.is-selected {
   background: var(--ref-color-electric-blue-10);
-  color: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-electric-blue-150);
+  font-weight: var(--comp-select-one-line-selected-text-font-weight);
 }
 
 .image-studio__font-check {
   margin-left: auto;
-  color: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-electric-blue-150);
 }
 
-/* Import action — a real DS stroked button (not a menu row), kept auto-width and
-   left-aligned so it doesn't stretch to fill the popover body. */
+/* Import action — a real DS stroked button (not a menu row), auto-width and
+   inset to the option text so it lines up under the list. */
 .image-studio__font-import {
   align-self: flex-start;
+  margin-inline: var(--comp-select-one-line-padding-horizontal);
 }
 
 .image-studio__font-div {
   height: 1px;
   margin: 0;
-  background: var(--app-border-soft);
+  background: var(--comp-action-dropdown-divider-color);
 }
 
-/* The font popover is a compact menu: a tighter 8px body gutter (vs the swatch
-   popovers' roomier padding) so the row hover/selected pills sit close to the
-   edge, and each row's text lines up with the "Font" title above it (both land
-   at 16px — 8px body padding + 8px row padding = the 16px header inset). */
+/* Font popover body follows the DS dropdown container: vertical padding only, so
+   the option rows span full width (their 16px padding lines the text up with the
+   header title). A small gap sets the list / divider / import apart. */
 .image-studio__popover--font .image-studio__popover-body {
-  padding: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs) 0;
   gap: var(--ref-spacing-xxs);
 }
 
