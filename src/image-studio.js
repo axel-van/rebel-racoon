@@ -233,7 +233,6 @@ export function start(
     // look (its own `disabled` state, not this set).
     collapsedGroups: new Set(),
     composerExpanded: false, // prompt composer size: small (default) vs expanded
-    logoView: "grid", // "Add image" popover layout: grid (default) vs list
     variationCount: 2, // single-image mode: how many alternatives to pick from
     slideCount, // carousel mode: how many slides to generate
     variations, // [{ seed, url, w, h }] — alternatives (single) or slides (carousel)
@@ -445,14 +444,6 @@ export function toggleGroupCollapsed(sessionId, id) {
 export function setComposerExpandedSilent(sessionId, value) {
   const s = states.get(sessionId);
   if (s) s.composerExpanded = !!value;
-}
-
-// "Add image" popover layout — grid vs list.
-export function setLogoView(sessionId, view) {
-  const s = states.get(sessionId);
-  if (!s || (view !== "grid" && view !== "list") || s.logoView === view) return;
-  s.logoView = view;
-  notify(sessionId);
 }
 
 // ── "Suggest from this post" (mock) ─────────────────────────────────────────

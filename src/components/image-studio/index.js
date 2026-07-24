@@ -23,17 +23,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=36";
 import { getSessionById } from "../../sessions-store.js?v=6";
 import { getContextById } from "../../contexts-store.js?v=37";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=10";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=11";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "./canvas.js?v=2";
-import { renderStudio } from "./shell-view.js?v=29";
+import { renderStudio } from "./shell-view.js?v=30";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=12";
-import * as imageStudio from "../../image-studio.js?v=36";
+} from "./interactions.js?v=13";
+import * as imageStudio from "../../image-studio.js?v=37";
 
 let backdrop;
 let initialized = false;
@@ -237,9 +237,6 @@ function onClick(event) {
     const name = popToggle.dataset.imgPopoverToggle;
     return void imageStudio.setOpenPopover(KEY, st.openPopover === name ? null : name);
   }
-  // Grid/list toggle inside the "Add image" popover — re-renders in place, popover stays open.
-  const logoViewBtn = event.target.closest("[data-img-logo-view]");
-  if (logoViewBtn) return void imageStudio.setLogoView(KEY, logoViewBtn.dataset.imgLogoView);
   // A click outside any open popover (but not on its trigger) closes it; fall
   // through so the click still performs its normal action.
   if (st.openPopover && !event.target.closest("[data-img-popover]")) imageStudio.setOpenPopover(KEY, null);

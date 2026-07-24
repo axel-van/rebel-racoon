@@ -1700,44 +1700,6 @@ button.image-studio__ref--pick:focus-visible {
   border-color: var(--ref-color-electric-blue-100);
 }
 
-/* Name — hidden in the grid (tooltip only), shown beside the logo in list view. */
-.image-studio__preset-label {
-  display: none;
-}
-
-/* List view — one row per logo: a contained thumbnail + its name. */
-.image-studio__presets--list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-}
-
-.image-studio__presets--list .image-studio__preset {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  flex: 0 0 auto; /* don't shrink to fit the bounded, scrolling column */
-  gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-xs);
-}
-
-.image-studio__presets--list .image-studio__preset img {
-  width: 40px;
-  height: 40px;
-  aspect-ratio: auto;
-  flex: 0 0 auto;
-}
-
-.image-studio__presets--list .image-studio__preset-label {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--ref-color-grey-100);
-}
-
 .image-studio__swatches {
   display: inline-flex;
   flex-wrap: wrap;
