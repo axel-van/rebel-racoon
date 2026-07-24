@@ -1349,10 +1349,10 @@ button.image-studio__ref--pick:focus-visible {
   transform: translate(-50%, var(--ref-spacing-xs));
   display: inline-flex;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xxxs);
   width: max-content;
   max-width: 92vw;
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  padding: 4px 6px; /* match the text mini toolbar */
   background: var(--ref-color-white);
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-pill);
@@ -1376,7 +1376,7 @@ button.image-studio__ref--pick:focus-visible {
 .image-studio__crop-actions {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xxxs);
 }
 
 /* Apply = confirm: tint the check with the studio's accent so it reads as the
@@ -1413,14 +1413,15 @@ button.image-studio__ref--pick:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  height: 32px;
-  padding: 0 var(--ref-spacing-xs);
+  height: var(--comp-button-height);
+  padding: 0 var(--ref-spacing-sm);
   border: none;
   background: none;
-  border-radius: var(--app-radius-md);
+  border-radius: var(--comp-button-border-radius);
   cursor: pointer;
   color: var(--ref-color-grey-80);
-  font-size: var(--sys-text-style-caption-size);
+  font-size: var(--comp-button-text-size);
+  line-height: var(--comp-button-text-line-height);
   font-weight: var(--ref-font-weight-regular);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;

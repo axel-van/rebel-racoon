@@ -435,6 +435,7 @@ function onPointerDown(event) {
     return;
   }
   if (event.target.closest("[data-img-overlay-delete]")) return; // click handles delete
+  if (event.target.closest("[data-img-overlay-rotate-reset]")) return; // click handles rotation reset
   // Clicks on the element's mini toolbar / a popover are UI, not a drag.
   if (event.target.closest("[data-img-text-toolbar]") || event.target.closest("[data-img-popover]")) return;
   const overlayEl = event.target.closest("[data-img-overlay]");

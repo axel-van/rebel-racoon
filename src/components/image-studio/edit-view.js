@@ -314,13 +314,19 @@ function textToolbar(o, st, selected) {
 function renderOverlay(o, selected, editing, st) {
   const base = `left:${o.xF * 100}%; top:${o.yF * 100}%; transform:translate(-50%,-50%) rotate(${o.rot || 0}rad);`;
   const style = o.kind === "logo" ? `${base} width:${o.wF * 100}%;` : base;
+  // A rotated element gets a small "reset rotation" button beside the rotate
+  // handle; it disappears once the element is back to 0.
+  const rotateReset =
+    Math.abs(o.rot || 0) > 0.001
+      ? `<button type="button" class="image-studio__overlay-rotate-reset" data-img-overlay-rotate-reset="${o.id}" title="Reset rotation" aria-label="Reset rotation"><i class="ap-icon-reset" aria-hidden="true"></i></button>`
+      : "";
   let inner;
   let chrome;
   if (o.kind === "logo") {
     inner = `<img src="${escapeHtml(o.url)}" alt="" draggable="false" />`;
     // Logos keep the corner ×, rotate and resize handles.
     chrome = `<button type="button" class="image-studio__overlay-delete" data-img-overlay-delete="${o.id}" aria-label="Delete element"><i class="ap-icon-close" aria-hidden="true"></i></button>
-      <span class="image-studio__overlay-rotate" data-img-overlay-rotate="${o.id}" title="Rotate" aria-hidden="true"><i class="ap-icon-refresh"></i></span>
+      <span class="image-studio__overlay-rotate" data-img-overlay-rotate="${o.id}" title="Rotate" aria-hidden="true"><i class="ap-icon-refresh"></i></span>${rotateReset}
       <span class="image-studio__overlay-resize" data-img-overlay-resize="${o.id}" title="Resize" aria-hidden="true"></span>`;
   } else {
     const sm = shadowMetrics(o.shadowIntensity);
@@ -343,7 +349,7 @@ function renderOverlay(o, selected, editing, st) {
     // Text elements: mini toolbar (style) + rotate/resize handles. Delete lives
     // in the toolbar. Handles are hidden while editing (see CSS).
     chrome = `${textToolbar(o, st, selected)}
-      <span class="image-studio__overlay-rotate" data-img-overlay-rotate="${o.id}" title="Rotate" aria-hidden="true"><i class="ap-icon-refresh"></i></span>
+      <span class="image-studio__overlay-rotate" data-img-overlay-rotate="${o.id}" title="Rotate" aria-hidden="true"><i class="ap-icon-refresh"></i></span>${rotateReset}
       <span class="image-studio__overlay-resize" data-img-overlay-resize="${o.id}" title="Resize" aria-hidden="true"></span>`;
   }
   const cls = `image-studio__overlay${o.kind === "text" ? " is-text" : ""}${selected ? " is-selected" : ""}${editing ? " is-editing" : ""}`;
