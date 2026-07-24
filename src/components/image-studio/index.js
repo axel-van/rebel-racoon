@@ -23,17 +23,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=36";
 import { getSessionById } from "../../sessions-store.js?v=6";
 import { getContextById } from "../../contexts-store.js?v=37";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=2";
-import { compositeOverlays, loadImg, shadowMetrics, STROKE_K } from "./canvas.js?v=1";
-import { renderStudio } from "./shell-view.js?v=16";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=3";
+import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "./canvas.js?v=2";
+import { renderStudio } from "./shell-view.js?v=17";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=4";
-import * as imageStudio from "../../image-studio.js?v=28";
+} from "./interactions.js?v=5";
+import * as imageStudio from "../../image-studio.js?v=29";
 
 let backdrop;
 let initialized = false;
@@ -315,6 +315,17 @@ function onInput(event) {
     imageStudio.updateOverlaySilent(KEY, st.selectedOverlayId, { outlineColor: event.target.value });
     const node = ctx.modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .image-studio__overlay-text`);
     if (node) node.style.webkitTextStrokeColor = event.target.value;
+  } else if (event.target.matches("[data-img-outline-width]")) {
+    // Live outline-thickness preview (stroke width only; colour stays).
+    const st = state();
+    if (!st?.selectedOverlayId) return;
+    const v = Number(event.target.value);
+    imageStudio.updateOverlaySilent(KEY, st.selectedOverlayId, { outlineWidth: v });
+    const node = ctx.modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .image-studio__overlay-text`);
+    if (node) node.style.webkitTextStrokeWidth = `${outlineMetrics(v).emStroke}em`;
+    event.target.style.setProperty("--fill", `${v}%`);
+    const valEl = ctx.modal.querySelector("[data-img-outline-val]");
+    if (valEl) valEl.textContent = String(v);
   } else if (event.target.matches("[data-img-shadow-intensity]")) {
     // Live shadow-intensity preview (no re-render → the slider drag isn't lost).
     const st = state();
@@ -345,6 +356,9 @@ function onChange(event) {
     toggleTextEffect("outline", event.target.checked);
   } else if (event.target.matches("[data-img-shadow-toggle]") && st?.selectedOverlayId) {
     toggleTextEffect("shadow", event.target.checked);
+  } else if (event.target.matches("[data-img-outline-width]") && st?.selectedOverlayId) {
+    // Slider release commits + re-renders (live preview happened in onInput).
+    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { outlineWidth: Number(event.target.value) });
   } else if (event.target.matches("[data-img-shadow-intensity]") && st?.selectedOverlayId) {
     // Slider release commits + re-renders (live preview happened in onInput).
     imageStudio.updateOverlay(KEY, st.selectedOverlayId, { shadowIntensity: Number(event.target.value) });
@@ -366,7 +380,14 @@ function toggleTextEffect(kind, on) {
   const o = (st.overlays || []).find((ov) => ov.id === id);
   const textNode = ctx.modal.querySelector(`[data-img-overlay="${id}"] .image-studio__overlay-text`);
   if (kind === "outline") {
-    if (textNode) textNode.style.webkitTextStroke = on ? `${STROKE_K}em ${o?.outlineColor || "#0A1B33"}` : "";
+    if (textNode) {
+      textNode.style.webkitTextStroke = on
+        ? `${outlineMetrics(o?.outlineWidth).emStroke}em ${o?.outlineColor || "#0A1B33"}`
+        : "";
+      textNode.style.paintOrder = on ? "stroke" : "";
+    }
+    const slider = ctx.modal.querySelector("[data-img-outline-width]");
+    if (slider) slider.disabled = !on;
   } else {
     const sm = shadowMetrics(o?.shadowIntensity);
     if (textNode) textNode.style.textShadow = on ? `0 ${sm.offYEm}em ${sm.blurEm}em rgba(0,0,0,${sm.alpha})` : "";

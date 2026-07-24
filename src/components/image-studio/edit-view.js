@@ -7,9 +7,9 @@
 import { escapeHtml } from "../../utils.js?v=21";
 import { FORMATS, NETWORK_FORMATS } from "../../clip-formats.js?v=5";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=26";
-import { KEY } from "./context.js?v=2";
-import { STROKE_K, shadowMetrics, cssFamily } from "./canvas.js?v=1";
-import * as imageStudio from "../../image-studio.js?v=28";
+import { KEY } from "./context.js?v=3";
+import { outlineMetrics, shadowMetrics, cssFamily } from "./canvas.js?v=2";
+import * as imageStudio from "../../image-studio.js?v=29";
 
 // Edit mode — the floating AI reprompt bar over the canvas bottom: a filled
 // prompt field (mermaid-sparkle cue = generative AI) with the orange Apply CTA;
@@ -58,9 +58,10 @@ function cropToolbar(st) {
   const r = st.cropRect || { xF: 0.15, yF: 0.15, wF: 0.7, hF: 0.7 };
   const style = `left:${(r.xF + r.wF / 2) * 100}%; top:${(r.yF + r.hF) * 100}%;`;
   const net = st.network || null;
+  const netLabel = escapeHtml(NETWORK_LABEL[net] || net || "");
   const bestFor =
     net && NETWORK_FORMATS[net]
-      ? `<span class="image-studio__crop-bestfor"><i class="${NETWORK_ICON_BY_PLATFORM[net] || ""}" aria-hidden="true"></i>Best for ${escapeHtml(NETWORK_LABEL[net] || net)}</span>`
+      ? `<span class="image-studio__crop-bestfor" aria-label="Best for ${netLabel}">Best for <i class="${NETWORK_ICON_BY_PLATFORM[net] || ""}" title="${netLabel}" aria-hidden="true"></i></span>`
       : "";
   // One horizontal bar like the text mini toolbar: the "Best for" hint, the
   // borderless aspect options (divider-separated, no pills), then the compact
@@ -169,16 +170,23 @@ function fxToggle(attr, on, label) {
   return `<label class="ap-toggle-container image-studio__fx-toggle" title="${label}"><input type="checkbox" ${attr} ${on ? "checked" : ""} aria-label="${label}" /><i aria-hidden="true"></i></label>`;
 }
 
-// Outline popover — on/off switch + a colour grid for the stroke colour. The grid
-// dims (and swatches disable) while outline is off.
+// Outline popover — on/off switch + a thickness slider (0–100) + a colour grid
+// for the stroke colour. The body dims (and controls disable) while outline is off.
 function textOutlinePopover(o, st) {
   const on = !!o.outline;
+  const w = o.outlineWidth ?? 50;
   return `<div class="image-studio__popover image-studio__popover--textcolor image-studio__popover--outline${on ? "" : " is-off"}" data-img-popover role="menu" aria-label="Outline">
     <div class="image-studio__popover-head">
       <p class="image-studio__popover-title">Outline</p>
       ${fxToggle("data-img-outline-toggle", on, "Toggle outline")}
     </div>
-    <div class="image-studio__popover-body">${swatchGrid({ st, selected: o.outlineColor, applyAttr: "data-img-outline-color", pickAttr: "data-img-outline-colorpick", pickLabel: "Add outline colour" })}</div>
+    <div class="image-studio__popover-body">
+      <div class="image-studio__slider-row">
+        <input type="range" class="ap-slider" min="0" max="100" step="1" value="${w}" data-img-outline-width aria-label="Outline thickness" style="--fill:${w}%" ${on ? "" : "disabled"} />
+        <span class="image-studio__slider-val" data-img-outline-val>${w}</span>
+      </div>
+      ${swatchGrid({ st, selected: o.outlineColor, applyAttr: "data-img-outline-color", pickAttr: "data-img-outline-colorpick", pickLabel: "Add outline colour" })}
+    </div>
   </div>`;
 }
 
@@ -316,10 +324,15 @@ function renderOverlay(o, selected, editing, st) {
       <span class="image-studio__overlay-resize" data-img-overlay-resize="${o.id}" title="Resize" aria-hidden="true"></span>`;
   } else {
     const sm = shadowMetrics(o.shadowIntensity);
+    const om = outlineMetrics(o.outlineWidth);
     const textStyle =
       `color:${escapeHtml(o.color || "#FFFFFF")}; font-family:${cssFamily(o.fontFamily)};` +
       ` font-size:${o.sizeF * 100}cqh; font-weight:${o.bold ? 700 : 400};` +
-      (o.outline ? ` -webkit-text-stroke:${STROKE_K}em ${escapeHtml(o.outlineColor || "#0A1B33")};` : "") +
+      // paint-order:stroke → the fill paints over the stroke, so only the stroke's
+      // outer half shows — an external outline that never bites into the glyph.
+      (o.outline
+        ? ` -webkit-text-stroke:${om.emStroke}em ${escapeHtml(o.outlineColor || "#0A1B33")}; paint-order:stroke;`
+        : "") +
       (o.shadow ? ` text-shadow:0 ${sm.offYEm}em ${sm.blurEm}em rgba(0,0,0,${sm.alpha});` : "");
     // Editing = contenteditable + focusable; otherwise inert so pointerdown falls
     // through to the draggable overlay div.

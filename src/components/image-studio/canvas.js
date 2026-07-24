@@ -5,9 +5,16 @@
 // The render views import the metric helpers; the commit path imports
 // compositeOverlays / cropImage to flatten the working image to a PNG data URL.
 
-// Outline stroke width as a fraction of the font size (the -webkit-text-stroke
-// width on screen / the canvas lineWidth in the bake, both ÷ font-size).
-export const STROKE_K = 0.06;
+// Text outline — an EXTERNAL stroke that never eats into the glyph. The stroke is
+// always painted UNDER the fill (canvas: stroke then fill; screen: paint-order:
+// stroke), so only its outer half shows. We therefore lay the stroke at 2× the
+// target thickness (emStroke) so the visible outer band equals emVisible.
+// outlineWidth 0–100 → em thickness (default 50 ≈ the old fixed 0.06em look).
+export function outlineMetrics(width) {
+  const t = Math.max(0, Math.min(100, width ?? 50)) / 100;
+  const emVisible = 0.02 + t * 0.13; // 0.02em … 0.15em of visible outline
+  return { emVisible, emStroke: emVisible * 2 };
+}
 
 // shadowIntensity 0–100 → { blurEm, offYEm, alpha }. Calibrated so the default
 // (55) reproduces the previous baked shadow exactly: { blur .18em, offY .04em, α .55 }.
@@ -88,7 +95,7 @@ export function compositeOverlays(baseUrl, overlays, w, h) {
           ctx.restore();
         }
         if (o.outline) {
-          ctx.lineWidth = STROKE_K * fontPx;
+          ctx.lineWidth = outlineMetrics(o.outlineWidth).emStroke * fontPx;
           ctx.lineJoin = "round";
           ctx.strokeStyle = o.outlineColor || "#0A1B33";
           ctx.strokeText(text, 0, 0);

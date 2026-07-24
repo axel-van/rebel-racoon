@@ -734,13 +734,14 @@ let overlaySeq = 0;
 const OVERLAY_DEFAULTS = {
   logo: { xF: 0.5, yF: 0.5, wF: 0.28, rot: 0 },
   // Fresh text starts clean — no bold / outline / shadow — so the user opts into
-  // each effect. outlineColor / shadowIntensity are the values used once those
-  // effects are switched on. fontFamily null = the default (Averta).
+  // each effect. outlineColor / outlineWidth / shadowIntensity are the values used
+  // once those effects are switched on. fontFamily null = the default (Averta).
   text: {
     text: "Your text",
     color: "#FFFFFF",
     outline: false,
     outlineColor: "#0A1B33",
+    outlineWidth: 50,
     shadow: false,
     shadowIntensity: 55,
     fontFamily: null,

@@ -1242,6 +1242,15 @@ button.image-studio__ref--pick:focus-visible {
   font-size: 11px;
 }
 
+/* Text overlays carry the style toolbar directly above them, so the rotate
+   handle can't stay at the top — the toolbar (z-index 5) would cover it and
+   you couldn't grab it. Drop it below, centred, clear of both the toolbar
+   above and the bottom-right resize corner. */
+.image-studio__overlay.is-text .image-studio__overlay-rotate {
+  top: auto;
+  bottom: -30px;
+}
+
 .image-studio__overlay-resize {
   bottom: -8px;
   right: -8px;
