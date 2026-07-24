@@ -14,9 +14,10 @@ import * as imageStudio from "../../image-studio.js?v=28";
 // Edit mode — the floating AI reprompt bar over the canvas bottom: a filled
 // prompt field (mermaid-sparkle cue = generative AI) with the orange Apply CTA;
 // describe a change and I redraw the image. The manual hand-tools live in the
-// left palette (toolPalette); each tool that needs options opens them in a
-// popover flyout to the right of the rail.
+// left palette (toolPalette). During crop the AI bar hides so the crop toolbar
+// (attached below the crop box) has clear space beneath the image.
 export function actionBar(st) {
+  if (st.cropDrawing) return "";
   const busy = st.editBusy ? "disabled" : "";
   return `<div class="image-studio__actionbar" role="toolbar" aria-label="AI edit">
     <div class="image-studio__actionbar-ai">
@@ -30,17 +31,14 @@ export function actionBar(st) {
 }
 
 // Manual edit tools as a labelled palette floating at the canvas top-left (a
-// Figma/Canva-style rail). Tools with options open them in a popover flyout to
-// the RIGHT of the rail — Crop (aspect ratios + Apply/Cancel) and Add image
-// (upload + presets) share that one pattern; Add text drops an overlay directly.
-// Hooks are unchanged — event delegation keys off the data-* attributes.
+// Figma/Canva-style rail). Crop enters draw mode (its options float below the
+// crop box, see cropToolbar); Add text drops an overlay directly; Add image
+// opens the image popover (flyout to the right of the rail). Hooks are unchanged
+// — event delegation keys off the data-* attributes.
 export function toolPalette(st) {
   const busy = st.editBusy ? "disabled" : "";
   return `<div class="image-studio__palette" role="toolbar" aria-label="Edit tools">
-    <div class="image-studio__palette-anchor">
-      <button type="button" class="ap-button stroked grey" data-img-crop-start aria-haspopup="true" aria-expanded="${st.cropDrawing}" ${busy}><i class="ap-icon-cropper" aria-hidden="true"></i><span>Crop</span></button>
-      ${st.cropDrawing ? cropPopover(st) : ""}
-    </div>
+    <button type="button" class="ap-button stroked grey" data-img-crop-start aria-pressed="${st.cropDrawing}" ${busy}><i class="ap-icon-cropper" aria-hidden="true"></i><span>Crop</span></button>
     <button type="button" class="ap-button stroked grey" data-img-add-text ${busy}><i class="ap-icon-closed-captions" aria-hidden="true"></i><span>Add text</span></button>
     <div class="image-studio__palette-anchor">
       <button type="button" class="ap-button stroked grey" data-img-popover-toggle="logo" aria-haspopup="true" aria-expanded="${st.openPopover === "logo"}" ${busy}><i class="ap-icon-file--image" aria-hidden="true"></i><span>Add image</span></button>
@@ -49,21 +47,21 @@ export function toolPalette(st) {
   </div>`;
 }
 
-// Crop options as a popover flyout to the right of the Crop button — the same
-// rail pattern as the Add image popover. Holds the aspect-lock chips (Freeform +
-// presets, "Best for <Network>" hint, non-optimal ratios disabled) + Cancel /
-// Apply crop. The crop rectangle itself is drawn on the image (renderCropRect).
-function cropPopover(st) {
+// Crop options as a floating toolbar attached just below the crop rectangle (the
+// same on-canvas pattern as the text element's mini toolbar). Holds the
+// aspect-lock chips ("Best for <Network>" + Freeform + presets, non-optimal
+// disabled) + Cancel / Apply crop. Rendered by renderCropRect as a frame child
+// (outside the crop-layer so it isn't clipped and can't start a drag) and
+// positioned from the crop-rect fractions; it hides while a crop gesture runs.
+function cropToolbar(st) {
   const busy = st.editBusy ? "disabled" : "";
-  return `<div class="image-studio__popover image-studio__popover--crop" role="menu" aria-label="Crop">
-    <div class="image-studio__popover-head"><p class="image-studio__popover-title">Crop</p></div>
-    <div class="image-studio__popover-body">
-      <p class="image-studio__crop-hint">Drag on the image to draw a crop, or adjust the box.</p>
-      <div class="image-studio__crop-aspects">${cropAspectChips(st)}</div>
-      <div class="image-studio__crop-actions">
-        <button type="button" class="ap-button ghost grey" data-img-crop-cancel ${busy}><span>Cancel</span></button>
-        <button type="button" class="ap-button primary orange" data-img-crop-apply ${busy}><i class="ap-icon-check" aria-hidden="true"></i><span>Apply crop</span></button>
-      </div>
+  const r = st.cropRect || { xF: 0.15, yF: 0.15, wF: 0.7, hF: 0.7 };
+  const style = `left:${(r.xF + r.wF / 2) * 100}%; top:${(r.yF + r.hF) * 100}%;`;
+  return `<div class="image-studio__crop-toolbar" data-img-crop-toolbar style="${style}" role="toolbar" aria-label="Crop">
+    <div class="image-studio__crop-aspects">${cropAspectChips(st)}</div>
+    <div class="image-studio__crop-actions">
+      <button type="button" class="ap-button ghost grey" data-img-crop-cancel ${busy}><span>Cancel</span></button>
+      <button type="button" class="ap-button primary orange" data-img-crop-apply ${busy}><i class="ap-icon-check" aria-hidden="true"></i><span>Apply crop</span></button>
     </div>
   </div>`;
 }
@@ -250,7 +248,7 @@ function renderCropRect(st) {
     .join("");
   return `<div class="image-studio__crop-layer" data-img-crop-layer>
       <div class="image-studio__croprect" data-img-croprect style="${style}">${handles}</div>
-    </div>`;
+    </div>${cropToolbar(st)}`;
 }
 
 // Draggable logo/text elements layered over the working image (edit mode).

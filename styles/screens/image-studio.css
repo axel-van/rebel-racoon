@@ -594,15 +594,17 @@ button.image-studio__ref--pick:focus-visible {
   width: 100%;
 }
 
-/* Add image trigger, popover open — tint the stroked button with the blue accent. */
-.image-studio__palette .ap-button[aria-expanded="true"] {
+/* Active tool — Add image popover open (aria-expanded) or Crop mode on
+   (aria-pressed): tint the stroked button with the blue accent. */
+.image-studio__palette .ap-button[aria-expanded="true"],
+.image-studio__palette .ap-button[aria-pressed="true"] {
   border-color: var(--ref-color-electric-blue-100);
   color: var(--ref-color-electric-blue-100);
 }
 
-/* On the left rail, a tool's popover (Crop / Add image) flyouts to the right of
-   its button, top-aligned (overrides the bottom/right anchoring). */
-.image-studio__palette .image-studio__popover {
+/* On the left rail, the Add image popover flyouts to the right of its button,
+   top-aligned (overrides the bottom/right anchoring). */
+.image-studio__palette .image-studio__popover--logo {
   left: calc(100% + 10px);
   right: auto;
   top: 0;
@@ -1328,10 +1330,29 @@ button.image-studio__ref--pick:focus-visible {
   cursor: nwse-resize;
 }
 
-/* Crop options live in a popover flyout off the Crop palette button (same rail
-   pattern as the Add image popover). Sized so the aspect chips wrap tidily. */
-.image-studio__popover--crop {
+/* Crop options float as a card attached just below the crop rectangle (same
+   on-canvas pattern as the text mini toolbar) — a frame child positioned from
+   the crop-rect fractions (inline left/top), centred under the box's bottom edge.
+   It sits outside the crop-layer so it isn't clipped and can't start a drag. */
+.image-studio__crop-toolbar {
+  position: absolute;
+  z-index: 6;
+  transform: translate(-50%, var(--ref-spacing-xs));
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
   width: 300px;
+  padding: var(--ref-spacing-sm);
+  background: var(--ref-color-white);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-modal);
+  box-shadow: var(--app-shadow-popover-lg);
+}
+
+/* Hide it while a crop gesture runs (its position is only recomputed on
+   re-render); pointer-up re-renders it under the box's new rect. */
+.image-studio__frame.is-gesturing .image-studio__crop-toolbar {
+  display: none;
 }
 
 /* Quiet helper — an instruction, not content: the lightest text in the popover. */

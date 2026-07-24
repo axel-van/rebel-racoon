@@ -183,9 +183,13 @@ export function startCropGesture(event, mode, corner) {
       hF,
     });
   };
+  // Hide the below-box crop toolbar for the duration of the drag (its position is
+  // only recomputed on re-render), then let pointer-up's re-render replace it.
+  frame.classList.add("is-gesturing");
   const up = () => {
     window.removeEventListener("pointermove", move);
     window.removeEventListener("pointerup", up);
+    frame.classList.remove("is-gesturing");
     const cur = state();
     if (cur && cur.cropRect) imageStudio.setCropRect(KEY, cur.cropRect); // persist + re-render
   };
