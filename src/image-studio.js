@@ -211,10 +211,11 @@ export function start(
     customFonts: [], // [{ family, label, url }] fonts the user uploaded (FontFace)
     playbookName: playbookName || "", // brand/playbook label for the toggle
     usePlaybookRefs, // include the Playbook brand images in the grid
-    // Secondary sections start collapsed to a single summary row so the panel
-    // opens compact (prompt + brand kit visible); their headers show the current
-    // value. The user expands only what they want to change.
-    collapsedGroups: new Set(["refs", "style", "mood", "format", "output"]),
+    // Sections start EXPANDED so the user discovers what's available (the prompt
+    // moved to the bottom composer, so the panel has room). They can still
+    // collapse any section; Visual style stays folded while references guide the
+    // look (its own `disabled` state, not this set).
+    collapsedGroups: new Set(),
     composerExpanded: false, // prompt composer size: small (default) vs expanded
     variationCount: 2, // single-image mode: how many alternatives to pick from
     slideCount, // carousel mode: how many slides to generate

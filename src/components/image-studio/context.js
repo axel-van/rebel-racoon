@@ -5,7 +5,7 @@
 // module imports these instead of reaching back into the entry file, which keeps
 // the dependency graph acyclic (context depends on nothing app-specific).
 
-import * as imageStudio from "../../image-studio.js?v=32";
+import * as imageStudio from "../../image-studio.js?v=33";
 
 export const MODAL_ID = "imageStudio";
 export const KEY = "studio"; // single active studio → one state key
