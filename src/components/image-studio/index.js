@@ -59,6 +59,9 @@ function renderBody() {
   const st = state();
   if (!st || !ctx.body) return;
   ctx.body.innerHTML = renderStudio(st);
+  // Re-fit the reprompt textarea to any carried-over draft text (the fresh node
+  // renders at its 1-line floor until it's sized).
+  autosizeReprompt(ctx.body.querySelector("[data-img-edit-prompt]"));
 }
 
 // ── Inline-text edit helpers ────────────────────────────────────────────────
@@ -144,6 +147,14 @@ function commitSlideEdit() {
     return;
   }
   applySlide(st.currentImage.url);
+}
+
+// Grow the reprompt textarea to fit its content (bounded by the max-height in
+// CSS, past which it scrolls) — mirrors autosizeInput in the main composer.
+function autosizeReprompt(ta) {
+  if (!ta) return;
+  ta.style.height = "auto";
+  ta.style.height = ta.scrollHeight + "px";
 }
 
 // Apply an edit — a mocked reseed inside applyEdit (Reprompt syncs its note first).
@@ -303,6 +314,7 @@ function onInput(event) {
     if (gen) gen.disabled = !event.target.value.trim();
   } else if (event.target.matches("[data-img-edit-prompt]")) {
     imageStudio.setEditPromptSilent(KEY, event.target.value);
+    autosizeReprompt(event.target);
   } else if (event.target.matches("[data-img-overlay-text]")) {
     // Inline text editing: sync the contenteditable to state WITHOUT re-render so
     // the caret / focus survive (the DOM node is the source of truth here).
@@ -476,6 +488,15 @@ function onDblClick(event) {
 function onKeydown(event) {
   const st = state();
   if (!st) return;
+  // Reprompt textarea: Enter applies the edit, Shift+Enter inserts a newline
+  // (same contract as the main composer). Guard on busy so a mid-apply Enter is
+  // a no-op.
+  if (event.key === "Enter" && !event.shiftKey && event.target.matches("[data-img-edit-prompt]")) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!st.editBusy) applyEditTool("prompt");
+    return;
+  }
   if (event.key === "Enter" && st.editingOverlayId) {
     event.preventDefault();
     event.stopPropagation();

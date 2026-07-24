@@ -560,6 +560,12 @@ button.image-studio__ref--pick:focus-visible {
   box-shadow: var(--app-shadow-popover-lg);
 }
 
+/* Blue focus ring when the reprompt textarea is active — matches the main
+   composer card's :focus-within treatment. */
+.image-studio__actionbar:focus-within {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
 .image-studio__actionbar-row {
   display: flex;
   align-items: center;
@@ -611,28 +617,70 @@ button.image-studio__ref--pick:focus-visible {
   bottom: auto;
 }
 
-/* Zone 1 — the AI prompt: the DS input component (.ap-input-group) carrying the
-   mermaid-sparkle AI cue, beside the orange Apply CTA. The input-group is the
-   real DS field (its own border / fill / focus); we only lay it out here. */
-.image-studio__actionbar-ai {
+/* Zone 1 — the AI prompt. Mirrors the main conversational composer: the sparkle
+   AI cue + a borderless multi-line textarea sitting directly on the card, with
+   the Apply CTA in a toolbar row below (like the composer's send button). The
+   card chrome (border / fill / focus ring) is the .image-studio__actionbar
+   itself, so the field is transparent and border-free — same as the composer's
+   .session__composer-input-field. */
+.image-studio__reprompt-input-row {
   display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-}
-
-.image-studio__actionbar-ai .ap-input-group {
-  flex: 1 1 auto;
-  min-width: 0;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xxs);
 }
 
 /* The mermaid-gradient sparkle — the app's AI identity mark. Mask-based icon, so
-   paint the gradient onto its background and let the glyph clip it (overrides
-   the DS input-group's flat icon colour). */
+   paint the gradient onto its background and let the glyph clip it. Nudged down
+   to sit on the textarea's first line. */
 .image-studio__ai-icon {
+  font-size: var(--sys-text-style-body-size);
   background: var(--ref-color-mermaid-gradient-background);
+  margin-top: var(--ref-spacing-xxs);
+}
+
+/* Textarea styled like .session__composer-input-field: borderless, transparent,
+   body type, auto-grows between a 1-line floor and a capped height (JS pegs the
+   live height, see onInput in the studio's index.js). */
+.image-studio__reprompt-field {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
+  color: var(--ref-color-grey-100);
+  min-height: var(--sys-text-style-body-line-height);
+  max-height: calc(var(--sys-text-style-body-line-height) * 6);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.image-studio__reprompt-field::placeholder {
+  color: var(--ref-color-grey-40);
+  opacity: 1;
+}
+
+.image-studio__reprompt-field:focus {
+  outline: none;
+}
+
+.image-studio__reprompt-field:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Toolbar row — the Apply CTA hugs the right edge (like the composer send). */
+.image-studio__reprompt-toolbar {
+  display: flex;
+  align-items: center;
 }
 
 .image-studio__actionbar-apply {
+  margin-left: auto;
   flex: 0 0 auto;
 }
 
