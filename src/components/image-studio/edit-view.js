@@ -80,20 +80,23 @@ function cropToolbar(st) {
 // Freeform + the ratio presets, as a single chip group that locks the crop box's
 // aspect (Freeform = unconstrained, the default). Each chip carries a small glyph
 // drawn to its own proportions (Freeform = a dashed square) so the ratio reads at
-// a glance — more legible than a bare label. When the draft targets a network,
-// a "Best for <Network>" hint leads the row and the ratios that network isn't
-// optimised for are disabled — Freeform stays available for an arbitrary crop.
+// a glance — more legible than a bare label. When the draft targets a network, a
+// "Best for <Network>" hint leads the row and only that network's optimised
+// ratios are shown — Freeform stays available for an arbitrary crop.
 function cropAspectChips(st) {
   const net = st.network || null;
   const optimalIds = net ? NETWORK_FORMATS[net] || null : null;
-  const chip = (id, label, ratio, on, disabled) =>
-    `<button type="button" class="image-studio__crop-aspect${ratio ? "" : " image-studio__crop-aspect--free"}${on ? " is-selected" : ""}${disabled ? " is-disabled" : ""}" data-img-crop-aspect="${escapeHtml(id)}" aria-pressed="${on}"${disabled ? " disabled" : ""}><span class="image-studio__crop-aspect-glyph"${ratio ? ` style="aspect-ratio:${ratio}"` : ""} aria-hidden="true"></span><span>${escapeHtml(label)}</span></button>`;
-  const freeform = chip("free", "Freeform", null, !st.cropAspect, false);
-  const presets = Object.values(FORMATS).map((f) => {
-    const on = !!st.cropAspect && Math.abs(st.cropAspect - f.ratio) < 0.001;
-    const disabled = !!optimalIds && !optimalIds.includes(f.id);
-    return chip(f.id, f.tag, f.ratio, on, disabled);
-  });
+  const chip = (id, label, ratio, on) =>
+    `<button type="button" class="image-studio__crop-aspect${ratio ? "" : " image-studio__crop-aspect--free"}${on ? " is-selected" : ""}" data-img-crop-aspect="${escapeHtml(id)}" aria-pressed="${on}"><span class="image-studio__crop-aspect-glyph"${ratio ? ` style="aspect-ratio:${ratio}"` : ""} aria-hidden="true"></span><span>${escapeHtml(label)}</span></button>`;
+  const freeform = chip("free", "Freeform", null, !st.cropAspect);
+  // Only the network's optimised ratios (all of them when no network); the rest
+  // are hidden outright rather than shown disabled.
+  const presets = Object.values(FORMATS)
+    .filter((f) => !optimalIds || optimalIds.includes(f.id))
+    .map((f) => {
+      const on = !!st.cropAspect && Math.abs(st.cropAspect - f.ratio) < 0.001;
+      return chip(f.id, f.tag, f.ratio, on);
+    });
   // Divider-separated (like the text toolbar), not free-floating pills.
   return [freeform, ...presets].join(`<span class="image-studio__crop-sep" aria-hidden="true"></span>`);
 }
