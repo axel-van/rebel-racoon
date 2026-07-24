@@ -915,7 +915,7 @@ button.image-studio__ref--pick:focus-visible {
   align-items: center;
   gap: var(--ref-spacing-xs);
   width: 100%;
-  padding: 4px 10px;
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
   border: none;
   background: none;
   border-radius: var(--app-radius-md);
@@ -960,10 +960,13 @@ button.image-studio__ref--pick:focus-visible {
   background: var(--app-border-soft);
 }
 
-/* The font popover runs tight — a compact list, so the rows + divider + import
-   action sit close rather than floating in whitespace. */
+/* The font popover is a compact menu: a tighter 8px body gutter (vs the swatch
+   popovers' roomier padding) so the row hover/selected pills sit close to the
+   edge, and each row's text lines up with the "Font" title above it (both land
+   at 16px — 8px body padding + 8px row padding = the 16px header inset). */
 .image-studio__popover--font .image-studio__popover-body {
-  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xxs);
 }
 
 /* Inline text-edit state — text becomes typeable; the drag chrome steps aside. */
