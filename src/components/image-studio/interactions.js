@@ -5,24 +5,21 @@
 // drag for smoothness, then notify (re-render) on pointer-up. All DOM queries go
 // through ctx.modal.
 
-import { KEY, ctx, state, clamp } from "./context.js?v=11";
+import { KEY, ctx, state, clamp } from "./context.js?v=12";
 import { cropImage } from "./canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=37";
+import * as imageStudio from "../../image-studio.js?v=38";
 
 // ── File / font pickers ─────────────────────────────────────────────────────
 
-// Throwaway file picker for the "Your style" tile (kind="style") and the
-// reference-images grid (kind="ref").
-export function openFilePicker(kind) {
+// Throwaway file picker for the reference-images grid.
+export function openFilePicker() {
   const input = document.createElement("input");
   input.type = "file";
   input.accept = "image/*";
   input.addEventListener("change", () => {
     const file = input.files && input.files[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    if (kind === "style") imageStudio.setCustomStyle(KEY, url);
-    else imageStudio.addReferenceImage(KEY, url);
+    imageStudio.addReferenceImage(KEY, URL.createObjectURL(file));
   });
   input.click();
 }

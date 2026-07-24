@@ -23,17 +23,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=36";
 import { getSessionById } from "../../sessions-store.js?v=6";
 import { getContextById } from "../../contexts-store.js?v=37";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=11";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=12";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "./canvas.js?v=2";
-import { renderStudio } from "./shell-view.js?v=30";
+import { renderStudio } from "./shell-view.js?v=31";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=13";
-import * as imageStudio from "../../image-studio.js?v=37";
+} from "./interactions.js?v=14";
+import * as imageStudio from "../../image-studio.js?v=38";
 
 let backdrop;
 let initialized = false;
@@ -173,11 +173,10 @@ function onClick(event) {
   const st = state();
   if (!st) return;
   if (event.target.closest("[data-img-close]")) return void close();
-  if (event.target.closest("[data-img-style-upload]")) return void openFilePicker("style");
+  const typeBtn = event.target.closest("[data-img-image-type]");
+  if (typeBtn) return void imageStudio.setImageType(KEY, typeBtn.dataset.imgImageType);
   const styleBtn = event.target.closest("[data-img-style]");
   if (styleBtn) return void imageStudio.setStyle(KEY, styleBtn.dataset.imgStyle);
-  const moodBtn = event.target.closest("[data-img-mood]");
-  if (moodBtn) return void imageStudio.setMood(KEY, moodBtn.dataset.imgMood);
   const fmtBtn = event.target.closest("[data-img-format]");
   if (fmtBtn) return void imageStudio.setFormat(KEY, fmtBtn.dataset.imgFormat);
   const varBtn = event.target.closest("[data-img-varcount]");

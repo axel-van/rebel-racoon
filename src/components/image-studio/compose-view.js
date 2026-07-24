@@ -1,12 +1,12 @@
 // Image Studio — generate-mode left panel render. Pure string builders driven by
 // the studio state: the prompt lead + "Ingredients" (brand kit / reference
-// images) + Visual style / Mood / Format / Output sections. `generateControls`
+// images) + Image type / Style preset / Format / Output sections. `generateControls`
 // is the single entry point the shell composes into the panel.
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=26";
-import { KEY } from "./context.js?v=11";
-import * as imageStudio from "../../image-studio.js?v=37";
+import { KEY } from "./context.js?v=12";
+import * as imageStudio from "../../image-studio.js?v=38";
 
 // Left panel — generate mode: the reglages only (reference / style / mood /
 // format / variations). The prompt lead moved to the floating bottom composer
@@ -25,32 +25,24 @@ export function deriveButton(st) {
   return `<button type="button" class="image-studio__derive" data-img-derive ${st.promptLoading ? "disabled" : ""}>${label}</button>`;
 }
 
-function styleCards(st) {
-  const builtins = imageStudio.STYLE_OPTIONS.map((o) => {
-    const sel = st.styleKey === o.key;
-    return `<button type="button" class="gen-style-card${sel ? " is-selected" : ""}" data-img-style="${escapeHtml(o.key)}" aria-pressed="${sel}" title="${escapeHtml(o.label)}">
-      <span class="gen-style-thumb">
-        <img src="https://picsum.photos/seed/archie-style-${escapeHtml(o.key)}/220/170" alt="" loading="lazy" />
-        ${sel ? `<span class="gen-style-check" aria-hidden="true"><i class="ap-icon-check"></i></span>` : ""}
-      </span>
-      <span class="gen-style-name">${escapeHtml(o.label)}</span>
+// Image type — selectable cards (title + short description). Single-select with
+// toggle-off; no radio dot (matches the design), driven by aria-pressed + the
+// data-* delegation like the rest of the panel.
+function imageTypeCards(st) {
+  return imageStudio.IMAGE_TYPES.map((o) => {
+    const sel = st.imageTypeKey === o.key;
+    return `<button type="button" class="image-studio__type-card${sel ? " is-selected" : ""}" data-img-image-type="${escapeHtml(o.key)}" aria-pressed="${sel}">
+      <span class="image-studio__type-title">${escapeHtml(o.label)}</span>
+      <span class="image-studio__type-desc">${escapeHtml(o.desc)}</span>
     </button>`;
   }).join("");
-  const customSel = st.styleKey === "custom";
-  const customThumb = st.customStyleUrl
-    ? `<img src="${escapeHtml(st.customStyleUrl)}" alt="Your uploaded style" />${customSel ? `<span class="gen-style-check" aria-hidden="true"><i class="ap-icon-check"></i></span>` : ""}`
-    : `<span class="gen-style-upload-ph"><i class="ap-icon-plus" aria-hidden="true"></i></span>`;
-  const customCard = `<button type="button" class="gen-style-card gen-style-card--upload${customSel ? " is-selected" : ""}${st.customStyleUrl ? " has-image" : ""}" data-img-style-upload aria-pressed="${customSel}" title="Upload your own style">
-    <span class="gen-style-thumb">${customThumb}</span>
-    <span class="gen-style-name">${st.customStyleUrl ? "Your style" : "Upload yours"}</span>
-  </button>`;
-  return builtins + customCard;
 }
 
-function moodChips(st) {
-  return imageStudio.MOOD_OPTIONS.map((o) => {
-    const pressed = st.moodKey === o.key;
-    return `<button type="button" class="ap-filter-chip" data-img-mood="${escapeHtml(o.key)}" aria-pressed="${pressed}">${escapeHtml(o.label)}</button>`;
+// Style preset — filter chips (the aesthetic look). Single-select, toggle-off.
+function stylePresetChips(st) {
+  return imageStudio.STYLE_PRESETS.map((o) => {
+    const pressed = st.styleKey === o.key;
+    return `<button type="button" class="ap-filter-chip" data-img-style="${escapeHtml(o.key)}" aria-pressed="${pressed}">${escapeHtml(o.label)}</button>`;
   }).join("");
 }
 
@@ -192,29 +184,29 @@ function composeGroups(st) {
   const hasUsedRefs = st.referenceImages.length > 0;
   const ingredients = ingredientsSection(st);
 
-  // Visual style is mutually exclusive with reference images — when refs guide
-  // the look, this section switches off and folds away. Collapsed, its header
-  // carries the picked style (or "Any") so the value stays visible.
-  const styleLabel = st.styleKey
-    ? st.styleKey === "custom"
-      ? "Your style"
-      : imageStudio.STYLE_OPTIONS.find((o) => o.key === st.styleKey)?.label || "Custom"
+  // Image type — what the image is for (hook / infographic / illustration). A
+  // distinct dimension from the style; not tied to the reference images.
+  const imageTypeLabel = st.imageTypeKey
+    ? imageStudio.IMAGE_TYPES.find((o) => o.key === st.imageTypeKey)?.label || "Any"
     : "Any";
-  const styleGroup = collapsibleGroup(st, {
-    id: "style",
-    label: "Visual style",
-    summary: styleLabel,
-    body: `<div class="gen-style-grid">${styleCards(st)}</div>`,
-    disabled: hasUsedRefs,
-    disabledHint: "Guided by your reference images",
+  const imageTypeGroup = collapsibleGroup(st, {
+    id: "imageType",
+    label: "Image type",
+    summary: imageTypeLabel,
+    body: `<div class="image-studio__type-list">${imageTypeCards(st)}</div>`,
   });
 
-  const moodLabel = st.moodKey ? imageStudio.MOOD_OPTIONS.find((o) => o.key === st.moodKey)?.label || "Any" : "Any";
-  const moodGroup = collapsibleGroup(st, {
-    id: "mood",
-    label: "Mood",
-    summary: moodLabel,
-    body: `<div class="image-studio__chips">${moodChips(st)}</div>`,
+  // Style preset — the aesthetic look. Mutually exclusive with reference images:
+  // when refs guide the look, this section switches off and folds away. Collapsed,
+  // its header carries the picked preset (or "Any").
+  const styleLabel = st.styleKey ? imageStudio.STYLE_PRESETS.find((o) => o.key === st.styleKey)?.label || "Any" : "Any";
+  const styleGroup = collapsibleGroup(st, {
+    id: "style",
+    label: "Style preset",
+    summary: styleLabel,
+    body: `<div class="image-studio__chips">${stylePresetChips(st)}</div>`,
+    disabled: hasUsedRefs,
+    disabledHint: "Guided by your reference images",
   });
 
   // Format — the collapsed summary is the picked ratio ("1:1 · Square"); the
@@ -271,5 +263,5 @@ function composeGroups(st) {
       ? `${outputChips}<p class="image-studio__subgroup-label">${countLabel}</p>${countChips}`
       : countChips,
   });
-  return `${ingredients}${styleGroup}${moodGroup}${formatGroup}${outputGroup}`;
+  return `${ingredients}${imageTypeGroup}${styleGroup}${formatGroup}${outputGroup}`;
 }

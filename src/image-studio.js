@@ -45,22 +45,24 @@ export function supportsCarousel(network) {
   return carouselMaxFor(network) > 0;
 }
 
-// Visual-style exemplars + moods — ported from the old generate-image modal
-// (they lived nowhere else). Single-select with toggle-off, both optional.
-export const STYLE_OPTIONS = [
-  { key: "photorealistic", label: "Photorealistic" },
-  { key: "illustration", label: "Illustration" },
-  { key: "bold-graphic", label: "Bold graphic" },
-  { key: "editorial", label: "Editorial photo" },
-  { key: "abstract", label: "Abstract" },
+// Image type — what the image is FOR (a hero visual vs a data infographic vs an
+// illustration). A distinct dimension from the aesthetic style. Single-select,
+// toggle-off. Rendered as selectable cards (title + short description).
+export const IMAGE_TYPES = [
+  { key: "visual-hook", label: "Visual hook", desc: "Eye-catching visual" },
+  { key: "infographic", label: "Infographic", desc: "Data visualization" },
+  { key: "illustration", label: "Illustration", desc: "Artistic imagery" },
 ];
 
-export const MOOD_OPTIONS = [
-  { key: "professional", label: "Professional" },
-  { key: "energetic", label: "Energetic" },
-  { key: "calm", label: "Calm" },
-  { key: "inspiring", label: "Inspiring" },
-  { key: "playful", label: "Playful" },
+// Style presets — the aesthetic look. Single-select with toggle-off; switches off
+// when reference images guide the look. Rendered as filter chips.
+export const STYLE_PRESETS = [
+  { key: "tech-minimal", label: "Tech Minimal" },
+  { key: "corporate", label: "Corporate" },
+  { key: "3d-render", label: "3D Render" },
+  { key: "bold-editorial", label: "Bold Editorial" },
+  { key: "photoreal", label: "Photoreal" },
+  { key: "hand-drawn", label: "Hand-drawn" },
 ];
 
 // Curated logo presets for the "Add logo" tray (real bundled assets).
@@ -121,7 +123,7 @@ function picsum(seed, [w, h]) {
 // Seed captures the inputs so a Regenerate with the same options is stable while
 // a changed option (style / mood / format / variation index) reshuffles.
 function seedFor(s, extra) {
-  return `${s.postId || "img"}-${s.styleKey || "s"}-${s.moodKey || "m"}-${s.formatId || "f"}-${extra}`;
+  return `${s.postId || "img"}-${s.styleKey || "s"}-${s.imageTypeKey || "t"}-${s.formatId || "f"}-${extra}`;
 }
 
 function notify(sessionId) {
@@ -217,9 +219,8 @@ export function start(
     formatId: resolvedFormat,
     promptText: "",
     promptLoading: false,
-    styleKey: null,
-    moodKey: null,
-    customStyleUrl: null, // object URL of an uploaded "Your style" reference
+    styleKey: null, // selected Style preset (STYLE_PRESETS)
+    imageTypeKey: null, // selected Image type (IMAGE_TYPES)
     referenceImages: initialRefs, // [{ id, url, label?, fromPlaybook? }] (max MAX_REFS)
     playbookRefs: pbRefs, // the Playbook's brand images (snapshot, for the toggle)
     playbookColors: (Array.isArray(playbookColors) ? playbookColors : []).filter(Boolean), // brand hex list for text swatches
@@ -275,7 +276,6 @@ export function exit(sessionId) {
   if (s._genTimer) clearTimeout(s._genTimer);
   if (s._editTimer) clearTimeout(s._editTimer);
   if (s._deriveTimer) clearTimeout(s._deriveTimer);
-  if (s.customStyleUrl) safeRevoke(s.customStyleUrl);
   for (const r of s.referenceImages) safeRevoke(r.url);
   for (const o of s.overlays) if (o.kind === "logo") safeRevoke(o.url);
   for (const f of s.customFonts || []) safeRevoke(f.url);
@@ -321,19 +321,10 @@ export function setStyle(sessionId, key) {
   notify(sessionId);
 }
 
-export function setCustomStyle(sessionId, url) {
+export function setImageType(sessionId, key) {
   const s = states.get(sessionId);
   if (!s) return;
-  if (s.customStyleUrl) safeRevoke(s.customStyleUrl);
-  s.customStyleUrl = url;
-  s.styleKey = "custom";
-  notify(sessionId);
-}
-
-export function setMood(sessionId, key) {
-  const s = states.get(sessionId);
-  if (!s) return;
-  s.moodKey = s.moodKey === key ? null : key;
+  s.imageTypeKey = s.imageTypeKey === key ? null : key;
   notify(sessionId);
 }
 
