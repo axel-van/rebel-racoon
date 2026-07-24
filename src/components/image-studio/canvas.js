@@ -53,7 +53,9 @@ export function compositeOverlays(baseUrl, overlays, w, h) {
   // back to a system font before toDataURL. document.fonts.load never rejects.
   const fontSpecs = [
     ...new Set(
-      overlays.filter((o) => o.kind === "text").map((o) => `${o.bold ? 700 : 400} 32px ${fontPrimary(o.fontFamily)}`),
+      overlays
+        .filter((o) => o.kind === "text")
+        .map((o) => `${o.italic ? "italic " : ""}${o.bold ? 700 : 400} 32px ${fontPrimary(o.fontFamily)}`),
     ),
   ];
   const fontsReady = document?.fonts
@@ -79,7 +81,7 @@ export function compositeOverlays(baseUrl, overlays, w, h) {
       } else {
         const fontPx = o.sizeF * h;
         const text = o.text || "";
-        ctx.font = `${o.bold ? 700 : 400} ${fontPx}px ${cssFamily(o.fontFamily)}`;
+        ctx.font = `${o.italic ? "italic " : ""}${o.bold ? 700 : 400} ${fontPx}px ${cssFamily(o.fontFamily)}`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         // Three passes, matching the live CSS: 1) drop shadow cast off the fill

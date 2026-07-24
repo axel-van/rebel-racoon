@@ -747,6 +747,7 @@ const OVERLAY_DEFAULTS = {
     fontFamily: null,
     sizeF: 0.09,
     bold: false,
+    italic: false,
     xF: 0.5,
     yF: 0.5,
     rot: 0,

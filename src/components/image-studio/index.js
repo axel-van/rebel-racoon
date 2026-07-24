@@ -230,6 +230,8 @@ function onClick(event) {
   }
   const ovDel = event.target.closest("[data-img-overlay-delete]");
   if (ovDel) return void imageStudio.removeOverlay(KEY, ovDel.dataset.imgOverlayDelete);
+  const ovRotReset = event.target.closest("[data-img-overlay-rotate-reset]");
+  if (ovRotReset) return void imageStudio.updateOverlay(KEY, ovRotReset.dataset.imgOverlayRotateReset, { rot: 0 });
   // Text style controls (from the element's mini toolbar); keep the caret in the
   // contenteditable afterwards if we're editing.
   const restoreEdit = () => {
@@ -259,6 +261,12 @@ function onClick(event) {
   if (event.target.closest("[data-img-text-bold]") && st.selectedOverlayId) {
     const o = imageStudio.getOverlay(KEY, st.selectedOverlayId);
     imageStudio.updateOverlay(KEY, st.selectedOverlayId, { bold: !o?.bold });
+    restoreEdit();
+    return;
+  }
+  if (event.target.closest("[data-img-text-italic]") && st.selectedOverlayId) {
+    const o = imageStudio.getOverlay(KEY, st.selectedOverlayId);
+    imageStudio.updateOverlay(KEY, st.selectedOverlayId, { italic: !o?.italic });
     restoreEdit();
     return;
   }

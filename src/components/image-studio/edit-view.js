@@ -301,6 +301,7 @@ function textToolbar(o, st, selected) {
     <button type="button" class="image-studio__tt-btn image-studio__tt-font" data-img-popover-toggle="textFont" aria-haspopup="true" aria-expanded="${fontOpen}" title="Font — ${escapeHtml(fontLabel)}" aria-label="Font"><span class="image-studio__tt-aa" aria-hidden="true">Aa</span></button>
     ${fontOpen ? textFontPopover(o, st) : ""}
     <button type="button" class="image-studio__tt-btn image-studio__tt-bold" data-img-text-bold aria-pressed="${!!o.bold}">Bold</button>
+    <button type="button" class="image-studio__tt-btn image-studio__tt-italic" data-img-text-italic aria-pressed="${!!o.italic}">Italic</button>
     <span class="image-studio__tt-sep" aria-hidden="true"></span>
     <button type="button" class="image-studio__tt-btn image-studio__tt-outline${o.outline ? " is-on" : ""}" data-img-popover-toggle="textOutline" aria-haspopup="true" aria-expanded="${outlineOpen}" title="Outline"><span class="image-studio__tt-swatch" style="--sw:${escapeHtml(o.outlineColor || "#0A1B33")}"></span><span>Outline</span></button>
     ${outlineOpen ? textOutlinePopover(o, st) : ""}
@@ -333,7 +334,7 @@ function renderOverlay(o, selected, editing, st) {
     const om = outlineMetrics(o.outlineWidth);
     const textStyle =
       `color:${escapeHtml(o.color || "#FFFFFF")}; font-family:${cssFamily(o.fontFamily)};` +
-      ` font-size:${o.sizeF * 100}cqh; font-weight:${o.bold ? 700 : 400};` +
+      ` font-size:${o.sizeF * 100}cqh; font-weight:${o.bold ? 700 : 400}; font-style:${o.italic ? "italic" : "normal"};` +
       // paint-order:stroke → the fill paints over the stroke, so only the stroke's
       // outer half shows — an external outline that never bites into the glyph.
       (o.outline
