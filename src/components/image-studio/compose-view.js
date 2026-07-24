@@ -8,19 +8,21 @@ import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.j
 import { KEY } from "./context.js?v=3";
 import * as imageStudio from "../../image-studio.js?v=29";
 
-// Left panel — generate mode: prompt (lead) + reference / style / mood / format
-// / variations.
+// Left panel — generate mode: the reglages only (reference / style / mood /
+// format / variations). The prompt lead moved to the floating bottom composer
+// (see shell-view generateComposer), so the panel holds settings alone.
 export function generateControls(st) {
-  const deriveLabel = st.promptLoading
+  return composeGroups(st);
+}
+
+// "Suggest from this post" — an AI helper that drafts the prompt from the draft's
+// text. It followed the prompt out of the panel; shell-view places it just above
+// the bottom composer, so it's exported here.
+export function deriveButton(st) {
+  const label = st.promptLoading
     ? `<span class="gen-spinner"></span><span>Suggesting from this post…</span>`
     : `<i class="ap-icon-archie-official" aria-hidden="true"></i><span>Suggest from this post</span>`;
-  const promptGroup = `
-    <div class="image-studio__group image-studio__group--prompt">
-      <label class="image-studio__group-label" for="imgStudioPrompt">Describe your image</label>
-      <textarea id="imgStudioPrompt" class="image-studio__prompt-input" data-img-prompt rows="3" placeholder="e.g. A bold graphic of an upward-trending growth chart, vibrant blue and orange, minimalist style…">${escapeHtml(st.promptText)}</textarea>
-      <button type="button" class="image-studio__derive" data-img-derive ${st.promptLoading ? "disabled" : ""}>${deriveLabel}</button>
-    </div>`;
-  return promptGroup + composeGroups(st);
+  return `<button type="button" class="image-studio__derive" data-img-derive ${st.promptLoading ? "disabled" : ""}>${label}</button>`;
 }
 
 function styleCards(st) {

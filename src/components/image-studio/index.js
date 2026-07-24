@@ -25,7 +25,7 @@ import { getSessionById } from "../../sessions-store.js?v=6";
 import { getContextById } from "../../contexts-store.js?v=37";
 import { MODAL_ID, KEY, ctx, state } from "./context.js?v=3";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "./canvas.js?v=2";
-import { renderStudio } from "./shell-view.js?v=19";
+import { renderStudio } from "./shell-view.js?v=20";
 import {
   openFilePicker,
   openLogoPicker,
@@ -312,6 +312,7 @@ function onInput(event) {
     imageStudio.setPromptSilent(KEY, event.target.value);
     const gen = ctx.modal.querySelector("[data-img-generate]");
     if (gen) gen.disabled = !event.target.value.trim();
+    autosizeReprompt(event.target); // the prompt is now a single-row growing composer
   } else if (event.target.matches("[data-img-edit-prompt]")) {
     imageStudio.setEditPromptSilent(KEY, event.target.value);
     autosizeReprompt(event.target);
@@ -495,6 +496,17 @@ function onKeydown(event) {
     event.preventDefault();
     event.stopPropagation();
     if (!st.editBusy) applyEditTool("prompt");
+    return;
+  }
+  // Generate prompt composer: Enter (re)generates, Shift+Enter inserts a newline
+  // — same contract as the edit reprompt. No-op mid-generation.
+  if (event.key === "Enter" && !event.shiftKey && event.target.matches("[data-img-prompt]")) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (st.genPhase !== "generating") {
+      imageStudio.setPromptSilent(KEY, event.target.value);
+      if ((state()?.promptText || "").trim()) imageStudio.runGeneration(KEY);
+    }
     return;
   }
   if (event.key === "Enter" && st.editingOverlayId) {

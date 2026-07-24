@@ -150,13 +150,14 @@
 }
 
 /* ── Left-panel groups (generate mode) ──────────────────────────────────── */
-/* Flat sections separated by a divider — no per-section card chrome. */
+/* Flat sections separated by a soft divider — the panel holds settings only now
+   (the prompt moved to the bottom composer), so it reads lighter. */
 .image-studio__group {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
   padding: var(--ref-spacing-sm) var(--ref-spacing-md);
-  border-bottom: 1px solid var(--app-border);
+  border-bottom: 1px solid var(--app-border-soft);
 }
 
 .image-studio__group:last-child {
@@ -238,17 +239,10 @@ button.image-studio__group-head:disabled {
   color: var(--ref-color-grey-80);
 }
 
-/* Typographic hierarchy (three tiers so the panel doesn't read as one flat
-   size). Tier 1 — the prompt is the lead task: larger + bold + darkest. */
-.image-studio__group--prompt .image-studio__group-label {
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-grey-100);
-}
-
-/* Tier 2 — section headers become quiet uppercase eyebrows: they mark sections
-   without competing with the prompt or the controls below them. */
+/* Typographic hierarchy — quiet section headers over muted meta, so the panel
+   reads as grouped settings rather than one flat size.
+   Section headers become quiet uppercase eyebrows: they mark sections without
+   competing with the controls below them. */
 .image-studio__group-head .image-studio__group-label {
   font-size: var(--sys-text-style-caption-bold-size);
   font-weight: var(--ref-font-weight-bold);
@@ -297,32 +291,8 @@ button.image-studio__group-head:disabled {
   color: var(--ref-color-grey-60);
 }
 
-/* The lead prompt group + its input. */
-.image-studio__prompt-input {
-  width: 100%;
-  box-sizing: border-box;
-  resize: vertical;
-  min-height: 72px;
-  padding: var(--ref-spacing-sm) var(--ref-spacing-sm);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-md);
-  background: var(--ref-color-white);
-  font-family: inherit;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--ref-color-grey-80);
-}
-
-.image-studio__prompt-input::placeholder {
-  color: var(--ref-color-grey-60);
-}
-
-.image-studio__prompt-input:focus-visible {
-  outline: none;
-  border-color: var(--ref-color-electric-blue-100);
-  box-shadow: 0 0 0 3px var(--app-convo-navy-10);
-}
-
+/* "Suggest from this post" — a subtle AI helper link (orange = AI accent). Now
+   sits above the bottom composer; centered there via .image-studio__composer. */
 .image-studio__derive {
   align-self: flex-start;
   display: inline-flex;
@@ -486,6 +456,19 @@ button.image-studio__ref--pick:focus-visible {
   padding-bottom: 96px; /* clearance so the bottom bar never overlaps the image */
 }
 
+/* Generate mirrors edit's canvas-first layout: the prompt composer floats over
+   the canvas bottom and the variations rail floats on the right, so the canvas
+   is the positioning context here too. */
+.image-studio--generate .image-studio__canvas {
+  position: relative;
+  padding-bottom: 96px; /* clearance for the floating composer */
+}
+
+/* Keep the centered image clear of the variations rail when it's shown. */
+.image-studio--generate .image-studio__canvas:has(.image-studio__filmstrip--rail) {
+  padding-right: 112px;
+}
+
 /* Clip the image in an inner box so the frame itself can overflow — the
    on-element toolbar / colour popover / handles extend past the image edge. */
 .image-studio--edit .image-studio__frame {
@@ -523,6 +506,35 @@ button.image-studio__ref--pick:focus-visible {
    composer card's :focus-within treatment. */
 .image-studio__actionbar:focus-within {
   border-color: var(--ref-color-electric-blue-100);
+}
+
+/* Generate composer — the prompt bar + its "Suggest" helper stacked, floating at
+   the canvas bottom (mirrors the edit action bar). The bar reuses
+   .image-studio__actionbar; the --generate variant drops its own absolute
+   positioning (the wrapper positions the stack) and carries no Apply button —
+   Generate is the footer CTA. */
+.image-studio__composer {
+  position: absolute;
+  left: 50%;
+  bottom: var(--ref-spacing-md);
+  transform: translateX(-50%);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  width: min(94%, 540px);
+}
+
+.image-studio__actionbar--generate {
+  position: static;
+  transform: none;
+  width: 100%;
+}
+
+/* The derive helper sits centered above the bar (on the grey canvas). */
+.image-studio__composer .image-studio__derive {
+  align-self: center;
 }
 
 .image-studio__actionbar-row {
@@ -1037,6 +1049,36 @@ button.image-studio__ref--pick:focus-visible {
   justify-content: center;
   gap: var(--ref-spacing-xs);
   max-width: 100%;
+}
+
+/* Variations "chutier" as a vertical rail floating on the canvas right edge
+   (generate mode) — the filmstrip turned into a scrollable column, mirroring the
+   edit-mode tool palette on the left. */
+.image-studio__filmstrip--rail {
+  position: absolute;
+  right: var(--ref-spacing-lg);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  max-height: calc(100% - 2 * var(--ref-spacing-lg));
+  padding: var(--ref-spacing-xxs);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Carousel count chip at the top of the rail. */
+.image-studio__rail-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  margin: 0 0 var(--ref-spacing-xxs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
 }
 
 .image-studio__thumb {
@@ -1660,26 +1702,7 @@ button.image-studio__ref--pick:focus-visible {
   opacity: 0.6;
 }
 
-/* ── Carousel (generate mode): slides filmstrip + badges ────────────────── */
-.image-studio__filmstrip-wrap {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  max-width: 100%;
-}
-
-.image-studio__filmstrip-label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  margin: 0;
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-60);
-}
-
+/* ── Carousel (generate mode): slide tile badges ────────────────────────── */
 /* Slide number (top-left) + remove (top-right) on a carousel tile. */
 .image-studio__thumb-num {
   position: absolute;

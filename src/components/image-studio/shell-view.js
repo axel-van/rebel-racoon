@@ -11,7 +11,7 @@ import { getPosts } from "../../posts-store.js?v=36";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=26";
 import { renderPostCard } from "../post-card.js?v=68";
 import { KEY, ctx } from "./context.js?v=3";
-import { generateControls } from "./compose-view.js?v=5";
+import { generateControls, deriveButton } from "./compose-view.js?v=6";
 import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=17";
 import { compositeOverlays } from "./canvas.js?v=2";
 import * as imageStudio from "../../image-studio.js?v=29";
@@ -102,8 +102,9 @@ function canvasContent(st) {
   const hasImg = !!st.currentImage || (st.genPhase === "results" && st.variations.length > 0);
   const showToggle = hasImg && (st.mode === "edit" || (st.mode === "generate" && st.genPhase === "results"));
   const toggle = showToggle ? canvasViewToggle(st) : "";
+  const feedView = showToggle && st.canvasView === "feed";
   let inner;
-  if (showToggle && st.canvasView === "feed") inner = previewCanvas(st);
+  if (feedView) inner = previewCanvas(st);
   else if (st.mode === "edit") inner = editCanvas(st);
   else if (st.genPhase === "generating") inner = generatingCanvas(st);
   else if (st.genPhase === "results") inner = resultsCanvas(st);
@@ -111,46 +112,51 @@ function canvasContent(st) {
     inner = `<div class="gen-empty">
       <i class="ap-icon-image" aria-hidden="true"></i>
       <p class="gen-empty-title">Your image appears here</p>
-      <span class="gen-empty-sub">Describe it on the left, then generate.</span>
+      <span class="gen-empty-sub">Describe it below, then generate.</span>
     </div>`;
   // Edit mode (image view): the floating AI bar lives over the canvas bottom and
   // the manual hand-tools float as a palette top-left. Each palette tool opens
   // its options in a right-flyout popover (Crop / Add image) — so the palette
   // stays put during crop rather than the bottom bar taking over.
-  const editingImage = st.mode === "edit" && !(showToggle && st.canvasView === "feed");
-  const bar = editingImage ? actionBar(st) : "";
+  const editingImage = st.mode === "edit" && !feedView;
+  const editBar = editingImage ? actionBar(st) : "";
   const palette = editingImage ? toolPalette(st) : "";
-  return `${toggle}<div class="image-studio__canvas-body">${inner}</div>${palette}${bar}`;
+  // Generate mode (image view): mirror the edit layout — the prompt composer
+  // floats over the canvas bottom (every phase), and the variations "chutier"
+  // floats as a vertical rail on the right (results only).
+  const generating = st.mode === "generate" && !feedView;
+  const genComposer = generating ? generateComposer(st) : "";
+  const rail = generating && st.genPhase === "results" && st.variations.length > 0 ? variationsRail(st) : "";
+  return `${toggle}<div class="image-studio__canvas-body">${inner}</div>${palette}${editBar}${rail}${genComposer}`;
 }
 
-function generatingCanvas(st) {
-  const ratio = imageStudio.activeRatio(KEY);
-  return `<div class="gen-stage-wrap" style="--gen-ratio:${ratio}">
-    <div class="gen-single gen-single--loading" style="aspect-ratio:${ratio}" role="status" aria-label="Generating">
-      <div class="gen-loading-inner">
-        <span class="gen-image-spinner gen-loading-mark"></span>
-        <p class="gen-loading-label">Generating ${st.variationCount} variation${st.variationCount > 1 ? "s" : ""}…</p>
-      </div>
+// Generate mode — the prompt composer floating over the canvas bottom, built on
+// the same card as the edit action bar (mermaid-sparkle cue + borderless
+// auto-growing textarea). No send button: Generate is the footer CTA (Enter
+// fires it too). The "Suggest from this post" AI helper sits just above the bar.
+function generateComposer(st) {
+  const busy = st.promptLoading || st.genPhase === "generating" ? "disabled" : "";
+  return `<div class="image-studio__composer">
+    ${deriveButton(st)}
+    <div class="image-studio__actionbar image-studio__actionbar--generate" role="group" aria-label="Image prompt">
+      <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
+      <textarea id="imgStudioPrompt" class="image-studio__reprompt-field" data-img-prompt rows="1" placeholder="Describe your image…" aria-label="Describe your image" ${busy}>${escapeHtml(st.promptText)}</textarea>
     </div>
   </div>`;
 }
 
-// One large preview of the focused image + a bottom filmstrip (chutier). In
-// single mode the filmstrip is a pick-one (check on the chosen variation); in
-// carousel mode every tile is a kept slide (numbered, removable) and clicking a
-// tile only focuses it for preview.
-function resultsCanvas(st) {
-  const ratio = imageStudio.activeRatio(KEY);
+// The variations "chutier" as a vertical rail floating on the canvas right edge
+// (mirror of the edit-mode tool palette on the left). Single mode = pick-one
+// (check on the chosen variation); carousel = numbered, removable kept slides.
+// Reuses the .image-studio__thumb tiles + their data-* hooks unchanged.
+function variationsRail(st) {
   const carousel = st.outputMode === "carousel";
   const sel = st.selectedIndex == null ? 0 : st.selectedIndex;
-  const current = st.variations[sel] || st.variations[0];
   const cap = carousel ? imageStudio.carouselMaxFor(st.network) || 8 : 8;
   const canRemove = carousel && st.variations.length > 2;
   const thumbs = st.variations
     .map((v, i) => {
       const on = i === sel;
-      // Carousel tiles are <div>s (not <button>s) so the per-slide remove
-      // <button> can nest validly; single-mode tiles stay pick-one <button>s.
       if (carousel) {
         const label = `Slide ${i + 1}`;
         return `<div class="image-studio__thumb${on ? " is-selected" : ""}" role="button" tabindex="0" aria-pressed="${on}" data-img-variation="${i}" title="${label}">
@@ -173,10 +179,32 @@ function resultsCanvas(st) {
             : `<i class="ap-icon-plus" aria-hidden="true"></i>`
         }</button>`
       : "";
-  const stripLabel = carousel
-    ? `<p class="image-studio__filmstrip-label"><i class="ap-icon-multiple-images" aria-hidden="true"></i>Carousel · ${st.variations.length} slides — all slides are kept</p>`
+  const label = carousel
+    ? `<p class="image-studio__rail-label" title="Carousel · all slides are kept"><i class="ap-icon-multiple-images" aria-hidden="true"></i>${st.variations.length}</p>`
     : "";
-  const strip = `<div class="image-studio__filmstrip-wrap">${stripLabel}<div class="image-studio__filmstrip" role="tablist" aria-label="${carousel ? "Slides" : "Variations"}">${thumbs}${addTile}</div></div>`;
+  return `<div class="image-studio__filmstrip image-studio__filmstrip--rail" role="${carousel ? "group" : "tablist"}" aria-label="${carousel ? "Slides" : "Variations"}">${label}${thumbs}${addTile}</div>`;
+}
+
+function generatingCanvas(st) {
+  const ratio = imageStudio.activeRatio(KEY);
+  return `<div class="gen-stage-wrap" style="--gen-ratio:${ratio}">
+    <div class="gen-single gen-single--loading" style="aspect-ratio:${ratio}" role="status" aria-label="Generating">
+      <div class="gen-loading-inner">
+        <span class="gen-image-spinner gen-loading-mark"></span>
+        <p class="gen-loading-label">Generating ${st.variationCount} variation${st.variationCount > 1 ? "s" : ""}…</p>
+      </div>
+    </div>
+  </div>`;
+}
+
+// One large preview of the focused image, centered in the canvas. The variations
+// "chutier" is no longer stacked below — it floats as a vertical rail on the
+// right (see variationsRail), mirroring the edit-mode layout.
+function resultsCanvas(st) {
+  const ratio = imageStudio.activeRatio(KEY);
+  const carousel = st.outputMode === "carousel";
+  const sel = st.selectedIndex == null ? 0 : st.selectedIndex;
+  const current = st.variations[sel] || st.variations[0];
   return `<div class="image-studio__preview-stage">
     <div class="image-studio__preview-main">
       <div class="image-studio__frame" style="--imgs-ratio:${ratio}">
@@ -184,7 +212,6 @@ function resultsCanvas(st) {
         ${carousel ? `<span class="image-studio__slide-pos" aria-hidden="true">${sel + 1} / ${st.variations.length}</span>` : ""}
       </div>
     </div>
-    ${strip}
   </div>`;
 }
 
