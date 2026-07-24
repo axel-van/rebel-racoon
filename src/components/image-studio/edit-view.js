@@ -119,9 +119,13 @@ function swatchGrid({ st, selected, applyAttr, pickAttr, pickLabel }) {
   const brand = dedupe(st.playbookColors); // brand first → wins the dedupe
   const others = dedupe([...imageStudio.TEXT_COLORS, ...(st.customTextColors || [])]);
   const addSwatch = `<label class="image-studio__swatch image-studio__swatch--add" title="${pickLabel}"><input type="color" ${pickAttr} aria-label="${pickLabel}" /><i class="ap-icon-plus" aria-hidden="true"></i></label>`;
+  // Name the brand in parentheses (e.g. "Brand (Acme)") — matches how the
+  // Ingredients panel labels the brand kit.
+  const brandName = (st.playbookName || "").trim();
+  const brandLabel = brandName ? `Brand (${escapeHtml(brandName)})` : "Brand";
   const brandGroup = brand.length
     ? `<div class="image-studio__color-group">
-        <p class="image-studio__color-label">Brand</p>
+        <p class="image-studio__color-label">${brandLabel}</p>
         <span class="image-studio__swatches">${brand.map(swatch).join("")}</span>
       </div>`
     : "";
