@@ -1744,6 +1744,13 @@ button.image-studio__ingredient-head {
   padding: 0 var(--ref-spacing-sm) var(--ref-spacing-sm);
 }
 
+/* Collapsed → actually hide: the display:flex above would otherwise beat the
+   [hidden] attribute's UA display:none, so the Reference-images body never
+   collapsed. */
+.image-studio__ingredient-body[hidden] {
+  display: none;
+}
+
 /* Premium drop-zone for user uploads. */
 .image-studio__dropzone {
   display: flex;
