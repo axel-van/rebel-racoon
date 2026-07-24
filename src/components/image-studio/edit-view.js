@@ -37,7 +37,7 @@ export function actionBar(st) {
       <button type="button" class="ap-button stroked grey" data-img-crop-start ${busy}><i class="ap-icon-cropper" aria-hidden="true"></i><span>Crop</span></button>
       <button type="button" class="ap-button stroked grey" data-img-add-text ${busy}><i class="ap-icon-closed-captions" aria-hidden="true"></i><span>Add text</span></button>
       <div class="image-studio__actionbar-anchor">
-        <button type="button" class="ap-button stroked grey" data-img-popover-toggle="logo" aria-haspopup="true" aria-expanded="${st.openPopover === "logo"}" ${busy}><i class="ap-icon-file--image" aria-hidden="true"></i><span>Add logo</span></button>
+        <button type="button" class="ap-button stroked grey" data-img-popover-toggle="logo" aria-haspopup="true" aria-expanded="${st.openPopover === "logo"}" ${busy}><i class="ap-icon-file--image" aria-hidden="true"></i><span>Add image</span></button>
         ${st.openPopover === "logo" ? logoPopover() : ""}
       </div>
     </div>
@@ -89,13 +89,13 @@ function cropAspectChips(st) {
 function logoPopover() {
   // Upload is the first tile in the grid (a dashed "add" cell) so it reads as
   // part of the set and the layout scales to many logos: the grid scrolls.
-  const uploadTile = `<button type="button" class="image-studio__preset image-studio__preset--upload" data-img-logo-upload title="Upload a logo"><i class="ap-icon-upload" aria-hidden="true"></i><span>Upload</span></button>`;
+  const uploadTile = `<button type="button" class="image-studio__preset image-studio__preset--upload" data-img-logo-upload title="Upload an image"><i class="ap-icon-upload" aria-hidden="true"></i><span>Upload</span></button>`;
   const presets = imageStudio.LOGO_PRESETS.map(
     (p) =>
       `<button type="button" class="image-studio__preset" data-img-logo-preset="${escapeHtml(p.url)}" title="${escapeHtml(p.label)}"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.label)}" /></button>`,
   ).join("");
-  return `<div class="image-studio__popover image-studio__popover--logo" data-img-popover role="menu" aria-label="Logos">
-    <div class="image-studio__popover-head"><p class="image-studio__popover-title">Logos</p></div>
+  return `<div class="image-studio__popover image-studio__popover--logo" data-img-popover role="menu" aria-label="Images">
+    <div class="image-studio__popover-head"><p class="image-studio__popover-title">Images</p></div>
     <div class="image-studio__popover-body">
       <div class="image-studio__presets">${uploadTile}${presets}</div>
     </div>
