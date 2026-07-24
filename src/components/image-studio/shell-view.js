@@ -166,7 +166,7 @@ function derivingCanvas() {
 // textarea + a send-style Apply that (re)generates). The arrow-up button drives
 // Generate / Regenerate (data-img-generate covers both) — the footer keeps only
 // the commit CTA, mirroring Edit. The "Suggest from this post" AI helper sits
-// just above the bar.
+// just below the bar.
 function generateComposer(st) {
   const busy = st.promptLoading || st.genPhase === "generating";
   const applyLabel = st.genPhase === "results" ? "Regenerate" : "Generate";
@@ -174,13 +174,13 @@ function generateComposer(st) {
   const expanded = !!st.composerExpanded;
   const expandLabel = expanded ? "Collapse prompt" : "Expand prompt";
   return `<div class="image-studio__composer${expanded ? " is-expanded" : ""}">
-    ${deriveButton(st)}
     <div class="image-studio__actionbar image-studio__actionbar--generate" role="group" aria-label="Image prompt">
       <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
       <textarea id="imgStudioPrompt" class="image-studio__reprompt-field" data-img-prompt rows="3" placeholder="${escapeHtml(PROMPT_PLACEHOLDER)}" aria-label="Describe your image" ${busy ? "disabled" : ""}>${escapeHtml(st.promptText)}</textarea>
       <button type="button" class="ap-button ghost grey image-studio__actionbar-expand" data-img-composer-expand aria-label="${expandLabel}" title="${expandLabel}" aria-pressed="${expanded}"><i class="ap-icon-${expanded ? "minimize" : "maximize"}" aria-hidden="true"></i></button>
       <button type="button" class="ap-button primary orange image-studio__actionbar-apply" data-img-generate aria-label="${applyLabel}" title="${applyLabel}" ${applyDisabled ? "disabled" : ""}><i class="ap-icon-arrow-up" aria-hidden="true"></i></button>
     </div>
+    ${deriveButton(st)}
   </div>`;
 }
 
@@ -248,6 +248,7 @@ function resultsCanvas(st) {
     <div class="image-studio__preview-main">
       <div class="image-studio__frame" style="--imgs-ratio:${ratio}">
         <img class="image-studio__frame-img" src="${current ? escapeHtml(current.url) : ""}" alt="${carousel ? `Slide ${sel + 1}` : "Selected variation"}" />
+        <button type="button" class="image-studio__frame-edit" data-img-mode="edit" aria-label="${carousel ? `Edit slide ${sel + 1}` : "Edit this image"}" title="${carousel ? `Edit slide ${sel + 1}` : "Edit this image"}"><i class="ap-icon-pen" aria-hidden="true"></i></button>
         ${carousel ? `<span class="image-studio__slide-pos" aria-hidden="true">${sel + 1} / ${st.variations.length}</span>` : ""}
       </div>
     </div>
