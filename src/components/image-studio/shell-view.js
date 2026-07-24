@@ -12,7 +12,7 @@ import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.j
 import { renderPostCard } from "../post-card.js?v=68";
 import { KEY, ctx } from "./context.js?v=2";
 import { generateControls } from "./compose-view.js?v=2";
-import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=11";
+import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=12";
 import * as imageStudio from "../../image-studio.js?v=28";
 
 export function renderStudio(st) {
@@ -83,11 +83,12 @@ function canvasContent(st) {
       <span class="gen-empty-sub">Describe it on the left, then generate.</span>
     </div>`;
   // Edit mode (image view): the floating AI bar lives over the canvas bottom and
-  // the manual hand-tools float as a palette top-left — hidden during crop draw,
-  // which takes the bottom bar over with its own confirm controls.
+  // the manual hand-tools float as a palette top-left. Each palette tool opens
+  // its options in a right-flyout popover (Crop / Add image) — so the palette
+  // stays put during crop rather than the bottom bar taking over.
   const editingImage = st.mode === "edit" && !(showToggle && st.canvasView === "feed");
   const bar = editingImage ? actionBar(st) : "";
-  const palette = editingImage && !st.cropDrawing ? toolPalette(st) : "";
+  const palette = editingImage ? toolPalette(st) : "";
   return `${toggle}<div class="image-studio__canvas-body">${inner}</div>${palette}${bar}`;
 }
 

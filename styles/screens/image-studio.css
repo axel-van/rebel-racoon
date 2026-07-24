@@ -600,9 +600,9 @@ button.image-studio__ref--pick:focus-visible {
   color: var(--ref-color-electric-blue-100);
 }
 
-/* On the left rail the image popover flyouts to the right of the trigger,
-   top-aligned (overrides the bottom/right anchoring used in the bottom bar). */
-.image-studio__palette .image-studio__popover--logo {
+/* On the left rail, a tool's popover (Crop / Add image) flyouts to the right of
+   its button, top-aligned (overrides the bottom/right anchoring). */
+.image-studio__palette .image-studio__popover {
   left: calc(100% + 10px);
   right: auto;
   top: 0;
@@ -1328,37 +1328,14 @@ button.image-studio__ref--pick:focus-visible {
   cursor: nwse-resize;
 }
 
-/* Crop-draw toolbar — a floating card pinned above the crop frame (not docked in
-   the bottom bar), wide enough for the ratio chips to stay on ONE row. The frame
-   is overflow:visible so it sits in the canvas space above the image. */
-.image-studio__crop-toolbar {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + var(--ref-spacing-sm));
-  transform: translateX(-50%);
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-sm);
-  width: min(88vw, 700px);
-  padding: var(--ref-spacing-sm);
-  background: var(--ref-color-white);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-modal);
-  box-shadow: var(--app-shadow-popover-lg);
+/* Crop options live in a popover flyout off the Crop palette button (same rail
+   pattern as the Add image popover). Sized so the aspect chips wrap tidily. */
+.image-studio__popover--crop {
+  width: 300px;
 }
 
-/* Crop-draw toolbar variant — the aspect-lock chips sit on their own row. */
-.image-studio__crop-row {
-  align-items: center;
-  gap: var(--ref-spacing-sm);
-}
-
-/* Quiet helper — an instruction, not content: the lightest text in the bar. */
+/* Quiet helper — an instruction, not content: the lightest text in the popover. */
 .image-studio__crop-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
   margin: 0;
   color: var(--ref-color-grey-60);
   font-size: var(--sys-text-style-caption-size);
@@ -1366,24 +1343,25 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 .image-studio__crop-actions {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--ref-spacing-xs);
-  margin-left: auto;
 }
 
 .image-studio__crop-aspects {
+  display: flex;
   gap: var(--ref-spacing-xs);
   flex-wrap: wrap;
 }
 
-/* "Best for <Network>" hint leading the aspect chips — the draft's network logo
-   + label, marking which ratios below are the optimised set. */
+/* "Best for <Network>" hint leading the aspect chips (its own line) — the
+   draft's network logo + label, marking which ratios below are the optimised set. */
 .image-studio__crop-bestfor {
-  display: inline-flex;
+  flex: 0 0 100%;
+  display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  margin-right: var(--ref-spacing-xxs);
   color: var(--ref-color-grey-60);
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
