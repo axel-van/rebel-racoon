@@ -25,16 +25,13 @@ export function deriveButton(st) {
   return `<button type="button" class="image-studio__derive" data-img-derive ${st.promptLoading ? "disabled" : ""}>${label}</button>`;
 }
 
-// Image type — selectable cards (title + short description). Single-select with
-// toggle-off; no radio dot (matches the design), driven by aria-pressed + the
-// data-* delegation like the rest of the panel.
-function imageTypeCards(st) {
+// Image type — light filter chips (the label is self-explanatory; the short
+// description rides in the tooltip). Single-select, toggle-off.
+function imageTypeChips(st) {
   return imageStudio.IMAGE_TYPES.map((o) => {
     const sel = st.imageTypeKey === o.key;
-    return `<button type="button" class="image-studio__type-card${sel ? " is-selected" : ""}" data-img-image-type="${escapeHtml(o.key)}" aria-pressed="${sel}">
-      <span class="image-studio__type-title">${escapeHtml(o.label)}</span>
-      <span class="image-studio__type-desc">${escapeHtml(o.desc)}</span>
-    </button>`;
+    const tip = `${o.label} · ${o.desc}`;
+    return `<button type="button" class="ap-filter-chip" data-img-image-type="${escapeHtml(o.key)}" aria-pressed="${sel}" title="${escapeHtml(tip)}" aria-label="${escapeHtml(tip)}">${escapeHtml(o.label)}</button>`;
   }).join("");
 }
 
@@ -198,7 +195,7 @@ function composeGroups(st) {
     id: "imageType",
     label: "Image type",
     summary: imageTypeLabel,
-    body: `<div class="image-studio__type-list">${imageTypeCards(st)}</div>`,
+    body: `<div class="image-studio__chips">${imageTypeChips(st)}</div>`,
   });
 
   // Style preset — the aesthetic look. Mutually exclusive with reference images:

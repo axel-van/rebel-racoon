@@ -300,53 +300,6 @@ button.image-studio__group-head:disabled {
   opacity: 0.6;
 }
 
-/* Image type — selectable cards (title + description), stacked one per row so
-   they stay legible in the narrow panel. Selected = blue border + faint blue
-   wash (the app's clickable-card convention: blue border, no elevation). */
-.image-studio__type-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-}
-
-.image-studio__type-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-  width: 100%;
-  text-align: left;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-md);
-  background: var(--ref-color-white);
-  cursor: pointer;
-  transition: border-color var(--ref-animation-short) var(--app-ease-out);
-}
-
-.image-studio__type-card:hover,
-.image-studio__type-card:focus-visible {
-  outline: none;
-  border-color: var(--ref-color-electric-blue-100);
-}
-
-.image-studio__type-card.is-selected {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-05);
-}
-
-.image-studio__type-title {
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-grey-100);
-}
-
-.image-studio__type-desc {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-60);
-}
-
 /* Sub-label between the two chip rows in the merged Output group. */
 .image-studio__subgroup-label {
   margin: var(--ref-spacing-xs) 0 0;
