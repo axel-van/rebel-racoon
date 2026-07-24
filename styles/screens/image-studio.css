@@ -988,6 +988,7 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 .image-studio__overlay.is-editing .image-studio__overlay-rotate,
+.image-studio__overlay.is-editing .image-studio__overlay-rotate-reset,
 .image-studio__overlay.is-editing .image-studio__overlay-resize {
   display: none;
 }
@@ -1192,6 +1193,7 @@ button.image-studio__ref--pick:focus-visible {
 
 .image-studio__overlay-delete,
 .image-studio__overlay-rotate,
+.image-studio__overlay-rotate-reset,
 .image-studio__overlay-resize {
   position: absolute;
   z-index: 2;
@@ -1200,6 +1202,7 @@ button.image-studio__ref--pick:focus-visible {
 
 .image-studio__overlay.is-selected .image-studio__overlay-delete,
 .image-studio__overlay.is-selected .image-studio__overlay-rotate,
+.image-studio__overlay.is-selected .image-studio__overlay-rotate-reset,
 .image-studio__overlay.is-selected .image-studio__overlay-resize {
   display: inline-flex;
 }
@@ -1247,6 +1250,35 @@ button.image-studio__ref--pick:focus-visible {
    you couldn't grab it. Drop it below, centred, clear of both the toolbar
    above and the bottom-right resize corner. */
 .image-studio__overlay.is-text .image-studio__overlay-rotate {
+  top: auto;
+  bottom: -30px;
+}
+
+/* "Reset rotation" — sits just to the right of the rotate handle, sharing its
+   vertical band (top for logos, bottom for text). Only rendered while rotated
+   (see edit-view). Same circular chip as the handle, but filled electric-blue
+   so it reads as an action, not another grab target. */
+.image-studio__overlay-rotate-reset {
+  top: -30px;
+  left: 50%;
+  transform: translateX(calc(-50% + 24px));
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-white);
+  cursor: pointer;
+}
+
+.image-studio__overlay-rotate-reset > i {
+  font-size: 11px;
+}
+
+.image-studio__overlay.is-text .image-studio__overlay-rotate-reset {
   top: auto;
   bottom: -30px;
 }
