@@ -566,13 +566,13 @@ button.image-studio__ref--pick:focus-visible {
 /* Expanded mode is a much larger prompt panel — clearly taller AND wider than
    the small composer — so a full structured brief is comfortable to read/edit.
    Width animates from the center (the composer is translateX(-50%)-centered);
-   the field jumps to a fixed larger height. Small stays compact (540px wide,
+   the field jumps to a fixed 10-line height. Small stays compact (540px wide,
    5-line box) for a strong contrast. */
 .image-studio__composer.is-expanded {
   width: min(92%, 820px);
 }
 .image-studio__composer.is-expanded .image-studio__reprompt-field {
-  height: min(60vh, 500px);
+  height: calc(var(--sys-text-style-body-line-height) * 10);
 }
 
 /* Compact ghost icon button (small ↔ expanded toggle), sized to match the
