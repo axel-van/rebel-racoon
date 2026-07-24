@@ -12,7 +12,7 @@ import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.j
 import { renderPostCard } from "../post-card.js?v=68";
 import { KEY, ctx } from "./context.js?v=2";
 import { generateControls } from "./compose-view.js?v=2";
-import { actionBar, editCanvas } from "./edit-view.js?v=9";
+import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=10";
 import * as imageStudio from "../../image-studio.js?v=28";
 
 export function renderStudio(st) {
@@ -82,10 +82,13 @@ function canvasContent(st) {
       <p class="gen-empty-title">Your image appears here</p>
       <span class="gen-empty-sub">Describe it on the left, then generate.</span>
     </div>`;
-  // Edit mode (image view): the floating action bar lives over the canvas.
+  // Edit mode (image view): the floating AI bar lives over the canvas bottom and
+  // the manual hand-tools float as a palette top-left — hidden during crop draw,
+  // which takes the bottom bar over with its own confirm controls.
   const editingImage = st.mode === "edit" && !(showToggle && st.canvasView === "feed");
   const bar = editingImage ? actionBar(st) : "";
-  return `${toggle}<div class="image-studio__canvas-body">${inner}</div>${bar}`;
+  const palette = editingImage && !st.cropDrawing ? toolPalette(st) : "";
+  return `${toggle}<div class="image-studio__canvas-body">${inner}</div>${palette}${bar}`;
 }
 
 function generatingCanvas(st) {

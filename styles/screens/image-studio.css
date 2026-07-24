@@ -524,8 +524,8 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 .image-studio--edit .image-studio__canvas {
-  position: relative; /* anchor for the floating action bar */
-  padding-bottom: 116px; /* clearance so the 2-row bar never overlaps the image */
+  position: relative; /* anchor for the floating AI bar + tool palette */
+  padding-bottom: 96px; /* clearance so the bottom bar never overlaps the image */
 }
 
 /* Clip the image in an inner box so the frame itself can overflow — the
@@ -541,9 +541,8 @@ button.image-studio__ref--pick:focus-visible {
   border-radius: var(--app-radius-md);
 }
 
-/* Floating action bar — a card centred at the canvas bottom. Two zones with a
-   clear hierarchy: the AI prompt field (generative) up top, then the manual
-   hand-tools (Crop / Add text / Add logo) below an "or edit by hand" divider. */
+/* Floating AI bar — a card centred at the canvas bottom holding the reprompt
+   field + Apply. The manual hand-tools live in .image-studio__palette (left). */
 .image-studio__actionbar {
   position: absolute;
   left: 50%;
@@ -567,9 +566,43 @@ button.image-studio__ref--pick:focus-visible {
   gap: var(--ref-spacing-xs);
 }
 
-.image-studio__actionbar-tools {
-  justify-content: center;
-  gap: var(--ref-spacing-xs);
+/* Manual hand-tools — a compact icon-only palette floating at the canvas
+   top-left (Crop / Add text / Add image), the counterpart to the AI bar. */
+.image-studio__palette {
+  position: absolute;
+  left: var(--ref-spacing-lg);
+  top: var(--ref-spacing-lg);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs);
+  background: var(--ref-color-white);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-lg);
+  box-shadow: var(--app-shadow-popover-lg);
+}
+
+.image-studio__palette-anchor {
+  position: relative;
+}
+
+/* Add image trigger, popover open — tint the icon blue (matches .ap-icon-button.blue). */
+.image-studio__palette .ap-icon-button[aria-expanded="true"] {
+  background: var(--ref-color-electric-blue-10);
+}
+
+.image-studio__palette .ap-icon-button[aria-expanded="true"] > i {
+  color: var(--ref-color-electric-blue-100);
+}
+
+/* On the left rail the image popover flyouts to the right of the trigger,
+   top-aligned (overrides the bottom/right anchoring used in the bottom bar). */
+.image-studio__palette .image-studio__popover--logo {
+  left: calc(100% + 10px);
+  right: auto;
+  top: 0;
+  bottom: auto;
 }
 
 /* Zone 1 — the AI prompt: the DS input component (.ap-input-group) carrying the
@@ -595,36 +628,6 @@ button.image-studio__ref--pick:focus-visible {
 
 .image-studio__actionbar-apply {
   flex: 0 0 auto;
-}
-
-/* The zone divider — an "or edit by hand" label flanked by hairlines. It's the
-   line that keeps the AI path and the manual path from blurring together. */
-.image-studio__actionbar-or {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  color: var(--ref-color-grey-60);
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-}
-
-.image-studio__actionbar-or::before,
-.image-studio__actionbar-or::after {
-  content: "";
-  flex: 1 1 auto;
-  height: 1px;
-  background: var(--app-border-soft);
-}
-
-.image-studio__actionbar-anchor {
-  position: relative;
-}
-
-/* The edit-tools are DS .ap-button (stroked grey) — only the popover-open state
-   is app-specific: tint the active trigger with the studio's blue accent. */
-.image-studio__actionbar-tools .ap-button[aria-expanded="true"] {
-  border-color: var(--ref-color-electric-blue-100);
-  color: var(--ref-color-electric-blue-100);
 }
 
 .image-studio__actionbar-input:disabled {

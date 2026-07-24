@@ -11,20 +11,15 @@ import { KEY } from "./context.js?v=2";
 import { STROKE_K, shadowMetrics, cssFamily } from "./canvas.js?v=1";
 import * as imageStudio from "../../image-studio.js?v=28";
 
-// Edit mode — the floating action bar over the canvas bottom. Two clearly
-// separated zones so the AI path and the manual path don't blur together:
-//   1. AI zone — a filled prompt field (mermaid-sparkle cue = generative AI)
-//      with the orange Apply CTA; describe a change and I redraw the image.
-//   2. Manual zone — Crop / Add text / Add logo, precise hand tools, split off
-//      below an "or edit by hand" divider so they read as the alternative.
-// Crop drops straight into a draw-a-rectangle mode (see cropConfirmBar); Add logo
-// opens a small popover; text is added and edited directly on the canvas (see
-// renderOverlay). Inspired by the bottom tool bar of Krea AI / DALL·E.
+// Edit mode — the floating AI reprompt bar over the canvas bottom: a filled
+// prompt field (mermaid-sparkle cue = generative AI) with the orange Apply CTA;
+// describe a change and I redraw the image. The manual hand-tools (Crop / Add
+// text / Add image) live in their own floating palette on the left (toolPalette).
+// Crop draw mode takes the whole bottom bar over with its own confirm controls.
 export function actionBar(st) {
-  // Crop draw mode takes over the whole bar with its own confirm controls.
   if (st.cropDrawing) return cropConfirmBar(st);
   const busy = st.editBusy ? "disabled" : "";
-  return `<div class="image-studio__actionbar" role="toolbar" aria-label="Edit tools">
+  return `<div class="image-studio__actionbar" role="toolbar" aria-label="AI edit">
     <div class="image-studio__actionbar-ai">
       <div class="ap-input-group">
         <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
@@ -32,14 +27,22 @@ export function actionBar(st) {
       </div>
       <button type="button" class="ap-button primary orange image-studio__actionbar-apply" data-img-apply-edit="prompt" ${busy}><i class="ap-icon-archie-official" aria-hidden="true"></i><span>Apply</span></button>
     </div>
-    <div class="image-studio__actionbar-or" aria-hidden="true"><span>or edit by hand</span></div>
-    <div class="image-studio__actionbar-row image-studio__actionbar-tools">
-      <button type="button" class="ap-button stroked grey" data-img-crop-start ${busy}><i class="ap-icon-cropper" aria-hidden="true"></i><span>Crop</span></button>
-      <button type="button" class="ap-button stroked grey" data-img-add-text ${busy}><i class="ap-icon-closed-captions" aria-hidden="true"></i><span>Add text</span></button>
-      <div class="image-studio__actionbar-anchor">
-        <button type="button" class="ap-button stroked grey" data-img-popover-toggle="logo" aria-haspopup="true" aria-expanded="${st.openPopover === "logo"}" ${busy}><i class="ap-icon-file--image" aria-hidden="true"></i><span>Add image</span></button>
-        ${st.openPopover === "logo" ? logoPopover() : ""}
-      </div>
+  </div>`;
+}
+
+// Manual edit tools as a compact icon-only palette floating at the canvas
+// top-left (a Figma/Canva-style rail) — the alternative to the AI reprompt bar.
+// Crop enters draw mode; Add text drops an editable overlay; Add image opens the
+// image/logo popover (flyout to the right of the rail). Hooks are unchanged —
+// event delegation on the modal root keys off the data-* attributes.
+export function toolPalette(st) {
+  const busy = st.editBusy ? "disabled" : "";
+  return `<div class="image-studio__palette" role="toolbar" aria-label="Edit tools">
+    <button type="button" class="ap-icon-button" data-img-crop-start title="Crop" aria-label="Crop" ${busy}><i class="ap-icon-cropper" aria-hidden="true"></i></button>
+    <button type="button" class="ap-icon-button" data-img-add-text title="Add text" aria-label="Add text" ${busy}><i class="ap-icon-closed-captions" aria-hidden="true"></i></button>
+    <div class="image-studio__palette-anchor">
+      <button type="button" class="ap-icon-button" data-img-popover-toggle="logo" aria-haspopup="true" aria-expanded="${st.openPopover === "logo"}" title="Add image" aria-label="Add image" ${busy}><i class="ap-icon-file--image" aria-hidden="true"></i></button>
+      ${st.openPopover === "logo" ? logoPopover() : ""}
     </div>
   </div>`;
 }
