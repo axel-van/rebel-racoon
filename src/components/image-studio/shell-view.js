@@ -13,7 +13,38 @@ import { renderPostCard } from "../post-card.js?v=68";
 import { KEY, ctx } from "./context.js?v=3";
 import { generateControls } from "./compose-view.js?v=3";
 import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=17";
+import { compositeOverlays } from "./canvas.js?v=2";
 import * as imageStudio from "../../image-studio.js?v=29";
+
+// In-feed preview — the edit canvas layers logo/text overlays as live DOM over the
+// image, but the post-card preview can't (it just takes an image URL), so overlays
+// wouldn't show. We flatten (base image + overlays) into a PNG and feed the card
+// that. compositeOverlays is async while render is sync, so we memoise by a
+// signature of the flatten inputs and re-render once it lands; the plain image
+// shows meanwhile. Only one studio is open at a time (KEY is constant), so a
+// module-level cache suffices.
+let previewComposite = null; // { sig, url }
+let previewPendingSig = null;
+
+const overlaySig = (img, overlays) => JSON.stringify([img.url, img.w, img.h, overlays]);
+
+function compositedPreviewUrl(img, overlays) {
+  const sig = overlaySig(img, overlays);
+  if (previewComposite && previewComposite.sig === sig) return previewComposite.url;
+  if (previewPendingSig !== sig) {
+    previewPendingSig = sig;
+    compositeOverlays(img.url, overlays, img.w, img.h)
+      .then((url) => {
+        previewComposite = { sig, url };
+        previewPendingSig = null;
+        imageStudio.notifyOverlays(KEY); // re-render → swaps the plain image for the flattened one
+      })
+      .catch(() => {
+        previewPendingSig = null;
+      });
+  }
+  return img.url; // fall back to the plain image until the composite lands
+}
 
 export function renderStudio(st) {
   // Edit mode is a direct editor: a full-width canvas with a floating action bar
@@ -176,9 +207,14 @@ function previewCanvas(st) {
   let media;
   if (st.outputMode === "carousel") {
     const urls = st.variations.map((v) => v.url);
+    // Overlays are edited against the focused slide — flatten them into it so the
+    // preview reflects the edit in progress.
+    if (st.overlays.length && st.currentImage && st.selectedIndex != null)
+      urls[st.selectedIndex] = compositedPreviewUrl(st.currentImage, st.overlays);
     media = { imageUrl: urls[0] || null, carousel: urls };
   } else {
-    const url = st.currentImage?.url || (st.selectedIndex != null ? st.variations[st.selectedIndex]?.url : null);
+    let url = st.currentImage?.url || (st.selectedIndex != null ? st.variations[st.selectedIndex]?.url : null);
+    if (st.overlays.length && st.currentImage) url = compositedPreviewUrl(st.currentImage, st.overlays);
     media = { imageUrl: url, carousel: null };
   }
   // Null clip/regenerate so the image branch renders (not the video PIP).
