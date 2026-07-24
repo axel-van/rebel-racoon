@@ -64,10 +64,25 @@ export const MOOD_OPTIONS = [
 ];
 
 // Curated logo presets for the "Add logo" tray (real bundled assets).
-export const LOGO_PRESETS = [
-  { label: "Brand", url: "assets/avatars/northwind-studio.svg" },
-  { label: "Archie", url: "assets/logos/archie-mono.svg" },
-  { label: "Wordmark", url: "assets/logos/archie-wordmark.svg" },
+// Stock-image library shown in the Edit "Add image" popover — mock thumbnails the
+// user can drop onto the working image (or upload their own).
+export const IMAGE_PRESETS = [
+  { label: "Mountains", url: "https://picsum.photos/seed/imgp-mountains/240/240" },
+  { label: "Coastline", url: "https://picsum.photos/seed/imgp-coastline/240/240" },
+  { label: "City", url: "https://picsum.photos/seed/imgp-city/240/240" },
+  { label: "Studio", url: "https://picsum.photos/seed/imgp-studio/240/240" },
+  { label: "Team", url: "https://picsum.photos/seed/imgp-team/240/240" },
+  { label: "Desk", url: "https://picsum.photos/seed/imgp-desk/240/240" },
+  { label: "Abstract", url: "https://picsum.photos/seed/imgp-abstract/240/240" },
+  { label: "Gradient", url: "https://picsum.photos/seed/imgp-gradient/240/240" },
+  { label: "Texture", url: "https://picsum.photos/seed/imgp-texture/240/240" },
+  { label: "Product", url: "https://picsum.photos/seed/imgp-product/240/240" },
+  { label: "Event", url: "https://picsum.photos/seed/imgp-event/240/240" },
+  { label: "Portrait", url: "https://picsum.photos/seed/imgp-portrait/240/240" },
+  { label: "Aerial", url: "https://picsum.photos/seed/imgp-aerial/240/240" },
+  { label: "Minimal", url: "https://picsum.photos/seed/imgp-minimal/240/240" },
+  { label: "Neon", url: "https://picsum.photos/seed/imgp-neon/240/240" },
+  { label: "Forest", url: "https://picsum.photos/seed/imgp-forest/240/240" },
 ];
 
 // Text-overlay colour swatches.
@@ -217,6 +232,7 @@ export function start(
     // look (its own `disabled` state, not this set).
     collapsedGroups: new Set(),
     composerExpanded: false, // prompt composer size: small (default) vs expanded
+    logoView: "grid", // "Add image" popover layout: grid (default) vs list
     variationCount: 2, // single-image mode: how many alternatives to pick from
     slideCount, // carousel mode: how many slides to generate
     variations, // [{ seed, url, w, h }] — alternatives (single) or slides (carousel)
@@ -428,6 +444,14 @@ export function toggleGroupCollapsed(sessionId, id) {
 export function setComposerExpandedSilent(sessionId, value) {
   const s = states.get(sessionId);
   if (s) s.composerExpanded = !!value;
+}
+
+// "Add image" popover layout — grid vs list.
+export function setLogoView(sessionId, view) {
+  const s = states.get(sessionId);
+  if (!s || (view !== "grid" && view !== "list") || s.logoView === view) return;
+  s.logoView = view;
+  notify(sessionId);
 }
 
 // ── "Suggest from this post" (mock) ─────────────────────────────────────────

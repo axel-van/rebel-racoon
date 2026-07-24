@@ -10,11 +10,11 @@ import { html, raw, escapeHtml } from "../../utils.js?v=21";
 import { getPosts } from "../../posts-store.js?v=36";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=26";
 import { renderPostCard } from "../post-card.js?v=68";
-import { KEY, ctx } from "./context.js?v=7";
-import { generateControls, deriveButton } from "./compose-view.js?v=10";
-import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=21";
+import { KEY, ctx } from "./context.js?v=8";
+import { generateControls, deriveButton } from "./compose-view.js?v=11";
+import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=22";
 import { compositeOverlays } from "./canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=33";
+import * as imageStudio from "../../image-studio.js?v=34";
 
 // Empty-state hint for the prompt composer — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why

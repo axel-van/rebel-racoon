@@ -7,9 +7,9 @@
 import { escapeHtml } from "../../utils.js?v=21";
 import { FORMATS, NETWORK_FORMATS } from "../../clip-formats.js?v=5";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=26";
-import { KEY } from "./context.js?v=7";
+import { KEY } from "./context.js?v=8";
 import { outlineMetrics, shadowMetrics, cssFamily } from "./canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=33";
+import * as imageStudio from "../../image-studio.js?v=34";
 
 // Edit mode — the floating AI reprompt bar over the canvas bottom: a single-row
 // composer card — the mermaid-sparkle cue (= generative AI), a borderless
@@ -40,7 +40,7 @@ export function toolPalette(st) {
     <button type="button" class="ap-button ghost grey" data-img-add-text ${busy}><i class="ap-icon-closed-captions" aria-hidden="true"></i><span>Add text</span></button>
     <div class="image-studio__palette-anchor">
       <button type="button" class="ap-button ghost grey" data-img-popover-toggle="logo" aria-haspopup="true" aria-expanded="${st.openPopover === "logo"}" ${busy}><i class="ap-icon-file--image" aria-hidden="true"></i><span>Add image</span></button>
-      ${st.openPopover === "logo" ? logoPopover() : ""}
+      ${st.openPopover === "logo" ? logoPopover(st) : ""}
     </div>
   </div>`;
 }
@@ -100,18 +100,24 @@ function cropAspectChips(st) {
   return [freeform, ...presets].join(`<span class="image-studio__crop-sep" aria-hidden="true"></span>`);
 }
 
-function logoPopover() {
-  // Upload is the first tile in the grid (a dashed "add" cell) so it reads as
-  // part of the set and the layout scales to many logos: the grid scrolls.
-  const uploadTile = `<button type="button" class="image-studio__preset image-studio__preset--upload" data-img-logo-upload title="Upload an image"><i class="ap-icon-upload" aria-hidden="true"></i><span>Upload</span></button>`;
-  const presets = imageStudio.LOGO_PRESETS.map(
+function logoPopover(st) {
+  const list = st.logoView === "list";
+  // Upload is a distinct full-width action at the top (not a tile in the grid).
+  const upload = `<button type="button" class="ap-button stroked grey image-studio__logo-upload" data-img-logo-upload><i class="ap-icon-upload" aria-hidden="true"></i><span>Upload an image</span></button>`;
+  // Grid ↔ list toggle — reuses the segmented pill from the canvas view toggle.
+  const seg = `<div class="image-studio__viewseg image-studio__viewseg--compact" role="group" aria-label="Image layout">
+    <button type="button" class="image-studio__viewseg-btn" data-img-logo-view="grid" aria-pressed="${!list}" aria-label="Grid view" title="Grid view"><i class="ap-icon-view-grid" aria-hidden="true"></i></button>
+    <button type="button" class="image-studio__viewseg-btn" data-img-logo-view="list" aria-pressed="${list}" aria-label="List view" title="List view"><i class="ap-icon-view-list" aria-hidden="true"></i></button>
+  </div>`;
+  const presets = imageStudio.IMAGE_PRESETS.map(
     (p) =>
-      `<button type="button" class="image-studio__preset" data-img-logo-preset="${escapeHtml(p.url)}" title="${escapeHtml(p.label)}"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.label)}" /></button>`,
+      `<button type="button" class="image-studio__preset" data-img-logo-preset="${escapeHtml(p.url)}" title="${escapeHtml(p.label)}"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.label)}" loading="lazy" /><span class="image-studio__preset-label">${escapeHtml(p.label)}</span></button>`,
   ).join("");
   return `<div class="image-studio__popover image-studio__popover--logo" data-img-popover role="menu" aria-label="Images">
-    <div class="image-studio__popover-head"><p class="image-studio__popover-title">Images</p></div>
+    <div class="image-studio__popover-head"><p class="image-studio__popover-title">Images</p>${seg}</div>
     <div class="image-studio__popover-body">
-      <div class="image-studio__presets">${uploadTile}${presets}</div>
+      ${upload}
+      <div class="image-studio__presets${list ? " image-studio__presets--list" : ""}">${presets}</div>
     </div>
   </div>`;
 }
