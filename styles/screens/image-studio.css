@@ -958,22 +958,9 @@ button.image-studio__ref--pick:focus-visible {
   color: var(--ref-color-electric-blue-150);
 }
 
-/* Import action — a real DS stroked button (not a menu row), auto-width and
-   inset to the option text so it lines up under the list. */
-.image-studio__font-import {
-  align-self: flex-start;
-  margin-inline: var(--comp-select-one-line-padding-horizontal);
-}
-
-.image-studio__font-div {
-  height: 1px;
-  margin: 0;
-  background: var(--comp-action-dropdown-divider-color);
-}
-
 /* Font popover body follows the DS dropdown container: vertical padding only, so
    the option rows span full width (their 16px padding lines the text up with the
-   header title). A small gap sets the list / divider / import apart. */
+   header title). */
 .image-studio__popover--font .image-studio__popover-body {
   padding: var(--ref-spacing-xxs) 0;
   gap: var(--ref-spacing-xxs);

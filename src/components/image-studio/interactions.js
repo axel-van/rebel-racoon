@@ -1,11 +1,10 @@
-// Image Studio — imperative interactions: throwaway file/font pickers and the
+// Image Studio — imperative interactions: throwaway file/logo pickers and the
 // on-canvas pointer gestures (drag / resize / rotate an overlay, draw / move /
 // resize the crop rectangle, then apply the crop). These run outside the render
 // cycle: gestures update state silently + move the DOM node directly during the
 // drag for smoothness, then notify (re-render) on pointer-up. All DOM queries go
 // through ctx.modal.
 
-import { showToast } from "../toast.js?v=20";
 import { KEY, ctx, state, clamp } from "./context.js?v=2";
 import { cropImage } from "./canvas.js?v=1";
 import * as imageStudio from "../../image-studio.js?v=28";
@@ -36,43 +35,6 @@ export function openLogoPicker() {
   input.addEventListener("change", () => {
     const file = input.files && input.files[0];
     if (file) imageStudio.addOverlay(KEY, { kind: "logo", url: URL.createObjectURL(file) });
-  });
-  input.click();
-}
-
-let fontSeq = 0;
-const fontLabelFromName = (name) =>
-  (name || "")
-    .replace(/\.[^.]+$/, "")
-    .replace(/[-_]+/g, " ")
-    .trim() || "Custom font";
-
-// Upload a font file → register it via FontFace so both the live text and the
-// canvas bake can use it, then select it on the current overlay.
-export function openFontPicker() {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".ttf,.otf,.woff,.woff2,font/*";
-  input.addEventListener("change", () => {
-    const file = input.files && input.files[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    const family = `studio-font-${++fontSeq}`;
-    new FontFace(family, `url("${url}")`)
-      .load()
-      .then((loaded) => {
-        document.fonts.add(loaded);
-        imageStudio.addCustomFont(KEY, { family, label: fontLabelFromName(file.name), url });
-        imageStudio.setOpenPopover(KEY, null);
-      })
-      .catch(() => {
-        try {
-          URL.revokeObjectURL(url);
-        } catch {
-          /* ignore */
-        }
-        showToast("Couldn't load that font file.");
-      });
   });
   input.click();
 }

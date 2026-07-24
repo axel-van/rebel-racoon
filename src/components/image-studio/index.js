@@ -25,15 +25,14 @@ import { getSessionById } from "../../sessions-store.js?v=6";
 import { getContextById } from "../../contexts-store.js?v=37";
 import { MODAL_ID, KEY, ctx, state } from "./context.js?v=2";
 import { compositeOverlays, loadImg, shadowMetrics, STROKE_K } from "./canvas.js?v=1";
-import { renderStudio } from "./shell-view.js?v=6";
+import { renderStudio } from "./shell-view.js?v=7";
 import {
   openFilePicker,
   openLogoPicker,
-  openFontPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=2";
+} from "./interactions.js?v=3";
 import * as imageStudio from "../../image-studio.js?v=28";
 
 let backdrop;
@@ -257,7 +256,6 @@ function onClick(event) {
     restoreEdit();
     return;
   }
-  if (event.target.closest("[data-img-font-upload]")) return void openFontPicker();
   if (event.target.closest("[data-img-text-bold]") && st.selectedOverlayId) {
     const o = imageStudio.getOverlay(KEY, st.selectedOverlayId);
     imageStudio.updateOverlay(KEY, st.selectedOverlayId, { bold: !o?.bold });
