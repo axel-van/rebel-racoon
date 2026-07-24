@@ -583,16 +583,20 @@ button.image-studio__ref--pick:focus-visible {
   box-shadow: var(--app-shadow-popover-lg);
 }
 
+/* Labelled tools stack as a uniform-width, left-aligned rail (menu-like). */
+.image-studio__palette .ap-button {
+  width: 100%;
+  justify-content: flex-start;
+}
+
 .image-studio__palette-anchor {
   position: relative;
+  width: 100%;
 }
 
-/* Add image trigger, popover open — tint the icon blue (matches .ap-icon-button.blue). */
-.image-studio__palette .ap-icon-button[aria-expanded="true"] {
-  background: var(--ref-color-electric-blue-10);
-}
-
-.image-studio__palette .ap-icon-button[aria-expanded="true"] > i {
+/* Add image trigger, popover open — tint the stroked button with the blue accent. */
+.image-studio__palette .ap-button[aria-expanded="true"] {
+  border-color: var(--ref-color-electric-blue-100);
   color: var(--ref-color-electric-blue-100);
 }
 
@@ -1324,12 +1328,24 @@ button.image-studio__ref--pick:focus-visible {
   cursor: nwse-resize;
 }
 
-/* Crop-draw toolbar variant — wider than the edit bar so the ratio chips stay
-   on ONE row (no wrap), with a clear gap between the action tier and the
-   ratio tier. */
-.image-studio__actionbar--crop {
-  width: min(96%, 700px);
+/* Crop-draw toolbar — a floating card pinned above the crop frame (not docked in
+   the bottom bar), wide enough for the ratio chips to stay on ONE row. The frame
+   is overflow:visible so it sits in the canvas space above the image. */
+.image-studio__crop-toolbar {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + var(--ref-spacing-sm));
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
   gap: var(--ref-spacing-sm);
+  width: min(88vw, 700px);
+  padding: var(--ref-spacing-sm);
+  background: var(--ref-color-white);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-modal);
+  box-shadow: var(--app-shadow-popover-lg);
 }
 
 /* Crop-draw toolbar variant — the aspect-lock chips sit on their own row. */

@@ -25,7 +25,7 @@ import { getSessionById } from "../../sessions-store.js?v=6";
 import { getContextById } from "../../contexts-store.js?v=37";
 import { MODAL_ID, KEY, ctx, state } from "./context.js?v=2";
 import { compositeOverlays, loadImg, shadowMetrics, STROKE_K } from "./canvas.js?v=1";
-import { renderStudio } from "./shell-view.js?v=10";
+import { renderStudio } from "./shell-view.js?v=11";
 import {
   openFilePicker,
   openLogoPicker,

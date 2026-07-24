@@ -15,9 +15,10 @@ import * as imageStudio from "../../image-studio.js?v=28";
 // prompt field (mermaid-sparkle cue = generative AI) with the orange Apply CTA;
 // describe a change and I redraw the image. The manual hand-tools (Crop / Add
 // text / Add image) live in their own floating palette on the left (toolPalette).
-// Crop draw mode takes the whole bottom bar over with its own confirm controls.
+// During crop draw the bottom bar disappears — the crop controls float over the
+// image instead (cropToolbar, rendered from editCanvas).
 export function actionBar(st) {
-  if (st.cropDrawing) return cropConfirmBar(st);
+  if (st.cropDrawing) return "";
   const busy = st.editBusy ? "disabled" : "";
   return `<div class="image-studio__actionbar" role="toolbar" aria-label="AI edit">
     <div class="image-studio__actionbar-ai">
@@ -30,29 +31,30 @@ export function actionBar(st) {
   </div>`;
 }
 
-// Manual edit tools as a compact icon-only palette floating at the canvas
-// top-left (a Figma/Canva-style rail) — the alternative to the AI reprompt bar.
-// Crop enters draw mode; Add text drops an editable overlay; Add image opens the
-// image/logo popover (flyout to the right of the rail). Hooks are unchanged —
-// event delegation on the modal root keys off the data-* attributes.
+// Manual edit tools as a labelled palette floating at the canvas top-left (a
+// Figma/Canva-style rail) — the alternative to the AI reprompt bar. Crop enters
+// draw mode; Add text drops an editable overlay; Add image opens the image
+// popover (flyout to the right of the rail). Hooks are unchanged — event
+// delegation on the modal root keys off the data-* attributes.
 export function toolPalette(st) {
   const busy = st.editBusy ? "disabled" : "";
   return `<div class="image-studio__palette" role="toolbar" aria-label="Edit tools">
-    <button type="button" class="ap-icon-button" data-img-crop-start title="Crop" aria-label="Crop" ${busy}><i class="ap-icon-cropper" aria-hidden="true"></i></button>
-    <button type="button" class="ap-icon-button" data-img-add-text title="Add text" aria-label="Add text" ${busy}><i class="ap-icon-closed-captions" aria-hidden="true"></i></button>
+    <button type="button" class="ap-button stroked grey" data-img-crop-start ${busy}><i class="ap-icon-cropper" aria-hidden="true"></i><span>Crop</span></button>
+    <button type="button" class="ap-button stroked grey" data-img-add-text ${busy}><i class="ap-icon-closed-captions" aria-hidden="true"></i><span>Add text</span></button>
     <div class="image-studio__palette-anchor">
-      <button type="button" class="ap-icon-button" data-img-popover-toggle="logo" aria-haspopup="true" aria-expanded="${st.openPopover === "logo"}" title="Add image" aria-label="Add image" ${busy}><i class="ap-icon-file--image" aria-hidden="true"></i></button>
+      <button type="button" class="ap-button stroked grey" data-img-popover-toggle="logo" aria-haspopup="true" aria-expanded="${st.openPopover === "logo"}" ${busy}><i class="ap-icon-file--image" aria-hidden="true"></i><span>Add image</span></button>
       ${st.openPopover === "logo" ? logoPopover() : ""}
     </div>
   </div>`;
 }
 
-// The crop-draw toolbar — replaces the tools row while a crop rectangle is being
-// drawn. A short hint, aspect-lock chips (Freeform + the ratio presets), then
-// Cancel / Apply crop.
-function cropConfirmBar(st) {
+// Crop-draw controls — a floating toolbar over the crop area (above the image),
+// not docked in the bottom bar. A short hint, Cancel / Apply crop, then the
+// aspect-lock chips (Freeform + the ratio presets). Rendered inside the frame by
+// editCanvas so it pins to the crop area.
+function cropToolbar(st) {
   const busy = st.editBusy ? "disabled" : "";
-  return `<div class="image-studio__actionbar image-studio__actionbar--crop" role="toolbar" aria-label="Crop">
+  return `<div class="image-studio__crop-toolbar" role="toolbar" aria-label="Crop">
     <div class="image-studio__actionbar-row image-studio__crop-row">
       <p class="image-studio__crop-hint"><i class="ap-icon-cropper" aria-hidden="true"></i>Drag to draw a crop, or adjust the box</p>
       <div class="image-studio__crop-actions">
@@ -224,9 +226,10 @@ export function editCanvas(st) {
     st.outputMode === "carousel"
       ? `<span class="image-studio__badge image-studio__badge--slide"><i class="ap-icon-multiple-images" aria-hidden="true"></i>Editing slide ${(st.selectedIndex ?? 0) + 1} / ${st.variations.length}</span>`
       : "";
+  const crop = st.cropDrawing && !st.editBusy ? `${renderCropRect(st)}${cropToolbar(st)}` : "";
   return `<div class="image-studio__frame" style="--imgs-ratio:${ratio}">
       <div class="image-studio__frame-clip"><img class="image-studio__frame-img" src="${img ? img.url : ""}" alt="Working image" /></div>
-      ${overlayLayer(st)}${st.cropDrawing && !st.editBusy ? renderCropRect(st) : ""}${busy}${badge}
+      ${overlayLayer(st)}${crop}${busy}${badge}
     </div>`;
 }
 
