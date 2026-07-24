@@ -10,11 +10,11 @@ import { html, raw, escapeHtml } from "../../utils.js?v=21";
 import { getPosts } from "../../posts-store.js?v=36";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=26";
 import { renderPostCard } from "../post-card.js?v=68";
-import { KEY, ctx } from "./context.js?v=3";
-import { generateControls, deriveButton } from "./compose-view.js?v=6";
-import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=17";
+import { KEY, ctx } from "./context.js?v=4";
+import { generateControls, deriveButton } from "./compose-view.js?v=7";
+import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=18";
 import { compositeOverlays } from "./canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=29";
+import * as imageStudio from "../../image-studio.js?v=30";
 
 // In-feed preview — the edit canvas layers logo/text overlays as live DOM over the
 // image, but the post-card preview can't (it just takes an image URL), so overlays
@@ -103,9 +103,14 @@ function canvasContent(st) {
   const showToggle = hasImg && (st.mode === "edit" || (st.mode === "generate" && st.genPhase === "results"));
   const toggle = showToggle ? canvasViewToggle(st) : "";
   const feedView = showToggle && st.canvasView === "feed";
+  // On open (and on a manual re-suggest) Archie first drafts the best image
+  // prompt from the draft — a full-canvas loader stands in until it lands, then
+  // the composer appears pre-filled.
+  const deriving = st.mode === "generate" && !feedView && st.promptLoading && st.genPhase === "idle";
   let inner;
   if (feedView) inner = previewCanvas(st);
   else if (st.mode === "edit") inner = editCanvas(st);
+  else if (deriving) inner = derivingCanvas();
   else if (st.genPhase === "generating") inner = generatingCanvas(st);
   else if (st.genPhase === "results") inner = resultsCanvas(st);
   else
@@ -125,9 +130,20 @@ function canvasContent(st) {
   // floats over the canvas bottom (every phase), and the variations "chutier"
   // floats as a vertical rail on the right (results only).
   const generating = st.mode === "generate" && !feedView;
-  const genComposer = generating ? generateComposer(st) : "";
+  const genComposer = generating && !deriving ? generateComposer(st) : "";
   const rail = generating && st.genPhase === "results" && st.variations.length > 0 ? variationsRail(st) : "";
   return `${toggle}<div class="image-studio__canvas-body">${inner}</div>${palette}${editBar}${rail}${genComposer}`;
+}
+
+// Full-canvas loader shown while Archie drafts the image prompt from the draft
+// (on open + on a manual re-suggest). The animated network mark (initArchieLoader
+// swaps the .gen-image-spinner) + a status line.
+function derivingCanvas() {
+  return `<div class="gen-empty image-studio__deriving" role="status" aria-label="Writing your image prompt">
+    <span class="gen-image-spinner gen-loading-mark"></span>
+    <p class="gen-empty-title">Writing your image prompt…</p>
+    <span class="gen-empty-sub">Archie is drafting the best prompt for your post.</span>
+  </div>`;
 }
 
 // Generate mode — the prompt composer floating over the canvas bottom, built on

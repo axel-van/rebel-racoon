@@ -551,6 +551,12 @@ button.image-studio__ref--pick:focus-visible {
   align-self: center;
 }
 
+/* Prompt-writing loader on open — give the 88px network mark room above its
+   status line. */
+.image-studio__deriving {
+  gap: var(--ref-spacing-sm);
+}
+
 .image-studio__actionbar-row {
   display: flex;
   align-items: center;

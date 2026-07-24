@@ -28,7 +28,7 @@ const subscribers = new Map(); // sessionId → Set<fn>
 // Mock latencies — short enough to demo, long enough to read as work.
 const GEN_MS = 4200; // "generating N variations" loader
 const EDIT_MS = 2600; // per-edit loader
-const DERIVE_MS = 3200; // "suggest a prompt from this post"
+const DERIVE_MS = 2000; // "writing your image prompt" loader on open / re-suggest
 
 export const MAX_REFS = 6;
 export const VARIATION_CHOICES = [1, 2, 3, 4];
