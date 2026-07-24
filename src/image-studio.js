@@ -731,6 +731,16 @@ export function abortCropApply(sessionId) {
 
 let overlaySeq = 0;
 
+// Only one edit tool is active at a time: picking up an overlay (add / select)
+// ends any in-progress crop. Mirrors enterCropDraw, which clears the overlay
+// selection when crop takes over.
+function exitCropDraw(s) {
+  if (!s.cropDrawing) return;
+  s.cropDrawing = false;
+  s.cropRect = null;
+  s.cropAspect = null;
+}
+
 const OVERLAY_DEFAULTS = {
   logo: { xF: 0.5, yF: 0.5, wF: 0.28, rot: 0 },
   // Fresh text starts clean — no bold / outline / shadow — so the user opts into
@@ -760,6 +770,7 @@ export function addOverlay(sessionId, partial = {}) {
   overlaySeq += 1;
   const id = `ov-${overlaySeq}`;
   const overlay = { id, ...(OVERLAY_DEFAULTS[partial.kind] || {}), ...partial };
+  exitCropDraw(s); // switching to the text/logo tool ends any active crop
   s.overlays.push(overlay);
   s.selectedOverlayId = id;
   // A fresh text element opens straight into inline edit (contenteditable) so
@@ -845,6 +856,7 @@ export function selectOverlay(sessionId, id) {
   if (!s) return;
   // Selecting a different element (or nothing) exits any inline text edit.
   if (id !== s.selectedOverlayId) s.editingOverlayId = null;
+  if (id) exitCropDraw(s); // selecting an overlay ends any active crop
   s.selectedOverlayId = id;
   if (id) moveOverlayToFront(s, id); // selected element comes to the front
   notify(sessionId);
