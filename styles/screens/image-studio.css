@@ -283,6 +283,23 @@ button.image-studio__group-head:disabled {
   gap: var(--ref-spacing-xxs);
 }
 
+/* Format chips — compact ratio pills: a small aspect glyph (portrait vs
+   landscape at a glance) + the ratio tag. Lighter than the old ratio cards. */
+.image-studio__format-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.image-studio__format-glyph {
+  display: inline-block;
+  height: 11px;
+  flex: 0 0 auto;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  opacity: 0.6;
+}
+
 /* Image type — selectable cards (title + description), stacked one per row so
    they stay legible in the narrow panel. Selected = blue border + faint blue
    wash (the app's clickable-card convention: blue border, no elevation). */

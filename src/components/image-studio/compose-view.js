@@ -53,14 +53,12 @@ function stylePresetCards(st) {
   }).join("");
 }
 
+// Format — a light filter chip per ratio: a small aspect-ratio glyph (portrait vs
+// landscape at a glance) + the ratio tag. The full name (Square/Portrait/…) rides
+// in the tooltip + the collapsed group summary, so the chips stay compact.
 function formatChip(f, selected) {
-  return `<button type="button" class="gen-format-chip${selected ? " is-selected" : ""}" data-img-format="${escapeHtml(f.id)}" aria-pressed="${selected}">
-    <span class="gen-format-glyph" style="aspect-ratio:${f.ratio}" aria-hidden="true"></span>
-    <span class="gen-format-meta">
-      <span class="gen-format-tag">${escapeHtml(f.tag)}</span>
-      <span class="gen-format-name">${escapeHtml(f.label)}</span>
-    </span>
-  </button>`;
+  const full = `${f.tag} · ${f.label}`;
+  return `<button type="button" class="ap-filter-chip image-studio__format-chip" data-img-format="${escapeHtml(f.id)}" aria-pressed="${selected}" title="${escapeHtml(full)}" aria-label="${escapeHtml(full)}"><span class="image-studio__format-glyph" style="aspect-ratio:${f.ratio}" aria-hidden="true"></span>${escapeHtml(f.tag)}</button>`;
 }
 
 // Playbook reference tile — an explicit include/exclude control. The whole tile
@@ -233,7 +231,7 @@ function composeGroups(st) {
     id: "format",
     label: "Format",
     summary: fmtSummary,
-    body: `<p class="image-studio__count image-studio__count--net"${st.network ? ` aria-label="Best for ${escapeHtml(netLabel)}"` : ""}>${fmtHint}</p><div class="gen-format-chips">${fmtChips}</div>`,
+    body: `<p class="image-studio__count image-studio__count--net"${st.network ? ` aria-label="Best for ${escapeHtml(netLabel)}"` : ""}>${fmtHint}</p><div class="image-studio__chips">${fmtChips}</div>`,
   });
 
   // Output — merges the type toggle (single / carousel) with its count control
