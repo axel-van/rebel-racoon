@@ -1672,16 +1672,17 @@ button.image-studio__ref--pick:focus-visible {
   overflow-y: auto;
 }
 
-/* Block tile — the square comes from the IMG's own aspect-ratio (not the tile),
-   which avoids the aspect-ratio-in-a-flex-item height cycle that made the tiles
-   overflow and overlap. */
+/* Block tile — logos/stickers contained on a white tile with breathing room.
+   The square comes from the IMG's own aspect-ratio + the tile's symmetric
+   padding (which keeps the tile square), avoiding the aspect-ratio-in-a-flex-item
+   height cycle. */
 .image-studio__preset {
   display: block;
-  padding: 0;
+  padding: var(--ref-spacing-xs);
   overflow: hidden;
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-starter);
-  background: var(--ref-color-grey-05);
+  background: var(--ref-color-white);
   cursor: pointer;
   transition:
     border-color 120ms var(--app-ease-out),
@@ -1692,20 +1693,19 @@ button.image-studio__ref--pick:focus-visible {
   display: block;
   width: 100%;
   aspect-ratio: 1;
-  object-fit: cover;
+  object-fit: contain; /* logos: contain, never crop */
 }
 
 .image-studio__preset:hover {
   border-color: var(--ref-color-electric-blue-100);
 }
 
-/* Meta (note + "Best for" networks) — hidden in the grid (thumbnail only),
-   shown beside the thumbnail in list view. No display name. */
-.image-studio__preset-meta {
+/* Name — hidden in the grid (tooltip only), shown beside the logo in list view. */
+.image-studio__preset-label {
   display: none;
 }
 
-/* List view — one row per reference image: a roomy thumbnail + its info. */
+/* List view — one row per logo: a contained thumbnail + its name. */
 .image-studio__presets--list {
   display: flex;
   flex-direction: column;
@@ -1722,42 +1722,19 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 .image-studio__presets--list .image-studio__preset img {
-  width: 56px;
-  height: 56px;
+  width: 40px;
+  height: 40px;
   aspect-ratio: auto;
   flex: 0 0 auto;
-  border-radius: var(--app-radius-md);
 }
 
-.image-studio__presets--list .image-studio__preset-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  text-align: left;
-}
-
-.image-studio__preset-note {
+.image-studio__presets--list .image-studio__preset-label {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: var(--sys-text-style-body-size);
   line-height: var(--sys-text-style-body-line-height);
-  color: var(--ref-color-grey-100);
-}
-
-.image-studio__preset-nets {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-60);
-}
-
-.image-studio__presets--list .image-studio__preset-label {
-  display: block;
-  font-size: var(--sys-text-style-body-size);
   color: var(--ref-color-grey-100);
 }
 

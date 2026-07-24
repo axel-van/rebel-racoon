@@ -64,35 +64,26 @@ export const MOOD_OPTIONS = [
 ];
 
 // Curated logo presets for the "Add logo" tray (real bundled assets).
-// Reference images shown in the Edit "Add image" popover — mocks the Playbook's
-// brand reference library (same shape as mocks referenceImages: url + note +
-// target networks). No display name (real refs won't have one); the list view
-// surfaces the note + "Best for <networks>" instead.
+// Logos & stickers the user can stamp onto the image in the Edit "Add image"
+// popover — brand marks + social badges + a few app logos (the user reaches for
+// small graphics here, not big photos). Displayed contained on a white tile.
 export const IMAGE_PRESETS = [
-  { url: "https://picsum.photos/seed/imgp-mountains/240/240", note: "Wide establishing shots", networks: ["linkedin"] },
-  { url: "https://picsum.photos/seed/imgp-coastline/240/240", note: "Calm, wellness tone", networks: [] },
-  { url: "https://picsum.photos/seed/imgp-city/240/240", note: "Neutral backgrounds", networks: ["linkedin", "x"] },
-  { url: "https://picsum.photos/seed/imgp-studio/240/240", note: "Clean product hero", networks: ["linkedin"] },
-  {
-    url: "https://picsum.photos/seed/imgp-team/240/240",
-    note: "Culture & hiring posts",
-    networks: ["instagram", "facebook"],
-  },
-  { url: "https://picsum.photos/seed/imgp-desk/240/240", note: "Product-in-context", networks: ["linkedin", "x"] },
-  { url: "https://picsum.photos/seed/imgp-abstract/240/240", note: "Decorative fills", networks: [] },
-  { url: "https://picsum.photos/seed/imgp-gradient/240/240", note: "Brand overlays", networks: ["instagram"] },
-  { url: "https://picsum.photos/seed/imgp-texture/240/240", note: "Subtle textures", networks: [] },
-  { url: "https://picsum.photos/seed/imgp-product/240/240", note: "Detail shots", networks: ["instagram", "facebook"] },
-  { url: "https://picsum.photos/seed/imgp-event/240/240", note: "Announcements & recaps", networks: ["linkedin"] },
-  { url: "https://picsum.photos/seed/imgp-portrait/240/240", note: "Thought-leadership", networks: ["linkedin"] },
-  {
-    url: "https://picsum.photos/seed/imgp-aerial/240/240",
-    note: "Bold campaign moments",
-    networks: ["tiktok", "instagram"],
-  },
-  { url: "https://picsum.photos/seed/imgp-minimal/240/240", note: "Quote cards", networks: ["instagram"] },
-  { url: "https://picsum.photos/seed/imgp-neon/240/240", note: "High-energy scenes", networks: ["tiktok"] },
-  { url: "https://picsum.photos/seed/imgp-forest/240/240", note: "Behind-the-scenes", networks: ["instagram"] },
+  { label: "Northwind", url: "assets/avatars/northwind-studio.svg" },
+  { label: "Archie", url: "assets/logos/archie-mono.svg" },
+  { label: "Archie wordmark", url: "assets/logos/archie-wordmark.svg" },
+  { label: "LinkedIn", url: "assets/logos/social/linkedin.svg" },
+  { label: "X", url: "assets/logos/social/x.svg" },
+  { label: "Instagram", url: "assets/logos/social/instagram.svg" },
+  { label: "Facebook", url: "assets/logos/social/facebook.svg" },
+  { label: "YouTube", url: "assets/logos/social/youtube.svg" },
+  { label: "TikTok", url: "assets/logos/social/tiktok.svg" },
+  { label: "Threads", url: "assets/logos/social/threads.svg" },
+  { label: "Pinterest", url: "assets/logos/social/pinterest.svg" },
+  { label: "Bluesky", url: "assets/logos/social/bluesky.svg" },
+  { label: "Notion", url: "assets/logos/notion.svg" },
+  { label: "Slack", url: "assets/logos/slack.svg" },
+  { label: "Figma", url: "assets/logos/figma.svg" },
+  { label: "GitHub", url: "assets/logos/github.svg" },
 ];
 
 // Text-overlay colour swatches.

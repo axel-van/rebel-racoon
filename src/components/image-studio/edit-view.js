@@ -7,9 +7,9 @@
 import { escapeHtml } from "../../utils.js?v=21";
 import { FORMATS, NETWORK_FORMATS } from "../../clip-formats.js?v=5";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=26";
-import { KEY } from "./context.js?v=9";
+import { KEY } from "./context.js?v=10";
 import { outlineMetrics, shadowMetrics, cssFamily } from "./canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=35";
+import * as imageStudio from "../../image-studio.js?v=36";
 
 // Edit mode — the floating AI reprompt bar over the canvas bottom: a single-row
 // composer card — the mermaid-sparkle cue (= generative AI), a borderless
@@ -109,22 +109,10 @@ function logoPopover(st) {
     <button type="button" class="image-studio__viewseg-btn" data-img-logo-view="grid" aria-pressed="${!list}" aria-label="Grid view" title="Grid view"><i class="ap-icon-view-grid" aria-hidden="true"></i></button>
     <button type="button" class="image-studio__viewseg-btn" data-img-logo-view="list" aria-pressed="${list}" aria-label="List view" title="List view"><i class="ap-icon-view-list" aria-hidden="true"></i></button>
   </div>`;
-  const presets = imageStudio.IMAGE_PRESETS.map((p) => {
-    const nets = (p.networks || []).filter((n) => NETWORK_ICON_BY_PLATFORM[n]);
-    const bestFor = nets.length
-      ? `<span class="image-studio__preset-nets" aria-label="Best for ${nets.map((n) => NETWORK_LABEL[n] || n).join(", ")}">Best for ${nets
-          .map(
-            (n) =>
-              `<i class="${NETWORK_ICON_BY_PLATFORM[n]}" title="${escapeHtml(NETWORK_LABEL[n] || n)}" aria-hidden="true"></i>`,
-          )
-          .join("")}</span>`
-      : "";
-    const meta =
-      p.note || bestFor
-        ? `<span class="image-studio__preset-meta">${p.note ? `<span class="image-studio__preset-note">${escapeHtml(p.note)}</span>` : ""}${bestFor}</span>`
-        : "";
-    return `<button type="button" class="image-studio__preset" data-img-logo-preset="${escapeHtml(p.url)}" title="${escapeHtml(p.note || "Reference image")}"><img src="${escapeHtml(p.url)}" alt="Reference image" loading="lazy" />${meta}</button>`;
-  }).join("");
+  const presets = imageStudio.IMAGE_PRESETS.map(
+    (p) =>
+      `<button type="button" class="image-studio__preset" data-img-logo-preset="${escapeHtml(p.url)}" title="${escapeHtml(p.label)}"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.label)}" loading="lazy" /><span class="image-studio__preset-label">${escapeHtml(p.label)}</span></button>`,
+  ).join("");
   return `<div class="image-studio__popover image-studio__popover--logo" data-img-popover role="menu" aria-label="Images">
     <div class="image-studio__popover-head"><p class="image-studio__popover-title">Images</p>${seg}</div>
     <div class="image-studio__popover-body">
