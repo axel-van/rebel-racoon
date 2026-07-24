@@ -216,20 +216,23 @@ function composeGroups(st) {
   });
 
   // Format — the collapsed summary is the picked ratio ("1:1 · Square"); the
-  // "Best for <Network>" hint moves inside the body as a caption above the cards.
+  // "Best for" hint moves inside the body as a caption above the cards. The hint
+  // follows the app-wide convention: the words "Best for" then the network icon
+  // (never the spelled-out name — that rides in title/aria-label).
   const choices = imageStudio.formatChoices(KEY);
   const curFmt = choices.find((f) => f.id === st.formatId);
   const fmtSummary = curFmt ? `${curFmt.tag} · ${curFmt.label}` : "Aspect ratio";
+  const netLabel = st.network ? NETWORK_LABEL[st.network] || st.network : "";
   const netIcon = st.network ? NETWORK_ICON_BY_PLATFORM[st.network] : null;
   const fmtHint = st.network
-    ? `${netIcon ? `<i class="${netIcon}" aria-hidden="true"></i>` : ""}Best for ${escapeHtml(NETWORK_LABEL[st.network] || st.network)}`
+    ? `Best for ${netIcon ? `<i class="${netIcon}" title="${escapeHtml(netLabel)}" aria-hidden="true"></i>` : escapeHtml(netLabel)}`
     : "Pick an aspect ratio";
   const fmtChips = choices.map((f) => formatChip(f, st.formatId === f.id)).join("");
   const formatGroup = collapsibleGroup(st, {
     id: "format",
     label: "Format",
     summary: fmtSummary,
-    body: `<p class="image-studio__count image-studio__count--net">${fmtHint}</p><div class="gen-format-chips">${fmtChips}</div>`,
+    body: `<p class="image-studio__count image-studio__count--net"${st.network ? ` aria-label="Best for ${escapeHtml(netLabel)}"` : ""}>${fmtHint}</p><div class="gen-format-chips">${fmtChips}</div>`,
   });
 
   // Output — merges the type toggle (single / carousel) with its count control

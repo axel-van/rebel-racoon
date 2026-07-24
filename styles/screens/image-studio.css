@@ -1878,11 +1878,13 @@ button.image-studio__ingredient-head {
   color: var(--ref-color-grey-60);
 }
 
-/* Format hint: network icon + "Best for <Network>". */
+/* Format hint: the words "Best for" followed by the target network's icon.
+   Block-level so its bottom margin sets the gap down to the format cards. */
 .image-studio__count--net {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: var(--ref-spacing-xxxs);
+  gap: var(--ref-spacing-xxs);
+  margin: 0 0 var(--ref-spacing-sm);
 }
 
 .image-studio__count--net > i {
