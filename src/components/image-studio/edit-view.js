@@ -57,11 +57,22 @@ function cropToolbar(st) {
   const busy = st.editBusy ? "disabled" : "";
   const r = st.cropRect || { xF: 0.15, yF: 0.15, wF: 0.7, hF: 0.7 };
   const style = `left:${(r.xF + r.wF / 2) * 100}%; top:${(r.yF + r.hF) * 100}%;`;
+  const net = st.network || null;
+  const bestFor =
+    net && NETWORK_FORMATS[net]
+      ? `<span class="image-studio__crop-bestfor"><i class="${NETWORK_ICON_BY_PLATFORM[net] || ""}" aria-hidden="true"></i>Best for ${escapeHtml(NETWORK_LABEL[net] || net)}</span>`
+      : "";
+  // One horizontal bar like the text mini toolbar: the "Best for" hint, the
+  // borderless aspect options (divider-separated, no pills), then the compact
+  // validation icon buttons (✕ / ✓).
+  const sep = `<span class="image-studio__crop-sep" aria-hidden="true"></span>`;
   return `<div class="image-studio__crop-toolbar" data-img-crop-toolbar style="${style}" role="toolbar" aria-label="Crop">
+    ${bestFor ? `${bestFor}${sep}` : ""}
     <div class="image-studio__crop-aspects">${cropAspectChips(st)}</div>
+    ${sep}
     <div class="image-studio__crop-actions">
-      <button type="button" class="ap-button ghost grey" data-img-crop-cancel ${busy}><span>Cancel</span></button>
-      <button type="button" class="ap-button primary orange" data-img-crop-apply ${busy}><i class="ap-icon-check" aria-hidden="true"></i><span>Apply crop</span></button>
+      <button type="button" class="ap-icon-button" data-img-crop-cancel title="Cancel" aria-label="Cancel" ${busy}><i class="ap-icon-close" aria-hidden="true"></i></button>
+      <button type="button" class="ap-icon-button image-studio__crop-apply" data-img-crop-apply title="Apply crop" aria-label="Apply crop" ${busy}><i class="ap-icon-check" aria-hidden="true"></i></button>
     </div>
   </div>`;
 }
@@ -78,17 +89,13 @@ function cropAspectChips(st) {
   const chip = (id, label, ratio, on, disabled) =>
     `<button type="button" class="image-studio__crop-aspect${ratio ? "" : " image-studio__crop-aspect--free"}${on ? " is-selected" : ""}${disabled ? " is-disabled" : ""}" data-img-crop-aspect="${escapeHtml(id)}" aria-pressed="${on}"${disabled ? " disabled" : ""}><span class="image-studio__crop-aspect-glyph"${ratio ? ` style="aspect-ratio:${ratio}"` : ""} aria-hidden="true"></span><span>${escapeHtml(label)}</span></button>`;
   const freeform = chip("free", "Freeform", null, !st.cropAspect, false);
-  const presets = Object.values(FORMATS)
-    .map((f) => {
-      const on = !!st.cropAspect && Math.abs(st.cropAspect - f.ratio) < 0.001;
-      const disabled = !!optimalIds && !optimalIds.includes(f.id);
-      return chip(f.id, f.tag, f.ratio, on, disabled);
-    })
-    .join("");
-  const bestFor = optimalIds
-    ? `<span class="image-studio__crop-bestfor"><i class="${NETWORK_ICON_BY_PLATFORM[net] || ""}" aria-hidden="true"></i>Best for ${escapeHtml(NETWORK_LABEL[net] || net)}</span>`
-    : "";
-  return `${bestFor}${freeform}${presets}`;
+  const presets = Object.values(FORMATS).map((f) => {
+    const on = !!st.cropAspect && Math.abs(st.cropAspect - f.ratio) < 0.001;
+    const disabled = !!optimalIds && !optimalIds.includes(f.id);
+    return chip(f.id, f.tag, f.ratio, on, disabled);
+  });
+  // Divider-separated (like the text toolbar), not free-floating pills.
+  return [freeform, ...presets].join(`<span class="image-studio__crop-sep" aria-hidden="true"></span>`);
 }
 
 function logoPopover() {

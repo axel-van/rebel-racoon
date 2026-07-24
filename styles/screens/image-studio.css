@@ -1338,14 +1338,15 @@ button.image-studio__ref--pick:focus-visible {
   position: absolute;
   z-index: 6;
   transform: translate(-50%, var(--ref-spacing-xs));
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-sm);
-  width: 300px;
-  padding: var(--ref-spacing-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  width: max-content;
+  max-width: 92vw;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
   background: var(--ref-color-white);
   border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-modal);
+  border-radius: var(--app-radius-pill);
   box-shadow: var(--app-shadow-popover-lg);
 }
 
@@ -1355,67 +1356,69 @@ button.image-studio__ref--pick:focus-visible {
   display: none;
 }
 
-/* Quiet helper — an instruction, not content: the lightest text in the popover. */
-.image-studio__crop-hint {
-  margin: 0;
-  color: var(--ref-color-grey-60);
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
+/* Thin vertical divider between clusters + options — matches the text toolbar. */
+.image-studio__crop-sep {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 20px;
+  background: var(--sys-border-color-default);
 }
 
 .image-studio__crop-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-xxs);
+}
+
+/* Apply = confirm: tint the check with the studio's accent so it reads as the
+   primary action while staying a subtle icon button. */
+.image-studio__crop-apply > i {
+  color: var(--app-archie-mark);
 }
 
 .image-studio__crop-aspects {
-  display: flex;
-  gap: var(--ref-spacing-xs);
-  flex-wrap: wrap;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
 }
 
-/* "Best for <Network>" hint leading the aspect chips (its own line) — the
-   draft's network logo + label, marking which ratios below are the optimised set. */
+/* "Best for <Network>" hint — the draft's network logo + label, marking which
+   ratios are the optimised set. */
 .image-studio__crop-bestfor {
-  flex: 0 0 100%;
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
   color: var(--ref-color-grey-60);
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
+  white-space: nowrap;
 }
 
 .image-studio__crop-bestfor > i {
   font-size: 14px;
 }
 
-/* Visual aspect chips — a proportional glyph + the ratio label. The glyph is an
-   inline-block sized by its inline aspect-ratio at a fixed height (same trick as
-   the generate panel's .gen-format-glyph); Freeform shows a dashed square. */
+/* Aspect options — borderless buttons (like the text toolbar): a proportional
+   glyph + ratio label; hover tints grey, the selected ratio tints blue. */
 .image-studio__crop-aspect {
   display: inline-flex;
   align-items: center;
-  gap: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-xxs);
   height: 32px;
-  padding: 0 12px;
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-pill);
-  background: var(--ref-color-white);
+  padding: 0 var(--ref-spacing-xs);
+  border: none;
+  background: none;
+  border-radius: var(--app-radius-md);
   cursor: pointer;
   color: var(--ref-color-grey-80);
   font-size: var(--sys-text-style-caption-size);
   font-weight: var(--ref-font-weight-regular);
   font-variant-numeric: tabular-nums;
-  transition:
-    border-color var(--ref-animation-short) var(--app-ease-out),
-    background var(--ref-animation-short) var(--app-ease-out);
+  white-space: nowrap;
+  transition: background var(--ref-animation-short) var(--app-ease-out);
 }
 
-/* Ratios the draft's network isn't optimised for — visible but not selectable,
-   so the optimised set reads by contrast. */
+/* Ratios the draft's network isn't optimised for — visible but not selectable. */
 .image-studio__crop-aspect.is-disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -1423,14 +1426,11 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 .image-studio__crop-aspect:hover {
-  border-color: var(--ref-color-grey-40);
   background: var(--ref-color-grey-05);
 }
 
-/* Selected chip — the one place bold + colour earns its weight, so the active
-   ratio reads instantly against the calm, regular-weight row. */
+/* Selected ratio — blue tint (no border), the active option in the row. */
 .image-studio__crop-aspect[aria-pressed="true"] {
-  border-color: var(--ref-color-electric-blue-100);
   background: var(--ref-color-electric-blue-10);
   color: var(--ref-color-electric-blue-100);
   font-weight: var(--ref-font-weight-bold);
