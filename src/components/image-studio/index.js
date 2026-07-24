@@ -23,17 +23,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=36";
 import { getSessionById } from "../../sessions-store.js?v=6";
 import { getContextById } from "../../contexts-store.js?v=37";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=5";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=6";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "./canvas.js?v=2";
-import { renderStudio } from "./shell-view.js?v=23";
+import { renderStudio } from "./shell-view.js?v=24";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=7";
-import * as imageStudio from "../../image-studio.js?v=31";
+} from "./interactions.js?v=8";
+import * as imageStudio from "../../image-studio.js?v=32";
 
 let backdrop;
 let initialized = false;
@@ -191,7 +191,22 @@ function onClick(event) {
   const grpToggle = event.target.closest("[data-img-group-toggle]");
   if (grpToggle && !grpToggle.disabled)
     return void imageStudio.toggleGroupCollapsed(KEY, grpToggle.dataset.imgGroupToggle);
-  if (event.target.closest("[data-img-composer-expand]")) return void imageStudio.toggleComposerExpanded(KEY);
+  const expandBtn = event.target.closest("[data-img-composer-expand]");
+  if (expandBtn) {
+    // Mutate in place (no re-render) so the max-height CSS transition animates on
+    // the persistent node; keep state in sync silently for later renders.
+    const willExpand = !state().composerExpanded;
+    imageStudio.setComposerExpandedSilent(KEY, willExpand);
+    ctx.modal.querySelector(".image-studio__composer")?.classList.toggle("is-expanded", willExpand);
+    const icon = expandBtn.querySelector("i");
+    if (icon) icon.className = `ap-icon-${willExpand ? "minimize" : "maximize"}`;
+    const label = willExpand ? "Collapse prompt" : "Expand prompt";
+    expandBtn.setAttribute("aria-label", label);
+    expandBtn.setAttribute("title", label);
+    expandBtn.setAttribute("aria-pressed", String(willExpand));
+    autosizeReprompt(ctx.modal.querySelector("[data-img-prompt]"));
+    return;
+  }
   // Brand kit toggle is a DS switch (checkbox) — handled in onChange.
   if (event.target.closest("[data-img-ref-add]")) return void openFilePicker("ref");
   const refToggle = event.target.closest("[data-img-ref-toggle]");

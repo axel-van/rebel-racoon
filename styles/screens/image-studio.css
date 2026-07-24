@@ -539,9 +539,18 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 /* Bigger prompt area than the single-row edit reprompt — reads as a proper
-   prompt box (grows further, then scrolls via the shared max-height). */
+   prompt box (grows further, then scrolls via the shared max-height). The
+   max-height transition gives a quick, smooth grow/shrink between small ↔
+   expanded (the composer follows it, growing upward over the canvas). */
 .image-studio__actionbar--generate .image-studio__reprompt-field {
   min-height: calc(var(--sys-text-style-body-line-height) * 3);
+  transition: max-height var(--ref-animation-short) var(--app-ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image-studio__actionbar--generate .image-studio__reprompt-field {
+    transition: none;
+  }
 }
 
 /* Keep the AI cue aligned with the first line, not the bottom. */

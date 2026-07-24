@@ -419,13 +419,14 @@ export function toggleGroupCollapsed(sessionId, id) {
   notify(sessionId);
 }
 
-// Prompt composer size toggle (small ↔ expanded) — expanded raises the textarea's
-// max-height so a long, structured prompt fits without scrolling.
-export function toggleComposerExpanded(sessionId) {
+// Prompt composer size (small ↔ expanded) — expanded raises the textarea's
+// max-height so a long, structured prompt fits without scrolling. Set silently
+// (no re-render): the toggle mutates the composer in place so the max-height
+// CSS transition can animate on the persistent node (a full re-render would
+// swap the node and kill the animation) — state stays correct for later renders.
+export function setComposerExpandedSilent(sessionId, value) {
   const s = states.get(sessionId);
-  if (!s) return;
-  s.composerExpanded = !s.composerExpanded;
-  notify(sessionId);
+  if (s) s.composerExpanded = !!value;
 }
 
 // ── "Suggest from this post" (mock) ─────────────────────────────────────────
