@@ -38,10 +38,10 @@ export function actionBar(st) {
 export function toolPalette(st) {
   const busy = st.editBusy ? "disabled" : "";
   return `<div class="image-studio__palette" role="toolbar" aria-label="Edit tools">
-    <button type="button" class="ap-button stroked grey" data-img-crop-start aria-pressed="${st.cropDrawing}" ${busy}><i class="ap-icon-cropper" aria-hidden="true"></i><span>Crop</span></button>
-    <button type="button" class="ap-button stroked grey" data-img-add-text ${busy}><i class="ap-icon-closed-captions" aria-hidden="true"></i><span>Add text</span></button>
+    <button type="button" class="ap-button ghost grey" data-img-crop-start aria-pressed="${st.cropDrawing}" ${busy}><i class="ap-icon-cropper" aria-hidden="true"></i><span>Crop</span></button>
+    <button type="button" class="ap-button ghost grey" data-img-add-text ${busy}><i class="ap-icon-closed-captions" aria-hidden="true"></i><span>Add text</span></button>
     <div class="image-studio__palette-anchor">
-      <button type="button" class="ap-button stroked grey" data-img-popover-toggle="logo" aria-haspopup="true" aria-expanded="${st.openPopover === "logo"}" ${busy}><i class="ap-icon-file--image" aria-hidden="true"></i><span>Add image</span></button>
+      <button type="button" class="ap-button ghost grey" data-img-popover-toggle="logo" aria-haspopup="true" aria-expanded="${st.openPopover === "logo"}" ${busy}><i class="ap-icon-file--image" aria-hidden="true"></i><span>Add image</span></button>
       ${st.openPopover === "logo" ? logoPopover() : ""}
     </div>
   </div>`;

@@ -595,10 +595,10 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 /* Active tool — Add image popover open (aria-expanded) or Crop mode on
-   (aria-pressed): tint the stroked button with the blue accent. */
+   (aria-pressed): tint the ghost button with the blue accent (bg + text). */
 .image-studio__palette .ap-button[aria-expanded="true"],
 .image-studio__palette .ap-button[aria-pressed="true"] {
-  border-color: var(--ref-color-electric-blue-100);
+  background-color: var(--ref-color-electric-blue-05);
   color: var(--ref-color-electric-blue-100);
 }
 
