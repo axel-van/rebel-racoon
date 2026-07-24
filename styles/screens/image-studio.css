@@ -539,13 +539,15 @@ button.image-studio__ref--pick:focus-visible {
   align-items: flex-end;
 }
 
-/* Bigger prompt area than the single-row edit reprompt — reads as a proper
-   prompt box (grows further, then scrolls via the shared max-height). The
-   max-height transition gives a quick, smooth grow/shrink between small ↔
-   expanded (the composer follows it, growing upward over the canvas). */
+/* Two FIXED sizes — not content-driven: a compact small box (this rule) and a
+   large expanded panel (see .is-expanded below). Content scrolls within each
+   (overflow-y from the shared field). Height transitions directly between the
+   two — quick and smooth, growing upward over the canvas. */
 .image-studio__actionbar--generate .image-studio__reprompt-field {
-  min-height: calc(var(--sys-text-style-body-line-height) * 3);
-  transition: max-height var(--ref-animation-short) var(--app-ease-out);
+  height: calc(var(--sys-text-style-body-line-height) * 5);
+  min-height: 0;
+  max-height: none;
+  transition: height var(--ref-animation-short) var(--app-ease-out);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -564,13 +566,13 @@ button.image-studio__ref--pick:focus-visible {
 /* Expanded mode is a much larger prompt panel — clearly taller AND wider than
    the small composer — so a full structured brief is comfortable to read/edit.
    Width animates from the center (the composer is translateX(-50%)-centered);
-   height grows upward via the field's max-height. Small mode stays compact
-   (540px wide, 6-line cap) for a strong contrast. */
+   the field jumps to a fixed larger height. Small stays compact (540px wide,
+   5-line box) for a strong contrast. */
 .image-studio__composer.is-expanded {
   width: min(92%, 820px);
 }
 .image-studio__composer.is-expanded .image-studio__reprompt-field {
-  max-height: min(72vh, 680px);
+  height: min(60vh, 500px);
 }
 
 /* Compact ghost icon button (small ↔ expanded toggle), sized to match the

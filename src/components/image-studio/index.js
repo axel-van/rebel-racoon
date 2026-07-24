@@ -59,12 +59,10 @@ function renderBody() {
   const st = state();
   if (!st || !ctx.body) return;
   ctx.body.innerHTML = renderStudio(st);
-  // Re-fit both prompt textareas to any carried-over text (the fresh nodes render
-  // at their CSS floor until sized) — the edit reprompt and the generate prompt
-  // (so a derived/long prompt shows at its natural height, and expand/collapse
-  // re-fits to the new max-height).
+  // Re-fit the edit reprompt to any carried-over text (it auto-grows). The
+  // generate prompt does NOT auto-grow — it has two fixed sizes (small/expanded)
+  // driven purely by CSS, scrolling when the content overflows.
   autosizeReprompt(ctx.body.querySelector("[data-img-edit-prompt]"));
-  autosizeReprompt(ctx.body.querySelector("[data-img-prompt]"));
 }
 
 // ── Inline-text edit helpers ────────────────────────────────────────────────
@@ -193,30 +191,19 @@ function onClick(event) {
     return void imageStudio.toggleGroupCollapsed(KEY, grpToggle.dataset.imgGroupToggle);
   const expandBtn = event.target.closest("[data-img-composer-expand]");
   if (expandBtn) {
-    // Mutate in place (no re-render) so the max-height/width CSS transitions
-    // animate on the persistent node; keep state in sync silently for later
-    // renders.
+    // Mutate in place (no re-render) so the CSS height/width transitions animate
+    // on the persistent node; keep state in sync silently for later renders. The
+    // two sizes are fixed in CSS (no content-based autosize), so nothing to
+    // re-measure here.
     const willExpand = !state().composerExpanded;
     imageStudio.setComposerExpandedSilent(KEY, willExpand);
-    const composer = ctx.modal.querySelector(".image-studio__composer");
-    const ta = ctx.modal.querySelector("[data-img-prompt]");
-    composer?.classList.toggle("is-expanded", willExpand);
+    ctx.modal.querySelector(".image-studio__composer")?.classList.toggle("is-expanded", willExpand);
     const icon = expandBtn.querySelector("i");
     if (icon) icon.className = `ap-icon-${willExpand ? "minimize" : "maximize"}`;
     const label = willExpand ? "Collapse prompt" : "Expand prompt";
     expandBtn.setAttribute("aria-label", label);
     expandBtn.setAttribute("title", label);
     expandBtn.setAttribute("aria-pressed", String(willExpand));
-    autosizeReprompt(ta); // interim fit (drives the height transition)
-    // Widening rewraps the text (fewer lines), so re-fit once the width settles.
-    if (composer && ta) {
-      const refit = (e) => {
-        if (e.target !== composer || e.propertyName !== "width") return;
-        composer.removeEventListener("transitionend", refit);
-        autosizeReprompt(ta);
-      };
-      composer.addEventListener("transitionend", refit);
-    }
     return;
   }
   // Brand kit toggle is a DS switch (checkbox) — handled in onChange.
@@ -343,7 +330,6 @@ function onInput(event) {
     imageStudio.setPromptSilent(KEY, event.target.value);
     const gen = ctx.modal.querySelector("[data-img-generate]");
     if (gen) gen.disabled = !event.target.value.trim();
-    autosizeReprompt(event.target); // the prompt is now a single-row growing composer
   } else if (event.target.matches("[data-img-edit-prompt]")) {
     imageStudio.setEditPromptSilent(KEY, event.target.value);
     autosizeReprompt(event.target);
