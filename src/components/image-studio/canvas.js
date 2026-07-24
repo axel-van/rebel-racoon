@@ -84,23 +84,31 @@ export function compositeOverlays(baseUrl, overlays, w, h) {
         ctx.font = `${o.italic ? "italic " : ""}${o.bold ? 700 : 400} ${fontPx}px ${cssFamily(o.fontFamily)}`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        // Three passes, matching the live CSS: 1) drop shadow cast off the fill
-        // glyph, 2) the coloured stroke, 3) the fill on top.
-        if (o.shadow) {
-          const sm = shadowMetrics(o.shadowIntensity);
-          ctx.save();
+        // Matching the live CSS. The drop shadow is cast off whichever shape is
+        // the outermost silhouette: the stroke when there's an outline (so the
+        // shadow hugs the outline, not the glyph), otherwise the fill glyph.
+        const sm = o.shadow ? shadowMetrics(o.shadowIntensity) : null;
+        const castShadow = () => {
           ctx.shadowColor = `rgba(0,0,0,${sm.alpha})`;
           ctx.shadowBlur = sm.blurEm * fontPx;
           ctx.shadowOffsetY = sm.offYEm * fontPx;
-          ctx.fillStyle = o.color || "#FFFFFF";
-          ctx.fillText(text, 0, 0);
-          ctx.restore();
-        }
+        };
         if (o.outline) {
+          // Stroke (with the shadow, so it's cast off the outline), then fill on top.
           ctx.lineWidth = outlineMetrics(o.outlineWidth).emStroke * fontPx;
           ctx.lineJoin = "round";
           ctx.strokeStyle = o.outlineColor || "#0A1B33";
+          ctx.save();
+          if (sm) castShadow();
           ctx.strokeText(text, 0, 0);
+          ctx.restore();
+        } else if (sm) {
+          // No outline: shadow cast off the fill glyph.
+          ctx.save();
+          castShadow();
+          ctx.fillStyle = o.color || "#FFFFFF";
+          ctx.fillText(text, 0, 0);
+          ctx.restore();
         }
         ctx.fillStyle = o.color || "#FFFFFF";
         ctx.fillText(text, 0, 0);
