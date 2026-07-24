@@ -24,7 +24,7 @@ export function actionBar(st) {
   return `<div class="image-studio__actionbar" role="toolbar" aria-label="AI edit">
     <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
     <textarea class="image-studio__reprompt-field" data-img-edit-prompt rows="1" placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" ${busy}>${escapeHtml(st.editPrompt || "")}</textarea>
-    <button type="button" class="ap-button primary orange image-studio__actionbar-apply" data-img-apply-edit="prompt" aria-label="Apply" title="Apply" ${busy}><i class="ap-icon-archie-official" aria-hidden="true"></i></button>
+    <button type="button" class="ap-button primary orange image-studio__actionbar-apply" data-img-apply-edit="prompt" aria-label="Apply" title="Apply" ${busy}><i class="ap-icon-arrow-up" aria-hidden="true"></i></button>
   </div>`;
 }
 
