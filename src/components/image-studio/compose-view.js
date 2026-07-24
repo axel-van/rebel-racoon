@@ -38,11 +38,18 @@ function imageTypeCards(st) {
   }).join("");
 }
 
-// Style preset — filter chips (the aesthetic look). Single-select, toggle-off.
-function stylePresetChips(st) {
+// Style preset — thumbnail cards (a small preview hints the aesthetic look) +
+// label. Single-select, toggle-off.
+function stylePresetCards(st) {
   return imageStudio.STYLE_PRESETS.map((o) => {
-    const pressed = st.styleKey === o.key;
-    return `<button type="button" class="ap-filter-chip" data-img-style="${escapeHtml(o.key)}" aria-pressed="${pressed}">${escapeHtml(o.label)}</button>`;
+    const sel = st.styleKey === o.key;
+    return `<button type="button" class="gen-style-card${sel ? " is-selected" : ""}" data-img-style="${escapeHtml(o.key)}" aria-pressed="${sel}" title="${escapeHtml(o.label)}">
+      <span class="gen-style-thumb">
+        <img src="https://picsum.photos/seed/archie-style-${escapeHtml(o.key)}/220/170" alt="" loading="lazy" />
+        ${sel ? `<span class="gen-style-check" aria-hidden="true"><i class="ap-icon-check"></i></span>` : ""}
+      </span>
+      <span class="gen-style-name">${escapeHtml(o.label)}</span>
+    </button>`;
   }).join("");
 }
 
@@ -204,7 +211,7 @@ function composeGroups(st) {
     id: "style",
     label: "Style preset",
     summary: styleLabel,
-    body: `<div class="image-studio__chips">${stylePresetChips(st)}</div>`,
+    body: `<div class="gen-style-grid">${stylePresetCards(st)}</div>`,
     disabled: hasUsedRefs,
     disabledHint: "Guided by your reference images",
   });
