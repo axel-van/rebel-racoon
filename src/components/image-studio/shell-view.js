@@ -12,7 +12,7 @@ import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.j
 import { renderPostCard } from "../post-card.js?v=68";
 import { KEY, ctx } from "./context.js?v=2";
 import { generateControls } from "./compose-view.js?v=2";
-import { actionBar, editCanvas } from "./edit-view.js?v=5";
+import { actionBar, editCanvas } from "./edit-view.js?v=6";
 import * as imageStudio from "../../image-studio.js?v=28";
 
 export function renderStudio(st) {

@@ -281,7 +281,7 @@ function textToolbar(o, st, selected) {
     <button type="button" class="image-studio__tt-btn image-studio__tt-shadow${o.shadow ? " is-on" : ""}" data-img-popover-toggle="textShadow" aria-haspopup="true" aria-expanded="${shadowOpen}" title="Shadow"><span class="image-studio__tt-shadowdot" aria-hidden="true"></span><span>Shadow</span></button>
     ${shadowOpen ? textShadowPopover(o) : ""}
     <span class="image-studio__tt-sep" aria-hidden="true"></span>
-    <button type="button" class="image-studio__tt-del" data-img-overlay-delete="${o.id}" aria-label="Delete text"><i class="ap-icon-trash" aria-hidden="true"></i></button>
+    <button type="button" class="ap-icon-button image-studio__tt-del" data-img-overlay-delete="${o.id}" aria-label="Delete text"><i class="ap-icon-trash" aria-hidden="true"></i></button>
   </div>`;
 }
 
