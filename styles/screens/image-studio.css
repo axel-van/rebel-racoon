@@ -464,8 +464,12 @@ button.image-studio__ref--pick:focus-visible {
   padding-bottom: 168px; /* clearance for the roomy multi-line composer */
 }
 
-/* Keep the centered image clear of the variations rail when it's shown. */
+/* When the variations rail is shown, reserve its width on BOTH sides so the
+   image, the view toggle and the bottom composer stay centered on the same axis
+   (the composer is absolutely centered on the canvas — asymmetric padding would
+   shift the image off that axis) while the content still clears the rail. */
 .image-studio--generate .image-studio__canvas:has(.image-studio__filmstrip--rail) {
+  padding-left: 112px;
   padding-right: 112px;
 }
 
