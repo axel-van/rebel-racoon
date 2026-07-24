@@ -1672,14 +1672,13 @@ button.image-studio__ref--pick:focus-visible {
   overflow-y: auto;
 }
 
+/* Block tile — the square comes from the IMG's own aspect-ratio (not the tile),
+   which avoids the aspect-ratio-in-a-flex-item height cycle that made the tiles
+   overflow and overlap. */
 .image-studio__preset {
-  position: relative;
-  aspect-ratio: 1;
+  display: block;
   padding: 0;
   overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-starter);
   background: var(--ref-color-grey-05);
@@ -1690,10 +1689,10 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 .image-studio__preset img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
   display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
 }
 
 .image-studio__preset:hover {
@@ -1713,9 +1712,9 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 .image-studio__presets--list .image-studio__preset {
-  aspect-ratio: auto;
+  display: flex;
+  align-items: center;
   width: 100%;
-  justify-content: flex-start;
   gap: var(--ref-spacing-sm);
   padding: var(--ref-spacing-xxs);
 }
@@ -1723,6 +1722,7 @@ button.image-studio__ref--pick:focus-visible {
 .image-studio__presets--list .image-studio__preset img {
   width: 40px;
   height: 40px;
+  aspect-ratio: auto;
   flex: 0 0 auto;
   border-radius: var(--app-radius-md);
 }
