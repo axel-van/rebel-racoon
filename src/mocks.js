@@ -3501,6 +3501,30 @@ export const researchFindings = [
   },
 ];
 
+// An EDITION is one scan's output — the unit the digest lists, like a
+// newsletter issue. It groups the findings that landed together, and the digest
+// shows the IDEAS they produced rather than the findings themselves: what the
+// user asked for is "new content ideas at regular intervals", so the idea is the
+// deliverable and the finding is its justification.
+//
+// The per-finding `scannedAt` predates this and is no longer displayed — the
+// edition carries the date, because a scan happens at one moment.
+export const researchEditions = [
+  {
+    id: "ed-acme-3",
+    contextId: "ctx-acme",
+    at: "5h ago",
+    findingIds: ["rf-opinions-over-features", "rf-stack-teardowns"],
+  },
+  {
+    id: "ed-acme-2",
+    contextId: "ctx-acme",
+    at: "1w ago",
+    findingIds: ["rf-workflow-over-specs", "rf-flat-pricing-comments"],
+  },
+  { id: "ed-founder-1", contextId: "ctx-founder-voice", at: "2d ago", findingIds: ["rf-founder-reversals"] },
+];
+
 // Held back for "Run a scan". Most of these come from sources that are OFF by
 // default — enabling one and scanning is what proves the toggles do something.
 export const researchScanPool = [

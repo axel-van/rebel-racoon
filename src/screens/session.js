@@ -1,7 +1,7 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=221";
-import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=58";
+import { renderTopbar } from "../components/topbar.js?v=222";
+import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=59";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
@@ -11,11 +11,11 @@ import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
   PROFILE_SEARCH_THRESHOLD,
-} from "../social-profiles.js?v=28";
-import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=8";
+} from "../social-profiles.js?v=29";
+import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=9";
 import { CLIP_SUBTITLE_ITEMS, CLIP_SUBTITLE_LABEL } from "../clip-subtitles.js?v=1";
-import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=8";
-import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=39";
+import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=9";
+import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=40";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
   getThread,
@@ -36,46 +36,46 @@ import {
   markConnectPromptResolved,
   toggleTopPostsWidgetPick,
   answerTopPostsWidget,
-} from "../assistant.js?v=60";
+} from "../assistant.js?v=61";
 import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=51";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=40";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=52";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=41";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=25";
-import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=38";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=55";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=40";
-import * as topPostsFlow from "../top-posts-flow.js?v=77";
+} from "../composer-mentions.js?v=26";
+import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=39";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=56";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=41";
+import * as topPostsFlow from "../top-posts-flow.js?v=78";
 import {
   renderTopPostsBoard,
   renderTopPostEcho,
   renderTopPostsWidget,
   TOP_POSTS_LIMIT,
-} from "../components/top-post-card.js?v=68";
-import { getTopPost } from "../top-posts-store.js?v=12";
+} from "../components/top-post-card.js?v=69";
+import { getTopPost } from "../top-posts-store.js?v=13";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
-import * as sidebarWizard from "../sidebar-wizard.js?v=55";
+import * as sidebarWizard from "../sidebar-wizard.js?v=56";
 import * as inlineQuestion from "../inline-question.js?v=48";
-import * as clipStudio from "../clip-studio.js?v=25";
+import * as clipStudio from "../clip-studio.js?v=26";
 import * as batchStudio from "../batch-studio.js?v=4";
-import { askConnector } from "../connector-ask.js?v=10";
-import { executeUseFinding } from "../research-flow.js?v=3";
-import { getFinding } from "../research-store.js?v=2";
-import { open as openResearchModal } from "../components/research-modal.js?v=4";
+import { askConnector } from "../connector-ask.js?v=11";
+import { adoptAndDraft } from "../research-flow.js?v=4";
+import { getFinding } from "../research-store.js?v=3";
+import { open as openResearchModal } from "../components/research-modal.js?v=5";
 import { renderSocialPostCard } from "../components/social-post-card.js?v=2";
-import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=30";
-import { renderConnectorLogo } from "../connectors-view.js?v=12";
+import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=31";
+import { renderConnectorLogo } from "../connectors-view.js?v=13";
 import {
   getActiveConnector,
   clearActiveConnector,
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=12";
-import * as contextBuilder from "../context-builder.js?v=192";
+import * as contextBuilder from "../context-builder.js?v=193";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -86,10 +86,10 @@ import {
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=25";
-import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=56";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=59";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=63";
-import { open as openConnectorsModal } from "../components/connectors-modal.js?v=13";
+import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=57";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=60";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=64";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=14";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
   classifyFile,
@@ -105,8 +105,8 @@ import {
   updateSourceClips,
   extractClipsForSource,
   setSourceIdeaCount,
-} from "../sources-stream.js?v=53";
-import { renderClipCard } from "../components/clip-card.js?v=16";
+} from "../sources-stream.js?v=54";
+import { renderClipCard } from "../components/clip-card.js?v=17";
 import { onFeedbackClick } from "../components/feedback-control.js?v=2";
 import { showToast } from "../components/toast.js?v=20";
 import {
@@ -115,12 +115,12 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=359";
+} from "../components/right-panel.js?v=360";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=18";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=26";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=38";
+import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=19";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=27";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=39";
 // Pure thread-turn renderers — shared with the component handoff gallery so
 // the previews there never drift from the app (handoff/components.html).
 import {
@@ -3600,15 +3600,11 @@ function wireAssistantPanel(root, session, attachedContext) {
   // Hand-off from /research — the user picked this chat for a finding, either
   // through the chat picker or by minting a fresh chat. Turn it into ideas now
   // that the thread subscriptions are live.
-  const pendingResearch = consumeHandoff("pendingResearchUse");
-  if (pendingResearch?.findingId) {
-    setTimeout(
-      () =>
-        executeUseFinding(session.id, pendingResearch.findingId, {
-          thenDraft: pendingResearch.thenDraft === true,
-        }),
-      200,
-    );
+  // Hand-off from the research digest — the user picked this chat to write a
+  // delivered idea in. Adopt it and go straight to drafting.
+  const pendingResearch = consumeHandoff("pendingResearchIdea");
+  if (pendingResearch?.ideaId) {
+    setTimeout(() => adoptAndDraft(session.id, pendingResearch.ideaId), 200);
   }
 
   // Pending start flow set by the dashboard's New chat button. Only the

@@ -13,7 +13,7 @@ import {
   ideas as seedIdeas,
   ideasBySession as seedIdeasBySession,
   recentSessions as seedRecentSessions,
-} from "./mocks.js?v=58";
+} from "./mocks.js?v=59";
 import { isNewUser } from "./user-mode.js?v=22";
 
 // Demo session ids — the recentSessions seed (s-acme-launch / s-riverside /
@@ -21,13 +21,13 @@ import { isNewUser } from "./user-mode.js?v=22";
 // conversations (created at runtime via "+ New conversation") start empty
 // to match the user's mental model. Anything else looked-up — same path.
 const DEMO_SESSION_IDS = new Set(seedRecentSessions.map((s) => s.id));
-import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=60";
+import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=61";
 import {
   getSources as streamGetSources,
   subscribeSources,
   pushScriptedSource,
   completeScriptedSource,
-} from "./sources-stream.js?v=53";
+} from "./sources-stream.js?v=54";
 
 // --- Module state -------------------------------------------------------
 
@@ -152,6 +152,65 @@ export function countIdeasByOrigin() {
   const out = { all: seedIdeas.length, research: 0, session: 0 };
   for (const i of seedIdeas) out[(i.origin || "session") === "research" ? "research" : "session"] += 1;
   return out;
+}
+
+export function getIdeaById(id) {
+  return seedIdeas.find((i) => i.id === id) || null;
+}
+
+/**
+ * Add ideas that belong to NO conversation — what a research scan produces.
+ * They go to the global pool only, with `sessionId: null`, so /ideas holds them
+ * and the per-session stores stay untouched until one is adopted.
+ *
+ * Ids are caller-supplied and deterministic (idea-<findingId>-<n>), so
+ * re-delivering the same batch is idempotent — poolAdd dedupes on id.
+ */
+export function addGlobalIdeas(ideas) {
+  if (!Array.isArray(ideas) || ideas.length === 0) return [];
+  const created = ideas.map((i) => ({
+    id: i.id || newId("idea"),
+    title: i.title,
+    body: i.body,
+    kind: i.kind || "insight",
+    tags: i.tags || [],
+    used: 0,
+    ref: i.ref || "",
+    rationale: i.rationale || "",
+    relevance: i.relevance || "Medium relevance",
+    relevanceColor: i.relevanceColor || "tagOrange",
+    confidence: i.confidence ?? 70,
+    channels: i.channels || ["linkedin"],
+    state: "New",
+    pinned: false,
+    sourceIds: [],
+    researchFindingId: i.researchFindingId || null,
+    origin: "research",
+    sessionId: null,
+    extractedAt: i.extractedAt || "just now",
+  }));
+  poolAdd(created);
+  return created;
+}
+
+/**
+ * Copy a conversation-less idea into a chat, so the draft flow — which is
+ * session-scoped end to end — can act on it. The global row stays and gains a
+ * `usedIn` stamp; the session gets its own copy under the same id, which is
+ * what lets removeIdeasGlobally find both later.
+ */
+export function adoptIdea(sessionId, ideaId) {
+  if (!sessionId) return null;
+  const global = getIdeaById(ideaId);
+  if (!global) return null;
+  const list = getIdeas(sessionId) && ideasMap.get(sessionId);
+  if (!list) return null;
+  if (!list.some((i) => i.id === ideaId)) {
+    list.unshift({ ...global, sessionId, extractedAt: "just now" });
+  }
+  global.sessionId = sessionId;
+  notify(sessionId);
+  return list.find((i) => i.id === ideaId) || null;
 }
 
 /**

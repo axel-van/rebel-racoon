@@ -13,25 +13,25 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=359";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=53";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=60";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=51";
-import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=38";
+} from "./right-panel.js?v=360";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=54";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=61";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=52";
+import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=39";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=152";
-import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=8";
+} from "./conversation-status-card.js?v=153";
+import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=9";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { subscribe as subscribeContexts } from "../contexts-store.js?v=39";
+import { subscribe as subscribeContexts } from "../contexts-store.js?v=40";
 import { isFlagOn } from "../feature-flags.js?v=12";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=77";
+} from "../top-posts-flow.js?v=78";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static

@@ -1,52 +1,52 @@
-// Research — the findings feed (route /research).
+// Research — the digest (route /research).
 //
-// Recurring scans of the enabled research sources produce FINDINGS:
-// evidence-backed insights that sit upstream of Ideas in the pipeline
-// (Source → Finding → Idea → Draft → Schedule). This page is where they're
-// browsable; each batch also announces itself in the active chat.
+// A recurring scan of the enabled sources delivers IDEAS, grouped into editions
+// (one per scan). The research behind each idea is its justification, reachable
+// through "Why this?" — never the thing the user has to triage. The ideas are
+// real Ideas in the global library, so they also appear on /ideas.
 //
 // Gated behind the `research` flag — OFF bounces to the dashboard, the same
 // shape as screens/connectors.js.
 //
-// The active Playbook lives in the hash query (`#/research?pb=ctx-acme`) rather
-// than in module state, so a deep link into one Playbook's feed works and the
-// router's re-run on query-only changes repaints for free.
+// The active Playbook and tab live in the hash query (`#/research?pb=…&tab=…`),
+// so deep links work and the router's re-run on query-only changes repaints for
+// free.
 //
 // NOTE ON THE "New" BADGE: markAllSeen() runs in the TEARDOWN, not on mount.
-// Clearing it on arrival would make the tags disappear while the user is still
-// reading the cards they were notified about.
+// Clearing it on arrival would zero the counter the user just clicked.
 
 import { html, raw } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=221";
+import { renderTopbar } from "../components/topbar.js?v=222";
 import { navigate } from "../router.js?v=30";
 import { isFlagOn } from "../feature-flags.js?v=12";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { getContexts, getDefaultContext } from "../contexts-store.js?v=39";
-import { RESEARCH_SOURCES, CADENCES } from "../research-catalog.js?v=2";
+import { getContexts, getDefaultContext } from "../contexts-store.js?v=40";
+import { RESEARCH_SOURCES, CADENCES, findResearchSource } from "../research-catalog.js?v=2";
 import {
-  getFindings,
+  getEditions,
+  getFinding,
   getNewCount,
   getResearchConfig,
   getLastScanAt,
   isScanning,
   markAllSeen,
-  restoreFinding,
   setSourceEnabled,
   setCadence,
   setNotify,
   subscribe as subscribeResearch,
-} from "../research-store.js?v=2";
-import { renderResearchPage, renderFeedBody, renderSourcesBody } from "../research-view.js?v=2";
-import { findConnector } from "../connectors-store.js?v=30";
-import { open as openConnectorsModal } from "../components/connectors-modal.js?v=13";
-import { open as openResearchModal } from "../components/research-modal.js?v=4";
-import { useFinding, dismiss as dismissWithUndo, runScanAndAnnounce } from "../research-flow.js?v=3";
+} from "../research-store.js?v=3";
+import { getAllIdeas, getIdeaById } from "../library.js?v=52";
+import { renderResearchPage, renderDigestBody, renderSourcesBody } from "../research-view.js?v=3";
+import { findConnector } from "../connectors-store.js?v=31";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=14";
+import { open as openResearchModal } from "../components/research-modal.js?v=5";
+import { writeIdea, skipIdea, runScanAndAnnounce } from "../research-flow.js?v=4";
 
 let unsubscribe = null;
 let activeContextId = null;
-// Local view state — not URL-worthy: "show dismissed" is a momentary reveal,
-// not a place you'd link someone to.
-let showDismissed = false;
+// Which one-line rows the user opened. Local, not URL-worthy — a momentary
+// reveal, not a place you'd link someone to.
+let expanded = new Set();
 
 export function renderResearch(_params, target) {
   if (!isFlagOn("research")) {
@@ -62,9 +62,8 @@ export function renderResearch(_params, target) {
 
   return () => {
     teardownSubscription();
-    // Leaving the page is what marks the batch as read — see the note above.
     markAllSeen({ contextId: activeContextId });
-    showDismissed = false;
+    expanded = new Set();
   };
 }
 
@@ -83,14 +82,11 @@ function resolveContextId() {
   return getDefaultContext()?.id || all[0]?.id || null;
 }
 
-// "feed" unless ?tab=sources. In the URL so the "Choose my sources" empty-state
-// CTA and any future in-chat "change what I scan" link are real deep links.
 function resolveTab() {
-  return parseHashParams().get("tab") === "sources" ? "sources" : "feed";
+  return parseHashParams().get("tab") === "sources" ? "sources" : "digest";
 }
 
-// The MCP source advertises connected tools, so resolve them through
-// connectors-store — the catalog only carries ids.
+// The MCP source advertises connected tools; the catalog only carries ids.
 function toolsForSources() {
   const out = {};
   for (const s of RESEARCH_SOURCES) {
@@ -103,14 +99,32 @@ function toolsForSources() {
   return out;
 }
 
+// Resolve each edition's ideaIds into live ideas. Skipping an idea deletes it
+// from the library, so this filter is what makes it vanish from the digest —
+// and an edition whose ideas are all gone disappears with them.
+function buildEditions(contextId) {
+  const known = new Set(getAllIdeas({ origin: "research" }).map((i) => i.id));
+  return getEditions({ contextId }).map((e) => {
+    const ideas = (e.ideaIds || []).filter((id) => known.has(id)).map((id) => getIdeaById(id));
+    const sourceNames = [
+      ...new Set(
+        (e.findingIds || [])
+          .map((id) => findResearchSource(getFinding(id)?.sourceId)?.name)
+          .filter(Boolean)
+          // "Competitor sources" → "Competitor", so the footer reads as prose:
+          // "From Competitor and Influencer."
+          .map((n) => n.replace(/ sources?$/i, "")),
+      ),
+    ];
+    return { ...e, ideas, sourceNames };
+  });
+}
+
 function buildState() {
   const contextId = activeContextId;
-  const all = getFindings({ contextId, includeDismissed: true });
-  const dismissedCount = all.filter((f) => f.status === "dismissed").length;
   return {
-    findings: showDismissed ? all : all.filter((f) => f.status !== "dismissed"),
-    dismissedCount,
-    showDismissed,
+    editions: buildEditions(contextId),
+    expanded,
     tab: resolveTab(),
     playbooks: getContexts().map((c) => ({ id: c.id, name: c.name })),
     contextId,
@@ -122,12 +136,14 @@ function buildState() {
     cadences: CADENCES,
     tools: toolsForSources(),
     connectorsOn: isFlagOn("connectors"),
+    // The justification behind an idea, for the "Because …" line.
+    findingFor: (ideaId) => getFinding(getIdeaById(ideaId)?.researchFindingId),
   };
 }
 
-// What the page header renders from. When only the cards changed we patch the
-// body in place instead of rebuilding the page — a full repaint resets the
-// scroll position and closes the Playbook picker mid-interaction.
+// What the page header renders from. When only the ideas changed we patch the
+// body in place — a full repaint would reset the scroll position and close the
+// Playbook picker mid-interaction.
 function chromeSignature(state) {
   return [
     state.contextId,
@@ -161,7 +177,7 @@ function repaint(target) {
 function repaintBody(root, state = buildState()) {
   const body = root.querySelector("[data-research-body]");
   if (!body) return;
-  body.innerHTML = state.tab === "sources" ? renderSourcesBody(state) : renderFeedBody(state);
+  body.innerHTML = state.tab === "sources" ? renderSourcesBody(state) : renderDigestBody(state);
 }
 
 function bind(target) {
@@ -180,6 +196,42 @@ function onClick(event, root) {
     return;
   }
 
+  // ── The three actions on an idea ────────────────────────────────────────
+  const write = event.target.closest("[data-research-write]");
+  if (write) {
+    writeIdea(write.dataset.researchWrite);
+    return;
+  }
+
+  const skip = event.target.closest("[data-research-skip]");
+  if (skip) {
+    skipIdea(skip.dataset.researchSkip);
+    return;
+  }
+
+  const why = event.target.closest("[data-research-why]");
+  if (why) {
+    const idea = getIdeaById(why.dataset.researchWhy);
+    if (idea?.researchFindingId) openResearchModal({ findingId: idea.researchFindingId, ideaId: idea.id });
+    return;
+  }
+
+  const expand = event.target.closest("[data-research-expand]");
+  if (expand) {
+    const id = expand.dataset.researchExpand;
+    if (expanded.has(id)) expanded.delete(id);
+    else expanded.add(id);
+    repaintBody(root);
+    return;
+  }
+
+  const scan = event.target.closest("[data-research-scan]");
+  if (scan) {
+    runScanAndAnnounce({ contextId: activeContextId, manual: true });
+    return;
+  }
+
+  // ── "What I watch" ──────────────────────────────────────────────────────
   // The whole row is the <label>, so preventDefault stops the click firing a
   // second time through the nested checkbox — the Admin popover's contract.
   const sourceRow = event.target.closest("[data-research-source]");
@@ -221,98 +273,8 @@ function onClick(event, root) {
     const id = playbook.dataset.researchPlaybook;
     playbook.closest("details")?.removeAttribute("open");
     if (id !== activeContextId) {
-      showDismissed = false;
+      expanded = new Set();
       setHashQuery("/research", { pb: id, tab: resolveTab() });
     }
-    return;
   }
-
-  const scan = event.target.closest("[data-research-scan]");
-  if (scan) {
-    startScan();
-    return;
-  }
-
-  // The three card actions all live in research-flow so the feed, the modal
-  // footer and the in-chat turn share one implementation.
-  const use = event.target.closest("[data-research-use]");
-  if (use) {
-    useFinding(use.dataset.researchUse);
-    return;
-  }
-
-  const useIn = event.target.closest("[data-research-use-in]");
-  if (useIn) {
-    closeMenus(root);
-    useFinding(useIn.dataset.researchUseIn, { forcePicker: true });
-    return;
-  }
-
-  const draft = event.target.closest("[data-research-draft]");
-  if (draft) {
-    closeMenus(root);
-    useFinding(draft.dataset.researchDraft, { thenDraft: true });
-    return;
-  }
-
-  const dismiss = event.target.closest("[data-research-dismiss]");
-  if (dismiss) {
-    dismissWithUndo(dismiss.dataset.researchDismiss);
-    return;
-  }
-
-  const read = event.target.closest("[data-research-open]");
-  if (read) {
-    openResearchModal({ findingId: read.dataset.researchOpen });
-    return;
-  }
-
-  const restore = event.target.closest("[data-research-restore]");
-  if (restore) {
-    restoreFinding(restore.dataset.researchRestore);
-    return;
-  }
-
-  const toggle = event.target.closest("[data-research-toggle-dismissed]");
-  if (toggle) {
-    showDismissed = !showDismissed;
-    repaintBody(root);
-    return;
-  }
-
-  // The split button's chevron. One menu open at a time; the document-level
-  // listener below closes it on an outside click.
-  const menuBtn = event.target.closest("[data-research-menu]");
-  if (menuBtn) {
-    const id = menuBtn.dataset.researchMenu;
-    const menu = root.querySelector(`[data-research-menu-for="${id}"]`);
-    const open = menu && menu.hidden;
-    closeMenus(root);
-    if (open) {
-      menu.hidden = false;
-      menuBtn.classList.add("open");
-      menuBtn.setAttribute("aria-expanded", "true");
-    }
-    return;
-  }
-
-  closeMenus(root);
-}
-
-function closeMenus(root) {
-  root.querySelectorAll("[data-research-menu-for]").forEach((m) => {
-    m.hidden = true;
-  });
-  root.querySelectorAll("[data-research-menu]").forEach((b) => {
-    b.classList.remove("open");
-    b.setAttribute("aria-expanded", "false");
-  });
-}
-
-// The scan flips the header button to its loading state and then prepends
-// cards — both are covered by the store's notify(), so there's nothing to
-// repaint by hand here. The announcing (toast + the in-chat card) is shared
-// with the recurring scan, so it lives in research-flow.
-function startScan() {
-  runScanAndAnnounce({ contextId: activeContextId, manual: true });
 }

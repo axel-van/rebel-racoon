@@ -1,23 +1,33 @@
-// Research — pure render helpers.
+// Research — pure render helpers for the digest.
 //
 // Same contract as connectors-view.js and screens/session/thread-turns.js:
 // PURE. No store reads, no DOM, no side effects — everything arrives through
-// the `state` argument. That's what lets the finding card render in two places
-// (the /research feed and the "Read the research" modal footer) without either
-// surface importing the other.
+// the `state` argument.
+//
+// WHAT THIS RENDERS, AND WHY IT ISN'T A FEED OF CARDS
+//
+// The brief was "varied sources that deliver new content IDEAS at regular
+// intervals". So the deliverable is an idea, and the research behind it is the
+// justification — not an object the user has to triage. An earlier version had
+// this backwards: a stack of identical decision cards, each carrying a source
+// badge, a timestamp, a headline, a summary, a "research type" tag and three
+// buttons, with "Turn into ideas" as the primary action. The user's job became
+// arbitrating research instead of picking something to write.
+//
+// The digest inverts it. One EDITION per scan, like a newsletter issue:
+//   • the strongest idea, expanded — title, why it exists, a preview, actions;
+//   • the rest as one-line rows that expand on click;
+//   • a provenance line, so the research is a warrant rather than content to
+//     wade through.
 //
 // Screen state shape (built by screens/research.js):
 //   {
-//     findings: Finding[],        // already filtered to the active Playbook
-//     dismissedCount: number,
-//     showDismissed: boolean,
-//     playbooks: [{ id, name }],  // for the picker; hidden when length < 2
-//     contextId: string,
-//     config: { enabledSourceIds, cadence, notify },
-//     scanning: boolean,
-//     lastScanAt: string | null,
-//     sources: RESEARCH_SOURCES,  // the catalog, passed in to stay pure
-//     cadences: CADENCES,
+//     editions: [{ id, at, ideas: Idea[], sourceNames: string[] }],
+//     expanded: Set<ideaId>,      // rows the user opened
+//     playbooks: [{ id, name }],  // picker; hidden when length < 2
+//     contextId, config, scanning, lastScanAt, tab,
+//     sources: RESEARCH_SOURCES, cadences: CADENCES, tools, connectorsOn,
+//     findingFor(ideaId): Finding | null,
 //   }
 
 import { html, raw } from "./utils.js?v=21";
@@ -25,18 +35,13 @@ import { renderEmptyState } from "./components/empty-state.js?v=1";
 
 // ── Small pieces ──────────────────────────────────────────────────────────
 
-function findSource(state, sourceId) {
-  return (state.sources || []).find((s) => s.id === sourceId) || null;
-}
-
 function cadenceAdverb(state) {
   const c = (state.cadences || []).find((x) => x.id === state.config?.cadence);
   return c ? c.adverb : "weekly";
 }
 
-// The tinted source glyph. `accent` is a semantic key, resolved to
-// `--research-accent` by a `.research-badge--<accent>` class in the stylesheet
-// — never a hex here.
+// The tinted source glyph. `accent` is a semantic key, resolved to a token pair
+// by a `.research-badge--<accent>` class in the stylesheet — never a hex here.
 function renderBadge(source, { size = "md" } = {}) {
   if (!source) return "";
   return html`<span class="research-badge research-badge--${source.accent} research-badge--${size}" aria-hidden="true"
@@ -44,20 +49,27 @@ function renderBadge(source, { size = "md" } = {}) {
   ></span>`;
 }
 
+// "Your competitors stopped…" has to read as a clause inside "Because …".
+function lowerFirst(text) {
+  const t = String(text || "");
+  if (!t) return t;
+  if (/^[A-Z]{2}/.test(t)) return t; // leave acronyms alone
+  return t[0].toLowerCase() + t.slice(1);
+}
+
 // ── Page chrome ───────────────────────────────────────────────────────────
 
-// "2 sources · refreshes weekly · last scan 5h ago". The cadence shows up as
-// prose because that's all it drives — it is not a timer.
+// "2 sources · every week · last scan 5h ago".
 function renderSubline(state) {
   const count = (state.config?.enabledSourceIds || []).length;
-  const bits = [`${count} ${count === 1 ? "source" : "sources"}`, `refreshes ${cadenceAdverb(state)}`];
+  const bits = [`${count} ${count === 1 ? "source" : "sources"}`, `every ${cadenceAdverb(state).replace(/ly$/, "")}`];
   if (state.lastScanAt) bits.push(`last scan ${state.lastScanAt}`);
   return bits.join(" · ");
 }
 
-// The Playbook picker — a DS .ap-select over the native <details> disclosure,
-// the same shape the top-posts toolbar uses. Hidden when there's only one
-// Playbook: a picker with a single option is noise.
+// A DS .ap-select over the native <details> disclosure, the same shape the
+// top-posts toolbar uses. Hidden with a single Playbook: a picker with one
+// option is noise.
 function renderPlaybookPicker(state) {
   const list = state.playbooks || [];
   if (list.length < 2) return "";
@@ -88,8 +100,7 @@ function renderPlaybookPicker(state) {
   </details>`;
 }
 
-// Grey, not orange: the orange on this page belongs to the one primary action
-// per card. A header full of brand colour flattens that hierarchy.
+// Grey, not orange: the one orange on this page belongs to "Write it".
 function renderScanButton(state) {
   if (state.scanning) {
     return html`<button type="button" class="ap-button stroked grey" disabled>
@@ -98,189 +109,129 @@ function renderScanButton(state) {
           <circle></circle>
           <circle></circle></svg
       ></span>
-      <span>Scanning…</span>
+      <span>Looking…</span>
     </button>`;
   }
   return html`<button type="button" class="ap-button stroked grey" data-research-scan>
     <i class="ap-icon-refresh"></i>
-    <span>Run a scan</span>
+    <span>Look now</span>
   </button>`;
 }
 
-// ── The finding card ──────────────────────────────────────────────────────
+// ── The digest ────────────────────────────────────────────────────────────
 
-/**
- * One finding. `variant: "modal"` drops the headline and summary (the modal
- * header already carries them) and keeps only the action row, so both
- * surfaces share one set of data-* hooks and one handler.
- */
-export function renderFindingCard(finding, source, { variant = "feed" } = {}) {
-  if (!finding) return "";
-  const dismissed = finding.status === "dismissed";
-  const used = finding.status === "used";
-  const actions = dismissed
-    ? html`<div class="research-card__actions research-card__actions--dismissed">
-        <span class="research-card__dismissed-note">Dismissed — I won't suggest this again.</span>
-        <button type="button" class="ap-link standalone small" data-research-restore="${finding.id}">
-          Bring it back
-        </button>
-      </div>`
-    : html`<div class="research-card__actions">
-        ${raw(
-          used
-            ? html`<span class="ap-status green"><span>Turned into ideas</span></span>`
-            : html`<span class="ap-split-button primary orange research-card__split">
-                <button type="button" data-research-use="${finding.id}">
-                  <i class="ap-icon-check"></i>
-                  <span>Turn into ideas</span>
-                </button>
-                <button
-                  type="button"
-                  data-research-menu="${finding.id}"
-                  aria-label="More ways to use this finding"
-                  aria-haspopup="menu"
-                  aria-expanded="false"
-                >
-                  <i class="ap-icon-chevron-down"></i>
-                </button>
-                ${raw(renderUseMenu(finding))}
-              </span>`,
-        )}
-        ${raw(
-          used
-            ? ""
-            : html`<button type="button" class="ap-button ghost grey" data-research-dismiss="${finding.id}">
-                <i class="ap-icon-close"></i>
-                <span>Dismiss</span>
-              </button>`,
-        )}
-        ${raw(
-          // Inside the modal the research is already open — offering to read it
-          // again is noise.
-          variant === "modal"
-            ? ""
-            : html`<button
-                type="button"
-                class="ap-link standalone small research-card__read"
-                data-research-open="${finding.id}"
-              >
-                <i class="ap-icon-bar-graph"></i>
-                <span>Read the research</span>
-              </button>`,
-        )}
-      </div>`;
-
-  if (variant === "modal") {
-    return html`<div class="research-card__foot research-card__foot--modal">${raw(actions)}</div>`;
-  }
-
-  return html`<article
-    class="ap-card research-card${raw(dismissed ? " research-card--dismissed" : "")}${raw(
-      used ? " research-card--used" : "",
-    )}"
-    data-research-card="${finding.id}"
-  >
-    <header class="research-card__head">
-      ${raw(renderBadge(source))}
-      <span class="research-card__origin">
-        <span class="research-card__source">${source ? source.name : "Research"}</span>
-        <span class="research-card__time">· ${finding.scannedAt}</span>
-      </span>
-      ${raw(finding.status === "new" ? html`<span class="ap-tag blue mini research-card__new">New</span>` : "")}
-    </header>
-
-    <h3 class="research-card__headline">${finding.headline}</h3>
-    <p class="research-card__summary">${finding.summary}</p>
-
-    <div class="research-card__meta">
-      <span class="research-card__meta-label">Research type</span>
-      <span class="ap-tag grey">${finding.researchType}</span>
-      ${raw(
-        finding.posts?.length
-          ? html`<span class="research-card__evidence"
-              >${finding.posts.length} source ${raw(finding.posts.length === 1 ? "post" : "posts")}</span
-            >`
-          : "",
-      )}
-    </div>
-
-    <div class="research-card__foot">${raw(actions)}</div>
-  </article>`;
+// Why this idea exists, as Archie's reason rather than as metadata. This one
+// sentence replaces what the old card spent a headline, a summary and two tags
+// saying.
+function reasonFor(state, idea) {
+  const finding = state.findingFor?.(idea.id);
+  return finding ? finding.headline : "";
 }
 
-// The split button's second half. Two options, both things the primary can't
-// express: send it to a specific chat, or skip the Idea step entirely.
-function renderUseMenu(finding) {
-  return html`<div
-    class="ap-action-dropdown research-card__menu"
-    role="menu"
-    hidden
-    data-research-menu-for="${finding.id}"
-  >
-    <button type="button" role="menuitem" class="ap-action-dropdown-item" data-research-use-in="${finding.id}">
-      <i class="ap-icon-single-chat-bubble"></i>
-      <div class="ap-action-dropdown-item-text">
-        <div class="ap-action-dropdown-item-label-container">
-          <span class="ap-action-dropdown-item-label">Turn into ideas in…</span>
-        </div>
-      </div>
-    </button>
-    <button type="button" role="menuitem" class="ap-action-dropdown-item" data-research-draft="${finding.id}">
+function renderIdeaActions(idea) {
+  return html`<div class="research-idea__actions">
+    <button type="button" class="ap-button primary orange" data-research-write="${idea.id}">
       <i class="ap-icon-pen"></i>
-      <div class="ap-action-dropdown-item-text">
-        <div class="ap-action-dropdown-item-label-container">
-          <span class="ap-action-dropdown-item-label">Draft a post now</span>
-        </div>
-      </div>
+      <span>Write it</span>
+    </button>
+    <button type="button" class="ap-button ghost grey" data-research-skip="${idea.id}">
+      <span>Not for me</span>
+    </button>
+    <button type="button" class="ap-link standalone small research-idea__why" data-research-why="${idea.id}">
+      <span>Why this?</span>
     </button>
   </div>`;
 }
 
-// ── Feed ──────────────────────────────────────────────────────────────────
+function renderIdeaDetail(state, idea) {
+  const reason = reasonFor(state, idea);
+  return html`${raw(reason ? html`<p class="research-idea__reason">Because ${raw(lowerFirst(reason))}.</p>` : "")}
+    <p class="research-idea__body">${idea.body}</p>
+    ${raw(renderIdeaActions(idea))}`;
+}
 
-function renderFeedEmpty(state) {
+// The lead idea of an edition — the only one that gets room.
+function renderLeadIdea(state, idea) {
+  return html`<article class="research-idea research-idea--lead" data-research-idea="${idea.id}">
+    <h3 class="research-idea__title">${idea.title}</h3>
+    ${raw(renderIdeaDetail(state, idea))}
+  </article>`;
+}
+
+// Everything else — one line, expandable. Collapsed it's a title; expanded it
+// becomes the same block as the lead.
+function renderIdeaRow(state, idea, { expanded }) {
+  return html`<article
+    class="research-idea research-idea--row${raw(expanded ? " is-expanded" : "")}"
+    data-research-idea="${idea.id}"
+  >
+    <button
+      type="button"
+      class="research-idea__summary"
+      data-research-expand="${idea.id}"
+      aria-expanded="${raw(expanded ? "true" : "false")}"
+    >
+      <i class="ap-icon-chevron-right research-idea__chevron" aria-hidden="true"></i>
+      <span class="research-idea__row-title">${idea.title}</span>
+    </button>
+    ${raw(expanded ? html`<div class="research-idea__detail">${raw(renderIdeaDetail(state, idea))}</div>` : "")}
+  </article>`;
+}
+
+function renderEdition(state, edition) {
+  const ideas = edition.ideas || [];
+  if (ideas.length === 0) return "";
+  const [lead, ...rest] = ideas;
+  const n = ideas.length;
+  const sources = (edition.sourceNames || []).join(" and ");
+
+  return html`<section class="research-edition" data-research-edition="${edition.id}">
+    <header class="research-edition__head">
+      <h2 class="research-edition__title">${edition.at === "just now" ? "Just now" : edition.at}</h2>
+      <span class="research-edition__count">${n} ${raw(n === 1 ? "idea" : "ideas")}</span>
+    </header>
+
+    ${raw(renderLeadIdea(state, lead))}
+    ${raw(
+      rest.length
+        ? html`<div class="research-edition__rest">
+            ${raw(rest.map((i) => renderIdeaRow(state, i, { expanded: !!state.expanded?.has(i.id) })).join(""))}
+          </div>`
+        : "",
+    )}
+    ${raw(sources ? html`<footer class="research-edition__foot">From ${sources}.</footer>` : "")}
+  </section>`;
+}
+
+function renderDigestEmpty(state) {
   const noSources = (state.config?.enabledSourceIds || []).length === 0;
   if (noSources) {
     return renderEmptyState({
       icon: "ap-icon-feature-listening",
-      title: "No research sources on",
-      body: "Pick what I should watch — competitors, creators, what people say about you — and I'll start bringing findings back.",
-      actionHtml: `<button type="button" class="ap-button primary blue" data-research-tab="sources"><span>Choose my sources</span></button>`,
+      title: "Nothing to watch yet",
+      body: "Tell me what to keep an eye on — competitors, creators, what people say about you — and I'll start sending ideas.",
+      actionHtml: `<button type="button" class="ap-button primary blue" data-research-tab="sources"><span>Choose what I watch</span></button>`,
       wrapperClass: "research-view__empty research-view__empty--rich",
     });
   }
   return renderEmptyState({
     icon: "ap-icon-feature-listening",
     title: "Nothing yet",
-    body: `I'm watching ${(state.config?.enabledSourceIds || []).length} sources and refresh ${cadenceAdverb(state)}. Run a scan if you don't want to wait.`,
-    actionHtml: `<button type="button" class="ap-button primary blue" data-research-scan><i class="ap-icon-refresh"></i><span>Run a scan</span></button>`,
+    body: `I'm watching ${(state.config?.enabledSourceIds || []).length} sources and send ideas ${cadenceAdverb(state)}. Look now if you don't want to wait.`,
+    actionHtml: `<button type="button" class="ap-button primary blue" data-research-scan><i class="ap-icon-refresh"></i><span>Look now</span></button>`,
     wrapperClass: "research-view__empty research-view__empty--rich",
   });
 }
 
-export function renderFeedBody(state) {
-  const list = state.findings || [];
-  // Returns an HTML STRING in every branch — the caller assigns it straight to
-  // innerHTML, and raw() is only meaningful inside an html`` template.
-  if (list.length === 0 && !state.showDismissed) return renderFeedEmpty(state);
-
-  const cards = list.map((f) => renderFindingCard(f, findSource(state, f.sourceId))).join("");
-  const toggle =
-    state.dismissedCount > 0
-      ? html`<div class="research-view__dismissed">
-          <button type="button" class="ap-link small" data-research-toggle-dismissed>
-            ${raw(state.showDismissed ? "Hide dismissed" : `Show dismissed (${state.dismissedCount})`)}
-          </button>
-        </div>`
-      : "";
-
-  return html`<div class="research-view__feed">${raw(cards)}</div>
-    ${raw(toggle)}`;
+export function renderDigestBody(state) {
+  const editions = (state.editions || []).filter((e) => (e.ideas || []).length > 0);
+  if (editions.length === 0) return renderDigestEmpty(state);
+  return html`<div class="research-view__digest">${raw(editions.map((e) => renderEdition(state, e)).join(""))}</div>`;
 }
 
-// ── Sources tab ───────────────────────────────────────────────────────────
+// ── "What I watch" tab ────────────────────────────────────────────────────
 
-// One switch row per catalog entry. The whole row is the <label>, with the DS
+// One switch row per catalog source. The whole row is the <label>, with the DS
 // toggle aria-hidden + tabindex="-1" inside it — the same contract as the Admin
 // popover's flag rows, so the label is the single control.
 function renderSourceSettingCard(source, { enabled, playbookId, tools, connectorsOn }) {
@@ -354,15 +305,15 @@ function renderOtherSettings(state) {
   return html`<h2 class="research-sources__heading">Other settings</h2>
     <div class="ap-card research-settings">
       <div class="research-settings__text">
-        <span class="research-settings__label">Refresh frequency</span>
-        <p class="research-settings__desc">How often I scan your sources for new research.</p>
+        <span class="research-settings__label">How often</span>
+        <p class="research-settings__desc">How often I look at your sources and send ideas.</p>
       </div>
-      <div class="research-settings__chips" role="group" aria-label="Refresh frequency">${raw(chips)}</div>
+      <div class="research-settings__chips" role="group" aria-label="How often">${raw(chips)}</div>
     </div>
     <label class="ap-card research-settings research-settings--row" data-research-notify>
       <div class="research-settings__text">
         <span class="research-settings__label">Notifications</span>
-        <p class="research-settings__desc">Show a badge and a toast when new findings land.</p>
+        <p class="research-settings__desc">Show a badge and a toast when new ideas land.</p>
       </div>
       <span class="ap-toggle-container" aria-hidden="true">
         <input type="checkbox" ${raw(state.config?.notify ? "checked" : "")} tabindex="-1" />
@@ -391,8 +342,8 @@ export function renderSourcesBody(state) {
 
 // ── The page ──────────────────────────────────────────────────────────────
 
-// Feed | Sources. .ap-tabs is width:100%/column by default (it's built to own a
-// panel), so the inline instance is shrink-wrapped in research.css.
+// .ap-tabs is width:100%/column by default (it's built to own a panel), so the
+// inline instance is shrink-wrapped in research.css.
 function renderTabs(state) {
   const tab = (id, label, count) => {
     const on = state.tab === id;
@@ -407,10 +358,11 @@ function renderTabs(state) {
       ${raw(count > 0 ? html`<span class="ap-counter normal ${raw(on ? "blue" : "grey")}">${count}</span>` : "")}
     </button>`;
   };
+  const ideaCount = (state.editions || []).reduce((n, e) => n + (e.ideas || []).length, 0);
   return html`<div class="ap-tabs research-view__tabs">
     <div class="ap-tabs-nav" role="tablist" aria-label="Research views">
-      ${raw(tab("feed", "Feed", (state.findings || []).filter((f) => f.status !== "dismissed").length))}
-      ${raw(tab("sources", "Sources", (state.config?.enabledSourceIds || []).length))}
+      ${raw(tab("digest", "Ideas", ideaCount))}
+      ${raw(tab("sources", "What I watch", (state.config?.enabledSourceIds || []).length))}
     </div>
   </div>`;
 }
@@ -431,10 +383,10 @@ export function renderResearchPage(state) {
       ${raw(renderTabs(state))}
 
       <div class="research-view__body" data-research-body>
-        ${raw(state.tab === "sources" ? renderSourcesBody(state) : renderFeedBody(state))}
+        ${raw(state.tab === "sources" ? renderSourcesBody(state) : renderDigestBody(state))}
       </div>
     </div>
   `;
 }
 
-export { renderBadge, cadenceAdverb, findSource };
+export { renderBadge, cadenceAdverb };

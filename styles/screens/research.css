@@ -97,21 +97,6 @@
   min-height: 200px;
 }
 
-/* One reading column. 760px is the measure a finding's headline + summary
-   read at comfortably; wider and the two-line summary turns into one. */
-.research-view__feed {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-md);
-  max-width: 760px;
-}
-
-.research-view__dismissed {
-  max-width: 760px;
-  padding-top: var(--ref-spacing-sm);
-  text-align: center;
-}
-
 .research-view__empty {
   padding: var(--ref-spacing-md);
   text-align: center;
@@ -197,53 +182,76 @@
   --research-accent-fg: var(--ref-color-menthol-100);
 }
 
-/* ── Finding card ────────────────────────────────────────────────────── */
+/* ── The digest ──────────────────────────────────────────────────────────── */
 
-/* .ap-card already brings the surface, border, radius, padding and a sm gap.
-   Only the row rhythm and the typography of the card's own parts live here. */
-.research-card {
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-md);
-}
+/* One edition per scan, like a newsletter issue. No card-per-item: the earlier
+   version stacked identical decision cards and made the reader arbitrate
+   research instead of picking something to write. Here the strongest idea gets
+   room and the rest are one-liners. */
 
-.research-card--dismissed {
-  opacity: 0.6;
-}
-
-.research-card__head {
+.research-view__digest {
   display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
+  flex-direction: column;
+  gap: var(--ref-spacing-xl);
+  max-width: 680px;
 }
 
-.research-card__origin {
+.research-edition {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+}
+
+/* The edition's date is the heading — a scan happens at one moment, so the
+   individual ideas don't carry timestamps. */
+.research-edition__head {
   display: flex;
   align-items: baseline;
-  gap: var(--ref-spacing-xxxs);
-  min-width: 0;
-  flex: 1;
+  gap: var(--ref-spacing-xs);
+  padding-bottom: var(--ref-spacing-xxs);
+  border-bottom: 1px solid var(--ref-color-grey-10);
 }
 
-.research-card__source {
+.research-edition__title {
+  margin: 0;
+  font-family: var(--sys-text-style-h4-font-family);
   font-size: var(--sys-text-style-h4-size);
   line-height: var(--sys-text-style-h4-line-height);
   font-weight: var(--sys-text-style-h4-weight);
-  font-family: var(--sys-text-style-h4-font-family);
   color: var(--ref-color-grey-100);
 }
 
-.research-card__time {
+.research-edition__count {
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   color: var(--ref-color-grey-60);
-  white-space: nowrap;
 }
 
-.research-card__new {
-  margin-left: auto;
+/* The provenance line — the research as a warrant, not as content. */
+.research-edition__foot {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
 }
 
-.research-card__headline {
+.research-edition__rest {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── An idea ─────────────────────────────────────────────────────────────── */
+
+/* Deliberately NOT .ap-card. A card would put every idea in its own box and
+   we'd be back to a feed; the edition is the container, and hierarchy comes
+   from type size and space. */
+.research-idea--lead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding-bottom: var(--ref-spacing-xs);
+}
+
+.research-idea__title {
   margin: 0;
   font-family: var(--sys-text-style-h2-font-family);
   font-size: var(--sys-text-style-h2-size);
@@ -252,126 +260,69 @@
   color: var(--ref-color-grey-100);
 }
 
-/* Two lines, then ellipsis — the full argument lives in the modal. */
-.research-card__summary {
+/* "Because your competitors stopped announcing features." Archie's reason for
+   suggesting this — one sentence where the old card spent a headline, a summary
+   and two tags. */
+.research-idea__reason {
   margin: 0;
   font-size: var(--sys-text-style-body-size);
   line-height: var(--sys-text-style-body-line-height);
-  color: var(--ref-color-grey-80);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  color: var(--ref-color-grey-60);
 }
 
-.research-card__meta {
+.research-idea__body {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-100);
+}
+
+.research-idea__actions {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
   flex-wrap: wrap;
+  padding-top: var(--ref-spacing-xxs);
 }
 
-.research-card__meta-label,
-.research-card__evidence {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-60);
-}
-
-.research-card__evidence {
+.research-idea__why {
   margin-left: auto;
 }
 
-.research-card__foot {
-  padding-top: var(--ref-spacing-xs);
+/* ── A one-line row ──────────────────────────────────────────────────────── */
+
+.research-idea--row {
   border-top: 1px solid var(--ref-color-grey-10);
 }
 
-.research-card__foot--modal {
-  padding-top: 0;
-  border-top: none;
-}
-
-.research-card__actions {
+.research-idea__summary {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  flex-wrap: wrap;
-}
-
-/* "Read the research" sits opposite the decision, not beside it — reading is
-   the alternative to deciding now. */
-.research-card__read {
-  margin-left: auto;
-}
-
-.research-card__actions--dismissed {
-  justify-content: space-between;
-}
-
-.research-card__dismissed-note {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-60);
-}
-
-/* The split button's menu — .ap-action-dropdown brings its own surface; this
-   only anchors it under the chevron half. */
-.research-card__split {
-  position: relative;
-}
-
-.research-card__menu {
-  position: absolute;
-  top: calc(100% + var(--ref-spacing-xxxs));
-  left: 0;
-  z-index: 20;
-  min-width: 250px;
-}
-
-/* ── Sources tab ─────────────────────────────────────────────────────── */
-
-.research-sources {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-sm);
-  max-width: 760px;
-}
-
-.research-sources__list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-sm);
-}
-
-.research-sources__heading {
-  margin: var(--ref-spacing-md) 0 0;
-  font-family: var(--sys-text-style-h4-font-family);
-  font-size: var(--sys-text-style-h4-size);
-  line-height: var(--sys-text-style-h4-line-height);
-  font-weight: var(--sys-text-style-h4-weight);
-  color: var(--ref-color-grey-80);
-}
-
-/* One switch row per source. .ap-card brings the surface; the row rhythm and
-   the off-state dimming live here. */
-.research-source {
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
-}
-
-/* The whole head is the <label> — clicking anywhere on the row toggles. */
-.research-source__head {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: var(--ref-spacing-xs) 0;
+  background: none;
+  border: none;
+  text-align: left;
   cursor: pointer;
-  margin: 0;
 }
 
-.research-source__name {
-  flex: 1;
-  min-width: 0;
+.research-idea__summary:hover .research-idea__row-title {
+  color: var(--ref-color-electric-blue-100);
+}
+
+.research-idea__chevron {
+  flex-shrink: 0;
+  font-size: var(--sys-icon-css-xs);
+  color: var(--ref-color-grey-60);
+  transition: transform 0.15s ease-in-out;
+}
+
+.research-idea--row.is-expanded .research-idea__chevron {
+  transform: rotate(90deg);
+}
+
+.research-idea__row-title {
   font-family: var(--sys-text-style-h4-font-family);
   font-size: var(--sys-text-style-h4-size);
   line-height: var(--sys-text-style-h4-line-height);
@@ -379,86 +330,11 @@
   color: var(--ref-color-grey-100);
 }
 
-.research-source__toggle {
-  flex: 0 0 auto;
-}
-
-.research-source__desc {
-  margin: 0;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--ref-color-grey-60);
-}
-
-/* An enabled source states its description in full colour; an off one reads
-   as a description of something that isn't happening. */
-.research-source--on .research-source__desc {
-  color: var(--ref-color-grey-80);
-}
-
-.research-source__link {
-  align-self: flex-start;
-}
-
-.research-source__tools {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  flex-wrap: wrap;
-}
-
-.research-source__tool {
-  gap: var(--ref-spacing-xxxs);
-}
-
-.research-source__tool-logo {
-  width: 14px;
-  height: 14px;
-  object-fit: contain;
-}
-
-/* ── Other settings ──────────────────────────────────────────────────── */
-
-.research-settings {
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
-}
-
-/* The Notifications card is a single row (label block + toggle); the cadence
-   card stacks its chip group under the label. */
-.research-settings--row {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-}
-
-.research-settings__text {
+.research-idea__detail {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-  min-width: 0;
-}
-
-.research-settings__label {
-  font-family: var(--sys-text-style-h4-font-family);
-  font-size: var(--sys-text-style-h4-size);
-  line-height: var(--sys-text-style-h4-line-height);
-  font-weight: var(--sys-text-style-h4-weight);
-  color: var(--ref-color-grey-100);
-}
-
-.research-settings__desc {
-  margin: 0;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--ref-color-grey-60);
-}
-
-.research-settings__chips {
-  display: flex;
-  gap: var(--ref-spacing-xxs);
-  flex-wrap: wrap;
+  gap: var(--ref-spacing-xs);
+  padding: 0 0 var(--ref-spacing-sm) calc(var(--sys-icon-css-xs) + var(--ref-spacing-xs));
 }
 
 /* ── "Read the research" modal ───────────────────────────────────────── */
@@ -501,12 +377,6 @@
   color: var(--ref-color-grey-100);
 }
 
-.research-modal__time {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-60);
-}
-
 .research-modal__title {
   margin: 0;
   font-family: var(--sys-text-style-h2-font-family);
@@ -543,8 +413,8 @@
   color: var(--ref-color-grey-100);
 }
 
-.research-modal__evidence,
-.research-modal__seeds {
+.research-modal__reason,
+.research-modal__evidence {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
@@ -558,7 +428,7 @@
   gap: var(--ref-spacing-xxs);
 }
 
-.research-modal__evidence-title {
+.research-modal__section-title {
   margin: 0;
   font-family: var(--sys-text-style-h4-font-family);
   font-size: var(--sys-text-style-h4-size);
@@ -573,39 +443,6 @@
   gap: var(--ref-spacing-xs);
 }
 
-/* What the finding would become — the bridge between reading and the footer's
-   "Turn into ideas". */
-.research-modal__seed-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.research-modal__seed {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-  padding-left: var(--ref-spacing-sm);
-  border-left: 2px solid var(--ref-color-grey-20);
-}
-
-.research-modal__seed-title {
-  font-family: var(--sys-text-style-h4-font-family);
-  font-size: var(--sys-text-style-h4-size);
-  line-height: var(--sys-text-style-h4-line-height);
-  font-weight: var(--sys-text-style-h4-weight);
-  color: var(--ref-color-grey-100);
-}
-
-.research-modal__seed-body {
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--ref-color-grey-80);
-}
-
 /* Sticky: the decision has to stay reachable however long the argument runs. */
 .research-modal__footer {
   flex: 0 0 auto;
@@ -614,11 +451,27 @@
   background: var(--ref-color-white);
 }
 
-/* In the sticky footer the menu has to open UPWARD — downward would fall
-   outside the dialog. */
-.research-modal__footer .research-card__menu {
-  top: auto;
-  bottom: calc(100% + var(--ref-spacing-xxxs));
+/* The idea's own text, right under the title — the modal justifies THIS. */
+.research-modal__lead {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-80);
+}
+
+.research-modal__reason-line {
+  margin: 0;
+  font-family: var(--sys-text-style-h4-font-family);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.research-modal__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
 }
 
 /* ── In-chat delivery turn ───────────────────────────────────────────────── */

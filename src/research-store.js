@@ -35,11 +35,16 @@
 // Empty in new-alt mode — a brand-new user has nothing to have researched yet,
 // so /research shows its empty state and offers a scan instead.
 
-import { researchFindings as seed, researchScanPool as poolSeed } from "./mocks.js?v=58";
+import {
+  researchFindings as seed,
+  researchScanPool as poolSeed,
+  researchEditions as editionSeed,
+} from "./mocks.js?v=59";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
-import { getContextById, updateContext } from "./contexts-store.js?v=39";
+import { getContextById, updateContext } from "./contexts-store.js?v=40";
 import { DEFAULT_ENABLED_IDS, findCadence } from "./research-catalog.js?v=2";
+import { addGlobalIdeas } from "./library.js?v=52";
 
 // How long a scan "runs". Long enough to read as work, short enough to demo.
 const SCAN_MS = 2600;
@@ -50,6 +55,9 @@ const MAX_PER_SCAN = 3;
 
 let findings = null;
 let pool = null;
+// Editions — one per scan, newest first. The digest lists these; a finding is
+// only ever reached through the idea it produced.
+let editions = null;
 // dedupeKeys of findings the user rejected. Scans filter against this, so a
 // dismissed finding never comes back — even if a later scan re-derives the same
 // insight under a new id. Same contract as ctx.dismissedCompetitors.
@@ -65,6 +73,7 @@ export const subscribe = notifier.subscribe;
 function notify() {
   notifier.notify({
     findings: getFindings(),
+    editions: editions || [],
     newCount: getNewCount(),
     scanning: scanning.size > 0,
   });
@@ -85,7 +94,45 @@ function cloneFinding(f) {
 function ensureSeeded() {
   if (findings === null) findings = isNewUser() ? [] : seed.map(cloneFinding);
   if (pool === null) pool = isNewUser() ? [] : poolSeed.map(cloneFinding);
+  if (editions === null) {
+    editions = isNewUser()
+      ? []
+      : editionSeed.map((e) => ({
+          ...e,
+          findingIds: e.findingIds.slice(),
+          ideaIds: publishIdeas(e.findingIds.map((id) => findings.find((f) => f.id === id)).filter(Boolean)),
+        }));
+  }
   return findings;
+}
+
+/**
+ * Turn findings into real Ideas in the global library. This is what the feature
+ * actually delivers — "new content ideas at regular intervals" — so it happens
+ * at SCAN time, not when the user accepts something. The finding stays as the
+ * justification behind each idea (`researchFindingId`).
+ *
+ * Ids derive from the finding, so re-publishing the same batch is a no-op.
+ */
+function publishIdeas(batch) {
+  const seeds = [];
+  for (const f of batch) {
+    (f.ideaSeeds || []).forEach((s, n) => {
+      seeds.push({ ...s, id: `idea-${f.id}-${n + 1}`, researchFindingId: f.id, extractedAt: "just now" });
+    });
+  }
+  return addGlobalIdeas(seeds).map((i) => i.id);
+}
+
+/** The digest's dataset: every edition for a Playbook, newest first. */
+export function getEditions({ contextId = null } = {}) {
+  ensureSeeded();
+  return editions.filter((e) => !contextId || e.contextId === contextId);
+}
+
+export function getEdition(id) {
+  ensureSeeded();
+  return editions.find((e) => e.id === id) || null;
 }
 
 // ── Reads ─────────────────────────────────────────────────────────────────
@@ -278,6 +325,17 @@ export function runScan({ contextId, manual = false, onDone = null } = {}) {
       f.status = "new";
       f.scannedAt = "just now";
       findings.unshift(f);
+    }
+    // One scan, one edition. An empty scan records nothing — an edition with
+    // nothing in it is not news.
+    if (batch.length) {
+      editions.unshift({
+        id: `ed-${contextId}-${editions.length + 1}`,
+        contextId,
+        at: "just now",
+        findingIds: batch.map((f) => f.id),
+        ideaIds: publishIdeas(batch),
+      });
     }
     notify();
     onDone?.(batch.slice());
