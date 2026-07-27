@@ -36,7 +36,7 @@
 import { escapeHtml } from "../../utils.js?v=21";
 import { FORMATS, NETWORK_FORMATS } from "../../clip-formats.js?v=7";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=27";
-import { KEY } from "./context.js?v=1";
+import { KEY } from "./context.js?v=3";
 import * as imageStudio from "../../image-studio.js?v=42";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
@@ -66,48 +66,49 @@ export function settingsPanel(st) {
 }
 
 // The floating palette — the manual tools, top-left over the canvas, where the
-// work is. Crop and Add image open their options as flyouts to the RIGHT here
-// (there is nothing to their left but the modal edge).
+// work is. This is v1's palette, reusing v1's classes and its ghost-grey buttons
+// verbatim: the arrangement was already right and the compact look was already
+// right, so there is nothing here for v2 to redesign. Only the flyout direction
+// differs — the palette sits at the LEFT edge, so its options open right.
 export function toolPalette(st) {
-  return `<aside class="isv2-palette" role="toolbar" aria-label="Edit tools">${editTools(st)}</aside>`;
+  return `<div class="image-studio__palette" role="toolbar" aria-label="Edit tools">${editTools(st)}</div>`;
 }
 
 // ── Shared building blocks ──────────────────────────────────────────────────
 
-// One setting = the DS's own inline-label Select. `.ap-select-trigger` is the
-// Agorapulse control for exactly this job — a labelled field showing its current
-// value with a disclosure arrow — and it brings its `.open` (blue border +
-// rotated arrow) and `.disabled` states with it, so none of that is hand-rolled
-// here. `.ap-select-inline-label` supplies the label + hairline separator.
-// The label column is given a fixed width so all six separators land on one
-// axis: six DS fields, one form grid.
-function settingRow({ name, label, value, sheet, open, set = false, disabled = false }) {
-  const cls = `ap-select-trigger isv2-trigger${open ? " open" : ""}${disabled ? " disabled" : ""}${set ? " is-set" : ""}`;
-  return `<div class="isv2-set-wrap">
-    <div class="ap-select">
-      <button type="button" class="${cls}" data-img-popover-toggle="${name}" aria-haspopup="dialog" aria-expanded="${open}"${disabled ? " disabled" : ""}>
-        <span class="ap-select-inline-label isv2-trigger-label">${escapeHtml(label)}</span>
-        <span class="ap-select-value">${escapeHtml(value)}</span>
-        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
-      </button>
-    </div>
-    ${open && !disabled ? sheet() : ""}
+// One setting = one DS Accordion section, expanding IN PLACE inside the panel.
+//
+// This replaced a stack of `.ap-select` triggers that threw flyout sheets over
+// the image. Sections are the better tool for three reasons: the options land
+// next to the label they belong to instead of across the canvas, nothing has to
+// be positioned (no flyout can fall off an edge), and with no sheet needing to
+// escape it the panel is finally free to scroll — the `overflow: auto` trap that
+// bit this file three times simply stops existing.
+//
+// `.ap-accordion` brings the frame, the header row, the title, the toggle and
+// its 180° rotation on `.collapsed`. Only one is open at a time (state.openPopover
+// holds which), so the panel stays short.
+function settingRow({ name, label, value, body, open, set = false, disabled = false }) {
+  const expanded = open && !disabled;
+  return `<div class="ap-accordion isv2-acc${expanded ? "" : " collapsed"}${disabled ? " is-disabled" : ""}">
+    <button type="button" class="ap-accordion-header isv2-acc-head" data-img-popover-toggle="${name}" aria-expanded="${expanded}"${disabled ? " disabled" : ""}>
+      <span class="ap-accordion-title isv2-acc-title">${escapeHtml(label)}</span>
+      <span class="isv2-acc-value${set ? " is-set" : ""}">${escapeHtml(value)}</span>
+      ${disabled ? "" : `<i class="ap-icon-chevron-up ap-accordion-toggle" aria-hidden="true"></i>`}
+    </button>
+    <div class="ap-accordion-content isv2-acc-body">${expanded ? body() : ""}</div>
   </div>`;
 }
 
-// A tool (Edit mode) is a verb, not a value — so it's a DS button, not a Select.
-// Stroked grey is the DS's secondary tier; the ones that open a panel carry the
-// same chevron the Selects do. Natural width, never stretched to the column.
+// One palette tool, exactly as v1 draws it: a ghost-grey DS button with its
+// glyph and label. `.image-studio__palette-anchor` is v1's relative wrapper that
+// the flyout hangs off.
 function toolRow({ name, label, icon, sheet, open, active = false, disabled = false, action = "" }) {
   const hook = action || `data-img-popover-toggle="${name}"`;
-  const cls = `ap-button stroked grey isv2-tool${open ? " is-open" : ""}`;
-  return `<div class="isv2-set-wrap">
-    <button type="button" class="${cls}" ${hook} ${sheet ? `aria-haspopup="dialog" aria-expanded="${open}"` : ""} aria-pressed="${active}"${disabled ? " disabled" : ""}>
-      <i class="${icon}" aria-hidden="true"></i><span>${escapeHtml(label)}</span>
-      ${sheet ? `<i class="ap-icon-chevron-down isv2-tool-caret" aria-hidden="true"></i>` : ""}
-    </button>
-    ${sheet && open && !disabled ? sheet() : ""}
-  </div>`;
+  const busy = disabled ? " disabled" : "";
+  const btn = `<button type="button" class="ap-button ghost grey" ${hook}${sheet ? ` aria-haspopup="true" aria-expanded="${open}"` : ""} aria-pressed="${active}"${busy}><i class="${icon}" aria-hidden="true"></i><span>${escapeHtml(label)}</span></button>`;
+  if (!sheet) return btn;
+  return `<div class="image-studio__palette-anchor">${btn}${open && !disabled ? sheet() : ""}</div>`;
 }
 
 // The drop-up surface. Not an .ap-action-dropdown — that component is a fixed
@@ -233,7 +234,7 @@ function settingRows(st) {
         value: on ? `${brand} · ${usedCount}` : "Off",
         set: on,
         open: open === "brandKit",
-        sheet: () => brandKitSheet(st),
+        body: () => brandKitBody(st),
       }),
     );
   }
@@ -247,7 +248,7 @@ function settingRows(st) {
       value: uploads.length ? `${uploads.length} added` : "None",
       set: uploads.length > 0,
       open: open === "refs",
-      sheet: () => refsSheet(st, uploads),
+      body: () => refsBody(st, uploads),
     }),
   );
 
@@ -262,7 +263,7 @@ function settingRows(st) {
       value: typeLabel,
       set: !!st.imageTypeKey,
       open: open === "imageType",
-      sheet: () => imageTypeSheet(st),
+      body: () => imageTypeBody(st),
     }),
   );
 
@@ -278,7 +279,7 @@ function settingRows(st) {
       set: !hasRefs && !!st.styleKey,
       disabled: hasRefs,
       open: open === "style",
-      sheet: () => styleSheet(st),
+      body: () => styleBody(st),
     }),
   );
 
@@ -293,7 +294,7 @@ function settingRows(st) {
       value: cur ? `${cur.tag} · ${cur.label}` : "Aspect ratio",
       set: false, // format always has a value; "set" would be meaningless here
       open: open === "format",
-      sheet: () => formatSheet(st, choices),
+      body: () => formatBody(st, choices),
     }),
   );
 
@@ -309,7 +310,7 @@ function settingRows(st) {
         : `${st.variationCount} variation${st.variationCount > 1 ? "s" : ""}`,
       set: isCarousel,
       open: open === "output",
-      sheet: () => outputSheet(st, canCarousel, isCarousel),
+      body: () => outputBody(st, canCarousel, isCarousel),
     }),
   );
 
@@ -318,13 +319,13 @@ function settingRows(st) {
 
 // Brand kit — the switch IS the disclosure for the tiles below it (off = no
 // brand images in play, so there's nothing to show).
-function brandKitSheet(st) {
+function brandKitBody(st) {
   const brand = st.playbookName || "Playbook";
   const on = !!st.usePlaybookRefs;
   const usedIds = new Set(st.referenceImages.map((r) => r.id));
   const capReached = st.referenceImages.length >= imageStudio.MAX_REFS;
   const tiles = (st.playbookRefs || []).map((r) => playbookRefTile(r, usedIds.has(r.id), capReached)).join("");
-  const body = `<div class="isv2-sheet-switch">
+  return `<div class="isv2-sheet-switch">
       <span class="isv2-sheet-switch-label">Use ${escapeHtml(brand)}'s images</span>
       <label class="ap-toggle-container" title="Use your brand kit">
         <input type="checkbox" data-img-toggle-playbook-refs ${on ? "checked" : ""} aria-label="Use ${escapeHtml(brand)} brand kit" />
@@ -332,7 +333,6 @@ function brandKitSheet(st) {
       </label>
     </div>
     ${on ? `${sheetDivider}<div class="isv2-refs">${tiles}</div>` : ""}`;
-  return sheet({ title: "Brand kit", body, wide: on });
 }
 
 // An explicit include/exclude control. The whole tile is the toggle; the tick
@@ -354,7 +354,7 @@ function playbookRefTile(r, on, capReached) {
   </button>`;
 }
 
-function refsSheet(st, uploads) {
+function refsBody(st, uploads) {
   const capped = st.referenceImages.length >= imageStudio.MAX_REFS;
   const dropzone = capped
     ? `<p class="isv2-sheet-hint">Maximum ${imageStudio.MAX_REFS} reference images reached.</p>`
@@ -373,23 +373,19 @@ function refsSheet(st, uploads) {
       </div>`,
     )
     .join("");
-  return sheet({
-    title: "References",
-    body: `${dropzone}${tiles ? `<div class="isv2-refs">${tiles}</div>` : ""}`,
-    wide: true,
-  });
+  return `${dropzone}${tiles ? `<div class="isv2-refs">${tiles}</div>` : ""}`;
 }
 
-function imageTypeSheet(st) {
+function imageTypeBody(st) {
   const chips = imageStudio.IMAGE_TYPES.map((o) => {
     const sel = st.imageTypeKey === o.key;
     const tip = `${o.label} · ${o.desc}`;
     return `<button type="button" class="ap-filter-chip" data-img-image-type="${escapeHtml(o.key)}" aria-pressed="${sel}" title="${escapeHtml(tip)}" aria-label="${escapeHtml(tip)}">${escapeHtml(o.label)}</button>`;
   }).join("");
-  return sheet({ title: "Image type", body: `<div class="isv2-chip-group">${chips}</div>` });
+  return `<div class="isv2-chip-group">${chips}</div>`;
 }
 
-function styleSheet(st) {
+function styleBody(st) {
   const cards = imageStudio.STYLE_PRESETS.map((o) => {
     const sel = st.styleKey === o.key;
     return `<button type="button" class="gen-style-card${sel ? " is-selected" : ""}" data-img-style="${escapeHtml(o.key)}" aria-pressed="${sel}" title="${escapeHtml(o.label)}">
@@ -400,10 +396,10 @@ function styleSheet(st) {
       <span class="gen-style-name">${escapeHtml(o.label)}</span>
     </button>`;
   }).join("");
-  return sheet({ title: "Style preset", body: `<div class="gen-style-grid">${cards}</div>`, wide: true });
+  return `<div class="gen-style-grid isv2-style-grid">${cards}</div>`;
 }
 
-function formatSheet(st, choices) {
+function formatBody(st, choices) {
   const chips = choices
     .map((f) => {
       const sel = st.formatId === f.id;
@@ -411,15 +407,12 @@ function formatSheet(st, choices) {
       return `<button type="button" class="ap-filter-chip isv2-format-chip" data-img-format="${escapeHtml(f.id)}" aria-pressed="${sel}" title="${escapeHtml(full)}" aria-label="${escapeHtml(full)}"><span class="isv2-ratio-glyph" style="aspect-ratio:${f.ratio}" aria-hidden="true"></span>${escapeHtml(f.tag)}</button>`;
     })
     .join("");
-  return sheet({
-    title: "Format",
-    body: `${bestFor(st.network)}<div class="isv2-chip-group">${chips}</div>`,
-  });
+  return `${bestFor(st.network)}<div class="isv2-chip-group">${chips}</div>`;
 }
 
 // Type + count in one flat sheet: two labelled sections separated by a divider,
 // never a nested dropdown.
-function outputSheet(st, canCarousel, isCarousel) {
+function outputBody(st, canCarousel, isCarousel) {
   const typeSection = canCarousel
     ? `<div class="isv2-chip-group">
         <button type="button" class="ap-filter-chip" data-img-output="single" aria-pressed="${!isCarousel}"><i class="ap-icon-image" aria-hidden="true"></i>Single image</button>
@@ -438,10 +431,7 @@ function outputSheet(st, canCarousel, isCarousel) {
         (n) =>
           `<button type="button" class="ap-filter-chip" data-img-varcount="${n}" aria-pressed="${st.variationCount === n}">${n}</button>`,
       ).join("");
-  return sheet({
-    title: canCarousel ? "Output" : "Variations",
-    body: `${typeSection}<p class="isv2-sheet-label">${escapeHtml(countLabel)}</p><div class="isv2-chip-group">${counts}</div>`,
-  });
+  return `${typeSection}<p class="isv2-sheet-label">${escapeHtml(countLabel)}</p><div class="isv2-chip-group">${counts}</div>`;
 }
 
 // ── Edit mode ───────────────────────────────────────────────────────────────
@@ -455,11 +445,18 @@ function editComposer(st) {
   const primary = carousel
     ? `<button type="button" class="ap-button primary orange" data-img-apply-slide ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Apply to slide ${(st.selectedIndex ?? 0) + 1}</span></button>`
     : `<button type="button" class="ap-button primary orange" data-img-use ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Use this image</span></button>`;
-  const field = `<textarea class="isv2-prompt" data-img-edit-prompt rows="1" placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" ${busy}>${escapeHtml(st.editPrompt || "")}</textarea>`;
-  const tools = `<button type="button" class="ap-button primary orange isv2-apply" data-img-apply-edit="prompt" aria-label="Apply" title="Apply" ${busy}><i class="ap-icon-arrow-up" aria-hidden="true"></i></button>`;
+  // One row, v1's shape and v1's classes: the mermaid-sparkle cue, a borderless
+  // multi-line field, a compact orange send. No eyebrow and no tool band — the
+  // placeholder already says what the field is for, and the tools moved to the
+  // palette. v2 had wrapped this in a labelled two-band card, which was more
+  // chrome than one sentence of input has ever needed.
   return console_(
     "Edit the image",
-    briefColumn(st, { label: "Redraw", field, tools }),
+    `<div class="isv2-reprompt">
+      <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
+      <textarea class="image-studio__reprompt-field" data-img-edit-prompt rows="1" placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" ${busy}>${escapeHtml(st.editPrompt || "")}</textarea>
+      <button type="button" class="ap-button primary orange isv2-apply" data-img-apply-edit="prompt" aria-label="Apply" title="Apply" ${busy}><i class="ap-icon-arrow-up" aria-hidden="true"></i></button>
+    </div>`,
     `<button type="button" class="ap-button ghost grey" data-img-undo ${imageStudio.canUndo(KEY) ? "" : "disabled"}><i class="ap-icon-reset"></i><span>Undo</span></button>
      ${primary}`,
   );
@@ -520,13 +517,13 @@ function cropSheet(st) {
 function logoSheet() {
   const presets = imageStudio.IMAGE_PRESETS.map(
     (p) =>
-      `<button type="button" class="isv2-preset" data-img-logo-preset="${escapeHtml(p.url)}" title="${escapeHtml(p.label)}"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.label)}" loading="lazy" /></button>`,
+      `<button type="button" class="image-studio__preset" data-img-logo-preset="${escapeHtml(p.url)}" title="${escapeHtml(p.label)}"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.label)}" loading="lazy" /></button>`,
   ).join("");
   return sheet({
     title: "Add an image",
-    body: `<button type="button" class="ap-button stroked grey isv2-logo-upload" data-img-logo-upload><i class="ap-icon-upload" aria-hidden="true"></i><span>Upload an image</span></button>
+    body: `<button type="button" class="ap-button stroked grey image-studio__logo-upload" data-img-logo-upload><i class="ap-icon-upload" aria-hidden="true"></i><span>Upload an image</span></button>
       ${sheetDivider}
-      <div class="isv2-presets">${presets}</div>`,
+      <div class="image-studio__presets">${presets}</div>`,
     wide: true,
   });
 }

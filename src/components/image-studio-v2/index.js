@@ -25,16 +25,16 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=37";
 import { getSessionById } from "../../sessions-store.js?v=7";
 import { getContextById } from "../../contexts-store.js?v=38";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=1";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=3";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=1";
+import { renderStudio } from "./stage-view.js?v=3";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=1";
+} from "./interactions.js?v=3";
 import * as imageStudio from "../../image-studio.js?v=42";
 
 let backdrop;
@@ -383,14 +383,14 @@ function onInput(event) {
     const st = state();
     if (!st?.selectedOverlayId) return;
     imageStudio.updateOverlaySilent(KEY, st.selectedOverlayId, { color: event.target.value });
-    const node = ctx.modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .isv2-overlay-text`);
+    const node = ctx.modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .image-studio__overlay-text`);
     if (node) node.style.color = event.target.value;
   } else if (event.target.matches("[data-img-outline-colorpick]")) {
     // Live outline-colour preview (stroke colour only; width stays).
     const st = state();
     if (!st?.selectedOverlayId) return;
     imageStudio.updateOverlaySilent(KEY, st.selectedOverlayId, { outlineColor: event.target.value });
-    const node = ctx.modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .isv2-overlay-text`);
+    const node = ctx.modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .image-studio__overlay-text`);
     if (node) node.style.webkitTextStrokeColor = event.target.value;
   } else if (event.target.matches("[data-img-outline-width]")) {
     // Live outline-thickness preview (stroke width only; colour stays).
@@ -398,7 +398,7 @@ function onInput(event) {
     if (!st?.selectedOverlayId) return;
     const v = Number(event.target.value);
     imageStudio.updateOverlaySilent(KEY, st.selectedOverlayId, { outlineWidth: v });
-    const node = ctx.modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .isv2-overlay-text`);
+    const node = ctx.modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .image-studio__overlay-text`);
     if (node) node.style.webkitTextStrokeWidth = `${outlineMetrics(v).emStroke}em`;
     event.target.style.setProperty("--fill", `${v}%`);
     const valEl = ctx.modal.querySelector("[data-img-outline-val]");
@@ -410,7 +410,7 @@ function onInput(event) {
     const v = Number(event.target.value);
     imageStudio.updateOverlaySilent(KEY, st.selectedOverlayId, { shadowIntensity: v });
     const sm = shadowMetrics(v);
-    const node = ctx.modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .isv2-overlay-text`);
+    const node = ctx.modal.querySelector(`[data-img-overlay="${st.selectedOverlayId}"] .image-studio__overlay-text`);
     if (node) node.style.textShadow = `0 ${sm.offYEm}em ${sm.blurEm}em rgba(0,0,0,${sm.alpha})`;
     event.target.style.setProperty("--fill", `${v}%`);
     const valEl = ctx.modal.querySelector("[data-img-shadow-val]");
@@ -453,7 +453,7 @@ function toggleTextEffect(kind, on) {
   if (!id) return;
   imageStudio.updateOverlaySilent(KEY, id, { [kind]: on });
   const o = (st.overlays || []).find((ov) => ov.id === id);
-  const textNode = ctx.modal.querySelector(`[data-img-overlay="${id}"] .isv2-overlay-text`);
+  const textNode = ctx.modal.querySelector(`[data-img-overlay="${id}"] .image-studio__overlay-text`);
   if (kind === "outline") {
     if (textNode) {
       textNode.style.webkitTextStroke = on
@@ -469,9 +469,9 @@ function toggleTextEffect(kind, on) {
     const slider = ctx.modal.querySelector("[data-img-shadow-intensity]");
     if (slider) slider.disabled = !on;
   }
-  const btn = ctx.modal.querySelector(`.isv2-tt-${kind}`);
+  const btn = ctx.modal.querySelector(`.image-studio__tt-${kind}`);
   if (btn) btn.classList.toggle("is-on", on);
-  const pop = ctx.modal.querySelector(`.isv2-pop--${kind}`);
+  const pop = ctx.modal.querySelector(`.image-studio__popover--${kind}`);
   if (pop) pop.classList.toggle("is-off", !on);
 }
 

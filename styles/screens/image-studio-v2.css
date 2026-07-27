@@ -522,9 +522,24 @@
   color: var(--app-archie-mark);
 }
 
-/* The Apply send-button in Edit mode — compact and square, like the main
-   composer's send. */
+/* ── Edit mode's reprompt — v1's shape, one row ───────────────────────────── */
+
+/* v1's action bar, minus the absolute positioning (it lives in the console now,
+   not floating on the canvas): the mermaid-sparkle cue, a borderless field, a
+   compact orange send. It reuses `.image-studio__ai-icon` and
+   `.image-studio__reprompt-field` so the field itself is byte-identical to main.
+   v2 had wrapped this in a labelled two-band card — far more chrome than one
+   sentence of input has ever needed. */
+.isv2-reprompt {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+}
+
+/* The Apply send-button — compact and square, like the main composer's send. */
 .isv2-apply {
+  flex: 0 0 auto;
   min-width: 32px;
   padding: 0 var(--ref-spacing-xxs);
 }
@@ -591,9 +606,10 @@
 }
 
 /* The inspector — pinned to the stage's right edge, vertically centred like the
-   rail opposite it. Deliberately NOT scrollable: `overflow-y: auto` silently
-   computes overflow-x to `auto` too, which would clip every flyout sheet out of
-   sight. Six rows are 288px, so it never needs to. */
+   rail opposite it. It CAN scroll now: the sections expand in place, so nothing
+   has to escape this box any more. That was the whole hidden cost of the flyout
+   version — `overflow-y: auto` silently computes overflow-x to `auto` too, so a
+   scrollable panel and a flyout could never coexist. */
 .isv2-panel {
   position: absolute;
   z-index: 4;
@@ -601,78 +617,98 @@
   top: 50%;
   transform: translateY(-50%);
   width: 284px;
+  max-height: calc(100% - var(--ref-spacing-md) * 2);
+  overflow-y: auto;
+  /* The sections carry their own padding and their own dividers. */
+  gap: 0;
+  padding: var(--ref-spacing-xxs) 0;
 }
 
-/* The palette — pinned top-left over the canvas, at the contact point of the
-   work (v1's arrangement, which was right). */
-.isv2-palette {
-  position: absolute;
-  z-index: 4;
-  top: var(--ref-spacing-md);
-  left: var(--ref-spacing-lg);
-  align-items: stretch;
-  width: 140px;
+/* ── Setting sections — DS accordions, expanding in place ─────────────────── */
+
+/* The panel IS the card, so each accordion drops its own frame and reads as a
+   row in one list, separated by the header's own hairline. Six bordered cards
+   inside a bordered panel would be the nested-frames mistake all over again. */
+.isv2-acc {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
-/* ── Setting rows — six DS Selects, one form grid ─────────────────────────── */
-
-.isv2-set-wrap {
-  position: relative;
-  display: flex;
-  flex-direction: column;
+.isv2-acc + .isv2-acc {
+  border-top: 1px solid var(--sys-border-color-default);
 }
 
-/* `.ap-select-trigger` brings the frame, the 36px height, the type, the hover /
-   `.open` / `.disabled` states and the arrow rotation. All that's left to say is
-   how the label column behaves. */
-.isv2-trigger {
+.isv2-acc-head {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-family: var(--sys-text-style-body-font-family);
   text-align: left;
+  cursor: pointer;
+  min-height: 36px;
+  padding-inline: var(--ref-spacing-xs);
+  border-bottom: 0; /* the panel's own row divider does this job */
+  transition: background-color 120ms var(--app-ease-out);
 }
 
-/* Fixed label column so every separator lands on the same axis — that vertical
-   line is what turns six independent fields into one readable grid. */
-.isv2-trigger-label {
-  flex: 0 0 82px;
+.isv2-acc-head:hover:not(:disabled) {
+  background: var(--app-surface-subtle);
+}
+
+.isv2-acc-head:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: -2px;
+}
+
+.isv2-acc-head:disabled {
+  cursor: not-allowed;
+}
+
+.isv2-acc-title {
+  font-weight: var(--sys-text-style-body-weight);
+  color: var(--sys-text-color-light);
+}
+
+/* The current value, right-aligned before the toggle: the row still reads when
+   the section is shut, which is the whole point of collapsing it. */
+.isv2-acc-value {
+  flex: 0 1 auto;
+  min-width: 0;
+  color: var(--sys-text-color-default);
+  font-size: var(--sys-text-style-body-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  text-align: right;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* A setting carrying a real value says so in the DS accent — the same blue the
-   Select itself uses for its open state, so the panel speaks one colour. */
-.isv2-trigger.is-set .ap-select-value {
+/* A setting carrying a real value says so in the DS accent. */
+.isv2-acc-value.is-set {
   color: var(--sys-border-color-active);
-  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
-/* Disabled (Style, while references drive the look) explains itself rather than
-   just greying out. */
-.isv2-trigger.disabled .ap-select-value {
+.isv2-acc.is-disabled .isv2-acc-title,
+.isv2-acc.is-disabled .isv2-acc-value {
+  color: var(--ref-color-grey-40);
+  font-weight: var(--sys-text-style-body-weight);
   font-style: italic;
 }
 
-/* ── Tool buttons (Edit mode) ────────────────────────────────────────────── */
-
-.isv2-tool {
-  justify-content: flex-start;
-  width: 100%;
+.isv2-acc-body {
+  gap: var(--ref-spacing-xs);
+  padding: 0 var(--ref-spacing-xs) var(--ref-spacing-xs);
 }
 
-.isv2-tool-caret {
-  margin-left: auto;
-  font-size: var(--sys-icon-css-nano, 9px);
+.isv2-acc-head .ap-accordion-toggle {
+  font-size: var(--sys-icon-css-nano, 10px);
   color: var(--ref-color-grey-60);
-  transition: transform 150ms var(--app-ease-out);
 }
 
-.isv2-tool.is-open .isv2-tool-caret {
-  transform: rotate(180deg);
-}
-
-/* An engaged tool is a MODE — it holds the accent until you leave it. */
-.isv2-tool[aria-pressed="true"] {
-  border-color: var(--sys-border-color-active);
-  background: var(--ref-color-electric-blue-10);
-  color: var(--ref-color-electric-blue-150);
+/* Two columns at the panel's width — the six presets still read at 118px. */
+.isv2-style-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 /* ── Foot ────────────────────────────────────────────────────────────────── */
@@ -735,22 +771,47 @@
   max-width: min(560px, calc(100vw - 96px));
 }
 
-.isv2-palette .isv2-sheet {
+/* The tool palette sits at the stage's LEFT edge, so its sheets fly the other
+   way — there is nothing to their left but the modal edge. Centred on the button
+   that opened it, the same rule the text toolbar's popovers follow. */
+.image-studio__palette-anchor .isv2-sheet {
   right: auto;
   left: calc(100% + var(--ref-spacing-xxs));
-  transform-origin: bottom left;
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+  transform-origin: center left;
   animation-name: isv2-fly-right;
 }
 
 @keyframes isv2-fly-right {
   from {
     opacity: 0;
-    transform: translateX(-6px) scale(0.98);
+    transform: translateY(-50%) translateX(-6px);
   }
   to {
     opacity: 1;
-    transform: none;
+    transform: translateY(-50%);
   }
+}
+
+/* ── On-element popovers, centred on their trigger ────────────────────────── */
+
+/* Each text-toolbar control gets its own positioning context so its panel opens
+   under the CONTROL. v1's popovers use `left: 0`, which resolves against the
+   nearest positioned ancestor — the whole text overlay — so the panel appeared
+   wherever the element happened to start, sometimes half a canvas away from the
+   button that opened it. */
+.isv2-tt-anchor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.isv2-tt-anchor .image-studio__popover {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
 }
 
 @keyframes isv2-fly-left {
@@ -953,101 +1014,6 @@
   font-size: var(--sys-text-style-caption-size);
 }
 
-/* ── Add-image presets ───────────────────────────────────────────────────── */
-
-.isv2-logo-upload {
-  align-self: flex-start;
-}
-
-.isv2-presets {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
-  gap: var(--ref-spacing-xxs);
-}
-
-.isv2-preset {
-  display: grid;
-  place-items: center;
-  aspect-ratio: 1;
-  padding: var(--ref-spacing-xxs);
-  border: 1px solid var(--sys-border-color-default);
-  border-radius: var(--app-radius-md);
-  background: var(--ref-color-white);
-  cursor: pointer;
-}
-
-.isv2-preset:hover {
-  border-color: var(--sys-color-accent-default-bg-default);
-}
-
-.isv2-preset img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
-/* ══════════════════════════════════════════════════════════════════════════
-   EDIT CANVAS — only what has to track a pixel stays here.
-   ══════════════════════════════════════════════════════════════════════════ */
-
-/* ── Crop ────────────────────────────────────────────────────────────────── */
-
-.isv2-crop-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 6;
-  overflow: hidden; /* clips the dim-mask to the image bounds */
-  border-radius: inherit;
-  cursor: crosshair;
-}
-
-.isv2-croprect {
-  position: absolute;
-  border: 1px solid var(--ref-color-white);
-  box-shadow: 0 0 0 9999px rgba(10, 27, 51, 0.5);
-  cursor: move;
-}
-
-.isv2-crop-handle {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border: 2px solid var(--ref-color-white);
-  background: transparent;
-}
-
-.isv2-crop-handle--nw {
-  left: -2px;
-  top: -2px;
-  border-right: 0;
-  border-bottom: 0;
-  cursor: nwse-resize;
-}
-
-.isv2-crop-handle--ne {
-  right: -2px;
-  top: -2px;
-  border-left: 0;
-  border-bottom: 0;
-  cursor: nesw-resize;
-}
-
-.isv2-crop-handle--sw {
-  left: -2px;
-  bottom: -2px;
-  border-right: 0;
-  border-top: 0;
-  cursor: nesw-resize;
-}
-
-.isv2-crop-handle--se {
-  right: -2px;
-  bottom: -2px;
-  border-left: 0;
-  border-top: 0;
-  cursor: nwse-resize;
-}
-
 /* Just ✕ / ✓, pinned under the box. The ratio chips that used to crowd this
    bar live in the composer's Crop sheet now. */
 .isv2-crop-confirm {
@@ -1070,327 +1036,6 @@
 .isv2-frame.is-gesturing .isv2-crop-confirm {
   opacity: 0;
   pointer-events: none;
-}
-
-/* ── Overlay layer ───────────────────────────────────────────────────────── */
-
-.isv2-overlay-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  overflow: hidden;
-  border-radius: inherit;
-}
-
-/* With something selected, un-clip so a bleeding element + its chrome stay
-   grabbable; idle it clips to the image (matching the flattened result). */
-.isv2-overlay-layer.has-selection {
-  overflow: visible;
-}
-
-.isv2-overlay {
-  position: absolute;
-  cursor: grab;
-  touch-action: none;
-}
-
-.isv2-overlay img {
-  display: block;
-  width: 100%;
-  height: auto;
-  pointer-events: none;
-}
-
-.isv2-overlay-text {
-  display: block;
-  white-space: pre;
-  outline: none;
-  pointer-events: none;
-}
-
-.isv2-overlay.is-editing .isv2-overlay-text {
-  pointer-events: auto;
-  cursor: text;
-}
-
-.isv2-overlay.is-selected {
-  outline: 1px solid var(--sys-color-accent-default-bg-default);
-  outline-offset: 2px;
-}
-
-.isv2-overlay-delete,
-.isv2-overlay-rotate,
-.isv2-overlay-rotate-reset,
-.isv2-overlay-resize {
-  position: absolute;
-  display: none;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-circle);
-  background: var(--app-surface);
-  color: var(--sys-text-color-default);
-  font-size: 10px;
-  cursor: pointer;
-}
-
-.isv2-overlay.is-selected .isv2-overlay-delete,
-.isv2-overlay.is-selected .isv2-overlay-rotate,
-.isv2-overlay.is-selected .isv2-overlay-rotate-reset,
-.isv2-overlay.is-selected .isv2-overlay-resize {
-  display: grid;
-}
-
-/* Handles get in the way of the caret while typing. */
-.isv2-overlay.is-editing .isv2-overlay-resize,
-.isv2-overlay.is-editing .isv2-overlay-rotate,
-.isv2-overlay.is-editing .isv2-overlay-rotate-reset {
-  display: none;
-}
-
-.isv2-overlay-delete {
-  right: -10px;
-  top: -10px;
-}
-
-.isv2-overlay-rotate {
-  left: -10px;
-  bottom: -10px;
-  cursor: grab;
-}
-
-.isv2-overlay-rotate-reset {
-  left: -10px;
-  bottom: 14px;
-}
-
-.isv2-overlay-resize {
-  right: -10px;
-  bottom: -10px;
-  border-radius: var(--app-radius-sm);
-  cursor: nwse-resize;
-}
-
-/* ── Text mini toolbar (follows the element) ─────────────────────────────── */
-
-.isv2-tt {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 9;
-  display: none;
-  align-items: center;
-  gap: var(--app-spacing-micro, 2px);
-  padding: var(--ref-spacing-xxxs);
-  border-radius: var(--app-radius-pill);
-  background: var(--app-surface);
-  box-shadow: var(--app-shadow-low);
-  white-space: nowrap;
-}
-
-.isv2-overlay.is-selected .isv2-tt {
-  display: flex;
-}
-
-/* Trails the element badly during a drag — hide it for the duration. */
-.isv2-overlay-layer.is-gesturing .isv2-tt {
-  display: none;
-}
-
-.isv2-tt-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  height: 26px;
-  padding: 0 var(--ref-spacing-xxs);
-  border: 0;
-  border-radius: var(--app-radius-pill);
-  background: transparent;
-  color: var(--sys-text-color-default);
-  font-family: var(--ref-font-family);
-  font-size: var(--sys-text-style-caption-size);
-  cursor: pointer;
-}
-
-.isv2-tt-btn:hover {
-  background: var(--app-surface-subtle);
-}
-
-.isv2-tt-btn[aria-pressed="true"],
-.isv2-tt-btn.is-on {
-  background: var(--sys-color-accent-light-bg);
-  color: var(--sys-color-accent-default-bg-default);
-}
-
-.isv2-tt-bold {
-  font-weight: var(--sys-text-style-body-bold-weight);
-}
-
-.isv2-tt-italic {
-  font-style: italic;
-}
-
-.isv2-tt-aa {
-  font-size: 13px;
-  font-weight: var(--sys-text-style-body-bold-weight);
-}
-
-.isv2-tt-swatch {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border: 1px solid var(--app-border);
-  border-radius: 3px;
-  background: var(--sw, var(--ref-color-white));
-}
-
-.isv2-tt-shadowdot {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: var(--app-radius-circle);
-  background: var(--ref-color-grey-40);
-  box-shadow: 0 2px 3px rgba(10, 27, 51, 0.5);
-}
-
-.isv2-tt-sep {
-  width: 1px;
-  height: 16px;
-  background: var(--sys-border-color-default);
-}
-
-.isv2-tt-del {
-  color: var(--sys-color-error-default-bg-default);
-}
-
-/* ── On-element popovers (drop DOWN from the mini toolbar) ───────────────── */
-
-.isv2-pop {
-  position: absolute;
-  top: calc(100% + var(--ref-spacing-xxs));
-  left: 0;
-  z-index: 21;
-  width: max-content;
-  min-width: 200px;
-  max-width: 280px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm);
-  border-radius: var(--comp-action-dropdown-border-radius, var(--ref-border-radius-md));
-  background: var(--comp-action-dropdown-background-color, var(--ref-color-white));
-  box-shadow: var(--app-shadow-low);
-  white-space: normal;
-  cursor: default;
-}
-
-.isv2-pop-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ref-spacing-sm);
-}
-
-.isv2-pop-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-}
-
-/* Effect off → the controls read as inert without disappearing. */
-.isv2-pop.is-off .isv2-pop-body {
-  opacity: 0.5;
-}
-
-.isv2-slider-row {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-}
-
-.isv2-slider-row .ap-slider {
-  flex: 1 1 auto;
-}
-
-.isv2-slider-val {
-  min-width: 24px;
-  color: var(--sys-text-color-light);
-  font-size: var(--sys-text-style-caption-size);
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.isv2-color-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-}
-
-.isv2-swatches {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxs);
-}
-
-.isv2-swatch {
-  position: relative;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-sm);
-  background: var(--sw, var(--ref-color-white));
-  cursor: pointer;
-}
-
-.isv2-swatch.is-selected {
-  outline: 2px solid var(--sys-color-accent-default-bg-default);
-  outline-offset: 1px;
-}
-
-.isv2-swatch--add {
-  display: grid;
-  place-items: center;
-  border-style: dashed;
-  background: var(--app-surface-subtle);
-  color: var(--sys-text-color-light);
-  font-size: 11px;
-}
-
-.isv2-swatch--add input[type="color"] {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.isv2-font-list {
-  display: flex;
-  flex-direction: column;
-  max-height: 220px;
-  overflow-y: auto;
-}
-
-.isv2-font-row {
-  justify-content: space-between;
-  gap: var(--ref-spacing-xs);
-  border-radius: var(--app-radius-sm);
-}
-
-.isv2-font-row:hover {
-  background: var(--app-surface-subtle);
-}
-
-.isv2-font-row.is-selected {
-  background: var(--sys-color-accent-light-bg);
-}
-
-.isv2-font-check {
-  color: var(--sys-color-accent-default-bg-default);
-  font-size: 12px;
 }
 
 /* ── Narrow viewports ────────────────────────────────────────────────────── */

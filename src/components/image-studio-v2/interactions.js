@@ -5,7 +5,7 @@
 // drag for smoothness, then notify (re-render) on pointer-up. All DOM queries go
 // through ctx.modal.
 
-import { KEY, ctx, state, clamp, FRAME_SEL } from "./context.js?v=1";
+import { KEY, ctx, state, clamp, FRAME_SEL } from "./context.js?v=3";
 import { cropImage } from "../image-studio/canvas.js?v=2";
 import * as imageStudio from "../../image-studio.js?v=42";
 
@@ -55,7 +55,7 @@ export function startOverlayGesture(event, el) {
   // Select immediately without a re-render (toggle classes directly).
   const st = state();
   if (st) st.selectedOverlayId = id;
-  ctx.modal.querySelectorAll(".isv2-overlay.is-selected").forEach((n) => n.classList.remove("is-selected"));
+  ctx.modal.querySelectorAll(".image-studio__overlay.is-selected").forEach((n) => n.classList.remove("is-selected"));
   el.classList.add("is-selected");
   // Hide the text mini-toolbar while dragging so it doesn't trail the element.
   const layer = ctx.modal.querySelector("[data-img-overlay-layer]");
@@ -70,7 +70,7 @@ export function startOverlayGesture(event, el) {
   const startDist = Math.hypot(event.clientX - cx, event.clientY - cy) || 1;
   const startAngle = Math.atan2(event.clientY - cy, event.clientX - cx);
   const start = { px: event.clientX, py: event.clientY, xF: o.xF, yF: o.yF, wF: o.wF, sizeF: o.sizeF, rot: o.rot || 0 };
-  const textNode = el.querySelector(".isv2-overlay-text");
+  const textNode = el.querySelector(".image-studio__overlay-text");
 
   const move = (e) => {
     if (mode === "move") {
