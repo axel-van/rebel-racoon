@@ -63,9 +63,11 @@ export function renderStudio(st) {
 // ── Header ──────────────────────────────────────────────────────────────────
 
 // One 48px row instead of v1's two (dialog header + a tab strip below it): the
-// stage needs every pixel it can get now that the composer owns the bottom.
-// Title, the two peer modes, and the stage's view toggle share the row; the ×
-// is the .ap-dialog-close in the shell, which the row's right padding clears.
+// stage needs every pixel it can get now that the console owns the bottom. The
+// header carries only what scopes the WHOLE modal — its name and the two peer
+// modes; the × is the .ap-dialog-close in the shell, which the row's right
+// padding clears. The view toggle is not modal-wide, so it isn't here (see
+// stageContent).
 function header(st) {
   const hasImg = !!st.currentImage || (st.genPhase === "results" && st.variations.length > 0);
   const editState = (st.mode === "edit" ? " active" : "") + (hasImg ? "" : " disabled");
@@ -78,16 +80,15 @@ function header(st) {
         <button type="button" class="ap-tabs-tab${editState}" role="tab" aria-selected="${st.mode === "edit"}" data-img-mode="edit" ${lockedAttrs}><span>Edit</span></button>
       </div>
     </div>
-    <span class="isv2-header-gap"></span>
-    ${hasImg ? viewToggle(st) : ""}
   </div>`;
 }
 
 // Plain image ↔ network-accurate in-feed preview. A pair of filter chips driven
 // by aria-pressed (the app's shared toggle primitive) rather than a second
 // .ap-tabs strip, which would read as a competing mode switch beside the real
-// one. Lives in the header now — v1 floated it over the canvas, and the stage
-// has no spare chrome room left.
+// one. It sits directly ABOVE the image, centred on it: it changes what the
+// stage shows and nothing else, so it belongs to the stage — parked up in the
+// modal header it read as global chrome and sat a long way from its effect.
 function viewToggle(st) {
   const feed = st.canvasView === "feed";
   const netIcon = st.network ? NETWORK_ICON_BY_PLATFORM[st.network] || "ap-icon-image" : "ap-icon-image";
@@ -109,14 +110,17 @@ function stageContent(st) {
   else if (st.genPhase === "generating") inner = generatingStage(st);
   else if (st.genPhase === "results") inner = resultsStage(st);
   else inner = emptyStage();
-  // The variations "chutier" floats as a vertical rail on the stage's right edge
-  // (generate mode, results only). It survived the redesign untouched: a bottom
-  // composer doesn't compete with it the way a bottom filmstrip would have.
+  // The variations "chutier" floats as a vertical rail on the right edge of the
+  // image area (generate mode, results only). It lives inside the body, not the
+  // stage, so it centres on the image rather than on the image + the toggle row.
   const rail =
     st.mode === "generate" && !feedView && st.genPhase === "results" && st.variations.length > 0
       ? variationsRail(st)
       : "";
-  return `<div class="isv2-stage-body">${inner}</div>${rail}`;
+  // The toggle row only exists once there's something to preview; without it the
+  // stage keeps its full height for the empty state.
+  const top = hasImg ? `<div class="isv2-stage-top">${viewToggle(st)}</div>` : "";
+  return `${top}<div class="isv2-stage-body">${inner}${rail}</div>`;
 }
 
 function emptyStage() {

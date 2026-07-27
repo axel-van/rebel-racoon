@@ -55,32 +55,37 @@ export function composer(st) {
 
 // ── Shared building blocks ──────────────────────────────────────────────────
 
-// One row of the settings table: label left, current value right, disclosure
-// last. The label is the anchor you scan down; the value is the answer, so it
-// carries the weight (Refactoring UI: the de-emphasized label beside its value).
-// `set` marks a setting contributing something beyond its default.
+// One setting = the DS's own inline-label Select. `.ap-select-trigger` is the
+// Agorapulse control for exactly this job — a labelled field showing its current
+// value with a disclosure arrow — and it brings its `.open` (blue border +
+// rotated arrow) and `.disabled` states with it, so none of that is hand-rolled
+// here. `.ap-select-inline-label` supplies the label + hairline separator.
+// The label column is given a fixed width so all six separators land on one
+// axis: six DS fields, one form grid.
 function settingRow({ name, label, value, sheet, open, set = false, disabled = false }) {
-  const cls = `isv2-set${set ? " is-set" : ""}${open ? " is-open" : ""}`;
+  const cls = `ap-select-trigger isv2-trigger${open ? " open" : ""}${disabled ? " disabled" : ""}${set ? " is-set" : ""}`;
   return `<div class="isv2-set-wrap">
-    <button type="button" class="${cls}" data-img-popover-toggle="${name}" aria-haspopup="dialog" aria-expanded="${open}"${disabled ? " disabled" : ""}>
-      <span class="isv2-set-label">${escapeHtml(label)}</span>
-      <span class="isv2-set-value">${escapeHtml(value)}</span>
-      ${disabled ? "" : `<i class="ap-icon-chevron-down isv2-set-caret" aria-hidden="true"></i>`}
-    </button>
+    <div class="ap-select">
+      <button type="button" class="${cls}" data-img-popover-toggle="${name}" aria-haspopup="dialog" aria-expanded="${open}"${disabled ? " disabled" : ""}>
+        <span class="ap-select-inline-label isv2-trigger-label">${escapeHtml(label)}</span>
+        <span class="ap-select-value">${escapeHtml(value)}</span>
+        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+      </button>
+    </div>
     ${open && !disabled ? sheet() : ""}
   </div>`;
 }
 
-// A tool row (Edit mode). No value column — the verb is the whole row, so it
-// takes the value's weight and keeps its glyph.
+// A tool (Edit mode) is a verb, not a value — so it's a DS button, not a Select.
+// Stroked grey is the DS's secondary tier; the ones that open a panel carry the
+// same chevron the Selects do. Natural width, never stretched to the column.
 function toolRow({ name, label, icon, sheet, open, active = false, disabled = false, action = "" }) {
-  const cls = `isv2-set isv2-set--tool${active ? " is-set" : ""}${open ? " is-open" : ""}`;
   const hook = action || `data-img-popover-toggle="${name}"`;
+  const cls = `ap-button stroked grey isv2-tool${open ? " is-open" : ""}`;
   return `<div class="isv2-set-wrap">
-    <button type="button" class="${cls}" ${hook} ${sheet ? `aria-haspopup="dialog" aria-expanded="${open}"` : ""}${active ? ' aria-pressed="true"' : ""}${disabled ? " disabled" : ""}>
-      <i class="${icon} isv2-set-icon" aria-hidden="true"></i>
-      <span class="isv2-set-label isv2-set-label--tool">${escapeHtml(label)}</span>
-      ${sheet ? `<i class="ap-icon-chevron-down isv2-set-caret" aria-hidden="true"></i>` : ""}
+    <button type="button" class="${cls}" ${hook} ${sheet ? `aria-haspopup="dialog" aria-expanded="${open}"` : ""} aria-pressed="${active}"${disabled ? " disabled" : ""}>
+      <i class="${icon}" aria-hidden="true"></i><span>${escapeHtml(label)}</span>
+      ${sheet ? `<i class="ap-icon-chevron-down isv2-tool-caret" aria-hidden="true"></i>` : ""}
     </button>
     ${sheet && open && !disabled ? sheet() : ""}
   </div>`;
