@@ -117,17 +117,29 @@
   gap: var(--app-spacing-micro, 2px);
 }
 
+/* Three columns: chutier · image · inspector, all real flex items so they sit
+   against each other with one gap. NOT absolute overlays on reserved gutters —
+   that drifted the image off the modal's centre and left the 56px rail marooned
+   in the middle of an empty 300px margin.
+   overflow stays VISIBLE: the inspector's flyout sheets have to escape this box,
+   and `overflow: auto` on either axis would clip them (see .isv2-panel). */
 .isv2-stage-body {
-  position: relative; /* the variations rail anchors here, not to the stage */
+  position: relative; /* the tool palette overlay anchors here */
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Tighter at the bottom — the dock below adds its own breathing room. */
+  gap: var(--ref-spacing-sm);
   padding: var(--ref-spacing-md) var(--ref-spacing-lg);
-  overflow: auto;
+  overflow: visible;
+}
+
+/* The palette is the one genuine overlay — it belongs ON the canvas — so the
+   body gives up its width rather than letting it cover the image being edited. */
+.isv2-stage-body.has-palette {
+  padding-left: 172px;
 }
 
 /* A whole-modal drop target: the References sheet is usually closed, so an
@@ -233,17 +245,16 @@
 
 /* ── Variations rail ─────────────────────────────────────────────────────── */
 
+/* Your generated assets, left of the image — the one part of the layout that
+   scrolls, since a carousel can run to 20 slides. */
 .isv2-rail {
-  position: absolute;
-  top: 50%;
-  right: var(--ref-spacing-sm);
-  transform: translateY(-50%);
-  z-index: 4;
+  flex: 0 0 auto;
+  align-self: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  max-height: calc(100% - var(--ref-spacing-lg) * 2);
+  max-height: 100%;
   overflow-y: auto;
   padding: var(--ref-spacing-xxs);
   border-radius: var(--app-radius-card);
@@ -361,6 +372,10 @@
   align-items: center;
   gap: var(--ref-spacing-sm);
   width: 100%;
+  /* The one thing taller than the stage — the body can't scroll (it would clip
+     the inspector's flyouts), so the preview scrolls itself. */
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 .isv2-feed-note {
@@ -395,17 +410,15 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   THE CONSOLE — the whole point of v2.
+   THE CONSOLE — the prompt, and only the prompt.
 
-   Two columns over one foot:
-     .isv2-brief     the writing surface (wide, its own measure)
-     .isv2-settings  the label/value table (narrow, one grid)
-     .isv2-console-foot   the CTAs
+     .isv2-brief         the writing surface + its own actions
+     .isv2-console-foot  the CTAs
 
-   Laid out as one wrapping horizontal band the settings came out as two ragged
-   lines of naked text with nothing holding them — no shared left edge, no
-   shared right edge, no row height. Given a column they become a table, which
-   is what six label/value pairs have always wanted to be.
+   The settings and the manual tools live on the stage now (see THE FLOATING
+   ZONES), which is what finally lets this bar be the readable measure it wanted
+   to be — every attempt to also fit six settings and two CTAs in here came out
+   either too wide or too cramped.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* The dock continues the stage's canvas rather than being a separate white
@@ -421,19 +434,13 @@
 
 .isv2-console {
   width: 100%;
-  max-width: 860px;
+  max-width: 760px;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--sys-border-color-default);
   border-radius: var(--app-radius-card);
   background: var(--app-surface);
   box-shadow: var(--app-shadow-card);
-}
-
-.isv2-console-body {
-  display: flex;
-  align-items: stretch;
-  min-height: 0;
 }
 
 /* ── Brief column ────────────────────────────────────────────────────────── */
@@ -519,8 +526,8 @@
      stable height whatever the brief's length. An exact multiple of the
      line-height plus the field's padding — leaving the padding out of the cap
      sliced the last line in half and read as a rendering bug. */
-  min-height: calc(var(--sys-text-style-body-line-height) * 4);
-  max-height: calc(var(--sys-text-style-body-line-height) * 8 + 8px);
+  min-height: calc(var(--sys-text-style-body-line-height) * 2);
+  max-height: calc(var(--sys-text-style-body-line-height) * 6 + 8px);
   padding: 4px 0;
   border: 0;
   background: transparent;
@@ -556,18 +563,43 @@
   font-size: var(--sys-text-style-body-size);
 }
 
-/* ── Settings column — six DS Selects, one form grid ─────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   THE FLOATING ZONES — inspector right, palette top-left.
+   ══════════════════════════════════════════════════════════════════════════ */
 
-/* The one internal rule that earns its keep: it separates two different KINDS
-   of content, not two rows of the same content. */
-.isv2-settings {
-  flex: 0 0 288px;
+/* Both are the same object: a white card lifted off the canvas, matching the
+   variations rail opposite. */
+.isv2-panel,
+.isv2-palette {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border-left: 1px solid var(--sys-border-color-default);
+  padding: var(--ref-spacing-xs);
+  border-radius: var(--app-radius-card);
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow-popover-md);
 }
+
+/* The inspector — a flex item against the image's right edge. Deliberately NOT
+   scrollable: `overflow-y: auto` silently computes overflow-x to `auto` too,
+   which would clip every flyout sheet out of sight. Six rows are 288px. */
+.isv2-panel {
+  flex: 0 0 284px;
+  align-self: center;
+}
+
+/* The palette — floating top-left over the canvas, at the contact point of the
+   work (v1's arrangement, which was right). */
+.isv2-palette {
+  position: absolute;
+  z-index: 4;
+  top: var(--ref-spacing-md);
+  left: var(--ref-spacing-lg);
+  align-items: stretch;
+  width: 140px;
+}
+
+/* ── Setting rows — six DS Selects, one form grid ─────────────────────────── */
 
 .isv2-set-wrap {
   position: relative;
@@ -591,7 +623,7 @@
 }
 
 /* A setting carrying a real value says so in the DS accent — the same blue the
-   Select itself uses for its open state, so the column speaks one colour. */
+   Select itself uses for its open state, so the panel speaks one colour. */
 .isv2-trigger.is-set .ap-select-value {
   color: var(--sys-border-color-active);
   font-weight: var(--sys-text-style-body-bold-weight);
@@ -606,10 +638,12 @@
 /* ── Tool buttons (Edit mode) ────────────────────────────────────────────── */
 
 .isv2-tool {
-  align-self: flex-start;
+  justify-content: flex-start;
+  width: 100%;
 }
 
 .isv2-tool-caret {
+  margin-left: auto;
   font-size: var(--sys-icon-css-nano, 9px);
   color: var(--ref-color-grey-60);
   transition: transform 150ms var(--app-ease-out);
@@ -684,6 +718,24 @@
 
 .isv2-sheet--wide {
   max-width: min(560px, calc(100vw - 96px));
+}
+
+.isv2-palette .isv2-sheet {
+  right: auto;
+  left: calc(100% + var(--ref-spacing-xxs));
+  transform-origin: bottom left;
+  animation-name: isv2-fly-right;
+}
+
+@keyframes isv2-fly-right {
+  from {
+    opacity: 0;
+    transform: translateX(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @keyframes isv2-fly-left {
@@ -1329,14 +1381,18 @@
 /* ── Narrow viewports ────────────────────────────────────────────────────── */
 
 @media (max-width: 960px) {
-  /* The console is capped at 860 and the dock adds 32 either side — the gutters
-     give first, then the settings column narrows (its values ellipsis), and the
-     brief keeps whatever is left. */
-  .isv2-dock {
+  /* Gutters give first, then the inspector narrows (its values ellipsis), so the
+     image keeps as much of the width as it can. */
+  .isv2-dock,
+  .isv2-stage-body {
     padding-inline: var(--ref-spacing-sm);
   }
 
-  .isv2-settings {
-    flex-basis: 220px;
+  .isv2-panel {
+    flex-basis: 236px;
+  }
+
+  .isv2-trigger-label {
+    flex-basis: 72px;
   }
 }

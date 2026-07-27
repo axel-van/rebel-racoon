@@ -1,28 +1,34 @@
-// Image Studio v2 — the bottom console. One card, two columns, two modes.
+// Image Studio v2 — the three panels the console used to hold.
 //
-//   ┌───────────────────────────┬──────────────────────┐
-//   │ ✨ Prompt      Suggest  ⤢ │ Brand kit   Acme·3 ⌄ │
-//   │ Subject: …                │ References     None ⌄│
-//   │ Key message: …            │ Type            Any ⌄│
-//   │ …                         │ Style             — ⌄│
-//   │                           │ Format  1:1 · Square⌄│
-//   │                           │ Output  2 variations⌄│
-//   ├───────────────────────────┴──────────────────────┤
-//   │                     [Regenerate] [Use this image]│
-//   └──────────────────────────────────────────────────┘
+//   ┌────────────────────────────────────────────────────┐
+//   │  Image Studio    Generate | Edit                ✕  │
+//   ├────────────────────────────────────────────────────┤
+//   │              [ Image | In feed ]                   │
+//   │  ┌──┐                            ┌──────────────┐  │
+//   │  │▪ │                            │ Brand kit  ▾ │  │
+//   │  │▪ │        [   IMAGE   ]       │ References ▾ │  │
+//   │  │+ │                            │ Type       ▾ │  │
+//   │  └──┘                            │ Style      ▾ │  │
+//   │  chutier                         │ Format     ▾ │  │
+//   │                                  │ Output     ▾ │  │
+//   │                                  └──────────────┘  │
+//   ├────────────────────────────────────────────────────┤
+//   │  ✨ PROMPT …          [Suggest] [Regen] [Use it]   │
+//   └────────────────────────────────────────────────────┘
 //
-// WHY two columns. A brief, six settings and two CTAs do not fit in a
-// horizontal band: laid out as a wrapping row the settings came out as two
-// ragged lines of naked text with no grid to hold them — soup. Given a column
-// they become a label/value TABLE: one left edge for the labels, one right edge
-// for the values, one row height. That's the same three-column grid v1's rail
-// used ([label][current value][disclosure]) — the proven part of v1 — but as a
-// compact panel beside the prompt instead of a full-height rail, and opening as
-// flyouts instead of accordions. The prompt keeps the wide column it needs.
+// The creative-tool three-zone layout: assets left, canvas centre, inspector
+// right, composer bottom. Two things fall out of it. The settings sit beside the
+// image they describe instead of underneath it, and the bottom bar shrinks back
+// to the one thing it should hold — the prompt — which is what let it be too
+// wide and too heavy in the first place.
 //
-// EDIT reuses the exact frame: the AI reprompt takes the brief column, the three
-// manual tools take the settings column, Undo + commit take the foot. v1 needed
-// a rail AND a footer AND a floating AI bar AND a floating palette for this.
+// EDIT drops the inspector and floats its three manual tools top-left over the
+// canvas, at the contact point of the work (v1's arrangement, which was right).
+//
+// Three exported surfaces, all composed by stage-view:
+//   composer(st)      the bottom console — prompt + CTAs, both modes
+//   settingsPanel(st) the floating inspector (generate only)
+//   toolPalette(st)   the floating tool palette (edit only)
 //
 // Sheets are FLAT — sections + dividers, never a nested dropdown (the ADS has no
 // flyout-submenu pattern). One is open at a time, tracked by state.openPopover.
@@ -51,6 +57,19 @@ Composition focus: The transition point of the arrow where order turns into digi
 
 export function composer(st) {
   return st.mode === "edit" ? editComposer(st) : generateComposer(st);
+}
+
+// The floating inspector — the six settings, beside the image rather than under
+// it. Same DS Selects, same flyout sheets; only the container moved.
+export function settingsPanel(st) {
+  return `<aside class="isv2-panel" role="group" aria-label="Generation settings">${settingRows(st)}</aside>`;
+}
+
+// The floating palette — the manual tools, top-left over the canvas, where the
+// work is. Crop and Add image open their options as flyouts to the RIGHT here
+// (there is nothing to their left but the modal edge).
+export function toolPalette(st) {
+  return `<aside class="isv2-palette" role="toolbar" aria-label="Edit tools">${editTools(st)}</aside>`;
 }
 
 // ── Shared building blocks ──────────────────────────────────────────────────
@@ -122,25 +141,19 @@ function bestFor(network) {
 // empty bar. Capped and centred, the card reads as one object you act in.
 function generateComposer(st) {
   return console_(
-    "Image prompt and settings",
-    briefColumn(st, {
-      label: "Prompt",
-      field: promptField(st),
-      tools: promptTools(st),
-    }),
-    `<div class="isv2-settings" role="group" aria-label="Generation settings">${settingRows(st)}</div>`,
+    "Image prompt",
+    briefColumn(st, { label: "Prompt", field: promptField(st), tools: promptTools(st) }),
     generateActions(st),
   );
 }
 
-// The frame both modes share: two columns over one foot.
-function console_(label, brief, side, foot) {
+// The frame both modes share: the brief over a CTA foot. The settings and the
+// tools left this card for the stage — a bottom bar that holds only the prompt
+// can finally sit at a readable measure without cramming anything.
+function console_(label, brief, foot) {
   return `<div class="isv2-dock">
     <div class="isv2-console" role="group" aria-label="${escapeHtml(label)}">
-      <div class="isv2-console-body">
-        ${brief}
-        ${side}
-      </div>
+      ${brief}
       <div class="isv2-console-foot">${foot}</div>
     </div>
   </div>`;
@@ -447,7 +460,6 @@ function editComposer(st) {
   return console_(
     "Edit the image",
     briefColumn(st, { label: "Redraw", field, tools }),
-    `<div class="isv2-settings" role="group" aria-label="Edit tools">${editTools(st)}</div>`,
     `<button type="button" class="ap-button ghost grey" data-img-undo ${imageStudio.canUndo(KEY) ? "" : "disabled"}><i class="ap-icon-reset"></i><span>Undo</span></button>
      ${primary}`,
   );

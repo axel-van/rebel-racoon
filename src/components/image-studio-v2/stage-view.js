@@ -15,7 +15,7 @@ import { getPosts } from "../../posts-store.js?v=37";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=27";
 import { renderPostCard } from "../post-card.js?v=70";
 import { KEY, ctx } from "./context.js?v=1";
-import { composer } from "./composer-view.js?v=1";
+import { composer, settingsPanel, toolPalette } from "./composer-view.js?v=1";
 import { editCanvas } from "./edit-view.js?v=1";
 import { compositeOverlays } from "../image-studio/canvas.js?v=2";
 import * as imageStudio from "../../image-studio.js?v=42";
@@ -110,17 +110,28 @@ function stageContent(st) {
   else if (st.genPhase === "generating") inner = generatingStage(st);
   else if (st.genPhase === "results") inner = resultsStage(st);
   else inner = emptyStage();
-  // The variations "chutier" floats as a vertical rail on the right edge of the
-  // image area (generate mode, results only). It lives inside the body, not the
-  // stage, so it centres on the image rather than on the image + the toggle row.
-  const rail =
-    st.mode === "generate" && !feedView && st.genPhase === "results" && st.variations.length > 0
-      ? variationsRail(st)
-      : "";
-  // The toggle row only exists once there's something to preview; without it the
-  // stage keeps its full height for the empty state.
+  // Three floating zones around the image, the way a creative tool arranges
+  // them: the variations "chutier" LEFT (your assets), the settings inspector
+  // RIGHT (properties of what's on the canvas), the manual tools TOP-LEFT in
+  // edit mode (at the contact point of the work). The body reserves room for
+  // whichever ones are up, so the image centres in what's left over rather than
+  // sliding underneath them.
+  const showRail = st.mode === "generate" && !feedView && st.genPhase === "results" && st.variations.length > 0;
+  const showPanel = st.mode === "generate" && !feedView;
+  const showPalette = st.mode === "edit" && !feedView;
+  // The rail and the inspector are real flex items in DOM order, so they sit
+  // directly against the image with one gap — not absolute overlays on reserved
+  // gutters, which drifted the image off-centre and left the rail marooned in
+  // the middle of an empty 300px margin. The palette IS an overlay (it belongs
+  // on the canvas), so the body reserves its width instead.
+  const bodyCls = "isv2-stage-body" + (showPalette ? " has-palette" : "");
   const top = hasImg ? `<div class="isv2-stage-top">${viewToggle(st)}</div>` : "";
-  return `${top}<div class="isv2-stage-body">${inner}${rail}</div>`;
+  return `${top}<div class="${bodyCls}">
+    ${showRail ? variationsRail(st) : ""}
+    ${inner}
+    ${showPanel ? settingsPanel(st) : ""}
+    ${showPalette ? toolPalette(st) : ""}
+  </div>`;
 }
 
 function emptyStage() {
@@ -160,8 +171,9 @@ function resultsStage(st) {
   </div>`;
 }
 
-// Vertical rail on the stage's right edge. Single = pick-one (check on the
-// chosen one); carousel = numbered slides, removable down to 2, all kept.
+// Vertical rail on the LEFT edge of the image area — your generated assets,
+// where a creative tool keeps them. Single = pick-one (check on the chosen one);
+// carousel = numbered slides, removable down to 2, all kept.
 function variationsRail(st) {
   const carousel = st.outputMode === "carousel";
   const sel = st.selectedIndex == null ? 0 : st.selectedIndex;
