@@ -21,15 +21,7 @@
 
 import { escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import {
-  FORMATS,
-  NETWORK_FORMATS,
-  CLIP_RATIO_ORDER,
-  ratioNetworksMeta,
-  cropWidthFraction,
-  clampCropX,
-  cropPositionPercent,
-} from "../clip-formats.js?v=6";
+import { FORMATS, NETWORK_FORMATS, CLIP_RATIO_ORDER, ratioNetworksMeta, ratioValue } from "../clip-formats.js?v=7";
 import { iconFor } from "../file-kinds.js?v=20";
 import { DEFAULT_PRESET, buildCaptions, videoForClip } from "../clip-captions.js?v=5";
 
@@ -38,7 +30,7 @@ const MIN_CLIP = 5;
 const MAX_CLIP = 300;
 
 // Backfill the format on a clip draft: keep any valid value, else fall back to
-// the recommended format for its network. The Crop panel offers all five
+// the recommended format for its network. The Ratio panel offers all five
 // ratios, so a deliberate pick must survive a reopen even when it isn't the
 // recommended one for the clip's network — only a missing/unknown format is
 // replaced. (`clipOverrides.format` still wins, applied after this in `open`.)
@@ -46,14 +38,6 @@ function ensureDraftFormat(d) {
   if (!d) return;
   if (d.format && FORMATS[d.format]) return;
   d.format = (NETWORK_FORMATS[d.network] || ["16:9"])[0];
-}
-
-// Backfill the crop framing on a clip draft. `cropX` is the crop window's
-// center as a fraction of the source width (0.5 = centered); re-clamped on
-// every format change so a narrow window can't sit half outside the frame.
-function ensureDraftCrop(d) {
-  if (!d) return;
-  d.cropX = clampCropX(d.format, d.cropX);
 }
 
 // Backfill caption state on a clip draft. Captions are auto-generated lazily
@@ -94,9 +78,9 @@ let singleClipMode = false;
 let draft = null;
 let draftPlayhead = 0;
 
-// Editor tab — "clip" (preview / form / trim), "crop" (export ratio + framing)
-// or "subtitles" (the embedded caption editor). Tabs keep subtitle editing
-// inside the modal instead of a separate surface.
+// Editor tab — "clip" (preview / form / trim), "ratio" (output aspect ratio) or
+// "subtitles" (the embedded caption editor). Tabs keep subtitle editing inside
+// the modal instead of a separate surface.
 let editorTab = "clip";
 // Which sub-panel the Subtitles options show — "style" (Presets/Font/Effects)
 // or "transcript". The stage + timeline stay put; only this panel swaps.
@@ -113,9 +97,6 @@ let trimMode = false;
 
 // Drag state for the pro trimmer (null when not dragging).
 let dragState = null;
-
-// Drag state for the crop-frame pan (null when not dragging).
-let cropDrag = null;
 
 // Host callbacks (set by open()).
 let onUseCallback = null;
@@ -265,12 +246,6 @@ function renderFooterEdit() {
 
 // ── Render: a single browse-mode clip card ───────────────────────────
 
-// The clip's export ratio as a CSS aspect-ratio value (falls back to the
-// source's 16:9 for clips that never went through the editor).
-function cropRatioOf(clip) {
-  return String((FORMATS[clip.format] || FORMATS["16:9"]).ratio);
-}
-
 function clipCardHTML(clip) {
   const isSelected = selected.has(clip.id);
   const isEditingThis = editingId === clip.id;
@@ -285,9 +260,8 @@ function clipCardHTML(clip) {
         </span>
       </label>
       <div class="vc-thumb">
-        <div class="vc-thumb__crop" data-vc-thumb-crop style="aspect-ratio: ${cropRatioOf(clip)}">
-          <video class="vc-thumb__video" src="${videoForClip(clip)}#t=1" muted playsinline preload="metadata"
-                 style="object-position: ${cropPositionPercent(clip.format, clip.cropX)}% 50%"></video>
+        <div class="vc-thumb__crop" data-vc-thumb-crop style="aspect-ratio: ${ratioValue(clip.format)}">
+          <video class="vc-thumb__video" src="${videoForClip(clip)}#t=1" muted playsinline preload="metadata"></video>
         </div>
         ${clip.captionsOn && (clip.captions || []).length ? `<div class="vc-thumb__cc" title="Subtitles on">CC</div>` : ""}
         <div class="vc-thumb__play"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></div>
@@ -324,7 +298,7 @@ function clipCardHTML(clip) {
 function optionsHTML() {
   if (!draft) return "";
 
-  if (editorTab === "crop") {
+  if (editorTab === "ratio") {
     // One tile per export ratio, drawn at its true proportions so the shape
     // reads before the label. `ratioNetworksMeta` is the same "Best for +
     // network logos" hint the in-chat aspect-ratio picker uses.
@@ -345,17 +319,10 @@ function optionsHTML() {
       })
       .join("");
 
-    // 16:9 fills the source frame edge to edge — there's no slack to pan, so
-    // the framing group would be a control that does nothing.
-    const canPan = cropWidthFraction(draft.format) < 1;
-
     return `
       <div class="vc-editor__field">
         <label class="vc-editor__label">Export ratio</label>
         <div class="vc-ratio">${tiles}</div>
-      </div>
-      <div class="vc-editor__field"${canPan ? "" : " hidden"}>
-        <p class="vc-editor__hint">Drag the frame on the preview to choose what stays in shot.</p>
       </div>`;
   }
 
@@ -454,21 +421,15 @@ function editorPaneHTML() {
   const playheadPct = (draftPlayhead / duration) * 100;
 
   const cropRatio = (FORMATS[draft.format] || FORMATS["16:9"]).ratio;
-  // Crop framing — the frame is full-height and pans horizontally, so cropX
-  // (its center, as a fraction of the source width) is all it takes to place
-  // it. `canPan` is false at 16:9, where the frame fills the source frame.
-  const cropX = clampCropX(draft.format, draft.cropX);
-  const canPan = cropWidthFraction(draft.format) < 1;
-
   // VEED-style vertical tool rail — replaces the old top tabs. Switches the
-  // editor between the Clip (trim) and Subtitles sections.
+  // editor between the Clip (trim), Ratio and Subtitles sections.
   const railHTML = `
     <nav class="vc-rail" role="tablist" aria-label="Editor sections">
       <button type="button" class="vc-rail__item${editorTab === "clip" ? " is-on" : ""}" data-vc-action="tab-clip" role="tab" aria-selected="${editorTab === "clip"}">
         <i class="ap-icon-video" aria-hidden="true"></i><span>Clip</span>
       </button>
-      <button type="button" class="vc-rail__item${editorTab === "crop" ? " is-on" : ""}" data-vc-action="tab-crop" role="tab" aria-selected="${editorTab === "crop"}">
-        <i class="ap-icon-cropper" aria-hidden="true"></i><span>Crop</span>
+      <button type="button" class="vc-rail__item${editorTab === "ratio" ? " is-on" : ""}" data-vc-action="tab-ratio" role="tab" aria-selected="${editorTab === "ratio"}">
+        <i class="ap-icon-cropper" aria-hidden="true"></i><span>Ratio</span>
       </button>
       <button type="button" class="vc-rail__item${editorTab === "subtitles" ? " is-on" : ""}" data-vc-action="tab-subtitles" role="tab" aria-selected="${editorTab === "subtitles"}">
         <i class="ap-icon-closed-captions" aria-hidden="true"></i><span>Subtitles</span>
@@ -494,24 +455,13 @@ function editorPaneHTML() {
         <div class="vc-preview">
           <video class="vc-preview__video cap-ed__video" data-ce-video muted loop playsinline></video>
           <div class="vc-preview__crop" data-vc-crop data-vc-crop-frame data-ce-stage
-               style="aspect-ratio: ${cropRatio}; left: ${cropX * 100}%">
+               style="aspect-ratio: ${cropRatio}">
             <div class="cap-ed__deadzones" data-ce-deadzones></div>
             <div class="cap-ed__playicon" data-ce-playicon>
               <svg viewBox="0 0 24 24" width="34" height="34"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
             </div>
             <div class="cap-ed-box" data-ce-box></div>
             <div class="cap-ed-frame" data-ce-frame>${handles}</div>
-          </div>
-          <!-- Dedicated grab layer for panning the crop. The crop frame itself
-               is the caption editor's stage and must stay pointer-events:none,
-               so panning gets its own surface on top rather than opening up
-               that contract. CSS shows it only in Crop mode; "is-locked" is for
-               16:9, where the frame fills the source and there's no slack. -->
-          <div class="vc-preview__crop-grab${canPan ? "" : " is-locked"}" data-vc-drag-crop
-               role="slider" tabindex="0" aria-label="Crop position"
-               aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(cropX * 100)}"
-               style="aspect-ratio: ${cropRatio}; left: ${cropX * 100}%">
-            <span class="vc-preview__crop-grip" aria-hidden="true"><i class="ap-icon-move"></i></span>
           </div>
         </div>
       </main>
@@ -659,7 +609,6 @@ function renderOptions() {
   if (!editor || !panel) return;
   panel.innerHTML = optionsHTML();
   editor.classList.toggle("vc-editor--subtitles", editorTab === "subtitles");
-  editor.classList.toggle("vc-editor--crop", editorTab === "crop");
   editor.querySelectorAll(".vc-rail__item").forEach((b) => {
     const on = b.dataset.vcAction === `tab-${editorTab}`;
     b.classList.toggle("is-on", on);
@@ -721,18 +670,17 @@ function onModalClick(event) {
     return;
   }
 
-  // Export-ratio tile (Crop panel). Re-clamps the framing, then repaints the
-  // panel (pressed state + framing visibility) and the stage in place — no full
-  // render, so playback and the caption mount survive.
+  // Export-ratio tile. Repaints the panel (pressed state) and resizes the
+  // preview's viewfinder in place — no full render, so playback and the caption
+  // mount survive the change.
   const ratioEl = event.target.closest("[data-vc-ratio]");
   if (ratioEl) {
     if (!draft) return;
     const next = ratioEl.dataset.vcRatio;
     if (draft.format !== next && FORMATS[next]) {
       draft.format = next;
-      ensureDraftCrop(draft);
       renderOptions();
-      syncCropAfterDrag();
+      syncRatioFrame();
       // The caption box is sized off the stage width, which just changed.
       if (capMod) capMod.repaintStage();
     }
@@ -835,9 +783,9 @@ function onModalClick(event) {
     return;
   }
 
-  if (action === "tab-crop") {
-    if (editorTab !== "crop") {
-      editorTab = "crop";
+  if (action === "tab-ratio") {
+    if (editorTab !== "ratio") {
+      editorTab = "ratio";
       renderOptions();
     }
     return;
@@ -904,19 +852,6 @@ function onModalKeydown(event) {
       const delta = event.key === "ArrowUp" ? 1 : -1;
       const which = stepper.dataset.vcStepper; // "start" or "end"
       stepDraft(which, delta);
-    }
-    return;
-  }
-
-  // Crop pan by keyboard — the grab layer is a focusable slider, so ← / → nudge
-  // the framing 1% at a time (Shift for a coarser 5% step).
-  const grab = event.target.closest("[data-vc-drag-crop]");
-  if (grab && draft && !grab.classList.contains("is-locked")) {
-    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-      event.preventDefault();
-      const step = (event.shiftKey ? 0.05 : 0.01) * (event.key === "ArrowRight" ? 1 : -1);
-      draft.cropX = clampCropX(draft.format, draft.cropX + step);
-      syncCropAfterDrag();
     }
   }
 }
@@ -1042,79 +977,19 @@ function onProtrimMouseup() {
   window.removeEventListener("pointercancel", onProtrimMouseup);
 }
 
-// ── Drag (crop pan) ──────────────────────────────────────────────────
-// The crop frame is full-height, so panning is horizontal only: cropX tracks
-// the pointer as a fraction of the preview width. Same pointer-event shape as
-// the pro trimmer above.
-
-function onCropMousedown(event) {
-  const grabEl = event.target.closest("[data-vc-drag-crop]");
-  if (!grabEl || !draft) return;
-  if (grabEl.classList.contains("is-locked")) return;
-  event.preventDefault();
-  event.stopPropagation();
-  const preview = grabEl.closest(".vc-preview");
-  if (!preview) return;
-  cropDrag = {
-    startX: event.clientX,
-    anchorX: clampCropX(draft.format, draft.cropX),
-    previewWidth: preview.getBoundingClientRect().width || 1,
-  };
-  grabEl.classList.add("is-dragging");
-  bodyEl?.querySelector("[data-vc-editor]")?.classList.add("is-cropping");
-  window.addEventListener("pointermove", onCropMousemove);
-  window.addEventListener("pointerup", onCropMouseup);
-  window.addEventListener("pointercancel", onCropMouseup);
-}
-
-function onCropMousemove(event) {
-  if (!cropDrag || !draft) return;
-  const dx = event.clientX - cropDrag.startX;
-  draft.cropX = clampCropX(draft.format, cropDrag.anchorX + dx / cropDrag.previewWidth);
-  syncCropAfterDrag();
-}
-
-function onCropMouseup() {
-  if (!cropDrag) return;
-  cropDrag = null;
-  document.querySelector("[data-vc-drag-crop]")?.classList.remove("is-dragging");
-  bodyEl?.querySelector("[data-vc-editor]")?.classList.remove("is-cropping");
-  window.removeEventListener("pointermove", onCropMousemove);
-  window.removeEventListener("pointerup", onCropMouseup);
-  window.removeEventListener("pointercancel", onCropMouseup);
-}
-
-// Patches the crop frame + its grab layer (and the edited row's thumbnail) in
-// place after a ratio change or a pan — same "no full re-render" rule as the
-// trimmer, so the contenteditable fields and the video keep their state.
-function syncCropAfterDrag() {
+// Resizes the preview's viewfinder to the picked output ratio, and the edited
+// row's thumbnail window with it (visible behind the editor in browse mode).
+// Patched in place — same "no full re-render" rule as the trimmer, so the
+// contenteditable fields and the playing video keep their state.
+function syncRatioFrame() {
   if (!draft) return;
-  const ratio = (FORMATS[draft.format] || FORMATS["16:9"]).ratio;
-  const canPan = cropWidthFraction(draft.format) < 1;
-  const cropX = clampCropX(draft.format, draft.cropX);
-  draft.cropX = cropX;
+  const ratio = ratioValue(draft.format);
 
   const frame = document.querySelector("[data-vc-crop-frame]");
-  if (frame) {
-    frame.style.aspectRatio = String(ratio);
-    frame.style.left = `${cropX * 100}%`;
-  }
-  const grab = document.querySelector("[data-vc-drag-crop]");
-  if (grab) {
-    grab.style.aspectRatio = String(ratio);
-    grab.style.left = `${cropX * 100}%`;
-    grab.classList.toggle("is-locked", !canPan);
-    grab.setAttribute("aria-valuenow", String(Math.round(cropX * 100)));
-  }
+  if (frame) frame.style.aspectRatio = ratio;
 
-  // Keep the browse-mode thumbnail of the clip being edited in step with the
-  // framing (it's on-screen behind the editor in multi-clip mode).
   const thumbWin = document.querySelector(`[data-vc-cell="${draft.id}"] [data-vc-thumb-crop]`);
-  if (thumbWin) {
-    thumbWin.style.aspectRatio = String(ratio);
-    const vid = thumbWin.querySelector("video");
-    if (vid) vid.style.objectPosition = `${cropPositionPercent(draft.format, cropX)}% 50%`;
-  }
+  if (thumbWin) thumbWin.style.aspectRatio = ratio;
 }
 
 // Patches the in-editor DOM after a drag/seek so the contenteditable cursor
@@ -1166,7 +1041,6 @@ function enterEdit(clipId) {
   editingId = clipId;
   draft = { ...clip };
   ensureDraftFormat(draft);
-  ensureDraftCrop(draft);
   ensureDraftCaptions(draft);
   draftPlayhead = clip.start;
   editorTab = "clip";
@@ -1230,7 +1104,6 @@ function addClip() {
   editingId = newClip.id;
   draft = { ...newClip };
   ensureDraftFormat(draft);
-  ensureDraftCrop(draft);
   ensureDraftCaptions(draft);
   draftPlayhead = start;
   editorTab = "clip";
@@ -1311,12 +1184,6 @@ export function init() {
   // Drag is wired at the protrim level so handles + window + playhead are
   // all caught. Track click (for scrub) lives on the track wrapper.
   modal.addEventListener("pointerdown", (event) => {
-    // Crop pan first — its grab layer lives on the preview, nowhere near the
-    // trimmer, so it can't be confused with a track scrub.
-    if (event.target.closest("[data-vc-drag-crop]")) {
-      onCropMousedown(event);
-      return;
-    }
     const trackClick = event.target.closest("[data-vc-protrim-track]");
     if (trackClick && !event.target.closest("[data-vc-drag]")) {
       // We intentionally don't call onProtrimMousedown — the click handler
@@ -1367,8 +1234,6 @@ export function open(source, callbacks = {}) {
       // match what that post will actually publish — not the clip's default.
       const ovFormat = callbacks.clipOverrides && callbacks.clipOverrides.format;
       if (ovFormat && FORMATS[ovFormat]) draft.format = ovFormat;
-      // After the override — the framing has to be clamped to the final format.
-      ensureDraftCrop(draft);
       draftPlayhead = target.start || 0;
     }
   } else if (callbacks.startAddClip) {

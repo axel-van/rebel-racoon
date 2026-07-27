@@ -30,11 +30,10 @@
   background-position: center;
 }
 
-/* Crop window — the thumb box stays 16:9 so the card grid keeps a stable
-   rhythm, and this inner window carries the clip's export ratio (inline
-   aspect-ratio) with the crop framing applied as the video's object-position.
-   The card therefore shows the shape that will actually be published; the
-   letterbox falls back to the thumb's hue gradient. */
+/* Ratio window — the thumb box stays 16:9 so the card grid keeps a stable
+   rhythm, and this inner window carries the clip's chosen output ratio (inline
+   aspect-ratio). The card therefore shows the shape that will actually be
+   published; the letterbox falls back to the thumb's hue gradient. */
 .clip-card__thumb-crop {
   position: absolute;
   top: 0;

@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=216";
+import { renderTopbar } from "../components/topbar.js?v=217";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=57";
 import {
   getConnectedProfiles,
@@ -12,7 +12,7 @@ import {
   NETWORK_LABEL,
   PROFILE_SEARCH_THRESHOLD,
 } from "../social-profiles.js?v=27";
-import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=6";
+import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=7";
 import { CLIP_SUBTITLE_ITEMS, CLIP_SUBTITLE_LABEL } from "../clip-subtitles.js?v=1";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=7";
 import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=38";
@@ -71,7 +71,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=11";
-import * as contextBuilder from "../context-builder.js?v=187";
+import * as contextBuilder from "../context-builder.js?v=188";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -82,7 +82,7 @@ import {
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=25";
-import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=54";
+import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=55";
 import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=57";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=62";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=12";
@@ -102,7 +102,7 @@ import {
   extractClipsForSource,
   setSourceIdeaCount,
 } from "../sources-stream.js?v=52";
-import { renderClipCard } from "../components/clip-card.js?v=14";
+import { renderClipCard } from "../components/clip-card.js?v=15";
 import { onFeedbackClick } from "../components/feedback-control.js?v=2";
 import { showToast } from "../components/toast.js?v=20";
 import {
@@ -111,7 +111,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=354";
+} from "../components/right-panel.js?v=355";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=17";

@@ -17,8 +17,8 @@
 //   └────────────────────────────────────────────────────────────────┘
 //
 // Clip shape: { id, start, end, hue, title, summary, why, network, tags }
-//             + { format, cropX } once the clip has been through the editor
-//               (export ratio + crop framing, reflected in the thumbnail)
+//             + { format } once the clip has been through the editor
+//               (the chosen output ratio, reflected in the thumbnail)
 //
 // Visual classes prefixed `rpanel-ideas__*` are shared with the idea
 // card (defined in right-panel.css). Classes prefixed `clip-card__*`
@@ -29,7 +29,7 @@ import { escapeText, escapeAttr } from "../utils.js?v=21";
 import { installMoreMenu } from "./more-menu.js?v=1";
 import { renderFeedbackThumbs, renderFeedbackPanel } from "./feedback-control.js?v=2";
 import { videoForClip } from "../clip-captions.js?v=5";
-import { FORMATS, cropPositionPercent } from "../clip-formats.js?v=6";
+import { FORMATS } from "../clip-formats.js?v=7";
 
 function fmtTime(s) {
   if (!Number.isFinite(s) || s < 0) return "0:00";
@@ -58,10 +58,10 @@ export function renderClipCard(
   { sourceName = "", sourceKind = "Video", sessionId = null, whyOpen = false, selected = false } = {},
 ) {
   const duration = fmtTime((clip.end || 0) - (clip.start || 0));
-  // Export ratio — the thumb box stays 16:9 (grid stability) and the inner crop
-  // window carries the clip's chosen ratio + framing, so the card shows what
-  // will actually be published. Clips that never went through the editor have
-  // no format and read as the source's 16:9.
+  // Export ratio — the thumb box stays 16:9 (grid stability) and the inner
+  // window carries the clip's chosen output ratio, so the card shows the shape
+  // that will be published. Clips that never went through the editor have no
+  // format and read as the source's 16:9.
   const fmt = FORMATS[clip.format] || FORMATS["16:9"];
   const safeTitle = escapeText(clip.title || "Untitled clip");
   const safeSummary = escapeText(clip.summary || "");
@@ -124,7 +124,6 @@ export function renderClipCard(
             <video
               class="clip-card__thumb-video"
               src="${escapeAttr(videoForClip(clip))}#t=${Math.max(0, Math.round(clip.start || 0))}"
-              style="object-position: ${cropPositionPercent(clip.format, clip.cropX)}% 50%"
               preload="metadata"
               muted
               playsinline
