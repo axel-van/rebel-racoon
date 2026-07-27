@@ -10,7 +10,7 @@
 //   runScanAndAnnounce({ … })      scan + toast + the one-line chat notice
 //
 // It lives here rather than in the screen because several surfaces call the
-// same entry points: the digest, the "Why this?" modal, and /ideas.
+// same entry points: the digest and the "Why this?" modal.
 //
 // WHICH CHAT? A delivered idea belongs to no conversation, and drafting is
 // session-scoped end to end, so writing asks — the same chat-picker modal, with
@@ -21,7 +21,7 @@
 import { setHandoff } from "./handoff.js?v=20";
 import { navigate, getPath } from "./router.js?v=30";
 import { showToast } from "./components/toast.js?v=20";
-import { open as openChatPicker } from "./components/chat-picker-modal.js?v=62";
+import { open as openChatPicker } from "./components/chat-picker-modal.js?v=63";
 import { getSessions } from "./sessions-store.js?v=9";
 import {
   getFinding,
@@ -30,12 +30,12 @@ import {
   restoreFinding,
   getResearchConfig,
   runScan,
-} from "./research-store.js?v=6";
+} from "./research-store.js?v=7";
 import { findResearchSource } from "./research-catalog.js?v=3";
 import { postSelectionEcho, postAssistantMessage, postResearchDelivery } from "./assistant.js?v=61";
 import { addReadySource } from "./sources-stream.js?v=54";
-import { getIdeaById, addGlobalIdeas, adoptIdea, removeIdeasGlobally } from "./library.js?v=54";
-import { startDraftFlow } from "./draft-flow.js?v=58";
+import { getIdeaById, addGlobalIdeas, adoptIdea, removeIdeasGlobally } from "./library.js?v=55";
+import { startDraftFlow } from "./draft-flow.js?v=59";
 
 export const HANDOFF_KEY = "pendingResearchIdea";
 
@@ -92,8 +92,8 @@ export function writeIdea(ideaId, { sessionId = null } = {}) {
  * "Not for me" — drop a delivered idea.
  *
  * Two levels of memory, both needed: the idea leaves the library (so the digest
- * and /ideas both lose it), and its finding's dedupeKey is remembered so no
- * later scan re-derives the same thing. Undo restores both.
+ * loses it), and its finding's dedupeKey is remembered so no later scan
+ * re-derives the same thing. Undo restores both.
  */
 export function skipIdea(ideaId) {
   const idea = getIdeaById(ideaId);
@@ -195,7 +195,7 @@ export function runScanAndAnnounce({ contextId, manual = false, onDone = null } 
       if (getPath() === "/research") return;
 
       const n = delivered.length;
-      showToast(`${n} new research ${n === 1 ? "finding" : "findings"}`, {
+      showToast(`${n} new research ${n === 1 ? "idea" : "ideas"}`, {
         duration: 6000,
         action: { label: "Open", onClick: () => navigate("/research") },
       });

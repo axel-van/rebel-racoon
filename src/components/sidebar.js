@@ -17,15 +17,11 @@ import {
 } from "../sessions-store.js?v=9";
 import { isFlagOn } from "../feature-flags.js?v=12";
 import { isNewUser } from "../user-mode.js?v=22";
-import {
-  clearSession as clearLibrarySession,
-  countIdeasByOrigin,
-  subscribeGlobal as subscribeLibraryGlobal,
-} from "../library.js?v=54";
+import { clearSession as clearLibrarySession } from "../library.js?v=55";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=40";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=31";
-import { getNewCount as getNewResearchCount, subscribe as subscribeResearch } from "../research-store.js?v=6";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=366";
+import { getNewCount as getNewResearchCount, subscribe as subscribeResearch } from "../research-store.js?v=7";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=368";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=61";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=39";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=54";
@@ -315,9 +311,6 @@ export function initSidebar() {
   subscribeConnectors(() => renderSidebar());
   // A landed scan increments the Research counter in place — no polling.
   subscribeResearch(() => renderSidebar());
-  // …and the Ideas counter follows the global pool, which the per-session
-  // library notifier never fires for.
-  subscribeLibraryGlobal(() => renderSidebar());
 
   // Click outside the popmenu → close.
   document.addEventListener("click", (event) => {
@@ -580,16 +573,6 @@ const NAV = [
     counterClass: "blue",
     match: (p) => p === "/research",
     count: () => getNewResearchCount(),
-  },
-  {
-    // Back because research delivers ideas that belong to no chat. Gated on the
-    // same flag: with research off, nothing here changed.
-    path: "/ideas",
-    icon: "ap-icon-sparkles",
-    label: "Ideas",
-    flag: "research",
-    match: (p) => p === "/ideas",
-    count: () => countIdeasByOrigin().research,
   },
   {
     path: "/contexts",

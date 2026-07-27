@@ -45,7 +45,7 @@ const streamUnsubsBySession = new Map();
 // `seedIdeas` IS mocks.ideas — a flat union of every demo session's ideas that
 // several surfaces read directly instead of going through this store (the
 // right-panel Ideas mode, draft-flow's fallback resolver, assistant's reasoning
-// copy) and that /ideas, the global library, reads as its whole dataset.
+// copy) and that the research digest reads to resolve its editions' ideas.
 //
 // It used to be write-only from injectIdeasForSource and never pruned, so a
 // global surface showed ghosts (deleted ideas) and missed real ones (anything
@@ -55,9 +55,9 @@ const streamUnsubsBySession = new Map();
 // Not the same objects: the pool holds shallow copies, so a per-session edit
 // doesn't silently mutate the global row and vice versa. Identity is the `id`.
 
-// The pool has no per-session key, so surfaces that read it globally (/ideas,
-// the sidebar's Ideas counter) need their own signal — the per-session notifier
-// below never fires for a conversation-less idea.
+// The pool has no per-session key, so a surface reading it globally needs its
+// own signal — the per-session notifier below never fires for an idea that
+// belongs to no conversation. The research digest subscribes to this.
 const globalNotifier = createNotifier("library/global");
 export const subscribeGlobal = globalNotifier.subscribe;
 const notifyGlobal = () => globalNotifier.notify(seedIdeas.slice());
@@ -147,9 +147,9 @@ export function clearSession(sessionId) {
 }
 
 /**
- * Every idea the workspace holds, newest first — the dataset behind /ideas.
- * Reads the global pool rather than walking sessions, because ideas that came
- * from research belong to no conversation.
+ * Every idea the workspace holds, newest first. Reads the global pool rather
+ * than walking sessions, because an idea delivered by a research scan belongs
+ * to no conversation.
  *
  * @param {object} [opts]
  * @param {"all"|"research"|"session"} [opts.origin]  filter by where it came from
@@ -160,21 +160,14 @@ export function getAllIdeas({ origin = "all" } = {}) {
   return seedIdeas.filter((i) => (i.origin || "session") === origin);
 }
 
-/** How many ideas arrived on their own, for the library's filter chip. */
-export function countIdeasByOrigin() {
-  const out = { all: seedIdeas.length, research: 0, session: 0 };
-  for (const i of seedIdeas) out[(i.origin || "session") === "research" ? "research" : "session"] += 1;
-  return out;
-}
-
 export function getIdeaById(id) {
   return seedIdeas.find((i) => i.id === id) || null;
 }
 
 /**
  * Add ideas that belong to NO conversation — what a research scan produces.
- * They go to the global pool only, with `sessionId: null`, so /ideas holds them
- * and the per-session stores stay untouched until one is adopted.
+ * They go to the global pool only, with `sessionId: null`, so the digest can
+ * list them while the per-session stores stay untouched until one is adopted.
  *
  * Ids are caller-supplied and deterministic (idea-<findingId>-<n>), so
  * re-delivering the same batch is idempotent — poolAdd dedupes on id.

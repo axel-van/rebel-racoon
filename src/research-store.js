@@ -44,7 +44,7 @@ import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import { getContextById, updateContext } from "./contexts-store.js?v=40";
 import { DEFAULT_ENABLED_IDS, findCadence } from "./research-catalog.js?v=3";
-import { addGlobalIdeas } from "./library.js?v=54";
+import { addGlobalIdeas } from "./library.js?v=55";
 
 // How long a scan "runs". Long enough to read as work, short enough to demo.
 const SCAN_MS = 2600;

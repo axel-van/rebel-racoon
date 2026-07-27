@@ -19,7 +19,7 @@
 // Playbook A's digest.
 
 import { html, raw } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=228";
+import { renderTopbar } from "../components/topbar.js?v=230";
 import { navigate } from "../router.js?v=30";
 import { isFlagOn } from "../feature-flags.js?v=12";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -32,7 +32,7 @@ import {
   setCadence,
   setNotify,
   subscribe as subscribeResearch,
-} from "../research-store.js?v=6";
+} from "../research-store.js?v=7";
 import { renderResearchSettingsPage, renderSourcesBody } from "../research-view.js?v=6";
 import { findConnector } from "../connectors-store.js?v=31";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=14";

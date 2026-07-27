@@ -3,7 +3,7 @@
 // A recurring scan of the enabled sources delivers IDEAS, grouped into editions
 // (one per scan). The research behind each idea is its justification, reachable
 // through "Why this?" — never the thing the user has to triage. The ideas are
-// real Ideas in the global library, so they also appear on /ideas.
+// real Ideas in the global library — the digest is where they are listed.
 //
 // Gated behind the `research` flag — OFF bounces to the dashboard, the same
 // shape as screens/connectors.js.
@@ -19,7 +19,7 @@
 // Clearing it on arrival would zero the counter the user just clicked.
 
 import { html, raw } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=228";
+import { renderTopbar } from "../components/topbar.js?v=230";
 import { navigate } from "../router.js?v=30";
 import { isFlagOn } from "../feature-flags.js?v=12";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -34,13 +34,14 @@ import {
   isScanning,
   markAllSeen,
   subscribe as subscribeResearch,
-} from "../research-store.js?v=6";
-import { getAllIdeas, getIdeaById } from "../library.js?v=54";
+} from "../research-store.js?v=7";
+import { getAllIdeas, getIdeaById, subscribeGlobal as subscribeLibraryGlobal } from "../library.js?v=55";
 import { renderResearchPage, renderDigestBody } from "../research-view.js?v=6";
-import { open as openResearchModal } from "../components/research-modal.js?v=10";
-import { writeIdea, skipIdea, runScanAndAnnounce } from "../research-flow.js?v=7";
+import { open as openResearchModal } from "../components/research-modal.js?v=12";
+import { writeIdea, skipIdea, runScanAndAnnounce } from "../research-flow.js?v=9";
 
 let unsubscribe = null;
+let unsubscribeLibrary = null;
 let activeContextId = null;
 // Which one-line rows the user opened. Local, not URL-worthy — a momentary
 // reveal, not a place you'd link someone to.
@@ -64,6 +65,9 @@ export function renderResearch(_params, target) {
   teardownSubscription();
   paint(target);
   unsubscribe = subscribeResearch(() => repaint(target));
+  // The ideas live in the library, not in research-store — skipping one removes
+  // it there, so the digest has to follow the pool as well.
+  unsubscribeLibrary = subscribeLibraryGlobal(() => repaint(target));
 
   return () => {
     teardownSubscription();
@@ -73,10 +77,9 @@ export function renderResearch(_params, target) {
 }
 
 function teardownSubscription() {
-  if (unsubscribe) {
-    unsubscribe();
-    unsubscribe = null;
-  }
+  unsubscribe?.();
+  unsubscribeLibrary?.();
+  unsubscribe = unsubscribeLibrary = null;
 }
 
 // ?pb= wins, then the default Playbook, then the first one.
