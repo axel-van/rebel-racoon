@@ -233,9 +233,10 @@ export function start(
     // Sections start COLLAPSED. The rail reads as an ordered flow — review the
     // prompt Archie wrote (step 1), then adjust settings (step 2) — so every
     // setting shows its current value in its header and only opens if the user
-    // wants to change it. Style preset has its own `disabled` state (references
-    // guide the look), independent of this set.
-    collapsedGroups: new Set(["brandkit", "refs", "imageType", "style", "format", "output"]),
+    // wants to change it. Brand kit isn't in here: its switch is its disclosure.
+    // Style preset has its own `disabled` state (references guide the look),
+    // independent of this set.
+    collapsedGroups: new Set(["refs", "imageType", "style", "format", "output"]),
     composerExpanded: false, // prompt composer size: small (default) vs expanded
     variationCount: 2, // single-image mode: how many alternatives to pick from
     slideCount, // carousel mode: how many slides to generate

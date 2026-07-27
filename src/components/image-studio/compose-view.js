@@ -7,8 +7,8 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=26";
-import { KEY } from "./context.js?v=13";
-import * as imageStudio from "../../image-studio.js?v=39";
+import { KEY } from "./context.js?v=14";
+import * as imageStudio from "../../image-studio.js?v=40";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -126,87 +126,59 @@ function uploadRefTile(r) {
   </div>`;
 }
 
-// A generate-panel section that collapses to a single row. `summary` is the
-// current value, shown muted at the right of the header so a collapsed section
-// still tells you its state (Refactoring UI: de-emphasized value beside the
-// label). When `disabled`, the section can't be expanded and shows
-// `disabledHint` instead of the value + chevron — used to switch Visual style
-// off while references drive the look.
+// ── The settings row ─────────────────────────────────────────────────────────
+// Every setting is the SAME row: a three-column grid of
+//   [ label ] [ current value, right-aligned ] [ 32px trailing control ]
+// so the six rows share one left edge, one value column and one right edge. The
+// trailing column is a fixed 32px because that's the DS toggle's exact width —
+// it lets the chevrons and the brand-kit switch land on the same axis even
+// though each row is its own grid. Label and value both ellipsis rather than
+// wrap: the rail narrows to 320px and a wrapped label breaks the row rhythm.
+//
+// `summary` is the current value (Refactoring UI: the de-emphasized value beside
+// its label, so a folded row still reads). `disabled` swaps the value + chevron
+// for a quieter hint — used to switch Style preset off while references drive
+// the look.
 function collapsibleGroup(st, { id, label, summary = "", body, disabled = false, disabledHint = "" }) {
   const collapsed = disabled || st.collapsedGroups.has(id);
   const right =
     disabled && disabledHint
       ? `<span class="image-studio__group-note">${escapeHtml(disabledHint)}</span>`
-      : `${summary ? `<span class="image-studio__group-summary">${escapeHtml(summary)}</span>` : ""}<i class="ap-icon-chevron-down image-studio__group-chevron" aria-hidden="true"></i>`;
+      : `<span class="image-studio__group-summary">${escapeHtml(summary)}</span>
+         <i class="ap-icon-chevron-down image-studio__group-chevron" aria-hidden="true"></i>`;
   return `<div class="image-studio__group is-collapsible${collapsed ? " is-collapsed" : ""}${disabled ? " is-disabled" : ""}">
     <button type="button" class="image-studio__group-head" data-img-group-toggle="${id}" aria-expanded="${!collapsed}"${disabled ? " disabled" : ""}>
       <span class="image-studio__group-label">${label}</span>
-      <span class="image-studio__group-head-right">${right}</span>
+      ${right}
     </button>
     <div class="image-studio__group-body"${collapsed ? " hidden" : ""}>${body}</div>
   </div>`;
 }
 
-// ── Ingredients (Generate) ───────────────────────────────────────────────────
-// The image inputs, framed as "ingredients": a Brand kit toggle (the Playbook's
-// brand set, shown as use/skip tiles when open) + a Reference images card with a
-// drop-zone for the user's own uploads. Both live under the step-2 eyebrow that
-// composeGroups prints, so this section carries no heading of its own.
-function ingredientsSection(st) {
-  const hasPlaybookRefs = Array.isArray(st.playbookRefs) && st.playbookRefs.length > 0;
-  return `<div class="image-studio__group image-studio__group--ingredients">
-    <div class="image-studio__ingredients">
-      ${hasPlaybookRefs ? brandKitCard(st) : ""}
-      ${referenceImagesCard(st)}
-    </div>
-  </div>`;
-}
-
-// The head can't be one big button: the DS switch is interactive content and
-// would be invalid nested inside it. So the title half is the collapse button
-// and the switch sits beside it as a sibling.
-function brandKitCard(st) {
+// Brand kit — the one row whose trailing control is a switch, not a chevron.
+// The switch IS the disclosure (off = no brand images in play, so there's
+// nothing to show); a chevron next to it was a second control for the same job.
+// The head is a <div>, not a <button>: the DS switch is interactive content and
+// would be invalid nested in one.
+function brandKitGroup(st) {
   const brand = st.playbookName || "Playbook";
   const on = !!st.usePlaybookRefs;
-  const collapsed = !on || st.collapsedGroups.has("brandkit");
   const usedIds = new Set(st.referenceImages.map((r) => r.id));
   const capReached = st.referenceImages.length >= imageStudio.MAX_REFS;
   const usedCount = (st.playbookRefs || []).filter((r) => usedIds.has(r.id)).length;
   const tiles = (st.playbookRefs || []).map((r) => playbookRefTile(r, usedIds.has(r.id), capReached)).join("");
-  const summary = on ? `${usedCount} image${usedCount === 1 ? "" : "s"}` : "Off";
-  return `<div class="image-studio__ingredient${on ? " is-on" : ""}${collapsed ? " is-collapsed" : ""}">
-    <div class="image-studio__ingredient-head">
-      <button type="button" class="image-studio__ingredient-name" data-img-group-toggle="brandkit" aria-expanded="${!collapsed}" ${on ? "" : "disabled"}>
-        <i class="ap-icon-star image-studio__ingredient-icon" aria-hidden="true"></i>
-        <span class="image-studio__ingredient-title">Brand kit · ${escapeHtml(brand)}</span>
-        <span class="image-studio__group-summary">${escapeHtml(summary)}</span>
-        ${on ? `<i class="ap-icon-chevron-down image-studio__group-chevron" aria-hidden="true"></i>` : ""}
-      </button>
-      <label class="ap-toggle-container image-studio__ingredient-toggle" title="Use your brand kit">
+  // The brand name is the value, not part of the label — it's what varies.
+  const summary = on ? `${brand} · ${usedCount} image${usedCount === 1 ? "" : "s"}` : brand;
+  return `<div class="image-studio__group${on ? " is-on" : ""}">
+    <div class="image-studio__group-head">
+      <span class="image-studio__group-label">Brand kit</span>
+      <span class="image-studio__group-summary">${escapeHtml(summary)}</span>
+      <label class="ap-toggle-container image-studio__group-switch" title="Use your brand kit">
         <input type="checkbox" data-img-toggle-playbook-refs ${on ? "checked" : ""} aria-label="Use ${escapeHtml(brand)} brand kit" />
         <i aria-hidden="true"></i>
       </label>
     </div>
-    <div class="image-studio__ingredient-body"${collapsed ? " hidden" : ""}><div class="image-studio__refs">${tiles}</div></div>
-  </div>`;
-}
-
-function referenceImagesCard(st) {
-  const collapsed = st.collapsedGroups.has("refs");
-  const uploads = st.referenceImages.filter((r) => !r.fromPlaybook);
-  const uploadTiles = uploads.map(uploadRefTile).join("");
-  const summary = uploads.length ? `${uploads.length} added` : "";
-  return `<div class="image-studio__ingredient image-studio__ingredient--refs${collapsed ? " is-collapsed" : ""}">
-    <button type="button" class="image-studio__ingredient-head" data-img-group-toggle="refs" aria-expanded="${!collapsed}">
-      <i class="ap-icon-file--image image-studio__ingredient-icon" aria-hidden="true"></i>
-      <span class="image-studio__ingredient-title">Reference images</span>
-      ${summary ? `<span class="image-studio__group-summary">${escapeHtml(summary)}</span>` : ""}
-      <i class="ap-icon-chevron-down image-studio__group-chevron" aria-hidden="true"></i>
-    </button>
-    <div class="image-studio__ingredient-body"${collapsed ? " hidden" : ""}>
-      ${dropzone(st)}
-      ${uploadTiles ? `<div class="image-studio__refs">${uploadTiles}</div>` : ""}
-    </div>
+    <div class="image-studio__group-body"${on ? "" : " hidden"}><div class="image-studio__refs">${tiles}</div></div>
   </div>`;
 }
 
@@ -228,13 +200,22 @@ function dropzone(st) {
 }
 
 function composeGroups(st) {
-  // Reference inputs are framed as "Ingredients": a Brand kit toggle (Playbook
-  // brand set as use/skip tiles) + a collapsible Reference images drop target.
   const hasUsedRefs = st.referenceImages.length > 0;
-  const ingredients = ingredientsSection(st);
-  // Step 2 heads EVERY setting below, not just the ingredients — Archie has
-  // already picked defaults, so this whole block is the optional detour.
+  // Step 2 heads EVERY setting below — Archie has already picked defaults, so
+  // this whole block is the optional detour.
   const eyebrow = `<p class="image-studio__group-label image-studio__group-label--eyebrow image-studio__group-label--step2"><span class="image-studio__step">2</span>Settings</p>`;
+
+  // What goes in: the Playbook's brand set (switch) + the user's own uploads.
+  const hasPlaybookRefs = Array.isArray(st.playbookRefs) && st.playbookRefs.length > 0;
+  const brandKit = hasPlaybookRefs ? brandKitGroup(st) : "";
+  const uploads = st.referenceImages.filter((r) => !r.fromPlaybook);
+  const uploadTiles = uploads.map(uploadRefTile).join("");
+  const refsGroup = collapsibleGroup(st, {
+    id: "refs",
+    label: "References",
+    summary: uploads.length ? `${uploads.length} added` : "None",
+    body: `${dropzone(st)}${uploadTiles ? `<div class="image-studio__refs">${uploadTiles}</div>` : ""}`,
+  });
 
   // Image type — what the image is for (hook / infographic / illustration). A
   // distinct dimension from the style; not tied to the reference images.
@@ -258,7 +239,7 @@ function composeGroups(st) {
     summary: styleLabel,
     body: `<div class="gen-style-grid">${stylePresetCards(st)}</div>`,
     disabled: hasUsedRefs,
-    disabledHint: "Guided by your reference images",
+    disabledHint: "From your references",
   });
 
   // Format — the collapsed summary is the picked ratio ("1:1 · Square"); the
@@ -315,5 +296,5 @@ function composeGroups(st) {
       ? `${outputChips}<p class="image-studio__subgroup-label">${countLabel}</p>${countChips}`
       : countChips,
   });
-  return `${eyebrow}${ingredients}${imageTypeGroup}${styleGroup}${formatGroup}${outputGroup}`;
+  return `${eyebrow}${brandKit}${refsGroup}${imageTypeGroup}${styleGroup}${formatGroup}${outputGroup}`;
 }

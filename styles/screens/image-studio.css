@@ -162,13 +162,7 @@
   padding: 0 var(--ref-spacing-md);
 }
 
-/* Row padding lives on the head, never on the wrapper — that's what keeps every
-   settings row (ingredient or collapsible) on the same 44px pitch. */
-.image-studio__group.is-collapsible > .image-studio__group-head {
-  padding-block: var(--ref-spacing-xs);
-}
-
-.image-studio__group.is-collapsible > .image-studio__group-body {
+.image-studio__group-body {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
@@ -176,9 +170,8 @@
 }
 
 /* The display:flex above would otherwise beat the [hidden] attribute's UA
-   display:none and every section would render open (same trap as the
-   Reference-images body further down). */
-.image-studio__group.is-collapsible > .image-studio__group-body[hidden] {
+   display:none and every section would render open. */
+.image-studio__group-body[hidden] {
   display: none;
 }
 
@@ -188,40 +181,50 @@
   gap: var(--ref-spacing-xxs);
 }
 
+/* ── The settings row ───────────────────────────────────────────────────── */
+/* Three columns, identical on every row, so the six settings share one left
+   edge, one value column and one right edge:
+     1  label — shrinks to content, ellipsis rather than wrap
+     2  value — takes the slack and right-aligns against the control
+     3  control — FIXED 32px, the DS toggle's exact width, so the chevrons and
+        the brand-kit switch land on the same axis even though each row is its
+        own grid (auto would size per-row and go ragged).
+   Row padding lives here, not on the wrapper: that's what keeps every row on
+   the same 44px pitch whether its control is a chevron or a switch. */
 .image-studio__group-head {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) 32px;
   align-items: center;
-  justify-content: space-between;
   gap: var(--ref-spacing-xs);
-}
-
-/* Collapsible section header — the whole bar toggles the section. */
-button.image-studio__group-head {
   width: 100%;
-  padding: 0;
+  padding: var(--ref-spacing-xs) 0;
   border: 0;
   background: none;
   font: inherit;
   color: inherit;
-  cursor: pointer;
   text-align: left;
+}
+
+button.image-studio__group-head {
+  cursor: pointer;
 }
 
 button.image-studio__group-head:disabled {
   cursor: default;
 }
 
-.image-studio__group-head-right {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  flex: none;
-}
-
+/* Column 3 — the trailing control. Both variants are pinned to the same right
+   edge and fill the same 32px slot. */
 .image-studio__group-chevron {
+  justify-self: end;
+  width: 16px;
   font-size: 16px;
   color: var(--ref-color-grey-60);
   transition: transform var(--ref-animation-short) var(--app-ease-out);
+}
+
+.image-studio__group-switch {
+  justify-self: end;
 }
 
 /* Chevron points down when collapsed, flips up when the section is open. */
@@ -229,16 +232,24 @@ button.image-studio__group-head:disabled {
   transform: rotate(180deg);
 }
 
-/* Disabled section (e.g. Visual style while references drive the look). */
+/* Disabled section (Style preset while references drive the look). */
 .image-studio__group.is-disabled .image-studio__group-label {
   color: var(--ref-color-grey-40);
 }
 
-/* Sits where a value would, on a section that can't be opened — so it takes the
-   tier-3 treatment, just italic and one step lighter to read as "not a value". */
+/* Sits in the value column on a row that can't be opened. It's a reason, not a
+   setting, so it drops to caption — at body size it out-shouted the real values
+   and pushed its own label into a second line. Spans the control column too:
+   there's no chevron to leave room for. */
 .image-studio__group-note {
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
+  grid-column: 2 / -1;
+  justify-self: end;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
   color: var(--ref-color-grey-60);
   font-style: italic;
 }
@@ -252,25 +263,21 @@ button.image-studio__group-head:disabled {
    Size + weight + colour + case separate 1 from 2; weight + colour separate 2
    from 3 — no lever is doing double duty. */
 
-/* Tier 2 — group label. */
+/* Tier 2 — group label. Never wraps: the rail narrows to 320px and a two-line
+   label breaks the row pitch (this is what "Brand kit · Acme" was doing). */
 .image-studio__group-label {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
   margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-size: var(--sys-text-style-h4-size);
   line-height: var(--sys-text-style-h4-line-height);
   font-weight: var(--sys-text-style-h4-weight);
   color: var(--sys-text-color-default);
-}
-
-/* Tier 3 — the meta on the right of each header (value / hint): same size as its
-   label, but regular and lighter, so the pair reads label-then-value. */
-.image-studio__group-head-right {
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  font-weight: var(--sys-text-style-body-weight);
-  color: var(--sys-text-color-light);
 }
 
 .image-studio__count {
@@ -279,11 +286,11 @@ button.image-studio__group-head:disabled {
   color: var(--ref-color-grey-60);
 }
 
-/* Current-value summary shown at the right of a collapsed section header — the
-   de-emphasized value beside its label, so a folded section still reads. */
+/* Tier 3 — the current value, column 2. Right-aligned against the control so
+   every row's value ends on the same axis; ellipsis rather than push the label. */
 .image-studio__group-summary {
+  justify-self: end;
   min-width: 0;
-  max-width: 180px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -1946,107 +1953,6 @@ button.image-studio__ref--pick:focus-visible {
 .image-studio__group-label--step2 {
   padding: var(--ref-spacing-sm) var(--ref-spacing-md) 0;
   margin-bottom: 0;
-}
-
-/* The two ingredient rows are peers of the four setting groups below them, so
-   they sit on the same pitch: the row padding lives on each head, not on the
-   wrapper, and there's no extra gap stacking on top of it. */
-.image-studio__group--ingredients {
-  padding-block: 0;
-  gap: 0;
-}
-
-.image-studio__ingredients {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Flat sub-blocks (no per-card border) — the panel's section rhythm already
-   separates them, so nesting a bordered card only added visual weight. */
-.image-studio__ingredient-head {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  width: 100%;
-  padding: var(--ref-spacing-xs) 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  text-align: left;
-}
-
-button.image-studio__ingredient-head {
-  cursor: pointer;
-}
-
-/* Brand kit's head can't be one button — the DS switch inside it is interactive
-   content. The title half is the collapse control; the switch is its sibling. */
-.image-studio__ingredient-name {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-/* Kit switched off — the section can't open, so the row reads as inert. */
-.image-studio__ingredient-name:disabled {
-  cursor: default;
-}
-
-.image-studio__ingredient-name:disabled .image-studio__ingredient-title {
-  color: var(--ref-color-grey-60);
-}
-
-.image-studio__ingredient-icon {
-  flex: none;
-  font-size: 16px;
-  color: var(--ref-color-grey-60);
-}
-
-/* Tier 2 — same treatment as .image-studio__group-label: these rows are peers of
-   Image type / Format / Output, so they must not read as a different level. */
-.image-studio__ingredient-title {
-  flex: 1;
-  min-width: 0;
-  font-size: var(--sys-text-style-h4-size);
-  line-height: var(--sys-text-style-h4-line-height);
-  font-weight: var(--sys-text-style-h4-weight);
-  color: var(--sys-text-color-default);
-}
-
-.image-studio__ingredient-toggle {
-  flex: none;
-}
-
-.image-studio__ingredient .image-studio__group-chevron {
-  flex: none;
-  transition: transform var(--ref-animation-short) var(--app-ease-out);
-}
-
-.image-studio__ingredient:not(.is-collapsed) .image-studio__group-chevron {
-  transform: rotate(180deg);
-}
-
-.image-studio__ingredient-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  padding-bottom: var(--ref-spacing-xs);
-}
-
-/* Collapsed → actually hide: the display:flex above would otherwise beat the
-   [hidden] attribute's UA display:none, so the Reference-images body never
-   collapsed. */
-.image-studio__ingredient-body[hidden] {
-  display: none;
 }
 
 /* Compact single-row drop target: a dashed bar (icon + two-line label) that is

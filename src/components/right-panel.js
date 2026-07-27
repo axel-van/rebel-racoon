@@ -43,7 +43,7 @@ import { iconFor } from "../file-kinds.js?v=20";
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
 import { open as openScheduleModal } from "./schedule-modal.js?v=54";
-import { open as openImageStudioModal } from "./image-studio/index.js?v=38";
+import { open as openImageStudioModal } from "./image-studio/index.js?v=39";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
