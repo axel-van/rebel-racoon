@@ -152,14 +152,26 @@
 }
 
 /* ── Left-panel groups (generate mode) ──────────────────────────────────── */
-/* Settings rows share ONE rhythm. No per-row divider: six full-width rules made
-   six peers out of what is a two-level structure (step eyebrow → its settings).
-   The only rule in the panel separates step 1 from step 2 (see --prompt below);
-   inside a step, spacing does the grouping. */
+/* Settings rows share ONE rhythm. */
 .image-studio__group {
   display: flex;
   flex-direction: column;
   padding: 0 var(--ref-spacing-md);
+}
+
+/* A hairline between rows — needed once a row can expand, because an open body
+   would otherwise run straight into the next label with nothing closing it off.
+   INSET (it's a flex child, so the group's 24px padding insets it for free) so
+   it reads as a list separator, not a section rule: the panel's one FULL-BLEED
+   rule belongs to the step-1/step-2 boundary (see --prompt below), and keeping
+   the two weights apart is what stops six rows flattening into six peers.
+   The `+` doesn't reach across the step-2 eyebrow <p>, so the first settings row
+   correctly has no rule above it. */
+.image-studio__group + .image-studio__group::before {
+  content: "";
+  flex: none;
+  height: 1px;
+  background: var(--app-border-soft);
 }
 
 .image-studio__group-body {
