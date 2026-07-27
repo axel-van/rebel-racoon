@@ -14,14 +14,14 @@
 // suggestions, editingId, onComplete }.
 
 import * as inlineQuestion from "./inline-question.js?v=48";
-import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=58";
-import * as rightPanel from "./components/right-panel.js?v=351";
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=37";
-import { analyzeWebsite } from "./context-mock-analysis.js?v=24";
-import { connectors as connectorMocks } from "./mocks.js?v=56";
-import { getConnectedProfiles, buildConnectedProfileItems, PROFILE_SEARCH_THRESHOLD } from "./social-profiles.js?v=26";
+import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=59";
+import * as rightPanel from "./components/right-panel.js?v=352";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=38";
+import { analyzeWebsite } from "./context-mock-analysis.js?v=25";
+import { connectors as connectorMocks } from "./mocks.js?v=57";
+import { getConnectedProfiles, buildConnectedProfileItems, PROFILE_SEARCH_THRESHOLD } from "./social-profiles.js?v=27";
 import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1";
-import { isFlagOn } from "./feature-flags.js?v=10";
+import { isFlagOn } from "./feature-flags.js?v=11";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -65,6 +65,10 @@ function emptyDraft(overrides = {}) {
     brandTypography: null, // { headingFont, bodyFont }
     brandColors: [], // Array<{ name, hex }>
     referenceImages: [], // Array<{ id, label, url, note?, networks? }> — note/networks = optional usage guidance
+    // Competitors — Array<{ id, name, description, websiteUrl, socials:[{network,url}], logo?, suggested? }>.
+    // Pre-filled from the website analysis (each flagged `suggested`), then
+    // curated by the user in the Playbook's Competitors section.
+    competitors: [],
     sourceType: null, // "website" | "documents" | "social"
     sourceUrl: "",
     sourceFile: null,
@@ -135,6 +139,14 @@ export function sectionPatchFromAnalysis(analysis) {
     brandPersonality: s.brandPersonality || "",
     brandTypography: s.brandTypography ? { ...s.brandTypography } : null,
     brandColors: (s.brandColors || []).map((c) => ({ ...c })),
+    // Competitors Archie found on the brand's market — pre-filled and flagged
+    // `suggested` so the Playbook shows where they came from. The user prunes
+    // or adds to them in the Competitors section.
+    competitors: (s.competitors || []).map((c) => ({
+      ...c,
+      socials: Array.isArray(c.socials) ? c.socials.map((x) => ({ ...x })) : [],
+      suggested: true,
+    })),
   };
 }
 
@@ -795,6 +807,11 @@ export function save(sessionId) {
     brandColors: Array.isArray(d.brandColors) ? d.brandColors.map((c) => ({ ...c })) : [],
     referenceImages: Array.isArray(d.referenceImages)
       ? d.referenceImages.map((i) => ({ ...i, networks: Array.isArray(i.networks) ? [...i.networks] : [] }))
+      : [],
+    // Competitors survive the save with their provenance flag — the store
+    // deep-copies the nested socials and stamps missing ids.
+    competitors: Array.isArray(d.competitors)
+      ? d.competitors.map((c) => ({ ...c, socials: Array.isArray(c.socials) ? c.socials.map((s) => ({ ...s })) : [] }))
       : [],
     updatedAt: "just now",
   };

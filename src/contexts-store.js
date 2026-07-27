@@ -17,7 +17,7 @@
 // chooses "Save as global". updateContext is used by the section-edit flow
 // when scope is "Update everywhere".
 
-import { contexts as seed } from "./mocks.js?v=56";
+import { contexts as seed } from "./mocks.js?v=57";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import {
@@ -41,6 +41,23 @@ const notify = () => notifier.notify(getContexts());
 function freshId() {
   // Stable-enough id for the proto: "ctx-" + base36 timestamp + random suffix.
   return `ctx-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+// Competitors carry a nested socials array, so a shallow copy isn't enough —
+// clone both levels and stamp an id on entries that arrive without one (the
+// mock analysis and the mocks seed them without).
+let competitorSeq = 0;
+function normalizeCompetitors(list) {
+  if (!Array.isArray(list)) return [];
+  return list.map((c) => ({
+    ...c,
+    id: c.id || `cmp-${(competitorSeq += 1)}`,
+    name: c.name || "",
+    description: c.description || "",
+    websiteUrl: c.websiteUrl || "",
+    logo: c.logo || "",
+    socials: Array.isArray(c.socials) ? c.socials.map((s) => ({ ...s })) : [],
+  }));
 }
 
 export function getContexts() {
@@ -129,6 +146,8 @@ export function addContext(ctx = {}) {
     referenceImages: Array.isArray(ctx.referenceImages)
       ? ctx.referenceImages.map((i) => ({ ...i, networks: Array.isArray(i.networks) ? [...i.networks] : [] }))
       : [],
+    // — competitors (name / description / website / social profiles / logo) —
+    competitors: normalizeCompetitors(ctx.competitors),
     // — meta —
     usedIn: typeof ctx.usedIn === "number" ? ctx.usedIn : 0,
     updatedAt: ctx.updatedAt || "just now",
@@ -199,6 +218,7 @@ export function updateContext(id, patch) {
   if (patch.brandTypography !== undefined) c.brandTypography = patch.brandTypography;
   if (patch.brandColors !== undefined) c.brandColors = patch.brandColors;
   if (patch.referenceImages !== undefined) c.referenceImages = patch.referenceImages;
+  if (patch.competitors !== undefined) c.competitors = normalizeCompetitors(patch.competitors);
   // — multilingual fields —
   if (patch.languages !== undefined)
     c.languages = Array.isArray(patch.languages) ? patch.languages.slice() : patch.languages;

@@ -1,15 +1,16 @@
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=213";
+import { renderTopbar } from "../components/topbar.js?v=214";
 import {
   getContexts,
   subscribe as subscribeContexts,
   duplicateContext,
   deleteContext,
-} from "../contexts-store.js?v=37";
+} from "../contexts-store.js?v=38";
 import { navigate } from "../router.js?v=30";
 import { setHandoff } from "../handoff.js?v=20";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
+import { isFlagOn } from "../feature-flags.js?v=11";
 
 // Contexts library — standalone page (handoff §2.4).
 // Header → search → grid of ContextCards. Each card surfaces brand /
@@ -144,6 +145,10 @@ function renderContextCard(ctx) {
     ctx.voiceProfile?.headline ||
     (Array.isArray(ctx.tones) && ctx.tones.length ? ctx.tones.join(" · ").toLowerCase() : "");
   const audienceCount = Array.isArray(ctx.audience) ? ctx.audience.length : ctx.audience ? 1 : 0;
+  // Competitors ride along in the data whatever the flag says, so gate the
+  // counter on the flag rather than on the count alone.
+  const competitorCount =
+    isFlagOn("playbookCompetitors") && Array.isArray(ctx.competitors) ? ctx.competitors.length : 0;
   const usedIn = ctx.usedIn || 0;
   // Brand color preview — first website's primary / accent / link from
   // imageVoice, up to 3 dots. Matches the "people avatars" affordance
@@ -211,6 +216,14 @@ function renderContextCard(ctx) {
               ? `<span class="contexts-card__counter" title="${audienceCount} ${audienceCount === 1 ? "audience" : "audiences"}">
                   <i class="ap-icon-target"></i>
                   <span>${audienceCount}</span>
+                </span>`
+              : ""
+          }
+          ${
+            competitorCount
+              ? `<span class="contexts-card__counter" title="${competitorCount} ${competitorCount === 1 ? "competitor" : "competitors"}">
+                  <i class="ap-icon-buildings"></i>
+                  <span>${competitorCount}</span>
                 </span>`
               : ""
           }

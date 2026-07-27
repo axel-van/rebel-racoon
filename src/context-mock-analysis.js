@@ -107,6 +107,59 @@ const AGORAPULSE = {
     languages: ["English"],
     primaryLanguage: "English",
     color: "orange",
+    competitors: [
+      {
+        name: "Hootsuite",
+        description:
+          "The incumbent. Broadest network coverage and enterprise footprint, but a heavier, pricier suite that smaller teams outgrow the budget for.",
+        websiteUrl: "https://hootsuite.com",
+        socials: [
+          { network: "linkedin", url: "https://linkedin.com/company/hootsuite" },
+          { network: "x", url: "https://x.com/hootsuite" },
+          { network: "instagram", url: "https://instagram.com/hootsuite" },
+        ],
+      },
+      {
+        name: "Buffer",
+        description:
+          "Simple, affordable scheduling with a strong creator following. Light on inbox, listening and agency reporting.",
+        websiteUrl: "https://buffer.com",
+        socials: [
+          { network: "linkedin", url: "https://linkedin.com/company/bufferapp" },
+          { network: "x", url: "https://x.com/buffer" },
+        ],
+      },
+      {
+        name: "Sprout Social",
+        description:
+          "Premium analytics and social listening aimed at larger in-house teams. Frequently the head-to-head in agency deals.",
+        websiteUrl: "https://sproutsocial.com",
+        socials: [
+          { network: "linkedin", url: "https://linkedin.com/company/sprout-social-inc-" },
+          { network: "x", url: "https://x.com/sproutsocial" },
+        ],
+      },
+      {
+        name: "Later",
+        description:
+          "Visual-first planning built around Instagram and TikTok. Popular with ecommerce and creator-led brands.",
+        websiteUrl: "https://later.com",
+        socials: [
+          { network: "instagram", url: "https://instagram.com/latermedia" },
+          { network: "tiktok", url: "https://tiktok.com/@later" },
+        ],
+      },
+      {
+        name: "Sendible",
+        description:
+          "Agency-focused scheduling and white-label reporting at a mid-market price. Closest positioning on agency workflows.",
+        websiteUrl: "https://sendible.com",
+        socials: [
+          { network: "linkedin", url: "https://linkedin.com/company/sendible" },
+          { network: "x", url: "https://x.com/sendible" },
+        ],
+      },
+    ],
     imageVoice: {
       websites: [
         {
@@ -206,6 +259,30 @@ const GENERIC = {
     languages: ["English"],
     primaryLanguage: "English",
     color: "blue",
+    // Placeholder competitor set — like every other GENERIC field, it's a
+    // usable template the user edits rather than a real market read.
+    competitors: [
+      {
+        name: "The category incumbent",
+        description:
+          "The best-known name in the category. Broadest feature set, highest price, and the one prospects benchmark you against.",
+        websiteUrl: "",
+        socials: [],
+      },
+      {
+        name: "The low-cost challenger",
+        description: "Cheaper and simpler. Wins on price with smaller teams and loses on depth once they scale.",
+        websiteUrl: "",
+        socials: [],
+      },
+      {
+        name: "The niche specialist",
+        description:
+          "Narrower than you but excellent at one job. Comes up whenever a prospect cares most about that one thing.",
+        websiteUrl: "",
+        socials: [],
+      },
+    ],
     imageVoice: {
       websites: [
         {
@@ -335,6 +412,40 @@ export function analyzeDocument(file) {
     headline: "Professional · clear · helpful",
   };
   return generic;
+}
+
+/**
+ * Identity of a competitor for dedupe purposes — its domain when it has a
+ * website, else its lowercased name (the GENERIC placeholders ship no URL).
+ */
+function competitorKey(c) {
+  return (
+    deriveDomain(c?.websiteUrl || "") ||
+    String(c?.name || "")
+      .trim()
+      .toLowerCase() ||
+    ""
+  );
+}
+
+/**
+ * Mock "competitor discovery" for a brand's website. Returns the entries from
+ * that brand's competitor pool that aren't already known, so a repeat scan is
+ * idempotent and only ever adds what's new.
+ *
+ * @param {string} url                      the Playbook's website URL
+ * @param {{ exclude?: object[] }} options   competitors already on the Playbook
+ * @returns {object[]} fresh competitors, each flagged `suggested: true`
+ */
+export function discoverCompetitors(url, { exclude = [] } = {}) {
+  const pool = clone(analyzeWebsite(url).suggestions.competitors || []);
+  const known = new Set((Array.isArray(exclude) ? exclude : []).map(competitorKey).filter(Boolean));
+  return pool.filter((c) => {
+    const key = competitorKey(c);
+    if (!key || known.has(key)) return false;
+    known.add(key); // guard against duplicates inside the pool itself
+    return true;
+  });
 }
 
 function deriveDomain(url) {

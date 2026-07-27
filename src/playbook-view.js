@@ -15,10 +15,10 @@
 // is safe because only one route renders at a time.
 
 import { html, raw, escapeHtml as esc } from "./utils.js?v=21";
-import { analyzeWebsite } from "./context-mock-analysis.js?v=24";
+import { analyzeWebsite, discoverCompetitors } from "./context-mock-analysis.js?v=25";
 import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1";
-import { isFlagOn } from "./feature-flags.js?v=10";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=26";
+import { isFlagOn } from "./feature-flags.js?v=11";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=27";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -34,11 +34,28 @@ const LINE_FIELDS = [
   { key: "closingPatterns", label: "Closing patterns", placeholder: "A line that often ends a post…" },
 ];
 
+// Competitors is appended LAST on purpose: the panel renderers address the
+// first three positionally (SECTIONS[0..2]), and it reads as the least core
+// section — market context after audience, voice and brand.
 const SECTIONS = [
   { id: "pbk-sec-goals", scope: "goals", icon: "ap-icon-target", title: "Audience & goals" },
   { id: "pbk-sec-voice", scope: "voice", icon: "ap-icon-quote", title: "Voice & style" },
   { id: "pbk-sec-brand", scope: "brand", icon: "ap-icon-image", title: "Brand" },
+  { id: "pbk-sec-competitors", scope: "competitors", icon: "ap-icon-buildings", title: "Competitors" },
 ];
+
+// Competitors are gated behind a feature flag (default OFF). When OFF the
+// section and its rail entry disappear; the underlying data still rides along
+// (the website analysis pre-fills it), exactly like multilingualPlaybook.
+function competitorsOn() {
+  return isFlagOn("playbookCompetitors");
+}
+
+// The sections this Playbook actually shows — drives the rail nav and the
+// panels, so gating happens in one place.
+function sectionsFor() {
+  return competitorsOn() ? SECTIONS : SECTIONS.filter((s) => s.scope !== "competitors");
+}
 
 // Edit-mode guidance. Surfaced only while a section is being edited (one at a
 // time), so the read view stays clean. Audience & goals gets a per-field hint
@@ -84,15 +101,23 @@ const SECTION_HINTS = {
     q: "Visual identity",
     a: "Archie picked these up from your site so visuals stay on-brand.",
   },
+  competitors: {
+    q: "Who you're up against",
+    a: "Archie found these on your market. Prune the ones that don't matter and add the ones it missed.",
+  },
 };
 
 const STAGE_MS = 2400;
 
 let mountTarget = null;
 let cfg = null;
-let editScope = null; // null (read) | "goals" | "voice" | "brand"
+let editScope = null; // null (read) | "goals" | "voice" | "brand" | "competitors"
 let refModalIndex = null; // open reference-image detail modal (index) or null
-let refModalHost = null; // body-level portal node for the reference-image modal
+let cmpModalIndex = null; // open competitor detail modal (index) or null
+let cmpScanning = false; // "Discover competitors" scan in flight
+let cmpScanTimer = null; // the scan's pending timeout
+let cmpScanFoundNone = false; // last scan returned nothing new (show the note)
+let refModalHost = null; // body-level portal node for the open detail modal
 let snapshot = null; // deep copy of editable fields, for Cancel
 let audienceCustom = false; // "Other…" picked in the Primary audience dropdown
 let activeVoiceLang = null; // which language the Voice & style panel is showing/editing
@@ -126,6 +151,9 @@ export function mount(target, config) {
   editScope = null;
   snapshot = null;
   audienceCustom = false;
+  cmpModalIndex = null;
+  cmpScanning = false;
+  cmpScanFoundNone = false;
 
   if (cfg.loader && !cfg.skipLoader) {
     phase = "loading";
@@ -141,23 +169,32 @@ export function mount(target, config) {
   const onInputH = (e) => onInput(e);
   const onChangeH = (e) => onChange(e);
   const onKeydownH = (e) => onKeydown(e);
+  const onErrorH = (e) => onLoadError(e);
   target.addEventListener("click", onClickH);
   target.addEventListener("input", onInputH);
   target.addEventListener("change", onChangeH);
   target.addEventListener("keydown", onKeydownH);
+  // Competitor favicons come from a remote service, so a domain with no icon
+  // (or an offline session) has to fall back to the monogram tile. `error`
+  // doesn't bubble, so this listener has to run in the CAPTURE phase — that's
+  // what lets us keep the repo's "delegated handlers, no inline on*" rule.
+  target.addEventListener("error", onErrorH, true);
 
   return () => {
     stopLoading();
+    stopCompetitorScan();
     detachScrollSpy();
     target.removeEventListener("click", onClickH);
     target.removeEventListener("input", onInputH);
     target.removeEventListener("change", onChangeH);
     target.removeEventListener("keydown", onKeydownH);
+    target.removeEventListener("error", onErrorH, true);
     if (refModalHost) {
       refModalHost.remove();
       refModalHost = null;
     }
     refModalIndex = null;
+    cmpModalIndex = null;
     mountTarget = null;
     cfg = null;
     editScope = null;
@@ -299,6 +336,7 @@ export function snapshotEditable(d) {
       brandTypography: d.brandTypography || null,
       brandColors: d.brandColors || [],
       referenceImages: d.referenceImages || [],
+      competitors: d.competitors || [],
     }),
   );
 }
@@ -1132,8 +1170,336 @@ function renderBrandPanel(data, edit) {
   `;
 }
 
-// Reference images — a dedicated section (own rail link). Archie pulls these
-// into the image generator; the user picks which ones to use per generation.
+// ── Competitors ────────────────────────────────────────────────────────
+//
+// The market the brand is measured against. Archie pre-fills the list from the
+// website analysis (each entry flagged `suggested`) and can scan for more on
+// demand; the user prunes it and adds the ones Archie missed.
+//
+// A competitor's logo is never stored — it's resolved from its domain through a
+// favicon service at render time, with a monogram tile as the fallback (wired
+// by the capturing `error` listener in mount()).
+
+const MAX_COMPETITORS = 12;
+const CMP_SCAN_MS = 1600;
+
+function competitorDomain(c) {
+  const raw = (c?.websiteUrl || "").trim();
+  if (!raw) return "";
+  try {
+    return new URL(raw.startsWith("http") ? raw : `https://${raw}`).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+function competitorLogoUrl(c) {
+  if (c?.logo) return c.logo;
+  const domain = competitorDomain(c);
+  return domain ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64` : "";
+}
+
+// Deterministic monogram tint so a competitor keeps the same colour across
+// repaints. Reuses the reference-image hash + HSL helpers rather than adding
+// a second bit of colour maths to this file.
+function competitorAccent(c) {
+  const key = (c?.name || competitorDomain(c) || "competitor").toLowerCase();
+  const h = hashStr(key);
+  return hslToHex(h % 360, 44 + ((h >> 5) % 26), 42);
+}
+
+// Monogram letter. A leading article is skipped so names like "The category
+// incumbent" / "The low-cost challenger" don't all read as the same "T".
+function competitorInitial(c) {
+  const source = (c?.name || competitorDomain(c) || "").trim().replace(/^(the|a|an)\s+/i, "");
+  return (source.charAt(0) || "?").toUpperCase();
+}
+
+function competitorList(data) {
+  if (!Array.isArray(data.competitors)) data.competitors = [];
+  return data.competitors;
+}
+
+// Logo tile — the remote favicon plus a monogram twin that onLoadError reveals
+// when the favicon can't load (domain with no icon, blocked request, offline).
+// A competitor with no website has nothing to resolve, so it renders monogram-only.
+function renderCompetitorLogo(c, size = 36) {
+  const px = Number(size) || 36;
+  const url = competitorLogoUrl(c);
+  const mono = `<span class="recap__cmp-logo recap__cmp-logo--mono${url ? " is-hidden" : ""}" style="--cmp-accent:${esc(
+    competitorAccent(c),
+  )};--cmp-logo-size:${px}px;" aria-hidden="true">${esc(competitorInitial(c))}</span>`;
+  if (!url) return mono;
+  return `<img class="recap__cmp-logo" src="${esc(
+    url,
+  )}" alt="" width="${px}" height="${px}" loading="lazy" style="--cmp-logo-size:${px}px;" data-recap-cmp-logo />${mono}`;
+}
+
+// Read-only network badges for a competitor's social profiles. Rendered as
+// plain icons on the card (which is itself a button — no nested links) and as
+// real links in the modal.
+function competitorSocials(c) {
+  return (Array.isArray(c?.socials) ? c.socials : []).filter((s) => s && NETWORK_ICON_BY_PLATFORM[s.network]);
+}
+
+function renderCompetitorNetIcons(c) {
+  const socials = competitorSocials(c);
+  if (!socials.length) return "";
+  return `<span class="recap__cmp-nets">${socials
+    .map((s) => {
+      const label = esc(NETWORK_LABEL[s.network] || s.network);
+      return `<i class="${NETWORK_ICON_BY_PLATFORM[s.network]}" title="${label}" aria-label="${label}"></i>`;
+    })
+    .join("")}</span>`;
+}
+
+function renderCompetitorNetLinks(c) {
+  const socials = competitorSocials(c);
+  if (!socials.length) return `<span class="recap__cmpmodal-empty">No social profiles yet.</span>`;
+  return `<span class="recap__cmp-netlinks">${socials
+    .map((s) => {
+      const label = esc(NETWORK_LABEL[s.network] || s.network);
+      return `<a class="recap__cmp-netlink" href="${esc(
+        s.url,
+      )}" target="_blank" rel="noopener noreferrer" title="${label}"><i class="${
+        NETWORK_ICON_BY_PLATFORM[s.network]
+      }" aria-hidden="true"></i><span>${label}</span></a>`;
+    })
+    .join("")}</span>`;
+}
+
+function renderCompetitorCard(c, i, edit) {
+  const domain = competitorDomain(c);
+  const desc = (c.description || "").trim();
+  return `
+    <div class="recap__cmpcard">
+      <button type="button" class="recap__cmpcard-open" data-recap-cmp-open="${i}" aria-label="${
+        edit ? "Edit" : "View"
+      } ${esc(c.name || "competitor")} details">
+        <span class="recap__cmpcard-head">
+          ${renderCompetitorLogo(c, 36)}
+          <span class="recap__cmpcard-id">
+            <span class="recap__cmpcard-name">${esc(c.name || "Untitled competitor")}</span>
+            ${domain ? `<span class="recap__cmpcard-domain">${esc(domain)}</span>` : ""}
+          </span>
+        </span>
+        <span class="recap__cmpcard-desc${desc ? "" : " recap__cmpcard-desc--empty"}">${
+          desc ? esc(desc) : "No description yet"
+        }</span>
+        <span class="recap__cmpcard-foot">
+          ${renderCompetitorNetIcons(c)}
+          ${
+            c.suggested
+              ? `<span class="ap-tag grey mini recap__cmp-badge" title="Found by Archie on your market"><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Suggested</span></span>`
+              : ""
+          }
+        </span>
+      </button>
+      ${
+        edit
+          ? `<button type="button" class="recap__refimg-remove recap__cmpcard-remove" data-recap-cmp-remove="${i}" aria-label="Remove ${esc(
+              c.name || "competitor",
+            )}"><i class="ap-icon-close"></i></button>`
+          : ""
+      }
+    </div>`;
+}
+
+// Scan-in-flight state, scoped to this panel — the whole-Playbook staged loader
+// would be far too heavy for a single-section action.
+function renderCompetitorScan() {
+  const skeletons = [0, 1, 2]
+    .map(
+      () => `
+      <div class="recap__cmpcard recap__cmpcard--skeleton" aria-hidden="true">
+        <span class="recap__cmpskel recap__cmpskel--logo"></span>
+        <span class="recap__cmpskel recap__cmpskel--line"></span>
+        <span class="recap__cmpskel recap__cmpskel--line is-short"></span>
+      </div>`,
+    )
+    .join("");
+  return `
+    <p class="recap__cmp-scanning" role="status">
+      <span class="archie-loader" aria-hidden="true"></span>
+      <span>Scanning your market for competitors…</span>
+    </p>
+    <div class="recap__cmpgrid">${skeletons}</div>`;
+}
+
+function renderCompetitorsPanel(data, edit) {
+  const section = SECTIONS[3];
+  const list = competitorList(data);
+  const grid = (editing) =>
+    `<div class="recap__cmpgrid">${list.map((c, i) => renderCompetitorCard(c, i, editing)).join("")}</div>`;
+
+  // The panel body is a flex column of padded .recap__row blocks; this section
+  // has no label→value rows, so its content gets its own padded wrapper.
+  let hint = "";
+  let inner;
+  if (cmpScanning) {
+    inner = renderCompetitorScan();
+  } else if (edit) {
+    hint = renderSectionHint(SECTION_HINTS.competitors);
+    inner = [
+      list.length
+        ? grid(true)
+        : `<p class="recap__cmp-empty">No competitors yet. Add the ones you know — Archie can find the rest.</p>`,
+      list.length < MAX_COMPETITORS
+        ? `<button type="button" class="ap-button secondary blue recap__add-row" data-recap-cmp-add>
+             <i class="ap-icon-plus"></i><span>Add competitor</span>
+           </button>`
+        : "",
+    ].join("");
+  } else {
+    inner =
+      (list.length
+        ? grid(false)
+        : `<p class="recap__cmp-empty">No competitors yet — Archie can scan your market and suggest a few.</p>`) +
+      (cmpScanFoundNone
+        ? `<p class="recap__cmp-note"><i class="ap-icon-info" aria-hidden="true"></i><span>No new competitors found. Add one by hand instead.</span></p>`
+        : "");
+  }
+  const body = `${hint}<div class="recap__cmpsec">${inner}</div>`;
+
+  const discoverBtn =
+    !edit && !cmpScanning
+      ? `<button type="button" class="ap-button ghost grey recap__panel-action" data-recap-cmp-discover>
+           <i class="ap-icon-sparkles" aria-hidden="true"></i>
+           <span>${list.length ? "Discover more" : "Discover competitors"}</span>
+         </button>`
+      : "";
+
+  return `
+    <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" ${
+      edit ? "data-recap-editing-card" : ""
+    }>
+      ${renderPanelHead(section, edit, discoverBtn)}
+      <div class="recap__panel-body">${body}</div>
+    </section>
+  `;
+}
+
+// Per-competitor detail modal — the card stays a summary, everything editable
+// (name, website, description, social profiles) lives here. Editable while the
+// Competitors section is in edit scope, read-only otherwise; same rule as the
+// reference-image modal.
+function renderCompetitorModal(data) {
+  if (cmpModalIndex == null) return "";
+  const list = competitorList(data);
+  const c = list[cmpModalIndex];
+  if (!c) return "";
+  const i = cmpModalIndex;
+  const edit = editScope === "competitors";
+  const domain = competitorDomain(c);
+
+  const nameBlock = edit
+    ? `<div class="ap-input-group">
+         <input type="text" data-recap-cmp-field="name" data-recap-cmp-index="${i}" value="${esc(
+           c.name || "",
+         )}" placeholder="Competitor name" aria-label="Competitor name" />
+       </div>`
+    : `<p class="recap__cmpmodal-value">${esc(c.name || "Untitled competitor")}</p>`;
+
+  const siteBlock = edit
+    ? `<div class="ap-input-group">
+         <input type="text" data-recap-cmp-field="websiteUrl" data-recap-cmp-index="${i}" value="${esc(
+           c.websiteUrl || "",
+         )}" placeholder="https://competitor.com" aria-label="Website" spellcheck="false" />
+       </div>`
+    : domain
+      ? `<a class="recap__cmpmodal-link" href="${esc(
+          c.websiteUrl,
+        )}" target="_blank" rel="noopener noreferrer"><i class="ap-icon-link" aria-hidden="true"></i><span>${esc(
+          domain,
+        )}</span><i class="ap-icon-external-link" aria-hidden="true"></i></a>`
+      : `<span class="recap__cmpmodal-empty">No website yet.</span>`;
+
+  const descBlock = edit
+    ? `<div class="ap-textarea-field resizable">
+         <textarea data-recap-cmp-field="description" data-recap-cmp-index="${i}" rows="4" placeholder="How they position, who they win with, where you differ…" aria-label="Description">${esc(
+           c.description || "",
+         )}</textarea>
+       </div>`
+    : (c.description || "").trim()
+      ? `<p class="recap__cmpmodal-note">${esc(c.description)}</p>`
+      : `<p class="recap__cmpmodal-empty">No description yet.</p>`;
+
+  const socials = Array.isArray(c.socials) ? c.socials : [];
+  const socialsBlock = edit
+    ? `<div class="recap__cmp-socialedit">
+         ${socials
+           .map((s, si) => {
+             const options = REF_NETWORKS.map(
+               (n) =>
+                 `<option value="${n}"${s.network === n ? " selected" : ""}>${esc(NETWORK_LABEL[n] || n)}</option>`,
+             ).join("");
+             return `
+             <div class="recap__cmp-socialrow">
+               <select class="ap-native-select recap__cmp-socialnet" data-recap-cmp-social-network data-recap-cmp-index="${i}" data-recap-cmp-social-index="${si}" aria-label="Network">
+                 ${options}
+               </select>
+               <div class="ap-input-group recap__cmp-socialurl">
+                 <input type="text" data-recap-cmp-social-url data-recap-cmp-index="${i}" data-recap-cmp-social-index="${si}" value="${esc(
+                   s.url || "",
+                 )}" placeholder="https://…" aria-label="Profile URL" spellcheck="false" />
+               </div>
+               <button type="button" class="recap__cta-remove" data-recap-cmp-social-remove data-recap-cmp-index="${i}" data-recap-cmp-social-index="${si}" aria-label="Remove profile">
+                 <i class="ap-icon-close"></i>
+               </button>
+             </div>`;
+           })
+           .join("")}
+         <button type="button" class="ap-button secondary blue recap__add-row" data-recap-cmp-social-add="${i}">
+           <i class="ap-icon-plus"></i><span>Add profile</span>
+         </button>
+       </div>`
+    : renderCompetitorNetLinks(c);
+
+  const removeBtn = edit
+    ? `<button type="button" class="ap-button transparent grey" data-recap-cmp-remove="${i}"><i class="ap-icon-trash"></i><span>Remove competitor</span></button>`
+    : "";
+
+  return `
+  <div class="app-modal-backdrop recap__cmpmodal-backdrop" data-recap-cmpmodal-backdrop>
+    <aside class="ap-dialog recap__cmpmodal" role="dialog" aria-modal="true" aria-label="Competitor">
+      <div class="ap-dialog-header"><span class="ap-dialog-title">Competitor</span></div>
+      <button type="button" class="ap-dialog-close" data-recap-cmp-close aria-label="Close"><i class="ap-icon-close"></i></button>
+      <div class="ap-dialog-content recap__cmpmodal-content">
+        <div class="recap__cmpmodal-id">
+          ${renderCompetitorLogo(c, 48)}
+          ${
+            c.suggested
+              ? `<span class="ap-tag grey mini recap__cmp-badge" title="Found by Archie on your market"><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Suggested</span></span>`
+              : ""
+          }
+        </div>
+        <div class="recap__cmpmodal-sec">
+          <span class="recap__refedit-flabel">Name</span>
+          ${nameBlock}
+        </div>
+        <div class="recap__cmpmodal-sec">
+          <span class="recap__refedit-flabel">Website</span>
+          ${siteBlock}
+        </div>
+        <div class="recap__cmpmodal-sec">
+          <span class="recap__refedit-flabel">Description</span>
+          ${descBlock}
+        </div>
+        <div class="recap__cmpmodal-sec">
+          <span class="recap__refedit-flabel">Social profiles</span>
+          ${socialsBlock}
+        </div>
+      </div>
+      <div class="ap-dialog-footer">
+        <div class="ap-dialog-footer-left">${removeBtn}</div>
+        <div class="ap-dialog-footer-right">
+          <button type="button" class="ap-button primary orange" data-recap-cmp-close><span>Done</span></button>
+        </div>
+      </div>
+    </aside>
+  </div>`;
+}
+
 // ── Header + rail ──────────────────────────────────────────────────────
 
 function renderHeader(data) {
@@ -1180,12 +1546,14 @@ function renderHeader(data) {
 }
 
 function renderRail(data) {
-  const nav = SECTIONS.map(
-    (s, i) => `
+  const nav = sectionsFor()
+    .map(
+      (s, i) => `
     <button type="button" class="recap__nav-link ${i === 0 ? "is-active" : ""}" data-recap-nav="${s.id}">
       <i class="${s.icon}" aria-hidden="true"></i><span>${esc(s.title)}</span>
     </button>`,
-  ).join("");
+    )
+    .join("");
 
   const colors = visualColors(data).slice(0, 6);
   const usedIn = typeof data.usedIn === "number" ? data.usedIn : null;
@@ -1285,9 +1653,11 @@ function paint() {
         ${renderGoalsPanel(data, scope === "goals")}
         ${renderVoicePanel(data, scope === "voice")}
         ${renderBrandPanel(data, scope === "brand")}
+        ${competitorsOn() ? renderCompetitorsPanel(data, scope === "competitors") : ""}
       </div>
     </div>
     ${renderRefModal(data)}
+    ${competitorsOn() ? renderCompetitorModal(data) : ""}
   `;
 
   mountTarget.innerHTML = html`
@@ -1298,20 +1668,22 @@ function paint() {
     </section>
   `;
 
-  portalRefModal();
+  portalModal();
   attachScrollSpy();
 }
 
-// The reference-image modal is rendered inside the recap body, but the recap
-// scroll container / reveal transform stops its fixed backdrop from covering
-// the viewport. Move it onto <body> (like the app's real modals) and bind the
-// same delegated handlers so its controls keep working.
-function portalRefModal() {
+// The detail modals (reference image, competitor) are rendered inside the recap
+// body, but the recap scroll container / reveal transform stops their fixed
+// backdrop from covering the viewport. Move whichever one is open onto <body>
+// (like the app's real modals) and bind the same delegated handlers so its
+// controls keep working. Only one can be open at a time — refModalIndex and
+// cmpModalIndex are mutually exclusive — so one host covers both.
+function portalModal() {
   if (refModalHost) {
     refModalHost.remove();
     refModalHost = null;
   }
-  const modalEl = mountTarget?.querySelector(".recap__refmodal-backdrop");
+  const modalEl = mountTarget?.querySelector(".recap__refmodal-backdrop, .recap__cmpmodal-backdrop");
   if (!modalEl) return;
   refModalHost = document.createElement("div");
   refModalHost.className = "recap__refmodal-host";
@@ -1320,6 +1692,7 @@ function portalRefModal() {
   refModalHost.addEventListener("input", onInput);
   refModalHost.addEventListener("change", onChange);
   refModalHost.addEventListener("keydown", onKeydown);
+  refModalHost.addEventListener("error", onLoadError, true);
   document.body.appendChild(refModalHost);
 }
 
@@ -1353,6 +1726,53 @@ function attachScrollSpy() {
     { root, rootMargin: "-15% 0px -70% 0px", threshold: 0 },
   );
   sections.forEach((s) => scrollSpy.observe(s));
+}
+
+// ── Competitor logo fallback + discovery scan ───────────────────────────
+
+// A competitor favicon that can't load (no icon for that domain, blocked
+// request, offline session) hides itself and reveals its monogram twin. Runs in
+// the capture phase because `error` events don't bubble.
+function onLoadError(event) {
+  const img = event.target;
+  if (!(img instanceof HTMLImageElement) || !img.hasAttribute("data-recap-cmp-logo")) return;
+  img.classList.add("is-hidden");
+  img.nextElementSibling?.classList.remove("is-hidden");
+}
+
+function stopCompetitorScan() {
+  if (cmpScanTimer) {
+    window.clearTimeout(cmpScanTimer);
+    cmpScanTimer = null;
+  }
+  cmpScanning = false;
+}
+
+// Mock "scan the market" — shows the section-scoped skeleton, then merges only
+// the competitors that aren't already known (so a repeat scan is idempotent and
+// removing one brings just that one back).
+function startCompetitorScan() {
+  const data = cfg?.getData();
+  if (!data || cmpScanning) return;
+  stopCompetitorScan();
+  cmpScanning = true;
+  cmpScanFoundNone = false;
+  repaintPreservingScroll();
+  cmpScanTimer = window.setTimeout(() => {
+    cmpScanTimer = null;
+    cmpScanning = false;
+    const live = cfg?.getData();
+    if (!live || !mountTarget) return;
+    const existing = competitorList(live);
+    const found = discoverCompetitors(live.websiteUrl || live.sourceUrl || "", { exclude: existing });
+    const room = Math.max(0, MAX_COMPETITORS - existing.length);
+    const added = found.slice(0, room).map((c) => ({ ...c, suggested: true }));
+    added.forEach((c) => existing.push(c));
+    cmpScanFoundNone = added.length === 0;
+    // Persist in library mode (no-op in onboarding, where the draft IS the data).
+    if (added.length) cfg.commit?.();
+    repaintPreservingScroll();
+  }, CMP_SCAN_MS);
 }
 
 // ── Edit-mode mutations ──────────────────────────────────────────────────
@@ -1433,6 +1853,7 @@ function onClick(event) {
   const penBtn = event.target.closest("[data-recap-edit-card]");
   if (penBtn) {
     if (penBtn.dataset.recapEditCard === "brand") ensureBrand(data);
+    if (penBtn.dataset.recapEditCard === "competitors") competitorList(data);
     snapshot = snapshotEditable(data);
     editScope = penBtn.dataset.recapEditCard;
     audienceCustom = false;
@@ -1450,6 +1871,7 @@ function onClick(event) {
     snapshot = null;
     editScope = null;
     refModalIndex = null;
+    cmpModalIndex = null;
     audienceCustom = false;
     repaint();
     return;
@@ -1471,11 +1893,89 @@ function onClick(event) {
         });
       });
     }
+    // Drop competitors left completely blank (an "Add competitor" row the user
+    // opened and abandoned) and social rows with no URL. `suggested` is kept —
+    // it's provenance worth showing after the save, not a pending state.
+    if (Array.isArray(data.competitors)) {
+      data.competitors = data.competitors.filter(
+        (c) => (c.name || "").trim() || (c.websiteUrl || "").trim() || (c.description || "").trim(),
+      );
+      data.competitors.forEach((c) => {
+        c.socials = (Array.isArray(c.socials) ? c.socials : []).filter((s) => (s.url || "").trim());
+      });
+    }
     cfg.commit?.();
     snapshot = null;
     editScope = null;
     refModalIndex = null;
+    cmpModalIndex = null;
     audienceCustom = false;
+    repaint();
+    return;
+  }
+
+  // ── Competitors ──
+  if (event.target.closest("[data-recap-cmp-discover]")) {
+    startCompetitorScan();
+    return;
+  }
+
+  const cmpOpen = event.target.closest("[data-recap-cmp-open]");
+  if (cmpOpen) {
+    cmpModalIndex = Number(cmpOpen.dataset.recapCmpOpen);
+    repaint();
+    return;
+  }
+
+  if (event.target.closest("[data-recap-cmp-close]") || event.target.matches?.("[data-recap-cmpmodal-backdrop]")) {
+    cmpModalIndex = null;
+    repaint();
+    return;
+  }
+
+  const cmpRemove = event.target.closest("[data-recap-cmp-remove]");
+  if (cmpRemove) {
+    const idx = Number(cmpRemove.dataset.recapCmpRemove);
+    const list = competitorList(data);
+    if (idx >= 0 && idx < list.length) list.splice(idx, 1);
+    cmpModalIndex = null; // the open modal's index no longer means anything
+    repaintPreservingScroll();
+    return;
+  }
+
+  if (event.target.closest("[data-recap-cmp-add]")) {
+    const list = competitorList(data);
+    if (list.length >= MAX_COMPETITORS) return;
+    list.push({
+      id: `cmp-new-${list.length + 1}-${Date.now().toString(36)}`,
+      name: "",
+      description: "",
+      websiteUrl: "",
+      socials: [],
+    });
+    cmpModalIndex = list.length - 1; // open the blank card straight away
+    repaint();
+    mountTarget?.querySelector("[data-recap-cmp-field='name']")?.focus();
+    return;
+  }
+
+  const cmpSocialAdd = event.target.closest("[data-recap-cmp-social-add]");
+  if (cmpSocialAdd) {
+    const c = competitorList(data)[Number(cmpSocialAdd.dataset.recapCmpSocialAdd)];
+    if (!c) return;
+    if (!Array.isArray(c.socials)) c.socials = [];
+    c.socials.push({ network: REF_NETWORKS[0], url: "" });
+    repaint();
+    const inputs = document.querySelectorAll("[data-recap-cmp-social-url]");
+    inputs[inputs.length - 1]?.focus();
+    return;
+  }
+
+  const cmpSocialRemove = event.target.closest("[data-recap-cmp-social-remove]");
+  if (cmpSocialRemove) {
+    const c = competitorList(data)[Number(cmpSocialRemove.dataset.recapCmpIndex)];
+    const si = Number(cmpSocialRemove.dataset.recapCmpSocialIndex);
+    if (c && Array.isArray(c.socials) && si >= 0 && si < c.socials.length) c.socials.splice(si, 1);
     repaint();
     return;
   }
@@ -1733,6 +2233,13 @@ function onInput(event) {
       const sw = mountTarget?.querySelector(`[data-recap-color-swatch="${idx}"]`);
       if (sw) sw.style.background = t.value;
     }
+  } else if (t.matches("[data-recap-cmp-field]")) {
+    const c = data.competitors?.[Number(t.dataset.recapCmpIndex)];
+    if (c) c[t.dataset.recapCmpField] = t.value;
+  } else if (t.matches("[data-recap-cmp-social-url]")) {
+    const c = data.competitors?.[Number(t.dataset.recapCmpIndex)];
+    const s = c?.socials?.[Number(t.dataset.recapCmpSocialIndex)];
+    if (s) s.url = t.value;
   }
 }
 
@@ -1774,6 +2281,14 @@ function onChange(event) {
       data.primaryLanguage = val;
       repaint(); // refresh the "primary" tag + header/rail
     }
+    return;
+  }
+  // Competitor social row — the network select. No repaint: the row's own
+  // <select> already shows the new value, and repainting would steal focus.
+  if (event.target.matches("[data-recap-cmp-social-network]")) {
+    const c = data.competitors?.[Number(event.target.dataset.recapCmpIndex)];
+    const s = c?.socials?.[Number(event.target.dataset.recapCmpSocialIndex)];
+    if (s) s.network = event.target.value;
     return;
   }
 }

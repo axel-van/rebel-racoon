@@ -1402,6 +1402,44 @@ export const contexts = [
       },
       { id: "acme-ref-3", label: "Brand board", url: "https://picsum.photos/seed/acme-brand-board/480/480" },
     ],
+    // Competitors — the market Archie positions this brand against. `suggested`
+    // marks the ones Archie discovered (vs. added by hand). Logos resolve from
+    // the domain at render time, so no url is stored here.
+    competitors: [
+      {
+        id: "acme-cmp-1",
+        name: "Notion",
+        description:
+          "The all-in-one workspace everyone already has a tab open for. Wins on flexibility, loses on opinionated workflows.",
+        websiteUrl: "https://notion.so",
+        socials: [
+          { network: "linkedin", url: "https://linkedin.com/company/notionhq" },
+          { network: "x", url: "https://x.com/NotionHQ" },
+          { network: "youtube", url: "https://youtube.com/@Notion" },
+        ],
+        suggested: true,
+      },
+      {
+        id: "acme-cmp-2",
+        name: "Linear",
+        description:
+          "Beloved by engineering teams for speed and craft. Comes up whenever a prospect cares about issue tracking first.",
+        websiteUrl: "https://linear.app",
+        socials: [{ network: "x", url: "https://x.com/linear" }],
+        suggested: true,
+      },
+      {
+        id: "acme-cmp-3",
+        name: "Basecamp",
+        description:
+          "The opinionated veteran. Flat pricing and a strong point of view on how teams should work — a values-led alternative.",
+        websiteUrl: "https://basecamp.com",
+        socials: [
+          { network: "x", url: "https://x.com/basecamp" },
+          { network: "linkedin", url: "https://linkedin.com/company/basecamp" },
+        ],
+      },
+    ],
     ctaLinks: [
       { label: "30-day free trial", url: "acme.example.com/trial", checked: true, suggested: false },
       { label: "Book a demo", url: "acme.example.com/demo", checked: true, suggested: false },

@@ -94,4 +94,18 @@ export const FLAGS = Object.freeze([
       "language, and drafting asks the target language. Underlying multilingual " +
       "data is preserved either way — only the surfaces are gated.",
   },
+  {
+    id: "playbookCompetitors",
+    label: "Playbook competitors",
+    default: false,
+    hides:
+      "When OFF (default), hides the Competitors section of a Playbook: its " +
+      "panel + rail entry on /playbook and the onboarding recap, and the " +
+      "competitor counter on /contexts cards. The discovered competitors " +
+      "still ride along in the data (the website analysis pre-fills them) — " +
+      "only the surfaces are gated, like multilingualPlaybook. When ON, the " +
+      "section lists competitors (name, description, website, social " +
+      "profiles, auto-extracted favicon), Archie can discover more from the " +
+      "brand's market, and each one is editable in its own modal.",
+  },
 ]);

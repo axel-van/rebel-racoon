@@ -226,19 +226,32 @@ Header **« Playbooks »** + _« N Playbooks · applied across N chats »_ + sea
 
 ### Détail (`/playbook/:id`, [`screens/playbook.js`](../../src/screens/playbook.js))
 
-Rendu via `playbook-view` en mode **library**. Header identité + rail sticky + 3 sections. Actions : **Start a chat**, **Re-analyze website** (confirm → loader staged → patch), Delete, rename. Voice-only re-analysis : **My posts** / **Documents…**. Toggle ★ default (flag `playbookDefault`).
+Rendu via `playbook-view` en mode **library**. Header identité + rail sticky + les sections. Actions : **Start a chat**, **Re-analyze website** (confirm → loader staged → patch), Delete, rename. Voice-only re-analysis : **My posts** / **Documents…**. Toggle ★ default (flag `playbookDefault`).
 
 ### Moteur partagé ([`playbook-view.js`](../../src/playbook-view.js))
 
-Trois sections éditables inline (une à la fois, Save/Cancel avec snapshot) :
+Sections éditables inline (une à la fois, Save/Cancel avec snapshot) :
 
 1. **Audience & goals** — Language(s), Business, Primary audience, Content style, Primary goal, Content action, CTA links.
 2. **Voice & style** — toggle **Guided ⇄ Write it yourself**. Guided = Signature hooks + Closing patterns + Formatting + Visual style. Switcher **par langue** (2+ langues, flag `multilingualPlaybook`) — voice **écrite nativement par langue, jamais traduite** (voir mémoire _multilingual-playbook-model_). Dropdown « Learn from… ».
 3. **Brand** — Brand colors (hex swatches), Typography, Personality, Reference images.
+4. **Competitors** (flag `playbookCompetitors`) — voir ci-dessous.
+
+### Competitors (flag `playbookCompetitors`, défaut OFF)
+
+Le marché contre lequel Archie positionne la marque. Champ `competitors: Array<{ id, name, description, websiteUrl, socials:[{network,url}], logo?, suggested? }>` sur le Playbook.
+
+- **Grille de cartes** — tuile logo, nom, domaine, blurb sur 2 lignes, badges réseaux, chip **« Suggested »** (`suggested: true` = trouvé par Archie). Clic sur une carte → modale détail (`.ap-dialog`) : Name, Website, Description, Social profiles (select réseau + URL). Éditable quand la section est en edit scope, sinon lecture seule + liens réseaux cliquables.
+- **Favicon auto-extraite** — jamais stockée : résolue à partir du domaine via un service de favicons au render. Un `<img>` qui échoue (domaine sans icône, hors-ligne) bascule sur une **tuile monogramme** teintée déterministiquement depuis le nom, via un listener `error` en phase **capture** (`error` ne bulle pas) posé dans `mount()`.
+- **Découverte** — bouton **« Discover competitors » / « Discover more »** (`ap-icon-sparkles`) dans le head de section : skeleton scoped à la section (~1,6 s, pas le loader plein écran) → merge de `discoverCompetitors(url, { exclude })`, **dédupliqué par domaine** (à défaut par nom). Rescan idempotent : si rien de nouveau, ligne _« No new competitors found. »_. Max 12.
+- **Pré-remplissage onboarding** — `sectionPatchFromAnalysis` promeut `suggestions.competitors` sur le draft avec `suggested: true`, donc le recap `/welcome-alt/recap` révèle la section déjà peuplée : pas d'étape de chat supplémentaire, l'utilisateur ajuste sur place.
+- **Édition** — pencil de section → remove par carte + **« Add competitor »** (ouvre la modale sur une fiche vierge). Save élague les fiches restées entièrement vides et les lignes sociales sans URL ; `suggested` est conservé (provenance, pas un état transitoire).
+- **Gate** — quand le flag est OFF : section, entrée de rail et compteur `/contexts` disparaissent, mais **la donnée reste** (l'analyse la pré-remplit quand même) — même contrat que `multilingualPlaybook`.
 
 ### Mock analysis ([`context-mock-analysis.js`](../../src/context-mock-analysis.js))
 
-- `analyzeWebsite(url)` : URL contenant « agorapulse » → mock Agorapulse détaillé (5 audiences, voiceProfile, hooks, couleurs #212E44/#FF6726, 5 CTA links) ; sinon → template SaaS générique éditable.
+- `analyzeWebsite(url)` : URL contenant « agorapulse » → mock Agorapulse détaillé (5 audiences, voiceProfile, hooks, couleurs #212E44/#FF6726, 5 CTA links, 5 competitors réels) ; sinon → template SaaS générique éditable (3 competitors placeholders).
+- `discoverCompetitors(url, { exclude })` : puise dans le même pool et ne renvoie que les inconnus.
 - `analyzeSocialProfiles(ids)` / `analyzeDocument(file)` : voice/summary simulés.
 
 ---
@@ -316,7 +329,7 @@ Détail dimensions/coexistence avec la status-card : [`SHELL-LAYOUT.md`](SHELL-L
 - **Feature flags** : une toggle par flag.
 - **Docs** : lien externe **« Conversation thread components »** → `/handoff/components.html`.
 
-### Feature flags ([`ff-catalog.js`](../../src/ff-catalog.js)) — les 9
+### Feature flags ([`ff-catalog.js`](../../src/ff-catalog.js)) — les 10
 
 | id                       | label                          | défaut  | Gate                                                                                                                                                                                                                                                                                                                                   |
 | ------------------------ | ------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -328,6 +341,7 @@ Détail dimensions/coexistence avec la status-card : [`SHELL-LAYOUT.md`](SHELL-L
 | `playbookColors`         | Playbook colors                | **OFF** | Quand OFF (défaut), masque les visuels couleur Playbook partout (classe `body.hide-playbook-colors`) ; ON = couleurs affichées.                                                                                                                                                                                                        |
 | `multilingualPlaybook`   | Multilingual Playbooks         | **OFF** | Playbooks multi-langues (voice par langue, étape langue du draft flow).                                                                                                                                                                                                                                                                |
 | `manyProfiles`           | Many connected profiles (demo) | **OFF** | Seed ~40 profils connectés variés → le quickpicker de profil affiche une recherche live (voir §draft flow).                                                                                                                                                                                                                            |
+| `playbookCompetitors`    | Playbook competitors           | **OFF** | Section **Competitors** du Playbook (panneau + entrée de rail + compteur `/contexts`). La donnée reste présente quand OFF (voir §9).                                                                                                                                                                                                   |
 | `sidebarOrganize`        | Sort & group chats             | **OFF** | Bouton filtre au-dessus de la liste des chats → popover à plat **Group by** (Aucun / Playbook / Date) + **Sort by** (Récence / Alphabétique) ; réordonne/regroupe la liste (Pinned reste en tête). Date = buckets Today / Yesterday / Previous 7 days / … dérivés du libellé `lastActivity`. Préf. persistée (`archie-chat-organize`). |
 
 Persistés en `localStorage` (`archie-feature-flags`), lus via `isFlagOn()`. Voir aussi [`STORES.md`](STORES.md).
