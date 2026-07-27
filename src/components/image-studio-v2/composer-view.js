@@ -36,7 +36,7 @@
 import { escapeHtml } from "../../utils.js?v=21";
 import { FORMATS, NETWORK_FORMATS } from "../../clip-formats.js?v=7";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=27";
-import { KEY } from "./context.js?v=3";
+import { KEY } from "./context.js?v=4";
 import * as imageStudio from "../../image-studio.js?v=42";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
@@ -155,7 +155,7 @@ function console_(label, brief, foot) {
   return `<div class="isv2-dock">
     <div class="isv2-console" role="group" aria-label="${escapeHtml(label)}">
       ${brief}
-      <div class="isv2-console-foot">${foot}</div>
+      ${foot ? `<div class="isv2-console-foot">${foot}</div>` : ""}
     </div>
   </div>`;
 }
@@ -196,22 +196,48 @@ function promptTools(st) {
     <button type="button" class="ap-icon-button" data-img-composer-expand aria-label="${expandLabel}" title="${expandLabel}" aria-pressed="${expanded}"><i class="ap-icon-${expanded ? "minimize" : "maximize"}" aria-hidden="true"></i></button>`;
 }
 
-// The foot — exactly one primary, and it always names the next step.
+// The prompt card's own action — running the prompt. SECONDARY, because it is a
+// step and not the destination: the modal has exactly one primary now and it
+// lives in the footer ("Use this image"). Before the footer existed this button
+// had to carry both jobs, which is why it was orange.
 function generateActions(st) {
   if (st.genPhase === "generating") {
-    return `<button type="button" class="ap-button primary orange loading" disabled><span class="ap-loading-bar"></span><span>Generating…</span></button>`;
+    return `<button type="button" class="ap-button stroked grey loading" disabled><span class="ap-loading-bar"></span><span>Generating…</span></button>`;
   }
   // A prompt being rewritten isn't one you can run yet.
   const promptReady = !st.promptLoading && !!(st.promptText || "").trim();
   const hasResults = st.genPhase === "results" && st.variations.length > 0;
-  if (!hasResults) {
-    return `<button type="button" class="ap-button primary orange" data-img-generate ${promptReady ? "" : "disabled"}><i class="ap-icon-sparkles-mermaid"></i><span>Generate image</span></button>`;
-  }
+  const icon = hasResults ? "ap-icon-refresh" : "ap-icon-sparkles-mermaid";
+  const label = hasResults ? "Regenerate" : "Generate image";
+  return `<button type="button" class="ap-button stroked grey" data-img-generate ${promptReady ? "" : "disabled"}><i class="${icon}"></i><span>${label}</span></button>`;
+}
+
+// ── The modal footer ────────────────────────────────────────────────────────
+
+// One bar across the bottom of the modal, in BOTH modes, carrying the single
+// action that ends the flow. Having it there from the first frame — disabled
+// until there is something to commit — means the destination is visible the
+// whole way through instead of appearing only once results land.
+export function footerBar(st) {
   const carousel = st.outputMode === "carousel";
-  const useLabel = carousel ? `Use carousel · ${st.variations.length} slides` : "Use this image";
-  const useReady = carousel ? st.variations.length >= 2 : !!st.currentImage;
-  return `<button type="button" class="ap-button stroked grey" data-img-generate ${promptReady ? "" : "disabled"}><i class="ap-icon-refresh"></i><span>Regenerate</span></button>
-    <button type="button" class="ap-button primary orange" data-img-use ${useReady ? "" : "disabled"}><i class="ap-icon-check"></i><span>${escapeHtml(useLabel)}</span></button>`;
+  let left = "";
+  let primary;
+  if (st.mode === "edit") {
+    left = `<button type="button" class="ap-button ghost grey" data-img-undo ${imageStudio.canUndo(KEY) ? "" : "disabled"}><i class="ap-icon-reset"></i><span>Undo</span></button>`;
+    // Editing a carousel slide commits back into that slide rather than to the
+    // draft — a different destination, so a different verb.
+    primary = carousel
+      ? `<button type="button" class="ap-button primary orange" data-img-apply-slide ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Apply to slide ${(st.selectedIndex ?? 0) + 1}</span></button>`
+      : `<button type="button" class="ap-button primary orange" data-img-use ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Use this image</span></button>`;
+  } else {
+    const label = carousel ? `Use carousel · ${st.variations.length} slides` : "Use this image";
+    const ready = carousel ? st.variations.length >= 2 : !!st.currentImage;
+    primary = `<button type="button" class="ap-button primary orange" data-img-use ${ready ? "" : "disabled"}><i class="ap-icon-check"></i><span>${escapeHtml(label)}</span></button>`;
+  }
+  return `<div class="ap-dialog-footer isv2-footer">
+    <div class="ap-dialog-footer-left">${left}</div>
+    <div class="ap-dialog-footer-right">${primary}</div>
+  </div>`;
 }
 
 // ── The six setting chips ───────────────────────────────────────────────────
@@ -441,24 +467,23 @@ function outputBody(st, canCarousel, isCarousel) {
 // floating palette plus a footer to say this much.
 function editComposer(st) {
   const busy = st.editBusy ? "disabled" : "";
-  const carousel = st.outputMode === "carousel";
-  const primary = carousel
-    ? `<button type="button" class="ap-button primary orange" data-img-apply-slide ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Apply to slide ${(st.selectedIndex ?? 0) + 1}</span></button>`
-    : `<button type="button" class="ap-button primary orange" data-img-use ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Use this image</span></button>`;
   // One row, v1's shape and v1's classes: the mermaid-sparkle cue, a borderless
   // multi-line field, a compact orange send. No eyebrow and no tool band — the
   // placeholder already says what the field is for, and the tools moved to the
   // palette. v2 had wrapped this in a labelled two-band card, which was more
   // chrome than one sentence of input has ever needed.
+  // Still main's one-row shape, but the send is SECONDARY now: with the footer
+  // holding the orange "Use this image" sixty pixels below, two oranges that
+  // close together would be two competing primaries. (On main these never met —
+  // the AI bar floats up on the canvas, far from the footer.)
   return console_(
     "Edit the image",
     `<div class="isv2-reprompt">
       <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
       <textarea class="image-studio__reprompt-field" data-img-edit-prompt rows="1" placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" ${busy}>${escapeHtml(st.editPrompt || "")}</textarea>
-      <button type="button" class="ap-button primary orange isv2-apply" data-img-apply-edit="prompt" aria-label="Apply" title="Apply" ${busy}><i class="ap-icon-arrow-up" aria-hidden="true"></i></button>
+      <button type="button" class="ap-button stroked grey isv2-apply" data-img-apply-edit="prompt" aria-label="Redraw" title="Redraw" ${busy}><i class="ap-icon-arrow-up" aria-hidden="true"></i></button>
     </div>`,
-    `<button type="button" class="ap-button ghost grey" data-img-undo ${imageStudio.canUndo(KEY) ? "" : "disabled"}><i class="ap-icon-reset"></i><span>Undo</span></button>
-     ${primary}`,
+    "",
   );
 }
 

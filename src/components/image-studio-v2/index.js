@@ -25,16 +25,16 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=37";
 import { getSessionById } from "../../sessions-store.js?v=7";
 import { getContextById } from "../../contexts-store.js?v=38";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=3";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=4";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=3";
+import { renderStudio } from "./stage-view.js?v=4";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=3";
+} from "./interactions.js?v=4";
 import * as imageStudio from "../../image-studio.js?v=42";
 
 let backdrop;

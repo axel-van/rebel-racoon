@@ -438,7 +438,7 @@
   flex: 0 0 auto;
   display: flex;
   justify-content: center;
-  padding: 0 var(--ref-spacing-lg) var(--ref-spacing-md);
+  padding: 0 var(--ref-spacing-lg) var(--ref-spacing-sm);
   background: var(--app-bg);
 }
 
@@ -537,10 +537,10 @@
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
 }
 
-/* The Apply send-button — compact and square, like the main composer's send. */
+/* The redraw send — compact and square, like the main composer's send. */
 .isv2-apply {
   flex: 0 0 auto;
-  min-width: 32px;
+  min-width: 36px;
   padding: 0 var(--ref-spacing-xxs);
 }
 
@@ -713,6 +713,8 @@
 
 /* ── Foot ────────────────────────────────────────────────────────────────── */
 
+/* The prompt card's own foot — one secondary action, running the prompt. The
+   modal's single primary lives in the footer bar below. */
 .isv2-console-foot {
   display: flex;
   align-items: center;
@@ -720,6 +722,18 @@
   gap: var(--ref-spacing-xxs);
   padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
   border-top: 1px solid var(--sys-border-color-default);
+}
+
+/* ── The footer bar ───────────────────────────────────────────────────────── */
+
+/* Present in BOTH modes, carrying the one action that ends the flow. It is the
+   DS dialog footer used natively; the only thing said here is that it sits on
+   the white shell rather than the dock's canvas, so the modal closes on a solid
+   edge instead of trailing off into the grey. */
+.isv2-footer {
+  flex: 0 0 auto;
+  background: var(--app-surface);
+  border-top-color: var(--sys-border-color-default);
 }
 
 /* ── Aspect-ratio glyph (used inside the sheets) ─────────────────────────── */

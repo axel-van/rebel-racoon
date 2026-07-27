@@ -18,7 +18,7 @@
 // tool palette, so only ✕ / ✓ stay on the canvas).
 
 import { escapeHtml } from "../../utils.js?v=21";
-import { KEY } from "./context.js?v=3";
+import { KEY } from "./context.js?v=4";
 import { outlineMetrics, shadowMetrics, cssFamily } from "../image-studio/canvas.js?v=2";
 import * as imageStudio from "../../image-studio.js?v=42";
 
