@@ -14,6 +14,7 @@ import {
   ideasBySession as seedIdeasBySession,
   recentSessions as seedRecentSessions,
 } from "./mocks.js?v=59";
+import { createNotifier } from "./store-utils.js?v=2";
 import { isNewUser } from "./user-mode.js?v=22";
 
 // Demo session ids — the recentSessions seed (s-acme-launch / s-riverside /
@@ -54,19 +55,31 @@ const streamUnsubsBySession = new Map();
 // Not the same objects: the pool holds shallow copies, so a per-session edit
 // doesn't silently mutate the global row and vice versa. Identity is the `id`.
 
+// The pool has no per-session key, so surfaces that read it globally (/ideas,
+// the sidebar's Ideas counter) need their own signal — the per-session notifier
+// below never fires for a conversation-less idea.
+const globalNotifier = createNotifier("library/global");
+export const subscribeGlobal = globalNotifier.subscribe;
+const notifyGlobal = () => globalNotifier.notify(seedIdeas.slice());
+
 function poolAdd(ideas) {
   if (!Array.isArray(ideas) || ideas.length === 0) return;
   const known = new Set(seedIdeas.map((i) => i.id));
   const fresh = ideas.filter((i) => !known.has(i.id)).map((i) => ({ ...i }));
-  if (fresh.length) seedIdeas.unshift(...fresh);
+  if (fresh.length) {
+    seedIdeas.unshift(...fresh);
+    notifyGlobal();
+  }
 }
 
 function poolRemove(ideaIds) {
   if (!Array.isArray(ideaIds) || ideaIds.length === 0) return;
   const set = new Set(ideaIds);
+  const before = seedIdeas.length;
   for (let i = seedIdeas.length - 1; i >= 0; i -= 1) {
     if (set.has(seedIdeas[i].id)) seedIdeas.splice(i, 1);
   }
+  if (seedIdeas.length !== before) notifyGlobal();
 }
 
 let idCounter = 0;

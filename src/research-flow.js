@@ -21,7 +21,7 @@
 import { setHandoff } from "./handoff.js?v=20";
 import { navigate, getPath } from "./router.js?v=30";
 import { showToast } from "./components/toast.js?v=20";
-import { open as openChatPicker } from "./components/chat-picker-modal.js?v=60";
+import { open as openChatPicker } from "./components/chat-picker-modal.js?v=62";
 import { getSessions } from "./sessions-store.js?v=9";
 import {
   getFinding,
@@ -30,12 +30,12 @@ import {
   restoreFinding,
   getResearchConfig,
   runScan,
-} from "./research-store.js?v=4";
+} from "./research-store.js?v=6";
 import { findResearchSource } from "./research-catalog.js?v=3";
 import { postSelectionEcho, postAssistantMessage, postResearchDelivery } from "./assistant.js?v=61";
 import { addReadySource } from "./sources-stream.js?v=54";
-import { getIdeaById, addGlobalIdeas, adoptIdea, removeIdeasGlobally } from "./library.js?v=52";
-import { startDraftFlow } from "./draft-flow.js?v=56";
+import { getIdeaById, addGlobalIdeas, adoptIdea, removeIdeasGlobally } from "./library.js?v=54";
+import { startDraftFlow } from "./draft-flow.js?v=58";
 
 export const HANDOFF_KEY = "pendingResearchIdea";
 

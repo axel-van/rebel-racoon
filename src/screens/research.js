@@ -16,7 +16,7 @@
 // Clearing it on arrival would zero the counter the user just clicked.
 
 import { html, raw } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=224";
+import { renderTopbar } from "../components/topbar.js?v=227";
 import { navigate } from "../router.js?v=30";
 import { isFlagOn } from "../feature-flags.js?v=12";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -34,13 +34,13 @@ import {
   setCadence,
   setNotify,
   subscribe as subscribeResearch,
-} from "../research-store.js?v=4";
-import { getAllIdeas, getIdeaById } from "../library.js?v=52";
+} from "../research-store.js?v=6";
+import { getAllIdeas, getIdeaById } from "../library.js?v=54";
 import { renderResearchPage, renderDigestBody, renderSourcesBody } from "../research-view.js?v=5";
 import { findConnector } from "../connectors-store.js?v=31";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=14";
-import { open as openResearchModal } from "../components/research-modal.js?v=7";
-import { writeIdea, skipIdea, runScanAndAnnounce } from "../research-flow.js?v=5";
+import { open as openResearchModal } from "../components/research-modal.js?v=9";
+import { writeIdea, skipIdea, runScanAndAnnounce } from "../research-flow.js?v=7";
 
 let unsubscribe = null;
 let activeContextId = null;

@@ -13,16 +13,16 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=362";
+} from "./right-panel.js?v=365";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=54";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=61";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=52";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=54";
 import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=39";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=155";
+} from "./conversation-status-card.js?v=158";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=9";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=40";
@@ -512,6 +512,7 @@ function currentTitle() {
   if (path === "/contexts") return "Playbooks";
   if (path === "/connectors") return "Connectors";
   if (path === "/research") return "Research";
+  if (path === "/ideas") return "Ideas";
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);
   if (sessionMatch) {
     const id = sessionMatch[1];
