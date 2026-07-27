@@ -152,18 +152,34 @@
 }
 
 /* ── Left-panel groups (generate mode) ──────────────────────────────────── */
-/* Flat sections separated by a soft divider — the panel holds settings only now
-   (the prompt moved to the bottom composer), so it reads lighter. */
+/* Settings rows share ONE rhythm. No per-row divider: six full-width rules made
+   six peers out of what is a two-level structure (step eyebrow → its settings).
+   The only rule in the panel separates step 1 from step 2 (see --prompt below);
+   inside a step, spacing does the grouping. */
 .image-studio__group {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
-  border-bottom: 1px solid var(--app-border-soft);
+  padding: 0 var(--ref-spacing-md);
 }
 
-.image-studio__group:last-child {
-  border-bottom: none;
+/* Row padding lives on the head, never on the wrapper — that's what keeps every
+   settings row (ingredient or collapsible) on the same 44px pitch. */
+.image-studio__group.is-collapsible > .image-studio__group-head {
+  padding-block: var(--ref-spacing-xs);
+}
+
+.image-studio__group.is-collapsible > .image-studio__group-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding-bottom: var(--ref-spacing-xs);
+}
+
+/* The display:flex above would otherwise beat the [hidden] attribute's UA
+   display:none and every section would render open (same trap as the
+   Reference-images body further down). */
+.image-studio__group.is-collapsible > .image-studio__group-body[hidden] {
+  display: none;
 }
 
 /* Tighten the reused .gen-* tile grids for this denser panel. */
@@ -213,51 +229,48 @@ button.image-studio__group-head:disabled {
   transform: rotate(180deg);
 }
 
-/* Collapsing hides the body; keep a tighter head-only footprint. */
-.image-studio__group.is-collapsible.is-collapsed {
-  gap: 0;
-}
-
 /* Disabled section (e.g. Visual style while references drive the look). */
 .image-studio__group.is-disabled .image-studio__group-label {
   color: var(--ref-color-grey-40);
 }
 
+/* Sits where a value would, on a section that can't be opened — so it takes the
+   tier-3 treatment, just italic and one step lighter to read as "not a value". */
 .image-studio__group-note {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
   color: var(--ref-color-grey-60);
   font-style: italic;
 }
 
+/* ── Panel hierarchy: three tiers, three DS text styles ──────────────────── */
+/* The rail had one size for everything (caption-bold 12/700) — the step eyebrow,
+   the group labels and their values all read as peers, so nothing led. Now:
+     tier 1  eyebrow  caption-bold 12/700 UPPERCASE  grey-60   (marks the step)
+     tier 2  label    h4           14/700 sentence   grey-100  (the thing you act on)
+     tier 3  value    body         14/400            grey-80   (its current setting)
+   Size + weight + colour + case separate 1 from 2; weight + colour separate 2
+   from 3 — no lever is doing double duty. */
+
+/* Tier 2 — group label. */
 .image-studio__group-label {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
   margin: 0;
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  color: var(--sys-text-color-default);
 }
 
-/* Typographic hierarchy — quiet section headers over muted meta, so the panel
-   reads as grouped settings rather than one flat size.
-   Section headers become quiet uppercase eyebrows: they mark sections without
-   competing with the controls below them. */
-.image-studio__group-head .image-studio__group-label {
-  font-size: var(--sys-text-style-caption-bold-size);
-  font-weight: var(--ref-font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ref-color-grey-80);
-}
-
-/* Tier 3 — the meta on the right of each header (count / Optional / hint) is the
-   quietest: regular weight, muted grey. */
+/* Tier 3 — the meta on the right of each header (value / hint): same size as its
+   label, but regular and lighter, so the pair reads label-then-value. */
 .image-studio__group-head-right {
-  font-size: var(--sys-text-style-caption-size);
-  color: var(--ref-color-grey-60);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
+  color: var(--sys-text-color-light);
 }
 
 .image-studio__count {
@@ -274,9 +287,10 @@ button.image-studio__group-head:disabled {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
+  color: var(--sys-text-color-light);
 }
 
 .image-studio__chips {
@@ -530,20 +544,26 @@ button.image-studio__ref--pick:focus-visible {
 }
 
 /* ── Step 1: the prompt card (left panel) ───────────────────────────────── */
-/* The prompt leads the panel, so the flow reads top-down: review what Archie
-   wrote → adjust settings → Generate (footer). A bordered white card on the
-   panel's white ground, with the same blue focus ring as the edit action bar. */
+/* The prompt is the hero of the panel, and a 1px outline on white made it the
+   LIGHTEST thing in a rail full of bold labels. Giving it a filled surface makes
+   it the heaviest block without shouting — no colour, no shadow, just a shape
+   that reads as "the content" against the settings list. Focus flips it to white
+   with the blue ring, so editing feels like stepping into the field. */
 .image-studio__prompt {
   display: flex;
   align-items: flex-end;
   gap: var(--ref-spacing-xs);
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  background: var(--ref-color-white);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-md);
+  background: var(--app-surface-subtle);
+  border: 1px solid transparent;
+  border-radius: var(--app-radius-lg);
+  transition:
+    background var(--ref-animation-short) var(--app-ease-out),
+    border-color var(--ref-animation-short) var(--app-ease-out);
 }
 
 .image-studio__prompt:focus-within {
+  background: var(--app-surface);
   border-color: var(--ref-color-electric-blue-100);
 }
 
@@ -604,8 +624,8 @@ button.image-studio__ref--pick:focus-visible {
   gap: var(--ref-spacing-xs);
   min-height: calc(var(--sys-text-style-body-line-height) * 5 + var(--ref-spacing-md));
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border: 1px dashed var(--app-border);
-  border-radius: var(--app-radius-md);
+  background: var(--app-surface-subtle);
+  border-radius: var(--app-radius-lg);
 }
 
 /* The mark defaults to the 88px canvas loader — this one sits inline. */
@@ -618,7 +638,7 @@ button.image-studio__ref--pick:focus-visible {
 .image-studio__prompt-loading-text {
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-60);
+  color: var(--sys-text-color-light);
 }
 
 .image-studio__actionbar-row {
@@ -1879,11 +1899,19 @@ button.image-studio__ref--pick:focus-visible {
 /* Brand attribution + bulk action — replaces the old ambiguous filter-chip so
    the source and the Use-all/Clear-all control are both explicit. */
 /* ── Ingredients (Generate): Brand kit + Reference images cards ─────────── */
+/* Tier 1 — the step eyebrow. Smallest, lightest, uppercase: it names the step
+   without competing with the labels it heads. */
 .image-studio__group-label--eyebrow {
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--ref-color-grey-60);
-  margin-bottom: var(--ref-spacing-xs);
+  /* grey-60 is only 3.26:1 on white — under AA at 12px. grey-80 (the DS's
+     "secondary text") clears it at 5.45:1 and still reads a full step below the
+     grey-100 labels, because size + case are already doing the work. */
+  color: var(--sys-text-color-light);
+  margin-bottom: var(--ref-spacing-xxs);
 }
 
 /* The two numbered steps that order the panel — a small filled counter before
@@ -1896,35 +1924,41 @@ button.image-studio__ref--pick:focus-visible {
   width: 16px;
   height: 16px;
   border-radius: var(--app-radius-circle);
-  background: var(--ref-color-grey-20);
-  color: var(--ref-color-grey-80);
+  background: var(--app-border-soft);
+  /* grey-60 on grey-10 is ~2.6:1 — under AA for 10px text. grey-100 clears it at
+     ~7.9:1; the 16px chip keeps it quiet without relying on low contrast. */
+  color: var(--sys-text-color-default);
   font-size: 10px;
   line-height: 1;
   letter-spacing: 0;
 }
 
-/* Step 2 heads all the settings groups below it, so it needs the section
-   padding the groups have (it isn't inside one). */
+/* Step 1 — the prompt block. Its own section rhythm: card, then the AI helper.
+   The one divider in the panel closes it off, so step 2 reads as a new block. */
+.image-studio__group--prompt {
+  gap: var(--ref-spacing-xxs);
+  padding-block: var(--ref-spacing-sm);
+  border-bottom: 1px solid var(--app-border-soft);
+}
+
+/* Step 2 heads all the settings groups below it, so it carries the section
+   padding itself (it isn't inside one). */
 .image-studio__group-label--step2 {
   padding: var(--ref-spacing-sm) var(--ref-spacing-md) 0;
   margin-bottom: 0;
 }
 
-/* Step 1 — the prompt block. Its own section rhythm: card, then the AI helper. */
-.image-studio__group--prompt {
-  gap: var(--ref-spacing-xs);
-}
-
-/* Ingredients sit directly under the step-2 eyebrow — no divider between a
-   heading and the first thing it heads. */
+/* The two ingredient rows are peers of the four setting groups below them, so
+   they sit on the same pitch: the row padding lives on each head, not on the
+   wrapper, and there's no extra gap stacking on top of it. */
 .image-studio__group--ingredients {
-  padding-top: var(--ref-spacing-xs);
+  padding-block: 0;
+  gap: 0;
 }
 
 .image-studio__ingredients {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
 }
 
 /* Flat sub-blocks (no per-card border) — the panel's section rhythm already
@@ -1934,7 +1968,7 @@ button.image-studio__ref--pick:focus-visible {
   align-items: center;
   gap: var(--ref-spacing-xs);
   width: 100%;
-  padding: 0;
+  padding: var(--ref-spacing-xs) 0;
   border: 0;
   background: none;
   font: inherit;
@@ -1977,13 +2011,15 @@ button.image-studio__ingredient-head {
   color: var(--ref-color-grey-60);
 }
 
+/* Tier 2 — same treatment as .image-studio__group-label: these rows are peers of
+   Image type / Format / Output, so they must not read as a different level. */
 .image-studio__ingredient-title {
   flex: 1;
   min-width: 0;
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-100);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  color: var(--sys-text-color-default);
 }
 
 .image-studio__ingredient-toggle {
@@ -2003,7 +2039,7 @@ button.image-studio__ingredient-head {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xs);
-  padding-top: var(--ref-spacing-xs);
+  padding-bottom: var(--ref-spacing-xs);
 }
 
 /* Collapsed → actually hide: the display:flex above would otherwise beat the
