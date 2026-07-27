@@ -30,6 +30,39 @@
   background-position: center;
 }
 
+/* Crop window — the thumb box stays 16:9 so the card grid keeps a stable
+   rhythm, and this inner window carries the clip's export ratio (inline
+   aspect-ratio) with the crop framing applied as the video's object-position.
+   The card therefore shows the shape that will actually be published; the
+   letterbox falls back to the thumb's hue gradient. */
+.clip-card__thumb-crop {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--ref-border-radius-sm);
+}
+
+/* Export-ratio chip — same overlay-pill grammar as the timeframe below, so the
+   two read as one family of thumb metadata. */
+.clip-card__ratio {
+  position: absolute;
+  top: var(--ref-spacing-xxs);
+  right: var(--ref-spacing-xxs);
+  padding: 2px var(--ref-spacing-xxxs);
+  border-radius: var(--ref-border-radius-sm);
+  background: rgba(0, 0, 0, 0.62);
+  color: var(--ref-color-white);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
 /* Real video frame — a poster from the clip's source footage (local demo
    videos). Sits at the bottom of the thumb (first child) so the hue gradient
    remains a fallback behind it and the scrim + timeframe overlays stay on top.

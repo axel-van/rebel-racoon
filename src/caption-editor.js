@@ -1053,6 +1053,14 @@ export function refreshControls() {
   updateReconcile();
 }
 
+// Repaint everything that is sized off the stage. The caption box scales with
+// the stage width (stageScale → DESIGN_WIDTH), so changing the crop ratio
+// resizes the stage and the box has to be re-laid-out at the new scale.
+export function repaintStage() {
+  if (!mounted) return;
+  repaintAll();
+}
+
 // External playback sync — the modal's timeline playhead/track drives these so
 // the two scrubbers stay in lock-step. frac is 0..1 of the clip.
 export function seekFraction(frac) {

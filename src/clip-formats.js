@@ -1,4 +1,4 @@
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=26";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=27";
 
 // Shared aspect-ratio catalog for video clips.
 //
@@ -40,6 +40,36 @@ export function defaultFormatFor(net) {
 // landscape. Lets consumers pick a portrait vs landscape preview frame.
 export function isPortraitFormat(id) {
   return id === "9:16" || id === "4:5";
+}
+
+// ── Crop geometry ────────────────────────────────────────────────────────
+// Source footage is treated as 16:9 (the widest format in the catalog), so a
+// crop window is always full-height and only ever pans horizontally. `cropX` is
+// the window's CENTER as a fraction (0..1) of the source width — 0.5 = centered.
+
+const SOURCE_RATIO = FORMATS["16:9"].ratio;
+
+// Width of the crop window as a fraction of the source width.
+// 16:9 → 1 (no slack), 1:1 → 0.5625, 9:16 → 0.3164.
+export function cropWidthFraction(id) {
+  const f = FORMATS[id] || FORMATS["16:9"];
+  return Math.min(1, f.ratio / SOURCE_RATIO);
+}
+
+// Clamp a crop center so the window stays inside the source frame.
+export function clampCropX(id, x) {
+  const half = cropWidthFraction(id) / 2;
+  const v = Number.isFinite(x) ? x : 0.5;
+  return Math.min(1 - half, Math.max(half, v));
+}
+
+// `object-position` X (%) that reproduces the editor's framing on a thumbnail:
+// a window at the format's ratio + `object-fit: cover` + this X shows exactly
+// the cropped region. Percentage maps the overflow, hence the (1 - w) divisor.
+export function cropPositionPercent(id, x) {
+  const w = cropWidthFraction(id);
+  if (w >= 1) return 50;
+  return ((clampCropX(id, x) - w / 2) / (1 - w)) * 100;
 }
 
 // ── Clip-draft "pick an export format" quick-picker items ────────────────
