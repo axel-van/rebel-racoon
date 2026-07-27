@@ -25,7 +25,7 @@ import {
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=40";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=31";
 import { getNewCount as getNewResearchCount, subscribe as subscribeResearch } from "../research-store.js?v=6";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=365";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=366";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=61";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=39";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=54";

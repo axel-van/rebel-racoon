@@ -19,7 +19,7 @@ import { getFinding, subscribe as subscribeResearch } from "../research-store.js
 import { writeIdea, skipIdea } from "../research-flow.js?v=7";
 import { findResearchSource } from "../research-catalog.js?v=3";
 import { getIdeaById } from "../library.js?v=54";
-import { renderBadge } from "../research-view.js?v=5";
+import { renderBadge } from "../research-view.js?v=6";
 import { renderSocialPostCard } from "./social-post-card.js?v=2";
 
 const MODAL_ID = "research";
@@ -64,10 +64,6 @@ export function init() {
   bindOverlayDismissal({ modal, backdrop, close });
 }
 
-// The footer carries the same data-* hooks as the feed card, but the modal is
-// appended to <body> — outside the /research screen's delegated root — so it
-// handles them itself. The actions themselves live in research-flow, shared
-// with the feed.
 // The footer's actions live in research-flow, shared with the digest. The modal
 // is appended to <body> — outside the screen's delegated root — so it handles
 // its own clicks.

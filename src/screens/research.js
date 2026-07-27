@@ -8,20 +8,23 @@
 // Gated behind the `research` flag — OFF bounces to the dashboard, the same
 // shape as screens/connectors.js.
 //
-// The active Playbook and tab live in the hash query (`#/research?pb=…&tab=…`),
-// so deep links work and the router's re-run on query-only changes repaints for
-// free.
+// Single-purpose: the digest. The config moved to /research/settings, one cog
+// away — a permanent tab with a counter put something you set once a quarter at
+// the same level as the ideas you read weekly.
+//
+// The active Playbook lives in the hash query (`#/research?pb=…`), so deep links
+// work and the router's re-run on query-only changes repaints for free.
 //
 // NOTE ON THE "New" BADGE: markAllSeen() runs in the TEARDOWN, not on mount.
 // Clearing it on arrival would zero the counter the user just clicked.
 
 import { html, raw } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=227";
+import { renderTopbar } from "../components/topbar.js?v=228";
 import { navigate } from "../router.js?v=30";
 import { isFlagOn } from "../feature-flags.js?v=12";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { getContexts, getDefaultContext } from "../contexts-store.js?v=40";
-import { RESEARCH_SOURCES, CADENCES, findResearchSource } from "../research-catalog.js?v=3";
+import { CADENCES, findResearchSource } from "../research-catalog.js?v=3";
 import {
   getEditions,
   getFinding,
@@ -30,16 +33,11 @@ import {
   getLastScanAt,
   isScanning,
   markAllSeen,
-  setSourceEnabled,
-  setCadence,
-  setNotify,
   subscribe as subscribeResearch,
 } from "../research-store.js?v=6";
 import { getAllIdeas, getIdeaById } from "../library.js?v=54";
-import { renderResearchPage, renderDigestBody, renderSourcesBody } from "../research-view.js?v=5";
-import { findConnector } from "../connectors-store.js?v=31";
-import { open as openConnectorsModal } from "../components/connectors-modal.js?v=14";
-import { open as openResearchModal } from "../components/research-modal.js?v=9";
+import { renderResearchPage, renderDigestBody } from "../research-view.js?v=6";
+import { open as openResearchModal } from "../components/research-modal.js?v=10";
 import { writeIdea, skipIdea, runScanAndAnnounce } from "../research-flow.js?v=7";
 
 let unsubscribe = null;
@@ -53,10 +51,17 @@ export function renderResearch(_params, target) {
     navigate("/");
     return;
   }
+  activeContextId = resolveContextId();
+
+  // Back-compat: the config used to be a tab here. A link shared yesterday
+  // shouldn't land on a page that lost its tab.
+  if (parseHashParams().get("tab") === "sources") {
+    setHashQuery("/research/settings", activeContextId ? { pb: activeContextId } : {});
+    return;
+  }
+
   renderTopbar();
   teardownSubscription();
-
-  activeContextId = resolveContextId();
   paint(target);
   unsubscribe = subscribeResearch(() => repaint(target));
 
@@ -80,23 +85,6 @@ function resolveContextId() {
   const all = getContexts();
   if (wanted && all.some((c) => c.id === wanted)) return wanted;
   return getDefaultContext()?.id || all[0]?.id || null;
-}
-
-function resolveTab() {
-  return parseHashParams().get("tab") === "sources" ? "sources" : "digest";
-}
-
-// The MCP source advertises connected tools; the catalog only carries ids.
-function toolsForSources() {
-  const out = {};
-  for (const s of RESEARCH_SOURCES) {
-    if (!s.tools) continue;
-    out[s.id] = s.tools.map((id) => {
-      const c = findConnector(id);
-      return { id, name: c?.name || id, logo: c?.logo || "" };
-    });
-  }
-  return out;
 }
 
 // Resolve each edition's ideaIds into live ideas. Skipping an idea deletes it
@@ -125,17 +113,13 @@ function buildState() {
   return {
     editions: buildEditions(contextId),
     expanded,
-    tab: resolveTab(),
     playbooks: getContexts().map((c) => ({ id: c.id, name: c.name })),
     contextId,
     config: getResearchConfig(contextId),
     scanning: isScanning(contextId),
     lastScanAt: getLastScanAt(contextId),
     newCount: getNewCount({ contextId }),
-    sources: RESEARCH_SOURCES,
     cadences: CADENCES,
-    tools: toolsForSources(),
-    connectorsOn: isFlagOn("connectors"),
     // The justification behind an idea, for the "Because …" line.
     findingFor: (ideaId) => getFinding(getIdeaById(ideaId)?.researchFindingId),
   };
@@ -147,7 +131,6 @@ function buildState() {
 function chromeSignature(state) {
   return [
     state.contextId,
-    state.tab,
     state.scanning ? "scanning" : "idle",
     state.lastScanAt || "",
     (state.config.enabledSourceIds || []).join(","),
@@ -177,7 +160,7 @@ function repaint(target) {
 function repaintBody(root, state = buildState()) {
   const body = root.querySelector("[data-research-body]");
   if (!body) return;
-  body.innerHTML = state.tab === "sources" ? renderSourcesBody(state) : renderDigestBody(state);
+  body.innerHTML = renderDigestBody(state);
 }
 
 function bind(target) {
@@ -188,11 +171,11 @@ function bind(target) {
 }
 
 function onClick(event, root) {
-  const tabBtn = event.target.closest("[data-research-tab]");
-  if (tabBtn) {
-    const params = { tab: tabBtn.dataset.researchTab };
-    if (activeContextId) params.pb = activeContextId;
-    setHashQuery("/research", params);
+  // The cog, and the empty state's "Choose what I watch" — both go to the
+  // settings route carrying the Playbook the user is looking at.
+  const toSettings = event.target.closest("[data-research-open-settings], [data-research-tab]");
+  if (toSettings) {
+    openSettings();
     return;
   }
 
@@ -231,50 +214,17 @@ function onClick(event, root) {
     return;
   }
 
-  // ── "What I watch" ──────────────────────────────────────────────────────
-  // The whole row is the <label>, so preventDefault stops the click firing a
-  // second time through the nested checkbox — the Admin popover's contract.
-  const sourceRow = event.target.closest("[data-research-source]");
-  if (sourceRow) {
-    event.preventDefault();
-    const id = sourceRow.dataset.researchSource;
-    const on = (getResearchConfig(activeContextId).enabledSourceIds || []).includes(id);
-    setSourceEnabled(activeContextId, id, !on);
-    return;
-  }
-
-  const notifyRow = event.target.closest("[data-research-notify]");
-  if (notifyRow) {
-    event.preventDefault();
-    setNotify(activeContextId, !getResearchConfig(activeContextId).notify);
-    return;
-  }
-
-  const cadence = event.target.closest("[data-research-cadence]");
-  if (cadence) {
-    setCadence(activeContextId, cadence.dataset.researchCadence);
-    return;
-  }
-
-  const pbLink = event.target.closest("[data-research-playbook-link]");
-  if (pbLink) {
-    navigate(`/playbook/${pbLink.dataset.researchPlaybookLink}`);
-    return;
-  }
-
-  const addTool = event.target.closest("[data-research-add-tool]");
-  if (addTool) {
-    openConnectorsModal({});
-    return;
-  }
-
   const playbook = event.target.closest("[data-research-playbook]");
   if (playbook) {
     const id = playbook.dataset.researchPlaybook;
     playbook.closest("details")?.removeAttribute("open");
     if (id !== activeContextId) {
       expanded = new Set();
-      setHashQuery("/research", { pb: id, tab: resolveTab() });
+      setHashQuery("/research", { pb: id });
     }
   }
+}
+
+function openSettings() {
+  setHashQuery("/research/settings", activeContextId ? { pb: activeContextId } : {});
 }

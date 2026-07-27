@@ -20,9 +20,14 @@
 //   • a provenance line, so the research is a warrant rather than content to
 //     wade through.
 //
-// Screen state shape (built by screens/research.js):
+// This module serves TWO screens — the digest (screens/research.js) and the
+// settings page (screens/research-settings.js). The settings renderers live here
+// rather than in the settings screen because both surfaces need the same header
+// chrome (the Playbook picker, the subline) and the config summary.
+//
+// Screen state shape (built by the screens):
 //   {
-//     editions: [{ id, at, ideas: Idea[], sourceNames: string[] }],
+//     editions: [{ id, at, ideas: Idea[], sourceNames: string[] }],   // digest
 //     expanded: Set<ideaId>,      // rows the user opened
 //     playbooks: [{ id, name }],  // picker; hidden when length < 2
 //     contextId, config, scanning, lastScanAt, tab,
@@ -101,6 +106,22 @@ function renderPlaybookPicker(state) {
       <div class="ap-select-options">${raw(options)}</div>
     </div>
   </details>`;
+}
+
+// Discreet on purpose. The settings used to be a permanent tab with a counter,
+// which put something you revisit once a quarter at the same level as the ideas
+// you read weekly — and the counter implied there was something to do there.
+function renderSettingsCog(state) {
+  const pb = state.contextId ? `?pb=${encodeURIComponent(state.contextId)}` : "";
+  return html`<button
+    type="button"
+    class="ap-icon-button transparent research-view__cog"
+    data-research-open-settings="${pb}"
+    aria-label="Research settings"
+    title="What I watch"
+  >
+    <i class="ap-icon-cog"></i>
+  </button>`;
 }
 
 // Grey, not orange: the one orange on this page belongs to "Write it".
@@ -347,31 +368,8 @@ export function renderSourcesBody(state) {
 
 // ── The page ──────────────────────────────────────────────────────────────
 
-// .ap-tabs is width:100%/column by default (it's built to own a panel), so the
-// inline instance is shrink-wrapped in research.css.
-function renderTabs(state) {
-  const tab = (id, label, count) => {
-    const on = state.tab === id;
-    return html`<button
-      type="button"
-      class="ap-tabs-tab${raw(on ? " active" : "")}"
-      data-research-tab="${id}"
-      role="tab"
-      aria-selected="${raw(on ? "true" : "false")}"
-    >
-      <span>${label}</span>
-      ${raw(count > 0 ? html`<span class="ap-counter normal ${raw(on ? "blue" : "grey")}">${count}</span>` : "")}
-    </button>`;
-  };
-  const ideaCount = (state.editions || []).reduce((n, e) => n + (e.ideas || []).length, 0);
-  return html`<div class="ap-tabs research-view__tabs">
-    <div class="ap-tabs-nav" role="tablist" aria-label="Research views">
-      ${raw(tab("digest", "Ideas", ideaCount))}
-      ${raw(tab("sources", "What I watch", (state.config?.enabledSourceIds || []).length))}
-    </div>
-  </div>`;
-}
-
+// The digest page. Single-purpose: the editions, and nothing else. The config
+// lives on its own route, one cog away.
 export function renderResearchPage(state) {
   return html`
     <div class="research-view__page">
@@ -381,15 +379,36 @@ export function renderResearchPage(state) {
           <p class="research-view__sub">${renderSubline(state)}</p>
         </div>
         <div class="research-view__head-actions">
-          ${raw(renderPlaybookPicker(state))} ${raw(renderScanButton(state))}
+          ${raw(renderPlaybookPicker(state))} ${raw(renderScanButton(state))} ${raw(renderSettingsCog(state))}
         </div>
       </header>
 
-      ${raw(renderTabs(state))}
+      <div class="research-view__body" data-research-body>${raw(renderDigestBody(state))}</div>
+    </div>
+  `;
+}
 
-      <div class="research-view__body" data-research-body>
-        ${raw(state.tab === "sources" ? renderSourcesBody(state) : renderDigestBody(state))}
-      </div>
+// The settings page. Same chrome family as the digest, but the Playbook has to
+// be UNMISSABLE here: a page called settings reads as global, and this config is
+// per Playbook. So the name is in the subtitle in prose, not only in the picker
+// (which hides itself when there's a single Playbook).
+export function renderResearchSettingsPage(state) {
+  const name = (state.playbooks || []).find((p) => p.id === state.contextId)?.name || "this Playbook";
+  const count = (state.config?.enabledSourceIds || []).length;
+  return html`
+    <div class="research-view__page">
+      <header class="research-view__head">
+        <div class="research-view__head-text">
+          <h1 class="research-view__title">What I watch</h1>
+          <p class="research-view__sub">
+            ${count} ${raw(count === 1 ? "source" : "sources")} for <strong>${name}</strong>, every
+            ${cadence(state)?.every || "week"}.
+          </p>
+        </div>
+        <div class="research-view__head-actions">${raw(renderPlaybookPicker(state))}</div>
+      </header>
+
+      <div class="research-view__body" data-research-body>${raw(renderSourcesBody(state))}</div>
     </div>
   `;
 }

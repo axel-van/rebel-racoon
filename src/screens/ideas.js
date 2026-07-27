@@ -21,7 +21,7 @@
 
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=227";
+import { renderTopbar } from "../components/topbar.js?v=228";
 import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=2";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=64";

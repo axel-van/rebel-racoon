@@ -1,4 +1,5 @@
-import { html, raw } from "../utils.js?v=21";
+import { html, raw, escapeHtml, escapeAttr } from "../utils.js?v=21";
+import { parseHashParams } from "../url-state.js?v=21";
 import { getPath, navigate } from "../router.js?v=30";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 // Lot 19 — topbar no longer carries its own sidebar-toggle button. The
@@ -13,7 +14,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=365";
+} from "./right-panel.js?v=366";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=54";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=61";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=54";
@@ -22,7 +23,7 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=158";
+} from "./conversation-status-card.js?v=159";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=9";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=40";
@@ -57,7 +58,7 @@ export function renderTopbar(_options = {}) {
   const el = document.getElementById("topbar");
   if (!el) return;
   const onSession = isSessionRoute();
-  const onPlaybook = isPlaybookRoute();
+  const back = backTargetFor(getPath());
   const onWelcomeAlt = onSession && isWelcomeAltSession();
   const rpMode = getRightPanelMode();
   const draftCount = onSession ? latestDraftCount() : 0;
@@ -84,7 +85,7 @@ export function renderTopbar(_options = {}) {
   // On the repurposing winner board (profile-first mode), the topbar leads with
   // a "Change profile" back — the app's standard back affordance — in place of
   // the session title.
-  const left = onPlaybook ? renderBack() : isTopPostsBoard() ? renderTopPostsBack() : renderTitle(onSession);
+  const left = back ? renderBack(back) : isTopPostsBoard() ? renderTopPostsBack() : renderTitle(onSession);
   el.innerHTML = html`
     <div class="app-topbar__left">${raw(left)}</div>
     <div class="app-topbar__right">${raw(rightSide)}</div>
@@ -191,7 +192,8 @@ export function initTopbar() {
   const el = document.getElementById("topbar");
   if (!el) return;
   el.addEventListener("click", (event) => {
-    // Back to Playbooks — shown on the /playbook/:id page.
+    // Back from a sub-page — target comes from backTargetFor(), and may carry a
+    // query (the settings page sends its Playbook back to the digest).
     const backBtn = event.target.closest("[data-topbar-back]");
     if (backBtn) {
       navigate(backBtn.dataset.topbarBack || "/");
@@ -469,8 +471,16 @@ function isSessionRoute() {
   return /^\/session\//.test(getPath());
 }
 
-function isPlaybookRoute() {
-  return /^\/playbook\//.test(getPath());
+// Routes that lead with a back control instead of a title, and where they go.
+// `to` may carry a query — /research/settings sends the active Playbook back to
+// the digest, or setting Playbook B and returning would show Playbook A's.
+function backTargetFor(path) {
+  if (/^\/playbook\//.test(path)) return { to: "/contexts", label: "Back to Playbooks" };
+  if (path === "/research/settings") {
+    const pb = parseHashParams().get("pb");
+    return { to: pb ? `/research?pb=${encodeURIComponent(pb)}` : "/research", label: "Back to Research" };
+  }
+  return null;
 }
 
 // The welcome-alt session hosts the conversational Playbook builder
@@ -486,13 +496,12 @@ function isWelcomeAltSession() {
   return !!sid && sid.startsWith("welcome-alt-");
 }
 
-// On the Playbook page the topbar leads with a back control to the
-// Playbooks list, in place of the route title.
-function renderBack() {
+// A sub-page leads with a back control in place of the route title.
+function renderBack({ to, label }) {
   return `
-    <button type="button" class="ap-button ghost grey app-topbar__back" data-topbar-back="/contexts" title="Back to Playbooks">
+    <button type="button" class="ap-button ghost grey app-topbar__back" data-topbar-back="${escapeAttr(to)}" title="${escapeAttr(label)}">
       <i class="ap-icon-arrow-left" aria-hidden="true"></i>
-      <span>Back to Playbooks</span>
+      <span>${escapeHtml(label)}</span>
     </button>
   `;
 }
@@ -512,6 +521,7 @@ function currentTitle() {
   if (path === "/contexts") return "Playbooks";
   if (path === "/connectors") return "Connectors";
   if (path === "/research") return "Research";
+  if (path === "/research/settings") return "What I watch";
   if (path === "/ideas") return "Ideas";
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);
   if (sessionMatch) {
