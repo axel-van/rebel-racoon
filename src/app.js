@@ -26,7 +26,7 @@ import {
 } from "./components/conversation-status-card.js?v=158";
 import { renderDashboard } from "./screens/dashboard.js?v=55";
 import { renderSession } from "./screens/session.js?v=450";
-import { renderIdeas } from "./screens/ideas.js?v=6";
+import { renderIdeas } from "./screens/ideas.js?v=7";
 import { renderContexts } from "./screens/contexts.js?v=190";
 import { renderConnectors } from "./screens/connectors.js?v=129";
 import { renderResearch } from "./screens/research.js?v=11";

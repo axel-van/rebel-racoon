@@ -20,6 +20,7 @@
 // original — they were right the first time.
 
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
+import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=227";
 import { renderCompactIdeaCard } from "../components/idea-card-compact.js?v=2";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
@@ -79,6 +80,13 @@ let onInput = null;
 let onChange = null;
 
 export function renderIdeas(_params, target) {
+  // Gated on `research` like the nav entry: this page exists BECAUSE research
+  // delivers ideas that belong to no chat. With the flag off, leaving the route
+  // reachable would silently reverse the decision to remove it.
+  if (!isFlagOn("research")) {
+    navigate("/");
+    return;
+  }
   renderTopbar();
   pageState = { kind: "all", origin: "all", query: "", sort: "recent" };
   selection = new Set();
