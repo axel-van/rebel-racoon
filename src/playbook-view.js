@@ -15,7 +15,7 @@
 // is safe because only one route renders at a time.
 
 import { html, raw, escapeHtml as esc } from "./utils.js?v=21";
-import { analyzeWebsite, discoverCompetitors } from "./context-mock-analysis.js?v=25";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=25";
 import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1";
 import { isFlagOn } from "./feature-flags.js?v=11";
 import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=27";
@@ -337,6 +337,7 @@ export function snapshotEditable(d) {
       brandColors: d.brandColors || [],
       referenceImages: d.referenceImages || [],
       competitors: d.competitors || [],
+      dismissedCompetitors: d.dismissedCompetitors || [],
     }),
   );
 }
@@ -1220,6 +1221,19 @@ function competitorList(data) {
   return data.competitors;
 }
 
+function dismissedList(data) {
+  if (!Array.isArray(data.dismissedCompetitors)) data.dismissedCompetitors = [];
+  return data.dismissedCompetitors;
+}
+
+// `suggested: true` is a PENDING proposal from Archie — it is NOT part of the
+// Playbook until the user accepts it. Anything that counts a Playbook's
+// competitors (the section's own grid, the /contexts card counter) must skip
+// them; only the "Suggested by Archie" tray reads them.
+function pendingCompetitors(data) {
+  return competitorList(data).filter((c) => c.suggested);
+}
+
 // Logo tile — the remote favicon plus a monogram twin that onLoadError reveals
 // when the favicon can't load (domain with no icon, blocked request, offline).
 // A competitor with no website has nothing to resolve, so it renders monogram-only.
@@ -1268,14 +1282,23 @@ function renderCompetitorNetLinks(c) {
     .join("")}</span>`;
 }
 
-function renderCompetitorCard(c, i, edit) {
+// One competitor card. `i` is the index into the FULL competitors array (both
+// states share it) so the handlers stay index-addressed.
+//
+// A pending card reads as a proposal, not as a Playbook entry: dashed border,
+// recessed surface, and its own Add / Dismiss row. Those two buttons must be
+// SIBLINGS of the open-button (the card body is itself a <button>, so nesting
+// them would be invalid HTML), hence the flex-column card container.
+function renderCompetitorCard(c, i, { edit = false, pending = false } = {}) {
   const domain = competitorDomain(c);
   const desc = (c.description || "").trim();
+  const name = esc(c.name || "competitor");
+  const nets = renderCompetitorNetIcons(c);
   return `
-    <div class="recap__cmpcard">
+    <div class="recap__cmpcard${pending ? " recap__cmpcard--suggested" : ""}">
       <button type="button" class="recap__cmpcard-open" data-recap-cmp-open="${i}" aria-label="${
-        edit ? "Edit" : "View"
-      } ${esc(c.name || "competitor")} details">
+        edit && !pending ? "Edit" : "View"
+      } ${name} details">
         <span class="recap__cmpcard-head">
           ${renderCompetitorLogo(c, 36)}
           <span class="recap__cmpcard-id">
@@ -1286,21 +1309,21 @@ function renderCompetitorCard(c, i, edit) {
         <span class="recap__cmpcard-desc${desc ? "" : " recap__cmpcard-desc--empty"}">${
           desc ? esc(desc) : "No description yet"
         }</span>
-        <span class="recap__cmpcard-foot">
-          ${renderCompetitorNetIcons(c)}
-          ${
-            c.suggested
-              ? `<span class="ap-tag grey mini recap__cmp-badge" title="Found by Archie on your market"><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Suggested</span></span>`
-              : ""
-          }
-        </span>
+        ${nets ? `<span class="recap__cmpcard-foot">${nets}</span>` : ""}
       </button>
       ${
-        edit
-          ? `<button type="button" class="recap__refimg-remove recap__cmpcard-remove" data-recap-cmp-remove="${i}" aria-label="Remove ${esc(
-              c.name || "competitor",
-            )}"><i class="ap-icon-close"></i></button>`
-          : ""
+        pending
+          ? `<div class="recap__cmpcard-actions">
+               <button type="button" class="ap-button secondary blue recap__cmpcard-act" data-recap-cmp-accept="${i}">
+                 <i class="ap-icon-plus" aria-hidden="true"></i><span>Add</span>
+               </button>
+               <button type="button" class="ap-button ghost grey recap__cmpcard-act" data-recap-cmp-dismiss="${i}">
+                 <span>Dismiss</span>
+               </button>
+             </div>`
+          : edit
+            ? `<button type="button" class="recap__refimg-remove recap__cmpcard-remove" data-recap-cmp-remove="${i}" aria-label="Remove ${name}"><i class="ap-icon-close"></i></button>`
+            : ""
       }
     </div>`;
 }
@@ -1329,8 +1352,37 @@ function renderCompetitorScan() {
 function renderCompetitorsPanel(data, edit) {
   const section = SECTIONS[3];
   const list = competitorList(data);
-  const grid = (editing) =>
-    `<div class="recap__cmpgrid">${list.map((c, i) => renderCompetitorCard(c, i, editing)).join("")}</div>`;
+  // Index into the full array, so accept/dismiss/remove stay index-addressed
+  // while the two states render in separate groups.
+  const indexed = list.map((c, i) => ({ c, i }));
+  const active = indexed.filter(({ c }) => !c.suggested);
+  const pending = indexed.filter(({ c }) => c.suggested);
+
+  const gridOf = (entries, opts) =>
+    `<div class="recap__cmpgrid">${entries.map(({ c, i }) => renderCompetitorCard(c, i, opts)).join("")}</div>`;
+
+  // Archie's proposals live in their own tray below the Playbook's own
+  // competitors — a pending suggestion is not a competitor of this brand yet.
+  const pendingGroup = pending.length
+    ? `<section class="recap__cmpgroup recap__cmpgroup--suggested">
+         <header class="recap__cmpgroup-head">
+           <span class="recap__cmpgroup-title">
+             <i class="ap-icon-sparkles" aria-hidden="true"></i>
+             <span>Suggested by Archie</span>
+             <span class="ap-tag grey mini recap__cmpgroup-count">${pending.length}</span>
+           </span>
+           ${
+             pending.length > 1
+               ? `<button type="button" class="ap-button ghost grey recap__cmpgroup-act" data-recap-cmp-accept-all>
+                    <i class="ap-icon-check" aria-hidden="true"></i><span>Add all</span>
+                  </button>`
+               : ""
+           }
+         </header>
+         <p class="recap__cmpgroup-sub">Not in your Playbook yet — add the ones that matter.</p>
+         ${gridOf(pending, { edit, pending: true })}
+       </section>`
+    : "";
 
   // The panel body is a flex column of padded .recap__row blocks; this section
   // has no label→value rows, so its content gets its own padded wrapper.
@@ -1338,26 +1390,39 @@ function renderCompetitorsPanel(data, edit) {
   let inner;
   if (cmpScanning) {
     inner = renderCompetitorScan();
-  } else if (edit) {
-    hint = renderSectionHint(SECTION_HINTS.competitors);
+  } else {
+    const activeEmpty = pending.length
+      ? `<p class="recap__cmp-empty">None added yet — pick from Archie's suggestions below.</p>`
+      : edit
+        ? `<p class="recap__cmp-empty">No competitors yet. Add the ones you know — Archie can find the rest.</p>`
+        : `<p class="recap__cmp-empty">No competitors yet — Archie can scan your market and suggest a few.</p>`;
+    const activeGroup = active.length ? gridOf(active, { edit, pending: false }) : activeEmpty;
+    // Only label the active group when a suggestions tray sits under it —
+    // a lone grid needs no heading.
+    const activeBlock = pending.length
+      ? `<section class="recap__cmpgroup">
+           <header class="recap__cmpgroup-head">
+             <span class="recap__cmpgroup-title"><span>Your competitors</span>
+               <span class="ap-tag grey mini recap__cmpgroup-count">${active.length}</span>
+             </span>
+           </header>
+           ${activeGroup}
+         </section>`
+      : activeGroup;
+
+    if (edit) hint = renderSectionHint(SECTION_HINTS.competitors);
     inner = [
-      list.length
-        ? grid(true)
-        : `<p class="recap__cmp-empty">No competitors yet. Add the ones you know — Archie can find the rest.</p>`,
-      list.length < MAX_COMPETITORS
+      activeBlock,
+      edit && list.length < MAX_COMPETITORS
         ? `<button type="button" class="ap-button secondary blue recap__add-row" data-recap-cmp-add>
              <i class="ap-icon-plus"></i><span>Add competitor</span>
            </button>`
         : "",
-    ].join("");
-  } else {
-    inner =
-      (list.length
-        ? grid(false)
-        : `<p class="recap__cmp-empty">No competitors yet — Archie can scan your market and suggest a few.</p>`) +
-      (cmpScanFoundNone
+      pendingGroup,
+      !edit && cmpScanFoundNone
         ? `<p class="recap__cmp-note"><i class="ap-icon-info" aria-hidden="true"></i><span>No new competitors found. Add one by hand instead.</span></p>`
-        : "");
+        : "",
+    ].join("");
   }
   const body = `${hint}<div class="recap__cmpsec">${inner}</div>`;
 
@@ -1469,7 +1534,7 @@ function renderCompetitorModal(data) {
           ${renderCompetitorLogo(c, 48)}
           ${
             c.suggested
-              ? `<span class="ap-tag grey mini recap__cmp-badge" title="Found by Archie on your market"><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Suggested</span></span>`
+              ? `<span class="ap-tag grey mini recap__cmp-badge"><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Suggested — not added yet</span></span>`
               : ""
           }
         </div>
@@ -1491,9 +1556,16 @@ function renderCompetitorModal(data) {
         </div>
       </div>
       <div class="ap-dialog-footer">
-        <div class="ap-dialog-footer-left">${removeBtn}</div>
+        <div class="ap-dialog-footer-left">${c.suggested ? "" : removeBtn}</div>
         <div class="ap-dialog-footer-right">
-          <button type="button" class="ap-button primary orange" data-recap-cmp-close><span>Done</span></button>
+          ${
+            c.suggested
+              ? `<button type="button" class="ap-button ghost grey" data-recap-cmp-dismiss="${i}"><span>Dismiss</span></button>
+                 <button type="button" class="ap-button primary orange" data-recap-cmp-accept="${i}">
+                   <i class="ap-icon-plus" aria-hidden="true"></i><span>Add to Playbook</span>
+                 </button>`
+              : `<button type="button" class="ap-button primary orange" data-recap-cmp-close><span>Done</span></button>`
+          }
         </div>
       </div>
     </aside>
@@ -1764,7 +1836,11 @@ function startCompetitorScan() {
     const live = cfg?.getData();
     if (!live || !mountTarget) return;
     const existing = competitorList(live);
-    const found = discoverCompetitors(live.websiteUrl || live.sourceUrl || "", { exclude: existing });
+    // Exclude what's already on the Playbook (accepted or still pending) AND
+    // everything the user dismissed — Archie never re-proposes a rejection.
+    const found = discoverCompetitors(live.websiteUrl || live.sourceUrl || "", {
+      exclude: [...existing, ...dismissedList(live)],
+    });
     const room = Math.max(0, MAX_COMPETITORS - existing.length);
     const added = found.slice(0, room).map((c) => ({ ...c, suggested: true }));
     added.forEach((c) => existing.push(c));
@@ -1894,8 +1970,9 @@ function onClick(event) {
       });
     }
     // Drop competitors left completely blank (an "Add competitor" row the user
-    // opened and abandoned) and social rows with no URL. `suggested` is kept —
-    // it's provenance worth showing after the save, not a pending state.
+    // opened and abandoned) and social rows with no URL. `suggested` is kept:
+    // an unaccepted proposal stays pending across a Save rather than being
+    // silently adopted into the Playbook.
     if (Array.isArray(data.competitors)) {
       data.competitors = data.competitors.filter(
         (c) => (c.name || "").trim() || (c.websiteUrl || "").trim() || (c.description || "").trim(),
@@ -1917,6 +1994,46 @@ function onClick(event) {
   // ── Competitors ──
   if (event.target.closest("[data-recap-cmp-discover]")) {
     startCompetitorScan();
+    return;
+  }
+
+  // Accept a proposal — it becomes one of the Playbook's own competitors.
+  // Deliberately available in READ mode: adopting a suggestion shouldn't
+  // require entering the section editor, that's the point of the tray.
+  const cmpAccept = event.target.closest("[data-recap-cmp-accept]");
+  if (cmpAccept) {
+    const c = competitorList(data)[Number(cmpAccept.dataset.recapCmpAccept)];
+    if (!c) return;
+    delete c.suggested;
+    cmpModalIndex = null;
+    if (!editScope) cfg.commit?.(); // in edit mode the section's Save commits
+    repaintPreservingScroll();
+    return;
+  }
+
+  if (event.target.closest("[data-recap-cmp-accept-all]")) {
+    pendingCompetitors(data).forEach((c) => delete c.suggested);
+    cmpModalIndex = null;
+    if (!editScope) cfg.commit?.();
+    repaintPreservingScroll();
+    return;
+  }
+
+  // Dismiss a proposal — drop it and remember the rejection so a later scan
+  // doesn't surface it again.
+  const cmpDismiss = event.target.closest("[data-recap-cmp-dismiss]");
+  if (cmpDismiss) {
+    const list = competitorList(data);
+    const idx = Number(cmpDismiss.dataset.recapCmpDismiss);
+    const c = list[idx];
+    if (!c) return;
+    const key = competitorKey(c);
+    const dismissed = dismissedList(data);
+    if (key && !dismissed.includes(key)) dismissed.push(key);
+    list.splice(idx, 1);
+    cmpModalIndex = null; // indices shifted — the open modal no longer means anything
+    if (!editScope) cfg.commit?.();
+    repaintPreservingScroll();
     return;
   }
 

@@ -15,7 +15,7 @@
 
 import * as inlineQuestion from "./inline-question.js?v=48";
 import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=59";
-import * as rightPanel from "./components/right-panel.js?v=353";
+import * as rightPanel from "./components/right-panel.js?v=354";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=38";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=25";
 import { connectors as connectorMocks } from "./mocks.js?v=57";
@@ -66,9 +66,12 @@ function emptyDraft(overrides = {}) {
     brandColors: [], // Array<{ name, hex }>
     referenceImages: [], // Array<{ id, label, url, note?, networks? }> — note/networks = optional usage guidance
     // Competitors — Array<{ id, name, description, websiteUrl, socials:[{network,url}], logo?, suggested? }>.
-    // Pre-filled from the website analysis (each flagged `suggested`), then
-    // curated by the user in the Playbook's Competitors section.
+    // Pre-filled from the website analysis, each flagged `suggested: true` =
+    // a PENDING proposal the user still has to accept in the Playbook's
+    // Competitors section. dismissedCompetitors keeps the keys of the rejected
+    // ones so discovery never proposes them again.
     competitors: [],
+    dismissedCompetitors: [],
     sourceType: null, // "website" | "documents" | "social"
     sourceUrl: "",
     sourceFile: null,
@@ -139,9 +142,9 @@ export function sectionPatchFromAnalysis(analysis) {
     brandPersonality: s.brandPersonality || "",
     brandTypography: s.brandTypography ? { ...s.brandTypography } : null,
     brandColors: (s.brandColors || []).map((c) => ({ ...c })),
-    // Competitors Archie found on the brand's market — pre-filled and flagged
-    // `suggested` so the Playbook shows where they came from. The user prunes
-    // or adds to them in the Competitors section.
+    // Competitors Archie found on the brand's market. Flagged `suggested`, so
+    // they arrive as PENDING proposals in the Competitors section rather than
+    // as Playbook entries — the user accepts the ones that matter.
     competitors: (s.competitors || []).map((c) => ({
       ...c,
       socials: Array.isArray(c.socials) ? c.socials.map((x) => ({ ...x })) : [],
@@ -808,11 +811,13 @@ export function save(sessionId) {
     referenceImages: Array.isArray(d.referenceImages)
       ? d.referenceImages.map((i) => ({ ...i, networks: Array.isArray(i.networks) ? [...i.networks] : [] }))
       : [],
-    // Competitors survive the save with their provenance flag — the store
-    // deep-copies the nested socials and stamps missing ids.
+    // Competitors survive the save with their pending flag — an unaccepted
+    // suggestion stays pending on the saved Playbook rather than being dropped
+    // or silently adopted. The store deep-copies socials and stamps missing ids.
     competitors: Array.isArray(d.competitors)
       ? d.competitors.map((c) => ({ ...c, socials: Array.isArray(c.socials) ? c.socials.map((s) => ({ ...s })) : [] }))
       : [],
+    dismissedCompetitors: Array.isArray(d.dismissedCompetitors) ? d.dismissedCompetitors.slice() : [],
     updatedAt: "just now",
   };
 

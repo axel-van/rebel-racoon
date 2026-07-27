@@ -355,12 +355,7 @@ function optionsHTML() {
         <div class="vc-ratio">${tiles}</div>
       </div>
       <div class="vc-editor__field"${canPan ? "" : " hidden"}>
-        <label class="vc-editor__label">Framing</label>
         <p class="vc-editor__hint">Drag the frame on the preview to choose what stays in shot.</p>
-        <button type="button" class="ap-button stroked grey vc-crop__center-btn" data-vc-action="crop-center">
-          <i class="ap-icon-cropper" aria-hidden="true"></i>
-          <span>Center the frame</span>
-        </button>
       </div>`;
   }
 
@@ -829,13 +824,6 @@ function onModalClick(event) {
     if (!draft) return;
     draftPlayhead = draft.end;
     syncEditorAfterDrag();
-    return;
-  }
-
-  if (action === "crop-center") {
-    if (!draft) return;
-    draft.cropX = 0.5;
-    syncCropAfterDrag();
     return;
   }
 

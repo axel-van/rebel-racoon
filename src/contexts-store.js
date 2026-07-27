@@ -147,7 +147,11 @@ export function addContext(ctx = {}) {
       ? ctx.referenceImages.map((i) => ({ ...i, networks: Array.isArray(i.networks) ? [...i.networks] : [] }))
       : [],
     // — competitors (name / description / website / social profiles / logo) —
+    //   `suggested: true` = still a pending proposal from Archie, not yet part
+    //   of the Playbook. dismissedCompetitors holds the keys of the ones the
+    //   user rejected so discovery never re-proposes them.
     competitors: normalizeCompetitors(ctx.competitors),
+    dismissedCompetitors: Array.isArray(ctx.dismissedCompetitors) ? ctx.dismissedCompetitors.slice() : [],
     // — meta —
     usedIn: typeof ctx.usedIn === "number" ? ctx.usedIn : 0,
     updatedAt: ctx.updatedAt || "just now",
@@ -219,6 +223,8 @@ export function updateContext(id, patch) {
   if (patch.brandColors !== undefined) c.brandColors = patch.brandColors;
   if (patch.referenceImages !== undefined) c.referenceImages = patch.referenceImages;
   if (patch.competitors !== undefined) c.competitors = normalizeCompetitors(patch.competitors);
+  if (patch.dismissedCompetitors !== undefined)
+    c.dismissedCompetitors = Array.isArray(patch.dismissedCompetitors) ? patch.dismissedCompetitors.slice() : [];
   // — multilingual fields —
   if (patch.languages !== undefined)
     c.languages = Array.isArray(patch.languages) ? patch.languages.slice() : patch.languages;

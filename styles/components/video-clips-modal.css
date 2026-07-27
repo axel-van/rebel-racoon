@@ -1068,16 +1068,12 @@
   color: var(--app-vc-text-subtle);
 }
 
-/* Framing hint + Center button (auto-width — never stretched). */
+/* Framing hint — how to reframe; hidden at 16:9, where there's no slack. */
 .vc-editor__hint {
   margin: 0;
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   color: var(--app-vc-text-muted);
-}
-
-.vc-crop__center-btn {
-  align-self: flex-start;
 }
 
 /* ── Set IN/OUT buttons (timeline head) ────────────────────────── */

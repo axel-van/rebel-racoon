@@ -417,8 +417,11 @@ export function analyzeDocument(file) {
 /**
  * Identity of a competitor for dedupe purposes — its domain when it has a
  * website, else its lowercased name (the GENERIC placeholders ship no URL).
+ * Exported so the Playbook view can record a dismissal under the same key
+ * discovery later excludes on. Accepts a competitor or an existing key.
  */
-function competitorKey(c) {
+export function competitorKey(c) {
+  if (typeof c === "string") return c.trim().toLowerCase();
   return (
     deriveDomain(c?.websiteUrl || "") ||
     String(c?.name || "")
@@ -433,8 +436,10 @@ function competitorKey(c) {
  * that brand's competitor pool that aren't already known, so a repeat scan is
  * idempotent and only ever adds what's new.
  *
- * @param {string} url                      the Playbook's website URL
- * @param {{ exclude?: object[] }} options   competitors already on the Playbook
+ * @param {string} url  the Playbook's website URL
+ * @param {{ exclude?: Array<object|string> }} options  competitors already on
+ *   the Playbook — accepted or still pending — plus the keys of the ones the
+ *   user dismissed, so Archie never re-proposes a rejected competitor.
  * @returns {object[]} fresh competitors, each flagged `suggested: true`
  */
 export function discoverCompetitors(url, { exclude = [] } = {}) {
