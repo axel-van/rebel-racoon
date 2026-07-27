@@ -1,0 +1,170 @@
+/* social-post-card — someone else's published post, shown as evidence behind a
+   research finding. Separate from .top-post-card*: that one is a decision
+   surface for YOUR posts (×-vs-average hero, 4-metric strip, Repurpose CTA);
+   this is a quotation with its engagement as corroboration.
+
+   Reused, not re-declared: .ap-avatar (+ .ap-avatar-initials /
+   .ap-avatar-network) for identity. The author accent tints only the initials
+   bubble, from tokens, by class. */
+
+.social-post-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: var(--ref-border-radius-md);
+}
+
+.social-post-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.social-post-card__identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.social-post-card__author {
+  font-family: var(--sys-text-style-h4-font-family);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  color: var(--ref-color-grey-100);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.social-post-card__meta {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+.social-post-card__text {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-100);
+}
+
+.social-post-card__media {
+  border-radius: var(--ref-border-radius-sm);
+  overflow: hidden;
+}
+
+.social-post-card__media img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Engagement is corroboration, so it sits quiet and small — not a metric strip
+   competing with the quote. */
+.social-post-card__stats {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  flex-wrap: wrap;
+}
+
+.social-post-card__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+.social-post-card__stat > i {
+  font-size: var(--sys-icon-css-xs);
+}
+
+.social-post-card__stat-label {
+  color: var(--ref-color-grey-40);
+}
+
+/* ── Author accents ──────────────────────────────────────────────────── */
+
+/* The initials bubble only. Same semantic-key → token-pair contract as
+   .research-badge--*: the author's `accent` is a key in the data, never a hex. */
+.social-post-card__avatar > .ap-avatar-initials {
+  background: var(--social-post-accent-bg, var(--ref-color-grey-10));
+  color: var(--social-post-accent-fg, var(--ref-color-grey-80));
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 100%;
+}
+
+.social-post-card__avatar--purple {
+  --social-post-accent-bg: var(--ref-color-purple-10);
+  --social-post-accent-fg: var(--ref-color-purple-100);
+}
+
+.social-post-card__avatar--red {
+  --social-post-accent-bg: var(--ref-color-red-10);
+  --social-post-accent-fg: var(--ref-color-red-100);
+}
+
+.social-post-card__avatar--green {
+  --social-post-accent-bg: var(--ref-color-green-10);
+  --social-post-accent-fg: var(--ref-color-green-100);
+}
+
+.social-post-card__avatar--orange {
+  --social-post-accent-bg: var(--ref-color-orange-10);
+  --social-post-accent-fg: var(--ref-color-orange-100);
+}
+
+.social-post-card__avatar--electric-blue {
+  --social-post-accent-bg: var(--ref-color-electric-blue-10);
+  --social-post-accent-fg: var(--ref-color-electric-blue-100);
+}
+
+.social-post-card__avatar--soft-blue {
+  --social-post-accent-bg: var(--ref-color-soft-blue-10);
+  --social-post-accent-fg: var(--ref-color-soft-blue-100);
+}
+
+.social-post-card__avatar--menthol {
+  --social-post-accent-bg: var(--ref-color-menthol-10);
+  --social-post-accent-fg: var(--ref-color-menthol-100);
+}
+
+.social-post-card__avatar--yellow {
+  --social-post-accent-bg: var(--ref-color-yellow-10);
+  --social-post-accent-fg: var(--ref-color-yellow-100);
+}
+
+.social-post-card__avatar--grey {
+  --social-post-accent-bg: var(--ref-color-grey-10);
+  --social-post-accent-fg: var(--ref-color-grey-100);
+}
+
+/* ── Compact ─────────────────────────────────────────────────────────── */
+
+/* One representative post riding inside a chat turn — the quote stays, the
+   engagement row goes. */
+.social-post-card--compact {
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+}
+
+.social-post-card--compact .social-post-card__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-80);
+}

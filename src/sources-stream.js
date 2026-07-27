@@ -8,11 +8,11 @@
 // The state machine timers live here (not inside the modal) so uploads
 // continue in background after the user closes the modal.
 
-import { sourcesBySession as seedByCsesssion } from "./mocks.js?v=57";
+import { sourcesBySession as seedByCsesssion } from "./mocks.js?v=58";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import { detectUrlService } from "./url-services.js?v=1";
-import { isFlagOn } from "./feature-flags.js?v=11";
+import { isFlagOn } from "./feature-flags.js?v=12";
 
 // Canned extraction output attached to every Processed Video source.
 // Generic enough to plausibly come from any keynote / talk / demo video.
@@ -636,7 +636,7 @@ export function startConnectorImport(connector, doc, sessionId) {
 // `iconClass` lets the row render a network logo (see renderSourceRow).
 export function addReadySource(
   sessionId,
-  { id, filename, kind = "Post", preview = "", iconClass = null, topPost = null },
+  { id, filename, kind = "Post", preview = "", iconClass = null, topPost = null, researchFinding = null },
 ) {
   const list = getOrInitSessionSources(sessionId);
   if (list.some((s) => s.id === id)) return id;
@@ -655,6 +655,9 @@ export function addReadySource(
     // panel can render the real post card (renderTopPostEcho) instead of a
     // generic file row.
     topPost,
+    // Same idea for a used research finding — the payload rides along so the
+    // Sources panel can re-open "Read the research" from the row.
+    researchFinding,
   });
   notifySources(sessionId);
   return id;

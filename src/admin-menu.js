@@ -8,7 +8,7 @@
 
 import { html, raw, escapeHtml } from "./utils.js?v=21";
 import { FLAGS } from "./ff-catalog.js?v=16";
-import { getFlags, setFlag } from "./feature-flags.js?v=11";
+import { getFlags, setFlag } from "./feature-flags.js?v=12";
 import { getUserMode, setUserMode } from "./user-mode.js?v=22";
 
 const ADMIN_MODE_OPTIONS = [

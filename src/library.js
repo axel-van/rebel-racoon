@@ -13,7 +13,7 @@ import {
   ideas as seedIdeas,
   ideasBySession as seedIdeasBySession,
   recentSessions as seedRecentSessions,
-} from "./mocks.js?v=57";
+} from "./mocks.js?v=58";
 import { isNewUser } from "./user-mode.js?v=22";
 
 // Demo session ids — the recentSessions seed (s-acme-launch / s-riverside /
@@ -21,13 +21,13 @@ import { isNewUser } from "./user-mode.js?v=22";
 // conversations (created at runtime via "+ New conversation") start empty
 // to match the user's mental model. Anything else looked-up — same path.
 const DEMO_SESSION_IDS = new Set(seedRecentSessions.map((s) => s.id));
-import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=59";
+import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=60";
 import {
   getSources as streamGetSources,
   subscribeSources,
   pushScriptedSource,
   completeScriptedSource,
-} from "./sources-stream.js?v=52";
+} from "./sources-stream.js?v=53";
 
 // --- Module state -------------------------------------------------------
 
@@ -183,6 +183,10 @@ export function injectIdeasForSource(sessionId, sourceId, ideas) {
     state: "New",
     pinned: false,
     sourceIds: [sourceId],
+    // The research finding this idea was derived from, when it was. This mapper
+    // is a WHITELIST — a field not listed here is silently dropped, the same
+    // trap as contexts-store's updateContext.
+    researchFindingId: i.researchFindingId || null,
     extractedAt: "just now",
   }));
   ideasMap.get(sessionId).unshift(...created);

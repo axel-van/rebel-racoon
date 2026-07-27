@@ -45,20 +45,20 @@ Documentation qui décrit l'état actuel du code. À maintenir à jour quand le 
 
 ## 🗺️ Comment naviguer
 
-| Tu cherches…                                            | Va voir                                                                  |
-| ------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Ce que fait telle feature (flow, états, entrées)        | [`reference/FEATURES.md`](reference/FEATURES.md)                         |
-| Comment fonctionne le proto en général                  | [`reference/ARCHITECTURE.md`](reference/ARCHITECTURE.md)                 |
-| Quelles classes/tokens DS l'app utilise en pratique     | [`reference/UI-PATTERNS.md`](reference/UI-PATTERNS.md)                   |
-| Comment ajouter une route / un écran                    | [`reference/ROUTES.md`](reference/ROUTES.md)                             |
-| Comment ajouter / modifier un store                     | [`reference/STORES.md`](reference/STORES.md)                             |
-| Comment poser une couleur / un spacing                  | [`reference/DESIGN-SYSTEM.md`](reference/DESIGN-SYSTEM.md)               |
-| Comment se comportent sidebar + right panel (v1)        | [`reference/PANEL-SIDEBAR-RULES.md`](reference/PANEL-SIDEBAR-RULES.md)   |
-| Recréer le comportement sidebar + right panel de zéro   | [`reference/SIDEBAR-PANEL-RECIPE.md`](reference/SIDEBAR-PANEL-RECIPE.md) |
-| Que veut dire "Playbook" / "Context" / "Idea" / "Draft" | [`reference/GLOSSARY.md`](reference/GLOSSARY.md)                         |
-| Différences entre la prod Studio et le proto            | [`audits/PROD-VS-PROTOTYPE.md`](audits/PROD-VS-PROTOTYPE.md)             |
-| Quels changements appliquer côté prod                   | [`audits/PROD-CHANGES.md`](audits/PROD-CHANGES.md)                       |
-| Que dire / pas dire dans les copy                       | [`copy/copy-principles.md`](copy/copy-principles.md)                     |
+| Tu cherches…                                                        | Va voir                                                                  |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Ce que fait telle feature (flow, états, entrées)                    | [`reference/FEATURES.md`](reference/FEATURES.md)                         |
+| Comment fonctionne le proto en général                              | [`reference/ARCHITECTURE.md`](reference/ARCHITECTURE.md)                 |
+| Quelles classes/tokens DS l'app utilise en pratique                 | [`reference/UI-PATTERNS.md`](reference/UI-PATTERNS.md)                   |
+| Comment ajouter une route / un écran                                | [`reference/ROUTES.md`](reference/ROUTES.md)                             |
+| Comment ajouter / modifier un store                                 | [`reference/STORES.md`](reference/STORES.md)                             |
+| Comment poser une couleur / un spacing                              | [`reference/DESIGN-SYSTEM.md`](reference/DESIGN-SYSTEM.md)               |
+| Comment se comportent sidebar + right panel (v1)                    | [`reference/PANEL-SIDEBAR-RULES.md`](reference/PANEL-SIDEBAR-RULES.md)   |
+| Recréer le comportement sidebar + right panel de zéro               | [`reference/SIDEBAR-PANEL-RECIPE.md`](reference/SIDEBAR-PANEL-RECIPE.md) |
+| Que veut dire "Playbook" / "Context" / "Finding" / "Idea" / "Draft" | [`reference/GLOSSARY.md`](reference/GLOSSARY.md)                         |
+| Différences entre la prod Studio et le proto                        | [`audits/PROD-VS-PROTOTYPE.md`](audits/PROD-VS-PROTOTYPE.md)             |
+| Quels changements appliquer côté prod                               | [`audits/PROD-CHANGES.md`](audits/PROD-CHANGES.md)                       |
+| Que dire / pas dire dans les copy                                   | [`copy/copy-principles.md`](copy/copy-principles.md)                     |
 
 ---
 

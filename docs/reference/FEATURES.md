@@ -6,12 +6,12 @@
 
 ## Le pipeline
 
-Archie transforme des **Sources** en **Ideas**, puis en **Drafts** (posts), puis en posts **planifiés** — le tout depuis un chat conversationnel.
+Archie transforme des **Sources** en **Ideas**, puis en **Drafts** (posts), puis en posts **planifiés** — le tout depuis un chat conversationnel. En amont, un scan récurrent peut rapporter des **Findings** (§17) qui deviennent des Ideas.
 
 ```
-Source → Idea → Draft (post) → Schedule
-   │                             ▲
-   └── vidéo → Clips ────────────┘  (les clips deviennent aussi des drafts)
+Finding → Source → Idea → Draft (post) → Schedule
+(§17)       │                             ▲
+            └── vidéo → Clips ────────────┘  (les clips deviennent aussi des drafts)
 ```
 
 Vocabulaire : un **Playbook** (label UI) = un **Context** (code/store). Voir [`GLOSSARY.md`](GLOSSARY.md).
@@ -334,7 +334,7 @@ First-time sans Playbook → `/welcome-alt` ; sinon → session la plus récente
 ### Sidebar ([`sidebar.js`](../../src/components/sidebar.js))
 
 - **Head** : wordmark « Archie » + badge **BETA** (mint un chat), toggle collapse.
-- **Nav** : **New chat** (⇧⌘O), **Search…** (⌘K), puis **Ideas** (flag `sidebarIdeas`), **Playbooks**, **Connectors** (flag `connectors`) avec count badges.
+- **Nav** : **New chat** (⇧⌘O), **Search…** (⌘K), puis **Research** (flag `research` — compteur **bleu** des findings non vus, c'est une notification et non un total), **Ideas** (flag `sidebarIdeas`), **Playbooks**, **Connectors** (flag `connectors`) avec count badges.
 - **Recent** : groupés Pinned / Recent (avec le flag `sidebarOrganize` ON, un bouton filtre au-dessus de la liste ouvre **Group by** Aucun/Playbook/Date + **Sort by** Récence/Alphabétique — Pinned reste toujours en tête). Row = dot couleur playbook (masqué quand `playbookColors` est OFF) + titre + menu ⋮ (**Rename / Pin / Delete**). Delete → confirm + sweep de tous les stores per-session.
 - **Footer** : bloc user, **Send feedback**, ⚙️ popmenu → Send feedback / Report a bug / Keyboard shortcuts (`?`) / **Admin menu** (voir §14).
 - **Raccourcis globaux** : ⌘/Ctrl+B toggle sidebar, ⇧⌘O new chat, Esc ferme le menu. Collapse persisté (`archie-sidebar-collapsed`).
@@ -374,7 +374,7 @@ Détail dimensions/coexistence avec la status-card : [`SHELL-LAYOUT.md`](SHELL-L
 - **Feature flags** : une toggle par flag.
 - **Docs** : lien externe **« Conversation thread components »** → `/handoff/components.html`.
 
-### Feature flags ([`ff-catalog.js`](../../src/ff-catalog.js)) — les 10
+### Feature flags ([`ff-catalog.js`](../../src/ff-catalog.js)) — les 11
 
 | id                       | label                           | défaut  | Gate                                                                                                                                                                                                                                                                                                                                   |
 | ------------------------ | ------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -389,6 +389,8 @@ Détail dimensions/coexistence avec la status-card : [`SHELL-LAYOUT.md`](SHELL-L
 | `playbookCompetitors`    | Playbook competitors            | **OFF** | Section **Competitors** du Playbook (panneau + entrée de rail + compteur `/contexts`). La donnée reste présente quand OFF (voir §9).                                                                                                                                                                                                   |
 | `imageStudioV2`          | Image Studio v2 (prompt en bas) | **OFF** | Les actions image d'un draft ouvrent le redesign v2 (stage pleine largeur + composer en bas, réglages en chips-dropdown) au lieu de l'Image Studio actuel. Mêmes options, même moteur d'état (voir §7).                                                                                                                                |
 | `sidebarOrganize`        | Sort & group chats              | **OFF** | Bouton filtre au-dessus de la liste des chats → popover à plat **Group by** (Aucun / Playbook / Date) + **Sort by** (Récence / Alphabétique) ; réordonne/regroupe la liste (Pinned reste en tête). Date = buckets Today / Yesterday / Previous 7 days / … dérivés du libellé `lastActivity`. Préf. persistée (`archie-chat-organize`). |
+
+| `research` | Research (recurring findings) | **OFF** | Toute la feature **Research** (§17) : route `/research` + entrée de nav (avec le compteur de nouveaux findings), onglets Feed \| Sources, modal « Read the research », turn de livraison in-chat, toast d'arrivée et scan récurrent. La donnée (findings seedés + catalogue de sources) reste présente quand OFF, comme `playbookCompetitors`. |
 
 Persistés en `localStorage` (`archie-feature-flags`), lus via `isFlagOn()`. Voir aussi [`STORES.md`](STORES.md).
 
@@ -426,6 +428,37 @@ Tous via [`modal-coordinator.js`](../../src/modal-coordinator.js) (un overlay à
 - **URL services** ([`url-services.js`](../../src/url-services.js)) : reconnaissance de service depuis une URL (logos Google Docs/Notion/Drive/YouTube/Figma).
 - **Deep-links Figma-capture** : `?route=`, `?openModal=…`, `?openPanel=…`.
 - **Suppression de session** : `clearSession` dans chaque store per-session vide sources/ideas/drafts/mentions.
+
+---
+
+## 17. Research — findings récurrents (flag `research`, OFF)
+
+Un scan récurrent de sources de recherche (le **listening** Agorapulse d'abord) rapporte des **findings** : un constat sourcé, en amont des Ideas dans le pipeline. Voir [`GLOSSARY.md`](GLOSSARY.md#finding) pour le vocabulaire.
+
+### Route `/research` ([`screens/research.js`](../../src/screens/research.js))
+
+Deux onglets DS `.ap-tabs`, l'actif dans le hash (`?tab=sources`) — donc deep-linkable. Le Playbook actif aussi (`?pb=ctx-acme`) : la config **et** le feed sont par Playbook, et le picker `.ap-select` disparaît quand il n'y a qu'un Playbook. Header : titre + sous-ligne « N sources · refreshes weekly · last scan 5h ago » + **Run a scan** (gris, pas orange — l'orange de cette page appartient à l'action primaire de chaque carte).
+
+- **Feed** — une colonne de lecture (≈760px, pas une grille : un finding se lit avant d'être décidé). Carte = `.ap-card` + badge de source teinté, `Source · 5h ago`, tag `New` (`.ap-tag blue mini`), headline, résumé clampé à 2 lignes, « Research type » + `.ap-tag grey`, puis les actions : `.ap-split-button primary orange` **Turn into ideas** (chevron → _Turn into ideas in…_ / _Draft a post now_), **Dismiss** en ghost, et **Read the research** poussé à droite — lire est l'alternative à décider maintenant. Un finding utilisé se réduit à un `.ap-status green` « Turned into ideas ». Un toggle discret « Show dismissed (N) » en bas rend le rejet observable et réversible.
+- **Sources** — 7 cartes-interrupteurs (voir [`research-catalog.js`](../../src/research-catalog.js)) : Competitor sources, Influencer sources, Brand feedback, Competitor monitoring, Industry trends, Global trends, Internal team ideas. Toute la ligne est le `<label>`, toggle DS `.ap-toggle-container` en fin de ligne (contrat identique aux rows de flags du popover Admin). Sous la description, selon le `kind` : un deep link vers la section du Playbook qui alimente la source, ou les chips des outils connectés (**gatées par le flag `connectors`**). Puis « Other settings » : **Refresh frequency** (`.ap-filter-chip` Daily/Weekly/Monthly) et **Notifications**.
+
+### Modal « Read the research » ([`research-modal.js`](../../src/components/research-modal.js))
+
+720px — le premier dialog de **lecture longue** de l'app, délibérément plus étroit que les 920px du modal Connectors (c'est de la prose). Ordre de lecture : l'argument en 3 paragraphes → **Source posts** (les publications d'autrui, via [`social-post-card.js`](../../src/components/social-post-card.js)) → « What I'd write from this » (les idea seeds) → un footer collant qui rejoue les actions de la carte du feed, sans « Read the research » (on y est déjà). Son menu s'ouvre vers le haut.
+
+### Turn into ideas ([`research-flow.js`](../../src/research-flow.js))
+
+`/research` n'a pas de session : le **chat picker** demande où (avec le raccourci « aucun chat → on en crée un »), et le choix voyage sur le handoff `pendingResearchUse`, consommé au mount de la session. Puis, dans le chat : écho du finding (turn `selection-echo`) → chip _Turning research into ideas_ → le finding devient une **Source** consultable (`addReadySource`, payload `researchFinding`) → `injectIdeasForSource` avec `researchFindingId` sur chaque idea → le turn canonique « Extracted N ideas ». Avec _Draft a post now_, la chaîne continue dans `draft-flow`.
+
+### Livraison in-chat & récurrence
+
+Chaque batch s'annonce là où l'utilisateur est déjà : une phrase à la première personne (« I scanned your research sources. 3 new findings — … ») puis un turn `{ role: "assistant", variant: "research" }` rendu par le `renderResultCard` partagé, donc de la même famille que clips / ideas / drafts. Le teaser porte la headline la plus forte + une `social-post-card` compacte ; le CTA ouvre le modal **sur place** (on ne sort pas l'utilisateur de sa conversation).
+
+Deux déclencheurs, un seul chemin d'annonce : le bouton **Run a scan**, et un scan one-shot ~12s après le boot (`initResearch()` dans le bloc de boot de `app.js`). La **cadence n'est pas un timer** — daily/weekly/monthly ne se déclencherait jamais dans une session de démo ; elle pilote la copie et la taille du batch. La livraison cible le chat ouvert, sinon le plus récent de ce Playbook — jamais un fan-out. « Nothing new » ne se dit que si l'utilisateur a demandé. Notifications OFF supprime le toast mais **pas** le badge : la préférence porte sur l'interruption, pas sur le comptage.
+
+### Mémoire des rejets & toggles chargés
+
+`dismissFinding` retient le `dedupeKey` (pas l'`id`) : un finding rejeté ne revient jamais, même si un scan re-dérive le même constat. `runScan` ignore les sources désactivées — c'est ce qui rend les toggles de l'onglet Sources observablement utiles. Le badge « New » ne se vide qu'au **teardown** de la route, jamais à l'arrivée.
 
 ---
 

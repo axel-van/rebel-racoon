@@ -17,7 +17,7 @@
 // chooses "Save as global". updateContext is used by the section-edit flow
 // when scope is "Update everywhere".
 
-import { contexts as seed } from "./mocks.js?v=57";
+import { contexts as seed } from "./mocks.js?v=58";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import {
@@ -58,6 +58,18 @@ function normalizeCompetitors(list) {
     logo: c.logo || "",
     socials: Array.isArray(c.socials) ? c.socials.map((s) => ({ ...s })) : [],
   }));
+}
+
+// Research config carries a nested array, so it needs its own clone. `null`
+// stays null — research-store fills the catalog defaults on read, so a legacy
+// seed without the field behaves exactly like a fresh Playbook.
+function normalizeResearch(cfg) {
+  if (!cfg || typeof cfg !== "object") return null;
+  return {
+    enabledSourceIds: Array.isArray(cfg.enabledSourceIds) ? cfg.enabledSourceIds.slice() : [],
+    cadence: cfg.cadence || "weekly",
+    notify: cfg.notify !== false,
+  };
 }
 
 export function getContexts() {
@@ -152,6 +164,12 @@ export function addContext(ctx = {}) {
     //   user rejected so discovery never re-proposes them.
     competitors: normalizeCompetitors(ctx.competitors),
     dismissedCompetitors: Array.isArray(ctx.dismissedCompetitors) ? ctx.dismissedCompetitors.slice() : [],
+    // — research config (which sources Archie scans for this Playbook, how
+    //   often, and whether arrivals are announced). Per Playbook because the
+    //   sources it draws on — competitors, influencers — are Playbook data.
+    //   Read through research-store.getResearchConfig(), which fills the
+    //   catalog defaults when this is absent on a legacy seed.
+    research: normalizeResearch(ctx.research),
     // — meta —
     usedIn: typeof ctx.usedIn === "number" ? ctx.usedIn : 0,
     updatedAt: ctx.updatedAt || "just now",
@@ -225,6 +243,7 @@ export function updateContext(id, patch) {
   if (patch.competitors !== undefined) c.competitors = normalizeCompetitors(patch.competitors);
   if (patch.dismissedCompetitors !== undefined)
     c.dismissedCompetitors = Array.isArray(patch.dismissedCompetitors) ? patch.dismissedCompetitors.slice() : [];
+  if (patch.research !== undefined) c.research = normalizeResearch(patch.research);
   // — multilingual fields —
   if (patch.languages !== undefined)
     c.languages = Array.isArray(patch.languages) ? patch.languages.slice() : patch.languages;

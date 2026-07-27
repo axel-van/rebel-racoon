@@ -40,16 +40,16 @@
 
 ## Source layout (résumé)
 
-| Domaine | Fichiers |
-|---|---|
-| **Bootstrap** | `app.js`, `router.js`, `url-state.js`, `handoff.js`, `utils.js`, `store-utils.js`, `user-mode.js`, `feature-flags.js`, `ff-catalog.js`, `file-kinds.js`, `mocks.js` |
-| **Stores** | `sessions-store.js`, `contexts-store.js`, `connectors-store.js`, `library.js`, `posts-store.js`, `assistant.js`, `sources-stream.js`, `schedule-store.js`, `composer-mentions.js` — voir [`STORES.md`](STORES.md) |
-| **Flow orchestrators** | `start-flow.js`, `draft-flow.js`, `draft-rewrite.js`, `context-builder.js`, `playbook-editor.js`, `playbook-view.js`, `context-mock-analysis.js`, `sidebar-wizard.js`, `inline-question.js`, `library-actions.js`, `social-profiles.js`, `clip-formats.js`, `connectors-view.js`, `connector-ask.js`, `composer-connector.js` |
-| **Screens** | `screens/{dashboard, session, ideas, contexts, playbook, settings, connectors, welcome-alt, welcome-alt-recap}.js` + `screens/_analyse-common.js` + `screens/session/{intake-lifecycle, thinking-chip, wizard-keyboard}.js` |
-| **Components (persistent shell)** | `components/{topbar, sidebar, right-panel, conversation-status-card, content-workspace, toast, shortcut-legend}.js` |
-| **Components (cards)** | `components/{source-card, idea-card, idea-card-compact, post-card, clip-card, empty-state}.js` |
-| **Modals** | `components/{add-source, connectors, generate-image, video-clips, schedule, bug-report, feedback, chat-picker, confirm, rename, search}-modal.js` |
-| **Modal coordinator** | `modal-coordinator.js` — one-overlay-at-a-time orchestration |
+| Domaine                           | Fichiers                                                                                                                                                                                                                                                                                                                                                                                     |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Bootstrap**                     | `app.js`, `router.js`, `url-state.js`, `handoff.js`, `utils.js`, `store-utils.js`, `user-mode.js`, `feature-flags.js`, `ff-catalog.js`, `file-kinds.js`, `mocks.js`                                                                                                                                                                                                                          |
+| **Stores**                        | `sessions-store.js`, `contexts-store.js`, `connectors-store.js`, `library.js`, `posts-store.js`, `assistant.js`, `sources-stream.js`, `schedule-store.js`, `composer-mentions.js`, `research-store.js` — voir [`STORES.md`](STORES.md)                                                                                                                                                       |
+| **Flow orchestrators**            | `start-flow.js`, `draft-flow.js`, `draft-rewrite.js`, `context-builder.js`, `playbook-editor.js`, `playbook-view.js`, `context-mock-analysis.js`, `sidebar-wizard.js`, `inline-question.js`, `library-actions.js`, `social-profiles.js`, `clip-formats.js`, `connectors-view.js`, `connector-ask.js`, `composer-connector.js`, `research-flow.js`, `research-view.js`, `research-catalog.js` |
+| **Screens**                       | `screens/{dashboard, session, ideas, contexts, playbook, settings, connectors, research, welcome-alt, welcome-alt-recap}.js` + `screens/_analyse-common.js` + `screens/session/{intake-lifecycle, thinking-chip, wizard-keyboard}.js`                                                                                                                                                        |
+| **Components (persistent shell)** | `components/{topbar, sidebar, right-panel, conversation-status-card, content-workspace, toast, shortcut-legend}.js`                                                                                                                                                                                                                                                                          |
+| **Components (cards)**            | `components/{source-card, idea-card, idea-card-compact, post-card, clip-card, social-post-card, empty-state}.js`                                                                                                                                                                                                                                                                             |
+| **Modals**                        | `components/{add-source, connectors, research, generate-image, video-clips, schedule, bug-report, feedback, chat-picker, confirm, rename, search}-modal.js`                                                                                                                                                                                                                                  |
+| **Modal coordinator**             | `modal-coordinator.js` — one-overlay-at-a-time orchestration                                                                                                                                                                                                                                                                                                                                 |
 
 ## Conventions de fichiers
 
@@ -67,7 +67,7 @@ export function init() {
   document.body.insertAdjacentHTML("beforeend", `<aside id="myComponent">…</aside>`);
   root = document.getElementById("myComponent");
   root.addEventListener("click", handleDelegatedClick);
-  subscribe(render);  // store subscription
+  subscribe(render); // store subscription
 }
 ```
 
@@ -90,7 +90,9 @@ Pattern uniforme :
 
 ```js
 // pseudo-code
-let inited = false, dialog, lastFocus;
+let inited = false,
+  dialog,
+  lastFocus;
 const MODAL_ID = "addSourceModal";
 
 export function init() {
@@ -103,7 +105,7 @@ export function init() {
 
 export function open() {
   lastFocus = document.activeElement;
-  requestOpen(MODAL_ID, close);   // modal-coordinator
+  requestOpen(MODAL_ID, close); // modal-coordinator
   dialog.hidden = false;
   dialog.querySelector("[autofocus]")?.focus();
 }
@@ -124,8 +126,8 @@ Voir `src/modal-coordinator.js` pour le pattern global one-overlay-at-a-time.
 ```js
 import { html, raw, escapeHtml } from "./utils.js";
 
-const safe = html`<div class="card">${userInput}</div>`;         // escape par défaut
-const wrapped = html`<div>${raw(prerenderedHtml)}</div>`;        // n'escape pas raw()
+const safe = html`<div class="card">${userInput}</div>`; // escape par défaut
+const wrapped = html`<div>${raw(prerenderedHtml)}</div>`; // n'escape pas raw()
 ```
 
 **Règle d'or** : ne jamais appeler `escapeHtml()` sur une valeur déjà interpolée dans `html\`\``. Double-escape = bug (cf. la section "HTML rendu en clair" historique).
@@ -141,6 +143,7 @@ import { sendMessage } from "./assistant.js?v=40";
 ⚠️ Bumper la version d'un module impose de bumper **chez tous les importeurs** sinon un singleton/store devient deux instances séparées (avec leurs propres state map + subscribers).
 
 Outils :
+
 - `scripts/bump-cache.py` — utilitaire à utiliser pour bump consistant
 - Plus de détails dans [`STORES.md#singleton-warning`](STORES.md#singleton-warning)
 
