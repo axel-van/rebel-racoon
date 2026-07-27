@@ -25,16 +25,16 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=37";
 import { getSessionById } from "../../sessions-store.js?v=7";
 import { getContextById } from "../../contexts-store.js?v=38";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=4";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=5";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=4";
+import { renderStudio } from "./stage-view.js?v=5";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=4";
+} from "./interactions.js?v=5";
 import * as imageStudio from "../../image-studio.js?v=42";
 
 let backdrop;
@@ -220,8 +220,6 @@ function onClick(event) {
   if (refRm) return void imageStudio.removeReferenceImage(KEY, refRm.dataset.imgRefRemove);
 
   // ── Prompt row ──
-  if (event.target.closest("[data-img-derive]") && !st.promptLoading) return void imageStudio.runDerive(KEY);
-  if (event.target.closest("[data-img-composer-expand]")) return void toggleComposerExpanded();
 
   // ── Chrome ──
   const modeBtn = event.target.closest("[data-img-mode]");
@@ -342,25 +340,6 @@ function onClick(event) {
   ) {
     return void imageStudio.selectOverlay(KEY, null);
   }
-}
-
-// Expanding raises the prompt's height cap and lets the composer grow UPWARD
-// into the stage (never sideways — the bar is already full-width). Mutated in
-// place rather than re-rendered so the CSS height transition animates on the
-// persistent node; state stays in sync silently for later renders.
-function toggleComposerExpanded() {
-  const willExpand = !state().composerExpanded;
-  imageStudio.setComposerExpandedSilent(KEY, willExpand);
-  ctx.modal.querySelector(".isv2")?.classList.toggle("is-prompt-expanded", willExpand);
-  autosize(ctx.modal.querySelector("[data-img-prompt]"));
-  const btn = ctx.modal.querySelector("[data-img-composer-expand]");
-  if (!btn) return;
-  const icon = btn.querySelector("i");
-  if (icon) icon.className = `ap-icon-${willExpand ? "minimize" : "maximize"}`;
-  const label = willExpand ? "Collapse prompt" : "Expand prompt";
-  btn.setAttribute("aria-label", label);
-  btn.setAttribute("title", label);
-  btn.setAttribute("aria-pressed", String(willExpand));
 }
 
 function onInput(event) {

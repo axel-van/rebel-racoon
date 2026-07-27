@@ -14,9 +14,9 @@ import { html, raw, escapeHtml } from "../../utils.js?v=21";
 import { getPosts } from "../../posts-store.js?v=37";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=27";
 import { renderPostCard } from "../post-card.js?v=70";
-import { KEY, ctx } from "./context.js?v=4";
-import { composer, settingsPanel, toolPalette, footerBar } from "./composer-view.js?v=4";
-import { editCanvas } from "./edit-view.js?v=4";
+import { KEY, ctx } from "./context.js?v=5";
+import { composer, settingsPanel, toolPalette, footerBar } from "./composer-view.js?v=5";
+import { editCanvas } from "./edit-view.js?v=5";
 import { compositeOverlays } from "../image-studio/canvas.js?v=2";
 import * as imageStudio from "../../image-studio.js?v=42";
 
@@ -52,7 +52,7 @@ function compositedPreviewUrl(img, overlays) {
 
 export function renderStudio(st) {
   return html`
-    <div class="isv2 isv2--${st.mode}${st.composerExpanded ? " is-prompt-expanded" : ""}">
+    <div class="isv2 isv2--${st.mode}">
       ${raw(header(st))}
       <section class="isv2-stage" aria-label="Preview">${raw(stageContent(st))}</section>
       ${raw(composer(st))} ${raw(footerBar(st))}

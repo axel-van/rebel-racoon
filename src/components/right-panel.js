@@ -44,7 +44,7 @@ import { iconFor } from "../file-kinds.js?v=20";
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
 import { open as openScheduleModal } from "./schedule-modal.js?v=55";
 import { open as openImageStudioModal } from "./image-studio/index.js?v=43";
-import { open as openImageStudioV2Modal } from "./image-studio-v2/index.js?v=4";
+import { open as openImageStudioV2Modal } from "./image-studio-v2/index.js?v=5";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays

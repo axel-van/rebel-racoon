@@ -36,7 +36,7 @@
 import { escapeHtml } from "../../utils.js?v=21";
 import { FORMATS, NETWORK_FORMATS } from "../../clip-formats.js?v=7";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=27";
-import { KEY } from "./context.js?v=4";
+import { KEY } from "./context.js?v=5";
 import * as imageStudio from "../../image-studio.js?v=42";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
@@ -141,35 +141,33 @@ function bestFor(network) {
 // it made the six settings look like chrome stranded at the bottom of a huge
 // empty bar. Capped and centred, the card reads as one object you act in.
 function generateComposer(st) {
-  return console_(
-    "Image prompt",
-    briefColumn(st, { label: "Prompt", field: promptField(st), tools: promptTools(st) }),
-    generateActions(st),
-  );
+  return console_("Image prompt", promptField(st), generateActions(st), "to generate");
 }
 
-// The frame both modes share: the brief over a CTA foot. The settings and the
-// tools left this card for the stage — a bottom bar that holds only the prompt
-// can finally sit at a readable measure without cramming anything.
-function console_(label, brief, foot) {
+// The frame both modes share, and it IS the app's own conversational composer:
+// a bordered card that lights up on focus, a borderless field, a toolbar row
+// under it holding the action, and a keyboard hint below the card. Same recipe
+// as `.session__composer-card` — same border, same shadow, same padding rhythm,
+// same focus behaviour, same 2-to-12-line field — because the user is doing the
+// same thing here (writing a brief for Archie) and it should not feel like a
+// different product.
+//
+// What v2 grew instead and has now shed: an eyebrow, a "Suggest again" button
+// and an expand toggle. The eyebrow only gave the field an identity that the
+// composer's own frame already gives it; the expand solved a scrolling problem
+// the composer solves with a line cap; and re-deriving the prompt now happens
+// once, automatically, when the studio opens.
+function console_(label, field, action, hintVerb) {
   return `<div class="isv2-dock">
-    <div class="isv2-console" role="group" aria-label="${escapeHtml(label)}">
-      ${brief}
-      ${foot ? `<div class="isv2-console-foot">${foot}</div>` : ""}
+    <div class="isv2-console-wrap">
+      <div class="isv2-console" role="group" aria-label="${escapeHtml(label)}">
+        ${field}
+        ${action ? `<div class="isv2-console-toolbar">${action}</div>` : ""}
+      </div>
+      <div class="isv2-console-hint">
+        <kbd>Enter</kbd> ${hintVerb} · <kbd>Shift</kbd>+<kbd>Enter</kbd> for new line
+      </div>
     </div>
-  </div>`;
-}
-
-// Left column — the writing surface. The eyebrow gives the field an identity a
-// borderless textarea can't give itself (without it the brief read as a stray
-// paragraph of body copy that happened to land in a card).
-function briefColumn(st, { label, field, tools }) {
-  return `<div class="isv2-brief">
-    <div class="isv2-brief-head">
-      <p class="isv2-brief-label"><i class="ap-icon-sparkles-mermaid" aria-hidden="true"></i>${escapeHtml(label)}</p>
-      <div class="isv2-brief-tools">${tools}</div>
-    </div>
-    ${field}
   </div>`;
 }
 
@@ -184,16 +182,7 @@ function promptField(st) {
       <span>Writing your image prompt…</span>
     </div>`;
   }
-  return `<textarea id="isv2Prompt" class="isv2-prompt" data-img-prompt rows="1" placeholder="${escapeHtml(PROMPT_PLACEHOLDER)}" aria-label="Describe your image">${escapeHtml(st.promptText)}</textarea>`;
-}
-
-function promptTools(st) {
-  const expanded = !!st.composerExpanded;
-  const expandLabel = expanded ? "Collapse prompt" : "Expand prompt";
-  const suggestLabel = (st.promptText || "").trim() ? "Suggest again" : "Suggest from this post";
-  if (st.promptLoading) return "";
-  return `<button type="button" class="ap-button ghost grey isv2-suggest" data-img-derive><i class="ap-icon-archie-official" aria-hidden="true"></i><span>${suggestLabel}</span></button>
-    <button type="button" class="ap-icon-button" data-img-composer-expand aria-label="${expandLabel}" title="${expandLabel}" aria-pressed="${expanded}"><i class="ap-icon-${expanded ? "minimize" : "maximize"}" aria-hidden="true"></i></button>`;
+  return `<textarea id="isv2Prompt" class="isv2-prompt" data-img-prompt rows="2" placeholder="${escapeHtml(PROMPT_PLACEHOLDER)}" aria-label="Describe your image">${escapeHtml(st.promptText)}</textarea>`;
 }
 
 // The prompt card's own action — running the prompt. SECONDARY, because it is a
@@ -462,28 +451,17 @@ function outputBody(st, canCarousel, isCarousel) {
 
 // ── Edit mode ───────────────────────────────────────────────────────────────
 
-// The same frame, re-tasked: describe a change in the brief column, reach for a
-// manual tool in the side column. v1 needed a floating bar over the canvas plus a
-// floating palette plus a footer to say this much.
+// The same composer, re-tasked: describe a change instead of a brief. Identical
+// frame, identical field, and its action sits in the same toolbar slot Generate
+// uses — so switching modes moves the label, not the furniture. Secondary, like
+// Generate: the modal's one primary is "Use this image" in the footer.
 function editComposer(st) {
   const busy = st.editBusy ? "disabled" : "";
-  // One row, v1's shape and v1's classes: the mermaid-sparkle cue, a borderless
-  // multi-line field, a compact orange send. No eyebrow and no tool band — the
-  // placeholder already says what the field is for, and the tools moved to the
-  // palette. v2 had wrapped this in a labelled two-band card, which was more
-  // chrome than one sentence of input has ever needed.
-  // Still main's one-row shape, but the send is SECONDARY now: with the footer
-  // holding the orange "Use this image" sixty pixels below, two oranges that
-  // close together would be two competing primaries. (On main these never met —
-  // the AI bar floats up on the canvas, far from the footer.)
   return console_(
     "Edit the image",
-    `<div class="isv2-reprompt">
-      <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
-      <textarea class="image-studio__reprompt-field" data-img-edit-prompt rows="1" placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" ${busy}>${escapeHtml(st.editPrompt || "")}</textarea>
-      <button type="button" class="ap-button stroked grey isv2-apply" data-img-apply-edit="prompt" aria-label="Redraw" title="Redraw" ${busy}><i class="ap-icon-arrow-up" aria-hidden="true"></i></button>
-    </div>`,
-    "",
+    `<textarea class="isv2-prompt" data-img-edit-prompt rows="2" placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" ${busy}>${escapeHtml(st.editPrompt || "")}</textarea>`,
+    `<button type="button" class="ap-button stroked grey" data-img-apply-edit="prompt" ${busy}><i class="ap-icon-sparkles-mermaid"></i><span>Redraw</span></button>`,
+    "to redraw",
   );
 }
 

@@ -177,12 +177,6 @@
   container-type: size; /* text overlays size in cqh */
 }
 
-/* An expanded prompt eats into the stage — give the image back the room by
-   shrinking its cap rather than letting the stage scroll. */
-.isv2.is-prompt-expanded .isv2-frame {
-  --isv2-cap: min(36vh, 460px);
-}
-
 .isv2-frame-clip {
   position: absolute;
   inset: 0;
@@ -420,20 +414,18 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   THE CONSOLE — the prompt, and only the prompt.
+   THE CONSOLE — the app's own composer, doing the same job in another room.
 
-     .isv2-brief         the writing surface + its own actions
-     .isv2-console-foot  the CTAs
-
-   The settings and the manual tools live on the stage now (see THE FLOATING
-   ZONES), which is what finally lets this bar be the readable measure it wanted
-   to be — every attempt to also fit six settings and two CTAs in here came out
-   either too wide or too cramped.
+   Deliberately built to `.session__composer-card`'s recipe (styles/screens/
+   session.css): same border and focus colour, same shadow, same padding
+   rhythm, same borderless 2-to-12-line field, same toolbar row underneath,
+   same keyboard hint below the card. The user is writing a brief for Archie in
+   both places; it should not feel like two products.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* The dock continues the stage's canvas rather than being a separate white
-   footer — the console rests on it, so the whole lower half reads as one
-   surface instead of two stacked bars. */
+   band — the card rests on it, exactly as the chat composer rests on the
+   conversation. */
 .isv2-dock {
   flex: 0 0 auto;
   display: flex;
@@ -442,150 +434,106 @@
   background: var(--app-bg);
 }
 
-.isv2-console {
+.isv2-console-wrap {
   width: 100%;
   max-width: 760px;
+}
+
+/* `.session__composer-card`, value for value. */
+.isv2-console {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--sys-border-color-default);
-  border-radius: var(--app-radius-card);
-  background: var(--app-surface);
-  box-shadow: var(--app-shadow-card);
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  box-shadow: var(--app-shadow-low);
+  /* Top breathes for the textarea; the toolbar row hugs the card edges. */
+  padding: var(--ref-spacing-xs) var(--ref-spacing-xxs) var(--ref-spacing-xxs);
 }
 
-/* ── Brief column ────────────────────────────────────────────────────────── */
-
-.isv2-brief {
-  position: relative;
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-}
-
-/* A capped textarea that just stops mid-glyph looks broken rather than
-   scrollable. A short fade to the console's own white says "there's more"
-   without a scrollbar; when the brief is short it fades white-on-white and
-   vanishes. */
-.isv2-brief::after {
-  content: "";
-  position: absolute;
-  left: var(--ref-spacing-sm);
-  right: var(--ref-spacing-sm);
-  bottom: 0;
-  height: 16px;
-  background: linear-gradient(to top, var(--app-surface), transparent);
-  pointer-events: none;
-}
-
-/* The eyebrow gives the field an identity a borderless textarea cannot give
-   itself. Without it the brief read as a stray paragraph of body copy that
-   happened to land in a card — no label, no frame, no affordance. */
-.isv2-brief-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ref-spacing-xs);
-  min-height: 24px;
-}
-
-.isv2-brief-label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  margin: 0;
-  color: var(--sys-text-color-light);
-  font-size: var(--sys-text-style-caption-size);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.isv2-brief-label > i {
-  font-size: 14px;
-}
-
-.isv2-brief-tools {
-  display: flex;
-  align-items: center;
-  gap: var(--app-spacing-micro, 2px);
-  flex: 0 0 auto;
-}
-
-.isv2-suggest {
-  white-space: nowrap;
-}
-
-.isv2-suggest > i {
-  color: var(--app-archie-mark);
-}
-
-/* ── Edit mode's reprompt — v1's shape, one row ───────────────────────────── */
-
-/* v1's action bar, minus the absolute positioning (it lives in the console now,
-   not floating on the canvas): the mermaid-sparkle cue, a borderless field, a
-   compact orange send. It reuses `.image-studio__ai-icon` and
-   `.image-studio__reprompt-field` so the field itself is byte-identical to main.
-   v2 had wrapped this in a labelled two-band card — far more chrome than one
-   sentence of input has ever needed. */
-.isv2-reprompt {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-}
-
-/* The redraw send — compact and square, like the main composer's send. */
-.isv2-apply {
-  flex: 0 0 auto;
-  min-width: 36px;
-  padding: 0 var(--ref-spacing-xxs);
+.isv2-console:focus-within {
+  border-color: var(--ref-color-electric-blue-100);
 }
 
 .isv2-prompt {
   flex: 1 1 auto;
   min-width: 0;
-  /* Six settings rows tall, so the two columns balance and the card has a
-     stable height whatever the brief's length. An exact multiple of the
-     line-height plus the field's padding — leaving the padding out of the cap
-     sliced the last line in half and read as a rendering bug. */
-  min-height: calc(var(--sys-text-style-body-line-height) * 2);
-  max-height: calc(var(--sys-text-style-body-line-height) * 6 + 8px);
-  padding: 4px 0;
+  resize: none;
   border: 0;
   background: transparent;
-  color: var(--sys-text-color-default);
-  font-family: var(--sys-text-style-body-font-family);
+  padding: var(--ref-spacing-xxs);
+  font-family: inherit;
   font-size: var(--sys-text-style-body-size);
   line-height: var(--sys-text-style-body-line-height);
-  resize: none;
+  font-weight: var(--sys-text-style-body-weight);
+  color: var(--sys-text-color-default);
+  /* Floor at 2 lines so a fresh prompt always reads at the same height; cap at
+     12 so a long brief can't push the footer off-screen. This cap is what the
+     expand toggle used to work around. */
+  min-height: calc(var(--ref-font-line-height-sm) * 2);
+  max-height: calc(var(--ref-font-line-height-sm) * 12);
   overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.isv2-prompt::placeholder {
+  color: var(--ref-color-grey-40);
+  opacity: 1;
 }
 
 .isv2-prompt:focus {
   outline: none;
 }
 
-.isv2-prompt::placeholder {
-  color: var(--ref-color-grey-60);
-}
-
-/* Expanded raises the cap and lets the console grow UPWARD into the stage
-   (which is flex:1 and simply gives up the room). Never sideways — the measure
-   is the point. */
-.isv2.is-prompt-expanded .isv2-prompt {
-  max-height: calc(var(--sys-text-style-body-line-height) * 20 + 8px);
-}
-
 .isv2-prompt-loading {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  min-height: calc(var(--sys-text-style-body-line-height) * 4);
+  padding: var(--ref-spacing-xxs);
+  min-height: calc(var(--ref-font-line-height-sm) * 2);
   color: var(--sys-text-color-light);
   font-size: var(--sys-text-style-body-size);
+}
+
+/* The composer's toolbar row: actions live under the field, not beside it. */
+.isv2-console-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ref-spacing-xs);
+  min-width: 0;
+}
+
+.isv2-console-toolbar > .ap-button {
+  flex-shrink: 0;
+}
+
+.isv2-console-hint {
+  margin-top: var(--ref-spacing-xxs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxxs);
+  padding: 0 var(--ref-spacing-xxs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+.isv2-console-hint kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-grey-05);
+  border: 1px solid var(--sys-border-color-default);
+  font-family: inherit;
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -709,19 +657,6 @@
 /* Two columns at the panel's width — the six presets still read at 118px. */
 .isv2-style-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-/* ── Foot ────────────────────────────────────────────────────────────────── */
-
-/* The prompt card's own foot — one secondary action, running the prompt. The
-   modal's single primary lives in the footer bar below. */
-.isv2-console-foot {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
-  border-top: 1px solid var(--sys-border-color-default);
 }
 
 /* ── The footer bar ───────────────────────────────────────────────────────── */
