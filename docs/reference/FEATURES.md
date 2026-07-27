@@ -194,13 +194,48 @@ Store [`schedule-store.js`](../../src/schedule-store.js) : file upcoming, `getQu
 
 ## 7. Images
 
-### Modal Generate image ([`generate-image-modal.js`](../../src/components/generate-image-modal.js))
+### Image Studio ([`components/image-studio/`](../../src/components/image-studio/))
 
-Deux-pane (rail contrôles / preview). Entrée : placeholder « Generate an image » d'une post card.
+Modale near-fullscreen, deux modes pairs (**Generate** / **Edit**, tabs DS). Entrées : « Generate
+an image » d'un draft, ou l'action d'édition d'un draft qui a déjà une image (ouvre directement en
+Edit, ou en résultats carousel si le draft porte plusieurs slides). Tout l'état + les mocks vivent
+dans [`image-studio.js`](../../src/image-studio.js) (UI-agnostique) ; la vue est découpée en
+`shell-view` / `compose-view` / `edit-view` / `interactions`.
 
-- **Contrôles** : textarea _« Describe your image »_ + **« Suggest from this post »** (dérive un prompt du post, ~6 s ; auto-run si vide) · **Visual style** (Photorealistic / Illustration / Bold graphic / Editorial photo / Abstract / Upload yours) · **Mood** (Professional / Energetic / Calm / Inspiring / Playful) · **Format** (set recommandé du network).
-- **Preview** : idle « Your image appears here » → loading (skeleton + mark animé « Generating… ») → result (image mock ~6 s + « Regenerate » + feedback). Changer une option après génération → état **dirty** (« Options changed »).
-- **Footer** : Cancel · **Use this image** (`attachImageToDraft`). Échec → infobox.
+- **Generate** — rail de gauche : le prompt qu'Archie dérive du post à l'ouverture (**« Suggest from
+  this post »**, ~2 s) puis six réglages repliables portant chacun sa valeur courante : **Brand kit**
+  (images du Playbook, switch + tuiles include/exclude, max 6) · **References** (uploads, drop ou
+  clic) · **Image type** (Visual hook / Infographic / Illustration) · **Style preset** (6 vignettes,
+  désactivé dès qu'il y a une référence) · **Format** (ratios recommandés du network) · **Output**
+  (Single / Carousel + nombre de variations ou de slides ; carousel sur LinkedIn 20 / Instagram 10).
+  Canvas à droite : empty → generating (~4 s) → résultats (grande image + rail de variations
+  flottant) ; bascule **Image / In feed** (aperçu via `renderPostCard`).
+- **Edit** — canvas plein, palette d'outils flottante (**Crop** freeform avec ratios + poignées ·
+  **Add text** · **Add image** : upload ou 16 presets), barre IA flottante « Describe a change… »
+  (~2,6 s), overlays texte/logo déplaçables/redimensionnables/rotatifs avec mini-toolbar (couleur,
+  police, bold, italic, outline, shadow, delete) et undo.
+- **Commit** : **Use this image** aplatit les overlays sur l'image (`compositeOverlays`) puis
+  `attachImageToDraft` + toast ; en carousel, `attachCarouselToDraft` avec toutes les slides
+  (« Apply to slide N » rebake une slide éditée).
+
+#### Image Studio v2 — prompt en bas (flag `imageStudioV2`, défaut OFF)
+
+Redesign complet de la même feature, monté en parallèle
+([`components/image-studio-v2/`](../../src/components/image-studio-v2/)) et servi à la place de v1
+quand le flag est ON. **Mêmes options, même moteur d'état** (`image-studio.js`, clé `studio-v2`) —
+seule la surface change, ce qui permet de comparer les deux à comportement identique.
+
+- Un header d'une seule ligne (titre · tabs de mode · bascule Image/In feed), un **stage pleine
+  largeur**, et **un composer unique en bas**.
+- **Generate** : rangée 1 = le prompt (+ Suggest, + expand qui fait grandir le composer vers le
+  haut) ; rangée 2 = les six réglages en **chips-dropdown** portant leur valeur (`Format 1:1 ·
+Square ▾`), chacun ouvrant une feuille plate en drop-up, puis le cluster de CTA.
+- **Edit** : le même composer devient la barre IA (rangée 1) et les chips d'outils Crop / Add text /
+  Add image (rangée 2). Le rail de gauche, le footer, la barre IA flottante et la palette flottante
+  de v1 disparaissent tous les quatre. Ne restent sur le canvas que la boîte de crop (avec son ✕/✓)
+  et la mini-toolbar du texte sélectionné — ce qui doit suivre un pixel précis.
+- Le drop d'une image est accepté **sur toute la modale** en mode Generate (la feuille References
+  est le plus souvent fermée) et ouvre la feuille pour montrer ce qui vient d'atterrir.
 
 ---
 
@@ -341,18 +376,19 @@ Détail dimensions/coexistence avec la status-card : [`SHELL-LAYOUT.md`](SHELL-L
 
 ### Feature flags ([`ff-catalog.js`](../../src/ff-catalog.js)) — les 10
 
-| id                       | label                          | défaut  | Gate                                                                                                                                                                                                                                                                                                                                   |
-| ------------------------ | ------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `draftInlineEdit`        | Inline edit on draft posts     | **OFF** | Édition inline des post cards.                                                                                                                                                                                                                                                                                                         |
-| `playbookDefault`        | Default Playbook toggle        | **OFF** | Étoile ★ set/unset default sur `/playbook/:id`.                                                                                                                                                                                                                                                                                        |
-| `connectors`             | Connectors (live MCP sources)  | **OFF** | Toute la feature connecteurs (gallery, modal, submenu, Live connectors, tab modal).                                                                                                                                                                                                                                                    |
-| `conversationStatusCard` | Conversation status card       | **OFF** | Carte flottante + toggle « i ».                                                                                                                                                                                                                                                                                                        |
-| `statusActionSnackbars`  | Action success snackbars       | **OFF** | Snackbars succès dupliquant la status bar.                                                                                                                                                                                                                                                                                             |
-| `playbookColors`         | Playbook colors                | **OFF** | Quand OFF (défaut), masque les visuels couleur Playbook partout (classe `body.hide-playbook-colors`) ; ON = couleurs affichées.                                                                                                                                                                                                        |
-| `multilingualPlaybook`   | Multilingual Playbooks         | **OFF** | Playbooks multi-langues (voice par langue, étape langue du draft flow).                                                                                                                                                                                                                                                                |
-| `manyProfiles`           | Many connected profiles (demo) | **OFF** | Seed ~40 profils connectés variés → le quickpicker de profil affiche une recherche live (voir §draft flow).                                                                                                                                                                                                                            |
-| `playbookCompetitors`    | Playbook competitors           | **OFF** | Section **Competitors** du Playbook (panneau + entrée de rail + compteur `/contexts`). La donnée reste présente quand OFF (voir §9).                                                                                                                                                                                                   |
-| `sidebarOrganize`        | Sort & group chats             | **OFF** | Bouton filtre au-dessus de la liste des chats → popover à plat **Group by** (Aucun / Playbook / Date) + **Sort by** (Récence / Alphabétique) ; réordonne/regroupe la liste (Pinned reste en tête). Date = buckets Today / Yesterday / Previous 7 days / … dérivés du libellé `lastActivity`. Préf. persistée (`archie-chat-organize`). |
+| id                       | label                           | défaut  | Gate                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------ | ------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `draftInlineEdit`        | Inline edit on draft posts      | **OFF** | Édition inline des post cards.                                                                                                                                                                                                                                                                                                         |
+| `playbookDefault`        | Default Playbook toggle         | **OFF** | Étoile ★ set/unset default sur `/playbook/:id`.                                                                                                                                                                                                                                                                                        |
+| `connectors`             | Connectors (live MCP sources)   | **OFF** | Toute la feature connecteurs (gallery, modal, submenu, Live connectors, tab modal).                                                                                                                                                                                                                                                    |
+| `conversationStatusCard` | Conversation status card        | **OFF** | Carte flottante + toggle « i ».                                                                                                                                                                                                                                                                                                        |
+| `statusActionSnackbars`  | Action success snackbars        | **OFF** | Snackbars succès dupliquant la status bar.                                                                                                                                                                                                                                                                                             |
+| `playbookColors`         | Playbook colors                 | **OFF** | Quand OFF (défaut), masque les visuels couleur Playbook partout (classe `body.hide-playbook-colors`) ; ON = couleurs affichées.                                                                                                                                                                                                        |
+| `multilingualPlaybook`   | Multilingual Playbooks          | **OFF** | Playbooks multi-langues (voice par langue, étape langue du draft flow).                                                                                                                                                                                                                                                                |
+| `manyProfiles`           | Many connected profiles (demo)  | **OFF** | Seed ~40 profils connectés variés → le quickpicker de profil affiche une recherche live (voir §draft flow).                                                                                                                                                                                                                            |
+| `playbookCompetitors`    | Playbook competitors            | **OFF** | Section **Competitors** du Playbook (panneau + entrée de rail + compteur `/contexts`). La donnée reste présente quand OFF (voir §9).                                                                                                                                                                                                   |
+| `imageStudioV2`          | Image Studio v2 (prompt en bas) | **OFF** | Les actions image d'un draft ouvrent le redesign v2 (stage pleine largeur + composer en bas, réglages en chips-dropdown) au lieu de l'Image Studio actuel. Mêmes options, même moteur d'état (voir §7).                                                                                                                                |
+| `sidebarOrganize`        | Sort & group chats              | **OFF** | Bouton filtre au-dessus de la liste des chats → popover à plat **Group by** (Aucun / Playbook / Date) + **Sort by** (Récence / Alphabétique) ; réordonne/regroupe la liste (Pinned reste en tête). Date = buckets Today / Yesterday / Previous 7 days / … dérivés du libellé `lastActivity`. Préf. persistée (`archie-chat-organize`). |
 
 Persistés en `localStorage` (`archie-feature-flags`), lus via `isFlagOn()`. Voir aussi [`STORES.md`](STORES.md).
 

@@ -44,6 +44,7 @@ import { iconFor } from "../file-kinds.js?v=20";
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
 import { open as openScheduleModal } from "./schedule-modal.js?v=55";
 import { open as openImageStudioModal } from "./image-studio/index.js?v=43";
+import { open as openImageStudioV2Modal } from "./image-studio-v2/index.js?v=1";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
@@ -2032,6 +2033,14 @@ function onPostDelete(postId) {
   });
 }
 
+// Which Image Studio the draft image actions open. v2 (prompt-at-the-bottom
+// redesign) is behind the `imageStudioV2` flag; both take the same
+// (postId, opts) contract, so every call site below is version-agnostic.
+function openStudio(postId, opts) {
+  const open = isFlagOn("imageStudioV2") ? openImageStudioV2Modal : openImageStudioModal;
+  open(postId, opts);
+}
+
 // "Generate an image" on a draft → open the near-fullscreen Image Studio modal.
 // The studio pulls the draft's network for its format defaults and, on "Use
 // this image", attaches the result straight back to this draft (see
@@ -2039,7 +2048,7 @@ function onPostDelete(postId) {
 function onPostImage(postId) {
   const sid = activeSessionId();
   if (!sid) return;
-  openImageStudioModal(postId, { sessionId: sid });
+  openStudio(postId, { sessionId: sid });
 }
 
 // "Edit" on a draft that already has an image → open the Image Studio straight
@@ -2053,9 +2062,9 @@ function onPostImageEdit(postId) {
   // A carousel reopens in the studio's carousel results (add / remove /
   // regenerate slides); a single image opens straight into Edit mode.
   if (Array.isArray(post.carousel) && post.carousel.length > 1) {
-    openImageStudioModal(postId, { sessionId: sid, carouselUrls: post.carousel });
+    openStudio(postId, { sessionId: sid, carouselUrls: post.carousel });
   } else if (post.imageUrl) {
-    openImageStudioModal(postId, { sessionId: sid, editImageUrl: post.imageUrl });
+    openStudio(postId, { sessionId: sid, editImageUrl: post.imageUrl });
   }
 }
 

@@ -95,6 +95,22 @@ export const FLAGS = Object.freeze([
       "data is preserved either way — only the surfaces are gated.",
   },
   {
+    id: "imageStudioV2",
+    label: "Image Studio v2 (prompt at the bottom)",
+    default: false,
+    hides:
+      "When OFF (default), the draft image actions open the current Image " +
+      "Studio: a settings rail on the left carrying the prompt, a canvas on " +
+      "the right, a footer CTA, and a floating AI bar in Edit mode. When ON, " +
+      "they open the v2 redesign instead: the canvas goes full-width and the " +
+      "prompt becomes a composer pinned to the bottom, with the six settings " +
+      "(brand kit, references, image type, style, format, output) as inline " +
+      "chip-dropdowns. In Edit mode that same composer becomes the AI reprompt " +
+      "bar and carries the manual tools. Both versions share the same state " +
+      "engine (src/image-studio.js) so they behave identically — only the " +
+      "surface differs.",
+  },
+  {
     id: "playbookCompetitors",
     label: "Playbook competitors",
     default: false,

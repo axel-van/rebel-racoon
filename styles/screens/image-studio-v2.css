@@ -1,0 +1,1336 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Image Studio v2 — the prompt-at-the-bottom redesign (flag: imageStudioV2).
+
+   Every selector is namespaced `.isv2-*` so this file can sit beside the 250+
+   `.image-studio*` selectors of v1 without a single collision — the two studios
+   are mounted at the same time and only the flag decides which one opens.
+
+   Layout, top to bottom:
+     .isv2-header    one 56px row: title · mode tabs · view toggle   (fixed)
+     .isv2-stage     the image, as big as the box allows             (flex: 1)
+     .isv2-composer  prompt + settings + CTAs, or AI + tools in Edit (fixed)
+
+   Reused, not re-declared: the shared `.gen-*` image primitives from
+   screens/modals.css (empty state, loading frame, style cards, spinners) and
+   the DS classes (.ap-dialog, .ap-tabs, .ap-button, .ap-icon-button,
+   .ap-filter-chip, .ap-toggle-container, .ap-slider, .ap-action-dropdown-item).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Shell ───────────────────────────────────────────────────────────────── */
+
+.isv2-modal {
+  width: min(96vw, 1440px);
+  height: 92vh;
+  max-height: 940px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.isv2-close {
+  position: absolute;
+  top: var(--ref-spacing-sm);
+  right: var(--ref-spacing-sm);
+  z-index: 3;
+}
+
+.isv2-body {
+  height: 100%;
+}
+
+.isv2 {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+
+/* .ap-dialog-header stacks its children in a column (title over subtitle) and
+   pads 24px top with no bottom — right for a form dialog, wrong for a studio
+   whose stage wants the height. The co-class flattens it into one row; same
+   specificity, later in the cascade. */
+.isv2-header {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ref-spacing-md);
+  flex: 0 0 auto;
+  /* Right padding clears the absolutely-positioned .ap-dialog-close. */
+  padding: var(--ref-spacing-xs) 56px var(--ref-spacing-xs) var(--ref-spacing-lg);
+  border-bottom: 1px solid var(--app-border-soft);
+}
+
+/* The DS dialog title is 24px — sized for a title standing alone above a form.
+   In a one-row header beside a tab strip it has to sit at heading-4 scale. */
+.isv2-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  white-space: nowrap;
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  color: var(--ref-color-grey-150);
+}
+
+.isv2-title > i {
+  font-size: 18px;
+  color: var(--app-archie-mark);
+}
+
+/* The tab strip sits inline in the header rather than owning its own row —
+   the stage needs the height now that the composer occupies the bottom. */
+/* .ap-tabs is width:100% (it normally owns a whole panel). Inline in a header
+   row it has to shrink to its two tabs, or it pushes everything after it out
+   of the modal. */
+.isv2-modes {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+.isv2-modes .ap-tabs-nav {
+  border-bottom: 0;
+}
+
+.isv2-header-gap {
+  flex: 1 1 auto;
+}
+
+.isv2-viewseg {
+  display: inline-flex;
+  gap: var(--app-spacing-micro, 2px);
+  flex: 0 0 auto;
+}
+
+/* ── Stage ───────────────────────────────────────────────────────────────── */
+
+.isv2-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  background: var(--app-bg);
+}
+
+.isv2-stage-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ref-spacing-lg);
+  overflow: auto;
+}
+
+/* A whole-modal drop target: the References sheet is usually closed, so an
+   image dragged anywhere in generate mode is accepted (see index.js#onDrop). */
+.isv2.is-dragover .isv2-stage {
+  outline: 2px dashed var(--sys-color-accent-default-bg-default);
+  outline-offset: -8px;
+  background: var(--sys-color-accent-light-bg);
+}
+
+/* The image frame. overflow:visible so on-element toolbars / handles /
+   popovers can bleed past the image edge; .isv2-frame-clip does the clipping. */
+/* An aspect-ratio box with only max-* constraints collapses to zero width in a
+   flex row (its content is absolutely positioned, so there's nothing to size
+   it from). Drive the width off an explicit height cap instead, the way the
+   frame is sized everywhere else in the app. */
+.isv2-frame {
+  --isv2-cap: min(64vh, 760px);
+  position: relative;
+  flex: 0 0 auto;
+  aspect-ratio: var(--isv2-ratio, 1);
+  width: min(100%, calc(var(--isv2-cap) * var(--isv2-ratio, 1)));
+  max-height: var(--isv2-cap);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow-card);
+  container-type: size; /* text overlays size in cqh */
+}
+
+/* An expanded prompt eats into the stage — give the image back the room by
+   shrinking its cap rather than letting the stage scroll. */
+.isv2.is-prompt-expanded .isv2-frame {
+  --isv2-cap: min(36vh, 460px);
+}
+
+.isv2-frame-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.isv2-frame-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.isv2-frame--edit {
+  overflow: visible;
+  cursor: default;
+}
+
+/* Hover-revealed shortcut into Edit on the image you're looking at. */
+.isv2-frame-edit {
+  position: absolute;
+  top: var(--ref-spacing-xs);
+  right: var(--ref-spacing-xs);
+  opacity: 0;
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow-low);
+  transition: opacity 150ms var(--app-ease-out);
+}
+
+.isv2-frame--result:hover .isv2-frame-edit,
+.isv2-frame-edit:focus-visible {
+  opacity: 1;
+}
+
+.isv2-slide-pos,
+.isv2-slide-badge {
+  position: absolute;
+  bottom: var(--ref-spacing-xs);
+  left: var(--ref-spacing-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
+  border-radius: var(--app-radius-pill);
+  background: var(--app-thumb-scrim, rgba(10, 27, 51, 0.72));
+  color: var(--ref-color-white);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
+.isv2-busy {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xs);
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--ref-color-grey-100);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+/* ── Variations rail ─────────────────────────────────────────────────────── */
+
+.isv2-rail {
+  position: absolute;
+  top: 50%;
+  right: var(--ref-spacing-sm);
+  transform: translateY(-50%);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  max-height: calc(100% - var(--ref-spacing-lg) * 2);
+  overflow-y: auto;
+  padding: var(--ref-spacing-xxs);
+  border-radius: var(--app-radius-card);
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow-popover-md);
+}
+
+.isv2-rail-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  margin: 0;
+  padding: var(--ref-spacing-xxxs) 0;
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+.isv2-thumb {
+  position: relative;
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: var(--app-radius-md);
+  background: var(--app-surface-subtle);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.isv2-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.isv2-thumb:hover {
+  border-color: var(--sys-color-accent-default-bg-default);
+}
+
+.isv2-thumb.is-selected {
+  border-color: var(--sys-color-accent-default-bg-default);
+}
+
+.isv2-thumb-check {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--app-radius-circle);
+  background: var(--sys-color-accent-default-bg-default);
+  color: var(--ref-color-white);
+  font-size: 11px;
+}
+
+.isv2-thumb-num {
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: var(--app-radius-pill);
+  background: var(--app-thumb-scrim, rgba(10, 27, 51, 0.72));
+  color: var(--ref-color-white);
+  font-size: 11px;
+}
+
+.isv2-thumb-remove {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--app-radius-circle);
+  background: var(--app-thumb-scrim, rgba(10, 27, 51, 0.72));
+  color: var(--ref-color-white);
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.isv2-thumb:hover .isv2-thumb-remove,
+.isv2-thumb-remove:focus-visible {
+  opacity: 1;
+}
+
+.isv2-thumb--add {
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--app-border);
+  color: var(--ref-color-grey-80);
+}
+
+.isv2-thumb--add:hover {
+  border-style: solid;
+  color: var(--sys-color-accent-default-bg-default);
+}
+
+/* ── In-feed preview ─────────────────────────────────────────────────────── */
+
+.isv2-feed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  width: 100%;
+}
+
+.isv2-feed-note {
+  margin: 0;
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+.isv2-feed-card {
+  width: min(100%, 540px);
+}
+
+.isv2-feed-card .posts__row {
+  display: block;
+}
+
+.isv2-feed-card .posts__card-wrap {
+  width: 100%;
+}
+
+/* The card is a live Drafts card — strip the app tooling it carries (select
+   checkbox, action stack, feedback strip, generation-context panel, image
+   controls) so the preview shows the post, not the app around it. */
+.isv2-feed-card .posts__row-check,
+.isv2-feed-card .posts__row-actions,
+.isv2-feed-card .posts__card-footrow,
+.isv2-feed-card .posts__gencontext-panel,
+.isv2-feed-card .posts__gencontext-check,
+.isv2-feed-card .posts__card-image-controls,
+.isv2-feed-card .ap-infobox {
+  display: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE COMPOSER — the whole point of v2.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.isv2-composer {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-lg) var(--ref-spacing-md);
+  border-top: 1px solid var(--app-border-soft);
+  background: var(--app-surface);
+}
+
+.isv2-composer-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--ref-spacing-xs);
+}
+
+.isv2-composer-row--prompt {
+  align-items: flex-start;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-xs) var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-modal);
+  background: var(--app-surface);
+  transition: border-color 150ms var(--app-ease-out);
+}
+
+.isv2-composer-row--prompt:focus-within {
+  border-color: var(--ref-color-grey-60);
+}
+
+/* The mermaid sparkle = generative AI. Nudged down to sit on the first text
+   line rather than the box's top edge. */
+.isv2-ai-cue {
+  flex: 0 0 auto;
+  margin-top: 6px;
+  font-size: var(--sys-icon-size-md, 20px);
+}
+
+.isv2-prompt {
+  flex: 1 1 auto;
+  min-width: 0;
+  /* Grows from ONE line — unlike v1's fixed 5-line peek, which existed because
+     a 320px rail had no other way to show a long brief. Full width changes the
+     calculus: start small, grow to fit, cap and scroll. */
+  min-height: 32px;
+  /* An exact multiple of the line-height, so the cap never lands mid-glyph and
+     leave a half-line looking like a rendering bug. */
+  max-height: calc(var(--sys-text-style-body-line-height) * 5);
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ref-color-grey-150);
+  font-family: var(--ref-font-family);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  resize: none;
+  overflow-y: auto;
+}
+
+.isv2-prompt:focus {
+  outline: none;
+}
+
+.isv2-prompt::placeholder {
+  color: var(--ref-color-grey-60);
+}
+
+/* Expanded raises the cap and lets the composer grow UPWARD into the stage
+   (which is flex:1 and simply gives up the room). Never sideways — the bar is
+   already the full width of the modal. */
+.isv2.is-prompt-expanded .isv2-prompt {
+  max-height: calc(var(--sys-text-style-body-line-height) * 20);
+}
+
+.isv2-prompt-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  min-height: 32px;
+  padding: 4px 0;
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-body-size);
+}
+
+.isv2-prompt-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--app-spacing-micro, 2px);
+  flex: 0 0 auto;
+}
+
+.isv2-suggest {
+  white-space: nowrap;
+}
+
+.isv2-suggest > i {
+  color: var(--app-archie-mark);
+}
+
+/* The Apply send-button in Edit mode — compact and square, like the main
+   composer's send. */
+.isv2-apply {
+  min-width: 32px;
+  padding: 0 var(--ref-spacing-xxs);
+}
+
+/* ── Row 2: settings / tools + actions ───────────────────────────────────── */
+
+.isv2-composer-row--controls {
+  align-items: center;
+}
+
+/* The chip row absorbs the leftover width; the action cluster never shrinks.
+   It must NOT be a scroll container: the sheets are anchored inside it, and
+   `overflow-x: auto` silently computes `overflow-y` to `auto` too, which clips
+   every drop-up out of sight.
+   It WRAPS rather than shrinks. Shrinking distributes the shortfall across all
+   six chips, so a 35px deficit truncates every single value by a character —
+   six half-read settings instead of one extra row. */
+.isv2-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.isv2-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  flex: 0 0 auto;
+}
+
+/* ── The chip-dropdown ───────────────────────────────────────────────────── */
+
+.isv2-chip-wrap {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.isv2-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  height: 32px;
+  /* A single very long value (a brand name, "From your references") still
+     ellipsis rather than pushing the row around. */
+  max-width: 280px;
+  padding: 0 var(--ref-spacing-xxs) 0 var(--ref-spacing-xs);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-pill);
+  background: var(--app-surface);
+  color: var(--ref-color-grey-100);
+  font-family: var(--ref-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 120ms var(--app-ease-out),
+    background-color 120ms var(--app-ease-out);
+}
+
+.isv2-chip:hover:not(:disabled) {
+  border-color: var(--ref-color-grey-60);
+  background: var(--app-surface-subtle);
+}
+
+.isv2-chip:focus-visible {
+  outline: 2px solid var(--sys-color-accent-default-bg-default);
+  outline-offset: 1px;
+}
+
+/* A setting that carries a real value gets a darker frame and full-strength
+   text — hierarchy by weight, not by colour, so the row stays calm with six
+   chips in it. `is-open` is the disclosure state. */
+.isv2-chip.is-set,
+.isv2-chip.is-open {
+  border-color: var(--ref-color-grey-100);
+}
+
+.isv2-chip.is-open {
+  box-shadow: var(--app-shadow-subtle);
+}
+
+.isv2-chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* The label holds its ground; the value is what gives when the row is tight
+   (the chip's job is still readable as "Format …" with the value truncated,
+   never as "…" with no idea what setting it is). */
+.isv2-chip-label {
+  flex: 0 0 auto;
+  color: var(--ref-color-grey-80);
+}
+
+.isv2-chip-value {
+  flex: 0 1 auto;
+  min-width: 0;
+  color: var(--ref-color-grey-100);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.isv2-chip.is-set .isv2-chip-value {
+  color: var(--ref-color-grey-150);
+}
+
+.isv2-chip-caret {
+  font-size: 10px;
+  color: var(--ref-color-grey-60);
+  transition: transform 150ms var(--app-ease-out);
+}
+
+.isv2-chip.is-open .isv2-chip-caret {
+  transform: rotate(180deg);
+}
+
+.isv2-chip-lead {
+  font-size: 14px;
+  color: var(--ref-color-grey-80);
+}
+
+/* Tool chips (Edit mode) have no value column — the label is the whole thing. */
+.isv2-chip--tool .isv2-chip-label {
+  color: var(--ref-color-grey-100);
+}
+
+.isv2-chip--tool.is-set {
+  background: var(--sys-color-accent-light-bg);
+  border-color: var(--sys-color-accent-default-bg-default);
+}
+
+/* A ratio drawn to scale — the shape reads faster than "4:5" does. */
+.isv2-ratio-glyph {
+  display: inline-block;
+  width: auto;
+  height: 12px;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  opacity: 0.75;
+}
+
+.isv2-ratio-glyph--free {
+  width: 12px;
+  border-style: dashed;
+}
+
+/* ── The drop-up sheet ───────────────────────────────────────────────────── */
+
+/* Not an .ap-action-dropdown — that component is a fixed 250px column of
+   action rows, and half these sheets are tile grids or slider panels. It
+   borrows the action-dropdown's own --comp-* tokens so it reads as the same
+   object in the same system, sized to its content instead. */
+.isv2-sheet {
+  position: absolute;
+  bottom: calc(100% + var(--ref-spacing-xxs));
+  left: 0;
+  z-index: 20;
+  width: max-content;
+  min-width: 220px;
+  max-width: min(420px, calc(100vw - 96px));
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
+  border-radius: var(--comp-action-dropdown-border-radius, var(--ref-border-radius-md));
+  background: var(--comp-action-dropdown-background-color, var(--ref-color-white));
+  box-shadow: var(--app-shadow-low);
+  transform-origin: bottom left;
+  animation: isv2-pop-up 140ms var(--app-ease-out);
+}
+
+.isv2-sheet--wide {
+  max-width: min(560px, calc(100vw - 96px));
+}
+
+/* The rightmost chips would push their sheet past the modal edge — anchor
+   those to their right side instead. */
+.isv2-chip-wrap:nth-last-child(-n + 2) .isv2-sheet {
+  left: auto;
+  right: 0;
+  transform-origin: bottom right;
+}
+
+@keyframes isv2-pop-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.isv2-sheet-title {
+  margin: 0;
+  color: var(--ref-color-grey-150);
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+}
+
+.isv2-sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.isv2-sheet-divider {
+  display: block;
+  height: 1px;
+  background: var(--comp-action-dropdown-divider-color, var(--ref-color-grey-10));
+}
+
+.isv2-sheet-label {
+  margin: 0;
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+.isv2-sheet-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  margin: 0;
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+.isv2-sheet-hint > i {
+  font-size: 14px;
+}
+
+.isv2-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+}
+
+.isv2-format-chip {
+  gap: var(--ref-spacing-xxxs);
+}
+
+.isv2-sheet-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+}
+
+.isv2-sheet-switch-label {
+  color: var(--ref-color-grey-100);
+  font-size: var(--sys-text-style-body-size);
+}
+
+/* ── Reference tiles + dropzone ──────────────────────────────────────────── */
+
+.isv2-refs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: var(--ref-spacing-xxs);
+}
+
+.isv2-ref {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-md);
+  background: var(--app-surface-subtle);
+  overflow: hidden;
+}
+
+.isv2-ref img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.isv2-ref--pick {
+  cursor: pointer;
+}
+
+.isv2-ref--pick:hover:not(:disabled) {
+  border-color: var(--sys-color-accent-default-bg-default);
+}
+
+.isv2-ref--pick:disabled {
+  cursor: not-allowed;
+}
+
+/* Skipped tiles desaturate behind a scrim; the tick's presence/absence is the
+   primary signal (a shape, not a colour). */
+.isv2-ref-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--ref-color-white);
+  opacity: 0;
+  transition: opacity 150ms var(--app-ease-out);
+  pointer-events: none;
+}
+
+.isv2-ref.is-skipped .isv2-ref-scrim {
+  opacity: 0.6;
+}
+
+.isv2-ref.is-skipped img {
+  filter: grayscale(1);
+}
+
+.isv2-ref-box {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--ref-color-white);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ref-color-white);
+  font-size: 10px;
+}
+
+.isv2-ref.is-used .isv2-ref-box {
+  background: var(--sys-color-accent-default-bg-default);
+  border-color: var(--sys-color-accent-default-bg-default);
+}
+
+.isv2-ref-remove {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--app-radius-circle);
+  background: var(--app-thumb-scrim, rgba(10, 27, 51, 0.72));
+  color: var(--ref-color-white);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.isv2-dropzone {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border: 1px dashed var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--app-surface-subtle);
+  color: var(--ref-color-grey-100);
+  font-family: var(--ref-font-family);
+  text-align: left;
+  cursor: pointer;
+}
+
+.isv2-dropzone:hover,
+.isv2-dropzone.is-dragover {
+  border-color: var(--sys-color-accent-default-bg-default);
+  background: var(--sys-color-accent-light-bg);
+}
+
+.isv2-dropzone-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.isv2-dropzone-title {
+  font-size: var(--sys-text-style-body-size);
+}
+
+.isv2-dropzone-sub {
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+/* ── Add-image presets ───────────────────────────────────────────────────── */
+
+.isv2-logo-upload {
+  align-self: flex-start;
+}
+
+.isv2-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: var(--ref-spacing-xxs);
+}
+
+.isv2-preset {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: var(--ref-spacing-xxs);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
+  cursor: pointer;
+}
+
+.isv2-preset:hover {
+  border-color: var(--sys-color-accent-default-bg-default);
+}
+
+.isv2-preset img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   EDIT CANVAS — only what has to track a pixel stays here.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Crop ────────────────────────────────────────────────────────────────── */
+
+.isv2-crop-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  overflow: hidden; /* clips the dim-mask to the image bounds */
+  border-radius: inherit;
+  cursor: crosshair;
+}
+
+.isv2-croprect {
+  position: absolute;
+  border: 1px solid var(--ref-color-white);
+  box-shadow: 0 0 0 9999px rgba(10, 27, 51, 0.5);
+  cursor: move;
+}
+
+.isv2-crop-handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--ref-color-white);
+  background: transparent;
+}
+
+.isv2-crop-handle--nw {
+  left: -2px;
+  top: -2px;
+  border-right: 0;
+  border-bottom: 0;
+  cursor: nwse-resize;
+}
+
+.isv2-crop-handle--ne {
+  right: -2px;
+  top: -2px;
+  border-left: 0;
+  border-bottom: 0;
+  cursor: nesw-resize;
+}
+
+.isv2-crop-handle--sw {
+  left: -2px;
+  bottom: -2px;
+  border-right: 0;
+  border-top: 0;
+  cursor: nesw-resize;
+}
+
+.isv2-crop-handle--se {
+  right: -2px;
+  bottom: -2px;
+  border-left: 0;
+  border-top: 0;
+  cursor: nwse-resize;
+}
+
+/* Just ✕ / ✓, pinned under the box. The ratio chips that used to crowd this
+   bar live in the composer's Crop sheet now. */
+.isv2-crop-confirm {
+  position: absolute;
+  z-index: 8;
+  transform: translate(-50%, var(--ref-spacing-xxs));
+  display: flex;
+  gap: var(--app-spacing-micro, 2px);
+  padding: var(--ref-spacing-xxxs);
+  border-radius: var(--app-radius-pill);
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow-low);
+}
+
+.isv2-crop-apply {
+  color: var(--sys-color-main-default-bg-default);
+}
+
+/* Hidden mid-gesture: its position is only recomputed on re-render. */
+.isv2-frame.is-gesturing .isv2-crop-confirm {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Overlay layer ───────────────────────────────────────────────────────── */
+
+.isv2-overlay-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+/* With something selected, un-clip so a bleeding element + its chrome stay
+   grabbable; idle it clips to the image (matching the flattened result). */
+.isv2-overlay-layer.has-selection {
+  overflow: visible;
+}
+
+.isv2-overlay {
+  position: absolute;
+  cursor: grab;
+  touch-action: none;
+}
+
+.isv2-overlay img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.isv2-overlay-text {
+  display: block;
+  white-space: pre;
+  outline: none;
+  pointer-events: none;
+}
+
+.isv2-overlay.is-editing .isv2-overlay-text {
+  pointer-events: auto;
+  cursor: text;
+}
+
+.isv2-overlay.is-selected {
+  outline: 1px solid var(--sys-color-accent-default-bg-default);
+  outline-offset: 2px;
+}
+
+.isv2-overlay-delete,
+.isv2-overlay-rotate,
+.isv2-overlay-rotate-reset,
+.isv2-overlay-resize {
+  position: absolute;
+  display: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-circle);
+  background: var(--app-surface);
+  color: var(--ref-color-grey-100);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.isv2-overlay.is-selected .isv2-overlay-delete,
+.isv2-overlay.is-selected .isv2-overlay-rotate,
+.isv2-overlay.is-selected .isv2-overlay-rotate-reset,
+.isv2-overlay.is-selected .isv2-overlay-resize {
+  display: grid;
+}
+
+/* Handles get in the way of the caret while typing. */
+.isv2-overlay.is-editing .isv2-overlay-resize,
+.isv2-overlay.is-editing .isv2-overlay-rotate,
+.isv2-overlay.is-editing .isv2-overlay-rotate-reset {
+  display: none;
+}
+
+.isv2-overlay-delete {
+  right: -10px;
+  top: -10px;
+}
+
+.isv2-overlay-rotate {
+  left: -10px;
+  bottom: -10px;
+  cursor: grab;
+}
+
+.isv2-overlay-rotate-reset {
+  left: -10px;
+  bottom: 14px;
+}
+
+.isv2-overlay-resize {
+  right: -10px;
+  bottom: -10px;
+  border-radius: var(--app-radius-sm);
+  cursor: nwse-resize;
+}
+
+/* ── Text mini toolbar (follows the element) ─────────────────────────────── */
+
+.isv2-tt {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9;
+  display: none;
+  align-items: center;
+  gap: var(--app-spacing-micro, 2px);
+  padding: var(--ref-spacing-xxxs);
+  border-radius: var(--app-radius-pill);
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow-low);
+  white-space: nowrap;
+}
+
+.isv2-overlay.is-selected .isv2-tt {
+  display: flex;
+}
+
+/* Trails the element badly during a drag — hide it for the duration. */
+.isv2-overlay-layer.is-gesturing .isv2-tt {
+  display: none;
+}
+
+.isv2-tt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  height: 26px;
+  padding: 0 var(--ref-spacing-xxs);
+  border: 0;
+  border-radius: var(--app-radius-pill);
+  background: transparent;
+  color: var(--ref-color-grey-100);
+  font-family: var(--ref-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  cursor: pointer;
+}
+
+.isv2-tt-btn:hover {
+  background: var(--app-surface-subtle);
+}
+
+.isv2-tt-btn[aria-pressed="true"],
+.isv2-tt-btn.is-on {
+  background: var(--sys-color-accent-light-bg);
+  color: var(--sys-color-accent-default-bg-default);
+}
+
+.isv2-tt-bold {
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.isv2-tt-italic {
+  font-style: italic;
+}
+
+.isv2-tt-aa {
+  font-size: 13px;
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.isv2-tt-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--app-border);
+  border-radius: 3px;
+  background: var(--sw, var(--ref-color-white));
+}
+
+.isv2-tt-shadowdot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-grey-40);
+  box-shadow: 0 2px 3px rgba(10, 27, 51, 0.5);
+}
+
+.isv2-tt-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--app-border-soft);
+}
+
+.isv2-tt-del {
+  color: var(--sys-color-error-default-bg-default);
+}
+
+/* ── On-element popovers (drop DOWN from the mini toolbar) ───────────────── */
+
+.isv2-pop {
+  position: absolute;
+  top: calc(100% + var(--ref-spacing-xxs));
+  left: 0;
+  z-index: 21;
+  width: max-content;
+  min-width: 200px;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
+  border-radius: var(--comp-action-dropdown-border-radius, var(--ref-border-radius-md));
+  background: var(--comp-action-dropdown-background-color, var(--ref-color-white));
+  box-shadow: var(--app-shadow-low);
+  white-space: normal;
+  cursor: default;
+}
+
+.isv2-pop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+}
+
+.isv2-pop-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+/* Effect off → the controls read as inert without disappearing. */
+.isv2-pop.is-off .isv2-pop-body {
+  opacity: 0.5;
+}
+
+.isv2-slider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.isv2-slider-row .ap-slider {
+  flex: 1 1 auto;
+}
+
+.isv2-slider-val {
+  min-width: 24px;
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-size);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.isv2-color-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.isv2-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+}
+
+.isv2-swatch {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
+  background: var(--sw, var(--ref-color-white));
+  cursor: pointer;
+}
+
+.isv2-swatch.is-selected {
+  outline: 2px solid var(--sys-color-accent-default-bg-default);
+  outline-offset: 1px;
+}
+
+.isv2-swatch--add {
+  display: grid;
+  place-items: center;
+  border-style: dashed;
+  background: var(--app-surface-subtle);
+  color: var(--ref-color-grey-80);
+  font-size: 11px;
+}
+
+.isv2-swatch--add input[type="color"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.isv2-font-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.isv2-font-row {
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+  border-radius: var(--app-radius-sm);
+}
+
+.isv2-font-row:hover {
+  background: var(--app-surface-subtle);
+}
+
+.isv2-font-row.is-selected {
+  background: var(--sys-color-accent-light-bg);
+}
+
+.isv2-font-check {
+  color: var(--sys-color-accent-default-bg-default);
+  font-size: 12px;
+}
+
+/* ── Narrow viewports ────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  /* Past here the action cluster alone is most of the row — drop it onto its
+     own line so the CTA never gets squeezed. */
+  .isv2-composer-row--controls {
+    flex-wrap: wrap;
+  }
+
+  .isv2-actions {
+    margin-left: auto;
+  }
+}
