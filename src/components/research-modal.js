@@ -20,11 +20,11 @@
 
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 import { html, raw } from "../utils.js?v=21";
-import { getFinding, dismissFinding, restoreFinding, subscribe as subscribeResearch } from "../research-store.js?v=1";
-import { showToast } from "./toast.js?v=20";
-import { findResearchSource } from "../research-catalog.js?v=1";
-import { renderFindingCard, renderBadge } from "../research-view.js?v=1";
-import { renderSocialPostCard } from "./social-post-card.js?v=1";
+import { getFinding, restoreFinding, subscribe as subscribeResearch } from "../research-store.js?v=2";
+import { useFinding, dismiss as dismissWithUndo } from "../research-flow.js?v=1";
+import { findResearchSource } from "../research-catalog.js?v=2";
+import { renderFindingCard, renderBadge } from "../research-view.js?v=2";
+import { renderSocialPostCard } from "./social-post-card.js?v=2";
 
 const MODAL_ID = "research";
 
@@ -69,16 +69,34 @@ export function init() {
 
 // The footer carries the same data-* hooks as the feed card, but the modal is
 // appended to <body> — outside the /research screen's delegated root — so it
-// handles them itself. "Turn into ideas" / "Draft a post now" are wired in
-// research-flow.js (next commit), which both surfaces will call.
+// handles them itself. The actions themselves live in research-flow, shared
+// with the feed.
 function onClick(event) {
+  const use = event.target.closest("[data-research-use]");
+  if (use) {
+    close();
+    useFinding(use.dataset.researchUse);
+    return;
+  }
+
+  const useIn = event.target.closest("[data-research-use-in]");
+  if (useIn) {
+    close();
+    useFinding(useIn.dataset.researchUseIn, { forcePicker: true });
+    return;
+  }
+
+  const draft = event.target.closest("[data-research-draft]");
+  if (draft) {
+    close();
+    useFinding(draft.dataset.researchDraft, { thenDraft: true });
+    return;
+  }
+
   const dismiss = event.target.closest("[data-research-dismiss]");
   if (dismiss) {
-    const id = dismiss.dataset.researchDismiss;
-    if (dismissFinding(id)) {
-      showToast("Finding dismissed", { action: { label: "Undo", onClick: () => restoreFinding(id) } });
-      close();
-    }
+    close();
+    dismissWithUndo(dismiss.dataset.researchDismiss);
     return;
   }
 

@@ -35,11 +35,11 @@
 // Empty in new-alt mode — a brand-new user has nothing to have researched yet,
 // so /research shows its empty state and offers a scan instead.
 
-import { researchFindings as seed, researchScanPool as poolSeed } from "./mocks.js?v=57";
+import { researchFindings as seed, researchScanPool as poolSeed } from "./mocks.js?v=58";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
-import { getContextById, updateContext } from "./contexts-store.js?v=38";
-import { DEFAULT_ENABLED_IDS, findCadence } from "./research-catalog.js?v=1";
+import { getContextById, updateContext } from "./contexts-store.js?v=39";
+import { DEFAULT_ENABLED_IDS, findCadence } from "./research-catalog.js?v=2";
 
 // How long a scan "runs". Long enough to read as work, short enough to demo.
 const SCAN_MS = 2600;

@@ -17,12 +17,12 @@
 // reading the cards they were notified about.
 
 import { html, raw } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=217";
+import { renderTopbar } from "../components/topbar.js?v=218";
 import { navigate } from "../router.js?v=30";
-import { isFlagOn } from "../feature-flags.js?v=11";
+import { isFlagOn } from "../feature-flags.js?v=12";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { getContexts, getDefaultContext } from "../contexts-store.js?v=38";
-import { RESEARCH_SOURCES, CADENCES } from "../research-catalog.js?v=1";
+import { getContexts, getDefaultContext } from "../contexts-store.js?v=39";
+import { RESEARCH_SOURCES, CADENCES } from "../research-catalog.js?v=2";
 import {
   getFindings,
   getNewCount,
@@ -30,19 +30,19 @@ import {
   getLastScanAt,
   isScanning,
   markAllSeen,
-  dismissFinding,
   restoreFinding,
   setSourceEnabled,
   setCadence,
   setNotify,
   runScan,
   subscribe as subscribeResearch,
-} from "../research-store.js?v=1";
-import { renderResearchPage, renderFeedBody, renderSourcesBody } from "../research-view.js?v=1";
+} from "../research-store.js?v=2";
+import { renderResearchPage, renderFeedBody, renderSourcesBody } from "../research-view.js?v=2";
 import { showToast } from "../components/toast.js?v=20";
-import { findConnector } from "../connectors-store.js?v=29";
-import { open as openConnectorsModal } from "../components/connectors-modal.js?v=12";
-import { open as openResearchModal } from "../components/research-modal.js?v=1";
+import { findConnector } from "../connectors-store.js?v=30";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=13";
+import { open as openResearchModal } from "../components/research-modal.js?v=2";
+import { useFinding, dismiss as dismissWithUndo } from "../research-flow.js?v=1";
 
 let unsubscribe = null;
 let activeContextId = null;
@@ -235,14 +235,31 @@ function onClick(event, root) {
     return;
   }
 
+  // The three card actions all live in research-flow so the feed, the modal
+  // footer and the in-chat turn share one implementation.
+  const use = event.target.closest("[data-research-use]");
+  if (use) {
+    useFinding(use.dataset.researchUse);
+    return;
+  }
+
+  const useIn = event.target.closest("[data-research-use-in]");
+  if (useIn) {
+    closeMenus(root);
+    useFinding(useIn.dataset.researchUseIn, { forcePicker: true });
+    return;
+  }
+
+  const draft = event.target.closest("[data-research-draft]");
+  if (draft) {
+    closeMenus(root);
+    useFinding(draft.dataset.researchDraft, { thenDraft: true });
+    return;
+  }
+
   const dismiss = event.target.closest("[data-research-dismiss]");
   if (dismiss) {
-    const id = dismiss.dataset.researchDismiss;
-    if (dismissFinding(id)) {
-      showToast("Finding dismissed", {
-        action: { label: "Undo", onClick: () => restoreFinding(id) },
-      });
-    }
+    dismissWithUndo(dismiss.dataset.researchDismiss);
     return;
   }
 
