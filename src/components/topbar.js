@@ -511,6 +511,7 @@ function currentTitle() {
   if (path === "/") return "Home";
   if (path === "/contexts") return "Playbooks";
   if (path === "/connectors") return "Connectors";
+  if (path === "/research") return "Research";
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);
   if (sessionMatch) {
     const id = sessionMatch[1];

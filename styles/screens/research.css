@@ -1,0 +1,316 @@
+/* Research — the findings feed (route /research).
+   Page chrome mirrors /contexts (page wrapper, header, title/subline) so the
+   library routes read as one family. The feed itself is a single reading
+   column, not a grid: a finding is something you read before you act on it.
+
+   Reused, not re-declared here:
+     .ap-card               the finding card shell (border, radius, gap, padding)
+     .ap-split-button       "Turn into ideas" + its chevron half
+     .ap-action-dropdown    the chevron's menu
+     .ap-tag / .ap-status   the New tag, the research type, the used state
+     .ap-select             the Playbook picker (native <details> disclosure)
+     .ap-button / .ap-link  every other action
+     .session__empty-*      the shared empty-state children (empty-state.js) */
+
+.research-view {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.research-view__page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-md) var(--ref-spacing-xl) var(--ref-spacing-xl);
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────── */
+
+.research-view__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ref-spacing-md);
+  flex-wrap: wrap;
+}
+
+.research-view__head-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+}
+
+.research-view__title {
+  margin: 0;
+  font-family: var(--sys-text-style-h1-font-family);
+  font-size: var(--sys-text-style-h1-size);
+  line-height: var(--sys-text-style-h1-line-height);
+  font-weight: var(--sys-text-style-h1-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.research-view__sub {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
+  color: var(--ref-color-grey-80);
+}
+
+.research-view__head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+/* .ap-select is width:100% by default (it's built for form rows), so an
+   inline instance in a toolbar has to shrink-wrap — same override the
+   top-posts toolbar and the right panel apply. */
+.research-view__playbook {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 200px;
+}
+
+/* ── Feed ────────────────────────────────────────────────────────────── */
+
+.research-view__body {
+  min-height: 200px;
+}
+
+/* One reading column. 760px is the measure a finding's headline + summary
+   read at comfortably; wider and the two-line summary turns into one. */
+.research-view__feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  max-width: 760px;
+}
+
+.research-view__dismissed {
+  max-width: 760px;
+  padding-top: var(--ref-spacing-sm);
+  text-align: center;
+}
+
+.research-view__empty {
+  padding: var(--ref-spacing-md);
+  text-align: center;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
+  color: var(--ref-color-grey-60);
+}
+
+/* Mirrors the .session__empty chrome, like /contexts — empty-state.js ships
+   the children but not the wrapper layout. */
+.research-view__empty--rich {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--ref-spacing-sm);
+  max-width: 460px;
+  min-height: 48vh;
+  margin: 0 auto;
+  padding: var(--ref-spacing-xl) var(--ref-spacing-md);
+}
+
+/* ── Source badge ────────────────────────────────────────────────────── */
+
+/* `accent` on a catalog entry is a semantic key, resolved to a token pair
+   here — never a hex in the JS. A new accent means a new block below. */
+.research-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--research-accent-bg, var(--ref-color-grey-10));
+  color: var(--research-accent-fg, var(--ref-color-grey-80));
+}
+
+.research-badge--md {
+  width: 32px;
+  height: 32px;
+  font-size: var(--sys-icon-css-sm);
+}
+
+.research-badge--sm {
+  width: 24px;
+  height: 24px;
+  font-size: var(--sys-icon-css-xs);
+}
+
+.research-badge--purple {
+  --research-accent-bg: var(--ref-color-purple-10);
+  --research-accent-fg: var(--ref-color-purple-100);
+}
+
+.research-badge--red {
+  --research-accent-bg: var(--ref-color-red-10);
+  --research-accent-fg: var(--ref-color-red-100);
+}
+
+.research-badge--mermaid {
+  --research-accent-bg: var(--ref-color-mermaid-10);
+  --research-accent-fg: var(--ref-color-mermaid-20);
+}
+
+.research-badge--electric-blue {
+  --research-accent-bg: var(--ref-color-electric-blue-10);
+  --research-accent-fg: var(--ref-color-electric-blue-100);
+}
+
+.research-badge--green {
+  --research-accent-bg: var(--ref-color-green-10);
+  --research-accent-fg: var(--ref-color-green-100);
+}
+
+.research-badge--orange {
+  --research-accent-bg: var(--ref-color-orange-10);
+  --research-accent-fg: var(--ref-color-orange-100);
+}
+
+.research-badge--menthol {
+  --research-accent-bg: var(--ref-color-menthol-10);
+  --research-accent-fg: var(--ref-color-menthol-100);
+}
+
+/* ── Finding card ────────────────────────────────────────────────────── */
+
+/* .ap-card already brings the surface, border, radius, padding and a sm gap.
+   Only the row rhythm and the typography of the card's own parts live here. */
+.research-card {
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-md);
+}
+
+.research-card--dismissed {
+  opacity: 0.6;
+}
+
+.research-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.research-card__origin {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+  flex: 1;
+}
+
+.research-card__source {
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  font-family: var(--sys-text-style-h4-font-family);
+  color: var(--ref-color-grey-100);
+}
+
+.research-card__time {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+  white-space: nowrap;
+}
+
+.research-card__new {
+  margin-left: auto;
+}
+
+.research-card__headline {
+  margin: 0;
+  font-family: var(--sys-text-style-h2-font-family);
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  font-weight: var(--sys-text-style-h2-weight);
+  color: var(--ref-color-grey-100);
+}
+
+/* Two lines, then ellipsis — the full argument lives in the modal. */
+.research-card__summary {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-80);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.research-card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  flex-wrap: wrap;
+}
+
+.research-card__meta-label,
+.research-card__evidence {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+.research-card__evidence {
+  margin-left: auto;
+}
+
+.research-card__foot {
+  padding-top: var(--ref-spacing-xs);
+  border-top: 1px solid var(--ref-color-grey-10);
+}
+
+.research-card__foot--modal {
+  padding-top: 0;
+  border-top: none;
+}
+
+.research-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  flex-wrap: wrap;
+}
+
+/* "Read the research" sits opposite the decision, not beside it — reading is
+   the alternative to deciding now. */
+.research-card__read {
+  margin-left: auto;
+}
+
+.research-card__actions--dismissed {
+  justify-content: space-between;
+}
+
+.research-card__dismissed-note {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+/* The split button's menu — .ap-action-dropdown brings its own surface; this
+   only anchors it under the chevron half. */
+.research-card__split {
+  position: relative;
+}
+
+.research-card__menu {
+  position: absolute;
+  top: calc(100% + var(--ref-spacing-xxxs));
+  left: 0;
+  z-index: 20;
+  min-width: 250px;
+}
