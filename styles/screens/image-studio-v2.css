@@ -118,7 +118,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--ref-spacing-lg);
+  /* Tighter at the bottom — the dock below adds its own breathing room. */
+  padding: var(--ref-spacing-lg) var(--ref-spacing-lg) var(--ref-spacing-md);
   overflow: auto;
 }
 
@@ -390,41 +391,66 @@
    THE COMPOSER — the whole point of v2.
    ══════════════════════════════════════════════════════════════════════════ */
 
-.isv2-composer {
+/* The dock is a continuation of the stage's canvas, not a separate white
+   footer — the card floats on it. No border-top: the card's own elevation is
+   the separation, which keeps the whole lower half reading as one surface. */
+.isv2-dock {
   flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm) var(--ref-spacing-lg) var(--ref-spacing-md);
-  border-top: 1px solid var(--app-border-soft);
-  background: var(--app-surface);
+  justify-content: center;
+  padding: 0 var(--ref-spacing-lg) var(--ref-spacing-md);
+  background: var(--app-bg);
 }
 
-.isv2-composer-row {
+/* 720px, centred. A full-bleed 1300px prompt is ~180 characters per line —
+   more than twice the comfortable measure — and the six settings ended up
+   marooned across an enormous empty bar.
+   ONE frame: a hairline, no shadow, no inner dividers, no boxes around the
+   chips. Every extra edge in here was an edge around something that is already
+   inside a bordered card inside a bordered dialog. */
+.isv2-composer {
+  width: 100%;
+  max-width: 720px;
   display: flex;
-  align-items: flex-end;
-  gap: var(--ref-spacing-xs);
-}
-
-.isv2-composer-row--prompt {
-  align-items: flex-start;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-xs) var(--ref-spacing-xs) var(--ref-spacing-sm);
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs);
   border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-modal);
+  border-radius: var(--app-radius-card);
   background: var(--app-surface);
   transition: border-color 150ms var(--app-ease-out);
 }
 
-.isv2-composer-row--prompt:focus-within {
-  border-color: var(--ref-color-grey-60);
+.isv2-composer:focus-within {
+  border-color: var(--ref-color-grey-40);
 }
 
-/* The mermaid sparkle = generative AI. Nudged down to sit on the first text
-   line rather than the box's top edge. */
-.isv2-ai-cue {
-  flex: 0 0 auto;
-  margin-top: 6px;
-  font-size: var(--sys-icon-size-md, 20px);
+.isv2-composer-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+/* The card IS the field's frame — the prompt row carries no border of its own
+   (a bordered box inside a bordered card is two frames for one thing). */
+.isv2-composer-row--prompt {
+  position: relative;
+  align-items: flex-start;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xxs) 0 var(--ref-spacing-xxs);
+}
+
+/* A capped textarea that just stops mid-glyph looks broken rather than
+   scrollable. A short fade to the card's own white says "there's more" without
+   a scrollbar; when the text is short it fades white-on-white and vanishes. */
+.isv2-composer-row--prompt::after {
+  content: "";
+  position: absolute;
+  left: var(--ref-spacing-xxs);
+  right: var(--ref-spacing-xxs);
+  bottom: 0;
+  height: 18px;
+  background: linear-gradient(to top, var(--app-surface), transparent);
+  pointer-events: none;
 }
 
 .isv2-prompt {
@@ -434,9 +460,10 @@
      a 320px rail had no other way to show a long brief. Full width changes the
      calculus: start small, grow to fit, cap and scroll. */
   min-height: 32px;
-  /* An exact multiple of the line-height, so the cap never lands mid-glyph and
-     leave a half-line looking like a rendering bug. */
-  max-height: calc(var(--sys-text-style-body-line-height) * 5);
+  /* An exact multiple of the line-height PLUS the field's own padding — the box
+     is border-box, so leaving the padding out of the cap clipped the last line
+     in half and read as a rendering bug. */
+  max-height: calc(var(--sys-text-style-body-line-height) * 5 + 8px);
   padding: 4px 0;
   border: 0;
   background: transparent;
@@ -460,7 +487,7 @@
    (which is flex:1 and simply gives up the room). Never sideways — the bar is
    already the full width of the modal. */
 .isv2.is-prompt-expanded .isv2-prompt {
-  max-height: calc(var(--sys-text-style-body-line-height) * 20);
+  max-height: calc(var(--sys-text-style-body-line-height) * 18 + 8px);
 }
 
 .isv2-prompt-loading {
@@ -497,9 +524,8 @@
 
 /* ── Row 2: settings / tools + actions ───────────────────────────────────── */
 
-.isv2-composer-row--controls {
-  align-items: center;
-}
+/* No rule between the bands — the gap separates them, and one less line in a
+   card this small is one less thing to look at. */
 
 /* The chip row absorbs the leftover width; the action cluster never shrinks.
    It must NOT be a scroll container: the sheets are anchored inside it, and
@@ -508,20 +534,27 @@
    It WRAPS rather than shrinks. Shrinking distributes the shortfall across all
    six chips, so a 35px deficit truncates every single value by a character —
    six half-read settings instead of one extra row. */
+/* Band 2 — the settings, using the card's full width so they wrap to two tidy
+   lines instead of three ragged ones squeezed beside the buttons. NOT a scroll
+   container: the sheets are anchored inside it, and `overflow-x: auto` silently
+   computes `overflow-y` to `auto` too, which clips every drop-up out of sight. */
+/* Zero horizontal padding: the chip's own 8px inner padding puts its text on
+   exactly the same left edge as the prompt above and the buttons' right edge
+   below — one optical margin for all three bands. */
 .isv2-chips {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--ref-spacing-xxs);
-  flex: 1 1 auto;
-  min-width: 0;
+  gap: 2px var(--ref-spacing-xxxs);
 }
 
+/* Band 3 — act. Right-aligned, no rule above it: the gap is the separation. */
 .isv2-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--ref-spacing-xxs);
-  flex: 0 0 auto;
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs) 0;
 }
 
 /* ── The chip-dropdown ───────────────────────────────────────────────────── */
@@ -532,101 +565,132 @@
   flex: 0 0 auto;
 }
 
+/* BORDERLESS. Six bordered, filled pills inside a bordered card inside a
+   bordered dialog was three nested frames for one row of settings — that was
+   the visual weight. The legibility that was missing before does NOT come from
+   a box: it comes from body-size type and a dark, bold VALUE. So the type stays
+   strong and every frame goes. The chevron carries the affordance; hover fills. */
 .isv2-chip {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
-  height: 32px;
+  height: 28px;
   /* A single very long value (a brand name, "From your references") still
      ellipsis rather than pushing the row around. */
-  max-width: 280px;
-  padding: 0 var(--ref-spacing-xxs) 0 var(--ref-spacing-xs);
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-pill);
-  background: var(--app-surface);
+  max-width: 260px;
+  padding: 0 var(--ref-spacing-xxs);
+  border: 0;
+  border-radius: var(--app-radius-button-sm);
+  background: transparent;
   color: var(--ref-color-grey-100);
   font-family: var(--ref-font-family);
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
   white-space: nowrap;
   cursor: pointer;
   transition:
-    border-color 120ms var(--app-ease-out),
-    background-color 120ms var(--app-ease-out);
+    background-color 120ms var(--app-ease-out),
+    color 120ms var(--app-ease-out);
 }
 
 .isv2-chip:hover:not(:disabled) {
-  border-color: var(--ref-color-grey-60);
   background: var(--app-surface-subtle);
 }
 
 .isv2-chip:focus-visible {
-  outline: 2px solid var(--sys-color-accent-default-bg-default);
-  outline-offset: 1px;
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: -1px;
 }
 
-/* A setting that carries a real value gets a darker frame and full-strength
-   text — hierarchy by weight, not by colour, so the row stays calm with six
-   chips in it. `is-open` is the disclosure state. */
-.isv2-chip.is-set,
-.isv2-chip.is-open {
-  border-color: var(--ref-color-grey-100);
+/* A setting carrying a real value says so in colour alone — the app's accent
+   blue for a selected state, no fill, no frame. */
+.isv2-chip.is-set {
+  color: var(--ref-color-electric-blue-150);
 }
 
+/* Open must out-rank "set": the sheet above it belongs to THIS chip. */
 .isv2-chip.is-open {
-  box-shadow: var(--app-shadow-subtle);
+  background: var(--app-surface-subtle);
+  color: var(--ref-color-grey-150);
 }
 
 .isv2-chip:disabled {
-  opacity: 0.55;
+  color: var(--ref-color-grey-40);
   cursor: not-allowed;
 }
 
-/* The label holds its ground; the value is what gives when the row is tight
-   (the chip's job is still readable as "Format …" with the value truncated,
-   never as "…" with no idea what setting it is). */
+/* Label names the setting, value states it. The label is the quiet one and it
+   holds its ground; the value is bold, dark, and the part that ellipsis when
+   the row is tight — a chip truncated to "Format …" still says what it is,
+   where a truncated label would say nothing at all. */
 .isv2-chip-label {
   flex: 0 0 auto;
   color: var(--ref-color-grey-80);
 }
 
+.isv2-chip.is-set .isv2-chip-label {
+  color: var(--ref-color-electric-blue-60);
+}
+
 .isv2-chip-value {
   flex: 0 1 auto;
   min-width: 0;
-  color: var(--ref-color-grey-100);
-  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-150);
+  font-weight: var(--sys-text-style-body-bold-weight);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .isv2-chip.is-set .isv2-chip-value {
-  color: var(--ref-color-grey-150);
+  color: var(--ref-color-electric-blue-150);
 }
 
+/* The only affordance a borderless control has — so it's always visible, and
+   quiet enough not to compete with the value it belongs to. */
 .isv2-chip-caret {
-  font-size: 10px;
+  flex: 0 0 auto;
+  margin-left: 1px;
+  font-size: 9px;
   color: var(--ref-color-grey-60);
   transition: transform 150ms var(--app-ease-out);
 }
 
+.isv2-chip.is-set .isv2-chip-caret {
+  color: var(--ref-color-electric-blue-60);
+}
+
 .isv2-chip.is-open .isv2-chip-caret {
   transform: rotate(180deg);
+  color: var(--ref-color-grey-100);
 }
 
 .isv2-chip-lead {
+  flex: 0 0 auto;
   font-size: 14px;
   color: var(--ref-color-grey-80);
 }
 
-/* Tool chips (Edit mode) have no value column — the label is the whole thing. */
-.isv2-chip--tool .isv2-chip-label {
-  color: var(--ref-color-grey-100);
+.isv2-chip.is-set .isv2-chip-lead {
+  color: var(--ref-color-electric-blue-100);
 }
 
+/* Tool chips (Edit mode) have no value column — the label IS the thing, so it
+   takes the value's weight, and it keeps its icon (a verb needs a glyph the way
+   a setting doesn't). */
+.isv2-chip--tool .isv2-chip-label {
+  color: var(--ref-color-grey-150);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+/* An engaged tool is a MODE, not just a value — it earns a fill where a set
+   setting only earns colour. */
 .isv2-chip--tool.is-set {
-  background: var(--sys-color-accent-light-bg);
-  border-color: var(--sys-color-accent-default-bg-default);
+  background: var(--ref-color-electric-blue-10);
+}
+
+.isv2-chip--tool.is-set .isv2-chip-label {
+  color: var(--ref-color-electric-blue-150);
 }
 
 /* A ratio drawn to scale — the shape reads faster than "4:5" does. */
@@ -671,14 +735,6 @@
 
 .isv2-sheet--wide {
   max-width: min(560px, calc(100vw - 96px));
-}
-
-/* The rightmost chips would push their sheet past the modal edge — anchor
-   those to their right side instead. */
-.isv2-chip-wrap:nth-last-child(-n + 2) .isv2-sheet {
-  left: auto;
-  right: 0;
-  transform-origin: bottom right;
 }
 
 @keyframes isv2-pop-up {
@@ -1323,14 +1379,10 @@
 
 /* ── Narrow viewports ────────────────────────────────────────────────────── */
 
-@media (max-width: 900px) {
-  /* Past here the action cluster alone is most of the row — drop it onto its
-     own line so the CTA never gets squeezed. */
-  .isv2-composer-row--controls {
-    flex-wrap: wrap;
-  }
-
-  .isv2-actions {
-    margin-left: auto;
+@media (max-width: 820px) {
+  /* The card is capped at 720 and the dock adds 32 either side — below this the
+     dock's gutters are what has to give. */
+  .isv2-dock {
+    padding-inline: var(--ref-spacing-sm);
   }
 }

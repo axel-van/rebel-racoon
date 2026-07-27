@@ -83,10 +83,18 @@ function bestFor(network) {
 
 // ── Generate mode ───────────────────────────────────────────────────────────
 
+// The composer is a CARD centred on the stage, not a full-width footer strip.
+// At 1440px a full-bleed prompt runs ~180 characters per line — unreadable, and
+// it made the six settings look like chrome stranded at the bottom of a huge
+// empty bar. Capped and centred, the card reads as one object you act in.
+// Three stacked bands, one job each — write, configure, act. The settings and
+// the CTAs deliberately do NOT share a row: at this width the chips wrap, and a
+// cluster of buttons parked halfway down a wrapping chip block destroys the
+// reading order. Each band owns its full width instead.
 function generateComposer(st) {
-  return `<div class="isv2-composer" role="group" aria-label="Image prompt and settings">
-    ${promptRow(st)}
-    <div class="isv2-composer-row isv2-composer-row--controls">
+  return `<div class="isv2-dock">
+    <div class="isv2-composer" role="group" aria-label="Image prompt and settings">
+      ${promptRow(st)}
       <div class="isv2-chips" role="group" aria-label="Generation settings">${settingChips(st)}</div>
       ${generateActions(st)}
     </div>
@@ -100,9 +108,11 @@ function generateComposer(st) {
 function promptRow(st) {
   const expanded = !!st.composerExpanded;
   const expandLabel = expanded ? "Collapse prompt" : "Expand prompt";
+  // No leading sparkle glyph. The card already carries two AI marks (the Archie
+  // "Suggest" and the sparkle on Generate) and a third one only bought an
+  // indent that knocked the prompt text out of line with the settings below it.
   if (st.promptLoading) {
     return `<div class="isv2-composer-row isv2-composer-row--prompt">
-      <i class="ap-icon-sparkles-mermaid isv2-ai-cue" aria-hidden="true"></i>
       <div class="isv2-prompt-loading" role="status">
         <span class="gen-image-spinner gen-loading-mark"></span>
         <span>Writing your image prompt…</span>
@@ -110,7 +120,6 @@ function promptRow(st) {
     </div>`;
   }
   return `<div class="isv2-composer-row isv2-composer-row--prompt">
-    <i class="ap-icon-sparkles-mermaid isv2-ai-cue" aria-hidden="true"></i>
     <textarea id="isv2Prompt" class="isv2-prompt" data-img-prompt rows="1" placeholder="${escapeHtml(PROMPT_PLACEHOLDER)}" aria-label="Describe your image">${escapeHtml(st.promptText)}</textarea>
     <div class="isv2-prompt-tools">
       <button type="button" class="ap-button ghost grey isv2-suggest" data-img-derive><i class="ap-icon-archie-official" aria-hidden="true"></i><span>${(st.promptText || "").trim() ? "Suggest again" : "Suggest from this post"}</span></button>
@@ -164,7 +173,6 @@ function settingChips(st) {
         set: on,
         open: open === "brandKit",
         sheet: () => brandKitSheet(st),
-        lead: `<i class="ap-icon-star isv2-chip-lead" aria-hidden="true"></i>`,
       }),
     );
   }
@@ -179,7 +187,6 @@ function settingChips(st) {
       set: uploads.length > 0,
       open: open === "refs",
       sheet: () => refsSheet(st, uploads),
-      lead: `<i class="ap-icon-paper-clip isv2-chip-lead" aria-hidden="true"></i>`,
     }),
   );
 
@@ -226,9 +233,9 @@ function settingChips(st) {
       set: false, // format always has a value; "set" would be meaningless here
       open: open === "format",
       sheet: () => formatSheet(st, choices),
-      lead: cur
-        ? `<span class="isv2-ratio-glyph isv2-chip-lead" style="aspect-ratio:${cur.ratio}" aria-hidden="true"></span>`
-        : "",
+      // No lead glyph: six text-only chips read as one consistent row, and the
+      // value already says "1:1 · Square". The ratio glyphs live in the sheet,
+      // where they actually help you choose.
     }),
   );
 
@@ -390,15 +397,14 @@ function editComposer(st) {
   const primary = carousel
     ? `<button type="button" class="ap-button primary orange" data-img-apply-slide ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Apply to slide ${(st.selectedIndex ?? 0) + 1}</span></button>`
     : `<button type="button" class="ap-button primary orange" data-img-use ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Use this image</span></button>`;
-  return `<div class="isv2-composer" role="group" aria-label="Edit the image">
-    <div class="isv2-composer-row isv2-composer-row--prompt">
-      <i class="ap-icon-sparkles-mermaid isv2-ai-cue" aria-hidden="true"></i>
-      <textarea class="isv2-prompt" data-img-edit-prompt rows="1" placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" ${busy}>${escapeHtml(st.editPrompt || "")}</textarea>
-      <div class="isv2-prompt-tools">
-        <button type="button" class="ap-button primary orange isv2-apply" data-img-apply-edit="prompt" aria-label="Apply" title="Apply" ${busy}><i class="ap-icon-arrow-up" aria-hidden="true"></i></button>
+  return `<div class="isv2-dock">
+    <div class="isv2-composer" role="group" aria-label="Edit the image">
+      <div class="isv2-composer-row isv2-composer-row--prompt">
+        <textarea class="isv2-prompt" data-img-edit-prompt rows="1" placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" ${busy}>${escapeHtml(st.editPrompt || "")}</textarea>
+        <div class="isv2-prompt-tools">
+          <button type="button" class="ap-button primary orange isv2-apply" data-img-apply-edit="prompt" aria-label="Apply" title="Apply" ${busy}><i class="ap-icon-arrow-up" aria-hidden="true"></i></button>
+        </div>
       </div>
-    </div>
-    <div class="isv2-composer-row isv2-composer-row--controls">
       <div class="isv2-chips" role="group" aria-label="Edit tools">${editTools(st)}</div>
       <div class="isv2-actions">
         <button type="button" class="ap-button ghost grey" data-img-undo ${imageStudio.canUndo(KEY) ? "" : "disabled"}><i class="ap-icon-reset"></i><span>Undo</span></button>
