@@ -91,7 +91,7 @@
   gap: var(--ref-spacing-sm);
 }
 
-/* ── Feed ────────────────────────────────────────────────────────────── */
+/* ── Body + empty states ─────────────────────────────────────────────── */
 
 .research-view__body {
   min-height: 200px;
@@ -337,7 +337,121 @@
   padding: 0 0 var(--ref-spacing-sm) calc(var(--sys-icon-css-xs) + var(--ref-spacing-xs));
 }
 
-/* ── "Read the research" modal ───────────────────────────────────────── */
+/* ── "What I watch" ──────────────────────────────────────────────────────── */
+
+/* ONE card, seven rows. Seven booleans in seven full-width cards was the most
+   literal thing carried over from the reference screenshots, and it pushed the
+   cadence and notification settings below the fold. */
+
+.research-watch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  max-width: 680px;
+}
+
+.research-watch__list,
+.research-watch__settings {
+  gap: 0;
+  padding: 0;
+}
+
+/* The whole row is the <label> — clicking anywhere on it toggles. */
+.research-watch__row,
+.research-watch__setting {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xs);
+  margin: 0;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+}
+
+.research-watch__row {
+  cursor: pointer;
+}
+
+.research-watch__row + .research-watch__row,
+.research-watch__setting + .research-watch__setting {
+  border-top: 1px solid var(--ref-color-grey-10);
+}
+
+.research-watch__row:hover {
+  background: var(--ref-color-grey-05);
+}
+
+.research-watch__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.research-watch__name {
+  font-family: var(--sys-text-style-h4-font-family);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  color: var(--ref-color-grey-100);
+}
+
+/* One line — enough to know what you're turning on, not a paragraph per row. */
+.research-watch__desc {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.research-watch__row.is-on .research-watch__desc {
+  color: var(--ref-color-grey-80);
+}
+
+.research-watch__toggle {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+/* Discreet, not a CTA — a pointer to where the data lives, not an action
+   competing with the toggle beside it. */
+.research-watch__link {
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+.research-watch__tools {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.research-watch__tool {
+  gap: 2px;
+}
+
+.research-watch__tool-logo {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
+}
+
+.research-watch__setting {
+  align-items: center;
+  cursor: pointer;
+}
+
+.research-watch__chips {
+  display: flex;
+  gap: var(--ref-spacing-xxxs);
+  flex-shrink: 0;
+}
+
+/* ── "Why this idea" modal ───────────────────────────────────────────────── */
 
 /* Width/height sit beside the other dialogs in screens/modals.css. What's here
    is the reading layout: a header block, a scrolling prose column, and a

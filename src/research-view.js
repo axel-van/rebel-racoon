@@ -35,9 +35,12 @@ import { renderEmptyState } from "./components/empty-state.js?v=1";
 
 // ── Small pieces ──────────────────────────────────────────────────────────
 
+function cadence(state) {
+  return (state.cadences || []).find((x) => x.id === state.config?.cadence) || null;
+}
+
 function cadenceAdverb(state) {
-  const c = (state.cadences || []).find((x) => x.id === state.config?.cadence);
-  return c ? c.adverb : "weekly";
+  return cadence(state)?.adverb || "weekly";
 }
 
 // The tinted source glyph. `accent` is a semantic key, resolved to a token pair
@@ -62,7 +65,7 @@ function lowerFirst(text) {
 // "2 sources · every week · last scan 5h ago".
 function renderSubline(state) {
   const count = (state.config?.enabledSourceIds || []).length;
-  const bits = [`${count} ${count === 1 ? "source" : "sources"}`, `every ${cadenceAdverb(state).replace(/ly$/, "")}`];
+  const bits = [`${count} ${count === 1 ? "source" : "sources"}`, `every ${cadence(state)?.every || "week"}`];
   if (state.lastScanAt) bits.push(`last scan ${state.lastScanAt}`);
   return bits.join(" · ");
 }
@@ -231,37 +234,41 @@ export function renderDigestBody(state) {
 
 // ── "What I watch" tab ────────────────────────────────────────────────────
 
-// One switch row per catalog source. The whole row is the <label>, with the DS
-// toggle aria-hidden + tabindex="-1" inside it — the same contract as the Admin
-// popover's flag rows, so the label is the single control.
-function renderSourceSettingCard(source, { enabled, playbookId, tools, connectorsOn }) {
-  // `kind`, never the id, decides what sits under the description.
+// ONE card holding seven rows, not seven cards. Seven booleans do not deserve
+// seven full-width surfaces — that was the most literal thing carried over from
+// the reference screenshots, and it pushed the cadence and notification settings
+// below the fold. Rows are separated by a hairline; the description sits under
+// the name as one clamped line, because it's what tells you what you're turning
+// on.
+//
+// `kind`, never the id, decides what follows the description: a discreet link
+// into the Playbook section that feeds this source, or the connected-tool chips.
+function renderWatchRow(source, { enabled, playbookId, tools, connectorsOn }) {
   const extra =
     source.kind === "playbook" && playbookId
       ? html`<button
           type="button"
-          class="ap-link standalone small research-source__link"
+          class="ap-link small research-watch__link"
           data-research-playbook-link="${playbookId}"
         >
-          <span>${source.playbookLinkLabel}</span>
-          <i class="ap-icon-arrow-right"></i>
+          ${source.playbookLinkLabel}
         </button>`
       : source.kind === "mcp" && connectorsOn
         ? renderToolChips(tools)
         : "";
 
-  return html`<div class="ap-card research-source${raw(enabled ? " research-source--on" : "")}">
-    <label class="research-source__head" data-research-source="${source.id}">
-      ${raw(renderBadge(source, { size: "sm" }))}
-      <span class="research-source__name">${source.name}</span>
-      <span class="ap-toggle-container research-source__toggle" aria-hidden="true">
-        <input type="checkbox" ${raw(enabled ? "checked" : "")} tabindex="-1" />
-        <i></i>
-      </span>
-    </label>
-    <p class="research-source__desc">${source.description}</p>
-    ${raw(extra)}
-  </div>`;
+  return html`<label class="research-watch__row${raw(enabled ? " is-on" : "")}" data-research-source="${source.id}">
+    ${raw(renderBadge(source, { size: "sm" }))}
+    <span class="research-watch__text">
+      <span class="research-watch__name">${source.name}</span>
+      <span class="research-watch__desc">${source.description}</span>
+      ${raw(extra)}
+    </span>
+    <span class="ap-toggle-container research-watch__toggle" aria-hidden="true">
+      <input type="checkbox" ${raw(enabled ? "checked" : "")} tabindex="-1" />
+      <i></i>
+    </span>
+  </label>`;
 }
 
 // The connected tools feeding the MCP source. Gated on the `connectors` flag by
@@ -270,30 +277,27 @@ function renderToolChips(tools) {
   const chips = (tools || [])
     .map(
       (t) =>
-        html`<span class="ap-tag research-source__tool">
-          ${raw(t.logo ? html`<img src="${t.logo}" alt="" class="research-source__tool-logo" />` : "")}
+        html`<span class="ap-tag mini research-watch__tool">
+          ${raw(t.logo ? html`<img src="${t.logo}" alt="" class="research-watch__tool-logo" />` : "")}
           <span>${t.name}</span>
         </span>`,
     )
     .join("");
-  return html`<div class="research-source__tools">
+  return html`<span class="research-watch__tools">
     ${raw(chips)}
-    <button type="button" class="ap-link small research-source__add-tool" data-research-add-tool>
-      <i class="ap-icon-plus"></i>
-      <span>Add a tool</span>
-    </button>
-  </div>`;
+    <button type="button" class="ap-link small" data-research-add-tool>Add a tool</button>
+  </span>`;
 }
 
-// Plain noun-phrase labels, never imperatives — the description carries the
-// "notify me" intent instead.
+// Cadence and notifications, in the same column and on screen at the same time
+// as the sources. Plain noun-phrase labels — the description carries the intent.
 function renderOtherSettings(state) {
   const chips = (state.cadences || [])
     .map((c) => {
       const on = c.id === state.config?.cadence;
       return html`<button
         type="button"
-        class="ap-filter-chip research-settings__chip"
+        class="ap-filter-chip"
         data-research-cadence="${c.id}"
         aria-pressed="${raw(on ? "true" : "false")}"
       >
@@ -302,31 +306,32 @@ function renderOtherSettings(state) {
     })
     .join("");
 
-  return html`<h2 class="research-sources__heading">Other settings</h2>
-    <div class="ap-card research-settings">
-      <div class="research-settings__text">
-        <span class="research-settings__label">How often</span>
-        <p class="research-settings__desc">How often I look at your sources and send ideas.</p>
-      </div>
-      <div class="research-settings__chips" role="group" aria-label="How often">${raw(chips)}</div>
+  return html`<div class="ap-card research-watch__settings">
+    <div class="research-watch__setting">
+      <span class="research-watch__text">
+        <span class="research-watch__name">How often</span>
+        <span class="research-watch__desc">How often I look at your sources and send ideas.</span>
+      </span>
+      <span class="research-watch__chips" role="group" aria-label="How often">${raw(chips)}</span>
     </div>
-    <label class="ap-card research-settings research-settings--row" data-research-notify>
-      <div class="research-settings__text">
-        <span class="research-settings__label">Notifications</span>
-        <p class="research-settings__desc">Show a badge and a toast when new ideas land.</p>
-      </div>
-      <span class="ap-toggle-container" aria-hidden="true">
+    <label class="research-watch__setting" data-research-notify>
+      <span class="research-watch__text">
+        <span class="research-watch__name">Notifications</span>
+        <span class="research-watch__desc">Show a badge and a toast when new ideas land.</span>
+      </span>
+      <span class="ap-toggle-container research-watch__toggle" aria-hidden="true">
         <input type="checkbox" ${raw(state.config?.notify ? "checked" : "")} tabindex="-1" />
         <i></i>
       </span>
-    </label>`;
+    </label>
+  </div>`;
 }
 
 export function renderSourcesBody(state) {
   const enabled = new Set(state.config?.enabledSourceIds || []);
-  const cards = (state.sources || [])
+  const rows = (state.sources || [])
     .map((s) =>
-      renderSourceSettingCard(s, {
+      renderWatchRow(s, {
         enabled: enabled.has(s.id),
         playbookId: state.contextId,
         tools: state.tools?.[s.id] || [],
@@ -334,8 +339,8 @@ export function renderSourcesBody(state) {
       }),
     )
     .join("");
-  return html`<div class="research-sources">
-    <div class="research-sources__list">${raw(cards)}</div>
+  return html`<div class="research-watch">
+    <div class="ap-card research-watch__list">${raw(rows)}</div>
     ${raw(renderOtherSettings(state))}
   </div>`;
 }

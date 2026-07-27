@@ -30,8 +30,8 @@ import {
   restoreFinding,
   getResearchConfig,
   runScan,
-} from "./research-store.js?v=3";
-import { findResearchSource } from "./research-catalog.js?v=2";
+} from "./research-store.js?v=4";
+import { findResearchSource } from "./research-catalog.js?v=3";
 import { postSelectionEcho, postAssistantMessage, postResearchDelivery } from "./assistant.js?v=61";
 import { addReadySource } from "./sources-stream.js?v=54";
 import { getIdeaById, addGlobalIdeas, adoptIdea, removeIdeasGlobally } from "./library.js?v=52";

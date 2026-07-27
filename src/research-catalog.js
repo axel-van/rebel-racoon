@@ -126,10 +126,12 @@ export const RESEARCH_SOURCES = Object.freeze([
 export const DEFAULT_ENABLED_IDS = Object.freeze(RESEARCH_SOURCES.filter((s) => s.defaultEnabled).map((s) => s.id));
 
 /** Refresh cadences. Drives copy and how much a manual scan yields — never a timer. */
+// `adverb` for "I send ideas weekly", `every` for "every week". Both spelled
+// out rather than derived — stripping "ly" off "daily" gives "dai".
 export const CADENCES = Object.freeze([
-  { id: "daily", label: "Daily", adverb: "daily" },
-  { id: "weekly", label: "Weekly", adverb: "weekly" },
-  { id: "monthly", label: "Monthly", adverb: "monthly" },
+  { id: "daily", label: "Daily", adverb: "daily", every: "day" },
+  { id: "weekly", label: "Weekly", adverb: "weekly", every: "week" },
+  { id: "monthly", label: "Monthly", adverb: "monthly", every: "month" },
 ]);
 
 export function findResearchSource(id) {

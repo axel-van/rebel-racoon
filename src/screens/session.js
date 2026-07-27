@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=222";
+import { renderTopbar } from "../components/topbar.js?v=224";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=59";
 import {
   getConnectedProfiles,
@@ -63,9 +63,9 @@ import * as inlineQuestion from "../inline-question.js?v=48";
 import * as clipStudio from "../clip-studio.js?v=26";
 import * as batchStudio from "../batch-studio.js?v=4";
 import { askConnector } from "../connector-ask.js?v=11";
-import { adoptAndDraft } from "../research-flow.js?v=4";
-import { getFinding } from "../research-store.js?v=3";
-import { open as openResearchModal } from "../components/research-modal.js?v=5";
+import { adoptAndDraft } from "../research-flow.js?v=5";
+import { getFinding } from "../research-store.js?v=4";
+import { open as openResearchModal } from "../components/research-modal.js?v=7";
 import { renderSocialPostCard } from "../components/social-post-card.js?v=2";
 import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=31";
 import { renderConnectorLogo } from "../connectors-view.js?v=13";
@@ -75,7 +75,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=12";
-import * as contextBuilder from "../context-builder.js?v=193";
+import * as contextBuilder from "../context-builder.js?v=195";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -115,7 +115,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=360";
+} from "../components/right-panel.js?v=362";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=19";

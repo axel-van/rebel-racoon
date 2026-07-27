@@ -15,11 +15,11 @@
 
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 import { html, raw } from "../utils.js?v=21";
-import { getFinding, subscribe as subscribeResearch } from "../research-store.js?v=3";
-import { writeIdea, skipIdea } from "../research-flow.js?v=4";
-import { findResearchSource } from "../research-catalog.js?v=2";
+import { getFinding, subscribe as subscribeResearch } from "../research-store.js?v=4";
+import { writeIdea, skipIdea } from "../research-flow.js?v=5";
+import { findResearchSource } from "../research-catalog.js?v=3";
 import { getIdeaById } from "../library.js?v=52";
-import { renderBadge } from "../research-view.js?v=3";
+import { renderBadge } from "../research-view.js?v=5";
 import { renderSocialPostCard } from "./social-post-card.js?v=2";
 
 const MODAL_ID = "research";
