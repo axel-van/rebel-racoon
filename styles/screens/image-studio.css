@@ -568,10 +568,30 @@ button.image-studio__ref--pick:focus-visible {
    it the heaviest block without shouting — no colour, no shadow, just a shape
    that reads as "the content" against the settings list. Focus flips it to white
    with the blue ring, so editing feels like stepping into the field. */
-.image-studio__prompt {
+/* Header row above the box: step eyebrow (with the AI cue) on the left, the
+   expand toggle on the right. Both used to sit INSIDE the box flanking the
+   field, where each held a column for the full height of the row — at the 320px
+   breakpoint that cost the text ~30% of the card's width. Out here they cost it
+   nothing. */
+.image-studio__prompt-head {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--ref-spacing-xs);
+  min-height: 32px; /* the toggle's height, so the row doesn't jump while loading */
+}
+
+.image-studio__prompt-head .image-studio__group-label--eyebrow {
+  margin-bottom: 0;
+}
+
+.image-studio__ai-icon {
+  font-size: 16px;
+}
+
+/* The box now holds nothing but the field, which spans it edge to edge. */
+.image-studio__prompt {
+  display: block;
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   background: var(--app-surface-subtle);
   border: 1px solid transparent;
@@ -586,14 +606,11 @@ button.image-studio__ref--pick:focus-visible {
   border-color: var(--ref-color-electric-blue-100);
 }
 
-/* Keep the AI cue aligned with the first line, not the bottom. */
-.image-studio__prompt .image-studio__ai-icon {
-  align-self: flex-start;
-  margin-top: 3px;
-}
-
-/* Collapsed is a fixed 5-line peek; content scrolls inside it. */
+/* Full width of the box — nothing shares the row. Collapsed is a fixed 5-line
+   peek; content scrolls inside it. */
 .image-studio__prompt .image-studio__reprompt-field {
+  display: block;
+  width: 100%;
   height: calc(var(--sys-text-style-body-line-height) * 5);
   min-height: 0;
   max-height: none;
@@ -618,8 +635,8 @@ button.image-studio__ref--pick:focus-visible {
   }
 }
 
-/* Compact ghost icon button (small ↔ expanded toggle), pinned to the bottom of
-   the card beside the field. */
+/* Compact ghost icon button (small ↔ expanded toggle), at the right end of the
+   prompt's header row. */
 .image-studio__prompt-expand.ap-button {
   flex: 0 0 auto;
   width: 32px;

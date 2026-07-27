@@ -38,18 +38,23 @@ export function generateControls(st) {
 function promptCard(st) {
   const expanded = !!st.composerExpanded;
   const expandLabel = expanded ? "Collapse prompt" : "Expand prompt";
+  // The AI cue and the expand toggle live on the header row, NOT beside the
+  // field: inside the box each held a column for the full height of the row,
+  // costing the text ~30% of the card's width at the 320px breakpoint. The box
+  // now holds nothing but the textarea.
   const body = st.promptLoading
     ? `<div class="image-studio__prompt-loading" role="status">
         <span class="gen-image-spinner gen-loading-mark"></span>
         <span class="image-studio__prompt-loading-text">Writing your image prompt…</span>
       </div>`
     : `<div class="image-studio__prompt">
-        <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
         <textarea id="imgStudioPrompt" class="image-studio__reprompt-field" data-img-prompt rows="3" placeholder="${escapeHtml(PROMPT_PLACEHOLDER)}" aria-label="Describe your image">${escapeHtml(st.promptText)}</textarea>
-        <button type="button" class="ap-button ghost grey image-studio__prompt-expand" data-img-composer-expand aria-label="${expandLabel}" title="${expandLabel}" aria-pressed="${expanded}"><i class="ap-icon-${expanded ? "minimize" : "maximize"}" aria-hidden="true"></i></button>
       </div>`;
   return `<div class="image-studio__group image-studio__group--prompt">
-    <p class="image-studio__group-label image-studio__group-label--eyebrow"><span class="image-studio__step">1</span>Your prompt</p>
+    <div class="image-studio__prompt-head">
+      <p class="image-studio__group-label image-studio__group-label--eyebrow"><span class="image-studio__step">1</span><i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>Your prompt</p>
+      ${st.promptLoading ? "" : `<button type="button" class="ap-button ghost grey image-studio__prompt-expand" data-img-composer-expand aria-label="${expandLabel}" title="${expandLabel}" aria-pressed="${expanded}"><i class="ap-icon-${expanded ? "minimize" : "maximize"}" aria-hidden="true"></i></button>`}
+    </div>
     ${body}
     ${deriveButton(st)}
   </div>`;
