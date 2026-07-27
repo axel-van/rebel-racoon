@@ -25,16 +25,16 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=37";
 import { getSessionById } from "../../sessions-store.js?v=7";
 import { getContextById } from "../../contexts-store.js?v=38";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=5";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=6";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=5";
+import { renderStudio } from "./stage-view.js?v=6";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=5";
+} from "./interactions.js?v=6";
 import * as imageStudio from "../../image-studio.js?v=42";
 
 let backdrop;
@@ -189,7 +189,7 @@ function onClick(event) {
   // toggle or inside a sheet are exempt (the toggle flips it below; a click
   // inside is the user working in it). We fall through afterwards so the click
   // still performs its normal action.
-  const popToggle = event.target.closest("[data-img-popover-toggle], [data-img-crop-start]");
+  const popToggle = event.target.closest("[data-img-popover-toggle]");
   const insidePop = event.target.closest("[data-img-popover]");
   if (st.openPopover && !popToggle && !insidePop) imageStudio.setOpenPopover(KEY, null);
 
@@ -238,25 +238,15 @@ function onClick(event) {
   if (varPick) return void imageStudio.selectVariation(KEY, Number(varPick.dataset.imgVariation));
 
   // ── Edit tools ──
-  // Crop is a mode AND a sheet: the chip enters draw mode and opens its ratio
-  // options; hitting it again while both are on backs all the way out.
+  // Crop is a plain mode toggle now — its ratio options live in the on-canvas
+  // toolbar under the box, so there is no sheet to keep in sync.
   const cropChip = event.target.closest("[data-img-crop-start]");
   if (cropChip && !cropChip.disabled) {
-    if (st.cropDrawing && st.openPopover === "crop") {
-      imageStudio.cancelCropDraw(KEY);
-      return void imageStudio.setOpenPopover(KEY, null);
-    }
-    imageStudio.enterCropDraw(KEY); // clears openPopover — reopen it after
-    return void imageStudio.setOpenPopover(KEY, "crop");
+    if (st.cropDrawing) return void imageStudio.cancelCropDraw(KEY);
+    return void imageStudio.enterCropDraw(KEY);
   }
-  if (event.target.closest("[data-img-crop-cancel]")) {
-    imageStudio.cancelCropDraw(KEY);
-    return void imageStudio.setOpenPopover(KEY, null);
-  }
-  if (event.target.closest("[data-img-crop-apply]")) {
-    imageStudio.setOpenPopover(KEY, null);
-    return void applyCropSelection();
-  }
+  if (event.target.closest("[data-img-crop-cancel]")) return void imageStudio.cancelCropDraw(KEY);
+  if (event.target.closest("[data-img-crop-apply]")) return void applyCropSelection();
   const cropAspect = event.target.closest("[data-img-crop-aspect]");
   if (cropAspect) {
     const id = cropAspect.dataset.imgCropAspect;

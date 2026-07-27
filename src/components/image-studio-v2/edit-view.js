@@ -18,7 +18,9 @@
 // tool palette, so only ✕ / ✓ stay on the canvas).
 
 import { escapeHtml } from "../../utils.js?v=21";
-import { KEY } from "./context.js?v=5";
+import { FORMATS, NETWORK_FORMATS } from "../../clip-formats.js?v=7";
+import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=27";
+import { KEY } from "./context.js?v=6";
 import { outlineMetrics, shadowMetrics, cssFamily } from "../image-studio/canvas.js?v=2";
 import * as imageStudio from "../../image-studio.js?v=42";
 
@@ -59,20 +61,55 @@ function cropRect(st) {
     .join("");
   return `<div class="image-studio__crop-layer" data-img-crop-layer>
       <div class="image-studio__croprect" data-img-croprect style="${style}">${handles}</div>
-    </div>${cropConfirm(st, r)}`;
+    </div>${cropToolbar(st)}`;
 }
 
-// Just ✕ / ✓, pinned under the box — the one piece v2 does differently, because
-// the ratio chips that used to crowd this bar are a tool-palette sheet now.
+// Crop options as a floating toolbar attached just below the crop rectangle —
+// main's arrangement, main's classes, verbatim. It holds the "Best for" hint, the
+// divider-separated aspect options and the ✕ / ✓ pair in ONE bar, at the contact
+// point of the gesture.
+//
+// v2 had split this: the ratios into a tool-palette sheet, the ✕ / ✓ into their
+// own little pill. That put the ratio you were choosing a canvas-width away from
+// the box it reshapes, which is the one place it must not be.
+//
 // Rendered as a frame child (outside the crop layer) so it isn't clipped and
-// can't start a drag.
-function cropConfirm(st, r) {
+// can't start a drag; it hides while a crop gesture runs.
+function cropToolbar(st) {
   const busy = st.editBusy ? "disabled" : "";
+  const r = st.cropRect || { xF: 0.15, yF: 0.15, wF: 0.7, hF: 0.7 };
   const style = `left:${(r.xF + r.wF / 2) * 100}%; top:${(r.yF + r.hF) * 100}%;`;
-  return `<div class="isv2-crop-confirm" data-img-crop-toolbar style="${style}" role="toolbar" aria-label="Crop">
-    <button type="button" class="ap-icon-button" data-img-crop-cancel title="Cancel" aria-label="Cancel crop" ${busy}><i class="ap-icon-close" aria-hidden="true"></i></button>
-    <button type="button" class="ap-icon-button isv2-crop-apply" data-img-crop-apply title="Apply crop" aria-label="Apply crop" ${busy}><i class="ap-icon-check" aria-hidden="true"></i></button>
+  const net = st.network || null;
+  const netLabel = escapeHtml(NETWORK_LABEL[net] || net || "");
+  const bestFor =
+    net && NETWORK_FORMATS[net]
+      ? `<span class="image-studio__crop-bestfor" aria-label="Best for ${netLabel}">Best for <i class="${NETWORK_ICON_BY_PLATFORM[net] || ""}" title="${netLabel}" aria-hidden="true"></i></span>`
+      : "";
+  const sep = `<span class="image-studio__crop-sep" aria-hidden="true"></span>`;
+  return `<div class="image-studio__crop-toolbar" data-img-crop-toolbar style="${style}" role="toolbar" aria-label="Crop">
+    ${bestFor ? `${bestFor}${sep}` : ""}
+    <div class="image-studio__crop-aspects">${cropAspectChips(st)}</div>
+    ${sep}
+    <div class="image-studio__crop-actions">
+      <button type="button" class="ap-icon-button" data-img-crop-cancel title="Cancel" aria-label="Cancel" ${busy}><i class="ap-icon-close" aria-hidden="true"></i></button>
+      <button type="button" class="ap-icon-button image-studio__crop-apply" data-img-crop-apply title="Apply crop" aria-label="Apply crop" ${busy}><i class="ap-icon-check" aria-hidden="true"></i></button>
+    </div>
   </div>`;
+}
+
+// Freeform + the network's optimised ratios as one divider-separated group, each
+// with a glyph drawn to its own proportions so the shape reads at a glance.
+// Freeform is the default and stays available for an arbitrary crop.
+function cropAspectChips(st) {
+  const net = st.network || null;
+  const optimalIds = net ? NETWORK_FORMATS[net] || null : null;
+  const chip = (id, label, ratio, on) =>
+    `<button type="button" class="image-studio__crop-aspect${ratio ? "" : " image-studio__crop-aspect--free"}${on ? " is-selected" : ""}" data-img-crop-aspect="${escapeHtml(id)}" aria-pressed="${on}"><span class="image-studio__crop-aspect-glyph"${ratio ? ` style="aspect-ratio:${ratio}"` : ""} aria-hidden="true"></span><span>${escapeHtml(label)}</span></button>`;
+  const freeform = chip("free", "Freeform", null, !st.cropAspect);
+  const presets = Object.values(FORMATS)
+    .filter((f) => !optimalIds || optimalIds.includes(f.id))
+    .map((f) => chip(f.id, f.tag, f.ratio, !!st.cropAspect && Math.abs(st.cropAspect - f.ratio) < 0.001));
+  return [freeform, ...presets].join(`<span class="image-studio__crop-sep" aria-hidden="true"></span>`);
 }
 
 // ── Overlay layer ───────────────────────────────────────────────────────────

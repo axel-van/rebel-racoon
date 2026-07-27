@@ -46,18 +46,19 @@
 
 /* ── Header ──────────────────────────────────────────────────────────────── */
 
-/* .ap-dialog-header stacks its children in a column (title over subtitle) and
-   pads 24px top with no bottom — right for a form dialog, wrong for a studio
-   whose stage wants the height. The co-class flattens it into one row; same
-   specificity, later in the cascade. */
+/* Title on one line, the mode tabs under it — the DS dialog header's own column
+   layout, kept rather than flattened.
+   Flattening it into a single row meant stripping `.ap-tabs-nav`'s bottom
+   border to stop it colliding with the header's, and the active tab's 4px
+   indicator sits ON that border: with the rail gone the indicator floated in
+   space and the tabs read as two words glued to the title. The rail is now the
+   header's separator, so nothing doubles up and nothing floats. */
 .isv2-header {
-  flex-direction: row;
-  align-items: center;
-  gap: var(--ref-spacing-md);
   flex: 0 0 auto;
-  /* Right padding clears the absolutely-positioned .ap-dialog-close. */
-  padding: var(--ref-spacing-xs) 56px var(--ref-spacing-xs) var(--ref-spacing-lg);
-  border-bottom: 1px solid var(--sys-border-color-default);
+  gap: 0;
+  /* Only the title row needs to clear the absolute .ap-dialog-close; the tab
+     rail below it runs the full width, so the padding is symmetric. */
+  padding: var(--ref-spacing-sm) var(--ref-spacing-lg) 0;
 }
 
 /* The DS dialog title is 24px — sized for a title standing alone above a form.
@@ -66,6 +67,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
+  margin-bottom: var(--ref-spacing-xs);
   white-space: nowrap;
   font-size: var(--sys-text-style-h4-size);
   line-height: var(--sys-text-style-h4-line-height);
@@ -77,18 +79,28 @@
   color: var(--app-archie-mark);
 }
 
-/* The tab strip sits inline in the header rather than owning its own row —
-   the stage needs the height now that the composer occupies the bottom. */
-/* .ap-tabs is width:100% (it normally owns a whole panel). Inline in a header
-   row it has to shrink to its two tabs, or it pushes everything after it out
-   of the modal. */
+/* Full width, so the rail under the tabs reads as a rail and not as an
+   underline that stops after "Edit". Negative insets pull it out past the
+   header's padding to the modal edges — and `width` has to go back to `auto` for
+   that: `.ap-tabs` ships `width: 100%`, which resolves against the CONTENT box,
+   so the negative margins only shifted the strip left and left the rail 64px
+   short on the right. */
 .isv2-modes {
   flex: 0 0 auto;
   width: auto;
+  margin-inline: calc(var(--ref-spacing-lg) * -1);
 }
 
+/* The DS tab is 48px tall — right for a page-level strip, too tall stacked under
+   a title in a studio whose stage wants the height. */
+.isv2-modes .ap-tabs-tab {
+  min-height: 40px;
+  padding-block: var(--ref-spacing-xxs);
+}
+
+/* The first tab lines up with the title above it. */
 .isv2-modes .ap-tabs-nav {
-  border-bottom: 0;
+  padding-inline: var(--ref-spacing-sm);
 }
 
 /* ── Stage ───────────────────────────────────────────────────────────────── */
@@ -112,9 +124,11 @@
   padding: var(--ref-spacing-sm) var(--ref-spacing-lg) 0;
 }
 
+/* Two independent pills, not a welded segmented control — so they need a real
+   gap between them, not the 2px hairline they had. */
 .isv2-viewseg {
   display: inline-flex;
-  gap: var(--app-spacing-micro, 2px);
+  gap: var(--ref-spacing-xxs);
 }
 
 /* The image is the centre of this modal, so it sits on the modal's exact centre
@@ -963,26 +977,12 @@
   font-size: var(--sys-text-style-caption-size);
 }
 
-/* Just ✕ / ✓, pinned under the box. The ratio chips that used to crowd this
-   bar live in the composer's Crop sheet now. */
-.isv2-crop-confirm {
-  position: absolute;
-  z-index: 8;
-  transform: translate(-50%, var(--ref-spacing-xxs));
-  display: flex;
-  gap: var(--app-spacing-micro, 2px);
-  padding: var(--ref-spacing-xxxs);
-  border-radius: var(--app-radius-pill);
-  background: var(--app-surface);
-  box-shadow: var(--app-shadow-low);
-}
-
-.isv2-crop-apply {
-  color: var(--sys-color-main-default-bg-default);
-}
-
-/* Hidden mid-gesture: its position is only recomputed on re-render. */
-.isv2-frame.is-gesturing .isv2-crop-confirm {
+/* The crop toolbar is main's, styled by main's stylesheet. Only one of its rules
+   is ancestor-coupled — the mid-gesture hide keys on `.image-studio__frame` —
+   and v2's frame carries its own class, so that one is restated here. (A drag
+   deliberately doesn't re-render, and the bar's position is only recomputed when
+   it does.) */
+.isv2-frame.is-gesturing .image-studio__crop-toolbar {
   opacity: 0;
   pointer-events: none;
 }

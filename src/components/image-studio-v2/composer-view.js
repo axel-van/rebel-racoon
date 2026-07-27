@@ -34,9 +34,8 @@
 // flyout-submenu pattern). One is open at a time, tracked by state.openPopover.
 
 import { escapeHtml } from "../../utils.js?v=21";
-import { FORMATS, NETWORK_FORMATS } from "../../clip-formats.js?v=7";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=27";
-import { KEY } from "./context.js?v=5";
+import { KEY } from "./context.js?v=6";
 import * as imageStudio from "../../image-studio.js?v=42";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
@@ -468,18 +467,16 @@ function editComposer(st) {
 function editTools(st) {
   const busy = !!st.editBusy;
   return [
-    // Crop is a mode, not a menu: the row enters the draw mode AND opens its
-    // ratio sheet. The box + its ✕/✓ stay on the canvas, at the contact point of
-    // the gesture; only the options moved down here.
+    // Crop is a mode, not a menu — it just enters the draw mode. Its ratio
+    // options belong on the canvas, in the toolbar under the box they reshape
+    // (see edit-view#cropToolbar), not in a sheet a canvas-width away.
     toolRow({
       name: "crop",
       label: "Crop",
       icon: "ap-icon-cropper",
       action: `data-img-crop-start`,
       active: !!st.cropDrawing,
-      open: st.openPopover === "crop",
       disabled: busy,
-      sheet: () => cropSheet(st),
     }),
     toolRow({
       name: "addText",
@@ -497,24 +494,6 @@ function editTools(st) {
       sheet: () => logoSheet(),
     }),
   ].join("");
-}
-
-// Freeform + the network's optimised ratios, each with a glyph drawn to its own
-// proportions. Non-optimal ratios are hidden outright rather than shown disabled.
-function cropSheet(st) {
-  const net = st.network || null;
-  const optimalIds = net ? NETWORK_FORMATS[net] || null : null;
-  const chipFor = (id, label, ratio, on) =>
-    `<button type="button" class="ap-filter-chip isv2-format-chip" data-img-crop-aspect="${escapeHtml(id)}" aria-pressed="${on}"><span class="isv2-ratio-glyph${ratio ? "" : " isv2-ratio-glyph--free"}"${ratio ? ` style="aspect-ratio:${ratio}"` : ""} aria-hidden="true"></span>${escapeHtml(label)}</button>`;
-  const freeform = chipFor("free", "Freeform", null, !st.cropAspect);
-  const presets = Object.values(FORMATS)
-    .filter((f) => !optimalIds || optimalIds.includes(f.id))
-    .map((f) => chipFor(f.id, f.tag, f.ratio, !!st.cropAspect && Math.abs(st.cropAspect - f.ratio) < 0.001))
-    .join("");
-  return sheet({
-    title: "Crop",
-    body: `${bestFor(net)}<div class="isv2-chip-group">${freeform}${presets}</div>`,
-  });
 }
 
 function logoSheet() {
