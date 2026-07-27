@@ -20,6 +20,7 @@ import { isNewUser } from "../user-mode.js?v=22";
 import { clearSession as clearLibrarySession } from "../library.js?v=49";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=38";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=29";
+import { getNewCount as getNewResearchCount, subscribe as subscribeResearch } from "../research-store.js?v=1";
 import { closePanel as closeRightPanel } from "./right-panel.js?v=355";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=59";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=37";
@@ -308,6 +309,8 @@ export function initSidebar() {
   subscribeContexts(() => renderSidebar());
   subscribeSessions(() => renderSidebar());
   subscribeConnectors(() => renderSidebar());
+  // A landed scan increments the Research counter in place — no polling.
+  subscribeResearch(() => renderSidebar());
 
   // Click outside the popmenu → close.
   document.addEventListener("click", (event) => {
@@ -556,7 +559,21 @@ function renderFootMenu({ collapsed }) {
 // now live only inside a session + the right panel). Chats: the
 // recent-conversations list below is the canonical entry point for
 // session navigation.
+// `flag` gates the row declaratively (was a hardcoded `if` on /connectors).
+// `counterClass` picks the DS .ap-counter colour: grey for a plain total, blue
+// when the number is a notification the user is expected to act on.
 const NAV = [
+  {
+    // First: Research sits at the top of the pipeline, and it's the one row
+    // that carries a notification.
+    path: "/research",
+    icon: "ap-icon-feature-listening",
+    label: "Research",
+    flag: "research",
+    counterClass: "blue",
+    match: (p) => p === "/research",
+    count: () => getNewResearchCount(),
+  },
   {
     path: "/contexts",
     icon: "ap-icon-target",
@@ -568,6 +585,7 @@ const NAV = [
     path: "/connectors",
     icon: "ap-icon-view-grid",
     label: "Connectors",
+    flag: "connectors",
     match: (p) => p === "/connectors",
     count: () => getConnectedConnectors().length,
   },
@@ -606,13 +624,10 @@ function renderNav(path) {
     </button>
   `;
 
-  const routeItems = NAV.filter((item) => {
-    if (item.path === "/connectors") return isFlagOn("connectors");
-    return true;
-  })
+  const routeItems = NAV.filter((item) => !item.flag || isFlagOn(item.flag))
     .map((item) => {
       const count = item.count ? item.count() : 0;
-      const counter = count > 0 ? `<span class="ap-counter normal grey">${count}</span>` : "";
+      const counter = count > 0 ? `<span class="ap-counter normal ${item.counterClass || "grey"}">${count}</span>` : "";
       return `
       <button
         type="button"
