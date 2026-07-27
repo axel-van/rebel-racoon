@@ -124,7 +124,8 @@ function renderSettingsCog(state) {
   </button>`;
 }
 
-// Grey, not orange: the one orange on this page belongs to "Write it".
+// Grey, and stroked: looking is a refresh, not a decision. The decisions on
+// this page ("Write it") are blue — the convention for a list-page CTA.
 function renderScanButton(state) {
   if (state.scanning) {
     return html`<button type="button" class="ap-button stroked grey" disabled>
@@ -178,7 +179,7 @@ function renderIdeaCard(state, idea, { at = "" } = {}) {
     <p class="research-card__body">${idea.body}</p>
 
     <footer class="research-card__foot">
-      <button type="button" class="ap-button primary orange" data-research-write="${idea.id}">
+      <button type="button" class="ap-button secondary blue" data-research-write="${idea.id}">
         <i class="ap-icon-pen"></i>
         <span>Write it</span>
       </button>

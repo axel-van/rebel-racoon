@@ -214,8 +214,8 @@
   color: var(--ref-color-grey-80);
 }
 
-/* The newest scan is the page's subject, so its heading carries the weight and
-   the brand colour; "Earlier" stays grey. */
+/* The newest scan is the page's subject, so its heading carries the weight;
+   "Earlier" stays grey. */
 .research-hub__group-head--lead .research-hub__group-title {
   font-family: var(--sys-text-style-h3-font-family);
   font-size: var(--sys-text-style-h3-size);

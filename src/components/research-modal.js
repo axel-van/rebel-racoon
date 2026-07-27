@@ -19,7 +19,7 @@ import { getFinding, subscribe as subscribeResearch } from "../research-store.js
 import { writeIdea, skipIdea } from "../research-flow.js?v=9";
 import { findResearchSource } from "../research-catalog.js?v=3";
 import { getIdeaById } from "../library.js?v=55";
-import { renderBadge } from "../research-view.js?v=8";
+import { renderBadge } from "../research-view.js?v=9";
 import { renderSocialPostCard } from "./social-post-card.js?v=2";
 
 const MODAL_ID = "research";
@@ -183,7 +183,7 @@ function render() {
 
   footerEl.innerHTML = idea
     ? html`<div class="research-modal__actions">
-        <button type="button" class="ap-button primary orange" data-research-write="${idea.id}">
+        <button type="button" class="ap-button secondary blue" data-research-write="${idea.id}">
           <i class="ap-icon-pen"></i>
           <span>Write it</span>
         </button>
