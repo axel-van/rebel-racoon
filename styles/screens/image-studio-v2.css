@@ -149,6 +149,11 @@
   justify-content: center;
   padding: var(--ref-spacing-md) var(--ref-spacing-lg);
   overflow: visible;
+  /* A size container, so the image can be bounded by the space that ACTUALLY
+     exists (see .isv2-frame). Its own size comes from the flex column, not from
+     its contents, so the implied `contain: size` costs nothing — and it implies
+     no `contain: paint`, so the palette's flyouts still escape. */
+  container-type: size;
 }
 
 /* Reservations, always symmetric: the inspector is the widest thing pinned in
@@ -171,19 +176,24 @@
   background: var(--sys-color-accent-light-bg);
 }
 
-/* The image frame. overflow:visible so on-element toolbars / handles /
-   popovers can bleed past the image edge; .isv2-frame-clip does the clipping. */
-/* An aspect-ratio box with only max-* constraints collapses to zero width in a
-   flex row (its content is absolutely positioned, so there's nothing to size
-   it from). Drive the width off an explicit height cap instead, the way the
-   frame is sized everywhere else in the app. */
+/* The image frame — bounded by the stage's REAL free space, in both axes.
+   `overflow: visible` so on-element toolbars / handles / popovers can bleed past
+   the image edge; .isv2-frame-clip does the clipping.
+   The frame can't be sized by its contents (they're absolutely positioned), so
+   it needs an explicit width. It used to come off a `min(64vh, 760px)` guess —
+   and a guess at the viewport is not the height of this box: the stage is what's
+   left after the header, the composer (which grows with the prompt) and the
+   footer, so at 1100px tall the guess allowed 655px into a 528px slot and the
+   image spilled over the composer. `100cqh` / `100cqw` are the stage-body's own
+   content box, so the bound is exact at any window size and any composer height.
+   (cq units here resolve against the nearest ANCESTOR container — the stage
+   body; the frame's own `container-type` serves the text overlays inside it.) */
 .isv2-frame {
-  --isv2-cap: min(64vh, 760px);
   position: relative;
   flex: 0 0 auto;
   aspect-ratio: var(--isv2-ratio, 1);
-  width: min(100%, calc(var(--isv2-cap) * var(--isv2-ratio, 1)));
-  max-height: var(--isv2-cap);
+  width: min(100cqw, calc(100cqh * var(--isv2-ratio, 1)));
+  max-height: 100cqh;
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-card);
   background: var(--app-surface);
