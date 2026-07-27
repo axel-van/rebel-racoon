@@ -108,4 +108,22 @@ export const FLAGS = Object.freeze([
       "profiles, auto-extracted favicon), Archie can discover more from the " +
       "brand's market, and each one is editable in its own modal.",
   },
+  {
+    id: "research",
+    label: "Research (recurring findings)",
+    default: false,
+    hides:
+      "When OFF (default), hides everything Research-related: the /research " +
+      "route and its sidebar nav entry (with the new-findings counter), the " +
+      "Feed | Sources tabs, the 'Read the research' modal, the in-chat " +
+      "scan-delivery turn, the arrival toast, and the recurring scan. The " +
+      "seeded findings and the research-source catalog still ride along in " +
+      "the data — only the surfaces and the scan are gated, like " +
+      "playbookCompetitors. When ON, a recurring scan of the enabled research " +
+      "sources (Agorapulse listening first) delivers evidence-backed findings " +
+      "to the feed and announces each batch in the most recent chat; turning " +
+      "one into ideas injects 2–3 Ideas stamped with the finding as their " +
+      "source. Which sources are scanned, the cadence and the notification " +
+      "preference are per Playbook (ctx.research).",
+  },
 ]);
