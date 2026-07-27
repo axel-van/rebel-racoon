@@ -70,9 +70,9 @@
   flex: 1;
   min-height: 0;
   display: grid;
+  /* Fixed. Expanding the prompt grows it vertically only — the rail width never
+     changes, so the canvas and the image in it never shift. */
   grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
-  /* Expanding the prompt widens the rail (see .is-prompt-expanded). */
-  transition: grid-template-columns var(--ref-animation-short) var(--app-ease-out);
 }
 
 @media (max-width: 1080px) {
@@ -592,9 +592,7 @@ button.image-studio__ref--pick:focus-visible {
   margin-top: 3px;
 }
 
-/* Two FIXED sizes — not content-driven: a compact 5-line box (this rule) and a
-   10-line panel when expanded. Content scrolls within each (overflow-y from the
-   shared field); the height transitions directly between the two. */
+/* Collapsed is a fixed 5-line peek; content scrolls inside it. */
 .image-studio__prompt .image-studio__reprompt-field {
   height: calc(var(--sys-text-style-body-line-height) * 5);
   min-height: 0;
@@ -602,20 +600,20 @@ button.image-studio__ref--pick:focus-visible {
   transition: height var(--ref-animation-short) var(--app-ease-out);
 }
 
-/* Expanding gives the prompt room for a full structured brief: the field grows
-   to 10 lines AND the whole rail widens, so long lines stop wrapping to death.
-   The canvas simply gives up the width. */
+/* Expanded grows VERTICALLY ONLY — the rail keeps its width, so the canvas and
+   the image in it never shift. Because the brief still wraps at the rail's
+   measure, no fixed line count is right (this one wraps to 24 lines at 320px),
+   so the height is the CONTENT's: autosizeReprompt writes it inline, same as the
+   edit reprompt. min-height is the no-JS floor, max-height stops a long brief
+   pushing the settings out of view — it scrolls past that. */
 .image-studio.is-prompt-expanded .image-studio__prompt .image-studio__reprompt-field {
-  height: calc(var(--sys-text-style-body-line-height) * 10);
-}
-
-.image-studio.is-prompt-expanded .image-studio__workspace {
-  grid-template-columns: minmax(0, 620px) minmax(0, 1fr);
+  height: auto;
+  min-height: calc(var(--sys-text-style-body-line-height) * 10);
+  max-height: 50vh;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .image-studio__prompt .image-studio__reprompt-field,
-  .image-studio__workspace {
+  .image-studio__prompt .image-studio__reprompt-field {
     transition: none;
   }
 }

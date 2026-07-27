@@ -59,10 +59,11 @@ function renderBody() {
   const st = state();
   if (!st || !ctx.body) return;
   ctx.body.innerHTML = renderStudio(st);
-  // Re-fit the edit reprompt to any carried-over text (it auto-grows). The
-  // generate prompt does NOT auto-grow — it has two fixed sizes (small/expanded)
-  // driven purely by CSS, scrolling when the content overflows.
+  // Re-fit both auto-growing fields to their carried-over text. The generate
+  // prompt only grows while EXPANDED — collapsed it's a fixed 5-line peek that
+  // scrolls (see the CSS); expanded it fits its content, capped at 50vh.
   autosizeReprompt(ctx.body.querySelector("[data-img-edit-prompt]"));
+  if (st.composerExpanded) autosizeReprompt(ctx.body.querySelector("[data-img-prompt]"));
 }
 
 // ── Inline-text edit helpers ────────────────────────────────────────────────
@@ -190,14 +191,19 @@ function onClick(event) {
     return void imageStudio.toggleGroupCollapsed(KEY, grpToggle.dataset.imgGroupToggle);
   const expandBtn = event.target.closest("[data-img-composer-expand]");
   if (expandBtn) {
-    // Mutate in place (no re-render) so the CSS height/width transitions animate
-    // on the persistent node; keep state in sync silently for later renders. The
-    // two sizes are fixed in CSS (no content-based autosize), so nothing to
-    // re-measure here. The class goes on the studio root because expanding also
-    // widens the left rail (a grid-template-columns transition on .__workspace).
+    // Mutate in place (no re-render) so the CSS height transition animates on the
+    // persistent node; keep state in sync silently for later renders. Expanding
+    // grows the field to fit its content (the rail width never changes), so the
+    // height has to be measured here — collapsing clears it back to the CSS
+    // 5-line peek.
     const willExpand = !state().composerExpanded;
     imageStudio.setComposerExpandedSilent(KEY, willExpand);
     ctx.modal.querySelector(".image-studio")?.classList.toggle("is-prompt-expanded", willExpand);
+    const promptField = ctx.modal.querySelector("[data-img-prompt]");
+    if (promptField) {
+      if (willExpand) autosizeReprompt(promptField);
+      else promptField.style.height = "";
+    }
     const icon = expandBtn.querySelector("i");
     if (icon) icon.className = `ap-icon-${willExpand ? "minimize" : "maximize"}`;
     const label = willExpand ? "Collapse prompt" : "Expand prompt";
@@ -331,6 +337,8 @@ function onInput(event) {
     imageStudio.setPromptSilent(KEY, event.target.value);
     const gen = ctx.modal.querySelector("[data-img-generate]");
     if (gen) gen.disabled = !event.target.value.trim();
+    // Only while expanded — collapsed is a deliberate fixed-height peek.
+    if (state()?.composerExpanded) autosizeReprompt(event.target);
   } else if (event.target.matches("[data-img-edit-prompt]")) {
     imageStudio.setEditPromptSilent(KEY, event.target.value);
     autosizeReprompt(event.target);
