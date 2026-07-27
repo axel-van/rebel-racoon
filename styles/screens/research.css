@@ -177,159 +177,171 @@
   --research-accent-fg: var(--ref-color-menthol-100);
 }
 
-/* ── The digest ──────────────────────────────────────────────────────────── */
+/* ── The hub ─────────────────────────────────────────────────────────────── */
 
-/* One edition per scan, like a newsletter issue. No card-per-item: the earlier
-   version stacked identical decision cards and made the reader arbitrate
-   research instead of picking something to write. Here the strongest idea gets
-   room and the rest are one-liners. */
+/* A hub of fresh content ideas, not an archive. The first version stacked flat
+   text blocks (a lead idea, then one-line rows, per scan) and read as one grey
+   wall with no scannable rhythm. Cards in a grid now, with the tinted source
+   badge as the anchor — seven distinct hues already carry provenance.
 
-.research-view__digest {
+   Reused, not re-declared: .ap-card (surface/border/radius/padding),
+   .ap-button, and the app-card-entrance keyframe from screens/dashboard.css. */
+
+.research-hub {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xl);
-  max-width: 680px;
 }
 
-.research-edition {
+.research-hub__group {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-sm);
 }
 
-/* The edition's date is the heading — a scan happens at one moment, so the
-   individual ideas don't carry timestamps. */
-.research-edition__head {
+.research-hub__group-head {
   display: flex;
   align-items: baseline;
   gap: var(--ref-spacing-xs);
-  padding-bottom: var(--ref-spacing-xxs);
-  border-bottom: 1px solid var(--ref-color-grey-10);
 }
 
-.research-edition__title {
+.research-hub__group-title {
   margin: 0;
   font-family: var(--sys-text-style-h4-font-family);
   font-size: var(--sys-text-style-h4-size);
   line-height: var(--sys-text-style-h4-line-height);
   font-weight: var(--sys-text-style-h4-weight);
+  color: var(--ref-color-grey-80);
+}
+
+/* The newest scan is the page's subject, so its heading carries the weight and
+   the brand colour; "Earlier" stays grey. */
+.research-hub__group-head--lead .research-hub__group-title {
+  font-family: var(--sys-text-style-h3-font-family);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
 }
 
-.research-edition__count {
+.research-hub__group-count {
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   color: var(--ref-color-grey-60);
 }
 
-/* The provenance line — the research as a warrant, not as content. */
-.research-edition__foot {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-60);
+/* Auto-fill so the columns reflow when the right panel pinches the content
+   column — the same idiom as the /contexts grid. 320px keeps a two-line title
+   and a two-line reason readable. */
+.research-hub__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--ref-spacing-sm);
 }
 
-.research-edition__rest {
-  display: flex;
-  flex-direction: column;
-}
+/* ── An idea card ────────────────────────────────────────────────────────── */
 
-/* ── An idea ─────────────────────────────────────────────────────────────── */
-
-/* Deliberately NOT .ap-card. A card would put every idea in its own box and
-   we'd be back to a feed; the edition is the container, and hierarchy comes
-   from type size and space. */
-.research-idea--lead {
-  display: flex;
-  flex-direction: column;
+.research-card {
   gap: var(--ref-spacing-xs);
-  padding-bottom: var(--ref-spacing-xs);
-}
-
-.research-idea__title {
-  margin: 0;
-  font-family: var(--sys-text-style-h2-font-family);
-  font-size: var(--sys-text-style-h2-size);
-  line-height: var(--sys-text-style-h2-line-height);
-  font-weight: var(--sys-text-style-h2-weight);
-  color: var(--ref-color-grey-100);
-}
-
-/* "Because your competitors stopped announcing features." Archie's reason for
-   suggesting this — one sentence where the old card spent a headline, a summary
-   and two tags. */
-.research-idea__reason {
-  margin: 0;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--ref-color-grey-60);
-}
-
-.research-idea__body {
-  margin: 0;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--ref-color-grey-100);
-}
-
-.research-idea__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  flex-wrap: wrap;
-  padding-top: var(--ref-spacing-xxs);
-}
-
-.research-idea__why {
-  margin-left: auto;
-}
-
-/* ── A one-line row ──────────────────────────────────────────────────────── */
-
-.research-idea--row {
-  border-top: 1px solid var(--ref-color-grey-10);
-}
-
-.research-idea__summary {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  width: 100%;
-  padding: var(--ref-spacing-xs) 0;
-  background: none;
-  border: none;
-  text-align: left;
+  padding: var(--ref-spacing-md);
   cursor: pointer;
+  transition:
+    border-color 0.12s ease-in-out,
+    box-shadow 0.12s ease-in-out;
+  animation: app-card-entrance var(--ref-animation-normal) var(--app-ease-out) both;
 }
 
-.research-idea__summary:hover .research-idea__row-title {
-  color: var(--ref-color-electric-blue-100);
+/* Blue hover border, no elevation — the app's convention for a clickable card. */
+/* Staggered entrance, capped at 6 — past that the wait outweighs the effect. */
+.research-card:nth-child(2) {
+  animation-delay: 40ms;
+}
+.research-card:nth-child(3) {
+  animation-delay: 80ms;
+}
+.research-card:nth-child(4) {
+  animation-delay: 120ms;
+}
+.research-card:nth-child(5) {
+  animation-delay: 160ms;
+}
+.research-card:nth-child(n + 6) {
+  animation-delay: 200ms;
 }
 
-.research-idea__chevron {
-  flex-shrink: 0;
-  font-size: var(--sys-icon-css-xs);
+.research-card:hover {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.research-card:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.research-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.research-card__source {
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-80);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.research-card__at {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
   color: var(--ref-color-grey-60);
-  transition: transform 0.15s ease-in-out;
 }
 
-.research-idea--row.is-expanded .research-idea__chevron {
-  transform: rotate(90deg);
-}
-
-.research-idea__row-title {
+/* The idea itself is what you scan — it gets the size, and it's allowed three
+   lines before it truncates. */
+.research-card__title {
+  margin: 0;
   font-family: var(--sys-text-style-h4-font-family);
   font-size: var(--sys-text-style-h4-size);
   line-height: var(--sys-text-style-h4-line-height);
   font-weight: var(--sys-text-style-h4-weight);
   color: var(--ref-color-grey-100);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.research-idea__detail {
+/* The idea's own text — what you'd actually write. Three lines, then the modal.
+   The finding's shared "Because …" is deliberately NOT here: 2-3 ideas come from
+   one finding, so it repeated the same sentence across neighbouring cards. */
+.research-card__body {
+  margin: 0;
+  flex: 1;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Pinned to the bottom so the row of buttons lines up across a grid of cards
+   whose titles run to different lengths. */
+.research-card__foot {
   display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  padding: 0 0 var(--ref-spacing-sm) calc(var(--sys-icon-css-xs) + var(--ref-spacing-xs));
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  margin-top: auto;
+  padding-top: var(--ref-spacing-xxs);
 }
 
 /* ── "What I watch" ──────────────────────────────────────────────────────── */

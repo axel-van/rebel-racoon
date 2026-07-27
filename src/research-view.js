@@ -142,99 +142,75 @@ function renderScanButton(state) {
   </button>`;
 }
 
-// ── The digest ────────────────────────────────────────────────────────────
+// ── The hub ───────────────────────────────────────────────────────────────
+//
+// A HUB of fresh content ideas, not an archive you scroll. The first version
+// stacked flat text blocks — a lead idea then one-line rows, per scan — and it
+// read as one grey wall with no scannable rhythm. Cards, in a grid, with the
+// tinted source badge as the visual anchor: seven distinct hues already carry
+// provenance, so no second colour semantics (the `kind` tag describes the post
+// FORMAT, which matters less here than where the idea came from).
+//
+// The card carries the idea's OWN text, never the finding's headline: 2-3 ideas
+// share one finding, so that printed the same sentence on three cards in a row.
+// The shared reason ("Because …") is stated once, in the modal — which is also
+// where the argument and the evidence posts live. A modal and not a slide panel: the DS ships no side-drawer
+// primitive, and the one this repo built was reverted for forking DS conventions.
 
-// Why this idea exists, as Archie's reason rather than as metadata. This one
-// sentence replaces what the old card spent a headline, a summary and two tags
-// saying.
-function reasonFor(state, idea) {
+function sourceOf(state, idea) {
   const finding = state.findingFor?.(idea.id);
-  return finding ? finding.headline : "";
+  if (!finding) return null;
+  return (state.sources || []).find((s) => s.id === finding.sourceId) || null;
 }
 
-function renderIdeaActions(idea) {
-  return html`<div class="research-idea__actions">
-    <button type="button" class="ap-button primary orange" data-research-write="${idea.id}">
-      <i class="ap-icon-pen"></i>
-      <span>Write it</span>
-    </button>
-    <button type="button" class="ap-button ghost grey" data-research-skip="${idea.id}">
-      <span>Not for me</span>
-    </button>
-    <button type="button" class="ap-link standalone small research-idea__why" data-research-why="${idea.id}">
-      <span>Why this?</span>
-    </button>
-  </div>`;
-}
-
-function renderIdeaDetail(state, idea) {
-  const reason = reasonFor(state, idea);
-  return html`${raw(reason ? html`<p class="research-idea__reason">Because ${raw(lowerFirst(reason))}.</p>` : "")}
-    <p class="research-idea__body">${idea.body}</p>
-    ${raw(renderIdeaActions(idea))}`;
-}
-
-// The lead idea of an edition — the only one that gets room.
-function renderLeadIdea(state, idea) {
-  return html`<article class="research-idea research-idea--lead" data-research-idea="${idea.id}">
-    <h3 class="research-idea__title">${idea.title}</h3>
-    ${raw(renderIdeaDetail(state, idea))}
-  </article>`;
-}
-
-// Everything else — one line, expandable. Collapsed it's a title; expanded it
-// becomes the same block as the lead.
-function renderIdeaRow(state, idea, { expanded }) {
-  return html`<article
-    class="research-idea research-idea--row${raw(expanded ? " is-expanded" : "")}"
-    data-research-idea="${idea.id}"
-  >
-    <button
-      type="button"
-      class="research-idea__summary"
-      data-research-expand="${idea.id}"
-      aria-expanded="${raw(expanded ? "true" : "false")}"
-    >
-      <i class="ap-icon-chevron-right research-idea__chevron" aria-hidden="true"></i>
-      <span class="research-idea__row-title">${idea.title}</span>
-    </button>
-    ${raw(expanded ? html`<div class="research-idea__detail">${raw(renderIdeaDetail(state, idea))}</div>` : "")}
-  </article>`;
-}
-
-function renderEdition(state, edition) {
-  const ideas = edition.ideas || [];
-  if (ideas.length === 0) return "";
-  const [lead, ...rest] = ideas;
-  const n = ideas.length;
-  const sources = (edition.sourceNames || []).join(" and ");
-
-  return html`<section class="research-edition" data-research-edition="${edition.id}">
-    <header class="research-edition__head">
-      <h2 class="research-edition__title">${edition.at === "just now" ? "Just now" : edition.at}</h2>
-      <span class="research-edition__count">${n} ${raw(n === 1 ? "idea" : "ideas")}</span>
+// One idea. The whole card opens the detail; the footer's two buttons stop the
+// propagation so a decision never doubles as "open the modal".
+function renderIdeaCard(state, idea, { at = "" } = {}) {
+  const source = sourceOf(state, idea);
+  return html`<article class="ap-card research-card" data-research-open-idea="${idea.id}" tabindex="0" role="button">
+    <header class="research-card__head">
+      ${raw(renderBadge(source, { size: "sm" }))}
+      <span class="research-card__source">${source ? source.name.replace(/ sources?$/i, "") : "Research"}</span>
+      ${raw(at ? html`<span class="research-card__at">${at}</span>` : "")}
     </header>
 
-    ${raw(renderLeadIdea(state, lead))}
-    ${raw(
-      rest.length
-        ? html`<div class="research-edition__rest">
-            ${raw(rest.map((i) => renderIdeaRow(state, i, { expanded: !!state.expanded?.has(i.id) })).join(""))}
-          </div>`
-        : "",
-    )}
-    ${raw(sources ? html`<footer class="research-edition__foot">From ${sources}.</footer>` : "")}
-  </section>`;
+    <h3 class="research-card__title">${idea.title}</h3>
+    <p class="research-card__body">${idea.body}</p>
+
+    <footer class="research-card__foot">
+      <button type="button" class="ap-button primary orange" data-research-write="${idea.id}">
+        <i class="ap-icon-pen"></i>
+        <span>Write it</span>
+      </button>
+      <button type="button" class="ap-button ghost grey" data-research-skip="${idea.id}">
+        <span>Not for me</span>
+      </button>
+    </footer>
+  </article>`;
 }
 
-function renderDigestEmpty(state) {
+// The grid. Cards carry their own arrival time in the "Earlier" block; in the
+// fresh block the group heading already says it, so the card stays quiet.
+function renderIdeaGrid(state, entries, { showTime }) {
+  const cards = entries.map(([idea, at]) => renderIdeaCard(state, idea, { at: showTime ? at : "" })).join("");
+  return html`<div class="research-hub__grid">${raw(cards)}</div>`;
+}
+
+function renderGroupHead(title, count, { lead = false } = {}) {
+  return html`<header class="research-hub__group-head${raw(lead ? " research-hub__group-head--lead" : "")}">
+    <h2 class="research-hub__group-title">${title}</h2>
+    <span class="research-hub__group-count">${count} ${raw(count === 1 ? "idea" : "ideas")}</span>
+  </header>`;
+}
+
+function renderHubEmpty(state) {
   const noSources = (state.config?.enabledSourceIds || []).length === 0;
   if (noSources) {
     return renderEmptyState({
       icon: "ap-icon-feature-listening",
       title: "Nothing to watch yet",
       body: "Tell me what to keep an eye on — competitors, creators, what people say about you — and I'll start sending ideas.",
-      actionHtml: `<button type="button" class="ap-button primary blue" data-research-tab="sources"><span>Choose what I watch</span></button>`,
+      actionHtml: `<button type="button" class="ap-button primary blue" data-research-open-settings><span>Choose what I watch</span></button>`,
       wrapperClass: "research-view__empty research-view__empty--rich",
     });
   }
@@ -249,8 +225,34 @@ function renderDigestEmpty(state) {
 
 export function renderDigestBody(state) {
   const editions = (state.editions || []).filter((e) => (e.ideas || []).length > 0);
-  if (editions.length === 0) return renderDigestEmpty(state);
-  return html`<div class="research-view__digest">${raw(editions.map((e) => renderEdition(state, e)).join(""))}</div>`;
+  if (editions.length === 0) return renderHubEmpty(state);
+
+  // The newest scan is the hub's subject — "fresh". Everything before it is
+  // history: still available, one grid, not a stack of dated sections that turns
+  // the page into an archive.
+  const [latest, ...older] = editions;
+  const fresh = (latest.ideas || []).map((i) => [i, latest.at]);
+  const earlier = older.flatMap((e) => (e.ideas || []).map((i) => [i, e.at]));
+
+  return html`<div class="research-hub">
+    <section class="research-hub__group">
+      ${raw(
+        renderGroupHead(latest.at === "just now" ? "Fresh — just now" : `Fresh — ${latest.at}`, fresh.length, {
+          lead: true,
+        }),
+      )}
+      ${raw(renderIdeaGrid(state, fresh, { showTime: false }))}
+    </section>
+
+    ${raw(
+      earlier.length
+        ? html`<section class="research-hub__group">
+            ${raw(renderGroupHead("Earlier", earlier.length))}
+            ${raw(renderIdeaGrid(state, earlier, { showTime: true }))}
+          </section>`
+        : "",
+    )}
+  </div>`;
 }
 
 // ── "What I watch" tab ────────────────────────────────────────────────────

@@ -19,7 +19,7 @@ import { getFinding, subscribe as subscribeResearch } from "../research-store.js
 import { writeIdea, skipIdea } from "../research-flow.js?v=9";
 import { findResearchSource } from "../research-catalog.js?v=3";
 import { getIdeaById } from "../library.js?v=55";
-import { renderBadge } from "../research-view.js?v=6";
+import { renderBadge } from "../research-view.js?v=8";
 import { renderSocialPostCard } from "./social-post-card.js?v=2";
 
 const MODAL_ID = "research";
@@ -68,6 +68,13 @@ export function init() {
 // is appended to <body> — outside the screen's delegated root — so it handles
 // its own clicks.
 function onClick(event) {
+  // The ✕. bindOverlayDismissal only wires the backdrop and Esc — every modal
+  // handles its own close button, and rewriting this handler had dropped it.
+  if (event.target.closest("#researchModalClose") || event.target.closest("[data-modal-close]")) {
+    close();
+    return;
+  }
+
   const write = event.target.closest("[data-research-write]");
   if (write) {
     close();
