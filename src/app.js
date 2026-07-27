@@ -12,6 +12,7 @@ import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v
 import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=57";
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=62";
 import { init as initConnectorsModal } from "./components/connectors-modal.js?v=12";
+import { init as initResearchModal } from "./components/research-modal.js?v=1";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
 import { init as initRenameModal } from "./components/rename-modal.js?v=2";
 import { init as initSaveFolderModal } from "./components/save-folder-modal.js?v=10";
@@ -80,6 +81,7 @@ initVideoClipsModal();
 initChatPickerModal();
 initAddSourceModal();
 initConnectorsModal();
+initResearchModal();
 initConfirmModal();
 initRenameModal();
 initSaveFolderModal();

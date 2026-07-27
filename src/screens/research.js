@@ -42,6 +42,7 @@ import { renderResearchPage, renderFeedBody, renderSourcesBody } from "../resear
 import { showToast } from "../components/toast.js?v=20";
 import { findConnector } from "../connectors-store.js?v=29";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=12";
+import { open as openResearchModal } from "../components/research-modal.js?v=1";
 
 let unsubscribe = null;
 let activeContextId = null;
@@ -242,6 +243,12 @@ function onClick(event, root) {
         action: { label: "Undo", onClick: () => restoreFinding(id) },
       });
     }
+    return;
+  }
+
+  const read = event.target.closest("[data-research-open]");
+  if (read) {
+    openResearchModal({ findingId: read.dataset.researchOpen });
     return;
   }
 

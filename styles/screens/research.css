@@ -460,3 +460,163 @@
   gap: var(--ref-spacing-xxs);
   flex-wrap: wrap;
 }
+
+/* ── "Read the research" modal ───────────────────────────────────────── */
+
+/* Width/height sit beside the other dialogs in screens/modals.css. What's here
+   is the reading layout: a header block, a scrolling prose column, and a
+   sticky action row repeating the feed card's decision. */
+
+/* No `display` here on purpose — the centered-modal shell in screens/modals.css
+   owns it (none -> flex on .open), and research.css loads after it. */
+.research-modal {
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.research-modal__header {
+  display: block;
+  padding-right: var(--ref-spacing-xl);
+}
+
+.research-modal__title-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  min-width: 0;
+}
+
+.research-modal__origin {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  flex-wrap: wrap;
+}
+
+.research-modal__source {
+  font-family: var(--sys-text-style-h4-font-family);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.research-modal__time {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+.research-modal__title {
+  margin: 0;
+  font-family: var(--sys-text-style-h2-font-family);
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  font-weight: var(--sys-text-style-h2-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.research-modal__content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.research-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+}
+
+/* The argument. Paragraph spacing carries the structure — no sub-headings,
+   because a three-paragraph synthesis doesn't need navigation. */
+.research-modal__prose {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+}
+
+.research-modal__prose p {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-100);
+}
+
+.research-modal__evidence,
+.research-modal__seeds {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding-top: var(--ref-spacing-sm);
+  border-top: 1px solid var(--ref-color-grey-10);
+}
+
+.research-modal__evidence-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.research-modal__evidence-title {
+  margin: 0;
+  font-family: var(--sys-text-style-h4-font-family);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  color: var(--ref-color-grey-80);
+}
+
+.research-modal__posts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+/* What the finding would become — the bridge between reading and the footer's
+   "Turn into ideas". */
+.research-modal__seed-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.research-modal__seed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  padding-left: var(--ref-spacing-sm);
+  border-left: 2px solid var(--ref-color-grey-20);
+}
+
+.research-modal__seed-title {
+  font-family: var(--sys-text-style-h4-font-family);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.research-modal__seed-body {
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-80);
+}
+
+/* Sticky: the decision has to stay reachable however long the argument runs. */
+.research-modal__footer {
+  flex: 0 0 auto;
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  border-top: 1px solid var(--ref-color-grey-10);
+  background: var(--ref-color-white);
+}
+
+/* In the sticky footer the menu has to open UPWARD — downward would fall
+   outside the dialog. */
+.research-modal__footer .research-card__menu {
+  top: auto;
+  bottom: calc(100% + var(--ref-spacing-xxxs));
+}

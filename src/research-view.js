@@ -154,10 +154,20 @@ export function renderFindingCard(finding, source, { variant = "feed" } = {}) {
                 <span>Dismiss</span>
               </button>`,
         )}
-        <button type="button" class="ap-link standalone small research-card__read" data-research-open="${finding.id}">
-          <i class="ap-icon-bar-graph"></i>
-          <span>Read the research</span>
-        </button>
+        ${raw(
+          // Inside the modal the research is already open — offering to read it
+          // again is noise.
+          variant === "modal"
+            ? ""
+            : html`<button
+                type="button"
+                class="ap-link standalone small research-card__read"
+                data-research-open="${finding.id}"
+              >
+                <i class="ap-icon-bar-graph"></i>
+                <span>Read the research</span>
+              </button>`,
+        )}
       </div>`;
 
   if (variant === "modal") {
