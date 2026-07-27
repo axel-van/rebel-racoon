@@ -17,7 +17,7 @@
 // reading the cards they were notified about.
 
 import { html, raw } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=220";
+import { renderTopbar } from "../components/topbar.js?v=221";
 import { navigate } from "../router.js?v=30";
 import { isFlagOn } from "../feature-flags.js?v=12";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";

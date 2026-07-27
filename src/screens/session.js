@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=220";
+import { renderTopbar } from "../components/topbar.js?v=221";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=58";
 import {
   getConnectedProfiles,
@@ -75,7 +75,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=12";
-import * as contextBuilder from "../context-builder.js?v=191";
+import * as contextBuilder from "../context-builder.js?v=192";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -115,7 +115,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=358";
+} from "../components/right-panel.js?v=359";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=18";
@@ -3798,53 +3798,32 @@ function renderClipExtractionTurn(message, sessionId) {
   `;
 }
 
-// A research scan landing in the thread. Store-coupled (it resolves the live
-// findings each paint, so one dismissed elsewhere disappears from the turn),
-// which is why it lives here and not in the pure thread-turns module.
+// A research scan landing in the thread — ONE LINE, not a card.
 //
-// Same result-card family as clips / ideas / drafts — a scan is exactly "the
-// result of a long job".
+// It used to be a full renderResultCard with the headline repeated, an
+// evidence post and the source list. But Archie's own sentence right above
+// already says the count and names the strongest finding, so the card said
+// everything twice and added a quote nobody needs mid-conversation. A
+// conversation is not a place to render a decision surface; it's a place to
+// say something happened and point at where it lives.
+//
+// Store-coupled (it resolves the live findings each paint, so one dismissed
+// elsewhere disappears), which is why it isn't in the pure thread-turns module.
 function renderResearchTurn(message) {
-  const findings = (message.findingIds || []).map((id) => getFinding(id)).filter(Boolean);
-  const live = findings.filter((f) => f.status !== "dismissed");
+  const live = (message.findingIds || [])
+    .map((id) => getFinding(id))
+    .filter(Boolean)
+    .filter((f) => f.status !== "dismissed");
 
-  if (live.length === 0) {
-    // Factual, no apology (copy-principles §4.3).
-    return `
-      <div class="chat-turn chat-turn--ai chat-turn--research">
-        ${renderResultCard({
-          state: "unavailable",
-          icon: "ap-icon-feature-listening",
-          title: "Nothing new since the last scan",
-          sub: "I'll keep watching your research sources.",
-        })}
-      </div>
-    `;
-  }
-
-  const top = live[0];
-  const sources = (message.sourceNames || []).join(" · ");
-  // One representative quote as the teaser — the compact evidence card, so the
-  // turn shows what the finding is grounded in without unpacking the whole
-  // argument in the thread.
-  const teaser = `
-    <span class="research-turn__teaser">
-      <span class="research-turn__headline">${escapeHtml(top.headline)}</span>
-      ${top.posts?.length ? renderSocialPostCard(top.posts[0], { compact: true }) : ""}
-    </span>
-  `;
+  // Nothing left to point at — the sentence above already carried the news.
+  if (live.length === 0) return "";
 
   return `
     <div class="chat-turn chat-turn--ai chat-turn--research">
-      ${renderResultCard({
-        state: "ready",
-        icon: "ap-icon-feature-listening",
-        title: live.length === 1 ? "1 new finding" : `${live.length} new findings`,
-        extraHtml: teaser,
-        sub: sources ? `From ${escapeHtml(sources)}` : "",
-        cta: { label: "Read the research" },
-        dataAttr: `data-research-open="${escapeHtmlAttr(top.id)}"`,
-      })}
+      <button type="button" class="ap-link standalone small research-turn__link" data-research-open="${escapeHtmlAttr(live[0].id)}">
+        <span>${live.length === 1 ? "See the finding" : `See the ${live.length} findings`}</span>
+        <i class="ap-icon-arrow-right" aria-hidden="true"></i>
+      </button>
     </div>
   `;
 }

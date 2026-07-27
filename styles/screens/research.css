@@ -623,22 +623,11 @@
 
 /* ── In-chat delivery turn ───────────────────────────────────────────────── */
 
-/* The scan's result card reuses .drafts-card (renderResultCard) so it reads as
-   one family with clips / ideas / drafts. Only the teaser inside it is new: the
-   strongest finding's headline plus one compact evidence card, so the turn shows
-   what the finding rests on without unpacking the argument in the thread. */
-.research-turn__teaser {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  padding-top: var(--ref-spacing-xxxs);
-}
-
-.research-turn__headline {
-  font-family: var(--sys-text-style-h4-font-family);
-  font-size: var(--sys-text-style-h4-size);
-  line-height: var(--sys-text-style-h4-line-height);
-  font-weight: var(--sys-text-style-h4-weight);
-  color: var(--ref-color-grey-100);
-  text-align: left;
+/* One line, deliberately. Archie's sentence above the turn already carries the
+   count and names the strongest finding — a card here repeated all of it and
+   added an evidence quote that nobody reads mid-conversation. A chat says that
+   something happened and points at where it lives; the deciding happens on the
+   surface built for it. */
+.research-turn__link {
+  gap: var(--ref-spacing-xxxs);
 }

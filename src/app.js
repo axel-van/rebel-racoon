@@ -1,9 +1,9 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=12";
 import { initArchieLoader } from "./archie-loader.js?v=2";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=220";
-import { initSidebar, renderSidebar } from "./components/sidebar.js?v=191";
-import { init as initRightPanel } from "./components/right-panel.js?v=358";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=221";
+import { initSidebar, renderSidebar } from "./components/sidebar.js?v=192";
+import { init as initRightPanel } from "./components/right-panel.js?v=359";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=56";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=24";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
@@ -23,19 +23,19 @@ import { init as initSearchModal } from "./components/search-modal.js?v=11";
 import {
   init as initConversationStatusCard,
   render as renderConversationStatusCard,
-} from "./components/conversation-status-card.js?v=151";
+} from "./components/conversation-status-card.js?v=152";
 import { renderDashboard } from "./screens/dashboard.js?v=54";
-import { renderSession } from "./screens/session.js?v=443";
-import { renderContexts } from "./screens/contexts.js?v=183";
-import { renderConnectors } from "./screens/connectors.js?v=122";
-import { renderResearch } from "./screens/research.js?v=4";
+import { renderSession } from "./screens/session.js?v=444";
+import { renderContexts } from "./screens/contexts.js?v=184";
+import { renderConnectors } from "./screens/connectors.js?v=123";
+import { renderResearch } from "./screens/research.js?v=5";
 import { initResearch } from "./research-flow.js?v=3";
 import { getDefaultContext } from "./contexts-store.js?v=39";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=177";
-import { renderPlaybook } from "./screens/playbook.js?v=188";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=178";
+import { renderPlaybook } from "./screens/playbook.js?v=189";
 import * as __capAddSource from "./components/add-source-modal.js?v=63";
 import * as __capBug from "./components/bug-report-modal.js?v=24";
 import * as __capFeedback from "./components/feedback-modal.js?v=26";
@@ -46,7 +46,7 @@ import {
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=358";
+} from "./components/right-panel.js?v=359";
 
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
