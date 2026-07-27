@@ -155,6 +155,7 @@ export function start(
   key,
   {
     postId = null,
+    postText = "",
     network = null,
     formatId = null,
     editImage = null,
@@ -215,6 +216,7 @@ export function start(
     genPhase,
     outputMode, // single image vs multi-slide carousel (generate mode)
     postId,
+    postText: String(postText || "").trim(), // the draft's copy — what derivePrompt writes the brief from (newlines kept: they split lines)
     network: net,
     formatId: resolvedFormat,
     promptText: "",
@@ -228,11 +230,12 @@ export function start(
     customFonts: [], // [{ family, label, url }] fonts the user uploaded (FontFace)
     playbookName: playbookName || "", // brand/playbook label for the toggle
     usePlaybookRefs, // include the Playbook brand images in the grid
-    // Sections start EXPANDED so the user discovers what's available (the prompt
-    // moved to the bottom composer, so the panel has room). They can still
-    // collapse any section; Visual style stays folded while references guide the
-    // look (its own `disabled` state, not this set).
-    collapsedGroups: new Set(),
+    // Sections start COLLAPSED. The rail reads as an ordered flow — review the
+    // prompt Archie wrote (step 1), then adjust settings (step 2) — so every
+    // setting shows its current value in its header and only opens if the user
+    // wants to change it. Style preset has its own `disabled` state (references
+    // guide the look), independent of this set.
+    collapsedGroups: new Set(["brandkit", "refs", "imageType", "style", "format", "output"]),
     composerExpanded: false, // prompt composer size: small (default) vs expanded
     variationCount: 2, // single-image mode: how many alternatives to pick from
     slideCount, // carousel mode: how many slides to generate
@@ -439,16 +442,64 @@ export function setComposerExpandedSilent(sessionId, value) {
 
 // ── "Suggest from this post" (mock) ─────────────────────────────────────────
 
-function derivePrompt(postId) {
-  const prompts = [
-    "A professional executive presenting data insights in a modern office environment, photorealistic, warm lighting",
-    "Bold graphic showing an upward-trending growth chart with vibrant blue and orange colors, minimalist style",
-    "Diverse team collaborating around a laptop in a bright co-working space, candid photography",
-    "Abstract representation of connected ideas and knowledge networks, tech aesthetic, deep blue palette",
-    "Close-up of hands typing on a keyboard with data visualizations floating above, futuristic editorial style",
-  ];
-  const id = postId || "p";
-  return prompts[Math.abs(id.charCodeAt(id.length - 1)) % prompts.length];
+// Used when the draft has no copy to work from (studio opened on an empty post).
+const FALLBACK_PROMPTS = [
+  "A professional executive presenting data insights in a modern office environment, photorealistic, warm lighting",
+  "Bold graphic showing an upward-trending growth chart with vibrant blue and orange colors, minimalist style",
+  "Diverse team collaborating around a laptop in a bright co-working space, candid photography",
+  "Abstract representation of connected ideas and knowledge networks, tech aesthetic, deep blue palette",
+  "Close-up of hands typing on a keyboard with data visualizations floating above, futuristic editorial style",
+];
+
+// Visual direction per image type — the bridge from "what the image is for" to a
+// scene the prompt can actually describe.
+const TYPE_DIRECTION = {
+  "visual-hook": "One striking focal subject and generous negative space, so the image stops the scroll on its own.",
+  infographic: "Clean data-led composition: a single chart or diagram as the hero, labels legible at thumbnail size.",
+  illustration: "Illustrated metaphor rather than photography — flat shapes, confident linework, limited palette.",
+};
+
+// Split the draft into sentences and keep the substantial ones (hashtags, CTAs
+// and one-word lines make poor visual briefs).
+function sentencesOf(text) {
+  return text
+    .split(/(?:[.!?]+|\n+)\s*/)
+    .map((s) => s.trim().replace(/^[#>\-–—•\s]+/, ""))
+    .filter((s) => s.length > 12 && !/^#/.test(s));
+}
+
+// Compose a structured image brief FROM THE DRAFT — the hook becomes the
+// subject, the next line the key message, and the studio's own settings (image
+// type, style, brand, format) fill in the direction. Still a mock (no model
+// call), but every line traces back to something the user can see.
+function derivePrompt(s) {
+  const parts = sentencesOf(s.postText || "");
+  if (!parts.length) {
+    const id = s.postId || "p";
+    return FALLBACK_PROMPTS[Math.abs(id.charCodeAt(id.length - 1)) % FALLBACK_PROMPTS.length];
+  }
+  // The split ate the terminal punctuation — put a full stop back so the brief
+  // doesn't read as a list of fragments.
+  const stop = (t) => (/[.!?]$/.test(t) ? t : `${t}.`);
+  const hook = stop(parts[0]);
+  const message = stop(parts[1] || parts[0]);
+  const type = IMAGE_TYPES.find((o) => o.key === s.imageTypeKey);
+  const style = STYLE_PRESETS.find((o) => o.key === s.styleKey);
+  const fmt = FORMATS[s.formatId];
+  const refs = s.referenceImages.length;
+  const lines = [`Subject: ${hook}`, `Key message: ${message}`];
+  if (type) lines.push(`Image type: ${type.label} — ${type.desc.toLowerCase()}`);
+  lines.push(`Visual direction: ${TYPE_DIRECTION[s.imageTypeKey] || TYPE_DIRECTION["visual-hook"]}`);
+  if (refs) {
+    lines.push(
+      `Look: match the ${refs} reference image${refs > 1 ? "s" : ""} provided${s.playbookName ? ` — ${s.playbookName} brand kit` : ""}.`,
+    );
+  } else if (style) {
+    lines.push(`Look: ${style.label}.`);
+  }
+  if (s.playbookColors.length) lines.push(`Palette: ${s.playbookColors.slice(0, 4).join(", ")}.`);
+  if (fmt) lines.push(`Composition: ${fmt.tag} ${fmt.label.toLowerCase()}, key subject off-centre, no text baked in.`);
+  return lines.join("\n");
 }
 
 export function runDerive(sessionId) {
@@ -459,7 +510,7 @@ export function runDerive(sessionId) {
   s._deriveTimer = setTimeout(() => {
     const cur = states.get(sessionId);
     if (!cur) return;
-    cur.promptText = derivePrompt(cur.postId);
+    cur.promptText = derivePrompt(cur);
     cur.promptLoading = false;
     cur._deriveTimer = null;
     notify(sessionId);

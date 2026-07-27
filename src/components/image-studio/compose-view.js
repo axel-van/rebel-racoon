@@ -1,28 +1,68 @@
-// Image Studio — generate-mode left panel render. Pure string builders driven by
-// the studio state: the prompt lead + "Ingredients" (brand kit / reference
-// images) + Image type / Style preset / Format / Output sections. `generateControls`
-// is the single entry point the shell composes into the panel.
+// Image Studio — generate-mode left panel render. The panel IS the flow, in the
+// order the user works: (1) review the prompt Archie wrote from the draft, (2)
+// adjust settings if needed — brand kit / reference images / image type / style
+// preset / format / output, each collapsed to its current value. Step 3 is the
+// footer's Generate CTA (see shell-view). `generateControls` is the single entry
+// point the shell composes into the panel.
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=26";
-import { KEY } from "./context.js?v=12";
-import * as imageStudio from "../../image-studio.js?v=38";
+import { KEY } from "./context.js?v=13";
+import * as imageStudio from "../../image-studio.js?v=39";
 
-// Left panel — generate mode: the reglages only (reference / style / mood /
-// format / variations). The prompt lead moved to the floating bottom composer
-// (see shell-view generateComposer), so the panel holds settings alone.
+// Empty-state hint for the prompt field — a full structured brief, so the
+// placeholder itself shows the kind of rich prompt the box is built for (and why
+// the expand toggle exists). Shown only when the field is empty, which in
+// practice means the user cleared what Archie wrote.
+const PROMPT_PLACEHOLDER = `Campaign title: AI UX Safeguard
+Campaign objective: Raise awareness about the risks of unmediated AI in UX design and establish the line between acceleration and shortcuts.
+Audience: UX/UI Designers, Product Managers, Tech Leaders
+Tone: Professional, provocative, authoritative
+
+Title: AI can easily ruin your UX
+Key message: Velocity is useless if you are building the wrong things faster. Human oversight is non-negotiable.
+Narrative purpose: Grab attention immediately with a provocative statement and a striking visual metaphor of speed leading to chaos.
+Visual goal: Create an instant visual metaphor for speed without direction or acceleration leading to product degradation.
+Visual scene: A deep blue background. On the left, massive bold typography. On the right, a single powerful graphic: a thick, horizontal orange arrow representing velocity. The tail of the arrow is solid and perfectly defined, but as it points forward, the tip shatters and dissolves into a chaotic cloud of tiny, disconnected digital pixels and glitch fragments.
+Composition focus: The transition point of the arrow where order turns into digital chaos, aligned with the bold headline.`;
+
+// Left panel — generate mode: the prompt lead, then the settings.
 export function generateControls(st) {
-  return composeGroups(st);
+  return `${promptCard(st)}${composeGroups(st)}`;
 }
 
-// "Suggest from this post" — an AI helper that drafts the prompt from the draft's
-// text. It followed the prompt out of the panel; shell-view places it just above
-// the bottom composer, so it's exported here.
-export function deriveButton(st) {
-  const label = st.promptLoading
-    ? `<span class="gen-spinner"></span><span>Suggesting from this post…</span>`
-    : `<i class="ap-icon-archie-official" aria-hidden="true"></i><span>Suggest from this post</span>`;
-  return `<button type="button" class="image-studio__derive" data-img-derive ${st.promptLoading ? "disabled" : ""}>${label}</button>`;
+// Step 1 — the prompt. Archie drafts it from the post on open, so the card leads
+// with what he wrote and the user's job is to review it. While he's writing, the
+// card itself holds the loader (the canvas keeps its empty state) so the layout
+// is legible from the first frame.
+function promptCard(st) {
+  const expanded = !!st.composerExpanded;
+  const expandLabel = expanded ? "Collapse prompt" : "Expand prompt";
+  const body = st.promptLoading
+    ? `<div class="image-studio__prompt-loading" role="status">
+        <span class="gen-image-spinner gen-loading-mark"></span>
+        <span class="image-studio__prompt-loading-text">Writing your image prompt…</span>
+      </div>`
+    : `<div class="image-studio__prompt">
+        <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
+        <textarea id="imgStudioPrompt" class="image-studio__reprompt-field" data-img-prompt rows="3" placeholder="${escapeHtml(PROMPT_PLACEHOLDER)}" aria-label="Describe your image">${escapeHtml(st.promptText)}</textarea>
+        <button type="button" class="ap-button ghost grey image-studio__prompt-expand" data-img-composer-expand aria-label="${expandLabel}" title="${expandLabel}" aria-pressed="${expanded}"><i class="ap-icon-${expanded ? "minimize" : "maximize"}" aria-hidden="true"></i></button>
+      </div>`;
+  return `<div class="image-studio__group image-studio__group--prompt">
+    <p class="image-studio__group-label image-studio__group-label--eyebrow"><span class="image-studio__step">1</span>Your prompt</p>
+    ${body}
+    ${deriveButton(st)}
+  </div>`;
+}
+
+// The AI helper that (re)writes the prompt from the draft. It runs automatically
+// on open, so once there's text it reads as a redo rather than a first action.
+function deriveButton(st) {
+  if (st.promptLoading) {
+    return `<button type="button" class="image-studio__derive" data-img-derive disabled><span class="gen-spinner"></span><span>Writing from this post…</span></button>`;
+  }
+  const label = (st.promptText || "").trim() ? "Suggest again" : "Suggest from this post";
+  return `<button type="button" class="image-studio__derive" data-img-derive><i class="ap-icon-archie-official" aria-hidden="true"></i><span>${label}</span></button>`;
 }
 
 // Image type — light filter chips (the label is self-explanatory; the short
@@ -108,13 +148,13 @@ function collapsibleGroup(st, { id, label, summary = "", body, disabled = false,
 }
 
 // ── Ingredients (Generate) ───────────────────────────────────────────────────
-// Frames the generation inputs as "ingredients": a Brand kit toggle (the
-// Playbook's brand set, shown as use/skip tiles when on) + a Reference images
-// card with a drop-zone for the user's own uploads.
+// The image inputs, framed as "ingredients": a Brand kit toggle (the Playbook's
+// brand set, shown as use/skip tiles when open) + a Reference images card with a
+// drop-zone for the user's own uploads. Both live under the step-2 eyebrow that
+// composeGroups prints, so this section carries no heading of its own.
 function ingredientsSection(st) {
   const hasPlaybookRefs = Array.isArray(st.playbookRefs) && st.playbookRefs.length > 0;
   return `<div class="image-studio__group image-studio__group--ingredients">
-    <p class="image-studio__group-label image-studio__group-label--eyebrow">Ingredients</p>
     <div class="image-studio__ingredients">
       ${hasPlaybookRefs ? brandKitCard(st) : ""}
       ${referenceImagesCard(st)}
@@ -122,25 +162,32 @@ function ingredientsSection(st) {
   </div>`;
 }
 
+// The head can't be one big button: the DS switch is interactive content and
+// would be invalid nested inside it. So the title half is the collapse button
+// and the switch sits beside it as a sibling.
 function brandKitCard(st) {
   const brand = st.playbookName || "Playbook";
   const on = !!st.usePlaybookRefs;
+  const collapsed = !on || st.collapsedGroups.has("brandkit");
   const usedIds = new Set(st.referenceImages.map((r) => r.id));
   const capReached = st.referenceImages.length >= imageStudio.MAX_REFS;
+  const usedCount = (st.playbookRefs || []).filter((r) => usedIds.has(r.id)).length;
   const tiles = (st.playbookRefs || []).map((r) => playbookRefTile(r, usedIds.has(r.id), capReached)).join("");
-  const body = on
-    ? `<div class="image-studio__ingredient-body"><div class="image-studio__refs">${tiles}</div></div>`
-    : "";
-  return `<div class="image-studio__ingredient${on ? " is-on" : ""}">
+  const summary = on ? `${usedCount} image${usedCount === 1 ? "" : "s"}` : "Off";
+  return `<div class="image-studio__ingredient${on ? " is-on" : ""}${collapsed ? " is-collapsed" : ""}">
     <div class="image-studio__ingredient-head">
-      <i class="ap-icon-star image-studio__ingredient-icon" aria-hidden="true"></i>
-      <span class="image-studio__ingredient-title">Brand kit · ${escapeHtml(brand)}</span>
+      <button type="button" class="image-studio__ingredient-name" data-img-group-toggle="brandkit" aria-expanded="${!collapsed}" ${on ? "" : "disabled"}>
+        <i class="ap-icon-star image-studio__ingredient-icon" aria-hidden="true"></i>
+        <span class="image-studio__ingredient-title">Brand kit · ${escapeHtml(brand)}</span>
+        <span class="image-studio__group-summary">${escapeHtml(summary)}</span>
+        ${on ? `<i class="ap-icon-chevron-down image-studio__group-chevron" aria-hidden="true"></i>` : ""}
+      </button>
       <label class="ap-toggle-container image-studio__ingredient-toggle" title="Use your brand kit">
         <input type="checkbox" data-img-toggle-playbook-refs ${on ? "checked" : ""} aria-label="Use ${escapeHtml(brand)} brand kit" />
         <i aria-hidden="true"></i>
       </label>
     </div>
-    ${body}
+    <div class="image-studio__ingredient-body"${collapsed ? " hidden" : ""}><div class="image-studio__refs">${tiles}</div></div>
   </div>`;
 }
 
@@ -185,6 +232,9 @@ function composeGroups(st) {
   // brand set as use/skip tiles) + a collapsible Reference images drop target.
   const hasUsedRefs = st.referenceImages.length > 0;
   const ingredients = ingredientsSection(st);
+  // Step 2 heads EVERY setting below, not just the ingredients — Archie has
+  // already picked defaults, so this whole block is the optional detour.
+  const eyebrow = `<p class="image-studio__group-label image-studio__group-label--eyebrow image-studio__group-label--step2"><span class="image-studio__step">2</span>Settings</p>`;
 
   // Image type — what the image is for (hook / infographic / illustration). A
   // distinct dimension from the style; not tied to the reference images.
@@ -265,5 +315,5 @@ function composeGroups(st) {
       ? `${outputChips}<p class="image-studio__subgroup-label">${countLabel}</p>${countChips}`
       : countChips,
   });
-  return `${ingredients}${imageTypeGroup}${styleGroup}${formatGroup}${outputGroup}`;
+  return `${eyebrow}${ingredients}${imageTypeGroup}${styleGroup}${formatGroup}${outputGroup}`;
 }

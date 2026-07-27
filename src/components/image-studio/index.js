@@ -23,17 +23,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=36";
 import { getSessionById } from "../../sessions-store.js?v=6";
 import { getContextById } from "../../contexts-store.js?v=37";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=12";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=13";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "./canvas.js?v=2";
-import { renderStudio } from "./shell-view.js?v=34";
+import { renderStudio } from "./shell-view.js?v=35";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=14";
-import * as imageStudio from "../../image-studio.js?v=38";
+} from "./interactions.js?v=15";
+import * as imageStudio from "../../image-studio.js?v=39";
 
 let backdrop;
 let initialized = false;
@@ -193,10 +193,11 @@ function onClick(event) {
     // Mutate in place (no re-render) so the CSS height/width transitions animate
     // on the persistent node; keep state in sync silently for later renders. The
     // two sizes are fixed in CSS (no content-based autosize), so nothing to
-    // re-measure here.
+    // re-measure here. The class goes on the studio root because expanding also
+    // widens the left rail (a grid-template-columns transition on .__workspace).
     const willExpand = !state().composerExpanded;
     imageStudio.setComposerExpandedSilent(KEY, willExpand);
-    ctx.modal.querySelector(".image-studio__composer")?.classList.toggle("is-expanded", willExpand);
+    ctx.modal.querySelector(".image-studio")?.classList.toggle("is-prompt-expanded", willExpand);
     const icon = expandBtn.querySelector("i");
     if (icon) icon.className = `ap-icon-${willExpand ? "minimize" : "maximize"}`;
     const label = willExpand ? "Collapse prompt" : "Expand prompt";
@@ -216,8 +217,9 @@ function onClick(event) {
   if (modeBtn) return void imageStudio.setMode(KEY, modeBtn.dataset.imgMode);
   const viewBtn = event.target.closest("[data-img-view]");
   if (viewBtn) return void imageStudio.setCanvasView(KEY, viewBtn.dataset.imgView);
-  // Generate + Regenerate share the same path: sync the prompt, then run.
-  if (event.target.closest("[data-img-generate]") || event.target.closest("[data-img-regenerate]")) {
+  // Generate (footer, no results yet) and Regenerate (footer, with results) are
+  // the same path: sync the prompt from the field, then run.
+  if (event.target.closest("[data-img-generate]")) {
     const ta = ctx.modal.querySelector("[data-img-prompt]");
     if (ta) imageStudio.setPromptSilent(KEY, ta.value);
     if ((state()?.promptText || "").trim()) imageStudio.runGeneration(KEY);
@@ -603,6 +605,9 @@ export function open(postId, opts = {}) {
   const context = session?.contextId ? getContextById(session.contextId) : null;
   imageStudio.start(KEY, {
     postId: ctx.postId,
+    // The draft's copy — what "Suggest from this post" writes the brief from, so
+    // the prompt Archie proposes is genuinely about this post.
+    postText: Array.isArray(post?.text) ? post.text.join("\n") : post?.text || "",
     network: post?.network || null,
     formatId: post?.format || null,
     editImage: editImageUrl ? { url: editImageUrl } : null,

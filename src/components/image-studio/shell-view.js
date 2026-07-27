@@ -10,26 +10,11 @@ import { html, raw, escapeHtml } from "../../utils.js?v=21";
 import { getPosts } from "../../posts-store.js?v=36";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=26";
 import { renderPostCard } from "../post-card.js?v=68";
-import { KEY, ctx } from "./context.js?v=12";
-import { generateControls, deriveButton } from "./compose-view.js?v=18";
-import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=26";
+import { KEY, ctx } from "./context.js?v=13";
+import { generateControls } from "./compose-view.js?v=19";
+import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=27";
 import { compositeOverlays } from "./canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=38";
-
-// Empty-state hint for the prompt composer — a full structured brief, so the
-// placeholder itself shows the kind of rich prompt the box is built for (and why
-// the expand toggle exists). Shown only when the field is empty.
-const PROMPT_PLACEHOLDER = `Campaign title: AI UX Safeguard
-Campaign objective: Raise awareness about the risks of unmediated AI in UX design and establish the line between acceleration and shortcuts.
-Audience: UX/UI Designers, Product Managers, Tech Leaders
-Tone: Professional, provocative, authoritative
-
-Title: AI can easily ruin your UX
-Key message: Velocity is useless if you are building the wrong things faster. Human oversight is non-negotiable.
-Narrative purpose: Grab attention immediately with a provocative statement and a striking visual metaphor of speed leading to chaos.
-Visual goal: Create an instant visual metaphor for speed without direction or acceleration leading to product degradation.
-Visual scene: A deep blue background. On the left, massive bold typography. On the right, a single powerful graphic: a thick, horizontal orange arrow representing velocity. The tail of the arrow is solid and perfectly defined, but as it points forward, the tip shatters and dissolves into a chaotic cloud of tiny, disconnected digital pixels and glitch fragments.
-Composition focus: The transition point of the arrow where order turns into digital chaos, aligned with the bold headline.`;
+import * as imageStudio from "../../image-studio.js?v=39";
 
 // In-feed preview — the edit canvas layers logo/text overlays as live DOM over the
 // image, but the post-card preview can't (it just takes an image URL), so overlays
@@ -70,8 +55,11 @@ export function renderStudio(st) {
       ? `<section class="image-studio__canvas" aria-label="Preview">${canvasContent(st)}</section>`
       : `<aside class="image-studio__panel" aria-label="Generation options">${generateControls(st)}</aside>
          <section class="image-studio__canvas" aria-label="Preview">${canvasContent(st)}</section>`;
+  // The expanded-prompt class rides on the root (it widens the rail, not just
+  // the field) and must be rendered from state — the click handler toggles it in
+  // place for the transition, but any later re-render rebuilds this node.
   return html`
-    <div class="image-studio image-studio--${st.mode}">
+    <div class="image-studio image-studio--${st.mode}${st.composerExpanded ? " is-prompt-expanded" : ""}">
       ${raw(topBar(st))}
       <div class="image-studio__workspace">${raw(workspace)}</div>
       ${raw(footer(st))}
@@ -118,21 +106,16 @@ function canvasContent(st) {
   const showToggle = hasImg && (st.mode === "edit" || (st.mode === "generate" && st.genPhase === "results"));
   const toggle = showToggle ? canvasViewToggle(st) : "";
   const feedView = showToggle && st.canvasView === "feed";
-  // On open (and on a manual re-suggest) Archie first drafts the best image
-  // prompt from the draft — a full-canvas loader stands in until it lands, then
-  // the composer appears pre-filled.
-  const deriving = st.mode === "generate" && !feedView && st.promptLoading && st.genPhase === "idle";
   let inner;
   if (feedView) inner = previewCanvas(st);
   else if (st.mode === "edit") inner = editCanvas(st);
-  else if (deriving) inner = derivingCanvas();
   else if (st.genPhase === "generating") inner = generatingCanvas(st);
   else if (st.genPhase === "results") inner = resultsCanvas(st);
   else
     inner = `<div class="gen-empty">
       <i class="ap-icon-image" aria-hidden="true"></i>
       <p class="gen-empty-title">Your image appears here</p>
-      <span class="gen-empty-sub">Describe it below, then generate.</span>
+      <span class="gen-empty-sub">Review the prompt on the left, then generate.</span>
     </div>`;
   // Edit mode (image view): the floating AI bar lives over the canvas bottom and
   // the manual hand-tools float as a palette top-left. Each palette tool opens
@@ -141,47 +124,12 @@ function canvasContent(st) {
   const editingImage = st.mode === "edit" && !feedView;
   const editBar = editingImage ? actionBar(st) : "";
   const palette = editingImage ? toolPalette(st) : "";
-  // Generate mode (image view): mirror the edit layout — the prompt composer
-  // floats over the canvas bottom (every phase), and the variations "chutier"
-  // floats as a vertical rail on the right (results only).
+  // Generate mode (image view): the variations "chutier" floats as a vertical
+  // rail on the canvas right edge (results only). The prompt is NOT here — it
+  // leads the left panel, where the flow starts (see compose-view promptCard).
   const generating = st.mode === "generate" && !feedView;
-  const genComposer = generating && !deriving ? generateComposer(st) : "";
   const rail = generating && st.genPhase === "results" && st.variations.length > 0 ? variationsRail(st) : "";
-  return `${toggle}<div class="image-studio__canvas-body">${inner}</div>${palette}${editBar}${rail}${genComposer}`;
-}
-
-// Full-canvas loader shown while Archie drafts the image prompt from the draft
-// (on open + on a manual re-suggest). The animated network mark (initArchieLoader
-// swaps the .gen-image-spinner) + a status line.
-function derivingCanvas() {
-  return `<div class="gen-empty image-studio__deriving" role="status" aria-label="Writing your image prompt">
-    <span class="gen-image-spinner gen-loading-mark"></span>
-    <p class="gen-empty-title">Writing your image prompt…</p>
-    <span class="gen-empty-sub">Archie is drafting the best prompt for your post.</span>
-  </div>`;
-}
-
-// Generate mode — the prompt composer floating over the canvas bottom, built on
-// the same card as the edit action bar (mermaid-sparkle cue + roomy auto-growing
-// textarea + a send-style Apply that (re)generates). The arrow-up button drives
-// Generate / Regenerate (data-img-generate covers both) — the footer keeps only
-// the commit CTA, mirroring Edit. The "Suggest from this post" AI helper sits
-// just below the bar.
-function generateComposer(st) {
-  const busy = st.promptLoading || st.genPhase === "generating";
-  const applyLabel = st.genPhase === "results" ? "Regenerate" : "Generate";
-  const applyDisabled = busy || !(st.promptText || "").trim();
-  const expanded = !!st.composerExpanded;
-  const expandLabel = expanded ? "Collapse prompt" : "Expand prompt";
-  return `<div class="image-studio__composer${expanded ? " is-expanded" : ""}">
-    <div class="image-studio__actionbar image-studio__actionbar--generate" role="group" aria-label="Image prompt">
-      <i class="ap-icon-sparkles-mermaid image-studio__ai-icon" aria-hidden="true"></i>
-      <textarea id="imgStudioPrompt" class="image-studio__reprompt-field" data-img-prompt rows="3" placeholder="${escapeHtml(PROMPT_PLACEHOLDER)}" aria-label="Describe your image" ${busy ? "disabled" : ""}>${escapeHtml(st.promptText)}</textarea>
-      <button type="button" class="ap-button ghost grey image-studio__actionbar-expand" data-img-composer-expand aria-label="${expandLabel}" title="${expandLabel}" aria-pressed="${expanded}"><i class="ap-icon-${expanded ? "minimize" : "maximize"}" aria-hidden="true"></i></button>
-      <button type="button" class="ap-button primary orange image-studio__actionbar-apply" data-img-generate aria-label="${applyLabel}" title="${applyLabel}" ${applyDisabled ? "disabled" : ""}><i class="ap-icon-arrow-up" aria-hidden="true"></i></button>
-    </div>
-    ${deriveButton(st)}
-  </div>`;
+  return `${toggle}<div class="image-studio__canvas-body">${inner}</div>${palette}${editBar}${rail}`;
 }
 
 // The variations "chutier" as a vertical rail floating on the canvas right edge
@@ -314,14 +262,26 @@ function footer(st) {
       <button type="button" class="ap-button primary orange loading" disabled><span class="ap-loading-bar"></span><span>Generating…</span></button>
     </div>`;
   }
-  // Generate / Regenerate now live on the composer's ↑; the footer keeps only the
-  // commit CTA (mirrors Edit), disabled until there's an image to use.
+  // Generate mode — exactly one primary, and it always names the next step.
+  // Before results that's "Generate image" (step 3 of the panel flow); once
+  // there are results it hands over to the commit CTA, with Regenerate demoted
+  // to a stroked secondary beside it. "Use this image" is never shown disabled.
   const carousel = st.outputMode === "carousel";
   const hasResults = st.genPhase === "results" && st.variations.length > 0;
-  const useLabel = hasResults && carousel ? `Use carousel · ${st.variations.length} slides` : "Use this image";
-  const useReady = hasResults && (carousel ? st.variations.length >= 2 : !!st.currentImage);
+  // A prompt being rewritten isn't one you can run yet — both spellings of the
+  // generate button wait for it.
+  const promptReady = !st.promptLoading && !!(st.promptText || "").trim();
+  if (!hasResults) {
+    return `<div class="image-studio__bar">
+      <div class="image-studio__bar-spacer"></div>
+      <button type="button" class="ap-button primary orange" data-img-generate ${promptReady ? "" : "disabled"}><i class="ap-icon-sparkles-mermaid"></i><span>Generate image</span></button>
+    </div>`;
+  }
+  const useLabel = carousel ? `Use carousel · ${st.variations.length} slides` : "Use this image";
+  const useReady = carousel ? st.variations.length >= 2 : !!st.currentImage;
   return `<div class="image-studio__bar">
     <div class="image-studio__bar-spacer"></div>
+    <button type="button" class="ap-button stroked grey" data-img-generate ${promptReady ? "" : "disabled"}><i class="ap-icon-refresh"></i><span>Regenerate</span></button>
     <button type="button" class="ap-button primary orange" data-img-use ${useReady ? "" : "disabled"}><i class="ap-icon-check"></i><span>${useLabel}</span></button>
   </div>`;
 }

@@ -70,12 +70,14 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 380px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+  /* Expanding the prompt widens the rail (see .is-prompt-expanded). */
+  transition: grid-template-columns var(--ref-animation-short) var(--app-ease-out);
 }
 
 @media (max-width: 1080px) {
   .image-studio__workspace {
-    grid-template-columns: 320px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
   }
 }
 
@@ -308,8 +310,8 @@ button.image-studio__group-head:disabled {
   color: var(--ref-color-grey-60);
 }
 
-/* "Suggest from this post" — a subtle AI helper link (orange = AI accent). Now
-   sits above the bottom composer; centered there via .image-studio__composer. */
+/* "Suggest from this post" / "Suggest again" — a subtle AI helper link (orange =
+   AI accent), sitting under the prompt card in the left panel. */
 .image-studio__derive {
   align-self: flex-start;
   display: inline-flex;
@@ -473,18 +475,16 @@ button.image-studio__ref--pick:focus-visible {
   padding-bottom: 96px; /* clearance so the bottom bar never overlaps the image */
 }
 
-/* Generate mirrors edit's canvas-first layout: the prompt composer floats over
-   the canvas bottom and the variations rail floats on the right, so the canvas
-   is the positioning context here too. */
+/* The variations rail floats on the canvas right edge, so the canvas is the
+   positioning context here too. Nothing floats along the bottom in generate
+   mode any more — the prompt lives in the left panel. */
 .image-studio--generate .image-studio__canvas {
   position: relative;
-  padding-bottom: 168px; /* clearance for the roomy multi-line composer */
 }
 
 /* When the variations rail is shown, reserve its width on BOTH sides so the
-   image, the view toggle and the bottom composer stay centered on the same axis
-   (the composer is absolutely centered on the canvas — asymmetric padding would
-   shift the image off that axis) while the content still clears the rail. */
+   image and the view toggle stay centered on the same axis (asymmetric padding
+   would shift the image off it) while the content still clears the rail. */
 .image-studio--generate .image-studio__canvas:has(.image-studio__filmstrip--rail) {
   padding-left: 112px;
   padding-right: 112px;
@@ -529,72 +529,61 @@ button.image-studio__ref--pick:focus-visible {
   border-color: var(--ref-color-electric-blue-100);
 }
 
-/* Generate composer — the prompt bar + its "Suggest" helper stacked, floating at
-   the canvas bottom (mirrors the edit action bar). The bar reuses
-   .image-studio__actionbar; the --generate variant drops its own absolute
-   positioning (the wrapper positions the stack) and carries no Apply button —
-   Generate is the footer CTA. */
-.image-studio__composer {
-  position: absolute;
-  left: 50%;
-  bottom: var(--ref-spacing-md);
-  transform: translateX(-50%);
-  z-index: 4;
+/* ── Step 1: the prompt card (left panel) ───────────────────────────────── */
+/* The prompt leads the panel, so the flow reads top-down: review what Archie
+   wrote → adjust settings → Generate (footer). A bordered white card on the
+   panel's white ground, with the same blue focus ring as the edit action bar. */
+.image-studio__prompt {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  width: min(94%, 540px);
-  transition: width var(--ref-animation-short) var(--app-ease-out);
-}
-
-.image-studio__actionbar--generate {
-  position: static;
-  transform: none;
-  width: 100%;
-  /* A roomy multi-line prompt box: the send button + AI cue align to the ends. */
   align-items: flex-end;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  background: var(--ref-color-white);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
 }
 
-/* Two FIXED sizes — not content-driven: a compact small box (this rule) and a
-   large expanded panel (see .is-expanded below). Content scrolls within each
-   (overflow-y from the shared field). Height transitions directly between the
-   two — quick and smooth, growing upward over the canvas. */
-.image-studio__actionbar--generate .image-studio__reprompt-field {
+.image-studio__prompt:focus-within {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+/* Keep the AI cue aligned with the first line, not the bottom. */
+.image-studio__prompt .image-studio__ai-icon {
+  align-self: flex-start;
+  margin-top: 3px;
+}
+
+/* Two FIXED sizes — not content-driven: a compact 5-line box (this rule) and a
+   10-line panel when expanded. Content scrolls within each (overflow-y from the
+   shared field); the height transitions directly between the two. */
+.image-studio__prompt .image-studio__reprompt-field {
   height: calc(var(--sys-text-style-body-line-height) * 5);
   min-height: 0;
   max-height: none;
   transition: height var(--ref-animation-short) var(--app-ease-out);
 }
 
+/* Expanding gives the prompt room for a full structured brief: the field grows
+   to 10 lines AND the whole rail widens, so long lines stop wrapping to death.
+   The canvas simply gives up the width. */
+.image-studio.is-prompt-expanded .image-studio__prompt .image-studio__reprompt-field {
+  height: calc(var(--sys-text-style-body-line-height) * 10);
+}
+
+.image-studio.is-prompt-expanded .image-studio__workspace {
+  grid-template-columns: minmax(0, 620px) minmax(0, 1fr);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .image-studio__actionbar--generate .image-studio__reprompt-field,
-  .image-studio__composer {
+  .image-studio__prompt .image-studio__reprompt-field,
+  .image-studio__workspace {
     transition: none;
   }
 }
 
-/* Keep the AI cue aligned with the first line, not the bottom. */
-.image-studio__actionbar--generate .image-studio__ai-icon {
-  align-self: flex-start;
-  margin-top: 3px;
-}
-
-/* Expanded mode is a much larger prompt panel — clearly taller AND wider than
-   the small composer — so a full structured brief is comfortable to read/edit.
-   Width animates from the center (the composer is translateX(-50%)-centered);
-   the field jumps to a fixed 10-line height. Small stays compact (540px wide,
-   5-line box) for a strong contrast. */
-.image-studio__composer.is-expanded {
-  width: min(92%, 820px);
-}
-.image-studio__composer.is-expanded .image-studio__reprompt-field {
-  height: calc(var(--sys-text-style-body-line-height) * 10);
-}
-
-/* Compact ghost icon button (small ↔ expanded toggle), sized to match the
-   send-style Apply and aligned beside it at the bottom of the card. */
-.image-studio__actionbar-expand.ap-button {
+/* Compact ghost icon button (small ↔ expanded toggle), pinned to the bottom of
+   the card beside the field. */
+.image-studio__prompt-expand.ap-button {
   flex: 0 0 auto;
   width: 32px;
   min-width: 32px;
@@ -607,15 +596,29 @@ button.image-studio__ref--pick:focus-visible {
   justify-content: center;
 }
 
-/* The derive helper sits centered above the bar (on the grey canvas). */
-.image-studio__composer .image-studio__derive {
-  align-self: center;
+/* While Archie drafts the prompt, the card holds the loader — the canvas keeps
+   its empty state, so the whole layout is legible from the first frame. */
+.image-studio__prompt-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  min-height: calc(var(--sys-text-style-body-line-height) * 5 + var(--ref-spacing-md));
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border: 1px dashed var(--app-border);
+  border-radius: var(--app-radius-md);
 }
 
-/* Prompt-writing loader on open — give the 88px network mark room above its
-   status line. */
-.image-studio__deriving {
-  gap: var(--ref-spacing-sm);
+/* The mark defaults to the 88px canvas loader — this one sits inline. */
+.image-studio__prompt-loading .gen-image-spinner {
+  flex: none;
+  width: 28px;
+  height: 28px;
+}
+
+.image-studio__prompt-loading-text {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
 }
 
 .image-studio__actionbar-row {
@@ -1883,6 +1886,41 @@ button.image-studio__ref--pick:focus-visible {
   margin-bottom: var(--ref-spacing-xs);
 }
 
+/* The two numbered steps that order the panel — a small filled counter before
+   the eyebrow. Quiet by design: it sequences the sections, it isn't a CTA. */
+.image-studio__step {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-grey-20);
+  color: var(--ref-color-grey-80);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+/* Step 2 heads all the settings groups below it, so it needs the section
+   padding the groups have (it isn't inside one). */
+.image-studio__group-label--step2 {
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md) 0;
+  margin-bottom: 0;
+}
+
+/* Step 1 — the prompt block. Its own section rhythm: card, then the AI helper. */
+.image-studio__group--prompt {
+  gap: var(--ref-spacing-xs);
+}
+
+/* Ingredients sit directly under the step-2 eyebrow — no divider between a
+   heading and the first thing it heads. */
+.image-studio__group--ingredients {
+  padding-top: var(--ref-spacing-xs);
+}
+
 .image-studio__ingredients {
   display: flex;
   flex-direction: column;
@@ -1905,6 +1943,32 @@ button.image-studio__ref--pick:focus-visible {
 
 button.image-studio__ingredient-head {
   cursor: pointer;
+}
+
+/* Brand kit's head can't be one button — the DS switch inside it is interactive
+   content. The title half is the collapse control; the switch is its sibling. */
+.image-studio__ingredient-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Kit switched off — the section can't open, so the row reads as inert. */
+.image-studio__ingredient-name:disabled {
+  cursor: default;
+}
+
+.image-studio__ingredient-name:disabled .image-studio__ingredient-title {
+  color: var(--ref-color-grey-60);
 }
 
 .image-studio__ingredient-icon {
@@ -1931,7 +1995,7 @@ button.image-studio__ingredient-head {
   transition: transform var(--ref-animation-short) var(--app-ease-out);
 }
 
-.image-studio__ingredient--refs:not(.is-collapsed) .image-studio__group-chevron {
+.image-studio__ingredient:not(.is-collapsed) .image-studio__group-chevron {
   transform: rotate(180deg);
 }
 
