@@ -268,7 +268,142 @@ export function renderFeedBody(state) {
     ${raw(toggle)}`;
 }
 
+// ── Sources tab ───────────────────────────────────────────────────────────
+
+// One switch row per catalog entry. The whole row is the <label>, with the DS
+// toggle aria-hidden + tabindex="-1" inside it — the same contract as the Admin
+// popover's flag rows, so the label is the single control.
+function renderSourceSettingCard(source, { enabled, playbookId, tools, connectorsOn }) {
+  // `kind`, never the id, decides what sits under the description.
+  const extra =
+    source.kind === "playbook" && playbookId
+      ? html`<button
+          type="button"
+          class="ap-link standalone small research-source__link"
+          data-research-playbook-link="${playbookId}"
+        >
+          <span>${source.playbookLinkLabel}</span>
+          <i class="ap-icon-arrow-right"></i>
+        </button>`
+      : source.kind === "mcp" && connectorsOn
+        ? renderToolChips(tools)
+        : "";
+
+  return html`<div class="ap-card research-source${raw(enabled ? " research-source--on" : "")}">
+    <label class="research-source__head" data-research-source="${source.id}">
+      ${raw(renderBadge(source, { size: "sm" }))}
+      <span class="research-source__name">${source.name}</span>
+      <span class="ap-toggle-container research-source__toggle" aria-hidden="true">
+        <input type="checkbox" ${raw(enabled ? "checked" : "")} tabindex="-1" />
+        <i></i>
+      </span>
+    </label>
+    <p class="research-source__desc">${source.description}</p>
+    ${raw(extra)}
+  </div>`;
+}
+
+// The connected tools feeding the MCP source. Gated on the `connectors` flag by
+// the caller — this feature must not leak that one.
+function renderToolChips(tools) {
+  const chips = (tools || [])
+    .map(
+      (t) =>
+        html`<span class="ap-tag research-source__tool">
+          ${raw(t.logo ? html`<img src="${t.logo}" alt="" class="research-source__tool-logo" />` : "")}
+          <span>${t.name}</span>
+        </span>`,
+    )
+    .join("");
+  return html`<div class="research-source__tools">
+    ${raw(chips)}
+    <button type="button" class="ap-link small research-source__add-tool" data-research-add-tool>
+      <i class="ap-icon-plus"></i>
+      <span>Add a tool</span>
+    </button>
+  </div>`;
+}
+
+// Plain noun-phrase labels, never imperatives — the description carries the
+// "notify me" intent instead.
+function renderOtherSettings(state) {
+  const chips = (state.cadences || [])
+    .map((c) => {
+      const on = c.id === state.config?.cadence;
+      return html`<button
+        type="button"
+        class="ap-filter-chip research-settings__chip"
+        data-research-cadence="${c.id}"
+        aria-pressed="${raw(on ? "true" : "false")}"
+      >
+        ${c.label}
+      </button>`;
+    })
+    .join("");
+
+  return html`<h2 class="research-sources__heading">Other settings</h2>
+    <div class="ap-card research-settings">
+      <div class="research-settings__text">
+        <span class="research-settings__label">Refresh frequency</span>
+        <p class="research-settings__desc">How often I scan your sources for new research.</p>
+      </div>
+      <div class="research-settings__chips" role="group" aria-label="Refresh frequency">${raw(chips)}</div>
+    </div>
+    <label class="ap-card research-settings research-settings--row" data-research-notify>
+      <div class="research-settings__text">
+        <span class="research-settings__label">Notifications</span>
+        <p class="research-settings__desc">Show a badge and a toast when new findings land.</p>
+      </div>
+      <span class="ap-toggle-container" aria-hidden="true">
+        <input type="checkbox" ${raw(state.config?.notify ? "checked" : "")} tabindex="-1" />
+        <i></i>
+      </span>
+    </label>`;
+}
+
+export function renderSourcesBody(state) {
+  const enabled = new Set(state.config?.enabledSourceIds || []);
+  const cards = (state.sources || [])
+    .map((s) =>
+      renderSourceSettingCard(s, {
+        enabled: enabled.has(s.id),
+        playbookId: state.contextId,
+        tools: state.tools?.[s.id] || [],
+        connectorsOn: state.connectorsOn,
+      }),
+    )
+    .join("");
+  return html`<div class="research-sources">
+    <div class="research-sources__list">${raw(cards)}</div>
+    ${raw(renderOtherSettings(state))}
+  </div>`;
+}
+
 // ── The page ──────────────────────────────────────────────────────────────
+
+// Feed | Sources. .ap-tabs is width:100%/column by default (it's built to own a
+// panel), so the inline instance is shrink-wrapped in research.css.
+function renderTabs(state) {
+  const tab = (id, label, count) => {
+    const on = state.tab === id;
+    return html`<button
+      type="button"
+      class="ap-tabs-tab${raw(on ? " active" : "")}"
+      data-research-tab="${id}"
+      role="tab"
+      aria-selected="${raw(on ? "true" : "false")}"
+    >
+      <span>${label}</span>
+      ${raw(count > 0 ? html`<span class="ap-counter normal ${raw(on ? "blue" : "grey")}">${count}</span>` : "")}
+    </button>`;
+  };
+  return html`<div class="ap-tabs research-view__tabs">
+    <div class="ap-tabs-nav" role="tablist" aria-label="Research views">
+      ${raw(tab("feed", "Feed", (state.findings || []).filter((f) => f.status !== "dismissed").length))}
+      ${raw(tab("sources", "Sources", (state.config?.enabledSourceIds || []).length))}
+    </div>
+  </div>`;
+}
 
 export function renderResearchPage(state) {
   return html`
@@ -283,7 +418,11 @@ export function renderResearchPage(state) {
         </div>
       </header>
 
-      <div class="research-view__body" data-research-body>${raw(renderFeedBody(state))}</div>
+      ${raw(renderTabs(state))}
+
+      <div class="research-view__body" data-research-body>
+        ${raw(state.tab === "sources" ? renderSourcesBody(state) : renderFeedBody(state))}
+      </div>
     </div>
   `;
 }

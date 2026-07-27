@@ -32,11 +32,16 @@ import {
   markAllSeen,
   dismissFinding,
   restoreFinding,
+  setSourceEnabled,
+  setCadence,
+  setNotify,
   runScan,
   subscribe as subscribeResearch,
 } from "../research-store.js?v=1";
-import { renderResearchPage, renderFeedBody } from "../research-view.js?v=1";
+import { renderResearchPage, renderFeedBody, renderSourcesBody } from "../research-view.js?v=1";
 import { showToast } from "../components/toast.js?v=20";
+import { findConnector } from "../connectors-store.js?v=29";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=12";
 
 let unsubscribe = null;
 let activeContextId = null;
@@ -79,6 +84,26 @@ function resolveContextId() {
   return getDefaultContext()?.id || all[0]?.id || null;
 }
 
+// "feed" unless ?tab=sources. In the URL so the "Choose my sources" empty-state
+// CTA and any future in-chat "change what I scan" link are real deep links.
+function resolveTab() {
+  return parseHashParams().get("tab") === "sources" ? "sources" : "feed";
+}
+
+// The MCP source advertises connected tools, so resolve them through
+// connectors-store — the catalog only carries ids.
+function toolsForSources() {
+  const out = {};
+  for (const s of RESEARCH_SOURCES) {
+    if (!s.tools) continue;
+    out[s.id] = s.tools.map((id) => {
+      const c = findConnector(id);
+      return { id, name: c?.name || id, logo: c?.logo || "" };
+    });
+  }
+  return out;
+}
+
 function buildState() {
   const contextId = activeContextId;
   const all = getFindings({ contextId, includeDismissed: true });
@@ -87,6 +112,7 @@ function buildState() {
     findings: showDismissed ? all : all.filter((f) => f.status !== "dismissed"),
     dismissedCount,
     showDismissed,
+    tab: resolveTab(),
     playbooks: getContexts().map((c) => ({ id: c.id, name: c.name })),
     contextId,
     config: getResearchConfig(contextId),
@@ -95,6 +121,8 @@ function buildState() {
     newCount: getNewCount({ contextId }),
     sources: RESEARCH_SOURCES,
     cadences: CADENCES,
+    tools: toolsForSources(),
+    connectorsOn: isFlagOn("connectors"),
   };
 }
 
@@ -104,6 +132,7 @@ function buildState() {
 function chromeSignature(state) {
   return [
     state.contextId,
+    state.tab,
     state.scanning ? "scanning" : "idle",
     state.lastScanAt || "",
     (state.config.enabledSourceIds || []).join(","),
@@ -133,7 +162,7 @@ function repaint(target) {
 function repaintBody(root, state = buildState()) {
   const body = root.querySelector("[data-research-body]");
   if (!body) return;
-  body.innerHTML = renderFeedBody(state);
+  body.innerHTML = state.tab === "sources" ? renderSourcesBody(state) : renderFeedBody(state);
 }
 
 function bind(target) {
@@ -144,13 +173,57 @@ function bind(target) {
 }
 
 function onClick(event, root) {
+  const tabBtn = event.target.closest("[data-research-tab]");
+  if (tabBtn) {
+    const params = { tab: tabBtn.dataset.researchTab };
+    if (activeContextId) params.pb = activeContextId;
+    setHashQuery("/research", params);
+    return;
+  }
+
+  // The whole row is the <label>, so preventDefault stops the click firing a
+  // second time through the nested checkbox — the Admin popover's contract.
+  const sourceRow = event.target.closest("[data-research-source]");
+  if (sourceRow) {
+    event.preventDefault();
+    const id = sourceRow.dataset.researchSource;
+    const on = (getResearchConfig(activeContextId).enabledSourceIds || []).includes(id);
+    setSourceEnabled(activeContextId, id, !on);
+    return;
+  }
+
+  const notifyRow = event.target.closest("[data-research-notify]");
+  if (notifyRow) {
+    event.preventDefault();
+    setNotify(activeContextId, !getResearchConfig(activeContextId).notify);
+    return;
+  }
+
+  const cadence = event.target.closest("[data-research-cadence]");
+  if (cadence) {
+    setCadence(activeContextId, cadence.dataset.researchCadence);
+    return;
+  }
+
+  const pbLink = event.target.closest("[data-research-playbook-link]");
+  if (pbLink) {
+    navigate(`/playbook/${pbLink.dataset.researchPlaybookLink}`);
+    return;
+  }
+
+  const addTool = event.target.closest("[data-research-add-tool]");
+  if (addTool) {
+    openConnectorsModal({});
+    return;
+  }
+
   const playbook = event.target.closest("[data-research-playbook]");
   if (playbook) {
     const id = playbook.dataset.researchPlaybook;
     playbook.closest("details")?.removeAttribute("open");
     if (id !== activeContextId) {
       showDismissed = false;
-      setHashQuery("/research", { pb: id });
+      setHashQuery("/research", { pb: id, tab: resolveTab() });
     }
     return;
   }

@@ -77,6 +77,20 @@
   min-width: 200px;
 }
 
+/* ── Tabs ────────────────────────────────────────────────────────────── */
+
+/* .ap-tabs is width:100% + flex-direction:column by default — it's built to
+   own a panel. An inline instance has to shrink-wrap; same override the right
+   panel and the content workspace apply. */
+.research-view__tabs {
+  width: 100%;
+  max-width: 760px;
+}
+
+.research-view__tabs .ap-tabs-nav {
+  gap: var(--ref-spacing-sm);
+}
+
 /* ── Feed ────────────────────────────────────────────────────────────── */
 
 .research-view__body {
@@ -158,9 +172,9 @@
   --research-accent-fg: var(--ref-color-red-100);
 }
 
-.research-badge--mermaid {
-  --research-accent-bg: var(--ref-color-mermaid-10);
-  --research-accent-fg: var(--ref-color-mermaid-20);
+.research-badge--soft-blue {
+  --research-accent-bg: var(--ref-color-soft-blue-10);
+  --research-accent-fg: var(--ref-color-soft-blue-100);
 }
 
 .research-badge--electric-blue {
@@ -313,4 +327,136 @@
   left: 0;
   z-index: 20;
   min-width: 250px;
+}
+
+/* ── Sources tab ─────────────────────────────────────────────────────── */
+
+.research-sources {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  max-width: 760px;
+}
+
+.research-sources__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+}
+
+.research-sources__heading {
+  margin: var(--ref-spacing-md) 0 0;
+  font-family: var(--sys-text-style-h4-font-family);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  color: var(--ref-color-grey-80);
+}
+
+/* One switch row per source. .ap-card brings the surface; the row rhythm and
+   the off-state dimming live here. */
+.research-source {
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+}
+
+/* The whole head is the <label> — clicking anywhere on the row toggles. */
+.research-source__head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  cursor: pointer;
+  margin: 0;
+}
+
+.research-source__name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--sys-text-style-h4-font-family);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.research-source__toggle {
+  flex: 0 0 auto;
+}
+
+.research-source__desc {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+/* An enabled source states its description in full colour; an off one reads
+   as a description of something that isn't happening. */
+.research-source--on .research-source__desc {
+  color: var(--ref-color-grey-80);
+}
+
+.research-source__link {
+  align-self: flex-start;
+}
+
+.research-source__tools {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  flex-wrap: wrap;
+}
+
+.research-source__tool {
+  gap: var(--ref-spacing-xxxs);
+}
+
+.research-source__tool-logo {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+/* ── Other settings ──────────────────────────────────────────────────── */
+
+.research-settings {
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+}
+
+/* The Notifications card is a single row (label block + toggle); the cadence
+   card stacks its chip group under the label. */
+.research-settings--row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.research-settings__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+}
+
+.research-settings__label {
+  font-family: var(--sys-text-style-h4-font-family);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.research-settings__desc {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+.research-settings__chips {
+  display: flex;
+  gap: var(--ref-spacing-xxs);
+  flex-wrap: wrap;
 }

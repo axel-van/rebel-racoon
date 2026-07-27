@@ -54,7 +54,7 @@ export const RESEARCH_SOURCES = Object.freeze([
     id: "brand-feedback",
     name: "Brand feedback",
     icon: "ap-icon-double-chat-bubbles",
-    accent: "mermaid",
+    accent: "menthol",
     description:
       "I read what people say to and about you — comments, DMs, reviews — and pull out the pain points and requests that keep coming back.",
     kind: "listening",
@@ -109,13 +109,14 @@ export const RESEARCH_SOURCES = Object.freeze([
     id: "team-ideas",
     name: "Internal team ideas",
     icon: "ap-icon-note--plus",
-    accent: "menthol",
+    accent: "soft-blue",
     description:
       "I pick up the campaign notes and priorities your team writes down, so ideas stay aligned with this quarter's goals.",
     kind: "mcp",
     playbookAnchor: null,
     playbookLinkLabel: null,
-    tools: ["notion", "intercom", "google-drive"],
+    // connector ids from mocks.connectors — resolved to real logos at render time
+    tools: ["notion", "intercom", "gdrive"],
     defaultEnabled: false,
     defaultResearchType: "Internal priority",
   },
