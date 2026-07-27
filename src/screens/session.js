@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=218";
+import { renderTopbar } from "../components/topbar.js?v=219";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=58";
 import {
   getConnectedProfiles,
@@ -63,7 +63,10 @@ import * as inlineQuestion from "../inline-question.js?v=48";
 import * as clipStudio from "../clip-studio.js?v=25";
 import * as batchStudio from "../batch-studio.js?v=4";
 import { askConnector } from "../connector-ask.js?v=10";
-import { executeUseFinding } from "../research-flow.js?v=1";
+import { executeUseFinding } from "../research-flow.js?v=2";
+import { getFinding } from "../research-store.js?v=2";
+import { open as openResearchModal } from "../components/research-modal.js?v=3";
+import { renderSocialPostCard } from "../components/social-post-card.js?v=2";
 import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=30";
 import { renderConnectorLogo } from "../connectors-view.js?v=12";
 import {
@@ -72,7 +75,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=12";
-import * as contextBuilder from "../context-builder.js?v=189";
+import * as contextBuilder from "../context-builder.js?v=190";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -112,7 +115,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=356";
+} from "../components/right-panel.js?v=357";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=18";
@@ -2912,6 +2915,11 @@ function renderTurn(message, sessionId) {
     return renderIdeaExtractionTurn(message, sessionId);
   }
 
+  // A research scan landing — the result card for a batch of new findings.
+  if (message.role === "assistant" && message.variant === "research") {
+    return renderResearchTurn(message);
+  }
+
   // Profiles echo — right-aligned avatar (+ network badge) + handle chips,
   // used when the user picks which account(s) to draft a clip for.
   if (message.role === "user" && message.variant === "profiles") {
@@ -3785,6 +3793,57 @@ function renderClipExtractionTurn(message, sessionId) {
         sub: `From <span class="drafts-card__sub-quote">${filename}</span>`,
         cta: { label: "Open clips" },
         dataAttr: `data-clip-card-open="${source.id}"`,
+      })}
+    </div>
+  `;
+}
+
+// A research scan landing in the thread. Store-coupled (it resolves the live
+// findings each paint, so one dismissed elsewhere disappears from the turn),
+// which is why it lives here and not in the pure thread-turns module.
+//
+// Same result-card family as clips / ideas / drafts — a scan is exactly "the
+// result of a long job".
+function renderResearchTurn(message) {
+  const findings = (message.findingIds || []).map((id) => getFinding(id)).filter(Boolean);
+  const live = findings.filter((f) => f.status !== "dismissed");
+
+  if (live.length === 0) {
+    // Factual, no apology (copy-principles §4.3).
+    return `
+      <div class="chat-turn chat-turn--ai chat-turn--research">
+        ${renderResultCard({
+          state: "unavailable",
+          icon: "ap-icon-feature-listening",
+          title: "Nothing new since the last scan",
+          sub: "I'll keep watching your research sources.",
+        })}
+      </div>
+    `;
+  }
+
+  const top = live[0];
+  const sources = (message.sourceNames || []).join(" · ");
+  // One representative quote as the teaser — the compact evidence card, so the
+  // turn shows what the finding is grounded in without unpacking the whole
+  // argument in the thread.
+  const teaser = `
+    <span class="research-turn__teaser">
+      <span class="research-turn__headline">${escapeHtml(top.headline)}</span>
+      ${top.posts?.length ? renderSocialPostCard(top.posts[0], { compact: true }) : ""}
+    </span>
+  `;
+
+  return `
+    <div class="chat-turn chat-turn--ai chat-turn--research">
+      ${renderResultCard({
+        state: "ready",
+        icon: "ap-icon-feature-listening",
+        title: live.length === 1 ? "1 new finding" : `${live.length} new findings`,
+        extraHtml: teaser,
+        sub: sources ? `From ${escapeHtml(sources)}` : "",
+        cta: { label: "Read the research" },
+        dataAttr: `data-research-open="${escapeHtmlAttr(top.id)}"`,
       })}
     </div>
   `;
@@ -4815,6 +4874,23 @@ function bindSession(root, session) {
       if (openClipsBtn) {
         event.preventDefault();
         openClipsPanel();
+        return;
+      }
+
+      // Research delivery card → read the finding in place. Deliberately NOT a
+      // navigation to /research: the user is mid-conversation, and the modal
+      // carries the same decision buttons the feed would.
+      const openResearchCard = event.target.closest("[data-research-open]");
+      if (openResearchCard) {
+        event.preventDefault();
+        openResearchModal({ findingId: openResearchCard.dataset.researchOpen });
+        return;
+      }
+
+      const openResearchFeed = event.target.closest("[data-research-open-feed]");
+      if (openResearchFeed) {
+        event.preventDefault();
+        navigate("/research");
         return;
       }
 

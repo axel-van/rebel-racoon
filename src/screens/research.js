@@ -17,7 +17,7 @@
 // reading the cards they were notified about.
 
 import { html, raw } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=218";
+import { renderTopbar } from "../components/topbar.js?v=219";
 import { navigate } from "../router.js?v=30";
 import { isFlagOn } from "../feature-flags.js?v=12";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -34,15 +34,13 @@ import {
   setSourceEnabled,
   setCadence,
   setNotify,
-  runScan,
   subscribe as subscribeResearch,
 } from "../research-store.js?v=2";
 import { renderResearchPage, renderFeedBody, renderSourcesBody } from "../research-view.js?v=2";
-import { showToast } from "../components/toast.js?v=20";
 import { findConnector } from "../connectors-store.js?v=30";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=13";
-import { open as openResearchModal } from "../components/research-modal.js?v=2";
-import { useFinding, dismiss as dismissWithUndo } from "../research-flow.js?v=1";
+import { open as openResearchModal } from "../components/research-modal.js?v=3";
+import { useFinding, dismiss as dismissWithUndo, runScanAndAnnounce } from "../research-flow.js?v=2";
 
 let unsubscribe = null;
 let activeContextId = null;
@@ -313,17 +311,8 @@ function closeMenus(root) {
 
 // The scan flips the header button to its loading state and then prepends
 // cards — both are covered by the store's notify(), so there's nothing to
-// repaint by hand here.
+// repaint by hand here. The announcing (toast + the in-chat card) is shared
+// with the recurring scan, so it lives in research-flow.
 function startScan() {
-  runScan({
-    contextId: activeContextId,
-    manual: true,
-    onDone: (delivered) => {
-      if (!delivered.length) {
-        showToast("Nothing new since the last scan");
-        return;
-      }
-      showToast(`${delivered.length} new ${delivered.length === 1 ? "finding" : "findings"}`);
-    },
-  });
+  runScanAndAnnounce({ contextId: activeContextId, manual: true });
 }

@@ -453,6 +453,33 @@ export function postTopPostsWidget(sessionId, { network, postIds }) {
   return id;
 }
 
+// Announce a research scan in the thread. A VARIANT, not a new role: renderTurn
+// already branches on assistant + variant five times, whereas a new role would
+// need handling in every role-switching consumer (composer status, the offThread
+// subscription, the widget scans).
+//
+// Deliberately dumb — ids and counts only, no copies of the findings. The
+// renderer resolves them from research-store on each paint, so a finding
+// dismissed elsewhere disappears from the turn instead of going stale.
+export function postResearchDelivery(sessionId, { findingIds, sourceNames = [] }) {
+  const thread = getThread(sessionId);
+  const ids = Array.isArray(findingIds) ? findingIds.slice() : [];
+  const id = newId();
+  thread.push({
+    id,
+    role: "assistant",
+    variant: "research",
+    meta: "Archie",
+    findingIds: ids,
+    count: ids.length,
+    sourceNames: Array.isArray(sourceNames) ? sourceNames.slice() : [],
+    status: "ready",
+    createdAt: Date.now(),
+  });
+  notify(sessionId);
+  return id;
+}
+
 // Find the latest still-open (ready) top-posts widget turn for a session.
 function activeTopPostsWidget(sessionId) {
   const thread = getThread(sessionId);

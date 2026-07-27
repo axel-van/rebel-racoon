@@ -21,7 +21,7 @@
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 import { html, raw } from "../utils.js?v=21";
 import { getFinding, restoreFinding, subscribe as subscribeResearch } from "../research-store.js?v=2";
-import { useFinding, dismiss as dismissWithUndo } from "../research-flow.js?v=1";
+import { useFinding, dismiss as dismissWithUndo } from "../research-flow.js?v=2";
 import { findResearchSource } from "../research-catalog.js?v=2";
 import { renderFindingCard, renderBadge } from "../research-view.js?v=2";
 import { renderSocialPostCard } from "./social-post-card.js?v=2";
