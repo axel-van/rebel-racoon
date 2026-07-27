@@ -9,7 +9,7 @@ Chaque store suit cette structure :
 ```js
 import { createNotifier } from "./store-utils.js";
 
-const state = new Map();           // sessionId → state (ou un array pour un catalogue)
+const state = new Map(); // sessionId → state (ou un array pour un catalogue)
 const { subscribe, notify } = createNotifier("storeName");
 
 function seed(sessionId) {
@@ -23,10 +23,12 @@ function get(sessionId) {
   return state.get(sessionId);
 }
 
-export function getX(sessionId)   { return get(sessionId).x; }
+export function getX(sessionId) {
+  return get(sessionId).x;
+}
 export function setX(sessionId, x) {
   state.get(sessionId).x = x;
-  notify({ sessionId });          // shallow notify
+  notify({ sessionId }); // shallow notify
 }
 export { subscribe };
 ```
@@ -35,21 +37,22 @@ Voir [`src/store-utils.js`](../../src/store-utils.js) pour `createNotifier()`.
 
 ## Catalogue des stores
 
-| Store                                           | Domaine                                                          | API publique principale |
-|------------------------------------------------|------------------------------------------------------------------|-----------------------|
-| [`sessions-store.js`](../../src/sessions-store.js)         | Sessions de chat                                                 | `getSessions`, `getSessionById`, `updateSession`, `deleteSession`, `togglePin`, `subscribe` |
-| [`contexts-store.js`](../../src/contexts-store.js)         | Playbooks (Contexts en code)                                    | `getContexts`, `getContextById`, `getDefaultContext`, `addContext`, `updateContext`, `duplicateContext`, `deleteContext`, `subscribe` |
-| [`connectors-store.js`](../../src/connectors-store.js)     | Catalogue + état de connection des connectors                   | `getConnectors`, `findConnector`, `getConnectedConnectors`, `setConnectorStatus`, `subscribe` |
-| [`library.js`](../../src/library.js)                       | Ideas per-session (sources delegate to `sources-stream`)        | `getSources(sid)`, `getIdeas(sid)`, `appendExtractedIdeas`, `injectIdeasForSource`, `extractVideoIdeas`, `removeIdeas`, `subscribe(sid, fn)` |
-| [`posts-store.js`](../../src/posts-store.js)               | Drafts per-session                                              | `getPosts(sid)`, `addPostDraft`, `updatePostContent`, `attachImageToDraft`, `removePost`, `subscribe(sid, fn)` |
-| [`assistant.js`](../../src/assistant.js)                   | Thread conversationnel per-session                              | `getThread`, `sendMessage`, `sendConnectorMessage`, `postAssistantMessage`, `postSystemNotice` / `markSystemNoticeReady`, `postSourceIntake`, `postExtractionResult`, `postAssistantChoice` / `submitAssistantChoice`, `postDraftResult`, `subscribe(sid, fn)` |
-| [`sources-stream.js`](../../src/sources-stream.js)         | **Global** : uploads + sources state machine (uploading → processing → done) | `getSources`, `getUploads`, `subscribeSources`, `subscribeUploads`, `startFileUpload`, `startUrlImport`, `startConnectorImport`, `extractClipsForSource`, `removeSources`, `renameSource` |
-| [`schedule-store.js`](../../src/schedule-store.js)         | Queue des posts schedulés (calendrier)                          | `getQueue`, `getQueueOn`, `addToQueue`, `removeFromQueue`, `busyCountsByDay`, `subscribe` |
-| [`composer-mentions.js`](../../src/composer-mentions.js)   | Mentions @ dans le composer per-session                         | `addMention`, `removeMention`, `renderInto`, `subscribe(sid, fn)` |
+| Store                                                    | Domaine                                                                                                                                                                                          | API publique principale                                                                                                                                                                                                                                        |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`sessions-store.js`](../../src/sessions-store.js)       | Sessions de chat                                                                                                                                                                                 | `getSessions`, `getSessionById`, `updateSession`, `deleteSession`, `togglePin`, `subscribe`                                                                                                                                                                    |
+| [`contexts-store.js`](../../src/contexts-store.js)       | Playbooks (Contexts en code)                                                                                                                                                                     | `getContexts`, `getContextById`, `getDefaultContext`, `addContext`, `updateContext`, `duplicateContext`, `deleteContext`, `subscribe`                                                                                                                          |
+| [`connectors-store.js`](../../src/connectors-store.js)   | Catalogue + état de connection des connectors                                                                                                                                                    | `getConnectors`, `findConnector`, `getConnectedConnectors`, `setConnectorStatus`, `subscribe`                                                                                                                                                                  |
+| [`library.js`](../../src/library.js)                     | Ideas per-session (sources delegate to `sources-stream`)                                                                                                                                         | `getSources(sid)`, `getIdeas(sid)`, `appendExtractedIdeas`, `injectIdeasForSource`, `extractVideoIdeas`, `removeIdeas`, `subscribe(sid, fn)`                                                                                                                   |
+| [`posts-store.js`](../../src/posts-store.js)             | Drafts per-session                                                                                                                                                                               | `getPosts(sid)`, `addPostDraft`, `updatePostContent`, `attachImageToDraft`, `removePost`, `subscribe(sid, fn)`                                                                                                                                                 |
+| [`assistant.js`](../../src/assistant.js)                 | Thread conversationnel per-session                                                                                                                                                               | `getThread`, `sendMessage`, `sendConnectorMessage`, `postAssistantMessage`, `postSystemNotice` / `markSystemNoticeReady`, `postSourceIntake`, `postExtractionResult`, `postAssistantChoice` / `submitAssistantChoice`, `postDraftResult`, `subscribe(sid, fn)` |
+| [`sources-stream.js`](../../src/sources-stream.js)       | **Global** : uploads + sources state machine (uploading → processing → done)                                                                                                                     | `getSources`, `getUploads`, `subscribeSources`, `subscribeUploads`, `startFileUpload`, `startUrlImport`, `startConnectorImport`, `extractClipsForSource`, `removeSources`, `renameSource`                                                                      |
+| [`schedule-store.js`](../../src/schedule-store.js)       | Queue des posts schedulés (calendrier)                                                                                                                                                           | `getQueue`, `getQueueOn`, `addToQueue`, `removeFromQueue`, `busyCountsByDay`, `subscribe`                                                                                                                                                                      |
+| [`composer-mentions.js`](../../src/composer-mentions.js) | Mentions @ dans le composer per-session                                                                                                                                                          | `addMention`, `removeMention`, `renderInto`, `subscribe(sid, fn)`                                                                                                                                                                                              |
+| [`research-store.js`](../../src/research-store.js)       | **Global** : findings de recherche + moteur de scan. La config (sources activées / cadence / notify) est **par Playbook** et vit sur le Context (`ctx.research`), lue via `getResearchConfig()`. | `getFindings`, `getFinding`, `getNewCount`, `markSeen`, `markAllSeen`, `markUsed`, `dismissFinding`, `restoreFinding`, `getResearchConfig`, `setSourceEnabled`, `setCadence`, `setNotify`, `runScan`, `isScanning`, `subscribe`                                |
 
-## Le seul global : `sources-stream`
+## Les deux globaux : `sources-stream` et `research-store`
 
-Tous les autres stores sont per-session (Map<sessionId, state>). `sources-stream` est **global** parce que les sources sont partagées entre sessions. `library.js` re-émet par session pour que les écrans abonnés à `library.subscribe(sid)` repaint quand une source landed.
+Tous les autres stores sont per-session (Map<sessionId, state>). `sources-stream` est **global** parce que les sources sont partagées entre sessions ; `research-store` l'est parce que les findings viennent du listening au niveau du compte (chaque finding porte un `contextId` pour que le feed filtre par Playbook, et `/research` n'a de toute façon pas de session). `library.js` re-émet par session pour que les écrans abonnés à `library.subscribe(sid)` repaint quand une source landed.
 
 Conséquence : si tu ajoutes une source depuis la session A, la library de la session B verra aussi cette source (si elle est listée dans son periphery — selon la sélection).
 
@@ -57,12 +60,12 @@ Conséquence : si tu ajoutes une source depuis la session A, la library de la se
 
 **Rien n'est persisté côté app state.** Seuls survivent au reload :
 
-| Clé localStorage / sessionStorage | Domaine |
-|---|---|
-| `archie-user-mode` | `"returning"` vs `"new-alt"` (cf. `user-mode.js`) |
-| `ff-{flagName}` | Feature flags individuels (cf. `feature-flags.js`) |
-| Sidebar collapse state | UI prefs |
-| `pending*` keys | Handoffs sessionStorage (consommés une fois) |
+| Clé localStorage / sessionStorage | Domaine                                            |
+| --------------------------------- | -------------------------------------------------- |
+| `archie-user-mode`                | `"returning"` vs `"new-alt"` (cf. `user-mode.js`)  |
+| `ff-{flagName}`                   | Feature flags individuels (cf. `feature-flags.js`) |
+| Sidebar collapse state            | UI prefs                                           |
+| `pending*` keys                   | Handoffs sessionStorage (consommés une fois)       |
 
 → Refresh = retour aux mocks (sauf si en `new-alt` mode = state vide).
 
@@ -104,10 +107,10 @@ Le système `?v=N` du cache-bust **rend deux imports avec versions différentes 
 
 ```js
 // fichier A.js
-import { getSessions } from "./sessions-store.js?v=12";  // instance #1
+import { getSessions } from "./sessions-store.js?v=12"; // instance #1
 
 // fichier B.js
-import { getSessions } from "./sessions-store.js?v=13";  // instance #2 — !!
+import { getSessions } from "./sessions-store.js?v=13"; // instance #2 — !!
 ```
 
 Les deux instances ont leurs propres `state` Map et `subscribers` Set. **Bumper un store impose de bumper en lockstep dans tous les importeurs.**

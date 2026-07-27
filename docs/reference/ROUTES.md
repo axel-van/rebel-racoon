@@ -4,17 +4,18 @@ Source de vérité : [`src/app.js`](../../src/app.js) (route table) + [`src/rout
 
 ## Route table
 
-| Route                | Handler                  | Notes                                                                                              |
-| -------------------- | ------------------------ | -------------------------------------------------------------------------------------------------- |
-| `/`                  | `dashboard.js`           | **Redirect-only** : first-time (`new-alt` mode) → `/welcome-alt` ; returning → most-recent session ou nouvelle session. Pas de UI propre. |
-| `/session/:id`       | `session.js`             | La surface chat principale (le plus gros fichier du projet). Héberge le thread assistant, le composer, les flows per-session (intake, draft, clips). |
-| `/ideas`             | `ideas.js`               | Library Ideas standalone : grid + filter chips by kind + search + sort. Multi-session.            |
-| `/contexts`          | `contexts.js`            | Library **Playbooks** : cards (DO/DON'T, brief, color tag) + edit en side panel. |
-| `/playbook/:id`      | `playbook.js`            | Page détail d'un Playbook. Topbar back → `/contexts`. |
-| `/connectors`        | `connectors.js`          | Gallery des connectors (feature flag `connectors`, default OFF). Détail dans un modal. |
-| `/settings`          | `settings.js`            | Two-pane settings : Connectors / Contexts / Generation preferences / Social accounts / Notifications + section **Admin** (proto controls). |
-| `/welcome-alt`       | `welcome-alt.js`         | Onboarding first-time. Redirige vers une session transitoire. Body en `.onboarding` (full-bleed). |
-| `/welcome-alt/recap` | `welcome-alt-recap.js`   | Recap final du Playbook construit pendant l'onboarding. |
+| Route                | Handler                | Notes                                                                                                                                                                                                           |
+| -------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                  | `dashboard.js`         | **Redirect-only** : first-time (`new-alt` mode) → `/welcome-alt` ; returning → most-recent session ou nouvelle session. Pas de UI propre.                                                                       |
+| `/session/:id`       | `session.js`           | La surface chat principale (le plus gros fichier du projet). Héberge le thread assistant, le composer, les flows per-session (intake, draft, clips).                                                            |
+| `/ideas`             | `ideas.js`             | Library Ideas standalone : grid + filter chips by kind + search + sort. Multi-session.                                                                                                                          |
+| `/contexts`          | `contexts.js`          | Library **Playbooks** : cards (DO/DON'T, brief, color tag) + edit en side panel.                                                                                                                                |
+| `/playbook/:id`      | `playbook.js`          | Page détail d'un Playbook. Topbar back → `/contexts`.                                                                                                                                                           |
+| `/connectors`        | `connectors.js`        | Gallery des connectors (feature flag `connectors`, default OFF). Détail dans un modal.                                                                                                                          |
+| `/research`          | `research.js`          | Feed des **findings** + onglet **Sources** (feature flag `research`, default OFF). Onglet actif et Playbook actif dans le hash (`?tab=sources`, `?pb=ctx-acme`). Le teardown de la route vide le badge « New ». |
+| `/settings`          | `settings.js`          | Two-pane settings : Connectors / Contexts / Generation preferences / Social accounts / Notifications + section **Admin** (proto controls).                                                                      |
+| `/welcome-alt`       | `welcome-alt.js`       | Onboarding first-time. Redirige vers une session transitoire. Body en `.onboarding` (full-bleed).                                                                                                               |
+| `/welcome-alt/recap` | `welcome-alt-recap.js` | Recap final du Playbook construit pendant l'onboarding.                                                                                                                                                         |
 
 ## Matching & lifecycle
 
@@ -42,8 +43,10 @@ setHashQuery("/session/abc", { tab: "posts", focusIdea: "i-42" });
 `setHashQuery` appelle `navigate()` du router. Idiomatic pour pousser un changement d'état d'écran sans reload.
 
 Exemples observés :
+
 - `/session/:id?tab=posts` — Posts tab actif (right panel mode `drafts`)
 - `/session/:id?focusIdea=…` — scroll-and-highlight d'une idée précise
+- `/research?tab=sources&pb=ctx-acme` — onglet Sources du Playbook Acme (les deux sont deep-linkables)
 - (autres possibles : `?tab=ideas`, `?tab=sources`, `?tab=clips`, etc.)
 
 ## Handoffs entre routes
@@ -58,20 +61,23 @@ setHandoff("pendingDraftIdeaId", { ideaId: "i-42" });
 navigate("/session/abc");
 
 // dans le handler de la destination
-const payload = consumeHandoff("pendingDraftIdeaId");  // atomic read+remove
-if (payload) { /* … */ }
+const payload = consumeHandoff("pendingDraftIdeaId"); // atomic read+remove
+if (payload) {
+  /* … */
+}
 ```
 
 ### Handoffs actifs (consumés au mount de `session.js`)
 
-| Clé                          | Posé par                                       | Consommé par →                       |
-| ---------------------------- | ---------------------------------------------- | ------------------------------------ |
-| `pendingStartFlow`           | dashboard / new chat with a Playbook            | `startActionPickerFlow`              |
-| `pendingDraftIdeaId`         | idea card "Draft post"                          | `askProfileQuestion` (`draft-flow`)  |
-| `pendingAskSource`           | source card "Ask"                               | `askWhatToKnow`                      |
-| `pendingAskConnector`        | connectors gallery / modal "Try in chat"        | `askConnector` (`connector-ask`)     |
-| `pendingStartContextBuilder` | `/contexts` "New Playbook" + welcome-alt       | `context-builder` (création)         |
-| `pendingStartPlaybookEditor` | `/contexts` card edit                           | `playbook-editor`                    |
+| Clé                          | Posé par                                     | Consommé par →                        |
+| ---------------------------- | -------------------------------------------- | ------------------------------------- |
+| `pendingStartFlow`           | dashboard / new chat with a Playbook         | `startActionPickerFlow`               |
+| `pendingDraftIdeaId`         | idea card "Draft post"                       | `askProfileQuestion` (`draft-flow`)   |
+| `pendingAskSource`           | source card "Ask"                            | `askWhatToKnow`                       |
+| `pendingAskConnector`        | connectors gallery / modal "Try in chat"     | `askConnector` (`connector-ask`)      |
+| `pendingStartContextBuilder` | `/contexts` "New Playbook" + welcome-alt     | `context-builder` (création)          |
+| `pendingStartPlaybookEditor` | `/contexts` card edit                        | `playbook-editor`                     |
+| `pendingResearchUse`         | `/research` feed / modal « Turn into ideas » | `executeUseFinding` (`research-flow`) |
 
 ## Navigation interne — patterns
 

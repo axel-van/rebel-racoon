@@ -19,20 +19,20 @@
 
 ## Tiers de tokens
 
-| Tier | Usage |
-|---|---|
-| `--ref-*` | Reference tokens (couleurs, spacings, fontes, radii) — la base brute du DS |
-| `--sys-*` | Semantic tokens (text/border colors, états de composants) — **préférer ces tokens** |
-| `--comp-*` | Component-level tokens — ne pas utiliser directement en CSS app |
+| Tier       | Usage                                                                               |
+| ---------- | ----------------------------------------------------------------------------------- |
+| `--ref-*`  | Reference tokens (couleurs, spacings, fontes, radii) — la base brute du DS          |
+| `--sys-*`  | Semantic tokens (text/border colors, états de composants) — **préférer ces tokens** |
+| `--comp-*` | Component-level tokens — ne pas utiliser directement en CSS app                     |
 
 Exception documentée : l'icône `sparklesMermaid` utilise un SVG inline pour son gradient (pas un token). Les couleurs brand tierces (connector accents, social logos) vivent en data dans JS, pas en tokens DS.
 
 ## Convention couleur — usage app-wide
 
-| Couleur | Usage |
-|---|---|
+| Couleur    | Usage                                                                           |
+| ---------- | ------------------------------------------------------------------------------- |
 | **Orange** | AI / spotlight actions — "Ask", "Try in chat", primary AI CTA, "+ New Playbook" |
-| **Bleu** | Routine list-page CTAs — Connect, Create, navigation |
+| **Bleu**   | Routine list-page CTAs — Connect, Create, navigation                            |
 
 Réutiliser les primitives partagées : ex. tous les filter chips utilisent `.ap-filter-chip` (driven par `aria-pressed`), le même chip qu'utilise le Ideas panel.
 
@@ -67,17 +67,17 @@ styles/
 
 ## Composants `.ap-*` les plus utilisés
 
-| Classe | Variantes | Usage proto |
-|---|---|---|
-| `.ap-button` | `.primary` `.stroked` `.ghost` `.transparent` `.danger` (patch) | CTAs |
-| `.ap-icon-button` | `.stroked` `.transparent` `.lg` `.sm` | Boutons icon-only |
-| `.ap-input` / `.ap-textarea` | — | Inputs |
-| `.ap-card` | — | Conteneurs principaux |
-| `.ap-tag` | — | Tags texte (hashtags, kind) |
-| `.ap-badge` | — | Compteurs |
-| `.ap-status` | `.green` `.orange` `.red` `.blue` `.grey` `.tagOrange` | Pills de statut |
-| `.ap-snackbar` | — | Toasts (`toast.js`) |
-| `.ap-filter-chip` | `aria-pressed` driven | Filtres (extension `ds-patches.css`) |
+| Classe                       | Variantes                                                       | Usage proto                          |
+| ---------------------------- | --------------------------------------------------------------- | ------------------------------------ |
+| `.ap-button`                 | `.primary` `.stroked` `.ghost` `.transparent` `.danger` (patch) | CTAs                                 |
+| `.ap-icon-button`            | `.stroked` `.transparent` `.lg` `.sm`                           | Boutons icon-only                    |
+| `.ap-input` / `.ap-textarea` | —                                                               | Inputs                               |
+| `.ap-card`                   | —                                                               | Conteneurs principaux                |
+| `.ap-tag`                    | —                                                               | Tags texte (hashtags, kind)          |
+| `.ap-badge`                  | —                                                               | Compteurs                            |
+| `.ap-status`                 | `.green` `.orange` `.red` `.blue` `.grey` `.tagOrange`          | Pills de statut                      |
+| `.ap-snackbar`               | —                                                               | Toasts (`toast.js`)                  |
+| `.ap-filter-chip`            | `aria-pressed` driven                                           | Filtres (extension `ds-patches.css`) |
 
 `list_components` sur le MCP `ds-css` pour la liste exhaustive.
 
@@ -93,7 +93,7 @@ Pour les boutons icon-only, **mettre `aria-label` sur le bouton** et `aria-hidde
 - Ajouter `padding: 20px` sur `.step-card`, `.source-header`, etc. dans un view file → ces classes sont déjà stylées centralement.
 - Couleurs hex, radii px-based, spacings px qui ne matchent pas les tokens.
 - Inventer une icône quand `search_icons` matche.
-- Mettre `!important` pour résoudre un conflit de cascade — c'est presque toujours le signe qu'une ap-* est override hors `ds-patches.css`.
+- Mettre `!important` pour résoudre un conflit de cascade — c'est presque toujours le signe qu'une ap-\* est override hors `ds-patches.css`.
 
 ## MCP outils
 

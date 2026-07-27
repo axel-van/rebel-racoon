@@ -5,14 +5,15 @@
 ## Le pipeline canonique
 
 ```
-Source  →  Idea  →  Draft  →  Schedule
-(input)    (insight) (post)    (calendar slot)
+Source  →  Finding  →  Idea  →  Draft  →  Schedule
+(input)    (research)  (insight) (post)    (calendar slot)
 ```
 
 1. **Source** — un input brut (PDF, URL, vidéo, audio, video clip, ou une réponse de connecteur). Stocké global cross-session dans `sources-stream.js`.
-2. **Idea** — un insight extrait d'une source par Archie (Hook, Stat, Quote, Story, Insight). Per-session, mais re-mineable.
-3. **Draft** — un post généré depuis une (ou plusieurs) idea(s), pour un réseau spécifique (LinkedIn, X, …).
-4. **Schedule** — un draft posté dans le queue du calendrier.
+2. **Finding** — un constat de recherche sourcé, rapporté par un scan récurrent (flag `research`). Global, taggé par Playbook, dans `research-store.js`. Optionnel dans le pipeline : une Idea peut venir directement d'une Source.
+3. **Idea** — un insight extrait d'une source par Archie (Hook, Stat, Quote, Story, Insight). Per-session, mais re-mineable.
+4. **Draft** — un post généré depuis une (ou plusieurs) idea(s), pour un réseau spécifique (LinkedIn, X, …).
+5. **Schedule** — un draft posté dans le queue du calendrier.
 
 ## Concepts clés
 
@@ -51,28 +52,48 @@ Cf. [`../audits/PROD-CHANGES.md`](../audits/PROD-CHANGES.md) §P0-1 pour le plan
 
 Un **Source** est tout input brut qu'Archie peut ingérer :
 
-| Kind          | Origin               | State machine    |
-|---------------|----------------------|------------------|
-| PDF           | Upload file         | uploading → processing → done |
-| URL           | URL import          | importing → processing → done |
-| Video         | Upload file         | uploading → processing → done |
-| Audio         | Upload file         | uploading → processing → done |
-| Video Clip    | Extracted from video | extracting → done |
-| Connector doc | Connector query     | querying → done |
+| Kind          | Origin               | State machine                 |
+| ------------- | -------------------- | ----------------------------- |
+| PDF           | Upload file          | uploading → processing → done |
+| URL           | URL import           | importing → processing → done |
+| Video         | Upload file          | uploading → processing → done |
+| Audio         | Upload file          | uploading → processing → done |
+| Video Clip    | Extracted from video | extracting → done             |
+| Connector doc | Connector query      | querying → done               |
 
 Géré par [`src/sources-stream.js`](../../src/sources-stream.js) — le seul store global.
+
+### Finding
+
+Un **constat de recherche** : ce qu'un scan récurrent des sources de recherche rapporte. Produit **en amont** des Ideas — accepter un finding injecte ses `ideaSeeds` dans la library d'un chat.
+
+| Champ         | Rôle                                                                              |
+| ------------- | --------------------------------------------------------------------------------- |
+| `headline`    | Le constat, en une phrase affirmative                                             |
+| `summary`     | 2 lignes (clampées sur la carte du feed)                                          |
+| `synthesis[]` | L'argument long, lu dans le modal « Read the research »                           |
+| `posts[]`     | Les **source posts** — les publications d'autrui qui servent de preuve            |
+| `ideaSeeds[]` | Ce que le finding devient : 2-3 Ideas pré-écrites                                 |
+| `sourceId`    | La source de recherche qui l'a produit (voir `research-catalog.js`)               |
+| `contextId`   | Le Playbook pour lequel il a été produit                                          |
+| `dedupeKey`   | Identité stable entre scans — c'est **là-dessus** que porte la mémoire des rejets |
+| `status`      | `new` → `seen` → `used` \| `dismissed`                                            |
+
+**Termes à ne pas utiliser** : `brief` (réservé au sous-élément du Playbook), `signal` (banni comme nom), `insight` (c'est un _kind_ d'Idea), `alert`.
+
+**Feature flag `research`** : default OFF. Activable dans le popover Admin (cog de la sidebar).
 
 ### Idea (kind taxonomy)
 
 Une idée est typée selon une de ces 5 kinds :
 
-| Kind | Description |
-|---|---|
-| **Hook** | Un angle / une accroche qui peut ouvrir un post |
-| **Stat** | Un chiffre, une mesure |
-| **Quote** | Une citation extraite du contenu source |
-| **Story** | Une anecdote, un récit |
-| **Insight** | Une conclusion analytique |
+| Kind        | Description                                     |
+| ----------- | ----------------------------------------------- |
+| **Hook**    | Un angle / une accroche qui peut ouvrir un post |
+| **Stat**    | Un chiffre, une mesure                          |
+| **Quote**   | Une citation extraite du contenu source         |
+| **Story**   | Une anecdote, un récit                          |
+| **Insight** | Une conclusion analytique                       |
 
 Champ optionnel : `potential` (High / Medium / Low) — heuristique de priorité.
 
@@ -81,6 +102,7 @@ Champ optionnel : `potential` (High / Medium / Low) — heuristique de priorité
 Un **Draft** est un post candidat pour un réseau social. Stocké dans [`posts-store.js`](../../src/posts-store.js).
 
 Status pipeline (mocké) :
+
 - `generating` — en train d'être créé
 - `draft ready` — prêt à reviewer
 - `needs fixes` — Archie a flagué un problème (placeholder en proto)
@@ -88,10 +110,10 @@ Status pipeline (mocké) :
 
 ### Network = Channel = Social
 
-| Term | Usage |
-|---|---|
-| **Network** | Label UI (LinkedIn, X, Instagram, …) — préféré côté UI |
-| **Channel** | Variant historique parfois encore dans le code |
+| Term               | Usage                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| **Network**        | Label UI (LinkedIn, X, Instagram, …) — préféré côté UI                                |
+| **Channel**        | Variant historique parfois encore dans le code                                        |
 | **Social account** | Le compte concret connecté pour publier — distinct de la liste des networks supportés |
 
 Voir `social-profiles.js` (catalogue des comptes connectés).
@@ -117,14 +139,14 @@ Switch UI : `/settings → Admin`. Un reload est forcé pour que les stores re-s
 
 ## Vocabulaire UI à éviter
 
-| Mauvais | Bon | Pourquoi |
-|---|---|---|
-| "Context" (UI label) | "Playbook" | Label canonique, voir plus haut |
-| "Archie did X" | "I did X" | Archie parle en 1ère personne |
-| "AI-powered", "magic", "seamless" | concret | voir [`../copy/copy-principles.md`](../copy/copy-principles.md) — voice anchor = Linear |
-| "Project" | "Session" / "Chat" / "Conversation" | "Project" est un terme historique probable-spoon, supprimé |
-| "Composer" | "Archie" | "Composer" était un nom interne pré-rebrand |
-| "Studio" | "Archie" (proto) / "Studio" (prod) | "Studio" est le label prod côté Agorapulse — le proto reste "Archie standalone" |
+| Mauvais                           | Bon                                 | Pourquoi                                                                                |
+| --------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------- |
+| "Context" (UI label)              | "Playbook"                          | Label canonique, voir plus haut                                                         |
+| "Archie did X"                    | "I did X"                           | Archie parle en 1ère personne                                                           |
+| "AI-powered", "magic", "seamless" | concret                             | voir [`../copy/copy-principles.md`](../copy/copy-principles.md) — voice anchor = Linear |
+| "Project"                         | "Session" / "Chat" / "Conversation" | "Project" est un terme historique probable-spoon, supprimé                              |
+| "Composer"                        | "Archie"                            | "Composer" était un nom interne pré-rebrand                                             |
+| "Studio"                          | "Archie" (proto) / "Studio" (prod)  | "Studio" est le label prod côté Agorapulse — le proto reste "Archie standalone"         |
 
 ## Voir aussi
 

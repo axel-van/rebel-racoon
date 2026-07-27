@@ -92,6 +92,21 @@ Le « pick one of N » réutilisable. État dans [`inline-question.js`](../../sr
 
 DS `.ap-dialog` centré par `modals.css` sur `.open`. `.app-modal-backdrop` patché (fade via `@keyframes app-modal-backdrop-fade`). Radius `--app-radius-modal` (16). Modals empilés → couches `--app-z-modal-stacked*`.
 
+**Un nouveau modal doit être ajouté aux DEUX listes de sélecteurs de [`modals.css`](../../styles/screens/modals.css)** (la coquille centrée, et la variante `.open` qui passe `display: none` → `flex`). Sinon il reste invisible avec un backdrop actif. Corollaire : ne pas redéclarer `display` sur la classe du modal dans une feuille chargée **après** `modals.css`.
+
+Échelle de largeurs, toutes en `width: min(calc(100% - 32px), Npx)` :
+
+| Largeur | Modals                               | Pourquoi                                                       |
+| ------- | ------------------------------------ | -------------------------------------------------------------- |
+| 440     | rename                               | un seul champ                                                  |
+| 560     | bug report, chat picker, search      | une liste courte ou un formulaire                              |
+| 640     | feedback, add source                 | formulaire + onglets                                           |
+| **720** | **research** (« Read the research ») | **lecture longue** — de la prose ; au-delà, la mesure décroche |
+| 920     | connectors                           | une gallery à parcourir                                        |
+| 960     | schedule                             | deux colonnes                                                  |
+
+Les modals de lecture longue plafonnent aussi leur hauteur (`max-height: min(calc(100vh - 48px), 760px)`) et font défiler leur `.ap-dialog-content`, avec un footer d'actions collant : la décision doit rester atteignable quelle que soit la longueur du texte.
+
 ---
 
 ## 4. Icônes
