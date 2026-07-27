@@ -17,11 +17,11 @@ import {
 } from "../sessions-store.js?v=8";
 import { isFlagOn } from "../feature-flags.js?v=12";
 import { isNewUser } from "../user-mode.js?v=22";
-import { clearSession as clearLibrarySession } from "../library.js?v=50";
+import { clearSession as clearLibrarySession } from "../library.js?v=51";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=39";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=30";
 import { getNewCount as getNewResearchCount, subscribe as subscribeResearch } from "../research-store.js?v=2";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=357";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=358";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=60";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=38";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=53";

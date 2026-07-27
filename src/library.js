@@ -39,6 +39,36 @@ const subscribers = new Map(); // sessionId → Set<fn>
 // (e.g. Content tab) stay in sync.
 const streamUnsubsBySession = new Map();
 
+// ── The global pool ───────────────────────────────────────────────────────
+//
+// `seedIdeas` IS mocks.ideas — a flat union of every demo session's ideas that
+// several surfaces read directly instead of going through this store (the
+// right-panel Ideas mode, draft-flow's fallback resolver, assistant's reasoning
+// copy) and that /ideas, the global library, reads as its whole dataset.
+//
+// It used to be write-only from injectIdeasForSource and never pruned, so a
+// global surface showed ghosts (deleted ideas) and missed real ones (anything
+// from addSource / appendExtractedIdeas). Every write and every delete now goes
+// through these two helpers, so the pool and the per-session lists agree.
+//
+// Not the same objects: the pool holds shallow copies, so a per-session edit
+// doesn't silently mutate the global row and vice versa. Identity is the `id`.
+
+function poolAdd(ideas) {
+  if (!Array.isArray(ideas) || ideas.length === 0) return;
+  const known = new Set(seedIdeas.map((i) => i.id));
+  const fresh = ideas.filter((i) => !known.has(i.id)).map((i) => ({ ...i }));
+  if (fresh.length) seedIdeas.unshift(...fresh);
+}
+
+function poolRemove(ideaIds) {
+  if (!Array.isArray(ideaIds) || ideaIds.length === 0) return;
+  const set = new Set(ideaIds);
+  for (let i = seedIdeas.length - 1; i >= 0; i -= 1) {
+    if (set.has(seedIdeas[i].id)) seedIdeas.splice(i, 1);
+  }
+}
+
 let idCounter = 0;
 function newId(prefix) {
   idCounter += 1;
@@ -103,6 +133,57 @@ export function clearSession(sessionId) {
   }
 }
 
+/**
+ * Every idea the workspace holds, newest first — the dataset behind /ideas.
+ * Reads the global pool rather than walking sessions, because ideas that came
+ * from research belong to no conversation.
+ *
+ * @param {object} [opts]
+ * @param {"all"|"research"|"session"} [opts.origin]  filter by where it came from
+ */
+export function getAllIdeas({ origin = "all" } = {}) {
+  if (origin === "all") return seedIdeas.slice();
+  // Seeds predate the field, so anything unmarked counts as coming from a chat.
+  return seedIdeas.filter((i) => (i.origin || "session") === origin);
+}
+
+/** How many ideas arrived on their own, for the library's filter chip. */
+export function countIdeasByOrigin() {
+  const out = { all: seedIdeas.length, research: 0, session: 0 };
+  for (const i of seedIdeas) out[(i.origin || "session") === "research" ? "research" : "session"] += 1;
+  return out;
+}
+
+/**
+ * Remove ideas from the global pool AND from whichever session holds them.
+ * The per-session removers need a sessionId; a global surface doesn't have one,
+ * so it dispatches by the idea's own `sessionId` stamp.
+ */
+export function removeIdeasGlobally(ideaIds) {
+  if (!Array.isArray(ideaIds) || ideaIds.length === 0) return 0;
+  const set = new Set(ideaIds);
+  const bySession = new Map();
+  for (const idea of seedIdeas) {
+    if (!set.has(idea.id)) continue;
+    const sid = idea.sessionId || null;
+    if (!sid) continue;
+    if (!bySession.has(sid)) bySession.set(sid, []);
+    bySession.get(sid).push(idea.id);
+  }
+  const before = seedIdeas.length;
+  poolRemove(ideaIds);
+  // Then the per-session lists, so an open chat's Ideas panel agrees.
+  for (const [sid, ids] of bySession) {
+    const list = ideasMap.get(sid);
+    if (!list) continue;
+    for (let i = list.length - 1; i >= 0; i -= 1) {
+      if (ids.includes(list[i].id)) list.splice(i, 1);
+    }
+    notify(sid);
+  }
+  return before - seedIdeas.length;
+}
+
 // Bulk "extract more ideas" — used by the source-list bulk action bar.
 // For each source passed in, generates 1–2 fresh angle-flavored ideas using
 // EXTRA_IDEA_TEMPLATES, prepends them to the per-session ideas store, and
@@ -135,11 +216,14 @@ export function appendExtractedIdeas(sessionId, sources, onDone) {
         state: "New",
         pinned: false,
         sourceIds: [source.id],
+        origin: "session",
+        sessionId,
         extractedAt: "just now",
       });
     });
 
     ideasMap.get(sessionId).unshift(...created);
+    poolAdd(created);
 
     // Single extraction-turn summarising all of them. If only one source was
     // selected we use its filename; otherwise show "N sources".
@@ -187,14 +271,14 @@ export function injectIdeasForSource(sessionId, sourceId, ideas) {
     // is a WHITELIST — a field not listed here is silently dropped, the same
     // trap as contexts-store's updateContext.
     researchFindingId: i.researchFindingId || null,
+    // Where the idea came from. "research" ideas arrive on their own, so the
+    // global library needs to be able to filter them out (or to only them).
+    origin: i.origin || (i.researchFindingId ? "research" : "session"),
+    sessionId,
     extractedAt: "just now",
   }));
   ideasMap.get(sessionId).unshift(...created);
-  // Dual-write — right-panel / standalone /ideas / /sources read from this
-  // module-level array, not from ideasMap. unshift mutates in place so
-  // every consumer with a reference to it (including IDEAS = MOCK_IDEAS at
-  // module-load time) sees the new entries on its next render.
-  seedIdeas.unshift(...created.map((i) => ({ ...i })));
+  poolAdd(created);
   notify(sessionId);
   return created;
 }
@@ -219,7 +303,12 @@ export function removeIdeas(sessionId, ideaIds) {
     if (set.has(ideas[i].id)) ideas.splice(i, 1);
   }
   const removed = before - ideas.length;
-  if (removed > 0) notify(sessionId);
+  // Prune the global pool too, or the idea lives on in every surface that
+  // reads it — which is what made a global library impossible before.
+  if (removed > 0) {
+    poolRemove(ideaIds);
+    notify(sessionId);
+  }
   return removed;
 }
 
@@ -232,16 +321,19 @@ export function removeIdeasForSources(sessionId, sourceIds) {
   const ideas = ideasMap.get(sessionId);
   if (!ideas) return 0;
   const before = ideas.length;
+  const dropped = [];
   // Filter in place — same array reference so subscribers see the change.
   for (let i = ideas.length - 1; i >= 0; i -= 1) {
     const idea = ideas[i];
     const remaining = (idea.sourceIds || []).filter((sid) => !set.has(sid));
     if (remaining.length === 0) {
+      dropped.push(idea.id);
       ideas.splice(i, 1);
     } else if (remaining.length !== (idea.sourceIds || []).length) {
       idea.sourceIds = remaining;
     }
   }
+  poolRemove(dropped);
   const removed = before - ideas.length;
   notify(sessionId);
   return removed;
@@ -309,9 +401,12 @@ export function addSource(sessionId, kind) {
       state: "New",
       pinned: false,
       sourceIds: [sourceId],
+      origin: "session",
+      sessionId,
       extractedAt: "just now",
     }));
     ideasMap.get(sessionId).unshift(...extracted);
+    poolAdd(extracted);
 
     // Structured extraction turn — Drafting pill ("Extracted N ideas") +
     // "Analyzed <filename>" + one idea card per extracted idea.

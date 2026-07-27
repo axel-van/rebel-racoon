@@ -17,7 +17,7 @@
 // reading the cards they were notified about.
 
 import { html, raw } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=219";
+import { renderTopbar } from "../components/topbar.js?v=220";
 import { navigate } from "../router.js?v=30";
 import { isFlagOn } from "../feature-flags.js?v=12";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -39,8 +39,8 @@ import {
 import { renderResearchPage, renderFeedBody, renderSourcesBody } from "../research-view.js?v=2";
 import { findConnector } from "../connectors-store.js?v=30";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=13";
-import { open as openResearchModal } from "../components/research-modal.js?v=3";
-import { useFinding, dismiss as dismissWithUndo, runScanAndAnnounce } from "../research-flow.js?v=2";
+import { open as openResearchModal } from "../components/research-modal.js?v=4";
+import { useFinding, dismiss as dismissWithUndo, runScanAndAnnounce } from "../research-flow.js?v=3";
 
 let unsubscribe = null;
 let activeContextId = null;

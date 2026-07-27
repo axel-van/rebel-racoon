@@ -22,7 +22,7 @@
 import { setHandoff } from "./handoff.js?v=20";
 import { navigate, getPath } from "./router.js?v=30";
 import { showToast } from "./components/toast.js?v=20";
-import { open as openChatPicker } from "./components/chat-picker-modal.js?v=58";
+import { open as openChatPicker } from "./components/chat-picker-modal.js?v=59";
 import { getSessions } from "./sessions-store.js?v=8";
 import {
   getFinding,
@@ -42,8 +42,8 @@ import {
   finishPending,
 } from "./assistant.js?v=60";
 import { addReadySource } from "./sources-stream.js?v=53";
-import { injectIdeasForSource } from "./library.js?v=50";
-import { startDraftFlow } from "./draft-flow.js?v=54";
+import { injectIdeasForSource } from "./library.js?v=51";
+import { startDraftFlow } from "./draft-flow.js?v=55";
 
 export const HANDOFF_KEY = "pendingResearchUse";
 

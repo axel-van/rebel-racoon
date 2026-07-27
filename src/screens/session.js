@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=219";
+import { renderTopbar } from "../components/topbar.js?v=220";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=58";
 import {
   getConnectedProfiles,
@@ -38,16 +38,16 @@ import {
   answerTopPostsWidget,
 } from "../assistant.js?v=60";
 import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=50";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=39";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=51";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=40";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=24";
+} from "../composer-mentions.js?v=25";
 import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=38";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=54";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=55";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=40";
 import * as topPostsFlow from "../top-posts-flow.js?v=77";
 import {
@@ -63,9 +63,9 @@ import * as inlineQuestion from "../inline-question.js?v=48";
 import * as clipStudio from "../clip-studio.js?v=25";
 import * as batchStudio from "../batch-studio.js?v=4";
 import { askConnector } from "../connector-ask.js?v=10";
-import { executeUseFinding } from "../research-flow.js?v=2";
+import { executeUseFinding } from "../research-flow.js?v=3";
 import { getFinding } from "../research-store.js?v=2";
-import { open as openResearchModal } from "../components/research-modal.js?v=3";
+import { open as openResearchModal } from "../components/research-modal.js?v=4";
 import { renderSocialPostCard } from "../components/social-post-card.js?v=2";
 import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=30";
 import { renderConnectorLogo } from "../connectors-view.js?v=12";
@@ -75,7 +75,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=12";
-import * as contextBuilder from "../context-builder.js?v=190";
+import * as contextBuilder from "../context-builder.js?v=191";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -87,7 +87,7 @@ import {
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=25";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=56";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=58";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=59";
 import { open as openAddSourceModal } from "../components/add-source-modal.js?v=63";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=13";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
@@ -115,7 +115,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=357";
+} from "../components/right-panel.js?v=358";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=18";
