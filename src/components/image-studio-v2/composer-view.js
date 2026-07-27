@@ -1,15 +1,28 @@
-// Image Studio v2 — the bottom composer. One bar, two jobs.
+// Image Studio v2 — the bottom console. One card, two columns, two modes.
 //
-// GENERATE: row 1 is the prompt Archie wrote from the draft (+ re-suggest +
-// expand); row 2 is every setting as a chip carrying its own current value, and
-// the CTA cluster. Nothing is hidden behind a "More" — the six settings that
-// used to be a left rail of collapsible groups are six chips, each opening a
-// flat drop-up sheet above the bar.
+//   ┌───────────────────────────┬──────────────────────┐
+//   │ ✨ Prompt      Suggest  ⤢ │ Brand kit   Acme·3 ⌄ │
+//   │ Subject: …                │ References     None ⌄│
+//   │ Key message: …            │ Type            Any ⌄│
+//   │ …                         │ Style             — ⌄│
+//   │                           │ Format  1:1 · Square⌄│
+//   │                           │ Output  2 variations⌄│
+//   ├───────────────────────────┴──────────────────────┤
+//   │                     [Regenerate] [Use this image]│
+//   └──────────────────────────────────────────────────┘
 //
-// EDIT: the same bar becomes the AI reprompt (row 1) and the manual tool chips
-// (row 2). That reuse is the point of moving the prompt down: v1 needed a left
-// rail AND a footer AND a floating AI bar AND a floating tool palette to cover
-// the same ground.
+// WHY two columns. A brief, six settings and two CTAs do not fit in a
+// horizontal band: laid out as a wrapping row the settings came out as two
+// ragged lines of naked text with no grid to hold them — soup. Given a column
+// they become a label/value TABLE: one left edge for the labels, one right edge
+// for the values, one row height. That's the same three-column grid v1's rail
+// used ([label][current value][disclosure]) — the proven part of v1 — but as a
+// compact panel beside the prompt instead of a full-height rail, and opening as
+// flyouts instead of accordions. The prompt keeps the wide column it needs.
+//
+// EDIT reuses the exact frame: the AI reprompt takes the brief column, the three
+// manual tools take the settings column, Undo + commit take the foot. v1 needed
+// a rail AND a footer AND a floating AI bar AND a floating palette for this.
 //
 // Sheets are FLAT — sections + dividers, never a nested dropdown (the ADS has no
 // flyout-submenu pattern). One is open at a time, tracked by state.openPopover.
@@ -42,19 +55,34 @@ export function composer(st) {
 
 // ── Shared building blocks ──────────────────────────────────────────────────
 
-// A chip that opens a drop-up sheet. `value` is the setting's current value,
-// shown right in the chip so a closed row still reads as a full summary
-// (Refactoring UI: the de-emphasized value beside its label). `set` marks a
-// setting that's actively contributing something beyond its default.
-function chip({ name, label, value, sheet, open, set = false, disabled = false, lead = "" }) {
-  const cls = `isv2-chip${set ? " is-set" : ""}${open ? " is-open" : ""}`;
-  return `<div class="isv2-chip-wrap">
+// One row of the settings table: label left, current value right, disclosure
+// last. The label is the anchor you scan down; the value is the answer, so it
+// carries the weight (Refactoring UI: the de-emphasized label beside its value).
+// `set` marks a setting contributing something beyond its default.
+function settingRow({ name, label, value, sheet, open, set = false, disabled = false }) {
+  const cls = `isv2-set${set ? " is-set" : ""}${open ? " is-open" : ""}`;
+  return `<div class="isv2-set-wrap">
     <button type="button" class="${cls}" data-img-popover-toggle="${name}" aria-haspopup="dialog" aria-expanded="${open}"${disabled ? " disabled" : ""}>
-      ${lead}<span class="isv2-chip-label">${escapeHtml(label)}</span>
-      <span class="isv2-chip-value">${escapeHtml(value)}</span>
-      <i class="ap-icon-chevron-down isv2-chip-caret" aria-hidden="true"></i>
+      <span class="isv2-set-label">${escapeHtml(label)}</span>
+      <span class="isv2-set-value">${escapeHtml(value)}</span>
+      ${disabled ? "" : `<i class="ap-icon-chevron-down isv2-set-caret" aria-hidden="true"></i>`}
     </button>
     ${open && !disabled ? sheet() : ""}
+  </div>`;
+}
+
+// A tool row (Edit mode). No value column — the verb is the whole row, so it
+// takes the value's weight and keeps its glyph.
+function toolRow({ name, label, icon, sheet, open, active = false, disabled = false, action = "" }) {
+  const cls = `isv2-set isv2-set--tool${active ? " is-set" : ""}${open ? " is-open" : ""}`;
+  const hook = action || `data-img-popover-toggle="${name}"`;
+  return `<div class="isv2-set-wrap">
+    <button type="button" class="${cls}" ${hook} ${sheet ? `aria-haspopup="dialog" aria-expanded="${open}"` : ""}${active ? ' aria-pressed="true"' : ""}${disabled ? " disabled" : ""}>
+      <i class="${icon} isv2-set-icon" aria-hidden="true"></i>
+      <span class="isv2-set-label isv2-set-label--tool">${escapeHtml(label)}</span>
+      ${sheet ? `<i class="ap-icon-chevron-down isv2-set-caret" aria-hidden="true"></i>` : ""}
+    </button>
+    ${sheet && open && !disabled ? sheet() : ""}
   </div>`;
 }
 
@@ -87,74 +115,89 @@ function bestFor(network) {
 // At 1440px a full-bleed prompt runs ~180 characters per line — unreadable, and
 // it made the six settings look like chrome stranded at the bottom of a huge
 // empty bar. Capped and centred, the card reads as one object you act in.
-// Three stacked bands, one job each — write, configure, act. The settings and
-// the CTAs deliberately do NOT share a row: at this width the chips wrap, and a
-// cluster of buttons parked halfway down a wrapping chip block destroys the
-// reading order. Each band owns its full width instead.
 function generateComposer(st) {
+  return console_(
+    "Image prompt and settings",
+    briefColumn(st, {
+      label: "Prompt",
+      field: promptField(st),
+      tools: promptTools(st),
+    }),
+    `<div class="isv2-settings" role="group" aria-label="Generation settings">${settingRows(st)}</div>`,
+    generateActions(st),
+  );
+}
+
+// The frame both modes share: two columns over one foot.
+function console_(label, brief, side, foot) {
   return `<div class="isv2-dock">
-    <div class="isv2-composer" role="group" aria-label="Image prompt and settings">
-      ${promptRow(st)}
-      <div class="isv2-chips" role="group" aria-label="Generation settings">${settingChips(st)}</div>
-      ${generateActions(st)}
+    <div class="isv2-console" role="group" aria-label="${escapeHtml(label)}">
+      <div class="isv2-console-body">
+        ${brief}
+        ${side}
+      </div>
+      <div class="isv2-console-foot">${foot}</div>
     </div>
   </div>`;
 }
 
-// Row 1 — the prompt. Archie drafts it from the post on open, so the field leads
-// with what he wrote and the user's job is to review it. While he's writing, the
-// row holds the loader (the stage keeps its empty state) so the layout is
-// legible from the first frame.
-function promptRow(st) {
-  const expanded = !!st.composerExpanded;
-  const expandLabel = expanded ? "Collapse prompt" : "Expand prompt";
-  // No leading sparkle glyph. The card already carries two AI marks (the Archie
-  // "Suggest" and the sparkle on Generate) and a third one only bought an
-  // indent that knocked the prompt text out of line with the settings below it.
+// Left column — the writing surface. The eyebrow gives the field an identity a
+// borderless textarea can't give itself (without it the brief read as a stray
+// paragraph of body copy that happened to land in a card).
+function briefColumn(st, { label, field, tools }) {
+  return `<div class="isv2-brief">
+    <div class="isv2-brief-head">
+      <p class="isv2-brief-label"><i class="ap-icon-sparkles-mermaid" aria-hidden="true"></i>${escapeHtml(label)}</p>
+      <div class="isv2-brief-tools">${tools}</div>
+    </div>
+    ${field}
+  </div>`;
+}
+
+// Archie drafts the brief from the post on open, so the field leads with what he
+// wrote and the user's job is to review it. While he's writing, the field itself
+// holds the loader (the stage keeps its empty state) so the layout is legible
+// from the first frame.
+function promptField(st) {
   if (st.promptLoading) {
-    return `<div class="isv2-composer-row isv2-composer-row--prompt">
-      <div class="isv2-prompt-loading" role="status">
-        <span class="gen-image-spinner gen-loading-mark"></span>
-        <span>Writing your image prompt…</span>
-      </div>
+    return `<div class="isv2-prompt-loading" role="status">
+      <span class="gen-image-spinner gen-loading-mark"></span>
+      <span>Writing your image prompt…</span>
     </div>`;
   }
-  return `<div class="isv2-composer-row isv2-composer-row--prompt">
-    <textarea id="isv2Prompt" class="isv2-prompt" data-img-prompt rows="1" placeholder="${escapeHtml(PROMPT_PLACEHOLDER)}" aria-label="Describe your image">${escapeHtml(st.promptText)}</textarea>
-    <div class="isv2-prompt-tools">
-      <button type="button" class="ap-button ghost grey isv2-suggest" data-img-derive><i class="ap-icon-archie-official" aria-hidden="true"></i><span>${(st.promptText || "").trim() ? "Suggest again" : "Suggest from this post"}</span></button>
-      <button type="button" class="ap-icon-button" data-img-composer-expand aria-label="${expandLabel}" title="${expandLabel}" aria-pressed="${expanded}"><i class="ap-icon-${expanded ? "minimize" : "maximize"}" aria-hidden="true"></i></button>
-    </div>
-  </div>`;
+  return `<textarea id="isv2Prompt" class="isv2-prompt" data-img-prompt rows="1" placeholder="${escapeHtml(PROMPT_PLACEHOLDER)}" aria-label="Describe your image">${escapeHtml(st.promptText)}</textarea>`;
 }
 
-// Row 2, right — exactly one primary, and it always names the next step.
+function promptTools(st) {
+  const expanded = !!st.composerExpanded;
+  const expandLabel = expanded ? "Collapse prompt" : "Expand prompt";
+  const suggestLabel = (st.promptText || "").trim() ? "Suggest again" : "Suggest from this post";
+  if (st.promptLoading) return "";
+  return `<button type="button" class="ap-button ghost grey isv2-suggest" data-img-derive><i class="ap-icon-archie-official" aria-hidden="true"></i><span>${suggestLabel}</span></button>
+    <button type="button" class="ap-icon-button" data-img-composer-expand aria-label="${expandLabel}" title="${expandLabel}" aria-pressed="${expanded}"><i class="ap-icon-${expanded ? "minimize" : "maximize"}" aria-hidden="true"></i></button>`;
+}
+
+// The foot — exactly one primary, and it always names the next step.
 function generateActions(st) {
   if (st.genPhase === "generating") {
-    return `<div class="isv2-actions">
-      <button type="button" class="ap-button primary orange loading" disabled><span class="ap-loading-bar"></span><span>Generating…</span></button>
-    </div>`;
+    return `<button type="button" class="ap-button primary orange loading" disabled><span class="ap-loading-bar"></span><span>Generating…</span></button>`;
   }
   // A prompt being rewritten isn't one you can run yet.
   const promptReady = !st.promptLoading && !!(st.promptText || "").trim();
   const hasResults = st.genPhase === "results" && st.variations.length > 0;
   if (!hasResults) {
-    return `<div class="isv2-actions">
-      <button type="button" class="ap-button primary orange" data-img-generate ${promptReady ? "" : "disabled"}><i class="ap-icon-sparkles-mermaid"></i><span>Generate image</span></button>
-    </div>`;
+    return `<button type="button" class="ap-button primary orange" data-img-generate ${promptReady ? "" : "disabled"}><i class="ap-icon-sparkles-mermaid"></i><span>Generate image</span></button>`;
   }
   const carousel = st.outputMode === "carousel";
   const useLabel = carousel ? `Use carousel · ${st.variations.length} slides` : "Use this image";
   const useReady = carousel ? st.variations.length >= 2 : !!st.currentImage;
-  return `<div class="isv2-actions">
-    <button type="button" class="ap-button stroked grey" data-img-generate ${promptReady ? "" : "disabled"}><i class="ap-icon-refresh"></i><span>Regenerate</span></button>
-    <button type="button" class="ap-button primary orange" data-img-use ${useReady ? "" : "disabled"}><i class="ap-icon-check"></i><span>${escapeHtml(useLabel)}</span></button>
-  </div>`;
+  return `<button type="button" class="ap-button stroked grey" data-img-generate ${promptReady ? "" : "disabled"}><i class="ap-icon-refresh"></i><span>Regenerate</span></button>
+    <button type="button" class="ap-button primary orange" data-img-use ${useReady ? "" : "disabled"}><i class="ap-icon-check"></i><span>${escapeHtml(useLabel)}</span></button>`;
 }
 
 // ── The six setting chips ───────────────────────────────────────────────────
 
-function settingChips(st) {
+function settingRows(st) {
   const open = st.openPopover;
   const out = [];
 
@@ -166,10 +209,10 @@ function settingChips(st) {
     const usedIds = new Set(st.referenceImages.map((r) => r.id));
     const usedCount = st.playbookRefs.filter((r) => usedIds.has(r.id)).length;
     out.push(
-      chip({
+      settingRow({
         name: "brandKit",
         label: "Brand kit",
-        value: on ? `${brand} · ${usedCount} image${usedCount === 1 ? "" : "s"}` : "Off",
+        value: on ? `${brand} · ${usedCount}` : "Off",
         set: on,
         open: open === "brandKit",
         sheet: () => brandKitSheet(st),
@@ -180,7 +223,7 @@ function settingChips(st) {
   // References — the user's own uploads (Playbook tiles live in Brand kit).
   const uploads = st.referenceImages.filter((r) => !r.fromPlaybook);
   out.push(
-    chip({
+    settingRow({
       name: "refs",
       label: "References",
       value: uploads.length ? `${uploads.length} added` : "None",
@@ -195,7 +238,7 @@ function settingChips(st) {
     ? imageStudio.IMAGE_TYPES.find((o) => o.key === st.imageTypeKey)?.label || "Any"
     : "Any";
   out.push(
-    chip({
+    settingRow({
       name: "imageType",
       label: "Type",
       value: typeLabel,
@@ -206,14 +249,14 @@ function settingChips(st) {
   );
 
   // Style preset — the aesthetic look. Mutually exclusive with references: when
-  // refs guide the look, the chip switches off and says why.
+  // refs guide the look, the row switches off and says why instead.
   const hasRefs = st.referenceImages.length > 0;
   const styleLabel = st.styleKey ? imageStudio.STYLE_PRESETS.find((o) => o.key === st.styleKey)?.label || "Any" : "Any";
   out.push(
-    chip({
+    settingRow({
       name: "style",
       label: "Style",
-      value: hasRefs ? "From your references" : styleLabel,
+      value: hasRefs ? "From references" : styleLabel,
       set: !hasRefs && !!st.styleKey,
       disabled: hasRefs,
       open: open === "style",
@@ -221,21 +264,18 @@ function settingChips(st) {
     }),
   );
 
-  // Format — the chip carries a glyph drawn to the picked ratio, so the shape
-  // reads without opening anything.
+  // Format — the value says the shape ("1:1 · Square"); the ratio glyphs live in
+  // the sheet, where they actually help you choose.
   const choices = imageStudio.formatChoices(KEY);
   const cur = choices.find((f) => f.id === st.formatId);
   out.push(
-    chip({
+    settingRow({
       name: "format",
       label: "Format",
       value: cur ? `${cur.tag} · ${cur.label}` : "Aspect ratio",
       set: false, // format always has a value; "set" would be meaningless here
       open: open === "format",
       sheet: () => formatSheet(st, choices),
-      // No lead glyph: six text-only chips read as one consistent row, and the
-      // value already says "1:1 · Square". The ratio glyphs live in the sheet,
-      // where they actually help you choose.
     }),
   );
 
@@ -243,11 +283,11 @@ function settingChips(st) {
   const canCarousel = imageStudio.supportsCarousel(st.network);
   const isCarousel = canCarousel && st.outputMode === "carousel";
   out.push(
-    chip({
+    settingRow({
       name: "output",
       label: canCarousel ? "Output" : "Variations",
       value: isCarousel
-        ? `Carousel · ${st.slideCount} slides`
+        ? `Carousel · ${st.slideCount}`
         : `${st.variationCount} variation${st.variationCount > 1 ? "s" : ""}`,
       set: isCarousel,
       open: open === "output",
@@ -388,57 +428,58 @@ function outputSheet(st, canCarousel, isCarousel) {
 
 // ── Edit mode ───────────────────────────────────────────────────────────────
 
-// The same two rows, re-tasked: describe a change up top, reach for a manual
-// tool below. v1 needed a floating bar over the canvas plus a floating palette
-// plus a footer to say this much.
+// The same frame, re-tasked: describe a change in the brief column, reach for a
+// manual tool in the side column. v1 needed a floating bar over the canvas plus a
+// floating palette plus a footer to say this much.
 function editComposer(st) {
   const busy = st.editBusy ? "disabled" : "";
   const carousel = st.outputMode === "carousel";
   const primary = carousel
     ? `<button type="button" class="ap-button primary orange" data-img-apply-slide ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Apply to slide ${(st.selectedIndex ?? 0) + 1}</span></button>`
     : `<button type="button" class="ap-button primary orange" data-img-use ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Use this image</span></button>`;
-  return `<div class="isv2-dock">
-    <div class="isv2-composer" role="group" aria-label="Edit the image">
-      <div class="isv2-composer-row isv2-composer-row--prompt">
-        <textarea class="isv2-prompt" data-img-edit-prompt rows="1" placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" ${busy}>${escapeHtml(st.editPrompt || "")}</textarea>
-        <div class="isv2-prompt-tools">
-          <button type="button" class="ap-button primary orange isv2-apply" data-img-apply-edit="prompt" aria-label="Apply" title="Apply" ${busy}><i class="ap-icon-arrow-up" aria-hidden="true"></i></button>
-        </div>
-      </div>
-      <div class="isv2-chips" role="group" aria-label="Edit tools">${editTools(st)}</div>
-      <div class="isv2-actions">
-        <button type="button" class="ap-button ghost grey" data-img-undo ${imageStudio.canUndo(KEY) ? "" : "disabled"}><i class="ap-icon-reset"></i><span>Undo</span></button>
-        ${primary}
-      </div>
-    </div>
-  </div>`;
+  const field = `<textarea class="isv2-prompt" data-img-edit-prompt rows="1" placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" ${busy}>${escapeHtml(st.editPrompt || "")}</textarea>`;
+  const tools = `<button type="button" class="ap-button primary orange isv2-apply" data-img-apply-edit="prompt" aria-label="Apply" title="Apply" ${busy}><i class="ap-icon-arrow-up" aria-hidden="true"></i></button>`;
+  return console_(
+    "Edit the image",
+    briefColumn(st, { label: "Redraw", field, tools }),
+    `<div class="isv2-settings" role="group" aria-label="Edit tools">${editTools(st)}</div>`,
+    `<button type="button" class="ap-button ghost grey" data-img-undo ${imageStudio.canUndo(KEY) ? "" : "disabled"}><i class="ap-icon-reset"></i><span>Undo</span></button>
+     ${primary}`,
+  );
 }
 
 function editTools(st) {
-  const busy = st.editBusy ? " disabled" : "";
-  const cropOpen = st.openPopover === "crop";
-  // Crop is a mode, not a menu: the chip enters the draw mode AND opens its
-  // ratio sheet. The box + its ✕/✓ stay on the canvas, at the contact point of
-  // the gesture; only the options moved down here.
-  const crop = `<div class="isv2-chip-wrap">
-    <button type="button" class="isv2-chip isv2-chip--tool${st.cropDrawing ? " is-set" : ""}${cropOpen ? " is-open" : ""}" data-img-crop-start aria-pressed="${!!st.cropDrawing}" aria-haspopup="dialog" aria-expanded="${cropOpen}"${busy}>
-      <i class="ap-icon-cropper isv2-chip-lead" aria-hidden="true"></i><span class="isv2-chip-label">Crop</span>
-      <i class="ap-icon-chevron-down isv2-chip-caret" aria-hidden="true"></i>
-    </button>
-    ${cropOpen ? cropSheet(st) : ""}
-  </div>`;
-  const addText = `<button type="button" class="isv2-chip isv2-chip--tool" data-img-add-text${busy}>
-    <i class="ap-icon-closed-captions isv2-chip-lead" aria-hidden="true"></i><span class="isv2-chip-label">Add text</span>
-  </button>`;
-  const logoOpen = st.openPopover === "logo";
-  const addImage = `<div class="isv2-chip-wrap">
-    <button type="button" class="isv2-chip isv2-chip--tool${logoOpen ? " is-open" : ""}" data-img-popover-toggle="logo" aria-haspopup="dialog" aria-expanded="${logoOpen}"${busy}>
-      <i class="ap-icon-file--image isv2-chip-lead" aria-hidden="true"></i><span class="isv2-chip-label">Add image</span>
-      <i class="ap-icon-chevron-down isv2-chip-caret" aria-hidden="true"></i>
-    </button>
-    ${logoOpen ? logoSheet() : ""}
-  </div>`;
-  return `${crop}${addText}${addImage}`;
+  const busy = !!st.editBusy;
+  return [
+    // Crop is a mode, not a menu: the row enters the draw mode AND opens its
+    // ratio sheet. The box + its ✕/✓ stay on the canvas, at the contact point of
+    // the gesture; only the options moved down here.
+    toolRow({
+      name: "crop",
+      label: "Crop",
+      icon: "ap-icon-cropper",
+      action: `data-img-crop-start`,
+      active: !!st.cropDrawing,
+      open: st.openPopover === "crop",
+      disabled: busy,
+      sheet: () => cropSheet(st),
+    }),
+    toolRow({
+      name: "addText",
+      label: "Add text",
+      icon: "ap-icon-closed-captions",
+      action: "data-img-add-text",
+      disabled: busy,
+    }),
+    toolRow({
+      name: "logo",
+      label: "Add image",
+      icon: "ap-icon-file--image",
+      open: st.openPopover === "logo",
+      disabled: busy,
+      sheet: () => logoSheet(),
+    }),
+  ].join("");
 }
 
 // Freeform + the network's optimised ratios, each with a glyph drawn to its own
