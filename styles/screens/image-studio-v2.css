@@ -117,29 +117,36 @@
   gap: var(--app-spacing-micro, 2px);
 }
 
-/* Three columns: chutier · image · inspector, all real flex items so they sit
-   against each other with one gap. NOT absolute overlays on reserved gutters —
-   that drifted the image off the modal's centre and left the 56px rail marooned
-   in the middle of an empty 300px margin.
+/* The image is the centre of this modal, so it sits on the modal's exact centre
+   line — the same line the view toggle above it and the prompt below it sit on.
+   The side panels are PINNED to the edges and the body reserves the SAME width
+   on both sides for them. That symmetry is what keeps the three centred things
+   agreeing; reserving only as much as each side needs (the rail is 72px, the
+   inspector 284px) pushed the image left of its own prompt.
    overflow stays VISIBLE: the inspector's flyout sheets have to escape this box,
    and `overflow: auto` on either axis would clip them (see .isv2-panel). */
 .isv2-stage-body {
-  position: relative; /* the tool palette overlay anchors here */
+  position: relative; /* the pinned side panels anchor here */
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--ref-spacing-sm);
   padding: var(--ref-spacing-md) var(--ref-spacing-lg);
   overflow: visible;
 }
 
-/* The palette is the one genuine overlay — it belongs ON the canvas — so the
-   body gives up its width rather than letting it cover the image being edited. */
+/* Reservations, always symmetric: the inspector is the widest thing pinned in
+   generate mode, the palette in edit mode. */
+/* 32 edge + panel width + 40 breathing room, so the image never crowds the
+   panel it sits beside. */
+.isv2-stage-body.has-panel {
+  padding-inline: 356px;
+}
+
 .isv2-stage-body.has-palette {
-  padding-left: 172px;
+  padding-inline: 212px;
 }
 
 /* A whole-modal drop target: the References sheet is usually closed, so an
@@ -245,16 +252,19 @@
 
 /* ── Variations rail ─────────────────────────────────────────────────────── */
 
-/* Your generated assets, left of the image — the one part of the layout that
-   scrolls, since a carousel can run to 20 slides. */
+/* Your generated assets, pinned to the stage's left edge — the one part of the
+   layout that scrolls, since a carousel can run to 20 slides. */
 .isv2-rail {
-  flex: 0 0 auto;
-  align-self: center;
+  position: absolute;
+  z-index: 4;
+  left: var(--ref-spacing-lg);
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  max-height: 100%;
+  max-height: calc(100% - var(--ref-spacing-md) * 2);
   overflow-y: auto;
   padding: var(--ref-spacing-xxs);
   border-radius: var(--app-radius-card);
@@ -580,15 +590,20 @@
   box-shadow: var(--app-shadow-popover-md);
 }
 
-/* The inspector — a flex item against the image's right edge. Deliberately NOT
-   scrollable: `overflow-y: auto` silently computes overflow-x to `auto` too,
-   which would clip every flyout sheet out of sight. Six rows are 288px. */
+/* The inspector — pinned to the stage's right edge, vertically centred like the
+   rail opposite it. Deliberately NOT scrollable: `overflow-y: auto` silently
+   computes overflow-x to `auto` too, which would clip every flyout sheet out of
+   sight. Six rows are 288px, so it never needs to. */
 .isv2-panel {
-  flex: 0 0 284px;
-  align-self: center;
+  position: absolute;
+  z-index: 4;
+  right: var(--ref-spacing-lg);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 284px;
 }
 
-/* The palette — floating top-left over the canvas, at the contact point of the
+/* The palette — pinned top-left over the canvas, at the contact point of the
    work (v1's arrangement, which was right). */
 .isv2-palette {
   position: absolute;
@@ -1380,19 +1395,28 @@
 
 /* ── Narrow viewports ────────────────────────────────────────────────────── */
 
-@media (max-width: 960px) {
-  /* Gutters give first, then the inspector narrows (its values ellipsis), so the
-     image keeps as much of the width as it can. */
-  .isv2-dock,
-  .isv2-stage-body {
+@media (max-width: 1100px) {
+  /* The inspector narrows (its values ellipsis) and its reservation follows, so
+     the image keeps as much width as it can — but the reservation stays
+     symmetric, because that is what holds the centre line. */
+  .isv2-dock {
     padding-inline: var(--ref-spacing-sm);
   }
 
   .isv2-panel {
-    flex-basis: 236px;
+    right: var(--ref-spacing-sm);
+    width: 236px;
+  }
+
+  .isv2-stage-body.has-panel {
+    padding-inline: 276px;
+  }
+
+  .isv2-rail {
+    left: var(--ref-spacing-sm);
   }
 
   .isv2-trigger-label {
-    flex-basis: 72px;
+    flex-basis: 68px;
   }
 }

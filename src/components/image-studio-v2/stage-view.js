@@ -119,16 +119,17 @@ function stageContent(st) {
   const showRail = st.mode === "generate" && !feedView && st.genPhase === "results" && st.variations.length > 0;
   const showPanel = st.mode === "generate" && !feedView;
   const showPalette = st.mode === "edit" && !feedView;
-  // The rail and the inspector are real flex items in DOM order, so they sit
-  // directly against the image with one gap — not absolute overlays on reserved
-  // gutters, which drifted the image off-centre and left the rail marooned in
-  // the middle of an empty 300px margin. The palette IS an overlay (it belongs
-  // on the canvas), so the body reserves its width instead.
-  const bodyCls = "isv2-stage-body" + (showPalette ? " has-palette" : "");
+  // The chutier and the inspector are PINNED to the stage's edges, and the body
+  // reserves the same width on BOTH sides for them. Symmetry is the whole point:
+  // it puts the image on the modal's exact centre line, which is also where the
+  // toggle above it and the prompt below it sit. Reserving asymmetrically (the
+  // rail is narrower than the inspector) is what knocked the image off that line
+  // and left it visibly misaligned with its own prompt.
+  const bodyCls = "isv2-stage-body" + (showPanel ? " has-panel" : "") + (showPalette ? " has-palette" : "");
   const top = hasImg ? `<div class="isv2-stage-top">${viewToggle(st)}</div>` : "";
   return `${top}<div class="${bodyCls}">
-    ${showRail ? variationsRail(st) : ""}
     ${inner}
+    ${showRail ? variationsRail(st) : ""}
     ${showPanel ? settingsPanel(st) : ""}
     ${showPalette ? toolPalette(st) : ""}
   </div>`;
