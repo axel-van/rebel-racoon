@@ -5,15 +5,19 @@
 ## Le pipeline canonique
 
 ```
-Source  →  Finding  →  Idea  →  Draft  →  Schedule
-(input)    (research)  (insight) (post)    (calendar slot)
+Source  →  Idea  →  Draft  →  Schedule
+(input)    (insight) (post)    (calendar slot)
+              ↑
+           Research (un scan récurrent livre des Ideas directement ; le
+                     Finding est la PREUVE derrière l'une d'elles)
 ```
 
 1. **Source** — un input brut (PDF, URL, vidéo, audio, video clip, ou une réponse de connecteur). Stocké global cross-session dans `sources-stream.js`.
-2. **Finding** — un constat de recherche sourcé, rapporté par un scan récurrent (flag `research`). Global, taggé par Playbook, dans `research-store.js`. Optionnel dans le pipeline : une Idea peut venir directement d'une Source.
-3. **Idea** — un insight extrait d'une source par Archie (Hook, Stat, Quote, Story, Insight). Per-session, mais re-mineable.
-4. **Draft** — un post généré depuis une (ou plusieurs) idea(s), pour un réseau spécifique (LinkedIn, X, …).
-5. **Schedule** — un draft posté dans le queue du calendrier.
+2. **Idea** — un insight, soit extrait d'une source par Archie, soit **livré par un scan de recherche** (flag `research`). Une idée de recherche n'appartient à aucune conversation (`sessionId: null`) jusqu'à ce qu'on l'écrive.
+3. **Draft** — un post généré depuis une (ou plusieurs) idea(s), pour un réseau spécifique (LinkedIn, X, …).
+4. **Schedule** — un draft posté dans le queue du calendrier.
+
+> **Le Finding n'est pas une étape du pipeline.** Une version antérieure en faisait un objet que l'utilisateur devait trier avant d'obtenir des idées ; c'était à l'envers. Le brief était « livrer des idées de contenu à intervalle régulier », donc l'idée est le livrable et le finding est sa justification — lisible via « Why this? », jamais manipulé directement.
 
 ## Concepts clés
 
@@ -65,23 +69,27 @@ Géré par [`src/sources-stream.js`](../../src/sources-stream.js) — le seul st
 
 ### Finding
 
-Un **constat de recherche** : ce qu'un scan récurrent des sources de recherche rapporte. Produit **en amont** des Ideas — accepter un finding injecte ses `ideaSeeds` dans la library d'un chat.
+La **preuve derrière une Idea livrée** : ce qu'un scan a observé, et pourquoi Archie propose cette idée. Ce n'est **pas** un objet que l'utilisateur trie — le scan publie directement les Ideas dans la library globale, chacune portant un `researchFindingId`. On atteint le finding par « Why this? » sur l'idée.
 
-| Champ         | Rôle                                                                              |
-| ------------- | --------------------------------------------------------------------------------- |
-| `headline`    | Le constat, en une phrase affirmative                                             |
-| `summary`     | 2 lignes (clampées sur la carte du feed)                                          |
-| `synthesis[]` | L'argument long, lu dans le modal « Read the research »                           |
-| `posts[]`     | Les **source posts** — les publications d'autrui qui servent de preuve            |
-| `ideaSeeds[]` | Ce que le finding devient : 2-3 Ideas pré-écrites                                 |
-| `sourceId`    | La source de recherche qui l'a produit (voir `research-catalog.js`)               |
-| `contextId`   | Le Playbook pour lequel il a été produit                                          |
-| `dedupeKey`   | Identité stable entre scans — c'est **là-dessus** que porte la mémoire des rejets |
-| `status`      | `new` → `seen` → `used` \| `dismissed`                                            |
+| Champ         | Rôle                                                                                |
+| ------------- | ----------------------------------------------------------------------------------- |
+| `headline`    | Le constat, en une phrase affirmative                                               |
+| `summary`     | 2 lignes (aujourd'hui non affichées — la raison est portée par la headline)         |
+| `synthesis[]` | L'argument long, lu dans le modal « Why this idea »                                 |
+| `posts[]`     | Les **source posts** — les publications d'autrui qui servent de preuve              |
+| `ideaSeeds[]` | Les 2-3 Ideas que le scan publie depuis ce finding (ids `idea-<findingId>-<n>`)     |
+| `sourceId`    | La source de recherche qui l'a produit (voir `research-catalog.js`)                 |
+| `contextId`   | Le Playbook pour lequel il a été produit                                            |
+| `dedupeKey`   | Identité stable entre scans — c'est **là-dessus** que porte la mémoire des rejets   |
+| `status`      | `new` → `seen` → `used` \| `dismissed` (la mémoire des rejets porte sur le finding) |
 
 **Termes à ne pas utiliser** : `brief` (réservé au sous-élément du Playbook), `signal` (banni comme nom), `insight` (c'est un _kind_ d'Idea), `alert`.
 
 **Feature flag `research`** : default OFF. Activable dans le popover Admin (cog de la sidebar).
+
+### Edition
+
+Un **numéro** : la sortie d'un scan, l'unité que liste le digest (`/research`), comme un numéro de newsletter. Groupe les Ideas livrées ensemble et porte la date — un scan a lieu à un instant, donc les idées ne portent pas d'horodatage individuel. Dans `research-store.js` (`getEditions({ contextId })`), seedée depuis `mocks.researchEditions`.
 
 ### Idea (kind taxonomy)
 

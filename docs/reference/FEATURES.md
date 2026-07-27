@@ -390,7 +390,7 @@ Détail dimensions/coexistence avec la status-card : [`SHELL-LAYOUT.md`](SHELL-L
 | `imageStudioV2`          | Image Studio v2 (prompt en bas) | **OFF** | Les actions image d'un draft ouvrent le redesign v2 (stage pleine largeur + composer en bas, réglages en chips-dropdown) au lieu de l'Image Studio actuel. Mêmes options, même moteur d'état (voir §7).                                                                                                                                |
 | `sidebarOrganize`        | Sort & group chats              | **OFF** | Bouton filtre au-dessus de la liste des chats → popover à plat **Group by** (Aucun / Playbook / Date) + **Sort by** (Récence / Alphabétique) ; réordonne/regroupe la liste (Pinned reste en tête). Date = buckets Today / Yesterday / Previous 7 days / … dérivés du libellé `lastActivity`. Préf. persistée (`archie-chat-organize`). |
 
-| `research` | Research (recurring findings) | **OFF** | Toute la feature **Research** (§17) : route `/research` + entrée de nav (avec le compteur de nouveaux findings), onglets Feed \| Sources, modal « Read the research », turn de livraison in-chat, toast d'arrivée et scan récurrent. La donnée (findings seedés + catalogue de sources) reste présente quand OFF, comme `playbookCompetitors`. |
+| `research` | Research (recurring findings) | **OFF** | Toute la feature **Research** (§17) : les routes `/research` (digest), `/research/settings` et `/ideas` + leurs deux entrées de nav (avec le compteur d'idées non vues), le modal « Why this idea », la ligne de livraison in-chat, le toast d'arrivée et le scan récurrent. La donnée (findings + éditions seedés, catalogue de sources) reste présente quand OFF, comme `playbookCompetitors`. |
 
 Persistés en `localStorage` (`archie-feature-flags`), lus via `isFlagOn()`. Voir aussi [`STORES.md`](STORES.md).
 
@@ -431,34 +431,58 @@ Tous via [`modal-coordinator.js`](../../src/modal-coordinator.js) (un overlay à
 
 ---
 
-## 17. Research — findings récurrents (flag `research`, OFF)
+## 17. Research — des idées livrées à intervalle régulier (flag `research`, OFF)
 
-Un scan récurrent de sources de recherche (le **listening** Agorapulse d'abord) rapporte des **findings** : un constat sourcé, en amont des Ideas dans le pipeline. Voir [`GLOSSARY.md`](GLOSSARY.md#finding) pour le vocabulaire.
+Un scan récurrent de sources de veille (le **listening** Agorapulse d'abord) livre des **Ideas**. La recherche derrière chacune est sa justification, pas un objet à trier. Voir [`GLOSSARY.md`](GLOSSARY.md) pour Idea / Finding / Edition.
 
-### Route `/research` ([`screens/research.js`](../../src/screens/research.js))
+> **Ce que ce modèle a remplacé.** Une première version livrait des _findings_ que l'utilisateur devait convertir (« Turn into ideas »), présentés en une pile de cartes de décision identiques. Le brief était « livrer des idées de contenu à intervalle régulier » : le livrable, c'est l'idée. Le finding est redevenu la preuve.
 
-Deux onglets DS `.ap-tabs`, l'actif dans le hash (`?tab=sources`) — donc deep-linkable. Le Playbook actif aussi (`?pb=ctx-acme`) : la config **et** le feed sont par Playbook, et le picker `.ap-select` disparaît quand il n'y a qu'un Playbook. Header : titre + sous-ligne « N sources · refreshes weekly · last scan 5h ago » + **Run a scan** (gris, pas orange — l'orange de cette page appartient à l'action primaire de chaque carte).
+### Le digest — route `/research`
 
-- **Feed** — une colonne de lecture (≈760px, pas une grille : un finding se lit avant d'être décidé). Carte = `.ap-card` + badge de source teinté, `Source · 5h ago`, tag `New` (`.ap-tag blue mini`), headline, résumé clampé à 2 lignes, « Research type » + `.ap-tag grey`, puis les actions : `.ap-split-button primary orange` **Turn into ideas** (chevron → _Turn into ideas in…_ / _Draft a post now_), **Dismiss** en ghost, et **Read the research** poussé à droite — lire est l'alternative à décider maintenant. Un finding utilisé se réduit à un `.ap-status green` « Turned into ideas ». Un toggle discret « Show dismissed (N) » en bas rend le rejet observable et réversible.
-- **Sources** — 7 cartes-interrupteurs (voir [`research-catalog.js`](../../src/research-catalog.js)) : Competitor sources, Influencer sources, Brand feedback, Competitor monitoring, Industry trends, Global trends, Internal team ideas. Toute la ligne est le `<label>`, toggle DS `.ap-toggle-container` en fin de ligne (contrat identique aux rows de flags du popover Admin). Sous la description, selon le `kind` : un deep link vers la section du Playbook qui alimente la source, ou les chips des outils connectés (**gatées par le flag `connectors`**). Puis « Other settings » : **Refresh frequency** (`.ap-filter-chip` Daily/Weekly/Monthly) et **Notifications**.
+Mono-usage. Une **édition** par scan, comme un numéro de newsletter :
 
-### Modal « Read the research » ([`research-modal.js`](../../src/components/research-modal.js))
+- l'idée la plus forte **développée** : titre, la raison en une phrase (« Because your competitors stopped announcing features. »), le texte, puis **Write it** / **Not for me** / _Why this?_ ;
+- les autres en **lignes d'une ligne**, dépliables sur place ;
+- un pied de provenance (« From Competitor and Influencer. ») — la recherche comme caution, pas comme contenu à parcourir.
 
-720px — le premier dialog de **lecture longue** de l'app, délibérément plus étroit que les 920px du modal Connectors (c'est de la prose). Ordre de lecture : l'argument en 3 paragraphes → **Source posts** (les publications d'autrui, via [`social-post-card.js`](../../src/components/social-post-card.js)) → « What I'd write from this » (les idea seeds) → un footer collant qui rejoue les actions de la carte du feed, sans « Read the research » (on y est déjà). Son menu s'ouvre vers le haut.
+Délibérément **pas** de `.ap-card` par idée : une carte chacune et on revient à un fil ; l'édition est le conteneur, la hiérarchie vient du corps de texte et de l'espace. En-tête : titre, sous-ligne (« 2 sources · every week · last scan 5h ago »), sélecteur de Playbook (`?pb=`, masqué s'il n'y a qu'un Playbook), **Look now**, et un **cog** vers les réglages.
 
-### Turn into ideas ([`research-flow.js`](../../src/research-flow.js))
+### Les réglages — route `/research/settings`
 
-`/research` n'a pas de session : le **chat picker** demande où (avec le raccourci « aucun chat → on en crée un »), et le choix voyage sur le handoff `pendingResearchUse`, consommé au mount de la session. Puis, dans le chat : écho du finding (turn `selection-echo`) → chip _Turning research into ideas_ → le finding devient une **Source** consultable (`addReadySource`, payload `researchFinding`) → `injectIdeasForSource` avec `researchFindingId` sur chaque idea → le turn canonique « Extracted N ideas ». Avec _Draft a post now_, la chaîne continue dans `draft-flow`.
+« **What I watch** », par Playbook. Une seule carte de 7 lignes-interrupteurs (voir [`research-catalog.js`](../../src/research-catalog.js)) : Competitor sources, Influencer sources, Brand feedback, Competitor monitoring, Industry trends, Global trends, Internal team ideas. Toute la ligne est le `<label>`, toggle DS `.ap-toggle-container` en fin de ligne, description clampée à une ligne. Puis **How often** (`.ap-filter-chip`) et **Notifications**.
+
+Selon le `kind` de la source : un lien discret vers la section du Playbook qui l'alimente, ou les chips des outils connectés (**gatées par le flag `connectors`**).
+
+Trois choix d'architecture à ne pas défaire :
+
+- **Une route dédiée à la feature, pas un `/settings` global.** Les trois tentatives d'agrégation dans ce repo ont été annulées : le drawer (`2b0abcf` — le DS ne fournit pas de primitive side-drawer), la section Connectors (`8cdd7e8` — elle dupliquait `/connectors`), puis la route (`6fca0b0`).
+- **Le Playbook est nommé en prose** dans le sous-titre (« 3 sources for **Acme · Q2 marketing**, every day. »), pas seulement dans le picker : une page appelée réglages se lit comme globale, et cette config est par Playbook.
+- **Pas d'entrée de nav** — une seule porte, le cog. Une ligne de sidebar annulerait le fait de les avoir rendus moins visibles.
+
+`?tab=sources` sur `/research` (l'ancien onglet) redirige ici.
+
+### « Why this idea » — le modal
+
+720px, premier dialog de **lecture longue** de l'app. L'**idée** est le titre ; en dessous, « Why I'm suggesting it » (le constat + l'argument long) puis « What I saw » (les posts d'autrui, via [`social-post-card.js`](../../src/components/social-post-card.js)). Footer : **Write it** / **Not for me**.
+
+### Les actions sur une idée ([`research-flow.js`](../../src/research-flow.js))
+
+- **Write it** — l'idée existe déjà dans la library globale mais n'appartient à aucun chat. Le **chat picker** demande où, le choix voyage sur le handoff `pendingResearchIdea`, puis dans le chat : écho de l'idée, le finding devient une **Source** consultable, l'idée est adoptée dans la session et le draft flow démarre. Pas d'étape « convertir ».
+- **Not for me** — l'idée quitte la library (donc le digest **et** `/ideas`) et le `dedupeKey` de son finding est mémorisé, pour qu'aucun scan ne la re-dérive. Undo restaure les deux.
+
+### Où les idées s'accumulent — `/ideas`
+
+Les idées livrées sont de vraies Ideas dans la library globale (`origin: "research"`, `sessionId: null`). `/ideas` (même flag) les héberge avec un filtre par origine, la provenance sur chaque carte, et la suppression en masse — sans quoi 5 idées par semaine remplissent la page sans recours.
 
 ### Livraison in-chat & récurrence
 
-Chaque batch s'annonce là où l'utilisateur est déjà : une phrase à la première personne (« I scanned your research sources. 3 new findings — … ») puis un turn `{ role: "assistant", variant: "research" }` rendu par le `renderResultCard` partagé, donc de la même famille que clips / ideas / drafts. Le teaser porte la headline la plus forte + une `social-post-card` compacte ; le CTA ouvre le modal **sur place** (on ne sort pas l'utilisateur de sa conversation).
+Chaque batch s'annonce là où l'utilisateur est : une phrase à la première personne (« I looked through your sources. 3 new ideas — the strongest one is because… ») puis **une ligne**, « See the 3 findings → ». Pas une carte : la phrase au-dessus dit déjà le compte et nomme la plus forte.
 
-Deux déclencheurs, un seul chemin d'annonce : le bouton **Run a scan**, et un scan one-shot ~12s après le boot (`initResearch()` dans le bloc de boot de `app.js`). La **cadence n'est pas un timer** — daily/weekly/monthly ne se déclencherait jamais dans une session de démo ; elle pilote la copie et la taille du batch. La livraison cible le chat ouvert, sinon le plus récent de ce Playbook — jamais un fan-out. « Nothing new » ne se dit que si l'utilisateur a demandé. Notifications OFF supprime le toast mais **pas** le badge : la préférence porte sur l'interruption, pas sur le comptage.
+Deux déclencheurs, un seul chemin d'annonce : **Look now**, et un scan one-shot ~12s après le boot (`initResearch()` dans le bloc de boot de `app.js`). La **cadence n'est pas un timer** — daily/weekly/monthly ne se déclencherait jamais dans une session de démo ; elle pilote la copie et la taille du batch. Notifications OFF supprime le toast mais **pas** le badge.
 
 ### Mémoire des rejets & toggles chargés
 
-`dismissFinding` retient le `dedupeKey` (pas l'`id`) : un finding rejeté ne revient jamais, même si un scan re-dérive le même constat. `runScan` ignore les sources désactivées — c'est ce qui rend les toggles de l'onglet Sources observablement utiles. Le badge « New » ne se vide qu'au **teardown** de la route, jamais à l'arrivée.
+`runScan` ignore les sources désactivées — c'est ce qui rend les toggles observablement utiles. Le badge « New » ne se vide qu'au **teardown** de la route, jamais à l'arrivée.
 
 ---
 

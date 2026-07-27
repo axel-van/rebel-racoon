@@ -96,14 +96,14 @@ DS `.ap-dialog` centré par `modals.css` sur `.open`. `.app-modal-backdrop` patc
 
 Échelle de largeurs, toutes en `width: min(calc(100% - 32px), Npx)` :
 
-| Largeur | Modals                               | Pourquoi                                                       |
-| ------- | ------------------------------------ | -------------------------------------------------------------- |
-| 440     | rename                               | un seul champ                                                  |
-| 560     | bug report, chat picker, search      | une liste courte ou un formulaire                              |
-| 640     | feedback, add source                 | formulaire + onglets                                           |
-| **720** | **research** (« Read the research ») | **lecture longue** — de la prose ; au-delà, la mesure décroche |
-| 920     | connectors                           | une gallery à parcourir                                        |
-| 960     | schedule                             | deux colonnes                                                  |
+| Largeur | Modals                           | Pourquoi                                                       |
+| ------- | -------------------------------- | -------------------------------------------------------------- |
+| 440     | rename                           | un seul champ                                                  |
+| 560     | bug report, chat picker, search  | une liste courte ou un formulaire                              |
+| 640     | feedback, add source             | formulaire + onglets                                           |
+| **720** | **research** (« Why this idea ») | **lecture longue** — de la prose ; au-delà, la mesure décroche |
+| 920     | connectors                       | une gallery à parcourir                                        |
+| 960     | schedule                         | deux colonnes                                                  |
 
 Les modals de lecture longue plafonnent aussi leur hauteur (`max-height: min(calc(100vh - 48px), 760px)`) et font défiler leur `.ap-dialog-content`, avec un footer d'actions collant : la décision doit rester atteignable quelle que soit la longueur du texte.
 
