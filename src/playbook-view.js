@@ -103,7 +103,7 @@ const SECTION_HINTS = {
   },
   competitors: {
     q: "Who you're up against",
-    a: "Archie found these on your market. Prune the ones that don't matter and add the ones it missed.",
+    a: "Archie scans your market and proposes competitors. Add the ones that matter — a dismissed suggestion won't come back.",
   },
 };
 

@@ -146,9 +146,13 @@ function renderContextCard(ctx) {
     (Array.isArray(ctx.tones) && ctx.tones.length ? ctx.tones.join(" · ").toLowerCase() : "");
   const audienceCount = Array.isArray(ctx.audience) ? ctx.audience.length : ctx.audience ? 1 : 0;
   // Competitors ride along in the data whatever the flag says, so gate the
-  // counter on the flag rather than on the count alone.
+  // counter on the flag rather than on the count alone. `suggested` entries are
+  // still pending proposals from Archie, not competitors of this brand yet —
+  // they must not inflate the count.
   const competitorCount =
-    isFlagOn("playbookCompetitors") && Array.isArray(ctx.competitors) ? ctx.competitors.length : 0;
+    isFlagOn("playbookCompetitors") && Array.isArray(ctx.competitors)
+      ? ctx.competitors.filter((c) => !c.suggested).length
+      : 0;
   const usedIn = ctx.usedIn || 0;
   // Brand color preview — first website's primary / accent / link from
   // imageVoice, up to 3 dots. Matches the "people avatars" affordance

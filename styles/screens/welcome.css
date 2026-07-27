@@ -1067,9 +1067,106 @@
   width: 100%;
 }
 
+/* Two states, two groups: the Playbook's own competitors, then Archie's
+   pending proposals in a recessed tray below. */
+.recap__cmpgroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+}
+
+.recap__cmpgroup--suggested {
+  padding: var(--ref-spacing-sm);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-grey-05);
+}
+
+.recap__cmpgroup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+}
+
+.recap__cmpgroup-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ref-color-grey-60);
+}
+
+.recap__cmpgroup--suggested .recap__cmpgroup-title > i {
+  color: var(--ref-color-orange-100);
+  font-size: var(--ref-font-size-md);
+}
+
+.recap__cmpgroup-count {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.recap__cmpgroup-sub {
+  margin: 0 0 var(--ref-spacing-xxs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-60);
+}
+
+.recap__cmpgroup-act {
+  flex-shrink: 0;
+  height: 28px;
+  padding: 0 var(--ref-spacing-xs);
+  gap: var(--ref-spacing-xxxs);
+  font-size: var(--sys-text-style-caption-size);
+}
+
 .recap__cmpcard {
   position: relative;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+}
+
+/* A pending proposal reads as an offer, not an entry: dashed edge and a
+   surface that doesn't look committed. The dashed border sits on the CARD, not
+   on the inner open-button, so the Add / Dismiss row is enclosed by it — the
+   actions belong to this proposal, not to the tray around it. */
+.recap__cmpcard--suggested {
+  border: 1px dashed var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--app-surface);
+  transition: border-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.recap__cmpcard--suggested:hover {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.recap__cmpcard--suggested > .recap__cmpcard-open,
+.recap__cmpcard--suggested > .recap__cmpcard-open:hover {
+  border-color: transparent;
+  background: transparent;
+}
+
+.recap__cmpcard-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: 0 var(--ref-spacing-sm) var(--ref-spacing-sm);
+}
+
+.recap__cmpcard-act {
+  height: 28px;
+  padding: 0 var(--ref-spacing-xs);
+  gap: var(--ref-spacing-xxxs);
+  font-size: var(--sys-text-style-caption-size);
 }
 
 /* The whole card is the open affordance — a button, so the network badges
@@ -1079,7 +1176,7 @@
   flex-direction: column;
   gap: var(--ref-spacing-xs);
   width: 100%;
-  height: 100%;
+  flex: 1;
   padding: var(--ref-spacing-sm);
   text-align: left;
   border: 1px solid var(--app-border);

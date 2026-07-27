@@ -239,13 +239,23 @@ Sections éditables inline (une à la fois, Save/Cancel avec snapshot) :
 
 ### Competitors (flag `playbookCompetitors`, défaut OFF)
 
-Le marché contre lequel Archie positionne la marque. Champ `competitors: Array<{ id, name, description, websiteUrl, socials:[{network,url}], logo?, suggested? }>` sur le Playbook.
+Le marché contre lequel Archie positionne la marque. Champs sur le Playbook : `competitors: Array<{ id, name, description, websiteUrl, socials:[{network,url}], logo?, suggested? }>` et `dismissedCompetitors: string[]`.
 
-- **Grille de cartes** — tuile logo, nom, domaine, blurb sur 2 lignes, badges réseaux, chip **« Suggested »** (`suggested: true` = trouvé par Archie). Clic sur une carte → modale détail (`.ap-dialog`) : Name, Website, Description, Social profiles (select réseau + URL). Éditable quand la section est en edit scope, sinon lecture seule + liens réseaux cliquables.
+**Deux états, jamais confondus.** `suggested: true` = **proposition en attente** d'Archie, qui ne fait PAS partie du Playbook. Tout ce qui compte les compétiteurs (grille active, compteur `/contexts`) ignore les pending ; seul le bac « Suggested by Archie » les lit.
+
+|                         | Actif                               | Suggéré (pending)                                                             |
+| ----------------------- | ----------------------------------- | ----------------------------------------------------------------------------- |
+| Groupe                  | **« Your competitors »** + compteur | bac **« Suggested by Archie »** + compteur, fond creusé sous la grille active |
+| Carte                   | bordure pleine, surface blanche     | bordure **pointillée**, actions incluses dans la bordure                      |
+| Actions                 | remove (en edit scope)              | **Add** / **Dismiss** par carte + **« Add all »** dans l'en-tête du groupe    |
+| Compté dans le Playbook | oui                                 | non                                                                           |
+
+- **Grille de cartes** — tuile logo, nom, domaine, blurb sur 2 lignes, badges réseaux. Clic sur une carte → modale détail (`.ap-dialog`) : Name, Website, Description, Social profiles (select réseau + URL). Éditable quand la section est en edit scope, sinon lecture seule + liens réseaux cliquables. Pour une proposition, le footer de la modale offre **Dismiss** / **Add to Playbook** au lieu de Done.
+- **Accepter / écarter** — dispo en **lecture** (pas besoin d'ouvrir l'éditeur de section, c'est tout l'intérêt du bac). Add → `delete suggested`, la carte rejoint la grille active. Dismiss → la carte disparaît et sa clé part dans `dismissedCompetitors`, donc **Archie ne la repropose jamais**. Hors edit scope les deux commitent directement ; en edit scope c'est le Save de section qui commite.
 - **Favicon auto-extraite** — jamais stockée : résolue à partir du domaine via un service de favicons au render. Un `<img>` qui échoue (domaine sans icône, hors-ligne) bascule sur une **tuile monogramme** teintée déterministiquement depuis le nom, via un listener `error` en phase **capture** (`error` ne bulle pas) posé dans `mount()`.
-- **Découverte** — bouton **« Discover competitors » / « Discover more »** (`ap-icon-sparkles`) dans le head de section : skeleton scoped à la section (~1,6 s, pas le loader plein écran) → merge de `discoverCompetitors(url, { exclude })`, **dédupliqué par domaine** (à défaut par nom). Rescan idempotent : si rien de nouveau, ligne _« No new competitors found. »_. Max 12.
-- **Pré-remplissage onboarding** — `sectionPatchFromAnalysis` promeut `suggestions.competitors` sur le draft avec `suggested: true`, donc le recap `/welcome-alt/recap` révèle la section déjà peuplée : pas d'étape de chat supplémentaire, l'utilisateur ajuste sur place.
-- **Édition** — pencil de section → remove par carte + **« Add competitor »** (ouvre la modale sur une fiche vierge). Save élague les fiches restées entièrement vides et les lignes sociales sans URL ; `suggested` est conservé (provenance, pas un état transitoire).
+- **Découverte** — bouton **« Discover competitors » / « Discover more »** (`ap-icon-sparkles`) dans le head de section : skeleton scoped à la section (~1,6 s, pas le loader plein écran) → merge de `discoverCompetitors(url, { exclude })` où `exclude` = les compétiteurs présents (actifs **et** pending) + `dismissedCompetitors`. Dédupliqué par domaine (à défaut par nom, via `competitorKey`). Rescan idempotent : si rien de nouveau, ligne _« No new competitors found. »_. Max 12.
+- **Pré-remplissage onboarding** — `sectionPatchFromAnalysis` promeut `suggestions.competitors` sur le draft avec `suggested: true`, donc le recap `/welcome-alt/recap` révèle le bac déjà rempli (grille active vide) : pas d'étape de chat supplémentaire, l'utilisateur choisit sur place.
+- **Édition** — pencil de section → remove par carte active + **« Add competitor »** (ouvre la modale sur une fiche vierge, donc directement active). Save élague les fiches restées entièrement vides et les lignes sociales sans URL ; `suggested` est **conservé** — une proposition non acceptée reste en attente au lieu d'être adoptée silencieusement.
 - **Gate** — quand le flag est OFF : section, entrée de rail et compteur `/contexts` disparaissent, mais **la donnée reste** (l'analyse la pré-remplit quand même) — même contrat que `multilingualPlaybook`.
 
 ### Mock analysis ([`context-mock-analysis.js`](../../src/context-mock-analysis.js))
