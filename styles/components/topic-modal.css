@@ -1,0 +1,133 @@
+/* Topic dialog — one dossier, read end to end.
+ *
+ * Positioning (fixed/centered, .open show/hide, the 720px width) lives in
+ * styles/screens/modals.css alongside the other modals. This file owns only the
+ * inner reading layout.
+ *
+ * The `.topic-badge--<accent>` source pip is shared with the feed and the
+ * Playbook's Topics section, so it lives in styles/components/topic-badge.css.
+ *
+ * See src/components/topic-modal.js. */
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+/* The headline is the claim and often runs to two lines, so it needs a tighter
+   measure than the DS heading default gives at this width. */
+.topic-modal__title {
+  max-width: 34ch;
+  text-wrap: pretty;
+}
+
+.topic-modal__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.topic-modal__source {
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+/* ── Body ───────────────────────────────────────────────────────────────── */
+
+/* Collapse the DS content gap (24px, meant for stacked form sections) — the two
+   sections below own their own rhythm and the divider between them. */
+.topic-modal__content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  gap: 0;
+}
+
+.topic-modal__analysis {
+  padding-bottom: var(--ref-spacing-lg);
+}
+
+/* "What I found" — Archie's authorship, marked once at the top rather than
+   repeated per paragraph. Orange because this is the AI's own contribution. */
+.topic-modal__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  margin: 0 0 var(--ref-spacing-xs);
+  font-family: var(--sys-text-style-caption-bold-font-family);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ref-color-orange-100);
+}
+
+.topic-modal__eyebrow > i {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.topic-modal__analysis-title {
+  margin: 0 0 var(--ref-spacing-sm);
+  font-family: var(--sys-text-style-h2-font-family);
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  font-weight: var(--sys-text-style-h2-weight);
+  color: var(--sys-text-color-default);
+  text-wrap: pretty;
+}
+
+/* Reading prose, not UI text: a looser line-height than the DS body default and
+   a capped measure, so the analysis is actually pleasant to read. */
+.topic-modal__prose {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  max-width: 68ch;
+}
+
+.topic-modal__prose p {
+  margin: 0;
+  font-family: var(--sys-text-style-body-font-family);
+  font-size: var(--sys-text-style-body-size);
+  line-height: 1.65;
+  color: var(--sys-text-color-light);
+}
+
+/* ── Evidence ───────────────────────────────────────────────────────────── */
+
+/* A rule rather than a heading change of gear: the reader crosses from Archie's
+   argument into the raw material it came from. */
+.topic-modal__evidence {
+  padding-top: var(--ref-spacing-lg);
+  border-top: 1px solid var(--app-border-soft);
+}
+
+.topic-modal__evidence-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  margin-bottom: var(--ref-spacing-sm);
+}
+
+.topic-modal__evidence-title {
+  margin: 0;
+  font-family: var(--sys-text-style-caption-bold-font-family);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sys-text-color-light);
+}
+
+.topic-modal__posts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+
+.topic-modal__footer {
+  flex-shrink: 0;
+}

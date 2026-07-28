@@ -46,6 +46,7 @@ body.has-modal {
 .chat-picker-modal,
 .add-source-modal,
 .connectors-modal,
+.topic-modal,
 .confirm-modal,
 .rename-modal,
 .save-folder-modal,
@@ -69,6 +70,13 @@ body.has-modal {
   /* Cap the height so the dialog reads as a panel and the gallery scrolls
      inside it, rather than the modal stretching to near-full-viewport. */
   max-height: min(calc(100vh - 48px), 720px);
+}
+
+/* 720, not the connectors dialog's 920: this one is prose. Past ~720 the
+   measure decouples and the analysis stops being readable. */
+.topic-modal {
+  width: min(calc(100% - 32px), 720px);
+  max-height: min(calc(100vh - 48px), 800px);
 }
 
 .bug-report-modal {
@@ -462,6 +470,7 @@ body.has-modal {
 .chat-picker-modal.open,
 .add-source-modal.open,
 .connectors-modal.open,
+.topic-modal.open,
 .confirm-modal.open,
 .rename-modal.open,
 .save-folder-modal.open,
