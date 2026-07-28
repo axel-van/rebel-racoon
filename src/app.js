@@ -1,53 +1,48 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
-import { isFlagOn } from "./feature-flags.js?v=12";
+import { isFlagOn } from "./feature-flags.js?v=13";
 import { initArchieLoader } from "./archie-loader.js?v=2";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=236";
-import { initSidebar, renderSidebar } from "./components/sidebar.js?v=207";
-import { init as initRightPanel } from "./components/right-panel.js?v=374";
-import { init as initScheduleModal } from "./components/schedule-modal.js?v=57";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=237";
+import { initSidebar, renderSidebar } from "./components/sidebar.js?v=208";
+import { init as initRightPanel } from "./components/right-panel.js?v=375";
+import { init as initScheduleModal } from "./components/schedule-modal.js?v=58";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=24";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
-import { init as initImageStudioModal } from "./components/image-studio/index.js?v=46";
-import { init as initImageStudioV2Modal } from "./components/image-studio-v2/index.js?v=9";
-import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=57";
-import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=63";
-import { init as initAddSourceModal } from "./components/add-source-modal.js?v=64";
-import { init as initConnectorsModal } from "./components/connectors-modal.js?v=14";
-import { init as initResearchModal } from "./components/research-modal.js?v=17";
+import { init as initImageStudioModal } from "./components/image-studio/index.js?v=47";
+import { init as initImageStudioV2Modal } from "./components/image-studio-v2/index.js?v=10";
+import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=58";
+import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=64";
+import { init as initAddSourceModal } from "./components/add-source-modal.js?v=65";
+import { init as initConnectorsModal } from "./components/connectors-modal.js?v=15";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
 import { init as initRenameModal } from "./components/rename-modal.js?v=2";
-import { init as initSaveFolderModal } from "./components/save-folder-modal.js?v=12";
-import { init as initAnalyzeProfilesModal } from "./components/analyze-profiles-modal.js?v=16";
+import { init as initSaveFolderModal } from "./components/save-folder-modal.js?v=13";
+import { init as initAnalyzeProfilesModal } from "./components/analyze-profiles-modal.js?v=17";
 import { init as initFillDocumentModal } from "./components/fill-document-modal.js?v=5";
-import { init as initSearchModal } from "./components/search-modal.js?v=12";
+import { init as initSearchModal } from "./components/search-modal.js?v=13";
 import {
   init as initConversationStatusCard,
   render as renderConversationStatusCard,
-} from "./components/conversation-status-card.js?v=167";
-import { renderDashboard } from "./screens/dashboard.js?v=55";
-import { renderSession } from "./screens/session.js?v=459";
-import { renderContexts } from "./screens/contexts.js?v=199";
-import { renderConnectors } from "./screens/connectors.js?v=138";
-import { renderResearchSettings } from "./screens/research-settings.js?v=10";
-import { renderResearch } from "./screens/research.js?v=22";
-import { initResearch } from "./research-flow.js?v=9";
-import { getDefaultContext } from "./contexts-store.js?v=40";
+} from "./components/conversation-status-card.js?v=168";
+import { renderDashboard } from "./screens/dashboard.js?v=56";
+import { renderSession } from "./screens/session.js?v=460";
+import { renderContexts } from "./screens/contexts.js?v=200";
+import { renderConnectors } from "./screens/connectors.js?v=139";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=193";
-import { renderPlaybook } from "./screens/playbook.js?v=204";
-import * as __capAddSource from "./components/add-source-modal.js?v=64";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=194";
+import { renderPlaybook } from "./screens/playbook.js?v=205";
+import * as __capAddSource from "./components/add-source-modal.js?v=65";
 import * as __capBug from "./components/bug-report-modal.js?v=24";
 import * as __capFeedback from "./components/feedback-modal.js?v=26";
-import * as __capChatPicker from "./components/chat-picker-modal.js?v=63";
-import * as __capSearch from "./components/search-modal.js?v=12";
+import * as __capChatPicker from "./components/chat-picker-modal.js?v=64";
+import * as __capSearch from "./components/search-modal.js?v=13";
 import {
   openDrafts as __capOpenDrafts,
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=374";
+} from "./components/right-panel.js?v=375";
 
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
@@ -57,10 +52,6 @@ route("/session/:id", renderSession);
 route("/contexts", renderContexts);
 route("/playbook/:id", renderPlaybook);
 route("/connectors", renderConnectors);
-route("/research", renderResearch);
-// Declared after /research; the router compiles ^/research/settings$ so there is
-// no collision, but keeping the parent first reads in nav order.
-route("/research/settings", renderResearchSettings);
 // First-time ALT — thin redirect that mints a transient
 // /session/welcome-alt-{ts} session. The conversational Playbook
 // builder (3-question chat: URL → profile → optional documents) runs
@@ -89,7 +80,6 @@ initVideoClipsModal();
 initChatPickerModal();
 initAddSourceModal();
 initConnectorsModal();
-initResearchModal();
 initConfirmModal();
 initRenameModal();
 initSaveFolderModal();
@@ -97,15 +87,6 @@ initAnalyzeProfilesModal();
 initFillDocumentModal();
 initSearchModal();
 initConversationStatusCard();
-
-// Arm the recurring research scan — once, at boot, never from a route render
-// (navigating would stack scans). A few seconds later a batch of findings
-// lands, the sidebar counter increments and a toast appears while the user is
-// doing something else, which is what makes the feature read as recurring.
-// The cadence drives copy and batch size, not a timer.
-if (isFlagOn("research")) {
-  initResearch({ contextId: getDefaultContext()?.id || null });
-}
 
 // Re-render the sidebar on every route change so the active conversation row
 // stays highlighted. The conversation status card also re-renders here so it

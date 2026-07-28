@@ -4,9 +4,9 @@ import { open as openBugReportModal } from "./bug-report-modal.js?v=24";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=26";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { open as openSearchModal } from "./search-modal.js?v=12";
+import { open as openSearchModal } from "./search-modal.js?v=13";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=9";
+import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=10";
 import {
   getSessions,
   getSessionById,
@@ -14,17 +14,16 @@ import {
   deleteSession,
   togglePin as togglePinSession,
   subscribe as subscribeSessions,
-} from "../sessions-store.js?v=9";
-import { isFlagOn } from "../feature-flags.js?v=12";
+} from "../sessions-store.js?v=10";
+import { isFlagOn } from "../feature-flags.js?v=13";
 import { isNewUser } from "../user-mode.js?v=22";
-import { clearSession as clearLibrarySession } from "../library.js?v=55";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=40";
-import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=31";
-import { getNewCount as getNewResearchCount, subscribe as subscribeResearch } from "../research-store.js?v=7";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=374";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=61";
-import { clearSession as clearPostsSession } from "../posts-store.js?v=39";
-import { clearSession as clearSourcesSession } from "../sources-stream.js?v=54";
+import { clearSession as clearLibrarySession } from "../library.js?v=56";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=41";
+import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=32";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=375";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=62";
+import { clearSession as clearPostsSession } from "../posts-store.js?v=40";
+import { clearSession as clearSourcesSession } from "../sources-stream.js?v=55";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the
@@ -309,8 +308,6 @@ export function initSidebar() {
   subscribeContexts(() => renderSidebar());
   subscribeSessions(() => renderSidebar());
   subscribeConnectors(() => renderSidebar());
-  // A landed scan increments the Research counter in place — no polling.
-  subscribeResearch(() => renderSidebar());
 
   // Click outside the popmenu → close.
   document.addEventListener("click", (event) => {
@@ -560,20 +557,7 @@ function renderFootMenu({ collapsed }) {
 // recent-conversations list below is the canonical entry point for
 // session navigation.
 // `flag` gates the row declaratively (was a hardcoded `if` on /connectors).
-// `counterClass` picks the DS .ap-counter colour: grey for a plain total, blue
-// when the number is a notification the user is expected to act on.
 const NAV = [
-  {
-    // First: Research sits at the top of the pipeline, and it's the one row
-    // that carries a notification.
-    path: "/research",
-    icon: "ap-icon-feature-listening",
-    label: "Research",
-    flag: "research",
-    counterClass: "blue",
-    match: (p) => p === "/research",
-    count: () => getNewResearchCount(),
-  },
   {
     path: "/contexts",
     icon: "ap-icon-target",
@@ -627,7 +611,7 @@ function renderNav(path) {
   const routeItems = NAV.filter((item) => !item.flag || isFlagOn(item.flag))
     .map((item) => {
       const count = item.count ? item.count() : 0;
-      const counter = count > 0 ? `<span class="ap-counter normal ${item.counterClass || "grey"}">${count}</span>` : "";
+      const counter = count > 0 ? `<span class="ap-counter normal grey">${count}</span>` : "";
       return `
       <button
         type="button"

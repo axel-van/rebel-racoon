@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Interactive prototype for exploring and validating Agorapulse UI redesigns — specifically **Archie**, an AI content assistant (research → sources → ideas → drafts → schedule). No build step, no bundler — static ES modules served locally. The codebase mixes English (code, UI copy) and French (some comments). Archie speaks in the first person ("I", "Let's") — never third-person "Archie" — in user-facing copy.
+Interactive prototype for exploring and validating Agorapulse UI redesigns — specifically **Archie**, an AI content assistant (sources → ideas → drafts → schedule). No build step, no bundler — static ES modules served locally. The codebase mixes English (code, UI copy) and French (some comments). Archie speaks in the first person ("I", "Let's") — never third-person "Archie" — in user-facing copy.
 
 ## Running the prototype
 
@@ -25,24 +25,21 @@ With Claude Code the dev server auto-launches via `.claude/launch.json` (server 
 
 ### Routes (declared in `src/app.js`)
 
-| Route                | Screen                 | Notes                                                                                               |
-| -------------------- | ---------------------- | --------------------------------------------------------------------------------------------------- |
-| `/`                  | `dashboard.js`         | Redirect-only: first-time → `/welcome-alt`, returning → most-recent session or a fresh one          |
-| `/session/:id`       | `session.js`           | The main chat surface (largest file); hosts the assistant thread, composer, and per-session flows   |
-| `/contexts`          | `contexts.js`          | Standalone **Playbooks** library (cards + edit)                                                     |
-| `/playbook/:id`      | `playbook.js`          | Playbook detail page (topbar back → `/contexts`)                                                    |
-| `/connectors`        | `connectors.js`        | Connectors gallery (marketplace); detail opens in a modal (gated by the `connectors` flag)          |
-| `/ideas`             | `ideas.js`             | Global **Ideas** library — where research-delivered ideas live (gated by the `research` flag)       |
-| `/research`          | `research.js`          | **Research** digest: one edition of delivered ideas per scan (`?pb=`); gated by the `research` flag |
-| `/research/settings` | `research-settings.js` | « What I watch » — the per-Playbook source config (`?pb=`), reached from the digest's cog           |
-| `/welcome-alt`       | `welcome-alt.js`       | First-time onboarding kickoff (thin redirect into a transient session)                              |
-| `/welcome-alt/recap` | `welcome-alt-recap.js` | Onboarding recap reveal of the built Playbook                                                       |
+| Route                | Screen                 | Notes                                                                                             |
+| -------------------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
+| `/`                  | `dashboard.js`         | Redirect-only: first-time → `/welcome-alt`, returning → most-recent session or a fresh one        |
+| `/session/:id`       | `session.js`           | The main chat surface (largest file); hosts the assistant thread, composer, and per-session flows |
+| `/contexts`          | `contexts.js`          | Standalone **Playbooks** library (cards + edit)                                                   |
+| `/playbook/:id`      | `playbook.js`          | Playbook detail page (topbar back → `/contexts`)                                                  |
+| `/connectors`        | `connectors.js`        | Connectors gallery (marketplace); detail opens in a modal (gated by the `connectors` flag)        |
+| `/welcome-alt`       | `welcome-alt.js`       | First-time onboarding kickoff (thin redirect into a transient session)                            |
+| `/welcome-alt/recap` | `welcome-alt-recap.js` | Onboarding recap reveal of the built Playbook                                                     |
 
 There is **no `/settings` route** — it was removed. The prototype Admin controls (user mode + feature flags + docs link) now live in the sidebar footer cog popover (`admin-menu.js`, rendered by `sidebar.js`); the old Social-accounts page was dropped (`social-profiles.js` remains as a shared helper).
 
 `setAfterRender` (in `app.js`) re-renders the sidebar + conversation-status-card after every route change and toggles the `body.onboarding` full-bleed class for the welcome-alt flow.
 
-> **Vocabulary:** a saved AI context is a **Playbook** (UI label) but the code/store calls it a **Context** (`contexts-store`, `contextId`). Source → Idea → Draft (post) → Schedule is the content pipeline. Recurring **research** (see `/research`) delivers Ideas directly; a **Finding** is the evidence behind one, not a pipeline step.
+> **Vocabulary:** a saved AI context is a **Playbook** (UI label) but the code/store calls it a **Context** (`contexts-store`, `contextId`). Source → Idea → Draft (post) → Schedule is the content pipeline.
 
 ### Source layout
 
@@ -71,7 +68,6 @@ src/
   schedule-store.js     — scheduled-post queue (calendar)
   composer-mentions.js  — per-session @mention pills in the composer
   composer-connector.js — composer's "Connected sources" submenu (feature-flagged)
-  research-store.js     — GLOBAL research findings + per-Playbook scan config + the scan engine
 
   # Conversational flow orchestrators (drive the assistant thread + pickers)
   start-flow.js         — action-picker intro for an existing-Playbook chat
@@ -87,9 +83,6 @@ src/
   clip-formats.js        — video aspect-ratio catalog
   connectors-view.js    — shared pure render helpers for the connectors gallery + detail
   connector-ask.js      — launches the in-chat "Ask a connector" flow (gallery + right panel)
-  research-flow.js      — writeIdea / skipIdea on a delivered idea + the scan/announce path
-  research-view.js      — shared pure renderers for the digest AND the settings page
-  research-catalog.js   — the 7 research-source definitions + the refresh cadences (config, not data)
 
   # Studios (full-panel takeovers) + newer surfaces (not exhaustive — see docs/reference/FEATURES.md)
   batch-studio.js       — batch-of-posts studio (upload/analyse → review)
@@ -102,7 +95,7 @@ src/
 
   screens/
     dashboard.js, session.js, ideas.js, contexts.js, playbook.js,
-    connectors.js, research.js, research-settings.js, ideas.js,
+    connectors.js,
     welcome-alt.js, welcome-alt-recap.js
     _analyse-common.js  — shared "chat bubble + numbered picker bar" wizard primitives
     session/
@@ -120,7 +113,6 @@ src/
     conversation-status-card.js  floating in-progress card (sources/ideas/drafts counts)
     content-workspace.js  shared Sources+Ideas library layout (search / sort / By Source / All Ideas)
     source-card.js, idea-card.js, idea-card-compact.js, post-card.js, clip-card.js, empty-state.js
-    social-post-card.js   someone else's post, shown as evidence behind a finding (+ compact variant)
     toast.js              showToast() snackbar (DS .ap-snackbar)
     shortcut-legend.js    ? key dialog
     # Modals (init → open → close, coordinated by modal-coordinator.js):
@@ -128,7 +120,6 @@ src/
     connectors-modal.js   connectors gallery + detail overlay (from composer Add / Sources panel / page)
     generate-image-modal.js, video-clips-modal.js, schedule-modal.js,
     bug-report-modal.js, feedback-modal.js, chat-picker-modal.js,
-    research-modal.js     "Why this idea" — the long-form dialog justifying a delivered idea
     confirm-modal.js, rename-modal.js, search-modal.js
 
   modal-coordinator.js    one-overlay-at-a-time: requestOpen / notifyClose / bindOverlayDismissal
@@ -148,26 +139,13 @@ src/
 | `assistant.js`         | per-session thread                                                         | `getThread`, `sendMessage`, `sendConnectorMessage`, `postAssistantMessage`, `postSystemNotice`/`markSystemNoticeReady`, `postSourceIntake`, `postExtractionResult`, `postAssistantChoice`/`submitAssistantChoice`, `postDraftResult`, `subscribe(sid, fn)` |
 | `sources-stream.js`    | **global** uploads + sources state machine (uploading → processing → done) | `getSources`, `getUploads`, `subscribeSources`, `subscribeUploads`, `startFileUpload`, `startUrlImport`, `startConnectorImport`, `extractClipsForSource`, `removeSources`, `renameSource`                                                                  |
 | `schedule-store.js`    | scheduled-post queue                                                       | `getQueue`, `getQueueOn`, `addToQueue`, `removeFromQueue`, `busyCountsByDay`, `subscribe`                                                                                                                                                                  |
-| `research-store.js`    | **global** research findings + per-Playbook scan config + the scan engine  | `getFindings`, `getFinding`, `getNewCount`, `markSeen`/`markAllSeen`, `markUsed`, `dismissFinding`/`restoreFinding`, `getResearchConfig`, `setSourceEnabled`/`setCadence`/`setNotify`, `runScan`, `subscribe`                                              |
 | `composer-mentions.js` | per-session composer mentions                                              | `addMention`, `removeMention`, `renderInto`, `subscribe(sid, fn)`                                                                                                                                                                                          |
 
-`sources-stream` and `research-store` are the only **global** stores. `library.js` subscribes to sources-stream and re-emits per-session so any session's content surfaces repaint when a source lands. **No localStorage persistence of app state** — only `archie-user-mode`, the feature-flag keys, sidebar collapse state, and the single-use `sessionStorage` handoff keys.
+`sources-stream` is the only **global** store. `library.js` subscribes to sources-stream and re-emits per-session so any session's content surfaces repaint when a source lands. **No localStorage persistence of app state** — only `archie-user-mode`, the feature-flag keys, sidebar collapse state, and the single-use `sessionStorage` handoff keys.
 
-### Research — recurring ideas, and the evidence behind them
+### A settings surface must not aggregate
 
-**Gated behind the `research` feature flag (default OFF)** — when off, the `/research` digest, `/research/settings`, `/ideas`, their two sidebar nav entries, the "Why this idea" modal, the in-chat delivery line, the arrival toast and the recurring scan are all hidden; the seeded data and the source catalog still ride along, like `playbookCompetitors`.
-
-**A scan delivers Ideas, not findings to triage.** The brief was "deliver new content ideas at regular intervals", so the idea is the deliverable and the **finding** is its justification — reachable through "Why this?", never manipulated directly. An earlier version had this inverted (a stack of decision cards whose primary action was "Turn into ideas"); if you find prose or data still implying that, it's stale.
-
-- **Three surfaces, three jobs.** `/research` is the **digest** — one EDITION per scan, like a newsletter issue: the strongest idea expanded, the rest as one-line rows, a provenance footer. `/research/settings` is the per-Playbook config ("What I watch"), reached from a cog — deliberately not a tab, which put a quarterly setting next to a weekly read. `/ideas` is where the delivered ideas accumulate, filterable by origin.
-- **Catalog vs data.** `research-catalog.js` holds the seven source definitions (config — it must exist in `new-alt` too); the findings and editions are content in `mocks.js` (`researchFindings`, `researchScanPool`, `researchEditions`), empty in `new-alt`. A source's `kind` — never its id — decides whether the settings row renders a Playbook deep link, the MCP tool chips (gated on the `connectors` flag), or nothing.
-- **Config is per Playbook**, on the Context (`ctx.research = { enabledSourceIds, cadence, notify }`), beside the competitors it draws on. Read it through `research-store.getResearchConfig()`, which fills catalog defaults for a Playbook seeded before the feature. The settings page names the Playbook **in prose** — a page called settings reads as global.
-- **A settings surface must not aggregate.** Three attempts were reverted here: the drawer (`2b0abcf`, the DS ships no side-drawer primitive), the Connectors section (`8cdd7e8`, it duplicated `/connectors`), then `/settings` itself (`6fca0b0`). Hence a route scoped to one feature that links out to `/playbook/:id` rather than re-hosting its fields.
-- **Ideas from a scan belong to no conversation** (`origin: "research"`, `sessionId: null`) and live in the global pool. `library.js` owns that pool: `poolAdd`/`poolRemove` keep it honest, `getAllIdeas({origin})` / `countIdeasByOrigin()` / `removeIdeasGlobally()` / `subscribeGlobal()` are what a global surface needs, and `adoptIdea()` copies one into a chat so the session-scoped draft flow can act on it.
-- **Dismissal memory** keys on the finding's `dedupeKey`, not an id, so a skipped idea never comes back even if a later scan re-derives the same insight — the same contract as `dismissedCompetitors`. `runScan` also skips disabled sources, which is what makes the toggles observably load-bearing.
-- **The badge clears on route teardown**, not on mount — clearing on arrival would zero the counter the user just clicked.
-- **Cadence is copy and batch size, not a timer.** daily/weekly/monthly would never fire inside a demo session; the recurring feel comes from a one-shot scan ~12s after boot, armed once by `initResearch()` in `app.js`'s boot block.
-- **"Write it"** (`research-flow.writeIdea`) asks which chat via `chat-picker-modal`, carries the pick on the `pendingResearchIdea` handoff, then in the chat: echoes the idea, registers its finding as a browsable **Source**, adopts the idea into the session and starts the draft flow. No convert step. **"Not for me"** removes the idea from the library and remembers the finding, both undo-able.
+Three attempts at a general settings page were reverted here: the drawer (`2b0abcf`, the DS ships no side-drawer primitive), a Connectors section (`8cdd7e8`, it duplicated `/connectors`), then `/settings` itself (`6fca0b0`). Config belongs on the entity that owns it (a Playbook's fields live on `/playbook/:id`) or on a route scoped to one feature — never re-hosted in a global page.
 
 ### Connectors as live, MCP-queryable sources
 
@@ -183,18 +161,17 @@ Connectors (Notion, Slite, Google Drive, GitHub, …) are seeded in `mocks.js` (
 
 `handoff.js` exposes `setHandoff(key, payload)` / `consumeHandoff(key)` (atomic read+remove) / `hasHandoff(key)` over `sessionStorage`. Consumed at `session.js` mount:
 
-| Key                          | Set by                                               | Consumed by →                     |
-| ---------------------------- | ---------------------------------------------------- | --------------------------------- |
-| `pendingStartFlow`           | dashboard / new chat with a Playbook                 | `startActionPickerFlow`           |
-| `pendingDraftIdeaId`         | idea card "Draft post"                               | `askProfileQuestion` (draft-flow) |
-| `pendingAskSource`           | source card "Ask"                                    | `askWhatToKnow`                   |
-| `pendingAskConnector`        | connectors gallery/modal "Try in chat"               | `askConnector`                    |
-| `pendingStartContextBuilder` | `/contexts` "New Playbook" + welcome-alt             | `context-builder` (create)        |
-| `pendingResearchIdea`        | research digest / "Why this idea" modal → "Write it" | `adoptAndDraft` (research-flow)   |
+| Key                          | Set by                                   | Consumed by →                     |
+| ---------------------------- | ---------------------------------------- | --------------------------------- |
+| `pendingStartFlow`           | dashboard / new chat with a Playbook     | `startActionPickerFlow`           |
+| `pendingDraftIdeaId`         | idea card "Draft post"                   | `askProfileQuestion` (draft-flow) |
+| `pendingAskSource`           | source card "Ask"                        | `askWhatToKnow`                   |
+| `pendingAskConnector`        | connectors gallery/modal "Try in chat"   | `askConnector`                    |
+| `pendingStartContextBuilder` | `/contexts` "New Playbook" + welcome-alt | `context-builder` (create)        |
 
 ### Admin / user mode (prototype controls)
 
-The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototype control panel: switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()`. The 12 flags: `draftInlineEdit` (OFF), `playbookDefault` (OFF), `connectors` (OFF — gates the whole connectors feature), `conversationStatusCard` (OFF), `statusActionSnackbars` (OFF), `playbookColors` (OFF — colors hidden by default), `manyProfiles` (OFF — demo seed of ~40 connected profiles), `sidebarOrganize` (OFF — Sort & group control on the recent-chats list), `multilingualPlaybook` (OFF), `playbookCompetitors` (OFF — gates the Playbook's Competitors section), `research` (OFF — gates the whole Research feature), `imageStudioV2` (OFF — swaps the Image Studio for the prompt-at-the-bottom redesign in `components/image-studio-v2/`). Full table + gates: [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md#14-admin-feature-flags--user-modes).
+The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototype control panel: switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()`. The 11 flags: `draftInlineEdit` (OFF), `playbookDefault` (OFF), `connectors` (OFF — gates the whole connectors feature), `conversationStatusCard` (OFF), `statusActionSnackbars` (OFF), `playbookColors` (OFF — colors hidden by default), `manyProfiles` (OFF — demo seed of ~40 connected profiles), `sidebarOrganize` (OFF — Sort & group control on the recent-chats list), `multilingualPlaybook` (OFF), `playbookCompetitors` (OFF — gates the Playbook's Competitors section), `imageStudioV2` (OFF — swaps the Image Studio for the prompt-at-the-bottom redesign in `components/image-studio-v2/`). Full table + gates: [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md#14-admin-feature-flags--user-modes).
 
 ### Module loading
 
@@ -241,11 +218,11 @@ styles/
   layout.css        — app shell (sidebar / topbar / content / panel chrome)
   ds-patches.css    — the only legitimate place to touch .ap-* selectors
   chat.css          — composer + thread chrome
-  screens/          — dashboard, session, ideas, contexts, connectors, research,
+  screens/          — dashboard, session, ideas, contexts, connectors,
                       settings, posts, analyse, modals, sources, welcome
   components/       — sidebar, right-panel, conversation-status-card,
                       add-source-modal, connectors-modal, schedule-modal,
-                      video-clips-modal, clip-card, social-post-card, archie-loader
+                      video-clips-modal, clip-card, archie-loader
 ```
 
 ### Token tiers

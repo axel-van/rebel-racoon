@@ -13,8 +13,7 @@ import {
   ideas as seedIdeas,
   ideasBySession as seedIdeasBySession,
   recentSessions as seedRecentSessions,
-} from "./mocks.js?v=59";
-import { createNotifier } from "./store-utils.js?v=2";
+} from "./mocks.js?v=60";
 import { isNewUser } from "./user-mode.js?v=22";
 
 // Demo session ids — the recentSessions seed (s-acme-launch / s-riverside /
@@ -22,13 +21,13 @@ import { isNewUser } from "./user-mode.js?v=22";
 // conversations (created at runtime via "+ New conversation") start empty
 // to match the user's mental model. Anything else looked-up — same path.
 const DEMO_SESSION_IDS = new Set(seedRecentSessions.map((s) => s.id));
-import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=61";
+import { postAssistantMessage, postExtractionResult, startPending, finishPending } from "./assistant.js?v=62";
 import {
   getSources as streamGetSources,
   subscribeSources,
   pushScriptedSource,
   completeScriptedSource,
-} from "./sources-stream.js?v=54";
+} from "./sources-stream.js?v=55";
 
 // --- Module state -------------------------------------------------------
 
@@ -45,7 +44,7 @@ const streamUnsubsBySession = new Map();
 // `seedIdeas` IS mocks.ideas — a flat union of every demo session's ideas that
 // several surfaces read directly instead of going through this store (the
 // right-panel Ideas mode, draft-flow's fallback resolver, assistant's reasoning
-// copy) and that the research digest reads to resolve its editions' ideas.
+// copy).
 //
 // It used to be write-only from injectIdeasForSource and never pruned, so a
 // global surface showed ghosts (deleted ideas) and missed real ones (anything
@@ -55,31 +54,19 @@ const streamUnsubsBySession = new Map();
 // Not the same objects: the pool holds shallow copies, so a per-session edit
 // doesn't silently mutate the global row and vice versa. Identity is the `id`.
 
-// The pool has no per-session key, so a surface reading it globally needs its
-// own signal — the per-session notifier below never fires for an idea that
-// belongs to no conversation. The research digest subscribes to this.
-const globalNotifier = createNotifier("library/global");
-export const subscribeGlobal = globalNotifier.subscribe;
-const notifyGlobal = () => globalNotifier.notify(seedIdeas.slice());
-
 function poolAdd(ideas) {
   if (!Array.isArray(ideas) || ideas.length === 0) return;
   const known = new Set(seedIdeas.map((i) => i.id));
   const fresh = ideas.filter((i) => !known.has(i.id)).map((i) => ({ ...i }));
-  if (fresh.length) {
-    seedIdeas.unshift(...fresh);
-    notifyGlobal();
-  }
+  if (fresh.length) seedIdeas.unshift(...fresh);
 }
 
 function poolRemove(ideaIds) {
   if (!Array.isArray(ideaIds) || ideaIds.length === 0) return;
   const set = new Set(ideaIds);
-  const before = seedIdeas.length;
   for (let i = seedIdeas.length - 1; i >= 0; i -= 1) {
     if (set.has(seedIdeas[i].id)) seedIdeas.splice(i, 1);
   }
-  if (seedIdeas.length !== before) notifyGlobal();
 }
 
 let idCounter = 0;
@@ -146,109 +133,6 @@ export function clearSession(sessionId) {
   }
 }
 
-/**
- * Every idea the workspace holds, newest first. Reads the global pool rather
- * than walking sessions, because an idea delivered by a research scan belongs
- * to no conversation.
- *
- * @param {object} [opts]
- * @param {"all"|"research"|"session"} [opts.origin]  filter by where it came from
- */
-export function getAllIdeas({ origin = "all" } = {}) {
-  if (origin === "all") return seedIdeas.slice();
-  // Seeds predate the field, so anything unmarked counts as coming from a chat.
-  return seedIdeas.filter((i) => (i.origin || "session") === origin);
-}
-
-export function getIdeaById(id) {
-  return seedIdeas.find((i) => i.id === id) || null;
-}
-
-/**
- * Add ideas that belong to NO conversation — what a research scan produces.
- * They go to the global pool only, with `sessionId: null`, so the digest can
- * list them while the per-session stores stay untouched until one is adopted.
- *
- * Ids are caller-supplied and deterministic (idea-<findingId>-<n>), so
- * re-delivering the same batch is idempotent — poolAdd dedupes on id.
- */
-export function addGlobalIdeas(ideas) {
-  if (!Array.isArray(ideas) || ideas.length === 0) return [];
-  const created = ideas.map((i) => ({
-    id: i.id || newId("idea"),
-    title: i.title,
-    body: i.body,
-    kind: i.kind || "insight",
-    tags: i.tags || [],
-    used: 0,
-    ref: i.ref || "",
-    rationale: i.rationale || "",
-    relevance: i.relevance || "Medium relevance",
-    relevanceColor: i.relevanceColor || "tagOrange",
-    confidence: i.confidence ?? 70,
-    channels: i.channels || ["linkedin"],
-    state: "New",
-    pinned: false,
-    sourceIds: [],
-    researchFindingId: i.researchFindingId || null,
-    origin: "research",
-    sessionId: null,
-    extractedAt: i.extractedAt || "just now",
-  }));
-  poolAdd(created);
-  return created;
-}
-
-/**
- * Copy a conversation-less idea into a chat, so the draft flow — which is
- * session-scoped end to end — can act on it. The global row stays and gains a
- * `usedIn` stamp; the session gets its own copy under the same id, which is
- * what lets removeIdeasGlobally find both later.
- */
-export function adoptIdea(sessionId, ideaId) {
-  if (!sessionId) return null;
-  const global = getIdeaById(ideaId);
-  if (!global) return null;
-  const list = getIdeas(sessionId) && ideasMap.get(sessionId);
-  if (!list) return null;
-  if (!list.some((i) => i.id === ideaId)) {
-    list.unshift({ ...global, sessionId, extractedAt: "just now" });
-  }
-  global.sessionId = sessionId;
-  notify(sessionId);
-  return list.find((i) => i.id === ideaId) || null;
-}
-
-/**
- * Remove ideas from the global pool AND from whichever session holds them.
- * The per-session removers need a sessionId; a global surface doesn't have one,
- * so it dispatches by the idea's own `sessionId` stamp.
- */
-export function removeIdeasGlobally(ideaIds) {
-  if (!Array.isArray(ideaIds) || ideaIds.length === 0) return 0;
-  const set = new Set(ideaIds);
-  const bySession = new Map();
-  for (const idea of seedIdeas) {
-    if (!set.has(idea.id)) continue;
-    const sid = idea.sessionId || null;
-    if (!sid) continue;
-    if (!bySession.has(sid)) bySession.set(sid, []);
-    bySession.get(sid).push(idea.id);
-  }
-  const before = seedIdeas.length;
-  poolRemove(ideaIds);
-  // Then the per-session lists, so an open chat's Ideas panel agrees.
-  for (const [sid, ids] of bySession) {
-    const list = ideasMap.get(sid);
-    if (!list) continue;
-    for (let i = list.length - 1; i >= 0; i -= 1) {
-      if (ids.includes(list[i].id)) list.splice(i, 1);
-    }
-    notify(sid);
-  }
-  return before - seedIdeas.length;
-}
-
 // Bulk "extract more ideas" — used by the source-list bulk action bar.
 // For each source passed in, generates 1–2 fresh angle-flavored ideas using
 // EXTRA_IDEA_TEMPLATES, prepends them to the per-session ideas store, and
@@ -281,7 +165,6 @@ export function appendExtractedIdeas(sessionId, sources, onDone) {
         state: "New",
         pinned: false,
         sourceIds: [source.id],
-        origin: "session",
         sessionId,
         extractedAt: "just now",
       });
@@ -332,13 +215,6 @@ export function injectIdeasForSource(sessionId, sourceId, ideas) {
     state: "New",
     pinned: false,
     sourceIds: [sourceId],
-    // The research finding this idea was derived from, when it was. This mapper
-    // is a WHITELIST — a field not listed here is silently dropped, the same
-    // trap as contexts-store's updateContext.
-    researchFindingId: i.researchFindingId || null,
-    // Where the idea came from. "research" ideas arrive on their own, so the
-    // global library needs to be able to filter them out (or to only them).
-    origin: i.origin || (i.researchFindingId ? "research" : "session"),
     sessionId,
     extractedAt: "just now",
   }));
@@ -466,7 +342,6 @@ export function addSource(sessionId, kind) {
       state: "New",
       pinned: false,
       sourceIds: [sourceId],
-      origin: "session",
       sessionId,
       extractedAt: "just now",
     }));

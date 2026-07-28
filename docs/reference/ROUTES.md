@@ -4,18 +4,15 @@ Source de vérité : [`src/app.js`](../../src/app.js) (route table) + [`src/rout
 
 ## Route table
 
-| Route                | Handler                | Notes                                                                                                                                                                                                                               |
-| -------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                  | `dashboard.js`         | **Redirect-only** : first-time (`new-alt` mode) → `/welcome-alt` ; returning → most-recent session ou nouvelle session. Pas de UI propre.                                                                                           |
-| `/session/:id`       | `session.js`           | La surface chat principale (le plus gros fichier du projet). Héberge le thread assistant, le composer, les flows per-session (intake, draft, clips).                                                                                |
-| `/ideas`             | `ideas.js`             | Library **globale** des Ideas — où vivent les idées livrées par la recherche (`origin: "research"`, `sessionId: null`). Filtre par origine, provenance par carte, suppression en masse. Même flag `research` : route ET nav gatées. |
-| `/contexts`          | `contexts.js`          | Library **Playbooks** : cards (DO/DON'T, brief, color tag) + edit en side panel.                                                                                                                                                    |
-| `/playbook/:id`      | `playbook.js`          | Page détail d'un Playbook. Topbar back → `/contexts`.                                                                                                                                                                               |
-| `/connectors`        | `connectors.js`        | Gallery des connectors (feature flag `connectors`, default OFF). Détail dans un modal.                                                                                                                                              |
-| `/research`          | `research.js`          | **Digest** : une édition d'idées livrées par scan (flag `research`, default OFF). Playbook actif dans le hash (`?pb=`). Le teardown vide le badge « New ». `?tab=sources` (ancien onglet) redirige vers les réglages.               |
-| `/research/settings` | `research-settings.js` | « What I watch » — config des sources **par Playbook** (`?pb=`), atteinte par le cog du digest. Back topbar → `/research?pb=…`.                                                                                                     |
-| `/welcome-alt`       | `welcome-alt.js`       | Onboarding first-time. Redirige vers une session transitoire. Body en `.onboarding` (full-bleed).                                                                                                                                   |
-| `/welcome-alt/recap` | `welcome-alt-recap.js` | Recap final du Playbook construit pendant l'onboarding.                                                                                                                                                                             |
+| Route                | Handler                | Notes                                                                                                                                                |
+| -------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                  | `dashboard.js`         | **Redirect-only** : first-time (`new-alt` mode) → `/welcome-alt` ; returning → most-recent session ou nouvelle session. Pas de UI propre.            |
+| `/session/:id`       | `session.js`           | La surface chat principale (le plus gros fichier du projet). Héberge le thread assistant, le composer, les flows per-session (intake, draft, clips). |
+| `/contexts`          | `contexts.js`          | Library **Playbooks** : cards (DO/DON'T, brief, color tag) + edit en side panel.                                                                     |
+| `/playbook/:id`      | `playbook.js`          | Page détail d'un Playbook. Topbar back → `/contexts`.                                                                                                |
+| `/connectors`        | `connectors.js`        | Gallery des connectors (feature flag `connectors`, default OFF). Détail dans un modal.                                                               |
+| `/welcome-alt`       | `welcome-alt.js`       | Onboarding first-time. Redirige vers une session transitoire. Body en `.onboarding` (full-bleed).                                                    |
+| `/welcome-alt/recap` | `welcome-alt-recap.js` | Recap final du Playbook construit pendant l'onboarding.                                                                                              |
 
 ## Matching & lifecycle
 
@@ -46,7 +43,6 @@ Exemples observés :
 
 - `/session/:id?tab=posts` — Posts tab actif (right panel mode `drafts`)
 - `/session/:id?focusIdea=…` — scroll-and-highlight d'une idée précise
-- `/research?pb=ctx-acme` — digest du Playbook Acme ; `/research/settings?pb=ctx-acme` — ses réglages (les deux deep-linkables ; `?tab=sources` redirige vers les réglages)
 - (autres possibles : `?tab=ideas`, `?tab=sources`, `?tab=clips`, etc.)
 
 ## Handoffs entre routes
@@ -69,15 +65,14 @@ if (payload) {
 
 ### Handoffs actifs (consumés au mount de `session.js`)
 
-| Clé                          | Posé par                                        | Consommé par →                      |
-| ---------------------------- | ----------------------------------------------- | ----------------------------------- |
-| `pendingStartFlow`           | dashboard / new chat with a Playbook            | `startActionPickerFlow`             |
-| `pendingDraftIdeaId`         | idea card "Draft post"                          | `askProfileQuestion` (`draft-flow`) |
-| `pendingAskSource`           | source card "Ask"                               | `askWhatToKnow`                     |
-| `pendingAskConnector`        | connectors gallery / modal "Try in chat"        | `askConnector` (`connector-ask`)    |
-| `pendingStartContextBuilder` | `/contexts` "New Playbook" + welcome-alt        | `context-builder` (création)        |
-| `pendingStartPlaybookEditor` | `/contexts` card edit                           | `playbook-editor`                   |
-| `pendingResearchIdea`        | digest / modal « Why this idea » → « Write it » | `adoptAndDraft` (`research-flow`)   |
+| Clé                          | Posé par                                 | Consommé par →                      |
+| ---------------------------- | ---------------------------------------- | ----------------------------------- |
+| `pendingStartFlow`           | dashboard / new chat with a Playbook     | `startActionPickerFlow`             |
+| `pendingDraftIdeaId`         | idea card "Draft post"                   | `askProfileQuestion` (`draft-flow`) |
+| `pendingAskSource`           | source card "Ask"                        | `askWhatToKnow`                     |
+| `pendingAskConnector`        | connectors gallery / modal "Try in chat" | `askConnector` (`connector-ask`)    |
+| `pendingStartContextBuilder` | `/contexts` "New Playbook" + welcome-alt | `context-builder` (création)        |
+| `pendingStartPlaybookEditor` | `/contexts` card edit                    | `playbook-editor`                   |
 
 ## Navigation interne — patterns
 
@@ -98,7 +93,7 @@ setHashQuery("/session/abc", { tab: "ideas" });
 Les liens utilisent `href="#/route"` :
 
 ```html
-<a href="#/ideas" class="ap-button stroked">All ideas</a>
+<a href="#/contexts" class="ap-button stroked">All playbooks</a>
 ```
 
 Et le router gère le hashchange naturellement (pas besoin de preventDefault sauf cas particulier).

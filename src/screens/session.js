@@ -1,7 +1,7 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=236";
-import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=59";
+import { renderTopbar } from "../components/topbar.js?v=237";
+import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=60";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
@@ -11,11 +11,11 @@ import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
   PROFILE_SEARCH_THRESHOLD,
-} from "../social-profiles.js?v=29";
-import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=9";
+} from "../social-profiles.js?v=30";
+import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=10";
 import { CLIP_SUBTITLE_ITEMS, CLIP_SUBTITLE_LABEL } from "../clip-subtitles.js?v=1";
-import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=9";
-import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=40";
+import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=10";
+import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=41";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
   getThread,
@@ -36,46 +36,42 @@ import {
   markConnectPromptResolved,
   toggleTopPostsWidgetPick,
   answerTopPostsWidget,
-} from "../assistant.js?v=61";
+} from "../assistant.js?v=62";
 import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=55";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=44";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=56";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=45";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=29";
-import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=39";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=59";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=41";
-import * as topPostsFlow from "../top-posts-flow.js?v=78";
+} from "../composer-mentions.js?v=30";
+import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=40";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=60";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=42";
+import * as topPostsFlow from "../top-posts-flow.js?v=79";
 import {
   renderTopPostsBoard,
   renderTopPostEcho,
   renderTopPostsWidget,
   TOP_POSTS_LIMIT,
-} from "../components/top-post-card.js?v=69";
-import { getTopPost } from "../top-posts-store.js?v=13";
+} from "../components/top-post-card.js?v=70";
+import { getTopPost } from "../top-posts-store.js?v=14";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
-import * as sidebarWizard from "../sidebar-wizard.js?v=56";
+import * as sidebarWizard from "../sidebar-wizard.js?v=57";
 import * as inlineQuestion from "../inline-question.js?v=48";
-import * as clipStudio from "../clip-studio.js?v=26";
+import * as clipStudio from "../clip-studio.js?v=27";
 import * as batchStudio from "../batch-studio.js?v=4";
-import { askConnector } from "../connector-ask.js?v=11";
-import { adoptAndDraft } from "../research-flow.js?v=9";
-import { getFinding } from "../research-store.js?v=7";
-import { open as openResearchModal } from "../components/research-modal.js?v=17";
-import { renderSocialPostCard } from "../components/social-post-card.js?v=2";
-import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=31";
-import { renderConnectorLogo } from "../connectors-view.js?v=13";
+import { askConnector } from "../connector-ask.js?v=12";
+import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=32";
+import { renderConnectorLogo } from "../connectors-view.js?v=14";
 import {
   getActiveConnector,
   clearActiveConnector,
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
-import { isFlagOn } from "../feature-flags.js?v=12";
-import * as contextBuilder from "../context-builder.js?v=207";
+import { isFlagOn } from "../feature-flags.js?v=13";
+import * as contextBuilder from "../context-builder.js?v=208";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -86,10 +82,10 @@ import {
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=25";
-import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=57";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=63";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=64";
-import { open as openConnectorsModal } from "../components/connectors-modal.js?v=14";
+import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=58";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=64";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=65";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=15";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
   classifyFile,
@@ -105,8 +101,8 @@ import {
   updateSourceClips,
   extractClipsForSource,
   setSourceIdeaCount,
-} from "../sources-stream.js?v=54";
-import { renderClipCard } from "../components/clip-card.js?v=17";
+} from "../sources-stream.js?v=55";
+import { renderClipCard } from "../components/clip-card.js?v=18";
 import { onFeedbackClick } from "../components/feedback-control.js?v=2";
 import { showToast } from "../components/toast.js?v=20";
 import {
@@ -115,12 +111,12 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=374";
+} from "../components/right-panel.js?v=375";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=19";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=27";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=39";
+import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=20";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=28";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=40";
 // Pure thread-turn renderers — shared with the component handoff gallery so
 // the previews there never drift from the app (handoff/components.html).
 import {
@@ -2915,11 +2911,6 @@ function renderTurn(message, sessionId) {
     return renderIdeaExtractionTurn(message, sessionId);
   }
 
-  // A research scan landing — the result card for a batch of new findings.
-  if (message.role === "assistant" && message.variant === "research") {
-    return renderResearchTurn(message);
-  }
-
   // Profiles echo — right-aligned avatar (+ network badge) + handle chips,
   // used when the user picks which account(s) to draft a clip for.
   if (message.role === "user" && message.variant === "profiles") {
@@ -3597,16 +3588,6 @@ function wireAssistantPanel(root, session, attachedContext) {
     setTimeout(() => askConnector(session.id, pendingAskConnector.connectorId), 200);
   }
 
-  // Hand-off from /research — the user picked this chat for a finding, either
-  // through the chat picker or by minting a fresh chat. Turn it into ideas now
-  // that the thread subscriptions are live.
-  // Hand-off from the research digest — the user picked this chat to write a
-  // delivered idea in. Adopt it and go straight to drafting.
-  const pendingResearch = consumeHandoff("pendingResearchIdea");
-  if (pendingResearch?.ideaId) {
-    setTimeout(() => adoptAndDraft(session.id, pendingResearch.ideaId), 200);
-  }
-
   // Pending start flow set by the dashboard's New chat button. Only the
   // action-picker variant remains — creating a context happens via the
   // inline wizard (contextBuilder.start) instead.
@@ -3790,36 +3771,6 @@ function renderClipExtractionTurn(message, sessionId) {
         cta: { label: "Open clips" },
         dataAttr: `data-clip-card-open="${source.id}"`,
       })}
-    </div>
-  `;
-}
-
-// A research scan landing in the thread — ONE LINE, not a card.
-//
-// It used to be a full renderResultCard with the headline repeated, an
-// evidence post and the source list. But Archie's own sentence right above
-// already says the count and names the strongest finding, so the card said
-// everything twice and added a quote nobody needs mid-conversation. A
-// conversation is not a place to render a decision surface; it's a place to
-// say something happened and point at where it lives.
-//
-// Store-coupled (it resolves the live findings each paint, so one dismissed
-// elsewhere disappears), which is why it isn't in the pure thread-turns module.
-function renderResearchTurn(message) {
-  const live = (message.findingIds || [])
-    .map((id) => getFinding(id))
-    .filter(Boolean)
-    .filter((f) => f.status !== "dismissed");
-
-  // Nothing left to point at — the sentence above already carried the news.
-  if (live.length === 0) return "";
-
-  return `
-    <div class="chat-turn chat-turn--ai chat-turn--research">
-      <button type="button" class="ap-link standalone small research-turn__link" data-research-open="${escapeHtmlAttr(live[0].id)}">
-        <span>${live.length === 1 ? "See the finding" : `See the ${live.length} findings`}</span>
-        <i class="ap-icon-arrow-right" aria-hidden="true"></i>
-      </button>
     </div>
   `;
 }
@@ -4849,23 +4800,6 @@ function bindSession(root, session) {
       if (openClipsBtn) {
         event.preventDefault();
         openClipsPanel();
-        return;
-      }
-
-      // Research delivery card → read the finding in place. Deliberately NOT a
-      // navigation to /research: the user is mid-conversation, and the modal
-      // carries the same decision buttons the feed would.
-      const openResearchCard = event.target.closest("[data-research-open]");
-      if (openResearchCard) {
-        event.preventDefault();
-        openResearchModal({ findingId: openResearchCard.dataset.researchOpen });
-        return;
-      }
-
-      const openResearchFeed = event.target.closest("[data-research-open-feed]");
-      if (openResearchFeed) {
-        event.preventDefault();
-        navigate("/research");
         return;
       }
 

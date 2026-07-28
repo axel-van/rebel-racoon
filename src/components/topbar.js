@@ -1,5 +1,4 @@
 import { html, raw, escapeHtml, escapeAttr } from "../utils.js?v=21";
-import { parseHashParams } from "../url-state.js?v=21";
 import { getPath, navigate } from "../router.js?v=30";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 // Lot 19 — topbar no longer carries its own sidebar-toggle button. The
@@ -14,25 +13,25 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=374";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=54";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=61";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=55";
-import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=39";
+} from "./right-panel.js?v=375";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=55";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=62";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=56";
+import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=40";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=167";
-import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=9";
+} from "./conversation-status-card.js?v=168";
+import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=10";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { subscribe as subscribeContexts } from "../contexts-store.js?v=40";
-import { isFlagOn } from "../feature-flags.js?v=12";
+import { subscribe as subscribeContexts } from "../contexts-store.js?v=41";
+import { isFlagOn } from "../feature-flags.js?v=13";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=78";
+} from "../top-posts-flow.js?v=79";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static
@@ -46,8 +45,7 @@ import {
 //     control so the chrome stays reachable in any state) + route-derived
 //     title
 //   • Right     — Sources / Ideas / Drafts pills (only on /session/:id, drive
-//     the right-panel modes), or the page-level control a non-session route
-//     owns — today only the research digest's "What I watch" cog.
+//     the right-panel modes)
 //
 // The Archie wordmark moved to the global sidebar at Lot 2.1. Feedback /
 // Report a bug / Keyboard shortcuts / Settings moved out of the topbar at
@@ -82,9 +80,7 @@ export function renderTopbar(_options = {}) {
     ? renderWelcomeAltExit()
     : onSession
       ? `${renderSessionPills(rpMode, draftCount, isEmpty, ideaCount)}${renderStatusCardToggle(statusCardAvailable)}`
-      : isResearchDigest()
-        ? renderResearchSettingsCog()
-        : "";
+      : "";
   // On the repurposing winner board (profile-first mode), the topbar leads with
   // a "Change profile" back — the app's standard back affordance — in place of
   // the session title.
@@ -110,34 +106,6 @@ function renderTopPostsBack() {
     <button type="button" class="ap-button ghost grey app-topbar__back" data-topbar-topposts-back title="Change profile">
       <i class="ap-icon-arrow-left" aria-hidden="true"></i>
       <span>Change profile</span>
-    </button>
-  `;
-}
-
-// The research digest (/research) — NOT its settings page, which leads with a
-// back control and has nothing to configure about itself.
-function isResearchDigest() {
-  return getPath() === "/research";
-}
-
-// "What I watch", far right of the topbar — the same slot the session's chat-status
-// toggle occupies. It used to sit in the page header, where it read as a third
-// action next to the Playbook picker and "Look now"; the topbar is the app's
-// canonical home for a page-level control that isn't about the content below.
-//
-// Discreet on purpose: the config used to be a permanent tab with a counter,
-// which put something you set once a quarter at the same level as the ideas you
-// read weekly — and the counter implied there was something to do there.
-function renderResearchSettingsCog() {
-  return `
-    <button
-      type="button"
-      class="ap-icon-button transparent"
-      data-topbar-research-settings
-      aria-label="Research settings"
-      title="What I watch"
-    >
-      <i class="ap-icon-cog"></i>
     </button>
   `;
 }
@@ -228,13 +196,6 @@ export function initTopbar() {
     const backBtn = event.target.closest("[data-topbar-back]");
     if (backBtn) {
       navigate(backBtn.dataset.topbarBack || "/");
-      return;
-    }
-    // The digest's cog → "What I watch", carrying the Playbook the user is
-    // looking at (or the settings page resolves its own default, same rule).
-    if (event.target.closest("[data-topbar-research-settings]")) {
-      const pb = parseHashParams().get("pb");
-      navigate(`/research/settings${pb ? `?pb=${encodeURIComponent(pb)}` : ""}`);
       return;
     }
     // "Change profile" — back to the repurposing profile chooser (step 1).
@@ -510,14 +471,8 @@ function isSessionRoute() {
 }
 
 // Routes that lead with a back control instead of a title, and where they go.
-// `to` may carry a query — /research/settings sends the active Playbook back to
-// the digest, or setting Playbook B and returning would show Playbook A's.
 function backTargetFor(path) {
   if (/^\/playbook\//.test(path)) return { to: "/contexts", label: "Back to Playbooks" };
-  if (path === "/research/settings") {
-    const pb = parseHashParams().get("pb");
-    return { to: pb ? `/research?pb=${encodeURIComponent(pb)}` : "/research", label: "Back to Research" };
-  }
   return null;
 }
 
@@ -558,8 +513,6 @@ function currentTitle() {
   if (path === "/") return "Home";
   if (path === "/contexts") return "Playbooks";
   if (path === "/connectors") return "Connectors";
-  if (path === "/research") return "Research";
-  if (path === "/research/settings") return "What I watch";
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);
   if (sessionMatch) {
     const id = sessionMatch[1];

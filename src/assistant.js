@@ -6,11 +6,11 @@
 //
 // Subscribers re-render the thread DOM on any change — no global store.
 
-import { ideas, threadsBySession as seedThreadsBySession, connectorDocs } from "./mocks.js?v=59";
-import { findConnector } from "./connectors-store.js?v=31";
+import { ideas, threadsBySession as seedThreadsBySession, connectorDocs } from "./mocks.js?v=60";
+import { findConnector } from "./connectors-store.js?v=32";
 import { createSessionNotifier } from "./store-utils.js?v=2";
 import { showToast } from "./components/toast.js?v=20";
-import { isFlagOn } from "./feature-flags.js?v=12";
+import { isFlagOn } from "./feature-flags.js?v=13";
 
 const threads = new Map(); // sessionId → messages[]
 const notifier = createSessionNotifier("assistant");
@@ -446,33 +446,6 @@ export function postTopPostsWidget(sessionId, { network, postIds }) {
     network: network || null,
     postIds: Array.isArray(postIds) ? postIds.slice() : [],
     selected: [],
-    status: "ready",
-    createdAt: Date.now(),
-  });
-  notify(sessionId);
-  return id;
-}
-
-// Announce a research scan in the thread. A VARIANT, not a new role: renderTurn
-// already branches on assistant + variant five times, whereas a new role would
-// need handling in every role-switching consumer (composer status, the offThread
-// subscription, the widget scans).
-//
-// Deliberately dumb — ids and counts only, no copies of the findings. The
-// renderer resolves them from research-store on each paint, so a finding
-// dismissed elsewhere disappears from the turn instead of going stale.
-export function postResearchDelivery(sessionId, { findingIds, sourceNames = [] }) {
-  const thread = getThread(sessionId);
-  const ids = Array.isArray(findingIds) ? findingIds.slice() : [];
-  const id = newId();
-  thread.push({
-    id,
-    role: "assistant",
-    variant: "research",
-    meta: "Archie",
-    findingIds: ids,
-    count: ids.length,
-    sourceNames: Array.isArray(sourceNames) ? sourceNames.slice() : [],
     status: "ready",
     createdAt: Date.now(),
   });

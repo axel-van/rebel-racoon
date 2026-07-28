@@ -6,12 +6,12 @@
 
 ## Le pipeline
 
-Archie transforme des **Sources** en **Ideas**, puis en **Drafts** (posts), puis en posts **planifiés** — le tout depuis un chat conversationnel. En amont, un scan récurrent peut rapporter des **Findings** (§17) qui deviennent des Ideas.
+Archie transforme des **Sources** en **Ideas**, puis en **Drafts** (posts), puis en posts **planifiés** — le tout depuis un chat conversationnel.
 
 ```
-Finding → Source → Idea → Draft (post) → Schedule
-(§17)       │                             ▲
-            └── vidéo → Clips ────────────┘  (les clips deviennent aussi des drafts)
+Source → Idea → Draft (post) → Schedule
+   │                          ▲
+   └── vidéo → Clips ─────────┘  (les clips deviennent aussi des drafts)
 ```
 
 Vocabulaire : un **Playbook** (label UI) = un **Context** (code/store). Voir [`GLOSSARY.md`](GLOSSARY.md).
@@ -84,7 +84,7 @@ Store **global** [`sources-stream.js`](../../src/sources-stream.js) (uploads + m
 
 ### Ajouter une source — modal ([`add-source-modal.js`](../../src/components/add-source-modal.js))
 
-Dialog mono-méthode (le titre reflète la méthode). Entrées : panneau Sources « Attach source », empty-state `/ideas`, menus `+`.
+Dialog mono-méthode (le titre reflète la méthode). Entrées : panneau Sources « Attach source », menus `+`.
 
 - **Upload** : dropzone _« Drop files here, or »_ / _« PDF, Word, text, video, audio, images · Up to 100MB per file »_. Accepte `.pdf,.doc,.docx,.txt,.md,.mp4,.mov,.mp3,.wav,.m4a,.png,.jpg,.jpeg`. Multi-fichiers. Ligne par fichier : _« Uploading NN% »_ → pill bleu **Processing** → pill vert **Ready**.
 - **URL** : label _« Paste a URL »_, placeholder `https://example.com/article`. Reconnaissance de service live (logo + _« I recognised a <service> link — I'll import it. »_). Validation blur _« URL must start with http:// or https:// »_. Toast _« Link added — I'll fetch it now. »_. Lien connecteur non connecté → connect-prompt in-chat.
@@ -119,13 +119,6 @@ upload (uploading, progress 0→100% ~2s)
 ## 3. Ideas
 
 Store **per-session** [`library.js`](../../src/library.js). Idée = title, hook/body, **kind** (hook/stat/quote/story/insight), rationale (« Why this idea »), relevance/confidence (→ potential label), channels, sourceIds, pinned. Seedées seulement pour sessions démo (returning mode) ; chats neufs vides.
-
-### Page Ideas (`/ideas`, [`screens/ideas.js`](../../src/screens/ideas.js))
-
-- Header **« Ideas »** + _« N ideas · M used in posts · K unused »_ + « Re-extract from sources » / « Create an idea » (non câblés).
-- **Filtre kind** (chips + counts) : All / Hooks / Stats / Quotes / Stories / Insights.
-- **Search** _« Search ideas… »_ (repaint in-place, caret préservé). **Sort** : Most recent / Most used / Unused first.
-- **Empty states** (3 branches) : vide, filtré (« No ideas match »), analysing (« Ideas will appear here once I finish analyzing… »).
 
 ### Cartes idée
 
@@ -338,7 +331,7 @@ First-time sans Playbook → `/welcome-alt` ; sinon → session la plus récente
 ### Sidebar ([`sidebar.js`](../../src/components/sidebar.js))
 
 - **Head** : wordmark « Archie » + badge **BETA** (mint un chat), toggle collapse.
-- **Nav** : **New chat** (⇧⌘O), **Search…** (⌘K), puis **Research** (flag `research` — compteur **bleu** des findings non vus, c'est une notification et non un total), **Ideas** (flag `sidebarIdeas`), **Playbooks**, **Connectors** (flag `connectors`) avec count badges.
+- **Nav** : **New chat** (⇧⌘O), **Search…** (⌘K), puis **Playbooks**, **Connectors** (flag `connectors`) avec count badges.
 - **Recent** : groupés Pinned / Recent (avec le flag `sidebarOrganize` ON, un bouton filtre au-dessus de la liste ouvre **Group by** Aucun/Playbook/Date + **Sort by** Récence/Alphabétique — Pinned reste toujours en tête). Row = dot couleur playbook (masqué quand `playbookColors` est OFF) + titre + menu ⋮ (**Rename / Pin / Delete**). Delete → confirm + sweep de tous les stores per-session.
 - **Footer** : bloc user, **Send feedback**, ⚙️ popmenu → Send feedback / Report a bug / Keyboard shortcuts (`?`) / **Admin menu** (voir §14).
 - **Raccourcis globaux** : ⌘/Ctrl+B toggle sidebar, ⇧⌘O new chat, Esc ferme le menu. Collapse persisté (`archie-sidebar-collapsed`).
@@ -394,8 +387,6 @@ Détail dimensions/coexistence avec la status-card : [`SHELL-LAYOUT.md`](SHELL-L
 | `imageStudioV2`          | Image Studio v2 (prompt en bas) | **OFF** | Les actions image d'un draft ouvrent le redesign v2 (stage pleine largeur + composer en bas, réglages en chips-dropdown) au lieu de l'Image Studio actuel. Mêmes options, même moteur d'état (voir §7).                                                                                                                                |
 | `sidebarOrganize`        | Sort & group chats              | **OFF** | Bouton filtre au-dessus de la liste des chats → popover à plat **Group by** (Aucun / Playbook / Date) + **Sort by** (Récence / Alphabétique) ; réordonne/regroupe la liste (Pinned reste en tête). Date = buckets Today / Yesterday / Previous 7 days / … dérivés du libellé `lastActivity`. Préf. persistée (`archie-chat-organize`). |
 
-| `research` | Research (recurring findings) | **OFF** | Toute la feature **Research** (§17) : les routes `/research` (digest), `/research/settings` et `/ideas` + leurs deux entrées de nav (avec le compteur d'idées non vues), le modal « Why this idea », la ligne de livraison in-chat, le toast d'arrivée et le scan récurrent. La donnée (findings + éditions seedés, catalogue de sources) reste présente quand OFF, comme `playbookCompetitors`. |
-
 Persistés en `localStorage` (`archie-feature-flags`), lus via `isFlagOn()`. Voir aussi [`STORES.md`](STORES.md).
 
 ### User modes ([`user-mode.js`](../../src/user-mode.js))
@@ -432,61 +423,6 @@ Tous via [`modal-coordinator.js`](../../src/modal-coordinator.js) (un overlay à
 - **URL services** ([`url-services.js`](../../src/url-services.js)) : reconnaissance de service depuis une URL (logos Google Docs/Notion/Drive/YouTube/Figma).
 - **Deep-links Figma-capture** : `?route=`, `?openModal=…`, `?openPanel=…`.
 - **Suppression de session** : `clearSession` dans chaque store per-session vide sources/ideas/drafts/mentions.
-
----
-
-## 17. Research — des idées livrées à intervalle régulier (flag `research`, OFF)
-
-Un scan récurrent de sources de veille (le **listening** Agorapulse d'abord) livre des **Ideas**. La recherche derrière chacune est sa justification, pas un objet à trier. Voir [`GLOSSARY.md`](GLOSSARY.md) pour Idea / Finding / Edition.
-
-> **Ce que ce modèle a remplacé.** Une première version livrait des _findings_ que l'utilisateur devait convertir (« Turn into ideas »), présentés en une pile de cartes de décision identiques. Le brief était « livrer des idées de contenu à intervalle régulier » : le livrable, c'est l'idée. Le finding est redevenu la preuve.
-
-### Le digest — route `/research`
-
-Mono-usage. Une **édition** par scan, comme un numéro de newsletter :
-
-- l'idée la plus forte **développée** : titre, la raison en une phrase (« Because your competitors stopped announcing features. »), le texte, puis **Write it** / **Not for me** / _Why this?_ ;
-- les autres en **lignes d'une ligne**, dépliables sur place ;
-- un pied de provenance (« From Competitor and Influencer. ») — la recherche comme caution, pas comme contenu à parcourir.
-
-Délibérément **pas** de `.ap-card` par idée : une carte chacune et on revient à un fil ; l'édition est le conteneur, la hiérarchie vient du corps de texte et de l'espace. En-tête : titre, sous-ligne (« 2 sources · every week · last scan 5h ago »), sélecteur de Playbook (`?pb=`, masqué s'il n'y a qu'un Playbook), **Look now**, et un **cog** vers les réglages.
-
-### Les réglages — route `/research/settings`
-
-« **What I watch** », par Playbook. Une seule carte de 7 lignes-interrupteurs (voir [`research-catalog.js`](../../src/research-catalog.js)) : Competitor sources, Influencer sources, Brand feedback, Competitor monitoring, Industry trends, Global trends, Internal team ideas. Toute la ligne est le `<label>`, toggle DS `.ap-toggle-container` en fin de ligne, description clampée à une ligne. Puis **How often** (`.ap-filter-chip`) et **Notifications**.
-
-Selon le `kind` de la source : un lien discret vers la section du Playbook qui l'alimente, ou les chips des outils connectés (**gatées par le flag `connectors`**).
-
-Trois choix d'architecture à ne pas défaire :
-
-- **Une route dédiée à la feature, pas un `/settings` global.** Les trois tentatives d'agrégation dans ce repo ont été annulées : le drawer (`2b0abcf` — le DS ne fournit pas de primitive side-drawer), la section Connectors (`8cdd7e8` — elle dupliquait `/connectors`), puis la route (`6fca0b0`).
-- **Le Playbook est nommé en prose** dans le sous-titre (« 3 sources for **Acme · Q2 marketing**, every day. »), pas seulement dans le picker : une page appelée réglages se lit comme globale, et cette config est par Playbook.
-- **Pas d'entrée de nav** — une seule porte, le cog. Une ligne de sidebar annulerait le fait de les avoir rendus moins visibles.
-
-`?tab=sources` sur `/research` (l'ancien onglet) redirige ici.
-
-### « Why this idea » — le modal
-
-720px, premier dialog de **lecture longue** de l'app. L'**idée** est le titre ; en dessous, « Why I'm suggesting it » (le constat + l'argument long) puis « What I saw » (les posts d'autrui, via [`social-post-card.js`](../../src/components/social-post-card.js)). Footer : **Write it** / **Not for me**.
-
-### Les actions sur une idée ([`research-flow.js`](../../src/research-flow.js))
-
-- **Write it** — l'idée existe déjà dans la library globale mais n'appartient à aucun chat. Le **chat picker** demande où, le choix voyage sur le handoff `pendingResearchIdea`, puis dans le chat : écho de l'idée, le finding devient une **Source** consultable, l'idée est adoptée dans la session et le draft flow démarre. Pas d'étape « convertir ».
-- **Not for me** — l'idée quitte la library (donc le digest **et** `/ideas`) et le `dedupeKey` de son finding est mémorisé, pour qu'aucun scan ne la re-dérive. Undo restaure les deux.
-
-### Où les idées s'accumulent — `/ideas`
-
-Les idées livrées sont de vraies Ideas dans la library globale (`origin: "research"`, `sessionId: null`). `/ideas` (même flag) les héberge avec un filtre par origine, la provenance sur chaque carte, et la suppression en masse — sans quoi 5 idées par semaine remplissent la page sans recours.
-
-### Livraison in-chat & récurrence
-
-Chaque batch s'annonce là où l'utilisateur est : une phrase à la première personne (« I looked through your sources. 3 new ideas — the strongest one is because… ») puis **une ligne**, « See the 3 findings → ». Pas une carte : la phrase au-dessus dit déjà le compte et nomme la plus forte.
-
-Deux déclencheurs, un seul chemin d'annonce : **Look now**, et un scan one-shot ~12s après le boot (`initResearch()` dans le bloc de boot de `app.js`). La **cadence n'est pas un timer** — daily/weekly/monthly ne se déclencherait jamais dans une session de démo ; elle pilote la copie et la taille du batch. Notifications OFF supprime le toast mais **pas** le badge.
-
-### Mémoire des rejets & toggles chargés
-
-`runScan` ignore les sources désactivées — c'est ce qui rend les toggles observablement utiles. Le badge « New » ne se vide qu'au **teardown** de la route, jamais à l'arrivée.
 
 ---
 
