@@ -746,6 +746,16 @@
   max-width: min(560px, calc(100vw - 96px));
 }
 
+/* The palette is main's component (v2 reuses it verbatim), pinned top-left there.
+   In v2 it takes the slot the generate inspector vacates, so it takes its
+   alignment too: vertically centred on the same axis, so switching mode moves the
+   labels and nothing else. Restated here rather than changed in main's stylesheet,
+   which still wants its own palette at the top. */
+.isv2-stage-body > .image-studio__palette {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 /* The tool palette sits at the stage's LEFT edge, so its sheets fly the other
    way — there is nothing to their left but the modal edge. Centred on the button
    that opened it, the same rule the text toolbar's popovers follow. */
