@@ -1,0 +1,171 @@
+/* social-post-card — someone else's published post, shown as evidence behind a
+   claim. Quiet on purpose: it sits inside a reading surface (the topic dialog),
+   so it must not compete with the prose above it. No hover state, no elevation —
+   nothing here is clickable.
+
+   See src/components/social-post-card.js. */
+
+.social-post-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+  background: var(--app-surface);
+}
+
+/* ── Head: avatar · identity · network mark ─────────────────────────────── */
+
+.social-post-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+/* Accent tint on the DS avatar. Set as a plain background on this component's
+   own class rather than by reaching into --comp-avatar-*: the app must not touch
+   component-tier tokens, and the attribute selector out-specifies .ap-avatar's
+   default without redeclaring it. */
+.social-post-card__avatar {
+  flex-shrink: 0;
+}
+.social-post-card__avatar[data-accent="grey"] {
+  background: var(--ref-color-grey-150);
+}
+.social-post-card__avatar[data-accent="purple"] {
+  background: var(--ref-color-purple-100);
+}
+.social-post-card__avatar[data-accent="red"] {
+  background: var(--ref-color-red-100);
+}
+.social-post-card__avatar[data-accent="menthol"] {
+  background: var(--ref-color-menthol-100);
+}
+.social-post-card__avatar[data-accent="orange"] {
+  background: var(--ref-color-orange-100);
+}
+.social-post-card__avatar[data-accent="green"] {
+  background: var(--ref-color-green-100);
+}
+.social-post-card__avatar[data-accent="electric-blue"] {
+  background: var(--ref-color-electric-blue-100);
+}
+.social-post-card__avatar[data-accent="yellow"] {
+  background: var(--ref-color-yellow-100);
+}
+.social-post-card__avatar[data-accent="soft-blue"] {
+  background: var(--ref-color-soft-blue-100);
+}
+
+/* Every tint above is a -100 (or the grey -150) step, i.e. dark enough to carry
+   white initials at the DS's initials weight. */
+.social-post-card__avatar > .ap-avatar-initials {
+  color: var(--ref-color-white);
+}
+
+.social-post-card__identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.social-post-card__author {
+  font-family: var(--sys-text-style-body-bold-font-family);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--sys-text-color-default);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.social-post-card__meta {
+  font-family: var(--sys-text-style-caption-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
+}
+
+/* The DS `-official` glyphs paint their own brand colours (SVG data-URI
+   backgrounds), so this only has to size and place the mark. */
+.social-post-card__net {
+  flex-shrink: 0;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  align-self: flex-start;
+}
+
+/* ── Body ───────────────────────────────────────────────────────────────── */
+
+.social-post-card__text {
+  margin: 0;
+  font-family: var(--sys-text-style-body-font-family);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--sys-text-color-default);
+  white-space: pre-wrap;
+}
+
+/* ── Engagement ─────────────────────────────────────────────────────────── */
+
+.social-post-card__stats {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+}
+
+.social-post-card__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  font-family: var(--sys-text-style-caption-bold-font-family);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--sys-text-color-light);
+}
+
+.social-post-card__stat > i {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+/* The counts read as icon + number; the noun is there for screen readers only,
+   since three glyphs in a row are unambiguous to a sighted reader and the labels
+   would double the height of the row. */
+.social-post-card__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Compact: a single representative post riding inside another surface ── */
+
+.social-post-card--compact {
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs);
+}
+
+.social-post-card--compact .social-post-card__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.social-post-card--compact .social-post-card__net {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
