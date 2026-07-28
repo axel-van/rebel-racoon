@@ -100,6 +100,21 @@ export const FLAGS = Object.freeze([
       "surface differs.",
   },
   {
+    id: "topics",
+    label: "Topics (listening dossiers)",
+    default: false,
+    hides:
+      "When OFF (default), hides everything Topics-related: the /topics feed " +
+      "route + its sidebar nav row and unseen counter, the topic dossier " +
+      "dialog, and the Topics section (sources + refresh cadence) on a " +
+      "Playbook. The seeded dossiers and the per-Playbook config still ride " +
+      "along in the data, like playbookCompetitors. When ON, Agorapulse " +
+      "listening produces dossiers — a headline, a written analysis, and the " +
+      "social posts behind it — from six sources tied to the Playbook's " +
+      "competitors; each one can open a chat with itself attached, or be " +
+      "dismissed.",
+  },
+  {
     id: "playbookCompetitors",
     label: "Playbook competitors",
     default: false,

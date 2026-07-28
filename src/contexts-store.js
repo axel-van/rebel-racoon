@@ -20,6 +20,7 @@
 import { contexts as seed } from "./mocks.js?v=60";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
+import { DEFAULT_ENABLED_IDS, DEFAULT_CADENCE, findTopicSource, findCadence } from "./topics-catalog.js?v=1";
 import {
   normalizeLanguages,
   mirrorPrimaryToTopLevel,
@@ -32,7 +33,10 @@ import {
 // seed is upgraded to the multilingual shape (languages/primaryLanguage/
 // voiceByLanguage) lazily via normalizeLanguages — legacy single-language
 // mocks keep rendering identically.
-const contexts = isNewUser() ? [] : seed.map((c) => normalizeLanguages({ ...c }));
+// Seeds bypass addContext, so anything addContext normalises has to be applied
+// here too — `topics` included, or a seeded Playbook with no topics config at
+// all would render the section against `undefined`.
+const contexts = isNewUser() ? [] : seed.map((c) => normalizeLanguages({ ...c, topics: normalizeTopics(c.topics) }));
 const notifier = createNotifier("contexts-store");
 
 export const subscribe = notifier.subscribe;
@@ -58,6 +62,21 @@ function normalizeCompetitors(list) {
     logo: c.logo || "",
     socials: Array.isArray(c.socials) ? c.socials.map((s) => ({ ...s })) : [],
   }));
+}
+
+// Topics config — which listening sources this Playbook has switched on, and
+// how often I refresh them. One cadence for the whole Playbook, not one per
+// source. The catalog (names, icons, descriptions) is config and lives in
+// topics-catalog.js; only the user's choices are stored here.
+function normalizeTopics(t) {
+  const src = t && typeof t === "object" ? t : {};
+  const enabled = Array.isArray(src.enabledSourceIds) ? src.enabledSourceIds.slice() : DEFAULT_ENABLED_IDS.slice();
+  return {
+    // Keep only ids the catalog still knows about, so a removed source can't
+    // linger in a seeded Playbook and count towards an enabled total.
+    enabledSourceIds: enabled.filter((id) => !!findTopicSource(id)),
+    cadence: findCadence(src.cadence) ? src.cadence : DEFAULT_CADENCE,
+  };
 }
 
 export function getContexts() {
@@ -152,6 +171,10 @@ export function addContext(ctx = {}) {
     //   user rejected so discovery never re-proposes them.
     competitors: normalizeCompetitors(ctx.competitors),
     dismissedCompetitors: Array.isArray(ctx.dismissedCompetitors) ? ctx.dismissedCompetitors.slice() : [],
+    // — topics (which listening sources are on + how often I refresh them) —
+    //   Always present, even while the `topics` flag is OFF: the config rides
+    //   along in the data like competitors do, only the surfaces are gated.
+    topics: normalizeTopics(ctx.topics),
     // — meta —
     usedIn: typeof ctx.usedIn === "number" ? ctx.usedIn : 0,
     updatedAt: ctx.updatedAt || "just now",
@@ -225,6 +248,7 @@ export function updateContext(id, patch) {
   if (patch.competitors !== undefined) c.competitors = normalizeCompetitors(patch.competitors);
   if (patch.dismissedCompetitors !== undefined)
     c.dismissedCompetitors = Array.isArray(patch.dismissedCompetitors) ? patch.dismissedCompetitors.slice() : [];
+  if (patch.topics !== undefined) c.topics = normalizeTopics(patch.topics);
   // — multilingual fields —
   if (patch.languages !== undefined)
     c.languages = Array.isArray(patch.languages) ? patch.languages.slice() : patch.languages;
@@ -303,6 +327,7 @@ export function duplicateContext(id) {
       ...i,
       networks: Array.isArray(i.networks) ? [...i.networks] : [],
     })),
+    topics: src.topics ? { ...src.topics, enabledSourceIds: (src.topics.enabledSourceIds || []).slice() } : undefined,
     isDefault: false,
     usedIn: 0,
     analysis: src.analysis ? { ...src.analysis } : { voice: null, brief: null, brand: null },

@@ -1440,6 +1440,9 @@ export const contexts = [
         ],
       },
     ],
+    // Two sources on, refreshed monthly — a B2B Playbook watching a slower
+    // market than Pawtrack's, so the two feeds read differently.
+    topics: { enabledSourceIds: ["competitor-posts", "industry-trends"], cadence: "monthly" },
     ctaLinks: [
       { label: "30-day free trial", url: "acme.example.com/trial", checked: true, suggested: false },
       { label: "Book a demo", url: "acme.example.com/demo", checked: true, suggested: false },
@@ -1762,6 +1765,204 @@ export const contexts = [
       brand: null,
     },
   },
+  // A consumer brand, deliberately unlike the three B2B Playbooks above: it
+  // gives the Topics feed a market where listening has something vivid to say
+  // (a crowded hardware category whose buyers talk in feelings, not specs), and
+  // its competitors are the real names the seeded dossiers cite.
+  {
+    id: "ctx-pawtrack",
+    name: "Pawtrack · always-on",
+    color: "purple",
+    isDefault: false,
+    brandName: "Pawtrack",
+    websiteUrl: "https://pawtrack.example.com",
+    audience: ["Dog and cat owners who have already had one scare and never want another"],
+    businessSummary:
+      "Sell the Pawtrack collar on relief, not on radios. Owners don't buy LTE-M and IP68 — they buy knowing where their animal is at 2am. Lead with the moment the tracker mattered.",
+    briefSummary:
+      "Sell the Pawtrack collar on relief, not on radios. Owners don't buy LTE-M and IP68 — they buy knowing where their animal is at 2am. Lead with the moment the tracker mattered.",
+    tones: ["Warm", "Reassuring"],
+    voiceProfile: {
+      headline: "Warm · plain-spoken · never alarmist",
+      writingStyle:
+        "Story-first and close to the ground. Opens on a real moment — a gate left open, a cat that didn't come in — then says what happened next. Specs appear only once they've earned it, and always in service of the moment.",
+      vocabulary:
+        "The words owners use: 'she got out', 'he bolted', 'found her'. Never 'asset', 'device', 'solution' or 'pet parent'. Coverage and range are described as what they let you do, not as numbers.",
+      sentenceStructure:
+        "Short sentences. One idea each. The turn in the story gets its own line. Lists only for practical instructions, never for features.",
+      formality:
+        "Informal but never cute. 'You' and 'your dog', never the third person. Contractions throughout. Reads like a message from someone who's been there.",
+      personality:
+        "Steady and kind. Takes the fear seriously without dramatising it, and never implies the owner was careless.",
+      rhetoricalDevices:
+        "Open on the moment, not the product. Before / after in time, not in metrics. Resolve every story — the animal always comes home in ours, and we don't post the ones that don't.",
+      emotionalTone: "Relief, mostly. Warm, a little wry about animals being animals. Never panic-selling.",
+      contentPatterns:
+        "Moment → what we did → how it ended → the one thing that made it possible. Around 80 words, one animal per post.",
+      uniqueTraits:
+        "Names the animal, always. Real owner photos over studio product shots. No fear-based statistics about lost pets — the story carries the stakes on its own.",
+    },
+    contentStyle: ["Story-driven", "Warm and human"],
+    objective: ["Brand awareness", "Community building"],
+    contentAction: ["Shop the collar", "Read owner stories"],
+    signatureHooks: [
+      "She was gone eleven minutes.",
+      "The gate was open. Nobody knows how long.",
+      "Here's the part nobody tells you about a cat that goes out:",
+    ],
+    closingPatterns: ["Home in forty minutes. That's the whole point.", "Tell us about yours — we read all of them."],
+    formattingStyle:
+      "Opens on a one-line moment. Two or three short paragraphs, a single idea each. The turn in the story sits on its own line. Around 80 words. Emoji sparingly, and only ones an owner would actually use.",
+    visualStyle:
+      "Real owner photos, daylight, animals mid-motion — never a studio product shot as the hero. Sentence case. Distances in the local unit ('6km from camp'). The collar visible but not centred.",
+    brandPersonality:
+      "Steady and kind. Takes the fear seriously without dramatising it, is a little wry about animals being animals, and never makes an owner feel careless.",
+    brandTypography: { headingFont: "Poppins", bodyFont: "Inter" },
+    brandColors: [
+      { name: "Primary", hex: "#2F1B54" },
+      { name: "Accent", hex: "#7C4DFF" },
+      { name: "Warm", hex: "#FFB86B" },
+      { name: "Background", hex: "#FFFFFF" },
+      { name: "Text", hex: "#241537" },
+    ],
+    referenceImages: [
+      {
+        id: "pawtrack-ref-1",
+        label: "Owner + dog, daylight",
+        url: "https://picsum.photos/seed/pawtrack-owner-dog/480/480",
+        note: "The default hero for reunion stories. Real light, animal mid-motion, collar visible but not the subject.",
+        networks: ["instagram", "facebook"],
+      },
+      {
+        id: "pawtrack-ref-2",
+        label: "Collar detail",
+        url: "https://picsum.photos/seed/pawtrack-collar/480/480",
+        note: "Only for posts that genuinely need the hardware. Never the lead image on a story post.",
+        networks: ["instagram"],
+      },
+    ],
+    competitors: [
+      {
+        id: "pawtrack-cmp-1",
+        name: "Fi",
+        description:
+          "The design-led challenger. Leads on module specs and battery, and owns the running-club end of the market.",
+        websiteUrl: "https://tryfi.com",
+        socials: [
+          { network: "instagram", url: "https://instagram.com/fi.collars" },
+          { network: "facebook", url: "https://facebook.com/tryfi" },
+        ],
+      },
+      {
+        id: "pawtrack-cmp-2",
+        name: "Whistle",
+        description:
+          "The incumbent with retail shelf space. Bundles health monitoring, and speaks to vets as much as to owners.",
+        websiteUrl: "https://whistle.com",
+        socials: [
+          { network: "facebook", url: "https://facebook.com/whistle" },
+          { network: "instagram", url: "https://instagram.com/whistle" },
+        ],
+      },
+      {
+        id: "pawtrack-cmp-3",
+        name: "Jiobit",
+        description:
+          "Smallest tracker in the category, sold on being unnoticeable. Strong with cats and small breeds, priced high.",
+        websiteUrl: "https://jiobit.com",
+        socials: [{ network: "instagram", url: "https://instagram.com/jiobit" }],
+      },
+      {
+        id: "pawtrack-cmp-4",
+        name: "Tractive",
+        description:
+          "The volume player in Europe. Unlimited range on a cheap subscription, and by far the best at owner stories.",
+        websiteUrl: "https://tractive.com",
+        socials: [
+          { network: "instagram", url: "https://instagram.com/tractive" },
+          { network: "tiktok", url: "https://tiktok.com/@tractive" },
+        ],
+        suggested: true,
+      },
+      {
+        id: "pawtrack-cmp-5",
+        name: "Garmin",
+        description:
+          "Comes from hunting-dog GPS, not from pets. Wins on range and durability, loses on anything a city owner cares about.",
+        websiteUrl: "https://garmin.com",
+        socials: [{ network: "youtube", url: "https://youtube.com/@garmin" }],
+        suggested: true,
+      },
+    ],
+    // Five of the six sources on — Global trends stays off, so the Playbook's
+    // Topics section shows a real mix rather than an all-green wall.
+    topics: {
+      enabledSourceIds: [
+        "competitor-posts",
+        "influencer-posts",
+        "brand-feedback",
+        "competitor-monitoring",
+        "industry-trends",
+      ],
+      cadence: "weekly",
+    },
+    ctaLinks: [
+      { label: "Shop the collar", url: "pawtrack.example.com/shop", checked: true, suggested: false },
+      { label: "Read owner stories", url: "pawtrack.example.com/stories", checked: true, suggested: false },
+    ],
+    language: "English",
+    imageVoice: {
+      websites: [
+        {
+          domain: "pawtrack.example.com",
+          url: "https://pawtrack.example.com",
+          colors: {
+            primary: "#2F1B54",
+            accent: "#7C4DFF",
+            background: "#FFFFFF",
+            textPrimary: "#241537",
+            link: "#7C4DFF",
+          },
+          typography: {
+            primaryFont: "Inter",
+            headingFont: "Poppins",
+            h1Size: "52px",
+            h2Size: "26px",
+            bodySize: "17px",
+            fontStack: ["Inter", "system-ui", "sans-serif"],
+          },
+          images: {
+            logo: { label: "Logo", url: "" },
+            favicon: { label: "Favicon", url: "" },
+            ogImage: { label: "OgImage", url: "" },
+          },
+          buttons: {
+            primary: { bg: "#7C4DFF", color: "#FFFFFF", label: "Primary" },
+            secondary: { bg: "#FFFFFF", color: "#2F1B54", border: "#2F1B54", label: "Secondary" },
+          },
+          personality: {
+            tone: "warm",
+            energy: "calm",
+            audience: "dog and cat owners",
+          },
+        },
+      ],
+    },
+    doRules: ["Name the animal, always", "Open on the moment, not the product", "Resolve the story — say how it ended"],
+    dontRules: [
+      "No fear statistics about lost pets",
+      'Never say "pet parent"',
+      "No studio product shot as the hero image",
+    ],
+    cta: "Home in forty minutes. That's the whole point.",
+    usedIn: 2,
+    updatedAt: "yesterday",
+    analysis: {
+      voice: null,
+      brief: null,
+      brand: null,
+    },
+  },
 ];
 
 // Legacy accessors — keep `context.voice`, `context.brief`, `context.brand`
@@ -1774,6 +1975,550 @@ for (const ctx of contexts) {
     Object.defineProperty(ctx, "brand", { get: () => ctx.analysis.brand, enumerable: true });
   }
 }
+
+// ---- Topics (the dossiers Agorapulse listening produced) -------------------
+//
+// One topic = a claim Archie can defend: a headline, a written analysis, and the
+// social posts it read to get there. Tagged with the Playbook whose listening
+// sources produced it (`contextId`) and the source that produced it
+// (`sourceId`, from topics-catalog.js).
+//
+// `ageDays` rather than a real date: a prototype has no clock worth trusting,
+// and mock timestamps that drift as this file ages read worse than a stable
+// "3 days ago". The feed groups on it (≤7 this week, ≤30 this month, beyond
+// that Earlier) and refreshTopics() increments it so a scan really does put the
+// new arrivals on top.
+//
+// `posts[].author.accent` is a semantic avatar tint resolved in
+// social-post-card.css — never a hex.
+
+export const topics = [
+  {
+    id: "topic-pt-1",
+    contextId: "ctx-pawtrack",
+    sourceId: "competitor-posts",
+    headline: "Rivals lead with hardware specs while owners talk about peace of mind",
+    analysisTitle: "Rivals sell hardware; owners are buying peace of mind",
+    summary:
+      "Fi, Whistle, Jiobit and Garmin all open on chipsets and IP ratings. The posts that actually travel in this category are the ones about an animal coming home — and almost nobody is writing them.",
+    analysis: [
+      "A scan of Fi, Whistle, Jiobit and Garmin's recent pages shows a consistent pattern: their top posts lead with hardware — chipsets, waterproof ratings, band types, and acronym-dense feature lists. Engagement on these spec-led posts is modest and technical, drawing comments that argue over numbers rather than express relief or trust.",
+      "By contrast, the posts that travel furthest in this category are the human ones — a dog found, a cat home safe, a range that held when it mattered. Rivals largely under-use this register, leaving the emotional high ground open. Coverage and range show up in these stories as lived relief rather than as a published number.",
+      "The gap surfacing from the sources is one of framing, not capability. Where competitors present coverage as a spec, owners in the comments experience it as the difference between panic and relief — describing the same underlying attribute in entirely human terms.",
+    ],
+    posts: [
+      {
+        id: "topic-pt-1-p1",
+        network: "instagram",
+        publishedOn: "3 days ago",
+        author: { name: "Fi", handle: "@fi.collars", initials: "FI", accent: "grey" },
+        text: "New Series 3 module: upgraded LTE-M chipset, IP68 waterproofing, and 3-month battery. Specs that speak for themselves. 📶",
+        likes: 210,
+        comments: 18,
+        reposts: 6,
+      },
+      {
+        id: "topic-pt-1-p2",
+        network: "facebook",
+        publishedOn: "5 days ago",
+        author: { name: "Whistle", handle: "Whistle", initials: "W", accent: "menthol" },
+        text: "Health + location in one device. AT&T network coverage, Bluetooth proximity, and 20-day battery on a single charge.",
+        likes: 64,
+        comments: 22,
+        reposts: 4,
+      },
+      {
+        id: "topic-pt-1-p3",
+        network: "instagram",
+        publishedOn: "1 week ago",
+        author: { name: "Tractive", handle: "@tractive", initials: "TR", accent: "red" },
+        text: "Luna slipped her lead 6km from camp. Worldwide coverage, unlimited range — reunited in 40 minutes. This is why we build. 🐾❤️",
+        likes: 1400,
+        comments: 96,
+        reposts: 140,
+      },
+    ],
+    scannedOn: "yesterday",
+    ageDays: 1,
+    unseen: true,
+    dismissed: false,
+  },
+  {
+    id: "topic-pt-2",
+    contextId: "ctx-pawtrack",
+    sourceId: "influencer-posts",
+    headline: "Trainers are the ones selling trackers, and none of them are being paid to",
+    analysisTitle: "The recall trainers already do your selling",
+    summary:
+      "Six mid-size dog-training creators mentioned a tracker unprompted in the last month, always as a safety net for off-lead work. None of the posts were sponsored, and none named Pawtrack.",
+    analysis: [
+      "The creators with the most engaged audiences in this space aren't reviewers — they're trainers teaching recall. Their off-lead videos consistently draw the same comment: some version of \"I'd never risk it\". A tracker answers that objection, and six of them raised one unprompted in the last month.",
+      "Where a tracker does appear, it's framed as permission rather than as a product: the thing that let them try off-lead work at all. That framing is worth more than a feature list, and it's coming free.",
+      "None of these posts were sponsored, and none named Pawtrack. The partnership angle here isn't a discount code on a review channel — it's underwriting the recall content that already makes the argument.",
+    ],
+    posts: [
+      {
+        id: "topic-pt-2-p1",
+        network: "tiktok",
+        publishedOn: "4 days ago",
+        author: { name: "Ren Alvarez", handle: "@renandrue", initials: "RA", accent: "purple" },
+        text: "Week 6 of off-lead recall. I'll be honest — I would not be doing any of this without a tracker on her. That's not a sponsorship, that's just the truth.",
+        likes: 24800,
+        comments: 612,
+        reposts: 1900,
+      },
+      {
+        id: "topic-pt-2-p2",
+        network: "instagram",
+        publishedOn: "1 week ago",
+        author: { name: "Priya Raman", handle: "@thescentwork", initials: "PR", accent: "orange" },
+        text: "Scent work in woodland means letting them get out of sight. Every single question I get is \"aren't you scared\". Yes. That's what the collar is for.",
+        likes: 3100,
+        comments: 188,
+        reposts: 74,
+      },
+      {
+        id: "topic-pt-2-p3",
+        network: "youtube",
+        publishedOn: "2 weeks ago",
+        author: { name: "Gundog Basics", handle: "Gundog Basics", initials: "GB", accent: "green" },
+        text: "People ask what kit a beginner actually needs for field work. Long line, a whistle, and something that tells you where the dog is. In that order.",
+        likes: 9400,
+        comments: 341,
+        reposts: 210,
+      },
+    ],
+    scannedOn: "2 days ago",
+    ageDays: 2,
+    unseen: true,
+    dismissed: false,
+  },
+  {
+    id: "topic-pt-3",
+    contextId: "ctx-pawtrack",
+    sourceId: "competitor-monitoring",
+    headline: "Battery anxiety is the complaint every rival is failing to answer",
+    analysisTitle: "Nobody trusts the battery number on the box",
+    summary:
+      "Across Fi, Whistle and Jiobit's own comment sections, the recurring grievance isn't range or accuracy — it's that a tracker was flat on the day it was needed.",
+    analysis: [
+      "The pattern in rivals' comment sections is remarkably consistent: owners aren't disputing accuracy or coverage, they're describing a collar that had died. \"Two weeks, not two months\" appears in some form under most spec-led battery posts.",
+      "What makes it worse is the failure mode. A flat tracker is silent — the owner finds out at the exact moment they needed it, which turns a hardware shortfall into a betrayal. Several commenters describe checking the app obsessively as a result.",
+      "That's an opening on messaging rather than on hardware. The honest number, plus a warning the owner actually receives in time, answers a fear the category has decided to ignore.",
+    ],
+    posts: [
+      {
+        id: "topic-pt-3-p1",
+        network: "facebook",
+        publishedOn: "6 days ago",
+        author: { name: "Dawn Whitfield", handle: "Dawn Whitfield", initials: "DW", accent: "electric-blue" },
+        text: "Says three months on the box. I get about eleven days if he's actually out doing anything. Found out the hard way on Saturday.",
+        likes: 340,
+        comments: 91,
+        reposts: 12,
+      },
+      {
+        id: "topic-pt-3-p2",
+        network: "instagram",
+        publishedOn: "1 week ago",
+        author: { name: "Marcus Bell", handle: "@marcusandmabel", initials: "MB", accent: "yellow" },
+        text: "Genuine question to anyone with one of these — do you also check the battery six times a day or is that just me now",
+        likes: 880,
+        comments: 204,
+        reposts: 31,
+      },
+    ],
+    scannedOn: "4 days ago",
+    ageDays: 4,
+    unseen: false,
+    dismissed: false,
+  },
+  {
+    id: "topic-pt-4",
+    contextId: "ctx-pawtrack",
+    sourceId: "brand-feedback",
+    headline: "Multi-pet households keep asking for one subscription, not three",
+    analysisTitle: "Three animals, three bills, one complaint",
+    summary:
+      "Fourteen owners raised per-collar pricing in the last month. It isn't a discount request — they're describing a household plan the category doesn't offer.",
+    analysis: [
+      "Fourteen separate owners raised per-collar subscription pricing across our own comments, DMs and reviews in the last month — comfortably over the ten-voice bar, and consistent enough to read as one request rather than fourteen grumbles.",
+      "The framing matters. Almost nobody asks for a cheaper collar; they ask why a second animal costs the same as the first when it's the same app, the same map and the same household. Several mention cancelling on the second animal rather than the first.",
+      "That's a churn signal wearing a pricing complaint's clothes, and it's the households with the most to lose from a missing animal.",
+    ],
+    posts: [
+      {
+        id: "topic-pt-4-p1",
+        network: "instagram",
+        publishedOn: "1 week ago",
+        author: { name: "Nour Haddad", handle: "@threecatsnour", initials: "NH", accent: "purple" },
+        text: "Love the app. Three cats though. Three subscriptions for one map on one phone is a lot to justify to my partner every month.",
+        likes: 156,
+        comments: 43,
+        reposts: 3,
+      },
+      {
+        id: "topic-pt-4-p2",
+        network: "facebook",
+        publishedOn: "2 weeks ago",
+        author: { name: "Gemma Rowntree", handle: "Gemma Rowntree", initials: "GR", accent: "menthol" },
+        text: "Kept the collar on the escape artist, cancelled the other two. Would happily pay a household price for all of them instead.",
+        likes: 210,
+        comments: 67,
+        reposts: 8,
+      },
+    ],
+    scannedOn: "6 days ago",
+    ageDays: 6,
+    unseen: false,
+    dismissed: false,
+  },
+  {
+    id: "topic-pt-5",
+    contextId: "ctx-pawtrack",
+    sourceId: "industry-trends",
+    headline: "Vets have started asking owners for the tracker's activity data",
+    analysisTitle: "The collar is turning into a clinical record",
+    summary:
+      "Veterinary conversation about wearable activity data has roughly doubled over the last 30 days, driven by lameness and weight consultations rather than by location.",
+    analysis: [
+      "Discussion of wearable activity data in veterinary circles has roughly doubled over the last 30 days. The driver isn't location at all — it's consultations where the owner can't answer \"has she been moving less?\" and the collar can.",
+      "Lameness and weight management come up most. A four-week activity trend turns a subjective question into a chart, and several vets describe asking owners to bring it to the appointment.",
+      "This reframes the product from an emergency device to something used every day, which is a materially different reason to keep paying for it.",
+    ],
+    posts: [
+      {
+        id: "topic-pt-5-p1",
+        network: "linkedin",
+        publishedOn: "1 week ago",
+        author: { name: "Dr. Aisha Kone", handle: "Dr. Aisha Kone MRCVS", initials: "AK", accent: "electric-blue" },
+        text: "Increasingly I open a lameness consult by asking for the collar data. Four weeks of activity tells me more than the owner's best guess, through no fault of theirs.",
+        likes: 2100,
+        comments: 143,
+        reposts: 288,
+      },
+      {
+        id: "topic-pt-5-p2",
+        network: "x",
+        publishedOn: "3 weeks ago",
+        author: { name: "Small Animal Weekly", handle: "@smallanimalwk", initials: "SA", accent: "green" },
+        text: "Poll of 400 practices: 38% now reference owner-supplied wearable data in at least one consult a week. Up from 19% last year.",
+        likes: 640,
+        comments: 52,
+        reposts: 197,
+      },
+    ],
+    scannedOn: "1 week ago",
+    ageDays: 11,
+    unseen: false,
+    dismissed: false,
+  },
+  {
+    id: "topic-pt-6",
+    contextId: "ctx-pawtrack",
+    sourceId: "competitor-posts",
+    headline: "Every rival discounted the hardware and quietly raised the subscription",
+    analysisTitle: "The collar is cheap now; the plan isn't",
+    summary:
+      "Three competitors ran hardware discounts in the same fortnight while lengthening the minimum plan. Owners noticed, and the comments are doing the maths in public.",
+    analysis: [
+      "Fi, Whistle and Tractive all ran hardware promotions inside the same fortnight, each pairing the discount with a longer minimum plan. The headline price fell; the two-year cost didn't.",
+      "Owners worked it out publicly. The top comment on two of the three posts is someone multiplying the monthly fee out loud, and the replies are agreeing rather than defending.",
+      "The category has trained its buyers to read a discount as a lock-in. Any honest pricing message now lands against a suspicious audience — which is an advantage if the pricing genuinely is simple.",
+    ],
+    posts: [
+      {
+        id: "topic-pt-6-p1",
+        network: "instagram",
+        publishedOn: "3 weeks ago",
+        author: { name: "Fi", handle: "@fi.collars", initials: "FI", accent: "grey" },
+        text: "Series 3 is $50 off this week only. Pair with a 24-month plan to unlock the lowest monthly rate we've ever offered.",
+        likes: 420,
+        comments: 210,
+        reposts: 9,
+      },
+      {
+        id: "topic-pt-6-p2",
+        network: "facebook",
+        publishedOn: "3 weeks ago",
+        author: { name: "Whistle", handle: "Whistle", initials: "W", accent: "menthol" },
+        text: "Half-price device, all month. Requires an active 2-year Health & GPS plan.",
+        likes: 188,
+        comments: 174,
+        reposts: 5,
+      },
+    ],
+    scannedOn: "3 weeks ago",
+    ageDays: 21,
+    unseen: false,
+    dismissed: false,
+  },
+  {
+    id: "topic-pt-7",
+    contextId: "ctx-pawtrack",
+    sourceId: "influencer-posts",
+    headline: "Cat creators are the biggest under-served audience in the category",
+    analysisTitle: "Everyone markets to dogs; the cats are the ones going missing",
+    summary:
+      "Cat-owner accounts out-engage comparable dog accounts in this niche, yet almost every tracker campaign in the last quarter featured a dog.",
+    analysis: [
+      "Cat-owner accounts in this niche consistently out-engage dog accounts of comparable size, and their comment sections are markedly more anxious — an indoor-outdoor cat is gone for hours by design, so the owner has no baseline for when to worry.",
+      "Almost every tracker campaign we scanned last quarter featured a dog. Where cats appear, it's a size claim rather than a story, and the creative is the same walk-in-the-park footage.",
+      "The behavioural difference is the opening. A dog goes missing as an incident; a cat is unaccounted for as a routine. Those need different posts, and only one of them is being written.",
+    ],
+    posts: [
+      {
+        id: "topic-pt-7-p1",
+        network: "tiktok",
+        publishedOn: "6 weeks ago",
+        author: { name: "Yui Nakamura", handle: "@mochithetabby", initials: "YN", accent: "orange" },
+        text: "He's been out since 6am. This is normal. I have simply decided not to think about it. (I am thinking about it.)",
+        likes: 88000,
+        comments: 2400,
+        reposts: 6100,
+      },
+      {
+        id: "topic-pt-7-p2",
+        network: "instagram",
+        publishedOn: "7 weeks ago",
+        author: { name: "Jiobit", handle: "@jiobit", initials: "JB", accent: "soft-blue" },
+        text: "Small enough for a cat collar. 0.65 oz, and the smallest tracker in its class.",
+        likes: 96,
+        comments: 11,
+        reposts: 2,
+      },
+    ],
+    scannedOn: "6 weeks ago",
+    ageDays: 44,
+    unseen: false,
+    dismissed: false,
+  },
+  {
+    id: "topic-ac-1",
+    contextId: "ctx-acme",
+    sourceId: "competitor-posts",
+    headline: "Linear ships changelogs as content and gets launch engagement for free",
+    analysisTitle: "Their changelog is their best-performing channel",
+    summary:
+      "Linear's routine changelog posts out-perform their campaign posts. The craft is in treating a small fix as worth writing about at all.",
+    analysis: [
+      "Linear's highest-engagement posts of the last month weren't campaigns — they were changelog entries. Small, specific, shipped-this-week changes, written as if each one mattered.",
+      "The mechanic is repetition without fatigue. Because every post is concrete, none of them feel like marketing, and the audience has learned that following the account means seeing the product actually move.",
+      "Acme's equivalent releases go out as feature announcements a few times a quarter. The cadence is the difference, not the writing.",
+    ],
+    posts: [
+      {
+        id: "topic-ac-1-p1",
+        network: "x",
+        publishedOn: "4 days ago",
+        author: { name: "Linear", handle: "@linear", initials: "L", accent: "purple" },
+        text: "Sub-issues now roll up estimates to the parent. Small thing. Asked for 300 times.",
+        likes: 4200,
+        comments: 96,
+        reposts: 310,
+      },
+      {
+        id: "topic-ac-1-p2",
+        network: "linkedin",
+        publishedOn: "2 weeks ago",
+        author: { name: "Notion", handle: "Notion", initials: "N", accent: "grey" },
+        text: "Introducing a reimagined workspace experience designed to unlock how modern teams collaborate. Read more on the blog.",
+        likes: 640,
+        comments: 28,
+        reposts: 41,
+      },
+    ],
+    scannedOn: "3 days ago",
+    ageDays: 3,
+    unseen: false,
+    dismissed: false,
+  },
+  {
+    id: "topic-ac-2",
+    contextId: "ctx-acme",
+    sourceId: "industry-trends",
+    headline: "Operators have turned against AI features they didn't ask for",
+    analysisTitle: '"We turned it off" is the new review',
+    summary:
+      "Momentum over the last 30 days is running against bolted-on AI in project tools. The complaint isn't quality — it's that the feature interrupts work that was already fine.",
+    analysis: [
+      "Conversation about AI features in project tooling has grown sharply over the last 30 days, and the sentiment has inverted. The loudest posts aren't about output quality; they're about a summary nobody asked for appearing where a status used to be.",
+      'The recurring phrase is some version of "we turned it off". Operators are describing AI as a tax on a workflow that worked, which is a harder objection than "it isn\'t good enough".',
+      "For a launch that includes AI, that means leading on the work removed rather than on the capability added. The audience has already heard the capability pitch and dismissed it.",
+    ],
+    posts: [
+      {
+        id: "topic-ac-2-p1",
+        network: "linkedin",
+        publishedOn: "1 week ago",
+        author: { name: "Tomas Vidal", handle: "Tomas Vidal", initials: "TV", accent: "electric-blue" },
+        text: "Third tool this quarter to put an AI summary above the thing I actually opened the page to read. We turned it off. All of them.",
+        likes: 8800,
+        comments: 512,
+        reposts: 740,
+      },
+      {
+        id: "topic-ac-2-p2",
+        network: "x",
+        publishedOn: "2 weeks ago",
+        author: { name: "Hana Oyelaran", handle: "@hanaships", initials: "HO", accent: "yellow" },
+        text: 'nobody on my team has ever once said "I wish this sprint board would write me a paragraph"',
+        likes: 12400,
+        comments: 380,
+        reposts: 2100,
+      },
+    ],
+    scannedOn: "1 week ago",
+    ageDays: 9,
+    unseen: false,
+    dismissed: false,
+  },
+];
+
+// What "Refresh now" still has to find. Drained two at a time, so a demo can
+// press the button twice and get a fresh batch each time before it runs dry.
+export const topicScanPool = [
+  {
+    id: "topic-pool-1",
+    contextId: "ctx-pawtrack",
+    sourceId: "competitor-monitoring",
+    headline: "Jiobit raised its plan price and the cancellations are public",
+    analysisTitle: "A price rise nobody explained",
+    summary:
+      "Jiobit moved its monthly plan up without a note to existing owners. The comments have turned into a queue of people announcing they've cancelled.",
+    analysis: [
+      "Jiobit's monthly plan went up this month with no announcement to existing subscribers — several owners describe finding out from a bank statement rather than an email.",
+      "The reaction is disproportionate to the amount, which is the interesting part. The grievance is being kept in the dark about a device they rely on, not the few dollars.",
+      "Owners in that thread are actively asking for alternatives and naming the criteria: flat pricing, and being told before something changes.",
+    ],
+    posts: [
+      {
+        id: "topic-pool-1-p1",
+        network: "facebook",
+        publishedOn: "2 days ago",
+        author: { name: "Erin Pollack", handle: "Erin Pollack", initials: "EP", accent: "soft-blue" },
+        text: "Found out my plan went up from my bank app. Not an email, not a note in the app. Cancelled this morning — anyone got a recommendation?",
+        likes: 520,
+        comments: 176,
+        reposts: 22,
+      },
+      {
+        id: "topic-pool-1-p2",
+        network: "instagram",
+        publishedOn: "4 days ago",
+        author: { name: "Sam Okafor", handle: "@samandbisco", initials: "SO", accent: "red" },
+        text: "It's not even the money. Just tell me before you change the price of the thing keeping track of my dog.",
+        likes: 1100,
+        comments: 88,
+        reposts: 40,
+      },
+    ],
+    scannedOn: "just now",
+    ageDays: 0,
+    unseen: true,
+    dismissed: false,
+  },
+  {
+    id: "topic-pool-2",
+    contextId: "ctx-pawtrack",
+    sourceId: "brand-feedback",
+    headline: "False geofence alerts are training owners to ignore the app",
+    analysisTitle: "The alert that cried wolf",
+    summary:
+      "Eleven owners described a safe-zone alert firing while the animal was indoors. Most say they've since muted notifications — which defeats the product.",
+    analysis: [
+      "Eleven owners reported safe-zone alerts firing while the animal was demonstrably indoors, usually attributing it to GPS drift in dense housing. That clears the ten-voice bar and it's the same story each time.",
+      "What they do next is the problem. Most say they muted notifications rather than adjusted the zone, which means the one alert that matters won't reach them either.",
+      "This is worth saying out loud in public. Naming a known limitation and what we're doing about it costs less than the trust lost when owners quietly switch the alerts off.",
+    ],
+    posts: [
+      {
+        id: "topic-pool-2-p1",
+        network: "instagram",
+        publishedOn: "3 days ago",
+        author: { name: "Lena Fischer", handle: "@lenaandpepper", initials: "LF", accent: "menthol" },
+        text: 'Fourth "left the safe zone" alert this week. She is asleep on the sofa. I\'ve turned the notifications off, which I know is the wrong answer.',
+        likes: 240,
+        comments: 61,
+        reposts: 7,
+      },
+      {
+        id: "topic-pool-2-p2",
+        network: "x",
+        publishedOn: "5 days ago",
+        author: { name: "Ade Balogun", handle: "@adebalogun", initials: "AB", accent: "purple" },
+        text: "flat in a city = gps thinks my cat is two streets over at 3am. alerts muted. sorry.",
+        likes: 890,
+        comments: 44,
+        reposts: 130,
+      },
+    ],
+    scannedOn: "just now",
+    ageDays: 0,
+    unseen: true,
+    dismissed: false,
+  },
+  {
+    id: "topic-pool-3",
+    contextId: "ctx-pawtrack",
+    sourceId: "industry-trends",
+    headline: "Pet insurers have started bundling trackers into policies",
+    analysisTitle: "The insurer is becoming the channel",
+    summary:
+      "Two European insurers began including a tracker with new policies this month. It reframes the collar as risk reduction rather than as a gadget.",
+    analysis: [
+      "Two European pet insurers started bundling a tracker with new policies this month, positioning it as loss prevention rather than as a feature. Conversation about it has grown steadily over the last 30 days.",
+      "The framing does work our own marketing struggles with: an insurer calling a tracker risk reduction is a third party validating the purchase, which no amount of our own copy achieves.",
+      "It also introduces a channel where the buyer isn't the owner. Worth a position before someone else's collar is the one in the envelope.",
+    ],
+    posts: [
+      {
+        id: "topic-pool-3-p1",
+        network: "linkedin",
+        publishedOn: "1 week ago",
+        author: { name: "Petplan Europe", handle: "Petplan Europe", initials: "PE", accent: "green" },
+        text: "Every new Complete policy now ships with a GPS collar included. Lost-pet claims are the single largest category we handle, and the cheapest one to prevent.",
+        likes: 3400,
+        comments: 210,
+        reposts: 480,
+      },
+    ],
+    scannedOn: "just now",
+    ageDays: 0,
+    unseen: true,
+    dismissed: false,
+  },
+  {
+    id: "topic-pool-4",
+    contextId: "ctx-acme",
+    sourceId: "competitor-posts",
+    headline: "Basecamp is winning attention by arguing rather than announcing",
+    analysisTitle: "A point of view out-performs a feature",
+    summary:
+      "Basecamp's opinion posts out-perform their product posts several times over. The argument is the content; the product is barely mentioned.",
+    analysis: [
+      "Basecamp's best-performing posts this month contained no product news at all. They were positions — on meetings, on estimates, on hiring — with the product appearing only as evidence that they live by it.",
+      "The engagement is argumentative rather than approving, and it travels further for exactly that reason. Disagreement in the replies is doing the distribution.",
+      "Acme has positions of its own and has never published them. That's the cheapest untapped channel in this comparison set.",
+    ],
+    posts: [
+      {
+        id: "topic-pool-4-p1",
+        network: "x",
+        publishedOn: "5 days ago",
+        author: { name: "Basecamp", handle: "@basecamp", initials: "B", accent: "yellow" },
+        text: "Story points are a way to argue about time without saying a number out loud. Just say the number.",
+        likes: 15600,
+        comments: 1200,
+        reposts: 2400,
+      },
+    ],
+    scannedOn: "just now",
+    ageDays: 0,
+    unseen: true,
+    dismissed: false,
+  },
+];
 
 // ---- Posts (shown in the session Posts tab when populated) ----------------
 //
