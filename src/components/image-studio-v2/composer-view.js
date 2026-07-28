@@ -146,16 +146,15 @@ function bestFor(network) {
 // it made the six settings look like chrome stranded at the bottom of a huge
 // empty bar. Capped and centred, the card reads as one object you act in.
 function generateComposer(st) {
-  return console_("Image prompt", promptField(st), generateActions(st), "to generate");
+  return console_("Image prompt", promptField(st), generateActions(st), "to generate", { inline: true });
 }
 
 // The frame both modes share, and it IS the app's own conversational composer:
-// a bordered card that lights up on focus, a borderless field, a toolbar row
-// under it holding the action, and a keyboard hint below the card. Same recipe
-// as `.session__composer-card` — same border, same shadow, same padding rhythm,
-// same focus behaviour, same 2-to-12-line field — because the user is doing the
-// same thing here (writing a brief for Archie) and it should not feel like a
-// different product.
+// a bordered card that lights up on focus, a borderless field, the action beside
+// it, and a keyboard hint below the card. Same recipe as
+// `.session__composer-card` — same border, same shadow, same padding rhythm, same
+// focus behaviour — because the user is doing the same thing here (writing a
+// brief for Archie) and it should not feel like a different product.
 //
 // What v2 grew instead and has now shed: an eyebrow, a "Suggest again" button
 // and an expand toggle. The eyebrow only gave the field an identity that the
@@ -163,10 +162,11 @@ function generateComposer(st) {
 // the composer solves with a line cap; and re-deriving the prompt now happens
 // once, automatically, when the studio opens.
 //
-// `inline` lays the action at the END of the field's line instead of on a row of
-// its own — for edit mode, where the input is a phrase and not a brief, so a
-// two-line field with a toolbar under it was three rows of card for one row of
-// text. The field still grows; the action stays anchored to its last line.
+// `inline` puts the action BESIDE the field rather than on a row of its own,
+// bottom-aligned so it stays on the field's last line. Both modes use it: a
+// toolbar row of its own was a full row of card whose left half was empty, and
+// the text would rather have that space. Kept as a flag, not baked in, because a
+// console with several actions would need the row back.
 function console_(label, field, action, hintVerb, { inline = false } = {}) {
   return `<div class="isv2-dock">
     <div class="isv2-console-wrap">

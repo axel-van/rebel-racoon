@@ -19,7 +19,7 @@
 // Playbook A's digest.
 
 import { html, raw } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=235";
+import { renderTopbar } from "../components/topbar.js?v=236";
 import { navigate } from "../router.js?v=30";
 import { isFlagOn } from "../feature-flags.js?v=12";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";

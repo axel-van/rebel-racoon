@@ -491,11 +491,16 @@
   line-height: var(--sys-text-style-body-line-height);
   font-weight: var(--sys-text-style-body-weight);
   color: var(--sys-text-color-default);
-  /* Floor at 2 lines so a fresh prompt always reads at the same height; cap at
-     12 so a long brief can't push the footer off-screen. This cap is what the
-     expand toggle used to work around. */
+  /* Cap the box at THREE lines of text and scroll the rest. A derived brief runs
+     seven lines, and letting the field simply be seven lines tall made the
+     composer the biggest object in the modal — the image is what the user is
+     judging. The brief is read once and tweaked; three lines plus a scroll is the
+     right price for it.
+     The calc adds ONE padding, not two: a textarea's scrollport includes its
+     bottom padding, so `3 lines + padding-top` is what shows exactly three whole
+     lines. Adding both padded the box into a clipped fourth line. */
   min-height: calc(var(--ref-font-line-height-sm) * 2);
-  max-height: calc(var(--ref-font-line-height-sm) * 12);
+  max-height: calc(var(--ref-font-line-height-sm) * 3 + var(--ref-spacing-xxs));
   overflow-y: auto;
   box-sizing: border-box;
 }
@@ -528,11 +533,10 @@
   min-width: 0;
 }
 
-/* Edit mode's console is ONE line, action at the end of it. "warmer light" is a
-   phrase, not a brief — the two-line field plus a toolbar row under it spent
-   three rows of card on one row of text. The field still grows to a 6-line cap
-   (a redraw note is never a brief), and bottom alignment keeps the button on its
-   last line, the way a chat composer behaves. */
+/* The action sits BESIDE the field, not on a row under it — a row of its own was
+   a full row of card with an empty left half, and the text would rather have that
+   width. Bottom-aligned, so the button stays on the field's last line as it
+   grows, the way a chat composer behaves. */
 .isv2-console--inline {
   flex-direction: row;
   align-items: flex-end;
@@ -540,13 +544,16 @@
   padding: var(--ref-spacing-xxs);
 }
 
-.isv2-console--inline .isv2-prompt {
-  min-height: var(--ref-font-line-height-sm);
-  max-height: calc(var(--ref-font-line-height-sm) * 6);
-}
-
 .isv2-console--inline .isv2-console-toolbar {
   flex: 0 0 auto;
+}
+
+/* The redraw note is a phrase, not a brief ("warmer light"), so this field starts
+   at ONE line and tops out at six — its own sizing, unrelated to the row layout
+   above, which is why it keys on the field and not on the modifier. */
+.isv2-prompt[data-img-edit-prompt] {
+  min-height: var(--ref-font-line-height-sm);
+  max-height: calc(var(--ref-font-line-height-sm) * 6 + var(--ref-spacing-xxs));
 }
 
 .isv2-console-toolbar > .ap-button {
