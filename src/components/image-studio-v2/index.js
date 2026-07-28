@@ -25,17 +25,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=39";
 import { getSessionById } from "../../sessions-store.js?v=9";
 import { getContextById } from "../../contexts-store.js?v=40";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=8";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=9";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=8";
+import { renderStudio } from "./stage-view.js?v=10";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=8";
-import * as imageStudio from "../../image-studio.js?v=44";
+} from "./interactions.js?v=9";
+import * as imageStudio from "../../image-studio.js?v=45";
 
 let backdrop;
 let initialized = false;
@@ -174,7 +174,15 @@ function applyEditTool(tool) {
 function runGenerate() {
   const ta = ctx.modal.querySelector("[data-img-prompt]");
   if (ta) imageStudio.setPromptSilent(KEY, ta.value);
+  syncRenderText();
   if ((state()?.promptText || "").trim()) imageStudio.runGeneration(KEY);
+}
+
+// The text-to-render field is only read on demand (typing is silent), so a
+// Generate fired straight from the field still picks up what's in it.
+function syncRenderText() {
+  const el = ctx.modal.querySelector("[data-img-render-text]");
+  if (el) imageStudio.setRenderTextSilent(KEY, el.value);
 }
 
 // ── Event delegation ────────────────────────────────────────────────────────
@@ -333,6 +341,12 @@ function onClick(event) {
 }
 
 function onInput(event) {
+  if (event.target.matches("[data-img-render-text]")) {
+    imageStudio.setRenderTextSilent(KEY, event.target.value);
+    const count = ctx.modal.querySelector("[data-img-render-text-count]");
+    if (count) count.textContent = `${event.target.value.length}/${imageStudio.MAX_RENDER_TEXT}`;
+    return;
+  }
   if (event.target.matches("[data-img-prompt]")) {
     imageStudio.setPromptSilent(KEY, event.target.value);
     const gen = ctx.modal.querySelector("[data-img-generate]");
@@ -409,6 +423,9 @@ function onChange(event) {
     imageStudio.updateOverlay(KEY, st.selectedOverlayId, { shadowIntensity: Number(event.target.value) });
   } else if (event.target.matches("[data-img-toggle-playbook-refs]")) {
     imageStudio.setUsePlaybookRefs(KEY, event.target.checked);
+  } else if (event.target.matches("[data-img-render-text]")) {
+    // Blur commits, which is what refreshes the collapsed row's value.
+    imageStudio.commitRenderText(KEY, event.target.value);
   }
 }
 

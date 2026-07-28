@@ -35,8 +35,8 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=29";
-import { KEY } from "./context.js?v=8";
-import * as imageStudio from "../../image-studio.js?v=44";
+import { KEY } from "./context.js?v=9";
+import * as imageStudio from "../../image-studio.js?v=45";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -53,6 +53,10 @@ Narrative purpose: Grab attention immediately with a provocative statement and a
 Visual goal: Create an instant visual metaphor for speed without direction or acceleration leading to product degradation.
 Visual scene: A deep blue background. On the left, massive bold typography. On the right, a single powerful graphic: a thick, horizontal orange arrow representing velocity. The tail of the arrow is solid and perfectly defined, but as it points forward, the tip shatters and dissolves into a chaotic cloud of tiny, disconnected digital pixels and glitch fragments.
 Composition focus: The transition point of the arrow where order turns into digital chaos, aligned with the bold headline.`;
+
+// Two lines, so the placeholder teaches the line break as well as the length.
+const RENDER_TEXT_PLACEHOLDER = `Black Friday
+−50% on everything`;
 
 export function composer(st) {
   return st.mode === "edit" ? editComposer(st) : generateComposer(st);
@@ -266,6 +270,21 @@ function settingRows(st) {
     }),
   );
 
+  // Text in image — words the model paints into the artwork. It sits with the
+  // references because both answer "what goes IN the image"; type / style /
+  // format / output below are all treatment.
+  const inImage = (st.renderText || "").trim();
+  out.push(
+    settingRow({
+      name: "renderText",
+      label: "Text in image",
+      value: inImage ? shortRenderText(inImage) : "None",
+      set: !!inImage,
+      open: open === "renderText",
+      body: () => renderTextBody(st),
+    }),
+  );
+
   // Image type — what the image is FOR. A distinct dimension from the style.
   const typeLabel = st.imageTypeKey
     ? imageStudio.IMAGE_TYPES.find((o) => o.key === st.imageTypeKey)?.label || "Any"
@@ -388,6 +407,31 @@ function refsBody(st, uploads) {
     )
     .join("");
   return `${dropzone}${tiles ? `<div class="isv2-refs">${tiles}</div>` : ""}`;
+}
+
+// The collapsed row's value has one line of a 284px panel to live in, beside a
+// label that must stay readable — so it shows the headline's first line, clipped.
+// The full text is one click away in the field itself.
+function shortRenderText(text) {
+  const first = text.split("\n")[0].trim();
+  const rest = text.split("\n").length > 1;
+  const clipped = first.length > 18 ? `${first.slice(0, 18).trimEnd()}…` : first;
+  return rest && clipped === first ? `${clipped}…` : clipped;
+}
+
+// Text in image — a plain DS textarea field. The counter is a live node the input
+// handler writes into (typing must not re-render the panel, or the caret dies), and
+// the hint names the other thing the user might have meant: the movable text
+// overlay in Edit, which is a different job on a finished image.
+function renderTextBody(st) {
+  const text = st.renderText || "";
+  return `<div class="ap-textarea-field narrow isv2-textfield">
+      <textarea data-img-render-text rows="2" maxlength="${imageStudio.MAX_RENDER_TEXT}" placeholder="${escapeHtml(RENDER_TEXT_PLACEHOLDER)}" aria-label="Text to write into the image">${escapeHtml(text)}</textarea>
+    </div>
+    <p class="isv2-sheet-hint isv2-textfield-foot">
+      <span>I'll write these words into the image itself — one line per line break. For a text box you can move, use Add text in Edit.</span>
+      <span class="isv2-textfield-count" data-img-render-text-count>${text.length}/${imageStudio.MAX_RENDER_TEXT}</span>
+    </p>`;
 }
 
 function imageTypeBody(st) {

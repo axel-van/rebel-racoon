@@ -298,6 +298,29 @@ button.image-studio__group-head:disabled {
   color: var(--ref-color-grey-60);
 }
 
+/* ── Text in image ───────────────────────────────────────────────────────────
+   A DS textarea field in the settings rail: the DS supplies the frame, the states
+   and the type, so all that's left is the height (two lines, growing on drag) and
+   the caption row under it — help on the left, the count hugging the right so it
+   never pushes the sentence around as digits change. */
+.image-studio__textfield > textarea {
+  min-height: 56px;
+  resize: vertical;
+}
+
+.image-studio__textfield-foot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xxs);
+  margin: 0;
+}
+
+.image-studio__textfield-count {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Tier 3 — the current value, column 2. Right-aligned against the control so
    every row's value ends on the same axis; ellipsis rather than push the label. */
 .image-studio__group-summary {

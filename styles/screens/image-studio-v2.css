@@ -836,6 +836,27 @@
   font-size: 14px;
 }
 
+/* ── Text in image ───────────────────────────────────────────────────────────
+   A DS textarea field in a 284px panel: the DS supplies the frame, the states and
+   the type, so all that's left here is the height (two lines, growing on drag)
+   and the caption row under it — help on the left, the count hugging the right so
+   it never pushes the sentence around as digits change. */
+.isv2-textfield > textarea {
+  min-height: 56px;
+  resize: vertical;
+}
+
+.isv2-textfield-foot {
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xxs);
+}
+
+.isv2-textfield-count {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
 .isv2-chip-group {
   display: flex;
   flex-wrap: wrap;

@@ -203,9 +203,13 @@ dans [`image-studio.js`](../../src/image-studio.js) (UI-agnostique) ; la vue est
 `shell-view` / `compose-view` / `edit-view` / `interactions`.
 
 - **Generate** — rail de gauche : le prompt qu'Archie dérive du post à l'ouverture (**« Suggest from
-  this post »**, ~2 s) puis six réglages repliables portant chacun sa valeur courante : **Brand kit**
+  this post »**, ~2 s) puis sept réglages repliables portant chacun sa valeur courante : **Brand kit**
   (images du Playbook, switch + tuiles include/exclude, max 6) · **References** (uploads, drop ou
-  clic) · **Image type** (Visual hook / Infographic / Illustration) · **Style preset** (6 vignettes,
+  clic) · **Text in image** (optionnel, ≤ 90 car., ≤ 4 lignes — les mots qu'Archie écrit DANS
+  l'image, à ne pas confondre avec l'overlay texte déplaçable du mode Edit ; mocké en cuisant le
+  texte dans les pixels de la variation via `compositeOverlays`, donc il survit aux vignettes, à
+  l'aperçu in-feed, au recadrage, au « Redraw » et au draft final) · **Image type** (Visual hook /
+  Infographic / Illustration) · **Style preset** (6 vignettes,
   désactivé dès qu'il y a une référence) · **Format** (ratios recommandés du network) · **Output**
   (Single / Carousel + nombre de variations ou de slides ; carousel sur LinkedIn 20 / Instagram 10).
   Canvas à droite : empty → generating (~4 s) → résultats (grande image + rail de variations
@@ -228,7 +232,7 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
 - Un header d'une seule ligne (titre · tabs de mode · bascule Image/In feed), un **stage pleine
   largeur**, et **un composer unique en bas**.
 - **Generate** : rangée 1 = le prompt (+ Suggest, + expand qui fait grandir le composer vers le
-  haut) ; rangée 2 = les six réglages en **chips-dropdown** portant leur valeur (`Format 1:1 ·
+  haut) ; rangée 2 = les sept réglages en **chips-dropdown** portant leur valeur (`Format 1:1 ·
 Square ▾`), chacun ouvrant une feuille plate en drop-up, puis le cluster de CTA.
 - **Edit** : le même composer devient la barre IA (rangée 1) et les chips d'outils Crop / Add text /
   Add image (rangée 2). Le rail de gauche, le footer, la barre IA flottante et la palette flottante

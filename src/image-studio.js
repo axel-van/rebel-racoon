@@ -21,6 +21,12 @@
 // rides back to the draft via attachImageToDraft (see the modal component).
 
 import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=9";
+// Layering note: the only import this engine takes from the view side, and a
+// deliberate one — canvas.js is pure, UI-agnostic (its own header says so) and
+// already shared by both studio versions. "Text in image" is mocked by baking the
+// words into the generated pixels with the very same flattener the Edit overlays
+// use, so there is nothing to duplicate here.
+import { compositeOverlays } from "./components/image-studio/canvas.js?v=2";
 
 const states = new Map(); // sessionId → state
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -32,6 +38,13 @@ const DERIVE_MS = 2000; // "writing your image prompt" loader on open / re-sugge
 
 export const MAX_REFS = 6;
 export const VARIATION_CHOICES = [1, 2, 3, 4];
+
+// "Text in image" — words the model paints INTO the artwork (a headline, a price,
+// a date), as opposed to the Edit-mode text overlay, which is a movable layer on
+// top of a finished image. Short by design: a generated headline that runs long
+// stops being legible at thumbnail size.
+export const MAX_RENDER_TEXT = 90;
+export const RENDER_TEXT_MAX_LINES = 4;
 
 // Carousels — only some networks support a multi-slide post. Map is network →
 // max slides. LinkedIn (document/carousel) and Instagram are the ones we offer.
@@ -120,10 +133,70 @@ function picsum(seed, [w, h]) {
   return `https://picsum.photos/seed/${encodeURIComponent(seed)}/${w}/${h}`;
 }
 
+// A short, stable digest of a string — keeps the seed tidy while still letting
+// free text take part in it.
+function hash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i += 1) h = (h * 31 + str.charCodeAt(i)) | 0;
+  return Math.abs(h).toString(36);
+}
+
 // Seed captures the inputs so a Regenerate with the same options is stable while
-// a changed option (style / mood / format / variation index) reshuffles.
+// a changed option (style / mood / format / variation index / the text to render)
+// reshuffles.
 function seedFor(s, extra) {
-  return `${s.postId || "img"}-${s.styleKey || "s"}-${s.imageTypeKey || "t"}-${s.formatId || "f"}-${extra}`;
+  const text = (s.renderText || "").trim();
+  return `${s.postId || "img"}-${s.styleKey || "s"}-${s.imageTypeKey || "t"}-${s.formatId || "f"}-${text ? hash(text) : "n"}-${extra}`;
+}
+
+// ── Text in image ───────────────────────────────────────────────────────────
+
+// Turn the requested words into overlay specs compositeOverlays can paint. The
+// mock is a centred headline: line breaks split it, the longest line sets the
+// size (so a long line shrinks to fit rather than running off the frame), white
+// with a soft shadow because it has to land on an unknown photo.
+function renderTextOverlays(s) {
+  const lines = (s.renderText || "")
+    .split("\n")
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .slice(0, RENDER_TEXT_MAX_LINES);
+  if (!lines.length) return [];
+  const longest = Math.max(...lines.map((l) => l.length));
+  // ~14 characters fill the width at the biggest size; longer lines scale down.
+  const sizeF = Math.max(0.04, Math.min(0.12, 1.7 / Math.max(14, longest)));
+  const lineH = sizeF * 1.28;
+  const firstY = 0.5 - ((lines.length - 1) * lineH) / 2;
+  return lines.map((text, i) => ({
+    kind: "text",
+    text,
+    xF: 0.5,
+    yF: firstY + i * lineH,
+    sizeF,
+    rot: 0,
+    bold: true,
+    italic: false,
+    color: "#FFFFFF",
+    outline: false,
+    shadow: true,
+    shadowIntensity: 70,
+  }));
+}
+
+// Flatten the requested text into an image's pixels. Every generated image goes
+// through here, so the words live in the file itself — they survive into the
+// variations grid, the in-feed preview, the Edit canvas and the draft, with no
+// extra plumbing on any of those surfaces. `baseUrl` is the untouched photo, kept
+// beside `url` so a re-bake (crop, redraw) never stacks text on text.
+// A failure (offline, a CORS-tainted canvas) falls back to the plain photo — the
+// flow must never stall on the mock.
+function bakeRenderText(s, img) {
+  const overlays = renderTextOverlays(s);
+  const base = img.baseUrl || img.url;
+  if (!overlays.length) return Promise.resolve({ ...img, baseUrl: base, url: base });
+  return compositeOverlays(base, overlays, img.w, img.h)
+    .then((url) => ({ ...img, baseUrl: base, url }))
+    .catch(() => ({ ...img, baseUrl: base, url: base }));
 }
 
 function notify(sessionId) {
@@ -195,7 +268,7 @@ export function start(
   const initialRefs = usePlaybookRefs ? pbRefs.slice(0, MAX_REFS).map((r) => ({ ...r, fromPlaybook: true })) : [];
   if (editImage && editImage.url) {
     const [w, h] = editImage.w && editImage.h ? [editImage.w, editImage.h] : dimsFor(resolvedFormat);
-    currentImage = { url: editImage.url, w, h, seed: `${postId || "img"}-edit` };
+    currentImage = { url: editImage.url, baseUrl: editImage.url, w, h, seed: `${postId || "img"}-edit` };
     mode = "edit";
   } else if (carousel && carousel.urls && carousel.urls.length) {
     // Reopen an existing carousel to add / remove / regenerate slides.
@@ -203,9 +276,9 @@ export function start(
     outputMode = "carousel";
     genPhase = "results";
     slideCount = carousel.urls.length;
-    variations = carousel.urls.map((url, i) => ({ seed: `${postId || "img"}-slide-${i}`, url, w, h }));
+    variations = carousel.urls.map((url, i) => ({ seed: `${postId || "img"}-slide-${i}`, url, baseUrl: url, w, h }));
     selectedIndex = 0;
-    currentImage = { url: variations[0].url, w, h, seed: variations[0].seed };
+    currentImage = { url: variations[0].url, baseUrl: variations[0].url, w, h, seed: variations[0].seed };
   }
   states.set(key, {
     // Two peer modes toggled via the top segmented control. "edit" is only
@@ -221,6 +294,7 @@ export function start(
     formatId: resolvedFormat,
     promptText: "",
     promptLoading: false,
+    renderText: "", // words to paint INTO the image (empty = none)
     styleKey: null, // selected Style preset (STYLE_PRESETS)
     imageTypeKey: null, // selected Image type (IMAGE_TYPES)
     referenceImages: initialRefs, // [{ id, url, label?, fromPlaybook? }] (max MAX_REFS)
@@ -236,7 +310,7 @@ export function start(
     // wants to change it. Brand kit isn't in here: its switch is its disclosure.
     // Style preset has its own `disabled` state (references guide the look),
     // independent of this set.
-    collapsedGroups: new Set(["refs", "imageType", "style", "format", "output"]),
+    collapsedGroups: new Set(["refs", "renderText", "imageType", "style", "format", "output"]),
     composerExpanded: false, // prompt composer size: small (default) vs expanded
     variationCount: 2, // single-image mode: how many alternatives to pick from
     slideCount, // carousel mode: how many slides to generate
@@ -258,6 +332,7 @@ export function start(
     cropRect: null, // { xF, yF, wF, hF } while drawing
     cropAspect: null, // null = freeform, else a width/height decimal to lock
     _genTimer: null,
+    _genRun: null, // id of the newest generation run (guards the async text bake)
     _editTimer: null,
     _deriveTimer: null,
   });
@@ -311,6 +386,21 @@ function safeRevoke(url) {
 export function setPromptSilent(sessionId, text) {
   const s = states.get(sessionId);
   if (s) s.promptText = text;
+}
+
+// Same deal for the text to render: typing must not re-render the settings (the
+// row would be rebuilt under the caret). The header's value catches up on blur,
+// via commitRenderText.
+export function setRenderTextSilent(sessionId, text) {
+  const s = states.get(sessionId);
+  if (s) s.renderText = String(text || "").slice(0, MAX_RENDER_TEXT);
+}
+
+export function commitRenderText(sessionId, text) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  s.renderText = String(text || "").slice(0, MAX_RENDER_TEXT);
+  notify(sessionId);
 }
 
 export function setEditPromptSilent(sessionId, text) {
@@ -499,7 +589,18 @@ function derivePrompt(s) {
     lines.push(`Look: ${style.label}.`);
   }
   if (s.playbookColors.length) lines.push(`Palette: ${s.playbookColors.slice(0, 4).join(", ")}.`);
-  if (fmt) lines.push(`Composition: ${fmt.tag} ${fmt.label.toLowerCase()}, key subject off-centre, no text baked in.`);
+  // Whether the artwork carries type is the user's call ("Text in image"), so the
+  // composition line states whichever one they asked for rather than assuming.
+  const inImage = (s.renderText || "").trim();
+  if (inImage) {
+    lines.push(
+      `Text in image: "${inImage.replace(/\n+/g, " / ")}" — set as part of the artwork, high contrast, legible.`,
+    );
+  }
+  if (fmt) {
+    const typeClause = inImage ? "room for the headline" : "no text baked in";
+    lines.push(`Composition: ${fmt.tag} ${fmt.label.toLowerCase()}, key subject off-centre, ${typeClause}.`);
+  }
   return lines.join("\n");
 }
 
@@ -526,7 +627,7 @@ function adoptVariation(s, i) {
   const v = s.variations[i];
   if (!v) return;
   s.selectedIndex = i;
-  s.currentImage = { url: v.url, w: v.w, h: v.h, seed: v.seed };
+  s.currentImage = { url: v.url, baseUrl: v.baseUrl || v.url, w: v.w, h: v.h, seed: v.seed };
   s.editHistory = [];
   s.editPrompt = "";
   // Focusing a variation / slide is a fresh edit context — drop any overlays.
@@ -545,20 +646,31 @@ export function runGeneration(sessionId) {
   s.variations = [];
   if (s._genTimer) clearTimeout(s._genTimer);
   const runId = Date.now().toString(36);
-  s._genTimer = setTimeout(() => {
+  s._genRun = runId; // whose results are allowed to land (see the await below)
+  s._genTimer = setTimeout(async () => {
     const cur = states.get(sessionId);
     if (!cur || cur.genPhase !== "generating") return;
     const dims = dimsFor(cur.formatId);
     const count = cur.outputMode === "carousel" ? cur.slideCount : cur.variationCount;
-    cur.variations = Array.from({ length: count }, (_, i) => {
+    const shots = Array.from({ length: count }, (_, i) => {
       const seed = seedFor(cur, `${runId}-${i}`);
-      return { seed, url: picsum(seed, dims), w: dims[0], h: dims[1] };
+      const url = picsum(seed, dims);
+      return { seed, url, baseUrl: url, w: dims[0], h: dims[1] };
     });
-    cur.genPhase = "results";
+    // Any requested text is painted in BEFORE the results land, so the grid never
+    // shows a frame of untyped images. The loader is already up, which is where
+    // the canvas work hides.
+    const baked = await Promise.all(shots.map((v) => bakeRenderText(cur, v)));
+    // The studio may have closed — or a Regenerate may have started — while the
+    // canvas worked. Only the newest run gets to write.
+    const now = states.get(sessionId);
+    if (!now || now._genRun !== runId) return;
+    now.variations = baked;
+    now.genPhase = "results";
     // Auto-adopt the first variation as the working image so the Edit mode
     // unlocks immediately; the user can still pick another in the grid.
-    adoptVariation(cur, 0);
-    cur._genTimer = null;
+    adoptVariation(now, 0);
+    now._genTimer = null;
     notify(sessionId);
   }, GEN_MS);
   notify(sessionId);
@@ -586,7 +698,7 @@ export function setMode(sessionId, mode) {
       s.selectedOverlayId = null;
       s.editHistory = [];
       const v = s.selectedIndex != null ? s.variations[s.selectedIndex] : null;
-      if (v) s.currentImage = { url: v.url, w: v.w, h: v.h, seed: v.seed };
+      if (v) s.currentImage = { url: v.url, baseUrl: v.baseUrl || v.url, w: v.w, h: v.h, seed: v.seed };
     }
   }
   notify(sessionId);
@@ -621,12 +733,15 @@ export function addVariation(sessionId) {
   notify(sessionId);
   const runId = Date.now().toString(36);
   if (s._genTimer) clearTimeout(s._genTimer);
-  s._genTimer = setTimeout(() => {
+  s._genTimer = setTimeout(async () => {
     const cur = states.get(sessionId);
     if (!cur) return;
     const dims = dimsFor(cur.formatId);
     const seed = seedFor(cur, `add-${runId}-${cur.variations.length}`);
-    cur.variations.push({ seed, url: picsum(seed, dims), w: dims[0], h: dims[1] });
+    const url = picsum(seed, dims);
+    const shot = await bakeRenderText(cur, { seed, url, baseUrl: url, w: dims[0], h: dims[1] });
+    if (!states.get(sessionId)) return; // closed mid-bake
+    cur.variations.push(shot);
     cur.addingVariation = false;
     adoptVariation(cur, cur.variations.length - 1); // focus the fresh one
     if (cur.outputMode === "carousel") cur.slideCount = cur.variations.length;
@@ -660,11 +775,13 @@ function computeEdit(s, tool, payload) {
     const fmt = payload.formatId || s.formatId;
     s.formatId = fmt; // the frame genuinely changes shape
     const dims = dimsFor(fmt);
-    return { url: picsum(cur.seed, dims), w: dims[0], h: dims[1], seed: cur.seed };
+    const url = picsum(cur.seed, dims);
+    return { url, baseUrl: url, w: dims[0], h: dims[1], seed: cur.seed };
   }
   // prompt → reseed at the same dimensions (mock).
   const seed = `${cur.seed}-${tool}-${stamp}`;
-  return { url: picsum(seed, [cur.w, cur.h]), w: cur.w, h: cur.h, seed };
+  const url = picsum(seed, [cur.w, cur.h]);
+  return { url, baseUrl: url, w: cur.w, h: cur.h, seed };
 }
 
 export function applyEdit(sessionId, tool, payload = {}) {
@@ -673,11 +790,16 @@ export function applyEdit(sessionId, tool, payload = {}) {
   s.editBusy = true;
   notify(sessionId);
   if (s._editTimer) clearTimeout(s._editTimer);
-  s._editTimer = setTimeout(() => {
+  s._editTimer = setTimeout(async () => {
     const cur = states.get(sessionId);
     if (!cur) return;
+    const next = computeEdit(cur, tool, payload);
+    // A reframe or a redraw returns a fresh photo, so the requested text has to be
+    // painted in again — otherwise one "Redraw" would silently erase it.
+    const baked = await bakeRenderText(cur, next);
+    if (!states.get(sessionId)) return; // closed mid-bake
     cur.editHistory.push({ ...cur.currentImage });
-    cur.currentImage = computeEdit(cur, tool, payload);
+    cur.currentImage = baked;
     cur.editBusy = false;
     // Keep the applied tool active (segmented palette is never empty) so the
     // user can iterate — just clear the Reprompt scratch text.
@@ -785,7 +907,9 @@ export function commitCrop(sessionId, { url, w, h } = {}) {
   const s = states.get(sessionId);
   if (!s || !url) return;
   s.editHistory.push({ ...s.currentImage });
-  s.currentImage = { url, w, h, seed: `${s.currentImage.seed}-crop` };
+  // A freeform crop is real pixels (text and all) — there is no clean photo left
+  // underneath, so the cropped image is its own base.
+  s.currentImage = { url, baseUrl: url, w, h, seed: `${s.currentImage.seed}-crop` };
   s.formatId = "custom"; // no preset ratio matches a freeform crop
   s.cropDrawing = false;
   s.cropRect = null;
@@ -1005,7 +1129,7 @@ export function updateSlide(sessionId, index, { url, w, h }) {
   if (!s || !s.variations[index] || !url) return;
   const v = s.variations[index];
   slideEditSeq += 1;
-  s.variations[index] = { url, w: w || v.w, h: h || v.h, seed: `${v.seed}-e${slideEditSeq}` };
+  s.variations[index] = { url, baseUrl: url, w: w || v.w, h: h || v.h, seed: `${v.seed}-e${slideEditSeq}` };
   s.selectedIndex = index;
   s.currentImage = { ...s.variations[index] };
   s.editHistory = [];

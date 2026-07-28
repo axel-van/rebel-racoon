@@ -10,11 +10,11 @@ import { html, raw, escapeHtml } from "../../utils.js?v=21";
 import { getPosts } from "../../posts-store.js?v=39";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=29";
 import { renderPostCard } from "../post-card.js?v=72";
-import { KEY, ctx } from "./context.js?v=18";
-import { generateControls } from "./compose-view.js?v=25";
-import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=32";
+import { KEY, ctx } from "./context.js?v=19";
+import { generateControls } from "./compose-view.js?v=27";
+import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=33";
 import { compositeOverlays } from "./canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=44";
+import * as imageStudio from "../../image-studio.js?v=45";
 
 // In-feed preview — the edit canvas layers logo/text overlays as live DOM over the
 // image, but the post-card preview can't (it just takes an image URL), so overlays

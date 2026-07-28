@@ -534,3 +534,12 @@ button.ap-link {
     0 0 0 3px var(--ref-color-electric-blue-10),
     0 1px 3px rgba(16, 24, 40, 0.28);
 }
+
+/* .ap-textarea-field pins its textarea to min-width: 256px, which is wider than
+   a narrow rail or a 284px inspector panel can give it once a scrollbar takes
+   its cut — the field then forces a horizontal scrollbar on its container. The
+   DS ships no narrow variant, so this is one: a flat modifier (DS convention)
+   that lets the field size to its column instead. */
+.ap-textarea-field.narrow > textarea {
+  min-width: 0;
+}

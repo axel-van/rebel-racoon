@@ -23,17 +23,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=39";
 import { getSessionById } from "../../sessions-store.js?v=9";
 import { getContextById } from "../../contexts-store.js?v=40";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=18";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=19";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "./canvas.js?v=2";
-import { renderStudio } from "./shell-view.js?v=41";
+import { renderStudio } from "./shell-view.js?v=43";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=20";
-import * as imageStudio from "../../image-studio.js?v=44";
+} from "./interactions.js?v=21";
+import * as imageStudio from "../../image-studio.js?v=45";
 
 let backdrop;
 let initialized = false;
@@ -228,6 +228,7 @@ function onClick(event) {
   if (event.target.closest("[data-img-generate]")) {
     const ta = ctx.modal.querySelector("[data-img-prompt]");
     if (ta) imageStudio.setPromptSilent(KEY, ta.value);
+    syncRenderText();
     if ((state()?.promptText || "").trim()) imageStudio.runGeneration(KEY);
     return;
   }
@@ -332,7 +333,20 @@ function onClick(event) {
   }
 }
 
+// The text-to-render field is only read on demand (typing is silent), so a
+// Generate fired straight from the field still picks up what's in it.
+function syncRenderText() {
+  const el = ctx.modal.querySelector("[data-img-render-text]");
+  if (el) imageStudio.setRenderTextSilent(KEY, el.value);
+}
+
 function onInput(event) {
+  if (event.target.matches("[data-img-render-text]")) {
+    imageStudio.setRenderTextSilent(KEY, event.target.value);
+    const count = ctx.modal.querySelector("[data-img-render-text-count]");
+    if (count) count.textContent = `${event.target.value.length}/${imageStudio.MAX_RENDER_TEXT}`;
+    return;
+  }
   if (event.target.matches("[data-img-prompt]")) {
     imageStudio.setPromptSilent(KEY, event.target.value);
     const gen = ctx.modal.querySelector("[data-img-generate]");
@@ -412,6 +426,9 @@ function onChange(event) {
   } else if (event.target.matches("[data-img-toggle-playbook-refs]")) {
     // Brand kit switch (DS toggle checkbox).
     imageStudio.setUsePlaybookRefs(KEY, event.target.checked);
+  } else if (event.target.matches("[data-img-render-text]")) {
+    // Blur commits, which is what refreshes the folded row's value.
+    imageStudio.commitRenderText(KEY, event.target.value);
   }
 }
 

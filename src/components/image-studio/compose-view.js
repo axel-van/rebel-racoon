@@ -7,8 +7,8 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=29";
-import { KEY } from "./context.js?v=18";
-import * as imageStudio from "../../image-studio.js?v=44";
+import { KEY } from "./context.js?v=19";
+import * as imageStudio from "../../image-studio.js?v=45";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -25,6 +25,10 @@ Narrative purpose: Grab attention immediately with a provocative statement and a
 Visual goal: Create an instant visual metaphor for speed without direction or acceleration leading to product degradation.
 Visual scene: A deep blue background. On the left, massive bold typography. On the right, a single powerful graphic: a thick, horizontal orange arrow representing velocity. The tail of the arrow is solid and perfectly defined, but as it points forward, the tip shatters and dissolves into a chaotic cloud of tiny, disconnected digital pixels and glitch fragments.
 Composition focus: The transition point of the arrow where order turns into digital chaos, aligned with the bold headline.`;
+
+// Two lines, so the placeholder teaches the line break as well as the length.
+const RENDER_TEXT_PLACEHOLDER = `Black Friday
+−50% on everything`;
 
 // Left panel — generate mode: the prompt lead, then the settings.
 export function generateControls(st) {
@@ -131,6 +135,31 @@ function uploadRefTile(r) {
   </div>`;
 }
 
+// The folded row's value has one line of a narrow rail to live in, beside a label
+// that must stay readable — so it shows the headline's first line, clipped. The
+// full text is one click away in the field itself.
+function shortRenderText(text) {
+  const first = text.split("\n")[0].trim();
+  const rest = text.split("\n").length > 1;
+  const clipped = first.length > 18 ? `${first.slice(0, 18).trimEnd()}…` : first;
+  return rest && clipped === first ? `${clipped}…` : clipped;
+}
+
+// Text in image — words the model paints into the artwork, as opposed to the
+// movable text overlay in Edit (a layer on a finished image). A plain DS textarea
+// field; the counter is a live node the input handler writes into, because typing
+// must not re-render the rail under the caret.
+function renderTextField(st) {
+  const text = st.renderText || "";
+  return `<div class="ap-textarea-field narrow image-studio__textfield">
+      <textarea data-img-render-text rows="2" maxlength="${imageStudio.MAX_RENDER_TEXT}" placeholder="${escapeHtml(RENDER_TEXT_PLACEHOLDER)}" aria-label="Text to write into the image">${escapeHtml(text)}</textarea>
+    </div>
+    <p class="image-studio__count image-studio__textfield-foot">
+      <span>I'll write these words into the image itself — one line per line break. For a text box you can move, use Add text in Edit.</span>
+      <span class="image-studio__textfield-count" data-img-render-text-count>${text.length}/${imageStudio.MAX_RENDER_TEXT}</span>
+    </p>`;
+}
+
 // ── The settings row ─────────────────────────────────────────────────────────
 // Every setting is the SAME row: a three-column grid of
 //   [ label ] [ current value, right-aligned ] [ 32px trailing control ]
@@ -222,6 +251,16 @@ function composeGroups(st) {
     body: `${dropzone(st)}${uploadTiles ? `<div class="image-studio__refs">${uploadTiles}</div>` : ""}`,
   });
 
+  // Text in image — beside the references, because both answer "what goes IN the
+  // image"; everything below is treatment.
+  const inImage = (st.renderText || "").trim();
+  const renderTextGroup = collapsibleGroup(st, {
+    id: "renderText",
+    label: "Text in image",
+    summary: inImage ? shortRenderText(inImage) : "None",
+    body: renderTextField(st),
+  });
+
   // Image type — what the image is for (hook / infographic / illustration). A
   // distinct dimension from the style; not tied to the reference images.
   const imageTypeLabel = st.imageTypeKey
@@ -301,5 +340,5 @@ function composeGroups(st) {
       ? `${outputChips}<p class="image-studio__subgroup-label">${countLabel}</p>${countChips}`
       : countChips,
   });
-  return `${eyebrow}${brandKit}${refsGroup}${imageTypeGroup}${styleGroup}${formatGroup}${outputGroup}`;
+  return `${eyebrow}${brandKit}${refsGroup}${renderTextGroup}${imageTypeGroup}${styleGroup}${formatGroup}${outputGroup}`;
 }
