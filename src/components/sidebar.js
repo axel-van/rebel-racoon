@@ -6,7 +6,7 @@ import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { open as openSearchModal } from "./search-modal.js?v=13";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=10";
+import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=11";
 import {
   getSessions,
   getSessionById,
@@ -15,15 +15,15 @@ import {
   togglePin as togglePinSession,
   subscribe as subscribeSessions,
 } from "../sessions-store.js?v=10";
-import { isFlagOn } from "../feature-flags.js?v=13";
+import { isFlagOn } from "../feature-flags.js?v=14";
 import { isNewUser } from "../user-mode.js?v=22";
-import { clearSession as clearLibrarySession } from "../library.js?v=56";
+import { clearSession as clearLibrarySession } from "../library.js?v=57";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=41";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=32";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=375";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=62";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=376";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=63";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=40";
-import { clearSession as clearSourcesSession } from "../sources-stream.js?v=55";
+import { clearSession as clearSourcesSession } from "../sources-stream.js?v=56";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the
@@ -42,7 +42,7 @@ const COLLAPSED_KEY = "archie-sidebar-collapsed";
 
 let menuOpen = false;
 
-// Recent-chats "Sort & group" control (gated by the `sidebarOrganize` flag).
+// Recent-chats "Sort & group" control.
 // The chosen { groupBy, sortBy } persists across reloads — mirror the
 // feature-flags localStorage idiom (defensive JSON read, merge with defaults).
 const ORGANIZE_KEY = "archie-chat-organize";
@@ -726,11 +726,8 @@ function renderOrganizeSection(label, key, options, current) {
 }
 
 // Header row above the recent-chats list: a quiet "Chats" caption + a filter
-// button that opens the Group by / Sort by popover. Gated by the
-// `sidebarOrganize` flag — returns nothing (and the list keeps its default
-// Pinned/Recent order) when the flag is OFF.
+// button that opens the Group by / Sort by popover.
 function renderOrganizeHeader() {
-  if (!isFlagOn("sidebarOrganize")) return "";
   const { groupBy, sortBy } = getOrganizePrefs();
   return `
     <div class="app-sidebar__list-header">
@@ -775,9 +772,7 @@ function renderRecentLists(activeSessionId) {
       </div>
     `;
   }
-  // When the flag is OFF, fall back to the default order (none / recency) so the
-  // list behaves exactly as before.
-  const { groupBy, sortBy } = isFlagOn("sidebarOrganize") ? getOrganizePrefs() : ORGANIZE_DEFAULTS;
+  const { groupBy, sortBy } = getOrganizePrefs();
 
   const pinned = sortSessions(
     allSessions.filter((s) => s.pinned),

@@ -36,9 +36,9 @@
 // flyout-submenu pattern). One is open at a time, tracked by state.openPopover.
 
 import { escapeHtml } from "../../utils.js?v=21";
-import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=30";
-import { KEY } from "./context.js?v=10";
-import * as imageStudio from "../../image-studio.js?v=46";
+import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=31";
+import { KEY } from "./context.js?v=11";
+import * as imageStudio from "../../image-studio.js?v=47";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why

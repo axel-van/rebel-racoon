@@ -6,7 +6,7 @@
 // Only one studio is open at a time, so a single KEY plus a mutable `ctx`
 // (populated by index.js on open) is all the sibling modules need.
 
-import * as imageStudio from "../../image-studio.js?v=46";
+import * as imageStudio from "../../image-studio.js?v=47";
 
 export const MODAL_ID = "imageStudioV2";
 export const KEY = "studio-v2"; // distinct from v1's "studio" — separate state

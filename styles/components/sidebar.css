@@ -209,7 +209,7 @@
   margin-top: var(--ref-spacing-xxs);
 }
 
-/* ── "Sort & group" control (sidebarOrganize flag) ──────────────────────
+/* ── "Sort & group" control ─────────────────────────────────────────────
    A header row above the list: a quiet "Chats" caption + a filter button
    that opens a Group by / Sort by popover. The popover mirrors the foot
    popmenu (fixed + JS-anchored to escape the sidebar's overflow) and is a

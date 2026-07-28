@@ -71,17 +71,6 @@ export const FLAGS = Object.freeze([
       "and the picker stays a short, unsearched list.",
   },
   {
-    id: "sidebarOrganize",
-    label: "Sort & group chats",
-    default: false,
-    hides:
-      "When OFF (default), hides the sort/group control above the recent-chats " +
-      "list in the sidebar. When ON, a filter button opens a Group by (None / " +
-      "Playbook) + Sort by (Recency / Alphabetical) menu and the recent list is " +
-      "reordered / regrouped accordingly. The chosen preference persists in " +
-      "localStorage (archie-chat-organize).",
-  },
-  {
     id: "multilingualPlaybook",
     label: "Multilingual Playbooks",
     default: false,
