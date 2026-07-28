@@ -485,7 +485,9 @@
   resize: none;
   border: 0;
   background: transparent;
-  padding: var(--ref-spacing-xxs);
+  /* No padding on top: the card already pads that edge, and the two stacking made
+     the field look taller than the three lines it holds. */
+  padding: 0 var(--ref-spacing-xxs) var(--ref-spacing-xxs);
   font-family: inherit;
   font-size: var(--sys-text-style-body-size);
   line-height: var(--sys-text-style-body-line-height);
@@ -496,11 +498,12 @@
      composer the biggest object in the modal — the image is what the user is
      judging. The brief is read once and tweaked; three lines plus a scroll is the
      right price for it.
-     The calc adds ONE padding, not two: a textarea's scrollport includes its
-     bottom padding, so `3 lines + padding-top` is what shows exactly three whole
-     lines. Adding both padded the box into a clipped fourth line. */
+     The cap is exactly `3 × line-height` because a textarea's scrollport spans
+     its content AND its padding: with no padding on top, three lines is what
+     three lines of box shows. (Add padding back to that edge and the cap has to
+     grow by the same amount, or the third line gets clipped in half.) */
   min-height: calc(var(--ref-font-line-height-sm) * 2);
-  max-height: calc(var(--ref-font-line-height-sm) * 3 + var(--ref-spacing-xxs));
+  max-height: calc(var(--ref-font-line-height-sm) * 3);
   overflow-y: auto;
   box-sizing: border-box;
 }
@@ -518,7 +521,9 @@
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xxs);
+  /* Matches the field it stands in for, top edge included, so the swap doesn't
+     shift the card. */
+  padding: 0 var(--ref-spacing-xxs) var(--ref-spacing-xxs);
   min-height: calc(var(--ref-font-line-height-sm) * 2);
   color: var(--sys-text-color-light);
   font-size: var(--sys-text-style-body-size);
@@ -553,7 +558,7 @@
    above, which is why it keys on the field and not on the modifier. */
 .isv2-prompt[data-img-edit-prompt] {
   min-height: var(--ref-font-line-height-sm);
-  max-height: calc(var(--ref-font-line-height-sm) * 6 + var(--ref-spacing-xxs));
+  max-height: calc(var(--ref-font-line-height-sm) * 6);
 }
 
 .isv2-console-toolbar > .ap-button {
