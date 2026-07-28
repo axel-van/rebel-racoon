@@ -17,7 +17,7 @@
 // video-clips-modal trimmer, the right-panel Clips/Drafts surfaces, and the
 // draft-creation flow all operate on one source with no divergence.
 
-import { buildClipsForSource, updateSourceClips, getSources } from "./sources-stream.js?v=56";
+import { buildClipsForSource, updateSourceClips, getSources } from "./sources-stream.js?v=57";
 
 const states = new Map(); // sessionId → state
 const subscribers = new Map(); // sessionId → Set<fn>

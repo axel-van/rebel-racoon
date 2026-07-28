@@ -17,8 +17,8 @@
 import { html, raw, escapeHtml as esc } from "./utils.js?v=21";
 import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=25";
 import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1";
-import { isFlagOn } from "./feature-flags.js?v=14";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=31";
+import { isFlagOn } from "./feature-flags.js?v=15";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=32";
 import { TOPIC_SOURCES, CADENCES, DEFAULT_ENABLED_IDS, DEFAULT_CADENCE, findCadence } from "./topics-catalog.js?v=1";
 
 // Audience & goals — chip fields (multi-value), in display order.
