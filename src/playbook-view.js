@@ -19,6 +19,7 @@ import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mo
 import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1";
 import { isFlagOn } from "./feature-flags.js?v=14";
 import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=31";
+import { TOPIC_SOURCES, CADENCES, DEFAULT_ENABLED_IDS, DEFAULT_CADENCE, findCadence } from "./topics-catalog.js?v=1";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -34,14 +35,17 @@ const LINE_FIELDS = [
   { key: "closingPatterns", label: "Closing patterns", placeholder: "A line that often ends a post…" },
 ];
 
-// Competitors is appended LAST on purpose: the panel renderers address the
-// first three positionally (SECTIONS[0..2]), and it reads as the least core
-// section — market context after audience, voice and brand.
+// Competitors and Topics are appended LAST on purpose: the panel renderers
+// address the first three positionally (SECTIONS[0..2]), and both read as less
+// core than audience, voice and brand. Topics sits after Competitors because it
+// reads them — the two competitor-driven listening sources deep-link into that
+// section.
 const SECTIONS = [
   { id: "pbk-sec-goals", scope: "goals", icon: "ap-icon-target", title: "Audience & goals" },
   { id: "pbk-sec-voice", scope: "voice", icon: "ap-icon-quote", title: "Voice & style" },
   { id: "pbk-sec-brand", scope: "brand", icon: "ap-icon-image", title: "Brand" },
   { id: "pbk-sec-competitors", scope: "competitors", icon: "ap-icon-buildings", title: "Competitors" },
+  { id: "pbk-sec-topics", scope: "topics", icon: "ap-icon-antenna", title: "Topics" },
 ];
 
 // Competitors are gated behind a feature flag (default OFF). When OFF the
@@ -51,10 +55,16 @@ function competitorsOn() {
   return isFlagOn("playbookCompetitors");
 }
 
+// Same contract for Topics: flag OFF hides the section and its rail entry, but
+// ctx.topics stays in the data (contexts-store normalises it either way).
+function topicsOn() {
+  return isFlagOn("topics");
+}
+
 // The sections this Playbook actually shows — drives the rail nav and the
 // panels, so gating happens in one place.
 function sectionsFor() {
-  return competitorsOn() ? SECTIONS : SECTIONS.filter((s) => s.scope !== "competitors");
+  return SECTIONS.filter((s) => (s.scope !== "competitors" || competitorsOn()) && (s.scope !== "topics" || topicsOn()));
 }
 
 // Edit-mode guidance. Surfaced only while a section is being edited (one at a
@@ -104,6 +114,10 @@ const SECTION_HINTS = {
   competitors: {
     q: "Who you're up against",
     a: "Archie scans your market and proposes competitors. Add the ones that matter — a dismissed suggestion won't come back.",
+  },
+  topics: {
+    q: "What I watch, and how often",
+    a: "Archie listens to these sources and brings you the topics worth posting about. One rhythm for the whole Playbook.",
   },
 };
 
@@ -338,6 +352,7 @@ export function snapshotEditable(d) {
       referenceImages: d.referenceImages || [],
       competitors: d.competitors || [],
       dismissedCompetitors: d.dismissedCompetitors || [],
+      topics: d.topics || null,
     }),
   );
 }
@@ -1572,6 +1587,109 @@ function renderCompetitorModal(data) {
   </div>`;
 }
 
+// ── Topics — what I watch, and how often ───────────────────────────────────
+
+// Lazy-normalise, same shape as competitorList: a draft built by the onboarding
+// wizard never went through contexts-store, so it can arrive without the field.
+function topicsConfig(data) {
+  if (!data.topics || typeof data.topics !== "object") {
+    data.topics = { enabledSourceIds: DEFAULT_ENABLED_IDS.slice(), cadence: DEFAULT_CADENCE };
+  }
+  if (!Array.isArray(data.topics.enabledSourceIds)) data.topics.enabledSourceIds = [];
+  if (!findCadence(data.topics.cadence)) data.topics.cadence = DEFAULT_CADENCE;
+  return data.topics;
+}
+
+// The cadence control. Read mode states it; edit mode offers the three options
+// through a DS .ap-select built on <details> — never a bare native <select>.
+function renderCadenceControl(cfgTopics, edit) {
+  const active = findCadence(cfgTopics.cadence) || findCadence(DEFAULT_CADENCE);
+  if (!edit) return `<p class="recap__row-text">${esc(active.label)} — I bring you topics ${esc(active.adverb)}.</p>`;
+  const options = CADENCES.map((c) => {
+    const on = c.id === active.id;
+    return `<div class="ap-select-option${on ? " selected" : ""}" data-recap-topic-cadence="${c.id}" role="option" aria-selected="${on}">
+        <span class="ap-select-option-text">${esc(c.label)}</span>
+        ${on ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
+      </div>`;
+  }).join("");
+  return `
+    <details class="ap-select recap__topics-cadence">
+      <summary class="ap-select-trigger">
+        <span class="ap-select-value">${esc(active.label)}</span>
+        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+      </summary>
+      <div class="ap-select-dropdown" role="listbox" aria-label="Refresh cadence">
+        <div class="ap-select-options">${options}</div>
+      </div>
+    </details>`;
+}
+
+// One card per catalog source. Read mode shows the state as a tag and dims the
+// ones that are off; edit mode swaps the tag for the DS switch.
+function renderTopicSourceCard(source, on, edit) {
+  const state = edit
+    ? `<label class="ap-toggle-container recap__topicsrc-switch">
+         <input type="checkbox" data-recap-topic-source="${source.id}" ${on ? "checked" : ""} aria-label="${esc(source.name)}" />
+         <i aria-hidden="true"></i>
+       </label>`
+    : `<span class="ap-tag ${on ? "green" : "grey"} mini">${on ? "On" : "Off"}</span>`;
+
+  // The two competitor-driven sources read the Competitors section, so point at
+  // it rather than making the user go hunting. Hidden when that section isn't
+  // rendered at all — a link to a section the flag removed goes nowhere.
+  const anchor =
+    source.playbookAnchor === "competitors" && competitorsOn()
+      ? `<button type="button" class="recap__topicsrc-link" data-recap-nav="pbk-sec-competitors">
+           <span>${esc(source.playbookLinkLabel || "Edit the source")}</span><i class="ap-icon-arrow-right" aria-hidden="true"></i>
+         </button>`
+      : "";
+
+  return `
+    <div class="recap__topicsrc ${on ? "" : "is-off"}">
+      <span class="topic-badge topic-badge--lg topic-badge--${esc(source.accent)}" aria-hidden="true">
+        <i class="${source.icon}"></i>
+      </span>
+      <div class="recap__topicsrc-text">
+        <span class="recap__topicsrc-name">${esc(source.name)}</span>
+        <p class="recap__topicsrc-desc">${esc(source.description)}</p>
+        ${anchor}
+      </div>
+      <div class="recap__topicsrc-state">${state}</div>
+    </div>`;
+}
+
+function renderTopicsPanel(data, edit) {
+  const section = SECTIONS[4];
+  const conf = topicsConfig(data);
+  const enabled = new Set(conf.enabledSourceIds);
+  const onCount = TOPIC_SOURCES.filter((s) => enabled.has(s.id)).length;
+
+  const summary =
+    onCount === 0
+      ? `<span class="recap__row-empty">Nothing switched on — I'm not watching anything for this Playbook.</span>`
+      : `<p class="recap__row-text">${onCount} of ${TOPIC_SOURCES.length} sources on.</p>`;
+
+  const body = [
+    edit ? renderSectionHint(SECTION_HINTS.topics) : "",
+    renderRow("Watching", summary),
+    renderRow("Refresh", renderCadenceControl(conf, edit)),
+    `<div class="recap__topicsec">
+       <div class="recap__topicgrid">
+         ${TOPIC_SOURCES.map((s) => renderTopicSourceCard(s, enabled.has(s.id), edit)).join("")}
+       </div>
+     </div>`,
+  ].join("");
+
+  return `
+    <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" ${
+      edit ? "data-recap-editing-card" : ""
+    }>
+      ${renderPanelHead(section, edit)}
+      <div class="recap__panel-body">${body}</div>
+    </section>
+  `;
+}
+
 // ── Header + rail ──────────────────────────────────────────────────────
 
 function renderHeader(data) {
@@ -1726,6 +1844,7 @@ function paint() {
         ${renderVoicePanel(data, scope === "voice")}
         ${renderBrandPanel(data, scope === "brand")}
         ${competitorsOn() ? renderCompetitorsPanel(data, scope === "competitors") : ""}
+        ${topicsOn() ? renderTopicsPanel(data, scope === "topics") : ""}
       </div>
     </div>
     ${renderRefModal(data)}
@@ -1930,6 +2049,9 @@ function onClick(event) {
   if (penBtn) {
     if (penBtn.dataset.recapEditCard === "brand") ensureBrand(data);
     if (penBtn.dataset.recapEditCard === "competitors") competitorList(data);
+    // Normalise BEFORE snapshotting, so Cancel restores the normalised shape
+    // rather than the undefined the draft may have arrived with.
+    if (penBtn.dataset.recapEditCard === "topics") topicsConfig(data);
     snapshot = snapshotEditable(data);
     editScope = penBtn.dataset.recapEditCard;
     audienceCustom = false;
@@ -2125,6 +2247,18 @@ function onClick(event) {
     }
     data.languages = langs;
     if (!data.primaryLanguage || !langs.includes(data.primaryLanguage)) data.primaryLanguage = langs[0];
+    repaint();
+    return;
+  }
+
+  // Topics — pick the refresh cadence. Picking closes the DS .ap-select
+  // <details>, same as the audience dropdown.
+  const cadencePick = event.target.closest("[data-recap-topic-cadence]");
+  if (cadencePick) {
+    cadencePick.closest("details")?.removeAttribute("open");
+    const conf = topicsConfig(data);
+    const next = cadencePick.dataset.recapTopicCadence;
+    if (findCadence(next)) conf.cadence = next;
     repaint();
     return;
   }
@@ -2389,6 +2523,17 @@ function onChange(event) {
       loaded.filter(Boolean).forEach((img) => data.referenceImages.push(img));
       repaint();
     });
+    return;
+  }
+  // Topics — switch a listening source on or off. Repaint so the "N of 6 sources
+  // on" line and the card's dimmed state follow the switch immediately.
+  if (event.target.matches("[data-recap-topic-source]")) {
+    const conf = topicsConfig(data);
+    const id = event.target.dataset.recapTopicSource;
+    const at = conf.enabledSourceIds.indexOf(id);
+    if (event.target.checked && at < 0) conf.enabledSourceIds.push(id);
+    else if (!event.target.checked && at >= 0) conf.enabledSourceIds.splice(at, 1);
+    repaintPreservingScroll();
     return;
   }
   if (event.target.matches("[data-recap-primary-language]")) {

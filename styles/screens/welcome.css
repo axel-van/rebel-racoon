@@ -1585,6 +1585,117 @@
   max-width: 240px;
 }
 
+/* ── Topics: the listening sources this Playbook watches ──────────────────
+   Six cards, one per catalog source. Read mode dims the ones that are off and
+   states On/Off as a DS tag; edit mode swaps the tag for the DS switch. The
+   `.topic-badge--<accent>` pip is shared with the /topics feed and the topic
+   dialog — see styles/components/topic-badge.css. */
+
+.recap__topicsec {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-md) var(--ref-spacing-lg);
+}
+
+/* Two per row where there's room. Each card carries a full sentence of
+   description, so the 240px the competitor grid uses is far too narrow. */
+.recap__topicgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--ref-spacing-sm);
+  width: 100%;
+}
+
+.recap__topicsrc {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-md);
+  background: var(--app-surface);
+}
+
+/* Off: recessed rather than hidden. The user still needs to see what they could
+   switch on, so the card stays legible — it just stops competing with the ones
+   actually producing topics. */
+.recap__topicsrc.is-off {
+  background: var(--app-surface-subtle);
+}
+
+.recap__topicsrc.is-off .topic-badge {
+  filter: grayscale(1);
+  opacity: 0.7;
+}
+
+.recap__topicsrc-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.recap__topicsrc-name {
+  font-family: var(--sys-text-style-body-bold-font-family);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--sys-text-color-default);
+}
+
+.recap__topicsrc-desc {
+  margin: 0;
+  font-family: var(--sys-text-style-caption-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
+}
+
+/* Deep link into the Competitors section — a text button, because it navigates
+   within the page rather than committing anything. */
+.recap__topicsrc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  margin-top: var(--ref-spacing-xxxs);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--sys-text-style-caption-bold-font-family);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-electric-blue-100);
+}
+
+.recap__topicsrc-link:hover {
+  text-decoration: underline;
+}
+
+.recap__topicsrc-link > i {
+  font-size: 12px;
+  width: 12px;
+  height: 12px;
+}
+
+.recap__topicsrc-state {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  /* Optically centre the switch on the card's first text line rather than on the
+     card, which the two-line description would otherwise pull down. */
+  min-height: 20px;
+}
+
+.recap__topics-cadence {
+  max-width: 200px;
+}
+
 /* ── Languages (multilingual Playbook) ────────────────────────────────── */
 .recap__lang-picker {
   display: flex;
