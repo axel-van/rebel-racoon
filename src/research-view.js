@@ -108,22 +108,6 @@ function renderPlaybookPicker(state) {
   </details>`;
 }
 
-// Discreet on purpose. The settings used to be a permanent tab with a counter,
-// which put something you revisit once a quarter at the same level as the ideas
-// you read weekly — and the counter implied there was something to do there.
-function renderSettingsCog(state) {
-  const pb = state.contextId ? `?pb=${encodeURIComponent(state.contextId)}` : "";
-  return html`<button
-    type="button"
-    class="ap-icon-button transparent research-view__cog"
-    data-research-open-settings="${pb}"
-    aria-label="Research settings"
-    title="What I watch"
-  >
-    <i class="ap-icon-cog"></i>
-  </button>`;
-}
-
 // Grey, and stroked: looking is a refresh, not a decision. The decisions on
 // this page ("Write it") are blue — the convention for a list-page CTA.
 function renderScanButton(state) {
@@ -372,7 +356,9 @@ export function renderSourcesBody(state) {
 // ── The page ──────────────────────────────────────────────────────────────
 
 // The digest page. Single-purpose: the editions, and nothing else. The config
-// lives on its own route, one cog away.
+// lives on its own route, one cog away — and that cog sits in the topbar's far
+// right (cf. components/topbar.js), the app's canonical slot for a page-level
+// control, not in this header where it read as a third action next to "Look now".
 export function renderResearchPage(state) {
   return html`
     <div class="research-view__page">
@@ -382,7 +368,7 @@ export function renderResearchPage(state) {
           <p class="research-view__sub">${renderSubline(state)}</p>
         </div>
         <div class="research-view__head-actions">
-          ${raw(renderPlaybookPicker(state))} ${raw(renderScanButton(state))} ${raw(renderSettingsCog(state))}
+          ${raw(renderPlaybookPicker(state))} ${raw(renderScanButton(state))}
         </div>
       </header>
 

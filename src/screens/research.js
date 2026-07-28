@@ -19,7 +19,7 @@
 // Clearing it on arrival would zero the counter the user just clicked.
 
 import { html, raw } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=234";
+import { renderTopbar } from "../components/topbar.js?v=235";
 import { navigate } from "../router.js?v=30";
 import { isFlagOn } from "../feature-flags.js?v=12";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -36,8 +36,8 @@ import {
   subscribe as subscribeResearch,
 } from "../research-store.js?v=7";
 import { getAllIdeas, getIdeaById, subscribeGlobal as subscribeLibraryGlobal } from "../library.js?v=55";
-import { renderResearchPage, renderDigestBody } from "../research-view.js?v=9";
-import { open as openResearchModal } from "../components/research-modal.js?v=16";
+import { renderResearchPage, renderDigestBody } from "../research-view.js?v=10";
+import { open as openResearchModal } from "../components/research-modal.js?v=17";
 import { writeIdea, skipIdea, runScanAndAnnounce } from "../research-flow.js?v=9";
 
 let unsubscribe = null;

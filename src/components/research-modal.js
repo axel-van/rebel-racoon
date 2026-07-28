@@ -19,7 +19,7 @@ import { getFinding, subscribe as subscribeResearch } from "../research-store.js
 import { writeIdea, skipIdea } from "../research-flow.js?v=9";
 import { findResearchSource } from "../research-catalog.js?v=3";
 import { getIdeaById } from "../library.js?v=55";
-import { renderBadge } from "../research-view.js?v=9";
+import { renderBadge } from "../research-view.js?v=10";
 import { renderSocialPostCard } from "./social-post-card.js?v=2";
 
 const MODAL_ID = "research";

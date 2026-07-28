@@ -19,7 +19,7 @@
 
 import { navigate } from "../router.js?v=30";
 import { escapeHtml as esc } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=234";
+import { renderTopbar } from "../components/topbar.js?v=235";
 import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=40";
 import { mount, snapshotEditable } from "../playbook-view.js?v=53";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
@@ -27,7 +27,7 @@ import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";
 import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=16";
 import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=5";
 import { analyzeWebsite, analyzeDocument, analyzeSocialProfiles } from "../context-mock-analysis.js?v=25";
-import { sectionPatchFromAnalysis } from "../context-builder.js?v=205";
+import { sectionPatchFromAnalysis } from "../context-builder.js?v=206";
 import { isFlagOn } from "../feature-flags.js?v=12";
 
 const AUTOFILL_MS = 1500;

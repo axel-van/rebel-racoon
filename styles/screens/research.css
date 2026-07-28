@@ -77,14 +77,9 @@
   min-width: 200px;
 }
 
-/* ── Header cog ──────────────────────────────────────────────────────────── */
-
-/* The settings used to be a permanent .ap-tabs pair with a counter. A tab put
-   something you set once a quarter next to the ideas you read weekly, and the
-   counter implied there was something to do in it. One quiet icon now. */
-.research-view__cog {
-  flex: 0 0 auto;
-}
+/* No cog in this header: the "What I watch" control lives at the far right of
+   the topbar (cf. components/topbar.js), where a page-level setting doesn't read
+   as a third action next to the Playbook picker and "Look now". */
 
 /* ── Body + empty states ─────────────────────────────────────────────── */
 

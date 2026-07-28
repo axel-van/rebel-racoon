@@ -14,7 +14,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=372";
+} from "./right-panel.js?v=373";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=54";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=61";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=55";
@@ -23,7 +23,7 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=165";
+} from "./conversation-status-card.js?v=166";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=9";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=40";
@@ -45,8 +45,9 @@ import {
 //   • Far left  — sidebar-toggle button (mirrors the sidebar's own collapse
 //     control so the chrome stays reachable in any state) + route-derived
 //     title
-//   • Right     — Drafts pill + Ideas pill (only on /session/:id, drives the
-//     right-panel modes). Nothing else.
+//   • Right     — Sources / Ideas / Drafts pills (only on /session/:id, drive
+//     the right-panel modes), or the page-level control a non-session route
+//     owns — today only the research digest's "What I watch" cog.
 //
 // The Archie wordmark moved to the global sidebar at Lot 2.1. Feedback /
 // Report a bug / Keyboard shortcuts / Settings moved out of the topbar at
@@ -81,7 +82,9 @@ export function renderTopbar(_options = {}) {
     ? renderWelcomeAltExit()
     : onSession
       ? `${renderSessionPills(rpMode, draftCount, isEmpty, ideaCount)}${renderStatusCardToggle(statusCardAvailable)}`
-      : "";
+      : isResearchDigest()
+        ? renderResearchSettingsCog()
+        : "";
   // On the repurposing winner board (profile-first mode), the topbar leads with
   // a "Change profile" back — the app's standard back affordance — in place of
   // the session title.
@@ -107,6 +110,34 @@ function renderTopPostsBack() {
     <button type="button" class="ap-button ghost grey app-topbar__back" data-topbar-topposts-back title="Change profile">
       <i class="ap-icon-arrow-left" aria-hidden="true"></i>
       <span>Change profile</span>
+    </button>
+  `;
+}
+
+// The research digest (/research) — NOT its settings page, which leads with a
+// back control and has nothing to configure about itself.
+function isResearchDigest() {
+  return getPath() === "/research";
+}
+
+// "What I watch", far right of the topbar — the same slot the session's chat-status
+// toggle occupies. It used to sit in the page header, where it read as a third
+// action next to the Playbook picker and "Look now"; the topbar is the app's
+// canonical home for a page-level control that isn't about the content below.
+//
+// Discreet on purpose: the config used to be a permanent tab with a counter,
+// which put something you set once a quarter at the same level as the ideas you
+// read weekly — and the counter implied there was something to do there.
+function renderResearchSettingsCog() {
+  return `
+    <button
+      type="button"
+      class="ap-icon-button transparent"
+      data-topbar-research-settings
+      aria-label="Research settings"
+      title="What I watch"
+    >
+      <i class="ap-icon-cog"></i>
     </button>
   `;
 }
@@ -197,6 +228,13 @@ export function initTopbar() {
     const backBtn = event.target.closest("[data-topbar-back]");
     if (backBtn) {
       navigate(backBtn.dataset.topbarBack || "/");
+      return;
+    }
+    // The digest's cog → "What I watch", carrying the Playbook the user is
+    // looking at (or the settings page resolves its own default, same rule).
+    if (event.target.closest("[data-topbar-research-settings]")) {
+      const pb = parseHashParams().get("pb");
+      navigate(`/research/settings${pb ? `?pb=${encodeURIComponent(pb)}` : ""}`);
       return;
     }
     // "Change profile" — back to the repurposing profile chooser (step 1).
