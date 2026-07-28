@@ -113,6 +113,7 @@ import {
   subscribe as subscribeRightPanel,
 } from "../components/right-panel.js?v=376";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
+import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=1";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=21";
 import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=29";
@@ -3586,6 +3587,13 @@ function wireAssistantPanel(root, session, attachedContext) {
   const pendingAskConnector = consumeHandoff("pendingAskConnector");
   if (pendingAskConnector?.connectorId) {
     setTimeout(() => askConnector(session.id, pendingAskConnector.connectorId), 200);
+  }
+
+  // Hand-off from a topic card or the topic dialog's "Start a chat" — echo the
+  // topic, attach it as a source, and open on Archie's read of it.
+  const pendingTopic = consumeHandoff(TOPIC_CHAT_HANDOFF);
+  if (pendingTopic?.topicId) {
+    setTimeout(() => startTopicChat(session.id, pendingTopic.topicId), 150);
   }
 
   // Pending start flow set by the dashboard's New chat button. Only the
