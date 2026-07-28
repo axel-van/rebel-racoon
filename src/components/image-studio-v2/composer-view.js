@@ -4,23 +4,25 @@
 //   │  Image Studio    Generate | Edit                ✕  │
 //   ├────────────────────────────────────────────────────┤
 //   │              [ Image | In feed ]                   │
-//   │  ┌──┐                            ┌──────────────┐  │
-//   │  │▪ │                            │ Brand kit  ▾ │  │
-//   │  │▪ │        [   IMAGE   ]       │ References ▾ │  │
-//   │  │+ │                            │ Type       ▾ │  │
-//   │  └──┘                            │ Style      ▾ │  │
-//   │  chutier                         │ Format     ▾ │  │
-//   │                                  │ Output     ▾ │  │
-//   │                                  └──────────────┘  │
+//   │  ┌──────────────┐                          ┌──┐    │
+//   │  │ Brand kit  ▾ │                          │▪ │    │
+//   │  │ References ▾ │      [   IMAGE   ]       │▪ │    │
+//   │  │ Type       ▾ │                          │+ │    │
+//   │  │ Style      ▾ │                          └──┘    │
+//   │  │ Format     ▾ │                        chutier   │
+//   │  │ Output     ▾ │                                  │
+//   │  └──────────────┘                                  │
 //   ├────────────────────────────────────────────────────┤
 //   │  ✨ PROMPT …          [Suggest] [Regen] [Use it]   │
 //   └────────────────────────────────────────────────────┘
 //
-// The creative-tool three-zone layout: assets left, canvas centre, inspector
-// right, composer bottom. Two things fall out of it. The settings sit beside the
-// image they describe instead of underneath it, and the bottom bar shrinks back
-// to the one thing it should hold — the prompt — which is what let it be too
-// wide and too heavy in the first place.
+// The creative-tool three-zone layout: inputs left, canvas centre, output right,
+// composer bottom. Two things fall out of it. The settings sit beside the image
+// they describe instead of underneath it, and the bottom bar shrinks back to the
+// one thing it should hold — the prompt — which is what let it be too wide and
+// too heavy in the first place. The inspector shares the LEFT edge with edit
+// mode's tool palette, so switching mode swaps the controls in place instead of
+// throwing them across the modal; the chutier keeps the right edge to itself.
 //
 // EDIT drops the inspector and floats its three manual tools top-left over the
 // canvas, at the contact point of the work (v1's arrangement, which was right).
@@ -62,8 +64,8 @@ export function composer(st) {
   return st.mode === "edit" ? editComposer(st) : generateComposer(st);
 }
 
-// The floating inspector — the six settings, beside the image rather than under
-// it. Same DS Selects, same flyout sheets; only the container moved.
+// The floating inspector — the settings, beside the image rather than under it,
+// on the stage's left edge (where edit mode also keeps its tools).
 export function settingsPanel(st) {
   return `<aside class="isv2-panel" role="group" aria-label="Generation settings">${settingRows(st)}</aside>`;
 }

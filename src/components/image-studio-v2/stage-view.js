@@ -15,7 +15,7 @@ import { getPosts } from "../../posts-store.js?v=39";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=29";
 import { renderPostCard } from "../post-card.js?v=72";
 import { KEY, ctx } from "./context.js?v=9";
-import { composer, settingsPanel, toolPalette, footerBar } from "./composer-view.js?v=10";
+import { composer, settingsPanel, toolPalette, footerBar } from "./composer-view.js?v=11";
 import { editCanvas } from "./edit-view.js?v=9";
 import { compositeOverlays } from "../image-studio/canvas.js?v=2";
 import * as imageStudio from "../../image-studio.js?v=45";
@@ -110,16 +110,15 @@ function stageContent(st) {
   else if (st.genPhase === "generating") inner = generatingStage(st);
   else if (st.genPhase === "results") inner = resultsStage(st);
   else inner = emptyStage();
-  // Three floating zones around the image, the way a creative tool arranges
-  // them: the variations "chutier" LEFT (your assets), the settings inspector
-  // RIGHT (properties of what's on the canvas), the manual tools TOP-LEFT in
-  // edit mode (at the contact point of the work). The body reserves room for
-  // whichever ones are up, so the image centres in what's left over rather than
-  // sliding underneath them.
+  // Three floating zones around the image: the settings inspector LEFT and the
+  // manual edit tools TOP-LEFT — one side for everything you set — and the
+  // variations "chutier" RIGHT, where what you produced accumulates. The body
+  // reserves room for whichever ones are up, so the image centres in what's left
+  // over rather than sliding underneath them.
   const showRail = st.mode === "generate" && !feedView && st.genPhase === "results" && st.variations.length > 0;
   const showPanel = st.mode === "generate" && !feedView;
   const showPalette = st.mode === "edit" && !feedView;
-  // The chutier and the inspector are PINNED to the stage's edges, and the body
+  // The inspector and the chutier are PINNED to the stage's edges, and the body
   // reserves the same width on BOTH sides for them. Symmetry is the whole point:
   // it puts the image on the modal's exact centre line, which is also where the
   // toggle above it and the prompt below it sit. Reserving asymmetrically (the

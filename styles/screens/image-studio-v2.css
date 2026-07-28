@@ -270,12 +270,12 @@
 
 /* ── Variations rail ─────────────────────────────────────────────────────── */
 
-/* Your generated assets, pinned to the stage's left edge — the one part of the
+/* Your generated assets, pinned to the stage's RIGHT edge — the one part of the
    layout that scrolls, since a carousel can run to 20 slides. */
 .isv2-rail {
   position: absolute;
   z-index: 4;
-  left: var(--ref-spacing-lg);
+  right: var(--ref-spacing-lg);
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -577,15 +577,17 @@
   box-shadow: var(--app-shadow-popover-md);
 }
 
-/* The inspector — pinned to the stage's right edge, vertically centred like the
-   rail opposite it. It CAN scroll now: the sections expand in place, so nothing
-   has to escape this box any more. That was the whole hidden cost of the flyout
-   version — `overflow-y: auto` silently computes overflow-x to `auto` too, so a
-   scrollable panel and a flyout could never coexist. */
+/* The inspector — pinned to the stage's LEFT edge, vertically centred like the
+   rail opposite it, and on the same side as the edit-mode tool palette: whatever
+   mode you're in, the controls are in one place and the generated assets in the
+   other. It CAN scroll: the sections expand in place, so nothing has to escape
+   this box. That was the whole hidden cost of the flyout version —
+   `overflow-y: auto` silently computes overflow-x to `auto` too, so a scrollable
+   panel and a flyout could never coexist. */
 .isv2-panel {
   position: absolute;
   z-index: 4;
-  right: var(--ref-spacing-lg);
+  left: var(--ref-spacing-lg);
   top: 50%;
   transform: translateY(-50%);
   width: 284px;
@@ -1029,7 +1031,7 @@
   }
 
   .isv2-panel {
-    right: var(--ref-spacing-sm);
+    left: var(--ref-spacing-sm);
     width: 236px;
   }
 
@@ -1038,7 +1040,7 @@
   }
 
   .isv2-rail {
-    left: var(--ref-spacing-sm);
+    right: var(--ref-spacing-sm);
   }
 
   .isv2-trigger-label {
