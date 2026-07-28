@@ -162,10 +162,15 @@ function generateComposer(st) {
 // composer's own frame already gives it; the expand solved a scrolling problem
 // the composer solves with a line cap; and re-deriving the prompt now happens
 // once, automatically, when the studio opens.
-function console_(label, field, action, hintVerb) {
+//
+// `inline` lays the action at the END of the field's line instead of on a row of
+// its own — for edit mode, where the input is a phrase and not a brief, so a
+// two-line field with a toolbar under it was three rows of card for one row of
+// text. The field still grows; the action stays anchored to its last line.
+function console_(label, field, action, hintVerb, { inline = false } = {}) {
   return `<div class="isv2-dock">
     <div class="isv2-console-wrap">
-      <div class="isv2-console" role="group" aria-label="${escapeHtml(label)}">
+      <div class="isv2-console${inline ? " isv2-console--inline" : ""}" role="group" aria-label="${escapeHtml(label)}">
         ${field}
         ${action ? `<div class="isv2-console-toolbar">${action}</div>` : ""}
       </div>
@@ -504,9 +509,10 @@ function editComposer(st) {
   const busy = st.editBusy ? "disabled" : "";
   return console_(
     "Edit the image",
-    `<textarea class="isv2-prompt" data-img-edit-prompt rows="2" placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" ${busy}>${escapeHtml(st.editPrompt || "")}</textarea>`,
+    `<textarea class="isv2-prompt" data-img-edit-prompt rows="1" placeholder="Describe a change and I'll redraw it…" aria-label="Describe a change for AI to apply" ${busy}>${escapeHtml(st.editPrompt || "")}</textarea>`,
     `<button type="button" class="ap-button stroked grey" data-img-apply-edit="prompt" ${busy}><i class="ap-icon-sparkles-mermaid"></i><span>Redraw</span></button>`,
     "to redraw",
+    { inline: true },
   );
 }
 
@@ -552,6 +558,7 @@ function logoSheet() {
     body: `<button type="button" class="ap-button stroked grey image-studio__logo-upload" data-img-logo-upload><i class="ap-icon-upload" aria-hidden="true"></i><span>Upload an image</span></button>
       ${sheetDivider}
       <div class="image-studio__presets">${presets}</div>`,
-    wide: true,
+    // Not `wide`: the stamp grid is on fixed 72px tracks now, so the sheet sizes
+    // to the grid. Raising the cap only let it stretch the tiles.
   });
 }

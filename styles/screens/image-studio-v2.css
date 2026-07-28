@@ -528,6 +528,27 @@
   min-width: 0;
 }
 
+/* Edit mode's console is ONE line, action at the end of it. "warmer light" is a
+   phrase, not a brief — the two-line field plus a toolbar row under it spent
+   three rows of card on one row of text. The field still grows to a 6-line cap
+   (a redraw note is never a brief), and bottom alignment keeps the button on its
+   last line, the way a chat composer behaves. */
+.isv2-console--inline {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs);
+}
+
+.isv2-console--inline .isv2-prompt {
+  min-height: var(--ref-font-line-height-sm);
+  max-height: calc(var(--ref-font-line-height-sm) * 6);
+}
+
+.isv2-console--inline .isv2-console-toolbar {
+  flex: 0 0 auto;
+}
+
 .isv2-console-toolbar > .ap-button {
   flex-shrink: 0;
 }
@@ -744,6 +765,23 @@
 
 .isv2-sheet--wide {
   max-width: min(560px, calc(100vw - 96px));
+}
+
+/* Logo stamps in the "Add an image" sheet. Main's grid is three 1fr columns, so
+   it sizes to whatever the sheet is — and v2's sheet is far wider than main's
+   flyout, which turned 16 small stamps into 168px slabs with two rows of them
+   filling the canvas. Fixed 72px tracks instead: the sheet sizes to THEM (it is
+   width: max-content), the stamps read at the scale they'll be stamped at, and
+   three rows fit with the rest a scroll away. */
+.isv2-sheet .image-studio__presets {
+  grid-template-columns: repeat(4, 72px);
+  gap: var(--ref-spacing-xxs);
+  max-height: 232px;
+}
+
+/* A 72px tile can't spare main's 12px of padding on every side. */
+.isv2-sheet .image-studio__preset {
+  padding: var(--ref-spacing-xxs);
 }
 
 /* The palette is main's component (v2 reuses it verbatim), pinned top-left there.
