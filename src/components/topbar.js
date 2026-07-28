@@ -1,5 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr } from "../utils.js?v=21";
 import { getPath, navigate } from "../router.js?v=30";
+import { parseHashParams } from "../url-state.js?v=21";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 // Lot 19 — topbar no longer carries its own sidebar-toggle button. The
 // sidebar head exposes the toggle in both expanded (chevron-left) and
@@ -513,11 +514,17 @@ function currentTitle() {
   if (path === "/") return "Home";
   if (path === "/contexts") return "Playbooks";
   if (path === "/connectors") return "Connectors";
+  if (path === "/topics") return "Topics";
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);
   if (sessionMatch) {
     const id = sessionMatch[1];
     const known = getSessionById(id);
-    return known?.name || "New chat";
+    if (known?.name) return known.name;
+    // A freshly minted `new-*` chat isn't in the store yet, so fall back to the
+    // `?title=` param the same way session.js does when it builds the virtual
+    // session — otherwise a chat spawned with a name (from a topic, say) reads
+    // "New chat" in the topbar while its own header shows the real one.
+    return parseHashParams().get("title") || "New chat";
   }
   return "Archie";
 }

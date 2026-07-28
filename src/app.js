@@ -28,6 +28,7 @@ import { renderDashboard } from "./screens/dashboard.js?v=56";
 import { renderSession } from "./screens/session.js?v=461";
 import { renderContexts } from "./screens/contexts.js?v=201";
 import { renderConnectors } from "./screens/connectors.js?v=140";
+import { renderTopics } from "./screens/topics.js?v=1";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
@@ -53,6 +54,7 @@ route("/session/:id", renderSession);
 route("/contexts", renderContexts);
 route("/playbook/:id", renderPlaybook);
 route("/connectors", renderConnectors);
+route("/topics", renderTopics);
 // First-time ALT — thin redirect that mints a transient
 // /session/welcome-alt-{ts} session. The conversational Playbook
 // builder (3-question chat: URL → profile → optional documents) runs

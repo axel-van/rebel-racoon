@@ -1,0 +1,330 @@
+/* Topics feed — the /topics page.
+ *
+ * A reading queue, not a dashboard: one column, generous line lengths, date
+ * headings you can skim. Page chrome (max-width, padding scale) mirrors
+ * /contexts and /connectors so the three standalone pages sit at the same
+ * measure.
+ *
+ * The `.topic-badge--<accent>` source pip is shared with the dialog and the
+ * Playbook section — see styles/components/topic-badge.css.
+ *
+ * See src/screens/topics.js + src/components/topic-card.js. */
+
+.topics-view {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.topics-view__page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-md) var(--ref-spacing-xl) var(--ref-spacing-xxl);
+  /* Narrower than /contexts' 1280: the cards are prose, and a single column
+     stretched to 1280 gives a headline nobody can scan. */
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── Head ───────────────────────────────────────────────────────────────── */
+
+.topics-view__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ref-spacing-md);
+  flex-wrap: wrap;
+}
+
+.topics-view__head-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+}
+
+.topics-view__title {
+  margin: 0;
+  font-family: var(--sys-text-style-h1-font-family);
+  font-size: var(--sys-text-style-h1-size);
+  line-height: var(--sys-text-style-h1-line-height);
+  font-weight: var(--sys-text-style-h1-weight);
+  color: var(--sys-text-color-default);
+}
+
+.topics-view__sub {
+  margin: 0;
+  font-family: var(--sys-text-style-body-font-family);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--sys-text-color-light);
+}
+
+.topics-view__head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+/* ── Filters ────────────────────────────────────────────────────────────── */
+
+.topics-view__filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+}
+
+/* ── Date groups ────────────────────────────────────────────────────────── */
+
+.topics-view__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-lg);
+}
+
+.topics-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.topics-group__label {
+  margin: 0;
+  font-family: var(--sys-text-style-caption-bold-font-family);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sys-text-color-light);
+}
+
+.topics-group__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+/* ── Card ───────────────────────────────────────────────────────────────── */
+
+.topic-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+  background: var(--app-surface);
+  overflow: hidden;
+  transition: border-color var(--ref-animation-short);
+}
+
+/* Blue border on hover, no elevation — the project's convention for a clickable
+   card. Driven off :focus-within too so keyboard users get the same cue when the
+   body button takes focus. */
+.topic-card:hover,
+.topic-card:focus-within {
+  border-color: var(--sys-border-color-active);
+}
+
+/* Unseen: an orange left edge. Orange is what marks Archie's own contribution
+   everywhere else, and an edge reads down a column of cards far better than a
+   badge does. */
+.topic-card.is-unseen {
+  border-left: 3px solid var(--ref-color-orange-100);
+}
+
+/* The whole reading area is one button, so it has to shed every default the UA
+   gives a <button>: left-aligned text, inherited type, no chrome. */
+.topic-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  width: 100%;
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.topic-card__body:focus-visible {
+  outline: 2px solid var(--sys-border-color-active);
+  outline-offset: -2px;
+}
+
+.topic-card__eyebrow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxxs);
+  font-family: var(--sys-text-style-caption-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
+}
+
+.topic-card__source {
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--sys-text-color-default);
+}
+
+.topic-card__new {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--sys-text-style-caption-bold-font-family);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-orange-100);
+}
+
+.topic-card__new::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-orange-100);
+}
+
+/* The claim. Capped in characters rather than pixels so it stays scannable
+   whatever the window does. */
+.topic-card__headline {
+  max-width: 52ch;
+  font-family: var(--sys-text-style-h4-font-family);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  color: var(--sys-text-color-default);
+  text-wrap: pretty;
+}
+
+/* Two lines: enough to decide whether to open it, not enough to make opening it
+   pointless. */
+.topic-card__summary {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 72ch;
+  font-family: var(--sys-text-style-body-font-family);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--sys-text-color-light);
+}
+
+/* ── Card footer ────────────────────────────────────────────────────────── */
+
+/* Outside the body button on purpose — a button inside a button is invalid HTML
+   and browsers resolve the nesting unpredictably. */
+.topic-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  flex-wrap: wrap;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-md) var(--ref-spacing-sm);
+}
+
+.topic-card__evidence {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  font-family: var(--sys-text-style-caption-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
+}
+
+/* The stacked faces sit inside a card, where the group's default hover/active
+   affordances would suggest they're interactive. They aren't. */
+.topic-card__faces .ap-avatar-group-overflow {
+  pointer-events: none;
+}
+
+.topic-card__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+/* ── Scanning ───────────────────────────────────────────────────────────── */
+
+.topics-view__scanning {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  margin: 0;
+  font-family: var(--sys-text-style-body-font-family);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--sys-text-color-light);
+}
+
+/* Skeletons keep the feed's shape while the scan runs, so arriving cards land in
+   a layout the eye already knows. Same pulse grammar as the Playbook's
+   competitor scan. */
+.topics-skel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-md);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-card);
+  background: var(--app-surface);
+}
+
+.topics-skel__line {
+  display: block;
+  height: 10px;
+  width: 100%;
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-grey-10);
+  animation: topics-skel-pulse 1.4s ease-in-out infinite;
+}
+
+.topics-skel__line--eyebrow {
+  width: 30%;
+  height: 8px;
+}
+
+.topics-skel__line--title {
+  width: 70%;
+  height: 16px;
+}
+
+.topics-skel__line--short {
+  width: 55%;
+}
+
+@keyframes topics-skel-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ── Empty ──────────────────────────────────────────────────────────────── */
+
+.topics-view__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxl) var(--ref-spacing-lg);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-card);
+  background: var(--app-surface-subtle);
+}
+
+.topics-view__empty p {
+  max-width: 52ch;
+}

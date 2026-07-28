@@ -16,7 +16,7 @@
 
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 import { html, raw } from "../utils.js?v=21";
-import { getTopicById, markSeen, dismissTopic, subscribe as subscribeTopics } from "../topics-store.js?v=1";
+import { getTopicById, markSeen, dismissTopic, topicWhen, subscribe as subscribeTopics } from "../topics-store.js?v=1";
 import { findTopicSource } from "../topics-catalog.js?v=1";
 import { getContextById } from "../contexts-store.js?v=41";
 import { openTopicInChat } from "../topic-flow.js?v=1";
@@ -168,7 +168,7 @@ function render() {
               ><span class="topic-modal__source">${source.name}</span>`
           : "",
       )}
-      <span>·</span><span>${topic.scannedOn}</span>
+      <span>·</span><span>${topicWhen(topic.ageDays)}</span>
       ${raw(playbook ? html`<span>·</span><span>${playbook.name}</span>` : "")}
     </p>
   `;

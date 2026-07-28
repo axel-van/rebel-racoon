@@ -20,6 +20,7 @@ import { isNewUser } from "../user-mode.js?v=22";
 import { clearSession as clearLibrarySession } from "../library.js?v=57";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=41";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=32";
+import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=1";
 import { closePanel as closeRightPanel } from "./right-panel.js?v=376";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=63";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=40";
@@ -308,6 +309,9 @@ export function initSidebar() {
   subscribeContexts(() => renderSidebar());
   subscribeSessions(() => renderSidebar());
   subscribeConnectors(() => renderSidebar());
+  // A topic read, dismissed or scanned in anywhere has to move the unseen badge
+  // immediately — the user may never leave the page it happened on.
+  subscribeTopics(() => renderSidebar());
 
   // Click outside the popmenu → close.
   document.addEventListener("click", (event) => {
@@ -572,6 +576,17 @@ const NAV = [
     flag: "connectors",
     match: (p) => p === "/connectors",
     count: () => getConnectedConnectors().length,
+  },
+  // The counter is UNSEEN topics, not the total — this row is a notification,
+  // and it sums across every Playbook because arrival is an account-level event
+  // even though the config that produced it is per Playbook.
+  {
+    path: "/topics",
+    icon: "ap-icon-antenna",
+    label: "Topics",
+    flag: "topics",
+    match: (p) => p === "/topics",
+    count: () => getUnseenTopicCount(),
   },
 ];
 

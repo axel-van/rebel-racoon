@@ -23,11 +23,12 @@
 //     summary,        — one clamped paragraph on the card
 //     analysis: [ … ],— the prose paragraphs
 //     posts: [ … ],   — the source posts behind it (renderSocialPostCard)
-//     scannedOn, ageDays, unseen, dismissed }
+//     ageDays, unseen, dismissed }
 //
-// `ageDays` — not a real timestamp — drives the feed's date grouping. A
-// prototype has no clock worth trusting, and mock dates that drift as the file
-// ages read worse than a stable "3 days ago".
+// `ageDays` — not a real timestamp — is the single source of truth for age: the
+// feed groups on it AND every "3 days ago" label is derived from it via
+// topicWhen(). A prototype has no clock worth trusting, and mock dates that drift
+// as the file ages read worse than a stable "3 days ago".
 
 import { topics as seed, topicScanPool as scanSeed } from "./mocks.js?v=60";
 import { isNewUser } from "./user-mode.js?v=22";
@@ -44,6 +45,21 @@ const scanPool = isNewUser() ? [] : scanSeed.map(cloneTopic);
 const notifier = createNotifier("topics-store");
 export const subscribe = notifier.subscribe;
 const notify = () => notifier.notify(getTopics());
+
+// The "when" label, derived from ageDays rather than stored. It has to be
+// derived: refreshTopics ages every topic by a day, so an authored string would
+// still read "yesterday" on a card the feed had already moved into last week.
+// One source of truth means the label and the date group can never disagree.
+export function topicWhen(ageDays) {
+  const d = Math.max(0, Math.round(Number(ageDays) || 0));
+  if (d === 0) return "just now";
+  if (d === 1) return "yesterday";
+  if (d < 7) return `${d} days ago`;
+  const weeks = Math.round(d / 7);
+  if (d < 31) return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
+  const months = Math.round(d / 30);
+  return months === 1 ? "1 month ago" : `${months} months ago`;
+}
 
 // Posts carry a nested author object, so a shallow copy isn't enough — the
 // store must not hand out references into the mocks module.

@@ -21,7 +21,7 @@
 
 import { navigate } from "./router.js?v=30";
 import { setHandoff } from "./handoff.js?v=20";
-import { postSelectionEcho, postAssistantMessage, sendMessage } from "./assistant.js?v=63";
+import { postAssistantMessage, sendMessage } from "./assistant.js?v=63";
 import { addReadySource } from "./sources-stream.js?v=56";
 import * as inlineQuestion from "./inline-question.js?v=48";
 import { getTopicById, markSeen } from "./topics-store.js?v=1";
@@ -61,16 +61,13 @@ export function startTopicChat(sessionId, topicId) {
   // Arriving via the chat counts as reading it.
   markSeen(topicId);
 
-  // The pick echoes as a card, not as a sentence — same contract as a chosen
-  // source, idea or clip.
-  postSelectionEcho(sessionId, {
-    icon: source?.icon || "ap-icon-antenna",
-    title: topic.headline,
-    meta: source ? `${source.name} · ${topic.scannedOn}` : "Topic",
-  });
-
   // Attach it as an already-processed source. Deduped on the topic id inside
   // addReadySource, so re-entering the same chat twice can't double it up.
+  //
+  // This is also what puts the topic in the thread as a CARD rather than as a
+  // sentence: intake-lifecycle posts a source-intake turn for any source landing
+  // after mount, so the pick is visible the way a chosen source, idea or clip is.
+  // A postSelectionEcho on top of it stacked the same headline twice.
   addReadySource(sessionId, {
     id: topic.id,
     filename: topic.headline,
