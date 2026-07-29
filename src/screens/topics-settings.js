@@ -1,4 +1,4 @@
-// Topics settings — "What I watch", route /topics/settings.
+// Topics settings — route /topics/settings.
 //
 // Which listening sources are live for a Playbook, and how often I check them.
 //
@@ -157,7 +157,7 @@ function renderPage() {
   return html`
     <div class="topics-settings__content">
       <header class="topics-settings__head">
-        <h1 class="ap-h1 topics-settings__title">What I watch</h1>
+        <h1 class="ap-h1 topics-settings__title">Topics settings</h1>
         <p class="ap-body topics-settings__lead">
           The sources I listen to on your behalf, and how often I check them. Everything I find lands in your Topics
           feed.

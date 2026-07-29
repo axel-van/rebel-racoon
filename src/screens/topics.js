@@ -5,7 +5,7 @@
 // the shell rules, and a topic belongs to a Playbook and arrives on a cadence long
 // before any chat exists to hold it.
 //
-// The config ("What I watch") is NOT here. It lived as a tab on this page and that
+// The config (Topics settings) is NOT here. It lived as a tab on this page and that
 // gave it equal billing with the feed, which is wrong for something you set once and
 // then leave alone for months — it's a settings page now, screens/topics-settings.js.
 // It isn't on /playbook/:id either: a Playbook is a fact sheet, and which feeds are
@@ -106,7 +106,7 @@ export function renderTopics(_params, target) {
   // Repaint when a topic is read, dismissed or restored from elsewhere (the
   // dialog, or a chat marking one seen on arrival).
   unsubscribe = subscribeTopics(() => paint(target));
-  // …and when a Playbook changes, since "What I watch" edits straight into
+  // …and when a Playbook changes, since Topics settings edits straight into
   // contexts-store and the feed's Playbook chips read names from it.
   unsubscribeContexts = subscribeContexts(() => paint(target));
   return teardown;
@@ -207,7 +207,7 @@ function renderPage() {
                thing instead of making you hover a glyph. -->
           <button type="button" class="ap-button ghost grey" data-topics-settings>
             <i class="ap-icon-cog" aria-hidden="true"></i>
-            <span>What I watch</span>
+            <span>Settings</span>
           </button>
           ${raw(renderRefresh())}
         </div>

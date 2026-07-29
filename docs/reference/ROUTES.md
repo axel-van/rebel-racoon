@@ -4,17 +4,17 @@ Source de vérité : [`src/app.js`](../../src/app.js) (route table) + [`src/rout
 
 ## Route table
 
-| Route                | Handler                | Notes                                                                                                                                                              |
-| -------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/`                  | `dashboard.js`         | **Redirect-only** : first-time (`new-alt` mode) → `/welcome-alt` ; returning → most-recent session ou nouvelle session. Pas de UI propre.                          |
-| `/session/:id`       | `session.js`           | La surface chat principale (le plus gros fichier du projet). Héberge le thread assistant, le composer, les flows per-session (intake, draft, clips).               |
-| `/contexts`          | `contexts.js`          | Library **Playbooks** : cards (DO/DON'T, brief, color tag) + edit en side panel.                                                                                   |
-| `/playbook/:id`      | `playbook.js`          | Page détail d'un Playbook. Topbar back → `/contexts`.                                                                                                              |
-| `/connectors`        | `connectors.js`        | Gallery des connectors (feature flag `connectors`, default OFF). Détail dans un modal.                                                                             |
-| `/topics`            | `topics.js`            | Feed des dossiers du listening. Filtres Playbook (`?pb=`) + Source. Flag `topics`, default OFF ; deep-link périmé → `/`.                                           |
-| `/topics/settings`   | `topics-settings.js`   | **What I watch** — les six sources d'écoute + la cadence, scopées à un Playbook (`?pb=`). Une page, pas un onglet : on la règle une fois. Topbar back → `/topics`. |
-| `/welcome-alt`       | `welcome-alt.js`       | Onboarding first-time. Redirige vers une session transitoire. Body en `.onboarding` (full-bleed).                                                                  |
-| `/welcome-alt/recap` | `welcome-alt-recap.js` | Recap final du Playbook construit pendant l'onboarding.                                                                                                            |
+| Route                | Handler                | Notes                                                                                                                                                                 |
+| -------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                  | `dashboard.js`         | **Redirect-only** : first-time (`new-alt` mode) → `/welcome-alt` ; returning → most-recent session ou nouvelle session. Pas de UI propre.                             |
+| `/session/:id`       | `session.js`           | La surface chat principale (le plus gros fichier du projet). Héberge le thread assistant, le composer, les flows per-session (intake, draft, clips).                  |
+| `/contexts`          | `contexts.js`          | Library **Playbooks** : cards (DO/DON'T, brief, color tag) + edit en side panel.                                                                                      |
+| `/playbook/:id`      | `playbook.js`          | Page détail d'un Playbook. Topbar back → `/contexts`.                                                                                                                 |
+| `/connectors`        | `connectors.js`        | Gallery des connectors (feature flag `connectors`, default OFF). Détail dans un modal.                                                                                |
+| `/topics`            | `topics.js`            | Feed des dossiers du listening. Filtres Playbook (`?pb=`) + Source. Flag `topics`, default OFF ; deep-link périmé → `/`.                                              |
+| `/topics/settings`   | `topics-settings.js`   | **Topics settings** — les six sources d'écoute + la cadence, scopées à un Playbook (`?pb=`). Une page, pas un onglet : on la règle une fois. Topbar back → `/topics`. |
+| `/welcome-alt`       | `welcome-alt.js`       | Onboarding first-time. Redirige vers une session transitoire. Body en `.onboarding` (full-bleed).                                                                     |
+| `/welcome-alt/recap` | `welcome-alt-recap.js` | Recap final du Playbook construit pendant l'onboarding.                                                                                                               |
 
 ## Matching & lifecycle
 
