@@ -45,6 +45,7 @@ Exemples observés :
 - `/session/:id?tab=posts` — Posts tab actif (right panel mode `drafts`)
 - `/session/:id?focusIdea=…` — scroll-and-highlight d'une idée précise
 - `/topics?view=sources` — l'onglet **What I watch** (la config des sources d'écoute) au lieu du feed
+- `/topics?view=sources&pb=ctx-…` — le même onglet, scopé à un Playbook (obligatoire : sans lui, configurer B puis Retour montrerait A)
 - (autres possibles : `?tab=ideas`, `?tab=sources`, `?tab=clips`, etc.)
 
 ## Handoffs entre routes

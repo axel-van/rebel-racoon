@@ -459,7 +459,7 @@ Le seul endroit où **Archie propose** au lieu d'attendre. Le listening Agorapul
 
 ### Deux onglets (`/topics`, [`screens/topics.js`](../../src/screens/topics.js))
 
-DS `.ap-tabs` : **Feed** (avec son compteur) | **What I watch** (sans compteur — un nombre y serait ambigu : des sources ? des Playbooks ?). L'onglet actif vit dans **`?view=sources`**, pas en state module : `renderTopics` réinitialise `view` à chaque render et le router re-run le handler sur un changement de query seul, donc un onglet en state module reviendrait aussitôt au feed. Dans l'URL il est en plus deep-linkable et le retour navigateur fait ce qu'on attend. **Refresh now** n'existe que sur le feed — rien à rafraîchir sur l'onglet config, et ça scannerait des sources en cours d'édition.
+DS `.ap-tabs` : **Feed** (avec son compteur) | **What I watch** (sans compteur — un nombre y serait ambigu : des sources ? des Playbooks ?). L'onglet actif vit dans **`?view=sources`** (et le Playbook scopé dans `?pb=`, voir plus bas ; passer au feed le retire), pas en state module : `renderTopics` réinitialise `view` à chaque render et le router re-run le handler sur un changement de query seul, donc un onglet en state module reviendrait aussitôt au feed. Dans l'URL il est en plus deep-linkable et le retour navigateur fait ce qu'on attend. **Refresh now** n'existe que sur le feed — rien à rafraîchir sur l'onglet config, et ça scannerait des sources en cours d'édition.
 
 #### Le feed
 
@@ -473,12 +473,21 @@ Header **« Topics »** + _« N new · N topics · from N Playbooks »_ (les Pla
 
 #### L'onglet « What I watch »
 
-Un bloc par Playbook, **tous** les Playbooks y compris ceux qui ne surveillent rien — c'est le seul endroit pour les allumer. Par bloc : le nom, _« N of 6 sources on »_, un lien texte **« Open the Playbook → »**, la cadence en `.ap-select` (`<details>`, jamais un `<select>` natif), et les six sources en cartes avec le switch DS (`.ap-toggle-container`). Les OFF passent en surface creusée, pip désaturé.
+**Un seul Playbook à la fois**, choisi dans un picker de scope. Un bloc par Playbook était la première forme et elle ne tient pas : à vingt Playbooks c'est 120 switches et chacune des six descriptions répétée vingt fois — et ce sont **les descriptions**, pas les switches, qui font exploser la page. Scopé, le panneau mesure la même hauteur (575px mesuré) à 4 Playbooks comme à 20, et six descriptions se rendent au lieu de 120, là où la décision se prend.
 
+Le scope vit dans **`?pb=`**, pas en state module. Même raison que l'onglet, plus une propre à ce cas : une surface de config par entité **doit** porter son scope dans l'URL, sinon configurer le Playbook B puis faire Retour affiche silencieusement les switches du Playbook A. Résolution : `?pb=` valide → le Playbook par défaut (★) → le premier ; un id supprimé ou bidon rend donc quelque chose de réel au lieu d'un panneau vide.
+
+- **Le header dit le scope** — _« Watching for [Playbook ▾] »_ : la prose **et** le contrôle. Une page qui ressemble à des réglages se lit comme globale ; c'est le label qui l'en empêche, et un picker nu ne suffit pas puisque `.ap-select` se réduit à une seule option quand il n'y a qu'un Playbook. Puis _« N of 6 sources on · Open the Playbook → »_ et la cadence en `.ap-select` (`<details>`, jamais un `<select>` natif).
+- **Le picker fait office de vue d'ensemble** — chaque option porte une `.ap-select-option-caption` _« 5 of 6 · weekly »_, donc on compare les Playbooks sans quitter l'onglet : l'essentiel de ce que l'empilement apportait vraiment.
+- **Recherche au-delà de 8 Playbooks** — la dalle `.ap-select-search` du DS (`-icon` + `-input`, `.ap-select-not-found` pour un miss), **jamais utilisée dans l'app avant**. Le filtrage se fait **dans le DOM** sur `input`, pas par repaint : un repaint fermerait le `<details>` et emporterait le curseur. En dessous de 8, liste simple — un champ de recherche sur quatre lignes est du bruit.
+- **Les six sources en cartes** avec le switch DS (`.ap-toggle-container`) ; les OFF passent en surface creusée, pip désaturé.
 - **Commit direct, pas de Save** — un switch écrit via `updateContext`, `contexts-store` notifie, `subscribeContexts` repaint. Comme le repaint remplace le nœud sur lequel l'utilisateur était, le focus est **remis sur le switch** — sinon chaque bascule au clavier le renvoie en haut de page. Les ids sont stockés **dans l'ordre du catalogue**, pas dans l'ordre des clics, donc deux Playbooks avec le même set sérialisent pareil.
 - **`change`, pas `click`** — les switches sont des checkboxes : `change` ne tire qu'une fois (un clic sur le `<label>` se propage à l'input, ce qui doublerait) et attrape l'Espace au clavier.
-- **La dépendance en légende, pas en lien** — les sources `playbookAnchor: "competitors"` portent _« Reads your competitors »_. Le bloc a déjà un lien vers le Playbook ; six de plus seraient du bruit, et ce qui compte est de savoir **pourquoi** la source a besoin du Playbook. `influencer-posts` a un anchor `null` : un Playbook ne contient aucune liste de créateurs, donc prétendre qu'elle lit les competitors était faux.
+- **La dépendance en légende, pas en lien** — les sources `playbookAnchor: "competitors"` portent _« Reads your competitors »_. Le panneau a déjà un lien vers le Playbook ; six de plus seraient du bruit, et ce qui compte est de savoir **pourquoi** la source a besoin du Playbook. `influencer-posts` a un anchor `null` : un Playbook ne contient aucune liste de créateurs, donc prétendre qu'elle lit les competitors était faux.
+- **Dire que les autres diffèrent** — _« 19 other Playbooks watch different sources. »_ sous la grille (comparaison sur `enabledSourceIds` trié + `cadence`). Un-à-la-fois invite au « je croyais avoir réglé ça partout » ; c'est l'autre chose que l'empilement donnait gratuitement.
 - **Empty state** — aucun Playbook du tout (mode `new-alt`) : **« No Playbooks yet »** + lien vers `/contexts`.
+
+⚠️ **Deux pièges DS rencontrés ici**, tous deux valables ailleurs : `.ap-select-not-found` porte `display: flex`, qui bat `[hidden]` — masquer se fait en `style.display` inline (même famille que `.ap-form-message[hidden]` dans `ds-patches`). Et **des backticks dans un commentaire HTML terminent le template `html``** : un commentaire de code à l'intérieur d'un template doit se passer de ticks.
 
 ### La dialog du dossier ([`topic-modal.js`](../../src/components/topic-modal.js))
 
