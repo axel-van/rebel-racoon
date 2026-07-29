@@ -68,7 +68,7 @@ DS `.ap-button` avec `primary|stroked|ghost` × `orange|blue`. Icon = `.ap-icon-
 
 `<details class="ap-select">` + `summary.ap-select-trigger` + `.ap-select-dropdown > .ap-select-options > .ap-select-option`. Options peuvent porter `.ap-select-option-caption` (2ᵉ ligne) et `.ap-select-option-check`. **Jamais un `<select>` natif** (mémoire _use-ds-dropdowns_). Depuis le picker de Playbook de `/topics`, la dalle de recherche du DS est aussi utilisée : `.ap-select-search` > `.ap-select-search-icon` + `.ap-select-search-input`, avec `.ap-select-not-found`. ⚠️ `.ap-select-not-found` porte `display: flex` → il bat `[hidden]` ; masquer en `style.display` inline.
 
-### Filtres — chips ou dropdown ?
+### Filtres — chips, selects ou dropdown ?
 
 **Règle du DS** (`choosing-components.md` › Filtering) : bascules **toujours visibles** → _filter chips list_ ; **options groupées / presets / une étape d'apply derrière un déclencheur** → _filter dropdown_.
 
@@ -79,7 +79,7 @@ DS `.ap-button` avec `primary|stroked|ghost` × `orange|blue`. Icon = `.ap-icon-
 | Filter chips list | `.ap-filter-chip` (patché dans `ds-patches.css`, « en route vers le DS »)        |
 | Filter dropdown   | `.ap-selection-dropdown` (search · `-group` · `-item` · `-selected` · `-footer`) |
 
-Le panneau de filtres de `/topics` est le premier usage de `.ap-selection-dropdown` dans l'app : un `<details>` pour l'ouverture, un groupe par facette, un `.ap-badge` de compteur par ligne, et `Clear filters` dans le `-footer`. ⚠️ `.ap-selection-dropdown-empty` porte un `display` → il bat `[hidden]` ; masquer en `style.display` inline (même piège que `.ap-select-not-found`).
+**Troisième cas, et c'est celui de `/topics` :** quand chaque facette prend **une seule** valeur et s'applique **immédiatement**, ni l'un ni l'autre — **un `.ap-select` par facette**, avec `.ap-select-inline-label` pour nommer la facette dans le déclencheur et `.ap-select-option-badge` pour le compteur. Un select **montre sa sélection fermé** ; un déclencheur « Filters (2) » oblige à l'ouvrir pour savoir. Le _Filters dropdown_ du DS (V2 Molecules, panneau 420px checkboxes + Clear/Apply) reste le bon choix dès qu'on **compose un jeu multi-valeurs et qu'on l'applique en un coup**. Précédent en place : la toolbar Period / Sort du board top-posts.
 
 ### Filter chips
 

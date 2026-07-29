@@ -271,7 +271,7 @@ function renderTabs(tab, topicCount) {
 }
 
 function renderFeedTab({ all, visible, playbooks }) {
-  return html`${raw(all.length ? renderFilterPanel(all) : "")}
+  return html`${raw(all.length ? renderFilterBar(all) : "")}
     <div class="topics-view__body">
       ${raw(
         view.scanning
@@ -311,19 +311,18 @@ function renderRefresh() {
 
 // ─── Filters ───────────────────────────────────────────────────────────────
 //
-// Two facets — Playbook and source — behind ONE trigger, on the DS
-// `.ap-selection-dropdown` panel (header/search/groups/items/footer).
+// TWO SELECTS — Playbook and Source — not one "Filters" trigger. The DS does ship a
+// Filters dropdown (V2 Molecules › Filters dropdown: a 420px panel of checkboxes with
+// Clear / Apply, i.e. <ap-filter-dropdown> with needApplyButton), and that's the right
+// component when the user is composing a multi-value filter set and applying it in one
+// go. Here each facet takes exactly ONE value and applies immediately, so two selects
+// say what's selected without being opened — which a trigger reading "Filters (2)"
+// cannot. Same toolbar shape as the top-posts board's Period / Sort.
 //
-// This is the DS's own rule for filtering: always-visible toggles → a filter chips
-// list; **grouped options behind a trigger → a filter dropdown**. Two facets, one of
-// them as long as the account has Playbooks, is squarely the second. (The DS ships
-// <ap-filter-dropdown>, but it's Angular-only with no CSS-UI layer — this panel is
-// its CSS-UI counterpart and has exactly the anatomy the grouped case needs.)
-//
-// A row of Playbook chips was the alternative and it's the same trap the config tab
-// just got out of: it can't survive twenty Playbooks.
+// A chip per Playbook was the other option, and it's the trap the config tab just
+// escaped: it can't survive twenty Playbooks. A select can.
 
-// Above this many Playbooks in the list, the panel earns its search field.
+// Above this many options, the Playbook select earns a search field.
 const PB_FILTER_SEARCH_THRESHOLD = 8;
 
 function countBy(topics, key) {
@@ -332,54 +331,72 @@ function countBy(topics, key) {
   return out;
 }
 
-// One item. `active` draws the check; a zero count disables it rather than hiding it,
-// so the list doesn't reshuffle under the cursor as the other facet changes.
-function renderFilterItem({ attr, value, label, icon, count, active, searchKey }) {
+// One option row. A zero count DISABLES it rather than hiding it, so the list doesn't
+// reshuffle as the other facet changes — and a dead combination stays unreachable.
+function renderFilterOption({ attr, value, label, icon, count, active, searchKey }) {
   const disabled = count === 0 && !active;
-  return html`<button
-    type="button"
-    class="ap-selection-dropdown-item"
-    ${raw(attr)}="${escapeAttr(value)}"
+  return html`<div
+    class="ap-select-option${raw(active ? " selected" : "")}${raw(disabled ? " disabled" : "")}"
+    ${raw(disabled ? "" : `${attr}="${escapeAttr(value)}"`)}
     ${raw(searchKey ? `data-topics-filter-name="${escapeAttr(searchKey.toLowerCase())}"` : "")}
-    ${raw(disabled ? "disabled" : "")}
     role="option"
     aria-selected="${active ? "true" : "false"}"
+    aria-disabled="${disabled ? "true" : "false"}"
   >
-    <i
-      class="${raw(active ? "ap-icon-check" : icon || "ap-icon-check")}"
-      aria-hidden="true"
-      style="${raw(active ? "" : icon ? "" : "visibility: hidden")}"
-    ></i>
-    <span>${label}</span>
-    <span class="ap-badge ${raw(active ? "blue" : "")}">${count}</span>
-  </button>`;
+    ${raw(icon ? `<i class="${icon} ap-select-option-icon" aria-hidden="true"></i>` : "")}
+    <span class="ap-select-option-text">${label}</span>
+    <span class="ap-select-option-badge">${count}</span>
+    ${raw(active ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : "")}
+  </div>`;
 }
 
-function renderFilterPanel(all) {
+// `.ap-select` over <details>, with the DS's inline label in the trigger so the facet
+// names itself ("Playbook | All") without a separate <label>.
+function renderFilterSelect({ label, valueLabel, options, search, extraClass = "" }) {
+  return html`<details class="ap-select topics-filter__select ${raw(extraClass)}">
+    <summary class="ap-select-trigger">
+      <span class="ap-select-inline-label">${label}</span>
+      <span class="ap-select-value">${valueLabel}</span>
+      <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+    </summary>
+    <div class="ap-select-dropdown" role="listbox" aria-label="${escapeAttr(label)}">
+      ${raw(search)}
+      <div class="ap-select-options">${raw(options)}</div>
+      <!-- Inline display, not the hidden attribute: the DS gives
+           .ap-select-not-found display:flex, which out-specifies [hidden]. -->
+      <div class="ap-select-not-found" data-topics-filter-empty style="display: none">No match.</div>
+    </div>
+  </details>`;
+}
+
+function renderFilterBar(all) {
   const pb = activePlaybookFilter();
   const src = view.source;
 
-  // Each facet's counts are computed against the OTHER facet's selection, so a
-  // number never promises rows the current filters would exclude.
-  const bySourceScope = all.filter((t) => pb === "all" || t.contextId === pb);
-  const byPbScope = all.filter((t) => src === "all" || t.sourceId === src);
-  const srcCounts = countBy(bySourceScope, "sourceId");
-  const pbCounts = countBy(byPbScope, "contextId");
+  // Each facet's counts are computed against the OTHER facet's selection, so a number
+  // never promises rows the current filters would exclude.
+  const inPbScope = all.filter((t) => pb === "all" || t.contextId === pb);
+  const inSrcScope = all.filter((t) => src === "all" || t.sourceId === src);
+  const srcCounts = countBy(inPbScope, "sourceId");
+  const pbCounts = countBy(inSrcScope, "contextId");
 
-  // Only Playbooks that appear in the feed at all — a filter that can only ever
-  // return nothing isn't a filter.
+  // Only Playbooks that appear in the feed at all — a filter that can only ever return
+  // nothing isn't a filter. This is what really bounds the list: it grows with the
+  // feed's content, not with the size of the account.
   const feedPlaybooks = getContexts().filter((c) => all.some((t) => t.contextId === c.id));
+  const activePb = pb === "all" ? null : getContextById(pb);
+  const activeSrc = src === "all" ? null : findTopicSource(src);
 
-  const pbItems = [
-    renderFilterItem({
+  const pbOptions = [
+    renderFilterOption({
       attr: "data-topics-pb",
       value: "all",
       label: "All Playbooks",
-      count: byPbScope.length,
+      count: inSrcScope.length,
       active: pb === "all",
     }),
     ...feedPlaybooks.map((c) =>
-      renderFilterItem({
+      renderFilterOption({
         attr: "data-topics-pb",
         value: c.id,
         label: c.name,
@@ -390,71 +407,67 @@ function renderFilterPanel(all) {
     ),
   ].join("");
 
-  const srcItems = [
-    renderFilterItem({
+  const srcOptions = [
+    renderFilterOption({
       attr: "data-topics-source",
       value: "all",
       label: "All sources",
-      count: bySourceScope.length,
+      count: inPbScope.length,
       active: src === "all",
     }),
     ...TOPIC_SOURCES.map((s) =>
-      renderFilterItem({
+      renderFilterOption({
         attr: "data-topics-source",
         value: s.id,
         label: s.name,
         icon: s.icon,
         count: srcCounts.get(s.id) || 0,
         active: src === s.id,
-        searchKey: s.name,
       }),
     ),
   ].join("");
 
-  const search =
+  const pbSearch =
     feedPlaybooks.length > PB_FILTER_SEARCH_THRESHOLD
-      ? html`<div class="ap-selection-dropdown-search">
-          <i class="ap-icon-search" aria-hidden="true"></i>
-          <input type="search" placeholder="Search filters…" aria-label="Search filters" data-topics-filter-search />
+      ? html`<div class="ap-select-search">
+          <i class="ap-icon-search ap-select-search-icon" aria-hidden="true"></i>
+          <input
+            type="search"
+            class="ap-select-search-input"
+            placeholder="Search Playbooks…"
+            aria-label="Search Playbooks"
+            data-topics-filter-search
+          />
         </div>`
       : "";
 
-  const activeCount = (pb === "all" ? 0 : 1) + (src === "all" ? 0 : 1);
-
   return html`<div class="topics-view__filters">
-    <details class="topics-filter">
-      <summary class="ap-button stroked grey topics-filter__trigger">
-        <i class="ap-icon-filter" aria-hidden="true"></i>
-        <span>Filters</span>
-        ${raw(activeCount ? html`<span class="ap-counter normal blue">${activeCount}</span>` : "")}
-        <i class="ap-icon-chevron-down topics-filter__arrow" aria-hidden="true"></i>
-      </summary>
-      <div class="ap-selection-dropdown topics-filter__panel" role="listbox" aria-label="Filter topics">
-        ${raw(search)}
-        <div class="ap-selection-dropdown-items">
-          <div class="ap-selection-dropdown-group">Playbook</div>
-          ${raw(pbItems)}
-          <div class="ap-selection-dropdown-group">Source</div>
-          ${raw(srcItems)}
-          <!-- Inline display, not the hidden attribute: the DS gives
-               .ap-selection-dropdown-empty a padding-bearing block and [hidden] is
-               easy to out-specify — the same trap .ap-select-not-found sets. -->
-          <div class="ap-selection-dropdown-empty" data-topics-filter-empty style="display: none">
-            Nothing matches that.
-          </div>
-        </div>
-        <div class="ap-selection-dropdown-footer">
-          <button
-            type="button"
-            class="ap-button ghost grey"
-            data-topics-filter-clear
-            ${raw(activeCount ? "" : "disabled")}
-          >
-            <span>Clear filters</span>
-          </button>
-        </div>
-      </div>
-    </details>
+    ${raw(
+      renderFilterSelect({
+        label: "Playbook",
+        valueLabel: activePb ? activePb.name : "All",
+        options: pbOptions,
+        search: pbSearch,
+        extraClass: "topics-filter__select--pb",
+      }),
+    )}
+    ${raw(
+      renderFilterSelect({
+        label: "Source",
+        valueLabel: activeSrc ? activeSrc.name : "All",
+        options: srcOptions,
+        search: "",
+      }),
+    )}
+    <!-- Only offered when there's something to clear: each select already has its own
+         "All", so a permanent Clear would be a third way to do the same thing. -->
+    ${raw(
+      activePb || activeSrc
+        ? html`<button type="button" class="ap-button ghost grey" data-topics-filter-clear>
+            <span>Clear</span>
+          </button>`
+        : "",
+    )}
   </div>`;
 }
 
@@ -906,13 +919,12 @@ function bind(target) {
       });
       return;
     }
-    // The feed's filter panel — searches both groups at once, so one query can narrow
-    // either facet. Group HEADERS stay put; hiding them would make the panel jump.
+    // The feed's Playbook select.
     const filterField = event.target.closest("[data-topics-filter-search]");
     if (filterField) {
       filterDropdownRows({
         field: filterField,
-        scopeSelector: ".ap-selection-dropdown",
+        scopeSelector: ".ap-select-dropdown",
         rowSelector: "[data-topics-filter-name]",
         nameAttr: "topicsFilterName",
         emptySelector: "[data-topics-filter-empty]",

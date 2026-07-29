@@ -77,14 +77,12 @@
 }
 
 /* ── Filters ──────────────────────────────────────────────────────────────
-   Two facets (Playbook · source) behind ONE trigger, on the DS
-   `.ap-selection-dropdown` panel. That's the DS's own rule for filtering:
-   always-visible toggles → a filter chips list; grouped options behind a trigger →
-   a filter dropdown. <ap-filter-dropdown> is Angular-only with no CSS-UI layer, and
-   this panel is its CSS-UI counterpart — header/search/groups/items/footer.
-
-   A row of Playbook chips was the alternative, and it's the same trap the config tab
-   just escaped: it cannot survive twenty Playbooks. */
+   Two `.ap-select` — Playbook · Source — not one "Filters" trigger. The DS does ship
+   a Filters dropdown (V2 Molecules › Filters dropdown: a 420px checkbox panel with
+   Clear / Apply), and it's right when the user composes a multi-value set and applies
+   it in one go. Here each facet takes one value and applies immediately, so two selects
+   show what's selected without being opened — a trigger reading "Filters (2)" can't.
+   Same toolbar shape as the top-posts board's Period / Sort. */
 
 .topics-view__filters {
   display: flex;
@@ -93,39 +91,27 @@
   gap: var(--ref-spacing-xxs);
 }
 
-/* The DS panel has no positioning of its own — it's a floating card. <details> gives
-   us the open/close for free, matching every other dropdown on this screen. */
-.topics-filter {
-  position: relative;
+/* The trigger sizes to its content; cap it so a long Playbook name can't push the
+   Source select onto a second line, and let the DS's own ellipsis take over. */
+.topics-filter__select {
+  max-width: 320px;
 }
 
-.topics-filter > summary {
-  list-style: none;
-  cursor: pointer;
-}
-.topics-filter > summary::-webkit-details-marker,
-.topics-filter > summary::marker {
-  display: none;
+.topics-filter__select--pb .ap-select-dropdown {
+  min-width: 280px;
 }
 
-.topics-filter__arrow {
-  transition: transform var(--ref-animation-short);
-}
-.topics-filter[open] .topics-filter__arrow {
-  transform: rotate(180deg);
-}
-
-.topics-filter__panel {
-  position: absolute;
-  top: calc(100% + var(--ref-spacing-xxxs));
-  left: 0;
-  z-index: var(--app-z-overlay);
+/* A zero-count option stays visible (so the list doesn't reshuffle under the cursor)
+   but reads and behaves as unavailable. The DS has no `disabled` modifier for
+   .ap-select-option, so this is the app's own state on its own class. */
+.topics-filter__select .ap-select-option.disabled {
+  color: var(--ref-color-grey-40);
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
-/* The panel's own items carry the check/icon slot; keep the glyph column stable so
-   labels line up whether a row is checked or shows its source icon. */
-.topics-filter__panel .ap-selection-dropdown-item > .ap-badge {
-  margin-left: auto;
+.topics-filter__select .ap-select-option.disabled .ap-select-option-badge {
+  color: var(--ref-color-grey-40);
 }
 
 /* ── Date groups ────────────────────────────────────────────────────────── */
