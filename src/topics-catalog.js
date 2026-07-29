@@ -10,10 +10,10 @@
 // on the Context as `ctx.topics = { enabledSourceIds, cadence }`, normalised in
 // contexts-store.js and edited in the Playbook's Topics section.
 //
-// `playbookAnchor` — never the id — tells the view which Playbook section feeds
-// this source, so it can offer a deep link ("Edit my competitors ↓") without
-// hardcoding a source id. null = Agorapulse listening feeds it directly and
-// there is nothing in the Playbook to point at.
+// `playbookAnchor` — never the id — says which part of the Playbook a source
+// reads, so the view can state the dependency ("Reads your competitors") without
+// hardcoding a source id. null = Agorapulse listening feeds it directly and the
+// Playbook has nothing to do with it.
 //
 // `accent` is a SEMANTIC KEY, never a hex — the view maps it to a
 // `.topic-badge--<accent>` class that resolves DS colour tokens. Adding an
@@ -31,7 +31,6 @@ export const TOPIC_SOURCES = Object.freeze([
     description:
       "I track your competitors' best-performing posts — the formats, the messaging, the tone — so you know what's worth borrowing and where your own strengths let you differentiate.",
     playbookAnchor: "competitors",
-    playbookLinkLabel: "Edit my competitors",
     defaultEnabled: true,
   },
   {
@@ -41,8 +40,11 @@ export const TOPIC_SOURCES = Object.freeze([
     accent: "red",
     description:
       "I follow the creators your audience already listens to: their best content, the formats they use, who they partner with. You get collaboration angles and creative that already lands.",
-    playbookAnchor: "competitors",
-    playbookLinkLabel: "Edit who I follow",
+    // null, not "competitors": a Playbook holds no list of creators, so nothing
+    // in it feeds this. Agorapulse listening finds them from the audience.
+    // Pointing at Competitors was a stretch that made the UI claim this source
+    // "reads your competitors", which isn't what it does.
+    playbookAnchor: null,
     defaultEnabled: true,
   },
   {
@@ -53,7 +55,6 @@ export const TOPIC_SOURCES = Object.freeze([
     description:
       "I read what people say to and about you — comments, DMs, reviews — and pull out the pain points and requests that keep coming back. I only raise a theme once ten or more people have voiced it, and I tie it to a real complaint.",
     playbookAnchor: null,
-    playbookLinkLabel: null,
     defaultEnabled: false,
   },
   {
@@ -64,7 +65,6 @@ export const TOPIC_SOURCES = Object.freeze([
     description:
       "I watch the complaints and gaps in your competitors' products, and flag the openings where your strengths answer a need they're leaving unmet.",
     playbookAnchor: "competitors",
-    playbookLinkLabel: "Edit my competitors",
     defaultEnabled: false,
   },
   {
@@ -75,7 +75,6 @@ export const TOPIC_SOURCES = Object.freeze([
     description:
       "I follow the conversations gaining momentum in your industry, and surface the ones that have actually grown over the last 30 days.",
     playbookAnchor: null,
-    playbookLinkLabel: null,
     defaultEnabled: false,
   },
   {
@@ -86,7 +85,6 @@ export const TOPIC_SOURCES = Object.freeze([
     description:
       "I scan the cultural, seasonal and news moments that touch your brand, and suggest the timely angles with wide reach and low risk.",
     playbookAnchor: null,
-    playbookLinkLabel: null,
     defaultEnabled: false,
   },
 ]);

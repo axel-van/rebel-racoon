@@ -20,7 +20,7 @@
 import { contexts as seed } from "./mocks.js?v=61";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
-import { DEFAULT_ENABLED_IDS, DEFAULT_CADENCE, findTopicSource, findCadence } from "./topics-catalog.js?v=1";
+import { DEFAULT_ENABLED_IDS, DEFAULT_CADENCE, findTopicSource, findCadence } from "./topics-catalog.js?v=2";
 import {
   normalizeLanguages,
   mirrorPrimaryToTopLevel,

@@ -1,29 +1,46 @@
-// Topics — the feed of dossiers Agorapulse listening produced, route /topics.
+// Topics — route /topics. Two tabs: the feed of dossiers Agorapulse listening
+// produced, and the standing instructions that produced them.
 //
-// One chronological stream across every Playbook, newest first, each card
-// carrying the Playbook it came from. Not a right-panel mode: the panel is
+// The feed is one chronological stream across every Playbook, newest first, each
+// card carrying the Playbook it came from. Not a right-panel mode: the panel is
 // session-bound by the shell rules, and a topic belongs to a Playbook and
 // arrives on a cadence long before any chat exists to hold it.
+//
+// "What I watch" lives HERE rather than on /playbook/:id, where it was first
+// built. A Playbook is a fact sheet — every section answers "who are you?".
+// Which sources are live and how often they refresh answers "what job should
+// Archie run?", which is operational, not declarative; as a grid of switches it
+// read as a settings panel wedged into a profile. The project rule allows both
+// homes — the entity that owns the config, OR a route scoped to one feature —
+// and this is the second. The DATA is still per Playbook (`ctx.topics`); only
+// the editing surface is here.
 //
 // Cadence is copy, never a timer — a weekly tick would never fire inside a demo
 // session. The recurring feel comes from "Refresh now": a scanning state, then a
 // batch of unseen dossiers on top. See topics-store.refreshTopics.
 //
-// Modelled on screens/connectors.js — flag guard, teardown/paint/bind, one
-// delegated click listener, a store subscription, and teardown returned to the
-// router.
+// Modelled on screens/connectors.js — flag guard, teardown/paint/bind, delegated
+// listeners, store subscriptions, and teardown returned to the router.
 
-import { html, raw, escapeAttr, escapeText } from "../utils.js?v=21";
+import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=239";
+import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
+import { renderTopbar } from "../components/topbar.js?v=240";
 import { showToast } from "../components/toast.js?v=20";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 import { renderTopicCard } from "../components/topic-card.js?v=1";
-import { open as openTopicModal } from "../components/topic-modal.js?v=1";
+import { open as openTopicModal } from "../components/topic-modal.js?v=2";
 import { isFlagOn } from "../feature-flags.js?v=15";
-import { getContexts, getContextById } from "../contexts-store.js?v=42";
-import { TOPIC_SOURCES, findTopicSource, findCadence } from "../topics-catalog.js?v=1";
-import { openTopicInChat } from "../topic-flow.js?v=1";
+import { getContexts, getContextById, updateContext, subscribe as subscribeContexts } from "../contexts-store.js?v=43";
+import {
+  TOPIC_SOURCES,
+  CADENCES,
+  DEFAULT_ENABLED_IDS,
+  DEFAULT_CADENCE,
+  findTopicSource,
+  findCadence,
+} from "../topics-catalog.js?v=2";
+import { openTopicInChat } from "../topic-flow.js?v=2";
 import {
   getTopics,
   getUnseenCount,
@@ -38,14 +55,30 @@ import {
 // short enough that nobody waits for it in a demo.
 const SCAN_MS = 2000;
 
+// The two tabs. `sources` is the URL value — "what I watch" is the label, but the
+// param says what it holds.
+const TABS = ["feed", "sources"];
+
 // Local view state. `source` is a catalog id or "all"; `scanning` drives the
-// skeleton feed.
+// skeleton feed. The TAB is deliberately NOT here — see activeTab().
 let view = { source: "all", scanning: false };
 let scanTimer = null;
 
 let unsubscribe = null;
+let unsubscribeContexts = null;
 let boundTarget = null;
 let boundClick = null;
+let boundChange = null;
+
+// The tab lives in the URL, not in module state. renderTopics resets `view` on
+// every render and the router re-runs the handler on query-only changes, so a
+// tab held in module state would bounce straight back to the feed. Reading it
+// from the hash also makes it deep-linkable and back/forward-correct — the same
+// idiom session.js uses for its own ?view=.
+function activeTab() {
+  const raw = parseHashParams().get("view");
+  return TABS.includes(raw) ? raw : "feed";
+}
 
 export function renderTopics(_params, target) {
   // Gated behind a feature flag (default OFF). When off the route is unreachable
@@ -63,6 +96,9 @@ export function renderTopics(_params, target) {
   // Repaint when a topic is read, dismissed or restored from elsewhere (the
   // dialog, or a chat marking one seen on arrival).
   unsubscribe = subscribeTopics(() => paint(target));
+  // …and when a Playbook changes, since "What I watch" edits straight into
+  // contexts-store and the feed's Playbook chips read names from it.
+  unsubscribeContexts = subscribeContexts(() => paint(target));
   return teardown;
 }
 
@@ -71,14 +107,20 @@ function teardown() {
     unsubscribe();
     unsubscribe = null;
   }
+  if (unsubscribeContexts) {
+    unsubscribeContexts();
+    unsubscribeContexts = null;
+  }
   if (scanTimer) {
     window.clearTimeout(scanTimer);
     scanTimer = null;
   }
   view.scanning = false;
   if (boundTarget && boundClick) boundTarget.removeEventListener("click", boundClick);
+  if (boundTarget && boundChange) boundTarget.removeEventListener("change", boundChange);
   boundTarget = null;
   boundClick = null;
+  boundChange = null;
 }
 
 function paint(target) {
@@ -112,6 +154,7 @@ function watchedSourceIds() {
 }
 
 function renderPage() {
+  const tab = activeTab();
   const all = getTopics();
   const visible = view.source === "all" ? all : all.filter((t) => t.sourceId === view.source);
   const unseen = getUnseenCount();
@@ -121,13 +164,16 @@ function renderPage() {
   // two, and the honest number is the one that helps the user place a card.
   const represented = new Set(all.map((t) => t.contextId)).size;
 
-  const sub = [
-    unseen ? `${unseen} new` : null,
-    `${all.length} ${all.length === 1 ? "topic" : "topics"}`,
-    represented ? `from ${playbookCount(represented)}` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const sub =
+    tab === "sources"
+      ? "The sources I listen to, and how often I check them."
+      : [
+          unseen ? `${unseen} new` : null,
+          `${all.length} ${all.length === 1 ? "topic" : "topics"}`,
+          represented ? `from ${playbookCount(represented)}` : null,
+        ]
+          .filter(Boolean)
+          .join(" · ");
 
   return html`
     <div class="topics-view__page">
@@ -136,22 +182,46 @@ function renderPage() {
           <h1 class="topics-view__title">Topics</h1>
           <p class="topics-view__sub">${sub}</p>
         </div>
-        <div class="topics-view__head-actions">${raw(renderRefresh())}</div>
+        <!-- Refresh belongs to the feed: on the config tab there's no list to
+             refresh, and offering it there would scan sources you're mid-edit. -->
+        <div class="topics-view__head-actions">${raw(tab === "feed" ? renderRefresh() : "")}</div>
       </header>
 
-      ${raw(all.length ? renderFilters(all) : "")}
-
-      <div class="topics-view__body">
-        ${raw(
-          view.scanning
-            ? renderScanning()
-            : visible.length
-              ? renderFeed(visible)
-              : renderEmpty({ total: all.length, playbooks }),
-        )}
-      </div>
+      ${raw(renderTabs(tab, all.length))}
+      ${raw(tab === "sources" ? renderSourcesTab() : renderFeedTab({ all, visible, playbooks }))}
     </div>
   `;
+}
+
+// DS .ap-tabs, same markup as content-workspace. The feed carries its count; "What
+// I watch" carries none — a number there reads ambiguously (sources? Playbooks?).
+function renderTabs(tab, topicCount) {
+  return html`<div class="ap-tabs topics-view__tabs">
+    <div class="ap-tabs-nav">
+      <button type="button" class="ap-tabs-tab ${raw(tab === "feed" ? "active" : "")}" data-topics-tab="feed">
+        <i class="ap-icon-web-news" aria-hidden="true"></i>
+        <span>Feed</span>
+        <span class="ap-counter normal ${raw(tab === "feed" ? "blue" : "grey")}">${topicCount}</span>
+      </button>
+      <button type="button" class="ap-tabs-tab ${raw(tab === "sources" ? "active" : "")}" data-topics-tab="sources">
+        <i class="ap-icon-antenna" aria-hidden="true"></i>
+        <span>What I watch</span>
+      </button>
+    </div>
+  </div>`;
+}
+
+function renderFeedTab({ all, visible, playbooks }) {
+  return html`${raw(all.length ? renderFilters(all) : "")}
+    <div class="topics-view__body">
+      ${raw(
+        view.scanning
+          ? renderScanning()
+          : visible.length
+            ? renderFeed(visible)
+            : renderEmpty({ total: all.length, playbooks }),
+      )}
+    </div>`;
 }
 
 function playbookCount(n) {
@@ -261,16 +331,15 @@ function renderScanning() {
 // with no match, and a feed the user has emptied by hand.
 function renderEmpty({ total, playbooks }) {
   if (!watchedSourceIds().size) {
-    const target = getContexts()[0];
     return renderEmptyState({
       icon: "ap-icon-antenna",
       title: "Tell me what to watch",
-      body: "Turn on the listening sources in a Playbook and I'll bring you what your market is publishing.",
-      actionHtml: target
-        ? `<button type="button" class="ap-button primary blue" data-topics-configure="${escapeAttr(target.id)}">
-             <i class="ap-icon-target"></i><span>Open ${escapeText(target.name)}</span>
-           </button>`
-        : "",
+      body: "Turn a listening source on and I'll bring you what your market is publishing.",
+      // Straight to the tab that fixes it — this used to open a Playbook, which
+      // is no longer where the switches are.
+      actionHtml: `<button type="button" class="ap-button primary blue" data-topics-tab="sources">
+             <i class="ap-icon-antenna"></i><span>Choose what I watch</span>
+           </button>`,
       wrapperClass: "topics-view__empty",
     });
   }
@@ -297,6 +366,132 @@ function renderEmpty({ total, playbooks }) {
   });
 }
 
+// ─── "What I watch" — the standing instructions ────────────────────────────
+
+// Read-only view of a Playbook's topics config. contexts-store already
+// normalises it, but a caller shouldn't have to trust that to render — and this
+// must never mutate the stored object, since every write goes through
+// updateContext so the store can notify.
+function watchConfig(ctx) {
+  const t = (ctx && ctx.topics) || {};
+  return {
+    enabledSourceIds: Array.isArray(t.enabledSourceIds) ? t.enabledSourceIds : DEFAULT_ENABLED_IDS.slice(),
+    cadence: findCadence(t.cadence) ? t.cadence : DEFAULT_CADENCE,
+  };
+}
+
+// EVERY Playbook gets a block, including ones watching nothing — that's the only
+// place to switch them on.
+function renderSourcesTab() {
+  const playbooks = getContexts();
+  if (!playbooks.length) {
+    return html`<div class="topics-view__body">
+      ${raw(
+        renderEmptyState({
+          icon: "ap-icon-target",
+          title: "No Playbooks yet",
+          body: "I listen on behalf of a Playbook. Create one and I'll show you what I can watch for it.",
+          actionHtml: `<button type="button" class="ap-button primary blue" data-topics-playbooks><i class="ap-icon-target"></i><span>Go to Playbooks</span></button>`,
+          wrapperClass: "topics-view__empty",
+        }),
+      )}
+    </div>`;
+  }
+  return html`<div class="topics-view__body">${raw(playbooks.map(renderWatchBlock).join(""))}</div>`;
+}
+
+function renderWatchBlock(ctx) {
+  const conf = watchConfig(ctx);
+  const enabled = new Set(conf.enabledSourceIds);
+  const onCount = TOPIC_SOURCES.filter((s) => enabled.has(s.id)).length;
+  const cadence = findCadence(conf.cadence);
+
+  const meta =
+    onCount === 0
+      ? "Nothing on — I'm not watching anything for this Playbook."
+      : `${onCount} of ${TOPIC_SOURCES.length} sources on`;
+
+  return html`<section class="topics-watch">
+    <header class="topics-watch__head">
+      <div class="topics-watch__id">
+        <h2 class="topics-watch__name">${ctx.name}</h2>
+        <p class="topics-watch__meta">
+          <span>${meta}</span>
+          <span class="topics-watch__sep" aria-hidden="true">·</span>
+          <button type="button" class="topics-watch__link" data-topics-configure="${escapeAttr(ctx.id)}">
+            <span>Open the Playbook</span><i class="ap-icon-arrow-right" aria-hidden="true"></i>
+          </button>
+        </p>
+      </div>
+      <label class="topics-watch__cadence">
+        <span class="topics-watch__cadence-label">Refresh</span>
+        ${raw(renderCadenceSelect(ctx, cadence))}
+      </label>
+    </header>
+    <div class="topics-watch__grid">
+      ${raw(TOPIC_SOURCES.map((s) => renderWatchSource(ctx, s, enabled.has(s.id))).join(""))}
+    </div>
+  </section>`;
+}
+
+// DS .ap-select over <details> — never a bare native <select>. Same shape as
+// top-post-card's filter selects.
+function renderCadenceSelect(ctx, active) {
+  const options = CADENCES.map((c) => {
+    const on = c.id === active.id;
+    return html`<div
+      class="ap-select-option${raw(on ? " selected" : "")}"
+      data-topics-cadence="${escapeAttr(`${ctx.id}::${c.id}`)}"
+      role="option"
+      aria-selected="${on ? "true" : "false"}"
+    >
+      <span class="ap-select-option-text">${c.label}</span>
+      ${raw(on ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : "")}
+    </div>`;
+  }).join("");
+  return html`<details class="ap-select topics-watch__select">
+    <summary class="ap-select-trigger">
+      <span class="ap-select-value">${active.label}</span>
+      <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+    </summary>
+    <div class="ap-select-dropdown" role="listbox" aria-label="Refresh cadence for ${escapeAttr(ctx.name)}">
+      <div class="ap-select-options">${raw(options)}</div>
+    </div>
+  </details>`;
+}
+
+function renderWatchSource(ctx, source, on) {
+  // The competitor-driven sources state their dependency as a caption, not a
+  // link: the block already has one link to the Playbook, and six more would be
+  // noise. What matters is knowing WHY the source needs the Playbook.
+  const note =
+    source.playbookAnchor === "competitors"
+      ? html`<span class="topics-src__note">
+          <i class="ap-icon-buildings" aria-hidden="true"></i><span>Reads your competitors</span>
+        </span>`
+      : "";
+
+  return html`<div class="topics-src${raw(on ? "" : " is-off")}">
+    <span class="topic-badge topic-badge--lg topic-badge--${source.accent}" aria-hidden="true">
+      <i class="${source.icon}"></i>
+    </span>
+    <div class="topics-src__text">
+      <span class="topics-src__name">${source.name}</span>
+      <p class="topics-src__desc">${source.description}</p>
+      ${raw(note)}
+    </div>
+    <label class="ap-toggle-container topics-src__switch">
+      <input
+        type="checkbox"
+        data-topics-toggle="${escapeAttr(`${ctx.id}::${source.id}`)}"
+        ${raw(on ? "checked" : "")}
+        aria-label="${escapeAttr(`${source.name} for ${ctx.name}`)}"
+      />
+      <i aria-hidden="true"></i>
+    </label>
+  </div>`;
+}
+
 // One cadence per Playbook, so several Playbooks can disagree — say the fastest
 // one rather than listing them, since it's the one that will fire first.
 function cadenceAdverb(playbooks) {
@@ -313,6 +508,26 @@ function cadenceAdverb(playbooks) {
 function bind(target) {
   boundTarget = target;
   boundClick = (event) => {
+    // Tab switch goes through the URL, so back/forward and deep links work. The
+    // router re-runs this handler, which repaints — no local state to sync.
+    const tabBtn = event.target.closest("[data-topics-tab]");
+    if (tabBtn) {
+      const next = tabBtn.dataset.topicsTab;
+      if (next !== activeTab()) setHashQuery("/topics", next === "feed" ? {} : { view: next });
+      return;
+    }
+    // Cadence pick. Commits straight through updateContext — this surface has no
+    // Save button, so nothing is staged.
+    const cadencePick = event.target.closest("[data-topics-cadence]");
+    if (cadencePick) {
+      cadencePick.closest("details")?.removeAttribute("open");
+      const [ctxId, cadence] = cadencePick.dataset.topicsCadence.split("::");
+      const ctx = getContextById(ctxId);
+      if (ctx && findCadence(cadence)) {
+        updateContext(ctxId, { topics: { ...watchConfig(ctx), cadence } });
+      }
+      return;
+    }
     const chip = event.target.closest("[data-topics-source]");
     if (chip) {
       view.source = chip.dataset.topicsSource;
@@ -321,6 +536,10 @@ function bind(target) {
     }
     if (event.target.closest("[data-topics-refresh]")) {
       startScan(target);
+      return;
+    }
+    if (event.target.closest("[data-topics-playbooks]")) {
+      navigate("/contexts");
       return;
     }
     const configure = event.target.closest("[data-topics-configure]");
@@ -346,6 +565,36 @@ function bind(target) {
     }
   };
   target.addEventListener("click", boundClick);
+
+  // The switches are checkboxes, so `change` — not `click`. It fires once (a
+  // click on the wrapping <label> forwards to the input, which would double up),
+  // and it also catches the keyboard's Space.
+  boundChange = (event) => {
+    const toggle = event.target.closest("[data-topics-toggle]");
+    if (!toggle) return;
+    const key = toggle.dataset.topicsToggle;
+    const [ctxId, sourceId] = key.split("::");
+    const ctx = getContextById(ctxId);
+    if (!ctx || !findTopicSource(sourceId)) return;
+
+    const conf = watchConfig(ctx);
+    const next = new Set(conf.enabledSourceIds);
+    if (toggle.checked) next.add(sourceId);
+    else next.delete(sourceId);
+    // Keep catalog order rather than click order, so the stored list stays
+    // readable and two Playbooks with the same set serialise identically.
+    const enabledSourceIds = TOPIC_SOURCES.filter((s) => next.has(s.id)).map((s) => s.id);
+
+    // Direct commit — no snapshot, no Save. contexts-store notifies, which
+    // repaints through the subscription.
+    updateContext(ctxId, { topics: { ...conf, enabledSourceIds } });
+
+    // The repaint replaced the node the user was on, so put focus back where they
+    // left it — otherwise every keyboard toggle dumps them at the top of the page.
+    const again = target.querySelector(`[data-topics-toggle="${CSS.escape(key)}"]`);
+    if (again) again.focus({ preventScroll: true });
+  };
+  target.addEventListener("change", boundChange);
 }
 
 // Dismissal hides rather than deletes, so the toast can genuinely undo it. Also
