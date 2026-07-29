@@ -2,76 +2,95 @@
  *
  * Built on the DS **settings** recipe, not the app's generic surface tokens. On a
  * settings surface the guidelines are explicit: use the `--sys-settings-*` family and
- * NOT `--ref-spacing-*` / `--ref-color-grey-bg` for the content shell and cards. Only
- * `--sys-settings-card-feature-lock-border-color` was in use in the app before this
- * (in ds-patches for the feature-lock infobox), so this is the first use of the layout
- * half of the family.
+ * NOT `--ref-color-grey-bg` for the content shell and cards. Intra-component gaps stay
+ * on `--ref-spacing-*`, as the recipe's own example does.
  *
  * Layout only — never redefine a DS token here.
+ *
+ * The shape: a light labelled toolbar for the two page-level controls (which Playbook,
+ * what rhythm), then ONE CARD PER SOURCE in two columns. The first pass gave each of
+ * those controls a card of its own and stacked the six sources as rows inside a
+ * seventh — a title over a single select is mostly padding, and rows can't hold a
+ * source's own options, which is what the cards are for.
  *
  * No save bar: every control commits immediately through updateContext, so there's
  * nothing staged to save or cancel.
  *
  * See src/screens/topics-settings.js. */
 
+/* A query container, so the source grid drops to one column on the CONTENT width rather
+   than the viewport's: the sidebar collapses, which changes one and not the other. */
 .topics-settings {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   background: var(--sys-settings-content-background-color);
+  container-type: inline-size;
 }
 
-/* max-width-md (700px), not -lg: this is a form — a scope picker, a cadence and a
-   list of switches — rather than a table or a dashboard. */
+/* max-width-lg (1200), not -md (700): the six source cards read as a set of things you
+   pick from, and at 700 two columns are cramped while one column is a 900px scroll of
+   wide short bands that look like rows again. At 1200 each column is ~570 — a card's
+   width, not a row's. The prose above is capped separately so it doesn't stretch. */
 .topics-settings__content {
   display: flex;
   flex-direction: column;
   gap: var(--sys-settings-content-vertical-spacing);
   padding: var(--sys-settings-content-internal-margin);
-  max-width: var(--sys-settings-content-max-width-md);
+  max-width: var(--sys-settings-content-max-width-lg);
   width: 100%;
   margin: 0 auto;
 }
 
 /* ── Head ───────────────────────────────────────────────────────────────── */
 
-/* `.ap-h2` and `.ap-body` bring their own type; these only reset the UA margins the
-   DS classes don't touch. */
+/* Explicit margins rather than a flex gap: the four children want four different
+   spacings (title→lead tight, lead→toolbar open, toolbar→meta tight). */
 .topics-settings__head {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
 }
 
-.topics-settings__title,
-.topics-settings__lead {
+/* `.ap-h1` (24px), not the recipe's `.ap-h2` (18px): at 18 the page title is 2px off
+   the 16px card titles and the hierarchy reads flat. 24 also matches the /topics feed's
+   own title, so the two Topics screens sit at the same scale. */
+.topics-settings__title {
   margin: 0;
 }
 
-/* ── Scope ──────────────────────────────────────────────────────────────── */
+.topics-settings__lead {
+  margin: var(--ref-spacing-xxxs) 0 0;
+  /* A reading measure, independent of the 1200px grid above it. */
+  max-width: 72ch;
+  color: var(--sys-text-color-light);
+}
 
-/* Above the cards, because it's what the page is about rather than one of its
-   sections. */
-.topics-settings__scope {
+/* ── Scope + cadence toolbar ─────────────────────────────────────────────── */
+
+.topics-settings__bar {
   display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
+  align-items: flex-end;
+  gap: var(--ref-spacing-xs);
+  flex-wrap: wrap;
+  margin-top: var(--ref-spacing-sm);
+}
+
+.topics-settings__field {
   min-width: 0;
 }
 
-.topics-settings__scope-label {
-  flex-shrink: 0;
-  font-family: var(--sys-text-style-body-bold-font-family);
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--sys-text-color-default);
-}
-
+/* `.ap-select` is display:block, so both would take the whole row and push the second
+   field onto its own line. Fix their size, not their display — the DS owns the
+   latter. */
 .topics-settings__pbselect {
-  flex: 1;
-  min-width: 0;
-  max-width: 360px;
+  flex: 0 0 auto;
+  width: 320px;
+  max-width: 100%;
+}
+
+.topics-settings__cadence {
+  flex: 0 0 auto;
+  width: 180px;
 }
 
 .topics-settings__meta {
@@ -79,91 +98,77 @@
   align-items: center;
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxxs);
-  /* Pull up under the scope row: the two are one statement, and the card gap below
-     would otherwise read as separating them. */
-  margin: calc(var(--sys-settings-content-vertical-spacing) * -1 + var(--ref-spacing-xxxs)) 0 0;
+  margin: var(--ref-spacing-xxs) 0 0;
   font-family: var(--sys-text-style-caption-font-family);
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   color: var(--sys-text-color-light);
 }
 
-/* ── Cards ──────────────────────────────────────────────────────────────── */
+/* ── Sources ────────────────────────────────────────────────────────────── */
 
-/* `.ap-card` already ships a surface; these tokens make the values match the
-   Settings family. Never override `.ap-card` itself. */
-.topics-settings__card {
+.topics-settings__sources {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-xxs);
+}
+
+/* Label and count sit together on the left. Pushing the count to the right edge of a
+   1200px column left the two ends of one sentence a screen apart. */
+.topics-settings__group {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ref-spacing-xxxs);
+  flex-wrap: wrap;
+  color: var(--sys-text-color-light);
+  font-family: var(--sys-text-style-caption-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
+.topics-settings__group-title {
+  margin: 0;
+  color: inherit;
+}
+
+.topics-settings__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sys-settings-content-vertical-spacing);
+}
+
+/* Fixed two columns rather than auto-fit: at 1200px an auto-fit track wide enough to
+   hold a card would fit three, and three columns of prose is a table. Below ~920px of
+   content the two columns fall under 430px each and the descriptions start breaking
+   every three words, so one column takes over. */
+@container (max-width: 920px) {
+  .topics-settings__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── One source ─────────────────────────────────────────────────────────── */
+
+/* Co-class on `.ap-card`, never a redeclaration of it: the DS card ships the surface
+   and the column, these tokens align the values with the Settings family. */
+.topics-src {
+  gap: var(--ref-spacing-xxs);
   background: var(--sys-settings-card-background-color);
   border: 1px solid var(--sys-settings-card-border-color);
   border-radius: var(--sys-settings-card-border-radius);
   padding: var(--sys-settings-card-internal-padding);
 }
 
-.topics-settings__card > .ap-card-title {
-  margin: 0;
+/* Off: the card loses its fill and shows the page through, so the grid says what's live
+   at a glance. The BORDER is untouched in both states — a card's state goes in its
+   content (here the switch, the badge and the text), never on its frame. */
+.topics-src.is-off {
+  background: transparent;
 }
 
-/* A label/control pair on one line — the cadence row. */
-.topics-settings__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ref-spacing-md);
-  flex-wrap: wrap;
-}
-
-.topics-settings__row-label {
-  font-family: var(--sys-text-style-body-font-family);
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--sys-text-color-default);
-}
-
-/* `.ap-select` is display:block, so in a flex row it would take the whole remaining
-   width and wrap the label onto its own line. Fix its size rather than its display —
-   the DS owns the latter. */
-.topics-settings__cadence {
-  flex: 0 0 auto;
-  width: 180px;
-}
-
-/* ── Sources ────────────────────────────────────────────────────────────── */
-
-/* Rows in one card, not a grid of cards. At the settings content width a two-column
-   grid gives two cramped columns, and a list of rows with the switch on the right is
-   the canonical settings shape. Dividers between rows, negative insets so they span
-   the card's full width against its padding. */
-.topics-settings__sources {
-  display: flex;
-  flex-direction: column;
-}
-
-.topics-settings__sources > .topics-src + .topics-src {
-  border-top: 1px solid var(--sys-settings-card-border-color);
-}
-
-.topics-src {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm) 0;
-}
-
-.topics-src:first-child {
-  padding-top: 0;
-}
-.topics-src:last-child {
-  padding-bottom: 0;
-}
-
-/* Off: dimmed, not recessed. There's no grid gap left to carry a background, and on
-   a settings list the switch already states the state — the dimming just stops an
-   inactive source competing with the active ones. */
 .topics-src.is-off .topics-src__name,
-.topics-src.is-off .topics-src__desc {
+.topics-src.is-off .topics-src__desc,
+.topics-src.is-off .topics-src__note {
   color: var(--ref-color-grey-60);
 }
 
@@ -172,28 +177,34 @@
   opacity: 0.7;
 }
 
-.topics-src__text {
+.topics-src__head {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.topics-src__name {
   flex: 1;
   min-width: 0;
 }
 
-.topics-src__name {
-  font-family: var(--sys-text-style-body-bold-font-family);
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--sys-text-color-default);
+.topics-src__switch {
+  flex-shrink: 0;
 }
 
 .topics-src__desc {
   margin: 0;
-  font-family: var(--sys-text-style-caption-font-family);
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
+  font-family: var(--sys-text-style-body-font-family);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
   color: var(--sys-text-color-light);
+}
+
+/* The options slot. `margin-top: auto` pins it to the bottom, so in a row of cards of
+   unequal prose length the notes line up instead of floating mid-card. */
+.topics-src__foot {
+  margin-top: auto;
+  padding-top: var(--ref-spacing-xxxs);
 }
 
 /* States the dependency ("this one reads your competitors") without becoming a
@@ -201,9 +212,7 @@
 .topics-src__note {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  align-self: flex-start;
-  margin-top: var(--ref-spacing-xxxs);
+  gap: var(--ref-spacing-xxxs);
   font-family: var(--sys-text-style-caption-font-family);
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
@@ -211,16 +220,9 @@
 }
 
 .topics-src__note > i {
-  font-size: 12px;
-  width: 12px;
-  height: 12px;
-}
-
-.topics-src__switch {
-  flex-shrink: 0;
-  /* Optically centre the switch on the row's first text line rather than on the row,
-     which the two-line description would otherwise pull down. */
-  min-height: 20px;
+  font-size: var(--sys-icon-css-xs);
+  width: var(--sys-icon-css-xs);
+  height: var(--sys-icon-css-xs);
 }
 
 /* ── Empty ──────────────────────────────────────────────────────────────── */

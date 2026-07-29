@@ -19,8 +19,12 @@
 // that's 120 switches with each of the six descriptions repeated twenty times, and
 // it's the descriptions, not the switches, that make such a page explode.
 //
-// Chrome follows the DS settings recipe (`--sys-settings-*`): a content column of
-// cards. No save bar — every control commits immediately through updateContext.
+// Chrome follows the DS settings recipe (`--sys-settings-*`). The shape: a light
+// labelled toolbar for the two page-level controls, then ONE CARD PER SOURCE in two
+// columns. The first pass gave each control a card and stacked the six sources as rows
+// inside a seventh — a card title over a single select is mostly padding, and a row
+// can't hold a source's own options. No save bar: every control commits immediately
+// through updateContext.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
@@ -145,57 +149,70 @@ function renderPage() {
   const mine = watchKey(ctx);
   const differing = playbooks.filter((c) => c.id !== ctx.id && watchKey(c) !== mine).length;
 
-  const meta =
+  const count =
     onCount === 0
-      ? "Nothing on — I'm not watching anything for this Playbook."
-      : `${onCount} of ${TOPIC_SOURCES.length} sources on`;
+      ? "Nothing on yet — turn one on and I'll start watching."
+      : `${onCount} of ${TOPIC_SOURCES.length} on`;
 
   return html`
     <div class="topics-settings__content">
       <header class="topics-settings__head">
-        <h1 class="ap-h2 topics-settings__title">What I watch</h1>
-        <p class="ap-body topics-settings__lead">The sources I listen to for a Playbook, and how often I check them.</p>
+        <h1 class="ap-h1 topics-settings__title">What I watch</h1>
+        <p class="ap-body topics-settings__lead">
+          The sources I listen to on your behalf, and how often I check them. Everything I find lands in your Topics
+          feed.
+        </p>
+
+        <!-- A labelled toolbar, not a card each. These two controls scope everything
+             below — which Playbook, what rhythm — and a card apiece is what made this
+             page read as two mostly-empty boxes, one of them a title over a single
+             select. Same two-select shape as the feed's filter bar, so the pair of
+             screens looks related. "Playbook" is named in prose as well as offered as a
+             control: a page that looks like settings otherwise reads as global, and
+             .ap-select collapses to one option when there's a single Playbook.
+             The wrapper is the DS ap-form-field primitive: label above control, and it
+             styles its direct > label, so nothing wraps that. (No code ticks anywhere in
+             here — a backtick inside this comment ends the template literal.) -->
+        <div class="topics-settings__bar">
+          <div class="ap-form-field topics-settings__field">
+            <label>Playbook</label>
+            ${raw(renderPlaybookSelect(playbooks, ctx))}
+          </div>
+          <div class="ap-form-field topics-settings__field">
+            <label>How often I check</label>
+            ${raw(renderCadenceSelect(ctx, findCadence(conf.cadence)))}
+          </div>
+        </div>
+
+        <!-- Playbook-level facts only. The on/off count belongs to the source grid and
+             is stated there, so the two lines don't say the same thing twice. -->
+        <p class="topics-settings__meta">
+          ${raw(
+            differing
+              ? html`<span
+                    >${differing === 1 ? "1 other Playbook watches" : `${differing} other Playbooks watch`} different
+                    sources.</span
+                  >
+                  <span aria-hidden="true">·</span>`
+              : "",
+          )}
+          <button type="button" class="ap-link" data-topics-configure="${escapeAttr(ctx.id)}">Open the Playbook</button>
+        </p>
       </header>
 
-      <!-- The scope sits ABOVE the cards, not inside one: it's what the whole page is
-           about, not one of its sections. "Playbook" names it in prose as well as
-           offering the control — a page that looks like settings otherwise reads as
-           global, and .ap-select collapses to one option when there's a single
-           Playbook, so a bare picker wouldn't say it. -->
-      <div class="topics-settings__scope">
-        <span class="topics-settings__scope-label">Playbook</span>
-        ${raw(renderPlaybookSelect(playbooks, ctx))}
-      </div>
-
-      <p class="topics-settings__meta">
-        <span>${meta}</span>
-        <span aria-hidden="true">·</span>
-        <button type="button" class="ap-link" data-topics-configure="${escapeAttr(ctx.id)}">Open the Playbook</button>
-        ${raw(
-          differing
-            ? html`<span aria-hidden="true">·</span>
-                <span
-                  >${differing === 1 ? "1 other Playbook watches" : `${differing} other Playbooks watch`} different
-                  sources.</span
-                >`
-            : "",
-        )}
-      </p>
-
-      <section class="ap-card topics-settings__card">
-        <h2 class="ap-card-title">Refresh</h2>
-        <div class="topics-settings__row">
-          <span class="topics-settings__row-label">How often I check these sources</span>
-          ${raw(renderCadenceSelect(ctx, findCadence(conf.cadence)))}
+      <section class="topics-settings__sources">
+        <!-- A real heading, styled as a group label rather than a third size of bold:
+             at 24 / 16 the page title and the card titles already carry the hierarchy,
+             and a 16px "Sources" between them just flattens it. -->
+        <div class="topics-settings__group">
+          <h2 class="ap-caption-bold topics-settings__group-title">Sources</h2>
+          <span aria-hidden="true">·</span>
+          <span class="topics-settings__count">${count}</span>
         </div>
-      </section>
-
-      <section class="ap-card topics-settings__card">
-        <h2 class="ap-card-title">Sources</h2>
-        <!-- Rows in one card, not a grid of cards. At the settings content width a
-             two-column grid gives two cramped columns, and a list of rows with the
-             switch on the right is the canonical settings shape anyway. -->
-        <div class="topics-settings__sources">
+        <!-- One card per source, not six rows in one card. A card can carry that
+             source's own options later; a row can't without turning the list into a
+             form. Two columns, so the set is one glance instead of a long scroll. -->
+        <div class="topics-settings__grid">
           ${raw(TOPIC_SOURCES.map((s) => renderWatchSource(ctx, s, enabled.has(s.id))).join(""))}
         </div>
       </section>
@@ -283,36 +300,42 @@ function renderCadenceSelect(ctx, active) {
   </details>`;
 }
 
+// One source, one card. The switch sits in the card's header because it's the card's
+// on/off, and the footer is the slot a source's own options go in — the reason each
+// source is a card rather than a row. Nothing has options yet, so today the footer
+// carries only the Playbook dependency, and only the two sources that have one.
 function renderWatchSource(ctx, source, on) {
   // The competitor-driven sources state their dependency as a caption, not a link:
   // the page already has one link to the Playbook, and six more would be noise. What
   // matters is knowing WHY the source needs the Playbook.
-  const note =
+  const foot =
     source.playbookAnchor === "competitors"
-      ? html`<span class="topics-src__note">
-          <i class="ap-icon-buildings" aria-hidden="true"></i><span>Reads your competitors</span>
-        </span>`
+      ? html`<footer class="topics-src__foot">
+          <span class="topics-src__note">
+            <i class="ap-icon-buildings" aria-hidden="true"></i><span>Reads your competitors</span>
+          </span>
+        </footer>`
       : "";
 
-  return html`<div class="topics-src${raw(on ? "" : " is-off")}">
-    <span class="topic-badge topic-badge--lg topic-badge--${source.accent}" aria-hidden="true">
-      <i class="${source.icon}"></i>
-    </span>
-    <div class="topics-src__text">
-      <span class="topics-src__name">${source.name}</span>
-      <p class="topics-src__desc">${source.description}</p>
-      ${raw(note)}
-    </div>
-    <label class="ap-toggle-container topics-src__switch">
-      <input
-        type="checkbox"
-        data-topics-toggle="${escapeAttr(`${ctx.id}::${source.id}`)}"
-        ${raw(on ? "checked" : "")}
-        aria-label="${escapeAttr(`${source.name} for ${ctx.name}`)}"
-      />
-      <i aria-hidden="true"></i>
-    </label>
-  </div>`;
+  return html`<article class="ap-card topics-src${raw(on ? "" : " is-off")}">
+    <header class="topics-src__head">
+      <span class="topic-badge topic-badge--lg topic-badge--${source.accent}" aria-hidden="true">
+        <i class="${source.icon}"></i>
+      </span>
+      <h3 class="ap-card-title topics-src__name">${source.name}</h3>
+      <label class="ap-toggle-container topics-src__switch">
+        <input
+          type="checkbox"
+          data-topics-toggle="${escapeAttr(`${ctx.id}::${source.id}`)}"
+          ${raw(on ? "checked" : "")}
+          aria-label="${escapeAttr(`${source.name} for ${ctx.name}`)}"
+        />
+        <i aria-hidden="true"></i>
+      </label>
+    </header>
+    <p class="topics-src__desc">${source.description}</p>
+    ${raw(foot)}
+  </article>`;
 }
 
 // ─── Interaction ───────────────────────────────────────────────────────────

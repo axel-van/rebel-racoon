@@ -82,9 +82,15 @@ Le DS ship une **recette de page de réglages** et des tokens `--sys-settings-*`
 | Largeur max — table/dashboard | `--sys-settings-content-max-width-lg` (1200)                                                               |
 | Carte                         | `--sys-settings-card-background-color` / `-border-color` / `-border-radius` (8) / `-internal-padding` (16) |
 
-Markup : une colonne de `.ap-card` (+ classe locale portant les tokens ci-dessus — **ne jamais surcharger `.ap-card`**), titres en `.ap-card-title`, en-tête en `h1.ap-h2` + `p.ap-body`. Save bar optionnelle et **inutile quand tout commit immédiatement**.
+Markup : une colonne de `.ap-card` (+ classe locale portant les tokens ci-dessus — **ne jamais surcharger `.ap-card`**), titres en `.ap-card-title`, en-tête `h1` + `p.ap-body`. Save bar optionnelle et **inutile quand tout commit immédiatement**.
 
 Première utilisation de la moitié layout de cette famille : [`topics-settings.css`](../../styles/screens/topics-settings.css) (`/topics/settings`). Seul `--sys-settings-card-feature-lock-border-color` était déjà employé, dans `ds-patches` pour l'infobox feature-lock.
+
+Trois écarts assumés à la recette, appris en construisant cette page :
+
+- **Titre de page en `.ap-h1` (24px), pas `.ap-h2` (18px).** À 18 le titre de page n'est qu'à 2px des `.ap-card-title` (16) et la hiérarchie se lit plate. 24 → 16 → label de groupe en `.ap-caption-bold` (12) donne trois marches lisibles, et 24 est déjà la taille des titres des autres pages de l'app.
+- **Ne pas donner une carte à un contrôle isolé.** Un `.ap-card-title` au-dessus d'un unique `.ap-select` est surtout du padding, et deux boîtes comme ça enchaînées font une page qui a l'air vide. Les contrôles de **niveau page** (le scope, un rythme) vont dans une **barre de `.ap-form-field`** (label au-dessus du contrôle, classe DS existante qui style son `> label` direct) ; les cartes sont réservées à ce qui a du contenu.
+- **`-max-width-lg` (1200) n'est pas réservé aux tables.** Une galerie de cartes de config y a droit aussi : à 700, deux colonnes sont serrées et une colonne donne des bandes larges et courtes qui relisent comme des lignes. Corollaire : plafonner la prose (72ch) indépendamment de la grille, et faire tomber la grille à une colonne avec une **`@container` query** — dans une app à sidebar repliable, la largeur du viewport ne dit pas la largeur du contenu.
 
 ### Filtres — chips, selects ou dropdown ?
 
