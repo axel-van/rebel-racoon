@@ -58,6 +58,7 @@ Règle universelle (`chat.css`) : _« a light-blue wash on hover/focus (never na
 - `.drafts-card:hover` → `border-color: --ref-color-electric-blue-20` + `background: --ref-color-electric-blue-05`. Actif = `.is-active` (electric-blue-40).
 - `.top-post-card:hover`, `.clip-card` sélectionné → `border-color: --ref-color-electric-blue-100`.
 - Radius carte = `--app-radius-card` (12). Tuiles icône AI/brand = fond `--ref-color-orange-10` + glyphe orange.
+- ⛔️ **Jamais de liseré d'accent coloré sur un bord de carte** (`border-left: 3px solid …`). Règle catégorique de Matt. **L'état d'une carte va dans son contenu, pas sur son cadre** — un marqueur explicite (point + mot, ex. « • New ») dit la même chose sans repeindre la bordure. Un seul cas existait dans l'app (unseen sur `.topic-card`) et il a été retiré ; les `border-left`/`border-right` restants sont des séparateurs de panneau 1px dans la ramp sombre video-clips, pas des accents.
 - Cartes in-bubble : `.chat-bubble-card` (grey-05, border grey-10) via `bulletsBlock()` (`_analyse-common.js`).
 
 ### Boutons / CTAs
@@ -67,6 +68,23 @@ DS `.ap-button` avec `primary|stroked|ghost` × `orange|blue`. Icon = `.ap-icon-
 ### Selects (`.ap-select`)
 
 `<details class="ap-select">` + `summary.ap-select-trigger` + `.ap-select-dropdown > .ap-select-options > .ap-select-option`. Options peuvent porter `.ap-select-option-caption` (2ᵉ ligne) et `.ap-select-option-check`. **Jamais un `<select>` natif** (mémoire _use-ds-dropdowns_). Depuis le picker de Playbook de `/topics`, la dalle de recherche du DS est aussi utilisée : `.ap-select-search` > `.ap-select-search-icon` + `.ap-select-search-input`, avec `.ap-select-not-found`. ⚠️ `.ap-select-not-found` porte `display: flex` → il bat `[hidden]` ; masquer en `style.display` inline.
+
+### Surfaces « settings »
+
+Le DS ship une **recette de page de réglages** et des tokens `--sys-settings-*` dédiés. Sur une telle surface les guidelines sont explicites : utiliser cette famille et **pas** les `--ref-spacing-*` / `--ref-color-grey-bg` génériques **pour la coquille et les cartes** (les gaps intra-composant restent sur `--ref-spacing-*`, comme dans l'exemple de la recette).
+
+| Usage                         | Token                                                                                                      |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Fond de page                  | `--sys-settings-content-background-color`                                                                  |
+| Padding externe du contenu    | `--sys-settings-content-internal-margin` (24)                                                              |
+| Gap entre cartes              | `--sys-settings-content-vertical-spacing` (16)                                                             |
+| Largeur max — formulaire      | `--sys-settings-content-max-width-md` (**700**)                                                            |
+| Largeur max — table/dashboard | `--sys-settings-content-max-width-lg` (1200)                                                               |
+| Carte                         | `--sys-settings-card-background-color` / `-border-color` / `-border-radius` (8) / `-internal-padding` (16) |
+
+Markup : une colonne de `.ap-card` (+ classe locale portant les tokens ci-dessus — **ne jamais surcharger `.ap-card`**), titres en `.ap-card-title`, en-tête en `h1.ap-h2` + `p.ap-body`. Save bar optionnelle et **inutile quand tout commit immédiatement**.
+
+Première utilisation de la moitié layout de cette famille : [`topics-settings.css`](../../styles/screens/topics-settings.css) (`/topics/settings`). Seul `--sys-settings-card-feature-lock-border-color` était déjà employé, dans `ds-patches` pour l'infobox feature-lock.
 
 ### Filtres — chips, selects ou dropdown ?
 

@@ -33,6 +33,7 @@ With Claude Code the dev server auto-launches via `.claude/launch.json` (server 
 | `/playbook/:id`      | `playbook.js`          | Playbook detail page (topbar back → `/contexts`)                                                  |
 | `/connectors`        | `connectors.js`        | Connectors gallery (marketplace); detail opens in a modal (gated by the `connectors` flag)        |
 | `/topics`            | `topics.js`            | **Topics** feed — the listening dossiers, one stream across every Playbook (gated by `topics`)    |
+| `/topics/settings`   | `topics-settings.js`   | **What I watch** — the six listening sources + cadence for one Playbook (`?pb=`); topbar back     |
 | `/welcome-alt`       | `welcome-alt.js`       | First-time onboarding kickoff (thin redirect into a transient session)                            |
 | `/welcome-alt/recap` | `welcome-alt-recap.js` | Onboarding recap reveal of the built Playbook                                                     |
 
@@ -99,7 +100,7 @@ src/
 
   screens/
     dashboard.js, session.js, ideas.js, contexts.js, playbook.js,
-    connectors.js, topics.js,
+    connectors.js, topics.js, topics-settings.js,
     welcome-alt.js, welcome-alt-recap.js
     _analyse-common.js  — shared "chat bubble + numbered picker bar" wizard primitives
     session/
@@ -165,7 +166,7 @@ Connectors (Notion, Slite, Google Drive, GitHub, …) are seeded in `mocks.js` (
 
 **Gated behind the `topics` feature flag (default OFF)** — when off, the `/topics` route (a stale deep link bounces to `/`), its sidebar nav row + unseen counter, and the dossier dialog all disappear. The data (`mocks.topics`, `mocks.topicScanPool`, `ctx.topics`) rides along regardless, exactly like `playbookCompetitors`.
 
-Agorapulse listening pulls social posts against **six sources** declared in `topics-catalog.js` — competitor posts, influencer posts, brand feedback, competitor monitoring, industry trends, global trends. That file is **CONFIG, not content**: it ships with the app and must exist in `new-alt` mode too, the same split as `ff-catalog.js` vs `mocks.js`. Which sources are on, plus **one cadence for the whole Playbook**, live on the Context as `ctx.topics = { enabledSourceIds, cadence }` (normalised by `normalizeTopics()` in `contexts-store.js` — in `addContext` **and** on the seed, which bypasses it). They are **edited on `/topics`**, in a second `.ap-tabs` tab ("What I watch", state in `?view=sources`), committing straight through `updateContext` with no Save button. That tab shows **one Playbook at a time**, scoped by `?pb=` and chosen from a picker whose options double as an overview — stacking a block per Playbook was tried and doesn't scale (twenty Playbooks meant 120 switches and every description repeated twenty times).
+Agorapulse listening pulls social posts against **six sources** declared in `topics-catalog.js` — competitor posts, influencer posts, brand feedback, competitor monitoring, industry trends, global trends. That file is **CONFIG, not content**: it ships with the app and must exist in `new-alt` mode too, the same split as `ff-catalog.js` vs `mocks.js`. Which sources are on, plus **one cadence for the whole Playbook**, live on the Context as `ctx.topics = { enabledSourceIds, cadence }` (normalised by `normalizeTopics()` in `contexts-store.js` — in `addContext` **and** on the seed, which bypasses it). They are **edited on `/topics/settings`** — a settings PAGE, not a tab on the feed, because you set your sources once and then read topics for months; a tab gave it equal billing with the feed. It commits straight through `updateContext` with no Save button, shows **one Playbook at a time** scoped by `?pb=` (the same param the feed filters on, so the scope survives both directions), and uses the DS settings recipe (`--sys-settings-*`). Stacking a block per Playbook was tried and doesn't scale — twenty Playbooks meant 120 switches and every description repeated twenty times.
 
 **Not on the Playbook — that was tried and reverted.** A Playbook is a fact sheet: every section answers "who are you?". Which feeds are live and how often they run answers "what job should Archie run?" — operational, not declarative, and as a grid of switches it read as a settings panel wedged into a profile. The "config lives on its entity" rule has a second clause that covers this: _or on a route scoped to one feature_. The data stays per Playbook; only the surface moved.
 
@@ -192,7 +193,7 @@ A topic offers exactly two actions: **Start a chat** and **Dismiss**. Start-a-ch
 
 ### Admin / user mode (prototype controls)
 
-The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototype control panel: switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()`. The 11 flags: `draftInlineEdit` (OFF), `playbookDefault` (OFF), `connectors` (OFF — gates the whole connectors feature), `conversationStatusCard` (OFF), `statusActionSnackbars` (OFF), `playbookColors` (OFF — colors hidden by default), `manyProfiles` (OFF — demo seed of ~40 connected profiles), `multilingualPlaybook` (OFF), `playbookCompetitors` (OFF — gates the Playbook's Competitors section), `imageStudioV2` (OFF — swaps the Image Studio for the prompt-at-the-bottom redesign in `components/image-studio-v2/`), `topics` (OFF — gates the whole Topics feature: the `/topics` feed + its "What I watch" tab, its nav row, and the dossier dialog). Full table + gates: [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md#14-admin-feature-flags--user-modes).
+The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototype control panel: switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()`. The 11 flags: `draftInlineEdit` (OFF), `playbookDefault` (OFF), `connectors` (OFF — gates the whole connectors feature), `conversationStatusCard` (OFF), `statusActionSnackbars` (OFF), `playbookColors` (OFF — colors hidden by default), `manyProfiles` (OFF — demo seed of ~40 connected profiles), `multilingualPlaybook` (OFF), `playbookCompetitors` (OFF — gates the Playbook's Competitors section), `imageStudioV2` (OFF — swaps the Image Studio for the prompt-at-the-bottom redesign in `components/image-studio-v2/`), `topics` (OFF — gates the whole Topics feature: the `/topics` feed, `/topics/settings`, the nav row, and the dossier dialog). Full table + gates: [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md#14-admin-feature-flags--user-modes).
 
 ### Module loading
 
@@ -240,7 +241,7 @@ styles/
   ds-patches.css    — the only legitimate place to touch .ap-* selectors
   chat.css          — composer + thread chrome
   screens/          — dashboard, session, ideas, contexts, connectors, topics,
-                      settings, posts, analyse, modals, sources, welcome
+                      topics-settings, posts, analyse, modals, sources, welcome
   components/       — sidebar, right-panel, conversation-status-card,
                       add-source-modal, connectors-modal, schedule-modal,
                       video-clips-modal, clip-card, archie-loader,
