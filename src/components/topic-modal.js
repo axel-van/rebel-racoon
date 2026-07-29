@@ -88,9 +88,13 @@ function onClick(event) {
   const skip = event.target.closest("[data-topic-dismiss]");
   if (skip) {
     const id = skip.dataset.topicDismiss;
+    // Capture the callback BEFORE close(), which clears it. Calling it afterwards
+    // was a silent no-op, so "Not for me" dismissed the topic without ever raising
+    // the Undo toast the feed offers for the card's own Dismiss.
+    const notify = onDismiss;
     close();
     dismissTopic(id);
-    onDismiss?.(id);
+    notify?.(id);
   }
 }
 
@@ -158,19 +162,26 @@ function render() {
 
   // The headline IS the title — a dossier's claim is the thing you came to
   // read, and a generic "Topic" heading above it would only push it down.
+  //
+  // The provenance is a KICKER ABOVE it, not a subtitle below: same order as the
+  // feed card the reader just clicked, so the dialog reads as that card opened
+  // rather than as a different object. The Playbook stays a `.ap-tag` here for the
+  // same reason it is one on the card — its own name contains a middot
+  // ("Pawtrack · always-on"), and as plain text in a middot-separated line it
+  // turned the kicker into four dots in a row.
   headerEl.innerHTML = html`
-    <h2 class="ap-dialog-title topic-modal__title" id="topicModalTitle">${topic.headline}</h2>
-    <p class="ap-dialog-subtitle topic-modal__meta">
+    <p class="topic-modal__kicker">
       ${raw(
         source
           ? html`<span class="topic-badge topic-badge--${source.accent}" aria-hidden="true"
                 ><i class="${source.icon}"></i></span
-              ><span class="topic-modal__source">${source.name}</span>`
+              ><span class="topic-modal__source">${source.name}</span> <span aria-hidden="true">·</span>`
           : "",
       )}
-      <span>·</span><span>${topicWhen(topic.ageDays)}</span>
-      ${raw(playbook ? html`<span>·</span><span>${playbook.name}</span>` : "")}
+      <span>${topicWhen(topic.ageDays)}</span>
+      ${raw(playbook ? html`<span class="ap-tag grey mini topic-modal__playbook">${playbook.name}</span>` : "")}
     </p>
+    <h2 class="ap-dialog-title topic-modal__title" id="topicModalTitle">${topic.headline}</h2>
   `;
 
   const posts = topic.posts || [];

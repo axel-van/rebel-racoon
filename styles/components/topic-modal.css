@@ -11,22 +11,44 @@
 
 /* ── Header ─────────────────────────────────────────────────────────────── */
 
-/* The headline is the claim and often runs to two lines, so it needs a tighter
-   measure than the DS heading default gives at this width. */
-.topic-modal__title {
-  max-width: 34ch;
-  text-wrap: pretty;
+/* A hairline, because the content below SCROLLS: without it the prose slid up
+   under the title with nothing to say the title was a fixed layer. The DS already
+   puts one above the footer, so the reading area is now bounded top and bottom. */
+.topic-modal__header {
+  padding-bottom: var(--ref-spacing-sm);
+  border-bottom: 1px solid var(--app-border-soft);
 }
 
-.topic-modal__meta {
+/* Provenance, above the claim — the same kicker the feed card leads with. 12px:
+   as `.ap-dialog-subtitle` it was 16px, which put it a single step under a 24px
+   title and made the header read as two headings. */
+.topic-modal__kicker {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxxs);
+  margin: 0 0 var(--ref-spacing-xxs);
+  font-family: var(--sys-text-style-caption-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
 }
 
 .topic-modal__source {
-  font-weight: var(--sys-text-style-body-bold-weight);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--sys-text-color-default);
+}
+
+.topic-modal__playbook {
+  margin-left: var(--ref-spacing-xxxs);
+}
+
+/* The claim. `balance` rather than `pretty`, and the cap widened from 34ch (512px
+   inside a 654px column — it was forcing a wrap the container didn't ask for) to
+   42ch, so the measure stops binding before the dialog does. */
+.topic-modal__title {
+  max-width: 42ch;
+  text-wrap: balance;
 }
 
 /* ── Body ───────────────────────────────────────────────────────────────── */
@@ -60,10 +82,12 @@
   color: var(--ref-color-orange-100);
 }
 
+/* 14, not 16: at 16 the sparkle was larger than the 12px word beside it and the
+   eyebrow read as an icon with a label rather than a label. */
 .topic-modal__eyebrow > i {
-  font-size: 16px;
-  width: 16px;
-  height: 16px;
+  font-size: var(--sys-icon-sm);
+  width: var(--sys-icon-sm);
+  height: var(--sys-icon-sm);
 }
 
 .topic-modal__analysis-title {
@@ -76,21 +100,32 @@
   text-wrap: pretty;
 }
 
-/* Reading prose, not UI text: a looser line-height than the DS body default and
-   a capped measure, so the analysis is actually pleasant to read. */
+/* Reading prose, not UI text — and this is the one surface in the app whose whole
+   job is reading, so it gets a reading setting rather than the UI one:
+ *
+ * - **16px** (`--ref-font-size-md`, the size the DS itself uses for a dialog
+ *   subtitle) instead of the 14px UI body. Three paragraphs of argument at 14px
+ *   grey is the smallest text in the app doing the most work.
+ * - **Default text colour, not `-light`.** The analysis IS the content here. Light
+ *   grey is right for the feed card's summary, which is secondary to its headline;
+ *   here it just made the argument fainter than the furniture around it.
+ * - 1.65 line-height, and a **24px paragraph gap** — at 16/1.65 a line is 26px, so
+ *   the old 16px gap was less than a single line and the paragraphs ran together
+ *   into one wall.
+ * - Measure capped in `ch`, so it holds at ~65 characters whatever the size. */
 .topic-modal__prose {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-sm);
+  gap: var(--ref-spacing-md);
   max-width: 68ch;
 }
 
 .topic-modal__prose p {
   margin: 0;
   font-family: var(--sys-text-style-body-font-family);
-  font-size: var(--sys-text-style-body-size);
+  font-size: var(--ref-font-size-md);
   line-height: 1.65;
-  color: var(--sys-text-color-light);
+  color: var(--sys-text-color-default);
 }
 
 /* ── Evidence ───────────────────────────────────────────────────────────── */

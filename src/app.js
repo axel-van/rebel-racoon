@@ -13,7 +13,7 @@ import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v
 import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=66";
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=67";
 import { init as initConnectorsModal } from "./components/connectors-modal.js?v=16";
-import { init as initTopicModal } from "./components/topic-modal.js?v=2";
+import { init as initTopicModal } from "./components/topic-modal.js?v=3";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
 import { init as initRenameModal } from "./components/rename-modal.js?v=2";
 import { init as initSaveFolderModal } from "./components/save-folder-modal.js?v=14";
@@ -28,7 +28,7 @@ import { renderDashboard } from "./screens/dashboard.js?v=58";
 import { renderSession } from "./screens/session.js?v=464";
 import { renderContexts } from "./screens/contexts.js?v=204";
 import { renderConnectors } from "./screens/connectors.js?v=143";
-import { renderTopics } from "./screens/topics.js?v=9";
+import { renderTopics } from "./screens/topics.js?v=10";
 import { renderTopicsSettings } from "./screens/topics-settings.js?v=2";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
