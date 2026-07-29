@@ -5,7 +5,7 @@
  * inner reading layout.
  *
  * The `.topic-badge--<accent>` source pip is shared with the feed and the
- * Playbook's Topics section, so it lives in styles/components/topic-badge.css.
+ * "What I watch" source cards, so it lives in styles/components/topic-badge.css.
  *
  * See src/components/topic-modal.js. */
 

@@ -2,13 +2,14 @@
 //
 // This is CONFIG, not content: it ships with the app and must exist in
 // `new-alt` mode too (a brand-new user still sees the six toggleable source
-// cards in their Playbook's Topics section). The topics those sources produce
+// cards on /topics → "What I watch"). The topics those sources produce
 // are content and live in mocks.js, empty for a new user. Same split as
 // ff-catalog.js (config) vs mocks.js (data).
 //
 // Which sources are on, plus the refresh cadence, are PER PLAYBOOK — they live
 // on the Context as `ctx.topics = { enabledSourceIds, cadence }`, normalised in
-// contexts-store.js and edited in the Playbook's Topics section.
+// contexts-store.js and edited on /topics, in the "What I watch" tab. NOT on the
+// Playbook: it's a fact sheet, and this is operational config (see screens/topics.js).
 //
 // `playbookAnchor` — never the id — says which part of the Playbook a source
 // reads, so the view can state the dependency ("Reads your competitors") without

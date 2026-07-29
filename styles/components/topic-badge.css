@@ -1,6 +1,6 @@
 /* topic-badge — the pip that identifies which listening source produced a
  * thing. Shared by three surfaces (the /topics feed cards, the topic dialog's
- * header, the Playbook's Topics section), which is why it lives here rather than
+ * header, the "What I watch" source cards), which is why it lives here rather than
  * in any one of their stylesheets.
  *
  * The accent is a semantic key from topics-catalog.js, never a hex: the JS emits
