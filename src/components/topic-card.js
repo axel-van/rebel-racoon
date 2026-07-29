@@ -67,21 +67,30 @@ export function renderTopicCard(topic, { source = null, playbookName = "" } = {}
 
   return html`<article class="topic-card${raw(topic.unseen ? " is-unseen" : "")}" data-topic-id="${topic.id}">
     <button type="button" class="topic-card__body" data-topic-open="${topic.id}">
+      <!-- Kicker left, marks right — two stable anchors instead of one queue of five
+           chips. Scanning the feed you look for the SOURCE (which kind of listening
+           found this) at a fixed left edge, and for the Playbook / New marks at a
+           fixed right edge. In one flat row the badge stayed put but everything else
+           slid sideways with the length of the name before it. -->
       <span class="topic-card__eyebrow">
-        ${raw(
-          source
-            ? html`<span class="topic-badge topic-badge--${source.accent}" aria-hidden="true"
-                  ><i class="${source.icon}"></i></span
-                ><span class="topic-card__source">${source.name}</span>`
-            : "",
-        )}
-        <span class="topic-card__dot" aria-hidden="true">·</span>
-        <span class="topic-card__when">${topicWhen(topic.ageDays)}</span>
-        ${raw(playbookName ? html`<span class="ap-tag grey mini topic-card__playbook">${playbookName}</span>` : "")}
-        <!-- "New" is a dot + a word styled by this screen, not a DS tag: the DS
-             tag palette has no orange variant, and orange is what marks Archie's
-             own contribution everywhere else in the app. -->
-        ${raw(topic.unseen ? html`<span class="topic-card__new">New</span>` : "")}
+        <span class="topic-card__kicker">
+          ${raw(
+            source
+              ? html`<span class="topic-badge topic-badge--${source.accent}" aria-hidden="true"
+                    ><i class="${source.icon}"></i></span
+                  ><span class="topic-card__source">${source.name}</span>
+                  <span class="topic-card__dot" aria-hidden="true">·</span>`
+              : "",
+          )}
+          <span class="topic-card__when">${topicWhen(topic.ageDays)}</span>
+        </span>
+        <span class="topic-card__marks">
+          ${raw(playbookName ? html`<span class="ap-tag grey mini topic-card__playbook">${playbookName}</span>` : "")}
+          <!-- "New" is a dot + a word styled by this screen, not a DS tag: the DS
+               tag palette has no orange variant, and orange is what marks Archie's
+               own contribution everywhere else in the app. -->
+          ${raw(topic.unseen ? html`<span class="topic-card__new">New</span>` : "")}
+        </span>
       </span>
       <span class="topic-card__headline">${topic.headline}</span>
       <span class="topic-card__summary">${topic.summary}</span>

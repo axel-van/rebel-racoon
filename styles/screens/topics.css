@@ -165,12 +165,14 @@
 
 /* The whole reading area is one button, so it has to shed every default the UA
    gives a <button>: left-aligned text, inherited type, no chrome. */
+/* Explicit margins rather than one flex gap: a brief is kicker → 8 → headline → 4 →
+   deck, tighter under the headline than above it. A uniform gap spaces all three the
+   same and the headline stops reading as the thing the deck belongs to. */
 .topic-card__body {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxs);
   width: 100%;
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md) var(--ref-spacing-xs);
   border: 0;
   background: transparent;
   font: inherit;
@@ -184,15 +186,34 @@
   outline-offset: -2px;
 }
 
+/* Kicker left, marks right. `margin-left: auto` on the marks keeps them right even
+   when a long Playbook name wraps them onto their own line. */
 .topic-card__eyebrow {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--ref-spacing-xxxs);
+  gap: var(--ref-spacing-xxs);
+  margin-bottom: var(--ref-spacing-xxs);
   font-family: var(--sys-text-style-caption-font-family);
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   color: var(--sys-text-color-light);
+}
+
+.topic-card__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+}
+
+.topic-card__marks {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .topic-card__source {
@@ -219,16 +240,27 @@
   background: var(--ref-color-orange-100);
 }
 
-/* The claim. Capped in characters rather than pixels so it stays scannable
-   whatever the window does. */
+/* The claim, and the only thing a scan should have to read. It was set at h4 — 14px,
+   the SAME size as the summary under it — so the card had no lead and every brief
+   read as one grey paragraph. h2 (18px/700) against the 14px deck is the whole fix.
+   Capped in characters rather than pixels so it stays scannable whatever the window
+   does; 62ch, not 52, so a headline of this length usually lands on one line at the
+   feed's measure. `balance` for the ones that don't — at 52ch this headline broke as
+   "…peace / of mind", and an orphan is the fastest way to lose a scan. Two lines
+   maximum: a third means the headline is doing the summary's job. */
 .topic-card__headline {
-  max-width: 52ch;
-  font-family: var(--sys-text-style-h4-font-family);
-  font-size: var(--sys-text-style-h4-size);
-  line-height: var(--sys-text-style-h4-line-height);
-  font-weight: var(--sys-text-style-h4-weight);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 62ch;
+  margin-bottom: var(--ref-spacing-xxxs);
+  font-family: var(--sys-text-style-h2-font-family);
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  font-weight: var(--sys-text-style-h2-weight);
   color: var(--sys-text-color-default);
-  text-wrap: pretty;
+  text-wrap: balance;
 }
 
 /* Two lines: enough to decide whether to open it, not enough to make opening it
@@ -248,14 +280,20 @@
 /* ── Card footer ────────────────────────────────────────────────────────── */
 
 /* Outside the body button on purpose — a button inside a button is invalid HTML
-   and browsers resolve the nesting unpredictably. */
+   and browsers resolve the nesting unpredictably.
+ *
+ * A hairline above it, on the card's own border colour so it reads as structure and
+ * not decoration: without it the brief and the actions were one continuous field, and
+ * the tinted "Start a chat" ended up competing with the headline for the eye. Now
+ * there's somewhere for a scan to stop. */
 .topic-card__foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--ref-spacing-sm);
   flex-wrap: wrap;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-md) var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-md);
+  border-top: 1px solid var(--app-border);
 }
 
 .topic-card__evidence {
