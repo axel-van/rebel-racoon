@@ -87,15 +87,43 @@ function activeTab() {
   return TABS.includes(raw) ? raw : "feed";
 }
 
-// Which Playbook "What I watch" is scoped to, from `?pb=`. In the URL for the same
-// reason the tab is — plus a specific one: a per-entity config surface MUST carry
-// its scope, or configuring Playbook B and pressing back silently shows you
-// Playbook A's switches. Falls back to the default (★) Playbook, then the first,
-// so a deleted or bogus id renders something real instead of an empty panel.
+// `?pb=` is ONE idea — "scoped to this Playbook" — shared by both tabs, so filtering
+// the feed to a brand and switching to What I watch lands you on that brand's config.
+// The two tabs only differ in what an ABSENT value means, which follows from what
+// each surface is for:
+//
+//   • the feed  → "all Playbooks" (a feed with nothing selected shows everything)
+//   • the config → the default (★) Playbook (you always have to be editing one)
+//
+// In the URL rather than module state for the same reason the tab is, plus a
+// specific one: a per-entity config surface MUST carry its scope, or configuring
+// Playbook B and pressing back silently shows you Playbook A's switches.
 function activePlaybookId() {
   const wanted = parseHashParams().get("pb");
   if (wanted && getContextById(wanted)) return wanted;
   return getDefaultContext()?.id || getContexts()[0]?.id || null;
+}
+
+/** The feed's Playbook filter: a real Playbook id, or "all". */
+function activePlaybookFilter() {
+  const wanted = parseHashParams().get("pb");
+  return wanted && getContextById(wanted) ? wanted : "all";
+}
+
+// Build the hash query, carrying whatever isn't being changed. Overrides: `tab`
+// (defaults to the current one) and `pb` (null clears it, undefined keeps it).
+function scopedQuery({ tab, pb } = {}) {
+  const nextTab = tab || activeTab();
+  const nextPb = pb === undefined ? parseHashParams().get("pb") : pb;
+  const out = {};
+  if (nextTab !== "feed") out.view = nextTab;
+  if (nextPb && getContextById(nextPb)) out.pb = nextPb;
+  return out;
+}
+
+function matchesFilters(topic) {
+  const pb = activePlaybookFilter();
+  return (pb === "all" || topic.contextId === pb) && (view.source === "all" || topic.sourceId === view.source);
 }
 
 export function renderTopics(_params, target) {
@@ -176,24 +204,35 @@ function watchedSourceIds() {
 function renderPage() {
   const tab = activeTab();
   const all = getTopics();
-  const visible = view.source === "all" ? all : all.filter((t) => t.sourceId === view.source);
+  const pbFilter = activePlaybookFilter();
+  const visible = all.filter(matchesFilters);
   const unseen = getUnseenCount();
   const playbooks = getContexts().filter((c) => (c.topics?.enabledSourceIds || []).length > 0);
   // Count the Playbooks actually REPRESENTED in the feed, not the ones I'm
   // watching: "9 topics across 4 Playbooks" is a lie when nine of them come from
   // two, and the honest number is the one that helps the user place a card.
   const represented = new Set(all.map((t) => t.contextId)).size;
+  const filtered = pbFilter !== "all" || view.source !== "all";
 
-  const sub =
-    tab === "sources"
-      ? "The sources I listen to, and how often I check them."
-      : [
-          unseen ? `${unseen} new` : null,
-          `${all.length} ${all.length === 1 ? "topic" : "topics"}`,
-          represented ? `from ${playbookCount(represented)}` : null,
-        ]
-          .filter(Boolean)
-          .join(" · ");
+  // Filtered, the subtitle has to say what you're looking at — otherwise "9 topics"
+  // over a list of 3 reads as a bug. Unfiltered it keeps the account overview.
+  const feedSub = filtered
+    ? [
+        `${visible.length} of ${all.length} ${all.length === 1 ? "topic" : "topics"}`,
+        pbFilter !== "all" ? getContextById(pbFilter)?.name : null,
+        view.source !== "all" ? findTopicSource(view.source)?.name : null,
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : [
+        unseen ? `${unseen} new` : null,
+        `${all.length} ${all.length === 1 ? "topic" : "topics"}`,
+        represented ? `from ${playbookCount(represented)}` : null,
+      ]
+        .filter(Boolean)
+        .join(" · ");
+
+  const sub = tab === "sources" ? "The sources I listen to, and how often I check them." : feedSub;
 
   return html`
     <div class="topics-view__page">
@@ -232,7 +271,7 @@ function renderTabs(tab, topicCount) {
 }
 
 function renderFeedTab({ all, visible, playbooks }) {
-  return html`${raw(all.length ? renderFilters(all) : "")}
+  return html`${raw(all.length ? renderFilterPanel(all) : "")}
     <div class="topics-view__body">
       ${raw(
         view.scanning
@@ -270,36 +309,152 @@ function renderRefresh() {
   </button>`;
 }
 
-// Source filters. Only sources that actually produced something get a chip —
-// a row of six chips where four are dead ends is noise. `aria-pressed` drives
-// the active state, the same contract every other .ap-filter-chip uses.
-function renderFilters(all) {
-  const counts = new Map();
-  for (const t of all) counts.set(t.sourceId, (counts.get(t.sourceId) || 0) + 1);
-  const chips = TOPIC_SOURCES.filter((s) => counts.has(s.id)).map(
-    (s) =>
-      html`<button
-        type="button"
-        class="ap-filter-chip"
-        data-topics-source="${s.id}"
-        aria-pressed="${view.source === s.id ? "true" : "false"}"
-      >
-        <i class="${s.icon}" aria-hidden="true"></i>
-        <span>${s.name}</span>
-        <span class="ap-counter normal grey">${counts.get(s.id)}</span>
-      </button>`,
-  );
-  return html`<div class="topics-view__filters" role="group" aria-label="Filter by source">
-    <button
-      type="button"
-      class="ap-filter-chip"
-      data-topics-source="all"
-      aria-pressed="${view.source === "all" ? "true" : "false"}"
-    >
-      <span>All</span>
-      <span class="ap-counter normal grey">${all.length}</span>
-    </button>
-    ${raw(chips.join(""))}
+// ─── Filters ───────────────────────────────────────────────────────────────
+//
+// Two facets — Playbook and source — behind ONE trigger, on the DS
+// `.ap-selection-dropdown` panel (header/search/groups/items/footer).
+//
+// This is the DS's own rule for filtering: always-visible toggles → a filter chips
+// list; **grouped options behind a trigger → a filter dropdown**. Two facets, one of
+// them as long as the account has Playbooks, is squarely the second. (The DS ships
+// <ap-filter-dropdown>, but it's Angular-only with no CSS-UI layer — this panel is
+// its CSS-UI counterpart and has exactly the anatomy the grouped case needs.)
+//
+// A row of Playbook chips was the alternative and it's the same trap the config tab
+// just got out of: it can't survive twenty Playbooks.
+
+// Above this many Playbooks in the list, the panel earns its search field.
+const PB_FILTER_SEARCH_THRESHOLD = 8;
+
+function countBy(topics, key) {
+  const out = new Map();
+  for (const t of topics) out.set(t[key], (out.get(t[key]) || 0) + 1);
+  return out;
+}
+
+// One item. `active` draws the check; a zero count disables it rather than hiding it,
+// so the list doesn't reshuffle under the cursor as the other facet changes.
+function renderFilterItem({ attr, value, label, icon, count, active, searchKey }) {
+  const disabled = count === 0 && !active;
+  return html`<button
+    type="button"
+    class="ap-selection-dropdown-item"
+    ${raw(attr)}="${escapeAttr(value)}"
+    ${raw(searchKey ? `data-topics-filter-name="${escapeAttr(searchKey.toLowerCase())}"` : "")}
+    ${raw(disabled ? "disabled" : "")}
+    role="option"
+    aria-selected="${active ? "true" : "false"}"
+  >
+    <i
+      class="${raw(active ? "ap-icon-check" : icon || "ap-icon-check")}"
+      aria-hidden="true"
+      style="${raw(active ? "" : icon ? "" : "visibility: hidden")}"
+    ></i>
+    <span>${label}</span>
+    <span class="ap-badge ${raw(active ? "blue" : "")}">${count}</span>
+  </button>`;
+}
+
+function renderFilterPanel(all) {
+  const pb = activePlaybookFilter();
+  const src = view.source;
+
+  // Each facet's counts are computed against the OTHER facet's selection, so a
+  // number never promises rows the current filters would exclude.
+  const bySourceScope = all.filter((t) => pb === "all" || t.contextId === pb);
+  const byPbScope = all.filter((t) => src === "all" || t.sourceId === src);
+  const srcCounts = countBy(bySourceScope, "sourceId");
+  const pbCounts = countBy(byPbScope, "contextId");
+
+  // Only Playbooks that appear in the feed at all — a filter that can only ever
+  // return nothing isn't a filter.
+  const feedPlaybooks = getContexts().filter((c) => all.some((t) => t.contextId === c.id));
+
+  const pbItems = [
+    renderFilterItem({
+      attr: "data-topics-pb",
+      value: "all",
+      label: "All Playbooks",
+      count: byPbScope.length,
+      active: pb === "all",
+    }),
+    ...feedPlaybooks.map((c) =>
+      renderFilterItem({
+        attr: "data-topics-pb",
+        value: c.id,
+        label: c.name,
+        count: pbCounts.get(c.id) || 0,
+        active: pb === c.id,
+        searchKey: c.name,
+      }),
+    ),
+  ].join("");
+
+  const srcItems = [
+    renderFilterItem({
+      attr: "data-topics-source",
+      value: "all",
+      label: "All sources",
+      count: bySourceScope.length,
+      active: src === "all",
+    }),
+    ...TOPIC_SOURCES.map((s) =>
+      renderFilterItem({
+        attr: "data-topics-source",
+        value: s.id,
+        label: s.name,
+        icon: s.icon,
+        count: srcCounts.get(s.id) || 0,
+        active: src === s.id,
+        searchKey: s.name,
+      }),
+    ),
+  ].join("");
+
+  const search =
+    feedPlaybooks.length > PB_FILTER_SEARCH_THRESHOLD
+      ? html`<div class="ap-selection-dropdown-search">
+          <i class="ap-icon-search" aria-hidden="true"></i>
+          <input type="search" placeholder="Search filters…" aria-label="Search filters" data-topics-filter-search />
+        </div>`
+      : "";
+
+  const activeCount = (pb === "all" ? 0 : 1) + (src === "all" ? 0 : 1);
+
+  return html`<div class="topics-view__filters">
+    <details class="topics-filter">
+      <summary class="ap-button stroked grey topics-filter__trigger">
+        <i class="ap-icon-filter" aria-hidden="true"></i>
+        <span>Filters</span>
+        ${raw(activeCount ? html`<span class="ap-counter normal blue">${activeCount}</span>` : "")}
+        <i class="ap-icon-chevron-down topics-filter__arrow" aria-hidden="true"></i>
+      </summary>
+      <div class="ap-selection-dropdown topics-filter__panel" role="listbox" aria-label="Filter topics">
+        ${raw(search)}
+        <div class="ap-selection-dropdown-items">
+          <div class="ap-selection-dropdown-group">Playbook</div>
+          ${raw(pbItems)}
+          <div class="ap-selection-dropdown-group">Source</div>
+          ${raw(srcItems)}
+          <!-- Inline display, not the hidden attribute: the DS gives
+               .ap-selection-dropdown-empty a padding-bearing block and [hidden] is
+               easy to out-specify — the same trap .ap-select-not-found sets. -->
+          <div class="ap-selection-dropdown-empty" data-topics-filter-empty style="display: none">
+            Nothing matches that.
+          </div>
+        </div>
+        <div class="ap-selection-dropdown-footer">
+          <button
+            type="button"
+            class="ap-button ghost grey"
+            data-topics-filter-clear
+            ${raw(activeCount ? "" : "disabled")}
+          >
+            <span>Clear filters</span>
+          </button>
+        </div>
+      </div>
+    </details>
   </div>`;
 }
 
@@ -363,13 +518,21 @@ function renderEmpty({ total, playbooks }) {
       wrapperClass: "topics-view__empty",
     });
   }
-  if (total > 0 && view.source !== "all") {
-    const source = findTopicSource(view.source);
+  // Filters active but nothing matches. Name BOTH facets — "nothing from that
+  // source" is a lie when it's the Playbook doing the excluding.
+  const pb = activePlaybookFilter();
+  if (total > 0 && (pb !== "all" || view.source !== "all")) {
+    const named = [
+      view.source !== "all" ? findTopicSource(view.source)?.name : null,
+      pb !== "all" ? getContextById(pb)?.name : null,
+    ].filter(Boolean);
     return renderEmptyState({
       icon: "ap-icon-search",
-      title: "Nothing from that source",
-      body: `I haven't brought you anything from ${source ? source.name : "that source"} yet.`,
-      actionHtml: `<button type="button" class="ap-button stroked grey" data-topics-source="all">Show everything</button>`,
+      title: "Nothing matches those filters",
+      body: named.length
+        ? `I haven't brought you anything for ${named.join(" · ")} yet.`
+        : "Nothing matches the filters you've set.",
+      actionHtml: `<button type="button" class="ap-button stroked grey" data-topics-filter-clear><span>Clear filters</span></button>`,
       wrapperClass: "topics-view__empty",
     });
   }
@@ -621,25 +784,24 @@ function bind(target) {
   boundTarget = target;
   boundClick = (event) => {
     // Tab switch goes through the URL, so back/forward and deep links work. The
-    // router re-runs this handler, which repaints — no local state to sync.
-    // Going to the feed drops `pb`; it's meaningless there and would linger in the
-    // URL. Going to the config tab keeps whatever scope was last chosen.
+    // router re-runs this handler, which repaints — no local state to sync. `pb`
+    // rides along both ways: it means the same thing on either tab, so filtering the
+    // feed to a brand and switching to What I watch lands on that brand's config.
     const tabBtn = event.target.closest("[data-topics-tab]");
     if (tabBtn) {
       const next = tabBtn.dataset.topicsTab;
       if (next === activeTab()) return;
-      if (next === "feed") setHashQuery("/topics", {});
-      else {
-        const pb = parseHashParams().get("pb");
-        setHashQuery("/topics", pb ? { view: next, pb } : { view: next });
-      }
+      setHashQuery("/topics", scopedQuery({ tab: next }));
       return;
     }
-    // Playbook pick — scope the config tab to another Playbook.
+    // Playbook pick — the feed's filter and the config tab's scope are the same
+    // `?pb=`, so one handler serves both. Only "all" is feed-specific: the config tab
+    // never offers it, because you always have to be editing some Playbook.
     const pbPick = event.target.closest("[data-topics-pb]");
     if (pbPick) {
       pbPick.closest("details")?.removeAttribute("open");
-      setHashQuery("/topics", { view: "sources", pb: pbPick.dataset.topicsPb });
+      const value = pbPick.dataset.topicsPb;
+      setHashQuery("/topics", scopedQuery({ pb: value === "all" ? null : value }));
       return;
     }
     // Cadence pick. Commits straight through updateContext — this surface has no
@@ -654,10 +816,19 @@ function bind(target) {
       }
       return;
     }
-    const chip = event.target.closest("[data-topics-source]");
-    if (chip) {
-      view.source = chip.dataset.topicsSource;
+    // Source facet — module state, not the URL. It changes far more often than the
+    // scope, and putting it in the hash would stack a history entry per click.
+    const srcPick = event.target.closest("[data-topics-source]");
+    if (srcPick) {
+      srcPick.closest("details")?.removeAttribute("open");
+      view.source = srcPick.dataset.topicsSource;
       paint(target);
+      return;
+    }
+    if (event.target.closest("[data-topics-filter-clear]")) {
+      view.source = "all";
+      // Clears `pb` too, which repaints via the router — no explicit paint needed.
+      setHashQuery("/topics", scopedQuery({ pb: null }));
       return;
     }
     if (event.target.closest("[data-topics-refresh]")) {
@@ -722,26 +893,52 @@ function bind(target) {
   };
   target.addEventListener("change", boundChange);
 
-  // Playbook search — filters the open dropdown IN THE DOM rather than by
-  // repainting. A repaint would close the <details> and take the caret with it, so
-  // there's no query to keep in state either. Inline display, not the [hidden]
-  // attribute: `.ap-select-option { display: flex }` would out-specify it.
   boundInput = (event) => {
-    const field = event.target.closest("[data-topics-pb-search]");
-    if (!field) return;
-    const q = field.value.trim().toLowerCase();
-    const dropdown = field.closest(".ap-select-dropdown");
-    if (!dropdown) return;
-    let shown = 0;
-    for (const opt of dropdown.querySelectorAll("[data-topics-pb]")) {
-      const hit = !q || (opt.dataset.topicsPbName || "").includes(q);
-      opt.style.display = hit ? "" : "none";
-      if (hit) shown += 1;
+    // The config tab's Playbook picker.
+    const pbField = event.target.closest("[data-topics-pb-search]");
+    if (pbField) {
+      filterDropdownRows({
+        field: pbField,
+        scopeSelector: ".ap-select-dropdown",
+        rowSelector: "[data-topics-pb]",
+        nameAttr: "topicsPbName",
+        emptySelector: "[data-topics-pb-empty]",
+      });
+      return;
     }
-    const empty = dropdown.querySelector("[data-topics-pb-empty]");
-    if (empty) empty.style.display = shown > 0 ? "none" : "";
+    // The feed's filter panel — searches both groups at once, so one query can narrow
+    // either facet. Group HEADERS stay put; hiding them would make the panel jump.
+    const filterField = event.target.closest("[data-topics-filter-search]");
+    if (filterField) {
+      filterDropdownRows({
+        field: filterField,
+        scopeSelector: ".ap-selection-dropdown",
+        rowSelector: "[data-topics-filter-name]",
+        nameAttr: "topicsFilterName",
+        emptySelector: "[data-topics-filter-empty]",
+      });
+    }
   };
   target.addEventListener("input", boundInput);
+}
+
+// Both searchable dropdowns on this screen filter the SAME way — in the DOM, on
+// `input`, never by repainting. A repaint would close the <details> and take the caret
+// with it, which is also why neither keeps its query in state. Rows hide by inline
+// display, not the [hidden] attribute: the DS gives both the option rows and the
+// not-found row a `display`, which out-specifies [hidden].
+function filterDropdownRows({ field, rowSelector, nameAttr, emptySelector, scopeSelector }) {
+  const q = field.value.trim().toLowerCase();
+  const dropdown = field.closest(scopeSelector);
+  if (!dropdown) return;
+  let shown = 0;
+  for (const row of dropdown.querySelectorAll(rowSelector)) {
+    const hit = !q || (row.dataset[nameAttr] || "").includes(q);
+    row.style.display = hit ? "" : "none";
+    if (hit) shown += 1;
+  }
+  const empty = dropdown.querySelector(emptySelector);
+  if (empty) empty.style.display = shown > 0 ? "none" : "";
 }
 
 // Dismissal hides rather than deletes, so the toast can genuinely undo it. Also

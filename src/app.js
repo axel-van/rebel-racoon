@@ -28,7 +28,7 @@ import { renderDashboard } from "./screens/dashboard.js?v=58";
 import { renderSession } from "./screens/session.js?v=463";
 import { renderContexts } from "./screens/contexts.js?v=203";
 import { renderConnectors } from "./screens/connectors.js?v=142";
-import { renderTopics } from "./screens/topics.js?v=4";
+import { renderTopics } from "./screens/topics.js?v=5";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
