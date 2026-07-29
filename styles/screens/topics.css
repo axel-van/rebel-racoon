@@ -165,12 +165,11 @@
   border-color: var(--sys-border-color-active);
 }
 
-/* Unseen: an orange left edge. Orange is what marks Archie's own contribution
-   everywhere else, and an edge reads down a column of cards far better than a
-   badge does. */
-.topic-card.is-unseen {
-  border-left: 3px solid var(--ref-color-orange-100);
-}
+/* Unseen carries NO frame treatment. A coloured left-edge accent bar lived here and
+   is banned outright — a card's state goes in its content, not on its edge. The
+   `• New` marker in the eyebrow (.topic-card__new) is what communicates unseen, and
+   it was already doing the job; the bar was decoration on top of a working cue.
+   `.is-unseen` stays on the element as the state hook. */
 
 /* The whole reading area is one button, so it has to shed every default the UA
    gives a <button>: left-aligned text, inherited type, no chrome. */
