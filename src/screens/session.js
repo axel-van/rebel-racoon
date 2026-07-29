@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=240";
+import { renderTopbar } from "../components/topbar.js?v=242";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=61";
 import {
   getConnectedProfiles,
@@ -71,7 +71,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=15";
-import * as contextBuilder from "../context-builder.js?v=211";
+import * as contextBuilder from "../context-builder.js?v=212";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -111,7 +111,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=378";
+} from "../components/right-panel.js?v=379";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=2";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";

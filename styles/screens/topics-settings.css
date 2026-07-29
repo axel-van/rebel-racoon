@@ -1,0 +1,242 @@
+/* Topics settings — "What I watch", route /topics/settings.
+ *
+ * Built on the DS **settings** recipe, not the app's generic surface tokens. On a
+ * settings surface the guidelines are explicit: use the `--sys-settings-*` family and
+ * NOT `--ref-spacing-*` / `--ref-color-grey-bg` for the content shell and cards. Only
+ * `--sys-settings-card-feature-lock-border-color` was in use in the app before this
+ * (in ds-patches for the feature-lock infobox), so this is the first use of the layout
+ * half of the family.
+ *
+ * Layout only — never redefine a DS token here.
+ *
+ * No save bar: every control commits immediately through updateContext, so there's
+ * nothing staged to save or cancel.
+ *
+ * See src/screens/topics-settings.js. */
+
+.topics-settings {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: var(--sys-settings-content-background-color);
+}
+
+/* max-width-md (700px), not -lg: this is a form — a scope picker, a cadence and a
+   list of switches — rather than a table or a dashboard. */
+.topics-settings__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sys-settings-content-vertical-spacing);
+  padding: var(--sys-settings-content-internal-margin);
+  max-width: var(--sys-settings-content-max-width-md);
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── Head ───────────────────────────────────────────────────────────────── */
+
+/* `.ap-h2` and `.ap-body` bring their own type; these only reset the UA margins the
+   DS classes don't touch. */
+.topics-settings__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.topics-settings__title,
+.topics-settings__lead {
+  margin: 0;
+}
+
+/* ── Scope ──────────────────────────────────────────────────────────────── */
+
+/* Above the cards, because it's what the page is about rather than one of its
+   sections. */
+.topics-settings__scope {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  min-width: 0;
+}
+
+.topics-settings__scope-label {
+  flex-shrink: 0;
+  font-family: var(--sys-text-style-body-bold-font-family);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--sys-text-color-default);
+}
+
+.topics-settings__pbselect {
+  flex: 1;
+  min-width: 0;
+  max-width: 360px;
+}
+
+.topics-settings__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxxs);
+  /* Pull up under the scope row: the two are one statement, and the card gap below
+     would otherwise read as separating them. */
+  margin: calc(var(--sys-settings-content-vertical-spacing) * -1 + var(--ref-spacing-xxxs)) 0 0;
+  font-family: var(--sys-text-style-caption-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
+}
+
+/* ── Cards ──────────────────────────────────────────────────────────────── */
+
+/* `.ap-card` already ships a surface; these tokens make the values match the
+   Settings family. Never override `.ap-card` itself. */
+.topics-settings__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  background: var(--sys-settings-card-background-color);
+  border: 1px solid var(--sys-settings-card-border-color);
+  border-radius: var(--sys-settings-card-border-radius);
+  padding: var(--sys-settings-card-internal-padding);
+}
+
+.topics-settings__card > .ap-card-title {
+  margin: 0;
+}
+
+/* A label/control pair on one line — the cadence row. */
+.topics-settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-md);
+  flex-wrap: wrap;
+}
+
+.topics-settings__row-label {
+  font-family: var(--sys-text-style-body-font-family);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--sys-text-color-default);
+}
+
+/* `.ap-select` is display:block, so in a flex row it would take the whole remaining
+   width and wrap the label onto its own line. Fix its size rather than its display —
+   the DS owns the latter. */
+.topics-settings__cadence {
+  flex: 0 0 auto;
+  width: 180px;
+}
+
+/* ── Sources ────────────────────────────────────────────────────────────── */
+
+/* Rows in one card, not a grid of cards. At the settings content width a two-column
+   grid gives two cramped columns, and a list of rows with the switch on the right is
+   the canonical settings shape. Dividers between rows, negative insets so they span
+   the card's full width against its padding. */
+.topics-settings__sources {
+  display: flex;
+  flex-direction: column;
+}
+
+.topics-settings__sources > .topics-src + .topics-src {
+  border-top: 1px solid var(--sys-settings-card-border-color);
+}
+
+.topics-src {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm) 0;
+}
+
+.topics-src:first-child {
+  padding-top: 0;
+}
+.topics-src:last-child {
+  padding-bottom: 0;
+}
+
+/* Off: dimmed, not recessed. There's no grid gap left to carry a background, and on
+   a settings list the switch already states the state — the dimming just stops an
+   inactive source competing with the active ones. */
+.topics-src.is-off .topics-src__name,
+.topics-src.is-off .topics-src__desc {
+  color: var(--ref-color-grey-60);
+}
+
+.topics-src.is-off .topic-badge {
+  filter: grayscale(1);
+  opacity: 0.7;
+}
+
+.topics-src__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.topics-src__name {
+  font-family: var(--sys-text-style-body-bold-font-family);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--sys-text-color-default);
+}
+
+.topics-src__desc {
+  margin: 0;
+  font-family: var(--sys-text-style-caption-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
+}
+
+/* States the dependency ("this one reads your competitors") without becoming a
+   seventh link on the page. */
+.topics-src__note {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  margin-top: var(--ref-spacing-xxxs);
+  font-family: var(--sys-text-style-caption-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
+}
+
+.topics-src__note > i {
+  font-size: 12px;
+  width: 12px;
+  height: 12px;
+}
+
+.topics-src__switch {
+  flex-shrink: 0;
+  /* Optically centre the switch on the row's first text line rather than on the row,
+     which the two-line description would otherwise pull down. */
+  min-height: 20px;
+}
+
+/* ── Empty ──────────────────────────────────────────────────────────────── */
+
+.topics-settings__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxl) var(--ref-spacing-lg);
+  background: var(--sys-settings-card-background-color);
+  border: 1px solid var(--sys-settings-card-border-color);
+  border-radius: var(--sys-settings-card-border-radius);
+}
+
+.topics-settings__empty p {
+  max-width: 52ch;
+}

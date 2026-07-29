@@ -14,7 +14,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=378";
+} from "./right-panel.js?v=379";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=57";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=64";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=58";
@@ -23,7 +23,7 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=171";
+} from "./conversation-status-card.js?v=172";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=11";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=43";
@@ -474,6 +474,13 @@ function isSessionRoute() {
 // Routes that lead with a back control instead of a title, and where they go.
 function backTargetFor(path) {
   if (/^\/playbook\//.test(path)) return { to: "/contexts", label: "Back to Playbooks" };
+  // The Topics settings page carries its Playbook scope BACK to the feed, so a
+  // filtered feed survives the round trip. getPath() strips the query, so the scope
+  // has to be read from the hash here rather than taken from `path`.
+  if (/^\/topics\/settings/.test(path)) {
+    const pb = parseHashParams().get("pb");
+    return { to: pb ? `/topics?pb=${encodeURIComponent(pb)}` : "/topics", label: "Back to Topics" };
+  }
   return null;
 }
 
