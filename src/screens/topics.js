@@ -31,7 +31,13 @@ import { renderEmptyState } from "../components/empty-state.js?v=1";
 import { renderTopicCard } from "../components/topic-card.js?v=1";
 import { open as openTopicModal } from "../components/topic-modal.js?v=2";
 import { isFlagOn } from "../feature-flags.js?v=15";
-import { getContexts, getContextById, updateContext, subscribe as subscribeContexts } from "../contexts-store.js?v=43";
+import {
+  getContexts,
+  getContextById,
+  getDefaultContext,
+  updateContext,
+  subscribe as subscribeContexts,
+} from "../contexts-store.js?v=43";
 import {
   TOPIC_SOURCES,
   CADENCES,
@@ -69,6 +75,7 @@ let unsubscribeContexts = null;
 let boundTarget = null;
 let boundClick = null;
 let boundChange = null;
+let boundInput = null;
 
 // The tab lives in the URL, not in module state. renderTopics resets `view` on
 // every render and the router re-runs the handler on query-only changes, so a
@@ -78,6 +85,17 @@ let boundChange = null;
 function activeTab() {
   const raw = parseHashParams().get("view");
   return TABS.includes(raw) ? raw : "feed";
+}
+
+// Which Playbook "What I watch" is scoped to, from `?pb=`. In the URL for the same
+// reason the tab is — plus a specific one: a per-entity config surface MUST carry
+// its scope, or configuring Playbook B and pressing back silently shows you
+// Playbook A's switches. Falls back to the default (★) Playbook, then the first,
+// so a deleted or bogus id renders something real instead of an empty panel.
+function activePlaybookId() {
+  const wanted = parseHashParams().get("pb");
+  if (wanted && getContextById(wanted)) return wanted;
+  return getDefaultContext()?.id || getContexts()[0]?.id || null;
 }
 
 export function renderTopics(_params, target) {
@@ -118,9 +136,11 @@ function teardown() {
   view.scanning = false;
   if (boundTarget && boundClick) boundTarget.removeEventListener("click", boundClick);
   if (boundTarget && boundChange) boundTarget.removeEventListener("change", boundChange);
+  if (boundTarget && boundInput) boundTarget.removeEventListener("input", boundInput);
   boundTarget = null;
   boundClick = null;
   boundChange = null;
+  boundInput = null;
 }
 
 function paint(target) {
@@ -380,8 +400,23 @@ function watchConfig(ctx) {
   };
 }
 
-// EVERY Playbook gets a block, including ones watching nothing — that's the only
-// place to switch them on.
+// Above this many Playbooks the picker earns a search field. Below it, a search
+// box over four rows is just noise.
+const PB_SEARCH_THRESHOLD = 8;
+
+// A comparable fingerprint of what a Playbook watches, for counting how many
+// others differ from the selected one.
+function watchKey(ctx) {
+  const c = watchConfig(ctx);
+  return `${c.enabledSourceIds.slice().sort().join(",")}|${c.cadence}`;
+}
+
+// ONE Playbook at a time. Stacking a block per Playbook was the first shape and
+// it doesn't scale: at twenty Playbooks that's 120 switches and each of the six
+// descriptions repeated twenty times — and it's the descriptions, not the
+// switches, that make the page explode. Scoped to one, the page is the same
+// height at four Playbooks or two hundred, and each description appears exactly
+// once, where the decision is made.
 function renderSourcesTab() {
   const playbooks = getContexts();
   if (!playbooks.length) {
@@ -397,41 +432,118 @@ function renderSourcesTab() {
       )}
     </div>`;
   }
-  return html`<div class="topics-view__body">${raw(playbooks.map(renderWatchBlock).join(""))}</div>`;
-}
 
-function renderWatchBlock(ctx) {
+  const ctx = getContextById(activePlaybookId()) || playbooks[0];
   const conf = watchConfig(ctx);
   const enabled = new Set(conf.enabledSourceIds);
   const onCount = TOPIC_SOURCES.filter((s) => enabled.has(s.id)).length;
-  const cadence = findCadence(conf.cadence);
+
+  const mine = watchKey(ctx);
+  const differing = playbooks.filter((c) => c.id !== ctx.id && watchKey(c) !== mine).length;
 
   const meta =
     onCount === 0
       ? "Nothing on — I'm not watching anything for this Playbook."
       : `${onCount} of ${TOPIC_SOURCES.length} sources on`;
 
-  return html`<section class="topics-watch">
-    <header class="topics-watch__head">
-      <div class="topics-watch__id">
-        <h2 class="topics-watch__name">${ctx.name}</h2>
-        <p class="topics-watch__meta">
-          <span>${meta}</span>
-          <span class="topics-watch__sep" aria-hidden="true">·</span>
-          <button type="button" class="topics-watch__link" data-topics-configure="${escapeAttr(ctx.id)}">
-            <span>Open the Playbook</span><i class="ap-icon-arrow-right" aria-hidden="true"></i>
-          </button>
-        </p>
+  return html`<div class="topics-view__body">
+    <section class="topics-watch">
+      <header class="topics-watch__head">
+        <!-- "Watching for" carries the scope as prose as well as a control. A page
+             that looks like settings reads as global; the label is what stops it,
+             and a bare picker isn't enough — .ap-select collapses to a single
+             option when there's only one Playbook. -->
+        <div class="topics-watch__scope">
+          <span class="topics-watch__scope-label">Watching for</span>
+          ${raw(renderPlaybookSelect(playbooks, ctx))}
+        </div>
+        <label class="topics-watch__cadence">
+          <span class="topics-watch__cadence-label">Refresh</span>
+          ${raw(renderCadenceSelect(ctx, findCadence(conf.cadence)))}
+        </label>
+      </header>
+
+      <p class="topics-watch__meta">
+        <span>${meta}</span>
+        <span class="topics-watch__sep" aria-hidden="true">·</span>
+        <button type="button" class="topics-watch__link" data-topics-configure="${escapeAttr(ctx.id)}">
+          <span>Open the Playbook</span><i class="ap-icon-arrow-right" aria-hidden="true"></i>
+        </button>
+      </p>
+
+      <div class="topics-watch__grid">
+        ${raw(TOPIC_SOURCES.map((s) => renderWatchSource(ctx, s, enabled.has(s.id))).join(""))}
       </div>
-      <label class="topics-watch__cadence">
-        <span class="topics-watch__cadence-label">Refresh</span>
-        ${raw(renderCadenceSelect(ctx, cadence))}
-      </label>
-    </header>
-    <div class="topics-watch__grid">
-      ${raw(TOPIC_SOURCES.map((s) => renderWatchSource(ctx, s, enabled.has(s.id))).join(""))}
+
+      <!-- One-at-a-time invites "I thought I'd set this everywhere". Saying how
+           many others differ is the one thing stacking gave for free. -->
+      ${raw(
+        differing
+          ? html`<p class="topics-watch__others">
+              ${differing === 1 ? "1 other Playbook watches" : `${differing} other Playbooks watch`} different sources.
+            </p>`
+          : "",
+      )}
+    </section>
+  </div>`;
+}
+
+// The picker doubles as the overview: each option carries "5 of 6 · weekly" as a
+// DS caption, so you can compare Playbooks without leaving the tab — most of what
+// the stacked layout was actually good for.
+function renderPlaybookSelect(playbooks, active) {
+  const options = playbooks
+    .map((c) => {
+      const conf = watchConfig(c);
+      const on = TOPIC_SOURCES.filter((s) => conf.enabledSourceIds.includes(s.id)).length;
+      const isActive = c.id === active.id;
+      return html`<div
+        class="ap-select-option${raw(isActive ? " selected" : "")}"
+        data-topics-pb="${escapeAttr(c.id)}"
+        data-topics-pb-name="${escapeAttr(c.name.toLowerCase())}"
+        role="option"
+        aria-selected="${isActive ? "true" : "false"}"
+      >
+        <span class="ap-select-option-content">
+          <span class="ap-select-option-text">${c.name}</span>
+          <span class="ap-select-option-caption">${on} of ${TOPIC_SOURCES.length} · ${conf.cadence}</span>
+        </span>
+        ${raw(isActive ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : "")}
+      </div>`;
+    })
+    .join("");
+
+  // The DS ships this search slot but the app had never used it. Filtering happens
+  // in the DOM on `input` rather than by repainting — a repaint would close the
+  // <details> and take the caret with it.
+  const search =
+    playbooks.length > PB_SEARCH_THRESHOLD
+      ? html`<div class="ap-select-search">
+          <i class="ap-icon-search ap-select-search-icon" aria-hidden="true"></i>
+          <input
+            type="search"
+            class="ap-select-search-input"
+            placeholder="Search Playbooks…"
+            aria-label="Search Playbooks"
+            data-topics-pb-search
+          />
+        </div>`
+      : "";
+
+  return html`<details class="ap-select topics-watch__pbselect">
+    <summary class="ap-select-trigger">
+      <span class="ap-select-value">${active.name}</span>
+      <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+    </summary>
+    <div class="ap-select-dropdown" role="listbox" aria-label="Playbook">
+      ${raw(search)}
+      <div class="ap-select-options">${raw(options)}</div>
+      <!-- Inline display, not the hidden attribute: the DS gives
+           .ap-select-not-found display:flex, which out-specifies [hidden] and would
+           leave this visible with every option showing. -->
+      <div class="ap-select-not-found" data-topics-pb-empty style="display: none">No Playbook matches that.</div>
     </div>
-  </section>`;
+  </details>`;
 }
 
 // DS .ap-select over <details> — never a bare native <select>. Same shape as
@@ -510,10 +622,24 @@ function bind(target) {
   boundClick = (event) => {
     // Tab switch goes through the URL, so back/forward and deep links work. The
     // router re-runs this handler, which repaints — no local state to sync.
+    // Going to the feed drops `pb`; it's meaningless there and would linger in the
+    // URL. Going to the config tab keeps whatever scope was last chosen.
     const tabBtn = event.target.closest("[data-topics-tab]");
     if (tabBtn) {
       const next = tabBtn.dataset.topicsTab;
-      if (next !== activeTab()) setHashQuery("/topics", next === "feed" ? {} : { view: next });
+      if (next === activeTab()) return;
+      if (next === "feed") setHashQuery("/topics", {});
+      else {
+        const pb = parseHashParams().get("pb");
+        setHashQuery("/topics", pb ? { view: next, pb } : { view: next });
+      }
+      return;
+    }
+    // Playbook pick — scope the config tab to another Playbook.
+    const pbPick = event.target.closest("[data-topics-pb]");
+    if (pbPick) {
+      pbPick.closest("details")?.removeAttribute("open");
+      setHashQuery("/topics", { view: "sources", pb: pbPick.dataset.topicsPb });
       return;
     }
     // Cadence pick. Commits straight through updateContext — this surface has no
@@ -595,6 +721,27 @@ function bind(target) {
     if (again) again.focus({ preventScroll: true });
   };
   target.addEventListener("change", boundChange);
+
+  // Playbook search — filters the open dropdown IN THE DOM rather than by
+  // repainting. A repaint would close the <details> and take the caret with it, so
+  // there's no query to keep in state either. Inline display, not the [hidden]
+  // attribute: `.ap-select-option { display: flex }` would out-specify it.
+  boundInput = (event) => {
+    const field = event.target.closest("[data-topics-pb-search]");
+    if (!field) return;
+    const q = field.value.trim().toLowerCase();
+    const dropdown = field.closest(".ap-select-dropdown");
+    if (!dropdown) return;
+    let shown = 0;
+    for (const opt of dropdown.querySelectorAll("[data-topics-pb]")) {
+      const hit = !q || (opt.dataset.topicsPbName || "").includes(q);
+      opt.style.display = hit ? "" : "none";
+      if (hit) shown += 1;
+    }
+    const empty = dropdown.querySelector("[data-topics-pb-empty]");
+    if (empty) empty.style.display = shown > 0 ? "none" : "";
+  };
+  target.addEventListener("input", boundInput);
 }
 
 // Dismissal hides rather than deletes, so the toast can genuinely undo it. Also

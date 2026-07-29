@@ -320,9 +320,13 @@
 }
 
 /* ── "What I watch" — the standing instructions ──────────────────────────
-   One block per Playbook: identity + cadence in the head, then the six catalog
-   sources as cards. Everything here is always editable — this is the surface that
-   owns the config, so there's no read/edit split and no Save button.
+   ONE Playbook at a time, chosen from the scope picker. A block per Playbook was
+   the first shape and it doesn't scale: twenty Playbooks meant 120 switches with
+   each of the six descriptions repeated twenty times. Scoped, the panel is the
+   same height at four Playbooks or two hundred.
+
+   Everything here is always editable — this is the surface that owns the config,
+   so there's no read/edit split and no Save button.
 
    The `.topic-badge--<accent>` pip is shared with the feed and the dialog — see
    styles/components/topic-badge.css. */
@@ -339,26 +343,44 @@
 
 .topics-watch__head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--ref-spacing-md);
   flex-wrap: wrap;
 }
 
-.topics-watch__id {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+/* "Watching for [Playbook ▾]" — the scope, stated and selectable in one line. */
+.topics-watch__scope {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
   min-width: 0;
 }
 
-.topics-watch__name {
-  margin: 0;
-  font-family: var(--sys-text-style-h4-font-family);
-  font-size: var(--sys-text-style-h4-size);
-  line-height: var(--sys-text-style-h4-line-height);
-  font-weight: var(--sys-text-style-h4-weight);
+.topics-watch__scope-label {
+  flex-shrink: 0;
+  font-family: var(--sys-text-style-body-bold-font-family);
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--sys-text-color-default);
+}
+
+/* Wide enough for a real Playbook name without the trigger truncating on the
+   first one; the dropdown itself sizes to the trigger. */
+.topics-watch__pbselect {
+  min-width: 260px;
+}
+
+/* One-at-a-time hides the rest of the account, so say when the rest disagrees. */
+.topics-watch__others {
+  margin: 0;
+  padding-top: var(--ref-spacing-xxs);
+  border-top: 1px solid var(--app-border-soft);
+  font-family: var(--sys-text-style-caption-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
 }
 
 .topics-watch__meta {
