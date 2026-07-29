@@ -32,6 +32,7 @@ With Claude Code the dev server auto-launches via `.claude/launch.json` (server 
 | `/contexts`          | `contexts.js`          | Standalone **Playbooks** library (cards + edit)                                                   |
 | `/playbook/:id`      | `playbook.js`          | Playbook detail page (topbar back → `/contexts`)                                                  |
 | `/connectors`        | `connectors.js`        | Connectors gallery (marketplace); detail opens in a modal (gated by the `connectors` flag)        |
+| `/topics`            | `topics.js`            | **Topics** feed — the listening dossiers, one stream across every Playbook (gated by `topics`)    |
 | `/welcome-alt`       | `welcome-alt.js`       | First-time onboarding kickoff (thin redirect into a transient session)                            |
 | `/welcome-alt/recap` | `welcome-alt-recap.js` | Onboarding recap reveal of the built Playbook                                                     |
 
@@ -39,7 +40,7 @@ There is **no `/settings` route** — it was removed. The prototype Admin contro
 
 `setAfterRender` (in `app.js`) re-renders the sidebar + conversation-status-card after every route change and toggles the `body.onboarding` full-bleed class for the welcome-alt flow.
 
-> **Vocabulary:** a saved AI context is a **Playbook** (UI label) but the code/store calls it a **Context** (`contexts-store`, `contextId`). Source → Idea → Draft (post) → Schedule is the content pipeline.
+> **Vocabulary:** a saved AI context is a **Playbook** (UI label) but the code/store calls it a **Context** (`contexts-store`, `contextId`). Source → Idea → Draft (post) → Schedule is the content pipeline; a **Topic** (`topics-store`, flag `topics`) is an optional step upstream of it. `topic` stays banned as a synonym for **Idea** — a Topic is its own object.
 
 ### Source layout
 
@@ -66,6 +67,8 @@ src/
   assistant.js          — per-session conversational thread (turns, reasoning chips, MCP query)
   sources-stream.js     — GLOBAL sources + uploads + processing state machine
   schedule-store.js     — scheduled-post queue (calendar)
+  topics-store.js       — GLOBAL listening dossiers + the mock scan (flag `topics`)
+  topics-catalog.js     — the six listening sources + cadences (CONFIG, like ff-catalog)
   composer-mentions.js  — per-session @mention pills in the composer
   composer-connector.js — composer's "Connected sources" submenu (feature-flagged)
 
@@ -83,6 +86,7 @@ src/
   clip-formats.js        — video aspect-ratio catalog
   connectors-view.js    — shared pure render helpers for the connectors gallery + detail
   connector-ask.js      — launches the in-chat "Ask a connector" flow (gallery + right panel)
+  topic-flow.js         — a topic opens a chat with itself attached as a Source
 
   # Studios (full-panel takeovers) + newer surfaces (not exhaustive — see docs/reference/FEATURES.md)
   batch-studio.js       — batch-of-posts studio (upload/analyse → review)
@@ -95,7 +99,7 @@ src/
 
   screens/
     dashboard.js, session.js, ideas.js, contexts.js, playbook.js,
-    connectors.js,
+    connectors.js, topics.js,
     welcome-alt.js, welcome-alt-recap.js
     _analyse-common.js  — shared "chat bubble + numbered picker bar" wizard primitives
     session/
@@ -107,17 +111,20 @@ src/
   components/             — each exports init() (injects DOM once) + render/open()
     topbar.js             persistent header: route title (rename on session) +
                           Sources / Ideas / Drafts pills + status-card toggle; back on /playbook
-    sidebar.js            left rail: brand, New chat, Search, Playbooks / Connectors nav,
+    sidebar.js            left rail: brand, New chat, Search, Playbooks / Connectors / Topics nav,
                           recent chats (pin/rename/delete + Sort & group), footer popmenu (feedback/bug/shortcuts + Admin menu)
     right-panel.js        sliding panel — modes: drafts / ideas / sources / clips / context-brief
     conversation-status-card.js  floating in-progress card (sources/ideas/drafts counts)
     content-workspace.js  shared Sources+Ideas library layout (search / sort / By Source / All Ideas)
     source-card.js, idea-card.js, idea-card-compact.js, post-card.js, clip-card.js, empty-state.js
+    topic-card.js         one listening dossier, summarised, in the /topics feed
+    social-post-card.js   someone ELSE's published post, as evidence (not top-post-card)
     toast.js              showToast() snackbar (DS .ap-snackbar)
     shortcut-legend.js    ? key dialog
     # Modals (init → open → close, coordinated by modal-coordinator.js):
     add-source-modal.js   Upload / URL / Connectors tabs
     connectors-modal.js   connectors gallery + detail overlay (from composer Add / Sources panel / page)
+    topic-modal.js        one dossier read end to end — 720px, prose measure
     generate-image-modal.js, video-clips-modal.js, schedule-modal.js,
     bug-report-modal.js, feedback-modal.js, chat-picker-modal.js,
     confirm-modal.js, rename-modal.js, search-modal.js
@@ -140,6 +147,7 @@ src/
 | `sources-stream.js`    | **global** uploads + sources state machine (uploading → processing → done) | `getSources`, `getUploads`, `subscribeSources`, `subscribeUploads`, `startFileUpload`, `startUrlImport`, `startConnectorImport`, `extractClipsForSource`, `removeSources`, `renameSource`                                                                  |
 | `schedule-store.js`    | scheduled-post queue                                                       | `getQueue`, `getQueueOn`, `addToQueue`, `removeFromQueue`, `busyCountsByDay`, `subscribe`                                                                                                                                                                  |
 | `composer-mentions.js` | per-session composer mentions                                              | `addMention`, `removeMention`, `renderInto`, `subscribe(sid, fn)`                                                                                                                                                                                          |
+| `topics-store.js`      | **global** listening dossiers + the mock scan (flag `topics`)              | `getTopics`, `getTopicById`, `getUnseenCount`, `countBySource`, `markSeen`, `dismissTopic`, `restoreTopic`, `refreshTopics`, `hasMoreToScan`, `topicWhen`, `subscribe`                                                                                     |
 
 `sources-stream` is the only **global** store. `library.js` subscribes to sources-stream and re-emits per-session so any session's content surfaces repaint when a source lands. **No localStorage persistence of app state** — only `archie-user-mode`, the feature-flag keys, sidebar collapse state, and the single-use `sessionStorage` handoff keys.
 
@@ -152,6 +160,16 @@ Three attempts at a general settings page were reverted here: the drawer (`2b0ab
 **Gated behind the `connectors` feature flag (default OFF)** — when off, every connectors surface (gallery route + sidebar nav, modal, composer Add → "Connected sources" submenu, Sources panel "Live connectors", Add-source modal Connectors tab) is hidden. Turn it on in Settings → Admin. Connector management lives only on the `/connectors` page/modal — Settings does not duplicate it.
 
 Connectors (Notion, Slite, Google Drive, GitHub, …) are seeded in `mocks.js` (`connectors` + `connectorDocs`) with `category` / `featured` / `accent` / `capabilities`. Once **connected**, a connector becomes a **live source**: the user "asks" it in chat and `assistant.js` `sendConnectorMessage()` simulates an MCP round-trip — a "Querying … via MCP" reasoning chip listing tool calls, then a cited mock answer. Entry points: the `/connectors` gallery page (clicking a connector opens its detail in `connectors-modal.js`), the composer **Add** menu, and the right-panel **Sources** "Connect" / "Live connectors" surface. `connectors-view.js` holds the shared render helpers used by both the page and the modal; `connector-ask.js` launches the in-chat ask flow. All connect/disconnect goes through `connectors-store` so Settings, the gallery, and the modal stay in sync.
+
+### Topics — the one place Archie proposes instead of waiting
+
+**Gated behind the `topics` feature flag (default OFF)** — when off, the `/topics` route (a stale deep link bounces to `/`), its sidebar nav row + unseen counter, the dossier dialog, and the Playbook's Topics section all disappear. The data (`mocks.topics`, `mocks.topicScanPool`, `ctx.topics`) rides along regardless, exactly like `playbookCompetitors`.
+
+Agorapulse listening pulls social posts against **six sources** declared in `topics-catalog.js` — competitor posts, influencer posts, brand feedback, competitor monitoring, industry trends, global trends. That file is **CONFIG, not content**: it ships with the app and must exist in `new-alt` mode too, the same split as `ff-catalog.js` vs `mocks.js`. Which sources are on, plus **one cadence for the whole Playbook**, live on the Context as `ctx.topics = { enabledSourceIds, cadence }` (normalised by `normalizeTopics()` in `contexts-store.js` — in `addContext` **and** on the seed, which bypasses it).
+
+Archie assembles those posts into a **Topic**: a headline (the claim), a written analysis, and the source posts behind it. `topics-store.js` is **global** — a topic belongs to a Playbook and arrives on a cadence, long before a chat exists to hold it, so the `/topics` feed spans every Playbook and the sidebar counter sums the whole account. **Cadence is copy, never a timer** (a weekly tick would never fire in a demo); the recurring feel comes from **Refresh now**, which drains a seeded pool and ages everything else by a day. `ageDays` is the single source of truth for age — the feed groups on it _and_ every "3 days ago" label derives from it via `topicWhen()`.
+
+A topic offers exactly two actions: **Start a chat** and **Dismiss**. Start-a-chat (`topic-flow.js`) hands the topic to a fresh chat as a **Source** via the existing `addReadySource()` — no new action surface, no change to `sources-stream.js`, and every affordance the app already has (Extract ideas, Draft, Ask, the Sources panel) lights up on its own. Dismiss hides rather than deletes so the toast can genuinely offer Undo.
 
 ### Routing & screen lifecycle
 
@@ -168,10 +186,11 @@ Connectors (Notion, Slite, Google Drive, GitHub, …) are seeded in `mocks.js` (
 | `pendingAskSource`           | source card "Ask"                        | `askWhatToKnow`                   |
 | `pendingAskConnector`        | connectors gallery/modal "Try in chat"   | `askConnector`                    |
 | `pendingStartContextBuilder` | `/contexts` "New Playbook" + welcome-alt | `context-builder` (create)        |
+| `pendingTopicChat`           | topic card / dialog "Start a chat"       | `startTopicChat` (topic-flow)     |
 
 ### Admin / user mode (prototype controls)
 
-The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototype control panel: switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()`. The 10 flags: `draftInlineEdit` (OFF), `playbookDefault` (OFF), `connectors` (OFF — gates the whole connectors feature), `conversationStatusCard` (OFF), `statusActionSnackbars` (OFF), `playbookColors` (OFF — colors hidden by default), `manyProfiles` (OFF — demo seed of ~40 connected profiles), `multilingualPlaybook` (OFF), `playbookCompetitors` (OFF — gates the Playbook's Competitors section), `imageStudioV2` (OFF — swaps the Image Studio for the prompt-at-the-bottom redesign in `components/image-studio-v2/`). Full table + gates: [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md#14-admin-feature-flags--user-modes).
+The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototype control panel: switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()`. The 11 flags: `draftInlineEdit` (OFF), `playbookDefault` (OFF), `connectors` (OFF — gates the whole connectors feature), `conversationStatusCard` (OFF), `statusActionSnackbars` (OFF), `playbookColors` (OFF — colors hidden by default), `manyProfiles` (OFF — demo seed of ~40 connected profiles), `multilingualPlaybook` (OFF), `playbookCompetitors` (OFF — gates the Playbook's Competitors section), `imageStudioV2` (OFF — swaps the Image Studio for the prompt-at-the-bottom redesign in `components/image-studio-v2/`), `topics` (OFF — gates the whole Topics feature: the `/topics` feed + its nav row, the dossier dialog, and the Playbook's Topics section). Full table + gates: [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md#14-admin-feature-flags--user-modes).
 
 ### Module loading
 
@@ -218,11 +237,12 @@ styles/
   layout.css        — app shell (sidebar / topbar / content / panel chrome)
   ds-patches.css    — the only legitimate place to touch .ap-* selectors
   chat.css          — composer + thread chrome
-  screens/          — dashboard, session, ideas, contexts, connectors,
+  screens/          — dashboard, session, ideas, contexts, connectors, topics,
                       settings, posts, analyse, modals, sources, welcome
   components/       — sidebar, right-panel, conversation-status-card,
                       add-source-modal, connectors-modal, schedule-modal,
-                      video-clips-modal, clip-card, archie-loader
+                      video-clips-modal, clip-card, archie-loader,
+                      topic-badge (shared by 3 surfaces), topic-modal, social-post-card
 ```
 
 ### Token tiers

@@ -11,6 +11,7 @@ Source de vérité : [`src/app.js`](../../src/app.js) (route table) + [`src/rout
 | `/contexts`          | `contexts.js`          | Library **Playbooks** : cards (DO/DON'T, brief, color tag) + edit en side panel.                                                                     |
 | `/playbook/:id`      | `playbook.js`          | Page détail d'un Playbook. Topbar back → `/contexts`.                                                                                                |
 | `/connectors`        | `connectors.js`        | Gallery des connectors (feature flag `connectors`, default OFF). Détail dans un modal.                                                               |
+| `/topics`            | `topics.js`            | Feed des dossiers du listening (feature flag `topics`, default OFF ; deep-link périmé → `/`). Le dossier se lit dans une dialog 720px.               |
 | `/welcome-alt`       | `welcome-alt.js`       | Onboarding first-time. Redirige vers une session transitoire. Body en `.onboarding` (full-bleed).                                                    |
 | `/welcome-alt/recap` | `welcome-alt-recap.js` | Recap final du Playbook construit pendant l'onboarding.                                                                                              |
 
@@ -71,6 +72,7 @@ if (payload) {
 | `pendingDraftIdeaId`         | idea card "Draft post"                   | `askProfileQuestion` (`draft-flow`) |
 | `pendingAskSource`           | source card "Ask"                        | `askWhatToKnow`                     |
 | `pendingAskConnector`        | connectors gallery / modal "Try in chat" | `askConnector` (`connector-ask`)    |
+| `pendingTopicChat`           | topic card / dialog "Start a chat"       | `startTopicChat` (`topic-flow`)     |
 | `pendingStartContextBuilder` | `/contexts` "New Playbook" + welcome-alt | `context-builder` (création)        |
 | `pendingStartPlaybookEditor` | `/contexts` card edit                    | `playbook-editor`                   |
 

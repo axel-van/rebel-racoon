@@ -7,12 +7,34 @@
 ```
 Source  →  Idea  →  Draft  →  Schedule
 (input)    (insight) (post)    (calendar slot)
+   ▲
+   └── Topic  (optionnel, en amont — flag `topics`)
 ```
 
 1. **Source** — un input brut (PDF, URL, vidéo, audio, video clip, ou une réponse de connecteur). Stocké global cross-session dans `sources-stream.js`.
 2. **Idea** — un insight extrait d'une source par Archie.
 3. **Draft** — un post généré depuis une (ou plusieurs) idea(s), pour un réseau spécifique (LinkedIn, X, …).
 4. **Schedule** — un draft posté dans le queue du calendrier.
+
+En amont, **optionnellement** : un **Topic**. Une Idea peut toujours venir directement d'une Source.
+
+### Topic
+
+Un **Topic** est un dossier qu'Archie assemble à partir du listening Agorapulse : une **accroche** (le constat), une **analyse écrite**, et les **posts sources** qui la fondent. Il est rattaché à un Playbook (`contextId`) et à la source de listening qui l'a produit (`sourceId`, voir `topics-catalog.js`).
+
+| Champ                | Rôle                                                                       |
+| -------------------- | -------------------------------------------------------------------------- |
+| `headline`           | Le constat — titre de la carte **et** de la dialog                         |
+| `analysisTitle`      | Le titre au-dessus de l'analyse                                            |
+| `summary`            | Le paragraphe clampé sur la carte                                          |
+| `analysis[]`         | Les paragraphes de prose                                                   |
+| `posts[]`            | Les **source posts** — les publications d'autrui qui servent de preuve     |
+| `ageDays`            | **La** source de vérité de l'âge : groupe le feed et dérive chaque libellé |
+| `unseen` `dismissed` | Badge de la sidebar / masqué du feed (jamais supprimé, pour l'Undo)        |
+
+Terme **UI et code identiques** : `topic`, `topics-store`, `topicId`. ⚠️ `topic` reste **banni comme synonyme d'Idea** (voir [`../copy/copy-principles.md`](../copy/copy-principles.md)) — un Topic est un objet distinct, en amont. Ne pas dire **dossier** dans l'UI (tournure française, et ça collisionne avec `folders-store`).
+
+Deux actions, pas plus : **Start a chat** (le topic entre dans le chat comme Source, donc tout le pipeline existant s'allume) et **Dismiss**. Voir [`FEATURES.md`](FEATURES.md) §17.
 
 ## Concepts clés
 

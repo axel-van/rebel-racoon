@@ -12,7 +12,11 @@ Archie transforme des **Sources** en **Ideas**, puis en **Drafts** (posts), puis
 Source → Idea → Draft (post) → Schedule
    │                          ▲
    └── vidéo → Clips ─────────┘  (les clips deviennent aussi des drafts)
+
+Listening source → Topic ──→ (chat) ──┘   (flag `topics`, voir §17)
 ```
+
+Le **Topic** est un embranchement amont **optionnel** : Archie n'attend plus qu'on lui donne une source, il en propose une. Une Idea peut toujours venir directement d'une Source.
 
 Vocabulaire : un **Playbook** (label UI) = un **Context** (code/store). Voir [`GLOSSARY.md`](GLOSSARY.md).
 
@@ -268,6 +272,7 @@ Sections éditables inline (une à la fois, Save/Cancel avec snapshot) :
 2. **Voice & style** — toggle **Guided ⇄ Write it yourself**. Guided = Signature hooks + Closing patterns + Formatting + Visual style. Switcher **par langue** (2+ langues, flag `multilingualPlaybook`) — voice **écrite nativement par langue, jamais traduite** (voir mémoire _multilingual-playbook-model_). Dropdown « Learn from… ».
 3. **Brand** — Brand colors (hex swatches), Typography, Personality, Reference images.
 4. **Competitors** (flag `playbookCompetitors`) — voir ci-dessous.
+5. **Topics** (flag `topics`) — ce qu'Archie surveille, et à quel rythme. Deux `recap__row` (**Watching** « N of 6 sources on. » · **Refresh** la cadence) puis une grille de six cartes source : pip accent, nom, description. **Lecture** = tag `.ap-tag green|grey mini` On/Off, les OFF en surface creusée et pip désaturé ; **édition** = le switch DS (`.ap-toggle-container`) et la cadence en `.ap-select` (`<details>`, jamais un `<select>` natif). Les trois sources `playbookAnchor: "competitors"` offrent un deep-link **« Edit my competitors → »** qui scrolle vers `#pbk-sec-competitors` — masqué quand ce flag-là est OFF, un lien vers une section absente n'allant nulle part. `topicsConfig(data)` normalise paresseusement (comme `competitorList`) **avant** le snapshot, sinon Cancel restaurerait l'`undefined` avec lequel un draft d'onboarding arrive. Voir §17.
 
 ### Competitors (flag `playbookCompetitors`, défaut OFF)
 
@@ -373,18 +378,19 @@ Détail dimensions/coexistence avec la status-card : [`SHELL-LAYOUT.md`](SHELL-L
 
 ### Feature flags ([`ff-catalog.js`](../../src/ff-catalog.js)) — les 11
 
-| id                       | label                           | défaut  | Gate                                                                                                                                                                                                    |
-| ------------------------ | ------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `draftInlineEdit`        | Inline edit on draft posts      | **OFF** | Édition inline des post cards.                                                                                                                                                                          |
-| `playbookDefault`        | Default Playbook toggle         | **OFF** | Étoile ★ set/unset default sur `/playbook/:id`.                                                                                                                                                         |
-| `connectors`             | Connectors (live MCP sources)   | **OFF** | Toute la feature connecteurs (gallery, modal, submenu, Live connectors, tab modal).                                                                                                                     |
-| `conversationStatusCard` | Conversation status card        | **OFF** | Carte flottante + toggle « i ».                                                                                                                                                                         |
-| `statusActionSnackbars`  | Action success snackbars        | **OFF** | Snackbars succès dupliquant la status bar.                                                                                                                                                              |
-| `playbookColors`         | Playbook colors                 | **OFF** | Quand OFF (défaut), masque les visuels couleur Playbook partout (classe `body.hide-playbook-colors`) ; ON = couleurs affichées.                                                                         |
-| `multilingualPlaybook`   | Multilingual Playbooks          | **OFF** | Playbooks multi-langues (voice par langue, étape langue du draft flow).                                                                                                                                 |
-| `manyProfiles`           | Many connected profiles (demo)  | **OFF** | Seed ~40 profils connectés variés → le quickpicker de profil affiche une recherche live (voir §draft flow).                                                                                             |
-| `playbookCompetitors`    | Playbook competitors            | **OFF** | Section **Competitors** du Playbook (panneau + entrée de rail + compteur `/contexts`). La donnée reste présente quand OFF (voir §9).                                                                    |
-| `imageStudioV2`          | Image Studio v2 (prompt en bas) | **OFF** | Les actions image d'un draft ouvrent le redesign v2 (stage pleine largeur + composer en bas, réglages en chips-dropdown) au lieu de l'Image Studio actuel. Mêmes options, même moteur d'état (voir §7). |
+| id                       | label                           | défaut  | Gate                                                                                                                                                                                                                                                               |
+| ------------------------ | ------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `draftInlineEdit`        | Inline edit on draft posts      | **OFF** | Édition inline des post cards.                                                                                                                                                                                                                                     |
+| `playbookDefault`        | Default Playbook toggle         | **OFF** | Étoile ★ set/unset default sur `/playbook/:id`.                                                                                                                                                                                                                    |
+| `connectors`             | Connectors (live MCP sources)   | **OFF** | Toute la feature connecteurs (gallery, modal, submenu, Live connectors, tab modal).                                                                                                                                                                                |
+| `conversationStatusCard` | Conversation status card        | **OFF** | Carte flottante + toggle « i ».                                                                                                                                                                                                                                    |
+| `statusActionSnackbars`  | Action success snackbars        | **OFF** | Snackbars succès dupliquant la status bar.                                                                                                                                                                                                                         |
+| `playbookColors`         | Playbook colors                 | **OFF** | Quand OFF (défaut), masque les visuels couleur Playbook partout (classe `body.hide-playbook-colors`) ; ON = couleurs affichées.                                                                                                                                    |
+| `multilingualPlaybook`   | Multilingual Playbooks          | **OFF** | Playbooks multi-langues (voice par langue, étape langue du draft flow).                                                                                                                                                                                            |
+| `manyProfiles`           | Many connected profiles (demo)  | **OFF** | Seed ~40 profils connectés variés → le quickpicker de profil affiche une recherche live (voir §draft flow).                                                                                                                                                        |
+| `playbookCompetitors`    | Playbook competitors            | **OFF** | Section **Competitors** du Playbook (panneau + entrée de rail + compteur `/contexts`). La donnée reste présente quand OFF (voir §9).                                                                                                                               |
+| `imageStudioV2`          | Image Studio v2 (prompt en bas) | **OFF** | Les actions image d'un draft ouvrent le redesign v2 (stage pleine largeur + composer en bas, réglages en chips-dropdown) au lieu de l'Image Studio actuel. Mêmes options, même moteur d'état (voir §7).                                                            |
+| `topics`                 | Topics (listening dossiers)     | **OFF** | Toute la feature **Topics** (§17) : la route `/topics` + son entrée de nav et son compteur d'unseen, la dialog du dossier, et la section **Topics** du Playbook. La donnée (dossiers seedés + `ctx.topics`) reste présente quand OFF, comme `playbookCompetitors`. |
 
 Persistés en `localStorage` (`archie-feature-flags`), lus via `isFlagOn()`. Voir aussi [`STORES.md`](STORES.md).
 
@@ -422,6 +428,67 @@ Tous via [`modal-coordinator.js`](../../src/modal-coordinator.js) (un overlay à
 - **URL services** ([`url-services.js`](../../src/url-services.js)) : reconnaissance de service depuis une URL (logos Google Docs/Notion/Drive/YouTube/Figma).
 - **Deep-links Figma-capture** : `?route=`, `?openModal=…`, `?openPanel=…`.
 - **Suppression de session** : `clearSession` dans chaque store per-session vide sources/ideas/drafts/mentions.
+
+---
+
+## 17. Topics — les dossiers du listening (flag `topics`, défaut OFF)
+
+Le seul endroit où **Archie propose** au lieu d'attendre. Le listening Agorapulse remonte des posts sociaux sur six sources rattachées à un Playbook ; Archie en assemble un **Topic** : une accroche (le constat), une analyse écrite, et les posts qui la fondent. Fichiers : [`topics-catalog.js`](../../src/topics-catalog.js), [`topics-store.js`](../../src/topics-store.js), [`screens/topics.js`](../../src/screens/topics.js), [`components/topic-card.js`](../../src/components/topic-card.js), [`components/topic-modal.js`](../../src/components/topic-modal.js), [`components/social-post-card.js`](../../src/components/social-post-card.js), [`topic-flow.js`](../../src/topic-flow.js).
+
+### Les six sources ([`topics-catalog.js`](../../src/topics-catalog.js))
+
+**Config, pas contenu** — le catalogue ship avec l'app et existe aussi en mode `new-alt` (un utilisateur neuf voit les six cartes même s'il n'a aucun dossier). Même partage que `ff-catalog.js` (config) vs `mocks.js` (data). Descriptions écrites **à la 1ʳᵉ personne d'Archie**.
+
+| Source                    | Accent        | `playbookAnchor` | Défaut |
+| ------------------------- | ------------- | ---------------- | ------ |
+| **Competitor sources**    | purple        | `competitors`    | **ON** |
+| **Influencer sources**    | red           | `competitors`    | **ON** |
+| **Brand feedback**        | menthol       | —                | OFF    |
+| **Competitor monitoring** | electric-blue | `competitors`    | OFF    |
+| **Industry trends**       | green         | —                | OFF    |
+| **Global trends**         | orange        | —                | OFF    |
+
+`accent` est une **clé sémantique, jamais un hex** → `.topic-badge--<accent>` ([`topic-badge.css`](../../styles/components/topic-badge.css), partagé par les trois surfaces). `playbookAnchor` — jamais l'id — dit quelle section du Playbook alimente la source, donc la vue offre un deep-link sans hardcoder d'id.
+
+### Config par Playbook
+
+`ctx.topics = { enabledSourceIds, cadence }` — **une seule cadence pour tout le Playbook** (daily / weekly / monthly), pas une par source. Normalisé par `normalizeTopics()` dans [`contexts-store.js`](../../src/contexts-store.js), appliqué dans `addContext` **et sur le seed** (qui bypasse `addContext`). Édité dans la section **Topics** du Playbook (§9).
+
+**La cadence est du copy, pas un timer** — un tick hebdo ne se déclencherait jamais dans une démo. Le côté récurrent vient du bouton **Refresh now**.
+
+### Le feed (`/topics`, [`screens/topics.js`](../../src/screens/topics.js))
+
+Header **« Topics »** + _« N new · N topics · from N Playbooks »_ (les Playbooks **représentés** dans le feed, pas ceux surveillés — « across 4 Playbooks » est un mensonge quand neuf dossiers viennent de deux) + **Refresh now** (`secondary blue` : rafraîchir une liste est une action de page routinière ; l'orange est réservé au geste spotlight sur une carte).
+
+- **Filtres** — `.ap-filter-chip` piloté par `aria-pressed`, « All » + une puce par source **qui a produit quelque chose** (six puces dont quatre en cul-de-sac = du bruit).
+- **Feed** — un flux chronologique groupé par date : **This week** (`ageDays ≤ 7`) / **Earlier this month** (`≤ 30`) / **Earlier**. Groupes vides masqués.
+- **Carte** ([`topic-card.js`](../../src/components/topic-card.js)) — badge source + `topicWhen()` + chip Playbook (`.ap-tag grey mini`) + point orange **« New »** si unseen ; accroche (52ch), résumé clampé 2 lignes ; pied : `.ap-avatar-group` des auteurs + « N posts », puis **Dismiss** (ghost grey) et **Start a chat** (`secondary orange` — neuf boutons pleins en colonne, aucun ne lit comme important). Corps = un seul `<button>` qui ouvre la dialog ; les actions vivent dans un footer **frère** (un bouton dans un bouton est du HTML invalide). Hover = bordure bleue, sans élévation. Unseen = liseré orange à gauche.
+- **Scan** — Refresh passe en état scanning (`.archie-loader` + skeletons ~2 s) puis `refreshTopics()` prepend 2 dossiers unseen et **vieillit tout le reste d'un jour**, donc les arrivants sont vraiment les plus récents.
+- **Empty states** — trois culs-de-sac distincts : rien d'activé nulle part (**« Tell me what to watch »** + lien vers le Playbook), filtre sans résultat, feed vidé à la main (**« Nothing new right now »** + la cadence la plus rapide).
+
+### La dialog du dossier ([`topic-modal.js`](../../src/components/topic-modal.js))
+
+`.ap-dialog` **720px** — c'est de la prose, le 920 des connecteurs dépasse une mesure confortable. Lifecycle standard via `modal-coordinator` (un overlay à la fois, focus restore, Esc / backdrop). L'ouvrir vaut lecture (`markSeen`).
+
+Titre = **l'accroche** (le constat est ce qu'on vient lire ; un « Topic » générique au-dessus ne fait que le pousser vers le bas), sous-titre = badge + nom de source · âge · Playbook. Corps : eyebrow orange **« What I found »** (`ap-icon-sparkles`), titre d'analyse, les paragraphes ; puis un filet, **« Source posts »** + compteur, et les cartes de posts. Footer : **Start a chat** (`primary orange` — il n'y en a qu'un ici) + **Not for me**.
+
+**Social post card** ([`social-post-card.js`](../../src/components/social-post-card.js)) — le post publié par **quelqu'un d'autre**, comme preuve. Délibérément pas `top-post-card` : celui-là résout l'identité via tes propres profils connectés et présente ses chiffres comme une décision de perf. Ici l'auteur n'est pas toi et l'engagement fonde une affirmation. Avatar DS teinté (`data-accent`), handle, réseau · âge, la marque officielle du réseau en haut à droite (les glyphes `-official` du DS **portent leurs propres couleurs** — des SVG data-URI, donc aucun hex tiers en dur), texte, et les compteurs compactés (`1.4K`). `compact: true` retire l'engagement et clampe à 2 lignes.
+
+### Ce qu'on peut en faire
+
+Deux actions, pas plus : **Start a chat** et **Dismiss**.
+
+- **Start a chat** ([`topic-flow.js`](../../src/topic-flow.js)) — `openTopicInChat()` arme le handoff `pendingTopicChat` et navigue vers `/session/new-<ts>?contextId=…&title=<accroche>` (les query params pilotent déjà le nom et le Playbook d'une session `new-*`, donc le chat est correctement lié dès sa première frame). Au mount, `session.js` consomme le handoff → `startTopicChat()` : `markSeen`, puis **`addReadySource()`** (le hook existant, déjà utilisé par un top post repurposé), puis la lecture d'Archie, puis un Quickpicker de trois questions + custom + Skip.
+  **Pourquoi une source** : plutôt qu'inventer une surface d'action, le topic entre par le pipeline. Tout ce que l'app sait déjà faire (Extract ideas, Draft, Ask, le panneau Sources) s'allume tout seul — **zéro ligne dans `sources-stream.js`**. C'est aussi ce qui met le topic dans le thread comme **carte** : `intake-lifecycle` poste un turn source-intake pour toute source qui arrive après le mount, donc le pick est visible comme l'est une source choisie. Un `postSelectionEcho` par-dessus empilait deux fois la même accroche.
+- **Dismiss** — masque, ne supprime pas, donc le toast peut vraiment offrir **Undo** (`restoreTopic`). Même toast depuis la carte et depuis la dialog (la dialog passe un `onDismiss` au lieu d'en posséder un second).
+
+### Le compteur de la sidebar
+
+Le badge de la ligne **Topics** compte les **unseen**, pas le total : la ligne est une notification. Il somme **tout le compte** — l'arrivée est un évènement account-level même si la config qui l'a produite est par Playbook. `subscribeTopics` re-render la sidebar, donc lire ou écarter un dossier bouge le badge sans changer de route.
+
+### Une seule source de vérité pour l'âge
+
+`ageDays` — pas d'horodatage réel : un proto n'a pas d'horloge fiable, et des dates mockées qui dérivent avec l'âge du fichier lisent moins bien qu'un « 3 days ago » stable. Le feed **groupe** dessus **et** chaque libellé en est **dérivé** via `topicWhen()`. Un `scannedOn` stocké a existé puis a sauté : `refreshTopics()` vieillit tout d'un jour, donc la chaîne écrite disait encore « yesterday » sur une carte que le feed avait déjà passée en semaine dernière.
 
 ---
 
