@@ -39,8 +39,8 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=32";
-import { KEY } from "./context.js?v=12";
-import * as imageStudio from "../../image-studio.js?v=48";
+import { KEY } from "./context.js?v=13";
+import * as imageStudio from "../../image-studio.js?v=49";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -470,7 +470,7 @@ function renderTextBody(st) {
       <textarea data-img-render-text rows="2" maxlength="${imageStudio.MAX_RENDER_TEXT}" placeholder="${escapeHtml(RENDER_TEXT_PLACEHOLDER)}" aria-label="Text to write into the image">${escapeHtml(text)}</textarea>
     </div>
     <p class="isv2-sheet-hint isv2-textfield-foot">
-      <span>I'll write these words into the image itself — one line per line break. For a text box you can move, use Add text in Edit.</span>
+      <span>For a text box you can move, use Add text in Edit.</span>
       <span class="isv2-textfield-count" data-img-render-text-count>${text.length}/${imageStudio.MAX_RENDER_TEXT}</span>
     </p>`;
 }

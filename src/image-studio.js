@@ -304,13 +304,20 @@ export function start(
     customFonts: [], // [{ family, label, url }] fonts the user uploaded (FontFace)
     playbookName: playbookName || "", // brand/playbook label for the toggle
     usePlaybookRefs, // include the Playbook brand images in the grid
-    // Sections start COLLAPSED. The rail reads as an ordered flow — review the
-    // prompt Archie wrote (step 1), then adjust settings (step 2) — so every
-    // setting shows its current value in its header and only opens if the user
-    // wants to change it. Brand kit isn't in here: its switch is its disclosure.
-    // Style preset has its own `disabled` state (references guide the look),
-    // independent of this set.
-    collapsedGroups: new Set(["refs", "renderText", "imageType", "style", "format", "output"]),
+    // Sections start COLLAPSED, with the exceptions below: every setting shows
+    // its current value in its header and only opens if the user wants to change
+    // it. Once opened a section STAYS open (the panel is not an accordion), so
+    // this Set is only the starting point.
+    //
+    // `renderText` is NOT in here: Archie now pre-fills the headline from the
+    // draft, and a section that arrives with content in it has to arrive open —
+    // otherwise the studio silently decided to paint words into the image and the
+    // only clue is a value in a collapsed header.
+    //
+    // Brand kit isn't in here either, for a different reason: it's pinned open in
+    // the view and never collapses. Style preset has its own `disabled` state
+    // (references guide the look), independent of this Set.
+    collapsedGroups: new Set(["refs", "imageType", "style", "format", "output"]),
     composerExpanded: false, // prompt composer size: small (default) vs expanded
     variationCount: 2, // single-image mode: how many alternatives to pick from
     slideCount, // carousel mode: how many slides to generate
@@ -559,6 +566,29 @@ function sentencesOf(text) {
     .filter((s) => s.length > 12 && !/^#/.test(s));
 }
 
+// A headline for the artwork, derived from the draft the way the prompt is.
+//
+// The SHORTEST usable sentence wins, not the first: type baked into an image has
+// to read at a glance, and a draft's opening line is usually its longest. Broken
+// at a natural pause into two lines when there is one, because that is how a
+// headline is set — and the field takes one line per line break.
+function deriveRenderText(s) {
+  const parts = sentencesOf(s.postText || "").map((t) => t.replace(/[.!?]+$/, "").trim());
+  const pick = parts.filter((t) => t.length <= MAX_RENDER_TEXT).sort((a, b) => a.length - b.length)[0];
+  if (!pick) return "";
+  // Break on a dash / colon / comma, but only when both halves are worth a line.
+  const at = pick.search(/\s[—–]\s|:\s|,\s/);
+  if (at > 8 && pick.length - at > 12) {
+    const head = pick.slice(0, at).trim();
+    const tail = pick
+      .slice(at)
+      .replace(/^[\s—–:,]+/, "")
+      .trim();
+    return `${head}\n${tail}`;
+  }
+  return pick;
+}
+
 // Compose a structured image brief FROM THE DRAFT — the hook becomes the
 // subject, the next line the key message, and the studio's own settings (image
 // type, style, brand, format) fill in the direction. Still a mock (no model
@@ -612,6 +642,10 @@ export function runDerive(sessionId) {
   s._deriveTimer = setTimeout(() => {
     const cur = states.get(sessionId);
     if (!cur) return;
+    // Headline first: derivePrompt reads renderText to write the "Text in image:"
+    // line, so deriving it after would leave the brief and the field disagreeing.
+    // Only when empty — a re-derive must never overwrite what the user typed.
+    if (!cur.renderText) cur.renderText = deriveRenderText(cur);
     cur.promptText = derivePrompt(cur);
     cur.promptLoading = false;
     cur._deriveTimer = null;
