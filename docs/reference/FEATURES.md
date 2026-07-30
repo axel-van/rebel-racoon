@@ -309,6 +309,25 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   un gradient non enregistré s'interpole de façon discrète dans Chrome, donc le masque basculait de
   côté en une frame à mi-course. À 0px la paire de stops se réduit à une largeur nulle : pas de
   fondu du tout, ce qui est exactement l'aspect attendu du bord qu'on a atteint.
+  **Deux interrupteurs, pas un** — « Show my logo » et « Use my brand colors ». Le logo et la
+  palette sont deux impositions différentes sur une image : beaucoup de posts veulent les couleurs de
+  la marque sans son wordmark dans un coin, et un visuel de lancement peut vouloir la marque sur
+  l'artwork de quelqu'un d'autre. Un seul interrupteur prenait la moitié bon marché en otage de la
+  moitié chère. Chacun ouvre SA propre partie (le placeur au logo, les pastilles aux couleurs), les
+  deux sont ON par défaut quand le Playbook a de quoi, et un interrupteur sans matière reste
+  **visible mais désactivé** avec la raison en dessous (« This Playbook has no logo yet. ») — un
+  contrôle qui disparaît laisse se demander si l'option existe. La valeur d'en-tête nomme la moitié
+  active (`Acme` / `Logo only` / `Colors only` / `Off` / `No brand kit`), parce qu'« On » cacherait
+  la différence entre un logo tamponné et un brief de couleurs.
+  Chaque paire interrupteur + contenu est **emballée** (`.isv2-brandgroup`) : le corps de
+  l'accordéon espace ses enfants uniformément, donc sans emballage l'écart entre un interrupteur et
+  ce qu'il commande valait celui entre les deux moitiés, et le placeur se lisait autant comme
+  appartenant à la rangée du dessous.
+  Côté moteur, `useBrandColors` conditionne la ligne `Palette:` du brief. Comme le brief n'est écrit
+  qu'à l'ouverture et que Generate envoie **le champ** et pas les réglages, l'interrupteur **édite
+  cette ligne en place** (`syncPaletteLine`) : re-dériver jetterait tout ce que l'utilisateur a tapé,
+  ne rien faire rendrait l'interrupteur inerte pour la génération qu'il s'apprête à lancer. La ligne
+  revient à sa position d'origine (après `Look:`), pas en fin de brief.
   Le bloc porte le libellé **« Logo placement »** : la grille n'avait qu'un `aria-label`, donc
   l'utilisateur voyant devait deviner ce qu'étaient neuf radios dans un cadre — ce que le lecteur
   d'écran, lui, savait déjà. Le libellé titre la **paire**, parce que la paire est l'énoncé : ce

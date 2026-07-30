@@ -211,6 +211,18 @@ export const BRAND_ANCHORS = {
   se: { xF: 0.78, yF: 0.89 },
 };
 
+// The brief's palette line, in one place: derivePrompt writes it and the brand-
+// colours switch splices it in and out, and those two disagreeing would show up
+// as a duplicate line rather than as an error.
+const PALETTE_RE = /^Palette: /;
+
+function paletteLine(s) {
+  return `Palette: ${s.playbookColors
+    .slice(0, 4)
+    .map((c) => c.hex)
+    .join(", ")}.`;
+}
+
 // The brand mark, at 26% of the frame's width — a wordmark has to stay readable,
 // and 18% left the name too small to be one.
 function brandingOverlays(s) {
@@ -268,6 +280,11 @@ export function start(
     playbookColors = [],
   } = {},
 ) {
+  // NAMED colours, filtered once here so both `playbookColors` and the switch that
+  // gates them read from the same list — deriving the default from an unfiltered
+  // array would turn a palette of malformed entries into a switch that's on with
+  // nothing behind it.
+  const brandColors = (Array.isArray(playbookColors) ? playbookColors : []).filter((c) => c && c.hex);
   // posts-store stores X as "twitter"; the format catalogue keys on "x".
   const net = network === "twitter" ? "x" : network || null;
   const resolvedFormat = formatId || (net ? defaultFormatFor(net) : "1:1");
@@ -350,7 +367,14 @@ export function start(
     // [{ name, hex }] — NAMED, not bare hexes. Every consumer that wants the hex
     // maps for it; the Branding recap and nothing else wants the name, and two
     // parallel arrays for one palette is the kind of thing that drifts.
-    playbookColors: (Array.isArray(playbookColors) ? playbookColors : []).filter((c) => c && c.hex),
+    playbookColors: brandColors,
+    // The palette is a SEPARATE opt-out from the logo. A stamped mark and a colour
+    // brief are two different impositions on an image — plenty of posts want the
+    // brand's colours without its wordmark sitting in a corner, and a launch visual
+    // may want the mark on someone else's artwork. One switch for both made the
+    // cheap half hostage to the expensive one. ON by default, same reasoning as the
+    // logo: an image made for a brand should look like it unless someone says no.
+    useBrandColors: brandColors.length > 0,
     customTextColors: [], // custom hex colours the user added to the text swatches
     customFonts: [], // [{ family, label, url }] fonts the user uploaded (FontFace)
     playbookName: playbookName || "", // brand/playbook label for the toggle
@@ -576,6 +600,43 @@ export function setUseBranding(sessionId, on) {
   notify(sessionId);
 }
 
+// Send the Playbook's palette to the model, or don't. A no-op without colours —
+// same contract as setUseBranding, and for the same reason: a switch that can't
+// change anything shouldn't pretend it did.
+export function setUseBrandColors(sessionId, on) {
+  const s = states.get(sessionId);
+  if (!s || !s.playbookColors.length) return;
+  s.useBrandColors = !!on;
+  syncPaletteLine(s);
+  notify(sessionId);
+}
+
+// The palette reaches the model through exactly ONE line of the brief, and the
+// brief is only written when the studio opens — so the switch has to edit that
+// line in place. Re-deriving the whole thing would throw away every word the user
+// typed; leaving the text alone would make the switch inert for the generation
+// they are about to run, since Generate sends the field and not the settings.
+//
+// Surgical on purpose: it adds or removes its own line and touches nothing else.
+function syncPaletteLine(s) {
+  const text = s.promptText || "";
+  if (!text.trim()) return; // nothing derived yet — derivePrompt will get it right
+  const lines = text.split("\n");
+  const at = lines.findIndex((l) => PALETTE_RE.test(l));
+  if (s.useBrandColors === at >= 0) return;
+  if (!s.useBrandColors) {
+    lines.splice(at, 1);
+  } else {
+    // Back where derivePrompt puts it: after the look, before the type and the
+    // format. Appending would have left the brief reading in a different order
+    // depending on how the user got there.
+    let after = lines.findIndex((l) => l.startsWith("Look:"));
+    if (after < 0) after = lines.findIndex((l) => l.startsWith("Visual direction:"));
+    lines.splice(after < 0 ? lines.length : after + 1, 0, paletteLine(s));
+  }
+  s.promptText = lines.join("\n");
+}
+
 // Where the mark lands. No-op without a logo, and only ever one of the nine — a
 // bad value here would silently move the mark somewhere nobody chose.
 export function setBrandingAnchor(sessionId, anchor) {
@@ -727,13 +788,7 @@ function derivePrompt(s) {
   } else if (style) {
     lines.push(`Look: ${style.label}.`);
   }
-  if (s.playbookColors.length)
-    lines.push(
-      `Palette: ${s.playbookColors
-        .slice(0, 4)
-        .map((c) => c.hex)
-        .join(", ")}.`,
-    );
+  if (s.useBrandColors && s.playbookColors.length) lines.push(paletteLine(s));
   // Whether the artwork carries type is the user's call ("Text in image"), so the
   // composition line states whichever one they asked for rather than assuming.
   const inImage = (s.renderText || "").trim();

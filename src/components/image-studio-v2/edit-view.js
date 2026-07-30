@@ -20,9 +20,9 @@
 import { escapeHtml } from "../../utils.js?v=21";
 import { FORMATS, NETWORK_FORMATS } from "../../clip-formats.js?v=14";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=34";
-import { KEY } from "./context.js?v=26";
+import { KEY } from "./context.js?v=28";
 import { outlineMetrics, shadowMetrics, cssFamily } from "../image-studio/canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=62";
+import * as imageStudio from "../../image-studio.js?v=64";
 
 // The working image is clipped inside .isv2-frame-clip while the frame itself is
 // overflow:visible, so on-element toolbars / popovers / handles can extend past

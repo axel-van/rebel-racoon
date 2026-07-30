@@ -39,8 +39,8 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=34";
-import { KEY } from "./context.js?v=26";
-import * as imageStudio from "../../image-studio.js?v=62";
+import { KEY } from "./context.js?v=28";
+import * as imageStudio from "../../image-studio.js?v=64";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -340,16 +340,27 @@ function settingRows(st) {
   // missing section leaves you wondering whether the feature exists, a disabled
   // one tells you where to go and get it.
   const hasLogo = !!st.playbookLogo;
+  const hasColors = (st.playbookColors || []).length > 0;
   const branded = hasLogo && !!st.useBranding;
+  const tinted = hasColors && !!st.useBrandColors;
+  // The header value NAMES which half is on, because they're now independently
+  // switchable and "On" would hide the difference between a stamped mark and a
+  // colour brief. Both on is the Playbook's name — the whole brand kit, said the
+  // short way.
+  let brandValue = "Off";
+  if (!hasLogo && !hasColors) brandValue = "No brand kit";
+  else if (branded && tinted) brandValue = st.playbookName || "On";
+  else if (branded) brandValue = "Logo only";
+  else if (tinted) brandValue = "Colors only";
   out.push(
     settingRow({
       name: "branding",
       label: "Branding",
-      value: hasLogo ? (branded ? st.playbookName || "On" : "Off") : "No logo",
-      set: branded,
-      disabled: !hasLogo,
+      value: brandValue,
+      set: branded || tinted,
+      disabled: !hasLogo && !hasColors,
       open: isOpen("branding"),
-      body: () => brandingBody(st, branded),
+      body: () => brandingBody(st, branded, tinted),
     }),
   );
 
@@ -523,49 +534,78 @@ function refTile(r, on) {
   </div>`;
 }
 
-// The switch, then the PLACER: a frame the shape of the output, with the mark
-// sitting in the corner it will land in and four quadrants you can move it to.
+// TWO switches, not one: the logo and the palette are separate impositions on an
+// image and get separate opt-outs. Each one owns its own disclosure — the placer
+// belongs to the logo, the swatches to the colours — so turning one off takes its
+// half of the section with it and leaves the other intact.
 //
-// The preview and the control are one object on purpose. A small preview beside a
-// select would be two things saying the same thing, and it would turn a spatial
-// choice into a dropdown of words — "Bottom right" in a list is strictly worse
-// than the bottom-right square. This also shrinks the old preview, which was a
-// full-width tile spending 60px of panel to say "this is your logo".
-function brandingBody(st, branded) {
+// A switch stays visible with nothing behind it (disabled, with a line saying
+// why) rather than disappearing: a Playbook with colours but no mark should still
+// tell you the logo option exists and where it comes from.
+function brandingBody(st, branded, tinted) {
   const palette = st.playbookColors || [];
-  // The colours are a RECAP, not a control: nothing here is clickable and they
-  // already reach the model through the brief's "Palette:" line.
-  //
-  // Their OWN row, under the logo row — not tucked beside the mark. The palette
-  // isn't part of the logo; it's the other half of "what my brand looks like", and
-  // stacking it under the mark said it belonged to it. Standing alone it earns its
-  // label back: five unlabelled dots on a row of their own are a guess.
-  //
-  // Dots, the shape the Playbook's own "Brand color" row already uses; each one
-  // still names itself on hover.
-  const swatches = palette.length
-    ? `<div class="isv2-block">
-         <p class="isv2-sheet-hint">Brand color</p>
-         <p class="isv2-branddots">
-         ${palette
-           .map(
-             (c) =>
-               `<span class="isv2-branddot" style="background:${escapeHtml(c.hex)}" title="${escapeHtml(
-                 c.name ? `${c.name} · ${c.hex}` : c.hex,
-               )}"></span>`,
-           )
-           .join("")}
-         </p>
-       </div>`
-    : "";
-  return `<div class="isv2-sheet-switch">
-      <span class="isv2-sheet-switch-label">Show my logo</span>
-      <label class="ap-toggle-container" title="Stamp the Playbook's logo on what I generate">
-        <input type="checkbox" data-img-toggle-branding ${branded ? "checked" : ""} aria-label="Show my logo on the image" />
+  const hasLogo = !!st.playbookLogo;
+  return `${brandSwitch({
+    label: "Show my logo",
+    hint: "Stamp the Playbook's logo on what I generate",
+    hook: "data-img-toggle-branding",
+    on: branded,
+    available: hasLogo,
+    missing: "This Playbook has no logo yet.",
+    body: branded ? brandingPlacer(st) : "",
+  })}
+  ${brandSwitch({
+    label: "Use my brand colors",
+    hint: "Brief the model with the Playbook's palette",
+    hook: "data-img-toggle-brand-colors",
+    on: tinted,
+    available: palette.length > 0,
+    missing: "This Playbook has no brand colors yet.",
+    body: tinted ? swatchRow(palette) : "",
+  })}`;
+}
+
+// One switch row and whatever it discloses. Same shape as the References switch,
+// which is the other place a section is gated by one — a second bespoke row would
+// have made two identical controls look like two different kinds of control.
+function brandSwitch({ label, hint, hook, on, available, missing, body }) {
+  const off = available ? "" : "disabled";
+  // Switch and disclosure WRAPPED as one group, because the accordion body spaces
+  // its children evenly: unwrapped, the gap between a switch and the thing it
+  // controls was the same as the gap between the two halves, so the placer read as
+  // belonging to the colours row below it as much as to the logo row above.
+  return `<div class="isv2-brandgroup">
+    <div class="isv2-sheet-switch">
+      <span class="isv2-sheet-switch-label">${escapeHtml(label)}</span>
+      <label class="ap-toggle-container" title="${escapeHtml(available ? hint : missing)}">
+        <input type="checkbox" ${hook} ${on ? "checked" : ""} ${off} aria-label="${escapeHtml(label)}" />
         <i aria-hidden="true"></i>
       </label>
     </div>
-    ${branded ? `${brandingPlacer(st)}${swatches}` : ""}`;
+    ${available ? body : `<p class="isv2-sheet-hint">${escapeHtml(missing)}</p>`}
+  </div>`;
+}
+
+// The colours, as a RECAP: nothing here is clickable, and the switch above is the
+// only decision — they reach the model through the brief's "Palette:" line.
+//
+// Dots, the shape the Playbook's own "Brand color" row already uses; each one
+// still names itself on hover. Their own labelled block rather than something
+// tucked beside the mark: the palette isn't part of the logo, it's the other half
+// of "what my brand looks like".
+function swatchRow(palette) {
+  const dots = palette
+    .map(
+      (c) =>
+        `<span class="isv2-branddot" style="background:${escapeHtml(c.hex)}" title="${escapeHtml(
+          c.name ? `${c.name} \u00b7 ${c.hex}` : c.hex,
+        )}"></span>`,
+    )
+    .join("");
+  return `<div class="isv2-block">
+      <p class="isv2-sheet-hint">Brand color</p>
+      <p class="isv2-branddots">${dots}</p>
+    </div>`;
 }
 
 // Nine anchors in a 3×3, as REAL radios — one choice out of a fixed set is what a

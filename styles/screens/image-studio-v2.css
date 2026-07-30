@@ -1018,6 +1018,20 @@
    other and read as one pair; spreading them to the row's edges made two objects
    that merely shared a line. `--isv2-placer-ratio` lives here because BOTH halves
    take their shape from it. */
+/* One switch and what it discloses, bound together. Half the accordion body's own
+   gap inside, and more than it between groups: the logo and the colours are two
+   settings that happen to live in one section, and even spacing made them read as
+   four loose rows. */
+.isv2-brandgroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.isv2-brandgroup + .isv2-brandgroup {
+  margin-top: var(--ref-spacing-xxxs);
+}
+
 .isv2-brandrow {
   display: flex;
   /* STRETCH, not center: `aspect-ratio` gives each box a height, but the grid also
