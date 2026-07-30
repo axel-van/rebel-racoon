@@ -25,17 +25,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=42";
 import { getSessionById } from "../../sessions-store.js?v=12";
 import { getContextById } from "../../contexts-store.js?v=44";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=24";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=25";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=43";
+import { renderStudio } from "./stage-view.js?v=44";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=24";
-import * as imageStudio from "../../image-studio.js?v=60";
+} from "./interactions.js?v=25";
+import * as imageStudio from "../../image-studio.js?v=61";
 
 let backdrop;
 let initialized = false;
@@ -212,6 +212,9 @@ function onClick(event) {
   // first alone. Same `collapsedGroups` Set v1's composer uses.
   const expandBtn = event.target.closest("[data-img-composer-expand]");
   if (expandBtn) return void imageStudio.setComposerExpanded(KEY, !state().composerExpanded);
+
+  const corner = event.target.closest("[data-img-branding-corner]");
+  if (corner) return void imageStudio.setBrandingCorner(KEY, corner.dataset.imgBrandingCorner);
 
   const grpToggle = event.target.closest("[data-img-group-toggle]");
   if (grpToggle && !grpToggle.disabled) {

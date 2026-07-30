@@ -999,22 +999,55 @@
   line-height: var(--sys-text-style-caption-line-height);
 }
 
-/* The brand mark preview — the logo on a neutral tile, so a setting you'd
-   otherwise take on faith shows you what it stamps. Contained, never cropped: a
-   wordmark clipped to a square stops being the logo. */
-.isv2-brandmark {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: var(--ref-spacing-xs);
+/* The logo PLACER — the preview and the position control as one object. A frame
+   the shape of the output (`--isv2-placer-ratio`, set from activeRatio) with four
+   quadrant buttons; the mark renders in the chosen one.
+ *
+   Auto width, not full: it's a control, and a CTA-sized target never stretches to
+   fill its container. 140px is enough for four 70px quadrants to be comfortable
+   clicks while the whole thing costs a third of what the old full-width tile did. */
+.isv2-placer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  width: 140px;
+  aspect-ratio: var(--isv2-placer-ratio, 1);
   border: 1px solid var(--sys-border-color-default);
   border-radius: var(--app-radius-md);
   background: var(--app-surface-subtle);
+  overflow: hidden;
 }
 
-.isv2-brandmark > img {
-  max-width: 60%;
-  max-height: 32px;
+.isv2-placer-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 120ms var(--app-ease-out);
+}
+
+.isv2-placer-cell:hover {
+  background: var(--ref-color-grey-10);
+}
+
+.isv2-placer-cell:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: -2px;
+}
+
+/* The chosen quadrant holds the mark, so the selected state is the mark being
+   there — no extra highlight competing with it. */
+.isv2-placer-cell[aria-pressed="true"] {
+  background: var(--ref-color-white);
+}
+
+/* Contained, never cropped: a wordmark clipped stops being the logo. */
+.isv2-placer-mark {
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
 }
 

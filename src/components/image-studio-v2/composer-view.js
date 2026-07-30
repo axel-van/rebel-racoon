@@ -39,8 +39,8 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=34";
-import { KEY } from "./context.js?v=24";
-import * as imageStudio from "../../image-studio.js?v=60";
+import { KEY } from "./context.js?v=25";
+import * as imageStudio from "../../image-studio.js?v=61";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -513,10 +513,14 @@ function refTile(r, on) {
   </div>`;
 }
 
-// The switch plus a preview of the mark it stamps: a logo you can't see is a
-// setting you have to take on faith, and the preview is the cheapest way to say
-// "this is what lands on the image". Bottom-right is where it goes, so the
-// preview sits in a frame that says as much without a diagram.
+// The switch, then the PLACER: a frame the shape of the output, with the mark
+// sitting in the corner it will land in and four quadrants you can move it to.
+//
+// The preview and the control are one object on purpose. A small preview beside a
+// select would be two things saying the same thing, and it would turn a spatial
+// choice into a dropdown of words — "Bottom right" in a list is strictly worse
+// than the bottom-right square. This also shrinks the old preview, which was a
+// full-width tile spending 60px of panel to say "this is your logo".
 function brandingBody(st, branded) {
   const palette = st.playbookColors || [];
   // The palette is a RECAP, not a control: these colours already reach the model
@@ -549,15 +553,30 @@ function brandingBody(st, branded) {
         <i aria-hidden="true"></i>
       </label>
     </div>
-    ${
-      branded
-        ? `<div class="isv2-brandmark">
-            <img src="${escapeHtml(st.playbookLogo)}" alt="${escapeHtml(st.playbookName || "Brand")} logo" />
-          </div>
-          <p class="isv2-sheet-hint">Bottom-right corner of every image I make.</p>`
-        : ""
-    }
+    ${branded ? brandingPlacer(st) : ""}
     ${swatches}`;
+}
+
+// The frame carries the OUTPUT's aspect ratio (`activeRatio`, the same helper the
+// generating stage uses), so the preview is truthful: change Format and it
+// reshapes. The mark renders inside the chosen quadrant rather than the quadrant
+// merely lighting up — moving it has to look like moving it.
+//
+// Four buttons with `aria-pressed`, the app's toggle-state primitive, and the
+// `nw / ne / sw / se` names the crop handles already use.
+const CORNER_LABELS = { nw: "Top left", ne: "Top right", sw: "Bottom left", se: "Bottom right" };
+
+function brandingPlacer(st) {
+  const active = imageStudio.BRAND_CORNERS[st.brandingCorner] ? st.brandingCorner : "se";
+  const cells = Object.keys(CORNER_LABELS)
+    .map((c) => {
+      const on = c === active;
+      return `<button type="button" class="isv2-placer-cell" data-img-branding-corner="${c}" aria-pressed="${on}" title="${CORNER_LABELS[c]}" aria-label="${CORNER_LABELS[c]}">
+        ${on ? `<img class="isv2-placer-mark" src="${escapeHtml(st.playbookLogo)}" alt="${escapeHtml(st.playbookName || "Brand")} logo" />` : ""}
+      </button>`;
+    })
+    .join("");
+  return `<div class="isv2-placer" style="--isv2-placer-ratio:${imageStudio.activeRatio(KEY)}" role="group" aria-label="Logo position">${cells}</div>`;
 }
 
 // The collapsed row's value has one line of a 284px panel to live in, beside a

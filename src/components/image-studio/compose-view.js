@@ -7,8 +7,8 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=34";
-import { KEY } from "./context.js?v=34";
-import * as imageStudio from "../../image-studio.js?v=60";
+import { KEY } from "./context.js?v=35";
+import * as imageStudio from "../../image-studio.js?v=61";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why

@@ -278,9 +278,19 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   faite pour une marque la porte, sauf avis contraire. Sans logo la section est **désactivée, pas
   masquée** — une section absente laisse se demander si la fonctionnalité existe, une section grisée
   dit où aller la chercher. Le logo est cuit dans les pixels par le même `compositeOverlays` que
-  « Text in image » (overlay `kind: "logo"`, coin bas-droit, 26% de la largeur), donc il survit aux
+  « Text in image » (overlay `kind: "logo"`, 26% de la largeur, dans **le coin choisi**), donc il survit aux
   vignettes, à l'aperçu in-feed, au recadrage et au draft final. Comme tous les autres réglages, il
   s'applique à la **génération suivante**, pas rétroactivement.
+  **L'aperçu EST le placeur.** Un cadre au **ratio de sortie** (`activeRatio`, le même helper que
+  l'étape generating) avec quatre quadrants `nw / ne / sw / se` — le vocabulaire des poignées de
+  crop — en `aria-pressed`, et la marque rendue **dans** le quadrant choisi : déplacer doit
+  ressembler à déplacer, pas à un surlignage qui bouge. Un aperçu séparé + un select auraient été
+  deux objets pour la même chose, et auraient transformé un choix spatial en liste de mots —
+  « Bottom right » dans un menu est strictement pire que le carré en bas à droite. Ça règle aussi la
+  taille : 140px de large au lieu d'une tuile pleine largeur. Les fractions vivent dans
+  `BRAND_CORNERS` (`image-studio.js`) — 0.22/0.78 et 0.11/0.89, symétriques par construction pour
+  `wF: 0.26`, donc aucun coin n'a l'air d'une erreur. Changer Format redessine le cadre.
+
   Sous la marque, un **récap des couleurs de marque** : les **mêmes pastilles rondes que la ligne
   « Brand color » du Playbook** (`.recap__fact-dot`), et les mêmes mots — un récap doit ressembler à
   ce qu'il récapitule. Nom + hex en tooltip ; l'hex imprimé sous chaque pastille transformait une

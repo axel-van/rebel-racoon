@@ -190,13 +190,27 @@ function renderTextOverlays(s) {
 // beside `url` so a re-bake (crop, redraw) never stacks text on text.
 // A failure (offline, a CORS-tainted canvas) falls back to the plain photo — the
 // flow must never stall on the mock.
-// The brand mark, bottom-right, at 26% of the frame's width — a wordmark has to
-// stay readable, and 18% left the name too small to be one. A corner rather than
-// anywhere else because that's where a mark goes on artwork it doesn't own, and
-// the same corner every time so a set of variations reads as one campaign.
+// Where the mark can go. A CORNER and not anywhere — that's where a mark sits on
+// artwork it doesn't own — but WHICH corner is the user's call, because the right
+// one depends on the image: a subject in the bottom-right wants the logo top-left.
+//
+// Fractions are the overlay's centre, and `wF` is 0.26, so 0.22 / 0.78 leaves the
+// same ~9% margin on either side and 0.11 / 0.89 the same top and bottom for a
+// wordmark's height. Symmetric by construction, so no corner looks like a mistake.
+// `nw / ne / sw / se` is the vocabulary the crop handles already speak.
+export const BRAND_CORNERS = {
+  nw: { xF: 0.22, yF: 0.11 },
+  ne: { xF: 0.78, yF: 0.11 },
+  sw: { xF: 0.22, yF: 0.89 },
+  se: { xF: 0.78, yF: 0.89 },
+};
+
+// The brand mark, at 26% of the frame's width — a wordmark has to stay readable,
+// and 18% left the name too small to be one.
 function brandingOverlays(s) {
   if (!s.useBranding || !s.playbookLogo) return [];
-  return [{ kind: "logo", url: s.playbookLogo, xF: 0.78, yF: 0.89, wF: 0.26, rot: 0 }];
+  const at = BRAND_CORNERS[s.brandingCorner] || BRAND_CORNERS.se;
+  return [{ kind: "logo", url: s.playbookLogo, xF: at.xF, yF: at.yF, wF: 0.26, rot: 0 }];
 }
 
 function bakeRenderText(s, img) {
@@ -326,6 +340,7 @@ export function start(
     // anything, so the switch has nothing to offer and the section says so.
     playbookLogo: playbookLogo || "",
     useBranding: !!playbookLogo,
+    brandingCorner: "se", // which corner the mark lands in — see BRAND_CORNERS
     // [{ name, hex }] — NAMED, not bare hexes. Every consumer that wants the hex
     // maps for it; the Branding recap and nothing else wants the name, and two
     // parallel arrays for one palette is the kind of thing that drifts.
@@ -552,6 +567,15 @@ export function setUseBranding(sessionId, on) {
   const s = states.get(sessionId);
   if (!s || !s.playbookLogo) return;
   s.useBranding = !!on;
+  notify(sessionId);
+}
+
+// Which corner the mark lands in. No-op without a logo, and only ever one of the
+// four — a bad value here would silently move the mark somewhere nobody chose.
+export function setBrandingCorner(sessionId, corner) {
+  const s = states.get(sessionId);
+  if (!s || !s.playbookLogo || !BRAND_CORNERS[corner]) return;
+  s.brandingCorner = corner;
   notify(sessionId);
 }
 
