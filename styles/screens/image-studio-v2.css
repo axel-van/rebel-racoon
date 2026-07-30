@@ -1051,6 +1051,34 @@
   object-fit: contain;
 }
 
+/* Brand colours — a RECAP under the mark, not a picker: nothing here is clickable,
+   the colours already reach the model through the brief's "Palette:" line.
+ *
+ * Deliberately the same dots as the Playbook's own "Brand color" row
+ * (`.recap__fact-dot`, styles/screens/welcome.css) — a recap should look like the
+ * thing it recaps. Restated rather than imported: welcome.css owns an unrelated
+ * screen, and coupling the studio to it to save six lines is the worse trade. If
+ * a third surface wants these, promote them to styles/components/ the way
+ * topic-badge went. */
+.isv2-branddots-label {
+  margin-top: var(--ref-spacing-xxs);
+}
+
+.isv2-branddots {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+  margin: 0;
+}
+
+.isv2-branddot {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--app-radius-circle);
+  /* The border is what keeps a white brand colour a swatch and not a hole. */
+  border: 1px solid var(--app-border);
+}
+
 /* ── Reference tiles + the uploader ──────────────────────────────────────── */
 
 /* 60px, not 72: at the panel's 260px that's four tiles to a row instead of three,
