@@ -538,6 +538,15 @@ export function setComposerExpandedSilent(sessionId, value) {
   if (s) s.composerExpanded = !!value;
 }
 
+// The notifying variant, for v2. There the toggle has to re-render — the button
+// swaps its icon and the console takes `.is-expanded` — and there is no in-place
+// transition to protect, because v2 re-renders its whole body on every change and
+// re-runs autosize afterwards anyway.
+export function setComposerExpanded(sessionId, value) {
+  setComposerExpandedSilent(sessionId, value);
+  notify(sessionId);
+}
+
 // ── "Suggest from this post" (mock) ─────────────────────────────────────────
 
 // Used when the draft has no copy to work from (studio opened on an empty post).

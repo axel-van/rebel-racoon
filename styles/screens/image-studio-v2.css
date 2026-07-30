@@ -558,8 +558,24 @@
   padding: var(--ref-spacing-xxs);
 }
 
+/* The toolbar becomes a COLUMN so the expand toggle can hold the console's
+   top-right corner while the action stays down on the field's last line — one
+   control resizes the box, the other runs what's in it. `align-self: stretch`
+   because the row bottom-aligns its children, which would otherwise shrink this
+   column to its content and leave nothing for space-between to distribute. */
 .isv2-console--inline .isv2-console-toolbar {
   flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  align-self: stretch;
+  gap: var(--ref-spacing-xxs);
+}
+
+/* Expanded doubles the cap, 4 lines → 8. A derived brief runs seven, so expanded
+   shows the whole thing without scrolling. */
+.isv2-console.is-expanded .isv2-prompt {
+  max-height: calc(var(--ref-font-line-height-sm) * 8);
 }
 
 /* The redraw note is a phrase, not a brief ("warmer light"), so this field starts

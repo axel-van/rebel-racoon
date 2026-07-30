@@ -25,17 +25,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=41";
 import { getSessionById } from "../../sessions-store.js?v=11";
 import { getContextById } from "../../contexts-store.js?v=43";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=14";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=15";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=27";
+import { renderStudio } from "./stage-view.js?v=28";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=14";
-import * as imageStudio from "../../image-studio.js?v=50";
+} from "./interactions.js?v=15";
+import * as imageStudio from "../../image-studio.js?v=51";
 
 let backdrop;
 let initialized = false;
@@ -210,6 +210,9 @@ function onClick(event) {
   // The settings panel's sections — independent, not an accordion. A section the
   // user opened stays open until they close it, and opening a second leaves the
   // first alone. Same `collapsedGroups` Set v1's composer uses.
+  const expandBtn = event.target.closest("[data-img-composer-expand]");
+  if (expandBtn) return void imageStudio.setComposerExpanded(KEY, !state().composerExpanded);
+
   const grpToggle = event.target.closest("[data-img-group-toggle]");
   if (grpToggle && !grpToggle.disabled) {
     return void imageStudio.toggleGroupCollapsed(KEY, grpToggle.dataset.imgGroupToggle);

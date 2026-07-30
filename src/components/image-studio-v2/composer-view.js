@@ -39,8 +39,8 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=33";
-import { KEY } from "./context.js?v=14";
-import * as imageStudio from "../../image-studio.js?v=50";
+import { KEY } from "./context.js?v=15";
+import * as imageStudio from "../../image-studio.js?v=51";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -167,7 +167,22 @@ function bestFor(network) {
 // it made the six settings look like chrome stranded at the bottom of a huge
 // empty bar. Capped and centred, the card reads as one object you act in.
 function generateComposer(st) {
-  return console_("Image prompt", promptField(st), generateActions(st), "to generate", { inline: true });
+  return console_("Image prompt", promptField(st), generateActions(st), "to generate", {
+    inline: true,
+    aux: expandToggle(st),
+    expanded: !!st.composerExpanded,
+  });
+}
+
+// Doubles the field's height cap, 4 lines → 8. It holds the console's TOP-RIGHT
+// corner while Generate stays on the field's last line, so the two controls read
+// as what they are: one resizes the box, one runs what's in it. Hidden while the
+// brief is being written — there is nothing to expand yet.
+function expandToggle(st) {
+  if (st.promptLoading) return "";
+  const on = !!st.composerExpanded;
+  const label = on ? "Collapse the prompt" : "Expand the prompt";
+  return `<button type="button" class="ap-icon-button isv2-console-expand" data-img-composer-expand aria-pressed="${on}" aria-label="${label}" title="${label}"><i class="ap-icon-${on ? "minimize" : "maximize"}" aria-hidden="true"></i></button>`;
 }
 
 // The frame both modes share, and it IS the app's own conversational composer:
@@ -188,12 +203,13 @@ function generateComposer(st) {
 // toolbar row of its own was a full row of card whose left half was empty, and
 // the text would rather have that space. Kept as a flag, not baked in, because a
 // console with several actions would need the row back.
-function console_(label, field, action, hintVerb, { inline = false } = {}) {
+function console_(label, field, action, hintVerb, { inline = false, aux = "", expanded = false } = {}) {
+  const toolbar = aux || action ? `<div class="isv2-console-toolbar">${aux}${action}</div>` : "";
   return `<div class="isv2-dock">
     <div class="isv2-console-wrap">
-      <div class="isv2-console${inline ? " isv2-console--inline" : ""}" role="group" aria-label="${escapeHtml(label)}">
+      <div class="isv2-console${inline ? " isv2-console--inline" : ""}${expanded ? " is-expanded" : ""}" role="group" aria-label="${escapeHtml(label)}">
         ${field}
-        ${action ? `<div class="isv2-console-toolbar">${action}</div>` : ""}
+        ${toolbar}
       </div>
       <div class="isv2-console-hint">
         <kbd>Enter</kbd> ${hintVerb} · <kbd>Shift</kbd>+<kbd>Enter</kbd> for new line
