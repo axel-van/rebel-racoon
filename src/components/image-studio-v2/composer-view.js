@@ -495,9 +495,13 @@ function refsBody(st, picked) {
     ${on ? `${groups.join("")}${dropzone}` : ""}`;
 }
 
+// A pool and its label as ONE block. Unwrapped, the body's 12px gap fell between
+// the label and its own grid exactly as it fell between the two pools, so nothing
+// grouped: the label read as floating above everything below it rather than as
+// the title of the three tiles it belongs to.
 function refGroup(label, tiles) {
   const head = label ? `<p class="isv2-refs-group">${escapeHtml(label)}</p>` : "";
-  return `${head}<div class="isv2-refs">${tiles}</div>`;
+  return `<div class="isv2-ref-block">${head}<div class="isv2-refs">${tiles}</div></div>`;
 }
 
 // One candidate. SINGLE-SELECT: picking one drops whatever was picked before, so

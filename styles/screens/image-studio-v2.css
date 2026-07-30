@@ -1005,17 +1005,27 @@
   gap: var(--ref-spacing-sm);
 }
 
+/* Caption, not body: at 14px dark this label was heavier than the section's own
+   header row above it ("References", 14px light), so the control out-shouted the
+   thing it belongs to. The switch beside it carries the state visually — the words
+   only have to name it. Same size as the group labels below, so the section reads
+   as one flat level of chrome around the tiles, which are the content. */
 .isv2-sheet-switch-label {
-  color: var(--sys-text-color-default);
-  font-size: var(--sys-text-style-body-size);
+  color: var(--sys-text-color-light);
+  font-family: var(--sys-text-style-caption-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
 }
 
 /* ── Reference tiles + the uploader ──────────────────────────────────────── */
 
+/* 60px, not 72: at the panel's 260px that's four tiles to a row instead of three,
+   so a pool of four or five is one row rather than two — and a reference thumbnail
+   only has to be recognisable, not readable. */
 .isv2-refs {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-  gap: var(--ref-spacing-xxs);
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: var(--ref-spacing-xxxs);
 }
 
 .isv2-ref {
@@ -1125,8 +1135,14 @@
 
 /* Which pool a tile came from, now that both live in one grid. Only rendered when
    there is something on both sides to tell apart. */
+.isv2-ref-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+}
+
 .isv2-refs-group {
-  margin: 0 0 var(--ref-spacing-xxs);
+  margin: 0;
   font-family: var(--sys-text-style-caption-font-family);
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
@@ -1158,7 +1174,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xxxs);
 }
 
 /* The crop toolbar is main's, styled by main's stylesheet. Only one of its rules
