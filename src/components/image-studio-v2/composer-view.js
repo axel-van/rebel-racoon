@@ -33,7 +33,9 @@
 //   toolPalette(st)   the floating tool palette (edit only)
 //
 // Sheets are FLAT — sections + dividers, never a nested dropdown (the ADS has no
-// flyout-submenu pattern). One is open at a time, tracked by state.openPopover.
+// flyout-submenu pattern). One sheet is open at a time, tracked by
+// state.openPopover — that's the EDIT-mode flyouts. The generate panel's settings
+// sections are independent and live in state.collapsedGroups.
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=32";
@@ -91,16 +93,35 @@ export function toolPalette(st) {
 // bit this file three times simply stops existing.
 //
 // `.ap-accordion` brings the frame, the header row, the title, the toggle and
-// its 180° rotation on `.collapsed`. Only one is open at a time (state.openPopover
-// holds which), so the panel stays short.
-function settingRow({ name, label, value, body, open, set = false, disabled = false }) {
-  const expanded = open && !disabled;
-  return `<div class="ap-accordion isv2-acc${expanded ? "" : " collapsed"}${disabled ? " is-disabled" : ""}">
-    <button type="button" class="ap-accordion-header isv2-acc-head" data-img-popover-toggle="${name}" aria-expanded="${expanded}"${disabled ? " disabled" : ""}>
-      <span class="ap-accordion-title isv2-acc-title">${escapeHtml(label)}</span>
-      <span class="isv2-acc-value${set ? " is-set" : ""}">${escapeHtml(value)}</span>
+// its 180° rotation on `.collapsed`.
+//
+// NOT an accordion in behaviour, despite the DS class: a section the user opened
+// stays open, and opening a second doesn't shut the first. One-at-a-time kept the
+// panel short, but it also meant you could never see two settings at once and
+// every section you'd opened shut itself behind your back. State lives in
+// `collapsedGroups` — the same Set v1's composer already used, so the two studios
+// track section state identically and `openPopover` goes back to meaning only what
+// its name says: the edit-mode flyouts, which ARE one at a time.
+//
+// `pinned` opts a row out of that: it is always expanded and never collapses, so
+// its header stops being a control — a static row rather than a <button>, with no
+// chevron and no toggle hook. Nothing to press means nothing that can mislead, and
+// it never enters `collapsedGroups` at all. The value still rides in the header:
+// with the body open it is a summary of what's below ("Acme · 3") rather than a
+// stand-in for it.
+function settingRow({ name, label, value, body, open, set = false, disabled = false, pinned = false }) {
+  const expanded = pinned || (open && !disabled);
+  const head = `<span class="ap-accordion-title isv2-acc-title">${escapeHtml(label)}</span>
+      <span class="isv2-acc-value${set ? " is-set" : ""}">${escapeHtml(value)}</span>`;
+  return `<div class="ap-accordion isv2-acc${expanded ? "" : " collapsed"}${disabled ? " is-disabled" : ""}${pinned ? " isv2-acc--pinned" : ""}">
+    ${
+      pinned
+        ? `<div class="ap-accordion-header isv2-acc-head isv2-acc-head--static">${head}</div>`
+        : `<button type="button" class="ap-accordion-header isv2-acc-head" data-img-group-toggle="${name}" aria-expanded="${expanded}"${disabled ? " disabled" : ""}>
+      ${head}
       ${disabled ? "" : `<i class="ap-icon-chevron-up ap-accordion-toggle" aria-hidden="true"></i>`}
-    </button>
+    </button>`
+    }
     <div class="ap-accordion-content isv2-acc-body">${expanded ? body() : ""}</div>
   </div>`;
 }
@@ -198,20 +219,24 @@ function promptField(st) {
   return `<textarea id="isv2Prompt" class="isv2-prompt" data-img-prompt rows="2" placeholder="${escapeHtml(PROMPT_PLACEHOLDER)}" aria-label="Describe your image">${escapeHtml(st.promptText)}</textarea>`;
 }
 
-// The prompt card's own action — running the prompt. SECONDARY, because it is a
-// step and not the destination: the modal has exactly one primary now and it
-// lives in the footer ("Use this image"). Before the footer existed this button
-// had to carry both jobs, which is why it was orange.
+// The prompt card's own action — running the prompt. `secondary blue`: it is a
+// step and not the destination, so it stays a tier below the modal's one primary
+// ("Use this image", in the footer), and blue rather than orange because it's the
+// routine action of this card rather than the spotlight moment. Before the footer
+// existed this button had to carry both jobs, which is why it was orange.
+//
+// "Generate", not "Generate image": the card is labelled Image prompt and the modal
+// is called Image Studio, so the noun was the third "image" in one corner.
 function generateActions(st) {
   if (st.genPhase === "generating") {
-    return `<button type="button" class="ap-button stroked grey loading" disabled><span class="ap-loading-bar"></span><span>Generating…</span></button>`;
+    return `<button type="button" class="ap-button secondary blue loading" disabled><span class="ap-loading-bar"></span><span>Generating…</span></button>`;
   }
   // A prompt being rewritten isn't one you can run yet.
   const promptReady = !st.promptLoading && !!(st.promptText || "").trim();
   const hasResults = st.genPhase === "results" && st.variations.length > 0;
   const icon = hasResults ? "ap-icon-refresh" : "ap-icon-sparkles-mermaid";
-  const label = hasResults ? "Regenerate" : "Generate image";
-  return `<button type="button" class="ap-button stroked grey" data-img-generate ${promptReady ? "" : "disabled"}><i class="${icon}"></i><span>${label}</span></button>`;
+  const label = hasResults ? "Regenerate" : "Generate";
+  return `<button type="button" class="ap-button secondary blue" data-img-generate ${promptReady ? "" : "disabled"}><i class="${icon}"></i><span>${label}</span></button>`;
 }
 
 // ── The modal footer ────────────────────────────────────────────────────────
@@ -245,7 +270,8 @@ export function footerBar(st) {
 // ── The six setting chips ───────────────────────────────────────────────────
 
 function settingRows(st) {
-  const open = st.openPopover;
+  // Sections are independent: a Set of what's shut, not a single "which one is open".
+  const isOpen = (id) => !st.collapsedGroups.has(id);
   const out = [];
 
   // Brand kit — only when the Playbook actually has reference images.
@@ -261,7 +287,10 @@ function settingRows(st) {
         label: "Brand kit",
         value: on ? `${brand} · ${usedCount}` : "Off",
         set: on,
-        open: open === "brandKit",
+        // Always open. It's the only row that answers "what will this look like",
+        // and it's the one the user checks every time before generating — a section
+        // you re-open on every visit shouldn't be a section you have to open.
+        pinned: true,
         body: () => brandKitBody(st),
       }),
     );
@@ -275,7 +304,7 @@ function settingRows(st) {
       label: "References",
       value: uploads.length ? `${uploads.length} added` : "None",
       set: uploads.length > 0,
-      open: open === "refs",
+      open: isOpen("refs"),
       body: () => refsBody(st, uploads),
     }),
   );
@@ -290,7 +319,7 @@ function settingRows(st) {
       label: "Text in image",
       value: inImage ? shortRenderText(inImage) : "None",
       set: !!inImage,
-      open: open === "renderText",
+      open: isOpen("renderText"),
       body: () => renderTextBody(st),
     }),
   );
@@ -305,7 +334,7 @@ function settingRows(st) {
       label: "Type",
       value: typeLabel,
       set: !!st.imageTypeKey,
-      open: open === "imageType",
+      open: isOpen("imageType"),
       body: () => imageTypeBody(st),
     }),
   );
@@ -321,7 +350,7 @@ function settingRows(st) {
       value: hasRefs ? "From references" : styleLabel,
       set: !hasRefs && !!st.styleKey,
       disabled: hasRefs,
-      open: open === "style",
+      open: isOpen("style"),
       body: () => styleBody(st),
     }),
   );
@@ -336,7 +365,7 @@ function settingRows(st) {
       label: "Format",
       value: cur ? `${cur.tag} · ${cur.label}` : "Aspect ratio",
       set: false, // format always has a value; "set" would be meaningless here
-      open: open === "format",
+      open: isOpen("format"),
       body: () => formatBody(st, choices),
     }),
   );
@@ -352,7 +381,7 @@ function settingRows(st) {
         ? `Carousel · ${st.slideCount}`
         : `${st.variationCount} variation${st.variationCount > 1 ? "s" : ""}`,
       set: isCarousel,
-      open: open === "output",
+      open: isOpen("output"),
       body: () => outputBody(st, canCarousel, isCarousel),
     }),
   );

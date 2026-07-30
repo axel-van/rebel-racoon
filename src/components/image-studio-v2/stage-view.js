@@ -15,7 +15,7 @@ import { getPosts } from "../../posts-store.js?v=41";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=32";
 import { renderPostCard } from "../post-card.js?v=75";
 import { KEY, ctx } from "./context.js?v=12";
-import { composer, settingsPanel, toolPalette, footerBar } from "./composer-view.js?v=18";
+import { composer, settingsPanel, toolPalette, footerBar } from "./composer-view.js?v=21";
 import { editCanvas } from "./edit-view.js?v=12";
 import { compositeOverlays } from "../image-studio/canvas.js?v=2";
 import * as imageStudio from "../../image-studio.js?v=48";
@@ -73,7 +73,7 @@ function header(st) {
   const editState = (st.mode === "edit" ? " active" : "") + (hasImg ? "" : " disabled");
   const lockedAttrs = hasImg ? "" : 'disabled title="Generate an image first"';
   return `<div class="ap-dialog-header isv2-header">
-    <span class="ap-dialog-title isv2-title"><i class="ap-icon-archie-official" aria-hidden="true"></i>Image Studio</span>
+    <span class="ap-dialog-title isv2-title">Image Studio</span>
     <div class="ap-tabs isv2-modes">
       <div class="ap-tabs-nav" role="tablist" aria-label="Studio mode">
         <button type="button" class="ap-tabs-tab${st.mode === "generate" ? " active" : ""}" role="tab" aria-selected="${st.mode === "generate"}" data-img-mode="generate"><span>Generate</span></button>

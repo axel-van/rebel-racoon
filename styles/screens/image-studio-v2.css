@@ -61,22 +61,15 @@
   padding: var(--ref-spacing-sm) var(--ref-spacing-lg) 0;
 }
 
-/* The DS dialog title is 24px — sized for a title standing alone above a form.
-   In a one-row header beside a tab strip it has to sit at heading-4 scale. */
+/* `.ap-dialog-title` at the DS size, like every other modal in the app. It had been
+   pulled down to h4 (14px) to sit "beside" the tab strip, but the strip is on its
+   own row underneath, so there was nothing to match — the studio just had the
+   smallest title of any dialog here. No mark either: the ✕ is the only thing that
+   shares this row, and every other dialog names itself in words alone. */
 .isv2-title {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
+  display: block;
   margin-bottom: var(--ref-spacing-xs);
   white-space: nowrap;
-  font-size: var(--sys-text-style-h4-size);
-  line-height: var(--sys-text-style-h4-line-height);
-  color: var(--sys-text-color-default);
-}
-
-.isv2-title > i {
-  font-size: 18px;
-  color: var(--app-archie-mark);
 }
 
 /* Full width, so the rail under the tabs reads as a rail and not as an
@@ -493,17 +486,18 @@
   line-height: var(--sys-text-style-body-line-height);
   font-weight: var(--sys-text-style-body-weight);
   color: var(--sys-text-color-default);
-  /* Cap the box at THREE lines of text and scroll the rest. A derived brief runs
+  /* Cap the box at FOUR lines of text and scroll the rest. A derived brief runs
      seven lines, and letting the field simply be seven lines tall made the
      composer the biggest object in the modal — the image is what the user is
-     judging. The brief is read once and tweaked; three lines plus a scroll is the
-     right price for it.
-     The cap is exactly `3 × line-height` because a textarea's scrollport spans
-     its content AND its padding: with no padding on top, three lines is what
-     three lines of box shows. (Add padding back to that edge and the cap has to
-     grow by the same amount, or the third line gets clipped in half.) */
+     judging. Four is the compromise: the brief's first two facts (subject, key
+     message) are what you check before running it, and at three lines the second
+     one was landing right on the fold.
+     The cap is exactly `4 × line-height` because a textarea's scrollport spans
+     its content AND its padding: with no padding on top, four lines is what four
+     lines of box shows. (Add padding back to that edge and the cap has to grow by
+     the same amount, or the fourth line gets clipped in half.) */
   min-height: calc(var(--ref-font-line-height-sm) * 2);
-  max-height: calc(var(--ref-font-line-height-sm) * 3);
+  max-height: calc(var(--ref-font-line-height-sm) * 4);
   overflow-y: auto;
   box-sizing: border-box;
 }
@@ -685,6 +679,17 @@
 
 .isv2-acc-head:disabled {
   cursor: not-allowed;
+}
+
+/* A pinned row's header isn't a control — no press target, so no hover tint and no
+   pointer. It stays a header: the label plus its value, reading as a caption over
+   the body that's always below it. */
+.isv2-acc-head--static {
+  cursor: default;
+}
+
+.isv2-acc-head--static:hover {
+  background: transparent;
 }
 
 .isv2-acc-title {

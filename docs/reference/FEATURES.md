@@ -228,9 +228,28 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
 
 - Un header d'une seule ligne (titre · tabs de mode · bascule Image/In feed), un **stage pleine
   largeur**, et **un composer unique en bas**.
-- **Generate** : rangée 1 = le prompt (+ Suggest, + expand qui fait grandir le composer vers le
-  haut) ; rangée 2 = les sept réglages en **chips-dropdown** portant leur valeur (`Format 1:1 ·
-Square ▾`), chacun ouvrant une feuille plate en drop-up, puis le cluster de CTA.
+- **Generate** : le composer est une **carte** centrée en bas (champ + bouton **Generate** côte à
+  côte, `secondary blue` — c'est une étape, pas la destination : l'unique primary de la modale est
+  « Use this image » dans le footer). Le champ est plafonné à **4 lignes** puis scrolle : un brief
+  dérivé en fait sept, et le laisser haut de sept lignes faisait du composer le plus gros objet de
+  la modale alors que c'est l'image qu'on juge. Le plafond vaut exactement `4 × line-height` — le
+  scrollport d'un textarea couvre son contenu ET son padding, et il n'y a pas de padding en haut.
+  Les réglages vivent dans un panneau de sections `.ap-accordion` à gauche du stage — **la classe
+  DS, pas le comportement** : une section ouverte le reste, et en ouvrir une seconde ne referme
+  pas la première. Un-à-la-fois gardait le panneau court mais interdisait de voir deux réglages
+  en même temps et refermait dans le dos de l'utilisateur ce qu'il avait ouvert. L'état vit dans
+  `collapsedGroups` — le Set que le composer de **v1 utilisait déjà**, si bien que les deux
+  studios suivent le même modèle et que `openPopover` retrouve son seul sens : les flyouts du
+  mode Edit, eux réellement exclusifs.
+  **Brand kit est épinglé ouvert** : c'est la seule ligne qui répond à « à quoi ça va ressembler »
+  et on la rouvrait à chaque visite. Une section qu'on rouvre systématiquement ne devrait pas être
+  une section à ouvrir. Épinglée, son en-tête cesse d'être un contrôle — un `<div>` et non un
+  `<button>`, sans chevron ni hook de toggle — et n'entre jamais dans `collapsedGroups`. Sa valeur
+  (`Acme · 3`) reste dans l'en-tête comme résumé de ce qu'il y a dessous.
+  Le titre de la modale est un `.ap-dialog-title` **à la taille du DS (24px), sans glyphe** : il
+  avait été descendu à 14px pour « tenir à côté » de la bande d'onglets, qui est en fait sur sa
+  propre ligne en dessous — il n'y avait donc rien à accompagner, et le studio portait juste le
+  plus petit titre de toutes les dialogs de l'app.
 - **Edit** : le même composer devient la barre IA (rangée 1) et les chips d'outils Crop / Add text /
   Add image (rangée 2). Le rail de gauche, le footer, la barre IA flottante et la palette flottante
   de v1 disparaissent tous les quatre. Ne restent sur le canvas que la boîte de crop (avec son ✕/✓)

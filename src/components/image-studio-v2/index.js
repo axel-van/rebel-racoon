@@ -27,7 +27,7 @@ import { getSessionById } from "../../sessions-store.js?v=11";
 import { getContextById } from "../../contexts-store.js?v=43";
 import { MODAL_ID, KEY, ctx, state } from "./context.js?v=12";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=18";
+import { renderStudio } from "./stage-view.js?v=22";
 import {
   openFilePicker,
   openLogoPicker,
@@ -205,6 +205,14 @@ function onClick(event) {
   if (toggle && !toggle.disabled) {
     const name = toggle.dataset.imgPopoverToggle;
     return void imageStudio.setOpenPopover(KEY, st.openPopover === name ? null : name);
+  }
+
+  // The settings panel's sections — independent, not an accordion. A section the
+  // user opened stays open until they close it, and opening a second leaves the
+  // first alone. Same `collapsedGroups` Set v1's composer uses.
+  const grpToggle = event.target.closest("[data-img-group-toggle]");
+  if (grpToggle && !grpToggle.disabled) {
+    return void imageStudio.toggleGroupCollapsed(KEY, grpToggle.dataset.imgGroupToggle);
   }
 
   // ── Composer settings ──
