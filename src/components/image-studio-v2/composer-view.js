@@ -39,8 +39,8 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=34";
-import { KEY } from "./context.js?v=23";
-import * as imageStudio from "../../image-studio.js?v=59";
+import { KEY } from "./context.js?v=24";
+import * as imageStudio from "../../image-studio.js?v=60";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -518,6 +518,26 @@ function refTile(r, on) {
 // "this is what lands on the image". Bottom-right is where it goes, so the
 // preview sits in a frame that says as much without a diagram.
 function brandingBody(st, branded) {
+  const palette = st.playbookColors || [];
+  // The palette is a RECAP, not a control: these colours already reach the model
+  // through the brief's "Palette:" line, and there is nothing here to pick. It's
+  // here because "Branding" is the one place that should answer "what does my
+  // brand look like to Archie" without opening the Playbook — the mark and the
+  // colours are the same answer. Name in the swatch's tooltip, hex under it: the
+  // hex is what you'd copy, the name is what you'd say.
+  const swatches = palette.length
+    ? `<p class="isv2-sheet-hint isv2-swatches-label">Brand colours</p>
+       <ul class="isv2-swatches">
+         ${palette
+           .map(
+             (c) => `<li class="isv2-swatch" title="${escapeHtml(c.name || c.hex)}">
+               <span class="isv2-swatch-chip" style="--sw:${escapeHtml(c.hex)}" aria-hidden="true"></span>
+               <span class="isv2-swatch-hex">${escapeHtml(c.hex)}</span>
+             </li>`,
+           )
+           .join("")}
+       </ul>`
+    : "";
   return `<div class="isv2-sheet-switch">
       <span class="isv2-sheet-switch-label">Show my logo on the image</span>
       <label class="ap-toggle-container" title="Stamp the Playbook's logo on what I generate">
@@ -532,7 +552,8 @@ function brandingBody(st, branded) {
           </div>
           <p class="isv2-sheet-hint">Bottom-right corner of every image I make.</p>`
         : ""
-    }`;
+    }
+    ${swatches}`;
 }
 
 // The collapsed row's value has one line of a 284px panel to live in, beside a

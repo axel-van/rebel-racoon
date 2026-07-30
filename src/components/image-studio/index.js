@@ -23,17 +23,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=42";
 import { getSessionById } from "../../sessions-store.js?v=12";
 import { getContextById } from "../../contexts-store.js?v=44";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=33";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=34";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "./canvas.js?v=2";
-import { renderStudio } from "./shell-view.js?v=62";
+import { renderStudio } from "./shell-view.js?v=63";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=35";
-import * as imageStudio from "../../image-studio.js?v=59";
+} from "./interactions.js?v=36";
+import * as imageStudio from "../../image-studio.js?v=60";
 
 let backdrop;
 let initialized = false;
@@ -638,9 +638,7 @@ export function open(postId, opts = {}) {
     carousel: carouselUrls ? { urls: carouselUrls } : null,
     playbookRefs: context?.referenceImages || [],
     playbookName: context?.brandName || context?.name || "",
-    playbookColors: (Array.isArray(context?.brandColors) ? context.brandColors : [])
-      .map((c) => c && c.hex)
-      .filter(Boolean),
+    playbookColors: (Array.isArray(context?.brandColors) ? context.brandColors : []).filter((c) => c && c.hex),
   });
   if (unsub) unsub();
   unsub = imageStudio.subscribe(KEY, renderBody);

@@ -20,9 +20,9 @@
 import { escapeHtml } from "../../utils.js?v=21";
 import { FORMATS, NETWORK_FORMATS } from "../../clip-formats.js?v=14";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=34";
-import { KEY } from "./context.js?v=23";
+import { KEY } from "./context.js?v=24";
 import { outlineMetrics, shadowMetrics, cssFamily } from "../image-studio/canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=59";
+import * as imageStudio from "../../image-studio.js?v=60";
 
 // The working image is clipped inside .isv2-frame-clip while the frame itself is
 // overflow:visible, so on-element toolbars / popovers / handles can extend past
@@ -225,7 +225,7 @@ function swatchGrid({ st, selected, applyAttr, pickAttr, pickLabel }) {
   const seen = new Set();
   const dedupe = (list) =>
     (list || []).map((c) => (c || "").toUpperCase()).filter((c) => c && !seen.has(c) && seen.add(c));
-  const brand = dedupe(st.playbookColors); // brand first → wins the dedupe
+  const brand = dedupe((st.playbookColors || []).map((c) => c.hex)); // brand first → wins the dedupe
   const others = dedupe([...imageStudio.TEXT_COLORS, ...(st.customTextColors || [])]);
   const addSwatch = `<label class="image-studio__swatch image-studio__swatch--add" title="${pickLabel}"><input type="color" ${pickAttr} aria-label="${pickLabel}" /><i class="ap-icon-plus" aria-hidden="true"></i></label>`;
   const brandName = (st.playbookName || "").trim();

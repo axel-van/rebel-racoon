@@ -1018,6 +1018,51 @@
   object-fit: contain;
 }
 
+/* Brand colours — a RECAP under the mark, not a picker: nothing here is clickable,
+   the colours already reach the model through the brief's "Palette:" line. Chip
+   over hex, because the hex is what you'd copy and the swatch is what you'd
+   recognise. */
+.isv2-swatches-label {
+  margin-top: var(--ref-spacing-xxs);
+}
+
+/* `.isv2-palette` was already the edit-mode tool card (see the top of this file),
+   so the swatch row gets its own name — a collision there silently made this a
+   flex COLUMN with a card's padding and shadow. */
+.isv2-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.isv2-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.isv2-swatch-chip {
+  width: 28px;
+  height: 20px;
+  border-radius: var(--app-radius-sm);
+  background: var(--sw);
+  /* A hairline, so #FFFFFF is still a swatch and not a hole in the panel. */
+  box-shadow: inset 0 0 0 1px var(--sys-border-color-default);
+}
+
+.isv2-swatch-hex {
+  font-family: var(--sys-text-style-caption-font-family);
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--sys-text-color-light);
+  text-transform: uppercase;
+}
+
 /* ── Reference tiles + the uploader ──────────────────────────────────────── */
 
 /* 60px, not 72: at the panel's 260px that's four tiles to a row instead of three,

@@ -326,7 +326,10 @@ export function start(
     // anything, so the switch has nothing to offer and the section says so.
     playbookLogo: playbookLogo || "",
     useBranding: !!playbookLogo,
-    playbookColors: (Array.isArray(playbookColors) ? playbookColors : []).filter(Boolean), // brand hex list for text swatches
+    // [{ name, hex }] — NAMED, not bare hexes. Every consumer that wants the hex
+    // maps for it; the Branding recap and nothing else wants the name, and two
+    // parallel arrays for one palette is the kind of thing that drifts.
+    playbookColors: (Array.isArray(playbookColors) ? playbookColors : []).filter((c) => c && c.hex),
     customTextColors: [], // custom hex colours the user added to the text swatches
     customFonts: [], // [{ family, label, url }] fonts the user uploaded (FontFace)
     playbookName: playbookName || "", // brand/playbook label for the toggle
@@ -694,7 +697,13 @@ function derivePrompt(s) {
   } else if (style) {
     lines.push(`Look: ${style.label}.`);
   }
-  if (s.playbookColors.length) lines.push(`Palette: ${s.playbookColors.slice(0, 4).join(", ")}.`);
+  if (s.playbookColors.length)
+    lines.push(
+      `Palette: ${s.playbookColors
+        .slice(0, 4)
+        .map((c) => c.hex)
+        .join(", ")}.`,
+    );
   // Whether the artwork carries type is the user's call ("Text in image"), so the
   // composition line states whichever one they asked for rather than assuming.
   const inImage = (s.renderText || "").trim();
@@ -1097,7 +1106,7 @@ export function addCustomColor(sessionId, hex, applyKey = "color") {
   if (!s || !hex) return;
   const h = hex.toUpperCase();
   const known = new Set(
-    [...(s.playbookColors || []), ...TEXT_COLORS, ...s.customTextColors].map((c) => c.toUpperCase()),
+    [...(s.playbookColors || []).map((c) => c.hex), ...TEXT_COLORS, ...s.customTextColors].map((c) => c.toUpperCase()),
   );
   if (!known.has(h)) s.customTextColors.push(h);
   if (s.selectedOverlayId) {
