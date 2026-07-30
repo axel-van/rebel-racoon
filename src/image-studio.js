@@ -233,6 +233,7 @@ export function start(
     formatId = null,
     editImage = null,
     carousel = null,
+    playbookId = null,
     playbookRefs = [],
     playbookName = "",
     playbookColors = [],
@@ -308,6 +309,7 @@ export function start(
     referenceImages: initialSelectedRefId ? [{ ...pbRefs[0], fromPlaybook: true }] : [],
     selectedRefId: initialSelectedRefId,
     lastRefId: initialSelectedRefId, // what the switch restores when turned back on
+    playbookId: playbookId || null, // which Playbook is feeding the brand pool
     playbookRefs: pbRefs, // the Playbook's brand images (snapshot)
     uploadedRefs: [], // the user's own uploads — a POOL to pick from, not the selection
     playbookColors: (Array.isArray(playbookColors) ? playbookColors : []).filter(Boolean), // brand hex list for text swatches
@@ -521,6 +523,39 @@ export function removeReferenceImage(sessionId, id) {
   safeRevoke(ref.url); // only ever an uploaded object URL — never a Playbook URL
   s.uploadedRefs = s.uploadedRefs.filter((r) => r.id !== id);
   if (s.selectedRefId === id) s.selectedRefId = null;
+  syncSelectedRef(s);
+  notify(sessionId);
+}
+
+// Swap the Playbook the studio is working for. The engine holds no store — the
+// caller resolves the Playbook and hands over the three things it feeds: the
+// brand reference pool, the name shown on the section, and the palette the brief
+// quotes. The user's OWN uploads survive: they belong to the user, not to the
+// Playbook that happened to be selected when they dropped them.
+//
+// The picked reference resets to the new Playbook's first image, because the old
+// pick was an id in a pool that no longer exists — unless the pick was an upload,
+// which is still there. The prompt is NOT re-derived: it may carry the user's
+// edits, and silently rewriting what someone typed is worse than a stale palette
+// line they can refresh with Suggest.
+export function setPlaybook(sessionId, { id, name = "", refs = [], colors = [] } = {}) {
+  const s = states.get(sessionId);
+  if (!s || s.playbookId === id) return;
+  s.playbookId = id || null;
+  s.playbookName = name || "";
+  s.playbookColors = (Array.isArray(colors) ? colors : []).filter(Boolean);
+  s.playbookRefs = (Array.isArray(refs) ? refs : [])
+    .filter((r) => r && r.url)
+    .map((r, i) => ({
+      id: r.id || `pb-${i}`,
+      url: r.url,
+      label: r.label || "",
+      note: r.note || "",
+      networks: Array.isArray(r.networks) ? r.networks : [],
+    }));
+  const keptUpload = s.uploadedRefs.some((r) => r.id === s.selectedRefId);
+  if (!keptUpload) s.selectedRefId = s.selectedRefId ? s.playbookRefs[0]?.id || null : null;
+  s.lastRefId = s.selectedRefId || s.playbookRefs[0]?.id || null;
   syncSelectedRef(s);
   notify(sessionId);
 }

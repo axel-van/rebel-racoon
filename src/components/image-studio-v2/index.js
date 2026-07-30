@@ -25,17 +25,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=41";
 import { getSessionById } from "../../sessions-store.js?v=11";
 import { getContextById } from "../../contexts-store.js?v=43";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=18";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=19";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=33";
+import { renderStudio } from "./stage-view.js?v=34";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=18";
-import * as imageStudio from "../../image-studio.js?v=54";
+} from "./interactions.js?v=19";
+import * as imageStudio from "../../image-studio.js?v=55";
 
 let backdrop;
 let initialized = false;
@@ -212,6 +212,22 @@ function onClick(event) {
   // first alone. Same `collapsedGroups` Set v1's composer uses.
   const expandBtn = event.target.closest("[data-img-composer-expand]");
   if (expandBtn) return void imageStudio.setComposerExpanded(KEY, !state().composerExpanded);
+
+  // Playbook pick — the view resolves it, the engine just takes the parts.
+  const pbPick = event.target.closest("[data-img-playbook]");
+  if (pbPick) {
+    pbPick.closest("details")?.removeAttribute("open");
+    const c = getContextById(pbPick.dataset.imgPlaybook);
+    if (c) {
+      imageStudio.setPlaybook(KEY, {
+        id: c.id,
+        name: c.brandName || c.name || "",
+        refs: c.referenceImages || [],
+        colors: (Array.isArray(c.brandColors) ? c.brandColors : []).map((x) => x && x.hex).filter(Boolean),
+      });
+    }
+    return;
+  }
 
   const grpToggle = event.target.closest("[data-img-group-toggle]");
   if (grpToggle && !grpToggle.disabled) {
@@ -652,6 +668,7 @@ export function open(postId, opts = {}) {
     formatId: post?.format || null,
     editImage: editImageUrl ? { url: editImageUrl } : null,
     carousel: carouselUrls ? { urls: carouselUrls } : null,
+    playbookId: context?.id || null,
     playbookRefs: context?.referenceImages || [],
     playbookName: context?.brandName || context?.name || "",
     playbookColors: (Array.isArray(context?.brandColors) ? context.brandColors : [])

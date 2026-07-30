@@ -39,8 +39,9 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=33";
-import { KEY } from "./context.js?v=18";
-import * as imageStudio from "../../image-studio.js?v=54";
+import { getContexts } from "../../contexts-store.js?v=43";
+import { KEY } from "./context.js?v=19";
+import * as imageStudio from "../../image-studio.js?v=55";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -278,6 +279,12 @@ export function footerBar(st) {
       ? `<button type="button" class="ap-button primary orange" data-img-apply-slide ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Apply to slide ${(st.selectedIndex ?? 0) + 1}</span></button>`
       : `<button type="button" class="ap-button primary orange" data-img-use ${st.editBusy || !st.currentImage ? "disabled" : ""}><i class="ap-icon-check"></i><span>Use this image</span></button>`;
   } else {
+    // The Playbook this image is being made for. It defaults to the draft's, and it
+    // lives HERE rather than in the settings panel because it isn't a setting of the
+    // image — it's the whose-brand-is-this that every setting above hangs off: the
+    // reference pool, the palette in the brief, the name on the section. Generate
+    // only; in edit mode the left slot is Undo, and the brand has done its work.
+    left = playbookPicker(st);
     const label = carousel ? `Use carousel · ${st.variations.length} slides` : "Use this image";
     const ready = carousel ? st.variations.length >= 2 : !!st.currentImage;
     primary = `<button type="button" class="ap-button primary orange" data-img-use ${ready ? "" : "disabled"}><i class="ap-icon-check"></i><span>${escapeHtml(label)}</span></button>`;
@@ -285,6 +292,35 @@ export function footerBar(st) {
   return `<div class="ap-dialog-footer isv2-footer">
     <div class="ap-dialog-footer-left">${left}</div>
     <div class="ap-dialog-footer-right">${primary}</div>
+  </div>`;
+}
+
+// DS `.ap-select` over <details> — never a bare native <select>. Hidden when there
+// is only one Playbook: a picker with one option is a label wearing a chevron.
+function playbookPicker(st) {
+  const books = getContexts();
+  if (books.length < 2) return "";
+  const active = books.find((c) => c.id === st.playbookId) || books[0];
+  const options = books
+    .map((c) => {
+      const on = c.id === active.id;
+      return `<div class="ap-select-option${on ? " selected" : ""}" data-img-playbook="${escapeHtml(c.id)}" role="option" aria-selected="${on}">
+        <span class="ap-select-option-text">${escapeHtml(c.name)}</span>
+        ${on ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
+      </div>`;
+    })
+    .join("");
+  return `<div class="ap-form-field isv2-playbook">
+    <label>Playbook</label>
+    <details class="ap-select isv2-playbook-select">
+      <summary class="ap-select-trigger">
+        <span class="ap-select-value">${escapeHtml(active.name)}</span>
+        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+      </summary>
+      <div class="ap-select-dropdown" role="listbox" aria-label="Playbook">
+        <div class="ap-select-options">${options}</div>
+      </div>
+    </details>
   </div>`;
 }
 
