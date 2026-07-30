@@ -484,7 +484,7 @@ function refsBody(st, picked) {
 // the title of the three tiles it belongs to.
 function refGroup(label, tiles) {
   const head = label ? `<p class="isv2-refs-group">${escapeHtml(label)}</p>` : "";
-  return `<div class="isv2-ref-block">${head}<div class="isv2-refs">${tiles}</div></div>`;
+  return `<div class="isv2-block">${head}<div class="isv2-refs">${tiles}</div></div>`;
 }
 
 // One candidate. SINGLE-SELECT: picking one drops whatever was picked before, so
@@ -534,8 +534,9 @@ function brandingBody(st, branded) {
   // Dots, the shape the Playbook's own "Brand color" row already uses; each one
   // still names itself on hover.
   const swatches = palette.length
-    ? `<p class="isv2-sheet-hint isv2-branddots-label">Brand color</p>
-       <p class="isv2-branddots">
+    ? `<div class="isv2-block">
+         <p class="isv2-sheet-hint">Brand color</p>
+         <p class="isv2-branddots">
          ${palette
            .map(
              (c) =>
@@ -544,7 +545,8 @@ function brandingBody(st, branded) {
                )}"></span>`,
            )
            .join("")}
-       </p>`
+         </p>
+       </div>`
     : "";
   return `<div class="isv2-sheet-switch">
       <span class="isv2-sheet-switch-label">Show my logo</span>
@@ -591,11 +593,17 @@ function brandingPlacer(st) {
       </label>`,
     )
     .join("");
-  // ONE row: the mark on the left, where it goes on the right. "This logo → lands
-  // there", read left to right.
-  return `<div class="isv2-brandrow">
-      <img class="isv2-placer-mark" src="${escapeHtml(st.playbookLogo)}" alt="${escapeHtml(st.playbookName || "Brand")} logo" />
-      <div class="isv2-placer" style="--isv2-placer-ratio:${imageStudio.activeRatio(KEY)}" role="radiogroup" aria-label="Logo position">${cells}</div>
+  // ONE row: the mark on the left, where it goes on the right — "this logo → lands
+  // there", read across.
+  // The thumb and the grid are the SAME box — same width, same ratio, same frame —
+  // so the row reads as one pair rather than two objects that happen to be near
+  // each other. The mark is contained inside its tile, never cropped.
+  const ratio = imageStudio.activeRatio(KEY);
+  return `<div class="isv2-brandrow" style="--isv2-placer-ratio:${ratio}">
+      <div class="isv2-brandthumb">
+        <img class="isv2-placer-mark" src="${escapeHtml(st.playbookLogo)}" alt="${escapeHtml(st.playbookName || "Brand")} logo" />
+      </div>
+      <div class="isv2-placer" role="radiogroup" aria-label="Logo position">${cells}</div>
     </div>`;
 }
 

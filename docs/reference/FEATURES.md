@@ -290,7 +290,14 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   Noms boussole `nw n ne / w c e / sw s se`, prolongeant le vocabulaire des poignées de crop.
   Fractions dans `BRAND_ANCHORS` (`image-studio.js`) : 0.22 / 0.5 / 0.78 et 0.11 / 0.5 / 0.89,
   symétriques par construction pour `wF: 0.26`, donc aucune ancre n'a l'air d'une erreur.
-  La marque est affichée **une fois, petite, À CÔTÉ** de la grille — « ce logo → va là », de gauche
+  La marque est une **tuile de la même boîte que la grille** — même largeur, même ratio, même
+  bordure — posée juste à côté : deux cadres identiques disent « cette chose → va dans ce cadre »,
+  alors qu'une tuile épousant sa propre largeur ne disait rien et changeait de taille selon la
+  marque. La rangée est en `align-items: stretch` et non `center` : `aspect-ratio` donne une hauteur
+  à chacune, mais la grille a aussi un plancher de contenu (trois pastilles de 16px + padding ne
+  descendent pas sous ~58px), donc à 16:9 les 50px du ratio perdaient et les deux cessaient de
+  correspondre. Étirées, la paire correspond **par construction** et non par une arithmétique qui
+  tombe juste. La marque est affichée **une fois, À CÔTÉ** de la grille — « ce logo → va là », de gauche
   à droite, et une rangée au lieu de deux blocs empilés. Elle est **encadrée** (bordure + fond
   blanc + padding) : un logo nu posé sur le panneau se lit comme du mobilier, une tuile bordée se
   lit comme un fichier qu'on a fourni. Elle épouse sa propre largeur — un wordmark et un monogramme
@@ -301,6 +308,10 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   boutons-quadrants avec le logo rendu dans celui qui était choisi — ça rendait chaque cellule de la
   taille d'un logo, donc le cadre gros, exactement ce que le placeur devait corriger.
 
+  Un **libellé et ce qu'il titre forment UN bloc** (`.isv2-block`, 4px à l'intérieur, les 12px du
+  corps entre blocs) — partagé par les groupes de References et par « Brand color », sinon les deux
+  sections dérivent : le libellé de References collait à ses vignettes à 4px pendant que celui de
+  Branding flottait à 12px de ses pastilles, la même relation à deux espacements.
   **Les couleurs ne font pas partie du logo** : elles ont leur **propre rangée**, sous la rangée du
   logo, et pas glissées à côté de la marque — les empiler sous elle disait qu'elles lui
   appartenaient. Debout seules, elles reprennent leur libellé : cinq pastilles sans étiquette sur
