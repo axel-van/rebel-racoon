@@ -964,7 +964,14 @@ button.image-studio__ref--pick:focus-visible {
   padding: var(--ref-spacing-sm);
 }
 
-/* Mini toolbar attached to a selected TEXT element (upright pill above it). */
+/* Mini toolbar attached to a selected TEXT element, above it.
+ *
+ * A DS radius, not a pill. At 999px the corner arc cut straight across the
+ * controls at both ends — the colour swatch on the left and the trash icon-button
+ * on the right — clipping them. 8px (`--app-radius-lg`, the DS `border-radius-lg`)
+ * is also `--comp-icon-button-border-radius`, so the container's corner is
+ * concentric with the icon buttons it holds: 4px of padding around a 4px button
+ * corner lands exactly on 8px. */
 .image-studio__text-toolbar {
   position: absolute;
   bottom: calc(100% + 10px);
@@ -978,7 +985,7 @@ button.image-studio__ref--pick:focus-visible {
   white-space: nowrap;
   background: var(--ref-color-white);
   border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-pill);
+  border-radius: var(--app-radius-lg);
   box-shadow: var(--app-shadow-popover-lg);
 }
 
@@ -1644,7 +1651,9 @@ button.image-studio__ref--pick:focus-visible {
   padding: 4px 6px; /* match the text mini toolbar */
   background: var(--ref-color-white);
   border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-pill);
+  /* Same DS radius as the text mini toolbar, and for the same reason — it ends in
+     two `.ap-icon-button`s that a pill corner sliced through. */
+  border-radius: var(--app-radius-lg);
   box-shadow: var(--app-shadow-popover-lg);
 }
 

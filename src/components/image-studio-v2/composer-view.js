@@ -392,15 +392,17 @@ function settingRows(st) {
 // Brand kit — the switch IS the disclosure for the tiles below it (off = no
 // brand images in play, so there's nothing to show).
 function brandKitBody(st) {
-  const brand = st.playbookName || "Playbook";
   const on = !!st.usePlaybookRefs;
   const usedIds = new Set(st.referenceImages.map((r) => r.id));
   const capReached = st.referenceImages.length >= imageStudio.MAX_REFS;
   const tiles = (st.playbookRefs || []).map((r) => playbookRefTile(r, usedIds.has(r.id), capReached)).join("");
+  // Names what the images ARE, not whose they are — the brand is already on the
+  // section header ("Brand kit · Acme · 3"), so "Use Acme's images" spent the line
+  // repeating it instead of saying these are the Playbook's reference images.
   return `<div class="isv2-sheet-switch">
-      <span class="isv2-sheet-switch-label">Use ${escapeHtml(brand)}'s images</span>
-      <label class="ap-toggle-container" title="Use your brand kit">
-        <input type="checkbox" data-img-toggle-playbook-refs ${on ? "checked" : ""} aria-label="Use ${escapeHtml(brand)} brand kit" />
+      <span class="isv2-sheet-switch-label">Use Playbook reference images</span>
+      <label class="ap-toggle-container" title="Use the Playbook's reference images">
+        <input type="checkbox" data-img-toggle-playbook-refs ${on ? "checked" : ""} aria-label="Use Playbook reference images" />
         <i aria-hidden="true"></i>
       </label>
     </div>
