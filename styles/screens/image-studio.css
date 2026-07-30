@@ -330,7 +330,10 @@ button.image-studio__group-head:disabled {
 }
 
 /* Tier 3 — the current value, column 2. Right-aligned against the control so
-   every row's value ends on the same axis; ellipsis rather than push the label. */
+   every row's value ends on the same axis; ellipsis rather than push the label.
+   Regular and light against the label's bold: the name of the setting is what you
+   scan for, its current value is what you read once you've found it. (v2 had this
+   inverted and was corrected to match.) */
 .image-studio__group-summary {
   justify-self: end;
   min-width: 0;

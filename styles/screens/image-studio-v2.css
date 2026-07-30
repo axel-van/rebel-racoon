@@ -708,19 +708,26 @@
   background: transparent;
 }
 
+/* The row's SUBJECT, so it's the bold one. It was the other way round — label
+   light-regular, value dark-bold — which made a panel of six rows read as six
+   values with a caption each: you scanned "Any / Any / 1:1 · Square" and had to
+   work back to what each one was setting. The name of the thing is what you look
+   for; what it's currently set to is what you read once you've found it. */
 .isv2-acc-title {
-  font-weight: var(--sys-text-style-body-weight);
-  color: var(--sys-text-color-light);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--sys-text-color-default);
 }
 
 /* The current value, right-aligned before the toggle: the row still reads when
-   the section is shut, which is the whole point of collapsing it. */
+   the section is shut, which is the whole point of collapsing it. Regular weight
+   now that the title carries the emphasis — set values keep the DS accent, which
+   is plenty of signal without also being bold. */
 .isv2-acc-value {
   flex: 0 1 auto;
   min-width: 0;
-  color: var(--sys-text-color-default);
+  color: var(--sys-text-color-light);
   font-size: var(--sys-text-style-body-size);
-  font-weight: var(--sys-text-style-body-bold-weight);
+  font-weight: var(--sys-text-style-body-weight);
   text-align: right;
   overflow: hidden;
   text-overflow: ellipsis;
