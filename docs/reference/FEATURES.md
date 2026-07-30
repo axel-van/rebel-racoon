@@ -309,11 +309,13 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   un gradient non enregistré s'interpole de façon discrète dans Chrome, donc le masque basculait de
   côté en une frame à mi-course. À 0px la paire de stops se réduit à une largeur nulle : pas de
   fondu du tout, ce qui est exactement l'aspect attendu du bord qu'on a atteint.
-  **Deux interrupteurs, pas un** — « Show my logo » et « Use my brand colors ». Le logo et la
+  **Deux interrupteurs, pas un** — « Show my logo » et « Use brand colors ». Le logo et la
   palette sont deux impositions différentes sur une image : beaucoup de posts veulent les couleurs de
   la marque sans son wordmark dans un coin, et un visuel de lancement peut vouloir la marque sur
   l'artwork de quelqu'un d'autre. Un seul interrupteur prenait la moitié bon marché en otage de la
-  moitié chère. Chacun ouvre SA propre partie (le placeur au logo, les pastilles aux couleurs), les
+  moitié chère. Chacun ouvre SA propre partie (le placeur au logo, les pastilles aux couleurs) — les pastilles **sans libellé à elles**, directement sous l'interrupteur : « Use brand
+  colors » suivi de cinq pastilles dit tout ce qu'une légende « Brand color » intercalée disait, et
+  cette légende faisait lire la paire comme deux rangées au lieu d'un seul énoncé, les
   deux sont ON par défaut quand le Playbook a de quoi, et un interrupteur sans matière reste
   **visible mais désactivé** avec la raison en dessous (« This Playbook has no logo yet. ») — un
   contrôle qui disparaît laisse se demander si l'option existe. La valeur d'en-tête nomme la moitié

@@ -555,7 +555,7 @@ function brandingBody(st, branded, tinted) {
     body: branded ? brandingPlacer(st) : "",
   })}
   ${brandSwitch({
-    label: "Use my brand colors",
+    label: "Use brand colors",
     hint: "Brief the model with the Playbook's palette",
     hook: "data-img-toggle-brand-colors",
     on: tinted,
@@ -589,10 +589,13 @@ function brandSwitch({ label, hint, hook, on, available, missing, body }) {
 // The colours, as a RECAP: nothing here is clickable, and the switch above is the
 // only decision — they reach the model through the brief's "Palette:" line.
 //
-// Dots, the shape the Playbook's own "Brand color" row already uses; each one
-// still names itself on hover. Their own labelled block rather than something
-// tucked beside the mark: the palette isn't part of the logo, it's the other half
-// of "what my brand looks like".
+// NO label of its own. "Use brand colors" with five dots directly under it says
+// everything a "Brand color" caption in between would have said, and the caption
+// made the pair read as two rows instead of one statement. The label the switch
+// already carries is the label.
+//
+// Dots, the shape the Playbook's own "Brand color" row uses; each names itself on
+// hover.
 function swatchRow(palette) {
   const dots = palette
     .map(
@@ -602,10 +605,7 @@ function swatchRow(palette) {
         )}"></span>`,
     )
     .join("");
-  return `<div class="isv2-block">
-      <p class="isv2-sheet-hint">Brand color</p>
-      <p class="isv2-branddots">${dots}</p>
-    </div>`;
+  return `<p class="isv2-branddots">${dots}</p>`;
 }
 
 // Nine anchors in a 3×3, as REAL radios — one choice out of a fixed set is what a
