@@ -290,11 +290,21 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   Noms boussole `nw n ne / w c e / sw s se`, prolongeant le vocabulaire des poignées de crop.
   Fractions dans `BRAND_ANCHORS` (`image-studio.js`) : 0.22 / 0.5 / 0.78 et 0.11 / 0.5 / 0.89,
   symétriques par construction pour `wF: 0.26`, donc aucune ancre n'a l'air d'une erreur.
-  La marque est affichée **une fois, petite, À CÔTÉ** de la grille — « ce logo → va là », de gauche à droite, et une rangée au lieu de deux blocs empilés. Grille de 96px : la pastille du radio DS fait 16px en dur, donc un tiers de 96 laisse ~13px de cellule autour de chacune — assez pour cliquer, sans l'hectare. Version précédente : quatre
+  La marque est affichée **une fois, petite, À CÔTÉ** de la grille — « ce logo → va là », de gauche
+  à droite, et une rangée au lieu de deux blocs empilés. Elle est **encadrée** (bordure + fond
+  blanc + padding) : un logo nu posé sur le panneau se lit comme du mobilier, une tuile bordée se
+  lit comme un fichier qu'on a fourni. Elle épouse sa propre largeur — un wordmark et un monogramme
+  n'ont pas la même forme, une boîte fixe en letterboxerait un ; c'est `space-between` qui tient la
+  grille contre le bord droit quelle que soit cette largeur. Grille de 88px : la pastille du radio
+  DS fait 16px en dur, donc un tiers de 88 laisse ~13px de cellule autour de chacune — cible de
+  26px, sans l'hectare. Version précédente : quatre
   boutons-quadrants avec le logo rendu dans celui qui était choisi — ça rendait chaque cellule de la
   taille d'un logo, donc le cadre gros, exactement ce que le placeur devait corriger.
 
-  Sous la marque, un **récap des couleurs de marque** : les **mêmes pastilles rondes que la ligne
+  **Les couleurs ne font pas partie du logo** : elles ont leur **propre rangée**, sous la rangée du
+  logo, et pas glissées à côté de la marque — les empiler sous elle disait qu'elles lui
+  appartenaient. Debout seules, elles reprennent leur libellé : cinq pastilles sans étiquette sur
+  une rangée à elles sont une devinette. Un **récap des couleurs de marque** : les **mêmes pastilles rondes que la ligne
   « Brand color » du Playbook** (`.recap__fact-dot`), et les mêmes mots — un récap doit ressembler à
   ce qu'il récapitule. Nom + hex en tooltip ; l'hex imprimé sous chaque pastille transformait une
   rangée de cinq en deux lignes de petit texte que personne ne lit dans un panneau. Les règles sont

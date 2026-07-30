@@ -523,16 +523,16 @@ function refTile(r, on) {
 // full-width tile spending 60px of panel to say "this is your logo".
 function brandingBody(st, branded) {
   const palette = st.playbookColors || [];
-  // The palette is a RECAP, not a control: these colours already reach the model
-  // through the brief's "Palette:" line, and there is nothing here to pick. It's
-  // here because "Branding" is the one place that should answer "what does my
-  // brand look like to Archie" without opening the Playbook — the mark and the
-  // colours are the same answer.
+  // The colours are a RECAP, not a control: nothing here is clickable and they
+  // already reach the model through the brief's "Palette:" line.
   //
-  // Dots, the shape the Playbook's own "Brand color" row already uses, and the
-  // same words. A recap should look like the thing it recaps; printing the hex
-  // under each one made a row of five into two lines of small type nobody reads
-  // off a panel. Name + hex ride in the tooltip.
+  // Their OWN row, under the logo row — not tucked beside the mark. The palette
+  // isn't part of the logo; it's the other half of "what my brand looks like", and
+  // stacking it under the mark said it belonged to it. Standing alone it earns its
+  // label back: five unlabelled dots on a row of their own are a guess.
+  //
+  // Dots, the shape the Playbook's own "Brand color" row already uses; each one
+  // still names itself on hover.
   const swatches = palette.length
     ? `<p class="isv2-sheet-hint isv2-branddots-label">Brand color</p>
        <p class="isv2-branddots">
@@ -547,14 +547,13 @@ function brandingBody(st, branded) {
        </p>`
     : "";
   return `<div class="isv2-sheet-switch">
-      <span class="isv2-sheet-switch-label">Show my logo on the image</span>
+      <span class="isv2-sheet-switch-label">Show my logo</span>
       <label class="ap-toggle-container" title="Stamp the Playbook's logo on what I generate">
         <input type="checkbox" data-img-toggle-branding ${branded ? "checked" : ""} aria-label="Show my logo on the image" />
         <i aria-hidden="true"></i>
       </label>
     </div>
-    ${branded ? brandingPlacer(st) : ""}
-    ${swatches}`;
+    ${branded ? `${brandingPlacer(st)}${swatches}` : ""}`;
 }
 
 // Nine anchors in a 3×3, as REAL radios — one choice out of a fixed set is what a
@@ -592,8 +591,8 @@ function brandingPlacer(st) {
       </label>`,
     )
     .join("");
-  // Mark and grid on ONE row, not stacked: "this logo → goes here" reads left to
-  // right, and it saves the panel a whole block of height.
+  // ONE row: the mark on the left, where it goes on the right. "This logo → lands
+  // there", read left to right.
   return `<div class="isv2-brandrow">
       <img class="isv2-placer-mark" src="${escapeHtml(st.playbookLogo)}" alt="${escapeHtml(st.playbookName || "Brand")} logo" />
       <div class="isv2-placer" style="--isv2-placer-ratio:${imageStudio.activeRatio(KEY)}" role="radiogroup" aria-label="Logo position">${cells}</div>
