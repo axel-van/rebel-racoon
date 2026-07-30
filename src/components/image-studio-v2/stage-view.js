@@ -14,11 +14,11 @@ import { html, raw, escapeHtml } from "../../utils.js?v=21";
 import { getPosts } from "../../posts-store.js?v=41";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=33";
 import { renderPostCard } from "../post-card.js?v=77";
-import { KEY, ctx } from "./context.js?v=17";
-import { composer, settingsPanel, toolPalette, footerBar } from "./composer-view.js?v=30";
-import { editCanvas } from "./edit-view.js?v=17";
+import { KEY, ctx } from "./context.js?v=18";
+import { composer, settingsPanel, toolPalette, footerBar } from "./composer-view.js?v=31";
+import { editCanvas } from "./edit-view.js?v=18";
 import { compositeOverlays } from "../image-studio/canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=53";
+import * as imageStudio from "../../image-studio.js?v=54";
 
 // In-feed preview — the edit canvas layers logo/text overlays as live DOM over
 // the image, but renderPostCard only takes a URL, so overlays wouldn't show. We

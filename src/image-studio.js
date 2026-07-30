@@ -307,6 +307,7 @@ export function start(
     // them cares how many there are.
     referenceImages: initialSelectedRefId ? [{ ...pbRefs[0], fromPlaybook: true }] : [],
     selectedRefId: initialSelectedRefId,
+    lastRefId: initialSelectedRefId, // what the switch restores when turned back on
     playbookRefs: pbRefs, // the Playbook's brand images (snapshot)
     uploadedRefs: [], // the user's own uploads — a POOL to pick from, not the selection
     playbookColors: (Array.isArray(playbookColors) ? playbookColors : []).filter(Boolean), // brand hex list for text swatches
@@ -504,7 +505,8 @@ export function addReferenceImage(sessionId, url) {
   refSeq += 1;
   const ref = { id: `ref-${refSeq}`, url };
   s.uploadedRefs.push(ref);
-  s.selectedRefId = ref.id;
+  s.selectedRefId = ref.id; // adding an image is also switching references on
+  s.lastRefId = ref.id;
   syncSelectedRef(s);
   notify(sessionId);
 }
@@ -523,25 +525,36 @@ export function removeReferenceImage(sessionId, id) {
   notify(sessionId);
 }
 
-// Generate with no reference at all. The explicit half of the choice: the "None"
-// tile sets it, and it's what clicking the picked tile falls back to.
-export function clearReferenceImage(sessionId) {
+// Whether the generator gets a reference image AT ALL. This is the switch at the
+// top of the section, and it owns the "none" state on its own — which is why the
+// tiles below are a plain radio group with no toggle-off: two ways to reach the
+// same nothing is one too many.
+//
+// Off remembers the pick so switching back doesn't make the user find it again;
+// on restores it, or falls back to the first image available.
+export function setUseReference(sessionId, on) {
   const s = states.get(sessionId);
-  if (!s || !s.selectedRefId) return;
-  s.selectedRefId = null;
+  if (!s) return;
+  if (on) {
+    const pool = referencePool(s);
+    const back = pool.some((r) => r.id === s.lastRefId) ? s.lastRefId : pool[0]?.id || null;
+    s.selectedRefId = back;
+  } else {
+    if (s.selectedRefId) s.lastRefId = s.selectedRefId;
+    s.selectedRefId = null;
+  }
   syncSelectedRef(s);
   notify(sessionId);
 }
 
-// Pick THE reference image — single-select across both pools. Clicking the one
-// already picked clears it, because "no reference at all" has to be reachable
-// and a radio group on its own can't get back to empty. Same single-select,
-// toggle-off contract as Image type and Style preset.
+// Pick THE reference image — single-select across both pools. Clicking the picked
+// one is a no-op, not a clear: the switch above is what turns references off, and
+// a radio group that can empty itself by re-click is a trap you fall into.
 export function toggleReferenceImage(sessionId, id) {
   const s = states.get(sessionId);
-  if (!s) return;
-  if (s.selectedRefId === id) s.selectedRefId = null;
-  else if (referencePool(s).some((r) => r.id === id)) s.selectedRefId = id;
+  if (!s || s.selectedRefId === id) return;
+  if (!referencePool(s).some((r) => r.id === id)) return;
+  s.selectedRefId = id;
   syncSelectedRef(s);
   notify(sessionId);
 }

@@ -25,17 +25,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=41";
 import { getSessionById } from "../../sessions-store.js?v=11";
 import { getContextById } from "../../contexts-store.js?v=43";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=17";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=18";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=32";
+import { renderStudio } from "./stage-view.js?v=33";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=17";
-import * as imageStudio from "../../image-studio.js?v=53";
+} from "./interactions.js?v=18";
+import * as imageStudio from "../../image-studio.js?v=54";
 
 let backdrop;
 let initialized = false;
@@ -212,8 +212,6 @@ function onClick(event) {
   // first alone. Same `collapsedGroups` Set v1's composer uses.
   const expandBtn = event.target.closest("[data-img-composer-expand]");
   if (expandBtn) return void imageStudio.setComposerExpanded(KEY, !state().composerExpanded);
-
-  if (event.target.closest("[data-img-ref-none]")) return void imageStudio.clearReferenceImage(KEY);
 
   const grpToggle = event.target.closest("[data-img-group-toggle]");
   if (grpToggle && !grpToggle.disabled) {
@@ -434,6 +432,8 @@ function onChange(event) {
     imageStudio.updateOverlay(KEY, st.selectedOverlayId, { outlineWidth: Number(event.target.value) });
   } else if (event.target.matches("[data-img-shadow-intensity]") && st?.selectedOverlayId) {
     imageStudio.updateOverlay(KEY, st.selectedOverlayId, { shadowIntensity: Number(event.target.value) });
+  } else if (event.target.matches("[data-img-toggle-ref]")) {
+    imageStudio.setUseReference(KEY, event.target.checked);
   } else if (event.target.matches("[data-img-render-text]")) {
     // Blur commits, which is what refreshes the collapsed row's value.
     imageStudio.commitRenderText(KEY, event.target.value);

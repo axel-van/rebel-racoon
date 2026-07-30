@@ -1061,54 +1061,6 @@
   border-color: var(--sys-color-accent-default-bg-default);
 }
 
-/* The "no reference" choice — a tile like the others so it sits in the same
-   decision, but empty: an icon and the word, no image. Its own single-cell grid,
-   because it belongs to neither labelled pool. */
-.isv2-refs--none {
-  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-}
-
-.isv2-ref--none {
-  /* The other tiles get their size from the `<img>` inside them; this one has no
-     image, so without a width it collapses to its icon and `aspect-ratio: 1`
-     squares off that. Fill the slot and let the ratio do the rest. */
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  background: var(--app-surface-subtle);
-  color: var(--sys-text-color-light);
-}
-
-.isv2-ref--none > i {
-  font-size: 18px;
-}
-
-.isv2-ref-none-label {
-  font-family: var(--sys-text-style-caption-font-family);
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-}
-
-/* The scrim dims a photo; there's no photo here, so the off state is carried by
-   the muted text the tile already has. */
-.isv2-ref--none.is-skipped {
-  opacity: 1;
-}
-
-.isv2-ref--none.is-used {
-  color: var(--sys-text-color-default);
-  border-color: var(--sys-color-accent-default-bg-default);
-}
-
-/* On an empty tile the marker needs its own contrast — the white ring that reads
-   against a photo disappears against a pale surface. */
-.isv2-ref--none .isv2-ref-radio {
-  border-color: var(--ref-color-grey-40);
-}
-
 /* SINGLE-SELECT, so the marker is a RADIO dot, not a tick — a tick promises you
    can have several, and here picking one drops the last. Same 16px box the tick
    sat in, made round and filled from the centre. */

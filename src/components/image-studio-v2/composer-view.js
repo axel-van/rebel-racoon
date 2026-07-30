@@ -39,8 +39,8 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=33";
-import { KEY } from "./context.js?v=17";
-import * as imageStudio from "../../image-studio.js?v=53";
+import { KEY } from "./context.js?v=18";
+import * as imageStudio from "../../image-studio.js?v=54";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -440,27 +440,23 @@ function refsBody(st, picked) {
         </button>
         <p class="isv2-sheet-hint">PNG, JPG or WebP · I'll match its look</p>
       </div>`;
+  // The switch owns "no reference at all" — it was an 81px tile in the grid, which
+  // is a lot of square for nothing, and a two-state choice is what a switch is. Off
+  // hides the grid rather than leaving a picker that picks nothing: the switch IS
+  // the disclosure.
+  //
   // No dividers between the pieces: rules inside a section re-draw the boundary the
   // merge just removed. The group labels already separate the pools, and the
   // section's own frame separates it from Text in image below.
-  return `${noneTile(!picked)}${groups.join("")}${dropzone}`;
-}
-
-// Generating with NO reference is a real choice — it's how you get an image that
-// isn't held to anything. It was reachable (clicking the picked tile clears it)
-// but only by trying, so it now has a tile of its own at the head of the grid.
-// Deliberately outside both labelled groups: it belongs to neither pool.
-function noneTile(on) {
-  const label = "No reference";
-  return `<div class="isv2-refs isv2-refs--none">
-    <div class="isv2-ref-slot">
-      <button type="button" class="isv2-ref isv2-ref--pick isv2-ref--none${on ? " is-used" : " is-skipped"}" data-img-ref-none aria-pressed="${on}" aria-label="${label}" title="Generate without a reference image">
-        <i class="ap-icon-ban" aria-hidden="true"></i>
-        <span class="isv2-ref-none-label">None</span>
-        <span class="isv2-ref-radio" aria-hidden="true"></span>
-      </button>
+  const on = !!picked;
+  return `<div class="isv2-sheet-switch">
+      <span class="isv2-sheet-switch-label">Use a reference image</span>
+      <label class="ap-toggle-container" title="Give the generator an image to match">
+        <input type="checkbox" data-img-toggle-ref ${on ? "checked" : ""} aria-label="Use a reference image" />
+        <i aria-hidden="true"></i>
+      </label>
     </div>
-  </div>`;
+    ${on ? `${groups.join("")}${dropzone}` : ""}`;
 }
 
 function refGroup(label, tiles) {

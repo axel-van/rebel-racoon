@@ -263,10 +263,14 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   **Aucun séparateur à l'intérieur de la section** : un filet entre les vignettes et le bouton
   redessinait exactement la frontière que la fusion venait d'enlever. Les libellés de groupe
   séparent déjà les viviers, et le cadre de la section la sépare déjà de Text in image.
-  **« None » est une tuile**, en tête de grille et hors des deux groupes libellés (elle
-  n'appartient à aucun vivier) : générer sans référence est un vrai choix — c'est comme ça qu'on
-  obtient une image qui n'est tenue à rien — et il n'était atteignable qu'en re-cliquant la tuile
-  choisie, donc seulement en essayant.
+  **Un switch « Use a reference image » possède l'état « aucune ».** Générer sans référence est un
+  vrai choix — c'est comme ça qu'on obtient une image qui n'est tenue à rien — mais il n'était
+  atteignable qu'en re-cliquant la tuile choisie, donc seulement en essayant. Essayé en **tuile
+  « None »** d'abord : 81px de carré pour du néant, alors qu'un choix à deux états est très
+  exactement ce qu'est un switch. **Off masque la grille** (le switch EST la disclosure) et
+  **mémorise le choix** (`lastRefId`), donc rallumer ne fait pas rechercher son image. Corollaire :
+  les tuiles redeviennent un **radio pur** — re-cliquer la tuile choisie ne fait rien, parce que
+  deux chemins vers le même néant, c'est un de trop. Ajouter une image rallume le switch.
   **Une seule image de référence à la fois**, prise indifféremment dans le brand book du Playbook ou
   dans les uploads de l'utilisateur — donc le marqueur de tuile est un **radio**, pas une coche :
   une coche promet qu'on peut en cumuler. `aria-pressed` et non `role="radio"`, parce que cliquer

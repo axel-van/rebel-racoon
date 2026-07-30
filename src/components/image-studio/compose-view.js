@@ -7,8 +7,8 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=33";
-import { KEY } from "./context.js?v=27";
-import * as imageStudio from "../../image-studio.js?v=53";
+import { KEY } from "./context.js?v=28";
+import * as imageStudio from "../../image-studio.js?v=54";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -233,11 +233,21 @@ function composeGroups(st) {
       "Custom",
       pool.filter((r) => !r.fromPlaybook),
     );
+  // Same switch as v2: it owns "no reference at all", so the tiles below are a
+  // plain radio group and only show when references are on.
+  const useRef = !!picked;
+  const refSwitch = `<div class="image-studio__ref-switch">
+    <span>Use a reference image</span>
+    <label class="ap-toggle-container" title="Give the generator an image to match">
+      <input type="checkbox" data-img-toggle-ref ${useRef ? "checked" : ""} aria-label="Use a reference image" />
+      <i aria-hidden="true"></i>
+    </label>
+  </div>`;
   const refsGroup = collapsibleGroup(st, {
     id: "refs",
     label: "Reference image",
     summary: picked ? (picked.fromPlaybook ? st.playbookName || "Brand book" : "Custom") : "None",
-    body: `${tiles}${dropzone(st)}`,
+    body: `${refSwitch}${useRef ? `${tiles}${dropzone(st)}` : ""}`,
   });
 
   // Text in image — beside the references, because both answer "what goes IN the

@@ -2077,6 +2077,18 @@ button.image-studio__ref--pick:focus-visible {
    64px drop panel — a placeholder-sized affordance for a one-click action, and the
    biggest object in a section whose subject is the tiles above it. Auto width: a
    CTA never stretches to fill its container. */
+/* The reference switch — label left, DS toggle right. */
+.image-studio__ref-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+  font-family: var(--sys-text-style-body-font-family);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--sys-text-color-default);
+}
+
 .image-studio__adder {
   display: flex;
   flex-direction: column;
