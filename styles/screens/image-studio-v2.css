@@ -517,16 +517,31 @@
   outline: none;
 }
 
+/* Centred in the box the field leaves behind, both ways — a small mark and its
+   label sitting mid-field read as "this field is working". Pinned top-left they
+   read as content, which is what the field will actually hold a second later.
+ *
+ * The mark is inline-scale (the `.gen-image-spinner` 20px default): this stands in
+ * for two lines of text, not for the canvas.
+ *
+ * The padding is split evenly where the field's is top-0/bottom-8, but the TOTAL
+ * box is the same 44px, so swapping the loader for the textarea still doesn't
+ * shift the card — the content is simply centred inside it rather than riding the
+ * top edge. */
 .isv2-prompt-loading {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--ref-spacing-xxs);
-  /* Matches the field it stands in for, top edge included, so the swap doesn't
-     shift the card. */
-  padding: 0 var(--ref-spacing-xxs) var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
   min-height: calc(var(--ref-font-line-height-sm) * 2);
   color: var(--sys-text-color-light);
   font-size: var(--sys-text-style-body-size);
+  /* `flex: 1` the way `.isv2-prompt` does. Without it this box shrinks to fit its
+     own content, and centring inside a shrink-to-fit box is the same thing as
+     left-aligning — it has to own the field's width to be centred IN the field. */
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* The composer's toolbar row: actions live under the field, not beside it. */

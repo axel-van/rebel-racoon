@@ -685,11 +685,13 @@ button.image-studio__ref--pick:focus-visible {
   border-radius: var(--app-radius-lg);
 }
 
-/* The mark defaults to the 88px canvas loader — this one sits inline. */
+/* The mark defaults to the 88px canvas loader — this one sits inline. Sized through
+   `--archie-loader-size` (the bounding-box WIDTH) rather than width+height: setting
+   both defeats the loader's own `aspect-ratio: 227.15 / 170.03` and squashed the
+   glyph to a square. */
 .image-studio__prompt-loading .gen-image-spinner {
   flex: none;
-  width: 28px;
-  height: 28px;
+  --archie-loader-size: 28px;
 }
 
 .image-studio__prompt-loading-text {

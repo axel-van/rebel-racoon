@@ -187,8 +187,11 @@ function console_(label, field, action, hintVerb, { inline = false } = {}) {
 // from the first frame.
 function promptField(st) {
   if (st.promptLoading) {
+    // `.gen-image-spinner` alone — NOT `.gen-loading-mark`, which is the 88px
+    // canvas mark for the stage's empty state. Wearing it here put an 88px glyph
+    // in a 36px field, where it overflowed the card and shoved the text sideways.
     return `<div class="isv2-prompt-loading" role="status">
-      <span class="gen-image-spinner gen-loading-mark"></span>
+      <span class="gen-image-spinner"></span>
       <span>Writing your image prompt…</span>
     </div>`;
   }

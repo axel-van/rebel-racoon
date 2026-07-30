@@ -48,7 +48,7 @@ function promptCard(st) {
   // now holds nothing but the textarea.
   const body = st.promptLoading
     ? `<div class="image-studio__prompt-loading" role="status">
-        <span class="gen-image-spinner gen-loading-mark"></span>
+        <span class="gen-image-spinner"></span>
         <span class="image-studio__prompt-loading-text">Writing your image prompt…</span>
       </div>`
     : `<div class="image-studio__prompt">
