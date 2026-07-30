@@ -1006,14 +1006,26 @@
    Nine anchors, not four corners: a centred wordmark along the bottom is one of
    the most ordinary ways to sign an image and had nowhere to go. Auto width, not
    full — it's a control, and a control never stretches to fill its container. */
+/* Mark left, grid right — "this logo → goes here", and one row instead of two
+   blocks stacked. */
+.isv2-brandrow {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+/* 96px, not 132: the DS radio dot is a hard 16px, so a third of 96 leaves ~13px
+   of cell around each one — enough to click, and the grid reads as a grid without
+   the acreage. */
 .isv2-placer {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   place-items: center;
-  width: 132px;
+  flex: 0 0 auto;
+  width: 96px;
   aspect-ratio: var(--isv2-placer-ratio, 1);
-  padding: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxxs);
   border: 1px solid var(--sys-border-color-default);
   border-radius: var(--app-radius-md);
   background: var(--app-surface-subtle);
@@ -1029,14 +1041,13 @@
   justify-content: center;
 }
 
-/* The mark, shown once and small above the grid. It used to render inside the
+/* The mark, shown once and small beside the grid. It used to render inside the
    chosen cell, which made every cell logo-sized and the frame big — exactly the
    thing the placer was meant to shrink. */
 .isv2-placer-mark {
-  display: block;
-  max-width: 132px;
-  max-height: 22px;
-  margin-bottom: var(--ref-spacing-xxs);
+  flex: 0 1 auto;
+  min-width: 0;
+  max-height: 24px;
   object-fit: contain;
 }
 

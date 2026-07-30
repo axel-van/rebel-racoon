@@ -592,8 +592,12 @@ function brandingPlacer(st) {
       </label>`,
     )
     .join("");
-  return `<img class="isv2-placer-mark" src="${escapeHtml(st.playbookLogo)}" alt="${escapeHtml(st.playbookName || "Brand")} logo" />
-    <div class="isv2-placer" style="--isv2-placer-ratio:${imageStudio.activeRatio(KEY)}" role="radiogroup" aria-label="Logo position">${cells}</div>`;
+  // Mark and grid on ONE row, not stacked: "this logo → goes here" reads left to
+  // right, and it saves the panel a whole block of height.
+  return `<div class="isv2-brandrow">
+      <img class="isv2-placer-mark" src="${escapeHtml(st.playbookLogo)}" alt="${escapeHtml(st.playbookName || "Brand")} logo" />
+      <div class="isv2-placer" style="--isv2-placer-ratio:${imageStudio.activeRatio(KEY)}" role="radiogroup" aria-label="Logo position">${cells}</div>
+    </div>`;
 }
 
 // The collapsed row's value has one line of a 284px panel to live in, beside a

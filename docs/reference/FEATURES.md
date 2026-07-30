@@ -290,7 +290,7 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   Noms boussole `nw n ne / w c e / sw s se`, prolongeant le vocabulaire des poignées de crop.
   Fractions dans `BRAND_ANCHORS` (`image-studio.js`) : 0.22 / 0.5 / 0.78 et 0.11 / 0.5 / 0.89,
   symétriques par construction pour `wF: 0.26`, donc aucune ancre n'a l'air d'une erreur.
-  La marque est affichée **une fois, petite, au-dessus** de la grille. Version précédente : quatre
+  La marque est affichée **une fois, petite, À CÔTÉ** de la grille — « ce logo → va là », de gauche à droite, et une rangée au lieu de deux blocs empilés. Grille de 96px : la pastille du radio DS fait 16px en dur, donc un tiers de 96 laisse ~13px de cellule autour de chacune — assez pour cliquer, sans l'hectare. Version précédente : quatre
   boutons-quadrants avec le logo rendu dans celui qui était choisi — ça rendait chaque cellule de la
   taille d'un logo, donc le cadre gros, exactement ce que le placeur devait corriger.
 
