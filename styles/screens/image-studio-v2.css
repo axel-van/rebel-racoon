@@ -624,6 +624,13 @@
 
 /* Both are the same object: a white card lifted off the canvas, matching the
    variations rail opposite. */
+/* `--isv2-tile` — ONE thumbnail size for the whole panel: the reference tiles,
+   the logo thumb and the placer grid. 80px so three tiles plus two 8px gaps fit
+   the body's 260px exactly. */
+.isv2-panel {
+  --isv2-tile: 80px;
+}
+
 .isv2-panel,
 .isv2-palette {
   display: flex;
@@ -1022,18 +1029,16 @@
   gap: var(--ref-spacing-xs);
 }
 
-/* 88px: the DS radio dot is a hard 16px, so a third of 88 still leaves ~13px of
-   cell around each one — a 27px target, and the grid reads as a grid without the
-   acreage. It's the tallest thing in the section, so it sets the section's height. */
+/* `--isv2-tile` wide, like the reference tiles and the logo thumb. The DS radio
+   dot is a hard 16px, so a third of 80 leaves ~8px of cell around each one. */
 .isv2-placer {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   place-items: center;
   flex: 0 0 auto;
-  width: 88px;
+  width: var(--isv2-tile);
   aspect-ratio: var(--isv2-placer-ratio, 1);
-  padding: var(--ref-spacing-xxxs);
   border: 1px solid var(--sys-border-color-default);
   border-radius: var(--app-radius-md);
   background: var(--app-surface-subtle);
@@ -1061,7 +1066,7 @@
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: 88px;
+  width: var(--isv2-tile);
   aspect-ratio: var(--isv2-placer-ratio, 1);
   padding: var(--ref-spacing-xxs);
   border: 1px solid var(--sys-border-color-default);
@@ -1103,19 +1108,78 @@
 
 /* ── Reference tiles + the uploader ──────────────────────────────────────── */
 
-/* 88px FIXED tracks, and the same 12px gap as the brand row — so a reference tile
-   is the same object as the logo thumbnail further down the panel. Two tile sizes
-   in one panel read as two kinds of thing when they're both just "an image you
-   gave me".
+/* A horizontal SCROLLER, not a wrapping grid. A pool that wraps grows the panel a
+   row at a time — at ten images the settings push the composer off the screen —
+   whereas a strip is the same height at three images or thirty.
  *
-   Fixed, not `minmax(88px, 1fr)`: with 1fr the two columns stretch to 116px and
-   stop matching the 88px thumb, which is the whole point. The cost is that three
-   brand images wrap to two rows instead of sitting in one — the trade the size
-   consistency is worth. */
+   `--isv2-tile` is 80px because the body is 260px wide and three tiles plus two
+   8px gaps is 256: exactly three visible, the rest one flick away. It's also the
+   size of the logo thumbnail and the placer further down, so the panel has ONE
+   tile size — two sizes read as two kinds of thing when both are just "an image
+   you gave me".
+ *
+   Flex, not grid: `flex: 0 0 var(--isv2-tile)` on the slot is all a scroller
+   needs, and `grid-auto-flow: column` would have to restate the track size. */
 .isv2-refs {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 88px);
-  gap: var(--ref-spacing-xs);
+  display: flex;
+  gap: var(--ref-spacing-xxs);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  /* Thin, and given its own couple of pixels, so the bar never lands on a tile. */
+  scrollbar-width: thin;
+  padding-bottom: 2px;
+}
+
+.isv2-ref-slot {
+  flex: 0 0 var(--isv2-tile);
+  scroll-snap-align: start;
+}
+
+/* The edge fade, driven by the scroll position itself: solid on the side you've
+   reached, faded on the side there's more. A static right-hand fade would leave
+   the last image permanently washed out once you got to it, which reads as a
+   broken thumbnail rather than as "the end".
+ *
+   The two edges are animated as REGISTERED custom properties, not by
+   interpolating `mask-image` directly: an unregistered gradient interpolates
+   discretely in Chrome, so the mask flipped sides in one frame halfway down the
+   scroll. Typed as `<length>`, they interpolate smoothly, and the mask recomputes
+   from them. At 0px a stop pair collapses to zero width — no fade at all — which
+   is exactly what the edge you've reached should look like. */
+@property --isv2-fade-l {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --isv2-fade-r {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes isv2-refs-edges {
+  from {
+    --isv2-fade-l: 0px;
+    --isv2-fade-r: 20px;
+  }
+  to {
+    --isv2-fade-l: 20px;
+    --isv2-fade-r: 0px;
+  }
+}
+
+.isv2-refs.is-scrollable {
+  mask-image: linear-gradient(
+    to right,
+    rgb(0 0 0 / 0) 0,
+    rgb(0 0 0) var(--isv2-fade-l),
+    rgb(0 0 0) calc(100% - var(--isv2-fade-r)),
+    rgb(0 0 0 / 0) 100%
+  );
+  animation: isv2-refs-edges linear both;
+  animation-timeline: scroll(self inline);
 }
 
 .isv2-ref {
@@ -1220,7 +1284,6 @@
 .isv2-ref-slot {
   position: relative;
   display: block;
-  min-width: 0;
 }
 
 /* Which pool a tile came from, now that both live in one grid. Only rendered when

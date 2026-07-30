@@ -60,6 +60,10 @@ Composition focus: The transition point of the arrow where order turns into digi
 
 // The two provenances a reference image can have. Shared by the group labels and
 // the collapsed header so the section can only ever call them the same thing.
+// How many reference tiles fit the panel's 260px body at --isv2-tile + an 8px
+// gap. Kept next to the CSS that sizes them: change one, change the other.
+const VISIBLE_REFS = 3;
+
 const BRAND_GROUP = "Brand book";
 const CUSTOM_GROUP = "Custom";
 
@@ -440,10 +444,10 @@ function refsBody(st, picked) {
     // An em dash, not a middot: a Playbook name has middots of its own
     // ("Acme · Q2 marketing") and a third one made the label unparseable.
     const book = st.playbookName ? `${BRAND_GROUP} — ${st.playbookName}` : BRAND_GROUP;
-    groups.push(refGroup(book, brand.map((r) => refTile(r, r.id === selectedId)).join("")));
+    groups.push(refGroup(book, brand.map((r) => refTile(r, r.id === selectedId)).join(""), brand.length));
   }
   if (mine.length) {
-    groups.push(refGroup(CUSTOM_GROUP, mine.map((r) => refTile(r, r.id === selectedId)).join("")));
+    groups.push(refGroup(CUSTOM_GROUP, mine.map((r) => refTile(r, r.id === selectedId)).join(""), mine.length));
   }
   const capped = mine.length >= imageStudio.MAX_REFS;
   const dropzone = capped
@@ -482,9 +486,15 @@ function refsBody(st, picked) {
 // the label and its own grid exactly as it fell between the two pools, so nothing
 // grouped: the label read as floating above everything below it rather than as
 // the title of the three tiles it belongs to.
-function refGroup(label, tiles) {
+function refGroup(label, tiles, count) {
   const head = label ? `<p class="isv2-refs-group">${escapeHtml(label)}</p>` : "";
-  return `<div class="isv2-block">${head}<div class="isv2-refs">${tiles}</div></div>`;
+  // Exactly VISIBLE_REFS tiles fit the panel, which is the problem: with the
+  // fourth starting a hair past the edge there is no half-tile peeking to say
+  // more exist, and macOS hides its overlay scrollbar until you already scroll.
+  // Ten images would read as three. The class turns on an edge fade — the only
+  // affordance left — so the count is announced by the strip itself.
+  const more = count > VISIBLE_REFS ? " is-scrollable" : "";
+  return `<div class="isv2-block">${head}<div class="isv2-refs${more}">${tiles}</div></div>`;
 }
 
 // One candidate. SINGLE-SELECT: picking one drops whatever was picked before, so
