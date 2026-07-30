@@ -763,21 +763,6 @@
 
 /* ── The footer bar ───────────────────────────────────────────────────────── */
 
-/* The footer Playbook picker. The label is the DS select's own inline label, so
-   there's no separate <label> to lay out beside it — one control, and the footer
-   bar stays one row tall without a wrapper. */
-.isv2-playbook-select {
-  flex: 0 0 auto;
-  width: 280px;
-}
-
-/* Opens UPWARD: the picker sits on the modal's bottom edge and the modal clips
-   its overflow, so a dropdown falling downward would be cut in half. */
-.isv2-playbook-select .ap-select-dropdown {
-  top: auto;
-  bottom: calc(100% + var(--ref-spacing-xxxs));
-}
-
 /* Present in BOTH modes, carrying the one action that ends the flow. It is the
    DS dialog footer used natively; the only thing said here is that it sits on
    the white shell rather than the dock's canvas, so the modal closes on a solid
