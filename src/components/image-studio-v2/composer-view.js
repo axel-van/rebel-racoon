@@ -598,12 +598,19 @@ function brandingPlacer(st) {
   // The thumb and the grid are the SAME box — same width, same ratio, same frame —
   // so the row reads as one pair rather than two objects that happen to be near
   // each other. The mark is contained inside its tile, never cropped.
+  // Labelled, like every other block in the panel. The grid had only an aria-label,
+  // so a sighted user had to infer nine radios in a frame — the one reading the
+  // screen reader already got for free. The label titles the PAIR, because the pair
+  // is the statement: this logo, placed there.
   const ratio = imageStudio.activeRatio(KEY);
-  return `<div class="isv2-brandrow" style="--isv2-placer-ratio:${ratio}">
-      <div class="isv2-brandthumb">
-        <img class="isv2-placer-mark" src="${escapeHtml(st.playbookLogo)}" alt="${escapeHtml(st.playbookName || "Brand")} logo" />
+  return `<div class="isv2-block">
+      <p class="isv2-sheet-hint">Logo placement</p>
+      <div class="isv2-brandrow" style="--isv2-placer-ratio:${ratio}">
+        <div class="isv2-brandthumb">
+          <img class="isv2-placer-mark" src="${escapeHtml(st.playbookLogo)}" alt="${escapeHtml(st.playbookName || "Brand")} logo" />
+        </div>
+        <div class="isv2-placer" role="radiogroup" aria-label="Logo placement">${cells}</div>
       </div>
-      <div class="isv2-placer" role="radiogroup" aria-label="Logo position">${cells}</div>
     </div>`;
 }
 

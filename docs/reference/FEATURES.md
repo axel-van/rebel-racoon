@@ -290,6 +290,10 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   Noms boussole `nw n ne / w c e / sw s se`, prolongeant le vocabulaire des poignées de crop.
   Fractions dans `BRAND_ANCHORS` (`image-studio.js`) : 0.22 / 0.5 / 0.78 et 0.11 / 0.5 / 0.89,
   symétriques par construction pour `wF: 0.26`, donc aucune ancre n'a l'air d'une erreur.
+  Le bloc porte le libellé **« Logo placement »** : la grille n'avait qu'un `aria-label`, donc
+  l'utilisateur voyant devait deviner ce qu'étaient neuf radios dans un cadre — ce que le lecteur
+  d'écran, lui, savait déjà. Le libellé titre la **paire**, parce que la paire est l'énoncé : ce
+  logo, placé là.
   La marque est une **tuile de la même boîte que la grille** — même largeur, même ratio, même
   bordure — posée juste à côté : deux cadres identiques disent « cette chose → va dans ce cadre »,
   alors qu'une tuile épousant sa propre largeur ne disait rien et changeait de taille selon la
