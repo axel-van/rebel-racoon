@@ -260,6 +260,13 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   plus gros d'une section dont le sujet est les vignettes au-dessus. Le drop marche toujours —
   `data-img-dropzone` est sur le bouton, et le mode Generate accepte de toute façon un drop
   n'importe où dans la modale.
+  **Aucun séparateur à l'intérieur de la section** : un filet entre les vignettes et le bouton
+  redessinait exactement la frontière que la fusion venait d'enlever. Les libellés de groupe
+  séparent déjà les viviers, et le cadre de la section la sépare déjà de Text in image.
+  **« None » est une tuile**, en tête de grille et hors des deux groupes libellés (elle
+  n'appartient à aucun vivier) : générer sans référence est un vrai choix — c'est comme ça qu'on
+  obtient une image qui n'est tenue à rien — et il n'était atteignable qu'en re-cliquant la tuile
+  choisie, donc seulement en essayant.
   **Une seule image de référence à la fois**, prise indifféremment dans le brand book du Playbook ou
   dans les uploads de l'utilisateur — donc le marqueur de tuile est un **radio**, pas une coche :
   une coche promet qu'on peut en cumuler. `aria-pressed` et non `role="radio"`, parce que cliquer

@@ -523,6 +523,16 @@ export function removeReferenceImage(sessionId, id) {
   notify(sessionId);
 }
 
+// Generate with no reference at all. The explicit half of the choice: the "None"
+// tile sets it, and it's what clicking the picked tile falls back to.
+export function clearReferenceImage(sessionId) {
+  const s = states.get(sessionId);
+  if (!s || !s.selectedRefId) return;
+  s.selectedRefId = null;
+  syncSelectedRef(s);
+  notify(sessionId);
+}
+
 // Pick THE reference image — single-select across both pools. Clicking the one
 // already picked clears it, because "no reference at all" has to be reachable
 // and a radio group on its own can't get back to empty. Same single-select,

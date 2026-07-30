@@ -25,17 +25,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=41";
 import { getSessionById } from "../../sessions-store.js?v=11";
 import { getContextById } from "../../contexts-store.js?v=43";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=16";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=17";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=31";
+import { renderStudio } from "./stage-view.js?v=32";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=16";
-import * as imageStudio from "../../image-studio.js?v=52";
+} from "./interactions.js?v=17";
+import * as imageStudio from "../../image-studio.js?v=53";
 
 let backdrop;
 let initialized = false;
@@ -212,6 +212,8 @@ function onClick(event) {
   // first alone. Same `collapsedGroups` Set v1's composer uses.
   const expandBtn = event.target.closest("[data-img-composer-expand]");
   if (expandBtn) return void imageStudio.setComposerExpanded(KEY, !state().composerExpanded);
+
+  if (event.target.closest("[data-img-ref-none]")) return void imageStudio.clearReferenceImage(KEY);
 
   const grpToggle = event.target.closest("[data-img-group-toggle]");
   if (grpToggle && !grpToggle.disabled) {
