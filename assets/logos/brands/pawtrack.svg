@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 64" width="260" height="64" role="img" aria-label="Pawtrack">
+  <rect x="0" y="8" width="48" height="48" rx="12" fill="#2F1B54" />
+  <circle cx="24" cy="36" r="8" fill="#FFB86B" />
+  <circle cx="14.5" cy="24.5" r="3.6" fill="#7C4DFF" />
+  <circle cx="24" cy="21" r="3.6" fill="#7C4DFF" />
+  <circle cx="33.5" cy="24.5" r="3.6" fill="#7C4DFF" />
+  <text x="62" y="41" font-family="Averta, Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#2F1B54" letter-spacing="-0.5">Pawtrack</text>
+</svg>

@@ -21,10 +21,10 @@
 
 import { navigate } from "./router.js?v=30";
 import { setHandoff } from "./handoff.js?v=20";
-import { postAssistantMessage, sendMessage } from "./assistant.js?v=65";
-import { addReadySource } from "./sources-stream.js?v=58";
+import { postAssistantMessage, sendMessage } from "./assistant.js?v=66";
+import { addReadySource } from "./sources-stream.js?v=59";
 import * as inlineQuestion from "./inline-question.js?v=48";
-import { getTopicById, markSeen } from "./topics-store.js?v=1";
+import { getTopicById, markSeen } from "./topics-store.js?v=2";
 import { findTopicSource } from "./topics-catalog.js?v=2";
 
 export const TOPIC_CHAT_HANDOFF = "pendingTopicChat";

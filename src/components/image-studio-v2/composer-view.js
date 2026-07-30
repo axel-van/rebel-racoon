@@ -38,9 +38,9 @@
 // sections are independent and live in state.collapsedGroups.
 
 import { escapeHtml } from "../../utils.js?v=21";
-import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=33";
-import { KEY } from "./context.js?v=20";
-import * as imageStudio from "../../image-studio.js?v=56";
+import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=34";
+import { KEY } from "./context.js?v=23";
+import * as imageStudio from "../../image-studio.js?v=59";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -330,6 +330,25 @@ function settingRows(st) {
     }),
   );
 
+  // Branding — the Playbook's logo, stamped on the artwork. Third in the "what
+  // goes IN the image" run (references / words / mark) before the treatment
+  // settings below. Disabled rather than hidden when the Playbook has no mark: a
+  // missing section leaves you wondering whether the feature exists, a disabled
+  // one tells you where to go and get it.
+  const hasLogo = !!st.playbookLogo;
+  const branded = hasLogo && !!st.useBranding;
+  out.push(
+    settingRow({
+      name: "branding",
+      label: "Branding",
+      value: hasLogo ? (branded ? st.playbookName || "On" : "Off") : "No logo",
+      set: branded,
+      disabled: !hasLogo,
+      open: isOpen("branding"),
+      body: () => brandingBody(st, branded),
+    }),
+  );
+
   // Image type — what the image is FOR. A distinct dimension from the style.
   const typeLabel = st.imageTypeKey
     ? imageStudio.IMAGE_TYPES.find((o) => o.key === st.imageTypeKey)?.label || "Any"
@@ -492,6 +511,28 @@ function refTile(r, on) {
     </button>
     ${remove}
   </div>`;
+}
+
+// The switch plus a preview of the mark it stamps: a logo you can't see is a
+// setting you have to take on faith, and the preview is the cheapest way to say
+// "this is what lands on the image". Bottom-right is where it goes, so the
+// preview sits in a frame that says as much without a diagram.
+function brandingBody(st, branded) {
+  return `<div class="isv2-sheet-switch">
+      <span class="isv2-sheet-switch-label">Show my logo on the image</span>
+      <label class="ap-toggle-container" title="Stamp the Playbook's logo on what I generate">
+        <input type="checkbox" data-img-toggle-branding ${branded ? "checked" : ""} aria-label="Show my logo on the image" />
+        <i aria-hidden="true"></i>
+      </label>
+    </div>
+    ${
+      branded
+        ? `<div class="isv2-brandmark">
+            <img src="${escapeHtml(st.playbookLogo)}" alt="${escapeHtml(st.playbookName || "Brand")} logo" />
+          </div>
+          <p class="isv2-sheet-hint">Bottom-right corner of every image I make.</p>`
+        : ""
+    }`;
 }
 
 // The collapsed row's value has one line of a 284px panel to live in, beside a

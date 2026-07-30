@@ -1333,6 +1333,7 @@ export const contexts = [
     color: "orange",
     isDefault: true,
     brandName: "Acme",
+    brandLogo: "assets/logos/brands/acme.svg",
     websiteUrl: "https://acme.example.com",
     audience: ["Operators and marketing leads at 50–200-person B2B startups"],
     businessSummary:
@@ -1655,6 +1656,7 @@ export const contexts = [
     color: "green",
     isDefault: false,
     brandName: "Acme",
+    brandLogo: "assets/logos/brands/acme.svg",
     websiteUrl: "https://acme.example.com/customers",
     audience: ["Prospects evaluating Acme who care about real outcomes from teams like theirs"],
     businessSummary:
@@ -1775,6 +1777,7 @@ export const contexts = [
     color: "purple",
     isDefault: false,
     brandName: "Pawtrack",
+    brandLogo: "assets/logos/brands/pawtrack.svg",
     websiteUrl: "https://pawtrack.example.com",
     audience: ["Dog and cat owners who have already had one scare and never want another"],
     businessSummary:

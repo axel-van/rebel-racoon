@@ -22,20 +22,20 @@
 
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../../modal-coordinator.js?v=21";
 import { showToast } from "../toast.js?v=20";
-import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=41";
-import { getSessionById } from "../../sessions-store.js?v=11";
-import { getContextById } from "../../contexts-store.js?v=43";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=20";
+import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=42";
+import { getSessionById } from "../../sessions-store.js?v=12";
+import { getContextById } from "../../contexts-store.js?v=44";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=23";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=37";
+import { renderStudio } from "./stage-view.js?v=40";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=20";
-import * as imageStudio from "../../image-studio.js?v=56";
+} from "./interactions.js?v=23";
+import * as imageStudio from "../../image-studio.js?v=59";
 
 let backdrop;
 let initialized = false;
@@ -432,6 +432,8 @@ function onChange(event) {
     imageStudio.updateOverlay(KEY, st.selectedOverlayId, { outlineWidth: Number(event.target.value) });
   } else if (event.target.matches("[data-img-shadow-intensity]") && st?.selectedOverlayId) {
     imageStudio.updateOverlay(KEY, st.selectedOverlayId, { shadowIntensity: Number(event.target.value) });
+  } else if (event.target.matches("[data-img-toggle-branding]")) {
+    imageStudio.setUseBranding(KEY, event.target.checked);
   } else if (event.target.matches("[data-img-toggle-ref]")) {
     imageStudio.setUseReference(KEY, event.target.checked);
   } else if (event.target.matches("[data-img-render-text]")) {
@@ -652,6 +654,7 @@ export function open(postId, opts = {}) {
     formatId: post?.format || null,
     editImage: editImageUrl ? { url: editImageUrl } : null,
     carousel: carouselUrls ? { urls: carouselUrls } : null,
+    playbookLogo: context?.brandLogo || "",
     playbookRefs: context?.referenceImages || [],
     playbookName: context?.brandName || context?.name || "",
     playbookColors: (Array.isArray(context?.brandColors) ? context.brandColors : [])

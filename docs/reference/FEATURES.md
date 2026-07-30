@@ -271,6 +271,17 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   **mémorise le choix** (`lastRefId`), donc rallumer ne fait pas rechercher son image. Corollaire :
   les tuiles redeviennent un **radio pur** — re-cliquer la tuile choisie ne fait rien, parce que
   deux chemins vers le même néant, c'est un de trop. Ajouter une image rallume le switch.
+  **Branding** — une section à part, après Text in image : références / mots / marque, c'est le trio
+  « ce qui va DANS l'image », avant les réglages de traitement en dessous. Un switch « Show my logo
+  on the image » + un aperçu de la marque, parce qu'un logo qu'on ne voit pas est un réglage qu'on
+  doit croire sur parole. **ON par défaut** quand le Playbook a un logo (`ctx.brandLogo`) : une image
+  faite pour une marque la porte, sauf avis contraire. Sans logo la section est **désactivée, pas
+  masquée** — une section absente laisse se demander si la fonctionnalité existe, une section grisée
+  dit où aller la chercher. Le logo est cuit dans les pixels par le même `compositeOverlays` que
+  « Text in image » (overlay `kind: "logo"`, coin bas-droit, 26% de la largeur), donc il survit aux
+  vignettes, à l'aperçu in-feed, au recadrage et au draft final. Comme tous les autres réglages, il
+  s'applique à la **génération suivante**, pas rétroactivement.
+
   **Une seule image de référence à la fois**, prise indifféremment dans le brand book du Playbook ou
   dans les uploads de l'utilisateur — donc le marqueur de tuile est un **radio**, pas une coche :
   une coche promet qu'on peut en cumuler. `aria-pressed` et non `role="radio"`, parce que cliquer
@@ -285,6 +296,7 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   avait été descendu à 14px pour « tenir à côté » de la bande d'onglets, qui est en fait sur sa
   propre ligne en dessous — il n'y avait donc rien à accompagner, et le studio portait juste le
   plus petit titre de toutes les dialogs de l'app.
+
 - **Edit** : le même composer devient la barre IA (rangée 1) et les chips d'outils Crop / Add text /
   Add image (rangée 2). Le rail de gauche, le footer, la barre IA flottante et la palette flottante
   de v1 disparaissent tous les quatre. Ne restent sur le canvas que la boîte de crop (avec son ✕/✓)

@@ -20,7 +20,7 @@
 // faithful results; Reprompt is an honest preview (reseed). The committed url
 // rides back to the draft via attachImageToDraft (see the modal component).
 
-import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=13";
+import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=14";
 // Layering note: the only import this engine takes from the view side, and a
 // deliberate one — canvas.js is pure, UI-agnostic (its own header says so) and
 // already shared by both studio versions. "Text in image" is mocked by baking the
@@ -190,8 +190,17 @@ function renderTextOverlays(s) {
 // beside `url` so a re-bake (crop, redraw) never stacks text on text.
 // A failure (offline, a CORS-tainted canvas) falls back to the plain photo — the
 // flow must never stall on the mock.
+// The brand mark, bottom-right, at 26% of the frame's width — a wordmark has to
+// stay readable, and 18% left the name too small to be one. A corner rather than
+// anywhere else because that's where a mark goes on artwork it doesn't own, and
+// the same corner every time so a set of variations reads as one campaign.
+function brandingOverlays(s) {
+  if (!s.useBranding || !s.playbookLogo) return [];
+  return [{ kind: "logo", url: s.playbookLogo, xF: 0.78, yF: 0.89, wF: 0.26, rot: 0 }];
+}
+
 function bakeRenderText(s, img) {
-  const overlays = renderTextOverlays(s);
+  const overlays = [...renderTextOverlays(s), ...brandingOverlays(s)];
   const base = img.baseUrl || img.url;
   if (!overlays.length) return Promise.resolve({ ...img, baseUrl: base, url: base });
   return compositeOverlays(base, overlays, img.w, img.h)
@@ -233,6 +242,7 @@ export function start(
     formatId = null,
     editImage = null,
     carousel = null,
+    playbookLogo = "",
     playbookRefs = [],
     playbookName = "",
     playbookColors = [],
@@ -310,6 +320,12 @@ export function start(
     lastRefId: initialSelectedRefId, // what the switch restores when turned back on
     playbookRefs: pbRefs, // the Playbook's brand images (snapshot)
     uploadedRefs: [], // the user's own uploads — a POOL to pick from, not the selection
+    // Branding — the Playbook's logo, stamped into the corner of what's generated.
+    // ON by default when the Playbook has a mark: an image made for a brand should
+    // carry it unless someone says otherwise. A Playbook without one can't brand
+    // anything, so the switch has nothing to offer and the section says so.
+    playbookLogo: playbookLogo || "",
+    useBranding: !!playbookLogo,
     playbookColors: (Array.isArray(playbookColors) ? playbookColors : []).filter(Boolean), // brand hex list for text swatches
     customTextColors: [], // custom hex colours the user added to the text swatches
     customFonts: [], // [{ family, label, url }] fonts the user uploaded (FontFace)
@@ -322,12 +338,14 @@ export function start(
     // `renderText` is NOT in here: Archie now pre-fills the headline from the
     // draft, and a section that arrives with content in it has to arrive open —
     // otherwise the studio silently decided to paint words into the image and the
-    // only clue is a value in a collapsed header.
+    // only clue is a value in a collapsed header. `refs` isn't either: it's pinned
+    // open in the view. `branding` IS: it defaults on, but its header already says
+    // whose logo ("Branding · Acme"), and a switch needs no room to be understood.
     //
     // Brand kit isn't in here either, for a different reason: it's pinned open in
     // the view and never collapses. Style preset has its own `disabled` state
     // (references guide the look), independent of this Set.
-    collapsedGroups: new Set(["refs", "imageType", "style", "format", "output"]),
+    collapsedGroups: new Set(["branding", "imageType", "style", "format", "output"]),
     composerExpanded: false, // prompt composer size: small (default) vs expanded
     variationCount: 2, // single-image mode: how many alternatives to pick from
     slideCount, // carousel mode: how many slides to generate
@@ -522,6 +540,15 @@ export function removeReferenceImage(sessionId, id) {
   s.uploadedRefs = s.uploadedRefs.filter((r) => r.id !== id);
   if (s.selectedRefId === id) s.selectedRefId = null;
   syncSelectedRef(s);
+  notify(sessionId);
+}
+
+// Stamp the Playbook's logo into what gets generated, or don't. A no-op without a
+// logo — there is nothing to turn on.
+export function setUseBranding(sessionId, on) {
+  const s = states.get(sessionId);
+  if (!s || !s.playbookLogo) return;
+  s.useBranding = !!on;
   notify(sessionId);
 }
 

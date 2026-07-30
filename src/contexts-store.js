@@ -17,7 +17,7 @@
 // chooses "Save as global". updateContext is used by the section-edit flow
 // when scope is "Update everywhere".
 
-import { contexts as seed } from "./mocks.js?v=61";
+import { contexts as seed } from "./mocks.js?v=62";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import { DEFAULT_ENABLED_IDS, DEFAULT_CADENCE, findTopicSource, findCadence } from "./topics-catalog.js?v=2";
@@ -162,6 +162,10 @@ export function addContext(ctx = {}) {
     brandPersonality: ctx.brandPersonality || "",
     brandTypography: ctx.brandTypography && typeof ctx.brandTypography === "object" ? { ...ctx.brandTypography } : null,
     brandColors: Array.isArray(ctx.brandColors) ? ctx.brandColors.map((c) => ({ ...c })) : [],
+    // The brand mark, as a URL. Optional — a Playbook can have a voice and an
+    // audience without anyone having uploaded a logo, and the surfaces that use
+    // it have to say so rather than stamp a placeholder.
+    brandLogo: ctx.brandLogo || "",
     referenceImages: Array.isArray(ctx.referenceImages)
       ? ctx.referenceImages.map((i) => ({ ...i, networks: Array.isArray(i.networks) ? [...i.networks] : [] }))
       : [],
@@ -244,6 +248,7 @@ export function updateContext(id, patch) {
   if (patch.brandPersonality !== undefined) c.brandPersonality = patch.brandPersonality;
   if (patch.brandTypography !== undefined) c.brandTypography = patch.brandTypography;
   if (patch.brandColors !== undefined) c.brandColors = patch.brandColors;
+  if (patch.brandLogo !== undefined) c.brandLogo = patch.brandLogo;
   if (patch.referenceImages !== undefined) c.referenceImages = patch.referenceImages;
   if (patch.competitors !== undefined) c.competitors = normalizeCompetitors(patch.competitors);
   if (patch.dismissedCompetitors !== undefined)
@@ -323,6 +328,7 @@ export function duplicateContext(id) {
     brandPersonality: src.brandPersonality || "",
     brandTypography: src.brandTypography ? { ...src.brandTypography } : null,
     brandColors: (src.brandColors || []).map((c) => ({ ...c })),
+    brandLogo: src.brandLogo || "",
     referenceImages: (src.referenceImages || []).map((i) => ({
       ...i,
       networks: Array.isArray(i.networks) ? [...i.networks] : [],

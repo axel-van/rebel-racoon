@@ -999,6 +999,25 @@
   line-height: var(--sys-text-style-caption-line-height);
 }
 
+/* The brand mark preview — the logo on a neutral tile, so a setting you'd
+   otherwise take on faith shows you what it stamps. Contained, never cropped: a
+   wordmark clipped to a square stops being the logo. */
+.isv2-brandmark {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: var(--ref-spacing-xs);
+  border: 1px solid var(--sys-border-color-default);
+  border-radius: var(--app-radius-md);
+  background: var(--app-surface-subtle);
+}
+
+.isv2-brandmark > img {
+  max-width: 60%;
+  max-height: 32px;
+  object-fit: contain;
+}
+
 /* ── Reference tiles + the uploader ──────────────────────────────────────── */
 
 /* 60px, not 72: at the panel's 260px that's four tiles to a row instead of three,
