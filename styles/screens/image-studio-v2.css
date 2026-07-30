@@ -1006,18 +1006,6 @@
   line-height: var(--sys-text-style-caption-line-height);
 }
 
-/* The logo PLACER — a 3×3 of DS radios in a frame the shape of the output, so it
-   reads as "where on the image" and reshapes when Format changes
-   (`--isv2-placer-ratio`, set from activeRatio).
- *
-   Nine anchors, not four corners: a centred wordmark along the bottom is one of
-   the most ordinary ways to sign an image and had nowhere to go. Auto width, not
-   full — it's a control, and a control never stretches to fill its container. */
-/* The mark on the left, where it lands on the right — "this logo → goes there",
-   read across. The two are the SAME box (see below), so they sit flush beside each
-   other and read as one pair; spreading them to the row's edges made two objects
-   that merely shared a line. `--isv2-placer-ratio` lives here because BOTH halves
-   take their shape from it. */
 /* One switch and what it discloses, bound together. Half the accordion body's own
    gap inside, and more than it between groups: the logo and the colours are two
    settings that happen to live in one section, and even spacing made them read as
@@ -1032,56 +1020,21 @@
   margin-top: var(--ref-spacing-xxxs);
 }
 
-.isv2-brandrow {
-  display: flex;
-  /* STRETCH, not center: `aspect-ratio` gives each box a height, but the grid also
-     has a min-content floor (three 16px dots plus padding never go below ~58px),
-     so at 16:9 the ratio-derived 50px lost and the two stopped matching. Stretching
-     makes the shorter box take the taller one's height whatever the ratio — the
-     pair matches by construction instead of by arithmetic that happens to agree. */
-  align-items: stretch;
-  gap: var(--ref-spacing-xs);
-}
-
-/* `--isv2-tile` wide, like the reference tiles and the logo thumb. The DS radio
-   dot is a hard 16px, so a third of 80 leaves ~8px of cell around each one. */
-.isv2-placer {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  place-items: center;
-  flex: 0 0 auto;
-  width: var(--isv2-tile);
-  aspect-ratio: var(--isv2-placer-ratio, 1);
-  border: 1px solid var(--sys-border-color-default);
-  border-radius: var(--app-radius-md);
-  background: var(--app-surface-subtle);
-  box-sizing: border-box;
-}
-
-/* `.ap-radio-container` is a flex row whose dot is a ::before and whose <span>
-   collapses when empty — so a cell is just the dot, centred in its third. The
-   whole cell is the hit area, not only the 16px dot. */
-.isv2-placer-cell {
-  width: 100%;
-  height: 100%;
-  justify-content: center;
-}
-
-/* The mark, shown once and small beside the grid. It used to render inside the
-   chosen cell, which made every cell logo-sized and the frame big — exactly the
-   thing the placer was meant to shrink. */
-/* The mark's tile — the placer's box exactly: same width, same ratio, same border
-   and radius. Two identical frames side by side say "this thing → goes in that
-   frame"; a tile that hugged its own width said nothing, and changed size with the
-   brand. White fill because a logo is a supplied asset and needs its own ground. */
+/* The logo PREVIEW — a bordered tile, and nothing else. It was half of a placer:
+   the mark on the left, a 3×3 of anchors on the right. The placement control is
+   gone, so the tile stops being one side of a pair and goes back to hugging its
+   own width — a wordmark and a monogram are different shapes, and a fixed box
+   letterboxed one of them for the sake of matching a grid that no longer exists.
+ *
+   Framed rather than bare: a logo dropped straight on the panel reads as chrome,
+   a bordered tile reads as a file you supplied. White fill for the same reason —
+   a supplied asset needs its own ground, not the panel's. */
 .isv2-brandthumb {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 auto;
-  width: var(--isv2-tile);
-  aspect-ratio: var(--isv2-placer-ratio, 1);
+  align-self: flex-start;
+  height: 44px;
   padding: var(--ref-spacing-xxs);
   border: 1px solid var(--sys-border-color-default);
   border-radius: var(--app-radius-md);
@@ -1089,10 +1042,13 @@
   box-sizing: border-box;
 }
 
-/* Contained, never cropped: a wordmark clipped stops being the logo. */
-.isv2-placer-mark {
-  max-width: 100%;
-  max-height: 100%;
+/* Sized by HEIGHT, width following: the tile has no width of its own, so a mark
+   bounded by `max-width: 100%` had nothing to be a percentage of and collapsed to
+   18px. Height is the one dimension the tile fixes, and letting the width follow
+   is what makes a wordmark and a monogram both come out right. */
+.isv2-brandmark {
+  height: 100%;
+  width: auto;
   object-fit: contain;
 }
 

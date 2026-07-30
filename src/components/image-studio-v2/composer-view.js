@@ -39,8 +39,8 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=34";
-import { KEY } from "./context.js?v=28";
-import * as imageStudio from "../../image-studio.js?v=64";
+import { KEY } from "./context.js?v=29";
+import * as imageStudio from "../../image-studio.js?v=65";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -552,7 +552,7 @@ function brandingBody(st, branded, tinted) {
     on: branded,
     available: hasLogo,
     missing: "This Playbook has no logo yet.",
-    body: branded ? brandingPlacer(st) : "",
+    body: branded ? brandingPreview(st) : "",
   })}
   ${brandSwitch({
     label: "Use brand colors",
@@ -608,59 +608,16 @@ function swatchRow(palette) {
   return `<p class="isv2-branddots">${dots}</p>`;
 }
 
-// Nine anchors in a 3×3, as REAL radios — one choice out of a fixed set is what a
-// radio group is, and the DS ships the control (`.ap-radio-container`, whose dot
-// is a ::before on the label; the empty <span> collapses, leaving just the dot).
+// The logo PREVIEW. Not a placement control: the mark lands bottom-right and the
+// user's only decision is whether it lands at all, so all this owes them is
+// "here's the logo I'd use" — from the Playbook, so seeing it is how you catch a
+// wrong or stale one before generating.
 //
-// It was four corner buttons with the logo rendered inside the chosen one. Two
-// things were wrong with that: four positions have no room for a centred wordmark
-// along the bottom, which is one of the most ordinary ways to sign an image; and
-// putting the mark in a cell made the cell the size of a logo, which made the
-// whole frame big — the opposite of what it was supposed to fix.
-//
-// The frame still carries the OUTPUT's aspect ratio (`activeRatio`, the helper the
-// generating stage uses), so it reads as "where on the image" and reshapes when
-// Format changes. The mark shows once, small, above it.
-const ANCHOR_LABELS = {
-  nw: "Top left",
-  n: "Top center",
-  ne: "Top right",
-  w: "Middle left",
-  c: "Center",
-  e: "Middle right",
-  sw: "Bottom left",
-  s: "Bottom center",
-  se: "Bottom right",
-};
-
-function brandingPlacer(st) {
-  const active = imageStudio.BRAND_ANCHORS[st.brandingAnchor] ? st.brandingAnchor : "se";
-  const cells = Object.keys(ANCHOR_LABELS)
-    .map(
-      (a) => `<label class="ap-radio-container isv2-placer-cell" title="${ANCHOR_LABELS[a]}">
-        <input type="radio" name="isv2-brand-anchor" value="${a}" data-img-branding-anchor="${a}" ${a === active ? "checked" : ""} aria-label="${ANCHOR_LABELS[a]}" />
-        <span></span>
-      </label>`,
-    )
-    .join("");
-  // ONE row: the mark on the left, where it goes on the right — "this logo → lands
-  // there", read across.
-  // The thumb and the grid are the SAME box — same width, same ratio, same frame —
-  // so the row reads as one pair rather than two objects that happen to be near
-  // each other. The mark is contained inside its tile, never cropped.
-  // Labelled, like every other block in the panel. The grid had only an aria-label,
-  // so a sighted user had to infer nine radios in a frame — the one reading the
-  // screen reader already got for free. The label titles the PAIR, because the pair
-  // is the statement: this logo, placed there.
-  const ratio = imageStudio.activeRatio(KEY);
-  return `<div class="isv2-block">
-      <p class="isv2-sheet-hint">Logo placement</p>
-      <div class="isv2-brandrow" style="--isv2-placer-ratio:${ratio}">
-        <div class="isv2-brandthumb">
-          <img class="isv2-placer-mark" src="${escapeHtml(st.playbookLogo)}" alt="${escapeHtml(st.playbookName || "Brand")} logo" />
-        </div>
-        <div class="isv2-placer" role="radiogroup" aria-label="Logo placement">${cells}</div>
-      </div>
+// It was a 3×3 anchor grid beside the mark. Nine positions turned out to be nine
+// ways to answer a question nobody was asking.
+function brandingPreview(st) {
+  return `<div class="isv2-brandthumb">
+      <img class="isv2-brandmark" src="${escapeHtml(st.playbookLogo)}" alt="${escapeHtml(st.playbookName || "Brand")} logo" />
     </div>`;
 }
 

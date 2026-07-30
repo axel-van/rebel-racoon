@@ -190,26 +190,12 @@ function renderTextOverlays(s) {
 // beside `url` so a re-bake (crop, redraw) never stacks text on text.
 // A failure (offline, a CORS-tainted canvas) falls back to the plain photo — the
 // flow must never stall on the mock.
-// Where the mark can go: the NINE anchors of a 3×3, not four corners. Corners
-// alone were the wrong model — a centred wordmark along the bottom is one of the
-// most common ways a brand signs an image, and it had nowhere to go.
-//
-// Fractions are the overlay's centre. `wF` is 0.26, so 0.22 / 0.78 leaves the same
-// ~9% margin on either side, and 0.11 / 0.89 the same top and bottom for a
-// wordmark's height — symmetric by construction, so no anchor looks like a
-// mistake. Compass names, extending the `nw / ne / sw / se` the crop handles
-// already speak; `c` is the middle.
-export const BRAND_ANCHORS = {
-  nw: { xF: 0.22, yF: 0.11 },
-  n: { xF: 0.5, yF: 0.11 },
-  ne: { xF: 0.78, yF: 0.11 },
-  w: { xF: 0.22, yF: 0.5 },
-  c: { xF: 0.5, yF: 0.5 },
-  e: { xF: 0.78, yF: 0.5 },
-  sw: { xF: 0.22, yF: 0.89 },
-  s: { xF: 0.5, yF: 0.89 },
-  se: { xF: 0.78, yF: 0.89 },
-};
+// Where the mark lands: bottom-right, always. It was choosable — nine anchors of
+// a 3×3 — and the choice went unused; signing a visual in the bottom-right corner
+// is the default for the same reason it's the default on paper. The fractions are
+// the overlay's CENTRE, and `wF` is 0.26, so 0.78 / 0.89 leaves the same ~9%
+// margin to the right as underneath.
+const BRAND_MARK = { xF: 0.78, yF: 0.89, wF: 0.26 };
 
 // The brief's palette line, in one place: derivePrompt writes it and the brand-
 // colours switch splices it in and out, and those two disagreeing would show up
@@ -227,8 +213,7 @@ function paletteLine(s) {
 // and 18% left the name too small to be one.
 function brandingOverlays(s) {
   if (!s.useBranding || !s.playbookLogo) return [];
-  const at = BRAND_ANCHORS[s.brandingAnchor] || BRAND_ANCHORS.se;
-  return [{ kind: "logo", url: s.playbookLogo, xF: at.xF, yF: at.yF, wF: 0.26, rot: 0 }];
+  return [{ kind: "logo", url: s.playbookLogo, ...BRAND_MARK, rot: 0 }];
 }
 
 function bakeRenderText(s, img) {
@@ -363,7 +348,6 @@ export function start(
     // anything, so the switch has nothing to offer and the section says so.
     playbookLogo: playbookLogo || "",
     useBranding: !!playbookLogo,
-    brandingAnchor: "se", // where the mark lands — one of the nine, see BRAND_ANCHORS
     // [{ name, hex }] — NAMED, not bare hexes. Every consumer that wants the hex
     // maps for it; the Branding recap and nothing else wants the name, and two
     // parallel arrays for one palette is the kind of thing that drifts.
@@ -635,15 +619,6 @@ function syncPaletteLine(s) {
     lines.splice(after < 0 ? lines.length : after + 1, 0, paletteLine(s));
   }
   s.promptText = lines.join("\n");
-}
-
-// Where the mark lands. No-op without a logo, and only ever one of the nine — a
-// bad value here would silently move the mark somewhere nobody chose.
-export function setBrandingAnchor(sessionId, anchor) {
-  const s = states.get(sessionId);
-  if (!s || !s.playbookLogo || !BRAND_ANCHORS[anchor]) return;
-  s.brandingAnchor = anchor;
-  notify(sessionId);
 }
 
 // Whether the generator gets a reference image AT ALL. This is the switch at the

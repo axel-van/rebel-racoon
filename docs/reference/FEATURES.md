@@ -278,20 +278,24 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   faite pour une marque la porte, sauf avis contraire. Sans logo la section est **désactivée, pas
   masquée** — une section absente laisse se demander si la fonctionnalité existe, une section grisée
   dit où aller la chercher. Le logo est cuit dans les pixels par le même `compositeOverlays` que
-  « Text in image » (overlay `kind: "logo"`, 26% de la largeur, dans **le coin choisi**), donc il survit aux
+  « Text in image » (overlay `kind: "logo"`, 26% de la largeur, **en bas à droite**), donc il survit aux
   vignettes, à l'aperçu in-feed, au recadrage et au draft final. Comme tous les autres réglages, il
   s'applique à la **génération suivante**, pas rétroactivement.
-  **Placeur : une grille 3×3 de vrais radios**, dans un cadre au **ratio de sortie** (`activeRatio`,
-  le même helper que l'étape generating) — donc il se lit « où sur l'image » et se redessine quand
-  Format change. Neuf ancres et pas quatre coins : une marque centrée en bas est l'une des façons
-  les plus ordinaires de signer une image, et elle n'avait nulle part où aller. Un choix unique dans
-  un ensemble fixe **est** un groupe radio, et le DS livre le contrôle (`.ap-radio-container`, dont
-  la pastille est un `::before` et dont le `<span>` vide se replie — il ne reste que la pastille).
-  Noms boussole `nw n ne / w c e / sw s se`, prolongeant le vocabulaire des poignées de crop.
-  Fractions dans `BRAND_ANCHORS` (`image-studio.js`) : 0.22 / 0.5 / 0.78 et 0.11 / 0.5 / 0.89,
-  symétriques par construction pour `wF: 0.26`, donc aucune ancre n'a l'air d'une erreur.
+  **Pas de réglage de placement — juste un aperçu du logo.** La marque atterrit en bas à droite,
+  point (`BRAND_MARK` dans `image-studio.js` : `xF 0.78 / yF 0.89 / wF 0.26`, le centre de l'overlay,
+  donc la même marge d'environ 9% à droite et en dessous). C'était choisissable — neuf ancres d'une
+  grille 3×3 — et le choix ne servait pas : signer un visuel en bas à droite est le défaut pour la
+  même raison que sur papier. La seule décision qui reste à l'utilisateur est **si** la marque
+  apparaît, donc tout ce que la section lui doit est « voici le logo que j'utiliserais » — celui du
+  Playbook, et le voir est ce qui permet d'attraper un logo faux ou périmé avant de générer.
+  L'aperçu est une **tuile encadrée** (bordure + fond blanc + padding) : un logo nu posé sur le
+  panneau se lit comme du mobilier, une tuile bordée se lit comme un fichier qu'on a fourni. Elle est
+  **dimensionnée par la hauteur** (44px), largeur libre : la tuile n'a pas de largeur propre, donc
+  une marque bornée par `max-width: 100%` n'avait rien dont être un pourcentage et se repliait à
+  18px — et laisser la largeur suivre est ce qui fait sortir correctement aussi bien un wordmark
+  qu'un monogramme.
   **Une seule taille de vignette dans tout le panneau : 80px** (`--isv2-tile`, porté par
-  `.isv2-panel`) — les tuiles de References, la thumbnail du logo et la grille de placement. Deux
+  `.isv2-panel`) — les tuiles de References. Deux
   tailles de vignette dans un même panneau se lisent comme deux natures de chose, alors que ce sont
   toutes « une image que tu m'as donnée ». 80 et pas 88 par arithmétique : le corps du panneau fait
   260px, et trois tuiles plus deux gaps de 8px font 256 — exactement trois visibles.
@@ -330,36 +334,12 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   cette ligne en place** (`syncPaletteLine`) : re-dériver jetterait tout ce que l'utilisateur a tapé,
   ne rien faire rendrait l'interrupteur inerte pour la génération qu'il s'apprête à lancer. La ligne
   revient à sa position d'origine (après `Look:`), pas en fin de brief.
-  Le bloc porte le libellé **« Logo placement »** : la grille n'avait qu'un `aria-label`, donc
-  l'utilisateur voyant devait deviner ce qu'étaient neuf radios dans un cadre — ce que le lecteur
-  d'écran, lui, savait déjà. Le libellé titre la **paire**, parce que la paire est l'énoncé : ce
-  logo, placé là.
-  La marque est une **tuile de la même boîte que la grille** — même largeur, même ratio, même
-  bordure — posée juste à côté : deux cadres identiques disent « cette chose → va dans ce cadre »,
-  alors qu'une tuile épousant sa propre largeur ne disait rien et changeait de taille selon la
-  marque. La rangée est en `align-items: stretch` et non `center` : `aspect-ratio` donne une hauteur
-  à chacune, mais la grille a aussi un plancher de contenu (trois pastilles de 16px + padding ne
-  descendent pas sous ~58px), donc à 16:9 les 50px du ratio perdaient et les deux cessaient de
-  correspondre. Étirées, la paire correspond **par construction** et non par une arithmétique qui
-  tombe juste. La marque est affichée **une fois, À CÔTÉ** de la grille — « ce logo → va là », de gauche
-  à droite, et une rangée au lieu de deux blocs empilés. Elle est **encadrée** (bordure + fond
-  blanc + padding) : un logo nu posé sur le panneau se lit comme du mobilier, une tuile bordée se
-  lit comme un fichier qu'on a fourni. Elle épouse sa propre largeur — un wordmark et un monogramme
-  n'ont pas la même forme, une boîte fixe en letterboxerait un ; c'est `space-between` qui tient la
-  grille contre le bord droit quelle que soit cette largeur. Grille de `--isv2-tile` : la pastille du radio
-  DS fait 16px en dur, donc un tiers de 80 laisse ~5px de cellule autour de chacune — cible de
-  26px, sans l'hectare. Version précédente : quatre
-  boutons-quadrants avec le logo rendu dans celui qui était choisi — ça rendait chaque cellule de la
-  taille d'un logo, donc le cadre gros, exactement ce que le placeur devait corriger.
-
   Un **libellé et ce qu'il titre forment UN bloc** (`.isv2-block`, 4px à l'intérieur, les 12px du
   corps entre blocs) — partagé par les groupes de References et par « Brand color », sinon les deux
   sections dérivent : le libellé de References collait à ses vignettes à 4px pendant que celui de
   Branding flottait à 12px de ses pastilles, la même relation à deux espacements.
-  **Les couleurs ne font pas partie du logo** : elles ont leur **propre rangée**, sous la rangée du
-  logo, et pas glissées à côté de la marque — les empiler sous elle disait qu'elles lui
-  appartenaient. Debout seules, elles reprennent leur libellé : cinq pastilles sans étiquette sur
-  une rangée à elles sont une devinette. Un **récap des couleurs de marque** : les **mêmes pastilles rondes que la ligne
+  **Les couleurs ne font pas partie du logo** : elles ont leur propre interrupteur et leur propre
+  rangée — les glisser à côté de la marque disait qu'elles lui appartenaient. Un **récap des couleurs de marque** : les **mêmes pastilles rondes que la ligne
   « Brand color » du Playbook** (`.recap__fact-dot`), et les mêmes mots — un récap doit ressembler à
   ce qu'il récapitule. Nom + hex en tooltip ; l'hex imprimé sous chaque pastille transformait une
   rangée de cinq en deux lignes de petit texte que personne ne lit dans un panneau. Les règles sont
