@@ -11,7 +11,7 @@
 // from any "+ New context" entry point (composer picker, AI inline
 // question chip, /contexts page via a spawn-session handoff).
 
-import { postAssistantMessage, postUserTurn, postAssistantChoice } from "./assistant.js?v=64";
+import { postAssistantMessage, postUserTurn, postAssistantChoice } from "./assistant.js?v=65";
 
 // ---- Action picker -----------------------------------------------------
 

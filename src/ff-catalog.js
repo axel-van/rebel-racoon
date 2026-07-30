@@ -86,18 +86,19 @@ export const FLAGS = Object.freeze([
   {
     id: "imageStudioV2",
     label: "Image Studio v2 (prompt at the bottom)",
-    default: false,
+    default: true,
     hides:
-      "When OFF (default), the draft image actions open the current Image " +
-      "Studio: a settings rail on the left carrying the prompt, a canvas on " +
-      "the right, a footer CTA, and a floating AI bar in Edit mode. When ON, " +
-      "they open the v2 redesign instead: the canvas goes full-width and the " +
-      "prompt becomes a composer pinned to the bottom, with the six settings " +
-      "(brand kit, references, image type, style, format, output) as inline " +
-      "chip-dropdowns. In Edit mode that same composer becomes the AI reprompt " +
-      "bar and carries the manual tools. Both versions share the same state " +
-      "engine (src/image-studio.js) so they behave identically — only the " +
-      "surface differs.",
+      "When ON (default), the draft image actions open the v2 redesign: a " +
+      "full-width stage, the prompt as a composer pinned to the bottom, and " +
+      "the settings in a panel of independent sections beside the image " +
+      "(brand kit pinned open, then references, text in image, type, style, " +
+      "format, output). In Edit mode that same composer becomes the AI " +
+      "reprompt bar and carries the manual tools. When OFF, they open the " +
+      "previous Image Studio instead: a settings rail on the left carrying " +
+      "the prompt, a canvas on the right, a footer CTA, and a floating AI bar " +
+      "in Edit mode. Both versions share the same state engine " +
+      "(src/image-studio.js) so they behave identically — only the surface " +
+      "differs.",
   },
   {
     id: "topics",

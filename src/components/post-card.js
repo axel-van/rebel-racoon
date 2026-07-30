@@ -20,7 +20,7 @@
 // `?focusPost=<id>`.
 
 import { html, raw } from "../utils.js?v=21";
-import { isPortraitFormat } from "../clip-formats.js?v=12";
+import { isPortraitFormat } from "../clip-formats.js?v=13";
 import { presetById } from "../clip-captions.js?v=5";
 import { renderFeedbackControl } from "./feedback-control.js?v=2";
 

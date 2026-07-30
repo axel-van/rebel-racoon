@@ -219,11 +219,11 @@ dans [`image-studio.js`](../../src/image-studio.js) (UI-agnostique) ; la vue est
   `attachImageToDraft` + toast ; en carousel, `attachCarouselToDraft` avec toutes les slides
   (« Apply to slide N » rebake une slide éditée).
 
-#### Image Studio v2 — prompt en bas (flag `imageStudioV2`, défaut OFF)
+#### Image Studio v2 — prompt en bas (flag `imageStudioV2`, **défaut ON**)
 
 Redesign complet de la même feature, monté en parallèle
-([`components/image-studio-v2/`](../../src/components/image-studio-v2/)) et servi à la place de v1
-quand le flag est ON. **Mêmes options, même moteur d'état** (`image-studio.js`, clé `studio-v2`) —
+([`components/image-studio-v2/`](../../src/components/image-studio-v2/)) et servi **par défaut** ; le
+flag à OFF rebascule sur v1. **Mêmes options, même moteur d'état** (`image-studio.js`, clé `studio-v2`) —
 seule la surface change, ce qui permet de comparer les deux à comportement identique.
 
 - Un header d'une seule ligne (titre · tabs de mode · bascule Image/In feed), un **stage pleine
@@ -409,7 +409,7 @@ Détail dimensions/coexistence avec la status-card : [`SHELL-LAYOUT.md`](SHELL-L
 | `multilingualPlaybook`   | Multilingual Playbooks          | **OFF** | Playbooks multi-langues (voice par langue, étape langue du draft flow).                                                                                                                                                                                       |
 | `manyProfiles`           | Many connected profiles (demo)  | **OFF** | Seed ~40 profils connectés variés → le quickpicker de profil affiche une recherche live (voir §draft flow).                                                                                                                                                   |
 | `playbookCompetitors`    | Playbook competitors            | **OFF** | Section **Competitors** du Playbook (panneau + entrée de rail + compteur `/contexts`). La donnée reste présente quand OFF (voir §9).                                                                                                                          |
-| `imageStudioV2`          | Image Studio v2 (prompt en bas) | **OFF** | Les actions image d'un draft ouvrent le redesign v2 (stage pleine largeur + composer en bas, réglages en chips-dropdown) au lieu de l'Image Studio actuel. Mêmes options, même moteur d'état (voir §7).                                                       |
+| `imageStudioV2`          | Image Studio v2 (prompt en bas) | **ON**  | Les actions image d'un draft ouvrent le redesign v2 (stage pleine largeur, composer en bas, réglages en sections indépendantes). OFF rebascule sur l'Image Studio précédent. Mêmes options, même moteur d'état (voir §7).                                     |
 | `topics`                 | Topics (listening dossiers)     | **OFF** | Toute la feature **Topics** (§17) : la route `/topics` + son entrée de nav et son compteur d'unseen, la dialog du dossier, et la page **/topics/settings**. La donnée (dossiers seedés + `ctx.topics`) reste présente quand OFF, comme `playbookCompetitors`. |
 
 Persistés en `localStorage` (`archie-feature-flags`), lus via `isFlagOn()`. Voir aussi [`STORES.md`](STORES.md).

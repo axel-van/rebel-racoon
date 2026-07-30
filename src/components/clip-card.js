@@ -29,7 +29,7 @@ import { escapeText, escapeAttr } from "../utils.js?v=21";
 import { installMoreMenu } from "./more-menu.js?v=1";
 import { renderFeedbackThumbs, renderFeedbackPanel } from "./feedback-control.js?v=2";
 import { videoForClip } from "../clip-captions.js?v=5";
-import { FORMATS } from "../clip-formats.js?v=12";
+import { FORMATS } from "../clip-formats.js?v=13";
 
 function fmtTime(s) {
   if (!Number.isFinite(s) || s < 0) return "0:00";
