@@ -187,11 +187,11 @@ export function renderPostCard(post, opts = {}) {
       : post.imageUrl
         ? `<div class="posts__card-image-wrap">
           <img class="posts__card-image" src="${post.imageUrl}" alt="Image for this post" loading="lazy" />
+          <!-- Change / Remove only. The carousel keeps its "Edit slides" — it is the
+               only way into the studio for a multi-slide draft — but on a single
+               image the row read as three near-equal greys for two different jobs
+               (open a studio vs swap the file). -->
           <div class="posts__card-image-controls">
-            <button type="button" class="ap-button ghost grey" data-post-image-edit="${post.id}">
-              <i class="ap-icon-archie-official"></i>
-              <span>Edit</span>
-            </button>
             <button type="button" class="ap-button ghost grey" data-post-image-upload="${post.id}">
               <i class="ap-icon-upload"></i>
               <span>Change</span>

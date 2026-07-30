@@ -303,8 +303,11 @@
   left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xxxs);
+  /* 4px, not 8: the ghost buttons already carry the DS button's own horizontal
+     padding, so the container's was a second inset around controls that were
+     already inset — the bar read as a box with the buttons floating inside it. */
+  padding: var(--ref-spacing-xxxs);
   background: var(--ref-color-white);
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
