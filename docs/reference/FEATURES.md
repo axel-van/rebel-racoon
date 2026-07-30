@@ -248,7 +248,19 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   visite ne devrait pas être une section à ouvrir. Son en-tête cesse alors d'être un contrôle — un
   `<div>` et non un `<button>`, sans chevron ni hook de toggle — et n'entre jamais dans
   `collapsedGroups` ; sa valeur est le **nom de l'image choisie** (`Product UI`), ou `None`.
-  **Une seule image de référence à la fois**, prise indifféremment dans le brand kit du Playbook ou
+  Chaque groupe est **libellé par sa provenance** — `Brand book — Acme` et `Custom` — et le libellé
+  s'affiche même quand il n'y a qu'un groupe : les deux sections disparues, c'est la seule chose qui
+  dise encore que ces images viennent du brand book du Playbook, et nommer le book nomme le standard
+  auquel l'image générée est tenue. Tiret cadratin et pas point médian, un nom de Playbook en
+  contenant déjà. La **valeur de l'en-tête replié est cette provenance** (`Acme` / `Custom` /
+  `None`), pas le nom du fichier : « Product UI » redisait une vignette qu'on a sous les yeux, alors
+  que la provenance est ce qu'une vignette ne montre pas.
+  L'ajout est un **bouton** (`stroked grey`) avec sa ligne d'explication dessous, pas un panneau de
+  drop pointillé : le panneau faisait 64px de haut pour une action à un clic, et c'était l'objet le
+  plus gros d'une section dont le sujet est les vignettes au-dessus. Le drop marche toujours —
+  `data-img-dropzone` est sur le bouton, et le mode Generate accepte de toute façon un drop
+  n'importe où dans la modale.
+  **Une seule image de référence à la fois**, prise indifféremment dans le brand book du Playbook ou
   dans les uploads de l'utilisateur — donc le marqueur de tuile est un **radio**, pas une coche :
   une coche promet qu'on peut en cumuler. `aria-pressed` et non `role="radio"`, parce que cliquer
   la tuile choisie la désélectionne et qu'un groupe radio ne sait pas revenir à vide — même contrat

@@ -58,6 +58,11 @@ Visual goal: Create an instant visual metaphor for speed without direction or ac
 Visual scene: A deep blue background. On the left, massive bold typography. On the right, a single powerful graphic: a thick, horizontal orange arrow representing velocity. The tail of the arrow is solid and perfectly defined, but as it points forward, the tip shatters and dissolves into a chaotic cloud of tiny, disconnected digital pixels and glitch fragments.
 Composition focus: The transition point of the arrow where order turns into digital chaos, aligned with the bold headline.`;
 
+// The two provenances a reference image can have. Shared by the group labels and
+// the collapsed header so the section can only ever call them the same thing.
+const BRAND_GROUP = "Brand book";
+const CUSTOM_GROUP = "Custom";
+
 // Two lines, so the placeholder teaches the line break as well as the length.
 const RENDER_TEXT_PLACEHOLDER = `Black Friday
 −50% on everything`;
@@ -303,7 +308,7 @@ function settingRows(st) {
     settingRow({
       name: "refs",
       label: "References",
-      value: picked ? refLabel(picked, st) : "None",
+      value: refSource(picked, st),
       set: !!picked,
       pinned: true,
       body: () => refsBody(st, picked),
@@ -392,15 +397,20 @@ function settingRows(st) {
 
 // What a picked reference is called in the collapsed header: its own label if it
 // has one, else where it came from. "Brand board" beats "1 selected".
-function refLabel(ref, st) {
-  const label = (ref.label || "").trim();
-  if (label) return label;
-  return ref.fromPlaybook ? st.playbookName || "Brand kit" : "Your image";
+// The collapsed header answers WHERE the reference came from, not which file it
+// is. "Product UI" told you a filename you already see in the grid below; the
+// brand book's name tells you the thing you can't see from a thumbnail — whether
+// this image is going to look on-brand or like something you dropped in.
+function refSource(ref, st) {
+  if (!ref) return "None";
+  return ref.fromPlaybook ? st.playbookName || BRAND_GROUP : CUSTOM_GROUP;
 }
 
-// The merged section: both pools in one grid, brand kit first, then the uploader.
-// The group labels are what carry the provenance now that the sections are one —
-// they only appear when there is something on both sides to tell apart.
+// The merged section: both pools in one grid, brand book first, then the uploader.
+// Every group is LABELLED, even when it's the only one — with the two sections
+// gone, the label is the only thing left saying these images come from the
+// Playbook's brand book rather than from somewhere the user chose. Naming the
+// book also names the standard the generated image is being held to.
 function refsBody(st, picked) {
   const pool = imageStudio.referencePool(st);
   const brand = pool.filter((r) => r.fromPlaybook);
@@ -408,26 +418,28 @@ function refsBody(st, picked) {
   const selectedId = picked ? picked.id : null;
   const groups = [];
   if (brand.length) {
-    groups.push(
-      refGroup(
-        mine.length ? st.playbookName || "Brand kit" : "",
-        brand.map((r) => refTile(r, r.id === selectedId)).join(""),
-      ),
-    );
+    // An em dash, not a middot: a Playbook name has middots of its own
+    // ("Acme · Q2 marketing") and a third one made the label unparseable.
+    const book = st.playbookName ? `${BRAND_GROUP} — ${st.playbookName}` : BRAND_GROUP;
+    groups.push(refGroup(book, brand.map((r) => refTile(r, r.id === selectedId)).join("")));
   }
   if (mine.length) {
-    groups.push(refGroup(brand.length ? "Your images" : "", mine.map((r) => refTile(r, r.id === selectedId)).join("")));
+    groups.push(refGroup(CUSTOM_GROUP, mine.map((r) => refTile(r, r.id === selectedId)).join("")));
   }
   const capped = mine.length >= imageStudio.MAX_REFS;
   const dropzone = capped
     ? `<p class="isv2-sheet-hint">Maximum ${imageStudio.MAX_REFS} images. Remove one to add another.</p>`
-    : `<button type="button" class="isv2-dropzone" data-img-dropzone data-img-ref-add>
-        <i class="ap-icon-plus" aria-hidden="true"></i>
-        <span class="isv2-dropzone-text">
-          <span class="isv2-dropzone-title">Drop or click to add an image</span>
-          <span class="isv2-dropzone-sub">PNG, JPG, WebP · I'll match its look</span>
-        </span>
-      </button>`;
+    : // A button and a line under it, not a dashed drop panel. The panel was a
+      // 64px-tall placeholder for an action that is one click, and it was the
+      // biggest thing in a section whose subject is the images above it. Dropping
+      // still works — `data-img-dropzone` rides on the button, and generate mode
+      // accepts a drop anywhere in the modal anyway (see index.js#onDrop).
+      `<div class="isv2-adder">
+        <button type="button" class="ap-button stroked grey" data-img-dropzone data-img-ref-add>
+          <i class="ap-icon-plus" aria-hidden="true"></i><span>Add an image</span>
+        </button>
+        <p class="isv2-sheet-hint">PNG, JPG or WebP · I'll match its look</p>
+      </div>`;
   return `${groups.join(sheetDivider)}${groups.length ? sheetDivider : ""}${dropzone}`;
 }
 

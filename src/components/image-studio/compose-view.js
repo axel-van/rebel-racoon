@@ -197,13 +197,13 @@ function dropzone(st) {
   if ((st.uploadedRefs || []).length >= imageStudio.MAX_REFS) {
     return `<p class="image-studio__dropzone-sub">Maximum ${imageStudio.MAX_REFS} images. Remove one to add another.</p>`;
   }
-  return `<button type="button" class="image-studio__dropzone" data-img-dropzone data-img-ref-add>
-    <i class="ap-icon-plus image-studio__dropzone-icon" aria-hidden="true"></i>
-    <span class="image-studio__dropzone-text">
-      <span class="image-studio__dropzone-title">Drop or click to add an image</span>
-      <span class="image-studio__dropzone-sub">PNG, JPG, WebP · I'll match its look</span>
-    </span>
-  </button>`;
+  // A button and a line under it, not a dashed drop panel — see the v2 note.
+  return `<div class="image-studio__adder">
+    <button type="button" class="ap-button stroked grey" data-img-dropzone data-img-ref-add>
+      <i class="ap-icon-plus" aria-hidden="true"></i><span>Add an image</span>
+    </button>
+    <p class="image-studio__dropzone-sub">PNG, JPG or WebP · I'll match its look</p>
+  </div>`;
 }
 
 function composeGroups(st) {
@@ -216,12 +216,28 @@ function composeGroups(st) {
   const brandKit = "";
   const pool = imageStudio.referencePool(st);
   const picked = imageStudio.selectedReference(st);
-  const tiles = pool.map((r) => refTile(r, !!picked && r.id === picked.id)).join("");
+  const on = (r) => !!picked && r.id === picked.id;
+  // Labelled groups, same as v2: with Brand kit gone as a section, the label is
+  // what says these images come from the Playbook's brand book.
+  const group = (label, list) =>
+    list.length
+      ? `<p class="image-studio__refs-group">${escapeHtml(label)}</p><div class="image-studio__refs">${list.map((r) => refTile(r, on(r))).join("")}</div>`
+      : "";
+  const book = st.playbookName ? `Brand book — ${st.playbookName}` : "Brand book";
+  const tiles =
+    group(
+      book,
+      pool.filter((r) => r.fromPlaybook),
+    ) +
+    group(
+      "Custom",
+      pool.filter((r) => !r.fromPlaybook),
+    );
   const refsGroup = collapsibleGroup(st, {
     id: "refs",
     label: "Reference image",
-    summary: picked ? picked.label || (picked.fromPlaybook ? st.playbookName || "Brand kit" : "Your image") : "None",
-    body: `${tiles ? `<div class="image-studio__refs">${tiles}</div>` : ""}${dropzone(st)}`,
+    summary: picked ? (picked.fromPlaybook ? st.playbookName || "Brand book" : "Custom") : "None",
+    body: `${tiles}${dropzone(st)}`,
   });
 
   // Text in image — beside the references, because both answer "what goes IN the

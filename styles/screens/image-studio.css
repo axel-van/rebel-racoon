@@ -2073,60 +2073,25 @@ button.image-studio__ref--pick:focus-visible {
 
 /* Compact single-row drop target: a dashed bar (icon + two-line label) that is
    itself the click + drop surface — no oversized empty zone, no extra button. */
-.image-studio__dropzone {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  width: 100%;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border: 1.5px dashed var(--sys-border-color-default);
-  border-radius: var(--app-radius-md);
-  background: var(--ref-color-grey-05);
-  text-align: left;
-  cursor: pointer;
-  font: inherit;
-  transition:
-    border-color var(--ref-animation-short) var(--app-ease-out),
-    background var(--ref-animation-short) var(--app-ease-out);
-}
-
-.image-studio__dropzone:hover,
-.image-studio__dropzone:focus-visible {
-  outline: none;
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-10);
-}
-
-.image-studio__dropzone.is-dragover {
-  border-color: var(--ref-color-electric-blue-100);
-  background: var(--ref-color-electric-blue-10);
-}
-
-.image-studio__dropzone-icon {
-  flex: none;
-  font-size: 16px;
-  color: var(--ref-color-grey-60);
-}
-
-.image-studio__dropzone-text {
+/* The uploader: a DS button with its explanation under it. It replaced a dashed
+   64px drop panel — a placeholder-sized affordance for a one-click action, and the
+   biggest object in a section whose subject is the tiles above it. Auto width: a
+   CTA never stretches to fill its container. */
+.image-studio__adder {
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xxs);
 }
 
-.image-studio__dropzone-title {
-  margin: 0;
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-100);
-}
-
+/* The line under the button, and the "maximum reached" message that replaces the
+   whole adder. */
 .image-studio__dropzone-sub {
   margin: 0;
+  font-family: var(--sys-text-style-caption-font-family);
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-60);
+  color: var(--sys-text-color-light);
 }
 
 /* Format hint: the words "Best for" followed by the target network's icon.

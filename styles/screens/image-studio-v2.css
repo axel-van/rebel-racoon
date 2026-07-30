@@ -985,7 +985,7 @@
   font-size: var(--sys-text-style-body-size);
 }
 
-/* ── Reference tiles + dropzone ──────────────────────────────────────────── */
+/* ── Reference tiles + the uploader ──────────────────────────────────────── */
 
 .isv2-refs {
   display: grid;
@@ -1125,40 +1125,15 @@
   cursor: pointer;
 }
 
-.isv2-dropzone {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  width: 100%;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border: 1px dashed var(--app-border);
-  border-radius: var(--app-radius-md);
-  background: var(--app-surface-subtle);
-  color: var(--sys-text-color-default);
-  font-family: var(--ref-font-family);
-  text-align: left;
-  cursor: pointer;
-}
-
-.isv2-dropzone:hover,
-.isv2-dropzone.is-dragover {
-  border-color: var(--sys-color-accent-default-bg-default);
-  background: var(--sys-color-accent-light-bg);
-}
-
-.isv2-dropzone-text {
+/* The uploader: a DS button with its explanation under it. It replaced a dashed
+   64px drop panel — a placeholder-sized affordance for a one-click action, and the
+   biggest object in a section whose subject is the tiles above it. Auto width: a
+   CTA never stretches to fill its container. */
+.isv2-adder {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-}
-
-.isv2-dropzone-title {
-  font-size: var(--sys-text-style-body-size);
-}
-
-.isv2-dropzone-sub {
-  color: var(--sys-text-color-light);
-  font-size: var(--sys-text-style-caption-size);
+  align-items: flex-start;
+  gap: var(--ref-spacing-xxs);
 }
 
 /* The crop toolbar is main's, styled by main's stylesheet. Only one of its rules
