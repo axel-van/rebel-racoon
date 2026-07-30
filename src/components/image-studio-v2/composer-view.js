@@ -297,6 +297,7 @@ export function footerBar(st) {
 
 // DS `.ap-select` over <details> — never a bare native <select>. Hidden when there
 // is only one Playbook: a picker with one option is a label wearing a chevron.
+// The trigger carries its own label, so the footer holds one control, not a pair.
 function playbookPicker(st) {
   const books = getContexts();
   if (books.length < 2) return "";
@@ -310,18 +311,19 @@ function playbookPicker(st) {
       </div>`;
     })
     .join("");
-  return `<div class="ap-form-field isv2-playbook">
-    <label>Playbook</label>
-    <details class="ap-select isv2-playbook-select">
-      <summary class="ap-select-trigger">
-        <span class="ap-select-value">${escapeHtml(active.name)}</span>
-        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
-      </summary>
-      <div class="ap-select-dropdown" role="listbox" aria-label="Playbook">
-        <div class="ap-select-options">${options}</div>
-      </div>
-    </details>
-  </div>`;
+  // The DS select's own INLINE LABEL — the label lives inside the trigger, behind a
+  // hairline, instead of being a separate word beside the control. Same shape the
+  // /topics feed filters use, and it costs the footer one object instead of two.
+  return `<details class="ap-select isv2-playbook-select">
+    <summary class="ap-select-trigger">
+      <span class="ap-select-inline-label">Playbook</span>
+      <span class="ap-select-value">${escapeHtml(active.name)}</span>
+      <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+    </summary>
+    <div class="ap-select-dropdown" role="listbox" aria-label="Playbook">
+      <div class="ap-select-options">${options}</div>
+    </div>
+  </details>`;
 }
 
 // ── The six setting chips ───────────────────────────────────────────────────

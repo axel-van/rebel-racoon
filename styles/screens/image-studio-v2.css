@@ -756,22 +756,12 @@
 
 /* ── The footer bar ───────────────────────────────────────────────────────── */
 
-/* The footer Playbook picker. Label and control side by side — the footer is a
-   horizontal bar, so `.ap-form-field`'s column would make it two rows tall. */
-.isv2-playbook {
-  flex-direction: row;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-}
-
-.isv2-playbook > label {
-  flex-shrink: 0;
-  color: var(--sys-text-color-light);
-}
-
+/* The footer Playbook picker. The label is the DS select's own inline label, so
+   there's no separate <label> to lay out beside it — one control, and the footer
+   bar stays one row tall without a wrapper. */
 .isv2-playbook-select {
   flex: 0 0 auto;
-  width: 240px;
+  width: 280px;
 }
 
 /* Opens UPWARD: the picker sits on the modal's bottom edge and the modal clips
