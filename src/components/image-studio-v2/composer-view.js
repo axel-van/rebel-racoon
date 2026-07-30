@@ -464,13 +464,22 @@ function shortRenderText(text) {
 // handler writes into (typing must not re-render the panel, or the caret dies), and
 // the hint names the other thing the user might have meant: the movable text
 // overlay in Edit, which is a different job on a finished image.
+//
+// "Edit" is a link straight to that tab — but ONLY once an image exists. The tab
+// is disabled until then, so linking earlier would promise a place you can't go.
+// It reuses `data-img-mode`, the mode tabs' own hook, so there's no second path
+// into setMode to keep in step.
 function renderTextBody(st) {
   const text = st.renderText || "";
+  const hasImg = !!st.currentImage || (st.genPhase === "results" && st.variations.length > 0);
+  const editLink = hasImg
+    ? `<button type="button" class="ap-link small isv2-hint-link" data-img-mode="edit">Edit</button>`
+    : "Edit";
   return `<div class="ap-textarea-field narrow isv2-textfield">
       <textarea data-img-render-text rows="2" maxlength="${imageStudio.MAX_RENDER_TEXT}" placeholder="${escapeHtml(RENDER_TEXT_PLACEHOLDER)}" aria-label="Text to write into the image">${escapeHtml(text)}</textarea>
     </div>
     <p class="isv2-sheet-hint isv2-textfield-foot">
-      <span>For a text box you can move, use Add text in Edit.</span>
+      <span>For a text box you can move, use Add text in ${editLink}.</span>
       <span class="isv2-textfield-count" data-img-render-text-count>${text.length}/${imageStudio.MAX_RENDER_TEXT}</span>
     </p>`;
 }

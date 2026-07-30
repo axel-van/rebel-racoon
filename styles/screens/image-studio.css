@@ -308,6 +308,14 @@ button.image-studio__group-head:disabled {
   resize: vertical;
 }
 
+/* `.ap-link` is inline-flex — a rigid box on the baseline that won't break with the
+   line it sits in. This one is a word inside a wrapping sentence, so it goes back to
+   inline. A co-class, never a redeclaration of `.ap-link` itself. */
+.image-studio__hint-link {
+  display: inline;
+  vertical-align: baseline;
+}
+
 .image-studio__textfield-foot {
   display: flex;
   align-items: flex-start;

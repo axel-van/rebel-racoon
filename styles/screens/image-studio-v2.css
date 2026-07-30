@@ -914,6 +914,14 @@
   font-size: var(--sys-text-style-caption-size);
 }
 
+/* `.ap-link` is inline-flex — a rigid box on the baseline that won't break with the
+   line it sits in. This one is a word inside a wrapping sentence, so it goes back to
+   inline. A co-class, never a redeclaration of `.ap-link` itself. */
+.isv2-hint-link {
+  display: inline;
+  vertical-align: baseline;
+}
+
 .isv2-sheet-hint > i {
   font-size: 14px;
 }

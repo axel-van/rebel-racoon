@@ -151,11 +151,17 @@ function shortRenderText(text) {
 // must not re-render the rail under the caret.
 function renderTextField(st) {
   const text = st.renderText || "";
+  // Link "Edit" to that tab once there's an image to edit — the tab is disabled
+  // before that. Same `data-img-mode` hook the tabs use.
+  const hasImg = !!st.currentImage || (st.genPhase === "results" && st.variations.length > 0);
+  const editLink = hasImg
+    ? `<button type="button" class="ap-link small image-studio__hint-link" data-img-mode="edit">Edit</button>`
+    : "Edit";
   return `<div class="ap-textarea-field narrow image-studio__textfield">
       <textarea data-img-render-text rows="2" maxlength="${imageStudio.MAX_RENDER_TEXT}" placeholder="${escapeHtml(RENDER_TEXT_PLACEHOLDER)}" aria-label="Text to write into the image">${escapeHtml(text)}</textarea>
     </div>
     <p class="image-studio__count image-studio__textfield-foot">
-      <span>For a text box you can move, use Add text in Edit.</span>
+      <span>For a text box you can move, use Add text in ${editLink}.</span>
       <span class="image-studio__textfield-count" data-img-render-text-count>${text.length}/${imageStudio.MAX_RENDER_TEXT}</span>
     </p>`;
 }
