@@ -290,6 +290,12 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   Noms boussole `nw n ne / w c e / sw s se`, prolongeant le vocabulaire des poignées de crop.
   Fractions dans `BRAND_ANCHORS` (`image-studio.js`) : 0.22 / 0.5 / 0.78 et 0.11 / 0.5 / 0.89,
   symétriques par construction pour `wF: 0.26`, donc aucune ancre n'a l'air d'une erreur.
+  **Une seule taille de vignette dans tout le panneau : 88px.** Les tuiles de References prennent la
+  boîte de la thumbnail du logo (pistes de grille **fixes**, pas `minmax(88px, 1fr)` — en 1fr les
+  deux colonnes s'étirent à 116px et cessent justement de correspondre), et le même gap de 12px que
+  la rangée du logo. Deux tailles de vignette dans un même panneau se lisent comme deux natures de
+  chose, alors que ce sont toutes « une image que tu m'as donnée ». Prix payé : trois images de
+  brand book passent sur deux rangées au lieu d'une.
   Le bloc porte le libellé **« Logo placement »** : la grille n'avait qu'un `aria-label`, donc
   l'utilisateur voyant devait deviner ce qu'étaient neuf radios dans un cadre — ce que le lecteur
   d'écran, lui, savait déjà. Le libellé titre la **paire**, parce que la paire est l'énoncé : ce

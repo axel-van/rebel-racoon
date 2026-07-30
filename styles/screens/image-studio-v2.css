@@ -1103,13 +1103,19 @@
 
 /* ── Reference tiles + the uploader ──────────────────────────────────────── */
 
-/* 60px, not 72: at the panel's 260px that's four tiles to a row instead of three,
-   so a pool of four or five is one row rather than two — and a reference thumbnail
-   only has to be recognisable, not readable. */
+/* 88px FIXED tracks, and the same 12px gap as the brand row — so a reference tile
+   is the same object as the logo thumbnail further down the panel. Two tile sizes
+   in one panel read as two kinds of thing when they're both just "an image you
+   gave me".
+ *
+   Fixed, not `minmax(88px, 1fr)`: with 1fr the two columns stretch to 116px and
+   stop matching the 88px thumb, which is the whole point. The cost is that three
+   brand images wrap to two rows instead of sitting in one — the trade the size
+   consistency is worth. */
 .isv2-refs {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-  gap: var(--ref-spacing-xxxs);
+  grid-template-columns: repeat(auto-fill, 88px);
+  gap: var(--ref-spacing-xs);
 }
 
 .isv2-ref {
