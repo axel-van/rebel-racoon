@@ -999,84 +999,45 @@
   line-height: var(--sys-text-style-caption-line-height);
 }
 
-/* The logo PLACER — the preview and the position control as one object. A frame
-   the shape of the output (`--isv2-placer-ratio`, set from activeRatio) with four
-   quadrant buttons; the mark renders in the chosen one.
+/* The logo PLACER — a 3×3 of DS radios in a frame the shape of the output, so it
+   reads as "where on the image" and reshapes when Format changes
+   (`--isv2-placer-ratio`, set from activeRatio).
  *
-   Auto width, not full: it's a control, and a CTA-sized target never stretches to
-   fill its container. 140px is enough for four 70px quadrants to be comfortable
-   clicks while the whole thing costs a third of what the old full-width tile did. */
+   Nine anchors, not four corners: a centred wordmark along the bottom is one of
+   the most ordinary ways to sign an image and had nowhere to go. Auto width, not
+   full — it's a control, and a control never stretches to fill its container. */
 .isv2-placer {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  width: 140px;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  place-items: center;
+  width: 132px;
   aspect-ratio: var(--isv2-placer-ratio, 1);
+  padding: var(--ref-spacing-xxs);
   border: 1px solid var(--sys-border-color-default);
   border-radius: var(--app-radius-md);
   background: var(--app-surface-subtle);
-  overflow: hidden;
+  box-sizing: border-box;
 }
 
+/* `.ap-radio-container` is a flex row whose dot is a ::before and whose <span>
+   collapses when empty — so a cell is just the dot, centred in its third. The
+   whole cell is the hit area, not only the 16px dot. */
 .isv2-placer-cell {
-  display: flex;
-  align-items: center;
+  width: 100%;
+  height: 100%;
   justify-content: center;
-  padding: 4px;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  transition: background-color 120ms var(--app-ease-out);
 }
 
-.isv2-placer-cell:hover {
-  background: var(--ref-color-grey-10);
-}
-
-.isv2-placer-cell:focus-visible {
-  outline: 2px solid var(--ref-color-electric-blue-100);
-  outline-offset: -2px;
-}
-
-/* The chosen quadrant holds the mark, so the selected state is the mark being
-   there — no extra highlight competing with it. */
-.isv2-placer-cell[aria-pressed="true"] {
-  background: var(--ref-color-white);
-}
-
-/* Contained, never cropped: a wordmark clipped stops being the logo. */
+/* The mark, shown once and small above the grid. It used to render inside the
+   chosen cell, which made every cell logo-sized and the frame big — exactly the
+   thing the placer was meant to shrink. */
 .isv2-placer-mark {
-  max-width: 100%;
-  max-height: 100%;
+  display: block;
+  max-width: 132px;
+  max-height: 22px;
+  margin-bottom: var(--ref-spacing-xxs);
   object-fit: contain;
-}
-
-/* Brand colours — a RECAP under the mark, not a picker: nothing here is clickable,
-   the colours already reach the model through the brief's "Palette:" line.
- *
- * Deliberately the same dots as the Playbook's own "Brand color" row
- * (`.recap__fact-dot`, styles/screens/welcome.css) — a recap should look like the
- * thing it recaps. Restated rather than imported: welcome.css owns an unrelated
- * screen, and coupling the studio to it to save six lines is the worse trade. If
- * a third surface wants these, promote them to styles/components/ the way
- * topic-badge went. */
-.isv2-branddots-label {
-  margin-top: var(--ref-spacing-xxs);
-}
-
-.isv2-branddots {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxs);
-  margin: 0;
-}
-
-.isv2-branddot {
-  width: 16px;
-  height: 16px;
-  border-radius: var(--app-radius-circle);
-  /* The border is what keeps a white brand colour a swatch and not a hole. */
-  border: 1px solid var(--app-border);
 }
 
 /* ── Reference tiles + the uploader ──────────────────────────────────────── */

@@ -281,15 +281,18 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   « Text in image » (overlay `kind: "logo"`, 26% de la largeur, dans **le coin choisi**), donc il survit aux
   vignettes, à l'aperçu in-feed, au recadrage et au draft final. Comme tous les autres réglages, il
   s'applique à la **génération suivante**, pas rétroactivement.
-  **L'aperçu EST le placeur.** Un cadre au **ratio de sortie** (`activeRatio`, le même helper que
-  l'étape generating) avec quatre quadrants `nw / ne / sw / se` — le vocabulaire des poignées de
-  crop — en `aria-pressed`, et la marque rendue **dans** le quadrant choisi : déplacer doit
-  ressembler à déplacer, pas à un surlignage qui bouge. Un aperçu séparé + un select auraient été
-  deux objets pour la même chose, et auraient transformé un choix spatial en liste de mots —
-  « Bottom right » dans un menu est strictement pire que le carré en bas à droite. Ça règle aussi la
-  taille : 140px de large au lieu d'une tuile pleine largeur. Les fractions vivent dans
-  `BRAND_CORNERS` (`image-studio.js`) — 0.22/0.78 et 0.11/0.89, symétriques par construction pour
-  `wF: 0.26`, donc aucun coin n'a l'air d'une erreur. Changer Format redessine le cadre.
+  **Placeur : une grille 3×3 de vrais radios**, dans un cadre au **ratio de sortie** (`activeRatio`,
+  le même helper que l'étape generating) — donc il se lit « où sur l'image » et se redessine quand
+  Format change. Neuf ancres et pas quatre coins : une marque centrée en bas est l'une des façons
+  les plus ordinaires de signer une image, et elle n'avait nulle part où aller. Un choix unique dans
+  un ensemble fixe **est** un groupe radio, et le DS livre le contrôle (`.ap-radio-container`, dont
+  la pastille est un `::before` et dont le `<span>` vide se replie — il ne reste que la pastille).
+  Noms boussole `nw n ne / w c e / sw s se`, prolongeant le vocabulaire des poignées de crop.
+  Fractions dans `BRAND_ANCHORS` (`image-studio.js`) : 0.22 / 0.5 / 0.78 et 0.11 / 0.5 / 0.89,
+  symétriques par construction pour `wF: 0.26`, donc aucune ancre n'a l'air d'une erreur.
+  La marque est affichée **une fois, petite, au-dessus** de la grille. Version précédente : quatre
+  boutons-quadrants avec le logo rendu dans celui qui était choisi — ça rendait chaque cellule de la
+  taille d'un logo, donc le cadre gros, exactement ce que le placeur devait corriger.
 
   Sous la marque, un **récap des couleurs de marque** : les **mêmes pastilles rondes que la ligne
   « Brand color » du Playbook** (`.recap__fact-dot`), et les mêmes mots — un récap doit ressembler à

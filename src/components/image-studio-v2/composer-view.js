@@ -39,8 +39,8 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=34";
-import { KEY } from "./context.js?v=25";
-import * as imageStudio from "../../image-studio.js?v=61";
+import { KEY } from "./context.js?v=26";
+import * as imageStudio from "../../image-studio.js?v=62";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -557,26 +557,43 @@ function brandingBody(st, branded) {
     ${swatches}`;
 }
 
-// The frame carries the OUTPUT's aspect ratio (`activeRatio`, the same helper the
-// generating stage uses), so the preview is truthful: change Format and it
-// reshapes. The mark renders inside the chosen quadrant rather than the quadrant
-// merely lighting up — moving it has to look like moving it.
+// Nine anchors in a 3×3, as REAL radios — one choice out of a fixed set is what a
+// radio group is, and the DS ships the control (`.ap-radio-container`, whose dot
+// is a ::before on the label; the empty <span> collapses, leaving just the dot).
 //
-// Four buttons with `aria-pressed`, the app's toggle-state primitive, and the
-// `nw / ne / sw / se` names the crop handles already use.
-const CORNER_LABELS = { nw: "Top left", ne: "Top right", sw: "Bottom left", se: "Bottom right" };
+// It was four corner buttons with the logo rendered inside the chosen one. Two
+// things were wrong with that: four positions have no room for a centred wordmark
+// along the bottom, which is one of the most ordinary ways to sign an image; and
+// putting the mark in a cell made the cell the size of a logo, which made the
+// whole frame big — the opposite of what it was supposed to fix.
+//
+// The frame still carries the OUTPUT's aspect ratio (`activeRatio`, the helper the
+// generating stage uses), so it reads as "where on the image" and reshapes when
+// Format changes. The mark shows once, small, above it.
+const ANCHOR_LABELS = {
+  nw: "Top left",
+  n: "Top center",
+  ne: "Top right",
+  w: "Middle left",
+  c: "Center",
+  e: "Middle right",
+  sw: "Bottom left",
+  s: "Bottom center",
+  se: "Bottom right",
+};
 
 function brandingPlacer(st) {
-  const active = imageStudio.BRAND_CORNERS[st.brandingCorner] ? st.brandingCorner : "se";
-  const cells = Object.keys(CORNER_LABELS)
-    .map((c) => {
-      const on = c === active;
-      return `<button type="button" class="isv2-placer-cell" data-img-branding-corner="${c}" aria-pressed="${on}" title="${CORNER_LABELS[c]}" aria-label="${CORNER_LABELS[c]}">
-        ${on ? `<img class="isv2-placer-mark" src="${escapeHtml(st.playbookLogo)}" alt="${escapeHtml(st.playbookName || "Brand")} logo" />` : ""}
-      </button>`;
-    })
+  const active = imageStudio.BRAND_ANCHORS[st.brandingAnchor] ? st.brandingAnchor : "se";
+  const cells = Object.keys(ANCHOR_LABELS)
+    .map(
+      (a) => `<label class="ap-radio-container isv2-placer-cell" title="${ANCHOR_LABELS[a]}">
+        <input type="radio" name="isv2-brand-anchor" value="${a}" data-img-branding-anchor="${a}" ${a === active ? "checked" : ""} aria-label="${ANCHOR_LABELS[a]}" />
+        <span></span>
+      </label>`,
+    )
     .join("");
-  return `<div class="isv2-placer" style="--isv2-placer-ratio:${imageStudio.activeRatio(KEY)}" role="group" aria-label="Logo position">${cells}</div>`;
+  return `<img class="isv2-placer-mark" src="${escapeHtml(st.playbookLogo)}" alt="${escapeHtml(st.playbookName || "Brand")} logo" />
+    <div class="isv2-placer" style="--isv2-placer-ratio:${imageStudio.activeRatio(KEY)}" role="radiogroup" aria-label="Logo position">${cells}</div>`;
 }
 
 // The collapsed row's value has one line of a 284px panel to live in, beside a
