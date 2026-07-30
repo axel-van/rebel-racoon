@@ -23,17 +23,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=41";
 import { getSessionById } from "../../sessions-store.js?v=11";
 import { getContextById } from "../../contexts-store.js?v=43";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=25";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=26";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "./canvas.js?v=2";
-import { renderStudio } from "./shell-view.js?v=52";
+import { renderStudio } from "./shell-view.js?v=53";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=27";
-import * as imageStudio from "../../image-studio.js?v=51";
+} from "./interactions.js?v=28";
+import * as imageStudio from "../../image-studio.js?v=52";
 
 let backdrop;
 let initialized = false;
@@ -423,9 +423,6 @@ function onChange(event) {
   } else if (event.target.matches("[data-img-shadow-intensity]") && st?.selectedOverlayId) {
     // Slider release commits + re-renders (live preview happened in onInput).
     imageStudio.updateOverlay(KEY, st.selectedOverlayId, { shadowIntensity: Number(event.target.value) });
-  } else if (event.target.matches("[data-img-toggle-playbook-refs]")) {
-    // Brand kit switch (DS toggle checkbox).
-    imageStudio.setUsePlaybookRefs(KEY, event.target.checked);
   } else if (event.target.matches("[data-img-render-text]")) {
     // Blur commits, which is what refreshes the folded row's value.
     imageStudio.commitRenderText(KEY, event.target.value);

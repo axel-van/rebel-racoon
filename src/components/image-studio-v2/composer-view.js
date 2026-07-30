@@ -39,8 +39,8 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=33";
-import { KEY } from "./context.js?v=15";
-import * as imageStudio from "../../image-studio.js?v=51";
+import { KEY } from "./context.js?v=16";
+import * as imageStudio from "../../image-studio.js?v=52";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -290,38 +290,23 @@ function settingRows(st) {
   const isOpen = (id) => !st.collapsedGroups.has(id);
   const out = [];
 
-  // Brand kit — only when the Playbook actually has reference images.
-  const hasPlaybookRefs = Array.isArray(st.playbookRefs) && st.playbookRefs.length > 0;
-  if (hasPlaybookRefs) {
-    const brand = st.playbookName || "Playbook";
-    const on = !!st.usePlaybookRefs;
-    const usedIds = new Set(st.referenceImages.map((r) => r.id));
-    const usedCount = st.playbookRefs.filter((r) => usedIds.has(r.id)).length;
-    out.push(
-      settingRow({
-        name: "brandKit",
-        label: "Brand kit",
-        value: on ? `${brand} · ${usedCount}` : "Off",
-        set: on,
-        // Always open. It's the only row that answers "what will this look like",
-        // and it's the one the user checks every time before generating — a section
-        // you re-open on every visit shouldn't be a section you have to open.
-        pinned: true,
-        body: () => brandKitBody(st),
-      }),
-    );
-  }
-
-  // References — the user's own uploads (Playbook tiles live in Brand kit).
-  const uploads = st.referenceImages.filter((r) => !r.fromPlaybook);
+  // ONE References section. Brand kit used to be its own row above this one, and
+  // that was a distinction without a difference: both hold images the generator
+  // should look like. Where an image CAME from is a label on the tile, not a
+  // reason for a second section — and split across two, the user had to check two
+  // places to answer one question ("what is this going to look like?").
+  //
+  // Pinned open, the way Brand kit was: it's that same question, and a section you
+  // re-open on every visit shouldn't be a section you have to open.
+  const picked = imageStudio.selectedReference(st);
   out.push(
     settingRow({
       name: "refs",
       label: "References",
-      value: uploads.length ? `${uploads.length} added` : "None",
-      set: uploads.length > 0,
-      open: isOpen("refs"),
-      body: () => refsBody(st, uploads),
+      value: picked ? refLabel(picked, st) : "None",
+      set: !!picked,
+      pinned: true,
+      body: () => refsBody(st, picked),
     }),
   );
 
@@ -405,65 +390,76 @@ function settingRows(st) {
   return out.join("");
 }
 
-// Brand kit — the switch IS the disclosure for the tiles below it (off = no
-// brand images in play, so there's nothing to show).
-function brandKitBody(st) {
-  const on = !!st.usePlaybookRefs;
-  const usedIds = new Set(st.referenceImages.map((r) => r.id));
-  const capReached = st.referenceImages.length >= imageStudio.MAX_REFS;
-  const tiles = (st.playbookRefs || []).map((r) => playbookRefTile(r, usedIds.has(r.id), capReached)).join("");
-  // Names what the images ARE, not whose they are — the brand is already on the
-  // section header ("Brand kit · Acme · 3"), so "Use Acme's images" spent the line
-  // repeating it instead of saying these are the Playbook's reference images.
-  return `<div class="isv2-sheet-switch">
-      <span class="isv2-sheet-switch-label">Use Playbook reference images</span>
-      <label class="ap-toggle-container" title="Use the Playbook's reference images">
-        <input type="checkbox" data-img-toggle-playbook-refs ${on ? "checked" : ""} aria-label="Use Playbook reference images" />
-        <i aria-hidden="true"></i>
-      </label>
-    </div>
-    ${on ? `${sheetDivider}<div class="isv2-refs">${tiles}</div>` : ""}`;
+// What a picked reference is called in the collapsed header: its own label if it
+// has one, else where it came from. "Brand board" beats "1 selected".
+function refLabel(ref, st) {
+  const label = (ref.label || "").trim();
+  if (label) return label;
+  return ref.fromPlaybook ? st.playbookName || "Brand kit" : "Your image";
 }
 
-// An explicit include/exclude control. The whole tile is the toggle; the tick
-// (present vs absent — a shape signal, not colour alone) plus a desaturating
-// scrim on skip make the two states clear without a worded pill on every
-// thumbnail. Note + target networks ride in the tooltip.
-function playbookRefTile(r, on, capReached) {
-  const lockedOff = !on && capReached;
-  const note = (r.note || "").trim();
-  const nets = Array.isArray(r.networks) ? r.networks.filter((n) => NETWORK_ICON_BY_PLATFORM[n]) : [];
-  const stateWord = on ? "Used in this image" : "Skipped";
-  const info = [stateWord];
-  if (note) info.push(note);
-  if (nets.length) info.push(`Best for ${nets.map((n) => NETWORK_LABEL[n] || n).join(", ")}`);
-  return `<button type="button" class="isv2-ref isv2-ref--pick${on ? " is-used" : " is-skipped"}" data-img-ref-toggle="${escapeHtml(r.id)}" aria-pressed="${on}" aria-label="${escapeHtml(stateWord)} — tap to toggle"${lockedOff ? " disabled" : ""} title="${escapeHtml(info.join(" · "))}">
-    <img src="${escapeHtml(r.url)}" alt="${escapeHtml(r.label || "Reference image")}" />
-    <span class="isv2-ref-scrim" aria-hidden="true"></span>
-    <span class="isv2-ref-box" aria-hidden="true">${on ? `<i class="ap-icon-check"></i>` : ""}</span>
-  </button>`;
-}
-
-function refsBody(st, uploads) {
-  const capped = st.referenceImages.length >= imageStudio.MAX_REFS;
+// The merged section: both pools in one grid, brand kit first, then the uploader.
+// The group labels are what carry the provenance now that the sections are one —
+// they only appear when there is something on both sides to tell apart.
+function refsBody(st, picked) {
+  const pool = imageStudio.referencePool(st);
+  const brand = pool.filter((r) => r.fromPlaybook);
+  const mine = pool.filter((r) => !r.fromPlaybook);
+  const selectedId = picked ? picked.id : null;
+  const groups = [];
+  if (brand.length) {
+    groups.push(
+      refGroup(
+        mine.length ? st.playbookName || "Brand kit" : "",
+        brand.map((r) => refTile(r, r.id === selectedId)).join(""),
+      ),
+    );
+  }
+  if (mine.length) {
+    groups.push(refGroup(brand.length ? "Your images" : "", mine.map((r) => refTile(r, r.id === selectedId)).join("")));
+  }
+  const capped = mine.length >= imageStudio.MAX_REFS;
   const dropzone = capped
-    ? `<p class="isv2-sheet-hint">Maximum ${imageStudio.MAX_REFS} reference images reached.</p>`
+    ? `<p class="isv2-sheet-hint">Maximum ${imageStudio.MAX_REFS} images. Remove one to add another.</p>`
     : `<button type="button" class="isv2-dropzone" data-img-dropzone data-img-ref-add>
         <i class="ap-icon-plus" aria-hidden="true"></i>
         <span class="isv2-dropzone-text">
-          <span class="isv2-dropzone-title">Drop or click to add images</span>
-          <span class="isv2-dropzone-sub">PNG, JPG, WebP · one matches its style, more blend a new look</span>
+          <span class="isv2-dropzone-title">Drop or click to add an image</span>
+          <span class="isv2-dropzone-sub">PNG, JPG, WebP · I'll match its look</span>
         </span>
       </button>`;
-  const tiles = uploads
-    .map(
-      (r) => `<div class="isv2-ref">
-        <img src="${escapeHtml(r.url)}" alt="${escapeHtml(r.label || "Reference image")}" />
-        <button type="button" class="isv2-ref-remove" data-img-ref-remove="${escapeHtml(r.id)}" aria-label="Remove reference"><i class="ap-icon-close" aria-hidden="true"></i></button>
-      </div>`,
-    )
-    .join("");
-  return `${dropzone}${tiles ? `<div class="isv2-refs">${tiles}</div>` : ""}`;
+  return `${groups.join(sheetDivider)}${groups.length ? sheetDivider : ""}${dropzone}`;
+}
+
+function refGroup(label, tiles) {
+  const head = label ? `<p class="isv2-refs-group">${escapeHtml(label)}</p>` : "";
+  return `${head}<div class="isv2-refs">${tiles}</div>`;
+}
+
+// One candidate. SINGLE-SELECT: picking one drops whatever was picked before, so
+// the marker is a radio dot, not a tick — a tick promises you can have several.
+// `aria-pressed` and not `role="radio"`, because clicking the picked one clears
+// it and a radio group can't be emptied; same single-select-with-toggle-off
+// contract as Image type and Style preset. An upload also carries a remove
+// button: it belongs to the user, whereas a Playbook image belongs to the
+// Playbook and "not this one" is what deselecting already means.
+function refTile(r, on) {
+  const note = (r.note || "").trim();
+  const nets = Array.isArray(r.networks) ? r.networks.filter((n) => NETWORK_ICON_BY_PLATFORM[n]) : [];
+  const info = [on ? "The reference for this image" : "Use as the reference"];
+  if (note) info.push(note);
+  if (nets.length) info.push(`Best for ${nets.map((n) => NETWORK_LABEL[n] || n).join(", ")}`);
+  const remove = r.fromPlaybook
+    ? ""
+    : `<button type="button" class="isv2-ref-remove" data-img-ref-remove="${escapeHtml(r.id)}" aria-label="Remove this image"><i class="ap-icon-close" aria-hidden="true"></i></button>`;
+  return `<div class="isv2-ref-slot">
+    <button type="button" class="isv2-ref isv2-ref--pick${on ? " is-used" : " is-skipped"}" data-img-ref-toggle="${escapeHtml(r.id)}" aria-pressed="${on}" aria-label="${escapeHtml(info[0])}" title="${escapeHtml(info.join(" · "))}">
+      <img src="${escapeHtml(r.url)}" alt="${escapeHtml(r.label || "Reference image")}" />
+      <span class="isv2-ref-scrim" aria-hidden="true"></span>
+      <span class="isv2-ref-radio" aria-hidden="true"></span>
+    </button>
+    ${remove}
+  </div>`;
 }
 
 // The collapsed row's value has one line of a 284px panel to live in, beside a

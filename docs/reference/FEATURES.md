@@ -200,9 +200,8 @@ dans [`image-studio.js`](../../src/image-studio.js) (UI-agnostique) ; la vue est
 `shell-view` / `compose-view` / `edit-view` / `interactions`.
 
 - **Generate** — rail de gauche : le prompt qu'Archie dérive du post à l'ouverture (**« Suggest from
-  this post »**, ~2 s) puis sept réglages repliables portant chacun sa valeur courante : **Brand kit**
-  (images du Playbook, switch + tuiles include/exclude, max 6) · **References** (uploads, drop ou
-  clic) · **Text in image** (optionnel, ≤ 90 car., ≤ 4 lignes — les mots qu'Archie écrit DANS
+  this post »**, ~2 s) puis six réglages repliables portant chacun sa valeur courante :
+  **References** (une seule section, voir ci-dessous) · **Text in image** (optionnel, ≤ 90 car., ≤ 4 lignes — les mots qu'Archie écrit DANS
   l'image, à ne pas confondre avec l'overlay texte déplaçable du mode Edit ; mocké en cuisant le
   texte dans les pixels de la variation via `compositeOverlays`, donc il survit aux vignettes, à
   l'aperçu in-feed, au recadrage, au « Redraw » et au draft final) · **Image type** (Visual hook /
@@ -241,11 +240,24 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   `collapsedGroups` — le Set que le composer de **v1 utilisait déjà**, si bien que les deux
   studios suivent le même modèle et que `openPopover` retrouve son seul sens : les flyouts du
   mode Edit, eux réellement exclusifs.
-  **Brand kit est épinglé ouvert** : c'est la seule ligne qui répond à « à quoi ça va ressembler »
-  et on la rouvrait à chaque visite. Une section qu'on rouvre systématiquement ne devrait pas être
-  une section à ouvrir. Épinglée, son en-tête cesse d'être un contrôle — un `<div>` et non un
-  `<button>`, sans chevron ni hook de toggle — et n'entre jamais dans `collapsedGroups`. Sa valeur
-  (`Acme · 3`) reste dans l'en-tête comme résumé de ce qu'il y a dessous.
+  **Une seule section References, épinglée ouverte.** Brand kit était une ligne à part au-dessus,
+  et c'était une distinction sans différence : des deux côtés, une image dont la génération doit
+  s'inspirer. D'où elle **vient** est un label sur la tuile, pas une raison d'avoir deux sections —
+  et séparées, il fallait regarder à deux endroits pour répondre à une seule question (« ça va
+  ressembler à quoi ? »). Épinglée pour la même raison qu'avant : une section qu'on rouvre à chaque
+  visite ne devrait pas être une section à ouvrir. Son en-tête cesse alors d'être un contrôle — un
+  `<div>` et non un `<button>`, sans chevron ni hook de toggle — et n'entre jamais dans
+  `collapsedGroups` ; sa valeur est le **nom de l'image choisie** (`Product UI`), ou `None`.
+  **Une seule image de référence à la fois**, prise indifféremment dans le brand kit du Playbook ou
+  dans les uploads de l'utilisateur — donc le marqueur de tuile est un **radio**, pas une coche :
+  une coche promet qu'on peut en cumuler. `aria-pressed` et non `role="radio"`, parce que cliquer
+  la tuile choisie la désélectionne et qu'un groupe radio ne sait pas revenir à vide — même contrat
+  single-select-avec-toggle-off qu'Image type et Style preset. Côté état : `playbookRefs` et
+  `uploadedRefs` sont deux **viviers**, `selectedRefId` est le choix, et `referenceImages` reste un
+  tableau de 0 ou 1 **dérivé** par `syncSelectedRef()` — parce que le prompt, la seed de génération
+  et le verrou du Style preset lisent tous « les références en jeu » sans se soucier du nombre. Les
+  deux studios partagent ce modèle, donc v1 est single-select aussi. `MAX_REFS` borne désormais le
+  **vivier d'uploads**, pas une multi-sélection.
   Le titre de la modale est un `.ap-dialog-title` **à la taille du DS (24px), sans glyphe** : il
   avait été descendu à 14px pour « tenir à côté » de la bande d'onglets, qui est en fait sur sa
   propre ligne en dessous — il n'y avait donc rien à accompagner, et le studio portait juste le

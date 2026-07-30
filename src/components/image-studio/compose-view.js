@@ -7,8 +7,8 @@
 
 import { escapeHtml } from "../../utils.js?v=21";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=33";
-import { KEY } from "./context.js?v=25";
-import * as imageStudio from "../../image-studio.js?v=51";
+import { KEY } from "./context.js?v=26";
+import * as imageStudio from "../../image-studio.js?v=52";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why
@@ -107,34 +107,6 @@ function formatChip(f, selected) {
   return `<button type="button" class="ap-filter-chip image-studio__format-chip" data-img-format="${escapeHtml(f.id)}" aria-pressed="${selected}" title="${escapeHtml(full)}" aria-label="${escapeHtml(full)}"><span class="image-studio__format-glyph" style="aspect-ratio:${f.ratio}" aria-hidden="true"></span>${escapeHtml(f.tag)}</button>`;
 }
 
-// Playbook reference tile — an explicit include/exclude control. The whole tile
-// is the toggle; the checkbox tick (present vs absent — a shape signal, not
-// colour alone) plus a desaturating scrim on skip make the two states clear
-// without a worded pill crowding every thumbnail. Note + target networks ride
-// in the tile's tooltip.
-function playbookRefTile(r, on, capReached) {
-  const lockedOff = !on && capReached;
-  const note = (r.note || "").trim();
-  const nets = Array.isArray(r.networks) ? r.networks.filter((n) => NETWORK_ICON_BY_PLATFORM[n]) : [];
-  const stateWord = on ? "Used in this image" : "Skipped";
-  const infoParts = [stateWord];
-  if (note) infoParts.push(note);
-  if (nets.length) infoParts.push(`Best for ${nets.map((n) => NETWORK_LABEL[n] || n).join(", ")}`);
-  const infoText = infoParts.join(" · ");
-  return `<button type="button" class="image-studio__ref image-studio__ref--pick${on ? " is-used" : " is-skipped"}" data-img-ref-toggle="${escapeHtml(r.id)}" aria-pressed="${on}" aria-label="${escapeHtml(stateWord)} — tap to toggle"${lockedOff ? " disabled" : ""} title="${escapeHtml(infoText)}">
-    <img src="${escapeHtml(r.url)}" alt="${escapeHtml(r.label || "Reference image")}" />
-    <span class="image-studio__ref-scrim" aria-hidden="true"></span>
-    <span class="image-studio__ref-box" aria-hidden="true">${on ? `<i class="ap-icon-check"></i>` : ""}</span>
-  </button>`;
-}
-
-function uploadRefTile(r) {
-  return `<div class="image-studio__ref">
-    <img src="${escapeHtml(r.url)}" alt="${escapeHtml(r.label || "Reference image")}" />
-    <button type="button" class="image-studio__ref-remove" data-img-ref-remove="${escapeHtml(r.id)}" aria-label="Remove reference"><i class="ap-icon-close" aria-hidden="true"></i></button>
-  </div>`;
-}
-
 // The folded row's value has one line of a narrow rail to live in, beside a label
 // that must stay readable — so it shows the headline's first line, clipped. The
 // full text is one click away in the field itself.
@@ -195,46 +167,41 @@ function collapsibleGroup(st, { id, label, summary = "", body, disabled = false,
   </div>`;
 }
 
-// Brand kit — the one row whose trailing control is a switch, not a chevron.
-// The switch IS the disclosure (off = no brand images in play, so there's
-// nothing to show); a chevron next to it was a second control for the same job.
-// The head is a <div>, not a <button>: the DS switch is interactive content and
-// would be invalid nested in one.
-function brandKitGroup(st) {
-  const brand = st.playbookName || "Playbook";
-  const on = !!st.usePlaybookRefs;
-  const usedIds = new Set(st.referenceImages.map((r) => r.id));
-  const capReached = st.referenceImages.length >= imageStudio.MAX_REFS;
-  const usedCount = (st.playbookRefs || []).filter((r) => usedIds.has(r.id)).length;
-  const tiles = (st.playbookRefs || []).map((r) => playbookRefTile(r, usedIds.has(r.id), capReached)).join("");
-  // The brand name is the value, not part of the label — it's what varies.
-  const summary = on ? `${brand} · ${usedCount} image${usedCount === 1 ? "" : "s"}` : brand;
-  return `<div class="image-studio__group${on ? " is-on" : ""}">
-    <div class="image-studio__group-head">
-      <span class="image-studio__group-label">Brand kit</span>
-      <span class="image-studio__group-summary">${escapeHtml(summary)}</span>
-      <label class="ap-toggle-container image-studio__group-switch" title="Use your brand kit">
-        <input type="checkbox" data-img-toggle-playbook-refs ${on ? "checked" : ""} aria-label="Use ${escapeHtml(brand)} brand kit" />
-        <i aria-hidden="true"></i>
-      </label>
-    </div>
-    <div class="image-studio__group-body"${on ? "" : " hidden"}><div class="image-studio__refs">${tiles}</div></div>
+// ONE reference group over both pools — the Playbook's brand kit and the user's
+// uploads are the same kind of thing (an image the generator should look like),
+// so v1 follows v2's merge rather than keeping a Brand kit row of its own.
+// Single-select: exactly one image is the reference, clicking the picked one
+// clears it.
+function refTile(r, on) {
+  const note = (r.note || "").trim();
+  const nets = Array.isArray(r.networks) ? r.networks.filter((n) => NETWORK_ICON_BY_PLATFORM[n]) : [];
+  const info = [on ? "The reference for this image" : "Use as the reference"];
+  if (note) info.push(note);
+  if (nets.length) info.push(`Best for ${nets.map((n) => NETWORK_LABEL[n] || n).join(", ")}`);
+  const remove = r.fromPlaybook
+    ? ""
+    : `<button type="button" class="image-studio__ref-remove" data-img-ref-remove="${escapeHtml(r.id)}" aria-label="Remove this image"><i class="ap-icon-close" aria-hidden="true"></i></button>`;
+  return `<div class="image-studio__ref-slot">
+    <button type="button" class="image-studio__ref image-studio__ref--pick${on ? " is-used" : " is-skipped"}" data-img-ref-toggle="${escapeHtml(r.id)}" aria-pressed="${on}" aria-label="${escapeHtml(info[0])}" title="${escapeHtml(info.join(" · "))}">
+      <img src="${escapeHtml(r.url)}" alt="${escapeHtml(r.label || "Reference image")}" />
+      <span class="image-studio__ref-scrim" aria-hidden="true"></span>
+      <span class="image-studio__ref-radio" aria-hidden="true"></span>
+    </button>
+    ${remove}
   </div>`;
 }
 
 // Compact single-row drop target: the whole bar opens the file picker and
-// accepts drops (both hooks live on one element). One image matches its style;
-// two or more blend into a new look — carried in the sub-line, not a separate
-// paragraph.
+// accepts drops (both hooks live on one element).
 function dropzone(st) {
-  if (st.referenceImages.length >= imageStudio.MAX_REFS) {
-    return `<p class="image-studio__dropzone-sub">Maximum ${imageStudio.MAX_REFS} reference images reached.</p>`;
+  if ((st.uploadedRefs || []).length >= imageStudio.MAX_REFS) {
+    return `<p class="image-studio__dropzone-sub">Maximum ${imageStudio.MAX_REFS} images. Remove one to add another.</p>`;
   }
   return `<button type="button" class="image-studio__dropzone" data-img-dropzone data-img-ref-add>
     <i class="ap-icon-plus image-studio__dropzone-icon" aria-hidden="true"></i>
     <span class="image-studio__dropzone-text">
-      <span class="image-studio__dropzone-title">Drop or click to add images</span>
-      <span class="image-studio__dropzone-sub">PNG, JPG, WebP · one matches its style, more blend a new look</span>
+      <span class="image-studio__dropzone-title">Drop or click to add an image</span>
+      <span class="image-studio__dropzone-sub">PNG, JPG, WebP · I'll match its look</span>
     </span>
   </button>`;
 }
@@ -245,16 +212,16 @@ function composeGroups(st) {
   // this whole block is the optional detour.
   const eyebrow = `<p class="image-studio__group-label image-studio__group-label--eyebrow image-studio__group-label--step2"><span class="image-studio__step">2</span>Settings</p>`;
 
-  // What goes in: the Playbook's brand set (switch) + the user's own uploads.
-  const hasPlaybookRefs = Array.isArray(st.playbookRefs) && st.playbookRefs.length > 0;
-  const brandKit = hasPlaybookRefs ? brandKitGroup(st) : "";
-  const uploads = st.referenceImages.filter((r) => !r.fromPlaybook);
-  const uploadTiles = uploads.map(uploadRefTile).join("");
+  // What goes in: one grid over both pools, brand kit first, then the uploader.
+  const brandKit = "";
+  const pool = imageStudio.referencePool(st);
+  const picked = imageStudio.selectedReference(st);
+  const tiles = pool.map((r) => refTile(r, !!picked && r.id === picked.id)).join("");
   const refsGroup = collapsibleGroup(st, {
     id: "refs",
-    label: "References",
-    summary: uploads.length ? `${uploads.length} added` : "None",
-    body: `${dropzone(st)}${uploadTiles ? `<div class="image-studio__refs">${uploadTiles}</div>` : ""}`,
+    label: "Reference image",
+    summary: picked ? picked.label || (picked.fromPlaybook ? st.playbookName || "Brand kit" : "Your image") : "None",
+    body: `${tiles ? `<div class="image-studio__refs">${tiles}</div>` : ""}${dropzone(st)}`,
   });
 
   // Text in image — beside the references, because both answer "what goes IN the

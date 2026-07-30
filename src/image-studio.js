@@ -264,8 +264,12 @@ export function start(
       note: r.note || "",
       networks: Array.isArray(r.networks) ? r.networks : [],
     }));
-  const usePlaybookRefs = pbRefs.length > 0;
-  const initialRefs = usePlaybookRefs ? pbRefs.slice(0, MAX_REFS).map((r) => ({ ...r, fromPlaybook: true })) : [];
+  // ONE reference image is active at a time, taken from either pool — the
+  // Playbook's brand kit or the user's own uploads. They're the same kind of
+  // thing (an image the generator should look like), which is why they share one
+  // section and one selection. It starts on the Playbook's first, so the first
+  // generate is on-brand before the user touches anything.
+  const initialSelectedRefId = pbRefs.length ? pbRefs[0].id : null;
   if (editImage && editImage.url) {
     const [w, h] = editImage.w && editImage.h ? [editImage.w, editImage.h] : dimsFor(resolvedFormat);
     currentImage = { url: editImage.url, baseUrl: editImage.url, w, h, seed: `${postId || "img"}-edit` };
@@ -297,13 +301,18 @@ export function start(
     renderText: "", // words to paint INTO the image (empty = none)
     styleKey: null, // selected Style preset (STYLE_PRESETS)
     imageTypeKey: null, // selected Image type (IMAGE_TYPES)
-    referenceImages: initialRefs, // [{ id, url, label?, fromPlaybook? }] (max MAX_REFS)
-    playbookRefs: pbRefs, // the Playbook's brand images (snapshot, for the toggle)
+    // The ACTIVE reference as an array of 0 or 1, derived from selectedRefId by
+    // syncSelectedRef(). Kept in this shape because the prompt, the generation
+    // seed and the style-preset lock all read "the refs in play" and none of
+    // them cares how many there are.
+    referenceImages: initialSelectedRefId ? [{ ...pbRefs[0], fromPlaybook: true }] : [],
+    selectedRefId: initialSelectedRefId,
+    playbookRefs: pbRefs, // the Playbook's brand images (snapshot)
+    uploadedRefs: [], // the user's own uploads — a POOL to pick from, not the selection
     playbookColors: (Array.isArray(playbookColors) ? playbookColors : []).filter(Boolean), // brand hex list for text swatches
     customTextColors: [], // custom hex colours the user added to the text swatches
     customFonts: [], // [{ family, label, url }] fonts the user uploaded (FontFace)
     playbookName: playbookName || "", // brand/playbook label for the toggle
-    usePlaybookRefs, // include the Playbook brand images in the grid
     // Sections start COLLAPSED, with the exceptions below: every setting shows
     // its current value in its header and only opens if the user wants to change
     // it. Once opened a section STAYS open (the panel is not an accordion), so
@@ -362,7 +371,7 @@ export function exit(sessionId) {
   if (s._genTimer) clearTimeout(s._genTimer);
   if (s._editTimer) clearTimeout(s._editTimer);
   if (s._deriveTimer) clearTimeout(s._deriveTimer);
-  for (const r of s.referenceImages) safeRevoke(r.url);
+  for (const r of s.uploadedRefs || []) safeRevoke(r.url);
   for (const o of s.overlays) if (o.kind === "logo") safeRevoke(o.url);
   for (const f of s.customFonts || []) safeRevoke(f.url);
   states.delete(sessionId);
@@ -461,60 +470,69 @@ export function setSlideCount(sessionId, n) {
   notify(sessionId);
 }
 
+// Every candidate the user can pick from, brand kit first — the one grid the
+// References section renders. `fromPlaybook` is what tells the two apart in the
+// view (labels, and which URLs are safe to revoke).
+export function referencePool(s) {
+  if (!s) return [];
+  return [
+    ...(s.playbookRefs || []).map((r) => ({ ...r, fromPlaybook: true })),
+    ...(s.uploadedRefs || []).map((r) => ({ ...r, fromPlaybook: false })),
+  ];
+}
+
+export function selectedReference(s) {
+  if (!s || !s.selectedRefId) return null;
+  return referencePool(s).find((r) => r.id === s.selectedRefId) || null;
+}
+
+// `referenceImages` is derived, never assigned from the outside: every mutator
+// below changes `selectedRefId` and calls this. One writer keeps the derived
+// array honest without a getter (state is a plain object).
+function syncSelectedRef(s) {
+  const picked = selectedReference(s);
+  s.referenceImages = picked ? [picked] : [];
+}
+
 let refSeq = 0;
+// An upload joins the pool AND becomes the selection — you dropped it because
+// you want this image, so making you click it again would be ceremony. The cap
+// bounds the POOL, not a multi-selection: past it the grid stops being scannable.
 export function addReferenceImage(sessionId, url) {
   const s = states.get(sessionId);
-  if (!s || s.referenceImages.length >= MAX_REFS) return;
+  if (!s || s.uploadedRefs.length >= MAX_REFS) return;
   refSeq += 1;
-  s.referenceImages.push({ id: `ref-${refSeq}`, url });
+  const ref = { id: `ref-${refSeq}`, url };
+  s.uploadedRefs.push(ref);
+  s.selectedRefId = ref.id;
+  syncSelectedRef(s);
   notify(sessionId);
 }
 
+// Drops an upload from the pool for good. Playbook images can't be removed —
+// they belong to the Playbook, and deselecting is what "not this one" means.
 export function removeReferenceImage(sessionId, id) {
   const s = states.get(sessionId);
   if (!s) return;
-  const ref = s.referenceImages.find((r) => r.id === id);
-  // Only revoke uploaded object URLs — never the Playbook's shared image URLs.
-  if (ref && !ref.fromPlaybook) safeRevoke(ref.url);
-  s.referenceImages = s.referenceImages.filter((r) => r.id !== id);
+  const ref = s.uploadedRefs.find((r) => r.id === id);
+  if (!ref) return;
+  safeRevoke(ref.url); // only ever an uploaded object URL — never a Playbook URL
+  s.uploadedRefs = s.uploadedRefs.filter((r) => r.id !== id);
+  if (s.selectedRefId === id) s.selectedRefId = null;
+  syncSelectedRef(s);
   notify(sessionId);
 }
 
-// Toggle ONE Playbook reference image in/out of the used set. The Playbook
-// tiles are always shown in the grid; this flips whether a given one is sent
-// to generation (selected) or skipped. Adds respect the MAX_REFS cap.
+// Pick THE reference image — single-select across both pools. Clicking the one
+// already picked clears it, because "no reference at all" has to be reachable
+// and a radio group on its own can't get back to empty. Same single-select,
+// toggle-off contract as Image type and Style preset.
 export function toggleReferenceImage(sessionId, id) {
   const s = states.get(sessionId);
   if (!s) return;
-  const selected = s.referenceImages.some((r) => r.id === id);
-  if (selected) {
-    s.referenceImages = s.referenceImages.filter((r) => r.id !== id);
-  } else {
-    if (s.referenceImages.length >= MAX_REFS) return;
-    const pb = (s.playbookRefs || []).find((r) => r.id === id);
-    if (pb) s.referenceImages.push({ ...pb, fromPlaybook: true });
-  }
-  // Keep the bulk flag in sync so the "Use all / Clear" chip reflects reality.
-  s.usePlaybookRefs = s.referenceImages.some((r) => r.fromPlaybook);
-  notify(sessionId);
-}
-
-// Toggle the Playbook's brand reference images in/out of the grid. Off = ignore
-// the Playbook (user-added images are always kept); on = re-add the brand set.
-export function setUsePlaybookRefs(sessionId, on) {
-  const s = states.get(sessionId);
-  if (!s) return;
-  s.usePlaybookRefs = !!on;
-  if (on) {
-    for (const r of s.playbookRefs) {
-      if (s.referenceImages.length >= MAX_REFS) break;
-      if (!s.referenceImages.some((x) => x.id === r.id)) {
-        s.referenceImages.push({ ...r, fromPlaybook: true });
-      }
-    }
-  } else {
-    s.referenceImages = s.referenceImages.filter((r) => !r.fromPlaybook);
-  }
+  if (s.selectedRefId === id) s.selectedRefId = null;
+  else if (referencePool(s).some((r) => r.id === id)) s.selectedRefId = id;
+  syncSelectedRef(s);
   notify(sessionId);
 }
 
@@ -616,14 +634,13 @@ function derivePrompt(s) {
   const type = IMAGE_TYPES.find((o) => o.key === s.imageTypeKey);
   const style = STYLE_PRESETS.find((o) => o.key === s.styleKey);
   const fmt = FORMATS[s.formatId];
-  const refs = s.referenceImages.length;
+  const ref = s.referenceImages[0] || null;
   const lines = [`Subject: ${hook}`, `Key message: ${message}`];
   if (type) lines.push(`Image type: ${type.label} — ${type.desc.toLowerCase()}`);
   lines.push(`Visual direction: ${TYPE_DIRECTION[s.imageTypeKey] || TYPE_DIRECTION["visual-hook"]}`);
-  if (refs) {
-    lines.push(
-      `Look: match the ${refs} reference image${refs > 1 ? "s" : ""} provided${s.playbookName ? ` — ${s.playbookName} brand kit` : ""}.`,
-    );
+  if (ref) {
+    const from = ref.fromPlaybook && s.playbookName ? ` — ${s.playbookName} brand kit` : "";
+    lines.push(`Look: match the reference image provided${from}.`);
   } else if (style) {
     lines.push(`Look: ${style.label}.`);
   }

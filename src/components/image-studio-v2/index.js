@@ -25,17 +25,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=41";
 import { getSessionById } from "../../sessions-store.js?v=11";
 import { getContextById } from "../../contexts-store.js?v=43";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=15";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=16";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=28";
+import { renderStudio } from "./stage-view.js?v=29";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=15";
-import * as imageStudio from "../../image-studio.js?v=51";
+} from "./interactions.js?v=16";
+import * as imageStudio from "../../image-studio.js?v=52";
 
 let backdrop;
 let initialized = false;
@@ -432,8 +432,6 @@ function onChange(event) {
     imageStudio.updateOverlay(KEY, st.selectedOverlayId, { outlineWidth: Number(event.target.value) });
   } else if (event.target.matches("[data-img-shadow-intensity]") && st?.selectedOverlayId) {
     imageStudio.updateOverlay(KEY, st.selectedOverlayId, { shadowIntensity: Number(event.target.value) });
-  } else if (event.target.matches("[data-img-toggle-playbook-refs]")) {
-    imageStudio.setUsePlaybookRefs(KEY, event.target.checked);
   } else if (event.target.matches("[data-img-render-text]")) {
     // Blur commits, which is what refreshes the collapsed row's value.
     imageStudio.commitRenderText(KEY, event.target.value);

@@ -502,6 +502,53 @@ button.image-studio__ref--pick:focus-visible {
   border-color: var(--ref-color-electric-blue-100);
 }
 
+/* SINGLE-SELECT, so the marker is a RADIO dot, not a tick — a tick promises you
+   can have several, and here picking one drops the last. Same 16px box the tick
+   sat in, made round and filled from the centre. */
+.image-studio__ref-radio {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--ref-color-white);
+  border-radius: var(--app-radius-circle);
+  background: transparent;
+}
+
+.image-studio__ref.is-used .image-studio__ref-radio {
+  border-color: var(--sys-color-accent-default-bg-default);
+  background: var(--sys-color-accent-default-bg-default);
+}
+
+.image-studio__ref.is-used .image-studio__ref-radio::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-white);
+}
+
+/* The tile and its remove button share a slot: the button is positioned against
+   the slot, so it doesn't sit inside the tile's own <button> (invalid HTML). */
+.image-studio__ref-slot {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+/* Which pool a tile came from, now that both live in one grid. Only rendered when
+   there is something on both sides to tell apart. */
+.image-studio__refs-group {
+  margin: 0 0 var(--ref-spacing-xxs);
+  font-family: var(--sys-text-style-caption-font-family);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
+}
+
 .image-studio__ref-remove {
   position: absolute;
   top: 4px;
