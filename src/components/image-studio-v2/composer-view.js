@@ -523,20 +523,24 @@ function brandingBody(st, branded) {
   // through the brief's "Palette:" line, and there is nothing here to pick. It's
   // here because "Branding" is the one place that should answer "what does my
   // brand look like to Archie" without opening the Playbook — the mark and the
-  // colours are the same answer. Name in the swatch's tooltip, hex under it: the
-  // hex is what you'd copy, the name is what you'd say.
+  // colours are the same answer.
+  //
+  // Dots, the shape the Playbook's own "Brand color" row already uses, and the
+  // same words. A recap should look like the thing it recaps; printing the hex
+  // under each one made a row of five into two lines of small type nobody reads
+  // off a panel. Name + hex ride in the tooltip.
   const swatches = palette.length
-    ? `<p class="isv2-sheet-hint isv2-swatches-label">Brand colours</p>
-       <ul class="isv2-swatches">
+    ? `<p class="isv2-sheet-hint isv2-branddots-label">Brand color</p>
+       <p class="isv2-branddots">
          ${palette
            .map(
-             (c) => `<li class="isv2-swatch" title="${escapeHtml(c.name || c.hex)}">
-               <span class="isv2-swatch-chip" style="--sw:${escapeHtml(c.hex)}" aria-hidden="true"></span>
-               <span class="isv2-swatch-hex">${escapeHtml(c.hex)}</span>
-             </li>`,
+             (c) =>
+               `<span class="isv2-branddot" style="background:${escapeHtml(c.hex)}" title="${escapeHtml(
+                 c.name ? `${c.name} · ${c.hex}` : c.hex,
+               )}"></span>`,
            )
            .join("")}
-       </ul>`
+       </p>`
     : "";
   return `<div class="isv2-sheet-switch">
       <span class="isv2-sheet-switch-label">Show my logo on the image</span>

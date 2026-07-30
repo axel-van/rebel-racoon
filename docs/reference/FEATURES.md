@@ -281,13 +281,15 @@ seule la surface change, ce qui permet de comparer les deux à comportement iden
   « Text in image » (overlay `kind: "logo"`, coin bas-droit, 26% de la largeur), donc il survit aux
   vignettes, à l'aperçu in-feed, au recadrage et au draft final. Comme tous les autres réglages, il
   s'applique à la **génération suivante**, pas rétroactivement.
-  Sous la marque, un **récap des couleurs de marque** — pastille + hex, nom en tooltip. C'est un
-  RÉCAP, pas un contrôle : rien n'y est cliquable et ces couleurs atteignent déjà le modèle par la
-  ligne « Palette: » du brief. Il est là parce que Branding est le seul endroit qui devrait répondre
-  à « à quoi ressemble ma marque, vue par Archie » sans ouvrir le Playbook — la marque et les
-  couleurs sont la même réponse. `playbookColors` porte donc `{ name, hex }` et non des hex nus :
-  les quatre consommateurs qui veulent l'hex le mappent, et deux tableaux parallèles pour une seule
-  palette, c'est ce qui dérive.
+  Sous la marque, un **récap des couleurs de marque** : les **mêmes pastilles rondes que la ligne
+  « Brand color » du Playbook** (`.recap__fact-dot`), et les mêmes mots — un récap doit ressembler à
+  ce qu'il récapitule. Nom + hex en tooltip ; l'hex imprimé sous chaque pastille transformait une
+  rangée de cinq en deux lignes de petit texte que personne ne lit dans un panneau. Les règles sont
+  redites côté studio plutôt qu'importées : `welcome.css` appartient à un écran sans rapport, et
+  coupler le studio à lui pour six lignes est le pire des deux échanges — au troisième consommateur,
+  promouvoir dans `styles/components/` comme `topic-badge`.
+  `playbookColors` porte `{ name, hex }` et non des hex nus : les quatre consommateurs qui veulent
+  l'hex le mappent, et deux tableaux parallèles pour une seule palette, c'est ce qui dérive.
 
   **Une seule image de référence à la fois**, prise indifféremment dans le brand book du Playbook ou
   dans les uploads de l'utilisateur — donc le marqueur de tuile est un **radio**, pas une coche :
