@@ -91,26 +91,11 @@
   resize: vertical;
 }
 
-.research-modal__info {
-  display: flex;
-  gap: 10px;
-  margin-top: 14px;
-  padding: 12px 14px;
-  background: var(--ref-color-electric-blue-05);
-  border-radius: var(--app-radius-starter);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.55;
-  color: var(--ref-color-grey-80);
-}
-
-.research-modal__info > i {
-  color: var(--ref-color-electric-blue-100);
-  flex: 0 0 auto;
-}
-
-.research-modal__info > p {
-  margin: 0;
+/* The info box is the DS .ap-infobox (info variant) — it brings its own
+   padding, radius, left accent bar and icon colour from --comp-infobox-*.
+   Only the outer spacing is ours. */
+.research-modal__infobox {
+  margin-top: var(--ref-spacing-sm);
 }
 
 .research-modal__check {

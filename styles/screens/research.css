@@ -591,57 +591,11 @@
   color: var(--ref-color-grey-80);
 }
 
-/* ── Pill toggle ─────────────────────────────────────────────────────── */
-
-.research-toggle {
-  position: relative;
-  display: inline-flex;
-  flex: 0 0 auto;
-  cursor: pointer;
-}
-
-/* The checkbox stays in the DOM and focusable — only visually replaced — so the
-   control keeps native keyboard and screen-reader behaviour. */
-.research-toggle > input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  margin: 0;
-  cursor: pointer;
-}
-
-.research-toggle__track {
-  display: inline-flex;
-  align-items: center;
-  width: 40px;
-  height: 22px;
-  padding: 2px;
-  background: var(--ref-color-grey-20);
-  border-radius: var(--app-radius-pill);
-  transition: background var(--ref-animation-short) var(--app-ease-standard);
-}
-
-.research-toggle__knob {
-  width: 18px;
-  height: 18px;
-  background: var(--ref-color-white);
-  border-radius: var(--app-radius-circle);
-  box-shadow: 0 1px 2px rgba(10, 27, 51, 0.3);
-  transition: transform var(--ref-animation-short) var(--app-ease-standard);
-}
-
-.research-toggle > input:checked + .research-toggle__track {
-  background: var(--ref-color-electric-blue-100);
-}
-
-.research-toggle > input:checked + .research-toggle__track .research-toggle__knob {
-  transform: translateX(18px);
-}
-
-.research-toggle > input:focus-visible + .research-toggle__track {
-  outline: 3px solid color-mix(in srgb, var(--app-archie-orange) 28%, transparent);
-  outline-offset: 2px;
-}
+/* ── Toggle ──────────────────────────────────────────────────────────────
+   No styles: the switch is the DS .ap-toggle-container / .ap-toggle, which
+   ships its own track, knob, hover, focus and disabled states. The ~55 lines
+   of hand-rolled pill that used to live here are gone — including the
+   visually-hidden input rule, which the DS component already does itself. */
 
 /* ── Segmented control ───────────────────────────────────────────────── */
 
@@ -891,27 +845,9 @@
   background: var(--app-paper);
 }
 
-.research-generating__ring {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  border: 4px solid var(--ref-color-grey-10);
-  border-top-color: var(--app-archie-orange);
-  border-radius: var(--app-radius-circle);
-  animation: research-spin 0.9s linear infinite;
-  color: var(--app-archie-orange);
-}
-
-/* Counter-rotated so the mark stays upright while its ring spins — the ring is
-   the only continuous animation in this feature. */
-.research-generating__mark {
-  width: 35px;
-  height: 26px;
-  animation: research-spin 0.9s linear infinite reverse;
-}
+/* The spinner is .ap-loader (see research-feed.js) — sized and coloured by DS
+   modifiers, and its contents are replaced by initArchieLoader() with the house
+   animated mark, so there is no ring or keyframe to declare here. */
 
 .research-generating__caption {
   margin: 0;
@@ -920,21 +856,9 @@
   color: var(--app-convo-navy);
 }
 
-@keyframes research-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .research-generating__ring,
-  .research-generating__mark {
-    animation: none;
-  }
-  .research-toggle__track,
-  .research-toggle__knob {
-    transition: none;
-  }
+  /* .ap-loader and .ap-toggle-container carry their own reduced-motion
+     behaviour from the DS; only the app-owned transitions are listed here. */
 }
 
 /* ── Trending page head ──────────────────────────────────────────────── */

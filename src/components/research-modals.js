@@ -19,8 +19,8 @@
 
 import { html, raw, escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=1";
-import { getBriefById, ignoreBrief, setStatus } from "../briefs-store.js?v=1";
+import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=2";
+import { getBriefById, ignoreBrief, setStatus } from "../briefs-store.js?v=2";
 import { getContextById } from "../contexts-store.js?v=44";
 import { renderSocialPostCard } from "./social-post-card.js?v=6";
 import { showToast } from "./toast.js?v=20";
@@ -33,7 +33,7 @@ let active = null; // { kind, ctx } — what's currently open
 
 const SHELL = `
 <div class="app-modal-backdrop research-modal__backdrop" id="researchModalBackdrop" hidden></div>
-<aside class="research-modal" id="researchModal" role="dialog" aria-modal="true" aria-labelledby="researchModalTitle" hidden>
+<aside class="research-modal" id="researchModal" role="dialog" aria-modal="true" aria-labelledby="researchModalTitle" tabindex="-1" hidden>
   <header class="research-modal__head">
     <div class="research-modal__head-text">
       <h2 class="research-modal__title" id="researchModalTitle"></h2>
@@ -149,12 +149,14 @@ export function openIgnoreReason({ briefId, onDone = null }) {
           placeholder="Tell me what was off…"
           data-ignore-text
         ></textarea>
-        <div class="research-modal__info">
+        <!-- The DS Infobox: the "info box" intent maps straight to it. The i
+             element is an implicit child the CSS-UI layer styles directly. -->
+        <div class="ap-infobox info research-modal__infobox">
           <i class="ap-icon-info" aria-hidden="true"></i>
-          <p>
+          <div>
             This helps me tailor research to your needs. I'll keep this topic out of your feed unless it trends well
             above its usual volume baseline — so you still catch real spikes without noise from recurring topics.
-          </p>
+          </div>
         </div>
         <label class="research-modal__check">
           <input type="checkbox" class="ap-checkbox" data-ignore-mute />

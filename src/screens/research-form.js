@@ -23,15 +23,15 @@ import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=282";
 import { isFlagOn } from "../feature-flags.js?v=16";
 import { getContexts, getContextById } from "../contexts-store.js?v=44";
-import { getLaneById, addLane, updateLane } from "../research-store.js?v=1";
-import { openNeedSource } from "../components/research-modals.js?v=1";
+import { getLaneById, addLane, updateLane } from "../research-store.js?v=2";
+import { openNeedSource } from "../components/research-modals.js?v=3";
 import {
   RESEARCH_SOURCES,
   CADENCES,
   DEFAULT_ENABLED_IDS,
   DEFAULT_CADENCE,
   isLiveSource,
-} from "../research-catalog.js?v=1";
+} from "../research-catalog.js?v=2";
 
 // The in-flight draft. Ephemeral by definition — it only becomes a lane on save,
 // so it lives here rather than in the store. Cancel just drops it.
@@ -196,11 +196,13 @@ function renderSourceCard(source) {
     <div class="research-source__head">
       <span class="topic-badge topic-badge--${source.accent}" aria-hidden="true"><i class="${source.icon}"></i></span>
       <span class="research-source__name">${source.name}</span>
-      <!-- A real checkbox, styled as the pill switch: it keeps the control
-           keyboard-operable and labelled without re-implementing either. -->
-      <label class="research-toggle">
+      <!-- The DS toggle: the i element is the switch and the input is the real
+           checkbox. Both are implicit children the CSS-UI layer styles directly,
+           so no wrapper elements. The DS hides the input itself, which is why
+           nothing here needs a visually-hidden helper on it. -->
+      <label class="ap-toggle-container">
         <input type="checkbox" data-form-source="${escapeAttr(source.id)}" ${raw(on ? " checked" : "")} />
-        <span class="research-toggle__track" aria-hidden="true"><span class="research-toggle__knob"></span></span>
+        <i aria-hidden="true"></i>
         <span class="sr-only">Enable ${source.name}</span>
       </label>
     </div>
@@ -269,9 +271,9 @@ function renderSwitchCard(key, title, desc, on) {
       <h4 class="research-form__setting-title">${title}</h4>
       <p class="research-form__setting-desc">${desc}</p>
     </div>
-    <label class="research-toggle">
+    <label class="ap-toggle-container">
       <input type="checkbox" data-form-switch="${escapeAttr(key)}" ${raw(on ? " checked" : "")} />
-      <span class="research-toggle__track" aria-hidden="true"><span class="research-toggle__knob"></span></span>
+      <i aria-hidden="true"></i>
       <span class="sr-only">${title}</span>
     </label>
   </div>`;

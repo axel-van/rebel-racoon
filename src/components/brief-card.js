@@ -26,7 +26,7 @@
 // border-top + flex:0 0 auto (see research.css) is the fix — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus } from "../research-catalog.js?v=1";
+import { findReviewStatus } from "../research-catalog.js?v=2";
 
 const IGNORE_TOOLTIP =
   "Ignored topics stay out of your feed unless they trend well above their usual " +
@@ -96,15 +96,25 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
       ${raw(
         // Hidden entirely once ignored — the action has already been taken and
         // there is nothing for a second press to do.
+        // The DS tooltip rather than a native `title`: title waits ~1s, can't be
+        // styled, and never appears on touch — so the copy explaining what
+        // ignoring actually does mostly went unread. .ap-tooltip is
+        // position:absolute, so it needs a positioned wrapper; the reveal is a
+        // hover/focus-within CSS rule on that wrapper (see brief-card.css).
         !trendingPage && !ignored
-          ? html`<button
-              type="button"
-              class="ap-button stroked grey brief-card__ignore"
-              data-brief-ignore="${escapeAttr(brief.id)}"
-              title="${escapeAttr(IGNORE_TOOLTIP)}"
-            >
-              <span>Ignore brief</span>
-            </button>`
+          ? html`<span class="brief-card__ignore-wrap">
+              <button
+                type="button"
+                class="ap-button stroked grey brief-card__ignore"
+                data-brief-ignore="${escapeAttr(brief.id)}"
+                aria-describedby="ignore-tip-${escapeAttr(brief.id)}"
+              >
+                <span>Ignore brief</span>
+              </button>
+              <span class="ap-tooltip top" role="tooltip" id="ignore-tip-${escapeAttr(brief.id)}"
+                >${IGNORE_TOOLTIP}</span
+              >
+            </span>`
           : "",
       )}
       <span class="brief-card__spacer"></span>

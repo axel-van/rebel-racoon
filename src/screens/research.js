@@ -24,7 +24,7 @@ import { renderTopbar } from "../components/topbar.js?v=282";
 import { showToast } from "../components/toast.js?v=20";
 import { isFlagOn } from "../feature-flags.js?v=16";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=44";
-import { getLanes, duplicateLane, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=1";
+import { getLanes, duplicateLane, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=2";
 
 // Local view state. The Playbook facet lives here rather than in the URL: unlike
 // /topics, whose `?pb=` scope has to survive the round trip to a per-Playbook

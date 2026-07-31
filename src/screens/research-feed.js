@@ -19,15 +19,15 @@ import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
 import { renderTopbar } from "../components/topbar.js?v=282";
 import { isFlagOn } from "../feature-flags.js?v=16";
-import { renderBriefCard } from "../components/brief-card.js?v=1";
+import { renderBriefCard } from "../components/brief-card.js?v=2";
 import {
   openFullResearch,
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=1";
+} from "../components/research-modals.js?v=3";
 import { showToast } from "../components/toast.js?v=20";
-import { getLaneById } from "../research-store.js?v=1";
+import { getLaneById } from "../research-store.js?v=2";
 import {
   getBriefsForLane,
   countTrendingForLane,
@@ -36,8 +36,8 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=1";
-import { RESEARCH_SOURCES, REVIEW_STATUSES, RESEARCH_TYPES, findResearchSource } from "../research-catalog.js?v=1";
+} from "../briefs-store.js?v=2";
+import { RESEARCH_SOURCES, REVIEW_STATUSES, RESEARCH_TYPES, findResearchSource } from "../research-catalog.js?v=2";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
@@ -172,10 +172,12 @@ function renderPage() {
 }
 
 function renderGenerating() {
+  // .ap-loader, not a hand-rolled ring. initArchieLoader() sweeps for this class
+  // and swaps its contents for the animated Archie network-assemble mark, so
+  // this spinner matches every other spinner in the app for free. A custom ring
+  // was the only loader in the product that didn't.
   return html`<div class="research-generating">
-    <span class="research-generating__ring" aria-hidden="true">
-      <i class="ap-icon-archie-official research-mark research-generating__mark"></i>
-    </span>
+    <span class="ap-loader orange size-60" aria-hidden="true"></span>
     <p class="research-generating__caption" role="status">We are generating content research for you…</p>
   </div>`;
 }
