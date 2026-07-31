@@ -23,7 +23,7 @@ import { renderBriefCard } from "../components/brief-card.js?v=2";
 import { openFullResearch } from "../components/research-modals.js?v=3";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=2";
-import { getTrendingForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=2";
+import { getTrendingForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=3";
 import { findResearchSource, findCadence } from "../research-catalog.js?v=2";
 
 let laneId = null;

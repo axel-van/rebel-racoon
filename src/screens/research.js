@@ -25,6 +25,7 @@ import { showToast } from "../components/toast.js?v=20";
 import { isFlagOn } from "../feature-flags.js?v=16";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=44";
 import { getLanes, duplicateLane, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=2";
+import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=3";
 
 // Local view state. The Playbook facet lives here rather than in the URL: unlike
 // /topics, whose `?pb=` scope has to survive the round trip to a per-Playbook
@@ -34,6 +35,7 @@ let view = { query: "", playbook: "all" };
 
 let unsubscribeLanes = null;
 let unsubscribeContexts = null;
+let unsubscribeBriefs = null;
 let boundTarget = null;
 let boundClick = null;
 let boundInput = null;
@@ -52,9 +54,12 @@ export function renderResearch(_params, target) {
   paint(target);
   bind(target);
   unsubscribeLanes = subscribeLanes(() => paint(target));
-  // Playbook names and colours are read from contexts-store on every card, so a
-  // rename elsewhere has to repaint this grid.
+  // Playbook names are read from contexts-store on every card, so a rename
+  // elsewhere has to repaint this grid.
   unsubscribeContexts = subscribeContexts(() => paint(target));
+  // …and the NEW badge counts untriaged briefs, so triaging one in a feed (or
+  // confirming an add-to-strategy in a modal) has to be reflected back here.
+  unsubscribeBriefs = subscribeBriefs(() => paint(target));
   return teardown;
 }
 
@@ -66,6 +71,10 @@ function teardown() {
   if (unsubscribeContexts) {
     unsubscribeContexts();
     unsubscribeContexts = null;
+  }
+  if (unsubscribeBriefs) {
+    unsubscribeBriefs();
+    unsubscribeBriefs = null;
   }
   if (boundTarget && boundClick) boundTarget.removeEventListener("click", boundClick);
   if (boundTarget && boundInput) {
@@ -178,18 +187,35 @@ function renderHeaderRow() {
 
 function renderLaneCard(lane) {
   const ctx = getContextById(lane.playbookId);
-  const color = ctx?.color || "orange";
   const playbookName = ctx?.name || "No Playbook";
   const n = lane.sources.length;
   const meta = `${playbookName} playbook · ${n} ${n === 1 ? "source" : "sources"}`;
+  // Untriaged briefs waiting in this lane. Drives the NEW badge, which replaces
+  // the Playbook accent bar: the bar encoded which Playbook a lane belonged to,
+  // but the meta line already says that in words, so the colour was decoration.
+  // What the card couldn't say before is whether there's anything to look at.
+  const newCount = countNewForLane(lane.id);
 
   // The card body is a button and the hover actions are its SIBLINGS, not
   // children: a button inside a button is invalid HTML and the browser resolves
   // the nesting unpredictably. Same reason topic-card splits body from footer.
-  return html`<article class="research-card research-card--${color}" data-lane-id="${escapeAttr(lane.id)}">
-    <span class="research-card__accent" aria-hidden="true"></span>
+  return html`<article class="research-card" data-lane-id="${escapeAttr(lane.id)}">
     <div class="research-card__head">
       <button type="button" class="research-card__title" data-lane-open="${escapeAttr(lane.id)}">${lane.name}</button>
+      <!-- The DS Badge, not a hand-rolled pill: Badge is the system-generated
+           marker (uppercase, orange, nowrap out of the box), and "I found new
+           research" is exactly that — Archie's own signal, not a user state.
+           It carries the count as well as the word, so one component answers
+           both "is there anything new" and "how much". -->
+      ${raw(
+        newCount
+          ? html`<span
+              class="ap-badge orange research-card__new"
+              aria-label="${newCount} new ${newCount === 1 ? "brief" : "briefs"} to review"
+              >${newCount} new</span
+            >`
+          : "",
+      )}
       <!-- Revealed by a PARENT-hover CSS rule (.research-card:hover &), not by a
            JS handler: an inline hover on the card can't reach a child, and
            visibility (not display) keeps the panel in flow so the title doesn't

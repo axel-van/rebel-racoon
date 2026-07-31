@@ -148,45 +148,21 @@
   border-radius: var(--app-radius-card);
   box-shadow: var(--app-shadow-subtle);
   transition: box-shadow var(--ref-animation-short) var(--app-ease-standard);
-  /* Deliberately NOT overflow:hidden, though the handoff's CSS says so. The
-     accent bar is the only thing that needed clipping to the radius, and it
-     gets its own border-radius below instead — because the hover action panel
-     lives inside this card and overflow:hidden would clip its shadow off. */
+  /* Deliberately NOT overflow:hidden, though the handoff's CSS says so. Clipping
+     was only ever needed for the accent bar, which is gone — and the hover
+     action panel lives inside this card, so overflow:hidden would clip its
+     shadow off. */
 }
 
 .research-card:hover {
   box-shadow: 0 6px 22px -6px rgba(10, 27, 51, 0.18);
 }
 
-.research-card__accent {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
-  /* Matches the card's own radius so the bar doesn't square off the corners. */
-  border-radius: var(--app-radius-card) var(--app-radius-card) 0 0;
-  background: var(--ref-color-grey-40);
-}
-
-/* Playbook accent — the same semantic colour keys contexts-store stores on a
-   Playbook, resolved here exactly as .contexts-card--<color> does on /contexts
-   so one Playbook reads the same colour on both surfaces. */
-.research-card--orange .research-card__accent {
-  background: var(--ref-color-orange-100);
-}
-.research-card--blue .research-card__accent {
-  background: var(--ref-color-electric-blue-100);
-}
-.research-card--green .research-card__accent {
-  background: var(--ref-color-green-100);
-}
-.research-card--purple .research-card__accent {
-  background: var(--ref-color-purple-100);
-}
-.research-card--red .research-card__accent {
-  background: var(--ref-color-red-100);
-}
+/* The Playbook accent bar is gone. It encoded which Playbook a lane belongs to
+   as a colour, but the meta line already states that in words — so the bar was
+   decoration competing with the one signal the card actually needed to carry,
+   which is whether there is new research waiting. That is now the NEW badge.
+   (The .research-card--<color> class went with it; nothing reads it.) */
 
 .research-card__head {
   display: flex;
@@ -213,23 +189,60 @@
   text-overflow: ellipsis;
 }
 
+/* The NEW badge. No colour, size or radius here — .ap-badge.orange supplies all
+   of it (uppercase, white on --comp-badge-orange-background-color, 2px radius,
+   nowrap). Only its place in the row is ours: it must not shrink, and it sits
+   between the ellipsising title and the hover panel, whose slot is always
+   reserved, so the badge never shifts when the actions appear.
+
+   Nudged down 3px because the title is 20px/800 and the badge is a 16px chip —
+   optical centring on the cap height, not the line box. */
+.research-card__new {
+  flex: 0 0 auto;
+  margin-top: 3px;
+}
+
 /* Hover actions — revealed by the PARENT's hover, which is the whole reason
-   this is a CSS rule and not a JS handler. visibility (not display) so the
-   panel keeps its space and the title doesn't reflow when it appears. */
+   this is a CSS rule and not a JS handler.
+
+   Absolutely positioned, unlike the handoff's in-flow panel. In flow it
+   permanently reserved ~106px (three 32px buttons plus gaps) at the end of the
+   title row, and once the NEW badge joined that row the title had barely 100px
+   left and truncated to "Lost dog reco…". Floating it costs nothing: it already
+   has a white background and a shadow, so it reads as sitting above the card,
+   and taking it out of flow removes the reflow that `visibility` was there to
+   prevent in the first place. */
 .research-card__hover {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
   display: flex;
   gap: 2px;
-  flex: 0 0 auto;
   padding: 3px;
   background: var(--ref-color-white);
   border-radius: var(--app-radius-starter);
   box-shadow: var(--app-shadow-low);
-  visibility: hidden;
+  /* opacity + pointer-events, NOT visibility. A visibility:hidden subtree is
+     not focusable, so its buttons could never be tabbed to and the
+     :focus-within rule below could never fire — the three lane actions were
+     keyboard-unreachable. At opacity 0 they stay in the tab order and focusing
+     one reveals the panel, which is the whole point of the rule. */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--ref-animation-short) var(--app-ease-standard);
 }
 
 .research-card:hover .research-card__hover,
 .research-card:focus-within .research-card__hover {
-  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .research-card__hover {
+    transition: none;
+  }
 }
 
 .research-card__hover > .ap-icon-button {

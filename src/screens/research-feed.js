@@ -36,7 +36,7 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=2";
+} from "../briefs-store.js?v=3";
 import { RESEARCH_SOURCES, REVIEW_STATUSES, RESEARCH_TYPES, findResearchSource } from "../research-catalog.js?v=2";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough

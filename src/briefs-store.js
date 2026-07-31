@@ -27,6 +27,7 @@
 //   getBriefsForLane(laneId, filters?) → Brief[]  (newest first, filtered)
 //   getTrendingForLane(laneId)         → Brief[]  (ignores the status filter)
 //   countTrendingForLane(laneId)       → number
+//   countNewForLane(laneId)            → number   (the lane card's NEW badge)
 //   getBriefById(id)                   → Brief | null
 //   getStatus(briefId)                 → 'new'|'saved'|'used'|'ignored'
 //   getIgnoreReason(briefId)           → string
@@ -145,6 +146,14 @@ export function getTrendingForLane(laneId) {
 
 export function countTrendingForLane(laneId) {
   return briefs.filter((b) => b.laneId === laneId && b.isTrending).length;
+}
+
+// How many briefs in this lane are still untriaged — what the lane card's NEW
+// badge counts. Deliberately status-only and filter-free: the lane list has no
+// filters, and "is there anything to look at in here?" must not depend on how
+// somebody left the feed's filter panel.
+export function countNewForLane(laneId) {
+  return briefs.filter((b) => b.laneId === laneId && getStatus(b.id) === "new").length;
 }
 
 export function getBriefById(id) {
