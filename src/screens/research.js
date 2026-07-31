@@ -203,11 +203,13 @@ function renderLaneCard(lane) {
   // The card body is a button and the hover actions are its SIBLINGS, not
   // children: a button inside a button is invalid HTML and the browser resolves
   // the nesting unpredictably. Same reason topic-card splits body from footer.
-  // Both signals live on their OWN row under the meta line, not beside the title.
-  // Beside it they cost the title ~140px between them and it ellipsised to
-  // "Lost dog reco…" — the lane's name is the one thing you have to be able to
-  // read. On their own row they also read as a set, which is what they are: two
-  // different counts of the same lane's contents.
+  // Both signals live on their OWN row, in the card's footer directly above the
+  // separator and "Open research". Not beside the title: there they cost it
+  // ~140px between them and it ellipsised to "Lost dog reco…", and the lane's
+  // name is the one thing that has to stay readable. On their own row they read
+  // as a set — two counts of the same lane's contents — and sitting next to the
+  // action means "here's what's inside" is the last thing you read before the
+  // thing that takes you inside.
   const signals =
     newCount || trendingCount
       ? html`<div class="research-card__signals">
@@ -282,11 +284,18 @@ function renderLaneCard(lane) {
       </span>
     </div>
     <p class="research-card__meta">${meta}</p>
-    ${raw(signals)}
-    <button type="button" class="research-card__open" data-lane-open="${escapeAttr(lane.id)}">
-      <span>Open research</span>
-      <i class="ap-icon-arrow-right" aria-hidden="true"></i>
-    </button>
+    <!-- One footer group holds the signals, the separator and the action, so the
+         single margin-top:auto that pins them to the bottom lives in one place.
+         Putting it on both the signals row and the button instead would split
+         the free space between them and open a gap in the middle of the card —
+         and the signals row is conditional, so the button can't own it alone. -->
+    <div class="research-card__foot">
+      ${raw(signals)}
+      <button type="button" class="research-card__open" data-lane-open="${escapeAttr(lane.id)}">
+        <span>Open research</span>
+        <i class="ap-icon-arrow-right" aria-hidden="true"></i>
+      </button>
+    </div>
   </article>`;
 }
 

@@ -197,17 +197,24 @@
 
    Nudged down 3px because the title is 20px/800 and the badge is a 16px chip —
    optical centring on the cap height, not the line box. */
-/* Signals row — the NEW badge and the trending mark, under the meta line.
-   align-items:center rather than baseline: the badge is a 16px box with its own
-   internal leading and the trending mark is line-height:1 text, so their
-   baselines don't agree; centring the boxes is what actually looks aligned.
-   Wraps, so a lane with both counts still fits a narrow card. */
+/* Footer group — signals, then the separator + action. This is what carries the
+   margin-top:auto that pins the block to the bottom of the card; see the note in
+   research.js for why it can't sit on the two children individually. */
+.research-card__foot {
+  margin-top: auto;
+}
+
+/* Signals row — the NEW badge and the trending mark, immediately above the
+   separator. align-items:center rather than baseline: the badge is a 16px box
+   with its own internal leading and the trending mark is line-height:1 text, so
+   their baselines don't agree; centring the boxes is what actually looks
+   aligned. Wraps, so a lane with both counts still fits a narrow card. */
 .research-card__signals {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 12px;
-  margin-top: 10px;
+  margin-bottom: 12px;
 }
 
 /* Hover actions — revealed by the PARENT's hover, which is the whole reason
@@ -275,7 +282,7 @@
   align-items: center;
   gap: 6px;
   width: 100%;
-  margin-top: auto;
+  /* No margin-top:auto — .research-card__foot owns the pinning now. */
   padding: 14px 0 0;
   border: 0;
   border-top: 1px solid var(--ref-color-grey-10);
