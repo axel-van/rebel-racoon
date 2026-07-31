@@ -681,13 +681,10 @@
   background: var(--ref-color-white);
 }
 
-/* Not [disabled]: the button keeps focus and an accessible name, and the guard
-   lives in the handler. This is the disabled TINT only. */
-.research-form__save.is-incomplete {
-  background: var(--ref-color-electric-blue-40);
-  border-color: var(--ref-color-electric-blue-40);
-  cursor: not-allowed;
-}
+/* The disabled tint itself lives in ds-patches.css, keyed on
+   [aria-disabled="true"] — the DS ships no such variant for .ap-button, and a
+   rule here would lose the specificity race against .ap-button.primary.blue.
+   Nothing screen-specific is needed. */
 
 /* ══ Feed ════════════════════════════════════════════════════════════════ */
 

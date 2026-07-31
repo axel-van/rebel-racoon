@@ -201,7 +201,7 @@ function renderSourceCard(source) {
       <label class="research-toggle">
         <input type="checkbox" data-form-source="${escapeAttr(source.id)}" ${raw(on ? " checked" : "")} />
         <span class="research-toggle__track" aria-hidden="true"><span class="research-toggle__knob"></span></span>
-        <span class="ap-sr-only">Enable ${source.name}</span>
+        <span class="sr-only">Enable ${source.name}</span>
       </label>
     </div>
     ${raw(anchorRow)}${raw(toolRow)}
@@ -272,7 +272,7 @@ function renderSwitchCard(key, title, desc, on) {
     <label class="research-toggle">
       <input type="checkbox" data-form-switch="${escapeAttr(key)}" ${raw(on ? " checked" : "")} />
       <span class="research-toggle__track" aria-hidden="true"><span class="research-toggle__knob"></span></span>
-      <span class="ap-sr-only">${title}</span>
+      <span class="sr-only">${title}</span>
     </label>
   </div>`;
 }
@@ -283,7 +283,7 @@ function renderFooter() {
     <button type="button" class="ap-button stroked grey" data-form-cancel><span>Cancel</span></button>
     <button
       type="button"
-      class="ap-button primary blue research-form__save${raw(ready ? "" : " is-incomplete")}"
+      class="ap-button primary blue research-form__save${raw(ready ? "" : "")}"
       data-form-save
       ${raw(ready ? "" : 'aria-disabled="true"')}
     >

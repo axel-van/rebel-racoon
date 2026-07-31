@@ -11,6 +11,23 @@
   z-index: var(--app-z-modal-backdrop);
 }
 
+/* The DS has no "disabled tint" for .ap-button. It ships :disabled, but a
+   disabled button is removed from the tab order and stops being announced —
+   wrong for a form's save button, where the user needs to be able to reach it
+   and be told why it won't fire. aria-disabled keeps it focusable and labelled;
+   this supplies the matching visual.
+
+   Specificity matters here: .ap-button.primary.blue is (0,3,0), so a two-class
+   rule loses to it and the tint silently never applies. Each selector below is
+   (0,3,0) too, and ds-patches.css loads after ds/css-ui/index.css, so equal
+   specificity resolves in this file's favour. */
+.ap-button.primary[aria-disabled="true"],
+.ap-button.secondary[aria-disabled="true"],
+.ap-button.stroked[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 /* .ap-status ships blue/green/grey/orange/red/tagOrange — no mermaid variant.
    Archie's in-conversation status pills (Drafting / Extracted-N-ideas /
    Extracting / Analyzing — Figma 25:1113, 25:1107) use this variant. Tinted

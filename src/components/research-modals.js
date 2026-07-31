@@ -128,7 +128,7 @@ export function openNeedSource({ sourceId }) {
       foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
           <span>Not now</span>
         </button>
-        <button type="button" class="ap-button primary blue is-incomplete" data-need-send aria-disabled="true">
+        <button type="button" class="ap-button primary blue" data-need-send aria-disabled="true">
           <span>Send feedback</span>
         </button>`,
     },
@@ -372,7 +372,8 @@ function onPanelInput(event) {
   if (!text) return;
   const send = panel.querySelector("[data-need-send]");
   if (!send) return;
-  const ready = !!text.value.trim();
-  send.setAttribute("aria-disabled", ready ? "false" : "true");
-  send.classList.toggle("is-incomplete", !ready);
+  // aria-disabled alone drives both the semantics and the tint — ds-patches.css
+  // styles .ap-button[aria-disabled="true"], so there's no second class to keep
+  // in sync with the attribute.
+  send.setAttribute("aria-disabled", text.value.trim() ? "false" : "true");
 }
