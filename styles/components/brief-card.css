@@ -51,19 +51,9 @@
   flex: 1;
 }
 
-/* Trending: PLAIN TEXT, deliberately not a pill. A filled pill means review
-   status in this app, and trending is an independent boolean that coexists with
-   all four statuses — as a pill the two read as mutually exclusive peers. */
-.brief-card__trending,
-.brief-trending {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1;
-  color: var(--app-archie-orange);
-}
+/* Trending is .trending-mark, in styles/components/trending-mark.css — the lane
+   cards on /research say it the same way, so it can't live here. That file also
+   carries the reasoning for why it's text and not a pill. */
 
 /* Status pills — the four review states. */
 .brief-status {

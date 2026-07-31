@@ -197,9 +197,17 @@
 
    Nudged down 3px because the title is 20px/800 and the badge is a 16px chip —
    optical centring on the cap height, not the line box. */
-.research-card__new {
-  flex: 0 0 auto;
-  margin-top: 3px;
+/* Signals row — the NEW badge and the trending mark, under the meta line.
+   align-items:center rather than baseline: the badge is a 16px box with its own
+   internal leading and the trending mark is line-height:1 text, so their
+   baselines don't agree; centring the boxes is what actually looks aligned.
+   Wraps, so a lane with both counts still fits a narrow card. */
+.research-card__signals {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-top: 10px;
 }
 
 /* Hover actions — revealed by the PARENT's hover, which is the whole reason

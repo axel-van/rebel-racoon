@@ -39,7 +39,7 @@ function renderStatusPill(status) {
 }
 
 function renderTrendingMark() {
-  return html`<span class="brief-trending">
+  return html`<span class="trending-mark">
     <i class="ap-icon-arrow-up" aria-hidden="true"></i>
     <span>Trending</span>
   </span>`;

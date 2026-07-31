@@ -1,0 +1,36 @@
+/* trending-mark — how "this is running above its baseline" is said, everywhere.
+ *
+ * Shared by the brief cards (feed + trending page) and the lane cards on
+ * /research, which is why it lives here rather than inside either one's
+ * stylesheet — the same reason topic-badge.css is its own file.
+ *
+ * ── It is TEXT, never a pill. This is deliberate. ──────────────────────────
+ * A filled pill already means something specific in this feature: review status
+ * on a brief card (New / Saved / Used / Ignored), and the NEW count on a lane
+ * card. Trending is an independent boolean that coexists with all of those — a
+ * brief can be Saved AND trending, Ignored AND trending. Rendered as a pill it
+ * read as a peer of those states, i.e. as a fifth status, which is exactly what
+ * it is not. As orange text with an arrow it reads as a separate axis.
+ *
+ * Orange because orange marks Archie's own contribution across the whole app,
+ * and a volume spike is something Archie noticed rather than something the user
+ * did. (--app-archie-orange, not the DS orange: the DS ramp tops out at #FF6726
+ * and Archie's brand orange is #FF3C00. See styles/tokens.css.) */
+
+.trending-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 800;
+  /* line-height 1 so the mark centres on its own text box rather than inheriting
+     the row's leading — it sits beside a 20px/800 title on the lane card and a
+     14px/800 source name on the brief card, and has to align in both. */
+  line-height: 1;
+  color: var(--app-archie-orange);
+  white-space: nowrap;
+}
+
+.trending-mark > i {
+  font-size: 14px;
+}

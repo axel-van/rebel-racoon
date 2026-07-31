@@ -25,7 +25,7 @@ import { showToast } from "../components/toast.js?v=20";
 import { isFlagOn } from "../feature-flags.js?v=16";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=44";
 import { getLanes, duplicateLane, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=2";
-import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=3";
+import { countNewForLane, countTrendingForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=3";
 
 // Local view state. The Playbook facet lives here rather than in the URL: unlike
 // /topics, whose `?pb=` scope has to survive the round trip to a per-Playbook
@@ -195,27 +195,58 @@ function renderLaneCard(lane) {
   // but the meta line already says that in words, so the colour was decoration.
   // What the card couldn't say before is whether there's anything to look at.
   const newCount = countNewForLane(lane.id);
+  // Gated on the lane's own Show-trending switch, not just the count. With it off
+  // there is no banner and no trending page for this lane (that route bounces
+  // back to the feed), so advertising a number here would point at nothing.
+  const trendingCount = lane.showTrending ? countTrendingForLane(lane.id) : 0;
 
   // The card body is a button and the hover actions are its SIBLINGS, not
   // children: a button inside a button is invalid HTML and the browser resolves
   // the nesting unpredictably. Same reason topic-card splits body from footer.
+  // Both signals live on their OWN row under the meta line, not beside the title.
+  // Beside it they cost the title ~140px between them and it ellipsised to
+  // "Lost dog reco…" — the lane's name is the one thing you have to be able to
+  // read. On their own row they also read as a set, which is what they are: two
+  // different counts of the same lane's contents.
+  const signals =
+    newCount || trendingCount
+      ? html`<div class="research-card__signals">
+          <!-- The DS Badge, not a hand-rolled pill: Badge is the system-generated
+               marker (uppercase, orange, nowrap out of the box), and "I found new
+               research" is exactly that — Archie's own signal, not a user state.
+               It carries the count as well as the word, so one component answers
+               both "is there anything new" and "how much". -->
+          ${raw(
+            newCount
+              ? html`<span
+                  class="ap-badge orange"
+                  aria-label="${newCount} new ${newCount === 1 ? "brief" : "briefs"} to review"
+                  >${newCount} new</span
+                >`
+              : "",
+          )}
+          <!-- Trending is TEXT beside that badge, never a second pill. Two filled
+               pills side by side would read as two of the same kind of thing, and
+               these are different kinds: NEW counts what you haven't triaged,
+               trending counts what's spiking regardless of triage. Same treatment
+               the brief cards use — see styles/components/trending-mark.css. -->
+          ${raw(
+            trendingCount
+              ? html`<span
+                  class="trending-mark"
+                  aria-label="${trendingCount} ${trendingCount === 1 ? "topic" : "topics"} trending"
+                >
+                  <i class="ap-icon-arrow-up" aria-hidden="true"></i>
+                  <span>${trendingCount} trending</span>
+                </span>`
+              : "",
+          )}
+        </div>`
+      : "";
+
   return html`<article class="research-card" data-lane-id="${escapeAttr(lane.id)}">
     <div class="research-card__head">
       <button type="button" class="research-card__title" data-lane-open="${escapeAttr(lane.id)}">${lane.name}</button>
-      <!-- The DS Badge, not a hand-rolled pill: Badge is the system-generated
-           marker (uppercase, orange, nowrap out of the box), and "I found new
-           research" is exactly that — Archie's own signal, not a user state.
-           It carries the count as well as the word, so one component answers
-           both "is there anything new" and "how much". -->
-      ${raw(
-        newCount
-          ? html`<span
-              class="ap-badge orange research-card__new"
-              aria-label="${newCount} new ${newCount === 1 ? "brief" : "briefs"} to review"
-              >${newCount} new</span
-            >`
-          : "",
-      )}
       <!-- Revealed by a PARENT-hover CSS rule (.research-card:hover &), not by a
            JS handler: an inline hover on the card can't reach a child, and
            visibility (not display) keeps the panel in flow so the title doesn't
@@ -251,6 +282,7 @@ function renderLaneCard(lane) {
       </span>
     </div>
     <p class="research-card__meta">${meta}</p>
+    ${raw(signals)}
     <button type="button" class="research-card__open" data-lane-open="${escapeAttr(lane.id)}">
       <span>Open research</span>
       <i class="ap-icon-arrow-right" aria-hidden="true"></i>
