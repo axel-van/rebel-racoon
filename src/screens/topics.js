@@ -27,7 +27,7 @@ import { renderEmptyState } from "../components/empty-state.js?v=1";
 import { renderTopicCard } from "../components/topic-card.js?v=3";
 import { open as openTopicModal } from "../components/topic-modal.js?v=5";
 import { isFlagOn } from "../feature-flags.js?v=16";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=44";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=45";
 import { TOPIC_SOURCES, findTopicSource, findCadence } from "../topics-catalog.js?v=2";
 import { openTopicInChat } from "../topic-flow.js?v=4";
 import {

@@ -21,7 +21,7 @@ import { html, raw, escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=2";
 import { getBriefById, ignoreBrief, setStatus } from "../briefs-store.js?v=3";
-import { getContextById } from "../contexts-store.js?v=44";
+import { getContextById } from "../contexts-store.js?v=45";
 import { renderSocialPostCard } from "./social-post-card.js?v=6";
 import { showToast } from "./toast.js?v=20";
 

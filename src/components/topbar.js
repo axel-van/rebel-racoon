@@ -26,7 +26,7 @@ import {
 } from "./conversation-status-card.js?v=212";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=12";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { subscribe as subscribeContexts } from "../contexts-store.js?v=44";
+import { subscribe as subscribeContexts } from "../contexts-store.js?v=45";
 import { isFlagOn } from "../feature-flags.js?v=16";
 import {
   getPickerState as getTopPostsState,

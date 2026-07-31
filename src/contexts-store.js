@@ -17,7 +17,7 @@
 // chooses "Save as global". updateContext is used by the section-edit flow
 // when scope is "Update everywhere".
 
-import { contexts as seed } from "./mocks.js?v=64";
+import { contexts as seed } from "./mocks.js?v=65";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import { DEFAULT_ENABLED_IDS, DEFAULT_CADENCE, findTopicSource, findCadence } from "./topics-catalog.js?v=2";
@@ -36,7 +36,16 @@ import {
 // Seeds bypass addContext, so anything addContext normalises has to be applied
 // here too — `topics` included, or a seeded Playbook with no topics config at
 // all would render the section against `undefined`.
-const contexts = isNewUser() ? [] : seed.map((c) => normalizeLanguages({ ...c, topics: normalizeTopics(c.topics) }));
+const contexts = isNewUser()
+  ? []
+  : seed.map((c) =>
+      normalizeLanguages({
+        ...c,
+        topics: normalizeTopics(c.topics),
+        strategy: normalizeStrategy(c.strategy),
+        influencers: normalizeInfluencers(c.influencers),
+      }),
+    );
 const notifier = createNotifier("contexts-store");
 
 export const subscribe = notifier.subscribe;
@@ -61,6 +70,45 @@ function normalizeCompetitors(list) {
     websiteUrl: c.websiteUrl || "",
     logo: c.logo || "",
     socials: Array.isArray(c.socials) ? c.socials.map((s) => ({ ...s })) : [],
+  }));
+}
+
+// Content strategy — the Approach paragraph plus the pillars Archie drafts
+// against. Normalised for the same reason competitors are: the seed and the
+// wizard both produce these, and the Playbook's Content Strategy section plus
+// the "Add to Content strategy" confirmation both render them, so a pillar
+// arriving without an id or a title must not reach a view.
+let pillarSeq = 0;
+function normalizeStrategy(s) {
+  const src = s && typeof s === "object" ? s : {};
+  const pillars = Array.isArray(src.pillars) ? src.pillars : [];
+  return {
+    approach: typeof src.approach === "string" ? src.approach : "",
+    pillars: pillars.map((p) => ({
+      ...p,
+      id: p.id || `pil-${(pillarSeq += 1)}`,
+      // The section renders an icon tile per pillar; without a fallback a pillar
+      // authored without one renders an empty square.
+      icon: p.icon || "ap-icon-target",
+      title: p.title || "",
+      description: p.description || "",
+    })),
+  };
+}
+
+// Influencers mirror competitors — same nested socials array, same id stamping.
+// `reach` is a display string ("9.5M"), never a number: it is quoted from a
+// profile rather than computed, and formatting it here would imply otherwise.
+let influencerSeq = 0;
+function normalizeInfluencers(list) {
+  if (!Array.isArray(list)) return [];
+  return list.map((f) => ({
+    ...f,
+    id: f.id || `inf-${(influencerSeq += 1)}`,
+    name: f.name || "",
+    reach: typeof f.reach === "string" ? f.reach : "",
+    description: f.description || "",
+    socials: Array.isArray(f.socials) ? f.socials.map((s) => ({ ...s })) : [],
   }));
 }
 
@@ -175,6 +223,11 @@ export function addContext(ctx = {}) {
     //   user rejected so discovery never re-proposes them.
     competitors: normalizeCompetitors(ctx.competitors),
     dismissedCompetitors: Array.isArray(ctx.dismissedCompetitors) ? ctx.dismissedCompetitors.slice() : [],
+    // — influencers (name / reach / description / social profiles) — mirrors
+    //   competitors, minus the suggestion machinery: nothing proposes creators.
+    influencers: normalizeInfluencers(ctx.influencers),
+    // — content strategy (approach paragraph + pillars) —
+    strategy: normalizeStrategy(ctx.strategy),
     // — topics (which listening sources are on + how often I refresh them) —
     //   Always present, even while the `topics` flag is OFF: the config rides
     //   along in the data like competitors do, only the surfaces are gated.
@@ -251,6 +304,8 @@ export function updateContext(id, patch) {
   if (patch.brandLogo !== undefined) c.brandLogo = patch.brandLogo;
   if (patch.referenceImages !== undefined) c.referenceImages = patch.referenceImages;
   if (patch.competitors !== undefined) c.competitors = normalizeCompetitors(patch.competitors);
+  if (patch.influencers !== undefined) c.influencers = normalizeInfluencers(patch.influencers);
+  if (patch.strategy !== undefined) c.strategy = normalizeStrategy(patch.strategy);
   if (patch.dismissedCompetitors !== undefined)
     c.dismissedCompetitors = Array.isArray(patch.dismissedCompetitors) ? patch.dismissedCompetitors.slice() : [];
   if (patch.topics !== undefined) c.topics = normalizeTopics(patch.topics);

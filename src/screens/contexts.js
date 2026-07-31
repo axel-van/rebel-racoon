@@ -5,7 +5,7 @@ import {
   subscribe as subscribeContexts,
   duplicateContext,
   deleteContext,
-} from "../contexts-store.js?v=44";
+} from "../contexts-store.js?v=45";
 import { navigate } from "../router.js?v=30";
 import { setHandoff } from "../handoff.js?v=20";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";

@@ -18,7 +18,7 @@ import {
 import { isFlagOn } from "../feature-flags.js?v=16";
 import { isNewUser } from "../user-mode.js?v=22";
 import { clearSession as clearLibrarySession } from "../library.js?v=60";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=44";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=45";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=34";
 import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=2";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=2";

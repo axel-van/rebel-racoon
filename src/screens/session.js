@@ -1,7 +1,7 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=282";
-import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=64";
+import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=65";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
@@ -15,7 +15,7 @@ import {
 import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=14";
 import { CLIP_SUBTITLE_ITEMS, CLIP_SUBTITLE_LABEL } from "../clip-subtitles.js?v=1";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=12";
-import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=44";
+import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=45";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
   getThread,

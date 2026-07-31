@@ -1531,6 +1531,78 @@ export const contexts = [
     cta: "Try Acme free for 30 days.",
     usedIn: 4,
     updatedAt: "3 minutes ago",
+    // Content strategy — the Approach paragraph plus the content pillars Archie
+    // drafts against. FIVE pillars deliberately: the section shows three and
+    // offers "Display more (N)", so a shorter list would never exercise it.
+    strategy: {
+      approach:
+        "One launch, one argument. Every post either explains a constraint we hit or shows what we shipped because of it — no round-ups, no thought-leadership without a receipt.",
+      pillars: [
+        {
+          id: "acme-pil-1",
+          icon: "ap-icon-target",
+          title: "Constraint stories",
+          description: "The decision behind a feature, and what we gave up to make it. Specific enough to be arguable.",
+        },
+        {
+          id: "acme-pil-2",
+          icon: "ap-icon-data-report",
+          title: "Numbers we can show",
+          description: "Anything with a figure we can actually publish. No vanity metrics, no 'up to'.",
+        },
+        {
+          id: "acme-pil-3",
+          icon: "ap-icon-single-chat-bubble",
+          title: "Customer language",
+          description:
+            "Words lifted from support threads and calls, used as-is rather than tidied into marketing copy.",
+        },
+        {
+          id: "acme-pil-4",
+          icon: "ap-icon-note",
+          title: "Behind the roadmap",
+          description: "What we said no to this quarter, and why. The most-read internal doc, made external.",
+        },
+        {
+          id: "acme-pil-5",
+          icon: "ap-icon-web",
+          title: "Category context",
+          description: "Where the market is moving, only when we have a first-hand read on it.",
+        },
+      ],
+    },
+    // Creators worth partnering with. Four so the three-card cap has a fourth to
+    // hide behind "See all".
+    influencers: [
+      {
+        id: "acme-inf-1",
+        name: "Lenny's Newsletter",
+        reach: "1.1M",
+        description: "Product and growth operators. Long-form, high-trust, sceptical of vendor content.",
+        socials: [{ network: "x", url: "https://x.com/lennysan" }],
+      },
+      {
+        id: "acme-inf-2",
+        name: "Elena Verna",
+        reach: "180K",
+        description: "Growth. Blunt, framework-led, will not post anything she hasn't pressure-tested.",
+        socials: [{ network: "x", url: "https://x.com/elenaverna" }],
+      },
+      {
+        id: "acme-inf-3",
+        name: "Dave Gerhardt",
+        reach: "95K",
+        description: "B2B marketing. Strong on positioning and plain language; audience overlaps ours heavily.",
+        socials: [{ network: "instagram", url: "https://instagram.com/davegerhardt" }],
+      },
+      {
+        id: "acme-inf-4",
+        name: "Anthony Pierri",
+        reach: "60K",
+        description: "Homepage and positioning teardowns. Format travels; often quoted by our buyers.",
+        socials: [{ network: "x", url: "https://x.com/anthonypierri" }],
+      },
+    ],
     analysis: {
       voice: voiceAnalysis,
       brief: strategyBrief,
@@ -1644,6 +1716,66 @@ export const contexts = [
     cta: "",
     usedIn: 1,
     updatedAt: "yesterday",
+    strategy: {
+      approach:
+        "One person, thinking out loud. Posts are first-person and unhedged — a position, the reasoning, and what changed his mind. Never written as the company.",
+      pillars: [
+        {
+          id: "fv-pil-1",
+          icon: "ap-icon-quote",
+          title: "Positions, not takes",
+          description: "A claim he'd defend in a room. Stated once, without the disclaimer paragraph.",
+        },
+        {
+          id: "fv-pil-2",
+          icon: "ap-icon-note",
+          title: "What I got wrong",
+          description: "A decision that didn't work and the specific reason. The highest-engagement register he has.",
+        },
+        {
+          id: "fv-pil-3",
+          icon: "ap-icon-target",
+          title: "How we actually decide",
+          description: "The mechanics — how a call got made, who pushed back, what the tradeoff was.",
+        },
+        {
+          id: "fv-pil-4",
+          icon: "ap-icon-double-chat-bubbles",
+          title: "Replies worth a post",
+          description: "A question from a comment thread answered at length, credited to whoever asked.",
+        },
+      ],
+    },
+    influencers: [
+      {
+        id: "fv-inf-1",
+        name: "Jason Fried",
+        reach: "400K",
+        description: "The register this Playbook is aiming at: short, first-person, unhedged.",
+        socials: [{ network: "x", url: "https://x.com/jasonfried" }],
+      },
+      {
+        id: "fv-inf-2",
+        name: "Sahil Bloom",
+        reach: "1M",
+        description: "Structure and cadence worth studying, even where the subject matter diverges.",
+        socials: [{ network: "x", url: "https://x.com/SahilBloom" }],
+      },
+      {
+        id: "fv-inf-3",
+        name: "Anne-Laure Le Cunff",
+        reach: "120K",
+        description: "Research-backed and calm. Good model for citing a source without turning into a citation.",
+        socials: [{ network: "x", url: "https://x.com/anthilemoon" }],
+      },
+      {
+        id: "fv-inf-4",
+        name: "Arvid Kahl",
+        reach: "170K",
+        description: "Builds in public without performing it. Strong on the 'what I got wrong' pillar.",
+        socials: [{ network: "x", url: "https://x.com/arvidkahl" }],
+      },
+    ],
     analysis: {
       voice: voiceAnalysis,
       brief: null,
@@ -1761,6 +1893,72 @@ export const contexts = [
     cta: "See how teams like yours use Acme →",
     usedIn: 0,
     updatedAt: "2 days ago",
+    strategy: {
+      approach:
+        "The customer is the narrator. Every post opens on their situation in their words, and the product appears only where they said it mattered. No unattributed claims.",
+      pillars: [
+        {
+          id: "cs-pil-1",
+          icon: "ap-icon-single-chat-bubble",
+          title: "Before and after",
+          description: "What the week looked like before, what it looks like now. Concrete, dated, quotable.",
+        },
+        {
+          id: "cs-pil-2",
+          icon: "ap-icon-data-report",
+          title: "The number they gave us",
+          description: "One figure the customer signed off on, framed the way they framed it.",
+        },
+        {
+          id: "cs-pil-3",
+          icon: "ap-icon-note",
+          title: "How they actually use it",
+          description: "The unglamorous workflow — the tab they leave open, the report they screenshot.",
+        },
+        {
+          id: "cs-pil-4",
+          icon: "ap-icon-heart",
+          title: "Named people",
+          description: "A face and a job title, not 'a leading enterprise'. Permission on file every time.",
+        },
+        {
+          id: "cs-pil-5",
+          icon: "ap-icon-target",
+          title: "Why they nearly didn't",
+          description: "The objection they had before buying. Disarms the same objection in the reader.",
+        },
+      ],
+    },
+    influencers: [
+      {
+        id: "cs-inf-1",
+        name: "Joel Klettke",
+        reach: "40K",
+        description: "Case-study specialist. Sets the bar for interviewing a customer without leading them.",
+        socials: [{ network: "x", url: "https://x.com/JoelKlettke" }],
+      },
+      {
+        id: "cs-inf-2",
+        name: "Katelyn Bourgoin",
+        reach: "90K",
+        description: "Buyer psychology. Useful on the 'why they nearly didn't' pillar specifically.",
+        socials: [{ network: "x", url: "https://x.com/KateBour" }],
+      },
+      {
+        id: "cs-inf-3",
+        name: "Emily Kramer",
+        reach: "75K",
+        description: "Marketing operator with a large practitioner audience; shares customer stories readily.",
+        socials: [{ network: "x", url: "https://x.com/emilykramer" }],
+      },
+      {
+        id: "cs-inf-4",
+        name: "Userlist",
+        reach: "25K",
+        description: "Small brand, disproportionate trust. Their customer posts get quoted in our niche.",
+        socials: [{ network: "instagram", url: "https://instagram.com/userlisthq" }],
+      },
+    ],
     analysis: {
       voice: null,
       brief: null,
@@ -1960,6 +2158,74 @@ export const contexts = [
     cta: "Home in forty minutes. That's the whole point.",
     usedIn: 2,
     updatedAt: "yesterday",
+    strategy: {
+      approach:
+        "Lead on the moment the tracker mattered, not on the hardware. A post earns the specs only after it has earned the relief — and the relief is always someone's actual animal, named.",
+      pillars: [
+        {
+          id: "pt-pil-1",
+          icon: "ap-icon-heart",
+          title: "Recovery stories",
+          description: "She was gone eleven minutes. Told as it happened, with the owner's own words kept in.",
+        },
+        {
+          id: "pt-pil-2",
+          icon: "ap-icon-target",
+          title: "The two-minute setup",
+          description: "What you do on day one. Removes the fear that the thing will sit in a drawer.",
+        },
+        {
+          id: "pt-pil-3",
+          icon: "ap-icon-antenna",
+          title: "Coverage, in plain words",
+          description: "What range means when it matters, never as a published number on its own.",
+        },
+        {
+          id: "pt-pil-4",
+          icon: "ap-icon-note",
+          title: "Cat territory",
+          description: "Indoor-outdoor cats and where they actually go. Underserved and travels on saves.",
+        },
+        {
+          id: "pt-pil-5",
+          icon: "ap-icon-double-chat-bubbles",
+          title: "Answering the collar question",
+          description: "The one owners ask and nobody answers: what happens if the plan lapses.",
+        },
+      ],
+    },
+    // The handoff's seeded creators, kept verbatim — they are pet-account
+    // accurate and transfer to Pawtrack unchanged.
+    influencers: [
+      {
+        id: "pt-inf-1",
+        name: "The Dogist",
+        reach: "9.5M",
+        description: "Portrait-led and enormous. One feature moves more trust than a quarter of paid.",
+        socials: [{ network: "instagram", url: "https://instagram.com/thedogist" }],
+      },
+      {
+        id: "pt-inf-2",
+        name: "Tucker Budzyn",
+        reach: "4.2M",
+        description: "Golden retriever, comedic register. Huge reach, low fit for a safety message.",
+        socials: [{ network: "instagram", url: "https://instagram.com/tuckerbudzyn" }],
+      },
+      {
+        id: "pt-inf-3",
+        name: "Doug the Pug",
+        reach: "3.8M",
+        description: "Costume and culture posts. Broad, mainstream, works for seasonal moments only.",
+        socials: [{ network: "instagram", url: "https://instagram.com/itsdougthepug" }],
+      },
+      {
+        id: "pt-inf-4",
+        name: "Loki the Wolfdog",
+        reach: "2.0M",
+        description: "Backcountry and off-lead. The closest fit we have — his audience already worries about range.",
+        socials: [{ network: "instagram", url: "https://instagram.com/loki" }],
+      },
+    ],
     analysis: {
       voice: null,
       brief: null,
@@ -2065,6 +2331,45 @@ export const contexts = [
     cta: "Book a free trial",
     usedIn: 0,
     updatedAt: "just now",
+    // Pillars taken straight from the four topics the listening export returned —
+    // they are the content themes it identified, which is exactly what a pillar
+    // is. The fifth is the export's own noise flag, kept as a standing "don't".
+    strategy: {
+      approach:
+        "Explain the mechanism, not the milestone. Competitors post that a promotion happened or that a kids' class exists; the opening is to say what it actually builds — self-control, problem-solving, resilience — for parents and adults who want capability without aggression.",
+      pillars: [
+        {
+          id: "abjj-pil-1",
+          icon: "ap-icon-user",
+          title: "Character over aggression",
+          description:
+            "Why grappling teaches control rather than striking. Answers the hesitation that stops a parent signing up.",
+        },
+        {
+          id: "abjj-pil-2",
+          icon: "ap-icon-rounded-check",
+          title: "What a promotion means",
+          description:
+            "Stripes as micro-goals and earned recognition. The highest-volume theme in the local conversation.",
+        },
+        {
+          id: "abjj-pil-3",
+          icon: "ap-icon-refresh",
+          title: "Coming back to the mats",
+          description:
+            "For former practitioners and busy professionals. Ego, reconditioning, and why the room you pick matters.",
+        },
+        {
+          id: "abjj-pil-4",
+          icon: "ap-icon-buildings",
+          title: "Training as a family",
+          description: "Parents on the mats alongside their kids. Blocked on photography and parent testimonials.",
+        },
+      ],
+    },
+    // Nothing in the export names creators — it collected competitor posts only.
+    // Left empty rather than invented; the section will show its empty state.
+    influencers: [],
     analysis: {
       voice: null,
       brief: null,
