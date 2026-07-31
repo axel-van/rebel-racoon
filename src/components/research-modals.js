@@ -17,7 +17,8 @@
 // Overlay arbitration goes through modal-coordinator so only one is ever up, and
 // so the source-feedback dialog can legitimately stack over the research form.
 
-import { html, raw, escapeHtml } from "../utils.js?v=21";
+import { html, raw, escapeAttr } from "../utils.js?v=21";
+import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=2";
 import { getBriefById, ignoreBrief, setStatus } from "../briefs-store.js?v=3";
@@ -238,7 +239,128 @@ export function openAddToStrategy({ briefId, playbookId, onConfirm = null }) {
   );
 }
 
-// ─── 5. Full research ──────────────────────────────────────────────────────
+// ─── 5. Playbook competitors / influencers (READ-ONLY) ─────────────────────
+//
+// Opened from the research form's per-source rows. Deliberately read-only, and
+// deliberately a modal rather than a link to /playbook: the form is a place you
+// are mid-edit, and sending someone to another route to check who their
+// competitors are loses the lane they were configuring. It answers "who is in
+// here?" and nothing else — editing stays on the Playbook, which the footer
+// links to.
+//
+// This replaces three broken links: the form used to point at
+// `#/playbook/:id?section=<anchor>`, but /playbook never honoured `?section=`,
+// the influencers anchor named a section that didn't exist, and the competitors
+// one was invisible whenever the playbookCompetitors flag was off.
+
+const LIST_KINDS = {
+  competitors: {
+    title: "Competitors",
+    intro: "Direct competitors we found for your brand, with their website and social profiles.",
+    empty: "No competitors in this Playbook yet.",
+    pick: (ctx) => (Array.isArray(ctx?.competitors) ? ctx.competitors.filter((c) => !c.suggested) : []),
+  },
+  influencers: {
+    title: "Influencers",
+    intro: "Creators in your niche worth partnering with, with their reach and social profiles.",
+    empty: "No influencers in this Playbook yet.",
+    pick: (ctx) => (Array.isArray(ctx?.influencers) ? ctx.influencers : []),
+  },
+};
+
+/** First letter of the brand, for the header tile. */
+function brandInitial(ctx) {
+  return ((ctx?.brandName || ctx?.name || "?").trim()[0] || "?").toUpperCase();
+}
+
+function renderProfileLinks(entry) {
+  const links = [];
+  if (entry.websiteUrl) links.push({ network: "website", url: entry.websiteUrl, label: "Website" });
+  for (const s of entry.socials || []) {
+    if (s && s.url) links.push({ network: s.network || "website", url: s.url, label: s.network || "Profile" });
+  }
+  if (!links.length) return "";
+  return html`<span class="pbklist__links">
+    ${raw(
+      links
+        .map(
+          (l) =>
+            // rel=noopener on every outbound link — without it the opened page
+            // gets a handle on this window via window.opener.
+            html`<a
+              class="pbklist__link"
+              href="${l.url}"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="${l.label}"
+              aria-label="${l.label}"
+              ><i class="${NETWORK_ICONS[l.network] || NETWORK_ICONS.website}" aria-hidden="true"></i
+            ></a>`,
+        )
+        .join(""),
+    )}
+  </span>`;
+}
+
+const NETWORK_ICONS = {
+  website: "ap-icon-web",
+  facebook: "ap-icon-facebook",
+  instagram: "ap-icon-instagram",
+  x: "ap-icon-twitter",
+  twitter: "ap-icon-twitter",
+};
+
+export function openPlaybookList({ playbookId, kind }) {
+  const spec = LIST_KINDS[kind];
+  if (!spec) return;
+  const ctx = getContextById(playbookId);
+  const list = spec.pick(ctx);
+
+  openShell(
+    "playbook-list",
+    { playbookId, kind },
+    {
+      title: spec.title,
+      // The Playbook name as an uppercase eyebrow ABOVE the section title, so the
+      // dialog says whose competitors these are without a second heading.
+      sub: "",
+      body: html`<div class="pbklist__eyebrow">
+          <span class="pbklist__tile" aria-hidden="true">${brandInitial(ctx)}</span>
+          <span class="pbklist__brand">${ctx ? ctx.name : "Playbook"}</span>
+        </div>
+        <p class="research-modal__lede">${spec.intro}</p>
+        ${raw(
+          list.length
+            ? html`<ul class="pbklist">
+                ${raw(
+                  list
+                    .map(
+                      (e) =>
+                        html`<li class="pbklist__row">
+                          <span class="pbklist__name">${e.name || "Untitled"}</span>
+                          ${raw(e.reach ? html`<span class="pbklist__reach">${e.reach} reach</span>` : "")}
+                          ${raw(e.description ? html`<span class="pbklist__desc">${e.description}</span>` : "")}
+                          ${raw(renderProfileLinks(e))}
+                        </li>`,
+                    )
+                    .join(""),
+                )}
+              </ul>`
+            : html`<p class="muted">${spec.empty}</p>`,
+        )}`,
+      // Read-only, so the footer offers the one thing this dialog can't do —
+      // and it goes to the Playbook, where editing actually lives.
+      foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
+          <span>Close</span>
+        </button>
+        <button type="button" class="ap-button primary blue" data-pbklist-edit="${escapeAttr(playbookId)}">
+          <span>Edit in the Playbook</span>
+        </button>`,
+    },
+  );
+}
+
+// ─── 6. Full research ──────────────────────────────────────────────────────
 
 export function openFullResearch({ briefId }) {
   const brief = getBriefById(briefId);
@@ -329,6 +451,16 @@ function onPanelClick(event) {
     return;
   }
   if (!active) return;
+
+  const pbkEdit = event.target.closest("[data-pbklist-edit]");
+  if (pbkEdit) {
+    // ?section= is honoured by screens/playbook.js, so this lands on the right
+    // section rather than the top of the page.
+    const kind = active.ctx.kind;
+    close();
+    navigate(`/playbook/${encodeURIComponent(pbkEdit.dataset.pbklistEdit)}?section=${kind}`);
+    return;
+  }
 
   if (event.target.closest("[data-need-send]")) {
     const btn = event.target.closest("[data-need-send]");

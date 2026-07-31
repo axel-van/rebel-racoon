@@ -189,14 +189,6 @@
   text-overflow: ellipsis;
 }
 
-/* The NEW badge. No colour, size or radius here — .ap-badge.orange supplies all
-   of it (uppercase, white on --comp-badge-orange-background-color, 2px radius,
-   nowrap). Only its place in the row is ours: it must not shrink, and it sits
-   between the ellipsising title and the hover panel, whose slot is always
-   reserved, so the badge never shifts when the actions appear.
-
-   Nudged down 3px because the title is 20px/800 and the badge is a 16px chip —
-   optical centring on the cap height, not the line box. */
 /* Signals row — the NEW badge and the trending mark, under the meta line.
    align-items:center rather than baseline: the badge is a 16px box with its own
    internal leading and the trending mark is line-height:1 text, so their
@@ -560,7 +552,13 @@
   color: var(--app-convo-navy);
 }
 
+/* A <button>, not an <a>, since it opens a dialog — so it needs width:100% and
+   text-align:left to sit in the card the way the anchor did. */
 .research-source__link {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
   display: flex;
   align-items: center;
   gap: 8px;

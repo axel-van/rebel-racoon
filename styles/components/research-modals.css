@@ -285,3 +285,106 @@
   font-weight: 500;
   line-height: 1.5;
 }
+
+/* ── Read-only Playbook competitors / influencers list ─────────────────────
+   Opened from the research form. Read-only by design, so there is no edit
+   affordance per row — the footer's one button goes to the Playbook. */
+
+.pbklist__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* Brand initial rather than a logo: not every Playbook has one, and a missing
+   logo leaves a hole exactly where the identity should be. */
+.pbklist__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  background: var(--app-convo-navy);
+  border-radius: var(--app-radius-sm);
+  color: var(--ref-color-white);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pbklist__brand {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ref-color-grey-60);
+}
+
+.pbklist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Each row is a small grid: name and reach share the top line, the links sit at
+   its right edge, and the description spans the full width underneath. */
+.pbklist__row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 2px 8px;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: var(--app-radius-starter);
+}
+
+.pbklist__name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--app-convo-navy);
+}
+
+.pbklist__reach {
+  justify-self: start;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ref-color-grey-60);
+}
+
+/* Full-width second row. grid-column 1/-1 rather than a wrapper element, so the
+   markup stays one <li> per entry. */
+.pbklist__desc {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ref-color-grey-80);
+}
+
+.pbklist__links {
+  grid-column: 3;
+  grid-row: 1;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.pbklist__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--app-radius-sm);
+  color: var(--ref-color-grey-60);
+  text-decoration: none;
+}
+
+.pbklist__link:hover {
+  background: var(--ref-color-grey-05);
+  color: var(--ref-color-electric-blue-100);
+}

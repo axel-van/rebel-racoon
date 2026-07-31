@@ -18,6 +18,7 @@
 // the section patch — the loader flips to ready and paints the fresh data.
 
 import { navigate } from "../router.js?v=30";
+import { parseHashParams } from "../url-state.js?v=21";
 import { escapeHtml as esc } from "../utils.js?v=21";
 import { renderTopbar } from "../components/topbar.js?v=282";
 import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=45";
@@ -306,7 +307,23 @@ export function renderPlaybook(params, target) {
 
   cleanup = mount(target, buildCfg());
 
+  // `?section=<scope>` deep-links to one section. Content Research links here
+  // from its read-only competitors/influencers dialog; without this the link
+  // landed at the top of the page and left the user to find the section. Run
+  // after mount so the target exists, and inside rAF so the panels have been
+  // laid out — scrollIntoView against a zero-height element does nothing.
+  const sectionScroll = window.requestAnimationFrame(() => {
+    const scope = parseHashParams().get("section");
+    if (!scope) return;
+    // The engine ids its panels `pbk-sec-<scope>`, except goals whose scope and
+    // id already agree. A scope naming a hidden or unknown section is ignored
+    // rather than scrolling to the top.
+    const el = target.querySelector(`#pbk-sec-${scope}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
   return () => {
+    window.cancelAnimationFrame(sectionScroll);
     document.removeEventListener("click", onDocClick);
     cleanup?.();
   };

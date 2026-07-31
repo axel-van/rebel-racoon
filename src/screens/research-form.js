@@ -24,7 +24,7 @@ import { renderTopbar } from "../components/topbar.js?v=282";
 import { isFlagOn } from "../feature-flags.js?v=16";
 import { getContexts, getContextById } from "../contexts-store.js?v=45";
 import { getLaneById, addLane, updateLane } from "../research-store.js?v=2";
-import { openNeedSource } from "../components/research-modals.js?v=4";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=5";
 import {
   RESEARCH_SOURCES,
   CADENCES,
@@ -175,12 +175,23 @@ function renderSourceCard(source) {
 
   // The Playbook link only makes sense once a Playbook is chosen — before that
   // there is nothing to open, so it's withheld rather than shown dead.
+  //
+  // A BUTTON opening a read-only modal, not an anchor to /playbook. Three reasons
+  // the link was wrong: /playbook never honoured `?section=` so it landed at the
+  // top of the page, the influencers anchor named a section that didn't exist,
+  // and the competitors one was invisible whenever playbookCompetitors was off.
+  // The modal also keeps the user on the form they were half-way through filling.
   const anchorRow =
     anchor && pb
-      ? html`<a class="research-source__link" href="#/playbook/${encodeURIComponent(pb.id)}?section=${anchor}">
-          <span>Edit my ${anchor} in the Playbook</span>
+      ? html`<button
+          type="button"
+          class="research-source__link"
+          data-form-playbook-list="${escapeAttr(anchor)}"
+          data-form-playbook-id="${escapeAttr(pb.id)}"
+        >
+          <span>Review my ${anchor} in the Playbook</span>
           <i class="ap-icon-arrow-right" aria-hidden="true"></i>
-        </a>`
+        </button>`
       : "";
 
   const toolRow = source.tools
@@ -314,6 +325,15 @@ function bind(target) {
     if (cadence) {
       draft.cadence = cadence.dataset.formCadence;
       paint(target);
+      return;
+    }
+
+    const pbkList = event.target.closest("[data-form-playbook-list]");
+    if (pbkList) {
+      openPlaybookList({
+        playbookId: pbkList.dataset.formPlaybookId,
+        kind: pbkList.dataset.formPlaybookList,
+      });
       return;
     }
 
