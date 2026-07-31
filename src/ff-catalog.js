@@ -116,6 +116,23 @@ export const FLAGS = Object.freeze([
       "dismissed.",
   },
   {
+    id: "contentResearch",
+    label: "Content Research (research lanes)",
+    default: false,
+    hides:
+      "When OFF (default), hides everything Content Research: the /research " +
+      "routes (lane list, form, feed, trending page), its sidebar nav row, and " +
+      "the composer Add → 'Content Research' picker. A stale deep link bounces " +
+      "to /, like /topics. When ON, the user pairs a Playbook with sources into " +
+      "a named research LANE, and Archie returns briefs — a headline, a " +
+      "summary, a full research article and the social posts behind it — each " +
+      "triaged New / Saved / Used / Ignored. Briefs whose volume runs above " +
+      "their own baseline are additionally flagged Trending (an independent " +
+      "boolean, never a status), surfaced by a banner plus a dedicated page. " +
+      "Sibling of `topics`, not a replacement: Topics is one stream across " +
+      "every Playbook, Content Research is lane-scoped — a different IA.",
+  },
+  {
     id: "playbookCompetitors",
     label: "Playbook competitors",
     default: false,

@@ -21,6 +21,7 @@ import { clearSession as clearLibrarySession } from "../library.js?v=60";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=44";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=34";
 import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=2";
+import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=1";
 import { closePanel as closeRightPanel } from "./right-panel.js?v=419";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=66";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=42";
@@ -312,6 +313,9 @@ export function initSidebar() {
   // A topic read, dismissed or scanned in anywhere has to move the unseen badge
   // immediately — the user may never leave the page it happened on.
   subscribeTopics(() => renderSidebar());
+  // The Content Research row shows a lane count, so creating, duplicating or
+  // deleting a lane has to repaint the rail.
+  subscribeLanes(() => renderSidebar());
 
   // Click outside the popmenu → close.
   document.addEventListener("click", (event) => {
@@ -589,6 +593,19 @@ const NAV = [
     // Topics rather than somewhere else.
     match: (p) => p.startsWith("/topics"),
     count: () => getUnseenTopicCount(),
+  },
+  // The counter is the number of LANES, not briefs: unlike Topics this row is
+  // navigation, not a notification. "How many research operations do I have
+  // running" is the useful number; summing unread briefs across lanes would
+  // compete with the Topics badge for the same kind of attention.
+  {
+    path: "/research",
+    icon: "ap-icon-folder",
+    label: "Content Research",
+    flag: "contentResearch",
+    // Prefix, so the row stays lit on a lane's feed, form and trending page.
+    match: (p) => p.startsWith("/research"),
+    count: () => getLanes().length,
   },
 ];
 

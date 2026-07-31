@@ -3870,3 +3870,463 @@ export const demoManyProfiles = (() => {
   }
   return out;
 })();
+
+// ── Content Research (flag `contentResearch`) ─────────────────────────────────
+//
+// A LANE is a named standing query: one Playbook × a set of sources × a cadence.
+// Lanes are what /topics deliberately lacks, so this seed is separate from
+// `topics` above rather than derived from it.
+//
+// The brands here reuse the app's real data: Pawtrack is the Playbook, and Fi /
+// Whistle / Jiobit / Garmin are its competitors — the same cast as `topics`. The
+// handoff's "Tractive" is a competitor in this codebase, not the brand, so it
+// stays on the competitor side of the fence.
+//
+// `showTrending: false` on lane-3 is deliberate: it's the fixture that proves the
+// banner and the trending-page entry are actually gated by the lane setting.
+export const researchLanes = [
+  {
+    id: "lane-1",
+    name: "Lost dog recovery research",
+    playbookId: "ctx-pawtrack",
+    sources: ["competitor-posts", "influencer-posts"],
+    cadence: "weekly",
+    notify: true,
+    showTrending: true,
+  },
+  {
+    id: "lane-2",
+    name: "Competitor launch watch",
+    playbookId: "ctx-pawtrack",
+    sources: ["competitor-posts"],
+    cadence: "monthly",
+    notify: false,
+    showTrending: true,
+  },
+  {
+    id: "lane-3",
+    name: "Q2 campaign angles",
+    playbookId: "ctx-acme",
+    sources: ["competitor-posts"],
+    cadence: "weekly",
+    notify: true,
+    showTrending: false,
+  },
+];
+
+// Briefs. `seedStatus` / `seedReason` seed the triage map in briefs-store — they
+// are the USER's state, not the scan's, which is why the store lifts them out
+// into its own map instead of reading them off the brief.
+//
+// The spread is chosen to exercise the state logic, not just to look full:
+//   • br-5 is Ignored AND trending — proves the two fields are independent
+//   • br-3 is Saved AND trending  — same, on the other side
+//   • br-9 is trending on a lane with showTrending off — proves the gate
+//   • ageLabel spans m/h/d/w so the sort parser is actually exercised
+//   • both researchType values appear, so the type filter has something to do
+export const researchBriefs = [
+  {
+    id: "br-1",
+    laneId: "lane-1",
+    sourceId: "competitor-posts",
+    ageLabel: "2h ago",
+    headline: "Rivals lead with hardware specs while owners talk about peace of mind",
+    summary:
+      "Fi, Whistle, Jiobit and Garmin all open on chipsets and IP ratings. The posts that actually travel are the ones about an animal coming home — and almost nobody is writing them.",
+    researchType: "ready-to-post",
+    isTrending: true,
+    whyNow: "Recovery-story posts are running at roughly 4x their usual volume in this category this week.",
+    whyNowDetail:
+      "Across the four tracked competitors, posts framed as a recovery story rose +310% over eight days, against a typical week-on-week drift of under 15%. Two of the four have published nothing in that register, so the share of voice is concentrated in a small number of accounts and is still winnable.",
+    research: {
+      title: "Rivals sell hardware; owners are buying peace of mind",
+      paragraphs: [
+        "A scan of Fi, Whistle, Jiobit and Garmin's recent pages shows a consistent pattern: their top posts lead with hardware — chipsets, waterproof ratings, band types, and acronym-dense feature lists. Engagement on these spec-led posts is modest and technical, drawing comments that argue over numbers rather than express relief or trust.",
+        "The posts that travel furthest in the category are the human ones — a dog found, a cat home safe, a range that held when it mattered. Rivals largely under-use this register, leaving the emotional high ground open. Coverage and range appear in these stories as lived relief rather than as a published number.",
+        "The gap surfacing from the sources is one of framing, not capability. Where competitors present coverage as a spec, owners in the comments experience it as the difference between panic and relief — describing the same underlying attribute in entirely human terms.",
+      ],
+    },
+    posts: [
+      {
+        id: "br-1-p1",
+        network: "instagram",
+        publishedOn: "3 days ago",
+        author: { name: "Fi", handle: "@fi.collars", initials: "FI", accent: "grey" },
+        text: "New Series 3 module: upgraded LTE-M chipset, IP68 waterproofing, and 3-month battery. Specs that speak for themselves. 📶",
+        likes: 210,
+        comments: 18,
+        reposts: 6,
+      },
+      {
+        id: "br-1-p2",
+        network: "facebook",
+        publishedOn: "5 days ago",
+        author: { name: "Whistle", handle: "Whistle", initials: "W", accent: "menthol" },
+        text: "Health + location in one device. AT&T network coverage, Bluetooth proximity, and 20-day battery on a single charge.",
+        likes: 64,
+        comments: 22,
+        reposts: 4,
+      },
+      {
+        id: "br-1-p3",
+        network: "instagram",
+        publishedOn: "1 week ago",
+        author: { name: "Tractive", handle: "@tractive", initials: "TR", accent: "red" },
+        text: "Luna slipped her lead 6km from camp. Worldwide coverage, unlimited range — reunited in 40 minutes. This is why we build. 🐾❤️",
+        likes: 1400,
+        comments: 96,
+        reposts: 140,
+      },
+    ],
+    history: [
+      { status: "new", when: "8 days ago", note: "First surfaced from competitor sources." },
+      { status: "new", when: "3 days ago", note: "Flagged trending — volume rose above its usual baseline." },
+    ],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-2",
+    laneId: "lane-1",
+    sourceId: "influencer-posts",
+    ageLabel: "9h ago",
+    headline: "Trainers recommend trackers unprompted, and none of them are being paid to",
+    summary:
+      "Four of the six trainers with the largest followings in this niche mention a tracker in passing, inside training advice rather than a sponsored slot. The recommendation lands because it isn't the point of the post.",
+    researchType: "ready-to-post",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "The most persuasive tracker recommendations aren't ads",
+      paragraphs: [
+        "Reviewing the six highest-reach trainers in the recall-and-long-line niche, four mention a GPS tracker inside ordinary advice — a long-line session, a recall drill, a note about working a dog off-lead in unfenced ground. None of the four posts carries a partnership tag.",
+        "The mentions share a shape: the tracker is the safety net that makes the training possible, not the subject. Comment threads under those posts ask which model, unprompted — a question that appears far less often under paid placements from the same accounts.",
+        "What the sources show is a channel that is currently unpaid and unmanaged. The trainers are already doing the recommending; nobody is equipping them to do it accurately.",
+      ],
+    },
+    posts: [
+      {
+        id: "br-2-p1",
+        network: "instagram",
+        publishedOn: "4 days ago",
+        author: { name: "Gundog Basics", handle: "Gundog Basics", initials: "GB", accent: "green" },
+        text: "Long-line work in open country: 15m line, high-value reward, and a tracker on the collar so you can relax enough to actually train.",
+        likes: 880,
+        comments: 74,
+        reposts: 31,
+      },
+      {
+        id: "br-2-p2",
+        network: "instagram",
+        publishedOn: "6 days ago",
+        author: { name: "Ren Alvarez", handle: "@renandrue", initials: "RA", accent: "purple" },
+        text: "Recall isn't a command, it's a relationship. (And yes, there's a tracker on him while we build it.)",
+        likes: 1220,
+        comments: 118,
+        reposts: 64,
+      },
+    ],
+    history: [{ status: "new", when: "2 days ago", note: "First surfaced from influencer sources." }],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-3",
+    laneId: "lane-1",
+    sourceId: "competitor-posts",
+    ageLabel: "2d ago",
+    headline: "Fi's subscription price rise is drawing the complaints its launch post buried",
+    summary:
+      "The pricing change itself passed quietly. The discontent is in the replies to unrelated posts three weeks later, which is where the churn language actually shows up.",
+    researchType: "competitive-intelligence",
+    isTrending: true,
+    whyNow: "Complaint volume under Fi's posts is running well above its own baseline for a third straight week.",
+    whyNowDetail:
+      "Mentions of the price change under Fi's non-pricing posts are up +240% against their eight-week baseline, and unlike a launch-week spike this one has not decayed — it has held for three weeks, which reads as sustained discontent rather than a news cycle.",
+    research: {
+      title: "The churn signal is in the replies, not the announcement",
+      paragraphs: [
+        "Fi's subscription increase was announced in a single post that drew comparatively little engagement. The measurable reaction appears elsewhere: in replies to product posts, feature teasers and community content published in the weeks after, where users raise the price unprompted.",
+        "The language in those replies is specific and portable — subscription fatigue, the cost of the device plus the plan, and the question of what happens to the hardware if the plan lapses. That last question recurs most often and is the one Fi's own posts do not answer.",
+        "For a competitor, the finding is not that Fi raised prices. It is that a specific unanswered question is circulating in their own comment threads, and it concerns hardware ownership rather than monthly cost.",
+      ],
+    },
+    posts: [
+      {
+        id: "br-3-p1",
+        network: "facebook",
+        publishedOn: "1 week ago",
+        author: { name: "Fi", handle: "@fi.collars", initials: "FI", accent: "grey" },
+        text: "Series 3 now ships with the updated escape-detection algorithm. Rolling out to all plans this month.",
+        likes: 143,
+        comments: 210,
+        reposts: 9,
+      },
+      {
+        id: "br-3-p2",
+        network: "x",
+        publishedOn: "5 days ago",
+        author: { name: "Dana K.", handle: "@danakwrites", initials: "DK", accent: "orange" },
+        text: "genuine question — if I stop paying the plan does the collar just become a collar? nobody will answer this",
+        likes: 620,
+        comments: 88,
+        reposts: 104,
+      },
+    ],
+    history: [
+      { status: "new", when: "12 days ago", note: "First surfaced from competitor sources." },
+      { status: "new", when: "6 days ago", note: "Flagged trending — complaint volume above baseline." },
+      { status: "saved", when: "2 days ago", note: "Saved for the competitive review." },
+    ],
+    seedStatus: "saved",
+    seedReason: "",
+  },
+  {
+    id: "br-4",
+    laneId: "lane-1",
+    sourceId: "influencer-posts",
+    ageLabel: "4d ago",
+    headline: "Cat owners are the underserved half of this audience",
+    summary:
+      "Tracker content in this niche is overwhelmingly dog-shaped. The cat-owner posts that do exist outperform on saves, and the creators making them are smaller and unsigned.",
+    researchType: "ready-to-post",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "Cat content is rarer and travels further",
+      paragraphs: [
+        "Across the tracked creator set, posts featuring cats account for a small minority of tracker-adjacent content but show a markedly higher save-to-like ratio — the pattern of a post being kept for later rather than simply approved of.",
+        "The recurring subject is not escape but range: indoor-outdoor cats with unpredictable territory, and owners who want to know where the boundary actually is. That is a different problem from recall, and the content answering it is thin.",
+        "The creators publishing it have smaller followings and no visible partnerships, which makes this both an audience gap and an unclaimed channel.",
+      ],
+    },
+    posts: [
+      {
+        id: "br-4-p1",
+        network: "instagram",
+        publishedOn: "1 week ago",
+        author: { name: "Priya Raman", handle: "@thescentwork", initials: "PR", accent: "orange" },
+        text: "Mapped Mango's actual territory for a week. Three gardens, one roof, and a stretch of railway embankment I did not authorise.",
+        likes: 940,
+        comments: 132,
+        reposts: 88,
+      },
+    ],
+    history: [
+      { status: "new", when: "9 days ago", note: "First surfaced from influencer sources." },
+      { status: "used", when: "4 days ago", note: "Drafted into a post." },
+    ],
+    seedStatus: "used",
+    seedReason: "",
+  },
+  {
+    id: "br-5",
+    laneId: "lane-1",
+    sourceId: "competitor-posts",
+    ageLabel: "1w ago",
+    headline: "Garmin's outdoor-sport framing keeps resurfacing in the same seasonal window",
+    summary:
+      "Garmin leans hunting-and-hiking every autumn. It performs for them and reads wrong for a pet-safety brand, but the seasonal timing itself is the transferable part.",
+    researchType: "competitive-intelligence",
+    isTrending: true,
+    whyNow: "Seasonal outdoor content is spiking again, on the same eight-week cycle as last year.",
+    whyNowDetail:
+      "Volume in this register is up +180% month-on-month, tracking almost exactly the curve observed in the same window last year. The spike is calendar-driven rather than news-driven, which means it is predictable and can be planned against rather than reacted to.",
+    research: {
+      title: "The framing doesn't transfer; the timing does",
+      paragraphs: [
+        "Garmin's tracker content concentrates on sporting dogs and backcountry use, with engagement drawn from an audience that overlaps only partially with mainstream pet ownership. The register is equipment-led and performs consistently for them.",
+        "Attempting the same framing from a pet-safety position has a poor fit — the audience reads it as a different product category. What does transfer is the calendar: the spike recurs in a predictable eight-week autumn window.",
+        "The usable finding is therefore about scheduling rather than messaging. The seasonal attention exists; the question is what a peace-of-mind brand says into it.",
+      ],
+    },
+    posts: [
+      {
+        id: "br-5-p1",
+        network: "facebook",
+        publishedOn: "2 weeks ago",
+        author: { name: "Garmin", handle: "Garmin", initials: "GA", accent: "electric-blue" },
+        text: "Alpha 300i with inReach: 15km range, multi-dog tracking, satellite messaging where there's no cell coverage.",
+        likes: 380,
+        comments: 41,
+        reposts: 22,
+      },
+    ],
+    history: [
+      { status: "new", when: "3 weeks ago", note: "First surfaced from competitor sources." },
+      { status: "new", when: "2 weeks ago", note: "Flagged trending — seasonal volume above baseline." },
+      { status: "ignored", when: "1 week ago", note: "Ignored — framing doesn't fit the brand." },
+    ],
+    seedStatus: "ignored",
+    seedReason:
+      "Hunting and backcountry framing reads wrong for us — we're a peace-of-mind brand, not an equipment one.",
+  },
+  {
+    id: "br-6",
+    laneId: "lane-2",
+    sourceId: "competitor-posts",
+    ageLabel: "6h ago",
+    headline: "Jiobit is quietly repositioning from pets to children",
+    summary:
+      "Three of Jiobit's last five posts feature a child rather than an animal. The product hasn't changed; the audience they're addressing has.",
+    researchType: "competitive-intelligence",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "A repositioning visible only in the creative",
+      paragraphs: [
+        "Jiobit's messaging has not formally changed — the site, the plans and the specs are as before. The shift is in the creative: children, school runs and family logistics now appear more often than pets across their recent posts.",
+        "Comment threads have followed. Questions about school policies and shared custody arrangements now outnumber questions about collars and harness fit, which suggests the new framing is recruiting a different audience rather than merely decorating the old one.",
+        "If this holds, it vacates territory rather than contesting it — the pet-specific ground they previously occupied is being left open.",
+      ],
+    },
+    posts: [
+      {
+        id: "br-6-p1",
+        network: "instagram",
+        publishedOn: "2 days ago",
+        author: { name: "Jiobit", handle: "@jiobit", initials: "JB", accent: "purple" },
+        text: "First week of walking to school on her own. We're not nervous. (We're a bit nervous.)",
+        likes: 720,
+        comments: 96,
+        reposts: 38,
+      },
+    ],
+    history: [{ status: "new", when: "1 day ago", note: "First surfaced from competitor sources." }],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-7",
+    laneId: "lane-2",
+    sourceId: "competitor-posts",
+    ageLabel: "30m ago",
+    headline: "Battery-life claims are the most contested thing competitors publish",
+    summary:
+      "Every stated battery figure draws a reply thread disputing it. The disputes are consistent enough to be a pattern, not noise.",
+    researchType: "ready-to-post",
+    isTrending: true,
+    whyNow:
+      "Battery disputes are running at about triple their usual volume across all four tracked competitors at once.",
+    whyNowDetail:
+      "This is the first week in the tracked period where the spike appears under all four competitors simultaneously rather than one at a time, which points to a category-level credibility problem rather than a single brand's overstatement.",
+    research: {
+      title: "Stated battery life is the category's least trusted number",
+      paragraphs: [
+        "Every competitor publishes a battery figure, and every figure attracts a reply thread contesting it. The pattern is stable across all four tracked accounts and across post formats.",
+        "The disputes are specific rather than vague: users report the stated figure holding only with location updates at their least frequent setting, and dropping sharply in poor coverage where the device works harder to acquire a signal. Nobody's published number is qualified this way.",
+        "The finding is a credibility gap the whole category shares. The transferable observation is that a qualified, conditions-stated figure would be unusual enough to be noticed.",
+      ],
+    },
+    posts: [
+      {
+        id: "br-7-p1",
+        network: "x",
+        publishedOn: "1 day ago",
+        author: { name: "Marc T.", handle: "@marctuesday", initials: "MT", accent: "menthol" },
+        text: '"20 day battery" is doing a lot of work here. mine does 6 if the dog is actually outside. which is the entire point of the device',
+        likes: 340,
+        comments: 52,
+        reposts: 61,
+      },
+      {
+        id: "br-7-p2",
+        network: "facebook",
+        publishedOn: "3 days ago",
+        author: { name: "Whistle", handle: "Whistle", initials: "W", accent: "menthol" },
+        text: "Up to 20 days of battery on a single charge. Track more, charge less.",
+        likes: 92,
+        comments: 143,
+        reposts: 7,
+      },
+    ],
+    history: [
+      { status: "new", when: "4 days ago", note: "First surfaced from competitor sources." },
+      { status: "new", when: "1 day ago", note: "Flagged trending — dispute volume above baseline." },
+    ],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-8",
+    laneId: "lane-2",
+    sourceId: "competitor-posts",
+    ageLabel: "3d ago",
+    headline: "Nobody in the category shows the app during a live search",
+    summary:
+      "Competitors show the hardware and the happy ending. The middle — the screen you're actually staring at while the dog is missing — is absent from all of them.",
+    researchType: "ready-to-post",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "The missing middle of the recovery story",
+      paragraphs: [
+        "Category creative reliably shows two moments: the device on the animal, and the reunion. The interval between them — the live map, the refresh, the widening search radius — appears in none of the tracked competitors' posts.",
+        "That interval is what the product actually is during the event that justifies buying it. Its absence is consistent enough across four independent accounts to look like an industry habit rather than a series of individual choices.",
+        "Comment threads under reunion posts frequently ask how the search itself went, which suggests the omitted middle is the part the audience is most curious about.",
+      ],
+    },
+    posts: [
+      {
+        id: "br-8-p1",
+        network: "instagram",
+        publishedOn: "1 week ago",
+        author: { name: "Fi", handle: "@fi.collars", initials: "FI", accent: "grey" },
+        text: "Found. 3.2km from home, 22 minutes. Welcome back, Scout. 🧭",
+        likes: 2100,
+        comments: 187,
+        reposts: 210,
+      },
+    ],
+    history: [
+      { status: "new", when: "1 week ago", note: "First surfaced from competitor sources." },
+      { status: "saved", when: "3 days ago", note: "Saved for later." },
+    ],
+    seedStatus: "saved",
+    seedReason: "",
+  },
+  {
+    id: "br-9",
+    laneId: "lane-3",
+    sourceId: "competitor-posts",
+    ageLabel: "5h ago",
+    headline: "Q2 launch messaging in this category is converging on the same three words",
+    summary:
+      "Four competitors, one vocabulary. The overlap is high enough that differentiating on language alone is now available at almost no cost.",
+    researchType: "ready-to-post",
+    isTrending: true,
+    whyNow: "Launch-season vocabulary overlap is at its highest point in the tracked period.",
+    whyNowDetail:
+      "Shared-term density across the four tracked accounts is up +150% quarter-on-quarter, concentrated in the same three terms. Convergence this tight is unusual and tends to resolve within a quarter as one account breaks from it.",
+    research: {
+      title: "Everyone is launching with the same three words",
+      paragraphs: [
+        "Across the tracked Q2 launch posts, three terms recur in almost every one, often in the opening line. The convergence is not coordinated; it reads as a category settling into a default vocabulary.",
+        "Engagement on the most heavily overlapping posts is flat relative to each account's own median, which is the signature of language that no longer distinguishes anything.",
+        "The finding is an opening rather than a warning: the cost of sounding different is currently very low, because the baseline everyone is measured against is identical.",
+      ],
+    },
+    posts: [
+      {
+        id: "br-9-p1",
+        network: "instagram",
+        publishedOn: "4 days ago",
+        author: { name: "Whistle", handle: "Whistle", initials: "W", accent: "menthol" },
+        text: "Smarter. Safer. Simpler. The new season starts here.",
+        likes: 118,
+        comments: 14,
+        reposts: 5,
+      },
+    ],
+    history: [
+      { status: "new", when: "6 days ago", note: "First surfaced from competitor sources." },
+      { status: "new", when: "2 days ago", note: "Flagged trending — vocabulary overlap above baseline." },
+    ],
+    seedStatus: "new",
+    seedReason: "",
+  },
+];

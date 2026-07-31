@@ -23,6 +23,23 @@
      Archie "A" logotype (mono orange) across the app. See ds-patches. */
   --app-archie-mark: #ff3c00;
 
+  /* ── Archie brand ramp (Content Research handoff) ──────────────────────
+     ONLY the values the Agorapulse DS genuinely lacks. Checked before adding:
+     the handoff's action blue #178DFE IS --ref-color-electric-blue-100 and its
+     hover #0E72D6 IS --ref-color-electric-blue-150, exactly; its meta grey
+     #5D6A82 IS --ref-color-grey-80. Those use the DS token and are deliberately
+     absent here — duplicating them as --app-* would fork the ramp.
+
+     What the DS has no answer for is the brand itself: its orange is #FF6726,
+     a different hue from Archie's #FF3C00, and it ships no warm paper and no
+     peach. Those are below. */
+  --app-archie-orange: #ff3c00; /* brand, trending, accent bars */
+  --app-archie-orange-deep: #db3100; /* orange text on peach (contrast) */
+  --app-peach: #fff1ec; /* trending surfaces, brand-soft fills */
+  --app-peach-border: #ffddd1; /* the border that pairs with peach */
+  --app-butter-deep: #f5fbcb; /* create-card hover (butter is --app-butter) */
+  --app-paper: #f9f9f2; /* warm off-white page background */
+
   /* ── Conversation navy — Archie tertiary brand #0A1B33 replaces the chat
      thread's electric-blue accents (user bubble, "You" label, Ideas pill,
      source-intake chips, card hover halos). Light tints are pale navy so the

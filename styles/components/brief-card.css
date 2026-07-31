@@ -1,0 +1,246 @@
+/* brief-card — one research brief in a lane's feed or on the trending page.
+ *
+ * ── Two rules here exist because of real bugs. Don't undo them. ────────────
+ *
+ * 1. flex: 0 0 auto. The feed is a flex column, and a flex item's DEFAULT
+ *    minimum size is auto — but overflow:hidden zeroes it. When this card was
+ *    an overflow:hidden wrapper, the column's default flex-shrink crushed the
+ *    cards and cut their footers off. Not shrinking is the fix.
+ *
+ * 2. The trending accent is a BORDER-TOP, not an absolutely-positioned span
+ *    inside a clipping wrapper. As a clipped span it also cut off the Use-now
+ *    dropdown, which has to escape the card's box. No overflow:hidden here. */
+
+.brief-card {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  padding: 20px 22px 14px;
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: 14px;
+}
+
+/* 4px border replaces the 1px one on top, so the card doesn't shift by 3px when
+   a brief starts trending. */
+.brief-card--trending {
+  border-color: var(--app-peach-border);
+  border-top: 4px solid var(--app-archie-orange);
+}
+
+.brief-card__source-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.brief-card__source {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--app-convo-navy);
+}
+
+.brief-card__when {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ref-color-grey-40);
+}
+
+.brief-card__spacer {
+  flex: 1;
+}
+
+/* Trending: PLAIN TEXT, deliberately not a pill. A filled pill means review
+   status in this app, and trending is an independent boolean that coexists with
+   all four statuses — as a pill the two read as mutually exclusive peers. */
+.brief-card__trending,
+.brief-trending {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--app-archie-orange);
+}
+
+/* Status pills — the four review states. */
+.brief-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 24px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.5;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.brief-status--new {
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-grey-100);
+}
+.brief-status--saved {
+  background: var(--ref-color-tag-orange-20);
+  color: var(--ref-color-tag-orange-150);
+}
+.brief-status--used {
+  background: var(--ref-color-green-10);
+  color: var(--ref-color-green-150);
+}
+.brief-status--ignored {
+  background: var(--ref-color-red-10);
+  color: var(--ref-color-red-100);
+}
+
+.brief-card__headline {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--app-convo-navy);
+}
+
+.brief-card__summary {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--ref-color-grey-80);
+}
+
+.brief-card__summary-label {
+  font-weight: 700;
+  color: var(--app-convo-navy);
+}
+
+.brief-card__whynow {
+  margin: 12px 0 0;
+  padding: 11px 13px;
+  background: var(--app-peach);
+  border-left: 3px solid var(--app-archie-orange);
+  border-radius: 0 8px 8px 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--ref-color-grey-80);
+}
+
+.brief-card__whynow-label {
+  font-weight: 800;
+  color: var(--app-archie-orange-deep);
+}
+
+.brief-card__reason {
+  margin: 10px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ref-color-grey-60);
+}
+
+.brief-card__reason-label {
+  font-weight: 800;
+}
+
+.brief-card__foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ref-color-grey-10);
+}
+
+.brief-card__ignore:hover {
+  background: var(--app-paper);
+  border-color: var(--app-peach-border);
+  color: var(--ref-color-red-100);
+}
+
+/* ── Use-now split button ─────────────────────────────────────────────── */
+
+.brief-use {
+  position: relative;
+  display: inline-flex;
+}
+
+.brief-use__main,
+.brief-use__toggle {
+  padding: 8px 14px;
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-electric-blue-40);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ref-color-electric-blue-100);
+  cursor: pointer;
+}
+
+/* Squared off where the two segments meet, rounded on the outer edges. */
+.brief-use__main {
+  border-radius: var(--app-radius-starter) 0 0 var(--app-radius-starter);
+  border-right: 0;
+}
+
+.brief-use__toggle {
+  border-radius: 0 var(--app-radius-starter) var(--app-radius-starter) 0;
+  padding: 8px 10px;
+}
+
+.brief-use__main:hover,
+.brief-use__toggle:hover {
+  background: var(--ref-color-electric-blue-05);
+}
+
+/* Opens upward-left and escapes the card — which is only possible because no
+   ancestor clips it. See the overflow note at the top of this file. */
+.brief-use__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: var(--app-z-overlay);
+  width: 288px;
+  padding: 6px;
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: var(--app-radius-starter);
+  box-shadow: var(--app-shadow-low);
+}
+
+.brief-use__menu[hidden] {
+  display: none;
+}
+
+.brief-use__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+  color: var(--app-convo-navy);
+  cursor: pointer;
+}
+
+.brief-use__item:hover {
+  background: var(--ref-color-grey-05);
+}
+
+.brief-use__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  background: var(--ref-color-electric-blue-05);
+  border-radius: 8px;
+  color: var(--ref-color-electric-blue-100);
+}

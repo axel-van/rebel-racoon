@@ -1,9 +1,11 @@
 /* topic-badge — the pip that identifies which listening source produced a
- * thing. Shared by three surfaces (the /topics feed cards, the topic dialog's
- * header, the Topics settings source cards), which is why it lives here rather than
- * in any one of their stylesheets.
+ * thing. Shared by the /topics feed cards, the topic dialog's header, the Topics
+ * settings source cards, and the Content Research surfaces (brief cards, the
+ * research form's source cards, the full-research modal), which is why it lives
+ * here rather than in any one of their stylesheets.
  *
- * The accent is a semantic key from topics-catalog.js, never a hex: the JS emits
+ * The accent is a semantic key from topics-catalog.js OR research-catalog.js —
+ * two catalogues, one badge vocabulary — never a hex: the JS emits
  * `.topic-badge--<accent>` and the pairs below resolve it to DS tokens. Adding an
  * accent to the catalog means adding a pair here — an unmatched one renders an
  * unstyled square rather than failing loudly, so keep the two in step.
@@ -64,4 +66,11 @@
 .topic-badge--orange {
   background: var(--ref-color-orange-10);
   color: var(--ref-color-orange-100);
+}
+/* Added for Content Research's seventh source (Internal team ideas), which the
+   six Topics accents didn't cover. -150 for the glyph, not -100: soft-blue-100
+   is light enough that the icon washes out against its own -10 tint. */
+.topic-badge--soft-blue {
+  background: var(--ref-color-soft-blue-10);
+  color: var(--ref-color-soft-blue-150);
 }
