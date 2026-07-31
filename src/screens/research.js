@@ -203,13 +203,12 @@ function renderLaneCard(lane) {
   // The card body is a button and the hover actions are its SIBLINGS, not
   // children: a button inside a button is invalid HTML and the browser resolves
   // the nesting unpredictably. Same reason topic-card splits body from footer.
-  // Both signals live on their OWN row, in the card's footer directly above the
-  // separator and "Open research". Not beside the title: there they cost it
-  // ~140px between them and it ellipsised to "Lost dog reco…", and the lane's
-  // name is the one thing that has to stay readable. On their own row they read
-  // as a set — two counts of the same lane's contents — and sitting next to the
-  // action means "here's what's inside" is the last thing you read before the
-  // thing that takes you inside.
+  // Both signals live on their OWN row, directly under the title and above the
+  // meta line. Their own row rather than beside the title because there they cost
+  // it ~140px between them and it ellipsised to "Lost dog reco…" — the lane's
+  // name is the one thing that has to stay readable. Under the title they attach
+  // to the thing they describe, and are read before the more static metadata
+  // (which Playbook, how many sources) rather than after it.
   const signals =
     newCount || trendingCount
       ? html`<div class="research-card__signals">
@@ -250,9 +249,10 @@ function renderLaneCard(lane) {
     <div class="research-card__head">
       <button type="button" class="research-card__title" data-lane-open="${escapeAttr(lane.id)}">${lane.name}</button>
       <!-- Revealed by a PARENT-hover CSS rule (.research-card:hover &), not by a
-           JS handler: an inline hover on the card can't reach a child, and
-           visibility (not display) keeps the panel in flow so the title doesn't
-           reflow when it appears. -->
+           JS handler: an inline hover on the card can't reach a child. It is
+           absolutely positioned and fades in via opacity — NOT visibility, which
+           would make these buttons unfocusable and put them out of reach of the
+           keyboard. See research.css. -->
       <span class="research-card__hover">
         <button
           type="button"
@@ -283,19 +283,16 @@ function renderLaneCard(lane) {
         </button>
       </span>
     </div>
+    ${raw(signals)}
     <p class="research-card__meta">${meta}</p>
-    <!-- One footer group holds the signals, the separator and the action, so the
-         single margin-top:auto that pins them to the bottom lives in one place.
-         Putting it on both the signals row and the button instead would split
-         the free space between them and open a gap in the middle of the card —
-         and the signals row is conditional, so the button can't own it alone. -->
-    <div class="research-card__foot">
-      ${raw(signals)}
-      <button type="button" class="research-card__open" data-lane-open="${escapeAttr(lane.id)}">
-        <span>Open research</span>
-        <i class="ap-icon-arrow-right" aria-hidden="true"></i>
-      </button>
-    </div>
+    <!-- The action carries margin-top:auto itself, so it stays pinned to the
+         bottom whatever the block above it holds. It no longer needs a wrapper:
+         that only existed to own the pinning while the conditional signals row
+         shared the footer with it. -->
+    <button type="button" class="research-card__open" data-lane-open="${escapeAttr(lane.id)}">
+      <span>Open research</span>
+      <i class="ap-icon-arrow-right" aria-hidden="true"></i>
+    </button>
   </article>`;
 }
 

@@ -197,24 +197,24 @@
 
    Nudged down 3px because the title is 20px/800 and the badge is a 16px chip —
    optical centring on the cap height, not the line box. */
-/* Footer group — signals, then the separator + action. This is what carries the
-   margin-top:auto that pins the block to the bottom of the card; see the note in
-   research.js for why it can't sit on the two children individually. */
-.research-card__foot {
-  margin-top: auto;
-}
-
-/* Signals row — the NEW badge and the trending mark, immediately above the
-   separator. align-items:center rather than baseline: the badge is a 16px box
-   with its own internal leading and the trending mark is line-height:1 text, so
-   their baselines don't agree; centring the boxes is what actually looks
-   aligned. Wraps, so a lane with both counts still fits a narrow card. */
+/* Signals row — the NEW badge and the trending mark, directly under the title.
+   align-items:center rather than baseline: the badge is a 16px box with its own
+   internal leading and the trending mark is line-height:1 text, so their
+   baselines don't agree; centring the boxes is what actually looks aligned.
+   Wraps, so a lane with both counts still fits a narrow card. */
 .research-card__signals {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 12px;
-  margin-bottom: 12px;
+  margin-top: 8px;
+}
+
+/* A slightly wider gap below the signals than the 6px the meta line carries on
+   its own, so the row reads as attached to the title above it rather than
+   floating between the two. */
+.research-card__signals + .research-card__meta {
+  margin-top: 8px;
 }
 
 /* Hover actions — revealed by the PARENT's hover, which is the whole reason
@@ -282,7 +282,9 @@
   align-items: center;
   gap: 6px;
   width: 100%;
-  /* No margin-top:auto — .research-card__foot owns the pinning now. */
+  /* Pins the separator + action to the bottom of the card, whatever the block
+     above them holds. */
+  margin-top: auto;
   padding: 14px 0 0;
   border: 0;
   border-top: 1px solid var(--ref-color-grey-10);
