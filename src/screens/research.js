@@ -216,6 +216,23 @@ function renderLaneCard(lane) {
   const signals =
     newCount || trendingCount
       ? html`<div class="research-card__signals">
+          <!-- Trending first, the NEW badge second. Trending is TEXT and never a
+               second pill: two filled pills side by side would read as two of the
+               same kind of thing, and these are different kinds — NEW counts what
+               you haven't triaged, trending counts what's spiking regardless of
+               triage. Same treatment the brief cards use, see
+               styles/components/trending-mark.css. -->
+          ${raw(
+            trendingCount
+              ? html`<span
+                  class="trending-mark"
+                  aria-label="${trendingCount} ${trendingCount === 1 ? "topic" : "topics"} trending"
+                >
+                  <i class="ap-icon-arrow-up" aria-hidden="true"></i>
+                  <span>${trendingCount} trending</span>
+                </span>`
+              : "",
+          )}
           <!-- The DS Badge, not a hand-rolled pill: Badge is the system-generated
                marker (uppercase, orange, nowrap out of the box), and "I found new
                research" is exactly that — Archie's own signal, not a user state.
@@ -228,22 +245,6 @@ function renderLaneCard(lane) {
                   aria-label="${newCount} new ${newCount === 1 ? "brief" : "briefs"} to review"
                   >${newCount} new</span
                 >`
-              : "",
-          )}
-          <!-- Trending is TEXT beside that badge, never a second pill. Two filled
-               pills side by side would read as two of the same kind of thing, and
-               these are different kinds: NEW counts what you haven't triaged,
-               trending counts what's spiking regardless of triage. Same treatment
-               the brief cards use — see styles/components/trending-mark.css. -->
-          ${raw(
-            trendingCount
-              ? html`<span
-                  class="trending-mark"
-                  aria-label="${trendingCount} ${trendingCount === 1 ? "topic" : "topics"} trending"
-                >
-                  <i class="ap-icon-arrow-up" aria-hidden="true"></i>
-                  <span>${trendingCount} trending</span>
-                </span>`
               : "",
           )}
         </div>`
