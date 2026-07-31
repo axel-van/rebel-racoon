@@ -19,6 +19,8 @@ import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mo
 import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1";
 import { isFlagOn } from "./feature-flags.js?v=16";
 import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=34";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=22";
+import { open as openAddPlaybookEntry } from "./components/add-playbook-entry-modal.js?v=1";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -44,12 +46,25 @@ const LINE_FIELDS = [
 // feature, not here — see screens/topics.js. That's why there's no Topics
 // section: it was tried, and a grid of switches read as a settings panel wedged
 // into a profile.
+// Order matters — it is the rail nav order and the panel order. Content Strategy
+// sits between Brand and Competitors: the first three sections describe who you
+// are, Content Strategy says what you therefore publish, and the last two are
+// the market you publish into.
 const SECTIONS = [
   { id: "pbk-sec-goals", scope: "goals", icon: "ap-icon-target", title: "Audience & goals" },
   { id: "pbk-sec-voice", scope: "voice", icon: "ap-icon-quote", title: "Voice & style" },
   { id: "pbk-sec-brand", scope: "brand", icon: "ap-icon-image", title: "Brand" },
+  { id: "pbk-sec-strategy", scope: "strategy", icon: "ap-icon-note", title: "Content Strategy" },
   { id: "pbk-sec-competitors", scope: "competitors", icon: "ap-icon-buildings", title: "Competitors" },
+  { id: "pbk-sec-influencers", scope: "influencers", icon: "ap-icon-star", title: "Influencers" },
 ];
+
+/** Look a section up by scope. Never index SECTIONS positionally — inserting
+ *  Content Strategy at index 3 silently repointed the old `SECTIONS[3]` from
+ *  Competitors to the new section, which is exactly the bug this prevents. */
+function sectionFor(scope) {
+  return SECTIONS.find((s) => s.scope === scope);
+}
 
 // Competitors are gated behind a feature flag (default OFF). When OFF the
 // section and its rail entry disappear; the underlying data still rides along
@@ -58,10 +73,24 @@ function competitorsOn() {
   return isFlagOn("playbookCompetitors");
 }
 
+// Influencers rides the SAME flag as Competitors, deliberately. The two are a
+// mirrored pair — same card shape, same add flow, both answering "who else is in
+// this market" — and shipping one visible while its twin is hidden reads as a
+// bug rather than as a choice. One flag, both sections, or neither.
+function influencersOn() {
+  return competitorsOn();
+}
+
 // The sections this Playbook actually shows — drives the rail nav and the
-// panels, so gating happens in one place.
+// panels, so gating happens in one place. Content Strategy is never gated: it
+// is what Archie drafts against, so a Playbook without it is incomplete rather
+// than simplified.
 function sectionsFor() {
-  return competitorsOn() ? SECTIONS : SECTIONS.filter((s) => s.scope !== "competitors");
+  return SECTIONS.filter((s) => {
+    if (s.scope === "competitors") return competitorsOn();
+    if (s.scope === "influencers") return influencersOn();
+    return true;
+  });
 }
 
 // Edit-mode guidance. Surfaced only while a section is being edited (one at a
@@ -118,7 +147,14 @@ const STAGE_MS = 2400;
 
 let mountTarget = null;
 let cfg = null;
-let editScope = null; // null (read) | "goals" | "voice" | "brand" | "competitors"
+let editScope = null; // null (read) | "goals" | "voice" | "brand" | "strategy" | "competitors" | "influencers"
+
+// "Show all" state for the three capped lists. View state, not data: it resets
+// on every mount, because arriving at a Playbook should always show the compact
+// three-card form rather than however the last visit left it.
+let pillarsExpanded = false;
+let competitorsExpanded = false;
+let influencersExpanded = false;
 let refModalIndex = null; // open reference-image detail modal (index) or null
 let cmpModalIndex = null; // open competitor detail modal (index) or null
 let cmpScanning = false; // "Discover competitors" scan in flight
@@ -161,6 +197,12 @@ export function mount(target, config) {
   cmpModalIndex = null;
   cmpScanning = false;
   cmpScanFoundNone = false;
+  // The three capped lists always open compact. Carrying an expanded state over
+  // from a previous Playbook would show one brand's list expanded because you
+  // expanded another's.
+  pillarsExpanded = false;
+  competitorsExpanded = false;
+  influencersExpanded = false;
 
   if (cfg.loader && !cfg.skipLoader) {
     phase = "loading";
@@ -345,6 +387,11 @@ export function snapshotEditable(d) {
       referenceImages: d.referenceImages || [],
       competitors: d.competitors || [],
       dismissedCompetitors: d.dismissedCompetitors || [],
+      // Both are edited in place (pillar delete, influencer add/remove, the
+      // approach textarea), so they have to be in the snapshot or Cancel would
+      // commit those edits instead of reverting them.
+      influencers: d.influencers || [],
+      strategy: d.strategy || { approach: "", pillars: [] },
     }),
   );
 }
@@ -966,7 +1013,7 @@ function renderLanguagePicker(data) {
 }
 
 function renderGoalsPanel(data, edit) {
-  const section = SECTIONS[0];
+  const section = sectionFor("goals");
   let body;
   if (edit) {
     body = [
@@ -1044,7 +1091,7 @@ function renderVoiceLangSwitcher(data) {
 }
 
 function renderVoicePanel(data, edit) {
-  const section = SECTIONS[1];
+  const section = sectionFor("voice");
   const manual = data.voiceMode === "manual";
   const ve = voiceEntry(data);
   let body;
@@ -1114,7 +1161,7 @@ function renderVoicePanel(data, edit) {
 }
 
 function renderBrandPanel(data, edit) {
-  const section = SECTIONS[2];
+  const section = sectionFor("brand");
   const colors = visualColors(data);
   let body;
   if (edit) {
@@ -1189,6 +1236,8 @@ function renderBrandPanel(data, edit) {
 // by the capturing `error` listener in mount()).
 
 const MAX_COMPETITORS = 12;
+// How many are DRAWN before "See all N competitors" — not how many may exist.
+const COMPETITORS_VISIBLE = 3;
 const CMP_SCAN_MS = 1600;
 
 function competitorDomain(c) {
@@ -1356,8 +1405,162 @@ function renderCompetitorScan() {
     <div class="recap__cmpgrid">${skeletons}</div>`;
 }
 
+// ── Content Strategy ───────────────────────────────────────────────────────
+//
+// The Approach paragraph plus the content pillars Archie drafts against. Unlike
+// the three sections above it this one is not a set of label→value rows: a pillar
+// is an icon tile, a title and a description, so it gets its own card grid.
+//
+// Only the first three pillars show. A Playbook accumulates pillars over time and
+// an unbounded list pushes Competitors and Influencers below the fold, so the
+// rest sit behind "Display more (N)". The cap is display-only — nothing is
+// dropped from the data.
+const PILLARS_VISIBLE = 3;
+
+function strategyOf(data) {
+  const s = data && typeof data.strategy === "object" && data.strategy ? data.strategy : {};
+  return { approach: s.approach || "", pillars: Array.isArray(s.pillars) ? s.pillars : [] };
+}
+
+function renderPillarCard(p, i, edit) {
+  return `
+    <div class="recap__pillar">
+      <span class="recap__pillar-icon" aria-hidden="true"><i class="${esc(p.icon || "ap-icon-target")}"></i></span>
+      <span class="recap__pillar-body">
+        <span class="recap__pillar-title">${esc(p.title || "Untitled pillar")}</span>
+        ${p.description ? `<span class="recap__pillar-desc">${esc(p.description)}</span>` : ""}
+      </span>
+      ${
+        edit
+          ? `<button type="button" class="recap__refimg-remove recap__pillar-remove" data-recap-pillar-remove="${i}" aria-label="Delete ${esc(
+              p.title || "pillar",
+            )}"><i class="ap-icon-trash"></i></button>`
+          : ""
+      }
+    </div>`;
+}
+
+function renderStrategyPanel(data, edit) {
+  const section = sectionFor("strategy");
+  const { approach, pillars } = strategyOf(data);
+  const expanded = pillarsExpanded;
+  const shown = expanded ? pillars : pillars.slice(0, PILLARS_VISIBLE);
+  const hidden = pillars.length - shown.length;
+
+  const approachBlock = renderRow(
+    "Approach",
+    edit
+      ? // Its own hook rather than data-recap-text: that one writes data[field]
+        // flat, and approach lives at data.strategy.approach.
+        `<textarea rows="3" data-recap-strategy-approach placeholder="How this brand decides what to publish…">${esc(
+          approach,
+        )}</textarea>`
+      : renderText(approach),
+  );
+
+  const pillarsBlock = pillars.length
+    ? `<div class="recap__pillars">${shown.map((p, idx) => renderPillarCard(p, pillars.indexOf(p), edit)).join("")}</div>
+       ${
+         // Only offered when there is something to reveal — and it flips to
+         // "Show less" rather than disappearing, so the control never moves.
+         pillars.length > PILLARS_VISIBLE
+           ? `<button type="button" class="recap__more" data-recap-pillars-toggle aria-expanded="${expanded}">
+                ${expanded ? "Show less" : `Display more (${hidden})`}
+              </button>`
+           : ""
+       }`
+    : `<p class="recap__cmp-empty">No content pillars yet — Archie adds one every time you accept a research brief into the strategy.</p>`;
+
+  const body = `${approachBlock}${renderRow("Content pillars", pillarsBlock)}`;
+
+  return `
+    <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" ${
+      edit ? "data-recap-editing-card" : ""
+    }>
+      ${renderPanelHead(section, edit)}
+      <div class="recap__panel-body">${body}</div>
+    </section>
+  `;
+}
+
+// ── Influencers ────────────────────────────────────────────────────────────
+//
+// Mirrors Competitors deliberately — same card shape, same three-card cap, same
+// edit-mode remove — minus the suggestion machinery, because nothing proposes
+// creators the way competitor discovery proposes competitors.
+const INFLUENCERS_VISIBLE = 3;
+
+function influencerList(data) {
+  return Array.isArray(data?.influencers) ? data.influencers : [];
+}
+
+function renderInfluencerCard(f, i, edit) {
+  const nets = renderCompetitorNetIcons(f);
+  return `
+    <div class="recap__cmpcard">
+      <div class="recap__cmpcard-open recap__cmpcard-open--static">
+        <span class="recap__cmpcard-head">
+          <span class="recap__inf-avatar" aria-hidden="true">${esc((f.name || "?").trim()[0] || "?")}</span>
+          <span class="recap__cmpcard-id">
+            <span class="recap__cmpcard-name">${esc(f.name || "Untitled creator")}</span>
+            ${f.reach ? `<span class="recap__cmpcard-domain">${esc(f.reach)} reach</span>` : ""}
+          </span>
+        </span>
+        <span class="recap__cmpcard-desc${f.description ? "" : " recap__cmpcard-desc--empty"}">${
+          f.description ? esc(f.description) : "No description yet"
+        }</span>
+        ${nets ? `<span class="recap__cmpcard-foot">${nets}</span>` : ""}
+      </div>
+      ${
+        edit
+          ? `<button type="button" class="recap__refimg-remove recap__cmpcard-remove" data-recap-inf-remove="${i}" aria-label="Remove ${esc(
+              f.name || "creator",
+            )}"><i class="ap-icon-close"></i></button>`
+          : ""
+      }
+    </div>`;
+}
+
+function renderInfluencersPanel(data, edit) {
+  const section = sectionFor("influencers");
+  const list = influencerList(data);
+  const expanded = influencersExpanded;
+  const shown = expanded ? list : list.slice(0, INFLUENCERS_VISIBLE);
+  const hidden = list.length - shown.length;
+
+  const grid = list.length
+    ? `<div class="recap__cmpgrid">${shown.map((f, i) => renderInfluencerCard(f, list.indexOf(f), edit)).join("")}</div>
+       ${
+         list.length > INFLUENCERS_VISIBLE
+           ? `<button type="button" class="recap__more" data-recap-inf-toggle aria-expanded="${expanded}">
+                ${expanded ? "See less" : `See all ${list.length} influencers`}
+              </button>`
+           : ""
+       }`
+    : `<p class="recap__cmp-empty">No influencers yet. Add the creators your audience already listens to.</p>`;
+
+  const inner = [
+    `<p class="recap__cmp-intro">Creators in your niche worth partnering with, with their reach and social profiles.</p>`,
+    grid,
+    edit
+      ? `<button type="button" class="ap-button secondary blue recap__add-row" data-recap-inf-add>
+           <i class="ap-icon-plus"></i><span>Add an influencer</span>
+         </button>`
+      : "",
+  ].join("");
+
+  return `
+    <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" ${
+      edit ? "data-recap-editing-card" : ""
+    }>
+      ${renderPanelHead(section, edit)}
+      <div class="recap__panel-body"><div class="recap__cmpsec">${inner}</div></div>
+    </section>
+  `;
+}
+
 function renderCompetitorsPanel(data, edit) {
-  const section = SECTIONS[3];
+  const section = sectionFor("competitors");
   const list = competitorList(data);
   // Index into the full array, so accept/dismiss/remove stay index-addressed
   // while the two states render in separate groups.
@@ -1403,7 +1606,18 @@ function renderCompetitorsPanel(data, edit) {
       : edit
         ? `<p class="recap__cmp-empty">No competitors yet. Add the ones you know — Archie can find the rest.</p>`
         : `<p class="recap__cmp-empty">No competitors yet — Archie can scan your market and suggest a few.</p>`;
-    const activeGroup = active.length ? gridOf(active, { edit, pending: false }) : activeEmpty;
+    // Display cap of three, like pillars and influencers. Distinct from
+    // MAX_COMPETITORS (12), which limits how many you may ADD — this only limits
+    // how many are drawn at once, and hides none of the data.
+    const shownActive = competitorsExpanded ? active : active.slice(0, COMPETITORS_VISIBLE);
+    const activeGroup = active.length
+      ? gridOf(shownActive, { edit, pending: false }) +
+        (active.length > COMPETITORS_VISIBLE
+          ? `<button type="button" class="recap__more" data-recap-cmp-toggle aria-expanded="${competitorsExpanded}">
+               ${competitorsExpanded ? "See less" : `See all ${active.length} competitors`}
+             </button>`
+          : "")
+      : activeEmpty;
     // Only label the active group when a suggestions tray sits under it —
     // a lone grid needs no heading.
     const activeBlock = pending.length
@@ -1732,7 +1946,9 @@ function paint() {
         ${renderGoalsPanel(data, scope === "goals")}
         ${renderVoicePanel(data, scope === "voice")}
         ${renderBrandPanel(data, scope === "brand")}
+        ${renderStrategyPanel(data, scope === "strategy")}
         ${competitorsOn() ? renderCompetitorsPanel(data, scope === "competitors") : ""}
+        ${influencersOn() ? renderInfluencersPanel(data, scope === "influencers") : ""}
       </div>
     </div>
     ${renderRefModal(data)}
@@ -2057,6 +2273,84 @@ function onClick(event) {
     return;
   }
 
+  // ── Display-cap toggles. View state only, so a plain repaint that keeps the
+  //    scroll position — expanding a list must not jump the page to the top.
+  if (event.target.closest("[data-recap-pillars-toggle]")) {
+    pillarsExpanded = !pillarsExpanded;
+    repaintPreservingScroll();
+    return;
+  }
+  if (event.target.closest("[data-recap-cmp-toggle]")) {
+    competitorsExpanded = !competitorsExpanded;
+    repaintPreservingScroll();
+    return;
+  }
+  if (event.target.closest("[data-recap-inf-toggle]")) {
+    influencersExpanded = !influencersExpanded;
+    repaintPreservingScroll();
+    return;
+  }
+
+  // ── Content pillars ──────────────────────────────────────────────────────
+  // Deleting a pillar is confirmed, unlike removing a competitor: a pillar is
+  // something Archie drafts against, so losing one silently changes what every
+  // future draft is written from.
+  const pillarRemove = event.target.closest("[data-recap-pillar-remove]");
+  if (pillarRemove) {
+    const idx = Number(pillarRemove.dataset.recapPillarRemove);
+    const { pillars } = strategyOf(data);
+    const pillar = pillars[idx];
+    if (!pillar) return;
+    openConfirmModal({
+      title: "Delete this content pillar?",
+      // Plain text, not markup: confirm-modal assigns `body` via textContent, so
+      // any <strong> would render as literal tags. The pillar is named and the
+      // copy says where it can come back from — the handoff is specific that
+      // this is recoverable from the Used cards.
+      body:
+        `Removing "${pillar.title || "this pillar"}" means I'll no longer use it to help draft content. ` +
+        `You can add it back anytime from the Used cards in Content Research.`,
+      confirmLabel: "Delete pillar",
+      danger: true,
+      onConfirm: () => {
+        const live = strategyOf(data).pillars;
+        if (idx >= 0 && idx < live.length) live.splice(idx, 1);
+        repaintPreservingScroll();
+      },
+    });
+    return;
+  }
+
+  // ── Influencers ──────────────────────────────────────────────────────────
+  const infRemove = event.target.closest("[data-recap-inf-remove]");
+  if (infRemove) {
+    const idx = Number(infRemove.dataset.recapInfRemove);
+    const list = influencerList(data);
+    if (idx >= 0 && idx < list.length) list.splice(idx, 1);
+    repaintPreservingScroll();
+    return;
+  }
+
+  if (event.target.closest("[data-recap-inf-add]")) {
+    openAddPlaybookEntry({
+      kind: "influencers",
+      onAdd: (entries) => {
+        const list = influencerList(data);
+        // Dedupe by name, case-insensitively — the handoff requires it for
+        // competitors and the same modal feeds both.
+        const seen = new Set(list.map((f) => (f.name || "").trim().toLowerCase()));
+        for (const e of entries) {
+          const key = (e.name || "").trim().toLowerCase();
+          if (!key || seen.has(key)) continue;
+          seen.add(key);
+          list.push(e);
+        }
+        repaintPreservingScroll();
+      },
+    });
+    return;
+  }
+
   const cmpRemove = event.target.closest("[data-recap-cmp-remove]");
   if (cmpRemove) {
     const idx = Number(cmpRemove.dataset.recapCmpRemove);
@@ -2070,16 +2364,29 @@ function onClick(event) {
   if (event.target.closest("[data-recap-cmp-add]")) {
     const list = competitorList(data);
     if (list.length >= MAX_COMPETITORS) return;
-    list.push({
-      id: `cmp-new-${list.length + 1}-${Date.now().toString(36)}`,
-      name: "",
-      description: "",
-      websiteUrl: "",
-      socials: [],
+    // Routes through the add-entry modal rather than pushing a blank card and
+    // opening the detail editor. The handoff specifies this shape — pick a
+    // network, paste a URL, repeat — and it is the faster path for the common
+    // case of adding several at once. The detail modal is still how you EDIT an
+    // existing competitor; clicking its card opens it.
+    openAddPlaybookEntry({
+      kind: "competitors",
+      onAdd: (entries) => {
+        const live = competitorList(data);
+        // Dedupe by name, case-insensitively, per the handoff. Suggested
+        // competitors count as taken too, so accepting a proposal later can't
+        // produce a duplicate.
+        const seen = new Set(live.map((c) => (c.name || "").trim().toLowerCase()));
+        for (const e of entries) {
+          if (live.length >= MAX_COMPETITORS) break;
+          const key = (e.name || "").trim().toLowerCase();
+          if (!key || seen.has(key)) continue;
+          seen.add(key);
+          live.push({ id: `cmp-new-${live.length + 1}-${key.replace(/\s+/g, "-")}`, ...e });
+        }
+        repaintPreservingScroll();
+      },
     });
-    cmpModalIndex = list.length - 1; // open the blank card straight away
-    repaint();
-    mountTarget?.querySelector("[data-recap-cmp-field='name']")?.focus();
     return;
   }
 
@@ -2336,6 +2643,11 @@ function onInput(event) {
     }
   } else if (t.matches("[data-recap-text]")) {
     data[t.dataset.recapText] = t.value;
+  } else if (t.matches("[data-recap-strategy-approach]")) {
+    // Nested, so the object has to exist before the write — a Playbook edited
+    // before it ever had a strategy would otherwise throw here.
+    if (!data.strategy || typeof data.strategy !== "object") data.strategy = { approach: "", pillars: [] };
+    data.strategy.approach = t.value;
   } else if (t.matches("[data-recap-typo]")) {
     if (!data.brandTypography || typeof data.brandTypography !== "object") data.brandTypography = brandFonts(data);
     data.brandTypography[t.dataset.recapTypo] = t.value;

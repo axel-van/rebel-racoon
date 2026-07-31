@@ -2007,3 +2007,124 @@
     align-self: start;
   }
 }
+
+/* ══ Playbook: Content Strategy + Influencers ════════════════════════════════
+   Both sections were added to bring the Playbook up to the Content Research
+   handoff (six sections, not four). They reuse the competitor card shell where
+   the shape genuinely matches and only add what differs. */
+
+/* Intro line above a section's list — the handoff gives Competitors and
+   Influencers one sentence of orientation each. */
+.recap__cmp-intro {
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--ref-color-grey-80);
+}
+
+/* The shared "show the rest" control for all three capped lists (pillars,
+   competitors, influencers). One class so the three read identically — they are
+   the same affordance and differ only in their label. */
+.recap__more {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 12px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ref-color-electric-blue-100);
+  cursor: pointer;
+}
+
+.recap__more:hover {
+  text-decoration: underline;
+}
+
+/* ── Content pillars ─────────────────────────────────────────────────────── */
+
+.recap__pillars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* position:relative so the edit-mode delete button can sit in the corner. */
+.recap__pillar {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: var(--app-radius-starter);
+}
+
+.recap__pillar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  background: var(--ref-color-electric-blue-05);
+  border-radius: 8px;
+  color: var(--ref-color-electric-blue-100);
+}
+
+.recap__pillar-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* min-width:0 so a long description wraps instead of stretching the row. */
+  min-width: 0;
+}
+
+.recap__pillar-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--app-convo-navy);
+}
+
+.recap__pillar-desc {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ref-color-grey-80);
+}
+
+/* Pulled clear of the text rather than overlapping it — the row is short enough
+   that an absolutely-centred button would sit on the description. */
+.recap__pillar-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+/* ── Influencers ─────────────────────────────────────────────────────────── */
+
+/* The competitor card's body is a <button> (it opens a detail modal). An
+   influencer card has no detail modal, so its body is a plain div and needs the
+   button's layout without its interactivity. */
+.recap__cmpcard-open--static {
+  cursor: default;
+}
+
+/* Initial-letter avatar. Competitors get a favicon; creators have no domain to
+   derive one from, so the initial stands in rather than an empty tile. */
+.recap__inf-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  background: var(--ref-color-purple-10);
+  border-radius: var(--app-radius-circle);
+  color: var(--ref-color-purple-100);
+  font-size: 15px;
+  font-weight: 800;
+}

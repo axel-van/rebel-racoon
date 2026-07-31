@@ -15,6 +15,7 @@ import { init as initAddSourceModal } from "./components/add-source-modal.js?v=6
 import { init as initConnectorsModal } from "./components/connectors-modal.js?v=17";
 import { init as initTopicModal } from "./components/topic-modal.js?v=5";
 import { init as initResearchModals } from "./components/research-modals.js?v=5";
+import { init as initAddPlaybookEntryModal } from "./components/add-playbook-entry-modal.js?v=1";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
 import { init as initRenameModal } from "./components/rename-modal.js?v=2";
 import { init as initSaveFolderModal } from "./components/save-folder-modal.js?v=15";
@@ -105,6 +106,7 @@ initAddSourceModal();
 initConnectorsModal();
 initTopicModal();
 initResearchModals();
+initAddPlaybookEntryModal();
 initConfirmModal();
 initRenameModal();
 initSaveFolderModal();
