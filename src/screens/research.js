@@ -203,12 +203,16 @@ function renderLaneCard(lane) {
   // The card body is a button and the hover actions are its SIBLINGS, not
   // children: a button inside a button is invalid HTML and the browser resolves
   // the nesting unpredictably. Same reason topic-card splits body from footer.
-  // Both signals live on their OWN row, directly under the title and above the
-  // meta line. Their own row rather than beside the title because there they cost
-  // it ~140px between them and it ellipsised to "Lost dog reco…" — the lane's
-  // name is the one thing that has to stay readable. Under the title they attach
-  // to the thing they describe, and are read before the more static metadata
-  // (which Playbook, how many sources) rather than after it.
+  // Both signals live on their OWN row, under the meta line. Their own row rather
+  // than beside the title because there they cost it ~140px between them and it
+  // ellipsised to "Lost dog reco…" — the lane's name is the one thing that has to
+  // stay readable. Under the meta they close out the card's description of itself:
+  // what this lane is, then what's currently in it.
+  //
+  // Three positions were tried before settling here — beside the title, in a
+  // footer above the separator, and directly under the title. Don't move it again
+  // without a reason; the row is conditional and each position needs its own
+  // spacing and pinning rules.
   const signals =
     newCount || trendingCount
       ? html`<div class="research-card__signals">
@@ -283,8 +287,8 @@ function renderLaneCard(lane) {
         </button>
       </span>
     </div>
-    ${raw(signals)}
     <p class="research-card__meta">${meta}</p>
+    ${raw(signals)}
     <!-- The action carries margin-top:auto itself, so it stays pinned to the
          bottom whatever the block above it holds. It no longer needs a wrapper:
          that only existed to own the pinning while the conditional signals row
