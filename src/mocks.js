@@ -1966,6 +1966,111 @@ export const contexts = [
       brand: null,
     },
   },
+  // ── Alliance Jiu Jitsu Carlsbad ──────────────────────────────────────────
+  //
+  // Added to back the Content Research lane built from the real Agorapulse
+  // listening export (see researchLanes / researchBriefs at the bottom of this
+  // file). A lane card reads its Playbook's name and colour, so without a
+  // matching Playbook the jiu-jitsu lane would have claimed to belong to
+  // Pawtrack.
+  //
+  // Everything below that the export actually stated is taken from it verbatim
+  // or near-verbatim: the objective ("drive local brand awareness and free trial
+  // sign-ups"), the positioning (elite coaching, safety-first culture, youth
+  // development over aggressive fighters), the audiences (Carlsbad parents,
+  // busy professionals returning after a break) and the three named competitors.
+  // Fields the export said nothing about — brand colours, typography, hooks —
+  // are left empty rather than invented, which is why this Playbook is thinner
+  // than the four seeded demo ones.
+  {
+    id: "ctx-alliance-bjj",
+    name: "Alliance Jiu Jitsu Carlsbad",
+    color: "red",
+    isDefault: false,
+    brandName: "Alliance Jiu Jitsu Carlsbad",
+    brandLogo: null,
+    websiteUrl: null,
+    audience: [
+      "Active Carlsbad parents weighing martial arts for a child, and wary of programs that make kids aggressive",
+      "Busy professionals and former practitioners returning to the mats after a multi-year break",
+    ],
+    businessSummary:
+      "Win on coaching quality and a safety-first mat culture, not on trophies. Local competitors are loud about youth programs, belt promotions and community events; the opening is to explain what those milestones actually build — self-control, problem-solving, resilience — for parents and adults who want capability without aggression.",
+    briefSummary:
+      "Win on coaching quality and a safety-first mat culture, not on trophies. Local competitors are loud about youth programs, belt promotions and community events; the opening is to explain what those milestones actually build.",
+    tones: ["Reassuring", "Expert"],
+    voiceProfile: {
+      headline: "Calm · expert · safety-first",
+      writingStyle:
+        "Answers a parent's real hesitation before selling anything. Explains the mechanism — why grappling teaches control rather than aggression — then lets the conclusion follow. Long-form and patient; never hypes competition results.",
+      vocabulary:
+        "Character development, self-control, problem-solving, structured progression, safety-first. Never 'dominate', 'destroy', 'killer instinct', or anything that frames training as fighting.",
+      sentenceStructure: null,
+      examples: [],
+    },
+    contentStyle: ["Educational", "Long-form"],
+    objective: ["Brand awareness", "Lead generation"],
+    contentAction: ["Book a free trial"],
+    signatureHooks: [],
+    closingPatterns: [],
+    formattingStyle: null,
+    visualStyle: null,
+    brandPersonality: "expert, reassuring, disciplined",
+    brandTypography: null,
+    brandColors: [],
+    referenceImages: [],
+    // The three competitors the listening export names by hand. No websites or
+    // socials in the export, so those stay empty.
+    competitors: [
+      {
+        id: "alliance-cmp-1",
+        name: "Gracie Barra",
+        description:
+          "Most active locally. Promotes youth programs on character building, celebrates belt and stripe promotions, and ran a 1st-anniversary celebration plus belt-rank seminars.",
+        websiteUrl: null,
+        socials: [],
+      },
+      {
+        id: "alliance-cmp-2",
+        name: "Six Blades",
+        description:
+          "Leans on welcome-back stories (a student returning after a three-year hiatus) and on very young beginners, alongside belt promotions.",
+        websiteUrl: null,
+        socials: [],
+      },
+      {
+        id: "alliance-cmp-3",
+        name: "Freedom",
+        description:
+          "Posts belt and stripe promotions; part of the local cluster driving engagement around milestones.",
+        websiteUrl: null,
+        socials: [],
+      },
+    ],
+    topics: {
+      enabledSourceIds: ["competitor-posts"],
+      cadence: "monthly",
+    },
+    ctaLinks: [],
+    language: "English",
+    imageVoice: null,
+    doRules: [
+      "Address the fear that martial arts makes children aggressive, directly.",
+      "Explain what a promotion or a technique teaches, not just that it happened.",
+    ],
+    dontRules: [
+      "Don't post generic holiday greetings — the export flagged competitors' Independence Day posts as carrying no brand angle.",
+      "Don't mirror competitors' anniversary or seminar promotion; it doesn't translate into a credible theme for this brand.",
+    ],
+    cta: "Book a free trial",
+    usedIn: 0,
+    updatedAt: "just now",
+    analysis: {
+      voice: null,
+      brief: null,
+      brand: null,
+    },
+  },
 ];
 
 // Legacy accessors — keep `context.voice`, `context.brief`, `context.brand`
@@ -3912,6 +4017,21 @@ export const researchLanes = [
     notify: true,
     showTrending: false,
   },
+  // The one lane NOT authored for this prototype. Built from a real Agorapulse
+  // listening export — search `alliance_jiujitsu_carlsbad_competitors_posts_
+  // last30days`, scope 1–31 July 2026, networks Instagram + Facebook, 25 items
+  // (18 Instagram / 7 Facebook). Cadence is monthly because the scope was a
+  // 30-day window; the single source is competitor posts because that is what
+  // the search collected.
+  {
+    id: "lane-4",
+    name: "Carlsbad competitors · last 30 days",
+    playbookId: "ctx-alliance-bjj",
+    sources: ["competitor-posts"],
+    cadence: "monthly",
+    notify: true,
+    showTrending: true,
+  },
 ];
 
 // Briefs. `seedStatus` / `seedReason` seed the triage map in briefs-store — they
@@ -4325,6 +4445,146 @@ export const researchBriefs = [
     history: [
       { status: "new", when: "6 days ago", note: "First surfaced from competitor sources." },
       { status: "new", when: "2 days ago", note: "Flagged trending — vocabulary overlap above baseline." },
+    ],
+    seedStatus: "new",
+    seedReason: "",
+  },
+
+  // ── lane-4 · from the real Alliance Jiu Jitsu Carlsbad listening export ────
+  //
+  // These four briefs are the four topics that model gemini-3.5-flash returned
+  // in that export, with its own headlines, "Why now" lines, volume figures,
+  // network mixes, keyword sets and item counts. The articles condense its
+  // long-form output while keeping its argument and its language.
+  //
+  // Why only one model's topics: the export is a MODEL COMPARISON — three models
+  // each proposed 3–4 topics over the same 25 posts, so the sets overlap heavily
+  // (all three found the youth-development and belt-promotion themes). Taking one
+  // model's set gives a feed without near-duplicates. gemini-3.5-flash is the one
+  // that returned four rather than three.
+  //
+  // Two honest gaps, both from the export rather than from choice:
+  //   • posts: [] — the export carries no source posts, only per-topic item
+  //     COUNTS. Inventing authors and engagement numbers would fake the very
+  //     evidence a brief exists to show, so the arrays are empty and the counts
+  //     live in whyNowDetail instead.
+  //   • ageLabel is the same on all four. They came out of one scan (the export's
+  //     window closes 2026-07-31 05:34), so they genuinely share an age.
+  //
+  // isTrending is DERIVED from the export's own `Volume:` field — high → trending,
+  // medium → not. That is the closest thing it gives to a baseline comparison.
+  {
+    id: "br-10",
+    laneId: "lane-4",
+    sourceId: "competitor-posts",
+    ageLabel: "5h ago",
+    headline: "Beyond the mats: how BJJ builds resilient, confident kids",
+    summary:
+      "Gracie Barra and Six Blades are both pushing youth programs on character building — 'raise boys who are kind, confident, and capable' — and taking students as young as four. The claim is everywhere; the mechanism behind it is explained nowhere.",
+    researchType: "ready-to-post",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "The parent's real question isn't 'will it work' — it's 'will it make my child aggressive'",
+      paragraphs: [
+        "Across the tracked Carlsbad academies, youth programs are being sold on character: kind, confident, capable children, sometimes from age four. The shift is a good one, and it is now the category default rather than a differentiator. What none of the posts do is answer the hesitation that actually stops a parent signing up — whether martial arts will teach their child to settle conflict with their fists.",
+        "That question has a real answer, and it is structural rather than cultural. Most martial arts are striking arts: they train a child to meet conflict with immediate outward aggression. Brazilian Jiu-Jitsu is grappling — leverage, technique and control. A child is taught to neutralise a threat, control a situation and escape safely, which is a fundamentally different instinct to rehearse. Every movement is cause and effect, so the training rewards keeping a cool head and thinking, not swinging.",
+        "The mat culture is the other half of it. A child who does not feel safe cannot build resilience — an environment that is chaotic or overly competitive puts them in survival mode, and character development stops there. The clearest expression of the opposite is the tap: when a partner taps, everything stops, immediately and without exception. That single rule teaches respect for someone else's boundaries and that it is safe to admit you are caught. Strength is for protecting and controlling, never for intimidating.",
+        "This is also why capable children fight least. Bullying runs on insecurity in both directions — the aggressor proving dominance, the target projecting fear. A child who knows with certainty that they could control a confrontation, and do it without hurting anyone, has nothing left to prove. That is the angle the local conversation has left open: not that character development matters, but how it is actually produced.",
+      ],
+    },
+    posts: [],
+    history: [
+      { status: "new", when: "5h ago", note: "Surfaced from the 1–31 July competitor scan (8 matching posts)." },
+    ],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-11",
+    laneId: "lane-4",
+    sourceId: "competitor-posts",
+    ageLabel: "5h ago",
+    headline: "What do BJJ belt promotions really mean for your child's growth?",
+    summary:
+      "Gracie Barra, Freedom and Six Blades are all posting belt and stripe promotions, and it is the highest-engagement theme in the set. Everyone shows the milestone; nobody explains what earning it actually built.",
+    researchType: "ready-to-post",
+    isTrending: true,
+    whyNow: "Belt and stripe promotions are the highest-volume theme across all three tracked competitors this month.",
+    whyNowDetail:
+      "Volume: high. 13 of the 25 collected posts match this topic — the largest cluster in the scan — and it is the most evenly split across networks at 54% Instagram / 46% Facebook, so it is carrying on both. Keywords: belt promotion, stripe, rank, consistency, perseverance.",
+    research: {
+      title: "A belt is a byproduct of the person a child is becoming",
+      paragraphs: [
+        "In a category full of participation trophies, the youth belt system is unusually honest — and unusually badly explained. Children move white, grey, yellow, orange, green, earning up to four stripes inside each rank. Those stripes are the mechanism worth talking to parents about: for a young child a year is an eternity, and stripes break an intimidating goal into phases small enough to feel. Each one is a signal that daily effort is compounding.",
+        "The reason it works is that the recognition is earned rather than given. A promotion arrives after a child has worked through frustration, refined something they were bad at, and shown up disciplined when they were tired. That teaches the thing empty praise cannot: that their success sits entirely inside their own control. Confidence built that way does not break when life produces a setback.",
+        "The mats behave like a laboratory for that. A student chasing a stripe will hit plateaus — a position they cannot escape, a newer partner who suddenly gives them trouble — and with decent coaching they learn to read those as information rather than failure. The question shifts to 'what do I do differently next time?'. Children who discover that consistency produces progression on the mats start applying it to schoolwork without being told to.",
+        "There is a practical parent angle here too, and it is a corrective. The instinct is to compare — why did another child get a stripe first? The more useful move is to ask what they improved today rather than what they received, to normalise plateaus rather than apologise for them, and to model showing up on the days motivation is low. That is the piece the promotion posts never carry.",
+      ],
+    },
+    posts: [],
+    history: [
+      { status: "new", when: "5h ago", note: "Surfaced from the 1–31 July competitor scan (13 matching posts)." },
+      { status: "new", when: "5h ago", note: "Flagged trending — highest-volume theme in the scan." },
+    ],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-12",
+    laneId: "lane-4",
+    sourceId: "competitor-posts",
+    ageLabel: "5h ago",
+    headline: "Returning to the mats: how to restart your BJJ journey safely",
+    summary:
+      "Six Blades welcomed back a student after a three-year hiatus, and it wasn't an isolated post. There is a local audience trying to come back, and nothing in the set speaks to what makes a comeback fail.",
+    researchType: "ready-to-post",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "The comeback fails on ego long before it fails on cardio",
+      paragraphs: [
+        "A dusty gi in the back of a closet comes with a specific set of hesitations: whether the cardio is gone, whether the joints will hold, whether you can keep pace with people who never stopped. The local signal is that plenty of people in North County are having that thought — former white belts who trained for a few months three years ago, coloured belts who took a multi-year break for work or family.",
+        "The obstacle is almost never conditioning. It is that your brain remembers techniques your body cannot yet execute, so timing and spatial awareness lag behind knowledge. Force the gap closed with raw athletic effort and the injury rate climbs. The useful reframe is to stop trying to win rounds and start collecting data: accept that you will be slower and more easily fatigued, and treat that as a temporary state rather than a new baseline.",
+        "Physically it wants a ramp, because grappling loads the neck, shoulders, lower back and knees, and a desk-bound body needs to re-adapt to that. Three things do most of the work: a real warm-up that mobilises hips and shoulders, controlled intensity — you are allowed to decline a roll or ask to keep the pace down — and positional sparring from closed guard or side control instead of open scrambles, which is where injuries happen.",
+        "Which makes the choice of academy the actual decision. A room that treats every round like a championship final is a poor bet for someone returning, or for anyone who has to be functional at work tomorrow. A structured adult curriculum rebuilds fundamentals in a cooperative setting before adding resistance, and coaches who watch mat dynamics will pair a returning student with partners who are safe rather than eager.",
+      ],
+    },
+    posts: [],
+    history: [
+      { status: "new", when: "5h ago", note: "Surfaced from the 1–31 July competitor scan (6 matching posts)." },
+    ],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-13",
+    laneId: "lane-4",
+    sourceId: "competitor-posts",
+    ageLabel: "5h ago",
+    headline: "The family that rolls together: BJJ as a shared lifestyle",
+    summary:
+      "Competitors are running family classes and turning academy anniversaries into family community events. The angle is strong and the volume is high — but this one can't be written yet, because it needs assets nobody has shot.",
+    researchType: "ready-to-post",
+    isTrending: true,
+    whyNow: "Family classes and family-oriented community events are the second-highest-volume theme in the scan.",
+    whyNowDetail:
+      "Volume: high. 11 of the 25 collected posts match this topic, at 64% Instagram / 36% Facebook. Keywords: family class, parents, kids and parents, community, anniversary. The export marked this one needs_assets rather than ready_to_write — see the blockers below.",
+    research: {
+      title: "Blocked on assets, not on the idea",
+      paragraphs: [
+        "The opening is parents training alongside their children rather than watching from the side, positioning one academy as the place where both find a real program rather than a compromise. Competitors are already gathering families — family classes, anniversaries run as community events — so the audience is assembled and the framing is unclaimed.",
+        "The export flagged this topic as needing assets before it can be written, and the two it names are specific: high-quality photos or video of Carlsbad families actually training at the academy, and testimonials from parents who train alongside their kids. Neither can be substituted with stock — the whole claim is that this happens here.",
+        "Suggested formats were an Instagram carousel, a short video reel, and a blog post — which is to say the shoot serves all three, so the asset gap is one production job rather than three.",
+        "Worth noting what the same scan told us NOT to copy: competitors' generic Independence Day posts were flagged as carrying no brand angle at all, and Gracie Barra's 1st-anniversary celebration and belt-rank seminars were flagged as self-promotional events that don't translate into a credible theme for another academy. The family angle is the part of the community conversation that does transfer.",
+      ],
+    },
+    posts: [],
+    history: [
+      { status: "new", when: "5h ago", note: "Surfaced from the 1–31 July competitor scan (11 matching posts)." },
+      { status: "new", when: "5h ago", note: "Flagged trending — second-highest-volume theme in the scan." },
     ],
     seedStatus: "new",
     seedReason: "",

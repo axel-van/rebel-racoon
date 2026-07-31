@@ -251,7 +251,13 @@ export function openFullResearch({ briefId }) {
     { briefId },
     {
       title: brief.headline,
-      sub: `${source ? source.name : ""} · ${posts.length} ${posts.length === 1 ? "post" : "posts"}`,
+      // Drop the count entirely at zero rather than printing "0 posts", which
+      // reads as a bug. A brief legitimately has no attached posts when its scan
+      // returned topics without the underlying items — the lane built from the
+      // Alliance Jiu Jitsu listening export is exactly that case.
+      sub: [source ? source.name : "", posts.length ? `${posts.length} ${posts.length === 1 ? "post" : "posts"}` : ""]
+        .filter(Boolean)
+        .join(" · "),
       wide: true,
       body: html`<section class="research-article">
           <span class="research-article__label"><i class="ap-icon-sparkles" aria-hidden="true"></i> Full article</span>

@@ -24,7 +24,7 @@ import { renderTopbar } from "../components/topbar.js?v=282";
 import { isFlagOn } from "../feature-flags.js?v=16";
 import { getContexts, getContextById } from "../contexts-store.js?v=44";
 import { getLaneById, addLane, updateLane } from "../research-store.js?v=2";
-import { openNeedSource } from "../components/research-modals.js?v=3";
+import { openNeedSource } from "../components/research-modals.js?v=4";
 import {
   RESEARCH_SOURCES,
   CADENCES,
