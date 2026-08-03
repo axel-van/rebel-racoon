@@ -20,7 +20,7 @@
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
 import { escapeHtml as esc } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=282";
+import { renderTopbar } from "../components/topbar.js?v=283";
 import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=45";
 import { mount, snapshotEditable } from "../playbook-view.js?v=60";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";

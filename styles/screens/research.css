@@ -10,123 +10,111 @@
  * transcribed: #ECEFF4 → grey-10, #DFE4EC → grey-20, #A6B1C2 → grey-40,
  * #7C8AA1 → grey-60. Within a couple of points each, and it keeps one ramp. */
 
+/* Matches .contexts-view: the screen root is the scroll container. It used to be
+   .research-view__body, which carried the paper background and the scroll —
+   removing that wrapper to match /contexts took the scroller with it, so it
+   moves here. The lane list consequently sits on the shell background like
+   /contexts does, rather than on --app-paper; the feed and trending pages are
+   detail views and keep theirs. */
 .research-view {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  overflow-y: auto;
 }
 
-/* ── Top bar ──────────────────────────────────────────────────────────── */
+/* ── Page head ─────────────────────────────────────────────────────────────
+   Mirrors .contexts-view__head in styles/screens/contexts.css — same structure,
+   same tokens, own namespace. Two things changed here versus the first pass:
 
-.research-view__topbar {
+   1. The in-page bordered top bar is gone. /contexts has none, and this screen's
+      only existed because topbar.js had no /research entry, so the page had to
+      caption itself. topbar.js now returns "Content Research".
+
+   2. Typography and spacing come from DS tokens, not transcribed pixels. The
+      handoff specifies 34px/800 titles and 36px/40px/48px padding; the app's own
+      convention (CLAUDE.md: "Typography is sourced exclusively from the DS text
+      styles") is --sys-text-style-* and --ref-spacing-*. The h1 therefore renders
+      at the DS h1 (24px/700) rather than the handoff's 34px/800 — a deliberate
+      deviation, because matching the surrounding product beats matching the
+      mockup's raw values. */
+
+.research-view__page {
   display: flex;
-  align-items: center;
-  padding: 22px 32px;
-  border-bottom: 1px solid var(--ref-color-grey-10);
-  background: var(--ref-color-white);
-  flex: 0 0 auto;
-}
-
-.research-view__topbar-title {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--app-convo-navy);
-}
-
-/* ── Body ─────────────────────────────────────────────────────────────── */
-
-.research-view__body {
-  flex: 1 1 auto;
-  padding: 36px 40px 48px;
-  background: var(--app-paper);
-}
-
-.research-view__inner {
-  max-width: 1200px;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-md) var(--ref-spacing-xl) var(--ref-spacing-xl);
+  max-width: 1280px;
+  width: 100%;
   margin: 0 auto;
 }
 
-.research-view__header {
+.research-view__head {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 16px 24px;
-  margin-bottom: 30px;
+  gap: var(--ref-spacing-md);
+  flex-wrap: wrap;
+}
+
+.research-view__head-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
 }
 
 .research-view__title {
   margin: 0;
-  font-size: 34px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--app-convo-navy);
-  /* nowrap + no-grow so the action cluster is what reflows, not the heading —
-     a wrapped 34px title pushes the whole row down for no gain. */
-  white-space: nowrap;
-  flex: 0 0 auto;
+  font-family: var(--sys-text-style-h1-font-family);
+  font-size: var(--sys-text-style-h1-size);
+  line-height: var(--sys-text-style-h1-line-height);
+  font-weight: var(--sys-text-style-h1-weight);
+  color: var(--ref-color-grey-100);
 }
 
-.research-view__actions {
+.research-view__sub {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-weight);
+  color: var(--ref-color-grey-80);
+}
+
+.research-view__head-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
-  flex: 1 1 auto;
-  justify-content: flex-end;
+  gap: var(--ref-spacing-xs);
 }
 
-/* Search — a leading icon inside the field, so the input carries the padding
-   and the icon is absolutely placed within the .ap-input wrapper. */
+/* Fixed basis like .contexts-view__search rather than the flex:1 1 160px the
+   first pass used — with a growing search field the <select> and the CTA had to
+   be pinned to stop the button being pushed off the row. A fixed basis removes
+   the fight entirely. */
 .research-view__search {
-  position: relative;
-  flex: 1 1 160px;
-  min-width: 120px;
-  max-width: 250px;
+  flex: 0 0 240px;
 }
 
-.research-view__search > i {
-  position: absolute;
-  left: 13px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 17px;
-  color: var(--ref-color-grey-40);
-  pointer-events: none;
+/* Narrow viewports (right panel open, or mobile) — let the field shrink so the
+   row never overflows horizontally. Mirrors the contexts breakpoint. */
+@media (max-width: 720px) {
+  .research-view__search {
+    flex: 1 1 160px;
+    min-width: 0;
+  }
 }
 
-.research-view__search > input {
-  width: 100%;
-  padding: 11px 13px 11px 39px;
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--app-radius-starter);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-/* flex:0 0 auto on both the select and the CTA. Without it the <select>
-   stretched to fill the row and pushed the primary button off the right edge —
-   .research-view__actions is flex:1 1 auto, so the growth had to be pinned
-   somewhere, and the search field (which has a max-width) is the only control
-   that should absorb it. */
 .research-view__filter {
   flex: 0 0 auto;
   max-width: 200px;
-  padding: 11px 14px;
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--app-radius-starter);
-  font-size: 14px;
-  font-weight: 800;
-  background: var(--ref-color-white);
 }
 
-.research-view__actions > .ap-button {
+.research-view__head-actions > .ap-button {
   flex: 0 0 auto;
   white-space: nowrap;
 }
 
 .research-view__nomatch {
-  margin-top: 24px;
+  margin-top: var(--ref-spacing-md);
 }
 
 /* ── Lane grid ────────────────────────────────────────────────────────── */
@@ -347,7 +335,9 @@
   gap: 16px;
   padding: 48px 24px;
   text-align: center;
-  background: var(--app-paper);
+  /* No paper background: the populated list dropped it when __body went, and an
+     empty state on paper while the populated state isn't would read as two
+     different pages. */
 }
 
 .research-empty__disc {

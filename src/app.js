@@ -1,7 +1,7 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=16";
 import { initArchieLoader } from "./archie-loader.js?v=2";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=282";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=283";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=252";
 import { init as initRightPanel } from "./components/right-panel.js?v=419";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=62";
@@ -32,7 +32,7 @@ import { renderContexts } from "./screens/contexts.js?v=244";
 import { renderConnectors } from "./screens/connectors.js?v=183";
 import { renderTopics } from "./screens/topics.js?v=51";
 import { renderTopicsSettings } from "./screens/topics-settings.js?v=43";
-import { renderResearch } from "./screens/research.js?v=9";
+import { renderResearch } from "./screens/research.js?v=10";
 import { renderResearchForm } from "./screens/research-form.js?v=4";
 import { renderResearchFeed } from "./screens/research-feed.js?v=3";
 import { renderResearchTrending } from "./screens/research-trending.js?v=3";

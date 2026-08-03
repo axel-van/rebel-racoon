@@ -522,6 +522,12 @@ function currentTitle() {
   if (path === "/contexts") return "Playbooks";
   if (path === "/connectors") return "Connectors";
   if (path === "/topics") return "Topics";
+  // Every Content Research route reports the SECTION here, not the lane. The
+  // topbar names where you are in the app; the lane's own header names which
+  // lane. Registering these is also what let the lane list drop its in-page
+  // bordered bar — that bar only existed because this map had no entry and the
+  // topbar fell through to "Archie".
+  if (path.startsWith("/research")) return "Content Research";
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);
   if (sessionMatch) {
     const id = sessionMatch[1];

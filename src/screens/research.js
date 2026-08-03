@@ -20,7 +20,7 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=282";
+import { renderTopbar } from "../components/topbar.js?v=283";
 import { showToast } from "../components/toast.js?v=20";
 import { isFlagOn } from "../feature-flags.js?v=16";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=45";
@@ -108,13 +108,7 @@ function renderPage() {
   // matched nothing. Conflating the two tells a user with twelve lanes that they
   // have none, and offers "create" when what they want is "clear the filter".
   if (!lanes.length) return renderEmpty();
-  return html`${raw(renderTopBar())}${raw(renderBody(lanes))}`;
-}
-
-function renderTopBar() {
-  return html`<header class="research-view__topbar">
-    <h2 class="research-view__topbar-title">Content Research</h2>
-  </header>`;
+  return renderBody(lanes);
 }
 
 // The 4:3 Archie mark, from the in-repo mask glyph (.ap-icon-archie-official,
@@ -146,26 +140,50 @@ function renderEmpty() {
   </div>`;
 }
 
+// Mirrors screens/contexts.js exactly — `__page` > `__head` > `__head-text`
+// (title + sub) beside `__head-actions`. Same structure, own namespace: the
+// contexts-view__* classes stay scoped to /contexts rather than being borrowed
+// across screens, so changing one page's header can't silently restyle another.
+//
+// There is no in-page bordered top bar. /contexts has none either, and the one
+// this screen used to carry only existed because topbar.js had no /research
+// entry and fell through to "Archie" — so the page was captioning itself. The
+// topbar names the section now.
 function renderBody(lanes) {
   const shown = lanes.filter(matchesFilters);
-  return html`<div class="research-view__body">
-    <div class="research-view__inner">
-      ${raw(renderHeaderRow())}
-      <div class="research-grid">${raw(shown.map(renderLaneCard).join(""))}${raw(renderCreateCard())}</div>
-      ${raw(!shown.length ? html`<p class="research-view__nomatch muted">No research matches that search.</p>` : "")}
-    </div>
+  return html`<div class="research-view__page">
+    ${raw(renderHead(lanes))}
+    <div class="research-grid">${raw(shown.map(renderLaneCard).join(""))}${raw(renderCreateCard())}</div>
+    ${raw(!shown.length ? html`<p class="research-view__nomatch muted">No research matches that search.</p>` : "")}
   </div>`;
 }
 
-function renderHeaderRow() {
+function renderHead(lanes) {
   const contexts = getContexts();
   const active = view.playbook;
-  return html`<div class="research-view__header">
-    <h1 class="research-view__title">Content Research</h1>
-    <div class="research-view__actions">
-      <div class="ap-input research-view__search">
-        <i class="ap-icon-search" aria-hidden="true"></i>
-        <input type="search" placeholder="Search research…" value="${escapeAttr(view.query)}" data-research-search />
+  // Mirrors "N Playbooks · applied across N chats" on /contexts: what you have,
+  // then the number that tells you whether to act. Untriaged briefs summed
+  // across every lane is that number here.
+  const waiting = lanes.reduce((sum, l) => sum + countNewForLane(l.id), 0);
+  const sub =
+    `${lanes.length} research ${lanes.length === 1 ? "lane" : "lanes"} · ` +
+    `${waiting} ${waiting === 1 ? "brief" : "briefs"} waiting`;
+
+  return html`<header class="research-view__head">
+    <div class="research-view__head-text">
+      <h1 class="research-view__title">Content Research</h1>
+      <p class="research-view__sub">${sub}</p>
+    </div>
+    <div class="research-view__head-actions">
+      <div class="ap-input-group research-view__search">
+        <i class="ap-icon-search"></i>
+        <input
+          type="search"
+          class="ap-input"
+          placeholder="Search research…"
+          value="${escapeAttr(view.query)}"
+          data-research-search
+        />
       </div>
       <select class="ap-select research-view__filter" data-research-playbook aria-label="Filter by Playbook">
         <option value="all" ${raw(active === "all" ? " selected" : "")}>All Playbooks</option>
@@ -182,7 +200,7 @@ function renderHeaderRow() {
         <span>Create a research</span>
       </button>
     </div>
-  </div>`;
+  </header>`;
 }
 
 function renderLaneCard(lane) {
