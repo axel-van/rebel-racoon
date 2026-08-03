@@ -2376,6 +2376,224 @@ export const contexts = [
       brand: null,
     },
   },
+  // ── Noba Fashion ─────────────────────────────────────────────────────────
+  //
+  // Backs the second real-export lane (lane-5, see researchLanes below), built
+  // from the Agorapulse listening export `noba_fashion_competitors_posts_
+  // last30days`. Same rule as ctx-alliance-bjj: a lane card reads its Playbook's
+  // name and colour, so the lane needs one of its own.
+  //
+  // Two separate sources, kept separate on purpose:
+  //   • The COMPETITORS are the five accounts the export actually collected —
+  //     ZEB, PointCarré, The Fashion Store, E5 Mode, JBC. Their descriptions are
+  //     drawn from what they posted in the 4 July–3 August window, nothing else.
+  //   • Everything BRAND-side (positioning, voice, audience, strategy) comes
+  //     from nobalifestyle.com — the tagline "Dress with class, for less", the
+  //     founding-by-two-brothers story, and the "quiet, confident, built to
+  //     last" line are the site's own words.
+  //
+  // Left deliberately empty rather than invented: brandColors, brandTypography,
+  // referenceImages and imageVoice. The site's palette and type stack were not
+  // read, and guessing them would put fake hexes into a Playbook that claims to
+  // describe a real brand. Same discipline as ctx-alliance-bjj.
+  //
+  // The influencers listed are the creators the SCAN saw the competitors working
+  // with — that is what a Playbook's Influencers section is for ("the creators
+  // your audience already listens to"). No reach figures: the export carries
+  // none, and follower counts are the easiest thing here to fabricate.
+  {
+    id: "ctx-noba",
+    name: "Noba Fashion",
+    color: "yellow",
+    isDefault: false,
+    brandName: "NOBA",
+    brandLogo: null,
+    websiteUrl: "https://www.nobalifestyle.com/",
+    audience: [
+      "Style-conscious professionals, 28–45, who want the look of quiet luxury without the luxury invoice",
+      "Repeat buyers who came in through one linen or cashmere piece and are building a wardrobe around it",
+    ],
+    businessSummary:
+      "Sell the material and the restraint, not the season. The market Noba is watched against — Belgian multibrand chains — runs on discount percentages, weekly drops and celebrity capsules. Noba's whole claim is the opposite: fewer, better pieces at an accessible price, worn for years rather than for a weekend. Every post should make the durability argument concrete rather than repeat the word 'quality'.",
+    briefSummary:
+      "Sell the material and the restraint, not the season. Competitors run on discount percentages and weekly drops; Noba's claim is fewer, better pieces at an accessible price.",
+    tones: ["Understated", "Confident"],
+    voiceProfile: {
+      headline: "Quiet · confident · never salesy",
+      writingStyle:
+        "Describes the garment and lets the reader draw the conclusion. Leads with the material and what it does over time — how linen softens, why cashmere holds its shape — instead of adjectives. Never hypes a drop.",
+      vocabulary:
+        "Linen, cashmere, merino, suede, tailored, considered, effortless. Never 'must-have', 'obsessed', 'grab yours', 'last chance', and no percentage-off language in organic copy.",
+      sentenceStructure:
+        "Short declaratives. One claim per sentence, and the claim is always checkable — a fabric, a construction, a use.",
+      formality: "Polished but plain. 'You' and 'your', full words rather than slang, and no exclamation marks.",
+      personality: "Assured and unhurried. Says less than it could, and never sounds like it needs the sale.",
+      rhetoricalDevices:
+        "Contrast the seasonal against the lasting. Show one piece styled several ways rather than several pieces once.",
+      emotionalTone: "Calm confidence. Aspirational without being remote.",
+      contentPatterns: "Material → what it does over time → how it's worn. Around 60 words, one piece per post.",
+      uniqueTraits:
+        "Names the fibre every time. Neutral, daylight photography over flat-lays. No countdown timers, no sale stickers on organic content.",
+    },
+    contentStyle: ["Editorial", "Product-led"],
+    objective: ["Brand awareness", "Sales"],
+    contentAction: ["Shop the collection", "Discover more"],
+    signatureHooks: [
+      "True style isn't loud or seasonal.",
+      "One hundred percent linen. That's the entire spec sheet.",
+      "Built to be worn next summer, and the one after that.",
+    ],
+    closingPatterns: ["Dress with class, for less.", "Fewer pieces. Worn longer."],
+    formattingStyle:
+      "Opens on the piece or the fibre. Two or three short lines. No emoji strings, at most one. Never opens with a discount.",
+    visualStyle:
+      "Neutral and jewel tones, daylight, models in motion rather than posed. Full-look framing so the cut reads. Sentence case throughout.",
+    brandPersonality:
+      "Assured, understated and accessible. Confident enough not to shout, warm enough not to feel like a luxury house.",
+    brandTypography: null,
+    brandColors: [],
+    referenceImages: [],
+    // The five accounts the export actually collected, with what each of them
+    // did in the 4 July–3 August window. Websites and Instagram handles are the
+    // public ones; nothing here is inferred beyond the posts.
+    competitors: [
+      {
+        id: "noba-cmp-1",
+        name: "ZEB",
+        description:
+          "Highest-volume poster in the scan and the loudest discounter — '-50% & -70%' ran through most of July. Multibrand, festival-heavy, and the one running its own staff and ambassadors as the face of the brand.",
+        websiteUrl: "https://www.zeb.be",
+        socials: [{ network: "instagram", url: "https://instagram.com/zebfashion" }],
+      },
+      {
+        id: "noba-cmp-2",
+        name: "JBC",
+        description:
+          "Belgian family retailer, and the strongest engagement in the set by a distance. Wins on personality — a celebrity capsule (CAMILLE x JBC), topical humour and second-hand Bring Back days — rather than on product.",
+        websiteUrl: "https://www.jbc.be",
+        socials: [{ network: "instagram", url: "https://instagram.com/jbcfashion" }],
+      },
+      {
+        id: "noba-cmp-3",
+        name: "The Fashion Store",
+        description:
+          "Multibrand with 75+ labels. Posts twice daily on a fixed schedule, mixing sale reminders with customer-worn looks from its #thefashionstorelovers creators.",
+        websiteUrl: "https://www.thefashionstore.be",
+        socials: [{ network: "instagram", url: "https://instagram.com/thefashionstore_be" }],
+      },
+      {
+        id: "noba-cmp-4",
+        name: "E5 Mode",
+        description:
+          "The closest thing in the set to Noba's register: label-led FW26 storytelling, 'quiet luxury', 'timeless', 'some pieces never date'. Posts in threes, one brand at a time, with almost no discount language.",
+        websiteUrl: "https://www.e5.be",
+        socials: [{ network: "instagram", url: "https://instagram.com/e5mode" }],
+      },
+      {
+        id: "noba-cmp-5",
+        name: "PointCarré",
+        description:
+          "Smallest volume, most creator-dependent. Nearly every post is a paid partnership look, and the comment counts on those run far ahead of its own brand posts.",
+        websiteUrl: "https://www.pointcarre.be",
+        socials: [{ network: "instagram", url: "https://instagram.com/point_carre" }],
+      },
+    ],
+    topics: {
+      enabledSourceIds: ["competitor-posts", "influencer-posts"],
+      cadence: "monthly",
+    },
+    ctaLinks: [
+      { label: "Shop the collection", url: "nobalifestyle.com/collections", checked: true, suggested: false },
+      { label: "Our story", url: "nobalifestyle.com/pages/our-story", checked: true, suggested: false },
+    ],
+    language: "English",
+    imageVoice: null,
+    doRules: [
+      "Name the fibre — linen, cashmere, merino, suede — in every product post.",
+      "Argue durability with something checkable: how the fabric ages, how it's made, how it's worn again.",
+      "Show one piece styled several ways rather than several pieces once.",
+    ],
+    dontRules: [
+      "No percentage-off language in organic posts — that's the competitors' whole feed and it undercuts the claim.",
+      "Don't chase a weekend: festival and one-off event content contradicts 'built to last'.",
+      "No countdown or scarcity framing.",
+    ],
+    cta: "Dress with class, for less.",
+    usedIn: 0,
+    updatedAt: "just now",
+    // Pillars taken from the four topics the listening export returned — those
+    // ARE the content themes it identified, which is what a pillar is. Read
+    // against Noba rather than against the competitors who produced them.
+    strategy: {
+      approach:
+        "Answer the seasonal conversation with a durable argument. Competitors are strongest on the calendar — sale weeks, festival weekends, holiday packing, celebrity capsules — and each of those moments has a version that belongs to Noba: what you wear when it's 30 degrees, what actually earns a place in the suitcase, what a collection is built on when there's no celebrity name attached.",
+      pillars: [
+        {
+          id: "noba-pil-1",
+          icon: "ap-icon-line-graph",
+          title: "Fabric in the heat",
+          description:
+            "Linen as a heat answer, not a look. The one place a material claim is felt the same day it's made.",
+        },
+        {
+          id: "noba-pil-2",
+          icon: "ap-icon-web",
+          title: "The travel wardrobe",
+          description: "Complete outfits and sets framed as what survives a suitcase. Peak-volume theme in the scan.",
+        },
+        {
+          id: "noba-pil-3",
+          icon: "ap-icon-star",
+          title: "What a collection is built on",
+          description: "The counter-position to celebrity capsules: the material is the muse.",
+        },
+        {
+          id: "noba-pil-4",
+          icon: "ap-icon-refresh",
+          title: "Worn again next year",
+          description: "The durability argument, made concrete. The standing answer to festival and sale content.",
+        },
+      ],
+    },
+    // The creators the SCAN saw working with the tracked competitors — this is
+    // who the audience already follows, which is exactly what this section is
+    // for. No reach figures: the export carries none.
+    influencers: [
+      {
+        id: "noba-inf-1",
+        name: "Camille Dhont",
+        description:
+          "Belgian artist behind CAMILLE x JBC. The single biggest engagement driver in the scan — her collection posts ran 10–30× JBC's own baseline.",
+        socials: [{ network: "instagram", url: "https://instagram.com/camille_dhont" }],
+      },
+      {
+        id: "noba-inf-2",
+        name: "Astrid Coppens",
+        description:
+          "Astrid Black Label, sold through ZEB. A designer-founder rather than a paid creator — the model closest to how Noba could tell its own founder story.",
+        socials: [{ network: "instagram", url: "https://instagram.com/astridblacklabel" }],
+      },
+      {
+        id: "noba-inf-3",
+        name: "Ashley Galeyn",
+        description:
+          "JBC ambassador, used to carry seasonal colour and styling explainers. The format Noba would use for a fibre, not a trend.",
+        socials: [{ network: "instagram", url: "https://instagram.com/ashleygaleyn" }],
+      },
+      {
+        id: "noba-inf-4",
+        name: "Ellen Callebout",
+        description:
+          "Belgian accessories designer stocked by The Fashion Store, including behind-the-scenes on the FW shoot — the highest-engagement non-celebrity content in that account.",
+        socials: [{ network: "instagram", url: "https://instagram.com/ellencallebout" }],
+      },
+    ],
+    analysis: {
+      voice: null,
+      brief: null,
+      brand: null,
+    },
+  },
 ];
 
 // Legacy accessors — keep `context.voice`, `context.brief`, `context.brand`
@@ -4337,6 +4555,20 @@ export const researchLanes = [
     notify: true,
     showTrending: true,
   },
+  // The second real-export lane. Search `noba_fashion_competitors_posts_
+  // last30days`, scope 2026-07-04 17:05 → 2026-08-03 14:40, network Instagram
+  // only, 112 items across five competitor accounts. Monthly cadence because the
+  // scope was a 30-day window; competitor posts because that is all the search
+  // collected.
+  {
+    id: "lane-5",
+    name: "Belgian multibrand competitors · last 30 days",
+    playbookId: "ctx-noba",
+    sources: ["competitor-posts"],
+    cadence: "monthly",
+    notify: true,
+    showTrending: true,
+  },
 ];
 
 // Briefs. `seedStatus` / `seedReason` seed the triage map in briefs-store — they
@@ -4890,6 +5122,354 @@ export const researchBriefs = [
     history: [
       { status: "new", when: "5h ago", note: "Surfaced from the 1–31 July competitor scan (11 matching posts)." },
       { status: "new", when: "5h ago", note: "Flagged trending — second-highest-volume theme in the scan." },
+    ],
+    seedStatus: "new",
+    seedReason: "",
+  },
+
+  // ── lane-5 · from the real Noba Fashion listening export ───────────────────
+  //
+  // The four topics model gemini-3.5-flash returned over the 112 Instagram posts
+  // in `noba_fashion_competitors_posts_last30days` (4 July – 3 August 2026, five
+  // competitor accounts). Its themes, "Why now" lines, volume figures, network
+  // mix, keyword sets and item counts are kept as it produced them.
+  //
+  // Why only one model, again: the export is a MODEL COMPARISON — gemini-3.5-flash
+  // returned 4 topics, gemini-3.6-flash 3, gemini-3.5-flash-lite 1 — over the same
+  // posts, so the sets overlap. gemini-3.5-flash is the widest and the one asked
+  // for.
+  //
+  // ⚠ One deliberate departure, and it is the only one. The export was RUN UNDER
+  // A TRACTIVE PLAYBOOK: every "Brand angle" and every article it wrote is about
+  // pet GPS trackers, even though the posts it read are Belgian fashion
+  // retailers. Kept verbatim, these four briefs would tell Noba Fashion to write
+  // about pet dehydration. So the half of each topic that the SCAN produced —
+  // theme, why-now, volume, network, keywords, counts — is the export's, and the
+  // half that the wrong brief produced — brand angle and article — is rewritten
+  // against ctx-noba. Nothing observational is invented.
+  //
+  // Unlike lane-4, `posts` is populated: this export came with the underlying
+  // items (author, date, text, likes, comments), so the briefs can show the real
+  // evidence. Engagement figures are as exported; `reposts` is 0 throughout
+  // because the export's shares column is empty, not because it was measured.
+  //
+  // isTrending is DERIVED from the export's own `Volume:` field — high → trending
+  // (topics 2 and 4), medium → not (topics 1 and 3), the same rule as lane-4.
+  // All four share an ageLabel: they came out of one scan.
+  {
+    id: "br-14",
+    laneId: "lane-5",
+    sourceId: "competitor-posts",
+    ageLabel: "2h ago",
+    headline: "Dressing for 30 degrees: the heatwave is a fabric problem",
+    summary:
+      "Competitors met the heat with discounts and accessories — '30 graden op de planning', airco in the stores, Dopper bottles. Nobody answered the actual question, which is what you put on your body when it's that warm.",
+    researchType: "ready-to-post",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "The one week of the year a fabric claim is felt the same day it's made",
+      paragraphs: [
+        "The heat ran through the whole scan, and every tracked account treated it as a merchandising moment rather than a wardrobe one. JBC opened on '30 graden op de planning' and went straight to a sale. The Fashion Store's answer to the heat was that its shops have air conditioning. ZEB sold recycled-steel water bottles. Four accounts, one week of genuinely uncomfortable weather, and not one of them said anything about what the clothes themselves do.",
+        "That is the gap, and it is unusually cheap to fill, because linen is one of the few product claims a customer can verify within an hour of putting it on. It is a loosely woven bast fibre: the weave moves air, and the fibre takes on moisture and releases it rather than holding it against the skin. That is why a linen shirt at 30 degrees feels different from a cotton T-shirt at 30 degrees, and it is a difference the reader has probably already noticed without having a reason for it.",
+        "The register matters as much as the content. Everything else in the feed that week was in exclamation marks and percentages; the honest version of this post is flat and specific — the fibre, what it does, what it looks like after three summers. Linen creases, and saying so is the credibility. A brand that admits the crease is believed about the cooling.",
+        "Practically this is a short caption on one piece rather than a guide. One garment, the fibre named, one line about how it wears in. It is also the post most worth repeating: the weather returns every year, and unlike a sale week it does not date.",
+      ],
+    },
+    posts: [
+      {
+        id: "br-14-p1",
+        network: "instagram",
+        publishedOn: "3 weeks ago",
+        author: { name: "JBC", handle: "@jbcfashion", initials: "JB", accent: "red" },
+        text: "30 graden op de planning = tijd voor luchtige zomerlooks. ☀️ En laat dat nu nét goed uitkomen: we hebben extra veel shorts, T-shirts, kleedjes en andere zonnige items toegevoegd aan onze SOLDEN.",
+        likes: 163,
+        comments: 2,
+        reposts: 0,
+      },
+      {
+        id: "br-14-p2",
+        network: "instagram",
+        publishedOn: "12 days ago",
+        author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
+        text: "NEW: de drinkflessen van Dopper in superleuke zomerkleurtjes🚰☀️ Gemaakt met 90% gerecycleerd staal ✅️",
+        likes: 3,
+        comments: 0,
+        reposts: 0,
+      },
+      {
+        id: "br-14-p3",
+        network: "instagram",
+        publishedOn: "3 weeks ago",
+        author: { name: "The Fashion Store", handle: "@thefashionstore_be", initials: "TF", accent: "purple" },
+        text: "Op zoek naar verkoeling? Onze winkels hebben airco! Én je geniet van solden met kortingen tot -70%*🛍️",
+        likes: 3,
+        comments: 0,
+        reposts: 0,
+      },
+      {
+        id: "br-14-p4",
+        network: "instagram",
+        publishedOn: "4 weeks ago",
+        author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
+        text: "Beat the heat & shop je zomer items tot -70%* instore of via link in bio 🔗",
+        likes: 3,
+        comments: 0,
+        reposts: 0,
+      },
+    ],
+    history: [
+      {
+        status: "new",
+        when: "2h ago",
+        note: "Surfaced from the 4 July – 3 August competitor scan (5 matching posts, volume medium). Keywords: 30 graden, heat, warm, drinkflessen, Dopper.",
+      },
+    ],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-15",
+    laneId: "lane-5",
+    sourceId: "competitor-posts",
+    ageLabel: "2h ago",
+    headline: "What actually earns a place in the suitcase",
+    summary:
+      "The peak-volume theme in the scan: nine posts on holidays, the coast and packing, across JBC, The Fashion Store and ZEB. All of them show the trip. None of them answers the question a traveller is actually asking, which is what to bring.",
+    researchType: "ready-to-post",
+    isTrending: true,
+    whyNow:
+      "Holiday and coast content is the highest-volume theme in the 30-day scan, running across three of the five tracked accounts at once.",
+    whyNowDetail:
+      "Volume: high. 9 of the 112 collected posts match this topic, on Instagram only (100%). Keywords: vakantie, zee, kust, strand, travel. It is one of only two themes in the scan that every high-engagement account touched independently, which is what separates a seasonal moment from one brand's campaign.",
+    research: {
+      title: "Competitors are posting the holiday. The unclaimed post is the packing list.",
+      paragraphs: [
+        "Three of the five tracked accounts spent July on holiday content, and they converged on the same format: the customer-at-the-coast photo. JBC ran #JBCfamily spotted at the Belgian seaside and on holiday; The Fashion Store sent greetings from its creators' trips; ZEB built a 'holiday essential' post around a swipe. It is warm, it performs adequately, and it is entirely about the destination.",
+        "The version nobody published is the one with a decision in it. A suitcase is a hard constraint — a fixed volume, a week of unpredictable weather, and no laundry — which makes it the single most natural argument for a wardrobe of fewer, better pieces. Every claim about versatility that sounds abstract in March is concrete in a suitcase in July.",
+        "That argues for showing the count rather than the trip: a small number of pieces, and what they become in combination — a linen set worn as two separate halves, a knit that covers an air-conditioned flight and a cool evening, one pair of shoes that survives both a restaurant and a walk. The complete-outfit and multi-piece sets already carry this shape; the post is simply doing the arithmetic out loud.",
+        "It is also the most durable thing in this scan. A discount post is dead when the sale ends and a festival post is dead on Monday, but a packing argument works every summer, and again at every long weekend. Written once, it should be treated as an evergreen asset rather than a July post.",
+      ],
+    },
+    posts: [
+      {
+        id: "br-15-p1",
+        network: "instagram",
+        publishedOn: "11 days ago",
+        author: { name: "JBC", handle: "@jbcfashion", initials: "JB", accent: "red" },
+        text: "Onze #JBCfamily gespot aan zee in de leukste (matching) outfits. Staat een tripje naar de Belgische kust ook nog op jullie planning deze zomer? 🌊",
+        likes: 78,
+        comments: 1,
+        reposts: 0,
+      },
+      {
+        id: "br-15-p2",
+        network: "instagram",
+        publishedOn: "3 weeks ago",
+        author: { name: "JBC", handle: "@jbcfashion", initials: "JB", accent: "red" },
+        text: "Onze allermooiste #JBCfamily gespot op vakantie! 🌞 Deel ook je leukste vakantiekiekjes met ons @jbcfashion. 💛",
+        likes: 143,
+        comments: 1,
+        reposts: 0,
+      },
+      {
+        id: "br-15-p3",
+        network: "instagram",
+        publishedOn: "10 days ago",
+        author: { name: "The Fashion Store", handle: "@thefashionstore_be", initials: "TF", accent: "purple" },
+        text: "Groetjes van onze #thefashionstorelovers vanop vakantie ☀️ Shop je favoriete vakantielooks aan kortingen tot -70%* ✨",
+        likes: 3,
+        comments: 1,
+        reposts: 0,
+      },
+      {
+        id: "br-15-p4",
+        network: "instagram",
+        publishedOn: "3 weeks ago",
+        author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
+        text: "Hold the screen to discover your holiday essential 🌴✅️ #zebfashion #multibrandstore #vakantie",
+        likes: 3,
+        comments: 4,
+        reposts: 0,
+      },
+      {
+        id: "br-15-p5",
+        network: "instagram",
+        publishedOn: "4 weeks ago",
+        author: { name: "JBC", handle: "@jbcfashion", initials: "JB", accent: "red" },
+        text: "Maak je vakantiekoffer klaar met de favoriete zomerlooks van @oliviaburguet, @ashleygaleyn en @maimouna.badjie. Ontdek nu nog meer items in SOLDEN! 🌞",
+        likes: 92,
+        comments: 0,
+        reposts: 0,
+      },
+    ],
+    history: [
+      {
+        status: "new",
+        when: "2h ago",
+        note: "Surfaced from the 4 July – 3 August competitor scan (9 matching posts).",
+      },
+      { status: "new", when: "2h ago", note: "Flagged trending — joint highest-volume theme in the scan." },
+    ],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-16",
+    laneId: "lane-5",
+    sourceId: "competitor-posts",
+    ageLabel: "2h ago",
+    headline: "When a collection has a muse — and yours isn't a celebrity",
+    summary:
+      "JBC's CAMILLE x JBC drop, a collection its designer built around her own cat, produced the four biggest posts in the entire scan — up to 2,830 likes against a baseline in the low hundreds. The mechanism is a story behind the collection, and it doesn't require a famous name.",
+    researchType: "ready-to-post",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "The celebrity is not the mechanism. The origin story is.",
+      paragraphs: [
+        "Nothing else in this 30-day window came close. JBC's CAMILLE x JBC launch — a capsule the Belgian artist Camille Dhont built around her own cat, Moustache, with paw prints worked into the prints and details — took 1,058 likes on the teaser, 1,013 and 879 on the launch posts, and 2,830 on the behind-the-scenes video. The same account's ordinary product posts sit between 50 and 150. It is a 10–30× multiple, and it repeated across four separate posts rather than spiking once.",
+        "The obvious read is that celebrity works, and the more useful read is that this is not what the numbers are measuring. The top performer of the four was the behind-the-scenes clip, not the product. What travelled was the origin — that the collection came from somewhere specific and slightly absurd, and that you could see the decision being made. E5 Mode is quietly running the same play without any celebrity at all: 'Chapter one: casual', 'Chapter two: city', a serialised look behind its FW26 shoot, and those posts outperform its product posts too.",
+        "For a brand founded by two brothers, that mechanism is available and unused. The equivalent origin is not a person but the material: why linen and not a cotton blend, why the shoes are handmade suede, what a European atelier changed about a pattern between the first sample and the tenth. Told as a sequence rather than a single post — the way both JBC and E5 Mode ran theirs — it is a format, not a one-off.",
+        "The line worth holding: competitors buy a muse for a season, and the collection ends when the collaboration does. A brand whose muse is the material never has to launch a new one.",
+      ],
+    },
+    posts: [
+      {
+        id: "br-16-p1",
+        network: "instagram",
+        publishedOn: "10 days ago",
+        author: { name: "JBC", handle: "@jbcfashion", initials: "JB", accent: "red" },
+        text: "Volgende week gaat Circus CAMILLE van start… en ook JBC is er dit jaar opnieuw bij met een superleuke stand vol officiële CAMILLE-merch. In deze video krijg je alvast een eerste sneak peek van het nieuwe Circus CAMILLE T-shirt. 🎪✨",
+        likes: 2830,
+        comments: 34,
+        reposts: 0,
+      },
+      {
+        id: "br-16-p2",
+        network: "instagram",
+        publishedOn: "8 days ago",
+        author: { name: "JBC", handle: "@jbcfashion", initials: "JB", accent: "red" },
+        text: "Nieuwe CAMILLE x JBC-collectie én Circus Merch loading... ❤️‍🔥 Heel snel verkrijgbaar... #CAMILLExJBC #CAMILLEcollectie",
+        likes: 1058,
+        comments: 47,
+        reposts: 0,
+      },
+      {
+        id: "br-16-p3",
+        network: "instagram",
+        publishedOn: "6 days ago",
+        author: { name: "JBC", handle: "@jbcfashion", initials: "JB", accent: "red" },
+        text: "Miauw! Voor haar nieuwste collectie liet @camille_dhont zich inspireren door haar eigen kat: Moustache. Shop jouw favoriete looks nu al op JBC.be en vanaf morgen in alle JBC-winkels.",
+        likes: 1013,
+        comments: 22,
+        reposts: 0,
+      },
+      {
+        id: "br-16-p4",
+        network: "instagram",
+        publishedOn: "6 days ago",
+        author: { name: "JBC", handle: "@jbcfashion", initials: "JB", accent: "red" },
+        text: "Er is een nieuwe designer bij CAMILLE x JBC. Hij miauwt, hij heeft snorharen, en hij heet Moustache. Het is... de kat van CAMILLE! Van printjes tot piepkleine details, Moustache heeft zijn pootafdrukje letterlijk overal achtergelaten.",
+        likes: 879,
+        comments: 17,
+        reposts: 0,
+      },
+    ],
+    history: [
+      {
+        status: "new",
+        when: "2h ago",
+        note: "Surfaced from the 4 July – 3 August competitor scan (4 matching posts, volume medium). Keywords: Moustache, kat, cat, inspireren.",
+      },
+    ],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-17",
+    laneId: "lane-5",
+    sourceId: "competitor-posts",
+    ageLabel: "2h ago",
+    headline: "Festival season is a rental market — sell the wardrobe that outlives it",
+    summary:
+      "ZEB spent July on festivals: outfits, an ice-cream bike, staff and ambassadors on site. Nine posts, and the engagement sits almost entirely on the creator content rather than the brand's own. It's the clearest example in the scan of buying a weekend.",
+    researchType: "ready-to-post",
+    isTrending: true,
+    whyNow:
+      "Festival content is the joint highest-volume theme in the 30-day scan and runs straight through July and into August.",
+    whyNowDetail:
+      "Volume: high. 9 of the 112 collected posts match this topic, on Instagram only (100%). Keywords: festival, festivals, lawaai, noise. Almost all of it comes from a single account, and its two best-performing entries (468 and 298 likes) are creator posts rather than brand posts — the brand's own festival posts sit at 3.",
+    research: {
+      title: "The counter-position writes itself, and it doesn't need a festival",
+      paragraphs: [
+        "One account owns this theme. ZEB ran festival outfits, parked an 'Ice Ice Baby Bike' handing out ice pops on site, photographed its own staff in the crowd and asked its ambassadors which festival they liked best. Nine posts across July. The pattern inside the numbers is worth more than the theme itself: the brand's own festival posts landed at 3 likes, while the two creator posts wearing the same clothes took 468 and 298.",
+        "So the activation is not buying attention for the brand; it is renting it from the people it pays. And what it is renting attention for is, structurally, a two-day garment — bought for one weekend, photographed once, then competing for hanger space for the rest of its life.",
+        "The counter-position does not require entering the conversation at all, which is the point. The argument is arithmetic: a piece worn twice has a cost per wear roughly a hundred times a piece worn twice a week for three years, and the second one is usually the cheaper item at the till. That is the most concrete form the 'built to last' claim takes, and it is stronger in July precisely because the surrounding feed is full of the alternative.",
+        "One caution on register. This wins on restraint, not on criticism — naming the competitor, or moralising about how people spend a summer, would cost more than the post earns. Say what a wardrobe is for, show a piece that has already had three summers, and let the comparison land on its own.",
+      ],
+    },
+    posts: [
+      {
+        id: "br-17-p1",
+        network: "instagram",
+        publishedOn: "3 weeks ago",
+        author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
+        text: "Ongelooflijk heet en sneller gedaan dan verwacht, maar wat een mooie dag.🧡💃🏼🌞 Festival outfit by @zebfashion || Publiciteit",
+        likes: 468,
+        comments: 10,
+        reposts: 0,
+      },
+      {
+        id: "br-17-p2",
+        network: "instagram",
+        publishedOn: "3 weeks ago",
+        author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
+        text: "“Hey @ellakonings, wat is je favoriete festival aller tijden?” “Ik ben geen festivalganger.” 😯 Ben jij team festival of team toch liever niet? 👇",
+        likes: 298,
+        comments: 5,
+        reposts: 0,
+      },
+      {
+        id: "br-17-p3",
+        network: "instagram",
+        publishedOn: "3 weeks ago",
+        author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
+        text: "Free ZEB ice pops at the festivals 🧡🍦 Have you spotted our 'Ice Ice Baby Bike' yet? Tell us where to park next ⬇️",
+        likes: 3,
+        comments: 5,
+        reposts: 0,
+      },
+      {
+        id: "br-17-p4",
+        network: "instagram",
+        publishedOn: "2 weeks ago",
+        author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
+        text: "Spotted: our colleagues at the festivals — dressed in ZEB 🩹 #zebfashion #multibrandstore #summer #festival",
+        likes: 3,
+        comments: 4,
+        reposts: 0,
+      },
+      {
+        id: "br-17-p5",
+        network: "instagram",
+        publishedOn: "2 weeks ago",
+        author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
+        text: "Live today. Love tomorrow. Unite forever.🌞 Festival outfit by @zebfashion",
+        likes: 3,
+        comments: 5,
+        reposts: 0,
+      },
+    ],
+    history: [
+      {
+        status: "new",
+        when: "2h ago",
+        note: "Surfaced from the 4 July – 3 August competitor scan (9 matching posts).",
+      },
+      { status: "new", when: "2h ago", note: "Flagged trending — joint highest-volume theme in the scan." },
     ],
     seedStatus: "new",
     seedReason: "",

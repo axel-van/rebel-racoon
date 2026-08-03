@@ -21,9 +21,9 @@ import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=2";
-import { getBriefById, ignoreBrief, setStatus } from "../briefs-store.js?v=3";
-import { getContextById } from "../contexts-store.js?v=45";
-import { renderSocialPostCard } from "./social-post-card.js?v=6";
+import { getBriefById, ignoreBrief, setStatus } from "../briefs-store.js?v=4";
+import { getContextById } from "../contexts-store.js?v=46";
+import { renderSocialPostCard } from "./social-post-card.js?v=7";
 import { showToast } from "./toast.js?v=20";
 
 const MODAL_ID = "research";
