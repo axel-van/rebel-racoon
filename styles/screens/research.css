@@ -756,14 +756,6 @@
   letter-spacing: -0.01em;
 }
 
-/* 28px like .recap__name-edit — an inline affordance on the title, not a button
-   in the action cluster. */
-.research-feed__name-edit {
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-}
-
 .research-feed__meta {
   display: flex;
   flex-wrap: wrap;
@@ -799,11 +791,15 @@
   max-width: 60ch;
 }
 
+/* Padding mirrors .welcome-screen__body.recap — 32px top, 40px sides — so the
+   header starts at the same height on both detail views. Its bottom is generous
+   for the same reason recap's is: the last card should not sit against the
+   viewport edge. */
 .research-feed__body {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding: 28px 32px 48px;
+  padding: var(--ref-spacing-lg) var(--ref-spacing-xl) var(--ref-spacing-xl);
   background: var(--app-paper);
 }
 
@@ -822,8 +818,12 @@
   margin: 0 auto;
 }
 
+/* recap puts --ref-spacing-lg (32px) between its header and the content below.
+   This column's own gap is 16px — the card-to-card rhythm the handoff specifies,
+   which must not change — so the header adds another 16px to reach the same 32px.
+   Stated as a sum rather than a magic number: 16 (column gap) + 16 = 32. */
 .research-feed__header {
-  margin-bottom: var(--ref-spacing-xxs);
+  margin-bottom: var(--ref-spacing-sm);
 }
 
 .research-feed__empty {

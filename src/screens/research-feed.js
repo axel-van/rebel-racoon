@@ -229,18 +229,6 @@ function renderFeedHeader(lane) {
       <div class="research-feed__id-text">
         <div class="research-feed__titlerow">
           <h1 class="research-feed__name">${lane.name}</h1>
-          <!-- Inline beside the name, the analogue of recap__name-edit: editing
-               the lane is the same intent as renaming a Playbook, so it belongs
-               on the thing it edits rather than in the action cluster. -->
-          <button
-            type="button"
-            class="ap-icon-button transparent research-feed__name-edit"
-            data-feed-settings
-            title="Feed settings"
-            aria-label="Feed settings"
-          >
-            <i class="ap-icon-cog"></i>
-          </button>
         </div>
         <div class="research-feed__meta">${raw(meta)}</div>
       </div>
@@ -261,6 +249,19 @@ function renderFeedHeader(lane) {
       </div>
       <button type="button" class="ap-button stroked grey" data-feed-export>
         <i class="ap-icon-upload" aria-hidden="true"></i><span>Export</span>
+      </button>
+      <!-- Last in the cluster, to the right of Export. It sat inline beside the
+           name as recap's rename pen does, but the handoff puts the settings gear
+           at the end of the toolbar and that is where it reads as the lane's
+           own control rather than as a rename. -->
+      <button
+        type="button"
+        class="ap-icon-button stroked grey"
+        data-feed-settings
+        title="Feed settings"
+        aria-label="Feed settings"
+      >
+        <i class="ap-icon-cog"></i>
       </button>
     </div>
   </header>`;
