@@ -75,41 +75,43 @@ function renderPage() {
   const cadence = findCadence(lane.cadence);
   const n = briefs.length;
 
-  return html`<header class="research-feed__topbar">
-      <button type="button" class="ap-icon-button ghost grey" data-trending-back aria-label="Back to the feed">
-        <i class="ap-icon-arrow-left" aria-hidden="true"></i>
-      </button>
-      <h2 class="research-feed__title">Trending now</h2>
-    </header>
-    <div class="research-feed__body">
-      <div class="research-trending__inner">
-        <div class="research-trending__head">
+  // Same recap__header shape as the feed, minus the monogram: this page belongs
+  // to one lane you have already identified by arriving from it, and the orange
+  // trending mark is the thing that should carry the eye. Back is the topbar's,
+  // via backTargetFor() — no in-page button on any Content Research detail view.
+  return html`<div class="research-feed__body">
+    <div class="research-trending__inner">
+      <header class="research-feed__header research-feed__header--trending">
+        <div class="research-feed__id">
           <span class="research-banner__mark" aria-hidden="true"><i class="ap-icon-arrow-up"></i></span>
-          <span>
-            <strong class="research-trending__title">You have ${n} ${n === 1 ? "topic" : "topics"} trending</strong>
-            <span class="research-trending__sub">
-              Refreshed ${cadence ? cadence.adverb : "weekly"} — topics appear here when this
-              ${cadence ? cadence.every : "week"}'s volume runs above the last one's baseline, whatever their review
-              status.
-            </span>
-          </span>
+          <div class="research-feed__id-text">
+            <div class="research-feed__titlerow">
+              <h1 class="research-feed__name">You have ${n} ${n === 1 ? "topic" : "topics"} trending</h1>
+            </div>
+            <div class="research-feed__meta">
+              <span class="research-feed__meta-item">
+                Refreshed ${cadence ? cadence.adverb : "weekly"} — topics appear here when this
+                ${cadence ? cadence.every : "week"}'s volume runs above the last one's baseline, whatever their review
+                status.
+              </span>
+            </div>
+          </div>
         </div>
-        ${raw(
-          n
-            ? briefs
-                .map((b) => renderBriefCard(b, { source: findResearchSource(b.sourceId), variant: "trending" }))
-                .join("")
-            : html`<p class="research-feed__empty muted">Nothing is running above its baseline right now.</p>`,
-        )}
-      </div>
-    </div>`;
+      </header>
+      ${raw(
+        n
+          ? briefs
+              .map((b) => renderBriefCard(b, { source: findResearchSource(b.sourceId), variant: "trending" }))
+              .join("")
+          : html`<p class="research-feed__empty muted">Nothing is running above its baseline right now.</p>`,
+      )}
+    </div>
+  </div>`;
 }
 
 function bind(target) {
   boundTarget = target;
   boundClick = (event) => {
-    if (event.target.closest("[data-trending-back]")) return navigate(`/research/${encodeURIComponent(laneId)}`);
-
     const use = event.target.closest("[data-brief-use]");
     if (use) {
       setStatus(use.dataset.briefUse, "used");

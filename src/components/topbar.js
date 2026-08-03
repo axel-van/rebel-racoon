@@ -474,6 +474,12 @@ function isSessionRoute() {
 // Routes that lead with a back control instead of a title, and where they go.
 function backTargetFor(path) {
   if (/^\/playbook\//.test(path)) return { to: "/contexts", label: "Back to Playbooks" };
+  // Every Content Research detail view — a lane's feed, its settings, its
+  // trending page — gets its back here rather than carrying its own button, the
+  // same way /playbook does. Deliberately WITHOUT ?fresh=1: that param runs the
+  // generating loader, and a back button should not spend 1.6s pretending to
+  // fetch a list you were just looking at.
+  if (/^\/research\/[^/]+/.test(path)) return { to: "/research", label: "Back to Content Research" };
   // The Topics settings page carries its Playbook scope BACK to the feed, so a
   // filtered feed survives the round trip. getPath() strips the query, so the scope
   // has to be read from the hash here rather than taken from `path`.

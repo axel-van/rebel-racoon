@@ -37,7 +37,14 @@ import {
   toggleSaved,
   subscribe as subscribeBriefs,
 } from "../briefs-store.js?v=3";
-import { RESEARCH_SOURCES, REVIEW_STATUSES, RESEARCH_TYPES, findResearchSource } from "../research-catalog.js?v=2";
+import {
+  RESEARCH_SOURCES,
+  REVIEW_STATUSES,
+  RESEARCH_TYPES,
+  findResearchSource,
+  findCadence,
+} from "../research-catalog.js?v=2";
+import { getContextById } from "../contexts-store.js?v=45";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
@@ -148,27 +155,26 @@ function renderPage() {
   // lane's own Show-trending setting has to be on.
   const showBanner = trendingCount > 0 && lane.showTrending;
 
-  return html`${raw(renderTopBar(lane))}
-    <div class="research-feed__body">
-      <div class="research-feed__inner">
-        ${raw(showBanner ? renderBanner(trendingCount) : "")}
-        ${raw(
-          briefs.length
-            ? briefs
-                .map((b) =>
-                  renderBriefCard(b, {
-                    source: findResearchSource(b.sourceId),
-                    variant: "feed",
-                    menuOpen: view.openMenu === b.id,
-                  }),
-                )
-                .join("")
-            : html`<p class="research-feed__empty muted">
-                No briefs match these filters. Try widening them, or reset to the defaults.
-              </p>`,
-        )}
-      </div>
-    </div>`;
+  return html`<div class="research-feed__body">
+    <div class="research-feed__inner">
+      ${raw(renderFeedHeader(lane))} ${raw(showBanner ? renderBanner(trendingCount) : "")}
+      ${raw(
+        briefs.length
+          ? briefs
+              .map((b) =>
+                renderBriefCard(b, {
+                  source: findResearchSource(b.sourceId),
+                  variant: "feed",
+                  menuOpen: view.openMenu === b.id,
+                }),
+              )
+              .join("")
+          : html`<p class="research-feed__empty muted">
+              No briefs match these filters. Try widening them, or reset to the defaults.
+            </p>`,
+      )}
+    </div>
+  </div>`;
 }
 
 function renderGenerating() {
@@ -182,15 +188,64 @@ function renderGenerating() {
   </div>`;
 }
 
-function renderTopBar(lane) {
+// Mirrors recap__header — the prototype's established detail-view header:
+//
+//   __id ( __monogram + __id-text ( __titlerow(h1 + inline affordance) + __meta ) )
+//   opposite __header-actions
+//
+// It replaces a bordered bar that carried its own back button and captioned
+// itself, matching no other detail screen. Back now lives in the global topbar
+// via backTargetFor(), exactly as /playbook's does.
+//
+// Own class names rather than reusing recap__*: those belong to the Playbook
+// render engine, and sharing them would mean restyling one detail view silently
+// restyles the other.
+function renderFeedHeader(lane) {
   const narrowed = narrowedGroupCount(filters);
-  return html`<header class="research-feed__topbar">
-    <button type="button" class="ap-icon-button ghost grey" data-feed-back aria-label="Back to Content Research">
-      <i class="ap-icon-arrow-left" aria-hidden="true"></i>
-    </button>
-    <h2 class="research-feed__title">${lane.name}</h2>
-    <span class="research-feed__spacer"></span>
-    <div class="research-feed__tools">
+  const ctx = getContextById(lane.playbookId);
+  const cadence = findCadence(lane.cadence);
+  const n = lane.sources.length;
+
+  // The Playbook's monogram, same idea as recap__monogram: it says which brand
+  // this research belongs to before you read a word. Tinted by a CLASS, not an
+  // inline hex — a lane has a semantic colour key, where /playbook has real
+  // extracted brand colours to interpolate.
+  const color = ctx?.color || "orange";
+  const initials = ((ctx?.brandName || ctx?.name || "?").trim()[0] || "?").toUpperCase();
+
+  const meta = [
+    ctx
+      ? html`<span class="research-feed__meta-item"><i class="ap-icon-target" aria-hidden="true"></i>${ctx.name}</span>`
+      : "",
+    html`<span class="research-feed__meta-item">${n} ${n === 1 ? "source" : "sources"}</span>`,
+    cadence ? html`<span class="research-feed__meta-item">Refreshed ${cadence.adverb}</span>` : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
+  return html`<header class="research-feed__header">
+    <div class="research-feed__id">
+      <span class="research-feed__monogram research-feed__monogram--${color}" aria-hidden="true">${initials}</span>
+      <div class="research-feed__id-text">
+        <div class="research-feed__titlerow">
+          <h1 class="research-feed__name">${lane.name}</h1>
+          <!-- Inline beside the name, the analogue of recap__name-edit: editing
+               the lane is the same intent as renaming a Playbook, so it belongs
+               on the thing it edits rather than in the action cluster. -->
+          <button
+            type="button"
+            class="ap-icon-button transparent research-feed__name-edit"
+            data-feed-settings
+            title="Feed settings"
+            aria-label="Feed settings"
+          >
+            <i class="ap-icon-cog"></i>
+          </button>
+        </div>
+        <div class="research-feed__meta">${raw(meta)}</div>
+      </div>
+    </div>
+    <div class="research-feed__header-actions">
       <div class="research-filters">
         <button
           type="button"
@@ -206,9 +261,6 @@ function renderTopBar(lane) {
       </div>
       <button type="button" class="ap-button stroked grey" data-feed-export>
         <i class="ap-icon-upload" aria-hidden="true"></i><span>Export</span>
-      </button>
-      <button type="button" class="ap-icon-button ghost grey" data-feed-settings aria-label="Feed settings">
-        <i class="ap-icon-cog" aria-hidden="true"></i>
       </button>
     </div>
   </header>`;
@@ -289,7 +341,6 @@ function bind(target) {
   boundTarget = target;
 
   boundClick = (event) => {
-    if (event.target.closest("[data-feed-back]")) return navigate("/research");
     if (event.target.closest("[data-feed-settings]"))
       return navigate(`/research/${encodeURIComponent(laneId)}/settings`);
     if (event.target.closest("[data-feed-trending]"))
