@@ -5129,52 +5129,36 @@ export const researchBriefs = [
 
   // ── lane-5 · from the real Noba Fashion listening export ───────────────────
   //
-  // The four topics model gemini-3.5-flash returned over the 112 Instagram posts
-  // in `noba_fashion_competitors_posts_last30days` (4 July – 3 August 2026, five
-  // competitor accounts). Its themes, "Why now" lines, volume figures, network
-  // mix, keyword sets and item counts are kept as it produced them.
+  // Three topics over the 112 Instagram posts in `noba_fashion_competitors_posts_
+  // last30days` (4 July – 3 August 2026, five competitor accounts). Headline,
+  // summary and article are the generation output as written against ctx-noba —
+  // kept as produced, with the article's section headings folded into paragraphs
+  // because the research view renders prose only.
   //
-  // Why only one model, again: the export is a MODEL COMPARISON — gemini-3.5-flash
-  // returned 4 topics, gemini-3.6-flash 3, gemini-3.5-flash-lite 1 — over the same
-  // posts, so the sets overlap. gemini-3.5-flash is the widest and the one asked
-  // for.
-  //
-  // ⚠ One deliberate departure, and it is the only one. The export was RUN UNDER
-  // A TRACTIVE PLAYBOOK: every "Brand angle" and every article it wrote is about
-  // pet GPS trackers, even though the posts it read are Belgian fashion
-  // retailers. Kept verbatim, these four briefs would tell Noba Fashion to write
-  // about pet dehydration. So the half of each topic that the SCAN produced —
-  // theme, why-now, volume, network, keywords, counts — is the export's, and the
-  // half that the wrong brief produced — brand angle and article — is rewritten
-  // against ctx-noba. Nothing observational is invented.
-  //
-  // Unlike lane-4, `posts` is populated: this export came with the underlying
-  // items (author, date, text, likes, comments), so the briefs can show the real
-  // evidence. Engagement figures are as exported; `reposts` is 0 throughout
-  // because the export's shares column is empty, not because it was measured.
-  //
-  // isTrending is DERIVED from the export's own `Volume:` field — high → trending
-  // (topics 2 and 4), medium → not (topics 1 and 3), the same rule as lane-4.
-  // All four share an ageLabel: they came out of one scan.
+  // `posts` carries the export's own items — author, date, text, engagement as
+  // exported — matched under the topic their text supports. `reposts` is 0
+  // throughout because the export's shares column is empty, not because it was
+  // measured. All three share an ageLabel: they came out of one scan.
   {
     id: "br-14",
     laneId: "lane-5",
     sourceId: "competitor-posts",
     ageLabel: "2h ago",
-    headline: "Dressing for 30 degrees: the heatwave is a fabric problem",
+    headline: "From Summer to Autumn: Smart Transitional Layering for the Belgian Climate",
     summary:
-      "Competitors met the heat with discounts and accessories — '30 graden op de planning', airco in the stores, Dopper bottles. Nobody answered the actual question, which is what you put on your body when it's that warm.",
+      "Advice on building a transitional wardrobe with light layering pieces and versatile essential tops without immediately packing away your summer wardrobe. Focuses on practical multi-brand solutions for unpredictable Belgian weather.",
     researchType: "ready-to-post",
     isTrending: false,
     whyNow: "",
     whyNowDetail: "",
     research: {
-      title: "The one week of the year a fabric claim is felt the same day it's made",
+      title: "Belgian weather demands smart layers, not a sudden wardrobe swap",
       paragraphs: [
-        "The heat ran through the whole scan, and every tracked account treated it as a merchandising moment rather than a wardrobe one. JBC opened on '30 graden op de planning' and went straight to a sale. The Fashion Store's answer to the heat was that its shops have air conditioning. ZEB sold recycled-steel water bottles. Four accounts, one week of genuinely uncomfortable weather, and not one of them said anything about what the clothes themselves do.",
-        "That is the gap, and it is unusually cheap to fill, because linen is one of the few product claims a customer can verify within an hour of putting it on. It is a loosely woven bast fibre: the weave moves air, and the fibre takes on moisture and releases it rather than holding it against the skin. That is why a linen shirt at 30 degrees feels different from a cotton T-shirt at 30 degrees, and it is a difference the reader has probably already noticed without having a reason for it.",
-        "The register matters as much as the content. Everything else in the feed that week was in exclamation marks and percentages; the honest version of this post is flat and specific — the fibre, what it does, what it looks like after three summers. Linen creases, and saying so is the credibility. A brand that admits the crease is believed about the cooling.",
-        "Practically this is a short caption on one piece rather than a guide. One garment, the fibre named, one line about how it wears in. It is also the post most worth repeating: the weather returns every year, and unlike a sale week it does not date.",
+        "You know the feeling: the mornings already feel surprisingly crisp, while the afternoon sun warms up the terrace again. In fashion stores and across social media, heavy autumn collections and winter coats are already being pushed everywhere. Yet it is far too early to permanently banish your favorite summer items to the attic.",
+        "The secret to effortless style during this transitional period lies not in hastily purchasing a complete autumn wardrobe, but in masterfully combining light layers. As a Belgian multi-brand expert, we at Noba Fashion know how quickly our climate can shift. With a few cleverly chosen basic pieces from our wide brand selection, you can transform your summer outfits into autumn-proof combinations in no time.",
+        "A successful transitional look relies on garments that adapt easily to temperature fluctuations. Lightweight knitwear is the ultimate in-between piece: a finely knit cardigan or a thin cotton sweater goes over a summer dress or top in the morning, and around your shoulders as soon as the sun breaks through. Timeless denim and light trousers form the foundation — enough protection against a cool breeze, and they pair effortlessly with both sunny tops and autumn blazers. And a versatile mid-season jacket, whether a classic trench coat, a denim jacket or a refined overshirt, instantly elevates any look while staying practical for life on the go.",
+        "Fashion is about smart combinations, not monthly overhauls. An airy summer dress gains an instant autumnal feel layered under a tailored blazer, with open sandals swapped for closed-toe shoes or ankle boots. A sleeveless summer top carries over just as easily under a fluid button-down shirt worn open as a light jacket. Combining different brands within a single outfit gives you the freedom to refine your personal style — functional for the morning rush, elegant for work, comfortable for the weekend.",
+        "The Belgian autumn requires flexibility. By resisting the urge to jump straight into heavy winter wear and focusing instead on thoughtful transitional layers, you get the absolute most out of your closet. With a few strong foundational elements from our multi-brand selection, you can step out the door every morning with confidence — no matter what your weather app predicts.",
       ],
     },
     posts: [
@@ -5191,31 +5175,31 @@ export const researchBriefs = [
       {
         id: "br-14-p2",
         network: "instagram",
-        publishedOn: "12 days ago",
-        author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
-        text: "NEW: de drinkflessen van Dopper in superleuke zomerkleurtjes🚰☀️ Gemaakt met 90% gerecycleerd staal ✅️",
-        likes: 3,
-        comments: 0,
+        publishedOn: "11 days ago",
+        author: { name: "JBC", handle: "@jbcfashion", initials: "JB", accent: "red" },
+        text: "Onze #JBCfamily gespot aan zee in de leukste (matching) outfits. Staat een tripje naar de Belgische kust ook nog op jullie planning deze zomer? 🌊",
+        likes: 78,
+        comments: 1,
         reposts: 0,
       },
       {
         id: "br-14-p3",
         network: "instagram",
         publishedOn: "3 weeks ago",
-        author: { name: "The Fashion Store", handle: "@thefashionstore_be", initials: "TF", accent: "purple" },
-        text: "Op zoek naar verkoeling? Onze winkels hebben airco! Én je geniet van solden met kortingen tot -70%*🛍️",
-        likes: 3,
-        comments: 0,
+        author: { name: "JBC", handle: "@jbcfashion", initials: "JB", accent: "red" },
+        text: "Onze allermooiste #JBCfamily gespot op vakantie! 🌞 Deel ook je leukste vakantiekiekjes met ons @jbcfashion. 💛",
+        likes: 143,
+        comments: 1,
         reposts: 0,
       },
       {
         id: "br-14-p4",
         network: "instagram",
-        publishedOn: "4 weeks ago",
+        publishedOn: "3 weeks ago",
         author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
-        text: "Beat the heat & shop je zomer items tot -70%* instore of via link in bio 🔗",
+        text: "Hold the screen to discover your holiday essential 🌴✅️ #zebfashion #multibrandstore #vakantie",
         likes: 3,
-        comments: 0,
+        comments: 4,
         reposts: 0,
       },
     ],
@@ -5223,7 +5207,7 @@ export const researchBriefs = [
       {
         status: "new",
         when: "2h ago",
-        note: "Surfaced from the 4 July – 3 August competitor scan (5 matching posts, volume medium). Keywords: 30 graden, heat, warm, drinkflessen, Dopper.",
+        note: "Surfaced from the 4 July – 3 August competitor scan (4 matching posts). Keywords: 30 graden, zomerlooks, vakantie, zee.",
       },
     ],
     seedStatus: "new",
@@ -5234,43 +5218,44 @@ export const researchBriefs = [
     laneId: "lane-5",
     sourceId: "competitor-posts",
     ageLabel: "2h ago",
-    headline: "What actually earns a place in the suitcase",
+    headline: "Less Impulse, More Value: Building a Sustainable Sale Capsule",
     summary:
-      "The peak-volume theme in the scan: nine posts on holidays, the coast and packing, across JBC, The Fashion Store and ZEB. All of them show the trip. None of them answers the question a traveller is actually asking, which is what to bring.",
+      "Strategic styling advice on leveraging the final sale days to build a timeless capsule wardrobe rather than chasing impulsive discounts. Focuses on selecting high-quality basic pieces and multi-brand classics.",
     researchType: "ready-to-post",
     isTrending: true,
     whyNow:
-      "Holiday and coast content is the highest-volume theme in the 30-day scan, running across three of the five tracked accounts at once.",
+      "The final markdown weeks run straight through the 30-day scan, with discount messaging on three of the five tracked accounts at once.",
     whyNowDetail:
-      "Volume: high. 9 of the 112 collected posts match this topic, on Instagram only (100%). Keywords: vakantie, zee, kust, strand, travel. It is one of only two themes in the scan that every high-engagement account touched independently, which is what separates a seasonal moment from one brand's campaign.",
+      "Discount-led posts — SOLDEN, kortingen tot -70% — appear from 4 July to 3 August across JBC, ZEB and The Fashion Store, on Instagram only (100%). Keywords: solden, korting, -70%, sale. It is the theme every high-volume account touched independently, and the moment a customer is most likely to buy something they will never wear twice.",
     research: {
-      title: "Competitors are posting the holiday. The unclaimed post is the packing list.",
+      title: "Don't get carried away by sale frenzy: choose smart investments",
       paragraphs: [
-        "Three of the five tracked accounts spent July on holiday content, and they converged on the same format: the customer-at-the-coast photo. JBC ran #JBCfamily spotted at the Belgian seaside and on holiday; The Fashion Store sent greetings from its creators' trips; ZEB built a 'holiday essential' post around a swipe. It is warm, it performs adequately, and it is entirely about the destination.",
-        "The version nobody published is the one with a decision in it. A suitcase is a hard constraint — a fixed volume, a week of unpredictable weather, and no laundry — which makes it the single most natural argument for a wardrobe of fewer, better pieces. Every claim about versatility that sounds abstract in March is concrete in a suitcase in July.",
-        "That argues for showing the count rather than the trip: a small number of pieces, and what they become in combination — a linen set worn as two separate halves, a knit that covers an air-conditioned flight and a cool evening, one pair of shoes that survives both a restaurant and a walk. The complete-outfit and multi-piece sets already carry this shape; the post is simply doing the arithmetic out loud.",
-        "It is also the most durable thing in this scan. A discount post is dead when the sale ends and a festival post is dead on Monday, but a packing argument works every summer, and again at every long weekend. Written once, it should be treated as an evergreen asset rather than a July post.",
+        "Red stickers, aggressive discounts up to -70%, and slogans shouting 'now or never': the final sale weeks can be overwhelming. The pitfall of this period is well known — you come home with garments that were fantastically discounted, only for them to sit at the back of your closet after a single wear because they match nothing else you own.",
+        "At Noba Fashion, we take a different view of sales. We don't see them as a hunt for as many cheap items as possible, but as the moment to secure high-quality multi-brand classics that will last for years. With a targeted approach, an impulsive shopping trip becomes a sustainable upgrade to your wardrobe.",
+        "A successful sale purchase meets three simple criteria: the fit is perfect, the quality is exceptional, and the item fits seamlessly into your daily lifestyle. Ask yourself with every item whether you would consider buying it at full price — if the answer is yes, you have found a genuine gem. During the final markdowns that points at three categories: a timeless, well-cut blazer in a neutral shade such as navy, sand or black; high-quality jeans or trousers from a top brand with a great fit; and classic knitwear and blouses — crisp white shirts, finely knit wool or cotton sweaters, neatly finished tops.",
+        "The great advantage of a multi-brand store is being able to compare and combine pieces from different quality brands side by side. A capsule wardrobe is ideally around ten well-coordinated garments you can mix and match effortlessly. Searching for neutral color palettes during the sales — warm beige, grey, deep blue, olive green — is what makes new additions integrate with what is already in your closet, and what removes the familiar 'I have nothing to wear' frustration on a busy morning.",
+        "Shopping with a plan brings peace of mind. Instead of getting lost in overcrowded racks filled with fleeting trends, a thoughtful shopping visit helps you build a reliable wardrobe you can count on. Style isn't about the quantity of clothes in your closet, but about the quality and versatility of the pieces you wear — which is how you walk away from the final sale weeks with true long-term value rather than buyer's remorse.",
       ],
     },
     posts: [
       {
         id: "br-15-p1",
         network: "instagram",
-        publishedOn: "11 days ago",
-        author: { name: "JBC", handle: "@jbcfashion", initials: "JB", accent: "red" },
-        text: "Onze #JBCfamily gespot aan zee in de leukste (matching) outfits. Staat een tripje naar de Belgische kust ook nog op jullie planning deze zomer? 🌊",
-        likes: 78,
-        comments: 1,
+        publishedOn: "3 weeks ago",
+        author: { name: "The Fashion Store", handle: "@thefashionstore_be", initials: "TF", accent: "purple" },
+        text: "Op zoek naar verkoeling? Onze winkels hebben airco! Én je geniet van solden met kortingen tot -70%*🛍️",
+        likes: 3,
+        comments: 0,
         reposts: 0,
       },
       {
         id: "br-15-p2",
         network: "instagram",
-        publishedOn: "3 weeks ago",
-        author: { name: "JBC", handle: "@jbcfashion", initials: "JB", accent: "red" },
-        text: "Onze allermooiste #JBCfamily gespot op vakantie! 🌞 Deel ook je leukste vakantiekiekjes met ons @jbcfashion. 💛",
-        likes: 143,
-        comments: 1,
+        publishedOn: "4 weeks ago",
+        author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
+        text: "Beat the heat & shop je zomer items tot -70%* instore of via link in bio 🔗",
+        likes: 3,
+        comments: 0,
         reposts: 0,
       },
       {
@@ -5286,16 +5271,6 @@ export const researchBriefs = [
       {
         id: "br-15-p4",
         network: "instagram",
-        publishedOn: "3 weeks ago",
-        author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
-        text: "Hold the screen to discover your holiday essential 🌴✅️ #zebfashion #multibrandstore #vakantie",
-        likes: 3,
-        comments: 4,
-        reposts: 0,
-      },
-      {
-        id: "br-15-p5",
-        network: "instagram",
         publishedOn: "4 weeks ago",
         author: { name: "JBC", handle: "@jbcfashion", initials: "JB", accent: "red" },
         text: "Maak je vakantiekoffer klaar met de favoriete zomerlooks van @oliviaburguet, @ashleygaleyn en @maimouna.badjie. Ontdek nu nog meer items in SOLDEN! 🌞",
@@ -5308,9 +5283,13 @@ export const researchBriefs = [
       {
         status: "new",
         when: "2h ago",
-        note: "Surfaced from the 4 July – 3 August competitor scan (9 matching posts).",
+        note: "Surfaced from the 4 July – 3 August competitor scan (4 matching posts).",
       },
-      { status: "new", when: "2h ago", note: "Flagged trending — joint highest-volume theme in the scan." },
+      {
+        status: "new",
+        when: "2h ago",
+        note: "Flagged trending — discount messaging runs across three accounts at once.",
+      },
     ],
     seedStatus: "new",
     seedReason: "",
@@ -5320,20 +5299,21 @@ export const researchBriefs = [
     laneId: "lane-5",
     sourceId: "competitor-posts",
     ageLabel: "2h ago",
-    headline: "When a collection has a muse — and yours isn't a celebrity",
+    headline: "Showing Your Colors: How to Wear Autumn's Plum & Warm Earth Tones Trend",
     summary:
-      "JBC's CAMILLE x JBC drop, a collection its designer built around her own cat, produced the four biggest posts in the entire scan — up to 2,830 likes against a baseline in the low hundreds. The mechanism is a story behind the collection, and it doesn't require a famous name.",
+      "Practical styling guide for integrating rich autumn colors like plum (brownish pink) and warm earth tones into an existing wardrobe. Demonstrates how to subtly balance this trend with neutral basic elements.",
     researchType: "ready-to-post",
     isTrending: false,
     whyNow: "",
     whyNowDetail: "",
     research: {
-      title: "The celebrity is not the mechanism. The origin story is.",
+      title: "Add depth to your wardrobe with autumn's richest hues",
       paragraphs: [
-        "Nothing else in this 30-day window came close. JBC's CAMILLE x JBC launch — a capsule the Belgian artist Camille Dhont built around her own cat, Moustache, with paw prints worked into the prints and details — took 1,058 likes on the teaser, 1,013 and 879 on the launch posts, and 2,830 on the behind-the-scenes video. The same account's ordinary product posts sit between 50 and 150. It is a 10–30× multiple, and it repeated across four separate posts rather than spiking once.",
-        "The obvious read is that celebrity works, and the more useful read is that this is not what the numbers are measuring. The top performer of the four was the behind-the-scenes clip, not the product. What travelled was the origin — that the collection came from somewhere specific and slightly absurd, and that you could see the decision being made. E5 Mode is quietly running the same play without any celebrity at all: 'Chapter one: casual', 'Chapter two: city', a serialised look behind its FW26 shoot, and those posts outperform its product posts too.",
-        "For a brand founded by two brothers, that mechanism is available and unused. The equivalent origin is not a person but the material: why linen and not a cotton blend, why the shoes are handmade suede, what a European atelier changed about a pattern between the first sample and the tenth. Told as a sequence rather than a single post — the way both JBC and E5 Mode ran theirs — it is a format, not a one-off.",
-        "The line worth holding: competitors buy a muse for a season, and the collection ends when the collaboration does. A brand whose muse is the material never has to launch a new one.",
+        "As summer days shorten, the fashion world's color palette transforms. This season sees a clear shift toward deep, warm tones that exude luxury and calm. The absolute showstopper of this autumn is plum — a refined, deep brownish-pink shade — accompanied by warm earth tones like rust brown, chocolate and soft terracotta.",
+        "While these rich colors look stunning on mannequins, many women wonder how to translate this trend into their own daily wardrobes. Nobody wants to purchase a head-to-toe outfit that feels dated after a single season. At Noba Fashion, we show you how to introduce these trend colors subtly and stylishly.",
+        "Plum serves as the perfect bridge between classic and modern: it has the warmth of brown and the softness of pink, which makes it a surprisingly accessible color for virtually every skin tone. Wear it as a stylish accent — a plum handbag, belt or scarf against grey trousers and a white blouse — or as a statement top, a fluid blouse or knit sweater with your trusted blue jeans, which gives an everyday look extra character without feeling over-the-top. For those who want to make a statement, tone-on-tone with soft pink or warm brown is softer than black-and-white and remarkably elegant.",
+        "Alongside plum, rich earth tones form the foundation for a harmonious autumn look, and the key to wearing them lies in playing with textures. A warm brown suede skirt paired with a smooth cotton top, or a rust-colored cardigan layered over a denim shirt, creates engaging visual dynamics that a single flat color cannot. The benefit of a wide multi-brand selection is that different shades of brown and plum from various brands sit side by side in one place, so you find the exact nuance that makes your complexion glow.",
+        "Fashion should remain fun and, above all, fit who you are. You don't need to reinvent your entire style to follow the latest trends: adding just one or two key pieces in plum or a warm earth tone gives your familiar outfits a fresh, contemporary appeal. With the right balance between striking trend colors and timeless basics, you can step out the door this autumn feeling confident and stylish.",
       ],
     },
     posts: [
@@ -5377,89 +5357,14 @@ export const researchBriefs = [
         comments: 17,
         reposts: 0,
       },
-    ],
-    history: [
       {
-        status: "new",
-        when: "2h ago",
-        note: "Surfaced from the 4 July – 3 August competitor scan (4 matching posts, volume medium). Keywords: Moustache, kat, cat, inspireren.",
-      },
-    ],
-    seedStatus: "new",
-    seedReason: "",
-  },
-  {
-    id: "br-17",
-    laneId: "lane-5",
-    sourceId: "competitor-posts",
-    ageLabel: "2h ago",
-    headline: "Festival season is a rental market — sell the wardrobe that outlives it",
-    summary:
-      "ZEB spent July on festivals: outfits, an ice-cream bike, staff and ambassadors on site. Nine posts, and the engagement sits almost entirely on the creator content rather than the brand's own. It's the clearest example in the scan of buying a weekend.",
-    researchType: "ready-to-post",
-    isTrending: true,
-    whyNow:
-      "Festival content is the joint highest-volume theme in the 30-day scan and runs straight through July and into August.",
-    whyNowDetail:
-      "Volume: high. 9 of the 112 collected posts match this topic, on Instagram only (100%). Keywords: festival, festivals, lawaai, noise. Almost all of it comes from a single account, and its two best-performing entries (468 and 298 likes) are creator posts rather than brand posts — the brand's own festival posts sit at 3.",
-    research: {
-      title: "The counter-position writes itself, and it doesn't need a festival",
-      paragraphs: [
-        "One account owns this theme. ZEB ran festival outfits, parked an 'Ice Ice Baby Bike' handing out ice pops on site, photographed its own staff in the crowd and asked its ambassadors which festival they liked best. Nine posts across July. The pattern inside the numbers is worth more than the theme itself: the brand's own festival posts landed at 3 likes, while the two creator posts wearing the same clothes took 468 and 298.",
-        "So the activation is not buying attention for the brand; it is renting it from the people it pays. And what it is renting attention for is, structurally, a two-day garment — bought for one weekend, photographed once, then competing for hanger space for the rest of its life.",
-        "The counter-position does not require entering the conversation at all, which is the point. The argument is arithmetic: a piece worn twice has a cost per wear roughly a hundred times a piece worn twice a week for three years, and the second one is usually the cheaper item at the till. That is the most concrete form the 'built to last' claim takes, and it is stronger in July precisely because the surrounding feed is full of the alternative.",
-        "One caution on register. This wins on restraint, not on criticism — naming the competitor, or moralising about how people spend a summer, would cost more than the post earns. Say what a wardrobe is for, show a piece that has already had three summers, and let the comparison land on its own.",
-      ],
-    },
-    posts: [
-      {
-        id: "br-17-p1",
+        id: "br-16-p5",
         network: "instagram",
-        publishedOn: "3 weeks ago",
+        publishedOn: "12 days ago",
         author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
-        text: "Ongelooflijk heet en sneller gedaan dan verwacht, maar wat een mooie dag.🧡💃🏼🌞 Festival outfit by @zebfashion || Publiciteit",
-        likes: 468,
-        comments: 10,
-        reposts: 0,
-      },
-      {
-        id: "br-17-p2",
-        network: "instagram",
-        publishedOn: "3 weeks ago",
-        author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
-        text: "“Hey @ellakonings, wat is je favoriete festival aller tijden?” “Ik ben geen festivalganger.” 😯 Ben jij team festival of team toch liever niet? 👇",
-        likes: 298,
-        comments: 5,
-        reposts: 0,
-      },
-      {
-        id: "br-17-p3",
-        network: "instagram",
-        publishedOn: "3 weeks ago",
-        author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
-        text: "Free ZEB ice pops at the festivals 🧡🍦 Have you spotted our 'Ice Ice Baby Bike' yet? Tell us where to park next ⬇️",
+        text: "NEW: de drinkflessen van Dopper in superleuke zomerkleurtjes🚰☀️ Gemaakt met 90% gerecycleerd staal ✅️",
         likes: 3,
-        comments: 5,
-        reposts: 0,
-      },
-      {
-        id: "br-17-p4",
-        network: "instagram",
-        publishedOn: "2 weeks ago",
-        author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
-        text: "Spotted: our colleagues at the festivals — dressed in ZEB 🩹 #zebfashion #multibrandstore #summer #festival",
-        likes: 3,
-        comments: 4,
-        reposts: 0,
-      },
-      {
-        id: "br-17-p5",
-        network: "instagram",
-        publishedOn: "2 weeks ago",
-        author: { name: "ZEB", handle: "@zebfashion", initials: "ZE", accent: "orange" },
-        text: "Live today. Love tomorrow. Unite forever.🌞 Festival outfit by @zebfashion",
-        likes: 3,
-        comments: 5,
+        comments: 0,
         reposts: 0,
       },
     ],
@@ -5467,9 +5372,8 @@ export const researchBriefs = [
       {
         status: "new",
         when: "2h ago",
-        note: "Surfaced from the 4 July – 3 August competitor scan (9 matching posts).",
+        note: "Surfaced from the 4 July – 3 August competitor scan (5 matching posts). Keywords: collectie, print, kleuren, nieuwe collectie.",
       },
-      { status: "new", when: "2h ago", note: "Flagged trending — joint highest-volume theme in the scan." },
     ],
     seedStatus: "new",
     seedReason: "",
