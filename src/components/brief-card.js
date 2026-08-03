@@ -54,42 +54,58 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
     class="brief-card${raw(brief.isTrending ? " brief-card--trending" : "")}"
     data-brief-id="${escapeAttr(brief.id)}"
   >
-    <div class="brief-card__source-row">
+    <!-- The card body is ONE BUTTON opening Full research, and the actions sit
+         outside it in a sibling footer. A button inside a button is invalid HTML
+         and the browser resolves the nesting unpredictably, which is the same
+         reason topic-card splits body from footer.
+
+         It carries data-brief-research — the exact attribute the footer's "Full
+         research" button already uses — so both screens' existing handlers pick
+         it up with no new wiring.
+
+         Everything inside is a <span>, not the h3/p it was: a button may only
+         contain PHRASING content, so a heading or paragraph in here is invalid.
+         topic-card made the same trade for the same reason. The classes are
+         unchanged, so the styling carries over; the spans are given display:block
+         in brief-card.css where they relied on being block elements. -->
+    <button type="button" class="brief-card__body" data-brief-research="${escapeAttr(brief.id)}">
+      <span class="brief-card__source-row">
+        ${raw(
+          source
+            ? html`<span class="topic-badge topic-badge--${source.accent}" aria-hidden="true"
+                  ><i class="${source.icon}"></i></span
+                ><span class="brief-card__source">${source.name}</span>`
+            : "",
+        )}
+        <span class="brief-card__when">· ${brief.ageLabel}</span>
+        <span class="brief-card__spacer"></span>
+        ${raw(brief.isTrending ? renderTrendingMark() : "")}
+        <!-- Status pill is ALWAYS shown in the feed and NEVER on the trending
+             page — see the variant note at the top of this file. -->
+        ${raw(trendingPage ? "" : renderStatusPill(brief.status))}
+      </span>
+
+      <span class="brief-card__headline">${brief.headline}</span>
+
+      <span class="brief-card__summary" data-brief-summary>
+        <strong class="brief-card__summary-label">Summary:</strong> ${brief.summary}
+      </span>
+
       ${raw(
-        source
-          ? html`<span class="topic-badge topic-badge--${source.accent}" aria-hidden="true"
-                ><i class="${source.icon}"></i></span
-              ><span class="brief-card__source">${source.name}</span>`
+        brief.isTrending && brief.whyNow
+          ? html`<span class="brief-card__whynow">
+              <strong class="brief-card__whynow-label">Why now:</strong> ${brief.whyNow}
+            </span>`
           : "",
       )}
-      <span class="brief-card__when">· ${brief.ageLabel}</span>
-      <span class="brief-card__spacer"></span>
-      ${raw(brief.isTrending ? renderTrendingMark() : "")}
-      <!-- Status pill is ALWAYS shown in the feed and NEVER on the trending
-           page — see the variant note at the top of this file. -->
-      ${raw(trendingPage ? "" : renderStatusPill(brief.status))}
-    </div>
-
-    <h3 class="brief-card__headline">${brief.headline}</h3>
-
-    <p class="brief-card__summary" data-brief-summary>
-      <strong class="brief-card__summary-label">Summary:</strong> ${brief.summary}
-    </p>
-
-    ${raw(
-      brief.isTrending && brief.whyNow
-        ? html`<p class="brief-card__whynow">
-            <strong class="brief-card__whynow-label">Why now:</strong> ${brief.whyNow}
-          </p>`
-        : "",
-    )}
-    ${raw(
-      !trendingPage && ignored && brief.ignoreReason
-        ? html`<p class="brief-card__reason">
-            <span class="brief-card__reason-label">You ignored this:</span> ${brief.ignoreReason}
-          </p>`
-        : "",
-    )}
+      ${raw(
+        !trendingPage && ignored && brief.ignoreReason
+          ? html`<span class="brief-card__reason">
+              <span class="brief-card__reason-label">You ignored this:</span> ${brief.ignoreReason}
+            </span>`
+          : "",
+      )}
+    </button>
 
     <footer class="brief-card__foot">
       ${raw(trendingPage ? renderUseSingle(brief) : renderUseSplit(brief, menuOpen))}

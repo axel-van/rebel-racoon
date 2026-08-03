@@ -15,7 +15,8 @@
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
-  padding: 20px 22px 14px;
+  /* No padding here — the body button and the footer each carry their own, so
+     the whole padded text area is clickable instead of a dead 22px gutter. */
   background: var(--ref-color-white);
   border: 1px solid var(--ref-color-grey-10);
   border-radius: 14px;
@@ -26,6 +27,28 @@
 .brief-card--trending {
   border-color: var(--app-peach-border);
   border-top: 4px solid var(--app-archie-orange);
+}
+
+/* One button covering the card's text, opening Full research. Mirrors
+   .topic-card__body: reset the chrome, inherit the type, left-align, and take the
+   padding the card used to own. */
+.brief-card__body {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 20px 22px 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Inset so the ring doesn't sit outside the card's rounded corner. */
+.brief-card__body:focus-visible {
+  outline: 2px solid var(--sys-border-color-active);
+  outline-offset: -2px;
 }
 
 .brief-card__source-row {
@@ -86,6 +109,7 @@
 }
 
 .brief-card__headline {
+  display: block;
   margin: 0 0 8px;
   font-size: 18px;
   font-weight: 700;
@@ -94,6 +118,7 @@
 }
 
 .brief-card__summary {
+  display: block;
   margin: 0;
   font-size: 15px;
   font-weight: 500;
@@ -107,6 +132,7 @@
 }
 
 .brief-card__whynow {
+  display: block;
   margin: 12px 0 0;
   padding: 11px 13px;
   background: var(--app-peach);
@@ -124,6 +150,7 @@
 }
 
 .brief-card__reason {
+  display: block;
   margin: 10px 0 0;
   font-size: 14px;
   font-weight: 500;
@@ -135,12 +162,16 @@
   font-weight: 800;
 }
 
+/* Horizontal MARGIN rather than padding, deliberately: the border-top is drawn
+   at the footer's outer edge, so padding would make the divider span the full
+   card width. Margin keeps it inset by 22px exactly as it was when the card
+   itself carried the padding. */
 .brief-card__foot {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 14px;
-  padding-top: 12px;
+  margin: 14px 22px 0;
+  padding: 12px 0 14px;
   border-top: 1px solid var(--ref-color-grey-10);
 }
 
