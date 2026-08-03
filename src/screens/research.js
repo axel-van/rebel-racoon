@@ -77,13 +77,9 @@ function teardown() {
     unsubscribeBriefs = null;
   }
   if (boundTarget && boundClick) boundTarget.removeEventListener("click", boundClick);
-  if (boundTarget && boundInput) {
-    // Bound for both events (see bind) — a <select> reports `change`, not
-    // `input`, in some browsers. Both have to come off or the handler outlives
-    // the screen and repaints a detached target.
-    boundTarget.removeEventListener("input", boundInput);
-    boundTarget.removeEventListener("change", boundInput);
-  }
+  // Only `input` now — the `change` pairing existed for the native <select> the
+  // Playbook facet used to be, and that listener is no longer attached.
+  if (boundTarget && boundInput) boundTarget.removeEventListener("input", boundInput);
   boundTarget = null;
   boundClick = null;
   boundInput = null;
@@ -185,22 +181,53 @@ function renderHead(lanes) {
           data-research-search
         />
       </div>
-      <select class="ap-select research-view__filter" data-research-playbook aria-label="Filter by Playbook">
-        <option value="all" ${raw(active === "all" ? " selected" : "")}>All Playbooks</option>
-        ${raw(
-          contexts
-            .map(
-              (c) =>
-                html`<option value="${escapeAttr(c.id)}" ${raw(active === c.id ? " selected" : "")}>${c.name}</option>`,
-            )
-            .join(""),
-        )}
-      </select>
+      ${raw(renderPlaybookFilter(contexts, active))}
       <button type="button" class="ap-button primary blue" data-research-create>
         <span>Create a research</span>
       </button>
     </div>
   </header>`;
+}
+
+// The Playbook facet, as the DS select — `<details class="ap-select">` with a
+// summary trigger and a dropdown of `.ap-select-option` rows.
+//
+// It was a native `<select class="ap-select">`, which was wrong twice over:
+// .ap-select is not a class for a native select at all (it styles a
+// details/summary widget — .ap-select-trigger, .ap-select-arrow,
+// .ap-select-dropdown), and the DS styles no bare <select> anywhere. My own
+// padding/border/radius rules were masking that, so when the head CSS was
+// rewritten to mirror /contexts the control collapsed to a 21px native box
+// beside its 36px neighbours. screens/topics-settings.js states the rule
+// outright: "DS .ap-select over <details> — never a bare native <select>."
+function renderPlaybookFilter(contexts, active) {
+  const activeName =
+    active === "all" ? "All Playbooks" : contexts.find((c) => c.id === active)?.name || "All Playbooks";
+
+  const option = (id, label) => {
+    const on = active === id;
+    return html`<div
+      class="ap-select-option${raw(on ? " selected" : "")}"
+      data-research-playbook="${escapeAttr(id)}"
+      role="option"
+      aria-selected="${on ? "true" : "false"}"
+    >
+      <span class="ap-select-option-text">${label}</span>
+      ${raw(on ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : "")}
+    </div>`;
+  };
+
+  return html`<details class="ap-select research-view__filter">
+    <summary class="ap-select-trigger">
+      <span class="ap-select-value">${activeName}</span>
+      <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+    </summary>
+    <div class="ap-select-dropdown" role="listbox" aria-label="Filter by Playbook">
+      <div class="ap-select-options">
+        ${raw(option("all", "All Playbooks"))}${raw(contexts.map((c) => option(c.id, c.name)).join(""))}
+      </div>
+    </div>
+  </details>`;
 }
 
 function renderLaneCard(lane) {
@@ -363,6 +390,16 @@ function bind(target) {
       return;
     }
 
+    // The Playbook facet is a details/summary dropdown now, so picking an option
+    // is a CLICK, not a select's change event. Repainting is what closes the
+    // <details> — which is the behaviour you want after choosing.
+    const pb = event.target.closest("[data-research-playbook]");
+    if (pb) {
+      view.playbook = pb.dataset.researchPlaybook;
+      paint(target);
+      return;
+    }
+
     const open = event.target.closest("[data-lane-open]");
     if (open) {
       // ?fresh=1 is what tells the feed to run the generating loader. Selecting
@@ -375,31 +412,20 @@ function bind(target) {
   };
   target.addEventListener("click", boundClick);
 
-  // One input listener covers the search field and the Playbook select — both
-  // only mutate view state and repaint, so they don't need separate handlers.
+  // Only the search field needs an input listener now — the Playbook facet moved
+  // to the click handler above with the switch to the DS select.
   boundInput = (event) => {
     const search = event.target.closest("[data-research-search]");
-    if (search) {
-      view.query = search.value;
-      paint(target);
-      // Repainting replaces the input, so focus and the caret have to be put
-      // back or typing a second character loses the field.
-      const next = target.querySelector("[data-research-search]");
-      if (next) {
-        next.focus();
-        next.setSelectionRange(next.value.length, next.value.length);
-      }
-      return;
-    }
-    const pb = event.target.closest("[data-research-playbook]");
-    if (pb) {
-      view.playbook = pb.value;
-      paint(target);
-      return;
+    if (!search) return;
+    view.query = search.value;
+    paint(target);
+    // Repainting replaces the input, so focus and the caret have to be put back
+    // or typing a second character loses the field.
+    const next = target.querySelector("[data-research-search]");
+    if (next) {
+      next.focus();
+      next.setSelectionRange(next.value.length, next.value.length);
     }
   };
   target.addEventListener("input", boundInput);
-  // <select> fires change, not input, in some browsers — listen for both so the
-  // facet can't get stuck.
-  target.addEventListener("change", boundInput);
 }

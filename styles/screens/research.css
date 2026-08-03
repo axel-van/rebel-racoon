@@ -103,9 +103,15 @@
   }
 }
 
+/* An explicit width, not a max-width. `.ap-select` is width:100%, so as a flex
+   item it would either fill the row or collapse — a max-width never gets a basis
+   to cap. Fix the size and leave the display to the DS, exactly as
+   .topics-settings__pbselect does. Nothing else here: the trigger's height,
+   border, radius and arrow all come from the DS widget. */
 .research-view__filter {
   flex: 0 0 auto;
-  max-width: 200px;
+  width: 200px;
+  max-width: 100%;
 }
 
 .research-view__head-actions > .ap-button {
