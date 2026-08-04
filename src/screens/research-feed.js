@@ -12,7 +12,13 @@
 // Trending in this feed is NOT an override: a trending brief appears under its
 // own review status and disappears when that status is unticked. The trending
 // page is where trending ignores triage. Keeping that split is the whole reason
-// trending is a banner here rather than a section.
+// trending is a notice here rather than a section.
+//
+// That split only works if the notice is HONEST about it. It used to announce
+// every trending brief in the lane, so at the default filter it promised 3 while
+// the feed showed 1 — an unexplained gap that reads as a broken filter. It now
+// counts only what the filter hides and says so, and disappears when the filter
+// hides nothing. Nothing overrides; the filter reports what it is keeping out.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
@@ -30,13 +36,13 @@ import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=3";
 import {
   getBriefsForLane,
-  countTrendingForLane,
+  countHiddenTrendingForLane,
   defaultFilters,
   narrowedGroupCount,
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=4";
+} from "../briefs-store.js?v=5";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
@@ -150,14 +156,15 @@ function renderPage() {
   if (view.generating) return renderGenerating();
 
   const briefs = getBriefsForLane(laneId, filters);
-  const trendingCount = countTrendingForLane(laneId);
-  // Two conditions, both required: the lane has to have trending briefs AND the
-  // lane's own Show-trending setting has to be on.
-  const showBanner = trendingCount > 0 && lane.showTrending;
+  // Only what the filter is HIDING. Two conditions, both required: the filter has
+  // to be keeping a trending brief out AND the lane's own Show-trending setting
+  // has to be on. Nothing hidden → nothing to report → no notice.
+  const hiddenTrending = countHiddenTrendingForLane(laneId, filters);
+  const showNotice = hiddenTrending > 0 && lane.showTrending;
 
   return html`<div class="research-feed__body">
     <div class="research-feed__inner">
-      ${raw(renderFeedHeader(lane))} ${raw(showBanner ? renderBanner(trendingCount) : "")}
+      ${raw(renderFeedHeader(lane))} ${raw(showNotice ? renderTrendingNotice(hiddenTrending) : "")}
       ${raw(
         briefs.length
           ? briefs
@@ -322,17 +329,35 @@ function renderGroup(key, label, options, selected, field) {
   </section>`;
 }
 
-function renderBanner(count) {
-  return html`<div class="research-banner">
-    <span class="research-banner__mark" aria-hidden="true"><i class="ap-icon-arrow-up"></i></span>
-    <span class="research-banner__text">
-      <strong class="research-banner__title">You have ${count} ${count === 1 ? "topic" : "topics"} trending</strong>
-      <span class="research-banner__sub">Running above their usual volume baseline right now.</span>
-    </span>
-    <button type="button" class="ap-button primary blue" data-feed-trending>
-      <span>See all trending topics</span>
-      <i class="ap-icon-arrow-right" aria-hidden="true"></i>
-    </button>
+// The DS Infobox, not a hand-built box: "banner" is an intent-lookup entry that
+// resolves to Infobox, so building one by hand is banned. `info` because this is
+// a statement of fact about the filter, not a warning about anything — and the
+// icon follows the variant, so it is the info glyph rather than the trending
+// arrow. Anatomy is the CSS-UI layer's: `> i`, then -content > -texts >
+// -title/-message with the button a DIRECT child of -content (the DS styles
+// `> .ap-button` and `> i` itself, so no wrapper divs).
+//
+// Not closable, deliberately. The notice already retires itself the moment the
+// filter stops hiding anything, so a dismiss control could only hide a statement
+// that is still true. Show-trending on the lane is the durable off switch.
+function renderTrendingNotice(count) {
+  const one = count === 1;
+  return html`<div class="ap-infobox info has-title research-feed__notice" role="status">
+    <i class="ap-icon-info_fill" aria-hidden="true"></i>
+    <div class="ap-infobox-content">
+      <div class="ap-infobox-texts">
+        <span class="ap-infobox-title"
+          >${count} trending ${one ? "topic" : "topics"} ${one ? "doesn't" : "don't"} match your filters</span
+        >
+        <span class="ap-infobox-message">
+          Trending ignores your review statuses, so you can read ${one ? "it" : "them"} on the trending page.
+        </span>
+      </div>
+      <button type="button" class="ap-button primary blue" data-feed-trending>
+        <span>See trending topics</span>
+        <i class="ap-icon-arrow-right" aria-hidden="true"></i>
+      </button>
+    </div>
   </div>`;
 }
 

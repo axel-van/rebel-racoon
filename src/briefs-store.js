@@ -26,7 +26,8 @@
 // Public API:
 //   getBriefsForLane(laneId, filters?) → Brief[]  (newest first, filtered)
 //   getTrendingForLane(laneId)         → Brief[]  (ignores the status filter)
-//   countTrendingForLane(laneId)       → number
+//   countTrendingForLane(laneId)       → number   (whole lane, filter-blind)
+//   countHiddenTrendingForLane(id, f)  → number   (trending the filter EXCLUDES)
 //   countNewForLane(laneId)            → number   (the lane card's NEW badge)
 //   getBriefById(id)                   → Brief | null
 //   getStatus(briefId)                 → 'new'|'saved'|'used'|'ignored'
@@ -119,18 +120,23 @@ function withTriage(b) {
   return { ...b, status: t.status, ignoreReason: t.reason };
 }
 
+// The one filter predicate. Factored out so the feed's list and the "what is the
+// filter hiding?" count can never disagree about what "hidden" means — if they
+// did, the notice would contradict the list it sits above.
+function matchesFilters(b, filters) {
+  const { statuses = [], sources = [], types = [] } = filters;
+  return statuses.includes(b.status) && sources.includes(b.sourceId) && types.includes(b.researchType);
+}
+
 /**
  * A lane's briefs, newest first, with triage merged in.
  * `filters` omitted → unfiltered (the export count and the picker both want this).
  */
 export function getBriefsForLane(laneId, filters = null) {
-  let list = briefs.filter((b) => b.laneId === laneId).map(withTriage);
-  if (filters) {
-    const { statuses = [], sources = [], types = [] } = filters;
-    list = list.filter(
-      (b) => statuses.includes(b.status) && sources.includes(b.sourceId) && types.includes(b.researchType),
-    );
-  }
+  const list = briefs
+    .filter((b) => b.laneId === laneId)
+    .map(withTriage)
+    .filter((b) => !filters || matchesFilters(b, filters));
   return list.sort(byRecency);
 }
 
@@ -146,6 +152,23 @@ export function getTrendingForLane(laneId) {
 
 export function countTrendingForLane(laneId) {
   return briefs.filter((b) => b.laneId === laneId && b.isTrending).length;
+}
+
+// How many trending briefs the CURRENT filter is hiding — the only number the
+// feed's notice is allowed to say. The old notice counted the whole lane, so on
+// lane-1 at the default filter it announced 3 while the feed could account for
+// 1, and never said where the other 2 were. That unexplained gap is what reads
+// as a broken filter.
+//
+// Deliberately every filter group, not just status: a trending brief kept out by
+// the sources or types filter is just as hidden, and the copy says "don't match
+// your filters", plural.
+export function countHiddenTrendingForLane(laneId, filters) {
+  if (!filters) return 0;
+  return briefs
+    .filter((b) => b.laneId === laneId && b.isTrending)
+    .map(withTriage)
+    .filter((b) => !matchesFilters(b, filters)).length;
 }
 
 // How many briefs in this lane are still untriaged — what the lane card's NEW

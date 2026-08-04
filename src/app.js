@@ -34,8 +34,8 @@ import { renderTopics } from "./screens/topics.js?v=52";
 import { renderTopicsSettings } from "./screens/topics-settings.js?v=44";
 import { renderResearch } from "./screens/research.js?v=12";
 import { renderResearchForm } from "./screens/research-form.js?v=5";
-import { renderResearchFeed } from "./screens/research-feed.js?v=7";
-import { renderResearchTrending } from "./screens/research-trending.js?v=6";
+import { renderResearchFeed } from "./screens/research-feed.js?v=8";
+import { renderResearchTrending } from "./screens/research-trending.js?v=7";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.

@@ -943,20 +943,23 @@
   cursor: pointer;
 }
 
-/* ── Trending banner ─────────────────────────────────────────────────── */
+/* ── Trending notice ─────────────────────────────────────── */
 
-.research-banner {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+/* The notice is the DS .ap-infobox and carries its own padding, radius, tint and
+   accent rail — nothing here restyles it. The one thing it needs is not to be
+   squeezed: .research-feed__inner is a flex column, where an item's default
+   flex-shrink is 1, and the infobox is `width: 100%` with `overflow: hidden`,
+   so it would give up height before the cards do. Same reason .brief-card is
+   flex: 0 0 auto. */
+.research-feed__notice {
   flex: 0 0 auto;
-  padding: 16px 20px;
-  background: var(--app-peach);
-  border: 1px solid var(--app-peach-border);
-  border-radius: 14px;
 }
 
-.research-banner__mark {
+/* The trending page's header glyph — it sits in the .research-feed__id slot where
+   a lane's monogram goes, so it needs the monogram's role without its square.
+   It used to borrow .research-banner__mark; when the hand-built banner became a
+   DS Infobox that class went away, so the trending page now owns it. */
+.research-trending__mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -966,24 +969,6 @@
   background: var(--app-archie-orange);
   border-radius: var(--app-radius-circle);
   color: var(--ref-color-white);
-}
-
-.research-banner__text {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.research-banner__title {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--app-convo-navy);
-}
-
-.research-banner__sub {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ref-color-grey-80);
 }
 
 /* ── Generating loader ───────────────────────────────────────────────── */

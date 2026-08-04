@@ -9,7 +9,7 @@
 // That is also why trending isn't a section at the top of the feed. It was, once
 // (see the handoff's explorations/): as a section it competed with the triage
 // list and forced trending to override the status filter, which made the filter
-// lie about what it was doing. Splitting it into a banner plus this page lets
+// lie about what it was doing. Splitting it into a notice plus this page lets
 // the feed's filter stay honest and gives trending somewhere to be complete.
 //
 // Cards here are deliberately REDUCED — single Use-now button, no dropdown, no
@@ -23,7 +23,7 @@ import { renderBriefCard } from "../components/brief-card.js?v=4";
 import { openFullResearch } from "../components/research-modals.js?v=6";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=3";
-import { getTrendingForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=4";
+import { getTrendingForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=5";
 import { findResearchSource, findCadence } from "../research-catalog.js?v=2";
 
 let laneId = null;
@@ -39,7 +39,7 @@ export function renderResearchTrending(params, target) {
   laneId = params.id;
   const lane = getLaneById(laneId);
   // Gated by the lane's own setting as well as the flag: with Show-trending off
-  // there is no banner to reach this page from, so a stale link has to bounce
+  // there is no notice to reach this page from, so a stale link has to bounce
   // back to the feed rather than render a surface the lane has switched off.
   if (!lane || !lane.showTrending) {
     navigate(lane ? `/research/${encodeURIComponent(laneId)}` : "/research");
@@ -83,7 +83,7 @@ function renderPage() {
     <div class="research-trending__inner">
       <header class="research-feed__header research-feed__header--trending">
         <div class="research-feed__id">
-          <span class="research-banner__mark" aria-hidden="true"><i class="ap-icon-arrow-up"></i></span>
+          <span class="research-trending__mark" aria-hidden="true"><i class="ap-icon-arrow-up"></i></span>
           <div class="research-feed__id-text">
             <div class="research-feed__titlerow">
               <h1 class="research-feed__name">You have ${n} ${n === 1 ? "topic" : "topics"} trending</h1>

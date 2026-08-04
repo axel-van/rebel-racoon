@@ -142,6 +142,59 @@ aucun débordement, aucune collision.
 
 DS `.ap-status` + `blue|green|grey|mermaid` (mermaid patché). Les états de travail in-conversation utilisent `mermaid` (butter + dot olive).
 
+### Deux axes sur une même carte : pill ≠ texte
+
+Sur une carte de brief (Content Research), deux informations coexistent et **ne sont
+pas du même genre** : le **statut de revue** (New / Saved for later / Used / Ignored,
+un état à la fois, choisi par l'utilisateur) et **trending** (un booléen indépendant
+que le système constate, et qui peut se cumuler avec n'importe lequel des quatre).
+
+Le statut est une **pill remplie**. Trending est du **texte orange avec une flèche**
+(`.trending-mark`), jamais une pill — y compris pas un `.ap-tag tagOrange`, qui est
+pourtant la réponse « correcte » côté modèle de données. Raison : `.ap-status grey` et
+`.ap-tag tagOrange` ont la même géométrie et se lisent côte à côte comme **deux
+états**, donc trending passe pour un cinquième statut. La séparation des deux axes doit
+être portée par la **forme**, pas seulement par le nom de classe. Voir l'en-tête de
+[`trending-mark.css`](../../styles/components/trending-mark.css).
+
+Corollaire côté données : `status` et `isTrending` sont deux champs séparés dans
+[`briefs-store.js`](../../src/briefs-store.js) et doivent le rester.
+
+⚠️ `.ap-tag` n'accepte **qu'une** icône, `ap-icon-close` dans un bouton de fermeture —
+pas de flèche de tendance dedans (règle DS sur `.ap-tag`). Et `.ap-badge` est réservé
+au contexte **système** (NEW / BETA, auto-uppercase en `orange`) : un état de cycle de
+vie choisi par l'utilisateur n'y a pas sa place, sinon un état sur quatre est un badge
+et les trois autres des status.
+
+### Un filtre ne ment pas : la notice dit ce qu'il cache
+
+Quand un signal système (ex. trending) tombe sur une carte que le filtre actif masque,
+la tentation est de **passer outre le filtre** et d'afficher la carte quand même. Ne
+pas le faire : une carte qu'aucun filtre actif n'explique se lit comme un bug.
+
+Le patron retenu (`/research/:id`) : **rien ne passe outre**, et c'est la notice qui
+rend compte de ce que le filtre exclut — « 2 trending topics don't match your filters »
+
+- un bouton vers la surface où le triage est ignoré (`/research/:id/trending`). Trois
+  propriétés à conserver :
+
+* **Le compte ne porte que sur ce qui est caché**, jamais sur le total. L'ancienne
+  bannière annonçait les 3 trending de la lane alors que le feed n'en montrait qu'1 —
+  c'est cet écart inexpliqué qui fait croire à un filtre cassé.
+* **Elle disparaît quand elle n'a rien à signaler**, ce qui la dispense d'être
+  fermable : un bouton « fermer » ne pourrait que masquer un énoncé encore vrai. La
+  réponse à la cécité aux bannières est là, pas dans le dismiss.
+* **Un seul prédicat de filtre** ([`matchesFilters()`](../../src/briefs-store.js)),
+  partagé par la liste et par le compte, sinon la notice contredit la liste au-dessus
+  de laquelle elle est posée. Et il couvre les trois groupes (statut, sources, types) —
+  un brief tenu à l'écart par le type est tout aussi caché.
+
+Composant : **`.ap-infobox info has-title`**, pas une boîte maison — « banner » est une
+entrée de la table intent→composant et résout vers Infobox. Anatomie imposée :
+`> i` puis `.ap-infobox-content` > `.ap-infobox-texts` > `-title` / `-message`, le
+`.ap-button` en **enfant direct** de `-content` (le DS style `> .ap-button` et `> i`
+lui-même). L'icône suit la variante (`info` → icône info), pas le sujet.
+
 ### Quickpicker (inline-question)
 
 Le « pick one of N » réutilisable. État dans [`inline-question.js`](../../src/inline-question.js), rendu par `renderPicker()` dans [`_analyse-common.js`](../../src/screens/_analyse-common.js) sous le chrome `session__assistant--wizard`. Modes : rows numérotées, `variant:"cards"`, `multi`, `single`, `stepper`, free-text, file. **Le CTA submit est bleu** (pas l'orange AI) — mémoire _quickpicker-primary-is-blue_ + _quickpicker-secondary-button-tiers_. Contrôles = vrai radio DS, fade-to-bg gris — mémoire _ds-controls-and-fade-bg_.
