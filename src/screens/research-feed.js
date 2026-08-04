@@ -31,7 +31,7 @@ import {
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=6";
+} from "../components/research-modals.js?v=7";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=3";
 import {

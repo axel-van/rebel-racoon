@@ -20,7 +20,7 @@ import { getTopicById, markSeen, dismissTopic, topicWhen, subscribe as subscribe
 import { findTopicSource } from "../topics-catalog.js?v=2";
 import { getContextById } from "../contexts-store.js?v=46";
 import { openTopicInChat } from "../topic-flow.js?v=5";
-import { renderSocialPostCard } from "./social-post-card.js?v=2";
+import { renderSocialPostCard } from "./social-post-card.js?v=7";
 
 const MODAL_ID = "topic";
 
