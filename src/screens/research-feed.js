@@ -330,20 +330,25 @@ function renderGroup(key, label, options, selected, field) {
 }
 
 // The DS Infobox, not a hand-built box: "banner" is an intent-lookup entry that
-// resolves to Infobox, so building one by hand is banned. `info` because this is
-// a statement of fact about the filter, not a warning about anything — and the
-// icon follows the variant, so it is the info glyph rather than the trending
-// arrow. Anatomy is the CSS-UI layer's: `> i`, then -content > -texts >
-// -title/-message with the button a DIRECT child of -content (the DS styles
-// `> .ap-button` and `> i` itself, so no wrapper divs).
+// resolves to Infobox, so building one by hand is banned. Anatomy is the CSS-UI
+// layer's: `> i`, then -content > -texts > -title/-message with the button a
+// DIRECT child of -content (the DS styles `> .ap-button` and `> i` itself, so no
+// wrapper divs).
+//
+// `main` (orange), not `info`. Blue read as a neutral aside and undersold it —
+// this is Archie saying you are not seeing something, which is the app's orange
+// across every surface. The variant is a ds-patches addition; the DS ships no
+// orange infobox, and `warning` would have been picking a semantic family for
+// its hue. The icon is the same arrow-up the .trending-mark on the cards below
+// uses, so the notice and the marks read as one signal rather than two.
 //
 // Not closable, deliberately. The notice already retires itself the moment the
 // filter stops hiding anything, so a dismiss control could only hide a statement
 // that is still true. Show-trending on the lane is the durable off switch.
 function renderTrendingNotice(count) {
   const one = count === 1;
-  return html`<div class="ap-infobox info has-title research-feed__notice" role="status">
-    <i class="ap-icon-info_fill" aria-hidden="true"></i>
+  return html`<div class="ap-infobox main has-title research-feed__notice" role="status">
+    <i class="ap-icon-arrow-up" aria-hidden="true"></i>
     <div class="ap-infobox-content">
       <div class="ap-infobox-texts">
         <span class="ap-infobox-title"

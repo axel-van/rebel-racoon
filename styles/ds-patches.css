@@ -237,6 +237,47 @@
   color: var(--sys-color-feature-lock-text);
 }
 
+/* Orange ("main") infobox variant. The DS ships info / warning / error /
+   success — every one of which understates a notice that is neither a caution
+   nor a neutral aside, but Archie flagging something worth your attention.
+   Picking `warning` for its amber hue would be choosing a semantic family for
+   its colour instead of its meaning, which is the exact anti-pattern.
+   Synthesised from the DS orange ramp using the DS's own formula for the four
+   shipped variants — `.20` for the fill, `.150` for the rail and the icon — so
+   it sits in the family rather than beside it. `main` is the DS's semantic name
+   for the orange family.
+
+   Rail and icon take the semantic `--sys-color-main-light-text`, which resolves
+   to the same #C83E07 as orange-150, so the higher tier costs nothing. The fill
+   deliberately does NOT take `--sys-color-main-light-bg`: that one is orange-10,
+   and every shipped infobox variant fills at `.20`, so the semantic token would
+   make this the one variant with a lighter wash than its siblings. Component
+   consistency wins over tier preference here. */
+.ap-infobox.main {
+  background-color: var(--ref-color-orange-20);
+}
+.ap-infobox.main::before {
+  background-color: var(--sys-color-main-light-text);
+}
+.ap-infobox.main > i {
+  color: var(--sys-color-main-light-text);
+}
+
+/* The infobox squeezes its own action button. `.ap-infobox-texts` is
+   `width: 100%`, so in the ≥560px row layout it claims the whole line, and the
+   button — flex-shrink 1 by default — gives up its horizontal padding: measured
+   150px rendered against 166px wanted and a 181px natural width, so the label
+   sat hard against both edges. The text block is the part that should yield; it
+   already carries `overflow-wrap: anywhere` and only needs a shrinkable
+   minimum. Applies to every infobox with a button, which is why it lives here
+   and not in one screen's stylesheet. */
+.ap-infobox-content > .ap-button {
+  flex-shrink: 0;
+}
+.ap-infobox-content > .ap-infobox-texts {
+  min-width: 0;
+}
+
 /* The DS .ap-link assumes an <a>. Buttons styled as links need their
    user-agent chrome (border / background / padding) reset so the
    link text renders without the native button box leaking through.

@@ -12,19 +12,21 @@ Tokens DS = `--ref-*` / `--sys-*` / `--comp-*`. Tokens app = `--app-*`. Les temp
 
 Seul endroit légitime pour toucher `.ap-*`. Charte du fichier : _« the only legitimate place to extend `.ap-*` classes… should shrink as the DS evolves »_.
 
-| Sélecteur                                               | Raison                                                                                                                                                                                                                     |
-| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.app-modal-backdrop`                                   | Le DS ne fournit pas de backdrop plein-viewport. `inset:0`, `--app-modal-backdrop`, `--app-z-modal-backdrop`.                                                                                                              |
-| `.ap-status.mermaid` (+ `::before`)                     | `.ap-status` DS n'a pas de variante mermaid. Pills de travail in-conversation (Drafting / Extracting / Extracted-N / Analyzing). Teinte `--app-butter`, dot olive `--app-butter-accent`.                                   |
-| `.ap-icon-archie-official`                              | Le glyphe logotype « A » d'Archie, mask-based (`-webkit-mask-image` data-URI). Hors liste d'icônes DS générée. Peint en `currentColor`. C'est **l'avatar AI**, distinct de `.ap-icon-sparkles`.                            |
-| `.ap-status-card` (+ variantes)                         | Le DS a les tokens `--comp-status-card-*` mais pas de classe CSS-UI. Recrée la primitive (miroir `libs/ui-components/status-card`). Container-query masque l'icône < 130px. Modifiers en `.tagOrange` (pas `.tag-orange`). |
-| `.ap-button.danger` (+ `.stroked.danger`)               | Le DS n'a pas de variante danger. Synthétisée depuis la palette rouge. Utilisée par `confirm-modal` en `danger=true`.                                                                                                      |
-| `.ap-infobox.feature-lock`                              | Intent violet « limit reached / upgrade » (les infobox DS n'ont que info/warning/error/success).                                                                                                                           |
-| `button.ap-link`                                        | `.ap-link` DS suppose un `<a>` ; reset le chrome UA d'un `<button>` stylé en lien.                                                                                                                                         |
-| `.ap-filter-chip` (+ états, `-icon`/`-avatar`/`-count`) | Primitive en route vers le DS (V2-Atoms › FilterChip). Pill 24px, `aria-pressed` → ramp electric-blue.                                                                                                                     |
-| `.ap-divider, .divider`                                 | La règle DS référence `--sys-color-border-color-default` mais les tokens du proto définissent `--sys-border-color-default` → fallback `--ref-color-grey-10`.                                                               |
-| `.ap-form-message[hidden]`                              | `.ap-form-message{display:flex}` bat `[hidden]{display:none}` → restaure le guard hidden.                                                                                                                                  |
-| `.ap-dropzone` (famille)                                | Le DS n'a pas de dropzone. Box partagée « drop / browse » ([`dropzone.js`](../../src/components/dropzone.js)), variantes `--compact` / `--lg`, highlight `is-drop-target`.                                                 |
+| Sélecteur                                               | Raison                                                                                                                                                                                                                                              |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.app-modal-backdrop`                                   | Le DS ne fournit pas de backdrop plein-viewport. `inset:0`, `--app-modal-backdrop`, `--app-z-modal-backdrop`.                                                                                                                                       |
+| `.ap-status.mermaid` (+ `::before`)                     | `.ap-status` DS n'a pas de variante mermaid. Pills de travail in-conversation (Drafting / Extracting / Extracted-N / Analyzing). Teinte `--app-butter`, dot olive `--app-butter-accent`.                                                            |
+| `.ap-icon-archie-official`                              | Le glyphe logotype « A » d'Archie, mask-based (`-webkit-mask-image` data-URI). Hors liste d'icônes DS générée. Peint en `currentColor`. C'est **l'avatar AI**, distinct de `.ap-icon-sparkles`.                                                     |
+| `.ap-status-card` (+ variantes)                         | Le DS a les tokens `--comp-status-card-*` mais pas de classe CSS-UI. Recrée la primitive (miroir `libs/ui-components/status-card`). Container-query masque l'icône < 130px. Modifiers en `.tagOrange` (pas `.tag-orange`).                          |
+| `.ap-button.danger` (+ `.stroked.danger`)               | Le DS n'a pas de variante danger. Synthétisée depuis la palette rouge. Utilisée par `confirm-modal` en `danger=true`.                                                                                                                               |
+| `.ap-infobox.feature-lock`                              | Intent violet « limit reached / upgrade » (les infobox DS n'ont que info/warning/error/success).                                                                                                                                                    |
+| `.ap-infobox.main`                                      | Variante orange. Le DS n'a que info/warning/error/success — tous sous-évaluent une notice qui n'est ni une mise en garde ni un aparté neutre. `warning` refusé : bon ton, mauvaise raison. Formule du composant (`.20` fond, `.150` filet + icône). |
+| `.ap-infobox-content > .ap-button`                      | L'infobox écrase son propre bouton : `-texts` est `width:100%`, donc en ligne (≥560px) le bouton cède son padding (mesuré 150px rendu / 181px naturel). `flex-shrink:0` dessus, `min-width:0` sur `-texts` — c'est le texte qui doit céder.         |
+| `button.ap-link`                                        | `.ap-link` DS suppose un `<a>` ; reset le chrome UA d'un `<button>` stylé en lien.                                                                                                                                                                  |
+| `.ap-filter-chip` (+ états, `-icon`/`-avatar`/`-count`) | Primitive en route vers le DS (V2-Atoms › FilterChip). Pill 24px, `aria-pressed` → ramp electric-blue.                                                                                                                                              |
+| `.ap-divider, .divider`                                 | La règle DS référence `--sys-color-border-color-default` mais les tokens du proto définissent `--sys-border-color-default` → fallback `--ref-color-grey-10`.                                                                                        |
+| `.ap-form-message[hidden]`                              | `.ap-form-message{display:flex}` bat `[hidden]{display:none}` → restaure le guard hidden.                                                                                                                                                           |
+| `.ap-dropzone` (famille)                                | Le DS n'a pas de dropzone. Box partagée « drop / browse » ([`dropzone.js`](../../src/components/dropzone.js)), variantes `--compact` / `--lg`, highlight `is-drop-target`.                                                                          |
 
 Règle : **jamais** redéclarer une `.ap-*` hors ce fichier (ça flippe la cascade silencieusement).
 
@@ -189,11 +191,24 @@ rend compte de ce que le filtre exclut — « 2 trending topics don't match your
   de laquelle elle est posée. Et il couvre les trois groupes (statut, sources, types) —
   un brief tenu à l'écart par le type est tout aussi caché.
 
-Composant : **`.ap-infobox info has-title`**, pas une boîte maison — « banner » est une
+Composant : **`.ap-infobox main has-title`**, pas une boîte maison — « banner » est une
 entrée de la table intent→composant et résout vers Infobox. Anatomie imposée :
 `> i` puis `.ap-infobox-content` > `.ap-infobox-texts` > `-title` / `-message`, le
 `.ap-button` en **enfant direct** de `-content` (le DS style `> .ap-button` et `> i`
-lui-même). L'icône suit la variante (`info` → icône info), pas le sujet.
+lui-même).
+
+`main` (orange), pas `info` : le bleu se lit comme un aparté neutre et sous-évalue
+l'information — c'est Archie qui signale qu'on ne voit pas quelque chose, et l'orange
+c'est ça partout dans l'app. La variante orange est un ajout `ds-patches.css` (le DS
+n'en a pas) ; `warning` a été écarté parce que choisir une famille sémantique **pour sa
+teinte** et non pour son sens est précisément l'anti-pattern. Et l'icône reprend le
+`arrow-up` de `.trending-mark` sur les cartes en dessous, pour que la notice et les
+marqueurs se lisent comme un seul signal.
+
+⚠️ Deux pièges mesurés sur ce composant, tous deux corrigés dans `ds-patches.css` :
+l'infobox **écrase son propre bouton** (voir le tableau §1), et son `border-radius` est
+de **4px** contre 14px pour les cartes de l'app — non aligné volontairement, puisque
+l'aligner voudrait dire surcharger un token du composant DS.
 
 ### Quickpicker (inline-question)
 
