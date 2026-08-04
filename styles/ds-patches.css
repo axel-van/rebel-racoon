@@ -262,11 +262,39 @@
 .ap-infobox.main {
   background-color: var(--app-peach);
 }
+
+/* Rail and icon complete the alignment on .brief-card__whynow, which pairs a
+   #FF3C00 rail with #db3100 text on the same peach. Two oranges, deliberately:
+   --app-archie-orange-deep exists precisely because the brand orange loses
+   contrast as TEXT on peach (see tokens.css), and a 16px glyph counts as text
+   where a 4px block of colour does not. The rail stays the DS's 4px —
+   --comp-infobox-border-width is the component's geometry, not a colour choice. */
 .ap-infobox.main::before {
-  background-color: var(--sys-color-main-light-text);
+  background-color: var(--app-archie-orange);
 }
 .ap-infobox.main > i {
-  color: var(--sys-color-main-light-text);
+  color: var(--app-archie-orange-deep);
+}
+
+/* Text colours, scoped to this variant so the four shipped ones keep the DS's
+   own. The DS paints both the title and the message --ref-color-grey-100
+   (#344563), which in this app matches nothing: every title in the Content
+   Research feature is --app-convo-navy and all its prose is grey-80. Sharing one
+   colour also flattened the claim and its explanation into a single tone, where
+   every card sets a navy title over grey prose. Size, weight and line-height are
+   left to --comp-infobox-text-* — a 16px notice title under an 18px card
+   headline is the right subordination, and the app has no business restating the
+   DS's h3. */
+.ap-infobox.main .ap-infobox-title {
+  color: var(--app-convo-navy);
+}
+.ap-infobox.main .ap-infobox-message {
+  /* --sys-text-color-light IS #5D6A82, i.e. grey-80 — the semantic name for the
+     muted-prose role, so the higher tier is free here. Note that the DS's own
+     --sys-text-color-default is #344563, the value being replaced: there is no
+     semantic token for "the colour this app uses for prose", because the app
+     picked the lighter of the two DS text colours throughout. */
+  color: var(--sys-text-color-light);
 }
 
 /* The infobox squeezes its own action button. `.ap-infobox-texts` is
