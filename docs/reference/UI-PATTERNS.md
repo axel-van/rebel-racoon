@@ -92,6 +92,35 @@ Trois écarts assumés à la recette, appris en construisant cette page :
 - **Ne pas donner une carte à un contrôle isolé.** Un `.ap-card-title` au-dessus d'un unique `.ap-select` est surtout du padding, et deux boîtes comme ça enchaînées font une page qui a l'air vide. Les contrôles de **niveau page** (le scope, un rythme) vont dans une **barre de `.ap-form-field`** (label au-dessus du contrôle, classe DS existante qui style son `> label` direct) ; les cartes sont réservées à ce qui a du contenu.
 - **`-max-width-lg` (1200) n'est pas réservé aux tables.** Une galerie de cartes de config y a droit aussi : à 700, deux colonnes sont serrées et une colonne donne des bandes larges et courtes qui relisent comme des lignes. Corollaire : plafonner la prose (72ch) indépendamment de la grille, et faire tomber la grille à une colonne avec une **`@container` query** — dans une app à sidebar repliable, la largeur du viewport ne dit pas la largeur du contenu.
 
+### En-tête de page de détail (identité + cluster d'actions)
+
+Le patron partagé par `recap__header` (`/playbook/:id`) et `research-feed__header`
+(`/research/:id`) : un **bloc identité** à gauche (monogramme 52×52, `h1` 24px/700,
+ligne de méta en `caption`) et un **cluster d'actions** à droite, `display: flex`,
+`align-items: flex-start`, `justify-content: space-between`, `gap: 24px`
+(`--ref-spacing-md`), `flex-wrap: wrap`.
+
+**Le piège :** avec `flex-wrap: wrap`, un navigateur qui manque de place **passe à
+la ligne, il ne rétrécit pas**. Dès que `identité + actions + gap` dépasse la
+colonne, le cluster tombe sous le titre. `recap__header` n'a aucun mécanisme contre
+ça — il y échappe seulement parce que sa colonne fait 1080px et que les noms de
+Playbook sont courts (mesuré : le plus long nom de lane n'y demande que 1016px).
+La colonne de Content Research fait 820px (mesure de lecture voulue pour les cartes
+de brief) et le même nom demande 885px → il passait à la ligne.
+
+**La règle, donc :** dans un en-tête comme ça, c'est **l'identité qui cède**, jamais
+les actions.
+
+| Élément           | Déclarations                               | Pourquoi                                                                                                                                     |
+| ----------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| bloc identité     | `flex: 1 1 0` + `min-width: 0`             | base zéro → ne réclame jamais une largeur qui force un retour à la ligne ; prend ce qui reste                                                |
+| le `h1`           | `min-width: 0` + `overflow-wrap: anywhere` | un `h1` refuse de descendre sous son mot le plus long (mesuré 131px) et son cadre finit par croiser les boutons                              |
+| cluster d'actions | `flex-shrink: 0` + `flex-wrap: wrap`       | les boutons gardent leur largeur intrinsèque ; si le cluster lui-même manque de place il se replie en interne plutôt que d'écraser un bouton |
+
+Le nom **passe à la ligne** au lieu d'être tronqué : un nom de lane complet reste
+lisible, une ellipse le perd. Vérifié de 820 à 380px de colonne — même ligne,
+aucun débordement, aucune collision.
+
 ### Filtres — chips, selects ou dropdown ?
 
 **Règle du DS** (`choosing-components.md` › Filtering) : bascules **toujours visibles** → _filter chips list_ ; **options groupées / presets / une étape d'apply derrière un déclencheur** → _filter dropdown_.

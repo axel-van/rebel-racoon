@@ -687,10 +687,22 @@
   flex-wrap: wrap;
 }
 
+/* `flex: 1 1 0` is the one place this header deliberately diverges from
+   .recap__id, which is a plain non-flexing box. Recap gets away with that
+   because its column is 1080px and Playbook names are short — measured, the
+   longest lane name only needs 616 + 376 + 24 = 1016px there, so it never
+   reaches the limit. This column is 820px (a deliberate reading measure for the
+   brief cards, widening it was tried and reverted) and the same name needs
+   572 + 289 + 24 = 885px, which overflows. With `flex-wrap` on the parent a
+   browser wraps rather than shrinks, so the actions dropped to their own line.
+   A zero flex-basis means the identity block never claims a hypothetical width
+   that forces a break: it takes what is left and its name wraps inside it,
+   which keeps the full name readable — better than truncating it. */
 .research-feed__id {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-md);
+  flex: 1 1 0;
   min-width: 0;
 }
 
@@ -754,6 +766,12 @@
   font-weight: var(--sys-text-style-h1-weight);
   color: var(--ref-color-grey-100);
   letter-spacing: -0.01em;
+  /* Without this the h1 refuses to shrink below its longest word — measured 131px
+     for "multibrand" — so under ~420px of column its box crossed into the
+     actions cluster. `anywhere` removes that floor, so the identity block stays
+     the one that gives ground. */
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .research-feed__meta {
@@ -778,10 +796,15 @@
   color: var(--ref-color-grey-40);
 }
 
+/* flex-shrink: 0 + flex-wrap are .recap__header-actions' own declarations —
+   the buttons keep their intrinsic width, and if the cluster itself ever runs
+   out of room it wraps internally rather than squashing a button. */
 .research-feed__header-actions {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
+  flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 /* The trending page's meta is one long sentence rather than a row of chips, so
