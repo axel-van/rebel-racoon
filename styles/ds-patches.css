@@ -248,13 +248,19 @@
    for the orange family.
 
    Rail and icon take the semantic `--sys-color-main-light-text`, which resolves
-   to the same #C83E07 as orange-150, so the higher tier costs nothing. The fill
-   deliberately does NOT take `--sys-color-main-light-bg`: that one is orange-10,
-   and every shipped infobox variant fills at `.20`, so the semantic token would
-   make this the one variant with a lighter wash than its siblings. Component
-   consistency wins over tier preference here. */
+   to the same #C83E07 as orange-150, so the higher tier costs nothing.
+
+   The FILL is the one place this leaves the DS ramp: `--app-peach`, whose own
+   charter in tokens.css is "trending surfaces, brand-soft fills". It is the same
+   surface as `.brief-card__whynow`, the "Why now" block on the cards this notice
+   sits above — one tint for one idea, rather than a DS orange-20 wash next to an
+   app peach one 40px below. Same reason `.ap-status.mermaid` carries
+   `--app-butter`: a patched variant that exists for an Archie concept takes the
+   Archie value. (Both DS candidates were wrong anyway: orange-20 clashed with
+   the peach, and `--sys-color-main-light-bg` is an orange-10 that would have
+   made this the one variant washed lighter than its four siblings.) */
 .ap-infobox.main {
-  background-color: var(--ref-color-orange-20);
+  background-color: var(--app-peach);
 }
 .ap-infobox.main::before {
   background-color: var(--sys-color-main-light-text);
