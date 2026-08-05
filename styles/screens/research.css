@@ -572,47 +572,39 @@
   margin-left: auto;
 }
 
-/* Brand-website row — the Playbook's URL echoed, not re-entered. Shaped like
-   __tools (the other "here is what this source reads" row) rather than like
-   __link: nothing here is clickable, so it must not borrow the blue affordance
-   of a button. Neutral grey-05 field, monospace-free, URL allowed to wrap. */
-.research-source__site {
+/* Brand-website scan list — one editable row per site.
+   The field itself is the DS .ap-input-group (its own height, border, radius,
+   hover and focus states), so nothing here restyles it; this only lays the row
+   out and lets the input take the free space beside a fixed-width remove
+   button. */
+.research-source__sites {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
-  /* 11px vertical is .research-source__link's, so the two rows sit at the same
-     height when a card carries both; 12px sides is --ref-spacing-xs. */
-  padding: 11px var(--ref-spacing-xs);
-  background: var(--ref-color-grey-05);
-  border: 1px solid var(--ref-color-grey-10);
-  border-radius: var(--app-radius-starter);
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  align-items: flex-start;
 }
 
-.research-source__site > i {
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-grey-40);
-  /* Baseline alignment puts an icon's box on the text baseline, which reads a
-     touch high against 14px text — nudge it back down. */
-  transform: translateY(2px);
+.research-source__site-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  width: 100%;
 }
 
-.research-source__site-url {
-  font-size: var(--sys-text-style-body-size);
-  font-weight: 700;
-  color: var(--app-convo-navy);
-  /* A URL has no spaces to break on, so let it break anywhere rather than push
-     the card wide. Same reasoning as the feed header's h1. */
+/* .ap-input-group is width:100% already, but as a flex item it needs a basis it
+   can shrink from — without min-width:0 a long URL pushes the remove button off
+   the card instead of scrolling inside the field. */
+.research-source__site-row > .ap-input-group {
+  flex: 1 1 auto;
   min-width: 0;
-  overflow-wrap: anywhere;
 }
 
-.research-source__site-from,
+.research-source__site-row > .ap-icon-button {
+  flex: 0 0 auto;
+}
+
 .research-source__site-empty {
-  /* 13px, between the DS caption (12) and body (14): it must read as secondary
-     beside the 14px URL without dropping to the 11px uppercase label size used
-     for __how-label. No token sits at 13; the surrounding file does the same in
-     .research-source__how-body. */
+  margin: 0;
   font-size: 13px;
   font-weight: 500;
   color: var(--sys-text-color-light);
@@ -625,7 +617,8 @@
   gap: 6px;
 }
 
-.research-source__add-tool {
+.research-source__add-tool,
+.research-source__add-site {
   display: inline-flex;
   align-items: center;
   gap: 4px;

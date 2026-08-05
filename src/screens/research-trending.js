@@ -17,13 +17,13 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=287";
+import { renderTopbar } from "../components/topbar.js?v=289";
 import { isFlagOn } from "../feature-flags.js?v=16";
 import { renderBriefCard } from "../components/brief-card.js?v=7";
-import { openFullResearch } from "../components/research-modals.js?v=10";
+import { openFullResearch } from "../components/research-modals.js?v=11";
 import { showToast } from "../components/toast.js?v=20";
-import { getLaneById } from "../research-store.js?v=6";
-import { getTrendingForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=8";
+import { getLaneById } from "../research-store.js?v=8";
+import { getTrendingForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=9";
 import { findResearchSource, findCadence } from "../research-catalog.js?v=5";
 
 let laneId = null;

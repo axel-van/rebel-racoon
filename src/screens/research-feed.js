@@ -23,7 +23,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=287";
+import { renderTopbar } from "../components/topbar.js?v=289";
 import { isFlagOn } from "../feature-flags.js?v=16";
 import { renderBriefCard } from "../components/brief-card.js?v=7";
 import {
@@ -31,9 +31,9 @@ import {
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=10";
+} from "../components/research-modals.js?v=11";
 import { showToast } from "../components/toast.js?v=20";
-import { getLaneById } from "../research-store.js?v=6";
+import { getLaneById } from "../research-store.js?v=8";
 import {
   getBriefsForLane,
   countHiddenTrendingForLane,
@@ -42,7 +42,7 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=8";
+} from "../briefs-store.js?v=9";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
@@ -50,7 +50,7 @@ import {
   findResearchSource,
   findCadence,
 } from "../research-catalog.js?v=5";
-import { getContextById } from "../contexts-store.js?v=46";
+import { getContextById } from "../contexts-store.js?v=47";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.

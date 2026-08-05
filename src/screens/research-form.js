@@ -20,11 +20,11 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=287";
+import { renderTopbar } from "../components/topbar.js?v=289";
 import { isFlagOn } from "../feature-flags.js?v=16";
-import { getContexts, getContextById } from "../contexts-store.js?v=46";
-import { getLaneById, addLane, updateLane } from "../research-store.js?v=6";
-import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=10";
+import { getContexts, getContextById } from "../contexts-store.js?v=47";
+import { getLaneById, addLane, updateLane } from "../research-store.js?v=8";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=11";
 import {
   RESEARCH_SOURCES,
   CADENCES,
@@ -62,7 +62,12 @@ export function renderResearchForm(params, target) {
       navigate("/research");
       return;
     }
-    draft = { ...lane, sources: lane.sources.slice() };
+    // The saved list, verbatim — deliberately NOT run through seedWebsites(). An
+    // existing lane's list is whatever it was saved as, so emptying it and saving
+    // is how you say "don't scan any site"; re-seeding on open would resurrect the
+    // URL the user just deleted. Seeded lanes carry their Playbook's site in
+    // mocks.js, so the pre-fill is still there on first open.
+    draft = { ...lane, sources: lane.sources.slice(), websites: lane.websites.slice() };
   } else {
     draft = {
       name: "",
@@ -71,6 +76,7 @@ export function renderResearchForm(params, target) {
       cadence: DEFAULT_CADENCE,
       notify: true,
       showTrending: true,
+      websites: [],
     };
   }
 
@@ -79,6 +85,20 @@ export function renderResearchForm(params, target) {
   paint(target);
   bind(target);
   return teardown;
+}
+
+// Put the Playbook's own site in the scan list when the list is empty, so the
+// common case — "scan my site" — needs no typing.
+//
+// Called from exactly two places, both of which mean "you have not chosen a list
+// yet": creating a lane, and pointing a lane at a different Playbook while its
+// list is empty. It is NOT called when opening an existing lane's settings — see
+// the note in renderResearchForm.
+function seedWebsites() {
+  if (draft.websites.length) return;
+  const pb = getContextById(draft.playbookId);
+  const url = (pb && pb.websiteUrl ? pb.websiteUrl : "").trim();
+  if (url) draft.websites = [url];
 }
 
 function teardown() {
@@ -194,31 +214,63 @@ function renderSourceCard(source) {
         </button>`
       : "";
 
-  // The Playbook's brand website, shown rather than re-entered. A second input for
-  // it here would make two places own one value, which is what the "config lives
-  // on its entity" rule exists to stop. Deliberately NOT a disabled input either:
-  // the comment on __how-body below records that a greyed-out field read as broken.
+  // The Brand-website scan list — editable, one row per site.
   //
-  // And no "change it in the Playbook" button, though that was the first instinct:
-  // websiteUrl is only ever DISPLAYED in the Playbook (renderHeader's meta line)
-  // and consumed by the website analysis — nothing in that UI edits it. A button
-  // would repeat the exact mistake the anchorRow comment above records, where an
-  // anchor named a Playbook section that did not exist. So this states the value
-  // and its owner and stops there, until the Playbook grows a field for it.
-  const siteRow = source.showsWebsite
-    ? html`<div class="research-source__site">
+  // It reads as a duplicate of the Playbook's websiteUrl and is not one: the
+  // Playbook holds the brand's canonical address, this is what ONE lane scans,
+  // and a lane may legitimately watch a blog, a docs site or a regional domain
+  // the brand record has no business holding. The lane owns it (see
+  // research-store.normalizeLane), which is also why this no longer depends on the
+  // Playbook growing an editor for its own field.
+  //
+  // Seeded from the Playbook in seedWebsites() so the common case — "scan my
+  // site" — needs no typing, and the pre-fill this card shipped with survives.
+  //
+  // DS input anatomy: .ap-input-group > (i + input), both implicit children the
+  // CSS-UI layer styles directly, so no classes on either. The remove control is
+  // a SIBLING of the group, not a child — the DS styles only `> input` and `> i`,
+  // so a button inside would be unstyled and would fight the group's padding.
+  const siteRows = source.showsWebsite
+    ? html`<div class="research-source__sites">
         ${raw(
-          pb && pb.websiteUrl
-            ? html`<span class="research-source__site-url">${pb.websiteUrl}</span>
-                <!-- "your Playbook", not the Playbook's name: the Linked Playbook
-                     select sits a few rows above, so naming it again is redundant,
-                     and names carrying a suffix ("Pawtrack · always-on") read badly
-                     mid-sentence. -->
-                <span class="research-source__site-from">from your Playbook</span>`
-            : html`<span class="research-source__site-empty"
-                >${pb ? "Your Playbook has no website on file" : "Pick a Playbook to fill this in"}</span
-              >`,
+          draft.websites
+            .map(
+              (url, i) =>
+                html`<div class="research-source__site-row">
+                  <div class="ap-input-group">
+                    <i class="ap-icon-link" aria-hidden="true"></i>
+                    <input
+                      type="url"
+                      inputmode="url"
+                      placeholder="https://example.com"
+                      value="${escapeAttr(url)}"
+                      aria-label="Website ${i + 1}"
+                      data-form-site="${i}"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    class="ap-icon-button transparent grey"
+                    data-form-site-remove="${i}"
+                    aria-label="Remove website ${i + 1}"
+                  >
+                    <i class="ap-icon-close" aria-hidden="true"></i>
+                  </button>
+                </div>`,
+            )
+            .join(""),
         )}
+        ${raw(
+          !draft.websites.length
+            ? html`<p class="research-source__site-empty">
+                ${pb ? "No website yet — add the one I should scan." : "Pick a Playbook, or add a website yourself."}
+              </p>`
+            : "",
+        )}
+        <button type="button" class="research-source__add-site" data-form-site-add>
+          <i class="ap-icon-plus" aria-hidden="true"></i
+          ><span>${draft.websites.length ? "Add another website" : "Add a website"}</span>
+        </button>
       </div>`
     : "";
 
@@ -245,7 +297,7 @@ function renderSourceCard(source) {
         <span class="sr-only">Enable ${source.name}</span>
       </label>
     </div>
-    ${raw(anchorRow)}${raw(siteRow)}${raw(toolRow)}
+    ${raw(anchorRow)}${raw(siteRows)}${raw(toolRow)}
     <div class="research-source__how">
       <span class="research-source__how-label">How this source works</span>
       <!-- Plain prose. This was a greyed-out read-only textarea once and read as
@@ -365,6 +417,25 @@ function bind(target) {
       return;
     }
 
+    const siteAdd = event.target.closest("[data-form-site-add]");
+    if (siteAdd) {
+      draft.websites = [...draft.websites, ""];
+      paint(target);
+      // Focus the row just added, so "Add another website" leaves the cursor
+      // where the typing has to happen rather than making the user click twice.
+      const rows = target.querySelectorAll("[data-form-site]");
+      rows[rows.length - 1]?.focus();
+      return;
+    }
+
+    const siteRemove = event.target.closest("[data-form-site-remove]");
+    if (siteRemove) {
+      const i = Number(siteRemove.dataset.formSiteRemove);
+      draft.websites = draft.websites.filter((_, n) => n !== i);
+      paint(target);
+      return;
+    }
+
     const addTool = event.target.closest("[data-form-add-tool]");
     if (addTool) {
       // The tool picker isn't built; the source itself isn't live either, so the
@@ -405,9 +476,21 @@ function bind(target) {
     const pb = event.target.closest("[data-form-playbook]");
     if (pb) {
       draft.playbookId = pb.value;
+      // A different Playbook means a different brand site, so offer it — but only
+      // into a list that is still empty (see seedWebsites).
+      seedWebsites();
       // Full repaint here: choosing a Playbook reveals the per-source
       // "Edit my competitors" links, which depend on it.
       paint(target);
+      return;
+    }
+
+    const site = event.target.closest("[data-form-site]");
+    if (site) {
+      // No repaint: re-rendering the row on every keystroke would blur the field
+      // being typed in. Nothing else on the page depends on this value, and the
+      // store normalises blanks and duplicates away on save.
+      draft.websites[Number(site.dataset.formSite)] = site.value;
       return;
     }
 

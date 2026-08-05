@@ -26,7 +26,7 @@
 //     notify,                   — "notify me after a scan" switch
 //     showTrending }            — gates the banner AND the trending page entry
 
-import { researchLanes as seed } from "./mocks.js?v=66";
+import { researchLanes as seed } from "./mocks.js?v=67";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import { DEFAULT_ENABLED_IDS, DEFAULT_CADENCE, findCadence, findResearchSource } from "./research-catalog.js?v=5";
@@ -58,17 +58,49 @@ function normalizeLane(raw = {}) {
     cadence: findCadence(raw.cadence) ? raw.cadence : DEFAULT_CADENCE,
     notify: raw.notify !== false,
     showTrending: raw.showTrending !== false,
+    // Sites the Brand-website source scans. Owned by the LANE, not the Playbook:
+    // the Playbook's own websiteUrl is the brand's canonical address, while this
+    // is the scan list for one research lane, which may add a blog, a docs site
+    // or a regional domain the brand record has no business holding. The form
+    // seeds the list from the Playbook so the common case needs no typing.
+    //
+    // Normalised rather than trusted: trimmed, blanks dropped, de-duplicated
+    // case-insensitively. A blank row is how a freshly-added field starts, so it
+    // must never survive a save.
+    websites: dedupeUrls(Array.isArray(raw.websites) ? raw.websites : []),
   };
+}
+
+function dedupeUrls(list) {
+  const seen = new Set();
+  const out = [];
+  for (const raw of list) {
+    const url = String(raw || "").trim();
+    if (!url) continue;
+    const key = url.toLowerCase().replace(/\/+$/, "");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(url);
+  }
+  return out;
+}
+
+// Both array fields cloned on the way out. Handing back the live arrays let a
+// view's splice mutate the store behind its back — the reason every getter here
+// went through .slice() already; `websites` joins it rather than being the one
+// field that leaks.
+function copyLane(l) {
+  return { ...l, sources: l.sources.slice(), websites: l.websites.slice() };
 }
 
 /** Every lane, in creation order so the grid doesn't reshuffle on repaint. */
 export function getLanes() {
-  return lanes.map((l) => ({ ...l, sources: l.sources.slice() }));
+  return lanes.map(copyLane);
 }
 
 export function getLaneById(id) {
   const l = lanes.find((x) => x.id === id);
-  return l ? { ...l, sources: l.sources.slice() } : null;
+  return l ? copyLane(l) : null;
 }
 
 export function getLanesForPlaybook(playbookId) {
@@ -79,7 +111,7 @@ export function addLane(draft = {}) {
   const lane = normalizeLane({ ...draft, id: draft.id || `lane-${++seq}` });
   lanes.push(lane);
   notify();
-  return { ...lane, sources: lane.sources.slice() };
+  return copyLane(lane);
 }
 
 export function updateLane(id, patch = {}) {
@@ -89,7 +121,7 @@ export function updateLane(id, patch = {}) {
   // `cadence` still has to be validated against the catalogue.
   lanes[i] = normalizeLane({ ...lanes[i], ...patch, id });
   notify();
-  return { ...lanes[i], sources: lanes[i].sources.slice() };
+  return copyLane(lanes[i]);
 }
 
 // Appends rather than inserting beside the original: the grid is creation-ordered,
