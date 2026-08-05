@@ -1,7 +1,7 @@
 // Content Research sources catalog — what Archie watches inside one research lane.
 //
 // CONFIG, not content: it ships with the app and must exist in `new-alt` mode
-// too (a brand-new user still sees all seven source cards on the research form).
+// too (a brand-new user still sees all eight source cards on the research form).
 // The briefs those sources produce are content and live in mocks.js, empty for a
 // new user. Same split as ff-catalog.js (config) vs mocks.js (data).
 //
@@ -17,8 +17,9 @@
 //   • Cadence — Topics ships Daily / Weekly / Monthly. The handoff specifies
 //     Weekly / Monthly / Quarterly. Both are correct for their own surface, so
 //     neither catalogue can own the other's list.
-//   • Count — Content Research adds a seventh source (Internal team ideas) that
-//     reads connected MCP tools rather than social listening.
+//   • Count — Content Research adds two sources Topics does not have: Internal
+//     team ideas, which reads connected MCP tools rather than social listening,
+//     and Brand website, which reads the Playbook's own site.
 //
 // Merging them was considered and rejected: it would have meant a shared list
 // with per-surface exclusions and two cadence arrays, which is more branching
@@ -76,6 +77,34 @@ export const RESEARCH_SOURCES = Object.freeze([
       "lands for them: the formats, the partnerships, the recurring themes. You " +
       "get collaboration angles and creative that has already proved itself with " +
       "the people you're trying to reach.",
+  },
+  {
+    id: "brand-website",
+    name: "Brand website",
+    // NOT one of the web* glyphs. ap-icon-web / web-blogs / web-news are filled
+    // multi-tone marks that ignore currentColor, so they render as a dark navy
+    // blob inside the tinted badge while every sibling here is a line icon in its
+    // accent colour. (ap-icon-web on global-trends below has the same problem —
+    // pre-existing, not fixed here.) ap-icon-link takes the tint and says "a URL",
+    // which is what this source is.
+    icon: "ap-icon-link",
+    accent: "soft-blue",
+    live: false,
+    playbookAnchor: null,
+    defaultEnabled: true,
+    // The only source whose subject is a VALUE the Playbook already holds, so the
+    // card shows that value instead of just a description. `showsWebsite` is what
+    // research-form.js keys the URL row on — a flag rather than an id check, so a
+    // second value-carrying source wouldn't need the renderer touched again.
+    showsWebsite: true,
+    // Behaviour only, like every other source's copy. An earlier draft ended with
+    // "it comes from your Playbook, so change it there and I follow" — true about
+    // the model, but it tells the reader to do something the Playbook UI has no
+    // field for. The site row above already states the provenance.
+    howItWorks:
+      "I scan your website regularly for content worth leveraging — new blog " +
+      "posts, product launches, customer success stories — and turn what I find " +
+      "into ideas you can post.",
   },
   {
     id: "brand-feedback",

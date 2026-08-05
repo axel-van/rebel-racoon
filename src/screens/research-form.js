@@ -20,18 +20,18 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=284";
+import { renderTopbar } from "../components/topbar.js?v=287";
 import { isFlagOn } from "../feature-flags.js?v=16";
 import { getContexts, getContextById } from "../contexts-store.js?v=46";
-import { getLaneById, addLane, updateLane } from "../research-store.js?v=3";
-import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=7";
+import { getLaneById, addLane, updateLane } from "../research-store.js?v=6";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=10";
 import {
   RESEARCH_SOURCES,
   CADENCES,
   DEFAULT_ENABLED_IDS,
   DEFAULT_CADENCE,
   isLiveSource,
-} from "../research-catalog.js?v=2";
+} from "../research-catalog.js?v=5";
 
 // The in-flight draft. Ephemeral by definition — it only becomes a lane on save,
 // so it lives here rather than in the store. Cancel just drops it.
@@ -194,6 +194,34 @@ function renderSourceCard(source) {
         </button>`
       : "";
 
+  // The Playbook's brand website, shown rather than re-entered. A second input for
+  // it here would make two places own one value, which is what the "config lives
+  // on its entity" rule exists to stop. Deliberately NOT a disabled input either:
+  // the comment on __how-body below records that a greyed-out field read as broken.
+  //
+  // And no "change it in the Playbook" button, though that was the first instinct:
+  // websiteUrl is only ever DISPLAYED in the Playbook (renderHeader's meta line)
+  // and consumed by the website analysis — nothing in that UI edits it. A button
+  // would repeat the exact mistake the anchorRow comment above records, where an
+  // anchor named a Playbook section that did not exist. So this states the value
+  // and its owner and stops there, until the Playbook grows a field for it.
+  const siteRow = source.showsWebsite
+    ? html`<div class="research-source__site">
+        ${raw(
+          pb && pb.websiteUrl
+            ? html`<span class="research-source__site-url">${pb.websiteUrl}</span>
+                <!-- "your Playbook", not the Playbook's name: the Linked Playbook
+                     select sits a few rows above, so naming it again is redundant,
+                     and names carrying a suffix ("Pawtrack · always-on") read badly
+                     mid-sentence. -->
+                <span class="research-source__site-from">from your Playbook</span>`
+            : html`<span class="research-source__site-empty"
+                >${pb ? "Your Playbook has no website on file" : "Pick a Playbook to fill this in"}</span
+              >`,
+        )}
+      </div>`
+    : "";
+
   const toolRow = source.tools
     ? html`<div class="research-source__tools">
         ${raw(source.tools.map((t) => html`<span class="ap-tag grey mini">${t.name}</span>`).join(""))}
@@ -217,7 +245,7 @@ function renderSourceCard(source) {
         <span class="sr-only">Enable ${source.name}</span>
       </label>
     </div>
-    ${raw(anchorRow)}${raw(toolRow)}
+    ${raw(anchorRow)}${raw(siteRow)}${raw(toolRow)}
     <div class="research-source__how">
       <span class="research-source__how-label">How this source works</span>
       <!-- Plain prose. This was a greyed-out read-only textarea once and read as
