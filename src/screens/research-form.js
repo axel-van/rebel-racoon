@@ -20,7 +20,7 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=290";
+import { renderTopbar } from "../components/topbar.js?v=291";
 import { isFlagOn } from "../feature-flags.js?v=16";
 import { getContexts, getContextById } from "../contexts-store.js?v=48";
 import { getLaneById, addLane, updateLane } from "../research-store.js?v=9";
@@ -123,20 +123,31 @@ function isComplete() {
   return !!draft.name.trim() && !!draft.playbookId;
 }
 
+// No in-page bordered bar. It was the last one left in the app and it duplicated
+// the global topbar: it captioned the page AND carried its own back button, while
+// backTargetFor() already puts a back there — pointing at this lane's feed, the
+// same place Cancel goes.
+//
+// The heading it leaves behind is the .topics-settings__head shape, the app's only
+// other settings page: a plain header inside the scrolling body, DS .ap-h1 over an
+// .ap-body lead, no border and no chrome. Kept rather than dropped because the
+// topbar renders EITHER a back or a title, never both (see topbar.renderTopbar), so
+// with the bar gone and a back showing there would otherwise be nothing on screen
+// naming what you are editing.
 function renderPage() {
   const settings = mode() === "settings";
-  return html`<header class="research-form__topbar">
-      ${raw(
-        settings
-          ? html`<button type="button" class="ap-icon-button ghost grey" data-form-back aria-label="Back to research">
-              <i class="ap-icon-arrow-left" aria-hidden="true"></i>
-            </button>`
-          : "",
-      )}
-      <h2 class="research-form__topbar-title">${settings ? "Feed settings" : "New content research"}</h2>
-    </header>
-    <div class="research-form__body">
-      <div class="research-form__inner">${raw(renderScope())} ${raw(renderSources())} ${raw(renderOther())}</div>
+  return html`<div class="research-form__body">
+      <div class="research-form__inner">
+        <header class="research-form__head">
+          <h1 class="ap-h1 research-form__title">${settings ? "Feed settings" : "New content research"}</h1>
+          <p class="ap-body research-form__lead">
+            ${settings
+              ? "What I watch for this research, and how often I check it."
+              : "Name it, point it at a Playbook, and pick what I should watch."}
+          </p>
+        </header>
+        ${raw(renderScope())} ${raw(renderSources())} ${raw(renderOther())}
+      </div>
     </div>
     ${raw(renderFooter())}`;
 }
@@ -387,7 +398,9 @@ function renderFooter() {
 
 // ─── Bind ──────────────────────────────────────────────────────────────────
 
-/** Where Cancel and the back button both go. */
+/** Where Cancel goes — and, deliberately, where the topbar's back goes too
+ * (topbar.backTargetFor). Two exits from one screen that disagree is how a user
+ * loses work. */
 function exitPath() {
   return mode() === "settings" ? `/research/${encodeURIComponent(laneId)}` : "/research";
 }
@@ -396,7 +409,7 @@ function bind(target) {
   boundTarget = target;
 
   boundClick = (event) => {
-    if (event.target.closest("[data-form-back]") || event.target.closest("[data-form-cancel]")) {
+    if (event.target.closest("[data-form-cancel]")) {
       navigate(exitPath());
       return;
     }

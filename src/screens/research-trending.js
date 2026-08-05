@@ -17,7 +17,7 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=290";
+import { renderTopbar } from "../components/topbar.js?v=291";
 import { isFlagOn } from "../feature-flags.js?v=16";
 import { renderBriefCard } from "../components/brief-card.js?v=7";
 import { openFullResearch } from "../components/research-modals.js?v=12";

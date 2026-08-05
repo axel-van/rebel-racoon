@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=290";
+import { renderTopbar } from "../components/topbar.js?v=291";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=68";
 import {
   getConnectedProfiles,

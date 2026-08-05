@@ -27,6 +27,7 @@ import {
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=15";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=48";
+import { getLaneById } from "../research-store.js?v=9";
 import { isFlagOn } from "../feature-flags.js?v=16";
 import {
   getPickerState as getTopPostsState,
@@ -474,11 +475,26 @@ function isSessionRoute() {
 // Routes that lead with a back control instead of a title, and where they go.
 function backTargetFor(path) {
   if (/^\/playbook\//.test(path)) return { to: "/contexts", label: "Back to Playbooks" };
-  // Every Content Research detail view — a lane's feed, its settings, its
-  // trending page — gets its back here rather than carrying its own button, the
-  // same way /playbook does. Deliberately WITHOUT ?fresh=1: that param runs the
-  // generating loader, and a back button should not spend 1.6s pretending to
-  // fetch a list you were just looking at.
+  // A lane's SETTINGS go back to that lane, not to the list. You reach the form
+  // from one feed's gear, so the list is not where you came from — and this is the
+  // only back in the app that names a specific destination rather than a section,
+  // which is why the label carries the lane's own name. Same target as the form's
+  // Cancel (research-form.exitPath), deliberately: two exits from one screen that
+  // disagree is how a user loses work.
+  const laneSettings = /^\/research\/([^/]+)\/settings$/.exec(path);
+  if (laneSettings) {
+    const lane = getLaneById(decodeURIComponent(laneSettings[1]));
+    return {
+      to: `/research/${laneSettings[1]}`,
+      // A deleted lane can still be deep-linked; fall back rather than render
+      // "Back to undefined".
+      label: lane ? `Back to ${lane.name}` : "Back to Content Research",
+    };
+  }
+  // Every other Content Research detail view — a lane's feed, its trending page,
+  // and /research/new — goes back to the list. Deliberately WITHOUT ?fresh=1: that
+  // param runs the generating loader, and a back button should not spend 1.6s
+  // pretending to fetch a list you were just looking at.
   if (/^\/research\/[^/]+/.test(path)) return { to: "/research", label: "Back to Content Research" };
   // The Topics settings page carries its Playbook scope BACK to the feed, so a
   // filtered feed survives the round trip. getPath() strips the query, so the scope

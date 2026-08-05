@@ -165,6 +165,19 @@ body.onboarding .app-content {
   margin-left: calc(var(--ref-spacing-xs) * -1);
 }
 
+/* The Content Research settings back names a specific lane, so this label is no
+   longer a short section name and a pathological title would otherwise push the
+   topbar's right-hand cluster around. 56ch clears every seeded lane — the longest
+   is "Back to Belgian multibrand competitors · last 30 days" at 52 — so the guard
+   only bites on genuinely absurd names. Ellipsis rather than truncating the string
+   in JS, so the full name still shows in the button's title attribute. */
+.app-topbar__back > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 56ch;
+}
+
 /* Click-to-rename variant on session routes — the title is a button.
    Pencil icon fades in on hover so the affordance is discoverable
    without cluttering the resting state. */
