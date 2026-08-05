@@ -21,8 +21,8 @@ import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=5";
-import { getBriefById, ignoreBrief, setStatus } from "../briefs-store.js?v=9";
-import { getContextById } from "../contexts-store.js?v=47";
+import { getBriefById, ignoreBrief, setStatus } from "../briefs-store.js?v=10";
+import { getContextById } from "../contexts-store.js?v=48";
 import { renderSocialPostCard } from "./social-post-card.js?v=7";
 import { showToast } from "./toast.js?v=20";
 

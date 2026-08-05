@@ -1,11 +1,11 @@
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=289";
+import { renderTopbar } from "../components/topbar.js?v=290";
 import {
   getContexts,
   subscribe as subscribeContexts,
   duplicateContext,
   deleteContext,
-} from "../contexts-store.js?v=47";
+} from "../contexts-store.js?v=48";
 import { navigate } from "../router.js?v=30";
 import { setHandoff } from "../handoff.js?v=20";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";

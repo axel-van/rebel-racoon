@@ -20,11 +20,11 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=289";
+import { renderTopbar } from "../components/topbar.js?v=290";
 import { isFlagOn } from "../feature-flags.js?v=16";
-import { getContexts, getContextById } from "../contexts-store.js?v=47";
-import { getLaneById, addLane, updateLane } from "../research-store.js?v=8";
-import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=11";
+import { getContexts, getContextById } from "../contexts-store.js?v=48";
+import { getLaneById, addLane, updateLane } from "../research-store.js?v=9";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=12";
 import {
   RESEARCH_SOURCES,
   CADENCES,
@@ -349,7 +349,7 @@ function renderOther() {
       renderSwitchCard(
         "showTrending",
         "Show trending topics",
-        "Surface a banner for topics running above their usual volume baseline.",
+        "Tell me in the feed when topics run above their usual volume baseline, and give them their own page.",
         draft.showTrending,
       ),
     )}
