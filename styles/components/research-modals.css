@@ -388,3 +388,71 @@
   background: var(--ref-color-grey-05);
   color: var(--ref-color-electric-blue-100);
 }
+
+/* ── Pick a topic (composer Add → Content Ideas) ─────────────────────────── */
+
+.research-pick__group + .research-pick__group {
+  margin-top: var(--ref-spacing-md);
+}
+
+.research-pick__group-title {
+  margin: 0 0 var(--ref-spacing-xxs);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ref-color-grey-40);
+}
+
+/* A row is a button covering its whole width, so the hit area is the row rather
+   than the headline — the same reason .brief-card__body is a button. The hover
+   is the app's universal card wash (light blue fill + light blue border, never
+   navy), per the rule in chat.css. */
+.research-pick__row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: 10px var(--ref-spacing-xs);
+  border: 1px solid transparent;
+  border-radius: var(--app-radius-starter);
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.research-pick__row:hover,
+.research-pick__row:focus-visible {
+  background: var(--ref-color-electric-blue-05);
+  border-color: var(--ref-color-electric-blue-20);
+}
+
+.research-pick__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.research-pick__headline {
+  font-size: var(--sys-text-style-body-size);
+  font-weight: 700;
+  color: var(--app-convo-navy);
+}
+
+.research-pick__meta {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sys-text-color-light);
+}
+
+.research-pick__trending {
+  font-weight: 800;
+  color: var(--app-archie-orange-deep);
+}
+
+.research-pick__empty {
+  margin: 0;
+}

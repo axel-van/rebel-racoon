@@ -21,7 +21,8 @@ import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=5";
-import { getBriefById, ignoreBrief, setStatus } from "../briefs-store.js?v=10";
+import { getBriefById, getBriefsForLane, ignoreBrief, setStatus } from "../briefs-store.js?v=10";
+import { getLanes } from "../research-store.js?v=9";
 import { getContextById } from "../contexts-store.js?v=48";
 import { renderSocialPostCard } from "./social-post-card.js?v=7";
 import { showToast } from "./toast.js?v=20";
@@ -360,7 +361,78 @@ export function openPlaybookList({ playbookId, kind }) {
   );
 }
 
-// ─── 6. Full research ──────────────────────────────────────────────────────
+// ─── 6. Pick a topic (composer Add → Content Ideas) ─────────────────────────
+//
+// The composer's Add menu can reach every other source kind but had no way into
+// Content Ideas, so a topic you had already triaged could only be used from its
+// own feed. This is that door.
+//
+// Grouped by lane rather than shown flat: a topic only means something next to
+// the research that produced it, and the lane name is the only thing that says
+// which brand and which sources it came from.
+//
+// IGNORED topics are left out. Everything else — New, Saved, Used — is offered,
+// because re-using a topic in a second chat is legitimate, but "Ignore" is the
+// one status that means "not this one".
+export function openIdeaPicker({ onPick }) {
+  const groups = getLanes()
+    .map((lane) => ({ lane, briefs: getBriefsForLane(lane.id).filter((b) => b.status !== "ignored") }))
+    .filter((g) => g.briefs.length);
+  const total = groups.reduce((n, g) => n + g.briefs.length, 0);
+
+  openShell(
+    "idea-picker",
+    { onPick },
+    {
+      title: "Pick a topic",
+      sub: total ? `${total} ${total === 1 ? "topic" : "topics"} across your Content Ideas` : "",
+      body: total
+        ? groups
+            .map(
+              (g) =>
+                html`<section class="research-pick__group">
+                  <h4 class="research-pick__group-title">${g.lane.name}</h4>
+                  ${raw(
+                    g.briefs
+                      .map((b) => {
+                        const src = findResearchSource(b.sourceId);
+                        const st = findReviewStatus(b.status);
+                        return html`<button
+                          type="button"
+                          class="research-pick__row"
+                          data-idea-pick="${escapeAttr(b.id)}"
+                        >
+                          <span class="topic-badge topic-badge--${src ? src.accent : "soft-blue"}" aria-hidden="true"
+                            ><i class="${src ? src.icon : "ap-icon-folder"}"></i
+                          ></span>
+                          <span class="research-pick__text">
+                            <span class="research-pick__headline">${b.headline}</span>
+                            <span class="research-pick__meta"
+                              >${src ? src.name : "Source"} ·
+                              ${b.ageLabel}${raw(
+                                b.isTrending ? ' · <span class="research-pick__trending">Trending</span>' : "",
+                              )}</span
+                            >
+                          </span>
+                          ${raw(st ? html`<span class="brief-status brief-status--${st.id}">${st.label}</span>` : "")}
+                        </button>`;
+                      })
+                      .join(""),
+                  )}
+                </section>`,
+            )
+            .join("")
+        : html`<p class="research-pick__empty muted">
+            No topics yet. Content Ideas fills up once a research lane has run.
+          </p>`,
+      foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
+        <span>Close</span>
+      </button>`,
+    },
+  );
+}
+
+// ─── 7. Full research ──────────────────────────────────────────────────────
 
 export function openFullResearch({ briefId }) {
   const brief = getBriefById(briefId);
@@ -474,6 +546,17 @@ function onPanelClick(event) {
     footEl.innerHTML = html`<button type="button" class="ap-button primary blue" data-research-modal-close>
       <span>Close</span>
     </button>`;
+    return;
+  }
+
+  const pick = event.target.closest("[data-idea-pick]");
+  if (pick) {
+    const brief = getBriefById(pick.dataset.ideaPick);
+    // Read the callback off `active` BEFORE closing — close() nulls it, which is
+    // the same trap the ignore branch below documents.
+    const onPick = active.ctx.onPick;
+    close();
+    if (brief && onPick) onPick(brief);
     return;
   }
 

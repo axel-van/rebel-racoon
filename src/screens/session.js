@@ -101,10 +101,15 @@ import {
   updateSourceClips,
   extractClipsForSource,
   setSourceIdeaCount,
+  addReadySource,
 } from "../sources-stream.js?v=63";
 import { renderClipCard } from "../components/clip-card.js?v=26";
 import { onFeedbackClick } from "../components/feedback-control.js?v=2";
 import { showToast } from "../components/toast.js?v=20";
+// The composer's Add menu reaches Content Ideas through this picker; the catalog
+// gives the picked topic's source its icon, matching the card it came from.
+import { openIdeaPicker } from "../components/research-modals.js?v=14";
+import { findResearchSource } from "../research-catalog.js?v=5";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
@@ -1249,6 +1254,29 @@ function renderPlaybookControl(ctx, selectable) {
 // connected connectors as live sources you can query in chat (logo + name →
 // ask), and the only place to connect new ones — "Browse connectors" — sits at
 // the very bottom of that flyout.
+// Returns a plain string and is interpolated WITHOUT raw(): renderComposer is a
+// plain template literal, not html``, so a raw() wrapper stringifies to
+// "[object Object]". Same call shape as renderConnectorsSubmenu right below it.
+//
+// The composer's way into Content Ideas. Same folder icon the sidebar's nav row
+// uses, so the two read as one destination, and the same flag gates both — with
+// contentResearch OFF this item disappears rather than opening an empty picker.
+//
+// It sits with "Top performing posts" below the divider: those two are the items
+// that pick from something the app already holds, where everything above the
+// divider brings something in from outside.
+function renderContentIdeasItem() {
+  if (!isFlagOn("contentResearch")) return "";
+  return html`<button type="button" class="ap-action-dropdown-item" data-add-source="content-ideas" role="menuitem">
+    <i class="ap-icon-folder"></i>
+    <div class="ap-action-dropdown-item-text">
+      <div class="ap-action-dropdown-item-label-container">
+        <span class="ap-action-dropdown-item-label">Pick from Content Ideas</span>
+      </div>
+    </div>
+  </button>`;
+}
+
 function renderConnectorsSubmenu() {
   // Connectors are gated behind a feature flag (default OFF) — when off, the
   // composer Add menu is just the file/URL quick-actions.
@@ -1575,6 +1603,7 @@ function renderComposer(attachedContext, session, selectable) {
                     </div>
                   </div>
                 </button>
+                ${renderContentIdeasItem()}
                 ${renderConnectorsSubmenu()}
               </div>
             </div>
@@ -4986,6 +5015,27 @@ function bindSession(root, session) {
         // widget → angle/scope/profile steps), never the full-screen studio.
         if (kind === "top-posts") {
           topPostsFlow.startTopPostsInline(session.id);
+          return;
+        }
+        // A Content Ideas topic arrives as an already-processed SOURCE, exactly as
+        // topic-flow lands one from /topics: intake-lifecycle then posts a
+        // source-intake turn for it, so the pick shows up in the thread as a card
+        // and every existing affordance (Extract ideas, Draft, Ask) lights up on
+        // its own. No new action surface for it to need.
+        if (kind === "content-ideas") {
+          openIdeaPicker({
+            onPick: (brief) => {
+              const src = findResearchSource(brief.sourceId);
+              addReadySource(session.id, {
+                id: brief.id,
+                filename: brief.headline,
+                kind: "Topic",
+                preview: brief.summary,
+                iconClass: src?.icon || "ap-icon-folder",
+              });
+              showToast("Topic added to this chat");
+            },
+          });
           return;
         }
         // URL + Paste text need the modal UI (a URL field / textarea) — open
