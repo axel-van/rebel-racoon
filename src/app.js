@@ -14,7 +14,7 @@ import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=73";
 import { init as initConnectorsModal } from "./components/connectors-modal.js?v=20";
 import { init as initTopicModal } from "./components/topic-modal.js?v=10";
-import { init as initResearchModals } from "./components/research-modals.js?v=14";
+import { init as initResearchModals } from "./components/research-modals.js?v=15";
 import { init as initAddPlaybookEntryModal } from "./components/add-playbook-entry-modal.js?v=1";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
 import { init as initRenameModal } from "./components/rename-modal.js?v=2";
@@ -27,15 +27,15 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=220";
 import { renderDashboard } from "./screens/dashboard.js?v=62";
-import { renderSession } from "./screens/session.js?v=515";
+import { renderSession } from "./screens/session.js?v=516";
 import { renderContexts } from "./screens/contexts.js?v=253";
 import { renderConnectors } from "./screens/connectors.js?v=192";
 import { renderTopics } from "./screens/topics.js?v=61";
 import { renderTopicsSettings } from "./screens/topics-settings.js?v=52";
 import { renderResearch } from "./screens/research.js?v=21";
-import { renderResearchForm } from "./screens/research-form.js?v=18";
-import { renderResearchFeed } from "./screens/research-feed.js?v=19";
-import { renderResearchTrending } from "./screens/research-trending.js?v=17";
+import { renderResearchForm } from "./screens/research-form.js?v=19";
+import { renderResearchFeed } from "./screens/research-feed.js?v=20";
+import { renderResearchTrending } from "./screens/research-trending.js?v=18";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.

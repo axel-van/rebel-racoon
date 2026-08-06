@@ -29,9 +29,13 @@ import { showToast } from "./toast.js?v=20";
 
 const MODAL_ID = "research";
 
-let backdrop, panel, titleEl, subEl, bodyEl, footEl;
+let backdrop, panel, titleEl, subEl, toolbarEl, bodyEl, footEl;
 let initialized = false;
 let active = null; // { kind, ctx } — what's currently open
+// Idea-picker Playbook filter. null = show every Playbook; an array = show only
+// those ids. Module-level because the picker re-renders itself through openShell
+// and the selection has to survive that.
+let pickerPlaybooks = null;
 
 const SHELL = `
 <div class="app-modal-backdrop research-modal__backdrop" id="researchModalBackdrop" hidden></div>
@@ -45,6 +49,7 @@ const SHELL = `
       <i class="ap-icon-close" aria-hidden="true"></i>
     </button>
   </header>
+  <div class="research-modal__toolbar" hidden></div>
   <div class="research-modal__body"></div>
   <footer class="research-modal__foot"></footer>
 </aside>`;
@@ -59,6 +64,7 @@ export function init() {
   panel = document.getElementById("researchModal");
   titleEl = panel.querySelector(".research-modal__title");
   subEl = panel.querySelector(".research-modal__sub");
+  toolbarEl = panel.querySelector(".research-modal__toolbar");
   bodyEl = panel.querySelector(".research-modal__body");
   footEl = panel.querySelector(".research-modal__foot");
 
@@ -78,13 +84,19 @@ function isOpen() {
   return !!panel && !panel.hidden;
 }
 
-function openShell(kind, ctx, { title, sub = "", body, foot, wide = false }) {
+// `toolbar` renders between the head and the BODY, outside the scroller. Anything
+// with an absolutely-positioned dropdown has to live there: .research-modal__body
+// is overflow-y:auto, which clips an open panel. .research-modal itself declares
+// no overflow, so a panel in the toolbar row escapes the modal box cleanly.
+function openShell(kind, ctx, { title, sub = "", body, foot, toolbar = "", wide = false }) {
   init();
   requestOpen(MODAL_ID, close);
   active = { kind, ctx };
   titleEl.textContent = title;
   subEl.textContent = sub;
   subEl.hidden = !sub;
+  toolbarEl.innerHTML = toolbar;
+  toolbarEl.hidden = !toolbar;
   bodyEl.innerHTML = body;
   footEl.innerHTML = foot;
   panel.classList.toggle("research-modal--wide", wide);
@@ -375,61 +387,135 @@ export function openPlaybookList({ playbookId, kind }) {
 // because re-using a topic in a second chat is legitimate, but "Ignore" is the
 // one status that means "not this one".
 export function openIdeaPicker({ onPick }) {
+  // Which Playbooks are shown. null = all — deliberately not "every id
+  // pre-ticked", so a Playbook that gains topics later is included without the
+  // filter having to be told about it.
+  pickerPlaybooks = null;
+  renderIdeaPicker({ onPick });
+}
+
+// Every Playbook that actually owns a topic, in lane order. Offering Playbooks
+// with nothing behind them would be a filter that can only ever empty the list.
+function pickerPlaybookOptions() {
+  const seen = new Map();
+  for (const lane of getLanes()) {
+    if (seen.has(lane.playbookId)) continue;
+    const pb = getContextById(lane.playbookId);
+    if (pb) seen.set(lane.playbookId, pb);
+  }
+  return [...seen.values()];
+}
+
+function pickerShows(playbookId) {
+  return !pickerPlaybooks || pickerPlaybooks.includes(playbookId);
+}
+
+// Re-opened rather than patched in place on every filter change: openShell resets
+// the whole dialog, which keeps one code path for "what does this modal look
+// like" instead of a second, drifting one for updates. The dialog is already open
+// so there is no flash, and requestOpen is idempotent for the same MODAL_ID.
+function renderIdeaPicker(ctx) {
   const groups = getLanes()
+    .filter((lane) => pickerShows(lane.playbookId))
     .map((lane) => ({ lane, briefs: getBriefsForLane(lane.id).filter((b) => b.status !== "ignored") }))
     .filter((g) => g.briefs.length);
   const total = groups.reduce((n, g) => n + g.briefs.length, 0);
+  const options = pickerPlaybookOptions();
 
-  openShell(
-    "idea-picker",
-    { onPick },
-    {
-      title: "Pick a topic",
-      sub: total ? `${total} ${total === 1 ? "topic" : "topics"} across your Content Ideas` : "",
-      body: total
-        ? groups
+  openShell("idea-picker", ctx, {
+    title: "Pick a topic",
+    sub: total ? `${total} ${total === 1 ? "topic" : "topics"} across your Content Ideas` : "",
+    toolbar: renderPlaybookFilter(options),
+    body: total
+      ? groups
+          .map(
+            (g) =>
+              html`<section class="research-pick__group">
+                <h4 class="research-pick__group-title">${g.lane.name}</h4>
+                ${raw(
+                  g.briefs
+                    .map((b) => {
+                      const src = findResearchSource(b.sourceId);
+                      const st = findReviewStatus(b.status);
+                      return html`<button type="button" class="research-pick__row" data-idea-pick="${escapeAttr(b.id)}">
+                        <span class="topic-badge topic-badge--${src ? src.accent : "soft-blue"}" aria-hidden="true"
+                          ><i class="${src ? src.icon : "ap-icon-folder"}"></i
+                        ></span>
+                        <span class="research-pick__text">
+                          <span class="research-pick__headline">${b.headline}</span>
+                          <span class="research-pick__meta"
+                            >${src ? src.name : "Source"} ·
+                            ${b.ageLabel}${raw(
+                              b.isTrending ? ' · <span class="research-pick__trending">Trending</span>' : "",
+                            )}</span
+                          >
+                        </span>
+                        ${raw(st ? html`<span class="brief-status brief-status--${st.id}">${st.label}</span>` : "")}
+                      </button>`;
+                    })
+                    .join(""),
+                )}
+              </section>`,
+          )
+          .join("")
+      : html`<p class="research-pick__empty muted">
+          ${pickerPlaybooks
+            ? "No topics in the Playbooks you picked."
+            : "No topics yet. Content Ideas fills up once a research lane has run."}
+        </p>`,
+    foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
+      <span>Close</span>
+    </button>`,
+  });
+}
+
+// DS .ap-select for the open/close mechanics — <details>/<summary>, never a bare
+// native <select> — with the DS .ap-selection-dropdown as the panel, which is the
+// component the DS names for multi-select. The panel ships its own width, shadow
+// and radius and is NOT positioned, so the app class beside it does only that.
+function renderPlaybookFilter(options) {
+  const n = pickerPlaybooks ? pickerPlaybooks.length : options.length;
+  const label =
+    !pickerPlaybooks || n === options.length
+      ? "All Playbooks"
+      : n === 1
+        ? options.find((o) => o.id === pickerPlaybooks[0])?.name || "1 Playbook"
+        : `${n} Playbooks`;
+
+  return html`<details class="ap-select research-pick__pbselect" data-idea-pbselect>
+    <summary class="ap-select-trigger">
+      <span class="ap-select-value">${label}</span>
+      <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+    </summary>
+    <div class="ap-selection-dropdown research-pick__pbmenu" role="group" aria-label="Filter by Playbook">
+      <div class="ap-selection-dropdown-header">
+        <span>Playbooks</span>
+        ${raw(
+          pickerPlaybooks
+            ? html`<button type="button" class="ap-link standalone" data-idea-pb-all>
+                <i class="ap-icon-refresh" aria-hidden="true"></i> Show all
+              </button>`
+            : "",
+        )}
+      </div>
+      <div class="ap-selection-dropdown-items">
+        ${raw(
+          options
             .map(
-              (g) =>
-                html`<section class="research-pick__group">
-                  <h4 class="research-pick__group-title">${g.lane.name}</h4>
-                  ${raw(
-                    g.briefs
-                      .map((b) => {
-                        const src = findResearchSource(b.sourceId);
-                        const st = findReviewStatus(b.status);
-                        return html`<button
-                          type="button"
-                          class="research-pick__row"
-                          data-idea-pick="${escapeAttr(b.id)}"
-                        >
-                          <span class="topic-badge topic-badge--${src ? src.accent : "soft-blue"}" aria-hidden="true"
-                            ><i class="${src ? src.icon : "ap-icon-folder"}"></i
-                          ></span>
-                          <span class="research-pick__text">
-                            <span class="research-pick__headline">${b.headline}</span>
-                            <span class="research-pick__meta"
-                              >${src ? src.name : "Source"} ·
-                              ${b.ageLabel}${raw(
-                                b.isTrending ? ' · <span class="research-pick__trending">Trending</span>' : "",
-                              )}</span
-                            >
-                          </span>
-                          ${raw(st ? html`<span class="brief-status brief-status--${st.id}">${st.label}</span>` : "")}
-                        </button>`;
-                      })
-                      .join(""),
-                  )}
-                </section>`,
+              (o) =>
+                html`<button type="button" class="ap-selection-dropdown-item" data-idea-pb="${escapeAttr(o.id)}">
+                  <label class="ap-checkbox-container">
+                    <input type="checkbox" ${raw(pickerShows(o.id) ? "checked" : "")} tabindex="-1" />
+                    <i aria-hidden="true"></i>
+                  </label>
+                  <span>${o.name}</span>
+                </button>`,
             )
-            .join("")
-        : html`<p class="research-pick__empty muted">
-            No topics yet. Content Ideas fills up once a research lane has run.
-          </p>`,
-      foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
-        <span>Close</span>
-      </button>`,
-    },
-  );
+            .join(""),
+        )}
+      </div>
+    </div>
+  </details>`;
 }
 
 // ─── 7. Full research ──────────────────────────────────────────────────────
@@ -546,6 +632,36 @@ function onPanelClick(event) {
     footEl.innerHTML = html`<button type="button" class="ap-button primary blue" data-research-modal-close>
       <span>Close</span>
     </button>`;
+    return;
+  }
+
+  // ── Idea-picker Playbook filter ──────────────────────────────────────────
+  // Both branches re-render through renderIdeaPicker, which calls openShell and
+  // therefore replaces the toolbar — so the <details> would snap shut on every
+  // tick. Re-opening it after the re-render keeps the menu up while you make a
+  // multi-selection, which is the whole point of a multi-select.
+  const pbAll = event.target.closest("[data-idea-pb-all]");
+  if (pbAll) {
+    pickerPlaybooks = null;
+    const ctx = active.ctx;
+    renderIdeaPicker(ctx);
+    panel.querySelector("[data-idea-pbselect]")?.setAttribute("open", "");
+    return;
+  }
+
+  const pbItem = event.target.closest("[data-idea-pb]");
+  if (pbItem) {
+    const id = pbItem.dataset.ideaPb;
+    const all = pickerPlaybookOptions().map((o) => o.id);
+    const current = pickerPlaybooks || all;
+    const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
+    // Unticking the last one would leave a list nothing can match, so an empty
+    // selection means the same as no filter — and so does ticking every box,
+    // which keeps the trigger reading "All Playbooks" rather than "4 Playbooks".
+    pickerPlaybooks = next.length === 0 || next.length === all.length ? null : next;
+    const ctx = active.ctx;
+    renderIdeaPicker(ctx);
+    panel.querySelector("[data-idea-pbselect]")?.setAttribute("open", "");
     return;
   }
 

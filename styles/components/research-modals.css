@@ -456,3 +456,32 @@
 .research-pick__empty {
   margin: 0;
 }
+
+/* The toolbar row sits between the head and the scrolling body, so an open
+   dropdown is not clipped by .research-modal__body's overflow-y. */
+.research-modal__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs) 20px;
+  border-bottom: 1px solid var(--ref-color-grey-10);
+  /* The row must sit above the body so the panel it opens paints over the list
+     rather than under it. */
+  position: relative;
+  z-index: 1;
+}
+
+/* An explicit width, not a max-width: .ap-select is width:100%, so as a flex item
+   it would fill the row. Same fix as .research-view__filter. */
+.research-pick__pbselect {
+  flex: 0 0 auto;
+  width: 240px;
+}
+
+/* .ap-selection-dropdown ships its own width, shadow and radius but no position —
+   it is a panel, and the consumer places it. This is the only thing added. */
+.research-pick__pbmenu {
+  position: absolute;
+  top: calc(100% + var(--ref-spacing-xxxs));
+  left: 0;
+}
