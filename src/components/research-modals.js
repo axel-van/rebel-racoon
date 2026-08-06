@@ -188,14 +188,14 @@ export function openExport({ count }) {
           <input type="radio" name="researchExportFormat" checked />
           <span class="research-modal__radio-text">
             <strong>CSV spreadsheet</strong>
-            <span>One row per research card, with source and status.</span>
+            <span>One row per topic, with source and status.</span>
           </span>
         </label>`,
       foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
           <span>Cancel</span>
         </button>
         <button type="button" class="ap-button primary blue" data-export-go>
-          <span>Export ${count} ${count === 1 ? "card" : "cards"}</span>
+          <span>Export ${count} ${count === 1 ? "topic" : "topics"}</span>
         </button>`,
     },
   );
@@ -483,14 +483,14 @@ function onPanelClick(event) {
     const done = active.ctx.onDone;
     close();
     if (done) done();
-    showToast("Brief ignored");
+    showToast("Topic ignored");
     return;
   }
 
   if (event.target.closest("[data-export-go]")) {
     const n = active.ctx.count;
     close();
-    showToast(`Exported ${n} ${n === 1 ? "card" : "cards"} as CSV`);
+    showToast(`Exported ${n} ${n === 1 ? "topic" : "topics"} as CSV`);
     return;
   }
 

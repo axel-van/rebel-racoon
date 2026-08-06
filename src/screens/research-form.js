@@ -20,11 +20,11 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=291";
-import { isFlagOn } from "../feature-flags.js?v=16";
+import { renderTopbar } from "../components/topbar.js?v=292";
+import { isFlagOn } from "../feature-flags.js?v=17";
 import { getContexts, getContextById } from "../contexts-store.js?v=48";
 import { getLaneById, addLane, updateLane } from "../research-store.js?v=9";
-import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=12";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=13";
 import {
   RESEARCH_SOURCES,
   CADENCES,
@@ -139,7 +139,7 @@ function renderPage() {
   return html`<div class="research-form__body">
       <div class="research-form__inner">
         <header class="research-form__head">
-          <h1 class="ap-h1 research-form__title">${settings ? "Feed settings" : "New content research"}</h1>
+          <h1 class="ap-h1 research-form__title">${settings ? "Feed settings" : "New content ideas"}</h1>
           <p class="ap-body research-form__lead">
             ${settings
               ? "What I watch for this research, and how often I check it."

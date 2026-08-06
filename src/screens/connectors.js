@@ -12,13 +12,13 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=291";
+import { renderTopbar } from "../components/topbar.js?v=292";
 import { showToast } from "../components/toast.js?v=20";
 import { setHandoff } from "../handoff.js?v=20";
 import { findConnector, setConnectorStatus, subscribe as subscribeConnectors } from "../connectors-store.js?v=37";
 import { renderGalleryBody } from "../connectors-view.js?v=19";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=20";
-import { isFlagOn } from "../feature-flags.js?v=16";
+import { isFlagOn } from "../feature-flags.js?v=17";
 
 // Local view state (search + category filter).
 let view = { query: "", category: "all" };

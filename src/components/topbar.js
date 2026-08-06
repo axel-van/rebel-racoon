@@ -14,26 +14,26 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=426";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=62";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=69";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=63";
+} from "./right-panel.js?v=427";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=63";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=70";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=64";
 import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=45";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=219";
+} from "./conversation-status-card.js?v=220";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=15";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=48";
 import { getLaneById } from "../research-store.js?v=9";
-import { isFlagOn } from "../feature-flags.js?v=16";
+import { isFlagOn } from "../feature-flags.js?v=17";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=87";
+} from "../top-posts-flow.js?v=88";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static
@@ -488,14 +488,14 @@ function backTargetFor(path) {
       to: `/research/${laneSettings[1]}`,
       // A deleted lane can still be deep-linked; fall back rather than render
       // "Back to undefined".
-      label: lane ? `Back to ${lane.name}` : "Back to Content Research",
+      label: lane ? `Back to ${lane.name}` : "Back to Content Ideas",
     };
   }
   // Every other Content Research detail view — a lane's feed, its trending page,
   // and /research/new — goes back to the list. Deliberately WITHOUT ?fresh=1: that
   // param runs the generating loader, and a back button should not spend 1.6s
   // pretending to fetch a list you were just looking at.
-  if (/^\/research\/[^/]+/.test(path)) return { to: "/research", label: "Back to Content Research" };
+  if (/^\/research\/[^/]+/.test(path)) return { to: "/research", label: "Back to Content Ideas" };
   // The Topics settings page carries its Playbook scope BACK to the feed, so a
   // filtered feed survives the round trip. getPath() strips the query, so the scope
   // has to be read from the hash here rather than taken from `path`.
@@ -549,7 +549,7 @@ function currentTitle() {
   // lane. Registering these is also what let the lane list drop its in-page
   // bordered bar — that bar only existed because this map had no entry and the
   // topbar fell through to "Archie".
-  if (path.startsWith("/research")) return "Content Research";
+  if (path.startsWith("/research")) return "Content Ideas";
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);
   if (sessionMatch) {
     const id = sessionMatch[1];

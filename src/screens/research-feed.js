@@ -23,15 +23,15 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=291";
-import { isFlagOn } from "../feature-flags.js?v=16";
-import { renderBriefCard } from "../components/brief-card.js?v=7";
+import { renderTopbar } from "../components/topbar.js?v=292";
+import { isFlagOn } from "../feature-flags.js?v=17";
+import { renderBriefCard } from "../components/brief-card.js?v=8";
 import {
   openFullResearch,
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=12";
+} from "../components/research-modals.js?v=13";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=9";
 import {
@@ -177,7 +177,7 @@ function renderPage() {
               )
               .join("")
           : html`<p class="research-feed__empty muted">
-              No briefs match these filters. Try widening them, or reset to the defaults.
+              No topics match these filters. Try widening them, or reset to the defaults.
             </p>`,
       )}
     </div>
@@ -191,7 +191,7 @@ function renderGenerating() {
   // was the only loader in the product that didn't.
   return html`<div class="research-generating">
     <span class="ap-loader orange size-60" aria-hidden="true"></span>
-    <p class="research-generating__caption" role="status">We are generating content research for you…</p>
+    <p class="research-generating__caption" role="status">We are generating content ideas for you…</p>
   </div>`;
 }
 
@@ -274,14 +274,14 @@ function renderFeedHeader(lane) {
   </header>`;
 }
 
-// Group order is fixed: Review status, Sources, Research type. Research type is
+// Group order is fixed: Topic status, Sources, Topic type. Topic type is
 // last by request — it's the least-touched of the three.
 function renderFilterPanel() {
   return html`<div class="research-filters__panel" data-feed-panel>
     ${raw(
-      renderGroup("status", "Review status", REVIEW_STATUSES, filters.statuses, "statuses") +
+      renderGroup("status", "Topic status", REVIEW_STATUSES, filters.statuses, "statuses") +
         renderGroup("sources", "Sources", RESEARCH_SOURCES, filters.sources, "sources") +
-        renderGroup("types", "Research type", RESEARCH_TYPES, filters.types, "types"),
+        renderGroup("types", "Topic type", RESEARCH_TYPES, filters.types, "types"),
     )}
     <div class="research-filters__reset-row">
       <button type="button" class="research-filters__reset" data-feed-reset>

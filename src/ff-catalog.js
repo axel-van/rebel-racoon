@@ -117,20 +117,25 @@ export const FLAGS = Object.freeze([
   },
   {
     id: "contentResearch",
-    label: "Content Research (research lanes)",
+    label: "Content Ideas (research lanes)",
     default: false,
     hides:
-      "When OFF (default), hides everything Content Research: the /research " +
+      "When OFF (default), hides everything Content Ideas: the /research " +
       "routes (lane list, form, feed, trending page), its sidebar nav row, and " +
-      "the composer Add → 'Content Research' picker. A stale deep link bounces " +
+      "the composer Add → 'Content Ideas' picker. A stale deep link bounces " +
       "to /, like /topics. When ON, the user pairs a Playbook with sources into " +
-      "a named research LANE, and Archie returns briefs — a headline, a " +
-      "summary, a full research article and the social posts behind it — each " +
-      "triaged New / Saved / Used / Ignored. Briefs whose volume runs above " +
-      "their own baseline are additionally flagged Trending (an independent " +
-      "boolean, never a status), surfaced by a banner plus a dedicated page. " +
-      "Sibling of `topics`, not a replacement: Topics is one stream across " +
-      "every Playbook, Content Research is lane-scoped — a different IA.",
+      "a named research LANE, and Archie returns topics — a headline, a " +
+      "summary, a full article and the social posts behind it — each triaged " +
+      "New / Saved / Used / Ignored. Topics whose volume runs above their own " +
+      "baseline are additionally flagged Trending (an independent boolean, " +
+      "never a status), surfaced by a notice plus a dedicated page. " +
+      "\n\nNAMING: the UI says Content Ideas and calls each card a TOPIC; the " +
+      "code still says research/brief (`briefs-store`, `brief-card`, " +
+      "`data-brief-*`), the same split as Playbook/Context. `briefs-store` " +
+      "cannot be renamed anyway — `topics-store` is the OTHER feature. Which is " +
+      "the live caveat: the `topics` flag below owns a different object also " +
+      "called Topic (a listening dossier in /topics, one stream across every " +
+      "Playbook). Both flags ON puts two unrelated things under one word.",
   },
   {
     id: "playbookCompetitors",

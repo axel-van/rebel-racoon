@@ -18,12 +18,12 @@ import {
   setConnectorStatus,
   subscribe as subscribeConnectors,
 } from "../connectors-store.js?v=37";
-import { postConnectPrompt } from "../assistant.js?v=69";
+import { postConnectPrompt } from "../assistant.js?v=70";
 import { URL_SERVICES, detectUrlService } from "../url-services.js?v=1";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { renderConnectorLogo } from "../connectors-view.js?v=19";
-import { isFlagOn } from "../feature-flags.js?v=16";
+import { isFlagOn } from "../feature-flags.js?v=17";
 import { showToast } from "./toast.js?v=20";
 import { dropzoneHTML } from "./dropzone.js?v=1";
 
@@ -37,7 +37,7 @@ import {
   cancelUpload,
   getUploads,
   subscribeUploads,
-} from "../sources-stream.js?v=62";
+} from "../sources-stream.js?v=63";
 
 let backdrop, modal, contentEl, footerEl, fileInput;
 let initialized = false;

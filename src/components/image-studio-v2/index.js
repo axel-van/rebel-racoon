@@ -25,17 +25,17 @@ import { showToast } from "../toast.js?v=20";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=45";
 import { getSessionById } from "../../sessions-store.js?v=15";
 import { getContextById } from "../../contexts-store.js?v=48";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=32";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=33";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=59";
+import { renderStudio } from "./stage-view.js?v=60";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=32";
-import * as imageStudio from "../../image-studio.js?v=68";
+} from "./interactions.js?v=33";
+import * as imageStudio from "../../image-studio.js?v=69";
 
 let backdrop;
 let initialized = false;

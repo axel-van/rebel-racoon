@@ -54,7 +54,9 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
     class="brief-card${raw(brief.isTrending ? " brief-card--trending" : "")}"
     data-brief-id="${escapeAttr(brief.id)}"
   >
-    <!-- The card body is ONE BUTTON opening Full research, and the actions sit
+    <!-- The card body is ONE BUTTON opening the full read — and since the footer's
+         "Full research" button was removed it is the ONLY way in, which is why it
+         must stay a button and stay the whole text area. The actions sit
          outside it in a sibling footer. A button inside a button is invalid HTML
          and the browser resolves the nesting unpredictably, which is the same
          reason topic-card splits body from footer.
@@ -125,7 +127,7 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
                 data-brief-ignore="${escapeAttr(brief.id)}"
                 aria-describedby="ignore-tip-${escapeAttr(brief.id)}"
               >
-                <span>Ignore brief</span>
+                <span>Ignore topic</span>
               </button>
               <span class="ap-tooltip top" role="tooltip" id="ignore-tip-${escapeAttr(brief.id)}"
                 >${IGNORE_TOOLTIP}</span
@@ -133,10 +135,6 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
             </span>`
           : "",
       )}
-      <span class="brief-card__spacer"></span>
-      <button type="button" class="ap-button stroked grey" data-brief-research="${escapeAttr(brief.id)}">
-        <span>Full research</span>
-      </button>
     </footer>
   </article>`;
 }
@@ -153,7 +151,7 @@ function renderUseSplit(brief, menuOpen) {
       data-brief-use-menu="${escapeAttr(brief.id)}"
       aria-haspopup="true"
       aria-expanded="${menuOpen ? "true" : "false"}"
-      aria-label="More options for this brief"
+      aria-label="More options for this topic"
     >
       <i class="ap-icon-chevron-down" aria-hidden="true"></i>
     </button>

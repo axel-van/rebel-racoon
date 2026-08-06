@@ -20,9 +20,9 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=291";
+import { renderTopbar } from "../components/topbar.js?v=292";
 import { showToast } from "../components/toast.js?v=20";
-import { isFlagOn } from "../feature-flags.js?v=16";
+import { isFlagOn } from "../feature-flags.js?v=17";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=48";
 import { getLanes, duplicateLane, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=9";
 import { countNewForLane, countTrendingForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=10";
@@ -163,11 +163,11 @@ function renderHead(lanes) {
   const waiting = lanes.reduce((sum, l) => sum + countNewForLane(l.id), 0);
   const sub =
     `${lanes.length} research ${lanes.length === 1 ? "lane" : "lanes"} · ` +
-    `${waiting} ${waiting === 1 ? "brief" : "briefs"} waiting`;
+    `${waiting} ${waiting === 1 ? "topic" : "topics"} waiting`;
 
   return html`<header class="research-view__head">
     <div class="research-view__head-text">
-      <h1 class="research-view__title">Content Research</h1>
+      <h1 class="research-view__title">Content Ideas</h1>
       <p class="research-view__sub">${sub}</p>
     </div>
     <div class="research-view__head-actions">
@@ -287,7 +287,7 @@ function renderLaneCard(lane) {
             newCount
               ? html`<span
                   class="ap-badge orange"
-                  aria-label="${newCount} new ${newCount === 1 ? "brief" : "briefs"} to review"
+                  aria-label="${newCount} new ${newCount === 1 ? "topic" : "topics"} to review"
                   >${newCount} new</span
                 >`
               : "",
@@ -340,7 +340,7 @@ function renderLaneCard(lane) {
          that only existed to own the pinning while the conditional signals row
          shared the footer with it. -->
     <button type="button" class="research-card__open" data-lane-open="${escapeAttr(lane.id)}">
-      <span>Open research</span>
+      <span>See topics</span>
       <i class="ap-icon-arrow-right" aria-hidden="true"></i>
     </button>
   </article>`;

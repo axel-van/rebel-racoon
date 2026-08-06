@@ -41,7 +41,9 @@ There is **no `/settings` route** — it was removed. The prototype Admin contro
 
 `setAfterRender` (in `app.js`) re-renders the sidebar + conversation-status-card after every route change and toggles the `body.onboarding` full-bleed class for the welcome-alt flow.
 
-> **Vocabulary:** a saved AI context is a **Playbook** (UI label) but the code/store calls it a **Context** (`contexts-store`, `contextId`). Source → Idea → Draft (post) → Schedule is the content pipeline; a **Topic** (`topics-store`, flag `topics`) is an optional step upstream of it. `topic` stays banned as a synonym for **Idea** — a Topic is its own object.
+> **Vocabulary — UI label vs code name.** A saved AI context is a **Playbook** in the UI but a **Context** in code (`contexts-store`, `contextId`). Content Research is now **Content Ideas** in the UI, and each card in a lane is a **Topic**; the code still says research/brief (`briefs-store`, `brief-card`, `data-brief-*`, `/research` routes) — same split, and `briefs-store` could not be renamed regardless because `topics-store` is a different feature. Source → Idea → Draft (post) → Schedule is the content pipeline.
+>
+> ⚠️ **"Topic" now names two unrelated objects.** `topics-store` + `/topics` (flag `topics`) own a **listening dossier** — one stream across every Playbook. Content Ideas calls its per-lane cards Topics too. Both flags ON puts two different things under one word; `topics` is OFF by default, so the clash is invisible in the default demo. The older rule "`topic` is banned as a synonym for Idea" still holds for the pipeline — a Topic is never an Idea.
 
 ### Source layout
 
