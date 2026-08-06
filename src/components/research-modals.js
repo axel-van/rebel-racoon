@@ -29,13 +29,13 @@ import { showToast } from "./toast.js?v=20";
 
 const MODAL_ID = "research";
 
-let backdrop, panel, titleEl, subEl, toolbarEl, bodyEl, footEl;
+let backdrop, panel, titleEl, subEl, bodyEl, footEl;
 let initialized = false;
 let active = null; // { kind, ctx } — what's currently open
-// Idea-picker Playbook filter. null = show every Playbook; an array = show only
-// those ids. Module-level because the picker re-renders itself through openShell
-// and the selection has to survive that.
-let pickerPlaybooks = null;
+// Idea-picker state. Module-level because each step re-renders through openShell,
+// which rebuilds the dialog — the step and the answers have to outlive that.
+let pickerStep = "playbooks";
+let pickerPlaybooks = [];
 
 const SHELL = `
 <div class="app-modal-backdrop research-modal__backdrop" id="researchModalBackdrop" hidden></div>
@@ -49,7 +49,6 @@ const SHELL = `
       <i class="ap-icon-close" aria-hidden="true"></i>
     </button>
   </header>
-  <div class="research-modal__toolbar" hidden></div>
   <div class="research-modal__body"></div>
   <footer class="research-modal__foot"></footer>
 </aside>`;
@@ -64,7 +63,6 @@ export function init() {
   panel = document.getElementById("researchModal");
   titleEl = panel.querySelector(".research-modal__title");
   subEl = panel.querySelector(".research-modal__sub");
-  toolbarEl = panel.querySelector(".research-modal__toolbar");
   bodyEl = panel.querySelector(".research-modal__body");
   footEl = panel.querySelector(".research-modal__foot");
 
@@ -84,19 +82,13 @@ function isOpen() {
   return !!panel && !panel.hidden;
 }
 
-// `toolbar` renders between the head and the BODY, outside the scroller. Anything
-// with an absolutely-positioned dropdown has to live there: .research-modal__body
-// is overflow-y:auto, which clips an open panel. .research-modal itself declares
-// no overflow, so a panel in the toolbar row escapes the modal box cleanly.
-function openShell(kind, ctx, { title, sub = "", body, foot, toolbar = "", wide = false }) {
+function openShell(kind, ctx, { title, sub = "", body, foot, wide = false }) {
   init();
   requestOpen(MODAL_ID, close);
   active = { kind, ctx };
   titleEl.textContent = title;
   subEl.textContent = sub;
   subEl.hidden = !sub;
-  toolbarEl.innerHTML = toolbar;
-  toolbarEl.hidden = !toolbar;
   bodyEl.innerHTML = body;
   footEl.innerHTML = foot;
   panel.classList.toggle("research-modal--wide", wide);
@@ -386,16 +378,22 @@ export function openPlaybookList({ playbookId, kind }) {
 // IGNORED topics are left out. Everything else — New, Saved, Used — is offered,
 // because re-using a topic in a second chat is legitimate, but "Ignore" is the
 // one status that means "not this one".
+// TWO STEPS, not a filter dropdown. Picking the Playbook first is a real
+// question with a small answer set, and answering it up front means step two is
+// already the short list — where a dropdown made you open the modal, read a list
+// you did not want, then go filter it.
+//
+// `pickerStep` and `pickerPlaybooks` are module-level because each step re-renders
+// through openShell, which rebuilds the dialog; the answers have to outlive that.
 export function openIdeaPicker({ onPick }) {
-  // Which Playbooks are shown. null = all — deliberately not "every id
-  // pre-ticked", so a Playbook that gains topics later is included without the
-  // filter having to be told about it.
-  pickerPlaybooks = null;
+  pickerStep = "playbooks";
+  // Everything ticked, so Continue works on arrival for the common case.
+  pickerPlaybooks = pickerPlaybookOptions().map((o) => o.id);
   renderIdeaPicker({ onPick });
 }
 
 // Every Playbook that actually owns a topic, in lane order. Offering Playbooks
-// with nothing behind them would be a filter that can only ever empty the list.
+// with nothing behind them would be a choice that can only empty the next step.
 function pickerPlaybookOptions() {
   const seen = new Map();
   for (const lane of getLanes()) {
@@ -406,116 +404,146 @@ function pickerPlaybookOptions() {
   return [...seen.values()];
 }
 
-function pickerShows(playbookId) {
-  return !pickerPlaybooks || pickerPlaybooks.includes(playbookId);
+// A lane's topics, split by whether the picker would normally show them.
+//
+// `shown` is everything not ignored. `hiddenTrending` is the exception this
+// picker makes: a topic you ignored but which is now running above its baseline.
+// That is the trending page's rule — "a spike is never hidden by triage state" —
+// and it does NOT contradict the feed's no-override rule, because there the user
+// set the status filter themselves and gets told what it hides. Here the
+// exclusion is a built-in default nobody chose, so silently dropping a spike
+// would just lose it.
+function pickerSplit(laneId) {
+  const all = getBriefsForLane(laneId);
+  return {
+    shown: all.filter((b) => b.status !== "ignored"),
+    hiddenTrending: all.filter((b) => b.status === "ignored" && b.isTrending),
+  };
 }
 
-// Re-opened rather than patched in place on every filter change: openShell resets
-// the whole dialog, which keeps one code path for "what does this modal look
-// like" instead of a second, drifting one for updates. The dialog is already open
-// so there is no flash, and requestOpen is idempotent for the same MODAL_ID.
+function pickerLanes() {
+  return getLanes().filter((lane) => pickerPlaybooks.includes(lane.playbookId));
+}
+
 function renderIdeaPicker(ctx) {
-  const groups = getLanes()
-    .filter((lane) => pickerShows(lane.playbookId))
-    .map((lane) => ({ lane, briefs: getBriefsForLane(lane.id).filter((b) => b.status !== "ignored") }))
-    .filter((g) => g.briefs.length);
-  const total = groups.reduce((n, g) => n + g.briefs.length, 0);
+  if (pickerStep === "playbooks") return renderPlaybookStep(ctx);
+  return renderTopicStep(ctx);
+}
+
+// ── Step 1: which Playbooks ────────────────────────────────────────────────
+function renderPlaybookStep(ctx) {
   const options = pickerPlaybookOptions();
+  const chosen = pickerPlaybooks.length;
 
   openShell("idea-picker", ctx, {
     title: "Pick a topic",
-    sub: total ? `${total} ${total === 1 ? "topic" : "topics"} across your Content Ideas` : "",
-    toolbar: renderPlaybookFilter(options),
-    body: total
-      ? groups
-          .map(
-            (g) =>
-              html`<section class="research-pick__group">
-                <h4 class="research-pick__group-title">${g.lane.name}</h4>
-                ${raw(
-                  g.briefs
-                    .map((b) => {
-                      const src = findResearchSource(b.sourceId);
-                      const st = findReviewStatus(b.status);
-                      return html`<button type="button" class="research-pick__row" data-idea-pick="${escapeAttr(b.id)}">
-                        <span class="topic-badge topic-badge--${src ? src.accent : "soft-blue"}" aria-hidden="true"
-                          ><i class="${src ? src.icon : "ap-icon-folder"}"></i
-                        ></span>
-                        <span class="research-pick__text">
-                          <span class="research-pick__headline">${b.headline}</span>
-                          <span class="research-pick__meta"
-                            >${src ? src.name : "Source"} ·
-                            ${b.ageLabel}${raw(
-                              b.isTrending ? ' · <span class="research-pick__trending">Trending</span>' : "",
-                            )}</span
-                          >
-                        </span>
-                        ${raw(st ? html`<span class="brief-status brief-status--${st.id}">${st.label}</span>` : "")}
-                      </button>`;
-                    })
-                    .join(""),
-                )}
-              </section>`,
-          )
-          .join("")
-      : html`<p class="research-pick__empty muted">
-          ${pickerPlaybooks
-            ? "No topics in the Playbooks you picked."
-            : "No topics yet. Content Ideas fills up once a research lane has run."}
-        </p>`,
+    sub: "Start with the Playbooks you want to look through.",
+    body: options.length
+      ? html`<div class="research-pick__pblist">
+          ${raw(
+            options
+              .map((o) => {
+                const lanes = getLanes().filter((l) => l.playbookId === o.id);
+                const n = lanes.reduce((t, l) => t + pickerSplit(l.id).shown.length, 0);
+                const on = pickerPlaybooks.includes(o.id);
+                return html`<label class="research-pick__pbrow">
+                  <span class="ap-checkbox-container">
+                    <input type="checkbox" data-idea-pb="${escapeAttr(o.id)}" ${raw(on ? "checked" : "")} />
+                    <i aria-hidden="true"></i>
+                  </span>
+                  <span class="research-pick__pbtext">
+                    <span class="research-pick__pbname">${o.name}</span>
+                    <span class="research-pick__pbmeta"
+                      >${n} ${n === 1 ? "topic" : "topics"} · ${lanes.length}
+                      ${lanes.length === 1 ? "lane" : "lanes"}</span
+                    >
+                  </span>
+                </label>`;
+              })
+              .join(""),
+          )}
+        </div>`
+      : html`<p class="research-pick__empty muted">No topics yet. Content Ideas fills up once a lane has run.</p>`,
     foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
-      <span>Close</span>
-    </button>`,
+        <span>Cancel</span>
+      </button>
+      <button type="button" class="ap-button primary blue" data-idea-next ${raw(chosen ? "" : 'aria-disabled="true"')}>
+        <span>Continue</span>
+      </button>`,
   });
 }
 
-// DS .ap-select for the open/close mechanics — <details>/<summary>, never a bare
-// native <select> — with the DS .ap-selection-dropdown as the panel, which is the
-// component the DS names for multi-select. The panel ships its own width, shadow
-// and radius and is NOT positioned, so the app class beside it does only that.
-function renderPlaybookFilter(options) {
-  const n = pickerPlaybooks ? pickerPlaybooks.length : options.length;
-  const label =
-    !pickerPlaybooks || n === options.length
-      ? "All Playbooks"
-      : n === 1
-        ? options.find((o) => o.id === pickerPlaybooks[0])?.name || "1 Playbook"
-        : `${n} Playbooks`;
+// ── Step 2: the topics themselves ──────────────────────────────────────────
+function renderTopicStep(ctx) {
+  const groups = pickerLanes()
+    .map((lane) => ({ lane, ...pickerSplit(lane.id) }))
+    .filter((g) => g.shown.length || g.hiddenTrending.length);
+  const shownTotal = groups.reduce((n, g) => n + g.shown.length, 0);
+  const trending = groups.flatMap((g) => g.hiddenTrending.map((b) => ({ ...b, laneName: g.lane.name })));
+  const names = pickerPlaybookOptions()
+    .filter((o) => pickerPlaybooks.includes(o.id))
+    .map((o) => o.name);
 
-  return html`<details class="ap-select research-pick__pbselect" data-idea-pbselect>
-    <summary class="ap-select-trigger">
-      <span class="ap-select-value">${label}</span>
-      <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
-    </summary>
-    <div class="ap-selection-dropdown research-pick__pbmenu" role="group" aria-label="Filter by Playbook">
-      <div class="ap-selection-dropdown-header">
-        <span>Playbooks</span>
-        ${raw(
-          pickerPlaybooks
-            ? html`<button type="button" class="ap-link standalone" data-idea-pb-all>
-                <i class="ap-icon-refresh" aria-hidden="true"></i> Show all
-              </button>`
-            : "",
-        )}
-      </div>
-      <div class="ap-selection-dropdown-items">
-        ${raw(
-          options
+  openShell("idea-picker", ctx, {
+    title: "Pick a topic",
+    sub: `${shownTotal} ${shownTotal === 1 ? "topic" : "topics"} in ${names.length === 1 ? names[0] : `${names.length} Playbooks`}`,
+    // Plain string concatenation, NOT raw(): openShell assigns this to
+    // bodyEl.innerHTML, and raw() returns a marker object that only means
+    // something inside an html`` template — as innerHTML it stringifies to
+    // "[object Object]" and the list silently vanishes.
+    //
+    // Trending-but-ignored goes FIRST, for the same reason the feed puts its
+    // notice above the list: it is the thing you would otherwise not see.
+    body:
+      shownTotal || trending.length
+        ? (trending.length
+            ? html`<section class="research-pick__group research-pick__group--trending">
+                <h4 class="research-pick__group-title">Trending, normally hidden</h4>
+                <p class="research-pick__group-note">
+                  You ignored ${trending.length === 1 ? "this one" : "these"}, but
+                  ${trending.length === 1 ? "it is" : "they are"} running above baseline again.
+                </p>
+                ${raw(trending.map((b) => pickerRow(b, b.laneName)).join(""))}
+              </section>`
+            : "") +
+          groups
+            .filter((g) => g.shown.length)
             .map(
-              (o) =>
-                html`<button type="button" class="ap-selection-dropdown-item" data-idea-pb="${escapeAttr(o.id)}">
-                  <label class="ap-checkbox-container">
-                    <input type="checkbox" ${raw(pickerShows(o.id) ? "checked" : "")} tabindex="-1" />
-                    <i aria-hidden="true"></i>
-                  </label>
-                  <span>${o.name}</span>
-                </button>`,
+              (g) =>
+                html`<section class="research-pick__group">
+                  <h4 class="research-pick__group-title">${g.lane.name}</h4>
+                  ${raw(g.shown.map((b) => pickerRow(b)).join(""))}
+                </section>`,
             )
-            .join(""),
-        )}
-      </div>
-    </div>
-  </details>`;
+            .join("")
+        : html`<p class="research-pick__empty muted">No topics in the Playbooks you picked.</p>`,
+    foot: html`<button type="button" class="ap-button stroked grey" data-idea-back>
+        <i class="ap-icon-arrow-left" aria-hidden="true"></i><span>Playbooks</span>
+      </button>
+      <button type="button" class="ap-button stroked grey" data-research-modal-close>
+        <span>Close</span>
+      </button>`,
+  });
+}
+
+// One compact row — the mini form of a brief card: no summary, no Why-now block,
+// no action footer, because the row IS the action.
+function pickerRow(b, laneName = "") {
+  const src = findResearchSource(b.sourceId);
+  const st = findReviewStatus(b.status);
+  const meta = [src ? src.name : "Source", b.ageLabel, laneName].filter(Boolean).join(" · ");
+  return html`<button type="button" class="research-pick__row" data-idea-pick="${escapeAttr(b.id)}">
+    <span class="topic-badge topic-badge--${src ? src.accent : "soft-blue"}" aria-hidden="true"
+      ><i class="${src ? src.icon : "ap-icon-folder"}"></i
+    ></span>
+    <span class="research-pick__text">
+      <span class="research-pick__headline">${b.headline}</span>
+      <span class="research-pick__meta"
+        >${meta}${raw(b.isTrending ? ' · <span class="research-pick__trending">Trending</span>' : "")}</span
+      >
+    </span>
+    ${raw(st ? html`<span class="brief-status brief-status--${st.id}">${st.label}</span>` : "")}
+  </button>`;
 }
 
 // ─── 7. Full research ──────────────────────────────────────────────────────
@@ -635,33 +663,20 @@ function onPanelClick(event) {
     return;
   }
 
-  // ── Idea-picker Playbook filter ──────────────────────────────────────────
-  // Both branches re-render through renderIdeaPicker, which calls openShell and
-  // therefore replaces the toolbar — so the <details> would snap shut on every
-  // tick. Re-opening it after the re-render keeps the menu up while you make a
-  // multi-selection, which is the whole point of a multi-select.
-  const pbAll = event.target.closest("[data-idea-pb-all]");
-  if (pbAll) {
-    pickerPlaybooks = null;
-    const ctx = active.ctx;
-    renderIdeaPicker(ctx);
-    panel.querySelector("[data-idea-pbselect]")?.setAttribute("open", "");
+  // ── Idea-picker step navigation ──────────────────────────────────────────
+  if (event.target.closest("[data-idea-next]")) {
+    const btn = event.target.closest("[data-idea-next]");
+    // aria-disabled, not the disabled attribute, so the control stays focusable
+    // and announced — the guard lives here, as it does on the research form.
+    if (btn.getAttribute("aria-disabled") === "true") return;
+    pickerStep = "topics";
+    renderIdeaPicker(active.ctx);
     return;
   }
 
-  const pbItem = event.target.closest("[data-idea-pb]");
-  if (pbItem) {
-    const id = pbItem.dataset.ideaPb;
-    const all = pickerPlaybookOptions().map((o) => o.id);
-    const current = pickerPlaybooks || all;
-    const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
-    // Unticking the last one would leave a list nothing can match, so an empty
-    // selection means the same as no filter — and so does ticking every box,
-    // which keeps the trigger reading "All Playbooks" rather than "4 Playbooks".
-    pickerPlaybooks = next.length === 0 || next.length === all.length ? null : next;
-    const ctx = active.ctx;
-    renderIdeaPicker(ctx);
-    panel.querySelector("[data-idea-pbselect]")?.setAttribute("open", "");
+  if (event.target.closest("[data-idea-back]")) {
+    pickerStep = "playbooks";
+    renderIdeaPicker(active.ctx);
     return;
   }
 
@@ -707,6 +722,19 @@ function onPanelClick(event) {
 }
 
 function onPanelInput(event) {
+  // Step 1's Playbook checkboxes. On `change`, not `click`: they are real inputs
+  // inside labels, so a click branch fires twice — once for the label, once for
+  // the input it forwards to. Only the footer is re-rendered, so ticking a box
+  // never rebuilds the list under the pointer.
+  const pb = event.target.closest("[data-idea-pb]");
+  if (pb) {
+    const id = pb.dataset.ideaPb;
+    pickerPlaybooks = pb.checked ? [...new Set([...pickerPlaybooks, id])] : pickerPlaybooks.filter((x) => x !== id);
+    const next = panel.querySelector("[data-idea-next]");
+    if (next) next.setAttribute("aria-disabled", pickerPlaybooks.length ? "false" : "true");
+    return;
+  }
+
   const text = event.target.closest("[data-need-text]");
   if (!text) return;
   const send = panel.querySelector("[data-need-send]");

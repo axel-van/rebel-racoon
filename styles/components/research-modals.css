@@ -413,7 +413,9 @@
   align-items: center;
   gap: var(--ref-spacing-xs);
   width: 100%;
-  padding: 10px var(--ref-spacing-xs);
+  /* Tighter than a brief card by design: this is the mini form of that list, so a
+     row carries the headline and one meta line and nothing else. */
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
   border: 1px solid transparent;
   border-radius: var(--app-radius-starter);
   background: none;
@@ -457,31 +459,77 @@
   margin: 0;
 }
 
-/* The toolbar row sits between the head and the scrolling body, so an open
-   dropdown is not clipped by .research-modal__body's overflow-y. */
-.research-modal__toolbar {
+/* ── Step 1: which Playbooks ─────────────────────────────────────────────── */
+
+.research-pick__pblist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+}
+
+/* A <label> wrapping the DS checkbox, so the whole row toggles it — the input is
+   a real checkbox the CSS-UI layer styles through .ap-checkbox-container. */
+.research-pick__pbrow {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xs) 20px;
-  border-bottom: 1px solid var(--ref-color-grey-10);
-  /* The row must sit above the body so the panel it opens paints over the list
-     rather than under it. */
-  position: relative;
-  z-index: 1;
+  padding: 10px var(--ref-spacing-xs);
+  border: 1px solid transparent;
+  border-radius: var(--app-radius-starter);
+  cursor: pointer;
 }
 
-/* An explicit width, not a max-width: .ap-select is width:100%, so as a flex item
-   it would fill the row. Same fix as .research-view__filter. */
-.research-pick__pbselect {
-  flex: 0 0 auto;
-  width: 240px;
+.research-pick__pbrow:hover,
+.research-pick__pbrow:focus-within {
+  background: var(--ref-color-electric-blue-05);
+  border-color: var(--ref-color-electric-blue-20);
 }
 
-/* .ap-selection-dropdown ships its own width, shadow and radius but no position —
-   it is a panel, and the consumer places it. This is the only thing added. */
-.research-pick__pbmenu {
-  position: absolute;
-  top: calc(100% + var(--ref-spacing-xxxs));
-  left: 0;
+.research-pick__pbtext {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.research-pick__pbname {
+  font-size: var(--sys-text-style-body-size);
+  font-weight: 700;
+  color: var(--app-convo-navy);
+}
+
+.research-pick__pbmeta {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sys-text-color-light);
+}
+
+/* ── The trending-but-ignored group ──────────────────────────────────────── */
+
+/* Peach, the same surface every trending signal in this app uses — the feed's
+   notice and .brief-card__whynow both — so the exception reads as the same idea
+   rather than as a new kind of box. */
+.research-pick__group--trending {
+  padding: var(--ref-spacing-xs);
+  margin-bottom: var(--ref-spacing-md);
+  background: var(--app-peach);
+  border-radius: var(--app-radius-starter);
+}
+
+.research-pick__group--trending .research-pick__group-title {
+  color: var(--app-archie-orange-deep);
+}
+
+.research-pick__group-note {
+  margin: 0 0 var(--ref-spacing-xxs);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sys-text-color-light);
+}
+
+.research-pick__group--trending .research-pick__row:hover,
+.research-pick__group--trending .research-pick__row:focus-visible {
+  /* The blue wash is invisible on peach; use white so the row still lifts. */
+  background: var(--ref-color-white);
+  border-color: var(--app-peach-border);
 }
