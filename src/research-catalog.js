@@ -216,7 +216,9 @@ export const DEFAULT_TYPE_IDS = Object.freeze(["ready-to-post"]);
 // the two can never share one field.
 export const REVIEW_STATUSES = Object.freeze([
   { id: "new", label: "New" },
-  { id: "saved", label: "Saved" },
+  // "Saved for later", matching the card action that sets it — the short
+  // "Saved" read as a different state from the button you had just pressed.
+  { id: "saved", label: "Saved for later" },
   { id: "used", label: "Used" },
   { id: "ignored", label: "Ignored" },
 ]);

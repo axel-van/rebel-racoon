@@ -26,7 +26,7 @@
 // border-top + flex:0 0 auto (see research.css) is the fix — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus } from "../research-catalog.js?v=5";
+import { findReviewStatus } from "../research-catalog.js?v=6";
 
 const IGNORE_TOOLTIP =
   "Ignored topics stay out of your feed unless they trend well above their usual " +

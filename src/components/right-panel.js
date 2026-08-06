@@ -21,7 +21,7 @@ import { onFeedbackClick } from "./feedback-control.js?v=2";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=66";
-import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=260";
+import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=261";
 import {
   getSources as getStreamSources,
   subscribeSources,
