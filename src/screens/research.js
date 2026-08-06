@@ -20,12 +20,12 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=293";
+import { renderTopbar } from "../components/topbar.js?v=294";
 import { showToast } from "../components/toast.js?v=20";
 import { isFlagOn } from "../feature-flags.js?v=17";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=48";
-import { getLanes, duplicateLane, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=10";
-import { countNewForLane, countTrendingForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=11";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=49";
+import { getLanes, duplicateLane, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=11";
+import { countNewForLane, countTrendingForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=12";
 
 // Local view state. The Playbook facet lives here rather than in the URL: unlike
 // /topics, whose `?pb=` scope has to survive the round trip to a per-Playbook
@@ -161,7 +161,7 @@ function renderHead(lanes) {
   // across every lane is that number here.
   const waiting = lanes.reduce((sum, l) => sum + countNewForLane(l.id), 0);
   const sub =
-    `${lanes.length} research ${lanes.length === 1 ? "lane" : "lanes"} · ` +
+    `${lanes.length} ${lanes.length === 1 ? "topic list" : "topic lists"} · ` +
     `${waiting} ${waiting === 1 ? "topic" : "topics"} waiting`;
 
   return html`<header class="research-view__head">

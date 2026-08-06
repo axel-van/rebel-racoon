@@ -4515,7 +4515,7 @@ export const demoManyProfiles = (() => {
 export const researchLanes = [
   {
     id: "lane-1",
-    name: "Lost dog recovery research",
+    name: "Lost dog recovery topics",
     playbookId: "ctx-pawtrack",
     sources: ["competitor-posts", "influencer-posts"],
     websites: ["https://pawtrack.example.com", "https://pawtrack.example.com/blog"],

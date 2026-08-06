@@ -21,9 +21,9 @@ import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=6";
-import { getBriefById, getBriefsForLane, ignoreBrief, setStatus } from "../briefs-store.js?v=11";
-import { getLanes } from "../research-store.js?v=10";
-import { getContextById } from "../contexts-store.js?v=48";
+import { getBriefById, getBriefsForLane, ignoreBrief, setStatus } from "../briefs-store.js?v=12";
+import { getLanes } from "../research-store.js?v=11";
+import { getContextById } from "../contexts-store.js?v=49";
 import { renderSocialPostCard } from "./social-post-card.js?v=7";
 import { showToast } from "./toast.js?v=20";
 
@@ -160,8 +160,8 @@ export function openIgnoreReason({ briefId, onDone = null }) {
         <div class="ap-infobox info research-modal__infobox">
           <i class="ap-icon-info" aria-hidden="true"></i>
           <div>
-            This helps me tailor research to your needs. I'll keep this topic out of your feed unless it trends well
-            above its usual volume baseline — so you still catch real spikes without noise from recurring topics.
+            This helps me tailor topics to your needs. I'll keep this topic out of your feed unless it trends well above
+            its usual volume baseline — so you still catch real spikes without noise from recurring topics.
           </div>
         </div>
         <label class="research-modal__check">

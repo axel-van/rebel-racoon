@@ -10,7 +10,7 @@
 //   | thing   | create                  | settings                |
 //   |---------|-------------------------|-------------------------|
 //   | header  | "New content research"  | "Feed settings" + back  |
-//   | save    | "Save research"         | "Save changes"          |
+//   | save    | "Save topic list"       | "Save changes"          |
 //   | on save | append → loader → feed  | return to feed          |
 //
 // Source gating: only Competitor sources is live. Every other toggle opens the
@@ -20,11 +20,11 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=293";
+import { renderTopbar } from "../components/topbar.js?v=294";
 import { isFlagOn } from "../feature-flags.js?v=17";
-import { getContexts, getContextById } from "../contexts-store.js?v=48";
-import { getLaneById, addLane, updateLane } from "../research-store.js?v=10";
-import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=20";
+import { getContexts, getContextById } from "../contexts-store.js?v=49";
+import { getLaneById, addLane, updateLane } from "../research-store.js?v=11";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=22";
 import {
   RESEARCH_SOURCES,
   CADENCES,
@@ -142,7 +142,7 @@ function renderPage() {
           <h1 class="ap-h1 research-form__title">${settings ? "Feed settings" : "New content ideas"}</h1>
           <p class="ap-body research-form__lead">
             ${settings
-              ? "What I watch for this research, and how often I check it."
+              ? "What I watch for this topic list, and how often I check it."
               : "Name it, point it at a Playbook, and pick what I should watch."}
           </p>
         </header>
@@ -160,14 +160,14 @@ function renderScope() {
   const contexts = getContexts();
   const selected = getContextById(draft.playbookId);
   return html`<section class="research-form__section">
-    ${raw(renderSectionLabel("Research scope"))}
+    ${raw(renderSectionLabel("Topic list scope"))}
     <div class="research-form__card research-form__card--stack">
       <label class="research-form__field">
-        <span class="research-form__field-label">Research name</span>
+        <span class="research-form__field-label">Topic list name</span>
         <input
           type="text"
           class="research-form__input"
-          placeholder="e.g. Lost dog recovery research"
+          placeholder="e.g. Lost dog recovery topics"
           value="${escapeAttr(draft.name)}"
           data-form-name
         />
@@ -194,7 +194,7 @@ function renderScope() {
 
 function renderSources() {
   return html`<section class="research-form__section">
-    ${raw(renderSectionLabel("Research sources"))}
+    ${raw(renderSectionLabel("Topic sources"))}
     <div class="research-form__sources">${raw(RESEARCH_SOURCES.map(renderSourceCard).join(""))}</div>
   </section>`;
 }
@@ -324,7 +324,7 @@ function renderOther() {
     <div class="research-form__card">
       <h4 class="research-form__setting-title">Refresh frequency</h4>
       <p class="research-form__setting-desc">
-        How often I scan your sources for new research. More frequent scans keep you close to live trends; less frequent
+        How often I scan your sources for new topics. More frequent scans keep you close to live trends; less frequent
         ones return a more aggregated, high-level overview.
       </p>
       <!-- Segmented control composed from primitives: the installed DS ships no
@@ -351,8 +351,8 @@ function renderOther() {
     ${raw(
       renderSwitchCard(
         "notify",
-        "Notify me about new research",
-        "Get notified after a new research scan with new content ideas.",
+        "Notify me about new topics",
+        "Get notified after a new scan with new topics.",
         draft.notify,
       ),
     )}
@@ -391,7 +391,7 @@ function renderFooter() {
       data-form-save
       ${raw(ready ? "" : 'aria-disabled="true"')}
     >
-      <span>${mode() === "settings" ? "Save changes" : "Save research"}</span>
+      <span>${mode() === "settings" ? "Save changes" : "Save topic list"}</span>
     </button>
   </footer>`;
 }
