@@ -788,6 +788,15 @@
   background: var(--ref-color-red-100);
 }
 
+/* yellow-150, not the yellow-100 that .contexts-card--yellow uses for its swatch.
+   A monogram is white text on the colour, and white on #FFE91F is unreadable;
+   the dark end of the same ramp keeps the hue and stays legible. Without this
+   variant a yellow Playbook (Noba) fell through to the base grey — visible on
+   the lane feed header as well as in the topic picker. */
+.research-feed__monogram--yellow {
+  background: var(--ref-color-yellow-150);
+}
+
 .research-feed__id-text {
   display: flex;
   flex-direction: column;

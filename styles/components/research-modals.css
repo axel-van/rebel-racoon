@@ -459,28 +459,33 @@
   margin: 0;
 }
 
-/* ── Step 1: which Playbooks ─────────────────────────────────────────────── */
+/* ── Step 1: which Playbook ──────────────────────────────────────────────── */
 
 .research-pick__pblist {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
+  gap: var(--ref-spacing-xxs);
 }
 
-/* A <label> wrapping the DS checkbox, so the whole row toggles it — the input is
-   a real checkbox the CSS-UI layer styles through .ap-checkbox-container. */
-.research-pick__pbrow {
+/* A whole-card button: choosing a Playbook navigates, so the card IS the control
+   and there is nothing smaller to aim at. Hover is the app's universal card wash
+   (light blue fill + light blue border, never navy), per the rule in chat.css. */
+.research-pick__pbcard {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
-  padding: 10px var(--ref-spacing-xs);
-  border: 1px solid transparent;
-  border-radius: var(--app-radius-starter);
+  width: 100%;
+  padding: var(--ref-spacing-xs);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: var(--app-radius-card);
+  background: var(--ref-color-white);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
 
-.research-pick__pbrow:hover,
-.research-pick__pbrow:focus-within {
+.research-pick__pbcard:hover,
+.research-pick__pbcard:focus-visible {
   background: var(--ref-color-electric-blue-05);
   border-color: var(--ref-color-electric-blue-20);
 }
@@ -489,6 +494,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -502,6 +508,20 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--sys-text-color-light);
+}
+
+/* The chevron only fires on hover/focus, like the lane cards' hover actions:
+   present when you are aiming at the card, quiet when you are scanning the list. */
+.research-pick__pbgo {
+  flex: 0 0 auto;
+  color: var(--ref-color-grey-40);
+  opacity: 0;
+  transition: opacity var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.research-pick__pbcard:hover .research-pick__pbgo,
+.research-pick__pbcard:focus-visible .research-pick__pbgo {
+  opacity: 1;
 }
 
 /* ── The trending-but-ignored group ──────────────────────────────────────── */
