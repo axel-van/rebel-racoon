@@ -183,7 +183,7 @@ function renderHead(lanes) {
       </div>
       ${raw(renderPlaybookFilter(contexts, active))}
       <button type="button" class="ap-button primary blue" data-research-create>
-        <span>Create a research</span>
+        <span>Create a topic list</span>
       </button>
     </div>
   </header>`;
@@ -349,7 +349,7 @@ function renderLaneCard(lane) {
 function renderCreateCard() {
   return html`<button type="button" class="research-create-card" data-research-create>
     <span class="research-create-card__disc">${raw(renderMark(24))}</span>
-    <span class="research-create-card__label">Create a research</span>
+    <span class="research-create-card__label">Create a topic list</span>
   </button>`;
 }
 
