@@ -148,7 +148,7 @@ export function openIgnoreReason({ briefId, onDone = null }) {
     "ignore",
     { briefId, onDone },
     {
-      title: "Why did this research miss the mark?",
+      title: "Why did this topic miss the mark?",
       body: html`<textarea
           class="research-modal__textarea"
           rows="4"
@@ -185,7 +185,7 @@ export function openExport({ count }) {
     "export",
     { count },
     {
-      title: "Export content research",
+      title: "Export topics",
       body: html`<p class="research-modal__lede">
           Export all ${count} research ${count === 1 ? "card" : "cards"} currently in your feed.
         </p>

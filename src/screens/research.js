@@ -127,11 +127,10 @@ function renderEmpty() {
     <span class="research-empty__disc" aria-hidden="true">${raw(renderMark(38))}</span>
     <h1 class="research-empty__title">Oops, there's nothing here yet</h1>
     <p class="research-empty__body">
-      Create a content research to pair a Playbook with the sources I should watch — then I'll start surfacing briefs
-      for you.
+      Create a topic list to pair a Playbook with the sources I should watch — then I'll start surfacing topics for you.
     </p>
     <button type="button" class="ap-button primary blue" data-research-create>
-      <span>Create a content research</span>
+      <span>Create a topic list</span>
     </button>
   </div>`;
 }
@@ -150,7 +149,7 @@ function renderBody(lanes) {
   return html`<div class="research-view__page">
     ${raw(renderHead(lanes))}
     <div class="research-grid">${raw(shown.map(renderLaneCard).join(""))}${raw(renderCreateCard())}</div>
-    ${raw(!shown.length ? html`<p class="research-view__nomatch muted">No research matches that search.</p>` : "")}
+    ${raw(!shown.length ? html`<p class="research-view__nomatch muted">No topic list matches that search.</p>` : "")}
   </div>`;
 }
 
@@ -176,7 +175,7 @@ function renderHead(lanes) {
         <input
           type="search"
           class="ap-input"
-          placeholder="Search research…"
+          placeholder="Search topics…"
           value="${escapeAttr(view.query)}"
           data-research-search
         />

@@ -108,7 +108,7 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=2";
 import { showToast } from "../components/toast.js?v=20";
 // The composer's Add menu reaches Content Ideas through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaPicker } from "../components/research-modals.js?v=19";
+import { openIdeaPicker } from "../components/research-modals.js?v=20";
 import { findResearchSource } from "../research-catalog.js?v=6";
 import {
   openDrafts as openDraftsPanel,

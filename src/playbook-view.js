@@ -1469,7 +1469,7 @@ function renderStrategyPanel(data, edit) {
               </button>`
            : ""
        }`
-    : `<p class="recap__cmp-empty">No content pillars yet — Archie adds one every time you accept a research brief into the strategy.</p>`;
+    : `<p class="recap__cmp-empty">No content pillars yet — Archie adds one every time you accept a topic into the strategy.</p>`;
 
   const body = `${approachBlock}${renderRow("Content pillars", pillarsBlock)}`;
 
