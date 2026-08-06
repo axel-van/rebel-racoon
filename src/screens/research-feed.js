@@ -27,13 +27,13 @@ import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
 import { renderTopbar } from "../components/topbar.js?v=295";
 import { isFlagOn } from "../feature-flags.js?v=17";
-import { renderBriefCard } from "../components/brief-card.js?v=11";
+import { renderBriefCard } from "../components/brief-card.js?v=10";
 import {
   openFullResearch,
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=25";
+} from "../components/research-modals.js?v=24";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=12";
 import {
@@ -44,7 +44,7 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=15";
+} from "../briefs-store.js?v=14";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,

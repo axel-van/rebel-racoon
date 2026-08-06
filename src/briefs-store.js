@@ -37,8 +37,6 @@
 //   setStatus(briefId, status)         mutates + notifies
 //   toggleSaved(briefId)               → the resulting status
 //   ignoreBrief(briefId, reason)       mutates + notifies
-//   dismissSignals(briefId)            silences trending + updated, notifies
-//   restoreSignals(briefId)            the Undo
 //   updateSummary(briefId, text)       — Adapt mode commits through here
 //   subscribe(fn)                      → unsubscribe
 
@@ -56,12 +54,6 @@ const triage = new Map();
 for (const b of briefs) {
   triage.set(b.id, { status: b.seedStatus || "new", reason: b.seedReason || "", updatedAt: b.ageLabel || "" });
 }
-
-// briefId → its attention signals are dismissed. User-owned, and kept apart from
-// the brief for the same reason triage is: a re-scan replaces briefs, and a signal
-// the user silenced should be able to come back if it genuinely spikes again.
-// A Set rather than a flag on the brief, so nothing can write it into the seed.
-const dismissedSignals = new Set();
 
 const notifier = createNotifier("briefs-store");
 export const subscribe = notifier.subscribe;
@@ -126,24 +118,9 @@ export function narrowedGroupCount(filters = defaultFilters()) {
   return n;
 }
 
-// Merges the user-owned facts onto a server-owned brief: the triage row, and
-// whether the user has DISMISSED its attention signals.
-//
-// Masking the signals here rather than filtering them out at each call site is
-// what makes a dismissal total — the mark on the card, the notice's count, the
-// attention page and the picker all read isTrending/isUpdated through this, so one
-// place governs all of them. Consequence for callers: filter on the HYDRATED
-// brief, never on the raw one, or a dismissed signal slips through.
-function hydrate(b) {
+function withTriage(b) {
   const t = triage.get(b.id) || { status: "new", reason: "" };
-  const muted = dismissedSignals.has(b.id);
-  return {
-    ...b,
-    status: t.status,
-    ignoreReason: t.reason,
-    isTrending: muted ? false : !!b.isTrending,
-    isUpdated: muted ? false : !!b.isUpdated,
-  };
+  return { ...b, status: t.status, ignoreReason: t.reason };
 }
 
 // The one filter predicate. Factored out so the feed's list and the "what is the
@@ -161,7 +138,7 @@ function matchesFilters(b, filters) {
 export function getBriefsForLane(laneId, filters = null) {
   const list = briefs
     .filter((b) => b.laneId === laneId)
-    .map(hydrate)
+    .map(withTriage)
     .filter((b) => !filters || matchesFilters(b, filters));
   return list.sort(byRecency);
 }
@@ -171,17 +148,13 @@ export function getBriefsForLane(laneId, filters = null) {
 // by design, and accepting one would invite a caller to pass it.
 export function getTrendingForLane(laneId) {
   return briefs
-    .filter((b) => b.laneId === laneId)
-    .map(hydrate)
-    .filter((b) => b.isTrending)
+    .filter((b) => b.laneId === laneId && b.isTrending)
+    .map(withTriage)
     .sort(byRecency);
 }
 
 export function countTrendingForLane(laneId) {
-  return briefs
-    .filter((b) => b.laneId === laneId)
-    .map(hydrate)
-    .filter((b) => b.isTrending).length;
+  return briefs.filter((b) => b.laneId === laneId && b.isTrending).length;
 }
 
 // Every brief carrying an ATTENTION SIGNAL — trending or updated — whatever its
@@ -191,9 +164,8 @@ export function countTrendingForLane(laneId) {
 // caller to pass it.
 export function getAttentionForLane(laneId) {
   return briefs
-    .filter((b) => b.laneId === laneId)
-    .map(hydrate)
-    .filter((b) => b.isTrending || b.isUpdated)
+    .filter((b) => b.laneId === laneId && (b.isTrending || b.isUpdated))
+    .map(withTriage)
     .sort(byRecency);
 }
 
@@ -213,9 +185,9 @@ export function getAttentionForLane(laneId) {
 export function hiddenAttentionForLane(laneId, filters) {
   if (!filters) return { trending: 0, updated: 0, total: 0 };
   const hidden = briefs
-    .filter((b) => b.laneId === laneId)
-    .map(hydrate)
-    .filter((b) => (b.isTrending || b.isUpdated) && !matchesFilters(b, filters));
+    .filter((b) => b.laneId === laneId && (b.isTrending || b.isUpdated))
+    .map(withTriage)
+    .filter((b) => !matchesFilters(b, filters));
   return {
     trending: hidden.filter((b) => b.isTrending).length,
     updated: hidden.filter((b) => b.isUpdated).length,
@@ -229,7 +201,7 @@ export function countNewForLane(laneId) {
 
 export function getBriefById(id) {
   const b = briefs.find((x) => x.id === id);
-  return b ? hydrate(b) : null;
+  return b ? withTriage(b) : null;
 }
 
 export function getStatus(briefId) {
@@ -246,7 +218,7 @@ export function setStatus(briefId, status) {
   const prev = triage.get(briefId) || { reason: "" };
   triage.set(briefId, { ...prev, status, updatedAt: "just now" });
   notify();
-  return hydrate(b);
+  return withTriage(b);
 }
 
 // Save ↔ un-save. Un-saving returns to New rather than to whatever it was
@@ -263,37 +235,16 @@ export function ignoreBrief(briefId, reason = "") {
   if (!b) return null;
   triage.set(briefId, { status: "ignored", reason: String(reason || "").trim(), updatedAt: "just now" });
   notify();
-  return hydrate(b);
+  return withTriage(b);
 }
 
 // Adapt mode edits the summary BODY, never the headline — the headline is the
 // claim the research supports, and letting it drift from the article underneath
 // would make the brief lie about its own evidence.
-// Silence a topic's attention signals — both of them, whichever put it on the
-// page. Clearing only the one that surfaced it would leave a brief that is
-// trending AND updated still sitting there under the other group, which is not
-// what "stop showing me this" means.
-//
-// It does NOT touch review status: a dismissed signal is Archie being told to
-// stop flagging, where Ignored is the user's own verdict on the topic. Two
-// different facts, two different fields.
-export function dismissSignals(briefId) {
-  if (!briefs.some((b) => b.id === briefId)) return false;
-  dismissedSignals.add(briefId);
-  notify();
-  return true;
-}
-
-/** Undo, so the toast can genuinely offer it. */
-export function restoreSignals(briefId) {
-  dismissedSignals.delete(briefId);
-  notify();
-}
-
 export function updateSummary(briefId, text) {
   const b = briefs.find((x) => x.id === briefId);
   if (!b) return null;
   b.summary = String(text || "");
   notify();
-  return hydrate(b);
+  return withTriage(b);
 }
