@@ -14,7 +14,7 @@ import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=75";
 import { init as initConnectorsModal } from "./components/connectors-modal.js?v=22";
 import { init as initTopicModal } from "./components/topic-modal.js?v=12";
-import { init as initResearchModals } from "./components/research-modals.js?v=23";
+import { init as initResearchModals } from "./components/research-modals.js?v=24";
 import { init as initAddPlaybookEntryModal } from "./components/add-playbook-entry-modal.js?v=1";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
 import { init as initRenameModal } from "./components/rename-modal.js?v=2";
@@ -27,15 +27,15 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=223";
 import { renderDashboard } from "./screens/dashboard.js?v=64";
-import { renderSession } from "./screens/session.js?v=524";
+import { renderSession } from "./screens/session.js?v=525";
 import { renderContexts } from "./screens/contexts.js?v=256";
 import { renderConnectors } from "./screens/connectors.js?v=195";
 import { renderTopics } from "./screens/topics.js?v=64";
 import { renderTopicsSettings } from "./screens/topics-settings.js?v=55";
-import { renderResearch } from "./screens/research.js?v=27";
-import { renderResearchForm } from "./screens/research-form.js?v=27";
-import { renderResearchFeed } from "./screens/research-feed.js?v=28";
-import { renderResearchTrending } from "./screens/research-trending.js?v=26";
+import { renderResearch } from "./screens/research.js?v=28";
+import { renderResearchForm } from "./screens/research-form.js?v=28";
+import { renderResearchFeed } from "./screens/research-feed.js?v=29";
+import { renderResearchTrending } from "./screens/research-trending.js?v=28";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
@@ -69,12 +69,12 @@ route("/topics/settings", renderTopicsSettings);
 // Content Research. ORDER MATTERS here, unlike the /topics pair above: match()
 // returns the FIRST matching route, and /research/:id would happily swallow
 // "/research/new" with id="new". The literal has to be registered first.
-// The /settings and /trending siblings carry an extra segment, so the anchored
+// The /settings and /attention siblings carry an extra segment, so the anchored
 // ^…$ regex keeps them distinct from /research/:id on its own.
 route("/research", renderResearch);
 route("/research/new", renderResearchForm);
 route("/research/:id/settings", renderResearchForm);
-route("/research/:id/trending", renderResearchTrending);
+route("/research/:id/attention", renderResearchTrending);
 route("/research/:id", renderResearchFeed);
 // First-time ALT — thin redirect that mints a transient
 // /session/welcome-alt-{ts} session. The conversational Playbook

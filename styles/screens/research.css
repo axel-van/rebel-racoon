@@ -1085,3 +1085,38 @@
   outline: 3px solid color-mix(in srgb, var(--app-archie-orange) 28%, transparent);
   outline-offset: 2px;
 }
+
+/* ── Attention page groups (trending / updated) ──────────────────────────── */
+
+/* The page splits into one section per signal. Group chrome only — the cards
+   inside are .brief-card, unchanged.
+   The sections are flex items of .research-trending__inner and already get its
+   16px gap; this adds a second 16 so the boundary between two signals reads
+   wider than the boundary between two cards. */
+.research-attention__group + .research-attention__group {
+  margin-top: var(--ref-spacing-sm);
+}
+
+.research-attention__group-title {
+  margin: 0;
+  font-family: var(--sys-text-style-h2-font-family);
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  font-weight: var(--sys-text-style-h2-weight);
+  color: var(--app-convo-navy);
+}
+
+.research-attention__group-note {
+  margin: var(--ref-spacing-xxxs) 0 var(--ref-spacing-sm);
+  font-size: var(--sys-text-style-body-size);
+  font-weight: 500;
+  color: var(--sys-text-color-light);
+}
+
+/* An adjacent-sibling margin, not a flex gap on the section: a gap would apply
+   between the title and its note as well, where those two want to sit tight.
+   Matches .research-trending__inner's own 16px so cards are evenly spaced
+   whether they sit in a group or not. */
+.research-attention__group .brief-card + .brief-card {
+  margin-top: var(--ref-spacing-sm);
+}

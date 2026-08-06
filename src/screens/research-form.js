@@ -24,7 +24,7 @@ import { renderTopbar } from "../components/topbar.js?v=295";
 import { isFlagOn } from "../feature-flags.js?v=17";
 import { getContexts, getContextById } from "../contexts-store.js?v=50";
 import { getLaneById, addLane, updateLane } from "../research-store.js?v=12";
-import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=23";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=24";
 import {
   RESEARCH_SOURCES,
   CADENCES,
@@ -359,8 +359,8 @@ function renderOther() {
     ${raw(
       renderSwitchCard(
         "showTrending",
-        "Show trending topics",
-        "Tell me in the feed when topics run above their usual volume baseline, and give them their own page.",
+        "Show topics that need attention",
+        "Tell me in the feed when a topic is trending or its story has moved, and give them their own page.",
         draft.showTrending,
       ),
     )}

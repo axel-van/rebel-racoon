@@ -27,8 +27,9 @@
 // Public API:
 //   getBriefsForLane(laneId, filters?) → Brief[]  (newest first, filtered)
 //   getTrendingForLane(laneId)         → Brief[]  (ignores the status filter)
+//   getAttentionForLane(laneId)        → Brief[]  (trending OR updated, deduped)
 //   countTrendingForLane(laneId)       → number   (whole lane, filter-blind)
-//   countHiddenTrendingForLane(id, f)  → number   (trending the filter EXCLUDES)
+//   hiddenAttentionForLane(id, f)      → {trending, updated, total} the filter EXCLUDES
 //   countNewForLane(laneId)            → number   (the lane card's NEW badge)
 //   getBriefById(id)                   → Brief | null
 //   getStatus(briefId)                 → 'new'|'saved'|'used'|'ignored'
@@ -156,27 +157,44 @@ export function countTrendingForLane(laneId) {
   return briefs.filter((b) => b.laneId === laneId && b.isTrending).length;
 }
 
-// How many trending briefs the CURRENT filter is hiding — the only number the
-// feed's notice is allowed to say. The old notice counted the whole lane, so on
-// lane-1 at the default filter it announced 3 while the feed could account for
-// 1, and never said where the other 2 were. That unexplained gap is what reads
-// as a broken filter.
-//
-// Deliberately every filter group, not just status: a trending brief kept out by
-// the sources or types filter is just as hidden, and the copy says "don't match
-// your filters", plural.
-export function countHiddenTrendingForLane(laneId, filters) {
-  if (!filters) return 0;
+// Every brief carrying an ATTENTION SIGNAL — trending or updated — whatever its
+// review status. The union of the two, deduped by construction (one brief, one
+// entry, even when it is both). Like getTrendingForLane it takes no filters: the
+// attention page ignores triage by design, and accepting one would invite a
+// caller to pass it.
+export function getAttentionForLane(laneId) {
   return briefs
-    .filter((b) => b.laneId === laneId && b.isTrending)
+    .filter((b) => b.laneId === laneId && (b.isTrending || b.isUpdated))
     .map(withTriage)
-    .filter((b) => !matchesFilters(b, filters)).length;
+    .sort(byRecency);
 }
 
-// How many briefs in this lane are still untriaged — what the lane card's NEW
-// badge counts. Deliberately status-only and filter-free: the lane list has no
-// filters, and "is there anything to look at in here?" must not depend on how
-// somebody left the feed's filter panel.
+// What the CURRENT filter is hiding, broken down by signal — the only numbers the
+// feed's notice is allowed to say. The old notice counted the whole lane, so on
+// lane-1 at the default filter it announced 3 while the feed could account for 1,
+// and never said where the other 2 were. That unexplained gap is what reads as a
+// broken filter.
+//
+// `total` is DEDUPED while the two breakdowns are not: a brief that is both
+// trending and updated is one topic needing attention but appears under both
+// labels, so the two numbers may sum to more than the total. The copy therefore
+// lists them as separate labels and never as an equation.
+//
+// Deliberately every filter group, not just status: a brief kept out by the
+// sources or types filter is just as hidden.
+export function hiddenAttentionForLane(laneId, filters) {
+  if (!filters) return { trending: 0, updated: 0, total: 0 };
+  const hidden = briefs
+    .filter((b) => b.laneId === laneId && (b.isTrending || b.isUpdated))
+    .map(withTriage)
+    .filter((b) => !matchesFilters(b, filters));
+  return {
+    trending: hidden.filter((b) => b.isTrending).length,
+    updated: hidden.filter((b) => b.isUpdated).length,
+    total: hidden.length,
+  };
+}
+
 export function countNewForLane(laneId) {
   return briefs.filter((b) => b.laneId === laneId && getStatus(b.id) === "new").length;
 }

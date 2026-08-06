@@ -9,16 +9,18 @@
 // Filters: three groups, defaults New / all sources / Ready to post. The badge
 // counts NARROWED GROUPS, not ticked options (see briefs-store.narrowedGroupCount).
 //
-// Trending in this feed is NOT an override: a trending brief appears under its
-// own review status and disappears when that status is unticked. The trending
-// page is where trending ignores triage. Keeping that split is the whole reason
-// trending is a notice here rather than a section.
+// The two ATTENTION SIGNALS — trending and updated — are NOT overrides in this
+// feed: a brief carrying either appears under its own review status and
+// disappears when that status is unticked. /attention is where they ignore
+// triage. Keeping that split is the whole reason they are a notice here rather
+// than a section.
 //
 // That split only works if the notice is HONEST about it. It used to announce
 // every trending brief in the lane, so at the default filter it promised 3 while
 // the feed showed 1 — an unexplained gap that reads as a broken filter. It now
-// counts only what the filter hides and says so, and disappears when the filter
-// hides nothing. Nothing overrides; the filter reports what it is keeping out.
+// counts only what the filter hides, breaks that down by signal, and disappears
+// when the filter hides nothing. Nothing overrides; the filter reports what it is
+// keeping out.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
@@ -31,18 +33,18 @@ import {
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=23";
+} from "../components/research-modals.js?v=24";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=12";
 import {
   getBriefsForLane,
-  countHiddenTrendingForLane,
+  hiddenAttentionForLane,
   defaultFilters,
   narrowedGroupCount,
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=13";
+} from "../briefs-store.js?v=14";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
@@ -159,12 +161,12 @@ function renderPage() {
   // Only what the filter is HIDING. Two conditions, both required: the filter has
   // to be keeping a trending brief out AND the lane's own Show-trending setting
   // has to be on. Nothing hidden → nothing to report → no notice.
-  const hiddenTrending = countHiddenTrendingForLane(laneId, filters);
-  const showNotice = hiddenTrending > 0 && lane.showTrending;
+  const hidden = hiddenAttentionForLane(laneId, filters);
+  const showNotice = hidden.total > 0 && lane.showTrending;
 
   return html`<div class="research-feed__body">
     <div class="research-feed__inner">
-      ${raw(renderFeedHeader(lane))} ${raw(showNotice ? renderTrendingNotice(hiddenTrending) : "")}
+      ${raw(renderFeedHeader(lane))} ${raw(showNotice ? renderAttentionNotice(hidden) : "")}
       ${raw(
         briefs.length
           ? briefs
@@ -339,27 +341,33 @@ function renderGroup(key, label, options, selected, field) {
 // this is Archie saying you are not seeing something, which is the app's orange
 // across every surface. The variant is a ds-patches addition; the DS ships no
 // orange infobox, and `warning` would have been picking a semantic family for
-// its hue. The icon is the same arrow-up the .trending-mark on the cards below
-// uses, so the notice and the marks read as one signal rather than two.
+// its hue.
 //
-// Not closable, deliberately. The notice already retires itself the moment the
-// filter stops hiding anything, so a dismiss control could only hide a statement
-// that is still true. Show-trending on the lane is the durable off switch.
-function renderTrendingNotice(count) {
-  const one = count === 1;
+// ── It now carries BOTH signals ────────────────────────────────────────────
+// The title counts topics, not signals, so a brief that is both trending and
+// updated is one topic needing attention. The breakdown below it names the
+// signals separately and deliberately does NOT read as an equation — see
+// hiddenAttentionForLane on why the two numbers can exceed the total.
+//
+// Still only what the filter HIDES. That is the whole point of the notice: a
+// count of everything would be furniture, and the gap between what it promised
+// and what the list showed is the bug this replaced.
+function renderAttentionNotice({ trending, updated, total }) {
+  const one = total === 1;
+  const parts = [];
+  if (trending) parts.push(`${trending} trending`);
+  if (updated) parts.push(`${updated} updated`);
   return html`<div class="ap-infobox main has-title research-feed__notice" role="status">
     <i class="ap-icon-arrow-up" aria-hidden="true"></i>
     <div class="ap-infobox-content">
       <div class="ap-infobox-texts">
-        <span class="ap-infobox-title"
-          >${count} trending ${one ? "topic" : "topics"} ${one ? "doesn't" : "don't"} match your filters</span
-        >
+        <span class="ap-infobox-title">${total} ${one ? "topic needs" : "topics need"} your attention</span>
         <span class="ap-infobox-message">
-          Trending ignores your review statuses, so you can read ${one ? "it" : "them"} on the trending page.
+          ${raw(parts.join(" · "))} — ${one ? "it does" : "they do"} not match your current filters.
         </span>
       </div>
       <button type="button" class="ap-button primary blue" data-feed-trending>
-        <span>See trending topics</span>
+        <span>See topics</span>
         <i class="ap-icon-arrow-right" aria-hidden="true"></i>
       </button>
     </div>
@@ -375,7 +383,7 @@ function bind(target) {
     if (event.target.closest("[data-feed-settings]"))
       return navigate(`/research/${encodeURIComponent(laneId)}/settings`);
     if (event.target.closest("[data-feed-trending]"))
-      return navigate(`/research/${encodeURIComponent(laneId)}/trending`);
+      return navigate(`/research/${encodeURIComponent(laneId)}/attention`);
 
     if (event.target.closest("[data-feed-filters]")) {
       view.panelOpen = !view.panelOpen;
