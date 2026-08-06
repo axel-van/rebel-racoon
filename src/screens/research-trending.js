@@ -24,11 +24,17 @@ import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=295";
 import { isFlagOn } from "../feature-flags.js?v=17";
-import { renderBriefCard } from "../components/brief-card.js?v=10";
-import { openFullResearch } from "../components/research-modals.js?v=24";
+import { renderBriefCard } from "../components/brief-card.js?v=11";
+import { openFullResearch } from "../components/research-modals.js?v=25";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=12";
-import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=14";
+import {
+  getAttentionForLane,
+  dismissSignals,
+  restoreSignals,
+  setStatus,
+  subscribe as subscribeBriefs,
+} from "../briefs-store.js?v=15";
 import { findResearchSource, findCadence } from "../research-catalog.js?v=6";
 
 let laneId = null;
@@ -148,6 +154,19 @@ function bind(target) {
       showToast("Added to a chat draft");
       return;
     }
+    const dismiss = event.target.closest("[data-brief-dismiss]");
+    if (dismiss) {
+      const id = dismiss.dataset.briefDismiss;
+      dismissSignals(id);
+      // Dismissal masks rather than deletes, so the Undo is real — the same
+      // choice topics-store made for its own dismiss, and the reason the toast
+      // can honestly offer one.
+      showToast("Dismissed — I won't flag this one again", {
+        action: { label: "Undo", onClick: () => restoreSignals(id) },
+      });
+      return;
+    }
+
     const research = event.target.closest("[data-brief-research]");
     if (research) return openFullResearch({ briefId: research.dataset.briefResearch });
   };

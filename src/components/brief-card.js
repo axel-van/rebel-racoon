@@ -131,6 +131,17 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
     <footer class="brief-card__foot">
       ${raw(trendingPage ? renderUseSingle(brief) : renderUseSplit(brief, menuOpen))}
       ${raw(
+        // Only on the attention page: silence this topic's signals so it stops
+        // being flagged. "Dismiss", not "Ignore" — Ignore-topic below is a
+        // different action (the user's verdict, which sets review status), and one
+        // word for two things one screen apart would be a trap.
+        trendingPage
+          ? html`<button type="button" class="ap-button stroked grey" data-brief-dismiss="${escapeAttr(brief.id)}">
+              <span>Dismiss</span>
+            </button>`
+          : "",
+      )}
+      ${raw(
         // Hidden entirely once ignored — the action has already been taken and
         // there is nothing for a second press to do.
         // The DS tooltip rather than a native `title`: title waits ~1s, can't be
