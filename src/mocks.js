@@ -5383,4 +5383,125 @@ export const researchBriefs = [
     seedStatus: "new",
     seedReason: "",
   },
+  // ── The five UPDATED topics, one per list ────────────────────────────────
+  //
+  // `isUpdated` is a third independent boolean, exactly like `isTrending`: a topic
+  // can be Saved AND updated, New AND updated, or both trending and updated. It
+  // says the SCAN found the story had moved on since it last ran, and `whatChanged`
+  // is the one-line account of how — the Updated counterpart to `whyNow`.
+  {
+    id: "br-17",
+    laneId: "lane-1",
+    sourceId: "competitor-posts",
+    ageLabel: "5h ago",
+    headline: "Fi quietly dropped the subscription requirement for basic tracking",
+    summary:
+      "The pricing page no longer gates live location behind a plan. Owners in the replies are re-evaluating trackers they had already written off, and the comparison threads from six months ago are being bumped.",
+    researchType: "ready-to-post",
+    isUpdated: true,
+    whatChanged:
+      "Last sync this was a rumour in two replies. Fi has now changed the pricing page itself, and three of the four tracked competitors have responded within a week.",
+    research: {
+      title: "The subscription objection just moved",
+      paragraphs: [
+        "When this topic first surfaced, the subscription complaint was the strongest recurring objection in the category and no competitor had acted on it. That is no longer true: Fi's pricing page now offers live location without a plan, which removes the single most-cited reason owners gave for not buying.",
+        "The comment threads have shifted with it. Where owners previously argued that every tracker is a subscription trap, the same accounts are now asking which devices still are — a question that favours whoever answers it plainly first.",
+      ],
+    },
+    posts: [],
+    history: [],
+    seedStatus: "new",
+  },
+  {
+    id: "br-18",
+    laneId: "lane-2",
+    sourceId: "competitor-posts",
+    ageLabel: "1d ago",
+    headline: "Jiobit's repositioning is now explicit, not implied",
+    summary:
+      "The kids-and-elders framing that was only visible in their creative has reached the copy: the tagline, the product page and the last four posts all name families rather than pets.",
+    researchType: "ready-to-post",
+    isUpdated: true,
+    whatChanged:
+      "Last sync the shift was a read on their imagery. They have since rewritten the tagline and the product page, so this is now a stated position rather than an inference.",
+    research: {
+      title: "A repositioning you can now quote",
+      paragraphs: [
+        "This topic previously rested on inference — Jiobit's photography had moved toward families while the copy still said pets. The copy has now caught up, which matters because a stated position can be quoted, compared and answered where an inferred one cannot.",
+        "It also narrows the category. With Jiobit explicitly addressing families, the pet-first ground they used to share is less contested than it was a month ago.",
+      ],
+    },
+    posts: [],
+    history: [],
+    seedStatus: "new",
+  },
+  {
+    id: "br-19",
+    laneId: "lane-3",
+    sourceId: "competitor-posts",
+    ageLabel: "2d ago",
+    headline: "The Q2 launch window your competitors were holding has slipped",
+    summary:
+      "Two of the three accounts that had teased an April launch have gone quiet and moved their dates. The window you were planning around is wider than it looked.",
+    researchType: "competitive-intelligence",
+    isUpdated: true,
+    whatChanged:
+      "Last sync all three were tracking to April. Two have since pulled their dates without announcing it — the teaser posts are still up but the countdowns are gone.",
+    research: {
+      title: "A crowded launch window just emptied out",
+      paragraphs: [
+        "The original read on this topic was that April would be crowded, which argued for either moving early or waiting until the noise passed. Two of the three competing launches have since slipped, and neither said so publicly — the signal is the removed countdown, not an announcement.",
+        "That leaves a quieter window than the plan assumed. The risk has inverted: the question is no longer how to be heard over three launches, but whether being the only launch draws more scrutiny.",
+      ],
+    },
+    posts: [],
+    history: [],
+    seedStatus: "new",
+  },
+  {
+    id: "br-20",
+    laneId: "lane-4",
+    sourceId: "competitor-posts",
+    ageLabel: "3d ago",
+    headline: "The competing gym's kids programme now runs on the same nights as yours",
+    summary:
+      "Their schedule page changed this week. The Tuesday and Thursday kids classes that used to sit opposite yours now overlap them exactly, and their last three posts push that timetable.",
+    researchType: "competitive-intelligence",
+    isUpdated: true,
+    whatChanged:
+      "Last sync their kids classes ran Monday and Wednesday, which was the whole reason this topic read as an opening. The schedule moved onto yours.",
+    research: {
+      title: "The timetable gap has closed",
+      paragraphs: [
+        "This topic originally described a scheduling gap: the nearest competing academy ran its kids programme on nights you did not, so parents comparing the two were not choosing between them. Their schedule page now shows the same Tuesday and Thursday slots.",
+        "The angle changes with it. Availability is no longer the differentiator, so the comparison falls back to instructor ratio and belt progression — both things your own posts already document and theirs do not.",
+      ],
+    },
+    posts: [],
+    history: [],
+    seedStatus: "new",
+  },
+  {
+    id: "br-21",
+    laneId: "lane-5",
+    sourceId: "competitor-posts",
+    ageLabel: "4d ago",
+    headline: "The multibrand discount wave has stopped, three weeks early",
+    summary:
+      "Four of the five tracked accounts pulled their sale messaging this week and went back to full-price editorial. The markdown conversation you were planning to answer has already moved on.",
+    researchType: "ready-to-post",
+    isUpdated: true,
+    whatChanged:
+      "Last sync this was an active discount wave across five accounts and the advice was to counter-programme it. Four have since stopped, so a counter-programming post would now arrive after the fact.",
+    research: {
+      title: "The sale ended before the response could ship",
+      paragraphs: [
+        "The original reading of this topic was that a sustained discount wave gave a sustainable-wardrobe message something concrete to push against. That wave has ended earlier than the seasonal pattern suggested — four of five accounts are back to full-price editorial.",
+        "What survives is the observation, not the urgency: shoppers who bought in the wave are three weeks from regret posts, which is a better moment for the capsule argument than the sale itself was.",
+      ],
+    },
+    posts: [],
+    history: [],
+    seedStatus: "new",
+  },
 ];

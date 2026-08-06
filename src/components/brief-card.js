@@ -38,6 +38,18 @@ function renderStatusPill(status) {
   return html`<span class="brief-status brief-status--${meta.id}">${meta.label}</span>`;
 }
 
+// The Updated counterpart. Same reasoning as the trending mark — text, never a
+// pill — but menthol rather than the Archie orange: this says "the story moved",
+// which matters less than "this is spiking", and it must not compete. Menthol is
+// also the one calm DS family that is NOT an action colour in this app, so it
+// cannot read as clickable the way electric-blue would.
+function renderUpdatedMark() {
+  return html`<span class="updated-mark">
+    <i class="ap-icon-refresh" aria-hidden="true"></i>
+    <span>Updated</span>
+  </span>`;
+}
+
 function renderTrendingMark() {
   return html`<span class="trending-mark">
     <i class="ap-icon-arrow-up" aria-hidden="true"></i>
@@ -81,7 +93,7 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
         )}
         <span class="brief-card__when">· ${brief.ageLabel}</span>
         <span class="brief-card__spacer"></span>
-        ${raw(brief.isTrending ? renderTrendingMark() : "")}
+        ${raw(brief.isTrending ? renderTrendingMark() : "")}${raw(brief.isUpdated ? renderUpdatedMark() : "")}
         <!-- Status pill is ALWAYS shown in the feed and NEVER on the trending
              page — see the variant note at the top of this file. -->
         ${raw(trendingPage ? "" : renderStatusPill(brief.status))}
@@ -97,6 +109,13 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
         brief.isTrending && brief.whyNow
           ? html`<span class="brief-card__whynow">
               <strong class="brief-card__whynow-label">Why now:</strong> ${brief.whyNow}
+            </span>`
+          : "",
+      )}
+      ${raw(
+        brief.isUpdated && brief.whatChanged
+          ? html`<span class="brief-card__changed">
+              <strong class="brief-card__changed-label">What changed:</strong> ${brief.whatChanged}
             </span>`
           : "",
       )}

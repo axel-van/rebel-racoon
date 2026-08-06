@@ -4,6 +4,9 @@
  * /research, which is why it lives here rather than inside either one's
  * stylesheet — the same reason topic-badge.css is its own file.
  *
+ * .updated-mark lives here too: it is the same KIND of thing — an independent
+ * signal rendered as text — and the reasoning below applies to it unchanged.
+ *
  * ── It is TEXT, never a pill. This is deliberate. ──────────────────────────
  * A filled pill already means something specific in this feature: review status
  * on a brief card (New / Saved / Used / Ignored), and the NEW count on a lane
@@ -20,7 +23,7 @@
 .trending-mark {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--ref-spacing-xxxs);
   font-size: 13px;
   font-weight: 800;
   /* line-height 1 so the mark centres on its own text box rather than inheriting
@@ -32,5 +35,29 @@
 }
 
 .trending-mark > i {
+  font-size: 14px;
+}
+
+/* Updated — the second independent signal, and deliberately the quieter one.
+ *
+ * Menthol, not the Archie orange: "the story moved since I last looked" matters
+ * less than "this is spiking", so the two must not compete. Menthol is also the
+ * only calm DS family that is NOT an action colour anywhere in this app, so it
+ * cannot be mistaken for something clickable the way electric-blue would be.
+ *
+ * -150 rather than -100: this is text, and #0FA09B on white is too light to read
+ * comfortably at 13px. Same reasoning as --app-archie-orange-deep on peach. */
+.updated-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ref-color-menthol-150);
+  white-space: nowrap;
+}
+
+.updated-mark > i {
   font-size: 14px;
 }

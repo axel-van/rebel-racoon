@@ -4,10 +4,11 @@
 // belongs to a lane, not to a chat.
 //
 // ── The one invariant this store exists to protect ──────────────────────────
-// `status` and `isTrending` are SEPARATE FIELDS and must stay that way.
-// Trending is not a fifth status; it is an independent boolean. A brief can be
-// Saved AND trending, or Ignored AND trending. Every consumer therefore reads
-// two things, and no code path may write trending into `status`.
+// `status`, `isTrending` and `isUpdated` are SEPARATE FIELDS and must stay that
+// way. Neither signal is a fifth status; both are independent booleans. A brief
+// can be Saved AND trending, New AND updated, or all three at once. Every
+// consumer therefore reads three things, and no code path may write either
+// signal into `status`.
 //
 // The consequences the views depend on:
 //   • In the FEED, a trending brief shows under its own status — a trending New
@@ -38,7 +39,7 @@
 //   updateSummary(briefId, text)       — Adapt mode commits through here
 //   subscribe(fn)                      → unsubscribe
 
-import { researchBriefs as seed } from "./mocks.js?v=69";
+import { researchBriefs as seed } from "./mocks.js?v=70";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES } from "./research-catalog.js?v=6";
@@ -69,6 +70,7 @@ function cloneBrief(b) {
     posts: Array.isArray(b.posts) ? b.posts.map((p) => ({ ...p, author: { ...(p.author || {}) } })) : [],
     history: Array.isArray(b.history) ? b.history.map((h) => ({ ...h })) : [],
     isTrending: !!b.isTrending,
+    isUpdated: !!b.isUpdated,
   };
 }
 

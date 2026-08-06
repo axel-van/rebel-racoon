@@ -12,7 +12,7 @@
 //   data-connector-open|connect|disconnect|try, data-connectors-category|search
 
 import { escapeHtml } from "./utils.js?v=21";
-import { getConnectors } from "./connectors-store.js?v=38";
+import { getConnectors } from "./connectors-store.js?v=39";
 
 // Category display order — anything unlisted falls to the end alphabetically.
 export const CATEGORY_ORDER = [

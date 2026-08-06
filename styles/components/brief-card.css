@@ -117,8 +117,19 @@
   color: var(--app-convo-navy);
 }
 
+/* Two lines, then an ellipsis. -webkit-box + -webkit-line-clamp is still the
+   only combination every current browser honours; `line-clamp` alone is not.
+   overflow:hidden is what actually produces the ellipsis, and the box display
+   is why this is NOT `display: block` any more.
+   The full text is one click away in the topic's own dialog, so nothing is lost
+   — and a card whose height depends on how much the scan wrote made the list
+   impossible to scan. */
 .brief-card__summary {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
   margin: 0;
   font-size: 15px;
   font-weight: 500;
@@ -133,15 +144,38 @@
 
 .brief-card__whynow {
   display: block;
-  margin: 12px 0 0;
+  margin: var(--ref-spacing-xs) 0 0;
   padding: 11px 13px;
   background: var(--app-peach);
   border-left: 3px solid var(--app-archie-orange);
   border-radius: 0 8px 8px 0;
-  font-size: 14px;
+  font-size: var(--sys-text-style-body-size);
   font-weight: 500;
   line-height: 1.55;
   color: var(--ref-color-grey-80);
+}
+
+/* The Updated counterpart to __whynow, same geometry so the two read as one
+   family, in menthol instead of peach. Menthol-10 is the calmest tint in the DS
+   that still reads as a tint, and menthol-150 keeps the label legible on it.
+   Deliberately quieter than Why-now: "the story moved" matters less than "this
+   is spiking", so it must not compete for the same attention. */
+.brief-card__changed {
+  display: block;
+  margin: var(--ref-spacing-xs) 0 0;
+  padding: 11px 13px;
+  background: var(--ref-color-menthol-10);
+  border-left: 3px solid var(--ref-color-menthol-100);
+  border-radius: 0 8px 8px 0;
+  font-size: var(--sys-text-style-body-size);
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--ref-color-grey-80);
+}
+
+.brief-card__changed-label {
+  font-weight: 800;
+  color: var(--ref-color-menthol-150);
 }
 
 .brief-card__whynow-label {
