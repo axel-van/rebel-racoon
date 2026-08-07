@@ -15,12 +15,10 @@
 // triage. Keeping that split is the whole reason they are a notice here rather
 // than a section.
 //
-// That split only works if the notice is HONEST about it. It used to announce
-// every trending brief in the lane, so at the default filter it promised 3 while
-// the feed showed 1 — an unexplained gap that reads as a broken filter. It now
-// counts only what you have not yet acknowledged, breaks that down by signal, and
-// disappears once you open /attention. Nothing overrides the filter; the feed's
-// list stays exactly what the filter says it is.
+// The notice counts every flagged topic in the lane and breaks that down by
+// signal. It deliberately does NOT track what the filter hides or what you have
+// already looked at — both were tried and removed. Nothing overrides the filter
+// either; the feed's list stays exactly what the filter says it is.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
@@ -33,18 +31,18 @@ import {
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=25";
+} from "../components/research-modals.js?v=26";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=12";
 import {
   getBriefsForLane,
-  unseenAttentionForLane,
+  attentionCountsForLane,
   defaultFilters,
   narrowedGroupCount,
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=15";
+} from "../briefs-store.js?v=16";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
@@ -158,15 +156,15 @@ function renderPage() {
   if (view.generating) return renderGenerating();
 
   const briefs = getBriefsForLane(laneId, filters);
-  // Unseen, not filtered: opening /attention acknowledges the lane's flagged
-  // topics, and the notice stays away until the scan flags something new. The
-  // lane's own Show-trending setting still gates it entirely.
-  const unseen = unseenAttentionForLane(laneId);
-  const showNotice = unseen.total > 0 && lane.showTrending;
+  // Unconditional: the notice reports whatever is flagged, and only the lane's
+  // own Show-trending setting switches it off. It does not consult the filter and
+  // is not dismissed by opening /attention — see attentionCountsForLane.
+  const attention = attentionCountsForLane(laneId);
+  const showNotice = attention.total > 0 && lane.showTrending;
 
   return html`<div class="research-feed__body">
     <div class="research-feed__inner">
-      ${raw(renderFeedHeader(lane))} ${raw(showNotice ? renderAttentionNotice(unseen) : "")}
+      ${raw(renderFeedHeader(lane))} ${raw(showNotice ? renderAttentionNotice(attention) : "")}
       ${raw(
         briefs.length
           ? briefs
@@ -349,12 +347,11 @@ function renderGroup(key, label, options, selected, field) {
 // signals separately and deliberately does NOT read as an equation — see
 // hiddenAttentionForLane on why the two numbers can exceed the total.
 //
-// Only what has NOT been acknowledged. Opening /attention marks the lane's
-// flagged topics seen, so the notice disappears and returns only when the scan
-// flags something new. That is what keeps it from being furniture — an earlier
-// version gated on "hidden by the active filter" instead, which never announced
-// something already in the list but did keep re-announcing a filtered-out topic
-// you had already read. See unseenAttentionForLane on why this replaced it.
+// Everything flagged, unconditionally. Two narrower rules were tried and removed
+// — counting only what the active filter hid, then counting only what the reader
+// had not yet opened /attention to see. Both existed to stop this becoming
+// permanent furniture; with both gone it shows for as long as anything is
+// flagged, and `showTrending` on the lane is the only way to switch it off.
 function renderAttentionNotice({ trending, updated, total }) {
   const one = total === 1;
   const parts = [];
@@ -365,7 +362,7 @@ function renderAttentionNotice({ trending, updated, total }) {
     <div class="ap-infobox-content">
       <div class="ap-infobox-texts">
         <span class="ap-infobox-title">${total} ${one ? "topic needs" : "topics need"} your attention</span>
-        <span class="ap-infobox-message"> ${raw(parts.join(" · "))} — flagged since you last looked. </span>
+        <span class="ap-infobox-message"> ${raw(parts.join(" · "))} in this topic list. </span>
       </div>
       <button type="button" class="ap-button primary blue" data-feed-trending>
         <span>See topics</span>

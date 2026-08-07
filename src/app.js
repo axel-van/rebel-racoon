@@ -14,7 +14,7 @@ import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=75";
 import { init as initConnectorsModal } from "./components/connectors-modal.js?v=22";
 import { init as initTopicModal } from "./components/topic-modal.js?v=12";
-import { init as initResearchModals } from "./components/research-modals.js?v=25";
+import { init as initResearchModals } from "./components/research-modals.js?v=26";
 import { init as initAddPlaybookEntryModal } from "./components/add-playbook-entry-modal.js?v=1";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
 import { init as initRenameModal } from "./components/rename-modal.js?v=2";
@@ -27,15 +27,15 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=223";
 import { renderDashboard } from "./screens/dashboard.js?v=64";
-import { renderSession } from "./screens/session.js?v=527";
+import { renderSession } from "./screens/session.js?v=528";
 import { renderContexts } from "./screens/contexts.js?v=257";
 import { renderConnectors } from "./screens/connectors.js?v=196";
 import { renderTopics } from "./screens/topics.js?v=65";
 import { renderTopicsSettings } from "./screens/topics-settings.js?v=56";
-import { renderResearch } from "./screens/research.js?v=30";
-import { renderResearchForm } from "./screens/research-form.js?v=30";
-import { renderResearchFeed } from "./screens/research-feed.js?v=32";
-import { renderResearchTrending } from "./screens/research-trending.js?v=30";
+import { renderResearch } from "./screens/research.js?v=31";
+import { renderResearchForm } from "./screens/research-form.js?v=31";
+import { renderResearchFeed } from "./screens/research-feed.js?v=34";
+import { renderResearchTrending } from "./screens/research-trending.js?v=31";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
