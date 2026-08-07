@@ -1060,13 +1060,14 @@
   }
 }
 
-/* The spinner sits on its own line above the message, left-aligned with it —
-   the card's other content is left-aligned too, so centring it the way
-   .research-generating does would make this the one card that isn't. */
+/* The spinner takes everything under the message. .ap-loader-container already
+   centres its child (DS: display:flex + align/justify center); all this adds is
+   the fill, so the loader sits in the middle of whatever height is left once the
+   sentence has wrapped — one line or two — rather than at a fixed offset that
+   only looks right for one of them. */
 .starter-topic__spinner {
-  display: block;
-  flex: 0 0 auto;
-  margin-bottom: var(--ref-spacing-xxs);
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* The two "not yet" states — waiting for the first topic, and out of topics.

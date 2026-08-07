@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=318";
+import { renderTopbar } from "../components/topbar.js?v=319";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=74";
 import {
   getConnectedProfiles,
@@ -73,7 +73,7 @@ import {
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { getBriefById, getStarterTopics } from "../briefs-store.js?v=26";
 import { getLaneById } from "../research-store.js?v=20";
-import * as contextBuilder from "../context-builder.js?v=285";
+import * as contextBuilder from "../context-builder.js?v=286";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -118,7 +118,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=452";
+} from "../components/right-panel.js?v=453";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=16";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2044,19 +2044,27 @@ function renderStarterTopicCard(brief) {
 // empty state — a plain div, no flip control, nothing to click — because both are
 // the slot saying "not yet" rather than offering something.
 //
-// One line, at title size, and a spinner instead of a number. The DS .ap-loader
-// is deliberate rather than a custom ring: archie-loader.js watches the DOM for
-// that class and swaps in the animated Archie mark, so this matches every other
-// spinner in the app for free — including the ones that appear after this card
-// is injected, because it watches via MutationObserver.
+// Message first, then the spinner filling everything under it. The order matters:
+// the card is read once and then watched, so the sentence should be where the eye
+// already lands — the top-left, level with every other card's title — and the
+// animation should own the space you go on looking at.
+//
+// The DS .ap-loader is deliberate rather than a custom ring: archie-loader.js
+// watches the DOM for that class and swaps in the animated Archie mark, so this
+// matches every other spinner in the app for free — including the ones that
+// appear after this card is injected, because it watches via MutationObserver.
+// .ap-loader-container is the DS's own centring wrapper; the fill comes from a
+// flex rule on it, so the loader itself keeps a documented size class.
 //
 // No watermark glyph here. The spinner already says "working"; an hourglass
 // behind it would be the same sentence twice.
 function renderStarterTopicWaiting() {
   return `
     <div class="starter-card starter-card--topic starter-topic--waiting">
-      <span class="ap-loader orange size-24 starter-topic__spinner" aria-hidden="true"></span>
       <span class="starter-card__title">New ideas will drop in a moment</span>
+      <span class="ap-loader-container starter-topic__spinner" aria-hidden="true">
+        <span class="ap-loader orange size-48"></span>
+      </span>
     </div>
   `;
 }
