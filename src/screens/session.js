@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=327";
+import { renderTopbar } from "../components/topbar.js?v=328";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=74";
 import {
   getConnectedProfiles,
@@ -73,7 +73,7 @@ import {
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { getBriefById, getStarterTopics } from "../briefs-store.js?v=26";
 import { getLaneById } from "../research-store.js?v=20";
-import * as contextBuilder from "../context-builder.js?v=294";
+import * as contextBuilder from "../context-builder.js?v=295";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -118,7 +118,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=461";
+} from "../components/right-panel.js?v=462";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=16";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2066,6 +2066,12 @@ function renderStarterTopicWaiting() {
   return `
     <div class="starter-card starter-card--topic starter-topic--waiting">
       <span class="starter-card__title">Finalizing your first custom post ideas</span>
+      <!-- .starter-card__subtitle, the same sub-header the workflow cards and the
+           empty state use — the waiting card was the only one of the three
+           without one. It sits between the message and the spinner so the three
+           read top to bottom as what's happening, what to do, and that it's
+           still going. -->
+      <span class="starter-card__subtitle">Hold on tight</span>
       <span class="ap-loader-container starter-topic__spinner" aria-hidden="true">
         <span class="ap-loader orange size-48"></span>
       </span>
