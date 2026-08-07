@@ -1015,6 +1015,27 @@
   z-index: 1;
 }
 
+/* The flip control's tooltip. Visibility lives on the APP class, never on
+   .ap-tooltip — redeclaring a DS class outside ds-patches.css flips the cascade
+   for every other use of it (CLAUDE.md). The DS supplies the panel, the arrow
+   and the type; this supplies where it sits and when it shows.
+
+   Anchored under the button: the card's top offset, plus the button, plus room
+   for the arrow — all three from tokens, so it follows if any of them move.
+   --sys-icon-button-height, not the --comp- one: component tokens are off-limits
+   in app CSS (CLAUDE.md, and validate_css errors on it). Right-aligned with the
+   button so a 33-character line grows leftwards into the card, not off its edge. */
+.starter-topic__tip {
+  display: none;
+  top: calc(var(--ref-spacing-xs) + var(--sys-icon-button-height) + var(--ref-spacing-xxs));
+  right: var(--ref-spacing-xs);
+}
+
+.starter-topic__flip:hover + .starter-topic__tip,
+.starter-topic__flip:focus-visible + .starter-topic__tip {
+  display: block;
+}
+
 /* ── The swap ─────────────────────────────────────────────────────────────
    Out to the left, in from the right, so the two halves read as one card being
    replaced by the next rather than as a card blinking. Both are transform +

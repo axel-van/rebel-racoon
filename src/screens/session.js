@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=320";
+import { renderTopbar } from "../components/topbar.js?v=322";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=74";
 import {
   getConnectedProfiles,
@@ -73,7 +73,7 @@ import {
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { getBriefById, getStarterTopics } from "../briefs-store.js?v=26";
 import { getLaneById } from "../research-store.js?v=20";
-import * as contextBuilder from "../context-builder.js?v=287";
+import * as contextBuilder from "../context-builder.js?v=289";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -118,7 +118,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=454";
+} from "../components/right-panel.js?v=456";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=16";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2118,11 +2118,21 @@ function renderStarterTopicSlot(sessionId) {
               type="button"
               class="ap-icon-button ghost grey starter-topic__flip"
               data-starter-topic-flip
-              aria-label="Show another topic${remaining > 0 ? ` (${remaining} more)` : ""}"
-              title="Show another topic"
+              aria-label="Cycle through more ideas${remaining > 0 ? ` (${remaining} more)` : ""}"
             >
               <i class="ap-icon-shuffle" aria-hidden="true"></i>
-            </button>`
+            </button>
+            <!-- The DS Tooltip, not the native title attribute. title waits about
+                 a second, can't be styled, and renders in the OS chrome rather
+                 than the page — three reasons the DS ships a component for this.
+                 It sits AFTER the button so a plain adjacent-sibling selector can
+                 reveal it, and inside .starter-topic (position: relative) rather
+                 than the card, whose overflow:hidden would clip it.
+                 aria-hidden: the button's own label already carries this, and a
+                 display:none target can't be read through aria-describedby. -->
+            <span class="ap-tooltip bottom-right starter-topic__tip" aria-hidden="true"
+              >Click to cycle through more ideas</span
+            >`
           : ""
       }
     </div>
