@@ -20,12 +20,12 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=302";
+import { renderTopbar } from "../components/topbar.js?v=304";
 import { showToast } from "../components/toast.js?v=20";
 import { isFlagOn } from "../feature-flags.js?v=18";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=54";
-import { getLanes, duplicateLane, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=17";
-import { countNewForLane, countTrendingForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=21";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=55";
+import { getLanes, duplicateLane, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=18";
+import { countNewForLane, countTrendingForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=23";
 
 // Local view state. The Playbook facet lives here rather than in the URL: unlike
 // /topics, whose `?pb=` scope has to survive the round trip to a per-Playbook

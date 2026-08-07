@@ -4586,6 +4586,15 @@ export const researchLanes = [
 //   • br-9 is trending on a lane with showTrending off — proves the gate
 //   • ageLabel spans m/h/d/w so the sort parser is actually exercised
 //   • both researchType values appear, so the type filter has something to do
+//   • every lane still fills all three age groups (Last 7 days / Earlier this
+//     month / Earlier), except lane-3, which only has two briefs
+//
+// ⚠️ A brief carrying isTrending or isUpdated MUST have an ageLabel inside the
+// first age group (≤ 7 days). Both flags are claims about right now, and under
+// an "Earlier" separator they contradict the separator. briefs-store's
+// withTriage() enforces this on read — a signal on an older brief is silently
+// dropped rather than rendered — so getting it wrong here loses the signal
+// instead of breaking the layout. Set the date, not just the flag.
 export const researchBriefs = [
   {
     id: "br-1",
@@ -4651,7 +4660,7 @@ export const researchBriefs = [
     id: "br-2",
     laneId: "lane-1",
     sourceId: "influencer-posts",
-    ageLabel: "9h ago",
+    ageLabel: "6w ago",
     headline: "Trainers recommend trackers unprompted, and none of them are being paid to",
     summary:
       "Four of the six trainers with the largest followings in this niche mention a tracker in passing, inside training advice rather than a sponsored slot. The recommendation lands because it isn't the point of the post.",
@@ -4697,7 +4706,7 @@ export const researchBriefs = [
     id: "br-3",
     laneId: "lane-1",
     sourceId: "competitor-posts",
-    ageLabel: "12d ago",
+    ageLabel: "4d ago",
     headline: "Fi's subscription price rise is drawing the complaints its launch post buried",
     summary:
       "The pricing change itself passed quietly. The discontent is in the replies to unrelated posts three weeks later, which is where the churn language actually shows up.",
@@ -4787,7 +4796,7 @@ export const researchBriefs = [
     id: "br-5",
     laneId: "lane-1",
     sourceId: "competitor-posts",
-    ageLabel: "2mo ago",
+    ageLabel: "6d ago",
     headline: "Garmin's outdoor-sport framing keeps resurfacing in the same seasonal window",
     summary:
       "Garmin leans hunting-and-hiking every autumn. It performs for them and reads wrong for a pet-safety brand, but the seasonal timing itself is the transferable part.",
@@ -5110,8 +5119,8 @@ export const researchBriefs = [
     summary:
       "Competitors are running family classes and turning academy anniversaries into family community events. The angle is strong and the volume is high — but this one can't be written yet, because it needs assets nobody has shot.",
     researchType: "ready-to-post",
-    isTrending: true,
-    whyNow: "Family classes and family-oriented community events are the second-highest-volume theme in the scan.",
+    isTrending: false,
+    whyNow: "",
     whyNowDetail:
       "Volume: high. 11 of the 25 collected posts match this topic, at 64% Instagram / 36% Facebook. Keywords: family class, parents, kids and parents, community, anniversary. The export marked this one needs_assets rather than ready_to_write — see the blockers below.",
     research: {
@@ -5148,7 +5157,7 @@ export const researchBriefs = [
     id: "br-14",
     laneId: "lane-5",
     sourceId: "competitor-posts",
-    ageLabel: "4d ago",
+    ageLabel: "12d ago",
     headline: "From Summer to Autumn: Smart Transitional Layering for the Belgian Climate",
     summary:
       "Advice on building a transitional wardrobe with light layering pieces and versatile essential tops without immediately packing away your summer wardrobe. Focuses on practical multi-brand solutions for unpredictable Belgian weather.",
@@ -5439,7 +5448,7 @@ export const researchBriefs = [
     id: "br-19",
     laneId: "lane-3",
     sourceId: "competitor-posts",
-    ageLabel: "3mo ago",
+    ageLabel: "6d ago",
     headline: "The Q2 launch window your competitors were holding has slipped",
     summary:
       "Two of the three accounts that had teased an April launch have gone quiet and moved their dates. The window you were planning around is wider than it looked.",
@@ -5462,7 +5471,7 @@ export const researchBriefs = [
     id: "br-20",
     laneId: "lane-4",
     sourceId: "competitor-posts",
-    ageLabel: "24d ago",
+    ageLabel: "4d ago",
     headline: "The competing gym's kids programme now runs on the same nights as yours",
     summary:
       "Their schedule page changed this week. The Tuesday and Thursday kids classes that used to sit opposite yours now overlap them exactly, and their last three posts push that timetable.",
@@ -5485,7 +5494,7 @@ export const researchBriefs = [
     id: "br-21",
     laneId: "lane-5",
     sourceId: "competitor-posts",
-    ageLabel: "16d ago",
+    ageLabel: "5d ago",
     headline: "The multibrand discount wave has stopped, three weeks early",
     summary:
       "Four of the five tracked accounts pulled their sale messaging this week and went back to full-price editorial. The markdown conversation you were planning to answer has already moved on.",
@@ -5620,7 +5629,7 @@ export const researchBriefs = [
     id: "br-25",
     laneId: "lane-4",
     sourceId: "competitor-posts",
-    ageLabel: "27d ago",
+    ageLabel: "1d ago",
     headline: "Competitors sell confidence to girls and character to boys",
     summary:
       "Gracie Barra's youth copy splits cleanly by gender — empowerment and fun for girls, self-control and respect for boys. It is the most consistent pattern in the scan and nobody has questioned whether parents want the split.",

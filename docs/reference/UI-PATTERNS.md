@@ -190,6 +190,40 @@ pourtant la réponse « correcte » côté modèle de données. Raison : `.ap-st
 Corollaire côté données : `status` et `isTrending` sont deux champs séparés dans
 [`briefs-store.js`](../../src/briefs-store.js) et doivent le rester.
 
+### Un sélecteur montre la vraie carte, pas une ligne compacte
+
+Le modal « Pick a topic » dessinait ses propres formes : une ligne d'une ligne pour
+un topic, une rangée maison pour un Playbook. Les deux ont été remplacées par les
+composants existants — `.contexts-card` à l'étape 1, `topics-card` (variante
+`picker`) à l'étape 2. Le principe : **ce qu'on choisit doit ressembler à ce qu'on
+lisait juste avant**. La ligne compacte supprimait le résumé, les marques Trending /
+Updated et les blocs Why-now / What-changed — c'est-à-dire exactement ce sur quoi on
+choisit.
+
+Deux ajustements imposés par la réutilisation :
+
+- La carte `topics-card` en variante `picker` n'a **pas de footer** : son bouton de
+  corps porte `data-idea-pick` au lieu de `data-brief-research`. Le même élément,
+  un autre verbe — une rangée d'actions en dessous serait une seconde réponse au
+  même clic.
+- `.contexts-card` est un `<article role="button">`, pas un `<button>`. Enter et
+  Espace doivent être câblés à la main dans le modal, comme `contexts.js` le fait
+  déjà sur sa propre page.
+
+⚠️ `.contexts-card` a maintenant deux consommateurs (l'écran `/contexts` et ce
+modal) tout en vivant dans `styles/screens/contexts.css`. Au troisième, la déplacer
+dans `styles/components/`.
+
+### Un signal d'attention ne vit que dans « Last 7 days »
+
+Trending et Updated affirment quelque chose sur le **maintenant**. Sous un séparateur
+« Earlier », la carte se contredit — et c'est le séparateur que le lecteur croit.
+La règle est donc appliquée à la lecture, dans `withTriage()` de
+[`briefs-store.js`](../../src/briefs-store.js) : au-delà du premier groupe d'âge les
+deux booléens sont remis à faux. L'âge (`ageLabel`) reste la seule source de vérité,
+et une donnée de seed qui oublierait la règle perd son signal au lieu de casser la
+mise en page.
+
 ### Une seule température de page
 
 Tous les écrans peignent le fond du shell (`--app-bg` → `--ref-color-grey-bg`,

@@ -21,10 +21,11 @@ import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=8";
-import { getBriefById, getBriefsForLane, ignoreBrief, setStatus } from "../briefs-store.js?v=21";
-import { getLanes } from "../research-store.js?v=17";
-import { getContextById } from "../contexts-store.js?v=54";
-import { renderSocialPostCard } from "./social-post-card.js?v=9";
+import { getBriefById, getBriefsForLane, ignoreBrief, setStatus } from "../briefs-store.js?v=23";
+import { getLanes } from "../research-store.js?v=18";
+import { getContextById } from "../contexts-store.js?v=55";
+import { renderBriefCard } from "./brief-card.js?v=18";
+import { renderSocialPostCard } from "./social-post-card.js?v=10";
 import { showToast } from "./toast.js?v=20";
 
 const MODAL_ID = "research";
@@ -76,6 +77,17 @@ export function init() {
   // the wiring is too. Each branch reads `active` for its context.
   panel.addEventListener("click", onPanelClick);
   panel.addEventListener("input", onPanelInput);
+  // The Playbook step's cards are .contexts-card — an <article role="button">,
+  // not a <button>, because that is the element /contexts styles. A real button
+  // gets Enter and Space for free; role="button" does not, so they are wired
+  // here exactly as contexts.js wires the same card on its own page.
+  panel.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const card = event.target.closest?.('[data-idea-pb][role="button"]');
+    if (!card) return;
+    event.preventDefault();
+    card.click();
+  });
   backdrop.addEventListener("click", close);
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && isOpen()) close();
@@ -442,37 +454,72 @@ function renderIdeaPicker(ctx) {
 // has exactly one answer in practice ("show me this brand's topics"), and a
 // multi-select made you state it twice: tick, then confirm.
 //
-// The card carries the Playbook's monogram, the same initial-on-brand-colour the
-// lane feed header uses, so it reads as the same object you see everywhere else
-// rather than as a row in a list.
+// It reuses the /contexts card — .contexts-card and its children, colour
+// modifier and all — rather than a list row of its own. A Playbook is the same
+// object here as it is on its own page, and the picker was the only surface
+// that drew it differently.
+//
+// Two deliberate omissions from that card:
+//   • .contexts-card__brief. Asked for, and right: the brief is a paragraph you
+//     read when you are deciding how a Playbook is set up, not when you are
+//     answering "whose topics?". It also made the cards tall enough to push the
+//     second row under the fold.
+//   • .contexts-card__actions (edit / duplicate / delete). Those are page
+//     affordances — a topic picker must not be a place you can delete a
+//     Playbook from.
+//
+// The topic count replaces them as an extra .contexts-card__counter, so the
+// picker's own information rides in the card's existing footer rather than in a
+// new element.
 function renderPlaybookStep(ctx) {
   const options = pickerPlaybookOptions();
 
   openShell("idea-picker", ctx, {
     title: "Pick a topic",
     sub: "Which Playbook do you want topics from?",
+    // wide, because .contexts-card is built for a ~300px minimum and the default
+    // 560px shell gave it one cramped column.
+    wide: true,
     body: options.length
-      ? html`<div class="research-pick__pblist">
+      ? html`<div class="research-pick__pbgrid">
           ${raw(
             options
               .map((o) => {
                 const lanes = getLanes().filter((l) => l.playbookId === o.id);
                 const n = lanes.reduce((t, l) => t + pickerSplit(l.id).shown.length, 0);
                 const color = o.color || "orange";
-                const initial = ((o.brandName || o.name || "?").trim()[0] || "?").toUpperCase();
-                return html`<button type="button" class="research-pick__pbcard" data-idea-pb="${escapeAttr(o.id)}">
-                  <span class="research-feed__monogram research-feed__monogram--${color}" aria-hidden="true"
-                    >${initial}</span
-                  >
-                  <span class="research-pick__pbtext">
-                    <span class="research-pick__pbname">${o.name}</span>
-                    <span class="research-pick__pbmeta"
-                      >${n} ${n === 1 ? "topic" : "topics"} · ${lanes.length}
-                      ${lanes.length === 1 ? "lane" : "lanes"}</span
-                    >
-                  </span>
-                  <i class="ap-icon-arrow-right research-pick__pbgo" aria-hidden="true"></i>
-                </button>`;
+                const voice = o.voiceProfile && o.voiceProfile.headline;
+                return html`<article
+                  class="contexts-card contexts-card--${color}"
+                  data-idea-pb="${escapeAttr(o.id)}"
+                  role="button"
+                  tabindex="0"
+                >
+                  <span class="contexts-card__swatch" aria-hidden="true"></span>
+                  <header class="contexts-card__head">
+                    <h3 class="contexts-card__name">${o.name}</h3>
+                  </header>
+                  ${raw(
+                    voice
+                      ? html`<div class="contexts-card__voice">
+                          <i class="ap-icon-archie-official"></i><span>${voice}</span>
+                        </div>`
+                      : "",
+                  )}
+                  <footer class="contexts-card__foot">
+                    <div class="contexts-card__counters">
+                      <span class="contexts-card__counter" title="${n} ${n === 1 ? "topic" : "topics"}">
+                        <i class="ap-icon-note"></i><span>${n}</span>
+                      </span>
+                      <span
+                        class="contexts-card__counter"
+                        title="${lanes.length} ${lanes.length === 1 ? "topic list" : "topic lists"}"
+                      >
+                        <i class="ap-icon-folder"></i><span>${lanes.length}</span>
+                      </span>
+                    </div>
+                  </footer>
+                </article>`;
               })
               .join(""),
           )}
@@ -490,12 +537,15 @@ function renderTopicStep(ctx) {
     .map((lane) => ({ lane, ...pickerSplit(lane.id) }))
     .filter((g) => g.shown.length || g.hiddenTrending.length);
   const shownTotal = groups.reduce((n, g) => n + g.shown.length, 0);
-  const trending = groups.flatMap((g) => g.hiddenTrending.map((b) => ({ ...b, laneName: g.lane.name })));
+  const trending = groups.flatMap((g) => g.hiddenTrending);
   const pb = getContextById(pickerPlaybook);
 
   openShell("idea-picker", ctx, {
     title: "Pick a topic",
     sub: `${shownTotal} ${shownTotal === 1 ? "topic" : "topics"} in ${pb ? pb.name : "this Playbook"}`,
+    // Wide, like step 1 and for the same reason: these are the feed's cards, and
+    // the feed gives them a full column.
+    wide: true,
     // Plain string concatenation, NOT raw(): openShell assigns this to
     // bodyEl.innerHTML, and raw() returns a marker object that only means
     // something inside an html`` template — as innerHTML it stringifies to
@@ -512,7 +562,7 @@ function renderTopicStep(ctx) {
                   You ignored ${trending.length === 1 ? "this one" : "these"}, but
                   ${trending.length === 1 ? "it is" : "they are"} running above baseline again.
                 </p>
-                ${raw(trending.map((b) => pickerRow(b, b.laneName)).join(""))}
+                ${raw(trending.map((b) => pickerCard(b)).join(""))}
               </section>`
             : "") +
           groups
@@ -521,7 +571,7 @@ function renderTopicStep(ctx) {
               (g) =>
                 html`<section class="research-pick__group">
                   <h4 class="research-pick__group-title">${g.lane.name}</h4>
-                  ${raw(g.shown.map((b) => pickerRow(b)).join(""))}
+                  ${raw(g.shown.map((b) => pickerCard(b)).join(""))}
                 </section>`,
             )
             .join("")
@@ -535,24 +585,15 @@ function renderTopicStep(ctx) {
   });
 }
 
-// One compact row — the mini form of a brief card: no summary, no Why-now block,
-// no action footer, because the row IS the action.
-function pickerRow(b, laneName = "") {
-  const src = findResearchSource(b.sourceId);
-  const st = findReviewStatus(b.status);
-  const meta = [src ? src.name : "Source", b.ageLabel, laneName].filter(Boolean).join(" · ");
-  return html`<button type="button" class="research-pick__row" data-idea-pick="${escapeAttr(b.id)}">
-    <span class="topic-badge topic-badge--${src ? src.accent : "soft-blue"}" aria-hidden="true"
-      ><i class="${src ? src.icon : "ap-icon-folder"}"></i
-    ></span>
-    <span class="research-pick__text">
-      <span class="research-pick__headline">${b.headline}</span>
-      <span class="research-pick__meta"
-        >${meta}${raw(b.isTrending ? ' · <span class="research-pick__trending">Trending</span>' : "")}</span
-      >
-    </span>
-    ${raw(st ? html`<span class="topics-status topics-status--${st.id}">${st.label}</span>` : "")}
-  </button>`;
+// The SAME card the topic list draws, in its picker variant — see
+// components/brief-card.js. This used to be a compact one-line row of its own
+// (headline + a "source · age · lane" meta string + a status pill), which meant
+// the topic you picked looked nothing like the topic you had been reading in the
+// feed two seconds earlier. The summary, the Trending and Updated marks and the
+// Why-now / What-changed blocks are the things you actually choose on, and the
+// row dropped all four.
+function pickerCard(b) {
+  return renderBriefCard(b, { source: findResearchSource(b.sourceId), variant: "picker" });
 }
 
 // ─── 7. Full research ──────────────────────────────────────────────────────

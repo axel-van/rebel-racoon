@@ -31,6 +31,28 @@
    ever comes back it must be a border, never an absolutely-positioned span: see
    the history note in brief-card.js. */
 
+/* Picker variant (the Pick-a-topic modal). Same card, two differences: it has no
+   footer, so the body button has to carry the bottom padding the footer used to
+   provide; and the whole card is a control, so it takes the app's universal card
+   hover wash — light blue fill and light blue border, never navy, per chat.css. */
+.topics-card--picker .topics-card__body {
+  padding-bottom: var(--ref-spacing-sm);
+}
+
+.topics-card--picker:hover,
+.topics-card--picker:focus-within {
+  background: var(--ref-color-electric-blue-05);
+  border-color: var(--ref-color-electric-blue-20);
+}
+
+/* The body button fills the card, so its own focus ring is the card's. Inset for
+   the same reason the feed's is: an outset ring escapes the rounded corner. */
+.topics-card--picker .topics-card__body:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: -2px;
+  border-radius: 14px;
+}
+
 /* One button covering the card's text, opening Full research. Mirrors
    .topic-card__body: reset the chrome, inherit the type, left-align, and take the
    padding the card used to own. */

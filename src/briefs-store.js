@@ -41,7 +41,7 @@
 //   updateSummary(briefId, text)       — Adapt mode commits through here
 //   subscribe(fn)                      → unsubscribe
 
-import { researchBriefs as seed } from "./mocks.js?v=73";
+import { researchBriefs as seed } from "./mocks.js?v=74";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES } from "./research-catalog.js?v=8";
@@ -108,7 +108,7 @@ export function ageMinutes(label) {
 const DAY = 1440;
 export const AGE_GROUPS = Object.freeze([
   { id: "week", label: "Last 7 days", maxDays: 7 },
-  { id: "month", label: "Last 30 days", maxDays: 30 },
+  { id: "month", label: "Earlier this month", maxDays: 30 },
   { id: "earlier", label: "Earlier", maxDays: Infinity },
 ]);
 
@@ -151,9 +151,27 @@ export function narrowedGroupCount(filters = defaultFilters()) {
   return n;
 }
 
+// ── An attention signal only ever lives in Last 7 days ──────────────────────
+// Trending and Updated are claims about RIGHT NOW — "this is running above its
+// baseline", "the story just moved". A card carrying either one under a
+// three-weeks-ago separator contradicts itself, and it is the separator the
+// reader believes. So the flags are cleared past the first age group rather
+// than left to the seed data to get right: age is the single source of truth
+// (see AGE_GROUPS), and a signal is a statement about age.
+//
+// Enforced here rather than in mocks.js because every read goes through this
+// function — the feed, the attention page, the picker and the lane counts all
+// agree for free, and a future seed cannot reintroduce the contradiction.
 function withTriage(b) {
   const t = triage.get(b.id) || { status: "new", reason: "" };
-  return { ...b, status: t.status, ignoreReason: t.reason };
+  const fresh = ageGroupOf(b).id === "week";
+  return {
+    ...b,
+    status: t.status,
+    ignoreReason: t.reason,
+    isTrending: !!b.isTrending && fresh,
+    isUpdated: !!b.isUpdated && fresh,
+  };
 }
 
 // The one filter predicate. Factored out so the feed's list and the "what is the

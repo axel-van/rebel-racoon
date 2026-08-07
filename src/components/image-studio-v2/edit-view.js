@@ -18,11 +18,11 @@
 // tool palette, so only ✕ / ✓ stay on the canvas).
 
 import { escapeHtml } from "../../utils.js?v=21";
-import { FORMATS, NETWORK_FORMATS } from "../../clip-formats.js?v=24";
-import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=44";
-import { KEY } from "./context.js?v=39";
+import { FORMATS, NETWORK_FORMATS } from "../../clip-formats.js?v=25";
+import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=45";
+import { KEY } from "./context.js?v=40";
 import { outlineMetrics, shadowMetrics, cssFamily } from "../image-studio/canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=75";
+import * as imageStudio from "../../image-studio.js?v=76";
 
 // The working image is clipped inside .isv2-frame-clip while the frame itself is
 // overflow:visible, so on-element toolbars / popovers / handles can extend past

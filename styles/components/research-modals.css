@@ -404,124 +404,23 @@
   color: var(--ref-color-grey-40);
 }
 
-/* A row is a button covering its whole width, so the hit area is the row rather
-   than the headline — the same reason .topics-card__body is a button. The hover
-   is the app's universal card wash (light blue fill + light blue border, never
-   navy), per the rule in chat.css. */
-.research-pick__row {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  width: 100%;
-  /* Tighter than a brief card by design: this is the mini form of that list, so a
-     row carries the headline and one meta line and nothing else. */
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
-  border: 1px solid transparent;
-  border-radius: var(--app-radius-starter);
-  background: none;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.research-pick__row:hover,
-.research-pick__row:focus-visible {
-  background: var(--ref-color-electric-blue-05);
-  border-color: var(--ref-color-electric-blue-20);
-}
-
-.research-pick__text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.research-pick__headline {
-  font-size: var(--sys-text-style-body-size);
-  font-weight: 700;
-  color: var(--app-convo-navy);
-}
-
-.research-pick__meta {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--sys-text-color-light);
-}
-
-.research-pick__trending {
-  font-weight: 800;
-  color: var(--app-archie-orange-deep);
-}
-
 .research-pick__empty {
   margin: 0;
 }
 
 /* ── Step 1: which Playbook ──────────────────────────────────────────────── */
 
-.research-pick__pblist {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-}
+/* The /contexts card, reused wholesale — .contexts-card and its colour modifier
+   come from styles/screens/contexts.css, which is loaded globally, so nothing is
+   restyled here. Only the container is the picker's, because /contexts lays its
+   cards out inside a page and this one lays them out inside a 768px dialog.
 
-/* A whole-card button: choosing a Playbook navigates, so the card IS the control
-   and there is nothing smaller to aim at. Hover is the app's universal card wash
-   (light blue fill + light blue border, never navy), per the rule in chat.css. */
-.research-pick__pbcard {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  width: 100%;
-  padding: var(--ref-spacing-xs);
-  border: 1px solid var(--ref-color-grey-10);
-  border-radius: var(--app-radius-card);
-  background: var(--ref-color-white);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.research-pick__pbcard:hover,
-.research-pick__pbcard:focus-visible {
-  background: var(--ref-color-electric-blue-05);
-  border-color: var(--ref-color-electric-blue-20);
-}
-
-.research-pick__pbtext {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.research-pick__pbname {
-  font-size: var(--sys-text-style-body-size);
-  font-weight: 700;
-  color: var(--app-convo-navy);
-}
-
-.research-pick__pbmeta {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--sys-text-color-light);
-}
-
-/* The chevron only fires on hover/focus, like the lane cards' hover actions:
-   present when you are aiming at the card, quiet when you are scanning the list. */
-.research-pick__pbgo {
-  flex: 0 0 auto;
-  color: var(--ref-color-grey-40);
-  opacity: 0;
-  transition: opacity var(--ref-animation-short) var(--app-ease-standard);
-}
-
-.research-pick__pbcard:hover .research-pick__pbgo,
-.research-pick__pbcard:focus-visible .research-pick__pbgo {
-  opacity: 1;
+   NOTE: .contexts-card now has two consumers. If it grows a third it should move
+   to styles/components/, per the layout rule in CLAUDE.md. */
+.research-pick__pbgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--ref-spacing-sm);
 }
 
 /* ── The trending-but-ignored group ──────────────────────────────────────── */
@@ -547,9 +446,9 @@
   color: var(--sys-text-color-light);
 }
 
-.research-pick__group--trending .research-pick__row:hover,
-.research-pick__group--trending .research-pick__row:focus-visible {
-  /* The blue wash is invisible on peach; use white so the row still lifts. */
+.research-pick__group--trending .topics-card--picker:hover,
+.research-pick__group--trending .topics-card--picker:focus-within {
+  /* The blue wash is invisible on peach; use white so the card still lifts. */
   background: var(--ref-color-white);
   border-color: var(--app-peach-border);
 }

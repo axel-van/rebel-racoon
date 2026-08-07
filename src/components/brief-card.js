@@ -7,11 +7,18 @@
 //
 //   renderBriefCard(brief, { source, variant }) → one card
 //
-// ── variant: "feed" | "trending" ────────────────────────────────────────────
+// ── variant: "feed" | "trending" | "picker" ─────────────────────────────────
 // The trending page's cards are DELIBERATELY reduced: Use in chat becomes a single
 // button with no dropdown, Ignore disappears, and so does the status pill. That
 // page answers "what's spiking", not "what have I triaged" — showing triage
 // controls there invites the user to work a queue that isn't one.
+//
+// "picker" is the Pick-a-topic modal. It has NO footer at all, because in a
+// picker the card IS the control — the body button, which everywhere else opens
+// the full read, carries data-idea-pick instead. Everything above the footer is
+// identical to the feed on purpose: the modal used to show a compact one-line
+// row of its own, so the thing you picked looked nothing like the thing you had
+// been reading two seconds earlier.
 //
 // ── Two signals that must never read as peers ───────────────────────────────
 // A filled pill unambiguously means REVIEW STATUS in this app. Trending is
@@ -69,9 +76,13 @@ function renderTrendingMark() {
 export function renderBriefCard(brief, { source = null, variant = "feed", menuOpen = false } = {}) {
   if (!brief) return "";
   const trendingPage = variant === "trending";
+  const picker = variant === "picker";
   const ignored = brief.status === "ignored";
 
-  return html`<article class="topics-card" data-brief-id="${escapeAttr(brief.id)}">
+  return html`<article
+    class="topics-card${raw(picker ? " topics-card--picker" : "")}"
+    data-brief-id="${escapeAttr(brief.id)}"
+  >
     <!-- The card body is ONE BUTTON opening the full read — and since the footer's
          "Full research" button was removed it is the ONLY way in, which is why it
          must stay a button and stay the whole text area. The actions sit
@@ -81,14 +92,21 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
 
          It carries data-brief-research — the exact attribute the footer's "Full
          research" button already uses — so both screens' existing handlers pick
-         it up with no new wiring.
+         it up with no new wiring. In the picker it carries data-idea-pick
+         instead: same button, different verb, because there the card is the
+         control rather than a way into the full read. -->
+    <!--
 
          Everything inside is a <span>, not the h3/p it was: a button may only
          contain PHRASING content, so a heading or paragraph in here is invalid.
          topic-card made the same trade for the same reason. The classes are
          unchanged, so the styling carries over; the spans are given display:block
          in brief-card.css where they relied on being block elements. -->
-    <button type="button" class="topics-card__body" data-brief-research="${escapeAttr(brief.id)}">
+    <button
+      type="button"
+      class="topics-card__body"
+      ${raw(picker ? `data-idea-pick="${escapeAttr(brief.id)}"` : `data-brief-research="${escapeAttr(brief.id)}"`)}
+    >
       <span class="topics-card__source-row">
         ${raw(
           source
@@ -134,9 +152,16 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
       )}
     </button>
 
-    <footer class="topics-card__foot">
-      ${raw(trendingPage ? renderUseSingle(brief) : renderUseSplit(brief, menuOpen))}
-    </footer>
+    <!-- No footer in the picker: the body button already picks, so a row of
+         actions underneath would be a second, different answer to the same
+         click. -->
+    ${raw(
+      picker
+        ? ""
+        : html`<footer class="topics-card__foot">
+            ${raw(trendingPage ? renderUseSingle(brief) : renderUseSplit(brief, menuOpen))}
+          </footer>`,
+    )}
   </article>`;
 }
 
