@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=319";
+import { renderTopbar } from "../components/topbar.js?v=320";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=74";
 import {
   getConnectedProfiles,
@@ -73,7 +73,7 @@ import {
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { getBriefById, getStarterTopics } from "../briefs-store.js?v=26";
 import { getLaneById } from "../research-store.js?v=20";
-import * as contextBuilder from "../context-builder.js?v=286";
+import * as contextBuilder from "../context-builder.js?v=287";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -118,7 +118,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=453";
+} from "../components/right-panel.js?v=454";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=16";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2049,6 +2049,10 @@ function renderStarterTopicCard(brief) {
 // already lands — the top-left, level with every other card's title — and the
 // animation should own the space you go on looking at.
 //
+// "Finalizing your first custom post ideas" — present participle, so it reads as
+// work in progress rather than a promise about timing, which is the same reason
+// the countdown became a spinner.
+//
 // The DS .ap-loader is deliberate rather than a custom ring: archie-loader.js
 // watches the DOM for that class and swaps in the animated Archie mark, so this
 // matches every other spinner in the app for free — including the ones that
@@ -2061,7 +2065,7 @@ function renderStarterTopicCard(brief) {
 function renderStarterTopicWaiting() {
   return `
     <div class="starter-card starter-card--topic starter-topic--waiting">
-      <span class="starter-card__title">New ideas will drop in a moment</span>
+      <span class="starter-card__title">Finalizing your first custom post ideas</span>
       <span class="ap-loader-container starter-topic__spinner" aria-hidden="true">
         <span class="ap-loader orange size-48"></span>
       </span>
