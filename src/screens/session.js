@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=323";
+import { renderTopbar } from "../components/topbar.js?v=324";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=74";
 import {
   getConnectedProfiles,
@@ -73,7 +73,7 @@ import {
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { getBriefById, getStarterTopics } from "../briefs-store.js?v=26";
 import { getLaneById } from "../research-store.js?v=20";
-import * as contextBuilder from "../context-builder.js?v=290";
+import * as contextBuilder from "../context-builder.js?v=291";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -118,7 +118,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=457";
+} from "../components/right-panel.js?v=458";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=16";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2139,12 +2139,36 @@ function renderStarterTopicSlot(sessionId) {
   `;
 }
 
-// One place both entry points land a topic: the composer's Pick-a-topic modal
-// and this card. A topic arrives as an already-processed SOURCE, exactly as
-// topic-flow lands one from /topics — intake-lifecycle then posts a
-// source-intake turn for it, so every existing affordance (Extract ideas,
-// Draft, Ask) lights up on its own and no new flow is introduced.
-function startTopicDraft(sessionId, brief) {
+// Picking a topic opens a NEW chat on it, rather than attaching it to whatever
+// chat you happened to be in and confirming with a snackbar. Two halves, because
+// the entry point and the arrival sit on opposite sides of a navigation — the
+// same shape topic-flow.js uses for /topics, and for the same reason: a topic is
+// the start of a conversation, not an ingredient in one already underway.
+//
+// The snackbar it replaces was telling you something the screen was about to
+// show anyway: intake-lifecycle posts a source-intake turn for any source that
+// lands after mount, so the topic appears in the thread as a card. A toast on
+// top of that is the same fact twice, and the quieter of the two.
+export const BRIEF_CHAT_HANDOFF = "pendingBriefChat";
+
+function startTopicDraft(_sessionId, brief) {
+  setHandoff(BRIEF_CHAT_HANDOFF, { briefId: brief.id });
+  // Playbook and chat name ride in the URL, not the handoff: session.js already
+  // resolves ?contextId= and ?title= when it mints a `new-*` session, so the
+  // chat is bound and named on its first paint instead of a frame later.
+  const lane = getLaneById(brief.laneId);
+  const params = new URLSearchParams();
+  if (lane?.playbookId) params.set("contextId", lane.playbookId);
+  params.set("title", brief.headline);
+  navigate(`/session/new-${Date.now().toString(36)}?${params.toString()}`);
+}
+
+// Consumed at session mount. Attaches the topic as an already-processed source;
+// intake-lifecycle turns that into the source-intake card in the thread, and
+// every existing affordance (Extract ideas, Draft, Ask) lights up on its own.
+function attachBriefToChat(sessionId, briefId) {
+  const brief = getBriefById(briefId);
+  if (!brief) return;
   const src = findResearchSource(brief.sourceId);
   addReadySource(sessionId, {
     id: brief.id,
@@ -2153,7 +2177,6 @@ function startTopicDraft(sessionId, brief) {
     preview: brief.summary,
     iconClass: src?.icon || "ap-icon-folder",
   });
-  showToast("Topic added to this chat");
 }
 
 function renderEmptyHero(sessionId, composerMarkup = "") {
@@ -3876,6 +3899,15 @@ function wireAssistantPanel(root, session, attachedContext) {
   const pendingTopic = consumeHandoff(TOPIC_CHAT_HANDOFF);
   if (pendingTopic?.topicId) {
     setTimeout(() => startTopicChat(session.id, pendingTopic.topicId), 150);
+  }
+
+  // Hand-off from a Content Ideas topic — the new-chat starter card or the
+  // composer's Pick-a-topic modal. Attach only: unlike /topics this posts no
+  // echo and no question picker, because the source-intake card already names
+  // the topic and the composer is right there.
+  const pendingBrief = consumeHandoff(BRIEF_CHAT_HANDOFF);
+  if (pendingBrief?.briefId) {
+    setTimeout(() => attachBriefToChat(session.id, pendingBrief.briefId), 150);
   }
 
   // Pending start flow set by the dashboard's New chat button. Only the

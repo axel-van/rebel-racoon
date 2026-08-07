@@ -36,7 +36,9 @@
    provide; and the whole card is a control, so it takes the app's universal card
    hover wash — light blue fill and light blue border, never navy, per chat.css. */
 .topics-card--picker .topics-card__body {
-  padding-bottom: var(--ref-spacing-sm);
+  /* md, not sm — the frame is 24 all round now, and with no footer this is the
+     only thing holding the bottom of it. */
+  padding-bottom: var(--ref-spacing-md);
 }
 
 .topics-card--picker:hover,
@@ -76,7 +78,11 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: 20px 22px 0;
+  /* 24 all round, on the DS scale. It was 20px 22px 0 — two values that are on
+     no scale step, and a frame that measured 21px at the top against 15px at the
+     bottom once the footer's padding was counted. The card was quietly
+     top-heavy. The footer below carries the matching 24. */
+  padding: var(--ref-spacing-md) var(--ref-spacing-md) 0;
   border: 0;
   background: transparent;
   font: inherit;
@@ -94,7 +100,7 @@
 .topics-card__source-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--ref-spacing-xxs);
   margin-bottom: 10px;
 }
 
@@ -158,7 +164,7 @@
 
 .topics-card__headline {
   display: block;
-  margin: 0 0 8px;
+  margin: 0 0 var(--ref-spacing-xxs);
   font-size: 18px;
   font-weight: 700;
   line-height: 1.45;
@@ -284,14 +290,19 @@
 
 /* Horizontal MARGIN rather than padding, deliberately: the border-top is drawn
    at the footer's outer edge, so padding would make the divider span the full
-   card width. Margin keeps it inset by 22px exactly as it was when the card
-   itself carried the padding. */
+   card width. Margin keeps it inset to match the body's own horizontal padding.
+
+   The divider now gets an equal 16 above and below, where it had 14 and 12 — a
+   near-miss at both ends, and both tighter than the frame around them. And the
+   card's bottom is 24, matching its top: the old 14 left the frame 6px shallower
+   at the bottom than the top, which is the sort of thing you feel as "cramped"
+   without being able to name. */
 .topics-card__foot {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 14px 22px 0;
-  padding: 12px 0 14px;
+  gap: var(--ref-spacing-xxs);
+  margin: var(--ref-spacing-sm) var(--ref-spacing-md) 0;
+  padding: var(--ref-spacing-sm) 0 var(--ref-spacing-md);
   border-top: 1px solid var(--ref-color-grey-10);
 }
 
