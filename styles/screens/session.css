@@ -861,13 +861,22 @@
   --starter-topic-accent: var(--ref-color-menthol-100);
 }
 
-/* Hover keeps the tone accent on top and takes the standard starter-card
-   highlight — blue edge + tint wash — on the other three sides. The base
-   .starter-card:hover sets border-color as a shorthand, which turned the 4px
-   accent blue and made the card look like it changed category on hover. Equal
-   specificity, so this wins on source order; it has to stay after that rule. */
-.starter-card--topic:hover,
-.starter-card--topic:focus-visible {
+/* Hover: every topic card takes the standard starter-card highlight — blue edge
+   plus tint wash — and the two SIGNALLED tones keep their accent on top instead
+   of the blue.
+
+   Scoped to those two on purpose. The rule used to apply to every topic card,
+   which meant a card with no accent got `border-top-color: transparent` on hover
+   while the base rule turned the other three edges blue: a three-sided blue
+   frame with a hole in the top. Plain, waiting and empty cards now just take the
+   blue all the way round.
+
+   Equal specificity to .starter-card:hover, so this wins on source order and has
+   to stay after it. */
+.starter-topic--trending:hover,
+.starter-topic--trending:focus-visible,
+.starter-topic--updated:hover,
+.starter-topic--updated:focus-visible {
   border-top-color: var(--starter-topic-accent);
 }
 
@@ -1056,22 +1065,17 @@
 }
 
 /* The two "not yet" states — waiting for the first topic, and out of topics.
-   Both are plain divs, so none of the button affordances apply; the empty
-   state's CTA is the only thing to click in either. */
+   Both are plain divs rather than buttons, so the card itself isn't a control
+   and the cursor stays default; the empty state's CTA is the only thing to click
+   in either.
+
+   They DO take the hover highlight, though. It used to be suppressed here on the
+   grounds that a non-button shouldn't look interactive — but they sit in a row
+   of cards that all light up, and one cell staying inert read as a rendering
+   fault rather than as a statement about affordance. */
 .starter-topic--empty,
 .starter-topic--waiting {
   cursor: default;
-}
-
-.starter-topic--empty:hover,
-.starter-topic--waiting:hover {
-  border-color: var(--app-border);
-  border-top-color: var(--starter-topic-accent);
-}
-
-.starter-topic--empty:hover::before,
-.starter-topic--waiting:hover::before {
-  opacity: 0;
 }
 
 /* The countdown number. Tabular figures so the line does not shuffle sideways
