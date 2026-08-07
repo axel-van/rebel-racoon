@@ -41,10 +41,10 @@
 //   updateSummary(briefId, text)       — Adapt mode commits through here
 //   subscribe(fn)                      → unsubscribe
 
-import { researchBriefs as seed } from "./mocks.js?v=75";
+import { researchBriefs as seed } from "./mocks.js?v=77";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
-import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES } from "./research-catalog.js?v=10";
+import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES, RESEARCH_TYPES } from "./research-catalog.js?v=11";
 
 const briefs = isNewUser() ? [] : seed.map(cloneBrief);
 
@@ -173,7 +173,7 @@ export function narrowedGroupCount(filters = defaultFilters()) {
   let n = 0;
   if ((filters.statuses || []).length !== 4) n++;
   if ((filters.sources || []).length !== ALL_SOURCE_IDS.length) n++;
-  if ((filters.types || []).length !== 2) n++;
+  if ((filters.types || []).length !== RESEARCH_TYPES.length) n++;
   return n;
 }
 

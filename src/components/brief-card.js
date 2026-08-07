@@ -40,7 +40,7 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus } from "../research-catalog.js?v=10";
+import { findReviewStatus } from "../research-catalog.js?v=11";
 
 // One line, not the paragraph this used to be. As a hover tooltip it could afford
 // the full explanation; as a permanent menu row it just made the menu tall. The

@@ -23,17 +23,17 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=329";
+import { renderTopbar } from "../components/topbar.js?v=331";
 import { isFlagOn } from "../feature-flags.js?v=18";
-import { renderBriefCard } from "../components/brief-card.js?v=24";
+import { renderBriefCard } from "../components/brief-card.js?v=25";
 import {
   openFullResearch,
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=43";
+} from "../components/research-modals.js?v=45";
 import { showToast } from "../components/toast.js?v=20";
-import { getLaneById } from "../research-store.js?v=21";
+import { getLaneById } from "../research-store.js?v=23";
 import {
   getBriefsForLane,
   groupBriefsByAge,
@@ -43,18 +43,86 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=27";
+} from "../briefs-store.js?v=29";
 import {
+  COLUMN_TYPES,
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
   RESEARCH_TYPES,
   findResearchSource,
   findCadence,
-} from "../research-catalog.js?v=10";
-import { getContextById } from "../contexts-store.js?v=56";
+} from "../research-catalog.js?v=11";
+import { getContextById } from "../contexts-store.js?v=58";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
+// ── The two columns ─────────────────────────────────────────────────────────
+// "Needs assets" on the left, "Ready to post" on the right. The split is the
+// brief's own type, so it is the same axis the type filter offers rather than a
+// second, invisible one.
+//
+// A topic list is read as two questions — what can go out, and what is stuck —
+// and the answer to the second is a to-do list for someone other than the writer.
+// Stacked, those two answers interleave and you have to read the type pill on
+// every card to tell them apart.
+//
+// COLUMN MEMBERSHIP is `ready-to-post` on the right, EVERYTHING ELSE on the left.
+// That is deliberate but worth naming: competitive-intelligence is neither ready
+// nor waiting on assets — it isn't a post at all — so under a header that says
+// "Needs assets" it is filed slightly wrong. It is off by default, so it only
+// appears there when the user asks for it, and a third column for two briefs
+// would cost more than the imprecision does. Revisit if intel grows.
+//
+// Age grouping survives inside each column: the separators answer "how fresh",
+// the columns answer "can I use it", and neither replaces the other.
+function renderColumns(briefs, view) {
+  const cards = (rows) =>
+    rows
+      .map((b) =>
+        renderBriefCard(b, {
+          source: findResearchSource(b.sourceId),
+          variant: "feed",
+          menuOpen: view.openMenu === b.id,
+        }),
+      )
+      .join("");
+
+  const column = (typeId) => {
+    const meta = RESEARCH_TYPES.find((t) => t.id === typeId);
+    const mine = briefs.filter((b) =>
+      typeId === "ready-to-post" ? b.researchType === "ready-to-post" : b.researchType !== "ready-to-post",
+    );
+    return html`<section class="research-feed__col">
+      <h2 class="research-feed__col-title">
+        ${meta ? meta.label : typeId}
+        <span class="research-feed__col-count">${mine.length}</span>
+      </h2>
+      ${raw(
+        mine.length
+          ? groupBriefsByAge(mine)
+              .map(
+                // A heading per non-empty age frame. The label is /topics'
+                // .topics-group__label — the app's own answer to this exact
+                // problem one feature over — so the two age-grouped card lists
+                // read as one idea rather than two.
+                ({ group, briefs: rows }) =>
+                  html`<section class="topics-agegroup">
+                    <h3 class="topics-agegroup__label">${group.label}</h3>
+                    ${raw(cards(rows))}
+                  </section>`,
+              )
+              .join("")
+          : // Both columns always render, even empty. A column that disappears
+            // when it empties makes the other jump the full width, and "nothing
+            // is stuck" is itself worth seeing.
+            html`<p class="research-feed__col-empty muted">Nothing here right now.</p>`,
+      )}
+    </section>`;
+  };
+
+  return html`<div class="research-feed__columns">${raw(COLUMN_TYPES.map(column).join(""))}</div>`;
+}
+
 const GENERATE_MS = 1600;
 
 // The attention notice above the topic list. Off: with every review status ticked
@@ -178,29 +246,7 @@ function renderPage() {
       ${raw(renderFeedHeader(lane))} ${raw(showNotice ? renderAttentionNotice(attention) : "")}
       ${raw(
         briefs.length
-          ? groupBriefsByAge(briefs)
-              .map(
-                // A heading per non-empty age frame. The label is /topics'
-                // .topics-group__label — the app's own answer to this exact
-                // problem one feature over — so the two age-grouped card lists
-                // read as one idea rather than two.
-                ({ group, briefs: rows }) =>
-                  html`<section class="topics-agegroup">
-                    <h2 class="topics-agegroup__label">${group.label}</h2>
-                    ${raw(
-                      rows
-                        .map((b) =>
-                          renderBriefCard(b, {
-                            source: findResearchSource(b.sourceId),
-                            variant: "feed",
-                            menuOpen: view.openMenu === b.id,
-                          }),
-                        )
-                        .join(""),
-                    )}
-                  </section>`,
-              )
-              .join("")
+          ? renderColumns(briefs, view)
           : html`<p class="research-feed__empty muted">
               No topics match these filters. Try widening them, or reset to the defaults.
             </p>`,

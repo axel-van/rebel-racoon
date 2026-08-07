@@ -5307,7 +5307,7 @@ export const researchBriefs = [
     headline: "The family that rolls together: BJJ as a shared lifestyle",
     summary:
       "Competitors are running family classes and turning academy anniversaries into family community events. The angle is strong and the volume is high — but this one can't be written yet, because it needs assets nobody has shot.",
-    researchType: "ready-to-post",
+    researchType: "needs-assets",
     isTrending: false,
     whyNow: "",
     whyNowDetail:
@@ -6039,6 +6039,116 @@ export const researchBriefs = [
       { status: "used", when: "3 weeks ago", note: "Drafted into a chat." },
     ],
     seedStatus: "used",
+    seedReason: "",
+  },
+
+  // The export's `needs_strategy` topics, which the feed calls "Needs assets".
+  // Every one is a real angle with something missing in front of it — a shoot, a
+  // customer who'll go on record, a number nobody has pulled. The export's own
+  // note on each is "Shown to the reader, not written up", which is exactly what
+  // the left column means.
+  {
+    id: "br-32",
+    laneId: "lane-6",
+    sourceId: "competitor-posts",
+    ageLabel: "3d ago",
+    headline: "Buffer's creator says half their followers came from a ten-minute DM setup",
+    summary:
+      "Keyword-triggered DMs through Meta's official API, framed as the single biggest driver of their Instagram growth. Two items, both Buffer, both first-person — and the format is the whole reason it lands.",
+    researchType: "needs-assets",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "The tactic is public. The proof is what's missing",
+      paragraphs: [
+        "Two items in this window, split between a first-person Instagram post and a longer guide, both from Buffer. The claim is specific: roughly half the account's followers came from keyword-triggered DM automation running on Meta's official API, set up in about ten minutes. The guide's angle is doing it without sounding robotic.",
+        "It works because it is first-person and numbered. A platform explaining DM automation is a feature page; a person saying what it did for their own account is a story, and the comments do the rest.",
+        "Which is also what this topic is waiting on. The version worth publishing needs someone's real numbers — before, after, over what period — and permission to use them. Without that it is the same explainer everyone has.",
+        "Blocked on: a customer or an in-house account willing to share follower data, and a screen recording of the setup rather than a description of it.",
+      ],
+    },
+    posts: [],
+    history: [{ status: "new", when: "3 days ago", note: "Surfaced from the competitor scan (2 matching items)." }],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-33",
+    laneId: "lane-6",
+    sourceId: "competitor-posts",
+    ageLabel: "5d ago",
+    headline: '"Not every trend is your trend" — a way to tell which ones are',
+    summary:
+      "Vista Social ran two posts pulling apart the same week's viral moments: one a format you can build on, one a template where every brand's output is identical but the logo. The test underneath it is reusable.",
+    researchType: "needs-assets",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "A format you can build on, or a template you can only copy",
+      paragraphs: [
+        "Two Instagram posts in this window make the same argument from different angles. The first separates a mockumentary format — which a brand can take and tell its own story inside — from an AI-edit template where every participant produces the identical clip with a different logo. The second argues most trends are a spike on one platform driven by a handful of accounts, not a trend at all.",
+        "Both land on a test rather than a verdict, which is the useful part: does this give us something to build on, and is it moving on more than one network? That is two questions a social media manager can actually apply on a Thursday without a meeting.",
+        "The reason this isn't ready is that a trend-vetting piece is worthless in the abstract. It needs this week's examples, and by the time it publishes they have to still be current — which makes it a repeatable format rather than a one-off, and a format needs a slot in the calendar and someone who owns it.",
+        "Blocked on: a recurring slot, and a decision about who picks the two examples each time.",
+      ],
+    },
+    posts: [],
+    history: [{ status: "new", when: "5 days ago", note: "Surfaced from the competitor scan (2 matching items)." }],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-34",
+    laneId: "lane-6",
+    sourceId: "competitor-posts",
+    ageLabel: "11d ago",
+    headline: "Buffer publishes head-to-head comparisons. We publish feature pages",
+    summary:
+      "Buffer vs Sprout, Buffer vs Hootsuite, Buffer vs Metricool — all on the blog, all pitched at people already deciding. The scan's own note calls it bottom-funnel search capture, and nobody in the set is doing it defensively.",
+    researchType: "needs-assets",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "The comparison the buyer runs anyway, written by someone who knows the answer",
+      paragraphs: [
+        "Three head-to-head comparisons in this window, all Buffer, all on the blog: against Sprout Social, against Hootsuite, against Metricool. Each covers features, pricing structure and which team size it suits. The scan tags all three the same way — competitor-comparison content aimed at high-intent switchers.",
+        "The tone is what makes them work. They concede things. A comparison that finds the competitor better at nothing reads as an advert and converts like one, and buyers who have already opened three tabs can tell the difference immediately.",
+        "This is the highest-intent content in the whole scan and it is the one thing here that needs a decision before a draft. Being honest in public about where a rival is stronger is a position, not a writing task.",
+        "Blocked on: sign-off on how candid the comparisons are allowed to be, and current pricing for each competitor — the numbers go stale fast and a wrong one is worse than no page.",
+      ],
+    },
+    posts: [],
+    history: [{ status: "new", when: "11 days ago", note: "Surfaced from the competitor scan (3 matching items)." }],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-35",
+    laneId: "lane-6",
+    sourceId: "competitor-posts",
+    ageLabel: "5w ago",
+    headline: "The brands winning attention stopped posting about their product",
+    summary:
+      "Sprinklr's line — 76% of tech brands stuck because they all say the same thing — next to Vista Social's case study where organic LinkedIn was the biggest lead source of the year. Three items, one argument.",
+    researchType: "needs-assets",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "Posting more didn't work. Posting about something else did",
+      paragraphs: [
+        "Three items in this window, two thirds Instagram. Sprinklr's claim is blunt: most tech brands aren't stuck because they post too little, they're stuck because they all post launches, features and product updates. One global brand publishes 32 times a week to very little effect. Vista Social's contribution is a case study — a company whose biggest lead source last year was organic LinkedIn, not paid.",
+        "The two halves fit together well. One names the pattern, the other shows what replacing it looks like, and the second is the half that persuades anyone.",
+        "That is also the blocker. This argument does not survive being made in the abstract — it needs a named company, a real before-and-after, and someone prepared to be quoted saying they stopped posting about their product.",
+        "Blocked on: a customer willing to go on record with lead-source numbers. Without one this is an opinion piece competing with a case study.",
+      ],
+    },
+    posts: [],
+    history: [{ status: "new", when: "5 weeks ago", note: "Surfaced from the competitor scan (3 matching items)." }],
+    seedStatus: "new",
     seedReason: "",
   },
 ];

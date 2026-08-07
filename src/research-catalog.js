@@ -200,14 +200,29 @@ export const CADENCES = Object.freeze([
 
 export const DEFAULT_CADENCE = "weekly";
 
-/** The two research types a brief can carry — the feed's third filter group. */
+// The types a brief can carry — the feed's third filter group, and the axis its
+// two columns are built on.
+//
+// `needs-assets` is the listening export's `needs_strategy`, renamed for what it
+// means to the person reading the feed. The export says a topic can't go to a
+// writer yet; the feed says what is actually missing before it can — a photo
+// shoot, a customer quote, a number nobody has pulled. Same set, plainer word.
+//
+// `competitive-intelligence` stays: an observation about a competitor is neither
+// ready to post nor waiting on assets, it is not a post at all. It is off by
+// default and lands in the left column when switched on — see the note on
+// COLUMNS in screens/research-feed.js.
 export const RESEARCH_TYPES = Object.freeze([
+  { id: "needs-assets", label: "Needs assets" },
   { id: "ready-to-post", label: "Ready to post" },
   { id: "competitive-intelligence", label: "Competitive intelligence" },
 ]);
 
-/** Filter default: Ready to post only. Reset restores exactly this. */
-export const DEFAULT_TYPE_IDS = Object.freeze(["ready-to-post"]);
+/** Filter default: the two the columns are built on. Reset restores exactly this. */
+export const DEFAULT_TYPE_IDS = Object.freeze(["needs-assets", "ready-to-post"]);
+
+/** The two columns, left to right. The feed's layout reads this, not literals. */
+export const COLUMN_TYPES = Object.freeze(["needs-assets", "ready-to-post"]);
 
 // Review statuses. `id` is what Triage stores; `label` is the pill text.
 //
