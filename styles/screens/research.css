@@ -1120,3 +1120,39 @@
 .research-attention__group .topics-card + .topics-card {
   margin-top: var(--ref-spacing-sm);
 }
+
+/* ── Age separators in a topic list ──────────────────────────────────────── */
+
+/* One section per age frame. The cards inside are .topics-card, unchanged; this
+   is group chrome only.
+   The sections are flex items of .research-feed__inner and already take its 16px
+   gap, so this adds a second 16 — the boundary between two time frames reads
+   wider than the boundary between two cards, which is the whole point of a
+   separator. */
+.topics-agegroup + .topics-agegroup {
+  margin-top: var(--ref-spacing-sm);
+}
+
+/* Deliberately identical to .topics-group__label on /topics — the app's other
+   age-grouped card list. Two surfaces solving the same problem must not look
+   like two different ideas, so this copies its text style rather than inventing
+   a second heading treatment. No rule line, for the same reason: /topics does
+   not draw one, and the whitespace already separates. */
+.topics-agegroup__label {
+  margin: 0 0 var(--ref-spacing-xs);
+  font-family: var(--sys-text-style-caption-bold-font-family);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sys-text-color-light);
+}
+
+/* An adjacent-sibling margin, not a flex gap on the section: a gap would apply
+   between the label and its first card too, where those want to sit closer.
+   Matches .research-feed__inner's own 16px so cards are evenly spaced whether
+   they sit in a group or not. */
+.topics-agegroup .topics-card + .topics-card {
+  margin-top: var(--ref-spacing-sm);
+}

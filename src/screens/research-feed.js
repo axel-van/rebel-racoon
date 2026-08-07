@@ -23,7 +23,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=297";
+import { renderTopbar } from "../components/topbar.js?v=298";
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { renderBriefCard } from "../components/brief-card.js?v=13";
 import {
@@ -31,18 +31,19 @@ import {
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=27";
+} from "../components/research-modals.js?v=28";
 import { showToast } from "../components/toast.js?v=20";
-import { getLaneById } from "../research-store.js?v=12";
+import { getLaneById } from "../research-store.js?v=13";
 import {
   getBriefsForLane,
+  groupBriefsByAge,
   attentionCountsForLane,
   defaultFilters,
   narrowedGroupCount,
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=16";
+} from "../briefs-store.js?v=17";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
@@ -50,7 +51,7 @@ import {
   findResearchSource,
   findCadence,
 } from "../research-catalog.js?v=6";
-import { getContextById } from "../contexts-store.js?v=50";
+import { getContextById } from "../contexts-store.js?v=51";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
@@ -167,13 +168,27 @@ function renderPage() {
       ${raw(renderFeedHeader(lane))} ${raw(showNotice ? renderAttentionNotice(attention) : "")}
       ${raw(
         briefs.length
-          ? briefs
-              .map((b) =>
-                renderBriefCard(b, {
-                  source: findResearchSource(b.sourceId),
-                  variant: "feed",
-                  menuOpen: view.openMenu === b.id,
-                }),
+          ? groupBriefsByAge(briefs)
+              .map(
+                // A heading per non-empty age frame. The label is /topics'
+                // .topics-group__label — the app's own answer to this exact
+                // problem one feature over — so the two age-grouped card lists
+                // read as one idea rather than two.
+                ({ group, briefs: rows }) =>
+                  html`<section class="topics-agegroup">
+                    <h2 class="topics-agegroup__label">${group.label}</h2>
+                    ${raw(
+                      rows
+                        .map((b) =>
+                          renderBriefCard(b, {
+                            source: findResearchSource(b.sourceId),
+                            variant: "feed",
+                            menuOpen: view.openMenu === b.id,
+                          }),
+                        )
+                        .join(""),
+                    )}
+                  </section>`,
               )
               .join("")
           : html`<p class="research-feed__empty muted">

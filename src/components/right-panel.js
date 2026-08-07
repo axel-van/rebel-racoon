@@ -1,7 +1,7 @@
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=73";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=74";
 import { isFlagOn } from "../feature-flags.js?v=18";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=70";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=71";
 import { isNewUser } from "../user-mode.js?v=22";
 import { getPath } from "../router.js?v=30";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -13,38 +13,38 @@ import {
   updatePostContent,
   attachImageToDraft,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=47";
-import { renderPostCard } from "./post-card.js?v=85";
-import { renderTopPostEcho } from "./top-post-card.js?v=82";
-import { renderClipCard } from "./clip-card.js?v=29";
+} from "../posts-store.js?v=48";
+import { renderPostCard } from "./post-card.js?v=86";
+import { renderTopPostEcho } from "./top-post-card.js?v=83";
+import { renderClipCard } from "./clip-card.js?v=30";
 import { onFeedbackClick } from "./feedback-control.js?v=2";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
-import { open as openVideoClipsModal } from "./video-clips-modal.js?v=69";
-import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=264";
+import { open as openVideoClipsModal } from "./video-clips-modal.js?v=70";
+import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=265";
 import {
   getSources as getStreamSources,
   subscribeSources,
   updateSourceClips,
   removeSources,
   renameSource,
-} from "../sources-stream.js?v=66";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=76";
+} from "../sources-stream.js?v=67";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=77";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { getConnectedConnectors } from "../connectors-store.js?v=39";
-import { askConnector } from "../connector-ask.js?v=19";
-import { renderConnectorLogo } from "../connectors-view.js?v=21";
-import { open as openConnectorsModal } from "./connectors-modal.js?v=22";
-import { addMention as addComposerMention } from "../composer-mentions.js?v=41";
+import { getConnectedConnectors } from "../connectors-store.js?v=40";
+import { askConnector } from "../connector-ask.js?v=20";
+import { renderConnectorLogo } from "../connectors-view.js?v=22";
+import { open as openConnectorsModal } from "./connectors-modal.js?v=23";
+import { addMention as addComposerMention } from "../composer-mentions.js?v=42";
 import { iconFor } from "../file-kinds.js?v=20";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
-import { open as openScheduleModal } from "./schedule-modal.js?v=69";
-import { open as openImageStudioModal } from "./image-studio/index.js?v=81";
-import { open as openImageStudioV2Modal } from "./image-studio-v2/index.js?v=59";
+import { open as openScheduleModal } from "./schedule-modal.js?v=70";
+import { open as openImageStudioModal } from "./image-studio/index.js?v=82";
+import { open as openImageStudioV2Modal } from "./image-studio-v2/index.js?v=60";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays

@@ -4697,7 +4697,7 @@ export const researchBriefs = [
     id: "br-3",
     laneId: "lane-1",
     sourceId: "competitor-posts",
-    ageLabel: "2d ago",
+    ageLabel: "12d ago",
     headline: "Fi's subscription price rise is drawing the complaints its launch post buried",
     summary:
       "The pricing change itself passed quietly. The discontent is in the replies to unrelated posts three weeks later, which is where the churn language actually shows up.",
@@ -4748,7 +4748,7 @@ export const researchBriefs = [
     id: "br-4",
     laneId: "lane-1",
     sourceId: "influencer-posts",
-    ageLabel: "4d ago",
+    ageLabel: "3w ago",
     headline: "Cat owners are the underserved half of this audience",
     summary:
       "Tracker content in this niche is overwhelmingly dog-shaped. The cat-owner posts that do exist outperform on saves, and the creators making them are smaller and unsigned.",
@@ -4787,7 +4787,7 @@ export const researchBriefs = [
     id: "br-5",
     laneId: "lane-1",
     sourceId: "competitor-posts",
-    ageLabel: "1w ago",
+    ageLabel: "2mo ago",
     headline: "Garmin's outdoor-sport framing keeps resurfacing in the same seasonal window",
     summary:
       "Garmin leans hunting-and-hiking every autumn. It performs for them and reads wrong for a pet-safety brand, but the seasonal timing itself is the transferable part.",
@@ -4829,7 +4829,7 @@ export const researchBriefs = [
     id: "br-6",
     laneId: "lane-2",
     sourceId: "competitor-posts",
-    ageLabel: "6h ago",
+    ageLabel: "9d ago",
     headline: "Jiobit is quietly repositioning from pets to children",
     summary:
       "Three of Jiobit's last five posts feature a child rather than an animal. The product hasn't changed; the audience they're addressing has.",
@@ -4916,7 +4916,7 @@ export const researchBriefs = [
     id: "br-8",
     laneId: "lane-2",
     sourceId: "competitor-posts",
-    ageLabel: "3d ago",
+    ageLabel: "5w ago",
     headline: "Nobody in the category shows the app during a live search",
     summary:
       "Competitors show the hardware and the happy ending. The middle — the screen you're actually staring at while the dog is missing — is absent from all of them.",
@@ -4955,7 +4955,7 @@ export const researchBriefs = [
     id: "br-9",
     laneId: "lane-3",
     sourceId: "competitor-posts",
-    ageLabel: "5h ago",
+    ageLabel: "4h ago",
     headline: "Q2 launch messaging in this category is converging on the same three words",
     summary:
       "Four competitors, one vocabulary. The overlap is high enough that differentiating on language alone is now available at almost no cost.",
@@ -5019,7 +5019,7 @@ export const researchBriefs = [
     id: "br-10",
     laneId: "lane-4",
     sourceId: "competitor-posts",
-    ageLabel: "5h ago",
+    ageLabel: "11d ago",
     headline: "Beyond the mats: how BJJ builds resilient, confident kids",
     summary:
       "Gracie Barra and Six Blades are both pushing youth programs on character building — 'raise boys who are kind, confident, and capable' — and taking students as young as four. The claim is everywhere; the mechanism behind it is explained nowhere.",
@@ -5077,7 +5077,7 @@ export const researchBriefs = [
     id: "br-12",
     laneId: "lane-4",
     sourceId: "competitor-posts",
-    ageLabel: "5h ago",
+    ageLabel: "6w ago",
     headline: "Returning to the mats: how to restart your BJJ journey safely",
     summary:
       "Six Blades welcomed back a student after a three-year hiatus, and it wasn't an isolated post. There is a local audience trying to come back, and nothing in the set speaks to what makes a comeback fail.",
@@ -5105,7 +5105,7 @@ export const researchBriefs = [
     id: "br-13",
     laneId: "lane-4",
     sourceId: "competitor-posts",
-    ageLabel: "5h ago",
+    ageLabel: "2d ago",
     headline: "The family that rolls together: BJJ as a shared lifestyle",
     summary:
       "Competitors are running family classes and turning academy anniversaries into family community events. The angle is strong and the volume is high — but this one can't be written yet, because it needs assets nobody has shot.",
@@ -5148,7 +5148,7 @@ export const researchBriefs = [
     id: "br-14",
     laneId: "lane-5",
     sourceId: "competitor-posts",
-    ageLabel: "2h ago",
+    ageLabel: "4d ago",
     headline: "From Summer to Autumn: Smart Transitional Layering for the Belgian Climate",
     summary:
       "Advice on building a transitional wardrobe with light layering pieces and versatile essential tops without immediately packing away your summer wardrobe. Focuses on practical multi-brand solutions for unpredictable Belgian weather.",
@@ -5303,7 +5303,7 @@ export const researchBriefs = [
     id: "br-16",
     laneId: "lane-5",
     sourceId: "competitor-posts",
-    ageLabel: "2h ago",
+    ageLabel: "4mo ago",
     headline: "Showing Your Colors: How to Wear Autumn's Plum & Warm Earth Tones Trend",
     summary:
       "Practical styling guide for integrating rich autumn colors like plum (brownish pink) and warm earth tones into an existing wardrobe. Demonstrates how to subtly balance this trend with neutral basic elements.",
@@ -5393,7 +5393,7 @@ export const researchBriefs = [
     id: "br-17",
     laneId: "lane-1",
     sourceId: "competitor-posts",
-    ageLabel: "5h ago",
+    ageLabel: "5d ago",
     headline: "Fi quietly dropped the subscription requirement for basic tracking",
     summary:
       "The pricing page no longer gates live location behind a plan. Owners in the replies are re-evaluating trackers they had already written off, and the comparison threads from six months ago are being bumped.",
@@ -5416,7 +5416,7 @@ export const researchBriefs = [
     id: "br-18",
     laneId: "lane-2",
     sourceId: "competitor-posts",
-    ageLabel: "1d ago",
+    ageLabel: "6d ago",
     headline: "Jiobit's repositioning is now explicit, not implied",
     summary:
       "The kids-and-elders framing that was only visible in their creative has reached the copy: the tagline, the product page and the last four posts all name families rather than pets.",
@@ -5439,7 +5439,7 @@ export const researchBriefs = [
     id: "br-19",
     laneId: "lane-3",
     sourceId: "competitor-posts",
-    ageLabel: "2d ago",
+    ageLabel: "3mo ago",
     headline: "The Q2 launch window your competitors were holding has slipped",
     summary:
       "Two of the three accounts that had teased an April launch have gone quiet and moved their dates. The window you were planning around is wider than it looked.",
@@ -5462,7 +5462,7 @@ export const researchBriefs = [
     id: "br-20",
     laneId: "lane-4",
     sourceId: "competitor-posts",
-    ageLabel: "3d ago",
+    ageLabel: "24d ago",
     headline: "The competing gym's kids programme now runs on the same nights as yours",
     summary:
       "Their schedule page changed this week. The Tuesday and Thursday kids classes that used to sit opposite yours now overlap them exactly, and their last three posts push that timetable.",
@@ -5485,7 +5485,7 @@ export const researchBriefs = [
     id: "br-21",
     laneId: "lane-5",
     sourceId: "competitor-posts",
-    ageLabel: "4d ago",
+    ageLabel: "16d ago",
     headline: "The multibrand discount wave has stopped, three weeks early",
     summary:
       "Four of the five tracked accounts pulled their sale messaging this week and went back to full-price editorial. The markdown conversation you were planning to answer has already moved on.",

@@ -12,7 +12,7 @@
 //       (addFolder via the dropdown's create item) before the callback fires.
 
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
-import { getFolders, addFolder } from "../folders-store.js?v=15";
+import { getFolders, addFolder } from "../folders-store.js?v=16";
 import { escapeHtml } from "../utils.js?v=21";
 
 const MODAL_ID = "saveFolder";

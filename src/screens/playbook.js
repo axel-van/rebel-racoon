@@ -20,15 +20,15 @@
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
 import { escapeHtml as esc } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=297";
-import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=50";
-import { mount, snapshotEditable } from "../playbook-view.js?v=68";
+import { renderTopbar } from "../components/topbar.js?v=298";
+import { getContextById, getContexts, updateContext, deleteContext } from "../contexts-store.js?v=51";
+import { mount, snapshotEditable } from "../playbook-view.js?v=69";
 import { open as openRenameModal } from "../components/rename-modal.js?v=2";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";
-import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=28";
+import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=29";
 import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=5";
 import { analyzeWebsite, analyzeDocument, analyzeSocialProfiles } from "../context-mock-analysis.js?v=25";
-import { sectionPatchFromAnalysis } from "../context-builder.js?v=264";
+import { sectionPatchFromAnalysis } from "../context-builder.js?v=265";
 import { isFlagOn } from "../feature-flags.js?v=18";
 
 const AUTOFILL_MS = 1500;

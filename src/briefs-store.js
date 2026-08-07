@@ -26,6 +26,7 @@
 //
 // Public API:
 //   getBriefsForLane(laneId, filters?) → Brief[]  (newest first, filtered)
+//   groupBriefsByAge(briefs)           → [{group, briefs}] in AGE_GROUPS order
 //   getTrendingForLane(laneId)         → Brief[]  (ignores the status filter)
 //   getAttentionForLane(laneId)        → Brief[]  (trending OR updated, deduped)
 //   countTrendingForLane(laneId)       → number   (whole lane, filter-blind)
@@ -40,7 +41,7 @@
 //   updateSummary(briefId, text)       — Adapt mode commits through here
 //   subscribe(fn)                      → unsubscribe
 
-import { researchBriefs as seed } from "./mocks.js?v=70";
+import { researchBriefs as seed } from "./mocks.js?v=71";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES } from "./research-catalog.js?v=6";
@@ -82,13 +83,45 @@ function cloneBrief(b) {
 //
 // Replace this with real timestamps when the feed is wired to a backend — this
 // parser is the seam, and nothing else reads `ageLabel`.
-const UNIT_MINUTES = { m: 1, h: 60, d: 1440, w: 10080 };
+// `mo` FIRST — the alternation is ordered, so putting `m` first would match the
+// "m" of "2mo" and leave "o" to fail the \b, which is exactly what used to
+// happen: every month label fell through to MAX_SAFE_INTEGER and sorted as
+// "unknown age". Months became usable only once the age grouping needed them.
+const UNIT_MINUTES = { mo: 43200, w: 10080, d: 1440, h: 60, m: 1 };
+const AGE_RE = /^\s*(\d+)\s*(mo|[wdhm])\b/i;
 
 export function ageMinutes(label) {
-  const m = /^\s*(\d+)\s*([mhdw])\b/i.exec(String(label || ""));
+  const m = AGE_RE.exec(String(label || ""));
   // Unparseable sorts LAST, not first: an unknown age is not a fresh one.
   if (!m) return Number.MAX_SAFE_INTEGER;
   return Number(m[1]) * (UNIT_MINUTES[m[2].toLowerCase()] || 1);
+}
+
+// The age separators a topic list draws between its cards.
+//
+// Defined HERE, next to the parser, and not in the view: the feed asks which
+// bucket a brief falls in, it does not get to decide what "7 days" means. Order
+// is newest-first and the render relies on it — see AC-AGE-1.
+//
+// Boundaries are inclusive at the top, so "1w ago" is Last 7 days rather than
+// falling into the next bucket on a technicality.
+const DAY = 1440;
+export const AGE_GROUPS = Object.freeze([
+  { id: "week", label: "Last 7 days", maxDays: 7 },
+  { id: "month", label: "Last 30 days", maxDays: 30 },
+  { id: "earlier", label: "Earlier", maxDays: Infinity },
+]);
+
+export function ageGroupOf(brief) {
+  const days = ageMinutes(brief && brief.ageLabel) / DAY;
+  return AGE_GROUPS.find((g) => days <= g.maxDays) || AGE_GROUPS[AGE_GROUPS.length - 1];
+}
+
+/** A lane's briefs already split into AGE_GROUPS order, empty groups dropped. */
+export function groupBriefsByAge(briefs) {
+  return AGE_GROUPS.map((g) => ({ group: g, briefs: briefs.filter((b) => ageGroupOf(b).id === g.id) })).filter(
+    (row) => row.briefs.length,
+  );
 }
 
 function byRecency(a, b) {
