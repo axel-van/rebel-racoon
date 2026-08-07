@@ -247,6 +247,25 @@ Deux ajustements imposés par la réutilisation :
 modal) tout en vivant dans `styles/screens/contexts.css`. Au troisième, la déplacer
 dans `styles/components/`.
 
+### Une seule mesure de lecture par carte
+
+La carte de topic fait 820px et sa prose occupait toute cette largeur : ~112
+caractères par ligne, soit une fois et demie la fourchette confortable (45–75).
+`--topics-measure` (620px, posé sur `.topics-card__body`) ramène ça à ~90 et
+s'applique aux **trois** blocs de prose — résumé, Why now, What changed — pour
+qu'ils partagent un seul bord droit.
+
+Deux choix qui méritent d'être notés :
+
+- **Une longueur, pas des `ch`.** Le résumé est en 15px et les deux blocs teintés
+  en 14px : un même nombre de `ch` leur donnerait des largeurs différentes et les
+  blocs s'arrêteraient ~40px avant le résumé au-dessus.
+- **Pas plus étroit que 620px**, et la contrainte est le clamp, pas le goût : le
+  résumé montre trois lignes, donc sous ~82 caractères le plus long résumé du seed
+  (244 caractères) passerait sur une quatrième ligne et serait coupé. Le clamp est
+  passé de 2 à 3 en même temps que la largeur, donc on échange de la longueur de
+  ligne contre de la hauteur — aucune information n'est perdue.
+
 ### Les séparateurs d'âge appartiennent à la carte, pas à l'écran
 
 `.topics-agegroup` vit désormais dans
