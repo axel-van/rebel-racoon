@@ -2594,6 +2594,180 @@ export const contexts = [
       brand: null,
     },
   },
+  // ── Agorapulse ───────────────────────────────────────────────────────────
+  //
+  // The third Playbook built from a real listening export rather than authored
+  // for this prototype — search `agorapulse`, scope 23 Apr 2025 → 21 Jul 2026,
+  // networks Instagram + Facebook + web blogs, 117 items (50 IG / 21 FB / 46 WB).
+  // It backs lane-6 below.
+  //
+  // Unusually, that export carried its OWN brand brief — the block the model was
+  // given to decide which subjects qualify — so the business summary, audiences,
+  // content styles, objectives, actions and competitors below are transcribed
+  // from it rather than inferred. Only the URLs are added from agorapulse.com,
+  // because the export names no links.
+  //
+  // ⚠️ The brief names four competitors (Sprout Social, Hootsuite, Sendible,
+  // Loomly) but the scan actually collected posts from Hootsuite, Buffer, Vista
+  // Social, Sprinklr and Sprout Social. Both sets are listed, tagged for which
+  // is which — a competitor the brand names and a competitor the scan keeps
+  // finding are different facts and neither should overwrite the other.
+  {
+    id: "ctx-agorapulse",
+    name: "Agorapulse",
+    color: "orange",
+    isDefault: false,
+    brandName: "Agorapulse",
+    brandLogo: null,
+    websiteUrl: "https://www.agorapulse.com/",
+    audience: [
+      "Social Media Managers running publishing, inbox and reporting day to day",
+      "Marketing agencies handling several client accounts at once",
+      "Growing marketing teams that need shared calendars and approval workflows",
+    ],
+    businessSummary:
+      "Agorapulse is an easy-to-use social media management platform for growing marketing teams, agencies and businesses: one dashboard for publishing, inbox, reporting, monitoring and team collaboration. Shared calendars, automated moderation and social ROI tracking are the levers — the pitch is saving time, staying organised, and being able to prove the value of the work.",
+    briefSummary:
+      "One dashboard for publishing, inbox, reporting, monitoring and collaboration. The pitch is saving time, staying organised, and proving social ROI.",
+    tones: ["Direct", "Helpful"],
+    voiceProfile: {
+      headline: "Direct · practical · customer-first",
+      writingStyle:
+        "Says the useful thing first and shows the workflow rather than describing it. Leans on what real teams did and what it changed. Educational without being abstract — every piece should leave a social media manager able to do something on Monday.",
+      vocabulary:
+        "Workflow, inbox, publishing, reporting, social ROI, approval, moderation, shared calendar. Concrete nouns over category language; never 'synergy', 'revolutionise' or 'game-changer'.",
+      sentenceStructure: null,
+      examples: [],
+    },
+    contentStyle: ["Direct and actionable", "Customer-centric storytelling", "Tool-driven and educational"],
+    objective: ["Lead generation", "Product adoption"],
+    contentAction: ["Sign up for a free trial", "Book a personalized demo", "Try free social media tools"],
+    signatureHooks: [],
+    closingPatterns: [],
+    formattingStyle: null,
+    visualStyle: null,
+    brandPersonality: "direct, practical, customer-first",
+    brandTypography: null,
+    brandColors: [],
+    referenceImages: [],
+    competitors: [
+      {
+        id: "agp-cmp-1",
+        name: "Sprout Social",
+        description:
+          "Named in the brand brief. In the scan: pillar guides on analytics and a two-part Bluesky playbook — cornerstone content built to rank and anchor a topic cluster.",
+        websiteUrl: "https://sproutsocial.com/",
+        socials: [],
+      },
+      {
+        id: "agp-cmp-2",
+        name: "Hootsuite",
+        description:
+          "Named in the brand brief. In the scan: the loudest AI move of the window — Social OS, pitched as rebuilding the product around an agent layer rather than bolting AI onto it.",
+        websiteUrl: "https://www.hootsuite.com/",
+        socials: [],
+      },
+      {
+        id: "agp-cmp-3",
+        name: "Sendible",
+        description: "Named in the brand brief. The scan returned no posts from this account in the window.",
+        websiteUrl: "https://www.sendible.com/",
+        socials: [],
+      },
+      {
+        id: "agp-cmp-4",
+        name: "Loomly",
+        description: "Named in the brand brief. The scan returned no posts from this account in the window.",
+        websiteUrl: "https://www.loomly.com/",
+        socials: [],
+      },
+      {
+        id: "agp-cmp-5",
+        name: "Buffer",
+        description:
+          "Not in the brand brief — surfaced by the scan. Practitioner-voice content on MCP servers and head-to-head comparisons, plus the Insights launch.",
+        websiteUrl: "https://buffer.com/",
+        socials: [],
+      },
+      {
+        id: "agp-cmp-6",
+        name: "Vista Social",
+        description:
+          "Not in the brand brief — surfaced by the scan. Ask Vista, a conversational command surface across 50+ tools, and image-to-video in the AI Assistant.",
+        websiteUrl: "https://vistasocial.com/",
+        socials: [],
+      },
+      {
+        id: "agp-cmp-7",
+        name: "Sprinklr",
+        description:
+          "Not in the brand brief — surfaced by the scan. Enterprise framing: governed measurement definitions, and LLM Insights for brand visibility inside AI answers.",
+        websiteUrl: "https://www.sprinklr.com/",
+        socials: [],
+      },
+    ],
+    topics: {
+      enabledSourceIds: ["competitor-posts"],
+      cadence: "monthly",
+    },
+    ctaLinks: [
+      { label: "Start a free trial", url: "https://www.agorapulse.com/free-trial/" },
+      { label: "Book a demo", url: "https://www.agorapulse.com/request-demo/" },
+    ],
+    language: "English",
+    imageVoice: null,
+    doRules: [
+      "Show the workflow. A screenshot of the thing working beats a paragraph describing it.",
+      "Answer the comparison question honestly — the scan shows head-to-head content is what captures bottom-funnel search.",
+    ],
+    dontRules: [
+      "Don't announce an AI capability without saying which job it removes. The window is full of agent launches and thin on what they actually replace.",
+      "Don't publish a metrics list. Competitors already own 'here are 30 metrics'; the opening is which ones tie to a decision.",
+    ],
+    cta: "Start a free trial",
+    usedIn: 0,
+    updatedAt: "just now",
+    strategy: {
+      approach:
+        "Every competitor in this window is announcing an agent. Almost nobody is saying what it takes off a social media manager's plate on a Tuesday. Lead with the job removed, not the capability added — and keep answering the comparison questions the category is too proud to answer.",
+      pillars: [
+        {
+          id: "agp-pil-1",
+          icon: "ap-icon-archie-official",
+          title: "What the agent actually does",
+          description:
+            "The highest-volume theme in the scan by a distance. Everyone claims the shift; the opening is the specific work it removes.",
+        },
+        {
+          id: "agp-pil-2",
+          icon: "ap-icon-antenna",
+          title: "Social data where the work happens",
+          description:
+            "MCP and connectors. Competitors pitch it to a technical audience; the same story told to a social media manager is unclaimed.",
+        },
+        {
+          id: "agp-pil-3",
+          icon: "ap-icon-line-graph",
+          title: "Reporting that ends in a decision",
+          description:
+            "Fragmented metrics and unaligned definitions. The category tracks more; the argument is tracking what changes what you do next.",
+        },
+        {
+          id: "agp-pil-4",
+          icon: "ap-icon-web",
+          title: "Being found inside AI answers",
+          description:
+            "Discovery is moving into LLM summaries. Thin evidence so far — two posts — but it is the one theme with no incumbent.",
+        },
+      ],
+    },
+    influencers: [],
+    analysis: {
+      voice: null,
+      brief: null,
+      brand: null,
+    },
+  },
 ];
 
 // Legacy accessors — keep `context.voice`, `context.brief`, `context.brand`
@@ -4564,6 +4738,21 @@ export const researchLanes = [
   // only, 112 items across five competitor accounts. Monthly cadence because the
   // scope was a 30-day window; competitor posts because that is all the search
   // collected.
+  // The third real-export lane. Search `agorapulse`, scope 23 Apr 2025 →
+  // 21 Jul 2026, networks Instagram + Facebook + web blogs, 117 items
+  // (50 IG / 21 FB / 46 WB). Monthly, because the scan's density is monthly even
+  // though the window is long; three sources because this export — unlike the
+  // other two — collected blogs as well as social.
+  {
+    id: "lane-6",
+    name: "Competitor product moves",
+    playbookId: "ctx-agorapulse",
+    sources: ["competitor-posts", "industry-trends", "brand-website"],
+    websites: ["https://www.agorapulse.com/", "https://www.agorapulse.com/blog/"],
+    cadence: "monthly",
+    notify: true,
+    showTrending: true,
+  },
   {
     id: "lane-5",
     name: "Belgian multibrand competitors · last 30 days",
@@ -5684,6 +5873,172 @@ export const researchBriefs = [
       },
     ],
     seedStatus: "new",
+    seedReason: "",
+  },
+
+  // ── The Agorapulse listening export ───────────────────────────────────────
+  // Same search that seeded ctx-agorapulse: 117 items across Instagram, Facebook
+  // and web blogs, 23 Apr 2025 → 21 Jul 2026, two model passes over the same set.
+  //
+  // Only the topics the export marked ready_to_write are here, deduped across the
+  // two passes — both found the AI-agent story, and the rest divide cleanly.
+  // Item counts, network splits, volume bands and keywords are read off the
+  // export; the prose is written to this Playbook's voice (say the useful thing
+  // first, show the workflow, leave the reader able to act on Monday).
+  //
+  // Two of the five sat below the export's own grounding floor of three items, so
+  // it never sent them to the writer. They are here anyway, marked for what they
+  // are — one is the reason br-33 is Ignored.
+  {
+    id: "br-27",
+    laneId: "lane-6",
+    sourceId: "competitor-posts",
+    ageLabel: "2h ago",
+    headline: "Everyone is shipping an agent. Nobody says what it takes off your plate",
+    summary:
+      "Fourteen posts across Hootsuite, Vista Social and Buffer pitch conversational agents as a replacement for the dashboard. The claims are about architecture — orchestration layers, autonomous teammates — not about which job disappears on a Tuesday.",
+    researchType: "ready-to-post",
+    isTrending: true,
+    whyNow:
+      "The highest-volume theme in the whole scan — 14 items, and every major competitor moved within the same thirty days.",
+    whyNowDetail:
+      "Hootsuite's Social OS, Vista Social's Ask Vista and Buffer's practitioner MCP content all landed inside one window, at 50% Instagram, 36% web blog and 14% Facebook. Concentration like that means the category has decided this is the story; the question is no longer whether to talk about it.",
+    research: {
+      title: "The category is selling the architecture. Social media managers buy the hour back",
+      paragraphs: [
+        "Fourteen items in this window pitch conversational agents as a replacement for the dashboard. Hootsuite describes rebuilding the product around an agent layer rather than bolting AI onto it. Vista Social launched a command surface wired into fifty-odd tools. Buffer published a creator's stack of MCP servers. The vocabulary is consistent across all three: orchestration layers, intelligence units, autonomous teammates.",
+        "What is almost entirely missing is the other half of the sentence. An agent that runs continuously and only interrupts you when something matters is a good pitch — but a social media manager reading it wants to know which of today's twenty jobs it does. Morning briefing? Inbox triage? Flagging the post that overperformed? Some posts list those duties; most stop at the layer.",
+        "That gap is the opening, and it is not a positioning argument — it is a format one. The same claim written as a workflow beats it written as an architecture. Show the Tuesday: what the inbox looked like at 9am, what the agent had already sorted, what was left for a human, and how long that took before.",
+        "One competitor makes the cost comparison explicit, setting a monthly subscription against the labour it displaces. That framing is available to anyone, and it is more concrete than any of the capability language around it.",
+      ],
+    },
+    posts: [],
+    history: [
+      {
+        status: "new",
+        when: "2 hours ago",
+        note: "Surfaced from the Apr 2025 – Jul 2026 competitor scan (14 matching items).",
+      },
+    ],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-28",
+    laneId: "lane-6",
+    sourceId: "competitor-posts",
+    ageLabel: "4d ago",
+    headline: "MCP is being explained to engineers. Nobody has explained it to a social media manager",
+    summary:
+      "Eight items, three quarters of them blog posts, frame connectors as the glue between social data and the AI tools people already draft in. Every one is pitched at a technical reader — and the person who would benefit most isn't one.",
+    researchType: "ready-to-post",
+    isTrending: false,
+    isUpdated: true,
+    whatChanged:
+      "Last sync this was one Buffer post. It is eight items now, and Buffer has started leading with 'MCP access on every plan' in head-to-head comparisons — it has moved from a curiosity to a pricing argument.",
+    research: {
+      title: "Your listening data, in the chat window where the work already happens",
+      paragraphs: [
+        "Eight items in this window cover Model Context Protocol connectors, three quarters of them on web blogs. Buffer publishes a creator's roundup of the eight servers they use weekly. Hootsuite frames protocol bridges as the way social intelligence reaches outside tools. One head-to-head comparison makes a point of MCP access being included on every plan.",
+        "All of it is written for someone comfortable with the words 'server' and 'protocol'. The person with the most to gain is a social media manager who already drafts in a chat tool and retypes numbers into it by hand — and none of this content is addressed to them.",
+        "Written for that reader, the story is short: the reporting you screenshot into a prompt can arrive by itself. No new dashboard to learn, no export step, and the thing you were already doing gets its data automatically. That is a workflow post, not a technical one, and it is unoccupied.",
+        "The pricing angle travels with it. If protocol access is a paid tier elsewhere and not here, that belongs in the comparison content the scan shows already captures bottom-funnel search.",
+      ],
+    },
+    posts: [],
+    history: [
+      { status: "new", when: "1 week ago", note: "Surfaced from the competitor scan (1 matching item)." },
+      { status: "new", when: "4 days ago", note: "Re-scanned — 8 matching items, and the framing shifted." },
+    ],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-29",
+    laneId: "lane-6",
+    sourceId: "competitor-posts",
+    ageLabel: "6d ago",
+    headline: "The argument isn't more metrics. It's which number ends an argument",
+    summary:
+      "Sprinklr says analytics break down when teams use inconsistent definitions. Buffer shipped Insights to turn numbers into next steps. Sprout published the pillar guide. Four items, one shared premise: volume of metrics is not insight.",
+    researchType: "ready-to-post",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "Everyone tracks more. Almost nobody says which number changes a decision",
+      paragraphs: [
+        "Four items in this window, split across web blogs, Facebook and Instagram, converge on the same complaint: reporting breaks at scale when teams use inconsistent definitions and siloed tools, so results can't be compared or trusted. Sprinklr argues for a single governed measurement framework. Buffer shipped a feature to turn data into takeaways. Sprout published the cornerstone metrics guide.",
+        "The convergence is the interesting part. Three competitors with very different customers arrived at the same premise — that tracking more does not produce more insight — which means the premise is safe and the differentiation has to be downstream of it.",
+        "Downstream is the decision. A metrics guide tells you what to measure; almost nothing in this window tells you which number should change what you do next week, or what to stop doing when it moves. For an agency reporting on several accounts, that is the whole job.",
+        "There is a customer story shape here too, and this Playbook is built for it: one team, one report that used to take a morning, and the specific meeting it now settles.",
+      ],
+    },
+    posts: [],
+    history: [
+      { status: "new", when: "6 days ago", note: "Surfaced from the competitor scan (4 matching items)." },
+      { status: "saved", when: "2 days ago", note: "Saved for later." },
+    ],
+    seedStatus: "saved",
+    seedReason: "",
+  },
+  {
+    id: "br-30",
+    laneId: "lane-6",
+    sourceId: "competitor-posts",
+    ageLabel: "19d ago",
+    headline: "Buyers are asking an AI about you before they ask you",
+    summary:
+      "Sprinklr launched LLM Insights to track how brands appear in AI answers, and its content playbook argues search is moving into AI Overviews. Two items — thin — but it is the one theme in the scan with no incumbent.",
+    researchType: "ready-to-post",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "The comparison page that matters most may be one you never see",
+      paragraphs: [
+        "Two items in this window cover brand visibility inside AI answers. Sprinklr launched LLM Insights — tracking how a brand shows up across LLM-powered search, and whether AI recommends it — and published a content playbook arguing that content now needs sharper structure, direct answers and credible sourcing because discovery is moving beyond ranked links.",
+        "Two items is below the floor this lane treats as evidence, so this is an observation rather than a trend. It is recorded because of what it implies rather than how loud it is: if a prospective customer asks an assistant which social tool suits an agency, the answer is assembled from content nobody in this category is writing for that purpose.",
+        "The practical version is unglamorous. Direct answers to real questions, sourced and structured, published where they can be cited. That is close to what the comparison content in this scan already does — the difference is writing it to be quoted rather than to be clicked.",
+        "Worth watching before it is worth investing in. If a second competitor ships tracking for this, it stops being an observation.",
+      ],
+    },
+    posts: [],
+    history: [
+      { status: "new", when: "19 days ago", note: "Surfaced from the competitor scan (2 matching items)." },
+      { status: "ignored", when: "12 days ago", note: "Ignored — below the evidence floor." },
+    ],
+    seedStatus: "ignored",
+    seedReason:
+      "Two posts, both from one competitor. Real shift, but I'd rather write it when there's more than one account behind it.",
+  },
+  {
+    id: "br-31",
+    laneId: "lane-6",
+    sourceId: "competitor-posts",
+    ageLabel: "6w ago",
+    headline: "Sprout has written the Bluesky guide twice. The question underneath it is unanswered",
+    summary:
+      "Two Sprout pieces: what Bluesky is, and how to build a brand presence on it. Both answer 'how'. Neither answers the question a social media manager actually has, which is whether it is worth the hours.",
+    researchType: "ready-to-post",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "Not 'how to post on Bluesky' — 'is it worth your Thursday'",
+      paragraphs: [
+        "Two web-blog items in this window, both from the same competitor: an explainer on what Bluesky is and where it fits in a 2026 strategy, and a fuller guide to building a brand presence — how the network differs from X and Threads, why a roughly 42-million audience skewing 25-34 is worth testing, and how to adapt tone and cadence.",
+        "Both are 'how' content, and both are good at it. Neither answers the prior question, which is the one a social media manager with a full calendar actually asks: does this earn a slot, and what comes off the calendar to pay for it?",
+        "That question has a shape this Playbook is suited to. Not a verdict — an honest way to run the test. What a fair trial looks like, over how many weeks, and the number that would tell you to keep going or stop. Two competitors have covered the setup; nobody has covered the decision.",
+        "The audience fit also deserves a sentence rather than a statistic. A 25-34 skew matters to some of the brands reading this and not at all to others, and saying which is which is more useful than the number on its own.",
+      ],
+    },
+    posts: [],
+    history: [
+      { status: "new", when: "6 weeks ago", note: "Surfaced from the competitor scan (2 matching items)." },
+      { status: "used", when: "3 weeks ago", note: "Drafted into a chat." },
+    ],
+    seedStatus: "used",
     seedReason: "",
   },
 ];

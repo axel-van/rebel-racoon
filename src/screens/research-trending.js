@@ -22,13 +22,13 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=328";
+import { renderTopbar } from "../components/topbar.js?v=329";
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { renderBriefCard } from "../components/brief-card.js?v=24";
-import { openFullResearch } from "../components/research-modals.js?v=42";
+import { openFullResearch } from "../components/research-modals.js?v=43";
 import { showToast } from "../components/toast.js?v=20";
-import { getLaneById } from "../research-store.js?v=20";
-import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=26";
+import { getLaneById } from "../research-store.js?v=21";
+import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=27";
 import { findResearchSource, findCadence } from "../research-catalog.js?v=10";
 
 let laneId = null;
