@@ -475,26 +475,27 @@ function isSessionRoute() {
 // Routes that lead with a back control instead of a title, and where they go.
 function backTargetFor(path) {
   if (/^\/playbook\//.test(path)) return { to: "/contexts", label: "Back to Playbooks" };
-  // A lane's SETTINGS go back to that lane, not to the list. You reach the form
-  // from one feed's gear, so the list is not where you came from — and this is the
-  // only back in the app that names a specific destination rather than a section,
-  // which is why the label carries the lane's own name. Same target as the form's
-  // Cancel (research-form.exitPath), deliberately: two exits from one screen that
-  // disagree is how a user loses work.
-  const laneSettings = /^\/research\/([^/]+)\/settings$/.exec(path);
-  if (laneSettings) {
-    const lane = getLaneById(decodeURIComponent(laneSettings[1]));
+  // A lane's own sub-pages — its SETTINGS and its ATTENTION page — go back to that
+  // lane, not to the list. You reach both from one topic list (the gear, and the
+  // notice's CTA), so the list is not where you came from. These are the only
+  // backs in the app that name a specific destination rather than a section, which
+  // is why the label carries the lane's own name. Settings shares the target with
+  // the form's Cancel (research-form.exitPath), deliberately: two exits from one
+  // screen that disagree is how a user loses work.
+  const laneSub = /^\/research\/([^/]+)\/(settings|attention)$/.exec(path);
+  if (laneSub) {
+    const lane = getLaneById(decodeURIComponent(laneSub[1]));
     return {
-      to: `/research/${laneSettings[1]}`,
+      to: `/research/${laneSub[1]}`,
       // A deleted lane can still be deep-linked; fall back rather than render
       // "Back to undefined".
       label: lane ? `Back to ${lane.name}` : "Back to Content Ideas",
     };
   }
-  // Every other Content Research detail view — a lane's feed, its trending page,
-  // and /research/new — goes back to the list. Deliberately WITHOUT ?fresh=1: that
-  // param runs the generating loader, and a back button should not spend 1.6s
-  // pretending to fetch a list you were just looking at.
+  // Every other Content Ideas view — a lane's topic list, and /research/new — goes
+  // back to the list of lists. Deliberately WITHOUT ?fresh=1: that param runs the
+  // generating loader, and a back button should not spend 1.6s pretending to fetch
+  // a list you were just looking at.
   if (/^\/research\/[^/]+/.test(path)) return { to: "/research", label: "Back to Content Ideas" };
   // The Topics settings page carries its Playbook scope BACK to the feed, so a
   // filtered feed survives the round trip. getPath() strips the query, so the scope

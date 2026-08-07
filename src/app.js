@@ -1,7 +1,7 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=17";
 import { initArchieLoader } from "./archie-loader.js?v=2";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=295";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=296";
 import { initSidebar, renderSidebar } from "./components/sidebar.js?v=263";
 import { init as initRightPanel } from "./components/right-panel.js?v=430";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=68";
@@ -27,20 +27,20 @@ import {
   render as renderConversationStatusCard,
 } from "./components/conversation-status-card.js?v=223";
 import { renderDashboard } from "./screens/dashboard.js?v=64";
-import { renderSession } from "./screens/session.js?v=526";
-import { renderContexts } from "./screens/contexts.js?v=256";
-import { renderConnectors } from "./screens/connectors.js?v=195";
-import { renderTopics } from "./screens/topics.js?v=64";
-import { renderTopicsSettings } from "./screens/topics-settings.js?v=55";
-import { renderResearch } from "./screens/research.js?v=29";
-import { renderResearchForm } from "./screens/research-form.js?v=29";
-import { renderResearchFeed } from "./screens/research-feed.js?v=31";
-import { renderResearchTrending } from "./screens/research-trending.js?v=29";
+import { renderSession } from "./screens/session.js?v=527";
+import { renderContexts } from "./screens/contexts.js?v=257";
+import { renderConnectors } from "./screens/connectors.js?v=196";
+import { renderTopics } from "./screens/topics.js?v=65";
+import { renderTopicsSettings } from "./screens/topics-settings.js?v=56";
+import { renderResearch } from "./screens/research.js?v=30";
+import { renderResearchForm } from "./screens/research-form.js?v=30";
+import { renderResearchFeed } from "./screens/research-feed.js?v=32";
+import { renderResearchTrending } from "./screens/research-trending.js?v=30";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
 import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=251";
-import { renderPlaybook } from "./screens/playbook.js?v=264";
+import { renderPlaybook } from "./screens/playbook.js?v=265";
 import * as __capAddSource from "./components/add-source-modal.js?v=75";
 import * as __capBug from "./components/bug-report-modal.js?v=24";
 import * as __capFeedback from "./components/feedback-modal.js?v=26";
