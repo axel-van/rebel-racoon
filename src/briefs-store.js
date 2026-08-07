@@ -29,7 +29,8 @@
 //   getTrendingForLane(laneId)         → Brief[]  (ignores the status filter)
 //   getAttentionForLane(laneId)        → Brief[]  (trending OR updated, deduped)
 //   countTrendingForLane(laneId)       → number   (whole lane, filter-blind)
-//   hiddenAttentionForLane(id, f)      → {trending, updated, total} the filter EXCLUDES
+//   unseenAttentionForLane(laneId)     → {trending, updated, total} not yet acknowledged
+//   markAttentionSeen(laneId)          acknowledges every flagged brief in the lane
 //   countNewForLane(laneId)            → number   (the lane card's NEW badge)
 //   getBriefById(id)                   → Brief | null
 //   getStatus(briefId)                 → 'new'|'saved'|'used'|'ignored'
@@ -54,6 +55,15 @@ const triage = new Map();
 for (const b of briefs) {
   triage.set(b.id, { status: b.seedStatus || "new", reason: b.seedReason || "", updatedAt: b.ageLabel || "" });
 }
+
+// briefId → its attention signal has been acknowledged, which happens by opening
+// the lane's /attention page. User-owned and kept apart from the brief for the same
+// reason triage is: a re-scan replaces briefs, and this records what the reader
+// did, not what the scan found.
+//
+// Mirrors topics-store's `unseen` flag, which solves the identical problem one
+// feature over — a badge that keeps announcing something you have already read.
+const seenSignals = new Set();
 
 const notifier = createNotifier("briefs-store");
 export const subscribe = notifier.subscribe;
@@ -169,30 +179,49 @@ export function getAttentionForLane(laneId) {
     .sort(byRecency);
 }
 
-// What the CURRENT filter is hiding, broken down by signal — the only numbers the
-// feed's notice is allowed to say. The old notice counted the whole lane, so on
-// lane-1 at the default filter it announced 3 while the feed could account for 1,
-// and never said where the other 2 were. That unexplained gap is what reads as a
-// broken filter.
+// Flagged topics the reader has NOT yet acknowledged, broken down by signal — the
+// only numbers the feed's notice is allowed to say.
+//
+// ── Why "unseen" and not "hidden by the filter" ────────────────────────────
+// This notice used to count flagged topics the active filter excluded, so that it
+// could never announce something already visible in the list. That rule worked but
+// it could still nag: a filtered-out topic you had read on the attention page kept
+// being counted every time you came back.
+//
+// Acknowledgement is the stronger guard and it subsumes the weaker one: the notice
+// appears when something is flagged, disappears the moment you open the page that
+// lists it, and returns only when the scan flags something NEW. It cannot nag,
+// which is the whole point — and it no longer needs to know about filters at all.
 //
 // `total` is DEDUPED while the two breakdowns are not: a brief that is both
 // trending and updated is one topic needing attention but appears under both
 // labels, so the two numbers may sum to more than the total. The copy therefore
 // lists them as separate labels and never as an equation.
-//
-// Deliberately every filter group, not just status: a brief kept out by the
-// sources or types filter is just as hidden.
-export function hiddenAttentionForLane(laneId, filters) {
-  if (!filters) return { trending: 0, updated: 0, total: 0 };
-  const hidden = briefs
-    .filter((b) => b.laneId === laneId && (b.isTrending || b.isUpdated))
-    .map(withTriage)
-    .filter((b) => !matchesFilters(b, filters));
+export function unseenAttentionForLane(laneId) {
+  const unseen = briefs
+    .filter((b) => b.laneId === laneId && (b.isTrending || b.isUpdated) && !seenSignals.has(b.id))
+    .map(withTriage);
   return {
-    trending: hidden.filter((b) => b.isTrending).length,
-    updated: hidden.filter((b) => b.isUpdated).length,
-    total: hidden.length,
+    trending: unseen.filter((b) => b.isTrending).length,
+    updated: unseen.filter((b) => b.isUpdated).length,
+    total: unseen.length,
   };
+}
+
+// Opening a lane's attention page acknowledges everything flagged in it. Returns
+// whether anything actually changed, so the caller can skip a pointless notify —
+// re-entering the page must not repaint every subscriber for nothing.
+export function markAttentionSeen(laneId) {
+  let changed = false;
+  for (const b of briefs) {
+    if (b.laneId !== laneId) continue;
+    if (!(b.isTrending || b.isUpdated)) continue;
+    if (seenSignals.has(b.id)) continue;
+    seenSignals.add(b.id);
+    changed = true;
+  }
+  if (changed) notify();
+  return changed;
 }
 
 export function countNewForLane(laneId) {

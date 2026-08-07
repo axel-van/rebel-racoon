@@ -18,9 +18,9 @@
 // That split only works if the notice is HONEST about it. It used to announce
 // every trending brief in the lane, so at the default filter it promised 3 while
 // the feed showed 1 — an unexplained gap that reads as a broken filter. It now
-// counts only what the filter hides, breaks that down by signal, and disappears
-// when the filter hides nothing. Nothing overrides; the filter reports what it is
-// keeping out.
+// counts only what you have not yet acknowledged, breaks that down by signal, and
+// disappears once you open /attention. Nothing overrides the filter; the feed's
+// list stays exactly what the filter says it is.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
@@ -33,18 +33,18 @@ import {
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=24";
+} from "../components/research-modals.js?v=25";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=12";
 import {
   getBriefsForLane,
-  hiddenAttentionForLane,
+  unseenAttentionForLane,
   defaultFilters,
   narrowedGroupCount,
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=14";
+} from "../briefs-store.js?v=15";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
@@ -158,15 +158,15 @@ function renderPage() {
   if (view.generating) return renderGenerating();
 
   const briefs = getBriefsForLane(laneId, filters);
-  // Only what the filter is HIDING. Two conditions, both required: the filter has
-  // to be keeping a trending brief out AND the lane's own Show-trending setting
-  // has to be on. Nothing hidden → nothing to report → no notice.
-  const hidden = hiddenAttentionForLane(laneId, filters);
-  const showNotice = hidden.total > 0 && lane.showTrending;
+  // Unseen, not filtered: opening /attention acknowledges the lane's flagged
+  // topics, and the notice stays away until the scan flags something new. The
+  // lane's own Show-trending setting still gates it entirely.
+  const unseen = unseenAttentionForLane(laneId);
+  const showNotice = unseen.total > 0 && lane.showTrending;
 
   return html`<div class="research-feed__body">
     <div class="research-feed__inner">
-      ${raw(renderFeedHeader(lane))} ${raw(showNotice ? renderAttentionNotice(hidden) : "")}
+      ${raw(renderFeedHeader(lane))} ${raw(showNotice ? renderAttentionNotice(unseen) : "")}
       ${raw(
         briefs.length
           ? briefs
@@ -349,9 +349,12 @@ function renderGroup(key, label, options, selected, field) {
 // signals separately and deliberately does NOT read as an equation — see
 // hiddenAttentionForLane on why the two numbers can exceed the total.
 //
-// Still only what the filter HIDES. That is the whole point of the notice: a
-// count of everything would be furniture, and the gap between what it promised
-// and what the list showed is the bug this replaced.
+// Only what has NOT been acknowledged. Opening /attention marks the lane's
+// flagged topics seen, so the notice disappears and returns only when the scan
+// flags something new. That is what keeps it from being furniture — an earlier
+// version gated on "hidden by the active filter" instead, which never announced
+// something already in the list but did keep re-announcing a filtered-out topic
+// you had already read. See unseenAttentionForLane on why this replaced it.
 function renderAttentionNotice({ trending, updated, total }) {
   const one = total === 1;
   const parts = [];
@@ -362,9 +365,7 @@ function renderAttentionNotice({ trending, updated, total }) {
     <div class="ap-infobox-content">
       <div class="ap-infobox-texts">
         <span class="ap-infobox-title">${total} ${one ? "topic needs" : "topics need"} your attention</span>
-        <span class="ap-infobox-message">
-          ${raw(parts.join(" · "))} — ${one ? "it does" : "they do"} not match your current filters.
-        </span>
+        <span class="ap-infobox-message"> ${raw(parts.join(" · "))} — flagged since you last looked. </span>
       </div>
       <button type="button" class="ap-button primary blue" data-feed-trending>
         <span>See topics</span>

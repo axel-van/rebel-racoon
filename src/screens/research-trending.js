@@ -25,10 +25,15 @@ import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=295";
 import { isFlagOn } from "../feature-flags.js?v=17";
 import { renderBriefCard } from "../components/brief-card.js?v=10";
-import { openFullResearch } from "../components/research-modals.js?v=24";
+import { openFullResearch } from "../components/research-modals.js?v=25";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=12";
-import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=14";
+import {
+  getAttentionForLane,
+  markAttentionSeen,
+  setStatus,
+  subscribe as subscribeBriefs,
+} from "../briefs-store.js?v=15";
 import { findResearchSource, findCadence } from "../research-catalog.js?v=6";
 
 let laneId = null;
@@ -53,6 +58,11 @@ export function renderResearchTrending(params, target) {
 
   renderTopbar();
   teardown();
+  // Arriving here IS the acknowledgement: the feed's notice counts flagged topics
+  // you have not seen, and this is the page that shows them. Marked before the
+  // subscription is attached, so its notify() cannot trigger a redundant repaint
+  // of a screen that is about to paint anyway.
+  markAttentionSeen(laneId);
   paint(target);
   bind(target);
   unsubscribe = subscribeBriefs(() => paint(target));
