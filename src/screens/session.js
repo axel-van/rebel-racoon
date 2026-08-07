@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=317";
+import { renderTopbar } from "../components/topbar.js?v=318";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=74";
 import {
   getConnectedProfiles,
@@ -73,7 +73,7 @@ import {
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { getBriefById, getStarterTopics } from "../briefs-store.js?v=26";
 import { getLaneById } from "../research-store.js?v=20";
-import * as contextBuilder from "../context-builder.js?v=284";
+import * as contextBuilder from "../context-builder.js?v=285";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -118,7 +118,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=451";
+} from "../components/right-panel.js?v=452";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=16";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -1947,32 +1947,22 @@ function syncStarterTopicSession(sessionId) {
   starterTopicCountdown = STARTER_TOPIC_COUNTDOWN;
 }
 
-// One ticker, driven from the slot's own DOM. It rewrites only the number, and
-// re-renders the slot once when the count runs out — cheaper than repainting the
-// card every second, and it means the reveal reuses the same enter animation the
-// flip does.
+// One delay, not a per-second tick. Nothing counts down on screen any more — the
+// spinner says "working" without committing to a number, which is also the
+// honest signal: a real scan doesn't know when it will finish, and a ticking
+// "3s" promised precision the feature can't have.
 //
-// It stops itself when the slot leaves the document, so navigating away or
-// sending the first message can't leave a timer repainting a detached tree. That
-// self-check is the cleanup, deliberately: the hero is re-rendered from several
+// It checks the slot is still mounted before swapping, so navigating away or
+// sending the first message can't leave a timer painting into a detached tree.
+// That self-check is the cleanup, deliberately: the hero re-renders from several
 // places and a teardown hook in only some of them would leak from the others.
 function startStarterTopicCountdown() {
-  if (starterTopicTimer) clearInterval(starterTopicTimer);
-  starterTopicTimer = window.setInterval(() => {
-    const slot = document.querySelector("[data-starter-topic-slot]");
-    if (!slot || !document.body.contains(slot)) {
-      clearInterval(starterTopicTimer);
-      starterTopicTimer = null;
-      return;
-    }
-    starterTopicCountdown -= 1;
-    if (starterTopicCountdown > 0) {
-      const n = slot.querySelector("[data-starter-topic-count]");
-      if (n) n.textContent = `${starterTopicCountdown}s`;
-      return;
-    }
-    clearInterval(starterTopicTimer);
+  if (starterTopicTimer) clearTimeout(starterTopicTimer);
+  starterTopicTimer = window.setTimeout(() => {
     starterTopicTimer = null;
+    starterTopicCountdown = 0;
+    const slot = document.querySelector("[data-starter-topic-slot]");
+    if (!slot || !document.body.contains(slot)) return;
     const host = slot.parentElement;
     const next = document.createElement("div");
     next.innerHTML = renderStarterTopicSlot();
@@ -1983,7 +1973,7 @@ function startStarterTopicCountdown() {
     if (stage && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       stage.classList.add("is-entering");
     }
-  }, 1000);
+  }, STARTER_TOPIC_COUNTDOWN * 1000);
 }
 
 // A brief's accent, keyed off the same two booleans the topic card reads. New
@@ -2054,19 +2044,19 @@ function renderStarterTopicCard(brief) {
 // empty state — a plain div, no flip control, nothing to click — because both are
 // the slot saying "not yet" rather than offering something.
 //
-// The number is NOT in a live region. A polite one would announce every second,
-// which is three interruptions to say nothing; the card that replaces it is the
-// thing worth hearing, and it announces itself by arriving.
+// One line, at title size, and a spinner instead of a number. The DS .ap-loader
+// is deliberate rather than a custom ring: archie-loader.js watches the DOM for
+// that class and swaps in the animated Archie mark, so this matches every other
+// spinner in the app for free — including the ones that appear after this card
+// is injected, because it watches via MutationObserver.
+//
+// No watermark glyph here. The spinner already says "working"; an hourglass
+// behind it would be the same sentence twice.
 function renderStarterTopicWaiting() {
   return `
     <div class="starter-card starter-card--topic starter-topic--waiting">
-      <i class="starter-card__art ap-icon-hourglass" aria-hidden="true"></i>
-      <span class="starter-card__title">I'm finishing today's scan</span>
-      <span class="starter-card__subtitle"
-        >New ideas will drop in <span class="starter-topic__count" data-starter-topic-count
-          >${starterTopicCountdown}s</span
-        ></span
-      >
+      <span class="ap-loader orange size-24 starter-topic__spinner" aria-hidden="true"></span>
+      <span class="starter-card__title">New ideas will drop in a moment</span>
     </div>
   `;
 }

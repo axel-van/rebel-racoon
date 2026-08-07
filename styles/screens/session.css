@@ -841,15 +841,17 @@
 }
 
 /* The accent, held in a custom property so the hover rule below can restore it
-   without restating every tone.
+   without restating the tone.
 
-   It is a 4px border-top REPLACING the 1px one, not added to it, so the card
-   doesn't shift by 3px between a plain topic and a flagged one — the same trick
-   the topic card used before its accent was removed. It survives here because
-   this is a single featured cell where the accent is the whole point, not one
-   row in a scannable column. */
-.starter-card--topic {
-  --starter-topic-accent: transparent;
+   It is drawn ONLY on the two signalled tones. Every other topic card — plain,
+   waiting, empty — keeps .starter-card's ordinary 1px border on all four sides,
+   which is what makes the hover highlight a uniform electric-blue frame instead
+   of a 4px blue bar across the top. A transparent 4px border used to sit on all
+   of them, to keep the content from shifting 3px between a flagged card and a
+   plain one; that shift is invisible now that the cell is a fixed-height grid
+   row and the flip animates the swap, so it isn't worth a blue slab on hover. */
+.starter-topic--trending,
+.starter-topic--updated {
   border-top: 4px solid var(--starter-topic-accent);
 }
 
@@ -861,15 +863,9 @@
   --starter-topic-accent: var(--ref-color-menthol-100);
 }
 
-/* Hover: every topic card takes the standard starter-card highlight — blue edge
-   plus tint wash — and the two SIGNALLED tones keep their accent on top instead
-   of the blue.
-
-   Scoped to those two on purpose. The rule used to apply to every topic card,
-   which meant a card with no accent got `border-top-color: transparent` on hover
-   while the base rule turned the other three edges blue: a three-sided blue
-   frame with a hole in the top. Plain, waiting and empty cards now just take the
-   blue all the way round.
+/* Hover: every topic card takes the standard starter-card highlight — an
+   electric-blue border plus the tint wash — and the two signalled tones keep
+   their accent on top rather than letting the blue overwrite it.
 
    Equal specificity to .starter-card:hover, so this wins on source order and has
    to stay after it. */
@@ -1064,6 +1060,15 @@
   }
 }
 
+/* The spinner sits on its own line above the message, left-aligned with it —
+   the card's other content is left-aligned too, so centring it the way
+   .research-generating does would make this the one card that isn't. */
+.starter-topic__spinner {
+  display: block;
+  flex: 0 0 auto;
+  margin-bottom: var(--ref-spacing-xxs);
+}
+
 /* The two "not yet" states — waiting for the first topic, and out of topics.
    Both are plain divs rather than buttons, so the card itself isn't a control
    and the cursor stays default; the empty state's CTA is the only thing to click
@@ -1076,16 +1081,6 @@
 .starter-topic--empty,
 .starter-topic--waiting {
   cursor: default;
-}
-
-/* The countdown number. Tabular figures so the line does not shuffle sideways
-   as 3 becomes 2 becomes 1 — the digits are the same width in Averta's lining
-   set, but the feature is cheap insurance and the intent is explicit.
-   Semibold against the subtitle's regular so the eye lands on the number. */
-.starter-topic__count {
-  font-variant-numeric: tabular-nums;
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-80);
 }
 
 /* Coming-soon teaser card — non-interactive: no hover lift, no pointer, and a
