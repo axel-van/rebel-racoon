@@ -22,12 +22,13 @@
   border-radius: 14px;
 }
 
-/* 4px border replaces the 1px one on top, so the card doesn't shift by 3px when
-   a brief starts trending. */
-.topics-card--trending {
-  border-color: var(--app-peach-border);
-  border-top: 4px solid var(--app-archie-orange);
-}
+/* No .topics-card--trending frame treatment, deliberately. A trending card used
+   to carry a peach border plus a 4px orange rail on top; both are gone. The
+   signal is carried INSIDE the card — the "Trending" mark in the source row and
+   the orange-railed __whynow block — which is exactly how Updated already worked,
+   so the two signals now read as the same kind of thing. If a card-level accent
+   ever comes back it must be a border, never an absolutely-positioned span: see
+   the history note in brief-card.js. */
 
 /* One button covering the card's text, opening Full research. Mirrors
    .topic-card__body: reset the chrome, inherit the type, left-align, and take the

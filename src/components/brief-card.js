@@ -18,12 +18,19 @@
 // therefore PLAIN TEXT with an icon, never a pill: as a pill it read as a fifth
 // status, and trending is an independent boolean that coexists with all four.
 //
-// ── The trending accent is a border-top. This matters. ──────────────────────
-// It started as an absolutely-positioned 4px span inside an overflow:hidden
-// wrapper and caused three separate bugs: it clipped the Use-now dropdown, and
-// because overflow:hidden zeroes a flex item's automatic minimum size, the
-// column's default flex-shrink crushed the cards and cut their footers off.
-// border-top + flex:0 0 auto (see research.css) is the fix — don't undo it.
+// ── A trending card has no frame accent, and never had a span ───────────────
+// Trending cards once carried a peach border plus a 4px orange rail on top.
+// Both are gone: the signal lives inside the card, in the "Trending" mark and
+// the orange-railed "Why now" block, which is how Updated already worked. Two
+// signals, one grammar.
+//
+// The history still matters if an accent ever comes back. It began as an
+// absolutely-positioned 4px span inside an overflow:hidden wrapper and caused
+// three bugs: it clipped the Use-now dropdown, and because overflow:hidden
+// zeroes a flex item's automatic minimum size, the column's default flex-shrink
+// crushed the cards and cut their footers off. A border is the only safe way to
+// draw one. flex:0 0 auto in research.css is the other half of that fix and is
+// still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { findReviewStatus } from "../research-catalog.js?v=7";
@@ -64,10 +71,7 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
   const trendingPage = variant === "trending";
   const ignored = brief.status === "ignored";
 
-  return html`<article
-    class="topics-card${raw(brief.isTrending ? " topics-card--trending" : "")}"
-    data-brief-id="${escapeAttr(brief.id)}"
-  >
+  return html`<article class="topics-card" data-brief-id="${escapeAttr(brief.id)}">
     <!-- The card body is ONE BUTTON opening the full read — and since the footer's
          "Full research" button was removed it is the ONLY way in, which is why it
          must stay a button and stay the whole text area. The actions sit

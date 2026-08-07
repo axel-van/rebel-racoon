@@ -190,6 +190,23 @@ pourtant la réponse « correcte » côté modèle de données. Raison : `.ap-st
 Corollaire côté données : `status` et `isTrending` sont deux champs séparés dans
 [`briefs-store.js`](../../src/briefs-store.js) et doivent le rester.
 
+**Le signal reste à l'intérieur de la carte — pas sur son cadre.** Une carte trending
+a porté un temps une bordure pêche et un rail orange de 4px en haut ; les deux ont été
+retirés. Il ne reste plus de modificateur `.topics-card--trending` : le signal est
+porté par la marque « Trending » dans la ligne de source et par le bloc
+`.topics-card__whynow` (fond pêche, rail orange à gauche) — exactement ce que faisait
+déjà Updated, qui n'a jamais eu d'accent de cadre. Deux signaux, une seule grammaire.
+Le cadre reste la même bordure grise pour toutes les cartes, donc la colonne se lit
+comme une liste et non comme une liste plus des exceptions.
+
+Si un accent de cadre devait revenir un jour : **une bordure, jamais un span en
+position absolue**. Le premier essai était un span de 4px dans un wrapper
+`overflow:hidden`, ce qui a coûté trois bugs — il rognait le dropdown Use-now, et comme
+`overflow:hidden` met à zéro la taille minimale automatique d'un flex item, le
+`flex-shrink` par défaut de la colonne écrasait les cartes et coupait leurs footers.
+Le `flex: 0 0 auto` de [`research.css`](../../styles/screens/research.css) est l'autre
+moitié de ce correctif et reste nécessaire.
+
 ⚠️ `.ap-tag` n'accepte **qu'une** icône, `ap-icon-close` dans un bouton de fermeture —
 pas de flèche de tendance dedans (règle DS sur `.ap-tag`). Et `.ap-badge` est réservé
 au contexte **système** (NEW / BETA, auto-uppercase en `orange`) : un état de cycle de
