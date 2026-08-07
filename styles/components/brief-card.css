@@ -161,11 +161,6 @@
   color: var(--ref-color-grey-80);
 }
 
-.topics-card__summary-label {
-  font-weight: 700;
-  color: var(--app-convo-navy);
-}
-
 .topics-card__whynow {
   display: block;
   margin: var(--ref-spacing-xs) 0 0;

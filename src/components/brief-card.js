@@ -40,7 +40,7 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus } from "../research-catalog.js?v=8";
+import { findReviewStatus } from "../research-catalog.js?v=10";
 
 // One line, not the paragraph this used to be. As a hover tooltip it could afford
 // the full explanation; as a permanent menu row it just made the menu tall. The
@@ -94,8 +94,7 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
          research" button already uses — so both screens' existing handlers pick
          it up with no new wiring. In the picker it carries data-idea-pick
          instead: same button, different verb, because there the card is the
-         control rather than a way into the full read. -->
-    <!--
+         control rather than a way into the full read.
 
          Everything inside is a <span>, not the h3/p it was: a button may only
          contain PHRASING content, so a heading or paragraph in here is invalid.
@@ -125,9 +124,10 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
 
       <span class="topics-card__headline">${brief.headline}</span>
 
-      <span class="topics-card__summary" data-brief-summary>
-        <strong class="topics-card__summary-label">Summary:</strong> ${brief.summary}
-      </span>
+      <!-- No "Summary:" label. Every card carried it, so it labelled nothing —
+           the two-line block under a headline is self-evidently the summary, and
+           the word ate a chunk of the first of only two visible lines. -->
+      <span class="topics-card__summary" data-brief-summary>${brief.summary}</span>
 
       ${raw(
         brief.isTrending && brief.whyNow

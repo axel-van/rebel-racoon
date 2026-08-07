@@ -32,7 +32,7 @@ import {
   postUserTurn,
   postUserProfilesTurn,
 } from "./assistant.js?v=77";
-import { getTopPosts, getTopPost } from "./top-posts-store.js?v=29";
+import { getTopPosts, getTopPost } from "./top-posts-store.js?v=51";
 import { addPostDraft } from "./posts-store.js?v=51";
 import { addReadySource } from "./sources-stream.js?v=70";
 import {

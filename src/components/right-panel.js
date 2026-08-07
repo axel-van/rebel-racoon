@@ -21,7 +21,7 @@ import { onFeedbackClick } from "./feedback-control.js?v=2";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=73";
-import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=275";
+import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=279";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -664,7 +664,7 @@ export function init() {
           updateSourceClips(srcId, nextClips);
           const edited = (nextClips || []).find((c) => c.id === ref.clipId);
           if (!edited) return;
-          import("../posts-store.js?v=46").then(({ updatePostClip }) => {
+          import("../posts-store.js?v=51").then(({ updatePostClip }) => {
             updatePostClip(sid, pid, {
               start: edited.start,
               end: edited.end,
@@ -736,7 +736,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=514").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=544").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -919,7 +919,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=514").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=544").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -937,7 +937,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=514").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=544").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -1933,7 +1933,7 @@ function onSectionSave(network) {
   if (snapshot.length === 0) return;
   const count = snapshot.length;
   const draftWord = count === 1 ? "draft" : "drafts";
-  Promise.all([import("./save-folder-modal.js?v=19"), import("../folders-store.js?v=14")]).then(
+  Promise.all([import("./save-folder-modal.js?v=24"), import("../folders-store.js?v=19")]).then(
     ([{ open: openSaveModal }, { addDraftsToFolder }]) => {
       openSaveModal({
         count,
@@ -2811,7 +2811,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=514").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=544").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

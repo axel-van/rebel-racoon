@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=308";
+import { renderTopbar } from "../components/topbar.js?v=312";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=74";
 import {
   getConnectedProfiles,
@@ -56,7 +56,7 @@ import {
   renderTopPostsWidget,
   TOP_POSTS_LIMIT,
 } from "../components/top-post-card.js?v=89";
-import { getTopPost } from "../top-posts-store.js?v=29";
+import { getTopPost } from "../top-posts-store.js?v=51";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 import * as sidebarWizard from "../sidebar-wizard.js?v=68";
 import * as inlineQuestion from "../inline-question.js?v=48";
@@ -71,9 +71,9 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=18";
-import { getBriefById, getStarterTopics } from "../briefs-store.js?v=24";
-import { getLaneById } from "../research-store.js?v=17";
-import * as contextBuilder from "../context-builder.js?v=275";
+import { getBriefById, getStarterTopics } from "../briefs-store.js?v=26";
+import { getLaneById } from "../research-store.js?v=20";
+import * as contextBuilder from "../context-builder.js?v=279";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -110,15 +110,15 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=2";
 import { showToast } from "../components/toast.js?v=20";
 // The composer's Add menu reaches Content Ideas through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaPicker } from "../components/research-modals.js?v=35";
-import { findResearchSource } from "../research-catalog.js?v=8";
+import { openIdeaPicker } from "../components/research-modals.js?v=39";
+import { findResearchSource } from "../research-catalog.js?v=10";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=442";
+} from "../components/right-panel.js?v=446";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=16";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";

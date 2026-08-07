@@ -20,18 +20,18 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=308";
+import { renderTopbar } from "../components/topbar.js?v=312";
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { getContexts, getContextById } from "../contexts-store.js?v=55";
-import { getLaneById, addLane, updateLane } from "../research-store.js?v=18";
-import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=35";
+import { getLaneById, addLane, updateLane } from "../research-store.js?v=20";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=39";
 import {
   RESEARCH_SOURCES,
   CADENCES,
   DEFAULT_ENABLED_IDS,
   DEFAULT_CADENCE,
   isLiveSource,
-} from "../research-catalog.js?v=8";
+} from "../research-catalog.js?v=10";
 
 // The in-flight draft. Ephemeral by definition — it only becomes a lane on save,
 // so it lives here rather than in the store. Cancel just drops it.

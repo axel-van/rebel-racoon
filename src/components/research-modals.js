@@ -20,11 +20,11 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=8";
-import { getBriefById, getBriefsForLane, ignoreBrief, setStatus } from "../briefs-store.js?v=24";
-import { getLanes } from "../research-store.js?v=18";
+import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=10";
+import { getBriefById, getBriefsForLane, ignoreBrief, setStatus } from "../briefs-store.js?v=26";
+import { getLanes } from "../research-store.js?v=20";
 import { getContextById } from "../contexts-store.js?v=55";
-import { renderBriefCard } from "./brief-card.js?v=18";
+import { renderBriefCard } from "./brief-card.js?v=22";
 import { renderSocialPostCard } from "./social-post-card.js?v=10";
 import { showToast } from "./toast.js?v=20";
 

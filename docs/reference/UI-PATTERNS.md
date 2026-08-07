@@ -175,7 +175,7 @@ DS `.ap-status` + `blue|green|grey|mermaid` (mermaid patché). Les états de tra
 ### Deux axes sur une même carte : pill ≠ texte
 
 Sur une carte de brief (Content Research), deux informations coexistent et **ne sont
-pas du même genre** : le **statut de revue** (New / Saved for later / Used / Ignored,
+pas du même genre** : le **statut de revue** (New / Saved / Used / Ignored,
 un état à la fois, choisi par l'utilisateur) et **trending** (un booléen indépendant
 que le système constate, et qui peut se cumuler avec n'importe lequel des quatre).
 

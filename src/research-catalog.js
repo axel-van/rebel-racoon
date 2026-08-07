@@ -216,9 +216,11 @@ export const DEFAULT_TYPE_IDS = Object.freeze(["ready-to-post"]);
 // the two can never share one field.
 export const REVIEW_STATUSES = Object.freeze([
   { id: "new", label: "New" },
-  // "Saved for later", matching the card action that sets it — the short
-  // "Saved" read as a different state from the button you had just pressed.
-  { id: "saved", label: "Saved for later" },
+  // "Saved", not "Saved for later". The long form was chosen to echo the card
+  // action that sets it ("Save for later"), but a pill states a STATE and the
+  // menu row states an ACTION — they don't have to read identically, and at pill
+  // size the extra two words were the widest thing in the status row.
+  { id: "saved", label: "Saved" },
   { id: "used", label: "Used" },
   { id: "ignored", label: "Ignored" },
 ]);

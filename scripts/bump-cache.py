@@ -45,10 +45,42 @@ def bump_refs_to(target_name, files):
     return changed
 
 
+def audit():
+    """Every module PATH must be referenced at exactly one version.
+
+    Keyed on the resolved path, never the basename: image-studio/ and
+    image-studio-v2/ both ship index.js / context.js / edit-view.js /
+    interactions.js, and those are different modules at different URLs whose
+    versions are allowed to differ. A basename-keyed check calls that a conflict
+    and "fixing" it churns four unrelated files.
+
+    A genuine conflict — one path requested at two versions — means the browser
+    loads the module twice, which for a store means two independent instances
+    and state that silently diverges.
+    """
+    refs = {}
+    for p in all_files():
+        for m in re.finditer(r"([\w./-]+\.(?:js|css))\?v=(\d+)", p.read_text()):
+            target = (p.parent / m.group(1)).resolve()
+            refs.setdefault(target, set()).add(int(m.group(2)))
+    bad = {str(k): sorted(v) for k, v in refs.items() if len(v) > 1}
+    if bad:
+        print("AUDIT FAILED — a module path is referenced at more than one version:")
+        for path, versions in bad.items():
+            print(f"  {path}: {versions}")
+        return 1
+    print("audit: OK — every module path is referenced at exactly one version")
+    return 0
+
+
 def main():
-    targets = [ROOT / a for a in sys.argv[1:]]
+    args = sys.argv[1:]
+    if args == ["--audit"]:
+        sys.exit(audit())
+    targets = [ROOT / a for a in args]
     if not targets:
         print("usage: bump-cache.py <changed-file> [<changed-file> ...]")
+        print("       bump-cache.py --audit   (check only, no writes)")
         sys.exit(1)
     files = all_files()
     worklist = [t.name for t in targets]
@@ -67,6 +99,11 @@ def main():
                 worklist.append(c.name)
     for f in sorted(touched):
         print("bumped", f.relative_to(ROOT))
+    # Always audit after writing. A file that is both a direct importer of the
+    # target AND a transitive one gets visited twice, which bumped its reference
+    # one step further than everyone else's and split the module across two
+    # versions — a silent two-instance bug for anything stateful.
+    sys.exit(audit())
 
 
 if __name__ == "__main__":
