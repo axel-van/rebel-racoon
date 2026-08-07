@@ -3,8 +3,8 @@
  * Token policy for this file, per styles/tokens.css: DS token first, --app-*
  * only for Archie-brand values the DS genuinely lacks. So the action blue is
  * --ref-color-electric-blue-100 (it IS #178DFE), the meta grey is
- * --ref-color-grey-80 (it IS #5D6A82), and only the orange / peach / butter /
- * paper come from --app-*.
+ * --ref-color-grey-80 (it IS #5D6A82), and only the orange / peach / butter
+ * come from --app-*.
  *
  * The handoff's neutrals are matched to the nearest DS grey rather than
  * transcribed: #ECEFF4 → grey-10, #DFE4EC → grey-20, #A6B1C2 → grey-40,
@@ -13,9 +13,16 @@
 /* Matches .contexts-view: the screen root is the scroll container. It used to be
    .research-view__body, which carried the paper background and the scroll —
    removing that wrapper to match /contexts took the scroller with it, so it
-   moves here. The lane list consequently sits on the shell background like
-   /contexts does, rather than on --app-paper; the feed and trending pages are
-   detail views and keep theirs. */
+   moves here.
+
+   ── No --app-paper anywhere in Content Ideas ──────────────────────────────
+   The lane list, the topic list, the attention page and the settings page all
+   sit on the shell background, like every other screen in the app. The feed and
+   the attention page used to be warm (#F9F9F2) on the argument that detail views
+   keep paper — but /playbook/:id is a detail view and it is on the shell
+   background, so the rule had exactly one member. The visible effect was a page
+   that changed temperature when you opened a topic list from the lane list.
+   --app-paper is now unused; don't reintroduce it for one screen. */
 .research-view {
   display: flex;
   flex-direction: column;
@@ -431,7 +438,7 @@
   min-height: 0;
   overflow-y: auto;
   padding: 32px;
-  background: var(--app-paper);
+  background: var(--app-bg);
 }
 
 .research-form__inner {
@@ -875,7 +882,7 @@
   min-height: 0;
   overflow-y: auto;
   padding: var(--ref-spacing-lg) var(--ref-spacing-xl) var(--ref-spacing-xl);
-  background: var(--app-paper);
+  background: var(--app-bg);
 }
 
 /* The card column. gap, not margins, and every child keeps its automatic
@@ -1032,7 +1039,7 @@
   align-items: center;
   justify-content: center;
   gap: 18px;
-  background: var(--app-paper);
+  background: var(--app-bg);
 }
 
 /* The spinner is .ap-loader (see research-feed.js) — sized and coloured by DS

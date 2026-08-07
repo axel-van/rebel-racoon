@@ -190,6 +190,18 @@ pourtant la réponse « correcte » côté modèle de données. Raison : `.ap-st
 Corollaire côté données : `status` et `isTrending` sont deux champs séparés dans
 [`briefs-store.js`](../../src/briefs-store.js) et doivent le rester.
 
+### Une seule température de page
+
+Tous les écrans peignent le fond du shell (`--app-bg` → `--ref-color-grey-bg`,
+`#F9F9FA`). Content Ideas a longtemps fait exception : la liste de topics, la page
+attention et la page de réglages étaient sur `--app-paper` (`#F9F9F2`, chaud), au
+motif que « les vues de détail gardent le papier ». Sauf que `/playbook/:id` est une
+vue de détail et se trouve sur le fond du shell — la règle n'avait qu'un membre, et
+l'effet visible était une page qui changeait de température quand on ouvrait une
+liste de topics depuis la liste des listes. Les trois fonds sont alignés et le token
+`--app-paper` a été supprimé faute de consommateur. Ne pas le réintroduire pour un
+seul écran.
+
 **Le signal reste à l'intérieur de la carte — pas sur son cadre.** Une carte trending
 a porté un temps une bordure pêche et un rail orange de 4px en haut ; les deux ont été
 retirés. Il ne reste plus de modificateur `.topics-card--trending` : le signal est

@@ -5504,4 +5504,177 @@ export const researchBriefs = [
     history: [],
     seedStatus: "new",
   },
+
+  // ── The gemini-3.5-flash-lite pass over the July Carlsbad scan ────────────
+  // Second export against the same search that seeded lane-4 (alliance_jiujitsu_
+  // carlsbad, 1–31 July 2026, Instagram + Facebook, 25 items / 18 IG / 7 FB) —
+  // this time a model comparison, three passes over the identical post set.
+  //
+  // The flash-lite pass returned TWO topics, and one of them (youth character
+  // development, 8 items) is already on this lane as br-10, so it is not
+  // duplicated here. Only its second topic is new: br-22. The remaining four
+  // come from the flash and 3.6-flash passes over the same posts, skipping belt
+  // progression because br-11 already covers it. Everything below — volume
+  // bands, network splits, item counts, keywords — is read off the export
+  // rather than invented; the prose is written for this Playbook's voice
+  // (calm, expert, safety-first; explains the mechanism before it sells).
+  //
+  // These five also give lane-4 a spread of review statuses. Every brief the
+  // lane had was seedStatus "new", so Saved / Used / Ignored had nothing to show.
+  // All three of those land on ready-to-post briefs deliberately: the TYPE filter
+  // opens on ready-to-post alone, so an Ignored competitive-intelligence brief
+  // would have been invisible on a fresh mount and the spread would only exist
+  // in the data.
+  {
+    id: "br-22",
+    laneId: "lane-4",
+    sourceId: "competitor-posts",
+    ageLabel: "18d ago",
+    headline: "Consistency is the only thing every promotion in this town has in common",
+    summary:
+      "Eleven July posts frame progress the same way — show up, keep showing up, the rank follows. Nobody explains what consistency actually looks like in a first year, which is the part a beginner is trying to work out before they sign.",
+    researchType: "ready-to-post",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "Everyone says 'stay consistent'. Almost nobody says what that means in practice",
+      paragraphs: [
+        "Eleven of the twenty-five posts in the July window frame training as a long-term journey built on steady effort — belt and stripe promotions, anniversary reflections, open mats. The vocabulary is remarkably uniform across the three tracked academies: endurance, perseverance, showing up. Sixty-four percent of it ran on Instagram, the rest on Facebook.",
+        "The messaging is also honest about pressure. Several posts note that sparring is where technique gets tested and that the pressure is productive when paired with patience — training rounds framed as a place to try things and help a partner improve rather than to win. That is a genuinely useful thing to say to an adult who is worried about being the worst person in the room.",
+        "Where the category stops short is the specific. 'Be consistent' is advice you can only act on if you know the number. Two sessions a week for a year is a different proposition to four, and a beginner deciding whether this fits around a job is doing exactly that arithmetic. None of the tracked posts answer it.",
+        "The opening is the mechanics rather than the mindset: what a realistic first year looks like week by week, what actually stalls people at the three-month mark, and why missing a fortnight does not undo it. The sentiment is taken; the specifics are unclaimed.",
+      ],
+    },
+    posts: [],
+    history: [
+      { status: "new", when: "18 days ago", note: "Surfaced from the 1–31 July competitor scan (11 matching posts)." },
+      { status: "used", when: "9 days ago", note: "Drafted into a chat — first-year expectations post." },
+    ],
+    seedStatus: "used",
+    seedReason: "",
+  },
+  {
+    id: "br-23",
+    laneId: "lane-4",
+    sourceId: "competitor-posts",
+    ageLabel: "3d ago",
+    headline: "The best coaching in the room happens between rounds",
+    summary:
+      "Gracie Barra ran a post asking students for the best advice they had been given on the mats, and it outperformed everything else they published in July. The subject — peer learning, not instruction — is barely covered by anyone else.",
+    researchType: "ready-to-post",
+    isTrending: true,
+    whyNow:
+      "Peer-learning posts drew the highest engagement of any theme in the window, on ten matching posts across two accounts.",
+    whyNowDetail:
+      "Ten items matched this subject, sixty percent on Instagram and forty on Facebook, and the engagement concentrated on the posts that asked a question rather than made a claim. The pattern held across both accounts that touched it, which suggests the response is to the subject rather than to one account's audience.",
+    research: {
+      title: "The thing beginners are most afraid of is the thing that teaches them fastest",
+      paragraphs: [
+        "One tracked account published a post in late July about the conversations that happen between rounds — questions asked, experiences swapped, advice passed down — and closed it by asking followers for the best guidance they had received on the mats. It drew more response than any of that account's promotional posts in the same window.",
+        "The framing matters. It presents the room as collaborative rather than competitive, and it makes the explicit claim that a beginner has something to learn from everyone training near them, not only from the instructor. Ten posts across two academies touched the theme; sixty percent ran on Instagram.",
+        "This lands on the exact hesitation that keeps adults out of a first class. The fear is not injury so much as being the least capable person present and having that be visible. A room where the person ahead of you is expected to help you is a different proposition to one where they are expected to beat you.",
+        "The gap is that everyone celebrates the culture and nobody explains how it is produced. It is not accidental — it comes from how rounds are paired, how the tap is treated, and what an instructor does when a stronger student goes too hard. That is the piece worth writing, because it is the piece a parent or a returning adult is actually assessing.",
+      ],
+    },
+    posts: [],
+    history: [
+      { status: "new", when: "3 days ago", note: "Surfaced from the 1–31 July competitor scan (10 matching posts)." },
+      { status: "new", when: "2 days ago", note: "Flagged trending — engagement above the window baseline." },
+      { status: "saved", when: "1 day ago", note: "Saved for later." },
+    ],
+    seedStatus: "saved",
+    seedReason: "",
+  },
+  {
+    id: "br-24",
+    laneId: "lane-4",
+    sourceId: "competitor-posts",
+    ageLabel: "7w ago",
+    headline: "Is grappling alone enough? The striking question parents keep asking",
+    summary:
+      "Six Blades has its 'Little Samurai' group training stand-up striking alongside grappling. One post, one account — but it puts a question in front of parents that is worth answering properly.",
+    researchType: "ready-to-post",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "Most of what a child actually faces isn't a punch",
+      paragraphs: [
+        "A single Instagram post in the July window shows a nearby academy's seven-to-twelve group working stand-up striking alongside their grappling. One matching item out of twenty-five, which is under the three-item floor this lane treats as evidence — but adding striking to a kids curriculum is a positioning decision, and the implied claim travels further than the post does.",
+        "The claim is that grappling alone is incomplete self-defence, and it is the kind of thing a parent hears once and then carries into every comparison. It deserves a real answer rather than a defensive one.",
+        "The answer is about what children actually encounter. Playground and schoolyard confrontations are overwhelmingly grabs, shoves, pins and being taken to the ground — not exchanges of punches. Grappling trains precisely that situation, and it trains it with an outcome that does not require hurting the other child: control, escape, and a conflict that ends without escalating. Striking trains a child to answer force with force, which is a different instinct to rehearse and a harder one to switch off.",
+        "That is the post. Not a rebuttal of another academy's curriculum, but the mechanism a parent is trying to reason about when they ask whether their child should learn to punch.",
+      ],
+    },
+    posts: [],
+    history: [
+      { status: "new", when: "7 weeks ago", note: "Surfaced from the 1–31 July competitor scan (1 matching post)." },
+      { status: "ignored", when: "6 weeks ago", note: "Ignored — single post, below the evidence floor." },
+    ],
+    seedStatus: "ignored",
+    seedReason:
+      "Real question, but one post from one account is thin. Revisit when more than a single post is driving it.",
+  },
+  {
+    id: "br-25",
+    laneId: "lane-4",
+    sourceId: "competitor-posts",
+    ageLabel: "27d ago",
+    headline: "Competitors sell confidence to girls and character to boys",
+    summary:
+      "Gracie Barra's youth copy splits cleanly by gender — empowerment and fun for girls, self-control and respect for boys. It is the most consistent pattern in the scan and nobody has questioned whether parents want the split.",
+    researchType: "ready-to-post",
+    isTrending: false,
+    isUpdated: true,
+    whatChanged:
+      "Last sync this looked like two unrelated post series. Eleven items in, the split is systematic: every girls-facing post leads on empowerment and friendship, every boys-facing one leads on self-control and respect.",
+    research: {
+      title: "The same programme, described two different ways depending on the child",
+      paragraphs: [
+        "Eleven July posts cover youth programmes, eighty-two percent of them on Instagram, and the framing divides by gender with unusual consistency. Posts about boys lead on behavioural outcomes — self-control, respect, problem-solving, perseverance, raising boys who are kind and capable rather than fighters. Posts about girls lead on empowerment, self-assurance, fun and friendship, frequently welcoming pairs of sisters.",
+        "Both halves are reasonable on their own. Read together they describe the same class twice, and the split implies the two children are there for different reasons. A parent with a son and a daughter is being sold two programmes.",
+        "There is a straightforward position available here, and it is the one this Playbook already holds: the mechanism does not vary by child. The tap teaches the same thing to everyone in the room. Leverage over strength matters more to the smaller person regardless of who that is. Control rather than aggression is the point of the art, not a girls' version of it.",
+        "The scan also fills in the specifics worth answering alongside: dedicated cohorts for four-year-olds and for seven-to-twelves, a parent-and-child class, and a free introductory session. Those are the concrete comparisons a parent will make once the framing question is settled.",
+      ],
+    },
+    posts: [],
+    history: [
+      { status: "new", when: "27 days ago", note: "Surfaced from the 1–31 July competitor scan (11 matching posts)." },
+    ],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-26",
+    laneId: "lane-4",
+    sourceId: "competitor-posts",
+    ageLabel: "6d ago",
+    headline: "Most of what the Carlsbad academies published in July was about themselves",
+    summary:
+      "Anniversaries, belt promotions, new-member welcomes and holiday greetings account for the bulk of the twenty-five posts in the window. Four self-promotional formats, three academies, almost no teaching.",
+    researchType: "competitive-intelligence",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "Four formats, three academies, and a month with almost nothing to learn from",
+      paragraphs: [
+        "The July scan flags four recurring formats as self-promotional rather than subject matter: school anniversary and seminar announcements, individual belt and stripe promotions, welcome posts for new and returning students, and Independence Day greetings. Between them they account for most of the twenty-five posts collected across the three tracked academies.",
+        "That is not a criticism of any one of them — social proof is a legitimate thing for a local academy to publish, and the promotions genuinely matter to the students in them. It is an observation about what is left over. Strip the four formats out and the month contains a handful of posts that teach a parent or a prospective adult student anything.",
+        "The competitive read is that attention in this category is not being won on content. It is being won on frequency and on local familiarity, which is a position that is hard to attack directly and easy to go around. Everything else in this lane — how character development is actually produced, what a realistic first year looks like, why a room where people help each other is safer — is unoccupied ground.",
+        "The practical consequence is about cadence rather than volume. Matching their posting rate is the wrong target; publishing the explanations they are not publishing is the cheap one.",
+      ],
+    },
+    posts: [],
+    history: [
+      {
+        status: "new",
+        when: "6 days ago",
+        note: "Surfaced from the 1–31 July competitor scan (aggregate noise flags).",
+      },
+    ],
+    seedStatus: "new",
+    seedReason: "",
+  },
 ];
