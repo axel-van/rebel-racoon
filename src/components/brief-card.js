@@ -144,7 +144,15 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
       ${raw(
         brief.isUpdated && brief.whatChanged
           ? html`<span class="topics-card__changed">
-              <strong class="topics-card__changed-label">What changed:</strong> ${brief.whatChanged}
+              <!-- The clamp goes on an INNER span, not on the tinted block. A
+                   -webkit-line-clamp element clips at its PADDING box, so with
+                   the block's own 11px bottom padding a third line rendered into
+                   that strip below the ellipsis — truncated and still visible.
+                   Clamping a child that has no padding puts the clip where the
+                   text ends. -->
+              <span class="topics-card__changed-clamp">
+                <strong class="topics-card__changed-label">What changed:</strong> ${brief.whatChanged}
+              </span>
             </span>`
           : "",
       )}

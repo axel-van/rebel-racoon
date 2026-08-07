@@ -31,7 +31,7 @@ import {
 } from "../briefs-store.js?v=26";
 import { getLanes } from "../research-store.js?v=20";
 import { getContextById } from "../contexts-store.js?v=55";
-import { renderBriefCard } from "./brief-card.js?v=23";
+import { renderBriefCard } from "./brief-card.js?v=24";
 import { renderSocialPostCard } from "./social-post-card.js?v=10";
 import { showToast } from "./toast.js?v=20";
 

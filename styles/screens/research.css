@@ -891,12 +891,20 @@
    gap 16px is the card-to-card spacing the handoff specifies; the header gets a
    wider gap beneath it via the adjacent rule below, so it reads as a header
    rather than as the first card. */
+/* Wide enough for two cards side by side. The card caps at its own content
+   (--topics-card-max, tokens.css), so this is that twice plus the gap between
+   them — derived, so the column and the card can't disagree. It was 820, which
+   fitted one 666px card and left the header overhanging it by 154px; at this
+   width the header spans the same box the two columns do.
+
+   The cards themselves are laid out by .topics-agegroup, which is the grid. This
+   is still a flex column because its children are the header and those groups. */
 .research-feed__inner,
 .research-trending__inner {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 820px;
+  max-width: calc(2 * var(--topics-card-max) + var(--ref-spacing-sm));
   margin: 0 auto;
 }
 

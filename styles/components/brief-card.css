@@ -13,31 +13,11 @@
  *    the rule it taught still holds. */
 
 .topics-card {
-  /* ── One reading measure for every block of prose on the card ─────────────
-     The card is 820px wide, which put the summary at a measured ~112 characters
-     a line — half again the 45–75 that prose sits comfortably at, and long
-     enough that the eye loses the line it is returning to. 620px brings it to
-     ~90 across all eight seeded summaries.
-
-     Not narrower, and the constraint is the clamp rather than taste: the summary
-     shows three lines, so a measure below ~82 characters would push the longest
-     seeded summary (244 characters) into a fourth line and cut it. 620px is the
-     value that gains the most measure while every summary still lands whole.
-
-     A length rather than `ch`, because these elements are 15px and 14px: the
-     same `ch` count would give them different widths and leave the tinted blocks
-     ending 40px short of the summary above them. One value, one right edge.
-
-     It governs the SOURCE ROW and the HEADLINE too, so the status pill — which
-     the row's spacer pushes to the far right — lands on the same edge the
-     summary stops at. Those caps are belt and braces now that the card itself
-     is capped, but they still do work in the picker, where the dialog can make
-     the card narrower than the measure. */
-  --topics-measure: 620px;
-
-  /* The gutter, held here so the body's padding, the footer's inset and the
-     card's own width can't drift apart. */
-  --topics-pad: 22px;
+  /* Geometry — --topics-measure / --topics-card-pad / --topics-card-max — lives
+     in styles/tokens.css, because research.css needs the same numbers to size
+     the feed column to two cards. The measure is ~90 characters at the summary's
+     15px, down from the ~112 the full-width card used to give; below ~82 the
+     longest seeded summary would spill past the 3-line clamp and be cut. */
 
   display: flex;
   flex-direction: column;
@@ -47,7 +27,7 @@
      the last thing in it — the status pill and the summary both stop at the
      measure — so the right third was empty frame that made the column look
      under-filled rather than roomy. */
-  max-width: calc(var(--topics-measure) + 2 * var(--topics-pad) + 2px);
+  max-width: var(--topics-card-max);
   /* No padding here — the body button and the footer each carry their own, so
      the whole padded text area is clickable instead of a dead gutter. */
   background: var(--ref-color-white);
@@ -92,7 +72,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: 20px var(--topics-pad) 0;
+  padding: 20px var(--topics-card-pad) 0;
   border: 0;
   background: transparent;
   font: inherit;
@@ -230,6 +210,11 @@
    that still reads as a tint, and menthol-150 keeps the label legible on it.
    Deliberately quieter than Why-now: "the story moved" matters less than "this
    is spiking", so it must not compete for the same attention. */
+/* Why-now stays unclamped on purpose: it is one sentence about why the topic is
+   spiking, and it has never needed the room. What-changed is a diff against the
+   last scan and grows with however much moved, which is exactly the kind of text
+   that sets a card's height from the outside — so it clamps to two lines, and
+   the full text stays one click away in the topic's own dialog. */
 .topics-card__changed {
   display: block;
   max-width: var(--topics-measure);
@@ -242,6 +227,19 @@
   font-weight: 500;
   line-height: 1.55;
   color: var(--ref-color-grey-80);
+}
+
+/* The clamp lives here rather than on the block above, because a
+   -webkit-line-clamp element clips at its PADDING box: with the block's own 11px
+   of bottom padding, a third line rendered into that strip below the ellipsis —
+   truncated and still perfectly readable, which is the worst of both. This span
+   has no padding, so the clip lands where the text ends. */
+.topics-card__changed-clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 .topics-card__changed-label {
@@ -269,26 +267,29 @@
 }
 
 /* ── Age separators between cards ─────────────────────────────────────────
-   Moved here from styles/screens/research.css: the Pick-a-topic modal groups by
-   age too now, so this is card-list chrome shared by two surfaces rather than
-   one screen's styling. */
-/* One section per age frame. The cards inside are .topics-card, unchanged; this
-   is group chrome only.
-   The sections are flex items of .research-feed__inner and already take its 16px
-   gap, so this adds a second 16 — the boundary between two time frames reads
-   wider than the boundary between two cards, which is the whole point of a
-   separator. */
-.topics-agegroup + .topics-agegroup {
-  margin-top: var(--ref-spacing-sm);
+   Card-list chrome shared by the feed and the Pick-a-topic modal, which is why
+   it lives with the card rather than in styles/screens/research.css.
+
+   TWO COLUMNS. The card caps at its own content now, which left the feed's
+   column half empty; a grid puts the reclaimed width to work instead of turning
+   it into margin. auto-fill rather than a hard `repeat(2, …)`, so the narrow
+   viewport — and the picker, whose dialog only ever fits one — collapse to a
+   single column on their own.
+
+   The 500px floor is what decides the breakpoint: two columns need
+   2 × 500 + gap, so the grid drops to one below ~1016px. The cards stretch to
+   fill their track up to --topics-card-max and stop there. */
+.topics-agegroup {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+  gap: var(--ref-spacing-sm);
+  align-items: start;
 }
 
-/* Deliberately identical to .topics-group__label on /topics — the app's other
-   age-grouped card list. Two surfaces solving the same problem must not look
-   like two different ideas, so this copies its text style rather than inventing
-   a second heading treatment. No rule line, for the same reason: /topics does
-   not draw one, and the whitespace already separates. */
+/* The label is a heading for the whole group, not a cell in it. */
 .topics-agegroup__label {
-  margin: 0 0 var(--ref-spacing-xs);
+  grid-column: 1 / -1;
+  margin: 0;
   font-family: var(--sys-text-style-caption-bold-font-family);
   font-size: var(--sys-text-style-caption-bold-size);
   line-height: var(--sys-text-style-caption-bold-line-height);
@@ -298,12 +299,14 @@
   color: var(--sys-text-color-light);
 }
 
-/* An adjacent-sibling margin, not a flex gap on the section: a gap would apply
-   between the label and its first card too, where those want to sit closer.
-   Matches .research-feed__inner's own 16px so cards are evenly spaced whether
-   they sit in a group or not. */
-.topics-agegroup .topics-card + .topics-card {
-  margin-top: var(--ref-spacing-sm);
+.topics-agegroup + .topics-agegroup {
+  margin-top: var(--ref-spacing-md);
+}
+
+/* The card fills its track rather than sitting at its cap, so two columns share
+   the row evenly instead of leaving a ragged gutter between them. */
+.topics-agegroup .topics-card {
+  width: 100%;
 }
 
 /* Horizontal MARGIN rather than padding, deliberately: the border-top is drawn
@@ -314,7 +317,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 14px var(--topics-pad) 0;
+  margin: 14px var(--topics-card-pad) 0;
   padding: 12px 0 14px;
   border-top: 1px solid var(--ref-color-grey-10);
 }

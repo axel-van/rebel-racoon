@@ -91,6 +91,15 @@
   --app-radius-lg: var(--sys-border-radius-lg); /* 8 */
   --app-radius-button-sm: 6px; /* handoff small buttons / icon-buttons */
   --app-radius-starter: 10px; /* handoff starter cards */
+  /* ── Topic card geometry ──────────────────────────────────────────────────
+     Here rather than on .topics-card because two stylesheets need them:
+     brief-card.css draws the card, and research.css sizes the feed column to
+     hold two of them. --topics-card-max is the measure plus both gutters plus
+     the two 1px borders, so the card ends exactly where its content does. */
+  --topics-measure: 620px;
+  --topics-card-pad: 22px;
+  --topics-card-max: calc(var(--topics-measure) + 2 * var(--topics-card-pad) + 2px);
+
   --app-radius-card: 12px; /* handoff source/idea/post/context cards */
   --app-radius-xl: 12px; /* alias kept for back-compat with existing screens */
   --app-radius-modal: 16px; /* handoff composer + modals */
