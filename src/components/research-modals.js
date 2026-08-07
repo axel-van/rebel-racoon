@@ -21,10 +21,17 @@ import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=10";
-import { getBriefById, getBriefsForLane, ignoreBrief, setStatus } from "../briefs-store.js?v=26";
+import {
+  ageMinutes,
+  getBriefById,
+  getBriefsForLane,
+  groupBriefsByAge,
+  ignoreBrief,
+  setStatus,
+} from "../briefs-store.js?v=26";
 import { getLanes } from "../research-store.js?v=20";
 import { getContextById } from "../contexts-store.js?v=55";
-import { renderBriefCard } from "./brief-card.js?v=22";
+import { renderBriefCard } from "./brief-card.js?v=23";
 import { renderSocialPostCard } from "./social-post-card.js?v=10";
 import { showToast } from "./toast.js?v=20";
 
@@ -532,12 +539,28 @@ function renderPlaybookStep(ctx) {
 }
 
 // ── Step 2: the topics themselves ──────────────────────────────────────────
+// Grouped BY AGE, exactly like the topic-list screen — same groupBriefsByAge,
+// same AGE_GROUPS order, same .topics-agegroup chrome. It used to group by lane,
+// which meant the one list in the app that shows the feed's cards sorted them by
+// a different rule than the feed does; "3 days ago" is the thing you actually
+// scan a topic list by, and the picker had no reason to disagree.
+//
+// The lane didn't just disappear with its headings: it moves onto each card's
+// meta line (see pickerCard), because a Playbook can own several lanes and the
+// picker is the one surface that spans them.
 function renderTopicStep(ctx) {
-  const groups = pickerLanes()
-    .map((lane) => ({ lane, ...pickerSplit(lane.id) }))
-    .filter((g) => g.shown.length || g.hiddenTrending.length);
-  const shownTotal = groups.reduce((n, g) => n + g.shown.length, 0);
-  const trending = groups.flatMap((g) => g.hiddenTrending);
+  const lanes = pickerLanes().map((lane) => ({ lane, ...pickerSplit(lane.id) }));
+  const laneNameOf = new Map();
+  const shown = [];
+  for (const g of lanes) {
+    for (const b of [...g.shown, ...g.hiddenTrending]) laneNameOf.set(b.id, g.lane.name);
+    shown.push(...g.shown);
+  }
+  // Newest first inside a group, matching the feed's own sort.
+  shown.sort((a, b) => ageMinutes(a.ageLabel) - ageMinutes(b.ageLabel));
+  const ageGroups = groupBriefsByAge(shown);
+  const shownTotal = shown.length;
+  const trending = lanes.flatMap((g) => g.hiddenTrending);
   const pb = getContextById(pickerPlaybook);
 
   openShell("idea-picker", ctx, {
@@ -562,16 +585,15 @@ function renderTopicStep(ctx) {
                   You ignored ${trending.length === 1 ? "this one" : "these"}, but
                   ${trending.length === 1 ? "it is" : "they are"} running above baseline again.
                 </p>
-                ${raw(trending.map((b) => pickerCard(b)).join(""))}
+                ${raw(trending.map((b) => pickerCard(b, laneNameOf.get(b.id))).join(""))}
               </section>`
             : "") +
-          groups
-            .filter((g) => g.shown.length)
+          ageGroups
             .map(
-              (g) =>
-                html`<section class="research-pick__group">
-                  <h4 class="research-pick__group-title">${g.lane.name}</h4>
-                  ${raw(g.shown.map((b) => pickerCard(b)).join(""))}
+              ({ group, briefs }) =>
+                html`<section class="topics-agegroup">
+                  <h4 class="topics-agegroup__label">${group.label}</h4>
+                  ${raw(briefs.map((b) => pickerCard(b, laneNameOf.get(b.id))).join(""))}
                 </section>`,
             )
             .join("")
@@ -592,8 +614,8 @@ function renderTopicStep(ctx) {
 // feed two seconds earlier. The summary, the Trending and Updated marks and the
 // Why-now / What-changed blocks are the things you actually choose on, and the
 // row dropped all four.
-function pickerCard(b) {
-  return renderBriefCard(b, { source: findResearchSource(b.sourceId), variant: "picker" });
+function pickerCard(b, laneName = "") {
+  return renderBriefCard(b, { source: findResearchSource(b.sourceId), variant: "picker", laneName });
 }
 
 // ─── 7. Full research ──────────────────────────────────────────────────────

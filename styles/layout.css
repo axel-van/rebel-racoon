@@ -90,23 +90,20 @@ body.onboarding .app-content {
   grid-column: 1;
 }
 
-/* ---------- Empty-chat full-bleed ----------
-   A fresh chat (the empty-state hero) drops the topbar and reclaims its row
-   so the welcome view stays as simple as possible — just the sidebar + the
-   centred hero. Reactive via :has(): the instant a turn lands, .empty-chat is
-   gone, the topbar (with its Sources / Ideas / Drafts pills) returns. The
-   sidebar stays put (unlike onboarding mode, which also hides it). */
-.app-shell:has(.empty-chat) {
-  grid-template-rows: 1fr;
-}
+/* ---------- Empty chat ----------
+   A fresh chat KEEPS the topbar, which reads "New chat" (topbar.js falls back to
+   that, or to ?title=, for a session not yet in the store). It used to be hidden
+   here for a cleaner welcome view, but that made the new-chat screen the only
+   route in the app with no header — the page had no name, and the frame jumped
+   the moment the first turn landed and the bar reappeared.
 
-.app-shell:has(.empty-chat) .app-topbar {
+   Only the RIGHT CLUSTER is dropped: Sources / Ideas / Drafts all count things
+   an empty chat has none of, so on this one screen they are three disabled
+   controls describing nothing. (The status-card toggle beside them is already
+   suppressed by its own emptiness check.) Everything returns with the first
+   turn, when the counts start meaning something. */
+.app-shell:has(.empty-chat) .app-topbar__right {
   display: none;
-}
-
-.app-shell:has(.empty-chat) .app-sidebar,
-.app-shell:has(.empty-chat) .app-content {
-  grid-row: 1;
 }
 
 /* ---------- Clip Studio (all stages) ----------

@@ -73,7 +73,7 @@ function renderTrendingMark() {
   </span>`;
 }
 
-export function renderBriefCard(brief, { source = null, variant = "feed", menuOpen = false } = {}) {
+export function renderBriefCard(brief, { source = null, variant = "feed", menuOpen = false, laneName = "" } = {}) {
   if (!brief) return "";
   const trendingPage = variant === "trending";
   const picker = variant === "picker";
@@ -114,6 +114,11 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
                 ><span class="topics-card__source">${source.name}</span>`
             : "",
         )}
+        <!-- The lane, picker only. The feed and the attention page are already
+             inside one lane, so naming it there would be noise; the picker spans
+             every lane a Playbook owns, and grouping by age (not by lane) is
+             what took the lane headings away. -->
+        ${raw(laneName ? html`<span class="topics-card__lane">· ${laneName}</span>` : "")}
         <span class="topics-card__when">· ${brief.ageLabel}</span>
         <span class="topics-card__spacer"></span>
         ${raw(brief.isTrending ? renderTrendingMark() : "")}${raw(brief.isUpdated ? renderUpdatedMark() : "")}

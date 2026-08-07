@@ -883,6 +883,22 @@
   gap: var(--ref-spacing-xxs) var(--ref-spacing-xs);
 }
 
+/* Playbook › topic list. The Playbook is the quieter of the two — it answers
+   "whose brand", which on this screen you mostly already know; the topic list is
+   the part that varies card to card. */
+.starter-topic__pb {
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-40);
+}
+
+.starter-topic__sep {
+  margin: 0 var(--ref-spacing-xxxs);
+  font-size: var(--sys-text-style-caption-bold-size);
+  color: var(--ref-color-grey-20);
+}
+
 .starter-topic__lane {
   font-size: var(--sys-text-style-caption-bold-size);
   line-height: var(--sys-text-style-caption-bold-line-height);

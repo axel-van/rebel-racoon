@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=312";
+import { renderTopbar } from "../components/topbar.js?v=313";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=74";
 import {
   getConnectedProfiles,
@@ -73,7 +73,7 @@ import {
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { getBriefById, getStarterTopics } from "../briefs-store.js?v=26";
 import { getLaneById } from "../research-store.js?v=20";
-import * as contextBuilder from "../context-builder.js?v=279";
+import * as contextBuilder from "../context-builder.js?v=280";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -110,7 +110,7 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=2";
 import { showToast } from "../components/toast.js?v=20";
 // The composer's Add menu reaches Content Ideas through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaPicker } from "../components/research-modals.js?v=39";
+import { openIdeaPicker } from "../components/research-modals.js?v=40";
 import { findResearchSource } from "../research-catalog.js?v=10";
 import {
   openDrafts as openDraftsPanel,
@@ -118,7 +118,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=446";
+} from "../components/right-panel.js?v=447";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=16";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -1947,8 +1947,17 @@ function starterTopicTone(brief) {
 
 function renderStarterTopicCard(brief) {
   const lane = getLaneById(brief.laneId);
+  const pb = lane ? getContextById(lane.playbookId) : null;
   const src = findResearchSource(brief.sourceId);
   const tone = starterTopicTone(brief);
+  // NB: this function builds a PLAIN template literal, not an html`` one, so
+  // every fragment below is interpolated as raw HTML — never wrap one in raw(),
+  // which only means something inside html`` and stringifies to "[object
+  // Object]" here.
+  const crumb = pb
+    ? `<span class="starter-topic__pb">${escapeHtml(pb.name)}</span
+        ><span class="starter-topic__sep" aria-hidden="true">›</span>`
+    : "";
   // The marks are the feed's own components (trending-mark.css), not a second
   // drawing of the same idea — the accent says "something is up with this one"
   // and the mark says which.
@@ -1966,6 +1975,11 @@ function renderStarterTopicCard(brief) {
     >
       <i class="starter-card__art ${escapeHtml(src?.icon || "ap-icon-note")}" aria-hidden="true"></i>
       <span class="starter-topic__head">
+        <!-- Playbook › topic list. Both, because the card can surface a topic
+             from any Playbook the account owns — the topic list alone doesn't
+             say whose brand it belongs to, and on this screen you haven't picked
+             one yet. The chevron reads as a path rather than two peer labels. -->
+        ${crumb}
         <span class="starter-topic__lane">${escapeHtml(lane ? lane.name : "Content Ideas")}</span>
         ${mark}
       </span>

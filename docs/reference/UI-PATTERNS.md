@@ -247,6 +247,21 @@ Deux ajustements imposés par la réutilisation :
 modal) tout en vivant dans `styles/screens/contexts.css`. Au troisième, la déplacer
 dans `styles/components/`.
 
+### Les séparateurs d'âge appartiennent à la carte, pas à l'écran
+
+`.topics-agegroup` vit désormais dans
+[`styles/components/brief-card.css`](../../styles/components/brief-card.css) et non
+dans `styles/screens/research.css` : le modal « Pick a topic » groupe par âge lui
+aussi, donc c'est de la chrome de liste de cartes partagée par deux surfaces. Le
+modal groupait auparavant par topic list, ce qui faisait de la seule liste montrant
+les cartes du feed la seule à les trier autrement que lui.
+
+Contrepartie assumée : en groupant par âge on perd les titres de topic list, alors
+qu'un Playbook peut en posséder plusieurs. L'information redescend donc sur la
+carte, dans `.topics-card__lane` — **variante picker uniquement**, parce que le feed
+et la page attention sont déjà à l'intérieur d'une seule lane et que la nommer y
+serait du bruit.
+
 ### Un signal d'attention ne vit que dans « Last 7 days »
 
 Trending et Updated affirment quelque chose sur le **maintenant**. Sous un séparateur
