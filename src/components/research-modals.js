@@ -107,7 +107,7 @@ function isOpen() {
   return !!panel && !panel.hidden;
 }
 
-function openShell(kind, ctx, { title, sub = "", body, foot, wide = false }) {
+function openShell(kind, ctx, { title, sub = "", body, foot, wide = false, size = "" }) {
   init();
   requestOpen(MODAL_ID, close);
   active = { kind, ctx };
@@ -117,6 +117,9 @@ function openShell(kind, ctx, { title, sub = "", body, foot, wide = false }) {
   bodyEl.innerHTML = body;
   footEl.innerHTML = foot;
   panel.classList.toggle("research-modal--wide", wide);
+  // One extra width, for the step whose content sets its own. See
+  // .research-modal--topics in research-modals.css.
+  panel.classList.toggle("research-modal--topics", size === "topics");
   backdrop.hidden = false;
   // The `open` class, not just [hidden], is what actually reveals the scrim —
   // .app-modal-backdrop is display:none until it lands. Every other modal in the
@@ -566,9 +569,10 @@ function renderTopicStep(ctx) {
   openShell("idea-picker", ctx, {
     title: "Pick a topic",
     sub: `${shownTotal} ${shownTotal === 1 ? "topic" : "topics"} in ${pb ? pb.name : "this Playbook"}`,
-    // Wide, like step 1 and for the same reason: these are the feed's cards, and
-    // the feed gives them a full column.
-    wide: true,
+    // Sized to the card rather than to a generic "wide": the topic card caps
+    // itself at its own content, so the 768px shell step 1 uses would leave a
+    // dead column beside every card.
+    size: "topics",
     // Plain string concatenation, NOT raw(): openShell assigns this to
     // bodyEl.innerHTML, and raw() returns a marker object that only means
     // something inside an html`` template — as innerHTML it stringifies to

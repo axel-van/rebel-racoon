@@ -13,11 +13,43 @@
  *    the rule it taught still holds. */
 
 .topics-card {
+  /* ── One reading measure for every block of prose on the card ─────────────
+     The card is 820px wide, which put the summary at a measured ~112 characters
+     a line — half again the 45–75 that prose sits comfortably at, and long
+     enough that the eye loses the line it is returning to. 620px brings it to
+     ~90 across all eight seeded summaries.
+
+     Not narrower, and the constraint is the clamp rather than taste: the summary
+     shows three lines, so a measure below ~82 characters would push the longest
+     seeded summary (244 characters) into a fourth line and cut it. 620px is the
+     value that gains the most measure while every summary still lands whole.
+
+     A length rather than `ch`, because these elements are 15px and 14px: the
+     same `ch` count would give them different widths and leave the tinted blocks
+     ending 40px short of the summary above them. One value, one right edge.
+
+     It governs the SOURCE ROW and the HEADLINE too, so the status pill — which
+     the row's spacer pushes to the far right — lands on the same edge the
+     summary stops at. Those caps are belt and braces now that the card itself
+     is capped, but they still do work in the picker, where the dialog can make
+     the card narrower than the measure. */
+  --topics-measure: 620px;
+
+  /* The gutter, held here so the body's padding, the footer's inset and the
+     card's own width can't drift apart. */
+  --topics-pad: 22px;
+
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
+  /* The card ends where its content ends. Derived, not typed: the measure plus
+     both gutters plus the two 1px borders. Left at 820 the card ran 150px past
+     the last thing in it — the status pill and the summary both stop at the
+     measure — so the right third was empty frame that made the column look
+     under-filled rather than roomy. */
+  max-width: calc(var(--topics-measure) + 2 * var(--topics-pad) + 2px);
   /* No padding here — the body button and the footer each carry their own, so
-     the whole padded text area is clickable instead of a dead 22px gutter. */
+     the whole padded text area is clickable instead of a dead gutter. */
   background: var(--ref-color-white);
   border: 1px solid var(--ref-color-grey-10);
   border-radius: 14px;
@@ -57,30 +89,10 @@
    .topic-card__body: reset the chrome, inherit the type, left-align, and take the
    padding the card used to own. */
 .topics-card__body {
-  /* ── One reading measure for every block of prose on the card ─────────────
-     The card is 820px wide, which put the summary at a measured ~112 characters
-     a line — half again the 45–75 that prose sits comfortably at, and long
-     enough that the eye loses the line it is returning to. 620px brings it to
-     ~90 across all eight seeded summaries.
-
-     Not narrower, and the constraint is the clamp rather than taste: the summary
-     shows three lines, so a measure below ~82 characters would push the longest
-     seeded summary (244 characters) into a fourth line and cut it. 620px is the
-     value that gains the most measure while every summary still lands whole.
-
-     A length rather than `ch`, because these elements are 15px and 14px: the
-     same `ch` count would give them different widths and leave the tinted blocks
-     ending 40px short of the summary above them. One value, one right edge.
-
-     It governs the SOURCE ROW and the HEADLINE too, so the status pill — which
-     the row's spacer pushes to the far right — lands on the same edge the
-     summary stops at. It was overshooting by 150px, which read as the pill
-     belonging to the card rather than to the block of text under it. */
-  --topics-measure: 620px;
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: 20px 22px 0;
+  padding: 20px var(--topics-pad) 0;
   border: 0;
   background: transparent;
   font: inherit;
@@ -302,7 +314,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 14px 22px 0;
+  margin: 14px var(--topics-pad) 0;
   padding: 12px 0 14px;
   border-top: 1px solid var(--ref-color-grey-10);
 }

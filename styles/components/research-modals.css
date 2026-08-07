@@ -21,6 +21,17 @@
   width: min(768px, calc(100vw - 48px));
 }
 
+/* The topic step is sized to the CARD, not the other way round: the card caps
+   itself at its own content, so a 768px dialog left a ~60px dead column down the
+   right-hand side — fine on a page, wrong inside a bounded box. 706 is the card
+   plus this body's 20px padding on each side. The value is derived in
+   brief-card.css and restated here because a stylesheet can't read another's
+   custom property off an element it doesn't own; if the card's measure moves,
+   move this with it. */
+.research-modal--topics {
+  width: min(706px, calc(100vw - 48px));
+}
+
 .research-modal[hidden] {
   display: none;
 }
