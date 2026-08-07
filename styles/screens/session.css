@@ -874,35 +874,54 @@
   border-top-color: var(--starter-topic-accent);
 }
 
-/* Lane name + signal mark on one line above the title. */
+/* Crumb + signal mark on one line above the title. Two children, not four: the
+   wide gap here separates the LABEL from the MARK, and the crumb owns the tight
+   spacing between its own parts. */
 .starter-topic__head {
   position: relative;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  min-width: 0;
 }
 
-/* Playbook › topic list. The Playbook is the quieter of the two — it answers
-   "whose brand", which on this screen you mostly already know; the topic list is
-   the part that varies card to card. */
-.starter-topic__pb {
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-40);
+/* Playbook › topic list — one label in three parts, so they sit at the xxxs the
+   DS uses inside a compound label rather than at the row's xs. */
+.starter-topic__crumb {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+  /* Ellipsises as a unit rather than letting either half win a shrink fight. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.starter-topic__sep {
-  margin: 0 var(--ref-spacing-xxxs);
-  font-size: var(--sys-text-style-caption-bold-size);
-  color: var(--ref-color-grey-20);
-}
-
+/* ONE type ramp across all three parts. The separator used to inherit the
+   browser default (12px/18px/400 against the labels' 12px/16px/700), so its box
+   was 2px taller and align-items:center pushed it a pixel below its neighbours —
+   the crumb's three baselines sat at 499 / 500 / 499. Same metrics = same box =
+   centring and baseline alignment agree. */
+.starter-topic__pb,
+.starter-topic__sep,
 .starter-topic__lane {
   font-size: var(--sys-text-style-caption-bold-size);
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
+}
+
+/* The Playbook answers "whose brand", which on this screen you mostly already
+   know; the topic list is the part that varies card to card, so it is the darker
+   of the two. The chevron matches the Playbook rather than going lighter still —
+   grey-20 is a BORDER token and read as a rendering artefact at 12px. */
+.starter-topic__pb,
+.starter-topic__sep {
+  color: var(--ref-color-grey-40);
+}
+
+.starter-topic__lane {
   color: var(--ref-color-grey-60);
 }
 
