@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=314";
+import { renderTopbar } from "../components/topbar.js?v=315";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=74";
 import {
   getConnectedProfiles,
@@ -73,7 +73,7 @@ import {
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { getBriefById, getStarterTopics } from "../briefs-store.js?v=26";
 import { getLaneById } from "../research-store.js?v=20";
-import * as contextBuilder from "../context-builder.js?v=281";
+import * as contextBuilder from "../context-builder.js?v=282";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -118,7 +118,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=448";
+} from "../components/right-panel.js?v=449";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=16";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -1954,11 +1954,11 @@ function renderStarterTopicCard(brief) {
   // every fragment below is interpolated as raw HTML — never wrap one in raw(),
   // which only means something inside html`` and stringifies to "[object
   // Object]" here.
-  // Playbook › topic list, wrapped in ONE element. The three parts belong to a
-  // single label, so they get their own tight gap; the head's wider gap then
-  // separates the whole crumb from the signal mark. Flat in the head row, the
-  // flex gap spaced the parts of the label further apart (16px) than the label
-  // was from the mark (12px), which read as three things rather than one.
+  // Playbook › topic list, wrapped in ONE element so the three parts share a
+  // tight gap of their own. It is now the ONLY thing on the head row — the
+  // signal mark moved down to the end of the title — so the crumb gets the whole
+  // width and the topic list ellipsises inside it rather than the crumb being
+  // clipped as a block.
   const crumb = `<span class="starter-topic__crumb">${
     pb
       ? `<span class="starter-topic__pb">${escapeHtml(pb.name)}</span><span class="starter-topic__sep" aria-hidden="true">›</span>`
@@ -1985,9 +1985,15 @@ function renderStarterTopicCard(brief) {
              from any Playbook the account owns — the topic list alone doesn't
              say whose brand it belongs to, and on this screen you haven't picked
              one yet. The chevron reads as a path rather than two peer labels. -->
-        ${crumb}${mark}
+        ${crumb}
       </span>
-      <span class="starter-card__title">${escapeHtml(brief.headline)}</span>
+      <!-- The signal mark rides at the END OF THE TITLE, inline, so it reads as
+           part of the sentence it qualifies rather than as a second label
+           competing with the crumb above. Inline-flex, so it flows with the text
+           and lands after the last word wherever that falls. -->
+      <span class="starter-card__title"
+        >${escapeHtml(brief.headline)}${mark ? ` ${mark}` : ""}</span
+      >
       <span class="starter-card__cta ap-link standalone small"
         >Start drafting<i class="ap-icon-arrow-right" aria-hidden="true"></i
       ></span>

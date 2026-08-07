@@ -880,15 +880,13 @@
    60px they had no reason to give up — invisible at two columns, a fifth of the
    card at one.
 
-   nowrap, deliberately. Wrapping put the mark on its own line as soon as the
-   crumb got long, which made the head two lines tall on some cards and one on
-   others. The crumb yields instead: see the flex rules below. */
+   One child now — the crumb. The signal mark moved to the end of the title, so
+   nothing here competes with the path for the row. */
 .starter-topic__head {
   position: relative;
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
-  gap: var(--ref-spacing-xs);
   min-width: 0;
   /* Clearance for the flip button, measured rather than guessed: the control is
      36px at right:12px, and this row already sits inside the card's 16px
@@ -898,12 +896,14 @@
   padding-right: var(--ref-spacing-xl);
 }
 
-/* When the row is too narrow, the PATH truncates and the SIGNAL never does.
-   "Trending" is why the card is at the top of the queue; which topic list it
-   came from is context you can live without half of. */
-.starter-topic__head > .trending-mark,
-.starter-topic__head > .updated-mark {
-  flex: 0 0 auto;
+/* The mark, inline at the end of the title. baseline rather than middle so it
+   sits on the sentence's own line rather than floating against the 24px
+   leading; the 4px lead keeps it off the last word without a space-collapse
+   dependency. */
+.starter-card--topic .starter-card__title .trending-mark,
+.starter-card--topic .starter-card__title .updated-mark {
+  vertical-align: baseline;
+  margin-left: var(--ref-spacing-xxxs);
 }
 
 /* Playbook › topic list — one label in three parts, so they sit at the xxxs the
@@ -914,10 +914,37 @@
   gap: var(--ref-spacing-xxxs);
   flex: 0 1 auto;
   min-width: 0;
-  /* Ellipsises as a unit rather than letting either half win a shrink fight. */
+}
+
+/* The TOPIC LIST is what ellipsises — it is the tail of the path and the part
+   that runs long. Clipping the crumb as a block put the "…" at the container's
+   edge and cut the lane mid-word with no mark of its own; an ellipsis on the
+   element that overflows says "there is more of this name", which is the honest
+   reading.
+   flex-basis 0 on the lane is what makes it the ONLY thing that yields. With
+   both at basis auto they shrank in proportion to their content, so the Playbook
+   ellipsised too and the crumb lost a word at each end. At basis 0 the lane's
+   hypothetical size is nothing, so the Playbook keeps its natural width and the
+   lane simply takes whatever is left — which is the sentence "this Playbook,
+   this topic list (name too long to show)". */
+.starter-topic__pb,
+.starter-topic__lane {
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.starter-topic__pb {
+  flex: 0 1 auto;
+}
+
+.starter-topic__sep {
+  flex: 0 0 auto;
+}
+
+.starter-topic__lane {
+  flex: 1 1 0;
 }
 
 /* ONE type ramp across all three parts. The separator used to inherit the
