@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=315";
+import { renderTopbar } from "../components/topbar.js?v=316";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=74";
 import {
   getConnectedProfiles,
@@ -73,7 +73,7 @@ import {
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { getBriefById, getStarterTopics } from "../briefs-store.js?v=26";
 import { getLaneById } from "../research-store.js?v=20";
-import * as contextBuilder from "../context-builder.js?v=282";
+import * as contextBuilder from "../context-builder.js?v=283";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -118,7 +118,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=449";
+} from "../components/right-panel.js?v=450";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=16";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -1931,10 +1931,59 @@ let starterTopicSession = null;
 // position across chats would mean that once you had flipped through four
 // topics, every new chat you ever opened greeted you with the empty state —
 // the queue is "what's worth drafting right now", not a read receipt.
+// The wait before the first topic appears. Purely theatrical — nothing is
+// actually being fetched — but it is the one moment the prototype can show that
+// topics ARRIVE rather than sit there waiting to be found, which is the whole
+// premise of Content Ideas. Three seconds is long enough to read the line and
+// short enough that nobody sits through it twice.
+const STARTER_TOPIC_COUNTDOWN = 3;
+let starterTopicCountdown = STARTER_TOPIC_COUNTDOWN;
+let starterTopicTimer = null;
+
 function syncStarterTopicSession(sessionId) {
   if (starterTopicSession === sessionId) return;
   starterTopicSession = sessionId;
   starterTopicIndex = 0;
+  starterTopicCountdown = STARTER_TOPIC_COUNTDOWN;
+}
+
+// One ticker, driven from the slot's own DOM. It rewrites only the number, and
+// re-renders the slot once when the count runs out — cheaper than repainting the
+// card every second, and it means the reveal reuses the same enter animation the
+// flip does.
+//
+// It stops itself when the slot leaves the document, so navigating away or
+// sending the first message can't leave a timer repainting a detached tree. That
+// self-check is the cleanup, deliberately: the hero is re-rendered from several
+// places and a teardown hook in only some of them would leak from the others.
+function startStarterTopicCountdown() {
+  if (starterTopicTimer) clearInterval(starterTopicTimer);
+  starterTopicTimer = window.setInterval(() => {
+    const slot = document.querySelector("[data-starter-topic-slot]");
+    if (!slot || !document.body.contains(slot)) {
+      clearInterval(starterTopicTimer);
+      starterTopicTimer = null;
+      return;
+    }
+    starterTopicCountdown -= 1;
+    if (starterTopicCountdown > 0) {
+      const n = slot.querySelector("[data-starter-topic-count]");
+      if (n) n.textContent = `${starterTopicCountdown}s`;
+      return;
+    }
+    clearInterval(starterTopicTimer);
+    starterTopicTimer = null;
+    const host = slot.parentElement;
+    const next = document.createElement("div");
+    next.innerHTML = renderStarterTopicSlot();
+    const fresh = next.querySelector("[data-starter-topic-slot]");
+    if (!fresh) return;
+    host.replaceChild(fresh, slot);
+    const stage = fresh.querySelector("[data-starter-topic-stage]");
+    if (stage && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      stage.classList.add("is-entering");
+    }
+  }, 1000);
 }
 
 // A brief's accent, keyed off the same two booleans the topic card reads. New
@@ -2001,6 +2050,27 @@ function renderStarterTopicCard(brief) {
   `;
 }
 
+// The waiting card, shown once per chat before the first topic. Same shape as the
+// empty state — a plain div, no flip control, nothing to click — because both are
+// the slot saying "not yet" rather than offering something.
+//
+// The number is NOT in a live region. A polite one would announce every second,
+// which is three interruptions to say nothing; the card that replaces it is the
+// thing worth hearing, and it announces itself by arriving.
+function renderStarterTopicWaiting() {
+  return `
+    <div class="starter-card starter-card--topic starter-topic--waiting">
+      <i class="starter-card__art ap-icon-hourglass" aria-hidden="true"></i>
+      <span class="starter-card__title">I'm finishing today's scan</span>
+      <span class="starter-card__subtitle"
+        >New ideas will drop in <span class="starter-topic__count" data-starter-topic-count
+          >${starterTopicCountdown}s</span
+        ></span
+      >
+    </div>
+  `;
+}
+
 // Reached only by flipping past the last topic — never on first paint, where a
 // user with no topics gets no slot at all rather than an empty one. The CTA is
 // the same .starter-card__cta as a live card so the two read as one component;
@@ -2031,12 +2101,14 @@ function renderStarterTopicSlot(sessionId) {
   // later" is an answer to "I've read them all", not to "there was never
   // anything here".
   if (!queue.length) return "";
-  const brief = queue[starterTopicIndex] || null;
+  const waiting = starterTopicCountdown > 0;
+  const brief = waiting ? null : queue[starterTopicIndex] || null;
   const remaining = queue.length - starterTopicIndex - 1;
+  if (waiting) startStarterTopicCountdown();
   return `
     <div class="starter-topic" data-starter-topic-slot>
       <div class="starter-topic__stage" data-starter-topic-stage>
-        ${brief ? renderStarterTopicCard(brief) : renderStarterTopicEmpty()}
+        ${waiting ? renderStarterTopicWaiting() : brief ? renderStarterTopicCard(brief) : renderStarterTopicEmpty()}
       </div>
       ${
         brief

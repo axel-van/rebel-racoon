@@ -1055,19 +1055,33 @@
   }
 }
 
-/* Empty state — a plain div, so none of the button affordances apply. The CTA
-   inside it is the only thing to click. */
-.starter-topic--empty {
+/* The two "not yet" states — waiting for the first topic, and out of topics.
+   Both are plain divs, so none of the button affordances apply; the empty
+   state's CTA is the only thing to click in either. */
+.starter-topic--empty,
+.starter-topic--waiting {
   cursor: default;
 }
 
-.starter-topic--empty:hover {
+.starter-topic--empty:hover,
+.starter-topic--waiting:hover {
   border-color: var(--app-border);
   border-top-color: var(--starter-topic-accent);
 }
 
-.starter-topic--empty:hover::before {
+.starter-topic--empty:hover::before,
+.starter-topic--waiting:hover::before {
   opacity: 0;
+}
+
+/* The countdown number. Tabular figures so the line does not shuffle sideways
+   as 3 becomes 2 becomes 1 — the digits are the same width in Averta's lining
+   set, but the feature is cheap insurance and the intent is explicit.
+   Semibold against the subtitle's regular so the eye lands on the number. */
+.starter-topic__count {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-80);
 }
 
 /* Coming-soon teaser card — non-interactive: no hover lift, no pointer, and a
