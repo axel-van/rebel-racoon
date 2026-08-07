@@ -891,21 +891,31 @@
    gap 16px is the card-to-card spacing the handoff specifies; the header gets a
    wider gap beneath it via the adjacent rule below, so it reads as a header
    rather than as the first card. */
-/* Wide enough for two cards side by side. The card caps at its own content
-   (--topics-card-max, tokens.css), so this is that twice plus the gap between
-   them — derived, so the column and the card can't disagree. It was 820, which
-   fitted one 666px card and left the header overhanging it by 154px; at this
-   width the header spans the same box the two columns do.
+/* No cap here. This column holds two different things and they want two
+   different widths: the HEADER spans the body, because the lane's name and its
+   Filters / Export / gear cluster are page furniture; the CARDS stop at
+   --topics-card-max, because a card that runs wider than its own content is what
+   this whole thread has been unpicking.
 
-   The cards themselves are laid out by .topics-agegroup, which is the grid. This
-   is still a flex column because its children are the header and those groups. */
+   Capping the column instead of the card lists was the mistake: at 666 the
+   header's action cluster wrapped under the title and the head grew from 66px to
+   110px. The cap now sits on the card containers below.
+
+   Still a flex column: its children are the header and the age groups, and the
+   groups are the grids that lay the cards out. */
 .research-feed__inner,
 .research-trending__inner {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: calc(2 * var(--topics-card-max) + var(--ref-spacing-sm));
-  margin: 0 auto;
+}
+
+/* The card lists, capped to one card. Left-aligned under a full-width header
+   rather than centred: the header's title starts at the left edge, and a centred
+   column would leave the two disagreeing about where the page begins. */
+.topics-agegroup,
+.research-attention__group {
+  max-width: var(--topics-card-max);
 }
 
 /* recap puts --ref-spacing-lg (32px) between its header and the content below.

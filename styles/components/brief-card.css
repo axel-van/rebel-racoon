@@ -270,18 +270,14 @@
    Card-list chrome shared by the feed and the Pick-a-topic modal, which is why
    it lives with the card rather than in styles/screens/research.css.
 
-   TWO COLUMNS. The card caps at its own content now, which left the feed's
-   column half empty; a grid puts the reclaimed width to work instead of turning
-   it into margin. auto-fill rather than a hard `repeat(2, …)`, so the narrow
-   viewport — and the picker, whose dialog only ever fits one — collapse to a
-   single column on their own.
-
-   The 500px floor is what decides the breakpoint: two columns need
-   2 × 500 + gap, so the grid drops to one below ~1016px. The cards stretch to
-   fill their track up to --topics-card-max and stop there. */
+   ONE PER ROW. It was briefly two columns, using the width the card's cap freed
+   up; back to a single column, with the card keeping that cap. Still a grid
+   rather than the margin-stacked list it started as — the grid's gap and the
+   label's `grid-column: 1 / -1` are simpler than a `+` selector and a heading
+   margin, and going back to two columns is one line from here. */
 .topics-agegroup {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--ref-spacing-sm);
   align-items: start;
 }
@@ -303,8 +299,8 @@
   margin-top: var(--ref-spacing-md);
 }
 
-/* The card fills its track rather than sitting at its cap, so two columns share
-   the row evenly instead of leaving a ragged gutter between them. */
+/* Fills its track, then stops at --topics-card-max — so the card keeps the width
+   it had at two columns rather than stretching across the whole row. */
 .topics-agegroup .topics-card {
   width: 100%;
 }
