@@ -17,9 +17,9 @@
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 import { html, raw } from "../utils.js?v=21";
 import { getTopicById, markSeen, dismissTopic, topicWhen, subscribe as subscribeTopics } from "../topics-store.js?v=8";
-import { findTopicSource } from "../topics-catalog.js?v=2";
-import { getContextById } from "../contexts-store.js?v=51";
-import { openTopicInChat } from "../topic-flow.js?v=12";
+import { findTopicSource } from "../topics-catalog.js?v=3";
+import { getContextById } from "../contexts-store.js?v=52";
+import { openTopicInChat } from "../topic-flow.js?v=13";
 import { renderSocialPostCard } from "./social-post-card.js?v=7";
 
 const MODAL_ID = "topic";

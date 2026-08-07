@@ -23,17 +23,17 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=299";
+import { renderTopbar } from "../components/topbar.js?v=300";
 import { isFlagOn } from "../feature-flags.js?v=18";
-import { renderBriefCard } from "../components/brief-card.js?v=15";
+import { renderBriefCard } from "../components/brief-card.js?v=16";
 import {
   openFullResearch,
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=29";
+} from "../components/research-modals.js?v=30";
 import { showToast } from "../components/toast.js?v=20";
-import { getLaneById } from "../research-store.js?v=14";
+import { getLaneById } from "../research-store.js?v=15";
 import {
   getBriefsForLane,
   groupBriefsByAge,
@@ -43,15 +43,15 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=18";
+} from "../briefs-store.js?v=19";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
   RESEARCH_TYPES,
   findResearchSource,
   findCadence,
-} from "../research-catalog.js?v=7";
-import { getContextById } from "../contexts-store.js?v=51";
+} from "../research-catalog.js?v=8";
+import { getContextById } from "../contexts-store.js?v=52";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
@@ -482,7 +482,7 @@ function bind(target) {
   target.addEventListener("input", boundInput);
   target.addEventListener("change", boundInput);
 
-  // Close the filters panel and any open Use-now menu on an outside click.
+  // Close the filters panel and any open Use-in-chat menu on an outside click.
   // Bound on document because the click that dismisses them lands outside the
   // panel by definition.
   boundDocClick = (event) => {

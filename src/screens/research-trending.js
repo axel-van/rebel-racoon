@@ -17,19 +17,19 @@
 // lie about what it was doing. Splitting it into a notice plus this page lets the
 // feed's filter stay honest and gives both signals somewhere to be complete.
 //
-// Cards here are deliberately REDUCED — single Use-now button, no dropdown, no
+// Cards here are deliberately REDUCED — single Use-in-chat button, no dropdown, no
 // Ignore, no status pill. See components/brief-card.js, variant "trending".
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=299";
+import { renderTopbar } from "../components/topbar.js?v=300";
 import { isFlagOn } from "../feature-flags.js?v=18";
-import { renderBriefCard } from "../components/brief-card.js?v=15";
-import { openFullResearch } from "../components/research-modals.js?v=29";
+import { renderBriefCard } from "../components/brief-card.js?v=16";
+import { openFullResearch } from "../components/research-modals.js?v=30";
 import { showToast } from "../components/toast.js?v=20";
-import { getLaneById } from "../research-store.js?v=14";
-import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=18";
-import { findResearchSource, findCadence } from "../research-catalog.js?v=7";
+import { getLaneById } from "../research-store.js?v=15";
+import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=19";
+import { findResearchSource, findCadence } from "../research-catalog.js?v=8";
 
 let laneId = null;
 let unsubscribe = null;

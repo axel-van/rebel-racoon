@@ -49,7 +49,7 @@
 export const RESEARCH_SOURCES = Object.freeze([
   {
     id: "competitor-posts",
-    name: "Competitor sources",
+    name: "Competitors",
     icon: "ap-icon-megaphone",
     accent: "purple",
     live: true,
@@ -63,7 +63,7 @@ export const RESEARCH_SOURCES = Object.freeze([
   },
   {
     id: "influencer-posts",
-    name: "Influencer sources",
+    name: "Influencers",
     icon: "ap-icon-star",
     accent: "red",
     live: false,

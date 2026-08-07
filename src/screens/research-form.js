@@ -13,25 +13,25 @@
 //   | save    | "Save topic list"       | "Save changes"          |
 //   | on save | append → loader → feed  | return to feed          |
 //
-// Source gating: only Competitor sources is live. Every other toggle opens the
+// Source gating: only Competitors is live. Every other toggle opens the
 // "Need that source?" feedback modal and leaves the switch untouched — the
 // sources aren't built, and a switch that flips without doing anything is worse
 // than one that explains itself.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=299";
+import { renderTopbar } from "../components/topbar.js?v=300";
 import { isFlagOn } from "../feature-flags.js?v=18";
-import { getContexts, getContextById } from "../contexts-store.js?v=51";
-import { getLaneById, addLane, updateLane } from "../research-store.js?v=14";
-import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=29";
+import { getContexts, getContextById } from "../contexts-store.js?v=52";
+import { getLaneById, addLane, updateLane } from "../research-store.js?v=15";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=30";
 import {
   RESEARCH_SOURCES,
   CADENCES,
   DEFAULT_ENABLED_IDS,
   DEFAULT_CADENCE,
   isLiveSource,
-} from "../research-catalog.js?v=7";
+} from "../research-catalog.js?v=8";
 
 // The in-flight draft. Ephemeral by definition — it only becomes a lane on save,
 // so it lives here rather than in the store. Cancel just drops it.

@@ -8,7 +8,7 @@
 //   renderBriefCard(brief, { source, variant }) → one card
 //
 // ── variant: "feed" | "trending" ────────────────────────────────────────────
-// The trending page's cards are DELIBERATELY reduced: Use now becomes a single
+// The trending page's cards are DELIBERATELY reduced: Use in chat becomes a single
 // button with no dropdown, Ignore disappears, and so does the status pill. That
 // page answers "what's spiking", not "what have I triaged" — showing triage
 // controls there invites the user to work a queue that isn't one.
@@ -26,14 +26,14 @@
 //
 // The history still matters if an accent ever comes back. It began as an
 // absolutely-positioned 4px span inside an overflow:hidden wrapper and caused
-// three bugs: it clipped the Use-now dropdown, and because overflow:hidden
+// three bugs: it clipped the Use-in-chat dropdown, and because overflow:hidden
 // zeroes a flex item's automatic minimum size, the column's default flex-shrink
 // crushed the cards and cut their footers off. A border is the only safe way to
 // draw one. flex:0 0 auto in research.css is the other half of that fix and is
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus } from "../research-catalog.js?v=7";
+import { findReviewStatus } from "../research-catalog.js?v=8";
 
 // One line, not the paragraph this used to be. As a hover tooltip it could afford
 // the full explanation; as a permanent menu row it just made the menu tall. The
@@ -146,7 +146,7 @@ function renderUseSplit(brief, menuOpen) {
   const saved = brief.status === "saved";
   const ignored = brief.status === "ignored";
   return html`<span class="topics-use" data-brief-use-wrap="${escapeAttr(brief.id)}">
-    <button type="button" class="topics-use__main" data-brief-use="${escapeAttr(brief.id)}">Use now</button>
+    <button type="button" class="topics-use__main" data-brief-use="${escapeAttr(brief.id)}">Use in chat</button>
     <button
       type="button"
       class="topics-use__toggle"
@@ -158,16 +158,18 @@ function renderUseSplit(brief, menuOpen) {
       <i class="ap-icon-chevron-down" aria-hidden="true"></i>
     </button>
     <div class="topics-use__menu" data-brief-menu="${escapeAttr(brief.id)}" ${raw(menuOpen ? "" : " hidden")}>
+      <!-- Text only, no icon tiles. Three rows is short enough to read as a
+           list, and the tiles were doing decoration rather than disambiguation:
+           a bookmark, a target and an eye-off don't tell you anything the labels
+           don't already say. -->
       <button type="button" class="topics-use__item" data-brief-save="${escapeAttr(brief.id)}">
-        <span class="topics-use__tile" aria-hidden="true"><i class="ap-icon-bookmark_fill"></i></span>
         <span>${saved ? "Remove from saved" : "Save for later"}</span>
       </button>
       <button type="button" class="topics-use__item" data-brief-strategy="${escapeAttr(brief.id)}">
-        <span class="topics-use__tile" aria-hidden="true"><i class="ap-icon-target"></i></span>
         <span>Add to Playbook — Content strategy</span>
       </button>
       ${raw(
-        // Ignore lives in here rather than beside Use now. It is the one
+        // Ignore lives in here rather than beside Use in chat. It is the one
         // destructive-ish option on the card, and a menu is where the app already
         // puts those; out in the footer it sat at the same weight as the action
         // you actually want, which is backwards.
@@ -176,6 +178,11 @@ function renderUseSplit(brief, menuOpen) {
         // nothing to do. The tooltip that used to explain it does not survive the
         // move (a menu row cannot host a hover popover without fighting the menu's
         // own dismissal), so the explanation moves into the row's own description.
+        //
+        // With the tiles gone, the red tile that marked this row as the taking-away
+        // one went with them, so the red moved onto the label — which is what the
+        // DS's own .ap-action-dropdown-item.red-mode does. Same family, same intent,
+        // no icon needed to carry it.
         ignored
           ? ""
           : html`<button
@@ -183,7 +190,6 @@ function renderUseSplit(brief, menuOpen) {
               class="topics-use__item topics-use__item--ignore"
               data-brief-ignore="${escapeAttr(brief.id)}"
             >
-              <span class="topics-use__tile" aria-hidden="true"><i class="ap-icon-eye-off"></i></span>
               <span class="topics-use__item-text">
                 <span>Ignore topic</span>
                 <span class="topics-use__item-desc">${IGNORE_HINT}</span>
@@ -201,6 +207,6 @@ function renderUseSingle(brief) {
   // border, and dropping the chevron shouldn't also promote the action. A column
   // of filled buttons down this page would read as nine primary actions.
   return html`<button type="button" class="ap-button stroked blue" data-brief-use="${escapeAttr(brief.id)}">
-    <span>Use now</span>
+    <span>Use in chat</span>
   </button>`;
 }

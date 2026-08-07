@@ -7,9 +7,10 @@
  *    an overflow:hidden wrapper, the column's default flex-shrink crushed the
  *    cards and cut their footers off. Not shrinking is the fix.
  *
- * 2. The trending accent is a BORDER-TOP, not an absolutely-positioned span
- *    inside a clipping wrapper. As a clipped span it also cut off the Use-now
- *    dropdown, which has to escape the card's box. No overflow:hidden here. */
+ * 2. No overflow:hidden here, ever. The Use-in-chat dropdown has to escape the
+ *    card's box. This card once wrapped an absolutely-positioned trending accent
+ *    in a clipping wrapper and the menu was cut off; the accent is gone now, but
+ *    the rule it taught still holds. */
 
 .topics-card {
   display: flex;
@@ -210,7 +211,7 @@
   border-top: 1px solid var(--ref-color-grey-10);
 }
 
-/* ── Use-now split button ─────────────────────────────────────────────── */
+/* ── Use-in-chat split button ─────────────────────────────────────────────── */
 
 .topics-use {
   position: relative;
@@ -263,10 +264,11 @@
   display: none;
 }
 
+/* Text only — no leading icon. The tiles this row used to carry were decoration
+   rather than disambiguation, so `gap` and `align-items` went with them: every
+   row now has exactly one child. */
 .topics-use__item {
   display: flex;
-  align-items: center;
-  gap: 10px;
   width: 100%;
   padding: 8px 10px;
   background: none;
@@ -283,17 +285,22 @@
   background: var(--ref-color-grey-05);
 }
 
-/* The Ignore row is the one item in this menu that takes something away, so it
-   carries a description and a red tile. Aligned to the top rather than centred:
-   with two lines of text, centring floats the tile against the description
-   instead of the label it belongs to. */
+/* The Ignore row is the one item in this menu that takes something away. It used
+   to say so with a red icon tile; with the tiles gone the red moves onto the
+   label, which is exactly what the DS does for a destructive dropdown row
+   (.ap-action-dropdown-item.red-mode — red-100 text, red-10 hover). Same family
+   as the tile it replaces, so the row is no louder than before. Written with the
+   --sys-* names rather than the --ref-* ones the DS rule falls back to: identical
+   values (#E81313 / #FDE7E7), higher tier.
+
+   The description keeps --sys-text-color-light: turning the explanation red too
+   would read as an error message rather than a caption. */
 .topics-use__item--ignore {
-  align-items: flex-start;
+  color: var(--sys-text-color-error);
 }
 
-.topics-use__item--ignore .topics-use__tile {
-  background: var(--ref-color-red-10);
-  color: var(--ref-color-red-100);
+.topics-use__item--ignore:hover {
+  background: var(--sys-color-error-light-bg);
 }
 
 .topics-use__item-text {
@@ -311,16 +318,4 @@
   line-height: 1.45;
   color: var(--sys-text-color-light);
   white-space: normal;
-}
-
-.topics-use__tile {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  flex: 0 0 auto;
-  background: var(--ref-color-electric-blue-05);
-  border-radius: 8px;
-  color: var(--ref-color-electric-blue-100);
 }

@@ -575,8 +575,8 @@ Le seul endroit où **Archie propose** au lieu d'attendre. Le listening Agorapul
 
 | Source                    | Accent        | `playbookAnchor` | Défaut |
 | ------------------------- | ------------- | ---------------- | ------ |
-| **Competitor sources**    | purple        | `competitors`    | **ON** |
-| **Influencer sources**    | red           | `competitors`    | **ON** |
+| **Competitors**           | purple        | `competitors`    | **ON** |
+| **Influencers**           | red           | `influencers`    | **ON** |
 | **Brand feedback**        | menthol       | —                | OFF    |
 | **Competitor monitoring** | electric-blue | `competitors`    | OFF    |
 | **Industry trends**       | green         | —                | OFF    |
@@ -600,7 +600,7 @@ Header **« Topics »** + _« N new · N topics · from N Playbooks »_ (les Pla
   - **Seuls les Playbooks présents dans le feed ont une option** — un filtre qui ne peut que ne rien renvoyer n'est pas un filtre. C'est ce qui règle vraiment l'échelle : la liste grandit avec le **contenu du feed**, pas avec la taille du compte (à 14 Playbooks le select en listait 3). La dalle `.ap-select-search` apparaît au-delà de 8 options.
   - **`Clear` n'apparaît que s'il y a quelque chose à effacer** — chaque select a déjà son « All », donc un Clear permanent serait une troisième façon de faire la même chose.
   - **`?pb=` pour le Playbook, state module pour la source** — la facette source change beaucoup plus souvent que le scope et empilerait une entrée d'historique par clic.
-- **Sous-titre filtré** — _« 2 of 9 topics · Pawtrack · always-on · Competitor sources »_ : « 9 topics » au-dessus d'une liste de 2 se lit comme un bug.
+- **Sous-titre filtré** — _« 2 of 9 topics · Pawtrack · always-on · Competitors »_ : « 9 topics » au-dessus d'une liste de 2 se lit comme un bug.
 - **Feed** — un flux chronologique groupé par date : **This week** (`ageDays ≤ 7`) / **Earlier this month** (`≤ 30`) / **Earlier**. Groupes vides masqués.
 - **Carte** ([`topic-card.js`](../../src/components/topic-card.js)) — un **brief éditorial** : kicker, accroche, chapô, ligne de signature.
   - **Kicker à gauche, marques à droite**, `space-between` : `[badge] Source · quand` d'un côté, `[chip Playbook] • New` de l'autre. En une seule file, seul le badge restait à sa place — tout le reste glissait selon la longueur du nom qui le précédait. Deux ancres fixes donnent deux colonnes à scanner : la **source** (quelle écoute a trouvé ça) et les marques. `margin-left: auto` sur les marques, pour qu'un nom de Playbook long qui les fait passer à la ligne les garde à droite.

@@ -29,7 +29,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=299";
+import { renderTopbar } from "../components/topbar.js?v=300";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=18";
 import {
@@ -38,7 +38,7 @@ import {
   getDefaultContext,
   updateContext,
   subscribe as subscribeContexts,
-} from "../contexts-store.js?v=51";
+} from "../contexts-store.js?v=52";
 import {
   TOPIC_SOURCES,
   CADENCES,
@@ -46,7 +46,7 @@ import {
   DEFAULT_CADENCE,
   findTopicSource,
   findCadence,
-} from "../topics-catalog.js?v=2";
+} from "../topics-catalog.js?v=3";
 
 // Above this many Playbooks the picker earns a search field. Below it, a search box
 // over four rows is just noise.
