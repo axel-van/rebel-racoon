@@ -23,15 +23,15 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=296";
-import { isFlagOn } from "../feature-flags.js?v=17";
-import { renderBriefCard } from "../components/brief-card.js?v=10";
+import { renderTopbar } from "../components/topbar.js?v=297";
+import { isFlagOn } from "../feature-flags.js?v=18";
+import { renderBriefCard } from "../components/brief-card.js?v=13";
 import {
   openFullResearch,
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=26";
+} from "../components/research-modals.js?v=27";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=12";
 import {
@@ -462,7 +462,7 @@ function bind(target) {
   // panel by definition.
   boundDocClick = (event) => {
     if (!view.panelOpen && !view.openMenu) return;
-    if (event.target.closest(".research-filters") || event.target.closest(".brief-use")) return;
+    if (event.target.closest(".research-filters") || event.target.closest(".topics-use")) return;
     view.panelOpen = false;
     view.openMenu = null;
     paint(target);

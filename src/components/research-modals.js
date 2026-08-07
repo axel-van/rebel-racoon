@@ -544,7 +544,7 @@ function pickerRow(b, laneName = "") {
         >${meta}${raw(b.isTrending ? ' · <span class="research-pick__trending">Trending</span>' : "")}</span
       >
     </span>
-    ${raw(st ? html`<span class="brief-status brief-status--${st.id}">${st.label}</span>` : "")}
+    ${raw(st ? html`<span class="topics-status topics-status--${st.id}">${st.label}</span>` : "")}
   </button>`;
 }
 
@@ -577,8 +577,8 @@ export function openFullResearch({ briefId }) {
         ${raw(
           brief.isTrending && brief.whyNow
             ? html`<section class="research-article">
-                <p class="brief-card__whynow">
-                  <strong class="brief-card__whynow-label">Why now:</strong> ${brief.whyNow}
+                <p class="topics-card__whynow">
+                  <strong class="topics-card__whynow-label">Why now:</strong> ${brief.whyNow}
                 </p>
                 ${raw(brief.whyNowDetail ? html`<p>${brief.whyNowDetail}</p>` : "")}
               </section>`
@@ -617,9 +617,9 @@ function renderHistory(history, currentStatus) {
           .map((e) => {
             const m = findReviewStatus(e.status);
             return html`<li class="research-timeline__row">
-              <span class="research-timeline__dot brief-status--${e.status}" aria-hidden="true"></span>
+              <span class="research-timeline__dot topics-status--${e.status}" aria-hidden="true"></span>
               <span class="research-timeline__body">
-                <span class="brief-status brief-status--${e.status}">${m ? m.label : e.status}</span>
+                <span class="topics-status topics-status--${e.status}">${m ? m.label : e.status}</span>
                 <span class="research-timeline__when">${e.when}</span>
                 <span class="research-timeline__note">${e.note}</span>
               </span>

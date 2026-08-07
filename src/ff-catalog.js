@@ -129,10 +129,14 @@ export const FLAGS = Object.freeze([
       "New / Saved / Used / Ignored. Topics whose volume runs above their own " +
       "baseline are additionally flagged Trending (an independent boolean, " +
       "never a status), surfaced by a notice plus a dedicated page. " +
-      "\n\nNAMING: the UI says Content Ideas and calls each card a TOPIC; the " +
-      "code still says research/brief (`briefs-store`, `brief-card`, " +
-      "`data-brief-*`), the same split as Playbook/Context. `briefs-store` " +
-      "cannot be renamed anyway — `topics-store` is the OTHER feature. Which is " +
+      "\n\nNAMING: the UI says Content Ideas and calls each card a TOPIC, and the " +
+      "CSS classes now follow it (.topics-card / .topics-status / .topics-use). " +
+      "The code underneath still says research/brief — briefs-store, the " +
+      "brief-card module, data-brief-* hooks and the /research routes — the same " +
+      "split as Playbook/Context. Note the classes are TOPICS-plural: .topic-card " +
+      "singular already belongs to the other feature and would collide exactly. " +
+      "briefs-store cannot be renamed at all — topics-store is that feature. " +
+      "Which is " +
       "the live caveat: the `topics` flag below owns a different object also " +
       "called Topic (a listening dossier in /topics, one stream across every " +
       "Playbook). Both flags ON puts two unrelated things under one word.",

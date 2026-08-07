@@ -879,7 +879,7 @@
 }
 
 /* The card column. gap, not margins, and every child keeps its automatic
-   minimum size — see the flex note on .brief-card. */
+   minimum size — see the flex note on .topics-card. */
 /* The header lives inside this column now, so the column owns the page rhythm.
    gap 16px is the card-to-card spacing the handoff specifies; the header gets a
    wider gap beneath it via the adjacent rule below, so it reads as a header
@@ -1001,7 +1001,7 @@
    accent rail — nothing here restyles it. The one thing it needs is not to be
    squeezed: .research-feed__inner is a flex column, where an item's default
    flex-shrink is 1, and the infobox is `width: 100%` with `overflow: hidden`,
-   so it would give up height before the cards do. Same reason .brief-card is
+   so it would give up height before the cards do. Same reason .topics-card is
    flex: 0 0 auto. */
 .research-feed__notice {
   flex: 0 0 auto;
@@ -1089,7 +1089,7 @@
 /* ── Attention page groups (trending / updated) ──────────────────────────── */
 
 /* The page splits into one section per signal. Group chrome only — the cards
-   inside are .brief-card, unchanged.
+   inside are .topics-card, unchanged.
    The sections are flex items of .research-trending__inner and already get its
    16px gap; this adds a second 16 so the boundary between two signals reads
    wider than the boundary between two cards. */
@@ -1117,6 +1117,6 @@
    between the title and its note as well, where those two want to sit tight.
    Matches .research-trending__inner's own 16px so cards are evenly spaced
    whether they sit in a group or not. */
-.research-attention__group .brief-card + .brief-card {
+.research-attention__group .topics-card + .topics-card {
   margin-top: var(--ref-spacing-sm);
 }

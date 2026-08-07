@@ -252,7 +252,7 @@
 
    The FILL is the one place this leaves the DS ramp: `--app-peach`, whose own
    charter in tokens.css is "trending surfaces, brand-soft fills". It is the same
-   surface as `.brief-card__whynow`, the "Why now" block on the cards this notice
+   surface as `.topics-card__whynow`, the "Why now" block on the cards this notice
    sits above — one tint for one idea, rather than a DS orange-20 wash next to an
    app peach one 40px below. Same reason `.ap-status.mermaid` carries
    `--app-butter`: a patched variant that exists for an Archie concept takes the
@@ -263,7 +263,7 @@
   background-color: var(--app-peach);
 }
 
-/* Rail and icon complete the alignment on .brief-card__whynow, which pairs a
+/* Rail and icon complete the alignment on .topics-card__whynow, which pairs a
    #FF3C00 rail with #db3100 text on the same peach. Two oranges, deliberately:
    --app-archie-orange-deep exists precisely because the brand orange loses
    contrast as TEXT on peach (see tokens.css), and a 16px glyph counts as text

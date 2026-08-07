@@ -1,4 +1,4 @@
-// brief-card — one research brief, summarised, in a lane's feed.
+// topics-card — one research brief, summarised, in a lane's feed.
 //
 // Pure render, no store reads: the screen resolves the source and passes it in,
 // so the card stays a function of its arguments and can be rendered in the feed,
@@ -28,14 +28,16 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { findReviewStatus } from "../research-catalog.js?v=6";
 
-const IGNORE_TOOLTIP =
-  "Ignored topics stay out of your feed unless they trend well above their usual " +
-  "volume baseline — so you spot real spikes without noise from recurring topics.";
+// One line, not the paragraph this used to be. As a hover tooltip it could afford
+// the full explanation; as a permanent menu row it just made the menu tall. The
+// long version still exists where it is actually being decided — the infobox in
+// the ignore-reason modal (research-modals.openIgnoreReason).
+const IGNORE_HINT = "Kept out of your feed unless it trends well above its baseline.";
 
 function renderStatusPill(status) {
   const meta = findReviewStatus(status);
   if (!meta) return "";
-  return html`<span class="brief-status brief-status--${meta.id}">${meta.label}</span>`;
+  return html`<span class="topics-status topics-status--${meta.id}">${meta.label}</span>`;
 }
 
 // The Updated counterpart. Same reasoning as the trending mark — text, never a
@@ -63,7 +65,7 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
   const ignored = brief.status === "ignored";
 
   return html`<article
-    class="brief-card${raw(brief.isTrending ? " brief-card--trending" : "")}"
+    class="topics-card${raw(brief.isTrending ? " topics-card--trending" : "")}"
     data-brief-id="${escapeAttr(brief.id)}"
   >
     <!-- The card body is ONE BUTTON opening the full read — and since the footer's
@@ -82,78 +84,54 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
          topic-card made the same trade for the same reason. The classes are
          unchanged, so the styling carries over; the spans are given display:block
          in brief-card.css where they relied on being block elements. -->
-    <button type="button" class="brief-card__body" data-brief-research="${escapeAttr(brief.id)}">
-      <span class="brief-card__source-row">
+    <button type="button" class="topics-card__body" data-brief-research="${escapeAttr(brief.id)}">
+      <span class="topics-card__source-row">
         ${raw(
           source
             ? html`<span class="topic-badge topic-badge--${source.accent}" aria-hidden="true"
                   ><i class="${source.icon}"></i></span
-                ><span class="brief-card__source">${source.name}</span>`
+                ><span class="topics-card__source">${source.name}</span>`
             : "",
         )}
-        <span class="brief-card__when">· ${brief.ageLabel}</span>
-        <span class="brief-card__spacer"></span>
+        <span class="topics-card__when">· ${brief.ageLabel}</span>
+        <span class="topics-card__spacer"></span>
         ${raw(brief.isTrending ? renderTrendingMark() : "")}${raw(brief.isUpdated ? renderUpdatedMark() : "")}
         <!-- Status pill is ALWAYS shown in the feed and NEVER on the trending
              page — see the variant note at the top of this file. -->
         ${raw(trendingPage ? "" : renderStatusPill(brief.status))}
       </span>
 
-      <span class="brief-card__headline">${brief.headline}</span>
+      <span class="topics-card__headline">${brief.headline}</span>
 
-      <span class="brief-card__summary" data-brief-summary>
-        <strong class="brief-card__summary-label">Summary:</strong> ${brief.summary}
+      <span class="topics-card__summary" data-brief-summary>
+        <strong class="topics-card__summary-label">Summary:</strong> ${brief.summary}
       </span>
 
       ${raw(
         brief.isTrending && brief.whyNow
-          ? html`<span class="brief-card__whynow">
-              <strong class="brief-card__whynow-label">Why now:</strong> ${brief.whyNow}
+          ? html`<span class="topics-card__whynow">
+              <strong class="topics-card__whynow-label">Why now:</strong> ${brief.whyNow}
             </span>`
           : "",
       )}
       ${raw(
         brief.isUpdated && brief.whatChanged
-          ? html`<span class="brief-card__changed">
-              <strong class="brief-card__changed-label">What changed:</strong> ${brief.whatChanged}
+          ? html`<span class="topics-card__changed">
+              <strong class="topics-card__changed-label">What changed:</strong> ${brief.whatChanged}
             </span>`
           : "",
       )}
       ${raw(
         !trendingPage && ignored && brief.ignoreReason
-          ? html`<span class="brief-card__reason">
-              <span class="brief-card__reason-label">You ignored this:</span> ${brief.ignoreReason}
+          ? html`<span class="topics-card__reason">
+              <span class="topics-card__reason-label">You ignored this:</span> ${brief.ignoreReason}
             </span>`
           : "",
       )}
     </button>
 
-    <footer class="brief-card__foot">
+    <footer class="topics-card__foot">
       ${raw(trendingPage ? renderUseSingle(brief) : renderUseSplit(brief, menuOpen))}
-      ${raw(
-        // Hidden entirely once ignored — the action has already been taken and
-        // there is nothing for a second press to do.
-        // The DS tooltip rather than a native `title`: title waits ~1s, can't be
-        // styled, and never appears on touch — so the copy explaining what
-        // ignoring actually does mostly went unread. .ap-tooltip is
-        // position:absolute, so it needs a positioned wrapper; the reveal is a
-        // hover/focus-within CSS rule on that wrapper (see brief-card.css).
-        !trendingPage && !ignored
-          ? html`<span class="brief-card__ignore-wrap">
-              <button
-                type="button"
-                class="ap-button stroked grey brief-card__ignore"
-                data-brief-ignore="${escapeAttr(brief.id)}"
-                aria-describedby="ignore-tip-${escapeAttr(brief.id)}"
-              >
-                <span>Ignore topic</span>
-              </button>
-              <span class="ap-tooltip top" role="tooltip" id="ignore-tip-${escapeAttr(brief.id)}"
-                >${IGNORE_TOOLTIP}</span
-              >
-            </span>`
-          : "",
-      )}
     </footer>
   </article>`;
 }
@@ -162,11 +140,12 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
 // opens save / add-to-Playbook.
 function renderUseSplit(brief, menuOpen) {
   const saved = brief.status === "saved";
-  return html`<span class="brief-use" data-brief-use-wrap="${escapeAttr(brief.id)}">
-    <button type="button" class="brief-use__main" data-brief-use="${escapeAttr(brief.id)}">Use now</button>
+  const ignored = brief.status === "ignored";
+  return html`<span class="topics-use" data-brief-use-wrap="${escapeAttr(brief.id)}">
+    <button type="button" class="topics-use__main" data-brief-use="${escapeAttr(brief.id)}">Use now</button>
     <button
       type="button"
-      class="brief-use__toggle"
+      class="topics-use__toggle"
       data-brief-use-menu="${escapeAttr(brief.id)}"
       aria-haspopup="true"
       aria-expanded="${menuOpen ? "true" : "false"}"
@@ -174,15 +153,39 @@ function renderUseSplit(brief, menuOpen) {
     >
       <i class="ap-icon-chevron-down" aria-hidden="true"></i>
     </button>
-    <div class="brief-use__menu" data-brief-menu="${escapeAttr(brief.id)}" ${raw(menuOpen ? "" : " hidden")}>
-      <button type="button" class="brief-use__item" data-brief-save="${escapeAttr(brief.id)}">
-        <span class="brief-use__tile" aria-hidden="true"><i class="ap-icon-bookmark_fill"></i></span>
+    <div class="topics-use__menu" data-brief-menu="${escapeAttr(brief.id)}" ${raw(menuOpen ? "" : " hidden")}>
+      <button type="button" class="topics-use__item" data-brief-save="${escapeAttr(brief.id)}">
+        <span class="topics-use__tile" aria-hidden="true"><i class="ap-icon-bookmark_fill"></i></span>
         <span>${saved ? "Remove from saved" : "Save for later"}</span>
       </button>
-      <button type="button" class="brief-use__item" data-brief-strategy="${escapeAttr(brief.id)}">
-        <span class="brief-use__tile" aria-hidden="true"><i class="ap-icon-target"></i></span>
+      <button type="button" class="topics-use__item" data-brief-strategy="${escapeAttr(brief.id)}">
+        <span class="topics-use__tile" aria-hidden="true"><i class="ap-icon-target"></i></span>
         <span>Add to Playbook — Content strategy</span>
       </button>
+      ${raw(
+        // Ignore lives in here rather than beside Use now. It is the one
+        // destructive-ish option on the card, and a menu is where the app already
+        // puts those; out in the footer it sat at the same weight as the action
+        // you actually want, which is backwards.
+        //
+        // Hidden once ignored — the action has been taken and a second press has
+        // nothing to do. The tooltip that used to explain it does not survive the
+        // move (a menu row cannot host a hover popover without fighting the menu's
+        // own dismissal), so the explanation moves into the row's own description.
+        ignored
+          ? ""
+          : html`<button
+              type="button"
+              class="topics-use__item topics-use__item--ignore"
+              data-brief-ignore="${escapeAttr(brief.id)}"
+            >
+              <span class="topics-use__tile" aria-hidden="true"><i class="ap-icon-eye-off"></i></span>
+              <span class="topics-use__item-text">
+                <span>Ignore topic</span>
+                <span class="topics-use__item-desc">${IGNORE_HINT}</span>
+              </span>
+            </button>`,
+      )}
     </div>
   </span>`;
 }

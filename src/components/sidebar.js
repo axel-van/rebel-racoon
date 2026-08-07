@@ -6,7 +6,7 @@ import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { open as openSearchModal } from "./search-modal.js?v=21";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=14";
+import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=15";
 import {
   getSessions,
   getSessionById,
@@ -15,17 +15,17 @@ import {
   togglePin as togglePinSession,
   subscribe as subscribeSessions,
 } from "../sessions-store.js?v=17";
-import { isFlagOn } from "../feature-flags.js?v=17";
+import { isFlagOn } from "../feature-flags.js?v=18";
 import { isNewUser } from "../user-mode.js?v=22";
-import { clearSession as clearLibrarySession } from "../library.js?v=66";
+import { clearSession as clearLibrarySession } from "../library.js?v=67";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=50";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=39";
 import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=7";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=12";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=430";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=72";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=431";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=73";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=47";
-import { clearSession as clearSourcesSession } from "../sources-stream.js?v=65";
+import { clearSession as clearSourcesSession } from "../sources-stream.js?v=66";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the

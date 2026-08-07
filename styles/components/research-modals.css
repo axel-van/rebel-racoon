@@ -405,7 +405,7 @@
 }
 
 /* A row is a button covering its whole width, so the hit area is the row rather
-   than the headline — the same reason .brief-card__body is a button. The hover
+   than the headline — the same reason .topics-card__body is a button. The hover
    is the app's universal card wash (light blue fill + light blue border, never
    navy), per the rule in chat.css. */
 .research-pick__row {
@@ -527,7 +527,7 @@
 /* ── The trending-but-ignored group ──────────────────────────────────────── */
 
 /* Peach, the same surface every trending signal in this app uses — the feed's
-   notice and .brief-card__whynow both — so the exception reads as the same idea
+   notice and .topics-card__whynow both — so the exception reads as the same idea
    rather than as a new kind of box. */
 .research-pick__group--trending {
   padding: var(--ref-spacing-xs);

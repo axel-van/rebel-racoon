@@ -1,4 +1,4 @@
-/* brief-card — one research brief in a lane's feed or on the trending page.
+/* topics-card — one research brief in a lane's feed or on the trending page.
  *
  * ── Two rules here exist because of real bugs. Don't undo them. ────────────
  *
@@ -11,7 +11,7 @@
  *    inside a clipping wrapper. As a clipped span it also cut off the Use-now
  *    dropdown, which has to escape the card's box. No overflow:hidden here. */
 
-.brief-card {
+.topics-card {
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
@@ -24,7 +24,7 @@
 
 /* 4px border replaces the 1px one on top, so the card doesn't shift by 3px when
    a brief starts trending. */
-.brief-card--trending {
+.topics-card--trending {
   border-color: var(--app-peach-border);
   border-top: 4px solid var(--app-archie-orange);
 }
@@ -32,7 +32,7 @@
 /* One button covering the card's text, opening Full research. Mirrors
    .topic-card__body: reset the chrome, inherit the type, left-align, and take the
    padding the card used to own. */
-.brief-card__body {
+.topics-card__body {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -46,31 +46,31 @@
 }
 
 /* Inset so the ring doesn't sit outside the card's rounded corner. */
-.brief-card__body:focus-visible {
+.topics-card__body:focus-visible {
   outline: 2px solid var(--sys-border-color-active);
   outline-offset: -2px;
 }
 
-.brief-card__source-row {
+.topics-card__source-row {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
 }
 
-.brief-card__source {
+.topics-card__source {
   font-size: 14px;
   font-weight: 800;
   color: var(--app-convo-navy);
 }
 
-.brief-card__when {
+.topics-card__when {
   font-size: 13px;
   font-weight: 600;
   color: var(--ref-color-grey-40);
 }
 
-.brief-card__spacer {
+.topics-card__spacer {
   flex: 1;
 }
 
@@ -79,7 +79,7 @@
    carries the reasoning for why it's text and not a pill. */
 
 /* Status pills — the four review states. */
-.brief-status {
+.topics-status {
   display: inline-flex;
   align-items: center;
   padding: 3px 10px;
@@ -91,24 +91,24 @@
   text-transform: uppercase;
 }
 
-.brief-status--new {
+.topics-status--new {
   background: var(--ref-color-grey-10);
   color: var(--ref-color-grey-100);
 }
-.brief-status--saved {
+.topics-status--saved {
   background: var(--ref-color-tag-orange-20);
   color: var(--ref-color-tag-orange-150);
 }
-.brief-status--used {
+.topics-status--used {
   background: var(--ref-color-green-10);
   color: var(--ref-color-green-150);
 }
-.brief-status--ignored {
+.topics-status--ignored {
   background: var(--ref-color-red-10);
   color: var(--ref-color-red-100);
 }
 
-.brief-card__headline {
+.topics-card__headline {
   display: block;
   margin: 0 0 8px;
   font-size: 18px;
@@ -124,7 +124,7 @@
    The full text is one click away in the topic's own dialog, so nothing is lost
    — and a card whose height depends on how much the scan wrote made the list
    impossible to scan. */
-.brief-card__summary {
+.topics-card__summary {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -137,12 +137,12 @@
   color: var(--ref-color-grey-80);
 }
 
-.brief-card__summary-label {
+.topics-card__summary-label {
   font-weight: 700;
   color: var(--app-convo-navy);
 }
 
-.brief-card__whynow {
+.topics-card__whynow {
   display: block;
   margin: var(--ref-spacing-xs) 0 0;
   padding: 11px 13px;
@@ -160,7 +160,7 @@
    that still reads as a tint, and menthol-150 keeps the label legible on it.
    Deliberately quieter than Why-now: "the story moved" matters less than "this
    is spiking", so it must not compete for the same attention. */
-.brief-card__changed {
+.topics-card__changed {
   display: block;
   margin: var(--ref-spacing-xs) 0 0;
   padding: 11px 13px;
@@ -173,17 +173,17 @@
   color: var(--ref-color-grey-80);
 }
 
-.brief-card__changed-label {
+.topics-card__changed-label {
   font-weight: 800;
   color: var(--ref-color-menthol-150);
 }
 
-.brief-card__whynow-label {
+.topics-card__whynow-label {
   font-weight: 800;
   color: var(--app-archie-orange-deep);
 }
 
-.brief-card__reason {
+.topics-card__reason {
   display: block;
   margin: 10px 0 0;
   font-size: 14px;
@@ -192,7 +192,7 @@
   color: var(--ref-color-grey-60);
 }
 
-.brief-card__reason-label {
+.topics-card__reason-label {
   font-weight: 800;
 }
 
@@ -200,7 +200,7 @@
    at the footer's outer edge, so padding would make the divider span the full
    card width. Margin keeps it inset by 22px exactly as it was when the card
    itself carried the padding. */
-.brief-card__foot {
+.topics-card__foot {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -209,63 +209,15 @@
   border-top: 1px solid var(--ref-color-grey-10);
 }
 
-/* Tooltip scaffolding. .ap-tooltip is position:absolute with a z-index of its
-   own, so it needs a positioned ancestor to anchor to — that's all this wrapper
-   is. The DS supplies the panel's look and its .top placement; the reveal is
-   ours because the CSS-UI layer has no hover trigger (the Angular component
-   drives it imperatively).
-
-   focus-within as well as hover, so the tooltip is reachable by keyboard. */
-.brief-card__ignore-wrap {
-  position: relative;
-  display: inline-flex;
-}
-
-.brief-card__ignore-wrap > .ap-tooltip {
-  /* Centred above the button, hidden until hover/focus. visibility rather than
-     display so the DS fade-in animation still has something to animate. */
-  bottom: calc(100% + var(--ref-spacing-xxs));
-  left: 50%;
-  transform: translateX(-50%);
-  width: max-content;
-  max-width: 280px;
-  visibility: hidden;
-  opacity: 0;
-  transition: opacity var(--ref-animation-short) var(--app-ease-standard);
-  /* The DS ships z-index 9999999 on .ap-tooltip, which outranks every modal
-     layer in the app — a tooltip left open on the feed then painted straight
-     over an opened dialog. Pinned to the in-page overlay tier so it still
-     clears sibling cards but can never escape a modal. */
-  z-index: var(--app-z-overlay);
-}
-
-.brief-card__ignore-wrap:hover > .ap-tooltip,
-.brief-card__ignore-wrap:focus-within > .ap-tooltip {
-  visibility: visible;
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .brief-card__ignore-wrap > .ap-tooltip {
-    transition: none;
-  }
-}
-
-.brief-card__ignore:hover {
-  background: var(--app-paper);
-  border-color: var(--app-peach-border);
-  color: var(--ref-color-red-100);
-}
-
 /* ── Use-now split button ─────────────────────────────────────────────── */
 
-.brief-use {
+.topics-use {
   position: relative;
   display: inline-flex;
 }
 
-.brief-use__main,
-.brief-use__toggle {
+.topics-use__main,
+.topics-use__toggle {
   padding: 8px 14px;
   background: var(--ref-color-white);
   border: 1px solid var(--ref-color-electric-blue-40);
@@ -276,24 +228,24 @@
 }
 
 /* Squared off where the two segments meet, rounded on the outer edges. */
-.brief-use__main {
+.topics-use__main {
   border-radius: var(--app-radius-starter) 0 0 var(--app-radius-starter);
   border-right: 0;
 }
 
-.brief-use__toggle {
+.topics-use__toggle {
   border-radius: 0 var(--app-radius-starter) var(--app-radius-starter) 0;
   padding: 8px 10px;
 }
 
-.brief-use__main:hover,
-.brief-use__toggle:hover {
+.topics-use__main:hover,
+.topics-use__toggle:hover {
   background: var(--ref-color-electric-blue-05);
 }
 
 /* Opens upward-left and escapes the card — which is only possible because no
    ancestor clips it. See the overflow note at the top of this file. */
-.brief-use__menu {
+.topics-use__menu {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
@@ -306,11 +258,11 @@
   box-shadow: var(--app-shadow-low);
 }
 
-.brief-use__menu[hidden] {
+.topics-use__menu[hidden] {
   display: none;
 }
 
-.brief-use__item {
+.topics-use__item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -326,11 +278,41 @@
   cursor: pointer;
 }
 
-.brief-use__item:hover {
+.topics-use__item:hover {
   background: var(--ref-color-grey-05);
 }
 
-.brief-use__tile {
+/* The Ignore row is the one item in this menu that takes something away, so it
+   carries a description and a red tile. Aligned to the top rather than centred:
+   with two lines of text, centring floats the tile against the description
+   instead of the label it belongs to. */
+.topics-use__item--ignore {
+  align-items: flex-start;
+}
+
+.topics-use__item--ignore .topics-use__tile {
+  background: var(--ref-color-red-10);
+  color: var(--ref-color-red-100);
+}
+
+.topics-use__item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* A reading measure, so the explanation does not stretch the menu wide. */
+.topics-use__item-desc {
+  max-width: 34ch;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--sys-text-color-light);
+  white-space: normal;
+}
+
+.topics-use__tile {
   display: inline-flex;
   align-items: center;
   justify-content: center;

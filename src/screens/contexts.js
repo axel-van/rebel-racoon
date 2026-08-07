@@ -1,5 +1,5 @@
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=296";
+import { renderTopbar } from "../components/topbar.js?v=297";
 import {
   getContexts,
   subscribe as subscribeContexts,
@@ -10,7 +10,7 @@ import { navigate } from "../router.js?v=30";
 import { setHandoff } from "../handoff.js?v=20";
 import { open as openConfirmModal } from "../components/confirm-modal.js?v=22";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
-import { isFlagOn } from "../feature-flags.js?v=17";
+import { isFlagOn } from "../feature-flags.js?v=18";
 
 // Contexts library — standalone page (handoff §2.4).
 // Header → search → grid of ContextCards. Each card surfaces brand /
