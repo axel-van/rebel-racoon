@@ -29,7 +29,7 @@
 import { researchLanes as seed } from "./mocks.js?v=71";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
-import { DEFAULT_ENABLED_IDS, DEFAULT_CADENCE, findCadence, findResearchSource } from "./research-catalog.js?v=6";
+import { DEFAULT_ENABLED_IDS, DEFAULT_CADENCE, findCadence, findResearchSource } from "./research-catalog.js?v=7";
 
 // First-time user mode starts empty so /research renders its empty state and the
 // sidebar row carries no count. Returning user keeps the mock seed. Same guard

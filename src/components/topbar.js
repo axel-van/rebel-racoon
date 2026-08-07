@@ -14,7 +14,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=432";
+} from "./right-panel.js?v=433";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=67";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=74";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=68";
@@ -23,11 +23,11 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=225";
+} from "./conversation-status-card.js?v=226";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=18";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=51";
-import { getLaneById } from "../research-store.js?v=13";
+import { getLaneById } from "../research-store.js?v=14";
 import { isFlagOn } from "../feature-flags.js?v=18";
 import {
   getPickerState as getTopPostsState,

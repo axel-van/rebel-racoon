@@ -26,7 +26,7 @@
 // border-top + flex:0 0 auto (see research.css) is the fix — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus } from "../research-catalog.js?v=6";
+import { findReviewStatus } from "../research-catalog.js?v=7";
 
 // One line, not the paragraph this used to be. As a hover tooltip it could afford
 // the full explanation; as a permanent menu row it just made the menu tall. The

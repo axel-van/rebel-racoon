@@ -224,7 +224,12 @@ export const REVIEW_STATUSES = Object.freeze([
 ]);
 
 /** Filter default: New only. Reset restores exactly this. */
-export const DEFAULT_STATUS_IDS = Object.freeze(["new"]);
+// Every status ticked. The feed used to open on New alone, which meant a topic
+// you had saved or used vanished from the list the moment you triaged it — and
+// that gap is what the attention notice existed to explain. Opening wide removes
+// the premise: the list shows the lane, and the filter is something you narrow
+// rather than something you have to widen before the list makes sense.
+export const DEFAULT_STATUS_IDS = Object.freeze(REVIEW_STATUSES.map((s) => s.id));
 
 export function findResearchSource(id) {
   return RESEARCH_SOURCES.find((s) => s.id === id) || null;

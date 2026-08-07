@@ -20,14 +20,20 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=6";
-import { getBriefById, getBriefsForLane, ignoreBrief, setStatus } from "../briefs-store.js?v=17";
-import { getLanes } from "../research-store.js?v=13";
+import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=7";
+import { getBriefById, getBriefsForLane, ignoreBrief, setStatus } from "../briefs-store.js?v=18";
+import { getLanes } from "../research-store.js?v=14";
 import { getContextById } from "../contexts-store.js?v=51";
 import { renderSocialPostCard } from "./social-post-card.js?v=7";
 import { showToast } from "./toast.js?v=20";
 
 const MODAL_ID = "research";
+
+// The picker's "Trending, normally hidden" group — the counterpart to the feed's
+// attention notice, and switched off with it. It surfaced ignored-but-trending
+// topics that the picker's own ignored-exclusion would otherwise drop. One line
+// to restore; pickerSplit and the group's render are both still below.
+const SHOW_HIDDEN_TRENDING = false;
 
 let backdrop, panel, titleEl, subEl, bodyEl, footEl;
 let initialized = false;
@@ -416,7 +422,8 @@ function pickerSplit(laneId) {
   const all = getBriefsForLane(laneId);
   return {
     shown: all.filter((b) => b.status !== "ignored"),
-    hiddenTrending: all.filter((b) => b.status === "ignored" && b.isTrending),
+    // Empty while the exception is off, so the group below simply never renders.
+    hiddenTrending: SHOW_HIDDEN_TRENDING ? all.filter((b) => b.status === "ignored" && b.isTrending) : [],
   };
 }
 

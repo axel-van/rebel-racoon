@@ -23,17 +23,17 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=298";
+import { renderTopbar } from "../components/topbar.js?v=299";
 import { isFlagOn } from "../feature-flags.js?v=18";
-import { renderBriefCard } from "../components/brief-card.js?v=13";
+import { renderBriefCard } from "../components/brief-card.js?v=14";
 import {
   openFullResearch,
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=28";
+} from "../components/research-modals.js?v=29";
 import { showToast } from "../components/toast.js?v=20";
-import { getLaneById } from "../research-store.js?v=13";
+import { getLaneById } from "../research-store.js?v=14";
 import {
   getBriefsForLane,
   groupBriefsByAge,
@@ -43,19 +43,24 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=17";
+} from "../briefs-store.js?v=18";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
   RESEARCH_TYPES,
   findResearchSource,
   findCadence,
-} from "../research-catalog.js?v=6";
+} from "../research-catalog.js?v=7";
 import { getContextById } from "../contexts-store.js?v=51";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
 const GENERATE_MS = 1600;
+
+// The attention notice above the topic list. Off: with every review status ticked
+// by default, a flagged topic is already visible in the list, so the notice
+// repeated it. One line to restore — nothing below it was removed.
+const SHOW_ATTENTION_NOTICE = false;
 
 let laneId = null;
 let filters = defaultFilters();
@@ -157,11 +162,16 @@ function renderPage() {
   if (view.generating) return renderGenerating();
 
   const briefs = getBriefsForLane(laneId, filters);
-  // Unconditional: the notice reports whatever is flagged, and only the lane's
-  // own Show-trending setting switches it off. It does not consult the filter and
-  // is not dismissed by opening /attention — see attentionCountsForLane.
-  const attention = attentionCountsForLane(laneId);
-  const showNotice = attention.total > 0 && lane.showTrending;
+  // ── The attention notice is switched OFF ─────────────────────────────────
+  // Kept, not deleted, so it can be switched back on in one line. It reported
+  // trending and updated topics above the list; with every status now ticked by
+  // default the list already shows them, so the notice was restating what was
+  // already on screen.
+  //
+  // Flip `SHOW_ATTENTION_NOTICE` to true to bring it back — renderAttentionNotice
+  // and attentionCountsForLane are both still here and still correct.
+  const attention = SHOW_ATTENTION_NOTICE ? attentionCountsForLane(laneId) : null;
+  const showNotice = SHOW_ATTENTION_NOTICE && attention.total > 0 && lane.showTrending;
 
   return html`<div class="research-feed__body">
     <div class="research-feed__inner">
