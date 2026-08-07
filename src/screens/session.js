@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=304";
+import { renderTopbar } from "../components/topbar.js?v=306";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=74";
 import {
   getConnectedProfiles,
@@ -71,7 +71,9 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=18";
-import * as contextBuilder from "../context-builder.js?v=271";
+import { getBriefById, getStarterTopics } from "../briefs-store.js?v=24";
+import { getLaneById } from "../research-store.js?v=17";
+import * as contextBuilder from "../context-builder.js?v=273";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -108,7 +110,7 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=2";
 import { showToast } from "../components/toast.js?v=20";
 // The composer's Add menu reaches Content Ideas through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaPicker } from "../components/research-modals.js?v=34";
+import { openIdeaPicker } from "../components/research-modals.js?v=35";
 import { findResearchSource } from "../research-catalog.js?v=8";
 import {
   openDrafts as openDraftsPanel,
@@ -116,7 +118,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=438";
+} from "../components/right-panel.js?v=440";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=16";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -1910,6 +1912,143 @@ function removeSlashToken(input) {
 // inline inside this hero). The previous inline AI question flow
 // ("Quick — which context?") was removed — the composer picker is now
 // the single, always-visible context affordance.
+// ── The Content Ideas card on the new-session page ──────────────────────────
+//
+// One topic at a time, from the same briefs the /research feed shows. It sits
+// ABOVE the workflow grid rather than inside it: the grid is three fixed
+// workflows and this is a live suggestion with its own lifecycle — it flips, it
+// runs out, it turns into an empty state. Dropping it into the grid would make
+// the grid reflow from four cells to three the moment the queue emptied.
+//
+// The queue is rendered one card at a time and advanced by the flip button.
+// `starterTopicIndex` is module-level for the same reason the picker's step is:
+// the hero re-renders through renderEmptyHero and the position has to outlive
+// that.
+let starterTopicIndex = 0;
+let starterTopicSession = null;
+
+// Reset the queue when the hero paints for a DIFFERENT chat. Carrying the
+// position across chats would mean that once you had flipped through four
+// topics, every new chat you ever opened greeted you with the empty state —
+// the queue is "what's worth drafting right now", not a read receipt.
+function syncStarterTopicSession(sessionId) {
+  if (starterTopicSession === sessionId) return;
+  starterTopicSession = sessionId;
+  starterTopicIndex = 0;
+}
+
+// A brief's accent, keyed off the same two booleans the topic card reads. New
+// gets nothing — an accent on every card would say nothing about any of them.
+function starterTopicTone(brief) {
+  if (brief.isTrending) return "trending";
+  if (brief.isUpdated) return "updated";
+  return "plain";
+}
+
+function renderStarterTopicCard(brief) {
+  const lane = getLaneById(brief.laneId);
+  const src = findResearchSource(brief.sourceId);
+  const tone = starterTopicTone(brief);
+  // The marks are the feed's own components (trending-mark.css), not a second
+  // drawing of the same idea — the accent says "something is up with this one"
+  // and the mark says which.
+  const mark =
+    tone === "trending"
+      ? `<span class="trending-mark"><i class="ap-icon-arrow-up" aria-hidden="true"></i><span>Trending</span></span>`
+      : tone === "updated"
+        ? `<span class="updated-mark"><i class="ap-icon-refresh" aria-hidden="true"></i><span>Updated</span></span>`
+        : "";
+  return `
+    <button
+      type="button"
+      class="starter-card starter-card--topic starter-topic--${tone}"
+      data-starter-topic="${escapeHtml(brief.id)}"
+    >
+      <i class="starter-card__art ${escapeHtml(src?.icon || "ap-icon-note")}" aria-hidden="true"></i>
+      <span class="starter-topic__head">
+        <span class="starter-topic__lane">${escapeHtml(lane ? lane.name : "Content Ideas")}</span>
+        ${mark}
+      </span>
+      <span class="starter-card__title">${escapeHtml(brief.headline)}</span>
+      <span class="starter-card__cta ap-link standalone small"
+        >Start drafting<i class="ap-icon-arrow-right" aria-hidden="true"></i
+      ></span>
+    </button>
+  `;
+}
+
+// Reached only by flipping past the last topic — never on first paint, where a
+// user with no topics gets no slot at all rather than an empty one. The CTA is
+// the same .starter-card__cta as a live card so the two read as one component;
+// it is an <a> because it navigates, and the card around it is a plain div
+// because there is nothing else here to click.
+function renderStarterTopicEmpty() {
+  return `
+    <div class="starter-card starter-card--topic starter-topic--empty">
+      <i class="starter-card__art ap-icon-note" aria-hidden="true"></i>
+      <span class="starter-card__title">That's every idea I have for now</span>
+      <span class="starter-card__subtitle">Come back later for more content ideas — I'm still watching.</span>
+      <a class="starter-card__cta ap-link standalone small" href="#/research"
+        >Browse Content Ideas<i class="ap-icon-arrow-right" aria-hidden="true"></i
+      ></a>
+    </div>
+  `;
+}
+
+// The whole block: label + slot. The flip button is a SIBLING of the card, not
+// a child — .starter-card is a <button>, and a button inside a button is
+// invalid HTML that browsers resolve unpredictably. The wrapper is the
+// positioning context for both.
+function renderStarterTopicSlot(sessionId) {
+  if (!isFlagOn("contentResearch")) return "";
+  if (sessionId) syncStarterTopicSession(sessionId);
+  const queue = getStarterTopics();
+  // No topics at all (new-alt mode): no slot, not an empty state. "Come back
+  // later" is an answer to "I've read them all", not to "there was never
+  // anything here".
+  if (!queue.length) return "";
+  const brief = queue[starterTopicIndex] || null;
+  const remaining = queue.length - starterTopicIndex - 1;
+  return `
+    <h2 class="empty-chat__starter-label">From your Content Ideas</h2>
+    <div class="starter-topic" data-starter-topic-slot>
+      <div class="starter-topic__stage" data-starter-topic-stage>
+        ${brief ? renderStarterTopicCard(brief) : renderStarterTopicEmpty()}
+      </div>
+      ${
+        brief
+          ? `<button
+              type="button"
+              class="ap-icon-button ghost grey starter-topic__flip"
+              data-starter-topic-flip
+              aria-label="Show another topic${remaining > 0 ? ` (${remaining} more)` : ""}"
+              title="Show another topic"
+            >
+              <i class="ap-icon-shuffle" aria-hidden="true"></i>
+            </button>`
+          : ""
+      }
+    </div>
+  `;
+}
+
+// One place both entry points land a topic: the composer's Pick-a-topic modal
+// and this card. A topic arrives as an already-processed SOURCE, exactly as
+// topic-flow lands one from /topics — intake-lifecycle then posts a
+// source-intake turn for it, so every existing affordance (Extract ideas,
+// Draft, Ask) lights up on its own and no new flow is introduced.
+function startTopicDraft(sessionId, brief) {
+  const src = findResearchSource(brief.sourceId);
+  addReadySource(sessionId, {
+    id: brief.id,
+    filename: brief.headline,
+    kind: "Topic",
+    preview: brief.summary,
+    iconClass: src?.icon || "ap-icon-folder",
+  });
+  showToast("Topic added to this chat");
+}
+
 function renderEmptyHero(sessionId, composerMarkup = "") {
   const sources = getStreamSources(sessionId);
   const firstSource = sources.find((s) => s.status !== "Processing") || sources[0] || null;
@@ -1962,7 +2101,7 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
       <div class="empty-chat__sub">
         Drop a source — I'll turn it into a batch of ready-to-schedule posts, all from one chat.
       </div>
-      ${raw(composerMarkup)}
+      ${raw(composerMarkup)} ${raw(renderStarterTopicSlot(sessionId))}
       <h2 class="empty-chat__starter-label" id="starterGridLabel">Or jump into a workflow</h2>
       <div class="starter-grid" role="group" aria-labelledby="starterGridLabel">${raw(cards)}</div>
     </div>
@@ -4536,6 +4675,47 @@ function bindSession(root, session) {
       // setting `action` on the mock. The "open-video-clips" action opens the
       // dedicated Clip Studio in a fresh `clip-studio-*` session (upload →
       // analyzing → clips), mirroring the welcome-alt dedicated-session pattern.
+      // ── The Content Ideas starter card ─────────────────────────────────
+      // Flip: animate the current card out, swap the markup at the halfway
+      // point, animate the next one in. The class is driven from JS rather than
+      // :target/:checked because the content changes between the two halves —
+      // there is no pure-CSS way to swap the card and keep both directions
+      // animated. Reduced motion short-circuits to an instant swap.
+      const flipBtn = event.target.closest("[data-starter-topic-flip]");
+      if (flipBtn) {
+        const slot = flipBtn.closest("[data-starter-topic-slot]");
+        const stage = slot?.querySelector("[data-starter-topic-stage]");
+        if (!stage) return;
+        starterTopicIndex += 1;
+        const swap = () => {
+          const host = slot.parentElement;
+          const next = document.createElement("div");
+          next.innerHTML = renderStarterTopicSlot();
+          // The label is the first node of the block; replace the slot only.
+          const fresh = next.querySelector("[data-starter-topic-slot]");
+          if (fresh) host.replaceChild(fresh, slot);
+        };
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          swap();
+          return;
+        }
+        stage.classList.add("is-leaving");
+        window.setTimeout(() => {
+          swap();
+          const s = document.querySelector("[data-starter-topic-stage]");
+          if (s) s.classList.add("is-entering");
+        }, 180);
+        return;
+      }
+      // Clicking the card itself drafts from that topic — the same handoff the
+      // idea card's "Draft post" uses, so no new flow is introduced.
+      const topicCard = event.target.closest("[data-starter-topic]");
+      if (topicCard) {
+        const brief = getBriefById(topicCard.dataset.starterTopic);
+        if (brief) startTopicDraft(session.id, brief);
+        return;
+      }
+
       const starterBtn = event.target.closest("[data-starter]");
       if (starterBtn && starterBtn.dataset.starterAction === "open-video-clips") {
         setHandoff("pendingStartClipStudio", {});
@@ -5023,19 +5203,7 @@ function bindSession(root, session) {
         // and every existing affordance (Extract ideas, Draft, Ask) lights up on
         // its own. No new action surface for it to need.
         if (kind === "content-ideas") {
-          openIdeaPicker({
-            onPick: (brief) => {
-              const src = findResearchSource(brief.sourceId);
-              addReadySource(session.id, {
-                id: brief.id,
-                filename: brief.headline,
-                kind: "Topic",
-                preview: brief.summary,
-                iconClass: src?.icon || "ap-icon-folder",
-              });
-              showToast("Topic added to this chat");
-            },
-          });
+          openIdeaPicker({ onPick: (brief) => startTopicDraft(session.id, brief) });
           return;
         }
         // URL + Paste text need the modal UI (a URL field / textarea) — open

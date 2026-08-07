@@ -23,7 +23,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=304";
+import { renderTopbar } from "../components/topbar.js?v=306";
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { renderBriefCard } from "../components/brief-card.js?v=17";
 import {
@@ -31,7 +31,7 @@ import {
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=34";
+} from "../components/research-modals.js?v=35";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=18";
 import {
@@ -43,7 +43,7 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=23";
+} from "../briefs-store.js?v=24";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,

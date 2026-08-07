@@ -117,6 +117,32 @@ export function ageGroupOf(brief) {
   return AGE_GROUPS.find((g) => days <= g.maxDays) || AGE_GROUPS[AGE_GROUPS.length - 1];
 }
 
+/**
+ * Up to four briefs for the new-session page's Content Ideas card, in the order
+ * they are shown: the trending one, the updated one, then two plain New ones.
+ *
+ * The order is the point. The card shows one topic at a time, so the first one
+ * has to be the one most worth acting on — and after the signals are spent, the
+ * queue falls back to whatever is newest and untriaged. Saved / Used / Ignored
+ * are excluded: all three mean the user has already answered this topic.
+ *
+ * Returns whole briefs (laneId included) rather than a view model — the screen
+ * resolves the lane name, because lane names live in research-store and this
+ * store deliberately doesn't know about it.
+ */
+export function getStarterTopics() {
+  const all = briefs.map(withTriage).filter((b) => b.status === "new");
+  const byAge = (a, b) => ageMinutes(a.ageLabel) - ageMinutes(b.ageLabel);
+  const trending = all.filter((b) => b.isTrending).sort(byAge)[0] || null;
+  const updated = all.filter((b) => b.isUpdated && b !== trending).sort(byAge)[0] || null;
+  const picked = [trending, updated].filter(Boolean);
+  const plain = all
+    .filter((b) => !b.isTrending && !b.isUpdated)
+    .sort(byAge)
+    .slice(0, 4 - picked.length);
+  return [...picked, ...plain].slice(0, 4);
+}
+
 /** A lane's briefs already split into AGE_GROUPS order, empty groups dropped. */
 export function groupBriefsByAge(briefs) {
   return AGE_GROUPS.map((g) => ({ group: g, briefs: briefs.filter((b) => ageGroupOf(b).id === g.id) })).filter(

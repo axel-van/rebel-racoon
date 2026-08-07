@@ -807,6 +807,155 @@
   transform: translateX(3px);
 }
 
+/* ── The Content Ideas card ───────────────────────────────────────────────
+   One live topic above the workflow grid. Same .starter-card chrome; what is
+   added here is the accent, the lane/mark head row, the flip control and the
+   swap animation.
+
+   The wrapper exists to be the positioning context for the flip button, which
+   is a SIBLING of the card, not a child — .starter-card is a <button> and a
+   button inside a button is invalid HTML. */
+.starter-topic {
+  position: relative;
+  width: 100%;
+  max-width: 1040px;
+}
+
+@media (max-width: 900px) {
+  .starter-topic {
+    max-width: 651px;
+  }
+}
+
+.starter-card--topic {
+  /* Full width, so it reads as one featured suggestion rather than a lone
+     orphan in a three-column grid. The title gets a measure instead. */
+  width: 100%;
+  min-height: 0;
+  /* Room for the flip button in the corner: 36px control + the xs gutter it
+     sits in, rounded to the nearest scale step. */
+  padding-right: var(--ref-spacing-xxxl);
+  gap: var(--ref-spacing-xxs);
+}
+
+/* The accent. A 4px border-top REPLACING the 1px one, not added to it, so the
+   card doesn't shift by 3px between a plain topic and a flagged one — the same
+   trick the topic card used before its accent was removed. It survives here
+   because this card is a single featured slot where the accent is the whole
+   point, not one row in a scannable column. */
+.starter-topic--trending {
+  border-top: 4px solid var(--app-archie-orange);
+}
+
+.starter-topic--updated {
+  border-top: 4px solid var(--ref-color-menthol-100);
+}
+
+.starter-topic--plain,
+.starter-topic--empty {
+  border-top: 4px solid transparent;
+}
+
+/* Lane name + signal mark on one line above the title. */
+.starter-topic__head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+}
+
+.starter-topic__lane {
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-60);
+}
+
+/* A measure, not the full 1040px: a headline running the whole card width is
+   one long line the eye has to track back across. */
+.starter-card--topic .starter-card__title {
+  max-width: 62ch;
+}
+
+.starter-card--topic .starter-card__subtitle {
+  max-width: 62ch;
+}
+
+/* The watermark, resized for this card. The workflow cards are 158px tall and
+   carry a 104px glyph; this one is ~116px, so the same glyph reached the
+   top-right corner and sat directly behind the flip button. Smaller and lower,
+   it stays a texture in the corner instead of competing with a control. */
+.starter-card--topic .starter-card__art {
+  /* decorative glyph — outside the DS type scale, like the base rule above */
+  font-size: 72px;
+  right: calc(var(--ref-spacing-xxs) * -1);
+  bottom: calc(var(--ref-spacing-xs) * -1);
+}
+
+/* The flip control. Pinned to the card's top-right corner, above the card in
+   the stacking order so its own hover works. */
+.starter-topic__flip {
+  position: absolute;
+  top: var(--ref-spacing-xs);
+  right: var(--ref-spacing-xs);
+  z-index: 1;
+}
+
+/* ── The swap ─────────────────────────────────────────────────────────────
+   Out to the left, in from the right, so the two halves read as one card being
+   replaced by the next rather than as a card blinking. Both are transform +
+   opacity only — no layout properties — so neither reflows the page. */
+.starter-topic__stage {
+  display: flex;
+}
+
+.starter-topic__stage.is-leaving {
+  animation: starter-topic-out 180ms var(--app-ease-standard) forwards;
+}
+
+.starter-topic__stage.is-entering {
+  animation: starter-topic-in 220ms var(--app-ease-standard);
+}
+
+@keyframes starter-topic-out {
+  to {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+
+@keyframes starter-topic-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+/* The JS already short-circuits to an instant swap under reduced motion; this
+   is the belt-and-braces half, in case a class lands anyway. */
+@media (prefers-reduced-motion: reduce) {
+  .starter-topic__stage.is-leaving,
+  .starter-topic__stage.is-entering {
+    animation: none;
+  }
+}
+
+/* Empty state — a plain div, so none of the button affordances apply. The CTA
+   inside it is the only thing to click. */
+.starter-topic--empty {
+  cursor: default;
+}
+
+.starter-topic--empty:hover {
+  border-color: var(--app-border);
+  border-top-color: transparent;
+}
+
+.starter-topic--empty:hover::before {
+  opacity: 0;
+}
+
 /* Coming-soon teaser card — non-interactive: no hover lift, no pointer, and a
    muted "Coming soon" tag in place of the link CTA. Kept in the grid so the
    capability is discoverable while signalling it isn't live yet. */

@@ -190,6 +190,31 @@ pourtant la réponse « correcte » côté modèle de données. Raison : `.ap-st
 Corollaire côté données : `status` et `isTrending` sont deux champs séparés dans
 [`briefs-store.js`](../../src/briefs-store.js) et doivent le rester.
 
+### L'accent de cadre : interdit en colonne, permis en vedette
+
+Les cartes de topics du feed n'ont **pas** d'accent de cadre (voir plus bas) : dans
+une colonne à parcourir, un liseré coloré fait crier une ligne sur dix et casse la
+lecture. La carte Content Ideas de la page nouvelle session en porte un — 4px en
+haut, orange (`--app-archie-orange`) pour Trending, menthol
+(`--ref-color-menthol-100`) pour Updated.
+
+Ce n'est pas une contradiction, c'est la même règle appliquée à deux contextes : là
+c'est **une carte unique en vedette**, où le signal est précisément la raison d'être
+de la carte, et il n'y a aucune voisine à écraser. Une carte « New » reçoit un
+liseré **transparent** de 4px plutôt que rien, pour que la carte ne bouge pas de 3px
+entre deux tons.
+
+⚠️ Si une troisième surface veut un accent, réconcilier les deux règles avant de
+l'ajouter.
+
+### Un contrôle par-dessus une carte-bouton est un FRÈRE, pas un enfant
+
+`.starter-card` est un `<button>`. Le bouton « voir un autre topic » ne peut donc pas
+vivre dedans : un bouton dans un bouton est du HTML invalide que les navigateurs
+résolvent de façon imprévisible. Le motif est un wrapper `position: relative` qui
+contient les deux en frères, le contrôle étant positionné en absolu dans le coin.
+Même raison que la séparation body / footer de `topics-card`.
+
 ### Un sélecteur montre la vraie carte, pas une ligne compacte
 
 Le modal « Pick a topic » dessinait ses propres formes : une ligne d'une ligne pour
