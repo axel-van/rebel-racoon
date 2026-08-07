@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=306";
+import { renderTopbar } from "../components/topbar.js?v=308";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=74";
 import {
   getConnectedProfiles,
@@ -73,7 +73,7 @@ import {
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { getBriefById, getStarterTopics } from "../briefs-store.js?v=24";
 import { getLaneById } from "../research-store.js?v=17";
-import * as contextBuilder from "../context-builder.js?v=273";
+import * as contextBuilder from "../context-builder.js?v=275";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -118,7 +118,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=440";
+} from "../components/right-panel.js?v=442";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=16";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2010,7 +2010,6 @@ function renderStarterTopicSlot(sessionId) {
   const brief = queue[starterTopicIndex] || null;
   const remaining = queue.length - starterTopicIndex - 1;
   return `
-    <h2 class="empty-chat__starter-label">From your Content Ideas</h2>
     <div class="starter-topic" data-starter-topic-slot>
       <div class="starter-topic__stage" data-starter-topic-stage>
         ${brief ? renderStarterTopicCard(brief) : renderStarterTopicEmpty()}
@@ -2101,9 +2100,16 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
       <div class="empty-chat__sub">
         Drop a source — I'll turn it into a batch of ready-to-schedule posts, all from one chat.
       </div>
-      ${raw(composerMarkup)} ${raw(renderStarterTopicSlot(sessionId))}
+      ${raw(composerMarkup)}
       <h2 class="empty-chat__starter-label" id="starterGridLabel">Or jump into a workflow</h2>
-      <div class="starter-grid" role="group" aria-labelledby="starterGridLabel">${raw(cards)}</div>
+      <!-- The Content Ideas card is the grid's FIRST cell, two columns wide —
+           see renderStarterTopicSlot. It sits under the same label as the
+           workflow cards because it answers the same question ("what now?"),
+           and inside the grid rather than above it so the two share one
+           alignment instead of stacking two full-width blocks. -->
+      <div class="starter-grid" role="group" aria-labelledby="starterGridLabel">
+        ${raw(renderStarterTopicSlot(sessionId))}${raw(cards)}
+      </div>
     </div>
   `;
 }
@@ -4691,7 +4697,8 @@ function bindSession(root, session) {
           const host = slot.parentElement;
           const next = document.createElement("div");
           next.innerHTML = renderStarterTopicSlot();
-          // The label is the first node of the block; replace the slot only.
+          // Swap the slot in place inside the grid, so the workflow cells
+          // around it keep their positions.
           const fresh = next.querySelector("[data-starter-topic-slot]");
           if (fresh) host.replaceChild(fresh, slot);
         };

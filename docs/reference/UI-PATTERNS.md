@@ -207,6 +207,14 @@ entre deux tons.
 ⚠️ Si une troisième surface veut un accent, réconcilier les deux règles avant de
 l'ajouter.
 
+**Au survol, l'accent garde sa couleur.** `.starter-card:hover` pose
+`border-color` en raccourci — les quatre côtés — ce qui repeignait le liseré de 4px
+en bleu et donnait l'impression que la carte changeait de catégorie sous le curseur.
+L'accent est donc stocké dans une custom property (`--starter-topic-accent`) et une
+règle `:hover` de même spécificité, placée **après** la règle de base, le restaure
+sur le seul bord haut. Les trois autres bords prennent le survol standard, et le
+reste du traitement (lavis teinté, filigrane) ne change pas.
+
 ### Un contrôle par-dessus une carte-bouton est un FRÈRE, pas un enfant
 
 `.starter-card` est un `<button>`. Le bouton « voir un autre topic » ne peut donc pas

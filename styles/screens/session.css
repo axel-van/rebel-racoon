@@ -808,52 +808,70 @@
 }
 
 /* ── The Content Ideas card ───────────────────────────────────────────────
-   One live topic above the workflow grid. Same .starter-card chrome; what is
-   added here is the accent, the lane/mark head row, the flip control and the
-   swap animation.
+   The first cell of the workflow grid, two columns wide. Same .starter-card
+   chrome; what is added here is the accent, the lane/mark head row, the flip
+   control and the swap animation.
+
+   Two columns rather than one because the headline is a real sentence, not a
+   three-word workflow name — and rather than three, because a full-width row
+   above the grid read as a banner instead of a card. Spanning two also means
+   the grid never reflows: the slot keeps its footprint when it turns into the
+   empty state, so the workflow cards below don't move.
 
    The wrapper exists to be the positioning context for the flip button, which
    is a SIBLING of the card, not a child — .starter-card is a <button> and a
    button inside a button is invalid HTML. */
 .starter-topic {
   position: relative;
-  width: 100%;
-  max-width: 1040px;
+  grid-column: span 2;
+  display: flex;
 }
 
+/* One column at the narrow breakpoint, where the grid itself collapses — at
+   that width "double" is the whole row anyway. */
 @media (max-width: 900px) {
   .starter-topic {
-    max-width: 651px;
+    grid-column: span 1;
   }
 }
 
 .starter-card--topic {
-  /* Full width, so it reads as one featured suggestion rather than a lone
-     orphan in a three-column grid. The title gets a measure instead. */
   width: 100%;
-  min-height: 0;
   /* Room for the flip button in the corner: 36px control + the xs gutter it
      sits in, rounded to the nearest scale step. */
   padding-right: var(--ref-spacing-xxxl);
   gap: var(--ref-spacing-xxs);
 }
 
-/* The accent. A 4px border-top REPLACING the 1px one, not added to it, so the
-   card doesn't shift by 3px between a plain topic and a flagged one — the same
-   trick the topic card used before its accent was removed. It survives here
-   because this card is a single featured slot where the accent is the whole
-   point, not one row in a scannable column. */
+/* The accent, held in a custom property so the hover rule below can restore it
+   without restating every tone.
+
+   It is a 4px border-top REPLACING the 1px one, not added to it, so the card
+   doesn't shift by 3px between a plain topic and a flagged one — the same trick
+   the topic card used before its accent was removed. It survives here because
+   this is a single featured cell where the accent is the whole point, not one
+   row in a scannable column. */
+.starter-card--topic {
+  --starter-topic-accent: transparent;
+  border-top: 4px solid var(--starter-topic-accent);
+}
+
 .starter-topic--trending {
-  border-top: 4px solid var(--app-archie-orange);
+  --starter-topic-accent: var(--app-archie-orange);
 }
 
 .starter-topic--updated {
-  border-top: 4px solid var(--ref-color-menthol-100);
+  --starter-topic-accent: var(--ref-color-menthol-100);
 }
 
-.starter-topic--plain,
-.starter-topic--empty {
-  border-top: 4px solid transparent;
+/* Hover keeps the tone accent on top and takes the standard starter-card
+   highlight — blue edge + tint wash — on the other three sides. The base
+   .starter-card:hover sets border-color as a shorthand, which turned the 4px
+   accent blue and made the card look like it changed category on hover. Equal
+   specificity, so this wins on source order; it has to stay after that rule. */
+.starter-card--topic:hover,
+.starter-card--topic:focus-visible {
+  border-top-color: var(--starter-topic-accent);
 }
 
 /* Lane name + signal mark on one line above the title. */
@@ -870,16 +888,6 @@
   line-height: var(--sys-text-style-caption-bold-line-height);
   font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-60);
-}
-
-/* A measure, not the full 1040px: a headline running the whole card width is
-   one long line the eye has to track back across. */
-.starter-card--topic .starter-card__title {
-  max-width: 62ch;
-}
-
-.starter-card--topic .starter-card__subtitle {
-  max-width: 62ch;
 }
 
 /* The watermark, resized for this card. The workflow cards are 158px tall and
@@ -906,8 +914,14 @@
    Out to the left, in from the right, so the two halves read as one card being
    replaced by the next rather than as a card blinking. Both are transform +
    opacity only — no layout properties — so neither reflows the page. */
+/* Fills the wrapper rather than sizing to its content — as a plain flex item it
+   shrank to the card's intrinsic width and left the cell 39px short of the two
+   columns it spans. min-width:0 is what actually lets a flex item narrow below
+   its content, which the clamped headline needs. */
 .starter-topic__stage {
   display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .starter-topic__stage.is-leaving {
@@ -949,7 +963,7 @@
 
 .starter-topic--empty:hover {
   border-color: var(--app-border);
-  border-top-color: transparent;
+  border-top-color: var(--starter-topic-accent);
 }
 
 .starter-topic--empty:hover::before {
