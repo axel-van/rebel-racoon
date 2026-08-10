@@ -987,30 +987,67 @@
    tall as the card list and would let the pane run off the bottom of the
    screen. */
 /* ── Opening the pane ─────────────────────────────────────────────────────
-   Left to right: the pane starts slightly left of its resting place and slides
-   right into it, so it reads as the article coming OUT of the card that was
-   clicked rather than flying in off the edge of the screen. The card is on the
-   left, so that is the direction the motion has to run.
+   Matched to how the app's own panel opens. That panel is a column of the shell
+   grid, and layout.css animates it with
+   `grid-template-columns var(--ref-animation-normal) var(--app-ease-standard)` —
+   so it does not slide or fade, it WIDENS into place, left to right, on the
+   handoff's standard curve.
 
-   Animated on entry only. There is no exit animation because the pane is removed
-   by a re-render — animating something out means keeping it in the DOM until the
-   animation ends, which is a state machine this screen does not need for 180ms.
+   This pane reproduces that with max-width rather than a grid track, which works
+   because the list beside it is capped at its own measure: growing the pane from
+   0 to its measure moves nothing to its left. Same direction as before, but the
+   motion is now a reveal rather than a slide, and it is the app's curve.
 
-   The card's electric-blue highlight fades in over the same duration, so the two
-   halves of "this card, that article" arrive together. */
+   The opacity ramp is short and front-loaded so the text is not legible mid-wipe;
+   without it the headline reads while still clipped, which looks like a rendering
+   fault rather than an animation.
+
+   Speed: --ref-animation-normal, 250ms, the same token the shell panel uses. The
+   card's border transition is deliberately --ref-animation-short (150ms) — the
+   highlight should be settled before the pane finishes arriving, so the eye is
+   told WHICH card before it is shown WHAT.
+
+   Entry only. Animating an exit means keeping the node alive past its removal,
+   which is a state machine this screen does not need for 250ms. */
+/* A clip-path wipe rather than an animated width, for one reason: it does not need
+   to know how wide the pane is. Animating max-width means naming the width in the
+   keyframe, which is either a second copy of 620px or a var() the animation has to
+   resolve; clip-path reveals whatever box the layout already sized, so the width
+   has exactly one home and the container query's narrower pane wipes correctly
+   with no second keyframe.
+
+   ⚠️ A note on verifying this, which cost real time: an automated browser tab is
+   often BACKGROUNDED (document.hidden === true), and a hidden tab does not advance
+   document.timeline or fire requestAnimationFrame. Every CSS animation then reads
+   playState "running" at currentTime 0 with its `from` state applied — so the pane
+   measures 1px wide, or fully clipped, and looks broken when it is not. Animation
+   cannot be checked by reading computed styles here. Take a screenshot: that
+   forces a paint, and the pane renders correctly. */
 @keyframes research-article-in {
   from {
+    clip-path: inset(0 100% 0 0);
     opacity: 0;
-    transform: translateX(-16px);
+  }
+  30% {
+    opacity: 1;
   }
   to {
+    clip-path: inset(0 0 0 0);
     opacity: 1;
-    transform: translateX(0);
   }
 }
 
 .research-feed__article {
-  animation: research-article-in var(--ref-animation-normal) var(--app-ease-out) both;
+  /* One source of truth for the pane's width — the container query below
+     redefines it for the stacked layout, and nothing else needs to know it. */
+  --article-w: 620px;
+  /* No fill-mode: the wipe is a transient, and the element's own clip-path (none)
+     applies the instant it finishes. `both` would leave the final keyframe latched
+     on for good. */
+  animation: research-article-in var(--ref-animation-normal) var(--app-ease-standard);
+  /* Not for the wipe — clip-path handles that. This keeps the scrolling body from
+     squaring off the pane's rounded bottom corners. */
+  overflow: hidden;
   /* Dropped by exactly one age-group heading, so the pane's first line of text
      lands on the first card's source row rather than 32px above it. The list
      column opens with a .topics-agegroup label ("LAST 7 DAYS") that the pane has
@@ -1034,7 +1071,7 @@
   /* A reading measure of its own. The pane takes the space the single capped
      column left empty, but prose set to 900px is a worse read than the same
      prose in a column, so it stops at the measure and leaves the rest. */
-  max-width: 620px;
+  max-width: var(--article-w);
   max-height: calc(100vh - var(--app-topbar-height) - 2 * var(--ref-spacing-xl));
   display: flex;
   flex-direction: column;
@@ -1120,7 +1157,7 @@
     position: static;
     /* Stacked below the list, the alignment offset has nothing to align to. */
     margin-top: 0;
-    max-width: var(--topics-card-max);
+    --article-w: var(--topics-card-max);
     max-height: none;
     width: 100%;
   }

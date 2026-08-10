@@ -44,25 +44,35 @@
    the history note in brief-card.js. */
 
 /* ── The card whose article is open ────────────────────────────────────────
-   Electric blue, which is this app's selected-state colour everywhere else — the
-   filter chips' pressed state and the universal card hover wash both use this
-   ramp, so a reader already knows what it means.
+   Border colour ONLY. Audited against the app's other selected-card states, and
+   the first version got two things wrong:
 
-   A 2px inset ring rather than a thicker border: a border change would shift the
-   card's content by a pixel and nudge every card below it. Paired with the same
-   pale fill the picker uses on hover, so the selection reads at a glance from the
-   fill and precisely from the ring.
+   • It drew a 2px inset ring. chat.css states the clickable-card convention
+     outright — "a light-blue wash on hover/focus (never navy/black) — soft blue
+     fill + a light blue border, NOT A HARD OUTLINE" — and a ring is exactly the
+     hard outline that rules out. The closest analogue in the app,
+     .drafts-card.is-active (a card in a list, selected), only firms its border
+     from electric-blue-20 to -40. Nothing anywhere adds a ring.
+   • It filled the interior. .drafts-card.is-active does keep a fill, but it
+     inherits it from its own hover wash — every clickable card there is washed
+     on hover, so active is just that wash held. A feed .topics-card has NO hover
+     wash (only .topics-card--picker does, where the card is itself a control), so
+     a fill here would be a paint the card shows in no other state. Border-only is
+     the version that stays consistent with this card.
+
+   electric-blue-100 rather than the -40 drafts-card uses: -40 leans on the fill
+   that card has and this one does not, so at 1px on white it would be too quiet
+   to find. -100 is what the app already uses for a firm accent border — pressed
+   filter chips and .analyse__option-shortcut both take it.
+
+   Border colour is also the only property that cannot shift the layout: the card
+   already has a 1px border, so nothing moves and no card below it is nudged.
 
    Driven by a class rather than :has(button[aria-expanded="true"]) — the state is
    also on the button for assistive tech, but the paint has one owner. */
 .topics-card.is-reading {
-  background: var(--ref-color-electric-blue-05);
-  border-color: var(--ref-color-electric-blue-20);
-  box-shadow: inset 0 0 0 2px var(--ref-color-electric-blue-100);
-  transition:
-    background-color var(--ref-animation-normal) var(--app-ease-out),
-    border-color var(--ref-animation-normal) var(--app-ease-out),
-    box-shadow var(--ref-animation-normal) var(--app-ease-out);
+  border-color: var(--ref-color-electric-blue-100);
+  transition: border-color var(--ref-animation-short) var(--app-ease-standard);
 }
 
 @media (prefers-reduced-motion: reduce) {
