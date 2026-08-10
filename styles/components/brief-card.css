@@ -200,9 +200,29 @@
   background: var(--ref-color-tag-orange-20);
   color: var(--ref-color-tag-orange-150);
 }
+/* Used is BLUE, not green, and green is not free any more: the Ready-to-post tag
+   took it, and .ap-tag green computes the identical #ECF7ED — two chips on one row
+   with the same fill meaning different things.
+
+   Blue is the only Status colour left. Measured against every fill that appears in
+   a card row: green and grey are both taken by the two route tags exactly, red by
+   Ignored, tagOrange by Saved, and Status orange (#FFEFE9) sits on top of
+   --app-peach (#FFF1EC), the Why-now block inside this very card.
+
+   It is also the better meaning. The house rules give Status blue as "info /
+   neutral-info — neither success nor error, e.g. Scheduled, DRAFT", and Used means
+   a draft was made from this topic. Green means success/validation, which Used
+   never was: it records that the topic went somewhere, not that it went well.
+   --ref-color-* rather than --comp-status-blue-*, because component tokens are not
+   allowed in app CSS and the sibling pills all take --ref-* too.
+   
+   Watch: blue is this app's action colour, so a pale blue pill could read as
+   clickable. Survivable because nothing blue and interactive shares this row any
+   more — the type chips moved into the Filters panel — and the selected-card
+   treatment is a border, not a fill. */
 .topics-status--used {
-  background: var(--ref-color-green-10);
-  color: var(--ref-color-green-150);
+  background: var(--ref-color-electric-blue-10);
+  color: var(--ref-color-electric-blue-150);
 }
 .topics-status--ignored {
   background: var(--ref-color-red-10);
