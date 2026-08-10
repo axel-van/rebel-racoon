@@ -6,8 +6,15 @@
 // straight away — re-running a 1.6s spinner on a back button is punishment, not
 // feedback.
 //
-// Filters: three groups, defaults New / all sources / Ready to post. The badge
-// counts NARROWED GROUPS, not ticked options (see briefs-store.narrowedGroupCount).
+// Filtering is split across TWO controls, deliberately, and each owns one axis:
+//   • Topic TYPE — always-visible .ap-filter-chip row under the header. It changes
+//     which action a card offers, so it is the one axis that must never be hidden.
+//   • Status + Sources — the Filters panel, two groups. Its badge counts NARROWED
+//     GROUPS, not ticked options, and it does NOT count the type chips: a control
+//     you can already see does not need a badge to announce it
+//     (see briefs-store.narrowedGroupCount).
+// Defaults: all four statuses, all sources, and DEFAULT_TYPE_IDS — the two route
+// types, with competitive intelligence off.
 //
 // The two ATTENTION SIGNALS — trending and updated — are NOT overrides in this
 // feed: a brief carrying either appears under its own review status and
@@ -23,18 +30,18 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=334";
+import { renderTopbar } from "../components/topbar.js?v=335";
 import { isFlagOn } from "../feature-flags.js?v=19";
-import { renderBriefCard } from "../components/brief-card.js?v=25";
+import { renderBriefCard } from "../components/brief-card.js?v=26";
 import {
   openFullResearch,
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=46";
-import { openBriefInChat } from "../brief-flow.js?v=3";
+} from "../components/research-modals.js?v=47";
+import { openBriefInChat } from "../brief-flow.js?v=4";
 import { showToast } from "../components/toast.js?v=20";
-import { getLaneById } from "../research-store.js?v=24";
+import { getLaneById } from "../research-store.js?v=25";
 import {
   getBriefsForLane,
   groupBriefsByAge,
@@ -42,41 +49,41 @@ import {
   defaultFilters,
   narrowedGroupCount,
   setStatus,
+  setResearchType,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=30";
+} from "../briefs-store.js?v=31";
 import {
-  COLUMN_TYPES,
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
   RESEARCH_TYPES,
   findResearchSource,
+  findResearchType,
   findCadence,
-} from "../research-catalog.js?v=11";
+} from "../research-catalog.js?v=12";
 import { getContextById } from "../contexts-store.js?v=59";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
-// ── The two columns ─────────────────────────────────────────────────────────
-// "Needs assets" on the left, "Ready to post" on the right. The split is the
-// brief's own type, so it is the same axis the type filter offers rather than a
-// second, invisible one.
+// ── One list, grouped by age ────────────────────────────────────────────────
+// This was two columns — "Needs assets" left, "Ready to post" right — and the
+// split has moved onto the card as a tag. The reasoning is in
+// SPEC-OPTION-B.md, but the short version is that the columns asserted a
+// FALLIBLE AI classification as a fact of the layout: a column header cannot
+// offer you a way to disagree with it, and the card's dropdown can.
 //
-// A topic list is read as two questions — what can go out, and what is stuck —
-// and the answer to the second is a to-do list for someone other than the writer.
-// Stacked, those two answers interleave and you have to read the type pill on
-// every card to tell them apart.
+// Three smaller things went with them, all of which the single list fixes for
+// free: the age separators no longer render twice (once per column) and the two
+// scroll positions no longer drift apart; the layout no longer changes meaning
+// below 1200px, where the columns stacked into two headings; and the grouping
+// axis is now free, which is what the lifecycle work needs — see
+// needs-assets-vs-ready-to-post.html, Option E.
 //
-// COLUMN MEMBERSHIP is `ready-to-post` on the right, EVERYTHING ELSE on the left.
-// That is deliberate but worth naming: competitive-intelligence is neither ready
-// nor waiting on assets — it isn't a post at all — so under a header that says
-// "Needs assets" it is filed slightly wrong. It is off by default, so it only
-// appears there when the user asks for it, and a third column for two briefs
-// would cost more than the imprecision does. Revisit if intel grows.
-//
-// Age grouping survives inside each column: the separators answer "how fresh",
-// the columns answer "can I use it", and neither replaces the other.
-function renderColumns(briefs, view) {
+// The cards keep their own max-width, so the reading measure is unchanged. What
+// is lost is density: a single capped column leaves the right of a wide window
+// empty, which is exactly the space the columns existed to use. That is the
+// accepted cost, not an oversight.
+function renderList(briefs, view) {
   const cards = (rows) =>
     rows
       .map((b) =>
@@ -88,40 +95,74 @@ function renderColumns(briefs, view) {
       )
       .join("");
 
-  const column = (typeId) => {
-    const meta = RESEARCH_TYPES.find((t) => t.id === typeId);
-    const mine = briefs.filter((b) =>
-      typeId === "ready-to-post" ? b.researchType === "ready-to-post" : b.researchType !== "ready-to-post",
-    );
-    return html`<section class="research-feed__col">
-      <h2 class="research-feed__col-title">
-        ${meta ? meta.label : typeId}
-        <span class="research-feed__col-count">${mine.length}</span>
-      </h2>
-      ${raw(
-        mine.length
-          ? groupBriefsByAge(mine)
-              .map(
-                // A heading per non-empty age frame. The label is /topics'
-                // .topics-group__label — the app's own answer to this exact
-                // problem one feature over — so the two age-grouped card lists
-                // read as one idea rather than two.
-                ({ group, briefs: rows }) =>
-                  html`<section class="topics-agegroup">
-                    <h3 class="topics-agegroup__label">${group.label}</h3>
-                    ${raw(cards(rows))}
-                  </section>`,
-              )
-              .join("")
-          : // Both columns always render, even empty. A column that disappears
-            // when it empties makes the other jump the full width, and "nothing
-            // is stuck" is itself worth seeing.
-            html`<p class="research-feed__col-empty muted">Nothing here right now.</p>`,
-      )}
-    </section>`;
-  };
+  return html`<div class="research-feed__list">
+    ${raw(
+      groupBriefsByAge(briefs)
+        .map(
+          // A heading per non-empty age frame. The label is /topics'
+          // .topics-group__label — the app's own answer to this exact problem one
+          // feature over — so the two age-grouped card lists read as one idea
+          // rather than two.
+          ({ group, briefs: rows }) =>
+            html`<section class="topics-agegroup">
+              <h3 class="topics-agegroup__label">${group.label}</h3>
+              ${raw(cards(rows))}
+            </section>`,
+        )
+        .join(""),
+    )}
+  </div>`;
+}
 
-  return html`<div class="research-feed__columns">${raw(COLUMN_TYPES.map(column).join(""))}</div>`;
+// ── The type filter, as always-visible chips ────────────────────────────────
+// Promoted out of the Filters panel. filter-chips-list.md names this exact case
+// — "a small filter set, visible at a glance, worth keeping on screen (source
+// kinds, content types, statuses)" — and with the columns gone the type is no
+// longer readable from the layout, so hiding it two clicks deep inside a panel
+// would have made the one axis that changes the card's action the least visible
+// thing on the page.
+//
+// It lives in EXACTLY ONE place now: the panel's third group is gone. Two
+// controls for one filter is the "one pattern per problem per surface" rule, and
+// it would also have let the panel and the chips disagree.
+//
+// Multi-select via aria-pressed, which is what .ap-filter-chip already is
+// everywhere else in this app, and DEFAULT_TYPE_IDS is untouched — so
+// competitive intelligence stays off on first paint exactly as before. An "All"
+// chip was mocked and dropped: meaning "all three types" it would have switched
+// intel on by default, a product change this refactor does not license.
+//
+// Counts are computed against the OTHER filters (status + source) and not against
+// the type filter itself, so a chip says how many topics it would add rather than
+// how many are showing. That is why toggling a status moves every count.
+function renderTypeChips() {
+  return html`<div class="research-feed__types" role="group" aria-label="Filter by topic type">
+    ${raw(
+      RESEARCH_TYPES.map((t) => {
+        const on = filters.types.includes(t.id);
+        const n = getBriefsForLane(laneId, { ...filters, types: [t.id] }).length;
+        // Disabled, not hidden, when the lane holds none of this type —
+        // filter-chips-list.md is explicit about that, and a chip that vanishes
+        // per lane makes the control's shape depend on the data.
+        //
+        // Only ever disabled while it is OFF. Disabling a chip the user has
+        // switched on would trap them behind a filter they cannot release —
+        // which is reachable, since rerouting the lane's last Needs-assets topic
+        // drops that count to zero while the chip is still pressed.
+        const dead = n === 0 && !on;
+        return html`<button
+          type="button"
+          class="ap-filter-chip"
+          data-feed-type="${escapeAttr(t.id)}"
+          aria-pressed="${on ? "true" : "false"}"
+          ${raw(dead ? 'aria-disabled="true" disabled' : "")}
+        >
+          <span>${t.label}</span>
+          <span class="research-feed__types-count">${n}</span>
+        </button>`;
+      }).join(""),
+    )}
+  </div>`;
 }
 
 const GENERATE_MS = 1600;
@@ -136,7 +177,7 @@ let filters = defaultFilters();
 let view = {
   generating: false,
   panelOpen: false,
-  groups: { status: true, sources: true, types: true },
+  groups: { status: true, sources: true },
   openMenu: null,
 };
 let timer = null;
@@ -244,10 +285,11 @@ function renderPage() {
 
   return html`<div class="research-feed__body">
     <div class="research-feed__inner">
-      ${raw(renderFeedHeader(lane))} ${raw(showNotice ? renderAttentionNotice(attention) : "")}
+      ${raw(renderFeedHeader(lane))} ${raw(renderTypeChips())}
+      ${raw(showNotice ? renderAttentionNotice(attention) : "")}
       ${raw(
         briefs.length
-          ? renderColumns(briefs, view)
+          ? renderList(briefs, view)
           : html`<p class="research-feed__empty muted">
               No topics match these filters. Try widening them, or reset to the defaults.
             </p>`,
@@ -351,9 +393,10 @@ function renderFeedHeader(lane) {
 function renderFilterPanel() {
   return html`<div class="research-filters__panel" data-feed-panel>
     ${raw(
+      // Two groups. "Topic type" used to be the third and is now the chip row in
+      // the toolbar — see renderTypeChips().
       renderGroup("status", "Topic status", REVIEW_STATUSES, filters.statuses, "statuses") +
-        renderGroup("sources", "Sources", RESEARCH_SOURCES, filters.sources, "sources") +
-        renderGroup("types", "Topic type", RESEARCH_TYPES, filters.types, "types"),
+        renderGroup("sources", "Sources", RESEARCH_SOURCES, filters.sources, "sources"),
     )}
     <div class="research-filters__reset-row">
       <button type="button" class="research-filters__reset" data-feed-reset>
@@ -465,6 +508,16 @@ function bind(target) {
       view.groups[k] = !view.groups[k];
       return paint(target);
     }
+    const chip = event.target.closest("[data-feed-type]");
+    if (chip) {
+      const id = chip.dataset.feedType;
+      const set = new Set(filters.types);
+      if (set.has(id)) set.delete(id);
+      else set.add(id);
+      filters = { ...filters, types: [...set] };
+      return paint(target);
+    }
+
     if (event.target.closest("[data-feed-reset]")) {
       filters = defaultFilters();
       return paint(target);
@@ -512,6 +565,23 @@ function bind(target) {
       // Opens a confirmation. The status does NOT change here — only on confirm,
       // inside the modal. Flipping it on this click was a real bug.
       return openAddToStrategy({ briefId: strategy.dataset.briefStrategy, playbookId: lane?.playbookId });
+    }
+
+    // The reroute. Writes through the store rather than into `view`, so the
+    // correction survives a repaint and a remount — it is a fact about the topic
+    // now, not a state of this screen.
+    // Clear the open menu BEFORE the store call, not after: setResearchType()
+    // notifies, the subscription repaints, and a repaint reads `view.openMenu`.
+    // Nulling it afterwards leaves the menu on screen with no repaint to follow
+    // — which is exactly what it did the first time round.
+    const route = event.target.closest("[data-brief-route]");
+    if (route) {
+      const to = route.dataset.briefRouteTo;
+      view.openMenu = null;
+      setResearchType(route.dataset.briefRoute, to);
+      const meta = findResearchType(to);
+      showToast(meta ? `Moved to ${meta.label}` : "Topic moved");
+      return;
     }
 
     const ignore = event.target.closest("[data-brief-ignore]");

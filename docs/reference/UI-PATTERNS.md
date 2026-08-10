@@ -125,7 +125,7 @@ aucun débordement, aucune collision.
 
 ### Listes de cartes groupées par âge
 
-Deux surfaces le font — le feed `/topics` et une liste de topics `/research/:id` —
+Deux surfaces le font — le feed `/topics` et une liste de topics `/content-ideas/:id` —
 et elles doivent se ressembler. Le patron : une `<section>` par tranche, titrée
 par un label **`caption-bold` en capitales**, `--sys-text-color-light`, **sans
 filet**. Le blanc suffit : 32px au-dessus du label contre 16px entre deux cartes,
@@ -166,7 +166,21 @@ que le groupement par âge ait besoin des mois.
 
 ### Filter chips
 
-`.ap-filter-chip` piloté par `aria-pressed`, optionnels `-icon` / `-avatar` (img rond) / `-count`. Partout : connectors-view, playbook-view, ideas, generate-image-modal, right-panel, feedback-control, schedule-modal.
+`.ap-filter-chip` piloté par `aria-pressed`, optionnels `-icon` / `-avatar` (img rond) / `-count`. Partout : connectors-view, playbook-view, ideas, generate-image-modal, right-panel, feedback-control, schedule-modal, et la ligne de types du feed Content Ideas.
+
+**Une facette vit à UN seul endroit.** Le type de topic était le 3ᵉ groupe du
+panneau Filters ; il est passé en chips et le groupe a été **supprimé**, pas
+dupliqué. Deux contrôles pour un même filtre, c'est la règle « one pattern per
+problem per surface » — et surtout deux sources de vérité qui finissent par se
+contredire. Corollaire mesurable : `narrowedGroupCount()` ne compte **plus** le
+groupe types, sinon le badge « Filters » resterait bloqué sur 1 (le défaut est
+2 types sur 3).
+
+**Une chip sans contenu se désactive, elle ne disparaît pas** (`filter-chips-list.md`).
+Mais **seulement quand elle est éteinte** : désactiver une chip allumée
+enfermerait l'utilisateur derrière un filtre qu'il ne peut plus relâcher — cas
+réel ici, puisque rerouter le dernier topic « Needs assets » d'une lane met ce
+compteur à 0 pendant que la chip est encore pressée.
 
 ### Status pills
 
@@ -189,6 +203,40 @@ pourtant la réponse « correcte » côté modèle de données. Raison : `.ap-st
 
 Corollaire côté données : `status` et `isTrending` sont deux champs séparés dans
 [`briefs-store.js`](../../src/briefs-store.js) et doivent le rester.
+
+#### Troisième axe : la ROUTE, et pourquoi elle a droit au `.ap-tag` que trending n'a pas
+
+Depuis Option B, la carte porte un **troisième** axe : la route du topic
+(`Needs assets` / `Ready to post` / `Competitive intelligence`), en `.ap-tag`. Ça
+ressemble à une contradiction de la règle ci-dessus — elle interdit justement un
+`.ap-tag` à côté de la pill de statut. Ce n'en est pas une, et la différence est
+la seule chose à retenir :
+
+- **Trending répond à la même question que le statut** — « où j'en suis avec ce
+  topic ». Deux marques sur le même axe, collées au même endroit, se lisent comme
+  deux valeurs concurrentes du même champ. D'où le texte, pas la pill.
+- **La route répond à une autre question** — « c'est quoi, ce topic ». Elle est
+  donc posée **à gauche du `__spacer`**, dans la file source · âge, pas dans le
+  groupe des marques à droite. Mesuré : ~290px séparent le tag de la pill. Ce sont
+  deux régions, pas deux voisins.
+
+Et la géométrie ne se recouvre pas non plus, contrairement au cas trending :
+mesuré, `.ap-tag green` fait 14px/400 en casse normale avec un rayon de **4px**,
+`.topics-status` fait 11px/800 en CAPITALES avec un rayon de **24px**. Un rectangle
+à coins doux contre une gélule.
+
+⚠️ **Le fond est identique, lui** : `.ap-tag green` et `.topics-status--used`
+calculent tous les deux `rgb(236, 247, 237)`. Accepté, parce que la forme, la
+casse, la taille et les 290px font le travail — vérifié à l'écran, pas seulement
+au calcul. Menthol a été essayé d'abord, précisément pour éviter cette collision,
+et était **trop pâle pour se repérer** en taille tag. Si un jour un quatrième
+marqueur vert arrive dans cette ligne, c'est cette collision qu'il faudra casser
+en premier.
+
+Règle générale qui sort de là : **un axe se distingue par sa RÉGION dans la ligne
+avant de se distinguer par sa couleur.** Gauche = ce que c'est. Droite = où j'en
+suis. Une couleur partagée entre deux régions coûte beaucoup moins qu'une couleur
+partagée dans la même région.
 
 ### L'accent de cadre : interdit en colonne, permis en vedette
 

@@ -948,34 +948,12 @@
   gap: 16px;
 }
 
-/* ── The two columns ──────────────────────────────────────────────────────
-   "Needs assets" and "Ready to post", side by side. Two tracks of one card each,
-   so a column is exactly as wide as the thing it holds and the pair fills the
-   body — the same arithmetic the feed column used when it briefly held two cards
-   in one list.
-
-   Fractional tracks, not `minmax(--topics-card-max, 1fr)`. Two full-width cards
-   plus the gap come to 1356 and the body offers 1340, so auto-fit read that as
-   "won't fit" and stacked them — sixteen pixels short. The tracks share what
-   there is instead and the cards fill them, stopping at their own cap if the
-   window is ever wide enough to matter.
-
-   Stacked below 1200px, where two columns would be two cramped ones. The headers
-   stay either way, so a stacked reader still knows which pile they are in. */
-.research-feed__columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--ref-spacing-md);
-  align-items: start;
-}
-
-@media (max-width: 1200px) {
-  .research-feed__columns {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.research-feed__col {
+/* ── One list ─────────────────────────────────────────────────────────────
+   Was a two-column grid. The cards carry their own max-width, so this only has
+   to be a column — and being a column rather than a grid is why nothing here
+   changes at any viewport width. The two-column rules, .research-feed__col*,
+   are gone; the type they expressed lives on the card as an .ap-tag. */
+.research-feed__list {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-sm);
@@ -983,40 +961,29 @@
   max-width: var(--topics-card-max);
 }
 
-/* The column heading outranks the age separators beneath it — h2 to their h3,
-   and the type scale says the same thing the markup does. */
-.research-feed__col-title {
+/* ── The type filter chips ───────────────────────────────────────────────
+   A sibling of the header, above the list rather than inside the header's
+   action cluster: the cluster holds controls that act on the whole lane
+   (Filters, Export, settings), and these narrow what is below them. Sat next to
+   Export they would have read as a fourth lane-level button.
+
+   .ap-filter-chip is the app's chip primitive (ds-patches.css) and already
+   drives its selected state from aria-pressed, so there is no state class here
+   — only the row's own layout and the count. */
+.research-feed__types {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  margin: 0;
-  font-family: var(--sys-text-style-h3-font-family);
-  font-size: var(--sys-text-style-h3-size);
-  line-height: var(--sys-text-style-h3-line-height);
-  font-weight: var(--sys-text-style-h3-weight);
-  color: var(--app-convo-navy);
+  margin-bottom: var(--ref-spacing-md);
 }
 
-/* The count is the DS Counter — a number attached to a label is exactly what it
-   is for, and it saves inventing a pill. */
-.research-feed__col-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  padding: 0 var(--ref-spacing-xxxs);
-  border-radius: var(--app-radius-circle);
-  background: var(--ref-color-grey-10);
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--ref-color-grey-80);
-}
-
-.research-feed__col-empty {
-  margin: 0;
-  font-size: var(--sys-text-style-body-size);
-  color: var(--sys-text-color-light);
+/* The count inside a chip. Deliberately not the DS Counter: a counter is its own
+   pill, and a pill inside a pill reads as two chips. Dimmed weight on the same
+   line is enough, and it inherits the chip's pressed colour for free. */
+.research-feed__types-count {
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
 }
 
 /* The attention page keeps a single capped column — it has no type split, its

@@ -20,7 +20,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=11";
+import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=12";
 import {
   ageMinutes,
   getBriefById,
@@ -28,10 +28,10 @@ import {
   groupBriefsByAge,
   ignoreBrief,
   setStatus,
-} from "../briefs-store.js?v=30";
-import { getLanes } from "../research-store.js?v=24";
+} from "../briefs-store.js?v=31";
+import { getLanes } from "../research-store.js?v=25";
 import { getContextById } from "../contexts-store.js?v=59";
-import { renderBriefCard } from "./brief-card.js?v=25";
+import { renderBriefCard } from "./brief-card.js?v=26";
 import { renderSocialPostCard } from "./social-post-card.js?v=14";
 import { showToast } from "./toast.js?v=20";
 

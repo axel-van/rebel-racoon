@@ -40,13 +40,35 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus } from "../research-catalog.js?v=11";
+import { findReviewStatus, findResearchType, otherRoute, typeTagColor } from "../research-catalog.js?v=12";
 
 // One line, not the paragraph this used to be. As a hover tooltip it could afford
 // the full explanation; as a permanent menu row it just made the menu tall. The
 // long version still exists where it is actually being decided — the infobox in
 // the ignore-reason modal (research-modals.openIgnoreReason).
 const IGNORE_HINT = "Kept out of your feed unless it trends well above its baseline.";
+
+// The ROUTE, as a DS Tag.
+//
+// Why a tag and not a second pill: choosing-components.md §1 draws the line by
+// how much of the object the marker describes. A marker that is single and
+// describes the whole row is a Status; one of several classifiable markers that
+// coexist is a Tag. Review status is the former — one value, whole card. The
+// route is the latter: it coexists with all four statuses and with both
+// attention signals, so three markers can sit in this row at once.
+//
+// Colour comes from typeTagColor(), which picks by object type rather than hue —
+// see the note there for why green means Ready to post and why not blue.
+//
+// A <span>, not a <button>: tag.md says a static tag is a span and only a
+// clickable one is a button. Rerouting lives in the footer menu, not here — a
+// clickable tag inside the card's body button would be a button in a button,
+// the same invalid nesting the body/footer split exists to avoid.
+function renderRouteTag(researchType) {
+  const meta = findResearchType(researchType);
+  if (!meta) return "";
+  return html`<span class="ap-tag ${typeTagColor(meta.id)} topics-card__route">${meta.label}</span>`;
+}
 
 function renderStatusPill(status) {
   const meta = findReviewStatus(status);
@@ -77,6 +99,7 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
   if (!brief) return "";
   const trendingPage = variant === "trending";
   const picker = variant === "picker";
+  const feed = !trendingPage && !picker;
   const ignored = brief.status === "ignored";
 
   return html`<article
@@ -120,6 +143,14 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
              what took the lane headings away. -->
         ${raw(laneName ? html`<span class="topics-card__lane">· ${laneName}</span>` : "")}
         <span class="topics-card__when">· ${brief.ageLabel}</span>
+        <!-- The route sits on the LEFT of the meta run, with the source and the
+             age. The left side answers "what is this"; the right side, past the
+             spacer, answers "where am I with it" — signals then status. Putting
+             the tag on the right would have made it the fourth chip in a huddle
+             and implied it was another thing the user had done. Feed only: the
+             attention page shows no triage controls and the picker's card IS a
+             control, so neither needs to be told which queue a topic is in. -->
+        ${raw(feed ? renderRouteTag(brief.researchType) : "")}
         <span class="topics-card__spacer"></span>
         ${raw(brief.isTrending ? renderTrendingMark() : "")}${raw(brief.isUpdated ? renderUpdatedMark() : "")}
         <!-- Status pill is ALWAYS shown in the feed and NEVER on the trending
@@ -178,13 +209,33 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
   </article>`;
 }
 
-// Feed: a split button. The main segment drafts and marks Used; the chevron
-// opens save / add-to-Playbook.
+// Feed: a split button. The main segment carries the action the topic's ROUTE
+// implies; the chevron opens the rest.
+//
+// ── The main segment is not one verb any more ───────────────────────────────
+// A Ready-to-post topic can go to a writer, so the default is Use in chat. A
+// Needs-assets topic cannot — its blocker is a commitment, a shoot or a customer
+// who will go on record — so its default is Add to strategy. This is the whole
+// point of Option B: the route stops being a label you read and becomes the
+// button you press, which is the only version of it that changes what happens.
+//
+// Neither action is ever hidden. A Needs-assets card keeps "Use in chat anyway"
+// as the first menu row, because the classification is the AI's guess and the
+// user overruling it must not require rerouting the topic first.
 function renderUseSplit(brief, menuOpen) {
   const saved = brief.status === "saved";
   const ignored = brief.status === "ignored";
+  const ready = brief.researchType === "ready-to-post";
+  const flip = otherRoute(brief.researchType);
+  const flipMeta = flip ? findResearchType(flip) : null;
   return html`<span class="topics-use" data-brief-use-wrap="${escapeAttr(brief.id)}">
-    <button type="button" class="topics-use__main" data-brief-use="${escapeAttr(brief.id)}">Use in chat</button>
+    <button
+      type="button"
+      class="topics-use__main"
+      ${raw(ready ? `data-brief-use="${escapeAttr(brief.id)}"` : `data-brief-strategy="${escapeAttr(brief.id)}"`)}
+    >
+      ${ready ? "Use in chat" : "Add to strategy"}
+    </button>
     <button
       type="button"
       class="topics-use__toggle"
@@ -200,12 +251,37 @@ function renderUseSplit(brief, menuOpen) {
            list, and the tiles were doing decoration rather than disambiguation:
            a bookmark, a target and an eye-off don't tell you anything the labels
            don't already say. -->
+      <!-- Whichever of the two actions is NOT the main segment leads the menu, so
+           the pair is always both present and never duplicated. -->
+      ${raw(
+        ready
+          ? html`<button type="button" class="topics-use__item" data-brief-strategy="${escapeAttr(brief.id)}">
+              <span>Add to Playbook — Content strategy</span>
+            </button>`
+          : html`<button type="button" class="topics-use__item" data-brief-use="${escapeAttr(brief.id)}">
+              <span>Use in chat anyway</span>
+            </button>`,
+      )}
       <button type="button" class="topics-use__item" data-brief-save="${escapeAttr(brief.id)}">
         <span>${saved ? "Remove from saved" : "Save for later"}</span>
       </button>
-      <button type="button" class="topics-use__item" data-brief-strategy="${escapeAttr(brief.id)}">
-        <span>Add to Playbook — Content strategy</span>
-      </button>
+      <!-- The reroute. Present only when the topic is actually ON the route axis:
+           competitive-intelligence is neither postable nor waiting on assets, so
+           offering "Ready to post instead" there would assert something false.
+           setResearchType() refuses it too — two locks, because this row is the
+           one place in the card that edits what the scan concluded. -->
+      ${raw(
+        flipMeta
+          ? html`<button
+              type="button"
+              class="topics-use__item"
+              data-brief-route="${escapeAttr(brief.id)}"
+              data-brief-route-to="${escapeAttr(flipMeta.id)}"
+            >
+              <span>${flipMeta.label} instead</span>
+            </button>`
+          : "",
+      )}
       ${raw(
         // Ignore lives in here rather than beside Use in chat. It is the one
         // destructive-ish option on the card, and a menu is where the app already

@@ -221,8 +221,43 @@ export const RESEARCH_TYPES = Object.freeze([
 /** Filter default: the two the columns are built on. Reset restores exactly this. */
 export const DEFAULT_TYPE_IDS = Object.freeze(["needs-assets", "ready-to-post"]);
 
-/** The two columns, left to right. The feed's layout reads this, not literals. */
-export const COLUMN_TYPES = Object.freeze(["needs-assets", "ready-to-post"]);
+// The two routes a topic can be on. "Route" is the word for the pair, because a
+// type answers WHICH ACTION a topic is heading for, and the pair is the only part
+// of RESEARCH_TYPES that is a genuine either/or: competitive-intelligence is not
+// on this axis at all, which is why it can never be rerouted.
+//
+// Replaces COLUMN_TYPES, which named the same two ids as a LAYOUT. They stopped
+// being columns when the feed became one list; they are still a pair.
+export const ROUTE_TYPES = Object.freeze(["needs-assets", "ready-to-post"]);
+
+/** The other route, or null when the type is not on the route axis. */
+export function otherRoute(typeId) {
+  if (!ROUTE_TYPES.includes(typeId)) return null;
+  return ROUTE_TYPES.find((t) => t !== typeId) || null;
+}
+
+// Tag colour per type. `.ap-tag` colours are chosen by OBJECT TYPE, never by hue
+// (tag.md), and the DS house rule reserves green for "a validated / approved
+// object" — which is exactly what Ready to post claims about a topic. Everything
+// not yet postable is the neutral grey. Deliberately not blue and not orange:
+// in this app those are action colours, and a route is not an action.
+//
+// Menthol was tried first, to keep clear of the green "Used" status chip, and was
+// too pale to scan at tag size. The residual collision — a green tag beside a
+// green Used chip — is accepted and recorded in SPEC-OPTION-B.md.
+const TYPE_TAG_COLOR = Object.freeze({
+  "needs-assets": "grey",
+  "ready-to-post": "green",
+  "competitive-intelligence": "grey",
+});
+
+export function typeTagColor(typeId) {
+  return TYPE_TAG_COLOR[typeId] || "grey";
+}
+
+export function findResearchType(id) {
+  return RESEARCH_TYPES.find((t) => t.id === id) || null;
+}
 
 // Review statuses. `id` is what Triage stores; `label` is the pill text.
 //

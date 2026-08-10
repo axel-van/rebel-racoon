@@ -36,6 +36,7 @@
 //   getStatus(briefId)                 → 'new'|'saved'|'used'|'ignored'
 //   getIgnoreReason(briefId)           → string
 //   setStatus(briefId, status)         mutates + notifies
+//   setResearchType(briefId, type)    reroute between the two ROUTE_TYPES
 //   toggleSaved(briefId)               → the resulting status
 //   ignoreBrief(briefId, reason)       mutates + notifies
 //   updateSummary(briefId, text)       — Adapt mode commits through here
@@ -44,7 +45,7 @@
 import { researchBriefs as seed } from "./mocks.js?v=78";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
-import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES, RESEARCH_TYPES } from "./research-catalog.js?v=11";
+import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES, ROUTE_TYPES } from "./research-catalog.js?v=12";
 
 const briefs = isNewUser() ? [] : seed.map(cloneBrief);
 
@@ -173,7 +174,11 @@ export function narrowedGroupCount(filters = defaultFilters()) {
   let n = 0;
   if ((filters.statuses || []).length !== 4) n++;
   if ((filters.sources || []).length !== ALL_SOURCE_IDS.length) n++;
-  if ((filters.types || []).length !== RESEARCH_TYPES.length) n++;
+  // Types are NOT counted. They moved out of this panel and onto always-visible
+  // filter chips in the toolbar, and the badge exists to say "something is
+  // narrowed that you cannot see". A chip you can see does not qualify — and
+  // because the type default is two of three, counting it would have pinned the
+  // badge to 1 forever.
   return n;
 }
 
@@ -290,6 +295,31 @@ export function setStatus(briefId, status) {
   if (!b) return null;
   const prev = triage.get(briefId) || { reason: "" };
   triage.set(briefId, { ...prev, status, updatedAt: "just now" });
+  notify();
+  return withTriage(b);
+}
+
+// Reroute — move a topic between "Needs assets" and "Ready to post".
+//
+// This one writes onto the BRIEF, not into the `triage` map, and that is a
+// deliberate exception to the server-owned / user-owned split at the top of this
+// file. The route is server-owned data: it is what the scan concluded. But the
+// scan is fallible in both directions, and correcting it has to stick — so the
+// user's correction overwrites the conclusion rather than sitting beside it.
+//
+// The cost is honest and worth stating: a re-scan that replaced `briefs` would
+// clobber a reroute, exactly as it would clobber any other server field. If
+// re-scan ever becomes real, a reroute belongs in `triage` as an override that
+// `withTriage()` layers on — the same shape `status` already uses.
+//
+// Silently ignores a type that is not on the route axis, so a
+// competitive-intelligence topic cannot be rerouted by a stray call. The card
+// does not render the control for one either; this is the second lock.
+export function setResearchType(briefId, typeId) {
+  if (!ROUTE_TYPES.includes(typeId)) return null;
+  const b = briefs.find((x) => x.id === briefId);
+  if (!b || !ROUTE_TYPES.includes(b.researchType)) return null;
+  b.researchType = typeId;
   notify();
   return withTriage(b);
 }

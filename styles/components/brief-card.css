@@ -124,6 +124,19 @@
   flex: 1;
 }
 
+/* The route tag. Geometry only — .ap-tag brings the fill, the border, the radius
+   and the type, and the DS caps a tag at 180px with an ellipsis, which is what
+   keeps "Competitive intelligence" from stretching the row.
+
+   A small nudge off the age label so the meta run reads as
+   source · age — [route] rather than as one run-on string. flex-shrink is
+   disabled because the tag is the shortest thing in the row and the source name
+   should give way first. */
+.topics-card__route {
+  flex: 0 0 auto;
+  margin-left: var(--ref-spacing-xxxs);
+}
+
 /* Trending is .trending-mark, in styles/components/trending-mark.css — the lane
    cards on /research say it the same way, so it can't live here. That file also
    carries the reasoning for why it's text and not a pill. */
