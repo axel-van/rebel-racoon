@@ -1081,7 +1081,18 @@
   display: flex;
   flex-direction: column;
   background: var(--ref-color-white);
-  border: 1px solid var(--ref-color-grey-10);
+  /* --app-border (grey-20), not --app-border-soft (grey-10) which the cards use.
+     This is the fix for a misalignment that was never geometric.
+     Measured, the pane and the selected card align exactly: box tops both 204.0,
+     both padding-top 20px, first-ink elements both 224.5 — and the pane's text is
+     if anything 2-5px HIGH (kicker ink -1.8, its baseline -4.6, the title -12.6).
+     What made it read as sitting lower was contrast: the selected card's top edge
+     is electric-blue-100 and unmissable, while the pane's grey-10 edge is
+     invisible against the page, so the eye compared the card's BORDER against the
+     pane's first TEXT — about 21px apart — instead of border against border.
+     grey-20 gives the pane an edge you can actually see, so the two tops read as
+     the peers they already were. */
+  border: 1px solid var(--app-border);
   border-radius: 14px;
 }
 
