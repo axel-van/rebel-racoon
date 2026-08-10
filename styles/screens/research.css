@@ -260,11 +260,43 @@
   color: var(--ref-color-red-100);
 }
 
+/* The meta line is now three parts rather than one string, so it lays out as a
+   wrapping flex row: the Playbook (with its icon) stays glued together and the
+   source count can drop to a second line on a narrow card without the icon
+   drifting away from the name it labels. */
 .research-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
   margin: 6px 0 0;
   font-size: 15px;
   font-weight: 600;
   color: var(--ref-color-grey-80);
+}
+
+/* Same shape as .research-feed__meta-item on the detail page — inline-flex, xxs
+   between glyph and name, icon a shade lighter than the text so it reads as a
+   marker rather than a word. min-width:0 lets a long Playbook name ellipsise
+   instead of pushing the source count off the card. */
+.research-card__meta-pb {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.research-card__meta-pb i {
+  flex: 0 0 auto;
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-grey-40);
+}
+
+.research-card__meta-sep {
+  color: var(--ref-color-grey-40);
 }
 
 .research-card__open {

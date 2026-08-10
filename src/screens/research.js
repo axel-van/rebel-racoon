@@ -233,7 +233,16 @@ function renderLaneCard(lane) {
   const ctx = getContextById(lane.playbookId);
   const playbookName = ctx?.name || "No Playbook";
   const n = lane.sources.length;
-  const meta = `${playbookName} playbook · ${n} ${n === 1 ? "source" : "sources"}`;
+  // The Playbook gets the icon the rest of the app already uses for one —
+  // ap-icon-target, from the sidebar's Playbooks nav row and from this feature's
+  // own detail header (.research-feed__meta-item). Not a new glyph: a Playbook
+  // looks the same wherever it is named.
+  //
+  // It earns its place here more than it does on the detail page, because these
+  // Playbooks are named with middots of their own — "Pawtrack · always-on" — so
+  // "Pawtrack · always-on playbook · 2 sources" is three separators in a row with
+  // nothing marking where the name starts. The icon marks it.
+  const sourceCount = `${n} ${n === 1 ? "source" : "sources"}`;
   // Untriaged briefs waiting in this lane. Drives the NEW badge, which replaces
   // the Playbook accent bar: the bar encoded which Playbook a lane belonged to,
   // but the meta line already says that in words, so the colour was decoration.
@@ -332,7 +341,13 @@ function renderLaneCard(lane) {
         </button>
       </span>
     </div>
-    <p class="research-card__meta">${meta}</p>
+    <p class="research-card__meta">
+      <span class="research-card__meta-pb">
+        <i class="ap-icon-target" aria-hidden="true"></i>${playbookName} playbook
+      </span>
+      <span class="research-card__meta-sep" aria-hidden="true">·</span>
+      <span>${sourceCount}</span>
+    </p>
     ${raw(signals)}
     <!-- The action carries margin-top:auto itself, so it stays pinned to the
          bottom whatever the block above it holds. It no longer needs a wrapper:
