@@ -30,7 +30,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=340";
+import { renderTopbar } from "../components/topbar.js?v=341";
 import { isFlagOn } from "../feature-flags.js?v=19";
 import { renderBriefCard } from "../components/brief-card.js?v=28";
 import {
@@ -40,7 +40,6 @@ import {
   renderResearchArticle,
   researchArticleSub,
 } from "../components/research-modals.js?v=51";
-import { openArticlePanel, getArticleKey, closeArticlePanelSilently } from "../components/right-panel.js?v=474";
 import { openBriefInChat } from "../brief-flow.js?v=6";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=27";
@@ -115,6 +114,39 @@ function renderList(briefs, view) {
   </div>`;
 }
 
+// The article, in the page, to the right of the list.
+//
+// Sticky rather than fixed: it is a flex item that has to stay put while the list
+// scrolls past it, and sticky does that without taking the pane out of flow and
+// without hardcoding a left offset that the sidebar's collapse would falsify.
+// `align-self: flex-start` in the CSS is what makes sticky possible at all — a
+// stretched flex item is already as tall as the row and has nothing to stick
+// within.
+//
+// It carries its own close control. The card that opened it also closes it, but
+// that card can be scrolled off-screen, so the pane needs an exit that is always
+// where the reader is looking.
+function renderArticlePane(brief) {
+  return html`<aside class="research-feed__article" aria-label="Topic article">
+    <header class="research-feed__article-head">
+      <div class="research-feed__article-headtext">
+        <h2 class="research-feed__article-title">${brief.headline}</h2>
+        <p class="research-feed__article-sub">${researchArticleSub(brief)}</p>
+      </div>
+      <button
+        type="button"
+        class="ap-icon-button ghost grey"
+        data-feed-article-close
+        aria-label="Close article"
+        title="Close article"
+      >
+        <i class="ap-icon-close" aria-hidden="true"></i>
+      </button>
+    </header>
+    <div class="research-feed__article-body">${raw(renderResearchArticle(brief))}</div>
+  </aside>`;
+}
+
 // ── The type filter, as always-visible chips ────────────────────────────────
 // Promoted out of the Filters panel. filter-chips-list.md names this exact case
 // — "a small filter set, visible at a glance, worth keeping on screen (source
@@ -175,12 +207,25 @@ const SHOW_ATTENTION_NOTICE = false;
 
 let laneId = null;
 let filters = defaultFilters();
-let view = {
-  generating: false,
-  panelOpen: false,
-  groups: { status: true, sources: true },
-  openMenu: null,
-};
+// One factory, used at module load AND on every mount. It was two literals, and
+// they had already drifted: the mount copy still carried a `types` filter group
+// that had moved out to the toolbar chips, and would have missed `articleId`
+// entirely — so an article left open on one lane would have followed you to the
+// next one.
+function freshView() {
+  return {
+    generating: false,
+    panelOpen: false,
+    groups: { status: true, sources: true },
+    openMenu: null,
+    // Which topic's article is showing beside the list, or null. View state, not
+    // URL state: the article is a way of reading the list, not a place, and a
+    // link to "the feed with this one open" is a link to a scroll position.
+    articleId: null,
+  };
+}
+
+let view = freshView();
 let timer = null;
 
 let unsubscribe = null;
@@ -204,7 +249,7 @@ export function renderResearchFeed(params, target) {
   renderTopbar();
   teardown();
   filters = defaultFilters();
-  view = { generating: false, panelOpen: false, groups: { status: true, sources: true, types: true }, openMenu: null };
+  view = freshView();
 
   const fresh = parseHashParams().get("fresh") === "1";
   if (fresh) {
@@ -281,6 +326,12 @@ function renderPage() {
   //
   // Flip `SHOW_ATTENTION_NOTICE` to true to bring it back — renderAttentionNotice
   // and attentionCountsForLane are both still here and still correct.
+  // Resolved here rather than inside the split so a stale id — the topic was
+  // ignored out of the filter, or the lane was re-scanned — simply closes the
+  // pane instead of rendering an empty one.
+  const article = view.articleId ? getBriefById(view.articleId) : null;
+  if (view.articleId && !article) view.articleId = null;
+
   const attention = SHOW_ATTENTION_NOTICE ? attentionCountsForLane(laneId) : null;
   const showNotice = SHOW_ATTENTION_NOTICE && attention.total > 0 && lane.showTrending;
 
@@ -288,13 +339,18 @@ function renderPage() {
     <div class="research-feed__inner">
       ${raw(renderFeedHeader(lane))} ${raw(renderTypeChips())}
       ${raw(showNotice ? renderAttentionNotice(attention) : "")}
-      ${raw(
-        briefs.length
-          ? renderList(briefs, view)
-          : html`<p class="research-feed__empty muted">
-              No topics match these filters. Try widening them, or reset to the defaults.
-            </p>`,
-      )}
+      <!-- The split starts HERE, below the header and the chips, so neither of
+           them changes width when an article opens. -->
+      <div class="research-feed__split${raw(article ? " is-split" : "")}">
+        ${raw(
+          briefs.length
+            ? renderList(briefs, view)
+            : html`<p class="research-feed__empty muted">
+                No topics match these filters. Try widening them, or reset to the defaults.
+              </p>`,
+        )}
+        ${raw(article ? renderArticlePane(article) : "")}
+      </div>
     </div>
   </div>`;
 }
@@ -574,29 +630,30 @@ function bind(target) {
     const ignore = event.target.closest("[data-brief-ignore]");
     if (ignore) return openIgnoreReason({ briefId: ignore.dataset.briefIgnore });
 
-    // ── The article opens in the RIGHT PANEL, not a modal ──────────────────
-    // A modal is the wrong container for this: reading one topic's article is
-    // almost always comparing it against the others in the list, and a modal
-    // blacks the list out to do it. The panel is a real third grid column — it
-    // SHRINKS the content rather than covering it — so the cards stay scrollable
-    // and clickable beside the article, and clicking the next card swaps the
-    // article in place.
+    // ── The article opens IN THE PAGE, beside the list ──────────────────────
+    // Not a modal (it blacks out the list you are comparing against) and no
+    // longer the app's right panel either. The panel is a column of the SHELL
+    // grid, so opening it narrowed everything in the content column — the lane
+    // header and the type chips included, which made two pieces of page
+    // furniture twitch every time an article was opened or closed.
     //
-    // Clicking the card whose article is already open closes it, so the same
-    // gesture is both directions. Without that the only way out is the panel's
-    // own close button, which is a different target from the one you opened with.
+    // So the split moved inside the page instead: header and chips keep the full
+    // width and never move, and only the region below them divides in two. This
+    // is the catalogue's master–detail archetype, scoped to the part of the page
+    // that is actually a list.
+    //
+    // Clicking the card whose article is already open closes it, so one target
+    // works both ways.
     const research = event.target.closest("[data-brief-research]");
     if (research) {
       const id = research.dataset.briefResearch;
-      if (getArticleKey() === id) return closeArticlePanelSilently();
-      const brief = getBriefById(id);
-      if (!brief) return;
-      return openArticlePanel({
-        key: id,
-        title: brief.headline,
-        sub: researchArticleSub(brief),
-        body: renderResearchArticle(brief),
-      });
+      view.articleId = view.articleId === id ? null : id;
+      return paint(target);
+    }
+
+    if (event.target.closest("[data-feed-article-close]")) {
+      view.articleId = null;
+      return paint(target);
     }
   };
   target.addEventListener("click", boundClick);

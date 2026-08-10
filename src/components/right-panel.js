@@ -21,7 +21,7 @@ import { onFeedbackClick } from "./feedback-control.js?v=2";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=79";
-import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=307";
+import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=308";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -411,63 +411,6 @@ const voiceProfileExpanded = new Set();
 let ctaManageOpen = false;
 let ctaManageSnapshot = null;
 
-// ── "article" mode — a read-only document beside the list that produced it ──
-//
-// The panel receives ALREADY-RENDERED html plus a title, not an entity id. That
-// is the whole point of the seam: this module is core app shell and must not
-// import briefs-store, which is gated behind the Content Ideas flag. The feature
-// owns its content, the panel owns the chrome — so any future surface can drop a
-// document in here without teaching the panel about its data.
-//
-// Not in VALID_URL_MODES, exactly like context-brief: the article is not a
-// user-level panel tab (there is no topbar pill for it), so it must not be
-// restorable from the URL or closable by the URL-syncing path.
-let articleConfig = null;
-
-// A header the panel owns (title + provenance line) over content it doesn't.
-// The heading is an h2 rather than the panel's landmark label alone: the article
-// has its own h3 subheads inside it, so it needs a level above them.
-function renderArticleView() {
-  if (!articleConfig) return "";
-  const { title, sub, body } = articleConfig;
-  return `<article class="panel-article">
-    <header class="panel-article__head">
-      <h2 class="panel-article__title">${escapeText(title || "")}</h2>
-      ${sub ? `<p class="panel-article__sub">${escapeText(sub)}</p>` : ""}
-    </header>
-    ${body}
-  </article>`;
-}
-
-export function openArticlePanel({ title = "", sub = "", body = "", key = "" } = {}) {
-  const prev = state.mode;
-  if (prev === null) resetPanelWidthOverride();
-  snapshotFocusOnOpen(prev);
-  articleConfig = { title, sub, body, key };
-  state = { ...state, mode: "article" };
-  maybeCollapseSidebarOnOpen(prev);
-  renderPanel();
-  notify();
-  // A fresh document starts at the top. Without this, opening a second topic
-  // inherits the first one's scroll position and looks like it opened halfway
-  // down its own article.
-  const bodyEl = document.querySelector("#" + PANEL_ID + " .app-right-panel__body");
-  if (bodyEl) bodyEl.scrollTop = 0;
-}
-
-/** Which document is showing, so a caller can tell "open" from "open on THIS". */
-export function getArticleKey() {
-  return state.mode === "article" ? articleConfig?.key || "" : "";
-}
-
-export function closeArticlePanelSilently() {
-  if (state.mode !== "article") return;
-  articleConfig = null;
-  state = { ...state, mode: null };
-  renderPanel();
-  notify();
-}
-
 export function openContextBriefPanel(config = {}) {
   const prev = state.mode;
   if (prev === null) resetPanelWidthOverride();
@@ -793,7 +736,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=572").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=573").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -976,7 +919,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=572").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=573").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -994,7 +937,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=572").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=573").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -1434,8 +1377,6 @@ function renderPanel() {
     titleText = "Drafts";
   } else if (state.mode === "sources") {
     titleText = "Sources";
-  } else if (state.mode === "article") {
-    titleText = articleConfig?.title || "Topic";
   } else if (state.mode === "context-brief") {
     if (contextBriefConfig?.mode === "read") {
       const ctx = contextBriefConfig.getCtx?.();
@@ -1452,13 +1393,11 @@ function renderPanel() {
     state.mode === "context-brief"
       ? renderContextBriefView()
       : `<div class="app-right-panel__body">${
-          state.mode === "article"
-            ? renderArticleView()
-            : state.mode === "drafts"
-              ? renderDraftsView()
-              : state.mode === "sources"
-                ? renderSourcesView()
-                : renderIdeasView()
+          state.mode === "drafts"
+            ? renderDraftsView()
+            : state.mode === "sources"
+              ? renderSourcesView()
+              : renderIdeasView()
         }</div>`;
 
   // Preserve scrollTop across re-renders so flipping a filter chip or
@@ -2873,7 +2812,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=572").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=573").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

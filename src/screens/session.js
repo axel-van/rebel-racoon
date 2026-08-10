@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=340";
+import { renderTopbar } from "../components/topbar.js?v=341";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=80";
 import {
   getConnectedProfiles,
@@ -74,7 +74,7 @@ import { isFlagOn } from "../feature-flags.js?v=19";
 import { getBriefById, getStarterTopics } from "../briefs-store.js?v=33";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=6";
 import { getLaneById } from "../research-store.js?v=27";
-import * as contextBuilder from "../context-builder.js?v=307";
+import * as contextBuilder from "../context-builder.js?v=308";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -119,7 +119,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=474";
+} from "../components/right-panel.js?v=475";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=22";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";

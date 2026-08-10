@@ -948,6 +948,124 @@
   gap: 16px;
 }
 
+/* The container the article/list split is measured against. Named, so the query
+   below can only ever match THIS element — an unnamed container would resolve to
+   whichever ancestor happened to be nearest. On __inner rather than on the
+   scroller: this is the box whose width the two panes actually share. */
+.research-feed__inner {
+  container-type: inline-size;
+  container-name: research-feed;
+}
+
+/* ── Master–detail, scoped to the list ────────────────────────────────────
+   The split starts BELOW the lane header and the type chips, which is the whole
+   point of it living here rather than in the app shell: the shell's right panel
+   is a grid column, so opening it narrowed the header and the chips too, and two
+   pieces of page furniture twitched on every open and close. Those now sit above
+   the split and never move.
+
+   Off-state costs nothing: with no article the row holds one item, and the list
+   already caps itself, so the layout is byte-for-byte what it was. `.is-split`
+   exists only for the article's own presence — no width of the list depends on
+   it, deliberately, because the list must not reflow either. What changes when
+   an article opens is that previously-empty space to the right gets used. */
+.research-feed__split {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ref-spacing-lg);
+  min-width: 0;
+}
+
+/* ── The article pane ─────────────────────────────────────────────────────
+   `align-self: flex-start` is load-bearing twice over: it stops the pane
+   stretching to the height of a long list, and a stretched flex item has no room
+   to stick inside, so sticky would silently do nothing.
+
+   The scroller is .research-feed__body, so `top: 0` pins the pane to the top of
+   that scrollport. Its own max-height is the viewport minus the topbar and the
+   body's padding — arithmetic rather than 100%, because 100% of this row is as
+   tall as the card list and would let the pane run off the bottom of the
+   screen. */
+.research-feed__article {
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  flex: 1 1 0;
+  min-width: 0;
+  /* A reading measure of its own. The pane takes the space the single capped
+     column left empty, but prose set to 900px is a worse read than the same
+     prose in a column, so it stops at the measure and leaves the rest. */
+  max-width: 620px;
+  max-height: calc(100vh - var(--app-topbar-height) - 2 * var(--ref-spacing-xl));
+  display: flex;
+  flex-direction: column;
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: 14px;
+}
+
+/* Sticky header inside the pane's own scroll, so the topic being read stays
+   named however far down the article you are. */
+.research-feed__article-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xs);
+  flex: 0 0 auto;
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  border-bottom: 1px solid var(--ref-color-grey-10);
+}
+
+.research-feed__article-headtext {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.research-feed__article-title {
+  margin: 0;
+  font-family: var(--sys-text-style-h4-font-family);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  color: var(--app-convo-navy);
+}
+
+.research-feed__article-sub {
+  margin: var(--ref-spacing-xxxs) 0 0;
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--sys-text-color-light);
+}
+
+/* The scroll lives here, not on the pane, so the header above stays put. */
+.research-feed__article-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--ref-spacing-md);
+}
+
+/* Below this the two panes are each too narrow to read: the list alone is 666px
+   and the article wants a measure of its own, so at 1180 the article would be
+   under 480. One column then, article last.
+
+   A @container query, NOT a media query — measured the hard way: with
+   `max-width: 1360px` on the viewport the rule never fired, because the viewport
+   was 1541 while the content column was 1200, and the article squeezed to 423px.
+   The sidebar collapses, so viewport width does not tell you content width. This
+   is the same rule /topics/settings follows for the same reason. */
+@container research-feed (max-width: 1180px) {
+  .research-feed__split {
+    flex-direction: column;
+  }
+
+  .research-feed__article {
+    position: static;
+    max-width: var(--topics-card-max);
+    max-height: none;
+    width: 100%;
+  }
+}
+
 /* ── One list ─────────────────────────────────────────────────────────────
    Was a two-column grid. The cards carry their own max-width, so this only has
    to be a column — and being a column rather than a grid is why nothing here
