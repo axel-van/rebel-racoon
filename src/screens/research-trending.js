@@ -22,11 +22,11 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=331";
+import { renderTopbar } from "../components/topbar.js?v=332";
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { renderBriefCard } from "../components/brief-card.js?v=25";
 import { openFullResearch } from "../components/research-modals.js?v=45";
-import { showToast } from "../components/toast.js?v=20";
+import { openBriefInChat } from "../brief-flow.js?v=2";
 import { getLaneById } from "../research-store.js?v=23";
 import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=29";
 import { findResearchSource, findCadence } from "../research-catalog.js?v=11";
@@ -142,10 +142,11 @@ function renderPage() {
 function bind(target) {
   boundTarget = target;
   boundClick = (event) => {
+    // Same as the feed: open a chat with the topic attached, don't just claim to.
     const use = event.target.closest("[data-brief-use]");
     if (use) {
       setStatus(use.dataset.briefUse, "used");
-      showToast("Added to a chat draft");
+      openBriefInChat(use.dataset.briefUse);
       return;
     }
     const research = event.target.closest("[data-brief-research]");

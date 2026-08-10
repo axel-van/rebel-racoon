@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=331";
+import { renderTopbar } from "../components/topbar.js?v=332";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=77";
 import {
   getConnectedProfiles,
@@ -72,8 +72,9 @@ import {
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { getBriefById, getStarterTopics } from "../briefs-store.js?v=29";
+import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=2";
 import { getLaneById } from "../research-store.js?v=23";
-import * as contextBuilder from "../context-builder.js?v=298";
+import * as contextBuilder from "../context-builder.js?v=299";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -118,7 +119,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=465";
+} from "../components/right-panel.js?v=466";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=19";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2145,46 +2146,9 @@ function renderStarterTopicSlot(sessionId) {
   `;
 }
 
-// Picking a topic opens a NEW chat on it, rather than attaching it to whatever
-// chat you happened to be in and confirming with a snackbar. Two halves, because
-// the entry point and the arrival sit on opposite sides of a navigation — the
-// same shape topic-flow.js uses for /topics, and for the same reason: a topic is
-// the start of a conversation, not an ingredient in one already underway.
-//
-// The snackbar it replaces was telling you something the screen was about to
-// show anyway: intake-lifecycle posts a source-intake turn for any source that
-// lands after mount, so the topic appears in the thread as a card. A toast on
-// top of that is the same fact twice, and the quieter of the two.
-export const BRIEF_CHAT_HANDOFF = "pendingBriefChat";
-
-function startTopicDraft(_sessionId, brief) {
-  setHandoff(BRIEF_CHAT_HANDOFF, { briefId: brief.id });
-  // Playbook and chat name ride in the URL, not the handoff: session.js already
-  // resolves ?contextId= and ?title= when it mints a `new-*` session, so the
-  // chat is bound and named on its first paint instead of a frame later.
-  const lane = getLaneById(brief.laneId);
-  const params = new URLSearchParams();
-  if (lane?.playbookId) params.set("contextId", lane.playbookId);
-  params.set("title", brief.headline);
-  navigate(`/session/new-${Date.now().toString(36)}?${params.toString()}`);
-}
-
-// Consumed at session mount. Attaches the topic as an already-processed source;
-// intake-lifecycle turns that into the source-intake card in the thread, and
-// every existing affordance (Extract ideas, Draft, Ask) lights up on its own.
-function attachBriefToChat(sessionId, briefId) {
-  const brief = getBriefById(briefId);
-  if (!brief) return;
-  const src = findResearchSource(brief.sourceId);
-  addReadySource(sessionId, {
-    id: brief.id,
-    filename: brief.headline,
-    kind: "Topic",
-    preview: brief.summary,
-    iconClass: src?.icon || "ap-icon-folder",
-  });
-}
-
+// Both halves of "a topic opens its own chat" now live in brief-flow.js, because
+// four surfaces start that flow and three of them can't import this file. See
+// the header there.
 function renderEmptyHero(sessionId, composerMarkup = "") {
   const sources = getStreamSources(sessionId);
   const firstSource = sources.find((s) => s.status !== "Processing") || sources[0] || null;
@@ -4864,8 +4828,7 @@ function bindSession(root, session) {
       // idea card's "Draft post" uses, so no new flow is introduced.
       const topicCard = event.target.closest("[data-starter-topic]");
       if (topicCard) {
-        const brief = getBriefById(topicCard.dataset.starterTopic);
-        if (brief) startTopicDraft(session.id, brief);
+        openBriefInChat(topicCard.dataset.starterTopic);
         return;
       }
 
@@ -5356,7 +5319,7 @@ function bindSession(root, session) {
         // and every existing affordance (Extract ideas, Draft, Ask) lights up on
         // its own. No new action surface for it to need.
         if (kind === "content-ideas") {
-          openIdeaPicker({ onPick: (brief) => startTopicDraft(session.id, brief) });
+          openIdeaPicker({ onPick: (brief) => openBriefInChat(brief.id) });
           return;
         }
         // URL + Paste text need the modal UI (a URL field / textarea) — open

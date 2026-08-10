@@ -23,7 +23,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=331";
+import { renderTopbar } from "../components/topbar.js?v=332";
 import { isFlagOn } from "../feature-flags.js?v=18";
 import { renderBriefCard } from "../components/brief-card.js?v=25";
 import {
@@ -32,6 +32,7 @@ import {
   openExport,
   openAddToStrategy,
 } from "../components/research-modals.js?v=45";
+import { openBriefInChat } from "../brief-flow.js?v=2";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=23";
 import {
@@ -482,10 +483,17 @@ function bind(target) {
       return paint(target);
     }
 
+    // "Use in chat" opens a NEW chat with the topic attached as a source — the
+    // same thing it means from the starter card and the picker, so the phrase
+    // does one job everywhere. It used to set the status and raise a snackbar,
+    // which described a chat that never opened.
+    //
+    // Marking it Used stays: taking a topic into a chat IS using it, and the
+    // status has to change before the navigation because this screen unmounts.
     const use = event.target.closest("[data-brief-use]");
     if (use) {
       setStatus(use.dataset.briefUse, "used");
-      showToast("Added to a chat draft");
+      openBriefInChat(use.dataset.briefUse);
       return;
     }
 

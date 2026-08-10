@@ -247,6 +247,26 @@ Deux ajustements imposés par la réutilisation :
 modal) tout en vivant dans `styles/screens/contexts.css`. Au troisième, la déplacer
 dans `styles/components/`.
 
+### Une action nommée pareil fait la même chose partout
+
+« Use in chat » existe sur quatre surfaces — le footer d'une carte du feed, la
+carte de la page attention, la starter card de la page nouvelle session, et le
+modal « Pick a topic ». Les quatre passent maintenant par
+[`brief-flow.js`](../../src/brief-flow.js) et font la même chose : ouvrir un
+**nouveau chat** avec le topic attaché comme **Source**.
+
+Avant, deux d'entre elles se contentaient de passer le statut à Used et
+d'afficher un snackbar — elles décrivaient un chat qui ne s'ouvrait jamais.
+
+Le module existe pour la même raison que `topic-flow.js` : la moitié « départ »
+et la moitié « arrivée » sont de part et d'autre d'une navigation, et **trois des
+quatre appelants ne peuvent pas importer `screens/session.js`**. Les deux moitiés
+vivent donc dans un module que tout le monde peut atteindre, et les `?v=` de
+`sources-stream` et `briefs-store` doivent y être **identiques** à celles de
+session.js — chacun garde un état par session dans une Map locale au module, et
+une seconde copie à une autre URL garderait le sien. `bump-cache.py --audit` le
+vérifie.
+
 ### Une seule mesure de lecture par carte
 
 La carte de topic fait 820px et sa prose occupait toute cette largeur : ~112
