@@ -2223,11 +2223,11 @@
   flex-direction: column;
 }
 
-/* Name + pencil on one row.
+/* Icon + name on one row.
    `flex-direction: row` is the load-bearing declaration: .ap-dialog-header is
    `flex-direction: column` in the DS — correct for its usual title-over-subtitle
-   stack — so setting only `display: flex` here left the icon, the name and the
-   pencil stacked and centred. Measured before it was fixed.
+   stack — so setting only `display: flex` here left the children stacked and
+   centred. Measured before it was fixed.
    No padding-right either: the DS header already reserves 64px for the pinned
    .ap-dialog-close, and overriding it with a spacing token made that gap
    smaller, not bigger. */
@@ -2264,9 +2264,8 @@
   border-color: var(--sys-border-color-active);
 }
 
-.recap__pilmodal-edit {
-  flex: 0 0 auto;
-}
+/* Nothing to declare — it is a plain .ap-button in the footer now, where it was
+   an icon-only pencil in the header. The class is kept as a hook only. */
 
 .recap__pilmodal-prose {
   margin: 0;

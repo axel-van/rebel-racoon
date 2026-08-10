@@ -1038,14 +1038,6 @@ function renderPillarModal(p, i, edit) {
               )}" aria-label="Pillar name" />`
             : `<span class="ap-dialog-title recap__pilmodal-name-read">${esc(p.title || "Untitled pillar")}</span>`
         }
-        ${
-          // Same control, same icon and same hook as the section head's pencil —
-          // it IS that pencil, reached from here. Hidden once editing, because
-          // the footer's Save/Cancel are the controls that matter then.
-          edit
-            ? ""
-            : `<button type="button" class="ap-icon-button transparent recap__pilmodal-edit" data-recap-edit-card="strategy" title="Edit" aria-label="Edit this pillar"><i class="ap-icon-pen"></i></button>`
-        }
       </div>
       <button type="button" class="ap-dialog-close" data-recap-pillar-close aria-label="Close"><i class="ap-icon-close"></i></button>
       <div class="ap-dialog-content recap__pilmodal-content">
@@ -1092,7 +1084,23 @@ function renderPillarModal(p, i, edit) {
             edit
               ? `<button type="button" class="ap-button ghost grey" data-recap-cancel><span>Cancel</span></button>
                  <button type="button" class="ap-button primary orange" data-recap-save><span>Save</span></button>`
-              : `<button type="button" class="ap-button primary orange" data-recap-pillar-close><span>Done</span></button>`
+              : // A LABELLED button, not the icon-only pencil this used to be in the
+                // header. A dialog footer is where labelled buttons live — every other
+                // control in this one has a word on it — and an icon-only button
+                // among them reads as a stray. It also lands on the app's only other
+                // in-modal edit affordance: video-clips-modal uses exactly this,
+                // `ap-button stroked grey` with the pencil and the word Edit.
+                //
+                // The pencil GLYPH stays, deliberately. It is what marks every edit
+                // affordance on the Playbook — the section heads, the Playbook name —
+                // so keeping it is what ties this control to those even though its
+                // shape had to change for the footer.
+                //
+                // Secondary weight, before the primary: Done closes, Edit continues.
+                `<button type="button" class="ap-button stroked grey recap__pilmodal-edit" data-recap-edit-card="strategy">
+                   <i class="ap-icon-pen" aria-hidden="true"></i><span>Edit</span>
+                 </button>
+                 <button type="button" class="ap-button primary orange" data-recap-pillar-close><span>Done</span></button>`
           }
         </div>
       </div>

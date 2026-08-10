@@ -1009,12 +1009,24 @@
 
    Entry only. Animating an exit means keeping the node alive past its removal,
    which is a state machine this screen does not need for 250ms. */
-/* A clip-path wipe rather than an animated width, for one reason: it does not need
-   to know how wide the pane is. Animating max-width means naming the width in the
-   keyframe, which is either a second copy of 620px or a var() the animation has to
-   resolve; clip-path reveals whatever box the layout already sized, so the width
-   has exactly one home and the container query's narrower pane wipes correctly
-   with no second keyframe.
+/* The pane and everything in it MOVE together, left to right. Not a wipe.
+   Two earlier attempts were both wrong about this:
+
+     • animating max-width reflowed the article continuously, so the prose
+       re-wrapped on every frame — text jittering rather than arriving;
+     • a clip-path wipe held the text still and slid a mask across it, which
+       progressively REVEALS the content instead of moving it.
+
+   The reference is how the app's own panel behaves: its contents travel with it.
+   So this is a plain translate — one transform on the whole pane, no reflow, no
+   mask, everything inside arriving as a single object.
+
+   transform + opacity only, which is also the pair a compositor can animate
+   without touching layout; the two rejected versions both animated
+   layout-affecting properties.
+
+   -24px, not the -16 it started at: 16 was a nudge rather than a movement, and
+   the whole point is that the pane is seen to arrive.
 
    ⚠️ A note on verifying this, which cost real time: an automated browser tab is
    often BACKGROUNDED (document.hidden === true), and a hidden tab does not advance
@@ -1025,14 +1037,11 @@
    forces a paint, and the pane renders correctly. */
 @keyframes research-article-in {
   from {
-    clip-path: inset(0 100% 0 0);
+    transform: translateX(-24px);
     opacity: 0;
   }
-  30% {
-    opacity: 1;
-  }
   to {
-    clip-path: inset(0 0 0 0);
+    transform: translateX(0);
     opacity: 1;
   }
 }
@@ -1041,8 +1050,8 @@
   /* One source of truth for the pane's width — the container query below
      redefines it for the stacked layout, and nothing else needs to know it. */
   --article-w: 620px;
-  /* Not for the wipe — clip-path handles that. This keeps the scrolling body from
-     squaring off the pane's rounded bottom corners. */
+  /* Keeps the scrolling body from squaring off the pane's rounded bottom corners.
+     Nothing to do with the entrance — that is a transform now. */
   overflow: hidden;
   /* Dropped by exactly one age-group heading, so the pane's first line of text
      lands on the first card's source row rather than 32px above it. The list
