@@ -178,9 +178,10 @@ groupe types, sinon le badge « Filters » resterait bloqué sur 1 (le défaut e
 
 **Une chip sans contenu se désactive, elle ne disparaît pas** (`filter-chips-list.md`).
 Mais **seulement quand elle est éteinte** : désactiver une chip allumée
-enfermerait l'utilisateur derrière un filtre qu'il ne peut plus relâcher — cas
-réel ici, puisque rerouter le dernier topic « Needs assets » d'une lane met ce
-compteur à 0 pendant que la chip est encore pressée.
+enfermerait l'utilisateur derrière un filtre qu'il ne peut plus relâcher. Cas réel
+sans rien rerouter : la lane 1 n'a aucun topic « Content strategy », donc cette
+chip y est éteinte **et** désactivée, alors que la même chip est allumée sur la
+lane 6.
 
 ### Status pills
 
@@ -204,39 +205,60 @@ pourtant la réponse « correcte » côté modèle de données. Raison : `.ap-st
 Corollaire côté données : `status` et `isTrending` sont deux champs séparés dans
 [`briefs-store.js`](../../src/briefs-store.js) et doivent le rester.
 
-#### Troisième axe : la ROUTE, et pourquoi elle a droit au `.ap-tag` que trending n'a pas
+#### Troisième axe : la CATÉGORIE, et pourquoi seule l'exception est marquée
 
-Depuis Option B, la carte porte un **troisième** axe : la route du topic
-(`Needs assets` / `Ready to post` / `Competitive intelligence`), en `.ap-tag`. Ça
-ressemble à une contradiction de la règle ci-dessus — elle interdit justement un
-`.ap-tag` à côté de la pill de statut. Ce n'en est pas une, et la différence est
-la seule chose à retenir :
+La carte porte un **troisième** axe : `Content strategy` (ou
+`Competitive intelligence`) en `.ap-tag`. Ça ressemble à une contradiction de la
+règle ci-dessus — elle interdit justement un `.ap-tag` à côté de la pill de statut.
+Ce n'en est pas une, et la différence est la seule chose à retenir :
 
 - **Trending répond à la même question que le statut** — « où j'en suis avec ce
   topic ». Deux marques sur le même axe, collées au même endroit, se lisent comme
   deux valeurs concurrentes du même champ. D'où le texte, pas la pill.
-- **La route répond à une autre question** — « c'est quoi, ce topic ». Elle est
+- **La catégorie répond à une autre question** — « c'est quoi, ce topic ». Elle est
   donc posée **à gauche du `__spacer`**, dans la file source · âge, pas dans le
-  groupe des marques à droite. Mesuré : ~290px séparent le tag de la pill. Ce sont
-  deux régions, pas deux voisins.
+  groupe des marques à droite. Deux régions, pas deux voisins.
 
-Et la géométrie ne se recouvre pas non plus, contrairement au cas trending :
-mesuré, `.ap-tag green` fait 14px/400 en casse normale avec un rayon de **4px**,
-`.topics-status` fait 11px/800 en CAPITALES avec un rayon de **24px**. Un rectangle
-à coins doux contre une gélule.
+**Et surtout : `ready-to-post` n'a PAS de tag.** `typeTagColor()` renvoie `null`
+pour lui. C'est le cœur du dispositif : postable est le défaut et la majorité, donc
+le marquer ne marquait rien — le lecteur parcourait une puce pour apprendre que
+tout allait bien. **L'absence veut dire « ça part chez un rédacteur » ; un tag veut
+dire « pas encore ».** Vérifié : 4 cartes taguées sur 9, et l'absence de tag
+prédit exactement le bouton du pied (`Use in chat` vs `Add to strategy`).
 
-⚠️ **Le fond est identique, lui** : `.ap-tag green` et `.topics-status--used`
-calculent tous les deux `rgb(236, 247, 237)`. Accepté, parce que la forme, la
-casse, la taille et les 290px font le travail — vérifié à l'écran, pas seulement
-au calcul. Menthol a été essayé d'abord, précisément pour éviter cette collision,
-et était **trop pâle pour se repérer** en taille tag. Si un jour un quatrième
-marqueur vert arrive dans cette ligne, c'est cette collision qu'il faudra casser
-en premier.
+Deux bénéfices tombent de là, et le second était un vrai défaut :
 
-Règle générale qui sort de là : **un axe se distingue par sa RÉGION dans la ligne
-avant de se distinguer par sa couleur.** Gauche = ce que c'est. Droite = où j'en
-suis. Une couleur partagée entre deux régions coûte beaucoup moins qu'une couleur
-partagée dans la même région.
+- La ligne de méta des cartes courantes redevient calme — source · âge, puis les
+  marques. Rien à parser.
+- Le tag `green` a disparu avec `ready-to-post`, **et avec lui une collision de
+  couleur exacte** : `.ap-tag green` et `.topics-status--used` calculaient tous les
+  deux `rgb(236, 247, 237)`. Deux puces sur la même ligne, même fond, sens
+  différents. Elles n'étaient distinguées que par la forme (rayon 4px contre 24px,
+  casse normale contre CAPITALES) et par ~290px d'écart. Le problème ne se résout
+  plus, il n'existe plus.
+
+Grey suffit pour le tag restant, précisément parce que **la présence est le
+signal** : il n'a personne à couvrir. Ni orange ni bleu — dans cette app ce sont
+des couleurs d'action, et une catégorie n'est pas une action.
+
+Règle générale qui sort de là : **ne marquez pas le cas par défaut.** Un axe à deux
+valeurs dont l'une est « normal » n'a besoin que d'une puce. Et un axe se distingue
+par sa RÉGION dans la ligne avant de se distinguer par sa couleur : gauche = ce que
+c'est, droite = où j'en suis.
+
+#### La catégorie est CONTOURNABLE, plus CORRIGIBLE — et c'est un choix
+
+Une ligne « Ready to post instead » a existé dans le menu et a été **retirée**.
+Elle écrivait le type stocké, donc il fallait une mutation de store sur une donnée
+côté serveur, et elle demandait à l'utilisateur de **réétiqueter** un topic pour
+pouvoir faire quelque chose avec. « Use in chat anyway » l'emmène directement au
+but, en un clic au lieu de deux.
+
+Le prix, à énoncer : si Archie classe mal, ça reste mal classé — l'étiquette cesse
+juste de bloquer. Acceptable tant que l'étiquette ne coûte rien à ignorer ; à
+rouvrir si un mauvais classement finit par avoir une conséquence ailleurs que sur
+cette carte. Côté code, ça a aussi supprimé la seule exception au partage
+serveur/utilisateur de [`briefs-store.js`](../../src/briefs-store.js).
 
 ### L'accent de cadre : interdit en colonne, permis en vedette
 

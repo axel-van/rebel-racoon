@@ -203,56 +203,48 @@ export const DEFAULT_CADENCE = "weekly";
 // The types a brief can carry — the feed's third filter group, and the axis its
 // two columns are built on.
 //
-// `needs-assets` is the listening export's `needs_strategy`, renamed for what it
-// means to the person reading the feed. The export says a topic can't go to a
-// writer yet; the feed says what is actually missing before it can — a photo
-// shoot, a customer quote, a number nobody has pulled. Same set, plainer word.
+// `content-strategy` is the listening export's `needs_strategy`. It spent a while
+// as `needs-assets` — naming the blocker rather than the decision — and is back
+// near the export's own word, because what the topic actually needs is a
+// commitment: a pillar someone owns, then the assets follow. The card's action
+// says the same thing ("Add to strategy"), so the label and the button now agree.
 //
 // `competitive-intelligence` stays: an observation about a competitor is neither
 // ready to post nor waiting on assets, it is not a post at all. It is off by
 // default and lands in the left column when switched on — see the note on
 // COLUMNS in screens/research-feed.js.
 export const RESEARCH_TYPES = Object.freeze([
-  { id: "needs-assets", label: "Needs assets" },
+  { id: "content-strategy", label: "Content strategy" },
   { id: "ready-to-post", label: "Ready to post" },
   { id: "competitive-intelligence", label: "Competitive intelligence" },
 ]);
 
 /** Filter default: the two the columns are built on. Reset restores exactly this. */
-export const DEFAULT_TYPE_IDS = Object.freeze(["needs-assets", "ready-to-post"]);
+export const DEFAULT_TYPE_IDS = Object.freeze(["content-strategy", "ready-to-post"]);
 
-// The two routes a topic can be on. "Route" is the word for the pair, because a
-// type answers WHICH ACTION a topic is heading for, and the pair is the only part
-// of RESEARCH_TYPES that is a genuine either/or: competitive-intelligence is not
-// on this axis at all, which is why it can never be rerouted.
+// ── Only the exception carries a tag ────────────────────────────────────────
+// `ready-to-post` maps to NO tag, and that is the whole design: it is the default
+// and the common case, so marking it labelled nothing. A tag on every card made
+// the reader parse a chip to learn "yes, this is normal". Absence now means
+// postable; a tag means something has to happen first.
 //
-// Replaces COLUMN_TYPES, which named the same two ids as a LAYOUT. They stopped
-// being columns when the feed became one list; they are still a pair.
-export const ROUTE_TYPES = Object.freeze(["needs-assets", "ready-to-post"]);
-
-/** The other route, or null when the type is not on the route axis. */
-export function otherRoute(typeId) {
-  if (!ROUTE_TYPES.includes(typeId)) return null;
-  return ROUTE_TYPES.find((t) => t !== typeId) || null;
-}
-
-// Tag colour per type. `.ap-tag` colours are chosen by OBJECT TYPE, never by hue
-// (tag.md), and the DS house rule reserves green for "a validated / approved
-// object" — which is exactly what Ready to post claims about a topic. Everything
-// not yet postable is the neutral grey. Deliberately not blue and not orange:
-// in this app those are action colours, and a route is not an action.
+// It also retired the one real problem the two-value version had: the green
+// Ready-to-post tag computed the SAME background as the green "Used" status chip
+// (both rgb(236,247,237)), so two chips on one row shared a fill while meaning
+// different things. With green gone the collision goes with it.
 //
-// Menthol was tried first, to keep clear of the green "Used" status chip, and was
-// too pale to scan at tag size. The residual collision — a green tag beside a
-// green Used chip — is accepted and recorded in SPEC-OPTION-B.md.
+// Grey for both remaining types, and grey is enough precisely because presence is
+// the signal — the tag has nothing to out-shout. Deliberately not orange or blue:
+// in this app those are action colours, and a category is not an action.
 const TYPE_TAG_COLOR = Object.freeze({
-  "needs-assets": "grey",
-  "ready-to-post": "green",
+  "content-strategy": "grey",
   "competitive-intelligence": "grey",
+  "ready-to-post": null,
 });
 
+/** The `.ap-tag` colour for a type, or null when the type carries no tag. */
 export function typeTagColor(typeId) {
-  return TYPE_TAG_COLOR[typeId] || "grey";
+  return TYPE_TAG_COLOR[typeId] || null;
 }
 
 export function findResearchType(id) {

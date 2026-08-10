@@ -30,18 +30,18 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=335";
+import { renderTopbar } from "../components/topbar.js?v=336";
 import { isFlagOn } from "../feature-flags.js?v=19";
-import { renderBriefCard } from "../components/brief-card.js?v=26";
+import { renderBriefCard } from "../components/brief-card.js?v=27";
 import {
   openFullResearch,
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=47";
-import { openBriefInChat } from "../brief-flow.js?v=4";
+} from "../components/research-modals.js?v=48";
+import { openBriefInChat } from "../brief-flow.js?v=5";
 import { showToast } from "../components/toast.js?v=20";
-import { getLaneById } from "../research-store.js?v=25";
+import { getLaneById } from "../research-store.js?v=26";
 import {
   getBriefsForLane,
   groupBriefsByAge,
@@ -49,24 +49,22 @@ import {
   defaultFilters,
   narrowedGroupCount,
   setStatus,
-  setResearchType,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=31";
+} from "../briefs-store.js?v=32";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
   RESEARCH_TYPES,
   findResearchSource,
-  findResearchType,
   findCadence,
-} from "../research-catalog.js?v=12";
-import { getContextById } from "../contexts-store.js?v=59";
+} from "../research-catalog.js?v=13";
+import { getContextById } from "../contexts-store.js?v=60";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
 // ── One list, grouped by age ────────────────────────────────────────────────
-// This was two columns — "Needs assets" left, "Ready to post" right — and the
+// This was two columns — "Content strategy" left, "Ready to post" right — and the
 // split has moved onto the card as a tag. The reasoning is in
 // SPEC-OPTION-B.md, but the short version is that the columns asserted a
 // FALLIBLE AI classification as a fact of the layout: a column header cannot
@@ -570,20 +568,6 @@ function bind(target) {
     // The reroute. Writes through the store rather than into `view`, so the
     // correction survives a repaint and a remount — it is a fact about the topic
     // now, not a state of this screen.
-    // Clear the open menu BEFORE the store call, not after: setResearchType()
-    // notifies, the subscription repaints, and a repaint reads `view.openMenu`.
-    // Nulling it afterwards leaves the menu on screen with no repaint to follow
-    // — which is exactly what it did the first time round.
-    const route = event.target.closest("[data-brief-route]");
-    if (route) {
-      const to = route.dataset.briefRouteTo;
-      view.openMenu = null;
-      setResearchType(route.dataset.briefRoute, to);
-      const meta = findResearchType(to);
-      showToast(meta ? `Moved to ${meta.label}` : "Topic moved");
-      return;
-    }
-
     const ignore = event.target.closest("[data-brief-ignore]");
     if (ignore) return openIgnoreReason({ briefId: ignore.dataset.briefIgnore });
 

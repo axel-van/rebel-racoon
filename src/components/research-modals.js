@@ -20,7 +20,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=12";
+import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=13";
 import {
   ageMinutes,
   getBriefById,
@@ -28,11 +28,11 @@ import {
   groupBriefsByAge,
   ignoreBrief,
   setStatus,
-} from "../briefs-store.js?v=31";
-import { getLanes } from "../research-store.js?v=25";
-import { getContextById } from "../contexts-store.js?v=59";
-import { renderBriefCard } from "./brief-card.js?v=26";
-import { renderSocialPostCard } from "./social-post-card.js?v=14";
+} from "../briefs-store.js?v=32";
+import { getLanes } from "../research-store.js?v=26";
+import { getContextById } from "../contexts-store.js?v=60";
+import { renderBriefCard } from "./brief-card.js?v=27";
+import { renderSocialPostCard } from "./social-post-card.js?v=15";
 import { showToast } from "./toast.js?v=20";
 
 const MODAL_ID = "research";

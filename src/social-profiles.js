@@ -7,7 +7,7 @@
 // as the muted caption, and a DS avatar carrying the brand photo plus a
 // corner network badge.
 
-import { socialAccounts, demoManyProfiles } from "./mocks.js?v=78";
+import { socialAccounts, demoManyProfiles } from "./mocks.js?v=79";
 import { escapeHtml } from "./utils.js?v=21";
 import { isFlagOn } from "./feature-flags.js?v=19";
 

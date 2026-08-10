@@ -5307,7 +5307,7 @@ export const researchBriefs = [
     headline: "The family that rolls together: BJJ as a shared lifestyle",
     summary:
       "Competitors are running family classes and turning academy anniversaries into family community events. The angle is strong and the volume is high — but this one can't be written yet, because it needs assets nobody has shot.",
-    researchType: "needs-assets",
+    researchType: "content-strategy",
     isTrending: false,
     whyNow: "",
     whyNowDetail:
@@ -6042,7 +6042,7 @@ export const researchBriefs = [
     seedReason: "",
   },
 
-  // The export's `needs_strategy` topics, which the feed calls "Needs assets".
+  // The export's `needs_strategy` topics, which the feed calls "Content strategy".
   // Every one is a real angle with something missing in front of it — a shoot, a
   // customer who'll go on record, a number nobody has pulled. The export's own
   // note on each is "Shown to the reader, not written up", which is exactly what
@@ -6055,7 +6055,7 @@ export const researchBriefs = [
     headline: "Buffer's creator says half their followers came from a ten-minute DM setup",
     summary:
       "Keyword-triggered DMs through Meta's official API, framed as the single biggest driver of their Instagram growth. Two items, both Buffer, both first-person — and the format is the whole reason it lands.",
-    researchType: "needs-assets",
+    researchType: "content-strategy",
     isTrending: false,
     whyNow: "",
     whyNowDetail: "",
@@ -6081,7 +6081,7 @@ export const researchBriefs = [
     headline: '"Not every trend is your trend" — a way to tell which ones are',
     summary:
       "Vista Social ran two posts pulling apart the same week's viral moments: one a format you can build on, one a template where every brand's output is identical but the logo. The test underneath it is reusable.",
-    researchType: "needs-assets",
+    researchType: "content-strategy",
     isTrending: false,
     whyNow: "",
     whyNowDetail: "",
@@ -6107,7 +6107,7 @@ export const researchBriefs = [
     headline: "Buffer publishes head-to-head comparisons. We publish feature pages",
     summary:
       "Buffer vs Sprout, Buffer vs Hootsuite, Buffer vs Metricool — all on the blog, all pitched at people already deciding. The scan's own note calls it bottom-funnel search capture, and nobody in the set is doing it defensively.",
-    researchType: "needs-assets",
+    researchType: "content-strategy",
     isTrending: false,
     whyNow: "",
     whyNowDetail: "",
@@ -6133,7 +6133,7 @@ export const researchBriefs = [
     headline: "The brands winning attention stopped posting about their product",
     summary:
       "Sprinklr's line — 76% of tech brands stuck because they all say the same thing — next to Vista Social's case study where organic LinkedIn was the biggest lead source of the year. Three items, one argument.",
-    researchType: "needs-assets",
+    researchType: "content-strategy",
     isTrending: false,
     whyNow: "",
     whyNowDetail: "",

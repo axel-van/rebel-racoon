@@ -40,7 +40,7 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus, findResearchType, otherRoute, typeTagColor } from "../research-catalog.js?v=12";
+import { findReviewStatus, findResearchType, typeTagColor } from "../research-catalog.js?v=13";
 
 // One line, not the paragraph this used to be. As a hover tooltip it could afford
 // the full explanation; as a permanent menu row it just made the menu tall. The
@@ -57,8 +57,11 @@ const IGNORE_HINT = "Kept out of your feed unless it trends well above its basel
 // route is the latter: it coexists with all four statuses and with both
 // attention signals, so three markers can sit in this row at once.
 //
-// Colour comes from typeTagColor(), which picks by object type rather than hue —
-// see the note there for why green means Ready to post and why not blue.
+// ── Only the exception is tagged ───────────────────────────────────────────
+// typeTagColor() returns null for `ready-to-post`, so a postable topic carries no
+// tag at all. That is deliberate: postable is the default and the majority, and a
+// chip on every card asked the reader to parse one to learn that nothing was
+// wrong. Absence means "this can go to a writer"; a tag means "not yet".
 //
 // A <span>, not a <button>: tag.md says a static tag is a span and only a
 // clickable one is a button. Rerouting lives in the footer menu, not here — a
@@ -66,8 +69,9 @@ const IGNORE_HINT = "Kept out of your feed unless it trends well above its basel
 // the same invalid nesting the body/footer split exists to avoid.
 function renderRouteTag(researchType) {
   const meta = findResearchType(researchType);
-  if (!meta) return "";
-  return html`<span class="ap-tag ${typeTagColor(meta.id)} topics-card__route">${meta.label}</span>`;
+  const color = typeTagColor(researchType);
+  if (!meta || !color) return "";
+  return html`<span class="ap-tag ${color} topics-card__route">${meta.label}</span>`;
 }
 
 function renderStatusPill(status) {
@@ -219,15 +223,23 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
 // point of Option B: the route stops being a label you read and becomes the
 // button you press, which is the only version of it that changes what happens.
 //
-// Neither action is ever hidden. A Needs-assets card keeps "Use in chat anyway"
-// as the first menu row, because the classification is the AI's guess and the
-// user overruling it must not require rerouting the topic first.
+// Neither action is ever hidden. A Content-strategy card keeps "Use in chat
+// anyway" as its first menu row, and that row IS the correction — there is no
+// separate "reroute this topic" step.
+//
+// A reroute row existed and was removed. It changed the topic's stored type, so
+// it needed a store mutation that wrote onto server-owned data, and it asked the
+// user to relabel a topic in order to do something with it. "Use in chat anyway"
+// gets them straight to the thing they wanted, one click instead of two.
+//
+// The trade is real and worth naming: the classification is now OVERRIDABLE but
+// no longer CORRECTABLE. If Archie files a topic wrongly it stays filed wrongly
+// — the label simply stops blocking anyone. Fine while the label costs nothing to
+// ignore; revisit if a mislabel ever carries a consequence beyond this card.
 function renderUseSplit(brief, menuOpen) {
   const saved = brief.status === "saved";
   const ignored = brief.status === "ignored";
   const ready = brief.researchType === "ready-to-post";
-  const flip = otherRoute(brief.researchType);
-  const flipMeta = flip ? findResearchType(flip) : null;
   return html`<span class="topics-use" data-brief-use-wrap="${escapeAttr(brief.id)}">
     <button
       type="button"
@@ -265,23 +277,6 @@ function renderUseSplit(brief, menuOpen) {
       <button type="button" class="topics-use__item" data-brief-save="${escapeAttr(brief.id)}">
         <span>${saved ? "Remove from saved" : "Save for later"}</span>
       </button>
-      <!-- The reroute. Present only when the topic is actually ON the route axis:
-           competitive-intelligence is neither postable nor waiting on assets, so
-           offering "Ready to post instead" there would assert something false.
-           setResearchType() refuses it too — two locks, because this row is the
-           one place in the card that edits what the scan concluded. -->
-      ${raw(
-        flipMeta
-          ? html`<button
-              type="button"
-              class="topics-use__item"
-              data-brief-route="${escapeAttr(brief.id)}"
-              data-brief-route-to="${escapeAttr(flipMeta.id)}"
-            >
-              <span>${flipMeta.label} instead</span>
-            </button>`
-          : "",
-      )}
       ${raw(
         // Ignore lives in here rather than beside Use in chat. It is the one
         // destructive-ish option on the card, and a menu is where the app already
