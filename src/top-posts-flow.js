@@ -44,7 +44,7 @@ import {
 import { SORTS, PERIODS } from "./components/top-post-card.js?v=99";
 import { showToast } from "./components/toast.js?v=20";
 import * as inlineQuestion from "./inline-question.js?v=48";
-import { getDefaultContext } from "./contexts-store.js?v=60";
+import { getDefaultContext } from "./contexts-store.js?v=61";
 
 // Cap on drafts produced in one run — post × angle × channel can multiply fast
 // (e.g. 3 posts × 4 angles × 3 channels = 36). Keep the result turn scannable;

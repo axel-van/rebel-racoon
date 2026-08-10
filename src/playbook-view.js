@@ -156,6 +156,7 @@ let pillarsExpanded = false;
 let competitorsExpanded = false;
 let influencersExpanded = false;
 let refModalIndex = null; // open reference-image detail modal (index) or null
+let pillarModalIndex = null; // open content-pillar detail modal (index) or null
 let cmpModalIndex = null; // open competitor detail modal (index) or null
 let cmpScanning = false; // "Discover competitors" scan in flight
 let cmpScanTimer = null; // the scan's pending timeout
@@ -243,6 +244,7 @@ export function mount(target, config) {
       refModalHost = null;
     }
     refModalIndex = null;
+    pillarModalIndex = null;
     cmpModalIndex = null;
     mountTarget = null;
     cfg = null;
@@ -945,6 +947,131 @@ function renderRefModal(data) {
   </div>`;
 }
 
+// ── Content-pillar dialog ──────────────────────────────────────────────────
+//
+// Deliberately the same chrome as the reference-image dialog above: .ap-dialog in
+// a centred .app-modal-backdrop, header + close + content + footer. It answers a
+// different question but it is the same GESTURE — open one item out of a grid and
+// see everything about it — and the Playbook should only have one answer to that.
+//
+// What a pillar shows that a pillar card cannot:
+//   • its full details, untruncated
+//   • the topics that fed it, newest last, so the accumulation is visible
+//   • the user's own notes, which Archie never writes into
+//   • reference assets, because a pillar is usually blocked on exactly those
+//
+// Read vs edit follows the SECTION, exactly as the reference-image dialog does:
+// in read mode the fields are prose, in Content Strategy's edit mode they are
+// inputs committed by that panel's own Save. Making them editable in read mode was
+// considered and dropped — the Playbook has one commit path, through the panel,
+// and a dialog that wrote straight to the store would be a second one that Cancel
+// could not undo. So: click Edit on Content Strategy, then open the pillar.
+function renderPillarSources(sources) {
+  if (!sources.length) {
+    return `<p class="recap__refmodal-empty">Nothing has fed this pillar yet — it was written by hand.</p>`;
+  }
+  return `<ol class="recap__pilmodal-sources">${sources
+    .map(
+      (srcItem) => `<li class="recap__pilmodal-source">
+        <span class="recap__pilmodal-source-head">${esc(srcItem.headline || "Untitled topic")}</span>
+        ${srcItem.when ? `<span class="recap__pilmodal-source-when">${esc(srcItem.when)}</span>` : ""}
+      </li>`,
+    )
+    .join("")}</ol>`;
+}
+
+function renderPillarAssets(assets, i, edit) {
+  const list = assets.length
+    ? `<ul class="recap__pilmodal-assets">${assets
+        .map(
+          (a, ai) => `<li class="recap__pilmodal-asset">
+            <i class="${esc(a.icon || "ap-icon-file")}" aria-hidden="true"></i>
+            <span class="recap__pilmodal-asset-name">${esc(a.name || "Asset")}</span>
+            ${
+              edit
+                ? `<button type="button" class="ap-icon-button ghost grey" data-recap-pillar-asset-remove="${ai}" aria-label="Remove ${esc(
+                    a.name || "asset",
+                  )}"><i class="ap-icon-close"></i></button>`
+                : ""
+            }
+          </li>`,
+        )
+        .join("")}</ul>`
+    : `<p class="recap__refmodal-empty">No assets yet. A pillar usually waits on these before anything can be drafted.</p>`;
+  if (!edit) return list;
+  return `${list}
+    <button type="button" class="ap-button secondary blue recap__pilmodal-add" data-recap-pillar-asset-add>
+      <i class="ap-icon-plus" aria-hidden="true"></i><span>Add reference asset</span>
+    </button>
+    <input type="file" multiple hidden data-recap-pillar-asset-input data-recap-pillar-index="${i}" />`;
+}
+
+function renderPillarModalIfOpen(data) {
+  if (pillarModalIndex == null) return "";
+  const list = strategyOf(data).pillars;
+  const p = list[pillarModalIndex];
+  if (!p) return "";
+  return renderPillarModal(p, pillarModalIndex, editScope === "strategy");
+}
+
+function renderPillarModal(p, i, edit) {
+  const sources = Array.isArray(p.sources) ? p.sources : [];
+  const assets = Array.isArray(p.assets) ? p.assets : [];
+  const removeBtn = edit
+    ? `<button type="button" class="ap-button transparent grey" data-recap-pillar-remove="${i}"><i class="ap-icon-trash"></i><span>Delete pillar</span></button>`
+    : "";
+  return `
+  <div class="app-modal-backdrop recap__refmodal-backdrop" data-recap-pilmodal-backdrop>
+    <aside class="ap-dialog recap__pilmodal" role="dialog" aria-modal="true" aria-label="Content pillar">
+      <div class="ap-dialog-header">
+        <span class="recap__pilmodal-icon" aria-hidden="true"><i class="${esc(p.icon || "ap-icon-target")}"></i></span>
+        <span class="ap-dialog-title">${esc(p.title || "Untitled pillar")}</span>
+      </div>
+      <button type="button" class="ap-dialog-close" data-recap-pillar-close aria-label="Close"><i class="ap-icon-close"></i></button>
+      <div class="ap-dialog-content recap__pilmodal-content">
+        <div class="recap__refmodal-sec">
+          <span class="recap__refedit-flabel">What this pillar covers</span>
+          ${
+            edit
+              ? `<textarea data-recap-pillar-desc data-recap-pillar-index="${i}" rows="6" placeholder="What Archie should know when it writes for this pillar…">${esc(
+                  p.description || "",
+                )}</textarea>`
+              : p.description
+                ? `<p class="recap__pilmodal-prose">${esc(p.description)}</p>`
+                : `<p class="recap__refmodal-empty">Nothing written yet.</p>`
+          }
+        </div>
+        <div class="recap__refmodal-sec">
+          <span class="recap__refedit-flabel">Topics that fed this pillar</span>
+          ${renderPillarSources(sources)}
+        </div>
+        <div class="recap__refmodal-sec">
+          <span class="recap__refedit-flabel">Your notes</span>
+          ${
+            edit
+              ? `<textarea data-recap-pillar-notes data-recap-pillar-index="${i}" rows="4" placeholder="Anything Archie should follow that the topics don't say — angles to avoid, who signs off, the format that works…">${esc(
+                  p.notes || "",
+                )}</textarea>`
+              : p.notes
+                ? `<p class="recap__pilmodal-prose">${esc(p.notes)}</p>`
+                : `<p class="recap__refmodal-empty">No notes yet. Add yours in edit mode — Archie never writes here.</p>`
+          }
+        </div>
+        <div class="recap__refmodal-sec">
+          <span class="recap__refedit-flabel">Reference assets</span>
+          ${renderPillarAssets(assets, i, edit)}
+        </div>
+      </div>
+      <div class="ap-dialog-footer">
+        <div class="ap-dialog-footer-left">${removeBtn}</div>
+        <div class="ap-dialog-footer-right">
+          <button type="button" class="ap-button primary orange" data-recap-pillar-close><span>Done</span></button>
+        </div>
+      </div>
+    </aside>
+  </div>`;
+}
+
 // Per-field edit hint (Audience & goals) — prompt + what Archie does with it.
 function renderFieldHint(hint) {
   if (!hint) return "";
@@ -1422,13 +1549,30 @@ function strategyOf(data) {
   return { approach: s.approach || "", pillars: Array.isArray(s.pillars) ? s.pillars : [] };
 }
 
+// The whole card is a button that opens the pillar, exactly as a reference-image
+// card opens its dialog. Same section, same gesture, so the two read as one idea.
+// The delete control stays a SIBLING of that button rather than a child — a button
+// inside a button is invalid HTML and resolves unpredictably; the reference cards
+// already split it this way.
 function renderPillarCard(p, i, edit) {
+  const srcCount = Array.isArray(p.sources) ? p.sources.length : 0;
+  const assetCount = Array.isArray(p.assets) ? p.assets.length : 0;
+  const meta = [
+    srcCount ? `${srcCount} ${srcCount === 1 ? "topic" : "topics"}` : "",
+    assetCount ? `${assetCount} ${assetCount === 1 ? "asset" : "assets"}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
   return `
     <div class="recap__pillar">
+      <button type="button" class="recap__pillar-open" data-recap-pillar-open="${i}" aria-label="Open ${esc(
+        p.title || "pillar",
+      )}"></button>
       <span class="recap__pillar-icon" aria-hidden="true"><i class="${esc(p.icon || "ap-icon-target")}"></i></span>
       <span class="recap__pillar-body">
         <span class="recap__pillar-title">${esc(p.title || "Untitled pillar")}</span>
         ${p.description ? `<span class="recap__pillar-desc">${esc(p.description)}</span>` : ""}
+        ${meta ? `<span class="recap__pillar-meta">${esc(meta)}</span>` : ""}
       </span>
       ${
         edit
@@ -1951,7 +2095,7 @@ function paint() {
         ${influencersOn() ? renderInfluencersPanel(data, scope === "influencers") : ""}
       </div>
     </div>
-    ${renderRefModal(data)}
+    ${renderRefModal(data)}${renderPillarModalIfOpen(data)}
     ${competitorsOn() ? renderCompetitorModal(data) : ""}
   `;
 
@@ -2550,6 +2694,34 @@ function onClick(event) {
     mountTarget?.querySelector("[data-recap-refimg-input]")?.click();
     return;
   }
+  // ── Content-pillar dialog ────────────────────────────────────────────────
+  // Same shape as the reference-image handlers directly below, and it shares the
+  // body-level portal: only one of the two can be open, which is why opening one
+  // does not have to close the other by hand.
+  const pilOpen = event.target.closest("[data-recap-pillar-open]");
+  if (pilOpen) {
+    pillarModalIndex = Number(pilOpen.dataset.recapPillarOpen);
+    repaintPreservingScroll();
+    return;
+  }
+  if (event.target.closest("[data-recap-pillar-close]") || event.target.matches?.("[data-recap-pilmodal-backdrop]")) {
+    pillarModalIndex = null;
+    repaintPreservingScroll();
+    return;
+  }
+  if (event.target.closest("[data-recap-pillar-asset-add]")) {
+    mountTarget?.querySelector("[data-recap-pillar-asset-input]")?.click();
+    return;
+  }
+  const pilAssetRemove = event.target.closest("[data-recap-pillar-asset-remove]");
+  if (pilAssetRemove) {
+    const ai = Number(pilAssetRemove.dataset.recapPillarAssetRemove);
+    const p = strategyOf(data).pillars[pillarModalIndex];
+    if (p && Array.isArray(p.assets)) p.assets = p.assets.filter((_, k) => k !== ai);
+    repaintPreservingScroll();
+    return;
+  }
+
   const refOpen = event.target.closest("[data-recap-refimg-open]");
   if (refOpen) {
     refModalIndex = Number(refOpen.dataset.recapRefimgOpen);
@@ -2632,6 +2804,12 @@ function onInput(event) {
   const t = event.target;
   if (t.matches("[data-recap-summary]")) {
     data.businessSummary = t.value;
+  } else if (t.matches("[data-recap-pillar-desc]")) {
+    const p = strategyOf(data).pillars[Number(t.dataset.recapPillarIndex)];
+    if (p) p.description = t.value;
+  } else if (t.matches("[data-recap-pillar-notes]")) {
+    const p = strategyOf(data).pillars[Number(t.dataset.recapPillarIndex)];
+    if (p) p.notes = t.value;
   } else if (t.matches("[data-recap-refnote]")) {
     const idx = Number(t.dataset.recapRefimgIndex);
     if (data.referenceImages?.[idx]) data.referenceImages[idx].note = t.value;
@@ -2680,11 +2858,45 @@ function onInput(event) {
 }
 
 let refImgCounter = 0;
+let pillarAssetCounter = 0;
+
+// A glyph per broad file family, so an asset list is scannable without thumbnails.
+// Real glyph names, checked against ap-icons.css — there is no ap-icon-attachment
+// or ap-icon-audio in this DS, and a missing mask renders as an invisible box
+// rather than as an error.
+function assetIcon(file) {
+  const t = file.type || "";
+  if (t.startsWith("image/")) return "ap-icon-file--image";
+  if (t.startsWith("video/")) return "ap-icon-file--video";
+  if (t === "application/pdf") return "ap-icon-file--pdf";
+  if (t.startsWith("text/")) return "ap-icon-file--text";
+  return "ap-icon-file";
+}
 
 function onChange(event) {
   if (!editScope) return;
   const data = cfg.getData();
   if (!data) return;
+  // Pillar reference assets. Name and icon only — no data URL. A pillar's assets
+  // are the photo shoot, the customer quote, the number nobody pulled; they are
+  // typically not images and are typically large, so reading them into memory to
+  // render a thumbnail nobody looks at would be waste. The reference-IMAGE upload
+  // below does read the bytes, because there the picture IS the content.
+  if (event.target.matches("[data-recap-pillar-asset-input]")) {
+    const picked = Array.from(event.target.files || []);
+    if (!picked.length) return;
+    const p = strategyOf(data).pillars[Number(event.target.dataset.recapPillarIndex)];
+    if (!p) return;
+    if (!Array.isArray(p.assets)) p.assets = [];
+    for (const f of picked) {
+      pillarAssetCounter += 1;
+      p.assets.push({ id: `pas-${pillarAssetCounter}`, name: f.name, icon: assetIcon(f) });
+    }
+    event.target.value = "";
+    repaintPreservingScroll();
+    return;
+  }
+
   // Reference-image upload — read each picked image as a data URL and append,
   // capped at MAX_REF_IMAGES. Part of the Brand section's Save flow.
   if (event.target.matches("[data-recap-refimg-input]")) {

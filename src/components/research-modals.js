@@ -30,7 +30,15 @@ import {
   setStatus,
 } from "../briefs-store.js?v=32";
 import { getLanes } from "../research-store.js?v=26";
-import { getContextById } from "../contexts-store.js?v=60";
+import {
+  getContextById,
+  getPillars,
+  pillarForTopic,
+  pillarRoom,
+  addPillarFromTopic,
+  addTopicToPillar,
+  PILLAR_LIMIT,
+} from "../contexts-store.js?v=61";
 import { renderBriefCard } from "./brief-card.js?v=27";
 import { renderSocialPostCard } from "./social-post-card.js?v=15";
 import { showToast } from "./toast.js?v=20";
@@ -50,6 +58,14 @@ let active = null; // { kind, ctx } — what's currently open
 // which rebuilds the dialog — the step and the answer have to outlive that.
 let pickerStep = "playbooks";
 let pickerPlaybook = null; // one id; picking a card IS the navigation
+// Add-to-strategy state. Same reason as the picker's: choosing create-vs-link
+// re-renders the dialog through openShell, so the choice and the edited text have
+// to live outside it. `text` is seeded once from the topic and then belongs to the
+// user — re-seeding it on every render would wipe their trimming.
+let strategyMode = "create"; // "create" | "link"
+let strategyPillarId = null;
+let strategyTitle = "";
+let strategyText = "";
 
 const SHELL = `
 <div class="app-modal-backdrop research-modal__backdrop" id="researchModalBackdrop" hidden></div>
@@ -84,6 +100,9 @@ export function init() {
   // the wiring is too. Each branch reads `active` for its context.
   panel.addEventListener("click", onPanelClick);
   panel.addEventListener("input", onPanelInput);
+  // A <select> emits `change`, never `click`, so the pillar picker needs its
+  // own listener — routing it through onPanelClick silently did nothing.
+  panel.addEventListener("change", onPanelChange);
   // The Playbook step's cards are .contexts-card — an <article role="button">,
   // not a <button>, because that is the element /contexts styles. A real button
   // gets Enter and Space for free; role="button" does not, so they are wired
@@ -236,40 +255,213 @@ export function openExport({ count }) {
 
 // ─── 4. Add to Content strategy ────────────────────────────────────────────
 
+// What a pillar IS, stated once, at the moment the user is deciding to make one.
+// A pillar is not a saved topic and the difference is not obvious, so the dialog
+// says it rather than assuming it: a saved topic gets reused as it is, a pillar
+// accumulates and gets refined as more topics feed into it.
+const PILLAR_EXPLAINER =
+  "Archie writes against your pillars: when a draft fits one, it adapts its " +
+  "writing to what that pillar already knows. Filing a topic into an existing " +
+  "pillar fleshes it out, so the next draft on that theme starts better informed " +
+  "once the assets are ready.";
+
+// The topic's own words, and only the topic's own words — headline into the name
+// field, the full article into the details field. No generated summary, no
+// invented framing: the user trims what they don't want, which they can only do
+// if what is there is text they recognise.
+function topicSeed(brief) {
+  if (!brief) return { title: "", text: "" };
+  const paras = Array.isArray(brief.research?.paragraphs) ? brief.research.paragraphs : [];
+  return {
+    title: brief.research?.title || brief.headline || "",
+    text: paras.length ? paras.join("\n\n") : brief.summary || "",
+  };
+}
+
+/**
+ * Add a topic to a Playbook's content strategy — as a new pillar, or into one
+ * that already exists.
+ *
+ * ── Why two paths and not one ───────────────────────────────────────────────
+ * "Add to strategy" used to be a confirmation: it showed the topic's headline, then
+ * dumped the Playbook's whole existing strategy underneath as context, and the
+ * only button was Add. It never said what adding DID, and it could only ever make
+ * the same undifferentiated thing. Both paths here are real and they produce
+ * different objects: a new pillar is a commitment to a theme, filing into an
+ * existing one is evidence that a theme already committed to is live.
+ *
+ * ── The Updated case opens pre-decided ──────────────────────────────────────
+ * If this topic already feeds a pillar, the dialog opens in `link` mode on THAT
+ * pillar with only `whatChanged` seeded. An updated topic is not a new
+ * commitment; it is news about one already made, and asking the user to re-pick
+ * the pillar they already picked is asking them to remember for the app.
+ */
 export function openAddToStrategy({ briefId, playbookId, onConfirm = null }) {
   const brief = getBriefById(briefId);
   const ctx = getContextById(playbookId);
-  const strategy = ctx?.strategy || {};
-  const pillars = Array.isArray(strategy.pillars) ? strategy.pillars : [];
+  const existing = ctx ? pillarForTopic(ctx.id, briefId) : null;
+  const seed = topicSeed(brief);
+
+  // Seed once per opening, not per render.
+  if (existing) {
+    strategyMode = "link";
+    strategyPillarId = existing.id;
+    // Only the delta. The pillar already holds what this topic said the first time.
+    strategyText = brief?.whatChanged || seed.text;
+  } else {
+    strategyMode = pillarRoom(playbookId) === 0 ? "link" : "create";
+    strategyPillarId = null;
+    strategyText = seed.text;
+  }
+  strategyTitle = seed.title;
+
+  paintStrategy({ briefId, playbookId, onConfirm, returning: !!existing });
+}
+
+// Re-rendered on every mode switch, so it is a function rather than an inline body.
+function paintStrategy({ briefId, playbookId, onConfirm, returning }) {
+  const brief = getBriefById(briefId);
+  const ctx = getContextById(playbookId);
+  const pillars = ctx ? getPillars(ctx.id) : [];
+  const room = pillarRoom(playbookId);
+  const full = room === 0;
+  const linking = strategyMode === "link";
+  if (linking && !strategyPillarId && pillars.length) strategyPillarId = pillars[0].id;
+  const target = pillars.find((p) => p.id === strategyPillarId) || null;
 
   openShell(
     "strategy",
-    { briefId, onConfirm },
+    { briefId, playbookId, onConfirm },
     {
-      title: "Add to Content strategy",
+      title: returning ? "Update a content pillar" : "Add to Content strategy",
       sub: ctx ? ctx.name : "",
-      body: html`<div class="research-modal__preview">${brief ? brief.headline : ""}</div>
-        <h4 class="research-modal__sub-head">Current content strategy overview</h4>
-        ${raw(strategy.approach ? html`<p class="research-modal__lede">${strategy.approach}</p>` : "")}
-        ${raw(
-          pillars.length
-            ? html`<ul class="research-modal__pillars">
-                ${raw(
-                  pillars
-                    .map((p) => html`<li><strong>${p.title || p.name || ""}</strong> ${p.description || ""}</li>`)
-                    .join(""),
-                )}
-              </ul>`
-            : html`<p class="muted">No pillars yet.</p>`,
-        )}`,
+      body:
+        // The DS Infobox, because "explain what this does" on a persistent
+        // surface is what an infobox is for. `info`, not the app's orange: this
+        // is Archie describing a mechanism, not flagging something needing
+        // attention.
+        html`<div class="ap-infobox info has-title strategy__why">
+            <i class="ap-icon-info_fill"></i>
+            <div class="ap-infobox-content">
+              <div class="ap-infobox-texts">
+                <span class="ap-infobox-title">A pillar is not a saved topic</span>
+                <span class="ap-infobox-message">${PILLAR_EXPLAINER}</span>
+              </div>
+            </div>
+          </div>
+
+          ${raw(
+            returning
+              ? html`<p class="strategy__returning">
+                  This topic already feeds <strong>${target ? target.title : "a pillar"}</strong>. What changed is below
+                  — it gets appended, so nothing the pillar already knows is lost.
+                </p>`
+              : renderStrategyChoice(pillars, room, full),
+          )}
+          ${raw(
+            linking
+              ? html`<div class="ap-form-field strategy__field">
+                  <label for="strategyPillarPick">Pillar</label>
+                  <select
+                    class="ap-select"
+                    id="strategyPillarPick"
+                    data-strategy-pick
+                    ${raw(returning ? "disabled" : "")}
+                  >
+                    ${raw(
+                      pillars
+                        .map(
+                          (p) =>
+                            html`<option value="${p.id}" ${raw(p.id === strategyPillarId ? "selected" : "")}>
+                              ${p.title}
+                            </option>`,
+                        )
+                        .join(""),
+                    )}
+                  </select>
+                </div>`
+              : html`<div class="ap-form-field strategy__field">
+                  <label for="strategyName">Pillar name</label>
+                  <div class="ap-input-group">
+                    <input type="text" id="strategyName" data-strategy-title value="${strategyTitle}" />
+                  </div>
+                </div>`,
+          )}
+
+          <div class="ap-form-field strategy__field">
+            <label for="strategyText">${linking ? "What this topic adds" : "Details"}</label>
+            <textarea class="ap-textarea strategy__text" id="strategyText" rows="9" data-strategy-text>
+${strategyText}</textarea
+            >
+            <span class="ap-form-message"
+              >${brief ? "Pre-filled from the topic. Trim it to what the pillar should actually carry." : ""}</span
+            >
+          </div>`,
       foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
           <span>Cancel</span>
         </button>
         <button type="button" class="ap-button primary blue" data-strategy-confirm>
-          <span>Add to strategy</span>
+          <span>${linking ? "Update pillar" : "Create pillar"}</span>
         </button>`,
     },
   );
+}
+
+// Create vs link. .ap-radio-card in `card` mode — the DS component for a
+// single-select where each option needs a title, a description and a badge, which
+// is exactly this choice. Never two buttons: the two paths are not equal-weight
+// actions, they are two answers to one question, and the answer changes the form
+// underneath.
+function renderStrategyChoice(pillars, room, full) {
+  const none = pillars.length === 0;
+  return html`<div class="strategy__choice">
+    <label class="ap-radio-card card${raw(full ? " is-unavailable" : "")}">
+      <input
+        type="radio"
+        name="strategyMode"
+        value="create"
+        data-strategy-mode
+        ${raw(strategyMode === "create" ? "checked" : "")}
+        ${raw(full ? "disabled" : "")}
+      />
+      <div>
+        <div class="ap-radio-card-header">
+          <i class="ap-icon-plus" aria-hidden="true"></i>
+          <span class="ap-radio-card-title">Create a new pillar</span>
+          <!-- The count is shown ALWAYS, not only once it bites. A cap the user
+               meets for the first time at the moment they are blocked reads as a
+               bug; a cap they have been watching count down does not. -->
+          <span class="ap-status ${raw(full ? "orange" : "grey")} no-dot">${pillars.length}/${PILLAR_LIMIT}</span>
+        </div>
+        <span
+          >${full
+            ? `This Playbook is at its limit of ${PILLAR_LIMIT} pillars. File the topic into one of them, or remove a pillar in the Playbook first.`
+            : "A new theme to write against. Start it from this topic, then refine it as more topics land."}</span
+        >
+      </div>
+    </label>
+    <label class="ap-radio-card card${raw(none ? " is-unavailable" : "")}">
+      <input
+        type="radio"
+        name="strategyMode"
+        value="link"
+        data-strategy-mode
+        ${raw(strategyMode === "link" ? "checked" : "")}
+        ${raw(none ? "disabled" : "")}
+      />
+      <div>
+        <div class="ap-radio-card-header">
+          <i class="ap-icon-target" aria-hidden="true"></i>
+          <span class="ap-radio-card-title">Add to an existing pillar</span>
+        </div>
+        <span
+          >${none
+            ? "No pillars yet — create the first one."
+            : "Flesh out a theme you have already committed to, so the next draft on it knows more."}</span
+        >
+      </div>
+    </label>
+  </div>`;
 }
 
 // ─── 5. Playbook competitors / influencers (READ-ONLY) ─────────────────────
@@ -788,11 +980,54 @@ function onPanelClick(event) {
     // Status flips HERE, on confirm — never when the menu item was clicked.
     // That was a real bug: the brief went Used the moment the dropdown item was
     // pressed, so cancelling still left it triaged.
-    const { briefId, onConfirm } = active.ctx;
+    const { briefId, playbookId, onConfirm } = active.ctx;
+    const brief = getBriefById(briefId);
+    const topic = brief ? { briefId, headline: brief.headline, when: brief.ageLabel } : null;
+    // Read the fields at confirm time rather than tracking every keystroke: the
+    // dialog is the only editor and it is about to close.
+    const titleEl2 = panel.querySelector("[data-strategy-title]");
+    const textEl = panel.querySelector("[data-strategy-text]");
+    const title = titleEl2 ? titleEl2.value : strategyTitle;
+    const text = textEl ? textEl.value : strategyText;
+
+    let result = null;
+    if (strategyMode === "link") {
+      result = addTopicToPillar(playbookId, strategyPillarId, { addition: text, topic });
+    } else {
+      result = addPillarFromTopic(playbookId, { title, description: text, topic });
+    }
+    // A null here means the cap was reached between opening and confirming.
+    // Don't close on failure — the dialog is where the user can still choose the
+    // other path.
+    if (!result) {
+      showToast(`This Playbook already has ${PILLAR_LIMIT} pillars`);
+      return;
+    }
     setStatus(briefId, "used");
     close();
     if (onConfirm) onConfirm();
-    showToast("Added to the Playbook's content strategy");
+    showToast(strategyMode === "link" ? `Added to ${result.title}` : `Created the pillar ${result.title}`);
+    return;
+  }
+
+  // Switching create ↔ link re-renders the form beneath the choice, so the
+  // in-progress text has to be carried across the repaint by hand.
+  const modeRadio = event.target.closest("[data-strategy-mode]");
+  if (modeRadio && active && active.kind === "strategy") {
+    const textEl = panel.querySelector("[data-strategy-text]");
+    const titleEl2 = panel.querySelector("[data-strategy-title]");
+    if (textEl) strategyText = textEl.value;
+    if (titleEl2) strategyTitle = titleEl2.value;
+    strategyMode = modeRadio.value;
+    paintStrategy({ ...active.ctx, returning: false });
+    return;
+  }
+}
+
+function onPanelChange(event) {
+  const pick = event.target.closest("[data-strategy-pick]");
+  if (pick) {
+    strategyPillarId = pick.value;
     return;
   }
 }

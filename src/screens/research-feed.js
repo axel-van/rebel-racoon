@@ -30,7 +30,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=336";
+import { renderTopbar } from "../components/topbar.js?v=338";
 import { isFlagOn } from "../feature-flags.js?v=19";
 import { renderBriefCard } from "../components/brief-card.js?v=27";
 import {
@@ -38,7 +38,7 @@ import {
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=48";
+} from "../components/research-modals.js?v=50";
 import { openBriefInChat } from "../brief-flow.js?v=5";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=26";
@@ -59,7 +59,7 @@ import {
   findResearchSource,
   findCadence,
 } from "../research-catalog.js?v=13";
-import { getContextById } from "../contexts-store.js?v=60";
+import { getContextById } from "../contexts-store.js?v=61";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.

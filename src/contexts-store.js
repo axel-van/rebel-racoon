@@ -360,6 +360,122 @@ export function updateContext(id, patch) {
  * Duplicate a context — clones every editable field, resets usedIn /
  * isDefault, marks the name as "(copy)". Returns the new context.
  */
+// ── Content pillars ─────────────────────────────────────────────────────────
+//
+// A pillar is a standing instruction Archie writes against. It differs from a
+// saved topic in the one way that matters: a saved topic is reused AS IS later,
+// while a pillar accumulates — every topic filed into it makes the next draft on
+// that theme better informed.
+//
+// Capped at ten per Playbook. Not an arbitrary number: a pillar only earns its
+// place if Archie can tell which one a draft belongs to, and past ten the
+// distinctions get too fine to detect reliably. The cap is enforced HERE rather
+// than in the modal, so no caller can route around it.
+export const PILLAR_LIMIT = 10;
+
+function strategyOf(c) {
+  if (!c.strategy || typeof c.strategy !== "object") c.strategy = { approach: "", pillars: [] };
+  if (!Array.isArray(c.strategy.pillars)) c.strategy.pillars = [];
+  return c.strategy;
+}
+
+/** Every pillar on a Playbook, normalised so callers never test for absent fields. */
+export function getPillars(ctxId) {
+  const c = contexts.find((x) => x.id === ctxId);
+  if (!c) return [];
+  return strategyOf(c).pillars.map((p) => ({
+    ...p,
+    sources: Array.isArray(p.sources) ? p.sources.map((s) => ({ ...s })) : [],
+    assets: Array.isArray(p.assets) ? p.assets.map((a) => ({ ...a })) : [],
+    notes: p.notes || "",
+  }));
+}
+
+export function getPillarById(ctxId, pillarId) {
+  return getPillars(ctxId).find((p) => p.id === pillarId) || null;
+}
+
+/** How many more pillars this Playbook can take. 0 means the cap is reached. */
+export function pillarRoom(ctxId) {
+  return Math.max(0, PILLAR_LIMIT - getPillars(ctxId).length);
+}
+
+/** Is this topic already feeding a pillar? Returns that pillar, or null. */
+export function pillarForTopic(ctxId, briefId) {
+  if (!briefId) return null;
+  return getPillars(ctxId).find((p) => p.sources.some((s) => s.briefId === briefId)) || null;
+}
+
+// The topic is recorded as a DENORMALISED SNAPSHOT — headline and age copied in,
+// not a live lookup by id. Two reasons, and both are load-bearing:
+//   • A pillar is Playbook-owned and has to render with the Content Ideas feature
+//     flag OFF. A live read would make /playbook import briefs-store, which is
+//     gated.
+//   • A re-scan can replace briefs. The pillar should still be able to say what
+//     it was built from after the topic that built it is gone.
+function snapshot(topic) {
+  return { briefId: topic.briefId || "", headline: topic.headline || "", when: topic.when || "" };
+}
+
+/**
+ * Create a pillar from a topic. Returns the new pillar, or null when the
+ * Playbook is already at PILLAR_LIMIT.
+ */
+export function addPillarFromTopic(ctxId, { title, description, topic = null, icon = "ap-icon-target" } = {}) {
+  const c = contexts.find((x) => x.id === ctxId);
+  if (!c) return null;
+  const s = strategyOf(c);
+  if (s.pillars.length >= PILLAR_LIMIT) return null;
+  const pillar = {
+    id: `pil-${Date.now().toString(36)}`,
+    icon,
+    title: (title || "").trim() || "Untitled pillar",
+    description: (description || "").trim(),
+    sources: topic ? [snapshot(topic)] : [],
+    notes: "",
+    assets: [],
+  };
+  s.pillars.push(pillar);
+  notify();
+  return pillar;
+}
+
+/**
+ * File a topic into an existing pillar. `addition` is appended to the pillar's
+ * description rather than replacing it — that IS the refinement: a pillar gets
+ * fleshed out as topics feed in, and overwriting would throw away the reason it
+ * existed. A topic already recorded on this pillar is not snapshotted twice; its
+ * text still lands, which is what an Updated topic needs.
+ */
+export function addTopicToPillar(ctxId, pillarId, { addition = "", topic = null } = {}) {
+  const c = contexts.find((x) => x.id === ctxId);
+  if (!c) return null;
+  const p = strategyOf(c).pillars.find((x) => x.id === pillarId);
+  if (!p) return null;
+  const add = (addition || "").trim();
+  if (add) p.description = p.description ? `${p.description}\n\n${add}` : add;
+  if (topic && topic.briefId) {
+    if (!Array.isArray(p.sources)) p.sources = [];
+    if (!p.sources.some((s) => s.briefId === topic.briefId)) p.sources.push(snapshot(topic));
+  }
+  notify();
+  return { ...p };
+}
+
+/** The user's own fields on a pillar — notes, assets, and manual title/description edits. */
+export function updatePillar(ctxId, pillarId, patch = {}) {
+  const c = contexts.find((x) => x.id === ctxId);
+  if (!c) return null;
+  const p = strategyOf(c).pillars.find((x) => x.id === pillarId);
+  if (!p) return null;
+  if (patch.title !== undefined) p.title = patch.title;
+  if (patch.description !== undefined) p.description = patch.description;
+  if (patch.notes !== undefined) p.notes = patch.notes;
+  if (patch.assets !== undefined) p.assets = patch.assets.map((a) => ({ ...a }));
+  notify();
+  return { ...p };
+}
+
 export function duplicateContext(id) {
   const src = contexts.find((c) => c.id === id);
   if (!src) return null;

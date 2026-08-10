@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=336";
+import { renderTopbar } from "../components/topbar.js?v=338";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=79";
 import {
   getConnectedProfiles,
@@ -15,7 +15,7 @@ import {
 import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=30";
 import { CLIP_SUBTITLE_ITEMS, CLIP_SUBTITLE_LABEL } from "../clip-subtitles.js?v=1";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=26";
-import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=60";
+import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=61";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
   getThread,
@@ -49,7 +49,7 @@ import {
 import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=56";
 import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=80";
 import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=62";
-import * as topPostsFlow from "../top-posts-flow.js?v=101";
+import * as topPostsFlow from "../top-posts-flow.js?v=102";
 import {
   renderTopPostsBoard,
   renderTopPostEcho,
@@ -74,7 +74,7 @@ import { isFlagOn } from "../feature-flags.js?v=19";
 import { getBriefById, getStarterTopics } from "../briefs-store.js?v=32";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=5";
 import { getLaneById } from "../research-store.js?v=26";
-import * as contextBuilder from "../context-builder.js?v=303";
+import * as contextBuilder from "../context-builder.js?v=305";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -111,7 +111,7 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=2";
 import { showToast } from "../components/toast.js?v=20";
 // The composer's Add menu reaches Content Ideas through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaPicker } from "../components/research-modals.js?v=48";
+import { openIdeaPicker } from "../components/research-modals.js?v=50";
 import { findResearchSource } from "../research-catalog.js?v=13";
 import {
   openDrafts as openDraftsPanel,
@@ -119,13 +119,13 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=470";
+} from "../components/right-panel.js?v=472";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=21";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=40";
 import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=48";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=62";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=63";
 // Pure thread-turn renderers — shared with the component handoff gallery so
 // the previews there never drift from the app (handoff/components.html).
 import {

@@ -2128,3 +2128,127 @@
   font-size: 15px;
   font-weight: 800;
 }
+
+/* ── Content pillars: openable card + detail dialog ────────────────────────
+   The pillar card became a button-over-card, the same construction the reference
+   image cards use: an absolutely-positioned overlay button as a SIBLING of the
+   content, never a wrapper. A button wrapping the card would nest the delete
+   button inside it, which is invalid HTML and resolves unpredictably. */
+.recap__pillar {
+  position: relative;
+}
+
+.recap__pillar-open {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.recap__pillar-open:focus-visible {
+  outline: 2px solid var(--sys-border-color-active);
+  outline-offset: -2px;
+}
+
+/* The delete control has to sit ABOVE the overlay or the overlay eats its click. */
+.recap__pillar-remove {
+  z-index: 2;
+}
+
+/* How much has fed this pillar, on the card. It is the one fact that distinguishes
+   a pillar from a saved topic — that it accumulates — so it belongs where the
+   pillars are scanned, not only inside the dialog. */
+.recap__pillar-meta {
+  display: block;
+  margin-top: var(--ref-spacing-xxxs);
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--sys-text-color-light);
+}
+
+/* The dialog. Narrower than the reference-image one because it has no image to
+   sit beside: one column of prose at a reading measure. */
+.recap__pilmodal {
+  width: min(680px, calc(100vw - 2 * var(--ref-spacing-lg)));
+  max-height: calc(100vh - 2 * var(--ref-spacing-lg));
+}
+
+.recap__pilmodal-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-right: var(--ref-spacing-xxs);
+  border-radius: var(--app-radius-starter);
+  background: var(--app-peach);
+  color: var(--app-archie-orange-deep);
+}
+
+.recap__pilmodal-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+}
+
+.recap__pilmodal-prose {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: 1.6;
+  color: var(--sys-text-color-default);
+  white-space: pre-wrap;
+}
+
+/* An ordered list, and the order is the point: oldest first, so the pillar reads
+   as something that grew rather than as a bag of links. */
+.recap__pilmodal-sources {
+  margin: 0;
+  padding-left: var(--ref-spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+.recap__pilmodal-source-head {
+  display: block;
+  font-size: var(--sys-text-style-body-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  line-height: 1.45;
+  color: var(--app-convo-navy);
+}
+
+.recap__pilmodal-source-when {
+  display: block;
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--ref-color-grey-40);
+}
+
+.recap__pilmodal-assets {
+  margin: 0 0 var(--ref-spacing-xxs);
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.recap__pilmodal-asset {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs);
+  border: 1px solid var(--ref-color-grey-10);
+  border-radius: var(--app-radius-starter);
+  font-size: var(--sys-text-style-body-size);
+}
+
+.recap__pilmodal-asset-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

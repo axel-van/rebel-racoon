@@ -463,3 +463,51 @@
   background: var(--ref-color-white);
   border-color: var(--app-peach-border);
 }
+
+/* ── Add to Content strategy ───────────────────────────────────────────────
+   The dialog is a short form now rather than a confirmation, so it needs field
+   rhythm. Everything visual comes from the DS — .ap-infobox, .ap-radio-card,
+   .ap-form-field, .ap-select, .ap-textarea; these rules only place them. */
+.strategy__why {
+  margin-bottom: var(--ref-spacing-sm);
+}
+
+/* Two stacked radio-cards. The DS documents radio-cards as vertically stacked in
+   a flex column with a gap, which is all this is. */
+.strategy__choice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  margin-bottom: var(--ref-spacing-sm);
+}
+
+/* An unavailable option is DISABLED, never hidden — the same rule the feed's type
+   chips follow. "Create a new pillar" greyed out at the cap explains why the user
+   cannot do it; a missing card would just look like the feature isn't there. The
+   DS dims a checked-disabled card's content via :has(); this dims the whole card
+   so the unreachable choice reads as unreachable before it is read. */
+.strategy__choice .is-unavailable {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.strategy__field + .strategy__field {
+  margin-top: var(--ref-spacing-sm);
+}
+
+/* A reading measure on the seeded article text. The topic's full research runs to
+   several paragraphs and this is the field where the user trims it, so the line
+   length has to be comfortable to read, not just to type into. */
+.strategy__text {
+  min-height: 168px;
+  resize: vertical;
+}
+
+/* The Updated case, where the pillar is already decided and the dialog says so
+   instead of asking again. */
+.strategy__returning {
+  margin: 0 0 var(--ref-spacing-sm);
+  font-size: var(--sys-text-style-body-size);
+  line-height: 1.55;
+  color: var(--sys-text-color-light);
+}
