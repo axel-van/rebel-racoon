@@ -240,8 +240,8 @@ function renderLaneCard(lane) {
   //
   // It earns its place here more than it does on the detail page, because these
   // Playbooks are named with middots of their own — "Pawtrack · always-on" — so
-  // "Pawtrack · always-on playbook · 2 sources" is three separators in a row with
-  // nothing marking where the name starts. The icon marks it.
+  // the line is three separators long with nothing marking where the name starts.
+  // The icon marks it, which is also why the word "playbook" could come out.
   const sourceCount = `${n} ${n === 1 ? "source" : "sources"}`;
   // Untriaged briefs waiting in this lane. Drives the NEW badge, which replaces
   // the Playbook accent bar: the bar encoded which Playbook a lane belonged to,
@@ -343,7 +343,14 @@ function renderLaneCard(lane) {
     </div>
     <p class="research-card__meta">
       <span class="research-card__meta-pb">
-        <i class="ap-icon-target" aria-hidden="true"></i>${playbookName} playbook
+        <i class="ap-icon-target" aria-hidden="true"></i>
+        <!-- The word "playbook" is gone from the visible line — the icon says it,
+             and repeating it made a line that is already three middots long
+             longer still. It stays for screen readers, because the icon is
+             aria-hidden and a name on its own doesn't say what kind of thing it
+             is: "Playbook Pawtrack · always-on". The detail header has the same
+             icon-only treatment and no such label — worth fixing there too. -->
+        <span class="sr-only">Playbook</span>${playbookName}
       </span>
       <span class="research-card__meta-sep" aria-hidden="true">·</span>
       <span>${sourceCount}</span>
