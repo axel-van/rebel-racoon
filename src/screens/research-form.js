@@ -1,5 +1,5 @@
-// Content Research — the research form. Routes /research/new AND
-// /research/:id/settings.
+// Content Research — the research form. Routes /content-ideas/new AND
+// /content-ideas/:id/settings.
 //
 // ONE component serves both. Exactly three things differ — the header, the
 // cancel affordance, and the save label — and they are resolved once in mode()
@@ -20,11 +20,11 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=332";
-import { isFlagOn } from "../feature-flags.js?v=18";
-import { getContexts, getContextById } from "../contexts-store.js?v=58";
-import { getLaneById, addLane, updateLane } from "../research-store.js?v=23";
-import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=45";
+import { renderTopbar } from "../components/topbar.js?v=334";
+import { isFlagOn } from "../feature-flags.js?v=19";
+import { getContexts, getContextById } from "../contexts-store.js?v=59";
+import { getLaneById, addLane, updateLane } from "../research-store.js?v=24";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=46";
 import {
   RESEARCH_SOURCES,
   CADENCES,
@@ -51,7 +51,7 @@ export function renderResearchForm(params, target) {
     navigate("/");
     return;
   }
-  // /research/new has no :id; /research/:id/settings does. That single fact is
+  // /content-ideas/new has no :id; /content-ideas/:id/settings does. That single fact is
   // what selects the mode — no separate entry point, no flag argument.
   laneId = params && params.id ? params.id : null;
 
@@ -59,7 +59,7 @@ export function renderResearchForm(params, target) {
     const lane = getLaneById(laneId);
     // A stale deep link to a deleted lane's settings has nowhere to go.
     if (!lane) {
-      navigate("/research");
+      navigate("/content-ideas");
       return;
     }
     // The saved list, verbatim — deliberately NOT run through seedWebsites(). An
@@ -402,7 +402,7 @@ function renderFooter() {
  * (topbar.backTargetFor). Two exits from one screen that disagree is how a user
  * loses work. */
 function exitPath() {
-  return mode() === "settings" ? `/research/${encodeURIComponent(laneId)}` : "/research";
+  return mode() === "settings" ? `/content-ideas/${encodeURIComponent(laneId)}` : "/content-ideas";
 }
 
 function bind(target) {
@@ -464,12 +464,12 @@ function bind(target) {
       if (!isComplete()) return;
       if (mode() === "settings") {
         updateLane(laneId, draft);
-        navigate(`/research/${encodeURIComponent(laneId)}`);
+        navigate(`/content-ideas/${encodeURIComponent(laneId)}`);
       } else {
         const lane = addLane(draft);
         // ?fresh=1 tells the feed this arrival is a save, so it runs the
         // generating loader. Selecting a lane from the list does the same.
-        navigate(`/research/${encodeURIComponent(lane.id)}?fresh=1`);
+        navigate(`/content-ideas/${encodeURIComponent(lane.id)}?fresh=1`);
       }
       return;
     }

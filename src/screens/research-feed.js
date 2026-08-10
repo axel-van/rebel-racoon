@@ -1,4 +1,4 @@
-// Content Research — a lane's brief feed, route /research/:id.
+// Content Research — a lane's brief feed, route /content-ideas/:id.
 //
 // The generating loader runs on ARRIVAL FROM ELSEWHERE only, keyed on ?fresh=1,
 // which both the lane list's open action and the form's save append. Returning
@@ -23,18 +23,18 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=332";
-import { isFlagOn } from "../feature-flags.js?v=18";
+import { renderTopbar } from "../components/topbar.js?v=334";
+import { isFlagOn } from "../feature-flags.js?v=19";
 import { renderBriefCard } from "../components/brief-card.js?v=25";
 import {
   openFullResearch,
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=45";
-import { openBriefInChat } from "../brief-flow.js?v=2";
+} from "../components/research-modals.js?v=46";
+import { openBriefInChat } from "../brief-flow.js?v=3";
 import { showToast } from "../components/toast.js?v=20";
-import { getLaneById } from "../research-store.js?v=23";
+import { getLaneById } from "../research-store.js?v=24";
 import {
   getBriefsForLane,
   groupBriefsByAge,
@@ -44,7 +44,7 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=29";
+} from "../briefs-store.js?v=30";
 import {
   COLUMN_TYPES,
   RESEARCH_SOURCES,
@@ -53,7 +53,7 @@ import {
   findResearchSource,
   findCadence,
 } from "../research-catalog.js?v=11";
-import { getContextById } from "../contexts-store.js?v=58";
+import { getContextById } from "../contexts-store.js?v=59";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
@@ -155,7 +155,7 @@ export function renderResearchFeed(params, target) {
   laneId = params.id;
   const lane = getLaneById(laneId);
   if (!lane) {
-    navigate("/research");
+    navigate("/content-ideas");
     return;
   }
 
@@ -451,9 +451,9 @@ function bind(target) {
 
   boundClick = (event) => {
     if (event.target.closest("[data-feed-settings]"))
-      return navigate(`/research/${encodeURIComponent(laneId)}/settings`);
+      return navigate(`/content-ideas/${encodeURIComponent(laneId)}/settings`);
     if (event.target.closest("[data-feed-trending]"))
-      return navigate(`/research/${encodeURIComponent(laneId)}/attention`);
+      return navigate(`/content-ideas/${encodeURIComponent(laneId)}/attention`);
 
     if (event.target.closest("[data-feed-filters]")) {
       view.panelOpen = !view.panelOpen;

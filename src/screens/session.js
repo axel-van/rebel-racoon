@@ -1,7 +1,7 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=332";
-import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=77";
+import { renderTopbar } from "../components/topbar.js?v=334";
+import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=78";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
@@ -11,11 +11,11 @@ import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
   PROFILE_SEARCH_THRESHOLD,
-} from "../social-profiles.js?v=48";
-import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=28";
+} from "../social-profiles.js?v=49";
+import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=29";
 import { CLIP_SUBTITLE_ITEMS, CLIP_SUBTITLE_LABEL } from "../clip-subtitles.js?v=1";
-import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=24";
-import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=58";
+import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=25";
+import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=59";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
   getThread,
@@ -36,45 +36,45 @@ import {
   markConnectPromptResolved,
   toggleTopPostsWidgetPick,
   answerTopPostsWidget,
-} from "../assistant.js?v=80";
+} from "../assistant.js?v=81";
 import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=74";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=63";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=75";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=64";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=48";
-import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=54";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=78";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=60";
-import * as topPostsFlow from "../top-posts-flow.js?v=99";
+} from "../composer-mentions.js?v=49";
+import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=55";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=79";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=61";
+import * as topPostsFlow from "../top-posts-flow.js?v=100";
 import {
   renderTopPostsBoard,
   renderTopPostEcho,
   renderTopPostsWidget,
   TOP_POSTS_LIMIT,
-} from "../components/top-post-card.js?v=95";
-import { getTopPost } from "../top-posts-store.js?v=57";
+} from "../components/top-post-card.js?v=97";
+import { getTopPost } from "../top-posts-store.js?v=59";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
-import * as sidebarWizard from "../sidebar-wizard.js?v=71";
+import * as sidebarWizard from "../sidebar-wizard.js?v=72";
 import * as inlineQuestion from "../inline-question.js?v=48";
-import * as clipStudio from "../clip-studio.js?v=45";
+import * as clipStudio from "../clip-studio.js?v=46";
 import * as batchStudio from "../batch-studio.js?v=4";
-import { askConnector } from "../connector-ask.js?v=26";
-import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=46";
-import { renderConnectorLogo } from "../connectors-view.js?v=28";
+import { askConnector } from "../connector-ask.js?v=27";
+import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=47";
+import { renderConnectorLogo } from "../connectors-view.js?v=29";
 import {
   getActiveConnector,
   clearActiveConnector,
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
-import { isFlagOn } from "../feature-flags.js?v=18";
-import { getBriefById, getStarterTopics } from "../briefs-store.js?v=29";
-import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=2";
-import { getLaneById } from "../research-store.js?v=23";
-import * as contextBuilder from "../context-builder.js?v=299";
+import { isFlagOn } from "../feature-flags.js?v=19";
+import { getBriefById, getStarterTopics } from "../briefs-store.js?v=30";
+import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=3";
+import { getLaneById } from "../research-store.js?v=24";
+import * as contextBuilder from "../context-builder.js?v=301";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -85,10 +85,10 @@ import {
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=25";
-import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=76";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=82";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=83";
-import { open as openConnectorsModal } from "../components/connectors-modal.js?v=29";
+import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=77";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=83";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=84";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=30";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
   classifyFile,
@@ -105,13 +105,13 @@ import {
   extractClipsForSource,
   setSourceIdeaCount,
   addReadySource,
-} from "../sources-stream.js?v=73";
-import { renderClipCard } from "../components/clip-card.js?v=36";
+} from "../sources-stream.js?v=74";
+import { renderClipCard } from "../components/clip-card.js?v=37";
 import { onFeedbackClick } from "../components/feedback-control.js?v=2";
 import { showToast } from "../components/toast.js?v=20";
 // The composer's Add menu reaches Content Ideas through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaPicker } from "../components/research-modals.js?v=45";
+import { openIdeaPicker } from "../components/research-modals.js?v=46";
 import { findResearchSource } from "../research-catalog.js?v=11";
 import {
   openDrafts as openDraftsPanel,
@@ -119,13 +119,13 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=466";
+} from "../components/right-panel.js?v=468";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
-import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=19";
+import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=20";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=38";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=46";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=60";
+import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=39";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=47";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=61";
 // Pure thread-turn renderers — shared with the component handoff gallery so
 // the previews there never drift from the app (handoff/components.html).
 import {
@@ -1915,7 +1915,7 @@ function removeSlashToken(input) {
 // the single, always-visible context affordance.
 // ── The Content Ideas card on the new-session page ──────────────────────────
 //
-// One topic at a time, from the same briefs the /research feed shows. It sits
+// One topic at a time, from the same briefs the /content-ideas feed shows. It sits
 // ABOVE the workflow grid rather than inside it: the grid is three fixed
 // workflows and this is a live suggestion with its own lifecycle — it flips, it
 // runs out, it turns into an empty state. Dropping it into the grid would make
@@ -2091,7 +2091,7 @@ function renderStarterTopicEmpty() {
       <i class="starter-card__art ap-icon-note" aria-hidden="true"></i>
       <span class="starter-card__title">That's everything for now</span>
       <span class="starter-card__subtitle">Come back later for more content ideas. Refreshes weekly.</span>
-      <a class="starter-card__cta ap-link standalone small" href="#/research"
+      <a class="starter-card__cta ap-link standalone small" href="#/content-ideas"
         >Explore more topics<i class="ap-icon-arrow-right" aria-hidden="true"></i
       ></a>
     </div>
@@ -4804,7 +4804,15 @@ function bindSession(root, session) {
         if (!stage) return;
         starterTopicIndex += 1;
         const swap = () => {
+          // Re-check that the slot we captured on the click is still in the
+          // document. It might not be: this runs 180ms later, and in between the
+          // countdown's own swap can have replaced it, the hero can have
+          // re-rendered, or a second click can have landed. Without the guard
+          // `slot.parentElement` is null and replaceChild throws — reachable just
+          // by clicking the shuffle button twice quickly. The countdown's swap
+          // already had this check; the flip's didn't.
           const host = slot.parentElement;
+          if (!host || !document.body.contains(slot)) return;
           const next = document.createElement("div");
           next.innerHTML = renderStarterTopicSlot();
           // Swap the slot in place inside the grid, so the workflow cells

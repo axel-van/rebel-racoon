@@ -1,4 +1,4 @@
-// Content Ideas — the attention page, route /research/:id/attention.
+// Content Ideas — the attention page, route /content-ideas/:id/attention.
 //
 // The file is still research-trending.js. The route was renamed when the page
 // grew to carry both signals; the module name lags, the same split as
@@ -22,13 +22,13 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=332";
-import { isFlagOn } from "../feature-flags.js?v=18";
+import { renderTopbar } from "../components/topbar.js?v=334";
+import { isFlagOn } from "../feature-flags.js?v=19";
 import { renderBriefCard } from "../components/brief-card.js?v=25";
-import { openFullResearch } from "../components/research-modals.js?v=45";
-import { openBriefInChat } from "../brief-flow.js?v=2";
-import { getLaneById } from "../research-store.js?v=23";
-import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=29";
+import { openFullResearch } from "../components/research-modals.js?v=46";
+import { openBriefInChat } from "../brief-flow.js?v=3";
+import { getLaneById } from "../research-store.js?v=24";
+import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=30";
 import { findResearchSource, findCadence } from "../research-catalog.js?v=11";
 
 let laneId = null;
@@ -47,7 +47,7 @@ export function renderResearchTrending(params, target) {
   // there is no notice to reach this page from, so a stale link has to bounce
   // back to the feed rather than render a surface the lane has switched off.
   if (!lane || !lane.showTrending) {
-    navigate(lane ? `/research/${encodeURIComponent(laneId)}` : "/research");
+    navigate(lane ? `/content-ideas/${encodeURIComponent(laneId)}` : "/content-ideas");
     return;
   }
 

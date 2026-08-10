@@ -26,12 +26,12 @@
 //     notify,                   — "notify me after a scan" switch
 //     showTrending }            — gates the banner AND the trending page entry
 
-import { researchLanes as seed } from "./mocks.js?v=77";
+import { researchLanes as seed } from "./mocks.js?v=78";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import { DEFAULT_ENABLED_IDS, DEFAULT_CADENCE, findCadence, findResearchSource } from "./research-catalog.js?v=11";
 
-// First-time user mode starts empty so /research renders its empty state and the
+// First-time user mode starts empty so /content-ideas renders its empty state and the
 // sidebar row carries no count. Returning user keeps the mock seed. Same guard
 // as contexts-store / topics-store / library.
 const lanes = isNewUser() ? [] : seed.map(normalizeLane);

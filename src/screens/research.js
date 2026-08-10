@@ -1,4 +1,4 @@
-// Content Research — the lane list, route /research.
+// Content Research — the lane list, route /content-ideas.
 //
 // A LANE is a named standing query: one Playbook × a set of sources × a cadence.
 // This screen is the account's whole set of them, plus the empty state before any
@@ -20,12 +20,12 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=332";
+import { renderTopbar } from "../components/topbar.js?v=334";
 import { showToast } from "../components/toast.js?v=20";
-import { isFlagOn } from "../feature-flags.js?v=18";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=58";
-import { getLanes, duplicateLane, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=23";
-import { countNewForLane, countTrendingForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=29";
+import { isFlagOn } from "../feature-flags.js?v=19";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=59";
+import { getLanes, duplicateLane, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=24";
+import { countNewForLane, countTrendingForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=30";
 
 // Local view state. The Playbook facet lives here rather than in the URL: unlike
 // /topics, whose `?pb=` scope has to survive the round trip to a per-Playbook
@@ -141,7 +141,7 @@ function renderEmpty() {
 // across screens, so changing one page's header can't silently restyle another.
 //
 // There is no in-page bordered top bar. /contexts has none either, and the one
-// this screen used to carry only existed because topbar.js had no /research
+// this screen used to carry only existed because topbar.js had no /content-ideas
 // entry and fell through to "Archie" — so the page was captioning itself. The
 // topbar names the section now.
 function renderBody(lanes) {
@@ -382,7 +382,7 @@ function bind(target) {
   boundClick = (event) => {
     const create = event.target.closest("[data-research-create]");
     if (create) {
-      navigate("/research/new");
+      navigate("/content-ideas/new");
       return;
     }
 
@@ -391,7 +391,7 @@ function bind(target) {
     const edit = event.target.closest("[data-lane-edit]");
     if (edit) {
       event.stopPropagation();
-      navigate(`/research/${encodeURIComponent(edit.dataset.laneEdit)}/settings`);
+      navigate(`/content-ideas/${encodeURIComponent(edit.dataset.laneEdit)}/settings`);
       return;
     }
 
@@ -427,7 +427,7 @@ function bind(target) {
       // a lane and saving a new one both count as arriving from elsewhere;
       // coming back from the trending page or settings does not, and those
       // carry no param.
-      navigate(`/research/${encodeURIComponent(open.dataset.laneOpen)}?fresh=1`);
+      navigate(`/content-ideas/${encodeURIComponent(open.dataset.laneOpen)}?fresh=1`);
       return;
     }
   };

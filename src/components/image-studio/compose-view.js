@@ -6,9 +6,9 @@
 // point the shell composes into the panel.
 
 import { escapeHtml } from "../../utils.js?v=21";
-import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=48";
-import { KEY } from "./context.js?v=53";
-import * as imageStudio from "../../image-studio.js?v=79";
+import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=49";
+import { KEY } from "./context.js?v=54";
+import * as imageStudio from "../../image-studio.js?v=80";
 
 // Empty-state hint for the prompt field — a full structured brief, so the
 // placeholder itself shows the kind of rich prompt the box is built for (and why

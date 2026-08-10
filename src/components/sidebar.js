@@ -4,9 +4,9 @@ import { open as openBugReportModal } from "./bug-report-modal.js?v=24";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=26";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { open as openSearchModal } from "./search-modal.js?v=29";
+import { open as openSearchModal } from "./search-modal.js?v=30";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=15";
+import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=16";
 import {
   getSessions,
   getSessionById,
@@ -14,18 +14,18 @@ import {
   deleteSession,
   togglePin as togglePinSession,
   subscribe as subscribeSessions,
-} from "../sessions-store.js?v=24";
-import { isFlagOn } from "../feature-flags.js?v=18";
+} from "../sessions-store.js?v=25";
+import { isFlagOn } from "../feature-flags.js?v=19";
 import { isNewUser } from "../user-mode.js?v=22";
-import { clearSession as clearLibrarySession } from "../library.js?v=74";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=58";
-import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=46";
-import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=14";
-import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=23";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=466";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=80";
-import { clearSession as clearPostsSession } from "../posts-store.js?v=54";
-import { clearSession as clearSourcesSession } from "../sources-stream.js?v=73";
+import { clearSession as clearLibrarySession } from "../library.js?v=75";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=59";
+import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=47";
+import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=15";
+import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=24";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=468";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=81";
+import { clearSession as clearPostsSession } from "../posts-store.js?v=55";
+import { clearSession as clearSourcesSession } from "../sources-stream.js?v=74";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the
@@ -599,12 +599,12 @@ const NAV = [
   // running" is the useful number; summing unread briefs across lanes would
   // compete with the Topics badge for the same kind of attention.
   {
-    path: "/research",
+    path: "/content-ideas",
     icon: "ap-icon-folder",
     label: "Content Ideas",
     flag: "contentResearch",
     // Prefix, so the row stays lit on a lane's feed, form and trending page.
-    match: (p) => p.startsWith("/research"),
+    match: (p) => p.startsWith("/content-ideas"),
     count: () => getLanes().length,
   },
 ];

@@ -14,26 +14,26 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=466";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=73";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=80";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=74";
-import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=54";
+} from "./right-panel.js?v=468";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=74";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=81";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=75";
+import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=55";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=259";
-import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=24";
+} from "./conversation-status-card.js?v=261";
+import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=25";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { subscribe as subscribeContexts } from "../contexts-store.js?v=58";
-import { getLaneById } from "../research-store.js?v=23";
-import { isFlagOn } from "../feature-flags.js?v=18";
+import { subscribe as subscribeContexts } from "../contexts-store.js?v=59";
+import { getLaneById } from "../research-store.js?v=24";
+import { isFlagOn } from "../feature-flags.js?v=19";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=99";
+} from "../top-posts-flow.js?v=100";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static
@@ -482,21 +482,21 @@ function backTargetFor(path) {
   // is why the label carries the lane's own name. Settings shares the target with
   // the form's Cancel (research-form.exitPath), deliberately: two exits from one
   // screen that disagree is how a user loses work.
-  const laneSub = /^\/research\/([^/]+)\/(settings|attention)$/.exec(path);
+  const laneSub = /^\/content-ideas\/([^/]+)\/(settings|attention)$/.exec(path);
   if (laneSub) {
     const lane = getLaneById(decodeURIComponent(laneSub[1]));
     return {
-      to: `/research/${laneSub[1]}`,
+      to: `/content-ideas/${laneSub[1]}`,
       // A deleted lane can still be deep-linked; fall back rather than render
       // "Back to undefined".
       label: lane ? `Back to ${lane.name}` : "Back to Content Ideas",
     };
   }
-  // Every other Content Ideas view — a lane's topic list, and /research/new — goes
+  // Every other Content Ideas view — a lane's topic list, and /content-ideas/new — goes
   // back to the list of lists. Deliberately WITHOUT ?fresh=1: that param runs the
   // generating loader, and a back button should not spend 1.6s pretending to fetch
   // a list you were just looking at.
-  if (/^\/research\/[^/]+/.test(path)) return { to: "/research", label: "Back to Content Ideas" };
+  if (/^\/content-ideas\/[^/]+/.test(path)) return { to: "/content-ideas", label: "Back to Content Ideas" };
   // The Topics settings page carries its Playbook scope BACK to the feed, so a
   // filtered feed survives the round trip. getPath() strips the query, so the scope
   // has to be read from the hash here rather than taken from `path`.
@@ -550,7 +550,7 @@ function currentTitle() {
   // lane. Registering these is also what let the lane list drop its in-page
   // bordered bar — that bar only existed because this map had no entry and the
   // topbar fell through to "Archie".
-  if (path.startsWith("/research")) return "Content Ideas";
+  if (path.startsWith("/content-ideas")) return "Content Ideas";
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);
   if (sessionMatch) {
     const id = sessionMatch[1];

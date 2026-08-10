@@ -120,7 +120,7 @@ export const FLAGS = Object.freeze([
     label: "Content Ideas (research lanes)",
     default: false,
     hides:
-      "When OFF (default), hides everything Content Ideas: the /research " +
+      "When OFF (default), hides everything Content Ideas: the /content-ideas " +
       "routes (lane list, form, feed, trending page), its sidebar nav row, and " +
       "the composer Add → 'Content Ideas' picker. A stale deep link bounces " +
       "to /, like /topics. When ON, the user pairs a Playbook with sources into " +
@@ -132,7 +132,7 @@ export const FLAGS = Object.freeze([
       "\n\nNAMING: the UI says Content Ideas and calls each card a TOPIC, and the " +
       "CSS classes now follow it (.topics-card / .topics-status / .topics-use). " +
       "The code underneath still says research/brief — briefs-store, the " +
-      "brief-card module, data-brief-* hooks and the /research routes — the same " +
+      "brief-card module, data-brief-* hooks and the /content-ideas routes — the same " +
       "split as Playbook/Context. Note the classes are TOPICS-plural: .topic-card " +
       "singular already belongs to the other feature and would collide exactly. " +
       "briefs-store cannot be renamed at all — topics-store is that feature. " +

@@ -4688,7 +4688,7 @@ export const demoManyProfiles = (() => {
 // banner and the trending-page entry are actually gated by the lane setting.
 export const researchLanes = [
   {
-    id: "lane-1",
+    id: "topic-list-1",
     name: "Lost dog recovery topics",
     playbookId: "ctx-pawtrack",
     sources: ["competitor-posts", "influencer-posts"],
@@ -4698,7 +4698,7 @@ export const researchLanes = [
     showTrending: true,
   },
   {
-    id: "lane-2",
+    id: "topic-list-2",
     name: "Competitor launch watch",
     playbookId: "ctx-pawtrack",
     sources: ["competitor-posts"],
@@ -4708,7 +4708,7 @@ export const researchLanes = [
     showTrending: true,
   },
   {
-    id: "lane-3",
+    id: "topic-list-3",
     name: "Q2 campaign angles",
     playbookId: "ctx-acme",
     sources: ["competitor-posts"],
@@ -4724,7 +4724,7 @@ export const researchLanes = [
   // 30-day window; the single source is competitor posts because that is what
   // the search collected.
   {
-    id: "lane-4",
+    id: "topic-list-4",
     name: "Carlsbad competitors · last 30 days",
     playbookId: "ctx-alliance-bjj",
     sources: ["competitor-posts"],
@@ -4744,7 +4744,7 @@ export const researchLanes = [
   // though the window is long; three sources because this export — unlike the
   // other two — collected blogs as well as social.
   {
-    id: "lane-6",
+    id: "topic-list-6",
     name: "Competitor product moves",
     playbookId: "ctx-agorapulse",
     sources: ["competitor-posts", "industry-trends", "brand-website"],
@@ -4754,7 +4754,7 @@ export const researchLanes = [
     showTrending: true,
   },
   {
-    id: "lane-5",
+    id: "topic-list-5",
     name: "Belgian multibrand competitors · last 30 days",
     playbookId: "ctx-noba",
     sources: ["competitor-posts"],
@@ -4787,7 +4787,7 @@ export const researchLanes = [
 export const researchBriefs = [
   {
     id: "br-1",
-    laneId: "lane-1",
+    laneId: "topic-list-1",
     sourceId: "competitor-posts",
     ageLabel: "2h ago",
     headline: "Rivals lead with hardware specs while owners talk about peace of mind",
@@ -4847,7 +4847,7 @@ export const researchBriefs = [
   },
   {
     id: "br-2",
-    laneId: "lane-1",
+    laneId: "topic-list-1",
     sourceId: "influencer-posts",
     ageLabel: "6w ago",
     headline: "Trainers recommend trackers unprompted, and none of them are being paid to",
@@ -4893,7 +4893,7 @@ export const researchBriefs = [
   },
   {
     id: "br-3",
-    laneId: "lane-1",
+    laneId: "topic-list-1",
     sourceId: "competitor-posts",
     ageLabel: "4d ago",
     headline: "Fi's subscription price rise is drawing the complaints its launch post buried",
@@ -4944,7 +4944,7 @@ export const researchBriefs = [
   },
   {
     id: "br-4",
-    laneId: "lane-1",
+    laneId: "topic-list-1",
     sourceId: "influencer-posts",
     ageLabel: "3w ago",
     headline: "Cat owners are the underserved half of this audience",
@@ -4983,7 +4983,7 @@ export const researchBriefs = [
   },
   {
     id: "br-5",
-    laneId: "lane-1",
+    laneId: "topic-list-1",
     sourceId: "competitor-posts",
     ageLabel: "6d ago",
     headline: "Garmin's outdoor-sport framing keeps resurfacing in the same seasonal window",
@@ -5025,7 +5025,7 @@ export const researchBriefs = [
   },
   {
     id: "br-6",
-    laneId: "lane-2",
+    laneId: "topic-list-2",
     sourceId: "competitor-posts",
     ageLabel: "9d ago",
     headline: "Jiobit is quietly repositioning from pets to children",
@@ -5061,7 +5061,7 @@ export const researchBriefs = [
   },
   {
     id: "br-7",
-    laneId: "lane-2",
+    laneId: "topic-list-2",
     sourceId: "competitor-posts",
     ageLabel: "30m ago",
     headline: "Battery-life claims are the most contested thing competitors publish",
@@ -5112,7 +5112,7 @@ export const researchBriefs = [
   },
   {
     id: "br-8",
-    laneId: "lane-2",
+    laneId: "topic-list-2",
     sourceId: "competitor-posts",
     ageLabel: "5w ago",
     headline: "Nobody in the category shows the app during a live search",
@@ -5151,7 +5151,7 @@ export const researchBriefs = [
   },
   {
     id: "br-9",
-    laneId: "lane-3",
+    laneId: "topic-list-3",
     sourceId: "competitor-posts",
     ageLabel: "4h ago",
     headline: "Q2 launch messaging in this category is converging on the same three words",
@@ -5215,7 +5215,7 @@ export const researchBriefs = [
   // medium → not. That is the closest thing it gives to a baseline comparison.
   {
     id: "br-10",
-    laneId: "lane-4",
+    laneId: "topic-list-4",
     sourceId: "competitor-posts",
     ageLabel: "11d ago",
     headline: "Beyond the mats: how BJJ builds resilient, confident kids",
@@ -5243,7 +5243,7 @@ export const researchBriefs = [
   },
   {
     id: "br-11",
-    laneId: "lane-4",
+    laneId: "topic-list-4",
     sourceId: "competitor-posts",
     ageLabel: "5h ago",
     headline: "What do BJJ belt promotions really mean for your child's growth?",
@@ -5273,7 +5273,7 @@ export const researchBriefs = [
   },
   {
     id: "br-12",
-    laneId: "lane-4",
+    laneId: "topic-list-4",
     sourceId: "competitor-posts",
     ageLabel: "6w ago",
     headline: "Returning to the mats: how to restart your BJJ journey safely",
@@ -5301,7 +5301,7 @@ export const researchBriefs = [
   },
   {
     id: "br-13",
-    laneId: "lane-4",
+    laneId: "topic-list-4",
     sourceId: "competitor-posts",
     ageLabel: "2d ago",
     headline: "The family that rolls together: BJJ as a shared lifestyle",
@@ -5344,7 +5344,7 @@ export const researchBriefs = [
   // measured. All three share an ageLabel: they came out of one scan.
   {
     id: "br-14",
-    laneId: "lane-5",
+    laneId: "topic-list-5",
     sourceId: "competitor-posts",
     ageLabel: "12d ago",
     headline: "From Summer to Autumn: Smart Transitional Layering for the Belgian Climate",
@@ -5418,7 +5418,7 @@ export const researchBriefs = [
   },
   {
     id: "br-15",
-    laneId: "lane-5",
+    laneId: "topic-list-5",
     sourceId: "competitor-posts",
     ageLabel: "2h ago",
     headline: "Less Impulse, More Value: Building a Sustainable Sale Capsule",
@@ -5499,7 +5499,7 @@ export const researchBriefs = [
   },
   {
     id: "br-16",
-    laneId: "lane-5",
+    laneId: "topic-list-5",
     sourceId: "competitor-posts",
     ageLabel: "4mo ago",
     headline: "Showing Your Colors: How to Wear Autumn's Plum & Warm Earth Tones Trend",
@@ -5589,7 +5589,7 @@ export const researchBriefs = [
   // is the one-line account of how — the Updated counterpart to `whyNow`.
   {
     id: "br-17",
-    laneId: "lane-1",
+    laneId: "topic-list-1",
     sourceId: "competitor-posts",
     ageLabel: "5d ago",
     headline: "Fi quietly dropped the subscription requirement for basic tracking",
@@ -5612,7 +5612,7 @@ export const researchBriefs = [
   },
   {
     id: "br-18",
-    laneId: "lane-2",
+    laneId: "topic-list-2",
     sourceId: "competitor-posts",
     ageLabel: "6d ago",
     headline: "Jiobit's repositioning is now explicit, not implied",
@@ -5635,7 +5635,7 @@ export const researchBriefs = [
   },
   {
     id: "br-19",
-    laneId: "lane-3",
+    laneId: "topic-list-3",
     sourceId: "competitor-posts",
     ageLabel: "6d ago",
     headline: "The Q2 launch window your competitors were holding has slipped",
@@ -5658,7 +5658,7 @@ export const researchBriefs = [
   },
   {
     id: "br-20",
-    laneId: "lane-4",
+    laneId: "topic-list-4",
     sourceId: "competitor-posts",
     ageLabel: "4d ago",
     headline: "The competing gym's kids programme now runs on the same nights as yours",
@@ -5681,7 +5681,7 @@ export const researchBriefs = [
   },
   {
     id: "br-21",
-    laneId: "lane-5",
+    laneId: "topic-list-5",
     sourceId: "competitor-posts",
     ageLabel: "5d ago",
     headline: "The multibrand discount wave has stopped, three weeks early",
@@ -5725,7 +5725,7 @@ export const researchBriefs = [
   // in the data.
   {
     id: "br-22",
-    laneId: "lane-4",
+    laneId: "topic-list-4",
     sourceId: "competitor-posts",
     ageLabel: "18d ago",
     headline: "Consistency is the only thing every promotion in this town has in common",
@@ -5754,7 +5754,7 @@ export const researchBriefs = [
   },
   {
     id: "br-23",
-    laneId: "lane-4",
+    laneId: "topic-list-4",
     sourceId: "competitor-posts",
     ageLabel: "3d ago",
     headline: "The best coaching in the room happens between rounds",
@@ -5786,7 +5786,7 @@ export const researchBriefs = [
   },
   {
     id: "br-24",
-    laneId: "lane-4",
+    laneId: "topic-list-4",
     sourceId: "competitor-posts",
     ageLabel: "7w ago",
     headline: "Is grappling alone enough? The striking question parents keep asking",
@@ -5816,7 +5816,7 @@ export const researchBriefs = [
   },
   {
     id: "br-25",
-    laneId: "lane-4",
+    laneId: "topic-list-4",
     sourceId: "competitor-posts",
     ageLabel: "1d ago",
     headline: "Competitors sell confidence to girls and character to boys",
@@ -5845,7 +5845,7 @@ export const researchBriefs = [
   },
   {
     id: "br-26",
-    laneId: "lane-4",
+    laneId: "topic-list-4",
     sourceId: "competitor-posts",
     ageLabel: "6d ago",
     headline: "Most of what the Carlsbad academies published in July was about themselves",
@@ -5891,7 +5891,7 @@ export const researchBriefs = [
   // are — one is the reason br-33 is Ignored.
   {
     id: "br-27",
-    laneId: "lane-6",
+    laneId: "topic-list-6",
     sourceId: "competitor-posts",
     ageLabel: "2h ago",
     headline: "Everyone is shipping an agent. Nobody says what it takes off your plate",
@@ -5925,7 +5925,7 @@ export const researchBriefs = [
   },
   {
     id: "br-28",
-    laneId: "lane-6",
+    laneId: "topic-list-6",
     sourceId: "competitor-posts",
     ageLabel: "4d ago",
     headline: "MCP is being explained to engineers. Nobody has explained it to a social media manager",
@@ -5955,7 +5955,7 @@ export const researchBriefs = [
   },
   {
     id: "br-29",
-    laneId: "lane-6",
+    laneId: "topic-list-6",
     sourceId: "competitor-posts",
     ageLabel: "6d ago",
     headline: "The argument isn't more metrics. It's which number ends an argument",
@@ -5984,7 +5984,7 @@ export const researchBriefs = [
   },
   {
     id: "br-30",
-    laneId: "lane-6",
+    laneId: "topic-list-6",
     sourceId: "competitor-posts",
     ageLabel: "19d ago",
     headline: "Buyers are asking an AI about you before they ask you",
@@ -6014,7 +6014,7 @@ export const researchBriefs = [
   },
   {
     id: "br-31",
-    laneId: "lane-6",
+    laneId: "topic-list-6",
     sourceId: "competitor-posts",
     ageLabel: "6w ago",
     headline: "Sprout has written the Bluesky guide twice. The question underneath it is unanswered",
@@ -6049,7 +6049,7 @@ export const researchBriefs = [
   // the left column means.
   {
     id: "br-32",
-    laneId: "lane-6",
+    laneId: "topic-list-6",
     sourceId: "competitor-posts",
     ageLabel: "3d ago",
     headline: "Buffer's creator says half their followers came from a ten-minute DM setup",
@@ -6075,7 +6075,7 @@ export const researchBriefs = [
   },
   {
     id: "br-33",
-    laneId: "lane-6",
+    laneId: "topic-list-6",
     sourceId: "competitor-posts",
     ageLabel: "5d ago",
     headline: '"Not every trend is your trend" — a way to tell which ones are',
@@ -6101,7 +6101,7 @@ export const researchBriefs = [
   },
   {
     id: "br-34",
-    laneId: "lane-6",
+    laneId: "topic-list-6",
     sourceId: "competitor-posts",
     ageLabel: "11d ago",
     headline: "Buffer publishes head-to-head comparisons. We publish feature pages",
@@ -6127,7 +6127,7 @@ export const researchBriefs = [
   },
   {
     id: "br-35",
-    laneId: "lane-6",
+    laneId: "topic-list-6",
     sourceId: "competitor-posts",
     ageLabel: "5w ago",
     headline: "The brands winning attention stopped posting about their product",

@@ -247,6 +247,22 @@ Deux ajustements imposés par la réutilisation :
 modal) tout en vivant dans `styles/screens/contexts.css`. Au troisième, la déplacer
 dans `styles/components/`.
 
+### Les URLs de Content Ideas
+
+Les routes utilisent le vocabulaire de l'UI, pas celui du code :
+`/content-ideas`, `/content-ideas/:id`, `/content-ideas/:id/settings`,
+`/content-ideas/:id/attention` — et les identifiants de topic list sont
+`topic-list-N`. Les **noms de fichiers et de classes restent en `research`/`brief`**
+(`screens/research-feed.js`, `.topics-card`, `data-brief-*`), comme le documente
+déjà CLAUDE.md : l'URL est ce que l'utilisateur voit, le code garde son historique.
+
+⚠️ **Piège de renommage.** Un `s|/research|/content-ideas|` sur les URLs touche
+aussi `"./screens/research.js"` — le `.js` suit un point, pas un tiret ni un
+caractère de mot, donc un garde-fou du type `(?![-\w])` le laisse passer. Résultat :
+un import 404, `#app` vide, et aucune erreur JS (un module manquant est une erreur
+réseau). Après tout renommage massif, vérifier que **chaque chemin importé existe**
+— c'est le contrôle qui attrape ça, pas un `node --check`.
+
 ### Une action nommée pareil fait la même chose partout
 
 « Use in chat » existe sur quatre surfaces — le footer d'une carte du feed, la
