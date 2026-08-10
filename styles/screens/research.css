@@ -986,7 +986,46 @@
    body's padding — arithmetic rather than 100%, because 100% of this row is as
    tall as the card list and would let the pane run off the bottom of the
    screen. */
+/* ── Opening the pane ─────────────────────────────────────────────────────
+   Left to right: the pane starts slightly left of its resting place and slides
+   right into it, so it reads as the article coming OUT of the card that was
+   clicked rather than flying in off the edge of the screen. The card is on the
+   left, so that is the direction the motion has to run.
+
+   Animated on entry only. There is no exit animation because the pane is removed
+   by a re-render — animating something out means keeping it in the DOM until the
+   animation ends, which is a state machine this screen does not need for 180ms.
+
+   The card's electric-blue highlight fades in over the same duration, so the two
+   halves of "this card, that article" arrive together. */
+@keyframes research-article-in {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .research-feed__article {
+  animation: research-article-in var(--ref-animation-normal) var(--app-ease-out) both;
+  /* Dropped by exactly one age-group heading, so the pane's first line of text
+     lands on the first card's source row rather than 32px above it. The list
+     column opens with a .topics-agegroup label ("LAST 7 DAYS") that the pane has
+     no counterpart for, and that label plus the group's own gap is the whole
+     difference.
+
+     DERIVED from the two tokens that produce it — the label's line-height and
+     .topics-agegroup's gap — not typed as 32px, so it follows if either changes.
+     Measured: 16 + 16 = 32, and the delta closes to 0.
+
+     Caveat: it assumes the list opens with an age group, which it does whenever
+     there are cards at all (groupBriefsByAge drops empty groups). Filter the list
+     down to nothing while the pane is open and the offset becomes 32px of blank —
+     with no card left to align to, which is a fair trade. */
+  margin-top: calc(var(--sys-text-style-caption-bold-line-height) + var(--ref-spacing-sm));
   position: sticky;
   top: 0;
   align-self: flex-start;
@@ -1006,13 +1045,24 @@
 
 /* Sticky header inside the pane's own scroll, so the topic being read stays
    named however far down the article you are. */
+/* Padding-top is --topics-card-pad-top, not a spacing token, and that is the
+   point: the pane's first line of text has to sit on the same baseline as the
+   first card's source row, and both boxes carry a 1px border, so matching the
+   inner top padding matches the text. A spacing token that happened to be close
+   would drift the moment either value changed. */
 .research-feed__article-head {
   display: flex;
   align-items: flex-start;
   gap: var(--ref-spacing-xs);
   flex: 0 0 auto;
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  padding: var(--topics-card-pad-top) var(--ref-spacing-md) var(--ref-spacing-sm);
   border-bottom: 1px solid var(--ref-color-grey-10);
+}
+
+/* The promoted "Full article" kicker. Sits above the headline, so the pane names
+   itself before it names the topic. */
+.research-feed__article-head .research-article__label {
+  margin-bottom: var(--ref-spacing-xxxs);
 }
 
 .research-feed__article-headtext {
@@ -1044,6 +1094,14 @@
   padding: var(--ref-spacing-md);
 }
 
+/* Motion is decoration here — the pane's position already says what happened —
+   so it goes away entirely when the user has asked for less of it. */
+@media (prefers-reduced-motion: reduce) {
+  .research-feed__article {
+    animation: none;
+  }
+}
+
 /* Below this the two panes are each too narrow to read: the list alone is 666px
    and the article wants a measure of its own, so at 1180 the article would be
    under 480. One column then, article last.
@@ -1060,6 +1118,8 @@
 
   .research-feed__article {
     position: static;
+    /* Stacked below the list, the alignment offset has nothing to align to. */
+    margin-top: 0;
     max-width: var(--topics-card-max);
     max-height: none;
     width: 100%;

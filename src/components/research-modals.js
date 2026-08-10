@@ -39,7 +39,7 @@ import {
   addTopicToPillar,
   PILLAR_LIMIT,
 } from "../contexts-store.js?v=62";
-import { renderBriefCard } from "./brief-card.js?v=28";
+import { renderBriefCard } from "./brief-card.js?v=30";
 import { renderSocialPostCard } from "./social-post-card.js?v=16";
 import { showToast } from "./toast.js?v=20";
 
@@ -826,11 +826,22 @@ function pickerCard(b, laneName = "") {
  * briefs-store — a core-shell module reaching into a flag-gated feature — which
  * is exactly the dependency this seam avoids.
  */
-export function renderResearchArticle(brief) {
+export function renderResearchArticle(brief, { withLabel = true } = {}) {
   if (!brief) return "";
   const posts = brief.posts || [];
+  // `withLabel: false` for the feed's article pane, which promotes "Full article"
+  // into its own header — the pane IS the article, so labelling it again inside
+  // its own body said the same thing twice. The dialog keeps the inline label,
+  // because there the article is one section among several in a shell whose title
+  // is the topic's headline.
   return html`<section class="research-article">
-      <span class="research-article__label"><i class="ap-icon-sparkles" aria-hidden="true"></i> Full article</span>
+      ${raw(
+        withLabel
+          ? html`<span class="research-article__label"
+              ><i class="ap-icon-sparkles" aria-hidden="true"></i> Full article</span
+            >`
+          : "",
+      )}
       <h3 class="research-article__title">${brief.research?.title || ""}</h3>
       ${raw((brief.research?.paragraphs || []).map((p) => html`<p>${p}</p>`).join(""))}
     </section>

@@ -30,16 +30,16 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=341";
+import { renderTopbar } from "../components/topbar.js?v=343";
 import { isFlagOn } from "../feature-flags.js?v=19";
-import { renderBriefCard } from "../components/brief-card.js?v=28";
+import { renderBriefCard } from "../components/brief-card.js?v=30";
 import {
   openIgnoreReason,
   openExport,
   openAddToStrategy,
   renderResearchArticle,
   researchArticleSub,
-} from "../components/research-modals.js?v=51";
+} from "../components/research-modals.js?v=53";
 import { openBriefInChat } from "../brief-flow.js?v=6";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=27";
@@ -91,6 +91,7 @@ function renderList(briefs, view) {
           source: findResearchSource(b.sourceId),
           variant: "feed",
           menuOpen: view.openMenu === b.id,
+          articleOpen: view.articleId === b.id,
         }),
       )
       .join("");
@@ -130,6 +131,11 @@ function renderArticlePane(brief) {
   return html`<aside class="research-feed__article" aria-label="Topic article">
     <header class="research-feed__article-head">
       <div class="research-feed__article-headtext">
+        <!-- "Full article" moved up here from the body's first section. The pane is
+             the article, so it names itself once, at the top, above the topic it
+             is the article for — and .research-article__label keeps the exact
+             treatment it had inline, so nothing new was invented to hold it. -->
+        <span class="research-article__label"><i class="ap-icon-sparkles" aria-hidden="true"></i> Full article</span>
         <h2 class="research-feed__article-title">${brief.headline}</h2>
         <p class="research-feed__article-sub">${researchArticleSub(brief)}</p>
       </div>
@@ -143,7 +149,7 @@ function renderArticlePane(brief) {
         <i class="ap-icon-close" aria-hidden="true"></i>
       </button>
     </header>
-    <div class="research-feed__article-body">${raw(renderResearchArticle(brief))}</div>
+    <div class="research-feed__article-body">${raw(renderResearchArticle(brief, { withLabel: false }))}</div>
   </aside>`;
 }
 

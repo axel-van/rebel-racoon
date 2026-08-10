@@ -96,7 +96,10 @@ function renderTrendingMark() {
   </span>`;
 }
 
-export function renderBriefCard(brief, { source = null, variant = "feed", menuOpen = false, laneName = "" } = {}) {
+export function renderBriefCard(
+  brief,
+  { source = null, variant = "feed", menuOpen = false, laneName = "", articleOpen = false } = {},
+) {
   if (!brief) return "";
   const trendingPage = variant === "trending";
   const picker = variant === "picker";
@@ -104,7 +107,7 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
   const ignored = brief.status === "ignored";
 
   return html`<article
-    class="topics-card${raw(picker ? " topics-card--picker" : "")}"
+    class="topics-card${raw(picker ? " topics-card--picker" : "")}${raw(articleOpen ? " is-reading" : "")}"
     data-brief-id="${escapeAttr(brief.id)}"
   >
     <!-- The card body is ONE BUTTON opening the full read — and since the footer's
@@ -125,10 +128,14 @@ export function renderBriefCard(brief, { source = null, variant = "feed", menuOp
          topic-card made the same trade for the same reason. The classes are
          unchanged, so the styling carries over; the spans are given display:block
          in brief-card.css where they relied on being block elements. -->
+    <!-- aria-expanded, because this button DISCLOSES the article pane beside the
+         list — and because the selected state must not be carried by colour
+         alone. The is-reading class on the article is only the paint. -->
     <button
       type="button"
       class="topics-card__body"
       ${raw(picker ? `data-idea-pick="${escapeAttr(brief.id)}"` : `data-brief-research="${escapeAttr(brief.id)}"`)}
+      ${raw(picker ? "" : `aria-expanded="${articleOpen ? "true" : "false"}"`)}
     >
       <span class="topics-card__source-row">
         ${raw(
@@ -261,14 +268,22 @@ function renderUseSplit(brief, menuOpen) {
            a bookmark, a target and an eye-off don't tell you anything the labels
            don't already say. -->
       <!-- Whichever of the two actions is NOT the main segment leads the menu, so
-           the pair is always both present and never duplicated. -->
+           the pair is always both present and never duplicated.
+           
+           Each row uses the OTHER card's main-segment label VERBATIM — "Add to
+           strategy" and "Use in chat" — so a reader learns two verbs for the whole
+           feature instead of four. It was "Add to Playbook — Content strategy"
+           (which named a destination the button already implies) and "Use in chat
+           anyway", where "anyway" was doing the work of arguing with Archie's
+           classification. Neither is needed: the row's presence already says the
+           other action is available. -->
       ${raw(
         ready
           ? html`<button type="button" class="topics-use__item" data-brief-strategy="${escapeAttr(brief.id)}">
-              <span>Add to Playbook — Content strategy</span>
+              <span>Add to strategy</span>
             </button>`
           : html`<button type="button" class="topics-use__item" data-brief-use="${escapeAttr(brief.id)}">
-              <span>Use in chat anyway</span>
+              <span>Use in chat</span>
             </button>`,
       )}
       <button type="button" class="topics-use__item" data-brief-save="${escapeAttr(brief.id)}">

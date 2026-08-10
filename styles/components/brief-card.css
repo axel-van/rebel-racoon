@@ -43,6 +43,34 @@
    ever comes back it must be a border, never an absolutely-positioned span: see
    the history note in brief-card.js. */
 
+/* ── The card whose article is open ────────────────────────────────────────
+   Electric blue, which is this app's selected-state colour everywhere else — the
+   filter chips' pressed state and the universal card hover wash both use this
+   ramp, so a reader already knows what it means.
+
+   A 2px inset ring rather than a thicker border: a border change would shift the
+   card's content by a pixel and nudge every card below it. Paired with the same
+   pale fill the picker uses on hover, so the selection reads at a glance from the
+   fill and precisely from the ring.
+
+   Driven by a class rather than :has(button[aria-expanded="true"]) — the state is
+   also on the button for assistive tech, but the paint has one owner. */
+.topics-card.is-reading {
+  background: var(--ref-color-electric-blue-05);
+  border-color: var(--ref-color-electric-blue-20);
+  box-shadow: inset 0 0 0 2px var(--ref-color-electric-blue-100);
+  transition:
+    background-color var(--ref-animation-normal) var(--app-ease-out),
+    border-color var(--ref-animation-normal) var(--app-ease-out),
+    box-shadow var(--ref-animation-normal) var(--app-ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topics-card.is-reading {
+    transition: none;
+  }
+}
+
 /* Picker variant (the Pick-a-topic modal). Same card, two differences: it has no
    footer, so the body button has to carry the bottom padding the footer used to
    provide; and the whole card is a control, so it takes the app's universal card
@@ -72,7 +100,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: 20px var(--topics-card-pad) 0;
+  padding: var(--topics-card-pad-top) var(--topics-card-pad) 0;
   border: 0;
   background: transparent;
   font: inherit;

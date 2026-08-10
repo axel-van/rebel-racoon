@@ -98,6 +98,10 @@
      the two 1px borders, so the card ends exactly where its content does. */
   --topics-measure: 620px;
   --topics-card-pad: 22px;
+  /* The card body's TOP padding, separate from the horizontal gutter. Promoted
+     here because research.css needs the same number to line the article pane's
+     header up with the first card's source row — two boxes, one baseline. */
+  --topics-card-pad-top: 20px;
   --topics-card-max: calc(var(--topics-measure) + 2 * var(--topics-card-pad) + 2px);
 
   --app-radius-card: 12px; /* handoff source/idea/post/context cards */
