@@ -228,6 +228,11 @@ function freshView() {
     // URL state: the article is a way of reading the list, not a place, and a
     // link to "the feed with this one open" is a link to a scroll position.
     articleId: null,
+    // Has the once-per-mount auto-open already run? A separate flag, because
+    // `articleId === null` is ALSO what closing the pane looks like — keying the
+    // auto-open off the id alone would reopen the pane the instant the user shut
+    // it, which is the closest thing to a locked door this screen could have.
+    articleAuto: false,
   };
 }
 
@@ -332,6 +337,24 @@ function renderPage() {
   //
   // Flip `SHOW_ATTENTION_NOTICE` to true to bring it back — renderAttentionNotice
   // and attentionCountsForLane are both still here and still correct.
+  // ── The first topic opens by itself, once per visit ──────────────────────
+  // The pane is the point of the layout, and an empty right half on arrival
+  // doesn't say so — the reader has to click a card to discover that reading one
+  // in place is even possible. Opening the newest topic answers that before it is
+  // asked, and it is the topic they would most likely have clicked anyway.
+  //
+  // Taken from the GROUPED order rather than from `briefs[0]`, so it is genuinely
+  // the first card rendered: the list draws age groups in order, and the auto-open
+  // must agree with what the eye lands on.
+  //
+  // Runs after the generating guard above, so a lane arriving with ?fresh=1 opens
+  // on its first real paint rather than being skipped while the loader is up.
+  const groups = groupBriefsByAge(briefs);
+  if (!view.articleAuto) {
+    view.articleAuto = true;
+    view.articleId = groups[0]?.briefs[0]?.id || null;
+  }
+
   // Resolved here rather than inside the split so a stale id — the topic was
   // ignored out of the filter, or the lane was re-scanned — simply closes the
   // pane instead of rendering an empty one.
