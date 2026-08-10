@@ -6,15 +6,16 @@
 // straight away — re-running a 1.6s spinner on a back button is punishment, not
 // feedback.
 //
-// Filtering is split across TWO controls, deliberately, and each owns one axis:
-//   • Topic TYPE — always-visible .ap-filter-chip row under the header. It changes
-//     which action a card offers, so it is the one axis that must never be hidden.
-//   • Status + Sources — the Filters panel, two groups. Its badge counts NARROWED
-//     GROUPS, not ticked options, and it does NOT count the type chips: a control
-//     you can already see does not need a badge to announce it
-//     (see briefs-store.narrowedGroupCount).
-// Defaults: all four statuses, all sources, and DEFAULT_TYPE_IDS — the two route
-// types, with competitive intelligence off.
+// Filtering is ONE control: the Filters panel, three groups — Topic type, Topic
+// status, Sources — in that order. Its badge counts NARROWED GROUPS, not ticked
+// options (see briefs-store.narrowedGroupCount).
+//
+// Topic type was briefly an always-visible chip row under the header, on the
+// argument that the axis which changes a card's action should never be hidden.
+// It went back in the panel because the row cost about 48px — a whole card line
+// above the fold — to keep two checkboxes on screen, and the card's own tag
+// already says which type it is. Defaults: everything ticked except nothing;
+// both types, all four statuses, all sources.
 //
 // The two ATTENTION SIGNALS — trending and updated — are NOT overrides in this
 // feed: a brief carrying either appears under its own review status and
@@ -30,7 +31,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=343";
+import { renderTopbar } from "../components/topbar.js?v=344";
 import { isFlagOn } from "../feature-flags.js?v=19";
 import { renderBriefCard } from "../components/brief-card.js?v=30";
 import {
@@ -39,8 +40,8 @@ import {
   openAddToStrategy,
   renderResearchArticle,
   researchArticleSub,
-} from "../components/research-modals.js?v=53";
-import { openBriefInChat } from "../brief-flow.js?v=6";
+} from "../components/research-modals.js?v=54";
+import { openBriefInChat } from "../brief-flow.js?v=7";
 import { showToast } from "../components/toast.js?v=20";
 import { getLaneById } from "../research-store.js?v=27";
 import {
@@ -53,7 +54,7 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=33";
+} from "../briefs-store.js?v=34";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
@@ -127,8 +128,8 @@ function renderList(briefs, view) {
 // It carries its own close control. The card that opened it also closes it, but
 // that card can be scrolled off-screen, so the pane needs an exit that is always
 // where the reader is looking.
-function renderArticlePane(brief) {
-  return html`<aside class="research-feed__article" aria-label="Topic article">
+function renderArticlePane(brief, entering = false) {
+  return html`<aside class="research-feed__article${raw(entering ? " is-entering" : "")}" aria-label="Topic article">
     <header class="research-feed__article-head">
       <div class="research-feed__article-headtext">
         <!-- "Full article" moved up here from the body's first section. The pane is
@@ -153,57 +154,6 @@ function renderArticlePane(brief) {
   </aside>`;
 }
 
-// ── The type filter, as always-visible chips ────────────────────────────────
-// Promoted out of the Filters panel. filter-chips-list.md names this exact case
-// — "a small filter set, visible at a glance, worth keeping on screen (source
-// kinds, content types, statuses)" — and with the columns gone the type is no
-// longer readable from the layout, so hiding it two clicks deep inside a panel
-// would have made the one axis that changes the card's action the least visible
-// thing on the page.
-//
-// It lives in EXACTLY ONE place now: the panel's third group is gone. Two
-// controls for one filter is the "one pattern per problem per surface" rule, and
-// it would also have let the panel and the chips disagree.
-//
-// Multi-select via aria-pressed, which is what .ap-filter-chip already is
-// everywhere else in this app, and DEFAULT_TYPE_IDS is untouched — so
-// competitive intelligence stays off on first paint exactly as before. An "All"
-// chip was mocked and dropped: meaning "all three types" it would have switched
-// intel on by default, a product change this refactor does not license.
-//
-// Counts are computed against the OTHER filters (status + source) and not against
-// the type filter itself, so a chip says how many topics it would add rather than
-// how many are showing. That is why toggling a status moves every count.
-function renderTypeChips() {
-  return html`<div class="research-feed__types" role="group" aria-label="Filter by topic type">
-    ${raw(
-      RESEARCH_TYPES.map((t) => {
-        const on = filters.types.includes(t.id);
-        const n = getBriefsForLane(laneId, { ...filters, types: [t.id] }).length;
-        // Disabled, not hidden, when the lane holds none of this type —
-        // filter-chips-list.md is explicit about that, and a chip that vanishes
-        // per lane makes the control's shape depend on the data.
-        //
-        // Only ever disabled while it is OFF. Disabling a chip the user has
-        // switched on would trap them behind a filter they cannot release —
-        // which is reachable, since rerouting the lane's last Needs-assets topic
-        // drops that count to zero while the chip is still pressed.
-        const dead = n === 0 && !on;
-        return html`<button
-          type="button"
-          class="ap-filter-chip"
-          data-feed-type="${escapeAttr(t.id)}"
-          aria-pressed="${on ? "true" : "false"}"
-          ${raw(dead ? 'aria-disabled="true" disabled' : "")}
-        >
-          <span>${t.label}</span>
-          <span class="research-feed__types-count">${n}</span>
-        </button>`;
-      }).join(""),
-    )}
-  </div>`;
-}
-
 const GENERATE_MS = 1600;
 
 // The attention notice above the topic list. Off: with every review status ticked
@@ -222,12 +172,23 @@ function freshView() {
   return {
     generating: false,
     panelOpen: false,
-    groups: { status: true, sources: true },
+    groups: { types: true, status: true, sources: true },
     openMenu: null,
     // Which topic's article is showing beside the list, or null. View state, not
     // URL state: the article is a way of reading the list, not a place, and a
     // link to "the feed with this one open" is a link to a scroll position.
     articleId: null,
+    // Should the pane play its entrance on the NEXT paint? True only when the
+    // user opens the pane from closed. Deliberately false for the two cases that
+    // are not an opening:
+    //   • the once-per-mount auto-open — the pane is part of the screen's initial
+    //     state, and animating it makes arriving at the page look like something
+    //     happened, when nothing did;
+    //   • swapping topics while the pane is already open — the container is not
+    //     appearing, its contents are changing, and wiping the whole pane in to
+    //     announce a new headline overstates it.
+    // Consumed and cleared by renderPage, so it survives exactly one paint.
+    articleEntering: false,
     // Has the once-per-mount auto-open already run? A separate flag, because
     // `articleId === null` is ALSO what closing the pane looks like — keying the
     // auto-open off the id alone would reopen the pane the instant the user shut
@@ -361,13 +322,17 @@ function renderPage() {
   const article = view.articleId ? getBriefById(view.articleId) : null;
   if (view.articleId && !article) view.articleId = null;
 
+  // Read and clear: the entrance class lands in exactly one paint's markup, so an
+  // unrelated repaint (a dropdown, a filter) neither replays it nor keeps it.
+  const entering = view.articleEntering;
+  view.articleEntering = false;
+
   const attention = SHOW_ATTENTION_NOTICE ? attentionCountsForLane(laneId) : null;
   const showNotice = SHOW_ATTENTION_NOTICE && attention.total > 0 && lane.showTrending;
 
   return html`<div class="research-feed__body">
     <div class="research-feed__inner">
-      ${raw(renderFeedHeader(lane))} ${raw(renderTypeChips())}
-      ${raw(showNotice ? renderAttentionNotice(attention) : "")}
+      ${raw(renderFeedHeader(lane))} ${raw(showNotice ? renderAttentionNotice(attention) : "")}
       <!-- The split starts HERE, below the header and the chips, so neither of
            them changes width when an article opens. -->
       <div class="research-feed__split${raw(article ? " is-split" : "")}">
@@ -378,7 +343,7 @@ function renderPage() {
                 No topics match these filters. Try widening them, or reset to the defaults.
               </p>`,
         )}
-        ${raw(article ? renderArticlePane(article) : "")}
+        ${raw(article ? renderArticlePane(article, entering) : "")}
       </div>
     </div>
   </div>`;
@@ -479,9 +444,14 @@ function renderFeedHeader(lane) {
 function renderFilterPanel() {
   return html`<div class="research-filters__panel" data-feed-panel>
     ${raw(
-      // Two groups. "Topic type" used to be the third and is now the chip row in
-      // the toolbar — see renderTypeChips().
-      renderGroup("status", "Topic status", REVIEW_STATUSES, filters.statuses, "statuses") +
+      // Topic type FIRST. It spent a while as a chip row under the header and is
+      // back in the panel, because that row cost ~48px of vertical space — a
+      // whole card line above the fold — to keep two checkboxes permanently on
+      // screen. First in the group order rather than last: it is the axis that
+      // changes which action a card offers, so of the three it is the one worth
+      // reaching first.
+      renderGroup("types", "Topic type", RESEARCH_TYPES, filters.types, "types") +
+        renderGroup("status", "Topic status", REVIEW_STATUSES, filters.statuses, "statuses") +
         renderGroup("sources", "Sources", RESEARCH_SOURCES, filters.sources, "sources"),
     )}
     <div class="research-filters__reset-row">
@@ -594,16 +564,6 @@ function bind(target) {
       view.groups[k] = !view.groups[k];
       return paint(target);
     }
-    const chip = event.target.closest("[data-feed-type]");
-    if (chip) {
-      const id = chip.dataset.feedType;
-      const set = new Set(filters.types);
-      if (set.has(id)) set.delete(id);
-      else set.add(id);
-      filters = { ...filters, types: [...set] };
-      return paint(target);
-    }
-
     if (event.target.closest("[data-feed-reset]")) {
       filters = defaultFilters();
       return paint(target);
@@ -676,7 +636,15 @@ function bind(target) {
     const research = event.target.closest("[data-brief-research]");
     if (research) {
       const id = research.dataset.briefResearch;
-      view.articleId = view.articleId === id ? null : id;
+      // Animate only on closed → open. Same card = close; different card while
+      // open = swap without the entrance.
+      const wasOpen = !!view.articleId;
+      if (view.articleId === id) {
+        view.articleId = null;
+      } else {
+        view.articleEntering = !wasOpen;
+        view.articleId = id;
+      }
       return paint(target);
     }
 

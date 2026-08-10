@@ -44,7 +44,7 @@
 import { researchBriefs as seed } from "./mocks.js?v=80";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
-import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES } from "./research-catalog.js?v=14";
+import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES, RESEARCH_TYPES } from "./research-catalog.js?v=14";
 
 const briefs = isNewUser() ? [] : seed.map(cloneBrief);
 
@@ -173,11 +173,13 @@ export function narrowedGroupCount(filters = defaultFilters()) {
   let n = 0;
   if ((filters.statuses || []).length !== 4) n++;
   if ((filters.sources || []).length !== ALL_SOURCE_IDS.length) n++;
-  // Types are NOT counted. They moved out of this panel and onto always-visible
-  // filter chips in the toolbar, and the badge exists to say "something is
-  // narrowed that you cannot see". A chip you can see does not qualify — and
-  // because the type default is two of three, counting it would have pinned the
-  // badge to 1 forever.
+  // Types ARE counted again: the group is back inside the panel, so narrowing it
+  // is once more something the badge has to announce. This was briefly excluded,
+  // correctly, while types lived as always-visible chips — a control you can see
+  // needs no badge. The other half of that exclusion is now moot too: back then
+  // the default was two types of three, so counting it would have pinned the
+  // badge to 1 forever. There are two types now and both are default.
+  if ((filters.types || []).length !== RESEARCH_TYPES.length) n++;
   return n;
 }
 

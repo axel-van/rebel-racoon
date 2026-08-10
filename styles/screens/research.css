@@ -1041,10 +1041,6 @@
   /* One source of truth for the pane's width — the container query below
      redefines it for the stacked layout, and nothing else needs to know it. */
   --article-w: 620px;
-  /* No fill-mode: the wipe is a transient, and the element's own clip-path (none)
-     applies the instant it finishes. `both` would leave the final keyframe latched
-     on for good. */
-  animation: research-article-in var(--ref-animation-normal) var(--app-ease-standard);
   /* Not for the wipe — clip-path handles that. This keeps the scrolling body from
      squaring off the pane's rounded bottom corners. */
   overflow: hidden;
@@ -1131,10 +1127,23 @@
   padding: var(--ref-spacing-md);
 }
 
+/* The entrance is OPT-IN, one paint at a time — the screen adds .is-entering only
+   when the user opens the pane from closed. It is deliberately absent on the
+   first-load auto-open (the pane is part of the screen's initial state, and
+   animating it makes arriving look like something happened) and on a swap between
+   topics while the pane is already open (the container is not appearing, only its
+   contents are changing).
+
+   No fill-mode: the wipe is a transient, and the element's own clip-path (none)
+   applies the instant it finishes. `both` would latch the final keyframe on. */
+.research-feed__article.is-entering {
+  animation: research-article-in var(--ref-animation-normal) var(--app-ease-standard);
+}
+
 /* Motion is decoration here — the pane's position already says what happened —
    so it goes away entirely when the user has asked for less of it. */
 @media (prefers-reduced-motion: reduce) {
-  .research-feed__article {
+  .research-feed__article.is-entering {
     animation: none;
   }
 }
@@ -1174,31 +1183,6 @@
   gap: var(--ref-spacing-sm);
   min-width: 0;
   max-width: var(--topics-card-max);
-}
-
-/* ── The type filter chips ───────────────────────────────────────────────
-   A sibling of the header, above the list rather than inside the header's
-   action cluster: the cluster holds controls that act on the whole lane
-   (Filters, Export, settings), and these narrow what is below them. Sat next to
-   Export they would have read as a fourth lane-level button.
-
-   .ap-filter-chip is the app's chip primitive (ds-patches.css) and already
-   drives its selected state from aria-pressed, so there is no state class here
-   — only the row's own layout and the count. */
-.research-feed__types {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  margin-bottom: var(--ref-spacing-md);
-}
-
-/* The count inside a chip. Deliberately not the DS Counter: a counter is its own
-   pill, and a pill inside a pill reads as two chips. Dimmed weight on the same
-   line is enough, and it inherits the chip's pressed colour for free. */
-.research-feed__types-count {
-  opacity: 0.6;
-  font-variant-numeric: tabular-nums;
 }
 
 /* The attention page keeps a single capped column — it has no type split, its
