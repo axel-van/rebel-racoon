@@ -960,12 +960,18 @@ function renderRefModal(data) {
 //   • the user's own notes, which Archie never writes into
 //   • reference assets, because a pillar is usually blocked on exactly those
 //
-// Read vs edit follows the SECTION, exactly as the reference-image dialog does:
-// in read mode the fields are prose, in Content Strategy's edit mode they are
-// inputs committed by that panel's own Save. Making them editable in read mode was
-// considered and dropped — the Playbook has one commit path, through the panel,
-// and a dialog that wrote straight to the store would be a second one that Cancel
-// could not undo. So: click Edit on Content Strategy, then open the pillar.
+// ── Editing from inside the dialog ─────────────────────────────────────────
+// The dialog has its own pencil, so a pillar can be edited without first finding
+// the section's Edit control behind it. It does NOT introduce a second commit
+// path, which was the reason it didn't at first: the pencil runs exactly what
+// [data-recap-edit-card] runs — snapshot the data, set editScope to "strategy" —
+// and the dialog's own Save/Cancel reuse [data-recap-save] / [data-recap-cancel].
+// One writer, two places to reach it.
+//
+// The dialog stays OPEN across Save and Cancel, unlike the reference-image one
+// which closes: you edit a pillar to read the result, and being thrown back to a
+// grid of cards to check is a worse ending. Those two handlers therefore leave
+// pillarModalIndex alone where they null the other sub-modal indices.
 function renderPillarSources(sources) {
   if (!sources.length) {
     return `<p class="recap__refmodal-empty">Nothing has fed this pillar yet — it was written by hand.</p>`;
@@ -1023,9 +1029,23 @@ function renderPillarModal(p, i, edit) {
   return `
   <div class="app-modal-backdrop recap__refmodal-backdrop" data-recap-pilmodal-backdrop>
     <aside class="ap-dialog recap__pilmodal" role="dialog" aria-modal="true" aria-label="Content pillar">
-      <div class="ap-dialog-header">
+      <div class="ap-dialog-header recap__pilmodal-head">
         <span class="recap__pilmodal-icon" aria-hidden="true"><i class="${esc(p.icon || "ap-icon-target")}"></i></span>
-        <span class="ap-dialog-title">${esc(p.title || "Untitled pillar")}</span>
+        ${
+          edit
+            ? `<input class="recap__pilmodal-name" data-recap-pillar-title data-recap-pillar-index="${i}" value="${esc(
+                p.title || "",
+              )}" aria-label="Pillar name" />`
+            : `<span class="ap-dialog-title recap__pilmodal-name-read">${esc(p.title || "Untitled pillar")}</span>`
+        }
+        ${
+          // Same control, same icon and same hook as the section head's pencil —
+          // it IS that pencil, reached from here. Hidden once editing, because
+          // the footer's Save/Cancel are the controls that matter then.
+          edit
+            ? ""
+            : `<button type="button" class="ap-icon-button transparent recap__pilmodal-edit" data-recap-edit-card="strategy" title="Edit" aria-label="Edit this pillar"><i class="ap-icon-pen"></i></button>`
+        }
       </div>
       <button type="button" class="ap-dialog-close" data-recap-pillar-close aria-label="Close"><i class="ap-icon-close"></i></button>
       <div class="ap-dialog-content recap__pilmodal-content">
@@ -1040,10 +1060,6 @@ function renderPillarModal(p, i, edit) {
                 ? `<p class="recap__pilmodal-prose">${esc(p.description)}</p>`
                 : `<p class="recap__refmodal-empty">Nothing written yet.</p>`
           }
-        </div>
-        <div class="recap__refmodal-sec">
-          <span class="recap__refedit-flabel">Topics that fed this pillar</span>
-          ${renderPillarSources(sources)}
         </div>
         <div class="recap__refmodal-sec">
           <span class="recap__refedit-flabel">Your notes</span>
@@ -1061,11 +1077,23 @@ function renderPillarModal(p, i, edit) {
           <span class="recap__refedit-flabel">Reference assets</span>
           ${renderPillarAssets(assets, i, edit)}
         </div>
+        <!-- Last, deliberately. This is reference history — what the pillar was
+             built from — not something you act on, so it sits below the fields you
+             do act on rather than between them. -->
+        <div class="recap__refmodal-sec">
+          <span class="recap__refedit-flabel">Topics that fed this pillar</span>
+          ${renderPillarSources(sources)}
+        </div>
       </div>
       <div class="ap-dialog-footer">
         <div class="ap-dialog-footer-left">${removeBtn}</div>
         <div class="ap-dialog-footer-right">
-          <button type="button" class="ap-button primary orange" data-recap-pillar-close><span>Done</span></button>
+          ${
+            edit
+              ? `<button type="button" class="ap-button ghost grey" data-recap-cancel><span>Cancel</span></button>
+                 <button type="button" class="ap-button primary orange" data-recap-save><span>Save</span></button>`
+              : `<button type="button" class="ap-button primary orange" data-recap-pillar-close><span>Done</span></button>`
+          }
         </div>
       </div>
     </aside>
@@ -2315,6 +2343,8 @@ function onClick(event) {
     editScope = null;
     refModalIndex = null;
     cmpModalIndex = null;
+    // pillarModalIndex is deliberately NOT cleared — see the note on
+    // renderPillarModal. You cancel a pillar edit to go back to reading it.
     audienceCustom = false;
     repaint();
     return;
@@ -2353,6 +2383,8 @@ function onClick(event) {
     editScope = null;
     refModalIndex = null;
     cmpModalIndex = null;
+    // Same as Cancel: stay in the pillar dialog so the edit is visible where it
+    // was made.
     audienceCustom = false;
     repaint();
     return;
@@ -2804,6 +2836,9 @@ function onInput(event) {
   const t = event.target;
   if (t.matches("[data-recap-summary]")) {
     data.businessSummary = t.value;
+  } else if (t.matches("[data-recap-pillar-title]")) {
+    const p = strategyOf(data).pillars[Number(t.dataset.recapPillarIndex)];
+    if (p) p.title = t.value;
   } else if (t.matches("[data-recap-pillar-desc]")) {
     const p = strategyOf(data).pillars[Number(t.dataset.recapPillarIndex)];
     if (p) p.description = t.value;

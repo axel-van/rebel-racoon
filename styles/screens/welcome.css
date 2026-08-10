@@ -2089,7 +2089,21 @@
   color: var(--app-convo-navy);
 }
 
+/* Two lines, then an ellipsis. A pillar's description grows every time a topic is
+   filed into it — that is the whole mechanism — so left unclamped one pillar's
+   card ends up several times the height of its neighbours and the grid stops
+   being scannable. The full text is one click away in the pillar's dialog.
+
+   Clamped on THIS span, which has no padding of its own. -webkit-line-clamp
+   clips at the PADDING box, so clamping the padded .recap__pillar row instead
+   would render a third line into its 12px bottom padding — truncated and still
+   perfectly readable, the worst of both. Same trap as topics-card__changed. */
 .recap__pillar-desc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
   font-size: 13px;
   font-weight: 500;
   line-height: 1.5;
@@ -2133,11 +2147,11 @@
    The pillar card became a button-over-card, the same construction the reference
    image cards use: an absolutely-positioned overlay button as a SIBLING of the
    content, never a wrapper. A button wrapping the card would nest the delete
-   button inside it, which is invalid HTML and resolves unpredictably. */
-.recap__pillar {
-  position: relative;
-}
+   button inside it, which is invalid HTML and resolves unpredictably.
 
+   `.recap__pillar` already sets position: relative further up this file — the
+   remove button needed it long before the overlay did — so nothing re-declares
+   it here. */
 .recap__pillar-open {
   position: absolute;
   inset: 0;
@@ -2188,10 +2202,70 @@
   color: var(--app-archie-orange-deep);
 }
 
+/* The dialog is capped at the viewport, so the CONTENT is what scrolls — the
+   header (name + pencil) and the footer (Save / Cancel / Done) have to stay
+   reachable, and a pillar with a long description, several topics and a stack of
+   assets exceeds any sensible height. `min-height: 0` is the half that is easy to
+   forget: a flex child will not shrink below its content without it, so the
+   overflow would never engage and the dialog would grow past the screen instead. */
 .recap__pilmodal-content {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-md);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Which requires the dialog itself to be a flex column — otherwise the content
+   has no bounded height to overflow within. */
+.recap__pilmodal {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Name + pencil on one row.
+   `flex-direction: row` is the load-bearing declaration: .ap-dialog-header is
+   `flex-direction: column` in the DS — correct for its usual title-over-subtitle
+   stack — so setting only `display: flex` here left the icon, the name and the
+   pencil stacked and centred. Measured before it was fixed.
+   No padding-right either: the DS header already reserves 64px for the pinned
+   .ap-dialog-close, and overriding it with a spacing token made that gap
+   smaller, not bigger. */
+.recap__pilmodal-head {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.recap__pilmodal-name-read {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* The name becomes a real input in edit mode. Styled from the dialog title's own
+   scale so the field reads as the title it replaces rather than as a form row
+   that appeared where the title was. */
+.recap__pilmodal-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: var(--ref-spacing-xxxs) var(--ref-spacing-xxs);
+  border: 1px solid var(--sys-border-color-default);
+  border-radius: var(--app-radius-starter);
+  background: var(--ref-color-white);
+  font-family: var(--sys-text-style-h4-font-family);
+  font-size: var(--sys-text-style-h4-size);
+  line-height: var(--sys-text-style-h4-line-height);
+  font-weight: var(--sys-text-style-h4-weight);
+  color: var(--app-convo-navy);
+}
+
+.recap__pilmodal-name:focus-visible {
+  outline: none;
+  border-color: var(--sys-border-color-active);
+}
+
+.recap__pilmodal-edit {
+  flex: 0 0 auto;
 }
 
 .recap__pilmodal-prose {
