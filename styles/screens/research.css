@@ -276,9 +276,15 @@
 }
 
 /* Same shape as .research-feed__meta-item on the detail page — inline-flex, xxs
-   between glyph and name, icon a shade lighter than the text so it reads as a
-   marker rather than a word. min-width:0 lets a long Playbook name ellipsise
-   instead of pushing the source count off the card. */
+   between glyph and name. min-width:0 lets a long Playbook name ellipsise instead
+   of pushing the source count off the card.
+
+   The icon takes the TEXT's colour, not the lighter grey the detail header uses.
+   That header is 12px caption grey-80, where grey-40 reads as a quiet marker;
+   this line is 15px/600, and against it grey-40 was faint enough to miss
+   entirely. grey-80 is also what the sidebar's own Playbooks row uses for the
+   same glyph, so the two now match — and at this weight the icon reads as part
+   of the phrase rather than as decoration beside it, which is what it is. */
 .research-card__meta-pb {
   display: inline-flex;
   align-items: center;
@@ -292,7 +298,7 @@
 .research-card__meta-pb i {
   flex: 0 0 auto;
   font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-grey-40);
+  color: var(--ref-color-grey-80);
 }
 
 .research-card__meta-sep {
