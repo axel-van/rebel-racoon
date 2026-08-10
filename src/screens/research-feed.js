@@ -30,19 +30,22 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=338";
+import { renderTopbar } from "../components/topbar.js?v=340";
 import { isFlagOn } from "../feature-flags.js?v=19";
-import { renderBriefCard } from "../components/brief-card.js?v=27";
+import { renderBriefCard } from "../components/brief-card.js?v=28";
 import {
-  openFullResearch,
   openIgnoreReason,
   openExport,
   openAddToStrategy,
-} from "../components/research-modals.js?v=50";
-import { openBriefInChat } from "../brief-flow.js?v=5";
+  renderResearchArticle,
+  researchArticleSub,
+} from "../components/research-modals.js?v=51";
+import { openArticlePanel, getArticleKey, closeArticlePanelSilently } from "../components/right-panel.js?v=474";
+import { openBriefInChat } from "../brief-flow.js?v=6";
 import { showToast } from "../components/toast.js?v=20";
-import { getLaneById } from "../research-store.js?v=26";
+import { getLaneById } from "../research-store.js?v=27";
 import {
+  getBriefById,
   getBriefsForLane,
   groupBriefsByAge,
   attentionCountsForLane,
@@ -51,15 +54,15 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=32";
+} from "../briefs-store.js?v=33";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
   RESEARCH_TYPES,
   findResearchSource,
   findCadence,
-} from "../research-catalog.js?v=13";
-import { getContextById } from "../contexts-store.js?v=61";
+} from "../research-catalog.js?v=14";
+import { getContextById } from "../contexts-store.js?v=62";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
@@ -571,8 +574,30 @@ function bind(target) {
     const ignore = event.target.closest("[data-brief-ignore]");
     if (ignore) return openIgnoreReason({ briefId: ignore.dataset.briefIgnore });
 
+    // ── The article opens in the RIGHT PANEL, not a modal ──────────────────
+    // A modal is the wrong container for this: reading one topic's article is
+    // almost always comparing it against the others in the list, and a modal
+    // blacks the list out to do it. The panel is a real third grid column — it
+    // SHRINKS the content rather than covering it — so the cards stay scrollable
+    // and clickable beside the article, and clicking the next card swaps the
+    // article in place.
+    //
+    // Clicking the card whose article is already open closes it, so the same
+    // gesture is both directions. Without that the only way out is the panel's
+    // own close button, which is a different target from the one you opened with.
     const research = event.target.closest("[data-brief-research]");
-    if (research) return openFullResearch({ briefId: research.dataset.briefResearch });
+    if (research) {
+      const id = research.dataset.briefResearch;
+      if (getArticleKey() === id) return closeArticlePanelSilently();
+      const brief = getBriefById(id);
+      if (!brief) return;
+      return openArticlePanel({
+        key: id,
+        title: brief.headline,
+        sub: researchArticleSub(brief),
+        body: renderResearchArticle(brief),
+      });
+    }
   };
   target.addEventListener("click", boundClick);
 

@@ -1,7 +1,7 @@
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=82";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=83";
 import { isFlagOn } from "../feature-flags.js?v=19";
-import { ideas as MOCK_IDEAS } from "../mocks.js?v=79";
+import { ideas as MOCK_IDEAS } from "../mocks.js?v=80";
 import { isNewUser } from "../user-mode.js?v=22";
 import { getPath } from "../router.js?v=30";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -13,38 +13,38 @@ import {
   updatePostContent,
   attachImageToDraft,
   subscribe as subscribePostsStore,
-} from "../posts-store.js?v=56";
-import { renderPostCard } from "./post-card.js?v=94";
-import { renderTopPostEcho } from "./top-post-card.js?v=99";
-import { renderClipCard } from "./clip-card.js?v=38";
+} from "../posts-store.js?v=57";
+import { renderPostCard } from "./post-card.js?v=95";
+import { renderTopPostEcho } from "./top-post-card.js?v=101";
+import { renderClipCard } from "./clip-card.js?v=39";
 import { onFeedbackClick } from "./feedback-control.js?v=2";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
-import { open as openVideoClipsModal } from "./video-clips-modal.js?v=78";
-import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=305";
+import { open as openVideoClipsModal } from "./video-clips-modal.js?v=79";
+import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=307";
 import {
   getSources as getStreamSources,
   subscribeSources,
   updateSourceClips,
   removeSources,
   renameSource,
-} from "../sources-stream.js?v=75";
-import { open as openAddSourceModal } from "./add-source-modal.js?v=85";
+} from "../sources-stream.js?v=76";
+import { open as openAddSourceModal } from "./add-source-modal.js?v=86";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { getConnectedConnectors } from "../connectors-store.js?v=48";
-import { askConnector } from "../connector-ask.js?v=28";
-import { renderConnectorLogo } from "../connectors-view.js?v=30";
-import { open as openConnectorsModal } from "./connectors-modal.js?v=31";
-import { addMention as addComposerMention } from "../composer-mentions.js?v=50";
+import { getConnectedConnectors } from "../connectors-store.js?v=49";
+import { askConnector } from "../connector-ask.js?v=29";
+import { renderConnectorLogo } from "../connectors-view.js?v=31";
+import { open as openConnectorsModal } from "./connectors-modal.js?v=32";
+import { addMention as addComposerMention } from "../composer-mentions.js?v=51";
 import { iconFor } from "../file-kinds.js?v=20";
 
 // Lot 15 — empty in first-time mode so the right-panel Ideas surface lines
 // up with the rest of the chrome (sidebar Recent list = empty, dashboard
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
-import { open as openScheduleModal } from "./schedule-modal.js?v=78";
-import { open as openImageStudioModal } from "./image-studio/index.js?v=92";
-import { open as openImageStudioV2Modal } from "./image-studio-v2/index.js?v=70";
+import { open as openScheduleModal } from "./schedule-modal.js?v=79";
+import { open as openImageStudioModal } from "./image-studio/index.js?v=93";
+import { open as openImageStudioV2Modal } from "./image-studio-v2/index.js?v=71";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
@@ -411,6 +411,63 @@ const voiceProfileExpanded = new Set();
 let ctaManageOpen = false;
 let ctaManageSnapshot = null;
 
+// ── "article" mode — a read-only document beside the list that produced it ──
+//
+// The panel receives ALREADY-RENDERED html plus a title, not an entity id. That
+// is the whole point of the seam: this module is core app shell and must not
+// import briefs-store, which is gated behind the Content Ideas flag. The feature
+// owns its content, the panel owns the chrome — so any future surface can drop a
+// document in here without teaching the panel about its data.
+//
+// Not in VALID_URL_MODES, exactly like context-brief: the article is not a
+// user-level panel tab (there is no topbar pill for it), so it must not be
+// restorable from the URL or closable by the URL-syncing path.
+let articleConfig = null;
+
+// A header the panel owns (title + provenance line) over content it doesn't.
+// The heading is an h2 rather than the panel's landmark label alone: the article
+// has its own h3 subheads inside it, so it needs a level above them.
+function renderArticleView() {
+  if (!articleConfig) return "";
+  const { title, sub, body } = articleConfig;
+  return `<article class="panel-article">
+    <header class="panel-article__head">
+      <h2 class="panel-article__title">${escapeText(title || "")}</h2>
+      ${sub ? `<p class="panel-article__sub">${escapeText(sub)}</p>` : ""}
+    </header>
+    ${body}
+  </article>`;
+}
+
+export function openArticlePanel({ title = "", sub = "", body = "", key = "" } = {}) {
+  const prev = state.mode;
+  if (prev === null) resetPanelWidthOverride();
+  snapshotFocusOnOpen(prev);
+  articleConfig = { title, sub, body, key };
+  state = { ...state, mode: "article" };
+  maybeCollapseSidebarOnOpen(prev);
+  renderPanel();
+  notify();
+  // A fresh document starts at the top. Without this, opening a second topic
+  // inherits the first one's scroll position and looks like it opened halfway
+  // down its own article.
+  const bodyEl = document.querySelector("#" + PANEL_ID + " .app-right-panel__body");
+  if (bodyEl) bodyEl.scrollTop = 0;
+}
+
+/** Which document is showing, so a caller can tell "open" from "open on THIS". */
+export function getArticleKey() {
+  return state.mode === "article" ? articleConfig?.key || "" : "";
+}
+
+export function closeArticlePanelSilently() {
+  if (state.mode !== "article") return;
+  articleConfig = null;
+  state = { ...state, mode: null };
+  renderPanel();
+  notify();
+}
+
 export function openContextBriefPanel(config = {}) {
   const prev = state.mode;
   if (prev === null) resetPanelWidthOverride();
@@ -664,7 +721,7 @@ export function init() {
           updateSourceClips(srcId, nextClips);
           const edited = (nextClips || []).find((c) => c.id === ref.clipId);
           if (!edited) return;
-          import("../posts-store.js?v=56").then(({ updatePostClip }) => {
+          import("../posts-store.js?v=57").then(({ updatePostClip }) => {
             updatePostClip(sid, pid, {
               start: edited.start,
               end: edited.end,
@@ -736,7 +793,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=570").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=572").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -919,7 +976,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=570").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=572").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -937,7 +994,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=570").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=572").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -1377,6 +1434,8 @@ function renderPanel() {
     titleText = "Drafts";
   } else if (state.mode === "sources") {
     titleText = "Sources";
+  } else if (state.mode === "article") {
+    titleText = articleConfig?.title || "Topic";
   } else if (state.mode === "context-brief") {
     if (contextBriefConfig?.mode === "read") {
       const ctx = contextBriefConfig.getCtx?.();
@@ -1393,11 +1452,13 @@ function renderPanel() {
     state.mode === "context-brief"
       ? renderContextBriefView()
       : `<div class="app-right-panel__body">${
-          state.mode === "drafts"
-            ? renderDraftsView()
-            : state.mode === "sources"
-              ? renderSourcesView()
-              : renderIdeasView()
+          state.mode === "article"
+            ? renderArticleView()
+            : state.mode === "drafts"
+              ? renderDraftsView()
+              : state.mode === "sources"
+                ? renderSourcesView()
+                : renderIdeasView()
         }</div>`;
 
   // Preserve scrollTop across re-renders so flipping a filter chip or
@@ -1429,9 +1490,10 @@ function renderPanel() {
     ${
       // List modes render the close inline in their first control row (so
       // it shares the row's flex baseline with the tabs / select). The
-      // context-brief has no such row + its content is centred, so it gets
-      // the corner-pinned close instead.
-      state.mode === "context-brief"
+      // context-brief and article modes have no such row, so they get the
+      // corner-pinned close instead — an article with no way out but Esc was a
+      // real dead end the first time round.
+      state.mode === "context-brief" || state.mode === "article"
         ? raw(`<button
              type="button"
              class="ap-icon-button transparent app-right-panel__close"
@@ -1788,7 +1850,7 @@ function onPostRewrite(postId, intent = "fresh") {
   // streaming → commit. Loaded lazily so the rewrite code is only
   // pulled in when the user actually triggers a regen. `intent` biases
   // the rewrite (shorter / longer / warmer / formal / fresh).
-  import("../draft-rewrite.js?v=24").then(({ startRewrite }) => {
+  import("../draft-rewrite.js?v=25").then(({ startRewrite }) => {
     startRewrite(sid, postId, intent);
   });
 }
@@ -1933,7 +1995,7 @@ function onSectionSave(network) {
   if (snapshot.length === 0) return;
   const count = snapshot.length;
   const draftWord = count === 1 ? "draft" : "drafts";
-  Promise.all([import("./save-folder-modal.js?v=29"), import("../folders-store.js?v=24")]).then(
+  Promise.all([import("./save-folder-modal.js?v=30"), import("../folders-store.js?v=25")]).then(
     ([{ open: openSaveModal }, { addDraftsToFolder }]) => {
       openSaveModal({
         count,
@@ -2811,7 +2873,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=570").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=572").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }

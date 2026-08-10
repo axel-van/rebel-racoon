@@ -20,7 +20,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=13";
+import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=14";
 import {
   ageMinutes,
   getBriefById,
@@ -28,8 +28,8 @@ import {
   groupBriefsByAge,
   ignoreBrief,
   setStatus,
-} from "../briefs-store.js?v=32";
-import { getLanes } from "../research-store.js?v=26";
+} from "../briefs-store.js?v=33";
+import { getLanes } from "../research-store.js?v=27";
 import {
   getContextById,
   getPillars,
@@ -38,9 +38,9 @@ import {
   addPillarFromTopic,
   addTopicToPillar,
   PILLAR_LIMIT,
-} from "../contexts-store.js?v=61";
-import { renderBriefCard } from "./brief-card.js?v=27";
-import { renderSocialPostCard } from "./social-post-card.js?v=15";
+} from "../contexts-store.js?v=62";
+import { renderBriefCard } from "./brief-card.js?v=28";
+import { renderSocialPostCard } from "./social-post-card.js?v=16";
 import { showToast } from "./toast.js?v=20";
 
 const MODAL_ID = "research";
@@ -816,49 +816,70 @@ function pickerCard(b, laneName = "") {
 
 // ─── 7. Full research ──────────────────────────────────────────────────────
 
+/**
+ * The article itself, as a string — no dialog, no panel, no chrome.
+ *
+ * Extracted so the SAME markup can be hosted by two very different containers:
+ * the right panel (where the feed now opens it, so cards stay scrollable beside
+ * it) and this module's own dialog (still used by the attention page, which has
+ * no panel to open into). The alternative was right-panel.js importing
+ * briefs-store — a core-shell module reaching into a flag-gated feature — which
+ * is exactly the dependency this seam avoids.
+ */
+export function renderResearchArticle(brief) {
+  if (!brief) return "";
+  const posts = brief.posts || [];
+  return html`<section class="research-article">
+      <span class="research-article__label"><i class="ap-icon-sparkles" aria-hidden="true"></i> Full article</span>
+      <h3 class="research-article__title">${brief.research?.title || ""}</h3>
+      ${raw((brief.research?.paragraphs || []).map((p) => html`<p>${p}</p>`).join(""))}
+    </section>
+    ${raw(
+      brief.isTrending && brief.whyNow
+        ? html`<section class="research-article">
+            <p class="topics-card__whynow">
+              <strong class="topics-card__whynow-label">Why now:</strong> ${brief.whyNow}
+            </p>
+            ${raw(brief.whyNowDetail ? html`<p>${brief.whyNowDetail}</p>` : "")}
+          </section>`
+        : "",
+    )}
+    ${raw(renderHistory(brief.history || [], brief.status))}
+    ${raw(
+      posts.length
+        ? html`<section class="research-article">
+            <span class="research-article__label">Source posts</span>
+            <div class="research-modal__posts">${raw(posts.map((p) => renderSocialPostCard(p)).join(""))}</div>
+          </section>`
+        : "",
+    )}`;
+}
+
+/** Source name + post count, the article's own subtitle in either container. */
+export function researchArticleSub(brief) {
+  if (!brief) return "";
+  const source = findResearchSource(brief.sourceId);
+  const posts = brief.posts || [];
+  // Drop the count entirely at zero rather than printing "0 posts", which reads
+  // as a bug. A brief legitimately has no attached posts when its scan returned
+  // topics without the underlying items.
+  return [source ? source.name : "", posts.length ? `${posts.length} ${posts.length === 1 ? "post" : "posts"}` : ""]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 export function openFullResearch({ briefId }) {
   const brief = getBriefById(briefId);
   if (!brief) return;
-  const source = findResearchSource(brief.sourceId);
-  const posts = brief.posts || [];
 
   openShell(
     "full-research",
     { briefId },
     {
       title: brief.headline,
-      // Drop the count entirely at zero rather than printing "0 posts", which
-      // reads as a bug. A brief legitimately has no attached posts when its scan
-      // returned topics without the underlying items — the lane built from the
-      // Alliance Jiu Jitsu listening export is exactly that case.
-      sub: [source ? source.name : "", posts.length ? `${posts.length} ${posts.length === 1 ? "post" : "posts"}` : ""]
-        .filter(Boolean)
-        .join(" · "),
+      sub: researchArticleSub(brief),
       wide: true,
-      body: html`<section class="research-article">
-          <span class="research-article__label"><i class="ap-icon-sparkles" aria-hidden="true"></i> Full article</span>
-          <h3 class="research-article__title">${brief.research?.title || ""}</h3>
-          ${raw((brief.research?.paragraphs || []).map((p) => html`<p>${p}</p>`).join(""))}
-        </section>
-        ${raw(
-          brief.isTrending && brief.whyNow
-            ? html`<section class="research-article">
-                <p class="topics-card__whynow">
-                  <strong class="topics-card__whynow-label">Why now:</strong> ${brief.whyNow}
-                </p>
-                ${raw(brief.whyNowDetail ? html`<p>${brief.whyNowDetail}</p>` : "")}
-              </section>`
-            : "",
-        )}
-        ${raw(renderHistory(brief.history || [], brief.status))}
-        ${raw(
-          posts.length
-            ? html`<section class="research-article">
-                <span class="research-article__label">Source posts</span>
-                <div class="research-modal__posts">${raw(posts.map((p) => renderSocialPostCard(p)).join(""))}</div>
-              </section>`
-            : "",
-        )}`,
+      body: renderResearchArticle(brief),
       foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
         <span>Close</span>
       </button>`,

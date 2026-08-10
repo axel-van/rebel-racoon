@@ -2369,3 +2369,46 @@ body.hide-playbook-colors .context-brief__hero-color {
   font-weight: var(--sys-text-style-caption-weight);
   padding: var(--ref-spacing-xxs) 0 var(--ref-spacing-xxs);
 }
+
+/* ── "article" mode — a topic's full article, beside the list it came from ──
+   The panel supplies the chrome and the scroll; the content is rendered by the
+   feature that owns it (research-modals.renderResearchArticle), so the
+   .research-article / .research-timeline rules in styles/screens/research.css
+   style the body and are deliberately not duplicated here.
+
+   Only the header belongs to the panel, plus a reading measure: the panel is
+   resizable and an article set to the full width of a dragged-open panel is a
+   worse read than the same article in a column. */
+/* The body wrapper carries no padding of its own — every mode supplies its own,
+   the way .rpanel-sources does — so the article's gutters live here. */
+.panel-article {
+  max-width: 72ch;
+  padding: var(--ref-spacing-md) var(--ref-spacing-md) var(--ref-spacing-lg);
+}
+
+.panel-article__head {
+  margin-bottom: var(--ref-spacing-sm);
+  padding-bottom: var(--ref-spacing-xs);
+  border-bottom: 1px solid var(--sys-border-color-default);
+}
+
+/* The topic's headline. h3 scale rather than h2's — the panel is a column beside
+   the page, not a page, and the article's own subheads sit below this. */
+.panel-article__title {
+  margin: 0;
+  font-family: var(--sys-text-style-h3-font-family);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
+  color: var(--app-convo-navy);
+  /* Leaves room for the panel's floating close control, which is pinned to the
+     top-right across every mode. */
+  padding-right: var(--ref-spacing-lg);
+}
+
+.panel-article__sub {
+  margin: var(--ref-spacing-xxxs) 0 0;
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--sys-text-color-light);
+}

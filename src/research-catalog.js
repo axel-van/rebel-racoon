@@ -209,42 +209,45 @@ export const DEFAULT_CADENCE = "weekly";
 // commitment: a pillar someone owns, then the assets follow. The card's action
 // says the same thing ("Add to strategy"), so the label and the button now agree.
 //
-// `competitive-intelligence` stays: an observation about a competitor is neither
-// ready to post nor waiting on assets, it is not a post at all. It is off by
-// default and lands in the left column when switched on — see the note on
-// COLUMNS in screens/research-feed.js.
 export const RESEARCH_TYPES = Object.freeze([
   { id: "content-strategy", label: "Content strategy" },
   { id: "ready-to-post", label: "Ready to post" },
-  { id: "competitive-intelligence", label: "Competitive intelligence" },
 ]);
 
-/** Filter default: the two the columns are built on. Reset restores exactly this. */
+/** Filter default: both types. There are only two, and both are worth reading. */
 export const DEFAULT_TYPE_IDS = Object.freeze(["content-strategy", "ready-to-post"]);
 
-// ── Only the exception carries a tag ────────────────────────────────────────
-// `ready-to-post` maps to NO tag, and that is the whole design: it is the default
-// and the common case, so marking it labelled nothing. A tag on every card made
-// the reader parse a chip to learn "yes, this is normal". Absence now means
-// postable; a tag means something has to happen first.
+// ── Both types carry a tag ──────────────────────────────────────────────────
+// Every card is labelled. An earlier pass tagged only the exception and left
+// postable topics bare, on the reasoning that you shouldn't mark the default
+// case — but with two types and only two, the label is what tells you which
+// action the footer will offer, and inferring it from an ABSENCE is a worse
+// trade than one extra chip.
 //
-// It also retired the one real problem the two-value version had: the green
-// Ready-to-post tag computed the SAME background as the green "Used" status chip
-// (both rgb(236,247,237)), so two chips on one row shared a fill while meaning
-// different things. With green gone the collision goes with it.
+// Colour: green for postable, grey for not-yet. Green is the DS house rule for
+// "a validated / approved object", which is exactly what Ready to post claims.
+// Grey is the neutral. Deliberately not orange and not blue — in this app those
+// are action colours, and a category is not an action; not red, which means
+// error.
 //
-// Grey for both remaining types, and grey is enough precisely because presence is
-// the signal — the tag has nothing to out-shout. Deliberately not orange or blue:
-// in this app those are action colours, and a category is not an action.
+// ⚠️ Both fills are shared with a status chip, and there is no way around it.
+// The four status chips consume grey-10, tag-orange-20, green-10 and red-10, so
+// `grey` matches New (#EAECEF) and `green` matches Used (#ECF7ED) exactly. The
+// only tag colours outside that set are `blue` and `menthol`, and menthol was
+// measured too pale to scan at tag size.
+//
+// It is accepted because the two things that must be told apart are the TWO TAGS
+// — they occupy one position across a scanned list — and grey vs green is
+// unmistakable. The status chip sits ~290px away at the other end of the row and
+// differs in radius (24px vs 4px), case (UPPERCASE vs sentence) and size
+// (11/800 vs 14/400). Region before colour; see UI-PATTERNS.md.
 const TYPE_TAG_COLOR = Object.freeze({
   "content-strategy": "grey",
-  "competitive-intelligence": "grey",
-  "ready-to-post": null,
+  "ready-to-post": "green",
 });
 
-/** The `.ap-tag` colour for a type, or null when the type carries no tag. */
 export function typeTagColor(typeId) {
-  return TYPE_TAG_COLOR[typeId] || null;
+  return TYPE_TAG_COLOR[typeId] || "grey";
 }
 
 export function findResearchType(id) {

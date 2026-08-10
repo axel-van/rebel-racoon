@@ -4899,7 +4899,7 @@ export const researchBriefs = [
     headline: "Fi's subscription price rise is drawing the complaints its launch post buried",
     summary:
       "The pricing change itself passed quietly. The discontent is in the replies to unrelated posts three weeks later, which is where the churn language actually shows up.",
-    researchType: "competitive-intelligence",
+    researchType: "content-strategy",
     isTrending: true,
     whyNow: "Complaint volume under Fi's posts is running well above its own baseline for a third straight week.",
     whyNowDetail:
@@ -4989,7 +4989,7 @@ export const researchBriefs = [
     headline: "Garmin's outdoor-sport framing keeps resurfacing in the same seasonal window",
     summary:
       "Garmin leans hunting-and-hiking every autumn. It performs for them and reads wrong for a pet-safety brand, but the seasonal timing itself is the transferable part.",
-    researchType: "competitive-intelligence",
+    researchType: "content-strategy",
     isTrending: true,
     whyNow: "Seasonal outdoor content is spiking again, on the same eight-week cycle as last year.",
     whyNowDetail:
@@ -5031,7 +5031,7 @@ export const researchBriefs = [
     headline: "Jiobit is quietly repositioning from pets to children",
     summary:
       "Three of Jiobit's last five posts feature a child rather than an animal. The product hasn't changed; the audience they're addressing has.",
-    researchType: "competitive-intelligence",
+    researchType: "content-strategy",
     isTrending: false,
     whyNow: "",
     whyNowDetail: "",
@@ -5641,7 +5641,7 @@ export const researchBriefs = [
     headline: "The Q2 launch window your competitors were holding has slipped",
     summary:
       "Two of the three accounts that had teased an April launch have gone quiet and moved their dates. The window you were planning around is wider than it looked.",
-    researchType: "competitive-intelligence",
+    researchType: "content-strategy",
     isUpdated: true,
     whatChanged:
       "Last sync all three were tracking to April. Two have since pulled their dates without announcing it — the teaser posts are still up but the countdowns are gone.",
@@ -5664,7 +5664,7 @@ export const researchBriefs = [
     headline: "The competing gym's kids programme now runs on the same nights as yours",
     summary:
       "Their schedule page changed this week. The Tuesday and Thursday kids classes that used to sit opposite yours now overlap them exactly, and their last three posts push that timetable.",
-    researchType: "competitive-intelligence",
+    researchType: "content-strategy",
     isUpdated: true,
     whatChanged:
       "Last sync their kids classes ran Monday and Wednesday, which was the whole reason this topic read as an opening. The schedule moved onto yours.",
@@ -5720,7 +5720,6 @@ export const researchBriefs = [
   // These five also give lane-4 a spread of review statuses. Every brief the
   // lane had was seedStatus "new", so Saved / Used / Ignored had nothing to show.
   // All three of those land on ready-to-post briefs deliberately: the TYPE filter
-  // opens on ready-to-post alone, so an Ignored competitive-intelligence brief
   // would have been invisible on a fresh mount and the spread would only exist
   // in the data.
   {
@@ -5851,7 +5850,7 @@ export const researchBriefs = [
     headline: "Most of what the Carlsbad academies published in July was about themselves",
     summary:
       "Anniversaries, belt promotions, new-member welcomes and holiday greetings account for the bulk of the twenty-five posts in the window. Four self-promotional formats, three academies, almost no teaching.",
-    researchType: "competitive-intelligence",
+    researchType: "content-strategy",
     isTrending: false,
     whyNow: "",
     whyNowDetail: "",

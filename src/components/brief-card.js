@@ -40,7 +40,7 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus, findResearchType, typeTagColor } from "../research-catalog.js?v=13";
+import { findReviewStatus, findResearchType, typeTagColor } from "../research-catalog.js?v=14";
 
 // One line, not the paragraph this used to be. As a hover tooltip it could afford
 // the full explanation; as a permanent menu row it just made the menu tall. The
@@ -57,11 +57,9 @@ const IGNORE_HINT = "Kept out of your feed unless it trends well above its basel
 // route is the latter: it coexists with all four statuses and with both
 // attention signals, so three markers can sit in this row at once.
 //
-// ── Only the exception is tagged ───────────────────────────────────────────
-// typeTagColor() returns null for `ready-to-post`, so a postable topic carries no
-// tag at all. That is deliberate: postable is the default and the majority, and a
-// chip on every card asked the reader to parse one to learn that nothing was
-// wrong. Absence means "this can go to a writer"; a tag means "not yet".
+// Both types are labelled. Tagging only the exception was tried and reverted: with
+// exactly two types, the tag is what tells you which action the footer offers, and
+// reading that off an ABSENCE costs more than the extra chip saves.
 //
 // A <span>, not a <button>: tag.md says a static tag is a span and only a
 // clickable one is a button. Rerouting lives in the footer menu, not here — a
@@ -69,9 +67,8 @@ const IGNORE_HINT = "Kept out of your feed unless it trends well above its basel
 // the same invalid nesting the body/footer split exists to avoid.
 function renderRouteTag(researchType) {
   const meta = findResearchType(researchType);
-  const color = typeTagColor(researchType);
-  if (!meta || !color) return "";
-  return html`<span class="ap-tag ${color} topics-card__route">${meta.label}</span>`;
+  if (!meta) return "";
+  return html`<span class="ap-tag ${typeTagColor(researchType)} topics-card__route">${meta.label}</span>`;
 }
 
 function renderStatusPill(status) {
