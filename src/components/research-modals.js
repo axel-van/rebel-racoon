@@ -456,15 +456,19 @@ function renderStrategyChoice(pillars, room, full) {
         <div class="ap-radio-card-header">
           <i class="ap-icon-plus" aria-hidden="true"></i>
           <span class="ap-radio-card-title">Create a new pillar</span>
-          <!-- The count is shown ALWAYS, not only once it bites. A cap the user
-               meets for the first time at the moment they are blocked reads as a
-               bug; a cap they have been watching count down does not. -->
-          <span class="ap-status ${raw(full ? "orange" : "grey")} no-dot">${pillars.length}/${PILLAR_LIMIT}</span>
         </div>
+        <!-- The count is still ALWAYS shown — a cap you first meet at the moment it
+             blocks you reads as a bug — but as plain text inside the sentence
+             rather than as an .ap-status chip. Status means "the state of the whole
+             surrounding component", and 4 of 10 is a COUNT; the DS's own rule for a
+             number inside a phrase is that it is plain text, not a chip. The
+             radio-card anatomy does sanction .ap-status in its header, which is why
+             it got there — but sanctioned position does not make it the right
+             component for this value. -->
         <span
           >${full
-            ? `This Playbook is at its limit of ${PILLAR_LIMIT} pillars. File the topic into one of them, or remove a pillar in the Playbook first.`
-            : "A new theme to write against. Start it from this topic, then refine it as more topics land."}</span
+            ? `All ${PILLAR_LIMIT} pillars are in use. File the topic into one of them, or remove a pillar in the Playbook first.`
+            : `${pillars.length} of ${PILLAR_LIMIT} used. A new theme to write against — start it from this topic, then refine it as more topics land.`}</span
         >
       </div>
     </label>
@@ -1066,7 +1070,26 @@ function onPanelClick(event) {
     setStatus(briefId, "used");
     close();
     if (onConfirm) onConfirm();
-    showToast(strategyMode === "link" ? `Added to ${result.title}` : `Created the pillar ${result.title}`);
+    // The snackbar carries a way to go and look at what was just written. Without
+    // it the user is told a pillar exists somewhere they are not, and has to find
+    // the Playbook and then the section inside it by hand.
+    //
+    // `?section=strategy` rather than a bare /playbook/:id — the screen already
+    // resolves that param to #pbk-sec-strategy and scrolls it into view on mount,
+    // so the page opens ON the Content strategy section instead of at the top with
+    // the user hunting for it.
+    //
+    // action.onClick, not a raw <a>: the snackbar renders the action as .ap-link
+    // and dismisses itself after the handler, which a plain link would not do —
+    // leaving a stale toast over the page it just navigated to.
+    showToast(strategyMode === "link" ? `Added to ${result.title}` : `Created the pillar ${result.title}`, {
+      action: playbookId
+        ? {
+            label: "View in Playbook",
+            onClick: () => navigate(`/playbook/${encodeURIComponent(playbookId)}?section=strategy`),
+          }
+        : null,
+    });
     return;
   }
 

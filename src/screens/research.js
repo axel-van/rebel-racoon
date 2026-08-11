@@ -20,7 +20,7 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=351";
+import { renderTopbar } from "../components/topbar.js?v=352";
 import { showToast } from "../components/toast.js?v=20";
 import { isFlagOn } from "../feature-flags.js?v=19";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=63";
