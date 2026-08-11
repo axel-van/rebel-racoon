@@ -52,7 +52,7 @@ import { findReviewStatus, findResearchType, typeTagColor } from "../research-ca
 // "Baseline" went earlier for length; the full version still lives where the
 // decision is actually made — the infobox in the ignore-reason modal
 // (research-modals.openIgnoreReason).
-const IGNORE_HINT = "Kept off this list unless trending";
+const IGNORE_HINT = "Kept off this list unless trending or updated";
 
 // The ROUTE, as a DS Tag.
 //
