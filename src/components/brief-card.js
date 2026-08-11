@@ -42,11 +42,13 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { findReviewStatus, findResearchType, typeTagColor } from "../research-catalog.js?v=14";
 
-// One line, not the paragraph this used to be. As a hover tooltip it could afford
-// the full explanation; as a permanent menu row it just made the menu tall. The
-// long version still exists where it is actually being decided — the infobox in
-// the ignore-reason modal (research-modals.openIgnoreReason).
-const IGNORE_HINT = "Kept out of your feed unless it trends well above its baseline.";
+// Four words, and no full stop — it is a caption on a menu row, not a sentence.
+// This started as a paragraph, became one line, and is now the shortest thing
+// that still carries the rule: ignoring is not deleting, and a spike overrides it.
+// "Baseline" went because the row is not where that gets explained; the full
+// version still lives where the decision is actually made — the infobox in the
+// ignore-reason modal (research-modals.openIgnoreReason).
+const IGNORE_HINT = "Kept off feed unless trending";
 
 // The ROUTE, as a DS Tag.
 //

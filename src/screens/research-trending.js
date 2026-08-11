@@ -22,10 +22,10 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=346";
+import { renderTopbar } from "../components/topbar.js?v=347";
 import { isFlagOn } from "../feature-flags.js?v=19";
-import { renderBriefCard } from "../components/brief-card.js?v=30";
-import { openFullResearch } from "../components/research-modals.js?v=55";
+import { renderBriefCard } from "../components/brief-card.js?v=31";
+import { openFullResearch } from "../components/research-modals.js?v=56";
 import { openBriefInChat } from "../brief-flow.js?v=8";
 import { getLaneById } from "../research-store.js?v=28";
 import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=35";
