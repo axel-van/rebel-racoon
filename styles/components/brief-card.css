@@ -281,11 +281,11 @@
    that still reads as a tint, and menthol-150 keeps the label legible on it.
    Deliberately quieter than Why-now: "the story moved" matters less than "this
    is spiking", so it must not compete for the same attention. */
-/* Why-now stays unclamped on purpose: it is one sentence about why the topic is
-   spiking, and it has never needed the room. What-changed is a diff against the
-   last scan and grows with however much moved, which is exactly the kind of text
-   that sets a card's height from the outside — so it clamps to two lines, and
-   the full text stays one click away in the topic's own dialog. */
+/* Both blocks clamp to two lines now. Why-now used to be exempt, on the argument
+   that it is one sentence and had never needed the room — but "one sentence" is
+   the scan's habit rather than a guarantee, and a card whose height depends on how
+   much the model wrote is what makes a list impossible to scan. The full text of
+   either is one click away in the article. */
 .topics-card__changed {
   display: block;
   max-width: var(--topics-measure);
@@ -305,6 +305,20 @@
    of bottom padding, a third line rendered into that strip below the ellipsis —
    truncated and still perfectly readable, which is the worst of both. This span
    has no padding, so the clip lands where the text ends. */
+/* One rule for both clamps. They are the same problem — a tinted block whose
+   text can run long — and had they been written separately they would have drifted
+   to different line counts, which is exactly what makes two blocks that look like
+   one family stop reading like one.
+
+   The clamp is on the INNER span in both cases, never on the padded block: a
+   -webkit-line-clamp element clips at its PADDING box, so with 11px of bottom
+   padding a third line renders below the ellipsis — truncated and still perfectly
+   readable. These spans carry no padding, so the clip lands where the text ends.
+
+   -webkit-box + -webkit-line-clamp is still the only combination every current
+   browser honours; `line-clamp` alone is not. overflow: hidden is what actually
+   produces the ellipsis, which is why neither can be display: block. */
+.topics-card__whynow-clamp,
 .topics-card__changed-clamp {
   display: -webkit-box;
   -webkit-box-orient: vertical;

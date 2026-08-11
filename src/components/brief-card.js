@@ -182,7 +182,22 @@ export function renderBriefCard(
       ${raw(
         brief.isTrending && brief.whyNow
           ? html`<span class="topics-card__whynow">
-              <strong class="topics-card__whynow-label">Why now:</strong> ${brief.whyNow}
+              <!-- The clamp is on an INNER span, and here that is doing two jobs.
+                   First, the padding trap: a -webkit-line-clamp element clips at
+                   its PADDING box, so clamping the tinted block itself would
+                   render a third line into its 11px bottom padding — truncated
+                   and still perfectly readable, the worst of both. Same reason
+                   __changed-clamp exists.
+
+                   Second, and specific to Why-now: this same class is reused by
+                   the FULL ARTICLE (research-modals.renderResearchArticle), where
+                   the whole point is to read everything. Putting the clamp on
+                   .topics-card__whynow would have truncated the text in the one
+                   place the user went to see all of it. The article renders no
+                   inner span, so it stays unclamped for free. -->
+              <span class="topics-card__whynow-clamp">
+                <strong class="topics-card__whynow-label">Why now:</strong> ${brief.whyNow}
+              </span>
             </span>`
           : "",
       )}
