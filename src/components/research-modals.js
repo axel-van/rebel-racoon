@@ -100,9 +100,6 @@ export function init() {
   // the wiring is too. Each branch reads `active` for its context.
   panel.addEventListener("click", onPanelClick);
   panel.addEventListener("input", onPanelInput);
-  // A <select> emits `change`, never `click`, so the pillar picker needs its
-  // own listener — routing it through onPanelClick silently did nothing.
-  panel.addEventListener("change", onPanelChange);
   // The Playbook step's cards are .contexts-card — an <article role="button">,
   // not a <button>, because that is the element /contexts styles. A real button
   // gets Enter and Space for free; role="button" does not, so they are wired
@@ -359,26 +356,57 @@ function paintStrategy({ briefId, playbookId, onConfirm, returning }) {
               : renderStrategyChoice(pillars, room, full),
           )}
           ${raw(
-            linking
-              ? html`<div class="ap-form-field strategy__field">
-                  <label for="strategyPillarPick">Pillar</label>
-                  <select
-                    class="ap-select"
-                    id="strategyPillarPick"
-                    data-strategy-pick
-                    ${raw(returning ? "disabled" : "")}
-                  >
-                    ${raw(
-                      pillars
-                        .map(
-                          (p) =>
-                            html`<option value="${p.id}" ${raw(p.id === strategyPillarId ? "selected" : "")}>
-                              ${p.title}
-                            </option>`,
-                        )
-                        .join(""),
-                    )}
-                  </select>
+            linking && !returning
+              ? // ── The DS Select, which is NOT a native <select> ─────────────────
+                // This was `<select class="ap-select">`, which is drift twice over:
+                // .ap-select is a details/summary composition — trigger + dropdown +
+                // option rows — and the DS ships a SEPARATE class,
+                // .ap-native-select, for the native fallback. A <select> wearing
+                // .ap-select gets the styling of neither.
+                //
+                // Built as the real component: <details> owns open/close with no JS,
+                // the trigger shows the current value, and each option is a row
+                // carrying its own id. No .ap-select-search — the anatomy lists it as
+                // optional and a Playbook is capped at ten pillars, which is well
+                // inside what you can read without filtering.
+                //
+                // The <label> has no `for`: a <details> is not a labelable element, so
+                // the summary points back at the label with aria-labelledby instead.
+                //
+                // Known limitation of the DS's details/summary pattern: an open
+                // dropdown does not close on an outside click, only on the summary or
+                // on picking. Accepted rather than patched — hand-rolling that would
+                // mean re-implementing the component's own behaviour.
+                html`<div class="ap-form-field strategy__field">
+                  <label id="strategyPillarLabel">Pillar</label>
+                  <details class="ap-select">
+                    <summary class="ap-select-trigger" aria-labelledby="strategyPillarLabel">
+                      <span class="ap-select-value">${target ? target.title : "Choose a pillar"}</span>
+                      <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+                    </summary>
+                    <div class="ap-select-dropdown">
+                      <div class="ap-select-options">
+                        ${raw(
+                          pillars
+                            .map(
+                              (p) =>
+                                html`<div
+                                  class="ap-select-option${raw(p.id === strategyPillarId ? " selected" : "")}"
+                                  data-strategy-pick="${escapeAttr(p.id)}"
+                                >
+                                  <span class="ap-select-option-text">${p.title}</span>
+                                  ${raw(
+                                    p.id === strategyPillarId
+                                      ? '<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>'
+                                      : "",
+                                  )}
+                                </div>`,
+                            )
+                            .join(""),
+                        )}
+                      </div>
+                    </div>
+                  </details>
                 </div>`
               : html`<div class="ap-form-field strategy__field">
                   <label for="strategyName">Pillar name</label>
@@ -1042,6 +1070,21 @@ function onPanelClick(event) {
     return;
   }
 
+  // Picking a pillar. A repaint is what closes the <details> and redraws the
+  // trigger, so the in-progress text has to survive it — same as the mode switch
+  // below, for the same reason.
+  // `pillarPick`, not `pick` — [data-idea-pick] already owns that name in this
+  // same function, and re-declaring it threw a SyntaxError that took the whole
+  // module down.
+  const pillarPick = event.target.closest("[data-strategy-pick]");
+  if (pillarPick && active && active.kind === "strategy") {
+    const textEl = panel.querySelector("[data-strategy-text]");
+    if (textEl) strategyText = textEl.value;
+    strategyPillarId = pillarPick.dataset.strategyPick;
+    paintStrategy({ ...active.ctx, returning: false });
+    return;
+  }
+
   // Switching create ↔ link re-renders the form beneath the choice, so the
   // in-progress text has to be carried across the repaint by hand.
   const modeRadio = event.target.closest("[data-strategy-mode]");
@@ -1052,14 +1095,6 @@ function onPanelClick(event) {
     if (titleEl2) strategyTitle = titleEl2.value;
     strategyMode = modeRadio.value;
     paintStrategy({ ...active.ctx, returning: false });
-    return;
-  }
-}
-
-function onPanelChange(event) {
-  const pick = event.target.closest("[data-strategy-pick]");
-  if (pick) {
-    strategyPillarId = pick.value;
     return;
   }
 }
