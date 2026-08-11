@@ -2676,6 +2676,22 @@ export const contexts = [
     strategy: {
       approach:
         "Every competitor in this window is announcing an agent. Almost nobody is saying what it takes off a social media manager's plate on a Tuesday. Lead with the job removed, not the capability added — and keep answering the comparison questions the category is too proud to answer.",
+      // `sources` on each pillar are the topics that fed it, quoted from the
+      // gemini-3.6-flash run of the `agorapulse` export (117 items, 23 Apr 2025 →
+      // 21 Jul 2026, thinking: medium). 11 topics, 3 ready_to_write, 8
+      // needs_strategy of which 2 judged self-promotional; 71/117 items claimed
+      // (61%, against 29% for 3.5-flash-lite on the same export).
+      //
+      // Headlines are the model's own topic titles, NOT this lane's card
+      // headlines — the point of the section is what the run produced. `briefId`
+      // still points at the lane card covering the same subject so dedupe and
+      // "Use in chat" resolve; it is never rendered. `f36-*` ids are topics 3.6
+      // produced that this lane has no card for.
+      //
+      // Two findings are visible in the shape of this list rather than written
+      // anywhere: 3.6 returned agents and MCP as ONE topic where 3.5-flash-lite
+      // split them (so pillars 1 and 2 share a source), and it produced no
+      // reporting/metrics topic at all — which is why pillar 3 has none.
       pillars: [
         {
           id: "agp-pil-1",
@@ -2683,6 +2699,13 @@ export const contexts = [
           title: "What the agent actually does",
           description:
             "The highest-volume theme in the scan by a distance. Everyone claims the shift; the opening is the specific work it removes.",
+          sources: [
+            {
+              briefId: "br-27",
+              headline: "AI agents and MCP connectors shifting social operations away from dashboards",
+              when: "2h ago",
+            },
+          ],
         },
         {
           id: "agp-pil-2",
@@ -2690,6 +2713,18 @@ export const contexts = [
           title: "Social data where the work happens",
           description:
             "MCP and connectors. Competitors pitch it to a technical audience; the same story told to a social media manager is unclaimed.",
+          sources: [
+            {
+              briefId: "br-27",
+              headline: "AI agents and MCP connectors shifting social operations away from dashboards",
+              when: "2h ago",
+            },
+            {
+              briefId: "f36-11",
+              headline: "Building custom publishing workflows with software platform APIs",
+              when: "3w ago",
+            },
+          ],
         },
         {
           id: "agp-pil-3",
@@ -2697,6 +2732,9 @@ export const contexts = [
           title: "Reporting that ends in a decision",
           description:
             "Fragmented metrics and unaligned definitions. The category tracks more; the argument is tracking what changes what you do next.",
+          // Deliberately empty. 3.6 produced no reporting topic on this export —
+          // the 3.5-flash-lite run's metrics theme did not survive the re-scan.
+          sources: [],
         },
         {
           id: "agp-pil-4",
@@ -2704,6 +2742,13 @@ export const contexts = [
           title: "Being found inside AI answers",
           description:
             "Discovery is moving into LLM summaries. Thin evidence so far — two posts — but it is the one theme with no incumbent.",
+          sources: [
+            {
+              briefId: "br-30",
+              headline: "Brand visibility and reputation management across LLM search engines",
+              when: "19d ago",
+            },
+          ],
         },
       ],
     },
