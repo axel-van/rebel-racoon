@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=353";
+import { renderTopbar } from "../components/topbar.js?v=354";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=81";
 import {
   getConnectedProfiles,
@@ -75,7 +75,7 @@ import { getBriefById, getStarterTopics } from "../briefs-store.js?v=35";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=8";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=2";
 import { getLaneById } from "../research-store.js?v=28";
-import * as contextBuilder from "../context-builder.js?v=320";
+import * as contextBuilder from "../context-builder.js?v=321";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -120,7 +120,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=487";
+} from "../components/right-panel.js?v=488";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=23";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -1353,6 +1353,31 @@ function renderConnectorsSubmenu() {
         </button>
       </div>
     </div>`;
+}
+
+// The Add menu opens DOWNWARD by default (see styles/screens/session.css), and
+// flips up only when there genuinely isn't room below. Neither direction works
+// on its own, because the composer sits in two very different places:
+//
+//   • an active chat  — composer pinned near the viewport bottom, ~50px below it
+//     and the whole page above, so the menu has to grow up;
+//   • a new/empty chat — composer around mid-page, so growing up clips its top.
+//
+// At eight items plus a divider and the "Connected sources" flyout the menu is
+// now ~313px tall, which is more than either gap can be assumed to hold. So
+// measure once on open and pick the side that fits, preferring down. The nested
+// flyout needs no equivalent: it grows up from the LAST row, so it stays inside
+// the span this function already confirmed fits.
+function placeAttachMenu(trigger, menu) {
+  menu.classList.remove("is-up");
+  const t = trigger.getBoundingClientRect();
+  const h = menu.getBoundingClientRect().height;
+  const gap = 8; // --ref-spacing-xxs, matching the CSS offset
+  const roomBelow = window.innerHeight - t.bottom - gap;
+  // Flip up only when down doesn't fit AND up does — if neither fits, down is
+  // the friendlier failure: the menu is scrolled into reach, not cut off above
+  // the window where there is nothing to scroll to.
+  if (h > roomBelow && h <= t.top - gap) menu.classList.add("is-up");
 }
 
 // "Ready" status bars (DS .ap-status-card) glued to the top of the composer,
@@ -5274,11 +5299,15 @@ function bindSession(root, session) {
       }
 
       // Paper-clip in the composer — toggle the dropdown menu open/closed.
-      // The menu offers three scripted "Add PDF/Video/URL" quick-actions.
+      // The menu offers the scripted "Add PDF/Video/URL" quick-actions plus the
+      // content-ideas and content-pillar pickers.
       if (event.target.closest("[data-assistant-attach-toggle]")) {
         event.preventDefault();
         const menu = root.querySelector("[data-assistant-attach-menu]");
-        if (menu) menu.hidden = !menu.hidden;
+        if (menu) {
+          menu.hidden = !menu.hidden;
+          if (!menu.hidden) placeAttachMenu(event.target.closest("[data-assistant-attach-toggle]"), menu);
+        }
         return;
       }
 

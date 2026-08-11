@@ -1626,24 +1626,41 @@
   font-size: var(--sys-icon-css-sm);
 }
 
-/* Attach dropdown — DS .ap-action-dropdown anchored above the trigger.
+/* Attach dropdown — DS .ap-action-dropdown anchored BELOW the trigger.
    We only override positioning here ; the DS provides the surface,
-   border, shadow, item layout, hover / focus states. */
+   border, shadow, item layout, hover / focus states.
+
+   It used to open upward (bottom: 100%), which was fine while the menu was short.
+   It is not any more: the list has grown to eight items plus a divider and the
+   Connected-sources flyout, and above a composer that already sits near the
+   bottom of the viewport the top of the menu was running off screen. Downward is
+   the quick prototype fix — the composer has the whole page above it and nothing
+   below, so there is room in that direction and none in the other. */
 
 .assistant-attach {
   position: relative;
 }
 
+/* Opens DOWNWARD by default; placeAttachMenu() in screens/session.js adds
+   `.is-up` when the composer sits too low for that to fit. Down is the default
+   rather than up because the menu is long (8 items + a divider + the flyout)
+   and the empty-chat composer sits mid-page, where up clips the first items. */
 .ap-action-dropdown.assistant-attach__menu {
   position: absolute;
   left: 0;
-  bottom: calc(100% + var(--ref-spacing-xxs));
+  top: calc(100% + var(--ref-spacing-xxs));
+  bottom: auto;
   min-width: 180px;
   width: auto;
   z-index: var(--app-z-overlay);
   /* Let the "Connected sources" flyout escape — the DS .ap-action-dropdown
      clips overflow, which would hide the nested submenu. */
   overflow: visible;
+}
+
+.ap-action-dropdown.assistant-attach__menu.is-up {
+  top: auto;
+  bottom: calc(100% + var(--ref-spacing-xxs));
 }
 
 .ap-action-dropdown.assistant-attach__menu[hidden] {
@@ -1664,9 +1681,10 @@
 .ap-action-dropdown.assistant-attach__submenu {
   position: absolute;
   left: 100%;
-  /* "Connected sources" is the last menu item and the menu itself opens above
-     the composer (near the screen bottom), so grow the flyout UPWARD from the
-     trigger's bottom edge to avoid clipping below the viewport. */
+  /* "Connected sources" is the last menu item, so grow the flyout UPWARD from
+     the trigger row's bottom edge. This holds whichever way the parent menu
+     opened: growing up from the LAST row keeps the flyout inside the parent's
+     own vertical span, which placeAttachMenu() has already confirmed fits. */
   bottom: 0;
   top: auto;
   width: auto;
