@@ -19,13 +19,13 @@
 // styles/screens/modals.css.
 
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../../modal-coordinator.js?v=21";
-import { showToast } from "../toast.js?v=20";
+import { showToast } from "../toast.js?v=21";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=58";
 import { getSessionById } from "../../sessions-store.js?v=28";
 import { getContextById } from "../../contexts-store.js?v=63";
 import { MODAL_ID, KEY, ctx, state } from "./context.js?v=57";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "./canvas.js?v=2";
-import { renderStudio } from "./shell-view.js?v=86";
+import { renderStudio } from "./shell-view.js?v=87";
 import {
   openFilePicker,
   openLogoPicker,

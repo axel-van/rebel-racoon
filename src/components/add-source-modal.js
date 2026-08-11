@@ -18,13 +18,13 @@ import {
   setConnectorStatus,
   subscribe as subscribeConnectors,
 } from "../connectors-store.js?v=50";
-import { postConnectPrompt } from "../assistant.js?v=84";
+import { postConnectPrompt } from "../assistant.js?v=85";
 import { URL_SERVICES, detectUrlService } from "../url-services.js?v=1";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { renderConnectorLogo } from "../connectors-view.js?v=32";
 import { isFlagOn } from "../feature-flags.js?v=19";
-import { showToast } from "./toast.js?v=20";
+import { showToast } from "./toast.js?v=21";
 import { dropzoneHTML } from "./dropzone.js?v=1";
 
 const MODAL_ID = "addSource";

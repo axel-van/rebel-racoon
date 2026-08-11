@@ -1,5 +1,5 @@
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=354";
+import { renderTopbar } from "../components/topbar.js?v=355";
 import {
   getContexts,
   subscribe as subscribeContexts,
@@ -287,7 +287,7 @@ function bind(root) {
       event.stopPropagation();
       const copy = duplicateContext(dupBtn.dataset.contextsDuplicate);
       if (copy) {
-        import("../components/toast.js?v=20").then(({ showToast }) => showToast("Playbook duplicated"));
+        import("../components/toast.js?v=21").then(({ showToast }) => showToast("Playbook duplicated"));
         navigate(`/playbook/${copy.id}`);
       }
       return;
@@ -298,7 +298,7 @@ function bind(root) {
       const ctx = getContexts().find((c) => c.id === delBtn.dataset.contextsDelete);
       if (!ctx) return;
       if (getContexts().length <= 1) {
-        import("../components/toast.js?v=20").then(({ showToast }) =>
+        import("../components/toast.js?v=21").then(({ showToast }) =>
           showToast("Can't delete the last Playbook — every chat needs one."),
         );
         return;
@@ -313,7 +313,7 @@ function bind(root) {
         danger: true,
         onConfirm: () => {
           deleteContext(ctx.id);
-          import("../components/toast.js?v=20").then(({ showToast }) => showToast("Playbook deleted"));
+          import("../components/toast.js?v=21").then(({ showToast }) => showToast("Playbook deleted"));
         },
       });
       return;

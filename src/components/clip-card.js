@@ -27,7 +27,7 @@
 import { iconFor } from "../file-kinds.js?v=20";
 import { escapeText, escapeAttr } from "../utils.js?v=21";
 import { installMoreMenu } from "./more-menu.js?v=1";
-import { renderFeedbackThumbs, renderFeedbackPanel } from "./feedback-control.js?v=2";
+import { renderFeedbackThumbs, renderFeedbackPanel } from "./feedback-control.js?v=3";
 import { videoForClip } from "../clip-captions.js?v=5";
 import { FORMATS } from "../clip-formats.js?v=32";
 

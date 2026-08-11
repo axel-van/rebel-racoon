@@ -17,13 +17,13 @@ import {
 } from "../sessions-store.js?v=28";
 import { isFlagOn } from "../feature-flags.js?v=19";
 import { isNewUser } from "../user-mode.js?v=22";
-import { clearSession as clearLibrarySession } from "../library.js?v=78";
+import { clearSession as clearLibrarySession } from "../library.js?v=79";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=63";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=50";
 import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=18";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=28";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=488";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=84";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=489";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=85";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=58";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=77";
 
@@ -955,7 +955,7 @@ function togglePinSidebar(sessionId) {
   if (!before) return;
   const after = togglePinSession(sessionId);
   if (!after) return;
-  import("./toast.js?v=20").then(({ showToast }) => {
+  import("./toast.js?v=21").then(({ showToast }) => {
     showToast(after.pinned ? "Chat pinned" : "Chat unpinned", {
       action: {
         label: "Undo",
@@ -1015,7 +1015,7 @@ function deleteSidebarSession(sessionId) {
         closeRightPanel();
         navigate("/");
       }
-      import("./toast.js?v=20").then(({ showToast }) => showToast("Chat deleted"));
+      import("./toast.js?v=21").then(({ showToast }) => showToast("Chat deleted"));
     },
   });
 }

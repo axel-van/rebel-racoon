@@ -21,13 +21,13 @@
 // carry no design, so there is nothing to redesign in them.
 
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../../modal-coordinator.js?v=21";
-import { showToast } from "../toast.js?v=20";
+import { showToast } from "../toast.js?v=21";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=58";
 import { getSessionById } from "../../sessions-store.js?v=28";
 import { getContextById } from "../../contexts-store.js?v=63";
 import { MODAL_ID, KEY, ctx, state } from "./context.js?v=47";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=74";
+import { renderStudio } from "./stage-view.js?v=75";
 import {
   openFilePicker,
   openLogoPicker,

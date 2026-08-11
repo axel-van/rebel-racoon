@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=354";
+import { renderTopbar } from "../components/topbar.js?v=355";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=81";
 import {
   getConnectedProfiles,
@@ -36,26 +36,26 @@ import {
   markConnectPromptResolved,
   toggleTopPostsWidgetPick,
   answerTopPostsWidget,
-} from "../assistant.js?v=84";
+} from "../assistant.js?v=85";
 import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=78";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=67";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=79";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=68";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=52";
+} from "../composer-mentions.js?v=53";
 import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=58";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=82";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=64";
-import * as topPostsFlow from "../top-posts-flow.js?v=104";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=83";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=65";
+import * as topPostsFlow from "../top-posts-flow.js?v=105";
 import {
   renderTopPostsBoard,
   renderTopPostEcho,
   renderTopPostsWidget,
   TOP_POSTS_LIMIT,
-} from "../components/top-post-card.js?v=103";
+} from "../components/top-post-card.js?v=104";
 import { getTopPost } from "../top-posts-store.js?v=65";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 import * as sidebarWizard from "../sidebar-wizard.js?v=75";
@@ -75,7 +75,7 @@ import { getBriefById, getStarterTopics } from "../briefs-store.js?v=35";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=8";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=2";
 import { getLaneById } from "../research-store.js?v=28";
-import * as contextBuilder from "../context-builder.js?v=321";
+import * as contextBuilder from "../context-builder.js?v=322";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -87,9 +87,9 @@ import {
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=25";
 import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=80";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=86";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=87";
-import { open as openConnectorsModal } from "../components/connectors-modal.js?v=33";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=87";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=88";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=34";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
   classifyFile,
@@ -107,12 +107,12 @@ import {
   setSourceIdeaCount,
   addReadySource,
 } from "../sources-stream.js?v=77";
-import { renderClipCard } from "../components/clip-card.js?v=40";
-import { onFeedbackClick } from "../components/feedback-control.js?v=2";
-import { showToast } from "../components/toast.js?v=20";
+import { renderClipCard } from "../components/clip-card.js?v=41";
+import { onFeedbackClick } from "../components/feedback-control.js?v=3";
+import { showToast } from "../components/toast.js?v=21";
 // The composer's Add menu reaches Content Ideas through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=62";
+import { openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=63";
 import { findResearchSource } from "../research-catalog.js?v=14";
 import {
   openDrafts as openDraftsPanel,
@@ -120,13 +120,13 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=488";
+} from "../components/right-panel.js?v=489";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
-import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=23";
+import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=24";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=42";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=50";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=65";
+import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=43";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=51";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=66";
 // Pure thread-turn renderers — shared with the component handoff gallery so
 // the previews there never drift from the app (handoff/components.html).
 import {

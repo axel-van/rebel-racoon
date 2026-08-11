@@ -9,7 +9,7 @@
 import { ideas, threadsBySession as seedThreadsBySession, connectorDocs } from "./mocks.js?v=81";
 import { findConnector } from "./connectors-store.js?v=50";
 import { createSessionNotifier } from "./store-utils.js?v=2";
-import { showToast } from "./components/toast.js?v=20";
+import { showToast } from "./components/toast.js?v=21";
 import { isFlagOn } from "./feature-flags.js?v=19";
 
 const threads = new Map(); // sessionId → messages[]

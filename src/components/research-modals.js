@@ -42,8 +42,8 @@ import {
   PILLAR_LIMIT,
 } from "../contexts-store.js?v=63";
 import { renderBriefCard } from "./brief-card.js?v=33";
-import { renderSocialPostCard } from "./social-post-card.js?v=17";
-import { showToast } from "./toast.js?v=20";
+import { renderSocialPostCard } from "./social-post-card.js?v=18";
+import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";
 

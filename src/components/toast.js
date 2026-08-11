@@ -51,7 +51,21 @@ export function showToast(message, opts = {}) {
       <span>${escapeHtml(message)}</span>
     </div>
     <div class="ap-snackbar-right">
-      ${action ? `<button type="button" class="ap-link" data-toast-action>${escapeHtml(action.label)}</button>` : ""}
+      ${
+        // The action MUST be an <a>: the DS styles this slot as
+        // `.ap-snackbar-right > a` (action link) and `> button` (close icon), and
+        // the close rule is `width/height: 20px; padding: 0; border-radius: 50%`.
+        // A <button> here therefore rendered the label inside a 20px circle,
+        // overflowing its own box and colliding with the ×. No `.ap-link` either
+        // — the slot rule already carries the link treatment, and `.ap-link`
+        // would fight it (permanent underline + its own type scale).
+        //
+        // No `href`: every action is a JS callback, and this app is hash-routed,
+        // so an `href="#"` would navigate. `role="button"` + `tabindex` restore
+        // what dropping href takes away; Enter/Space are wired up below because
+        // an anchor without href doesn't activate on the keyboard by itself.
+        action ? `<a role="button" tabindex="0" data-toast-action>${escapeHtml(action.label)}</a>` : ""
+      }
       <button type="button" aria-label="Close" data-toast-close>
         <i class="ap-icon-close" aria-hidden="true"></i>
       </button>
@@ -60,12 +74,19 @@ export function showToast(message, opts = {}) {
   region.appendChild(el);
 
   if (action) {
-    el.querySelector("[data-toast-action]")?.addEventListener("click", () => {
+    const actionEl = el.querySelector("[data-toast-action]");
+    const run = () => {
       try {
         action.onClick();
       } finally {
         dismiss(el);
       }
+    };
+    actionEl?.addEventListener("click", run);
+    actionEl?.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault(); // Space would scroll the page
+      run();
     });
   }
   el.querySelector("[data-toast-close]")?.addEventListener("click", () => dismiss(el));

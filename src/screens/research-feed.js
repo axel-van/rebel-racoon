@@ -31,7 +31,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=354";
+import { renderTopbar } from "../components/topbar.js?v=355";
 import { isFlagOn } from "../feature-flags.js?v=19";
 import { renderBriefCard } from "../components/brief-card.js?v=33";
 import {
@@ -40,9 +40,9 @@ import {
   openAddToStrategy,
   renderResearchArticle,
   researchArticleSub,
-} from "../components/research-modals.js?v=62";
+} from "../components/research-modals.js?v=63";
 import { openBriefInChat } from "../brief-flow.js?v=8";
-import { showToast } from "../components/toast.js?v=20";
+import { showToast } from "../components/toast.js?v=21";
 import { getLaneById } from "../research-store.js?v=28";
 import {
   getBriefById,

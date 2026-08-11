@@ -13,7 +13,7 @@
 import { html, raw, escapeHtml } from "../../utils.js?v=21";
 import { getPosts } from "../../posts-store.js?v=58";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=52";
-import { renderPostCard } from "../post-card.js?v=96";
+import { renderPostCard } from "../post-card.js?v=97";
 import { KEY, ctx } from "./context.js?v=47";
 import { composer, settingsPanel, toolPalette, footerBar } from "./composer-view.js?v=72";
 import { editCanvas } from "./edit-view.js?v=47";

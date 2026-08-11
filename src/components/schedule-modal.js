@@ -1,5 +1,5 @@
 import { html, raw, escapeText } from "../utils.js?v=21";
-import { showToast } from "./toast.js?v=20";
+import { showToast } from "./toast.js?v=21";
 import {
   getQueue,
   getQueueOn,
