@@ -39,7 +39,7 @@ import {
   addTopicToPillar,
   PILLAR_LIMIT,
 } from "../contexts-store.js?v=63";
-import { renderBriefCard } from "./brief-card.js?v=31";
+import { renderBriefCard } from "./brief-card.js?v=32";
 import { renderSocialPostCard } from "./social-post-card.js?v=17";
 import { showToast } from "./toast.js?v=20";
 

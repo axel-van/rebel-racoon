@@ -42,13 +42,17 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { findReviewStatus, findResearchType, typeTagColor } from "../research-catalog.js?v=14";
 
-// Four words, and no full stop — it is a caption on a menu row, not a sentence.
-// This started as a paragraph, became one line, and is now the shortest thing
-// that still carries the rule: ignoring is not deleting, and a spike overrides it.
-// "Baseline" went because the row is not where that gets explained; the full
-// version still lives where the decision is actually made — the infobox in the
-// ignore-reason modal (research-modals.openIgnoreReason).
-const IGNORE_HINT = "Kept off feed unless trending";
+// No full stop — it is a caption on a menu row, not a sentence. This started as a
+// paragraph, became one line, and is now the shortest thing that still carries the
+// rule: ignoring is not deleting, and a spike overrides it.
+//
+// "this list", not "feed": the user is standing in ONE topic list when they read
+// it, and that is the scope of what ignoring does. "Feed" was ambiguous with the
+// /topics feed, which is a different surface with a different object in it.
+// "Baseline" went earlier for length; the full version still lives where the
+// decision is actually made — the infobox in the ignore-reason modal
+// (research-modals.openIgnoreReason).
+const IGNORE_HINT = "Kept off this list unless trending";
 
 // The ROUTE, as a DS Tag.
 //
