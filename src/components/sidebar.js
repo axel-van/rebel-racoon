@@ -4,7 +4,7 @@ import { open as openBugReportModal } from "./bug-report-modal.js?v=24";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=26";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { open as openSearchModal } from "./search-modal.js?v=35";
+import { open as openSearchModal } from "./search-modal.js?v=36";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=16";
 import {
@@ -14,18 +14,18 @@ import {
   deleteSession,
   togglePin as togglePinSession,
   subscribe as subscribeSessions,
-} from "../sessions-store.js?v=29";
+} from "../sessions-store.js?v=30";
 import { isFlagOn } from "../feature-flags.js?v=19";
 import { isNewUser } from "../user-mode.js?v=22";
-import { clearSession as clearLibrarySession } from "../library.js?v=80";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=64";
-import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=51";
-import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=19";
-import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=29";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=491";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=86";
-import { clearSession as clearPostsSession } from "../posts-store.js?v=59";
-import { clearSession as clearSourcesSession } from "../sources-stream.js?v=78";
+import { clearSession as clearLibrarySession } from "../library.js?v=81";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=65";
+import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=52";
+import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=20";
+import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=30";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=492";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=87";
+import { clearSession as clearPostsSession } from "../posts-store.js?v=60";
+import { clearSession as clearSourcesSession } from "../sources-stream.js?v=79";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the

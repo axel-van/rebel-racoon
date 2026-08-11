@@ -2697,8 +2697,17 @@ export const contexts = [
           id: "agp-pil-1",
           icon: "ap-icon-archie-official",
           title: "What the agent actually does",
+          // First paragraph is the pillar's own thesis; everything after it is the
+          // topic text, appended the way addTopicToPillar appends it (blank line
+          // between). Both surfaces that render a description use pre-wrap, so the
+          // breaks survive.
           description:
-            "The highest-volume theme in the scan by a distance. Everyone claims the shift; the opening is the specific work it removes.",
+            "The highest-volume theme in the scan by a distance. Everyone claims the shift; the opening is the specific work it removes.\n\n" +
+            "Monitored accounts are introducing conversational AI agents and Model Context Protocol integrations that execute social management tasks directly inside external chat surfaces. While some frame this shift as a complete alternative to traditional dashboards, others present agents as background assistants for triaging inboxes, drafting posts, and auditing account performance.\n\n" +
+            "Monitored accounts focused on positioning conversational interfaces and autonomous background tools as replacements for traditional social media dashboards, publishing calendars, and inbox management interfaces. Posts promote conversational software command surfaces that allow users to execute publishing, moderation, audience listening, and performance reporting through direct text prompts rather than manual navigation across separate tools.\n\n" +
+            "Several accounts describe these software capabilities using the language of digital teammates that operate continuously in the background. Copy emphasizes ongoing monitoring across social channels and broader web conversations, claiming these tools alert users only when an actionable situation occurs. Posts highlight concrete daily tasks handled by automated workflows, including generating daily performance digests, surfacing sales leads in public comment sections, triaging incoming messages, and flagging high-performing content. One account claims that users can build custom operational agents using plain-language descriptions in under five minutes without writing code. Another highlights a central conversational layer backed by historical channel data and live platform signals, claiming it interprets context to guide immediate decision-making.\n\n" +
+            "Economic messaging within the posts contrasts the cost of expanding human staff against deploying software agents. One post asserts that operational scaling previously required hiring additional marketing coordinators, whereas current scaling relies on configuring background agents. The claim states that these software agents operate continuously for low monthly fees while providing output equivalent to thousands of dollars in human labor, adding that the interface logs the specific labor hours saved. To frame the broader market context, one account cites research indicating that sixty-four percent of senior marketing executives currently utilize artificial intelligence tools that lack live social media data integration, using the figure to argue for connecting real-time platform data to agent workflows.\n\n" +
+            "Across the monitoring window, seventeen items matched this subject, reflecting high volume across the monitored set. Instagram served as the primary network, accounting for 47 percent of the volume, followed by web blog posts at 41 percent and Facebook at 12 percent.",
           sources: [
             {
               briefId: "br-27",
@@ -2711,8 +2720,15 @@ export const contexts = [
           id: "agp-pil-2",
           icon: "ap-icon-antenna",
           title: "Social data where the work happens",
+          // Two topics feed this one, so the description carries both bodies in the
+          // order they arrived — the shape addTopicToPillar produces. Topic 1's
+          // text here is the half about protocols and tool chains, not the whole
+          // thing: pillar 1 above covers the agent side of the same topic.
           description:
-            "MCP and connectors. Competitors pitch it to a technical audience; the same story told to a social media manager is unclaimed.",
+            "MCP and connectors. Competitors pitch it to a technical audience; the same story told to a social media manager is unclaimed.\n\n" +
+            "The monitored accounts display two distinct approaches regarding workflow orchestration and platform ownership. One provider frames its offerings as an artificial intelligence operating system that restructures separate social tools, including social listening, advocacy, and customer support, under a single conversational intelligence layer. This messaging presents open integration protocols as a mechanism to stream listening data directly into external artificial intelligence chat applications used throughout an organization. Conversely, another provider frames open protocol availability as a way for practitioners to build custom tool chains, positioning its social software as one interoperable connector within a larger stack assembled by the user. Content supporting this view includes creator-focused guides that detail how to run social management tasks entirely inside third-party conversational chat software by combining multiple protocol connections.\n\n" +
+            "Accounts highlight technical case studies where creators and developers built bespoke integrations using social platform application programming interfaces. Examples showcase converting chat channel questions into scheduled posts and automating physical product e-commerce listings.\n\n" +
+            "Software developers and technical operators connect internal operational platforms directly to social media scheduling systems. Volume is low and split across Instagram at 50 percent, web blogs at 25 percent and Facebook at 25 percent — shown to the reader, not written up.",
           sources: [
             {
               briefId: "br-27",
@@ -2740,8 +2756,16 @@ export const contexts = [
           id: "agp-pil-4",
           icon: "ap-icon-web",
           title: "Being found inside AI answers",
+          // "Thin evidence — two posts" was written against the 3.5-flash-lite run.
+          // 3.6 matched three items on this subject, so the count is corrected here
+          // rather than left to contradict the topic text underneath it.
           description:
-            "Discovery is moving into LLM summaries. Thin evidence so far — two posts — but it is the one theme with no incumbent.",
+            "Discovery is moving into LLM summaries. Thin evidence so far — three items — but it is the one theme with no incumbent.\n\n" +
+            "Monitored accounts are addressing how brands appear inside AI-generated answer engines and LLM search queries. Discussions emphasize structuring content for direct AI sourcing, monitoring sentiment in generated answers, and defending brand reach as discovery moves beyond traditional search engines.\n\n" +
+            "Monitored accounts state that online discovery is shifting beyond traditional web page ranking toward automated answer generation and conversational summary tools. To maintain organic reach, posts emphasize structuring written material so automated systems can efficiently interpret and quote primary details. The surrounding copy frames artificial intelligence as an efficiency tool, while asserting that human oversight remains necessary to ensure factual credibility, structural clarity, and direct alignment with audience needs.\n\n" +
+            "The monitored accounts present various methods for navigating representation across these summary platforms. One account announced a tracking tool designed to measure how generative search models cite a brand, verify whether recommendation tools suggest the brand, and link those insights to customer conversation data instead of basic keyword tracking. A second account published editorial recommendations focused on evaluating content assets by their specific purpose, structural layout, and suitability for direct quotation by automated summary engines. A third account referenced a 2026 social trends research report, identifying answer engine optimization and the public search indexing of video content as key drivers of changing audience discovery behaviors.\n\n" +
+            "Messaging across the accounts converges on the premise that organizations face reduced direct control over how automated query tools summarize their information. Where the accounts diverge is in their proposed operational response: one focuses on monitoring outputs through dedicated tracking software, another advocates for refined content audits and editorial structure, and a third situates the phenomenon within broader social network indexation trends.\n\n" +
+            "Three items matched this subject in the window between April 2025 and July 2026. Volume for this topic is low, with web blogs accounting for two-thirds of the posts and Facebook representing the remaining third.",
           sources: [
             {
               briefId: "br-30",

@@ -28,8 +28,8 @@ import {
   groupBriefsByAge,
   ignoreBrief,
   setStatus,
-} from "../briefs-store.js?v=36";
-import { getLanes } from "../research-store.js?v=29";
+} from "../briefs-store.js?v=37";
+import { getLanes } from "../research-store.js?v=30";
 import {
   getContexts,
   getContextById,
@@ -40,9 +40,9 @@ import {
   addPillarFromTopic,
   addTopicToPillar,
   PILLAR_LIMIT,
-} from "../contexts-store.js?v=64";
+} from "../contexts-store.js?v=65";
 import { renderBriefCard } from "./brief-card.js?v=34";
-import { renderSocialPostCard } from "./social-post-card.js?v=19";
+import { renderSocialPostCard } from "./social-post-card.js?v=20";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";
@@ -425,7 +425,7 @@ function renderPillarDetailStep(ctx) {
     sub: pb ? `${pb.name} · Content strategy` : "",
     body: html`<div class="research-pick__detail">
       <section class="research-article">
-        <span class="research-article__label">What this pillar covers</span>
+        <span class="research-article__label">Pillar Detail</span>
         ${raw(p.description ? html`<p>${p.description}</p>` : html`<p class="muted">Nothing written yet.</p>`)}
       </section>
       ${raw(

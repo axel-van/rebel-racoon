@@ -15,11 +15,11 @@
 // is safe because only one route renders at a time.
 
 import { html, raw, escapeHtml as esc } from "./utils.js?v=21";
-import { openPillarInChat } from "./pillar-flow.js?v=3";
+import { openPillarInChat } from "./pillar-flow.js?v=4";
 import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=25";
 import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1";
 import { isFlagOn } from "./feature-flags.js?v=19";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=53";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=54";
 import { open as openConfirmModal } from "./components/confirm-modal.js?v=22";
 import { open as openAddPlaybookEntry } from "./components/add-playbook-entry-modal.js?v=1";
 
@@ -1045,7 +1045,7 @@ function renderPillarModal(p, i, edit) {
       <button type="button" class="ap-dialog-close" data-recap-pillar-close aria-label="Close"><i class="ap-icon-close"></i></button>
       <div class="ap-dialog-content recap__pilmodal-content">
         <div class="recap__refmodal-sec">
-          <span class="recap__refedit-flabel">What this pillar covers</span>
+          <span class="recap__refedit-flabel">Pillar Detail</span>
           ${
             edit
               ? `<textarea data-recap-pillar-desc data-recap-pillar-index="${i}" rows="6" placeholder="What Archie should know when it writes for this pillar…">${esc(
