@@ -1346,6 +1346,14 @@
    Drop both so the composer floats on the gradient. */
 .empty-chat .session__composer {
   background: transparent;
+  /* Beat the starter block. `.empty-chat > *` (above) makes every child a
+     z-index:1 stacking context so the staggered rise can't reorder them — which
+     traps the composer's popovers (attach menu, Playbook select, mention picker)
+     inside z-index 1, where the later-in-DOM starter cards paint over them
+     however high the popover's own z-index goes. Lifting the composer one step
+     frees all three at once; nothing here overlaps the cards geometrically, so
+     there is no visual change while they're closed. */
+  z-index: 2;
 }
 
 .empty-chat .session__composer::before {
