@@ -31,8 +31,10 @@ import {
 } from "../briefs-store.js?v=35";
 import { getLanes } from "../research-store.js?v=28";
 import {
+  getContexts,
   getContextById,
   getPillars,
+  getPillarById,
   pillarForTopic,
   pillarRoom,
   addPillarFromTopic,
@@ -62,6 +64,12 @@ let pickerPlaybook = null; // one id; picking a card IS the navigation
 // re-renders the dialog through openShell, so the choice and the edited text have
 // to live outside it. `text` is seeded once from the topic and then belongs to the
 // user — re-seeding it on every render would wipe their trimming.
+// Pillar-picker state — same reason the topic picker's lives here: each step
+// re-renders through openShell, so the step and the answers have to outlive it.
+let pillarStep = "playbooks"; // "playbooks" | "pillars" | "detail"
+let pillarPbId = null;
+let pillarPickedId = null;
+
 let strategyMode = "create"; // "create" | "link"
 let strategyPillarId = null;
 let strategyTitle = "";
@@ -293,6 +301,193 @@ function topicSeed(brief) {
  * commitment; it is news about one already made, and asking the user to re-pick
  * the pillar they already picked is asking them to remember for the app.
  */
+
+// ─── Pillar picker — "Post about a Content Pillar" ──────────────────────────
+//
+// Three steps: which Playbook → which pillar → read it, then use it. The topic
+// picker next door is two, and the third step here is the difference that
+// matters: a topic is a claim you can judge from its headline, while a pillar is
+// a standing instruction whose whole value is the accumulated detail. Picking one
+// blind would be picking a title.
+//
+// Each step reuses the card that object already has elsewhere — .contexts-card
+// for a Playbook, .recap__pillar for a pillar — for the reason the topic picker
+// does: the thing you pick should look like the thing you were reading a moment
+// ago. Nothing new was drawn for either.
+export function openPillarPicker({ onPick }) {
+  pillarStep = "playbooks";
+  pillarPbId = null;
+  pillarPickedId = null;
+  renderPillarPicker({ onPick });
+}
+
+function renderPillarPicker(ctx) {
+  if (pillarStep === "playbooks") return renderPillarPbStep(ctx);
+  if (pillarStep === "pillars") return renderPillarListStep(ctx);
+  return renderPillarDetailStep(ctx);
+}
+
+/** Only Playbooks that actually own a pillar — the rest can only empty step 2. */
+function pillarPbOptions() {
+  return getContexts().filter((c) => getPillars(c.id).length > 0);
+}
+
+function renderPillarPbStep(ctx) {
+  const options = pillarPbOptions();
+  openShell("pillar-picker", ctx, {
+    title: "Post about a content pillar",
+    sub: "Which Playbook's strategy do you want to write from?",
+    wide: true,
+    body: options.length
+      ? html`<div class="research-pick__pbgrid">
+          ${raw(
+            options
+              .map((o) => {
+                const n = getPillars(o.id).length;
+                const color = o.color || "orange";
+                return html`<article
+                  class="contexts-card contexts-card--${color}"
+                  data-pillar-pb="${escapeAttr(o.id)}"
+                  role="button"
+                  tabindex="0"
+                >
+                  <span class="contexts-card__swatch" aria-hidden="true"></span>
+                  <header class="contexts-card__head">
+                    <h3 class="contexts-card__name">${o.name}</h3>
+                  </header>
+                  <footer class="contexts-card__foot">
+                    <span class="contexts-card__counter">${n} ${n === 1 ? "pillar" : "pillars"}</span>
+                  </footer>
+                </article>`;
+              })
+              .join(""),
+          )}
+        </div>`
+      : html`<p class="muted">No Playbook has a content pillar yet. Add a topic to a strategy first.</p>`,
+    foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
+      <span>Cancel</span>
+    </button>`,
+  });
+}
+
+function renderPillarListStep(ctx) {
+  const pb = getContextById(pillarPbId);
+  const pillars = getPillars(pillarPbId);
+  openShell("pillar-picker", ctx, {
+    title: "Post about a content pillar",
+    sub: pb ? pb.name : "",
+    body: html`<div class="research-pick__pillars">
+      ${raw(
+        pillars
+          .map((p) => {
+            const srcN = p.sources.length;
+            const assetN = p.assets.length;
+            const meta = [
+              srcN ? `${srcN} ${srcN === 1 ? "topic" : "topics"}` : "",
+              assetN ? `${assetN} ${assetN === 1 ? "asset" : "assets"}` : "",
+            ]
+              .filter(Boolean)
+              .join(" · ");
+            return html`<div class="recap__pillar" data-pillar-pick="${escapeAttr(p.id)}" role="button" tabindex="0">
+              <span class="recap__pillar-icon" aria-hidden="true"><i class="${p.icon || "ap-icon-target"}"></i></span>
+              <span class="recap__pillar-body">
+                <span class="recap__pillar-title">${p.title}</span>
+                ${raw(p.description ? html`<span class="recap__pillar-desc">${p.description}</span>` : "")}
+                ${raw(meta ? html`<span class="recap__pillar-meta">${meta}</span>` : "")}
+              </span>
+            </div>`;
+          })
+          .join(""),
+      )}
+    </div>`,
+    foot: html`<button type="button" class="ap-button stroked grey" data-pillar-back>
+        <span>Back</span>
+      </button>
+      <button type="button" class="ap-button stroked grey" data-research-modal-close>
+        <span>Cancel</span>
+      </button>`,
+  });
+}
+
+// Step 3 renders the pillar READ-ONLY, in this shell rather than by reusing
+// playbook-view's dialog. That dialog is wired to the Playbook screen's edit
+// scope, snapshot and commit path; borrowing it here would drag all three into a
+// picker whose only verb is "use this". Same content, no editing.
+function renderPillarDetailStep(ctx) {
+  const pb = getContextById(pillarPbId);
+  const p = getPillarById(pillarPbId, pillarPickedId);
+  if (!p) {
+    pillarStep = "pillars";
+    return renderPillarListStep(ctx);
+  }
+  openShell("pillar-picker", ctx, {
+    title: p.title,
+    sub: pb ? `${pb.name} · Content strategy` : "",
+    body: html`<div class="research-pick__detail">
+      <section class="research-article">
+        <span class="research-article__label">What this pillar covers</span>
+        ${raw(p.description ? html`<p>${p.description}</p>` : html`<p class="muted">Nothing written yet.</p>`)}
+      </section>
+      ${raw(
+        p.notes
+          ? html`<section class="research-article">
+              <span class="research-article__label">Your notes</span>
+              <p>${p.notes}</p>
+            </section>`
+          : "",
+      )}
+      ${raw(
+        p.assets.length
+          ? html`<section class="research-article">
+              <span class="research-article__label">Reference assets</span>
+              <ul class="recap__pilmodal-assets">
+                ${raw(
+                  p.assets
+                    .map(
+                      (a) =>
+                        html`<li class="recap__pilmodal-asset">
+                          <i class="${a.icon || "ap-icon-file"}" aria-hidden="true"></i>
+                          <span class="recap__pilmodal-asset-name">${a.name}</span>
+                        </li>`,
+                    )
+                    .join(""),
+                )}
+              </ul>
+            </section>`
+          : "",
+      )}
+      ${raw(
+        p.sources.length
+          ? html`<section class="research-article">
+              <span class="research-article__label">Topics that fed this pillar</span>
+              <ol class="recap__pilmodal-sources">
+                ${raw(
+                  p.sources
+                    .map(
+                      (srcItem) =>
+                        html`<li class="recap__pilmodal-source">
+                          <span class="recap__pilmodal-source-head">${srcItem.headline}</span>
+                          ${raw(
+                            srcItem.when ? html`<span class="recap__pilmodal-source-when">${srcItem.when}</span>` : "",
+                          )}
+                        </li>`,
+                    )
+                    .join(""),
+                )}
+              </ol>
+            </section>`
+          : "",
+      )}
+    </div>`,
+    foot: html`<button type="button" class="ap-button stroked grey" data-pillar-back>
+        <span>Back</span>
+      </button>
+      <button type="button" class="ap-button primary blue" data-pillar-use="${escapeAttr(p.id)}">
+        <span>Add to chat</span>
+      </button>`,
+  });
+}
+
 export function openAddToStrategy({ briefId, playbookId, onConfirm = null }) {
   const brief = getBriefById(briefId);
   const ctx = getContextById(playbookId);
@@ -1090,6 +1285,40 @@ function onPanelClick(event) {
           }
         : null,
     });
+    return;
+  }
+
+  // ── Pillar picker ──────────────────────────────────────────────────────
+  const pillarPb = event.target.closest("[data-pillar-pb]");
+  if (pillarPb) {
+    pillarPbId = pillarPb.dataset.pillarPb;
+    pillarStep = "pillars";
+    return renderPillarPicker(active.ctx);
+  }
+  const pillarCard = event.target.closest("[data-pillar-pick]");
+  if (pillarCard) {
+    pillarPickedId = pillarCard.dataset.pillarPick;
+    pillarStep = "detail";
+    return renderPillarPicker(active.ctx);
+  }
+  if (event.target.closest("[data-pillar-back]")) {
+    // detail → list → playbooks, so Back always undoes exactly one choice.
+    if (pillarStep === "detail") {
+      pillarStep = "pillars";
+      pillarPickedId = null;
+    } else {
+      pillarStep = "playbooks";
+      pillarPbId = null;
+    }
+    return renderPillarPicker(active.ctx);
+  }
+  const pillarUse = event.target.closest("[data-pillar-use]");
+  if (pillarUse) {
+    const { onPick } = active.ctx;
+    const ctxId = pillarPbId;
+    const pid = pillarUse.dataset.pillarUse;
+    close();
+    if (onPick) onPick(ctxId, pid);
     return;
   }
 

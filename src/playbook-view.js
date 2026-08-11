@@ -15,6 +15,7 @@
 // is safe because only one route renders at a time.
 
 import { html, raw, escapeHtml as esc } from "./utils.js?v=21";
+import { openPillarInChat } from "./pillar-flow.js?v=2";
 import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=25";
 import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1";
 import { isFlagOn } from "./feature-flags.js?v=19";
@@ -157,6 +158,7 @@ let competitorsExpanded = false;
 let influencersExpanded = false;
 let refModalIndex = null; // open reference-image detail modal (index) or null
 let pillarModalIndex = null; // open content-pillar detail modal (index) or null
+let pillarMenuOpen = false; // the pillar dialog's split-button dropdown
 let cmpModalIndex = null; // open competitor detail modal (index) or null
 let cmpScanning = false; // "Discover competitors" scan in flight
 let cmpScanTimer = null; // the scan's pending timeout
@@ -245,6 +247,7 @@ export function mount(target, config) {
     }
     refModalIndex = null;
     pillarModalIndex = null;
+    pillarMenuOpen = false;
     cmpModalIndex = null;
     mountTarget = null;
     cfg = null;
@@ -1097,10 +1100,40 @@ function renderPillarModal(p, i, edit) {
                 // shape had to change for the footer.
                 //
                 // Secondary weight, before the primary: Done closes, Edit continues.
+                // Done becomes the DS split button, so the pillar has a forward
+                // action without Done losing its place. .ap-split-button primary
+                // orange — the real component, container plus exactly two buttons,
+                // main then chevron — not the hand-rolled pair .topics-use is on the
+                // topic card.
+                //
+                // One secondary action, and one is enough: "Use in chat" is the only
+                // thing you do with a pillar that is not editing it. It runs
+                // openPillarInChat, which is the same call the composer's picker ends
+                // in — so the phrase means one thing from both surfaces, exactly as
+                // "Use in chat" already does for a topic.
                 `<button type="button" class="ap-button stroked grey recap__pilmodal-edit" data-recap-edit-card="strategy">
                    <i class="ap-icon-pen" aria-hidden="true"></i><span>Edit</span>
                  </button>
-                 <button type="button" class="ap-button primary orange" data-recap-pillar-close><span>Done</span></button>`
+                 <div class="ap-split-button primary orange recap__pilmodal-done" data-recap-pillar-done-wrap>
+                   <button type="button" data-recap-pillar-close>Done</button>
+                   <button type="button" class="${pillarMenuOpen ? "open" : ""}" aria-label="Toggle" aria-expanded="${
+                     pillarMenuOpen ? "true" : "false"
+                   }" data-recap-pillar-menu><i class="ap-icon-chevron-down"></i></button>
+                 </div>
+                 ${
+                   pillarMenuOpen
+                     ? `<div class="ap-action-dropdown recap__pilmodal-menu" data-recap-pillar-menu-panel>
+                          <button type="button" class="ap-action-dropdown-item" data-recap-pillar-use="${i}" role="menuitem">
+                            <i class="ap-icon-single-chat-bubble"></i>
+                            <div class="ap-action-dropdown-item-text">
+                              <div class="ap-action-dropdown-item-label-container">
+                                <span class="ap-action-dropdown-item-label">Use in chat</span>
+                              </div>
+                            </div>
+                          </button>
+                        </div>`
+                     : ""
+                 }`
           }
         </div>
       </div>
@@ -2744,8 +2777,27 @@ function onClick(event) {
     repaintPreservingScroll();
     return;
   }
+  // The split button's chevron. Its own state rather than a CSS :focus trick —
+  // the panel has to survive a click inside it.
+  if (event.target.closest("[data-recap-pillar-menu]")) {
+    pillarMenuOpen = !pillarMenuOpen;
+    repaintPreservingScroll();
+    return;
+  }
+  const pillarUse = event.target.closest("[data-recap-pillar-use]");
+  if (pillarUse) {
+    const p = strategyOf(data).pillars[Number(pillarUse.dataset.recapPillarUse)];
+    pillarMenuOpen = false;
+    pillarModalIndex = null;
+    // Navigates away, so nothing after this needs to repaint.
+    // cfg.getData() returns the Context itself in library mode, so data.id IS
+    // the Playbook id — no new cfg field needed for this.
+    if (p) openPillarInChat(data.id, p.id);
+    return;
+  }
   if (event.target.closest("[data-recap-pillar-close]") || event.target.matches?.("[data-recap-pilmodal-backdrop]")) {
     pillarModalIndex = null;
+    pillarMenuOpen = false;
     repaintPreservingScroll();
     return;
   }

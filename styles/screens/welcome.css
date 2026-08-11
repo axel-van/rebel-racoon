@@ -2325,3 +2325,19 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* The pillar dialog's split-button dropdown. The footer is the positioning
+   context, and the panel opens UPWARD — the dialog's footer is at its bottom
+   edge, so a panel below it would fall outside the dialog. */
+.recap__pilmodal .ap-dialog-footer-right {
+  position: relative;
+}
+
+.recap__pilmodal-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--ref-spacing-xxs));
+  z-index: var(--app-z-overlay);
+  min-width: 220px;
+  text-align: left;
+}

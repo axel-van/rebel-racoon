@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=352";
+import { renderTopbar } from "../components/topbar.js?v=353";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=81";
 import {
   getConnectedProfiles,
@@ -73,8 +73,9 @@ import {
 import { isFlagOn } from "../feature-flags.js?v=19";
 import { getBriefById, getStarterTopics } from "../briefs-store.js?v=35";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=8";
+import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=2";
 import { getLaneById } from "../research-store.js?v=28";
-import * as contextBuilder from "../context-builder.js?v=319";
+import * as contextBuilder from "../context-builder.js?v=320";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -111,7 +112,7 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=2";
 import { showToast } from "../components/toast.js?v=20";
 // The composer's Add menu reaches Content Ideas through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaPicker } from "../components/research-modals.js?v=61";
+import { openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=62";
 import { findResearchSource } from "../research-catalog.js?v=14";
 import {
   openDrafts as openDraftsPanel,
@@ -119,7 +120,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=486";
+} from "../components/right-panel.js?v=487";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=23";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -1268,6 +1269,26 @@ function renderPlaybookControl(ctx, selectable) {
 // It sits with "Top performing posts" below the divider: those two are the items
 // that pick from something the app already holds, where everything above the
 // divider brings something in from outside.
+// Directly under "Pick from Content Ideas", because the two are the same gesture
+// at two altitudes: a topic is one observation, a pillar is the standing theme
+// several of them fed. Same flag gates both — a pillar only exists because a topic
+// was filed into one, so with contentResearch off there is nothing to pick.
+//
+// The antenna, matching the sidebar's Content Ideas row rather than the folder
+// this item's sibling still uses; the folder is the older icon and the nav row
+// moved off it.
+function renderContentPillarItem() {
+  if (!isFlagOn("contentResearch")) return "";
+  return html`<button type="button" class="ap-action-dropdown-item" data-add-source="content-pillar" role="menuitem">
+    <i class="ap-icon-target"></i>
+    <div class="ap-action-dropdown-item-text">
+      <div class="ap-action-dropdown-item-label-container">
+        <span class="ap-action-dropdown-item-label">Post about a Content Pillar</span>
+      </div>
+    </div>
+  </button>`;
+}
+
 function renderContentIdeasItem() {
   if (!isFlagOn("contentResearch")) return "";
   return html`<button type="button" class="ap-action-dropdown-item" data-add-source="content-ideas" role="menuitem">
@@ -1606,7 +1627,7 @@ function renderComposer(attachedContext, session, selectable) {
                     </div>
                   </div>
                 </button>
-                ${renderContentIdeasItem()}
+                ${renderContentIdeasItem()} ${renderContentPillarItem()}
                 ${renderConnectorsSubmenu()}
               </div>
             </div>
@@ -3875,6 +3896,13 @@ function wireAssistantPanel(root, session, attachedContext) {
   // composer's Pick-a-topic modal. Attach only: unlike /topics this posts no
   // echo and no question picker, because the source-intake card already names
   // the topic and the composer is right there.
+  // Same 150ms as the brief handoff below, and for the same reason: the thread
+  // has to exist before a source-intake turn can be posted into it.
+  const pendingPillar = consumeHandoff(PILLAR_CHAT_HANDOFF);
+  if (pendingPillar && pendingPillar.pillarId) {
+    setTimeout(() => attachPillarToChat(session.id, pendingPillar.ctxId, pendingPillar.pillarId), 150);
+  }
+
   const pendingBrief = consumeHandoff(BRIEF_CHAT_HANDOFF);
   if (pendingBrief?.briefId) {
     setTimeout(() => attachBriefToChat(session.id, pendingBrief.briefId), 150);
@@ -5328,6 +5356,15 @@ function bindSession(root, session) {
         // its own. No new action surface for it to need.
         if (kind === "content-ideas") {
           openIdeaPicker({ onPick: (brief) => openBriefInChat(brief.id) });
+          return;
+        }
+        // A pillar attaches to THIS chat rather than spawning one: the composer is
+        // already inside a session, so navigating away to a fresh chat would throw
+        // out whatever the user was writing. attachPillarToChat is the same call
+        // the /playbook dialog reaches through openPillarInChat, so "Use in chat"
+        // ends identically from both surfaces.
+        if (kind === "content-pillar") {
+          openPillarPicker({ onPick: (ctxId, pillarId) => attachPillarToChat(session.id, ctxId, pillarId) });
           return;
         }
         // URL + Paste text need the modal UI (a URL field / textarea) — open

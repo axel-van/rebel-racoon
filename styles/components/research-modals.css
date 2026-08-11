@@ -511,3 +511,45 @@
   line-height: 1.55;
   color: var(--sys-text-color-light);
 }
+
+/* ── Pillar picker ────────────────────────────────────────────────────────
+   Step 2 and 3 only. Step 1 reuses .research-pick__pbgrid, the same Playbook
+   grid the topic picker already has, so nothing is declared for it here. */
+.research-pick__pillars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+}
+
+/* .recap__pillar is the Playbook's own pillar card and it is not a control there
+   — the overlay button is. In the picker the card IS the control, so it takes the
+   app's universal clickable-card wash: light blue fill, light blue border, never
+   navy. Same treatment .topics-card--picker takes for the same reason. */
+.research-pick__pillars .recap__pillar {
+  cursor: pointer;
+  transition:
+    background-color var(--ref-animation-short) var(--app-ease-out),
+    border-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.research-pick__pillars .recap__pillar:hover,
+.research-pick__pillars .recap__pillar:focus-visible {
+  background: var(--ref-color-electric-blue-05);
+  border-color: var(--ref-color-electric-blue-20);
+  outline: none;
+}
+
+/* Step 3 sets its prose to the same measure the article uses, so a pillar reads
+   like the other long-form thing in this shell rather than like a form. */
+.research-pick__detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  max-width: var(--topics-measure);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .research-pick__pillars .recap__pillar {
+    transition: none;
+  }
+}
