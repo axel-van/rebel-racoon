@@ -22,7 +22,7 @@ import { getContexts, getContextById, subscribe as subscribeContexts } from "../
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=49";
 import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=17";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=27";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=478";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=479";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=83";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=57";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=76";
@@ -600,7 +600,16 @@ const NAV = [
   // compete with the Topics badge for the same kind of attention.
   {
     path: "/content-ideas",
-    icon: "ap-icon-folder",
+    // Same antenna as Topics, deliberately: both rows are Agorapulse listening,
+    // and a folder said "a place where things are filed" about a feature whose
+    // whole point is that Archie brings things in.
+    //
+    // ⚠️ The two rows are therefore identical in the COLLAPSED sidebar, which
+    // hides the label and the counter and leaves only the icon. Survivable
+    // because every nav row carries title + aria-label, so hover and assistive
+    // tech still separate them — but if the collapsed rail ever needs to be
+    // scannable on its own, this is the pair that breaks it.
+    icon: "ap-icon-antenna",
     label: "Content Ideas",
     flag: "contentResearch",
     // Prefix, so the row stays lit on a lane's feed, form and trending page.
