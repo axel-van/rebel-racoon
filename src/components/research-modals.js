@@ -1274,10 +1274,20 @@ function onPanelClick(event) {
     // so the page opens ON the Content strategy section instead of at the top with
     // the user hunting for it.
     //
-    // action.onClick, not a raw <a>: the snackbar renders the action as .ap-link
-    // and dismisses itself after the handler, which a plain link would not do —
-    // leaving a stale toast over the page it just navigated to.
-    showToast(strategyMode === "link" ? `Added to ${result.title}` : `Created the pillar ${result.title}`, {
+    // action.onClick, not a raw <a>: the snackbar renders the action in the DS's
+    // `.ap-snackbar-right > a` slot and dismisses itself after the handler, which
+    // a plain link would not do — leaving a stale toast over the page it just
+    // navigated to.
+    //
+    // Names the DESTINATION, not the pillar. "Added to Attainable by design" was
+    // the pillar's own title, which says nothing about where the topic landed —
+    // and on a pillar created from a topic the title is the topic's headline, so
+    // the message read as a sentence about the topic rather than a confirmation.
+    // "Content Strategy" is the Playbook section's exact name (playbook-view.js
+    // SECTIONS) and the place the action button goes, so the message and the
+    // button now describe the same destination.
+    const pbName = playbookId ? getContextById(playbookId)?.name : "";
+    showToast(pbName ? `Added to ${pbName}'s Content Strategy` : "Added to the Playbook's Content Strategy", {
       action: playbookId
         ? {
             label: "View in Playbook",
